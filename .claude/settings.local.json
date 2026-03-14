@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/jonasahnstedt/.claude/skills)",
+      "Bash(mv /Users/jonasahnstedt/git/slaktforskning/web-research /Users/jonasahnstedt/git/slaktforskning/interview-synthesis /Users/jonasahnstedt/git/slaktforskning/data-modeling /Users/jonasahnstedt/git/slaktforskning/gedcom /Users/jonasahnstedt/.claude/skills/)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/blader/napkin/refs/heads/main/SKILL.md\")"
+    ]
+  }
+}
