@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "slaktforskning": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/server.ts"],
+      "cwd": "/Users/jonasahnstedt/git/slaktforskning"
+    }
+  }
+}
