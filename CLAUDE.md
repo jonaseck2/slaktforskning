@@ -73,7 +73,9 @@ tests/
     └── app.test.ts               # App launch smoke test + MCP server connectivity
 
 .claude/
-├── SPEC.md                       # Product spec, implementation status, roadmap
+├── PLAN.md                       # Vision, implementation status, roadmap
+├── DATA_MODEL.md                 # Schema design, GEDCOM compatibility
+├── MCP.md                        # MCP server tools and UI bridge reference
 ├── napkin.md                     # Per-repo runbook (auto-curated)
 └── skills/                       # Claude skills (commit, test, electron-dev, etc.)
 ```
@@ -417,7 +419,7 @@ Follow this checklist in order:
 7. Add MCP tools in `src/mcp/server.ts` (thin wrapper, Zod schema, JSON response)
 8. Build Vue UI in `src/renderer/` (Composition API, `<script setup>`)
 9. Run `npm test && npx playwright test`
-10. **Update documentation**: `README.md`, `CLAUDE.md`, `.claude/SPEC.md`
+10. **Update documentation**: `README.md`, `CLAUDE.md`, `.claude/PLAN.md`
 
 ### Adding a New IPC Channel
 
@@ -460,7 +462,9 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 |------|----------|---------|
 | `README.md` | Humans | Quick start, features, project structure |
 | `CLAUDE.md` | Agents | This file. Complete architecture reference |
-| `.claude/SPEC.md` | Both | Product spec, implementation status, roadmap |
+| `.claude/PLAN.md` | Both | Vision, implementation status, roadmap |
+| `.claude/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility |
+| `.claude/MCP.md` | Both | MCP server tools and UI bridge reference |
 | `.claude/napkin.md` | Agents | Per-repo runbook with recurring gotchas |
 
 ## Skills
@@ -498,6 +502,6 @@ npx skills add browserbase/skills -y -g
 - **SQLite WAL mode** with foreign keys enforced
 - **No global DB singletons** in api/ — always pass `db` as parameter
 - **Modal dialogs** for create/edit forms — reserve page navigation for detail views
-- **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `.claude/SPEC.md`
+- **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `.claude/PLAN.md`
 - **Always commit ALL files** — Use `git add -A`. Never selectively skip files.
 - **Write plans to files, not context** — Persist plans/specs to disk immediately. Context can be lost.

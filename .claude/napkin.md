@@ -16,8 +16,8 @@
 3. **[2026-03-15] GPG signing fails in non-interactive agent context**
    Do instead: if GPG signing is enabled and commit fails with "Bad PIN", tell user immediately and suggest `git config --local commit.gpgsign false`.
 
-4. **[2026-03-15] Keep SPEC.md in sync with actual implementation state**
-   Do instead: when completing or starting work, update `.claude/SPEC.md` checkboxes and move items between sections. The spec is the single source of truth for what's done and what's planned.
+4. **[2026-03-15] Keep PLAN.md in sync with actual implementation state**
+   Do instead: when completing or starting work, update `.claude/PLAN.md` checkboxes and move items between sections. The plan is the single source of truth for what's done and what's planned.
 
 5. **[2026-03-15] Write plans to files, not context**
    Do instead: always persist plans, specs, and implementation notes to disk immediately. Context can be lost at any time. Never keep large plans only in conversation context.
@@ -55,8 +55,8 @@
 1. **[2026-03-15] Commit all files — don't skip any**
    Do instead: always include every changed file when committing. Check `git status` and stage everything.
 
-2. **[2026-03-15] Skills live in .claude/skills/, spec in .claude/SPEC.md**
-   Do instead: place all Claude-specific config under `.claude/`. Keep skills in `.claude/skills/`, product spec in `.claude/SPEC.md`.
+2. **[2026-03-15] Docs split: PLAN.md (roadmap), DATA_MODEL.md (schema), MCP.md (tools)**
+   Do instead: plan/status goes in `.claude/PLAN.md`, data model in `.claude/DATA_MODEL.md`, MCP tools in `.claude/MCP.md`. Skills live in `.claude/skills/`.
 
 3. **[2026-03-15] Keep it simple — avoid unnecessary complexity**
    Do instead: prefer simple solutions over elaborate workarounds. WASM-based SQLite eliminated all native module rebuild complexity.

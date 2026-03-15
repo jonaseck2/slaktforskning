@@ -107,7 +107,9 @@ src/
 │   └── constants/    # GEDCOM event types, date types, confidence levels
 └── mcp/              # MCP server for agent access
 .claude/
-├── SPEC.md           # Product spec, roadmap, implementation status
+├── PLAN.md           # Vision, implementation status, roadmap
+├── DATA_MODEL.md     # Schema design, GEDCOM compatibility
+├── MCP.md            # MCP server tools and UI bridge reference
 └── skills/           # Claude skills (commit, test, electron-dev, mcp-dev, domain)
 tests/
 ├── unit/             # Vitest API layer tests
@@ -118,7 +120,9 @@ tests/
 
 - **[README.md](README.md)** — This file. Quick start and overview for humans.
 - **[CLAUDE.md](CLAUDE.md)** — Agent instructions. Architecture, commands, conventions.
-- **[.claude/SPEC.md](.claude/SPEC.md)** — Product spec. Vision, design decisions, roadmap, data model rationale.
+- **[.claude/PLAN.md](.claude/PLAN.md)** — Vision, implementation status, roadmap.
+- **[.claude/DATA_MODEL.md](.claude/DATA_MODEL.md)** — Schema design, GEDCOM compatibility.
+- **[.claude/MCP.md](.claude/MCP.md)** — MCP server tools and UI bridge reference.
 
 ## License
 
