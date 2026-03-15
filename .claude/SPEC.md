@@ -198,22 +198,41 @@ Replaced `prompt()` dialogs with proper form-based data entry exposing the full 
 
 ## Future Roadmap
 
-### v0.3.0 — Visualization & Navigation
+### v0.3.0 — Add Related Person from Detail View
+
+The primary workflow in genealogy research is: you're looking at a person and you discover a related person (parent, spouse, child) in a source. You want to add that person *and* the relationship in one action, not create the person separately and then wire up the family.
+
+**Feature: "Add Related Person" from PersonDetailView**
+
+From the person detail view, the user can:
+- **Add Parent** — Creates a new person + creates/finds a family where the current person is a child. If one parent already exists in a family, the new person is added as the other partner.
+- **Add Spouse/Partner** — Creates a new person + creates a new family with both as partners. Prompts for union type.
+- **Add Child** — Creates a new person + adds them as a child to an existing family (if the current person is a partner in one), or creates a new family first.
+
+Each action opens a modal with:
+1. New person fields (given name, surname, sex)
+2. Relationship context (automatically set: e.g. "Child of [current person]", "Spouse of [current person]")
+3. Optional: select existing family (if the current person has multiple families) or create new
+
+On save, both the person and the family link are created in a single transaction, and the detail view refreshes.
+
+This replaces the current workflow of: navigate to Persons list → Add Person → navigate back → navigate to Families → create/find family → add the person as partner/child.
+
+### v0.4.0 — Visualization & Navigation
 - [ ] Family tree visualization (pedigree chart, descendant chart)
-- [ ] Search across all entities (persons, families, sources, events)
 - [ ] Place management UI and place autocomplete
 
-### v0.4.0 — GEDCOM Import/Export
+### v0.5.0 — GEDCOM Import/Export
 - [ ] GEDCOM 5.5.1 import
 - [ ] GEDCOM 5.5.1 export
 - [ ] GEDCOM 7.0 support
 
-### v0.5.0 — Research Tools
+### v0.6.0 — Research Tools
 - [ ] Assertion layer (Source → Citation → Assertion, per Genealogical Proof Standard)
 - [ ] Merge/deduplicate persons
 - [ ] Media attachments (photos, documents)
 
-### v0.6.0 — Polish
+### v0.7.0 — Polish
 - [ ] Print/export reports (ancestor charts, family group sheets)
 - [ ] Keyboard navigation and accessibility
 - [ ] Data backup and restore
