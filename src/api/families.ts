@@ -60,6 +60,28 @@ export function getChildrenOfFamily(db: Database, familyId: string): PersonFamil
   return db.prepare(`SELECT * FROM person_family_links WHERE family_id = ?`).all([familyId]) as PersonFamilyLink[];
 }
 
+export function searchFamilies(
+  db: Database,
+  query: string
+): (Family & { partner_a_given_name: string; partner_a_surname: string; partner_b_given_name: string; partner_b_surname: string })[] {
+  const like = `%${query}%`;
+  return db.prepare(`
+    SELECT DISTINCT f.*,
+      COALESCE(pna.given_name, '') as partner_a_given_name,
+      COALESCE(pna.surname, '') as partner_a_surname,
+      COALESCE(pnb.given_name, '') as partner_b_given_name,
+      COALESCE(pnb.surname, '') as partner_b_surname
+    FROM families f
+    LEFT JOIN person_names pna ON pna.person_id = f.partner_a_id
+      AND pna.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = f.partner_a_id)
+    LEFT JOIN person_names pnb ON pnb.person_id = f.partner_b_id
+      AND pnb.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = f.partner_b_id)
+    WHERE pna.given_name LIKE ? OR pna.surname LIKE ?
+       OR pnb.given_name LIKE ? OR pnb.surname LIKE ?
+    ORDER BY pna.surname, pna.given_name
+  `).all([like, like, like, like]) as unknown as (Family & { partner_a_given_name: string; partner_a_surname: string; partner_b_given_name: string; partner_b_surname: string })[];
+}
+
 export function getFamiliesOfPerson(db: Database, personId: string): Family[] {
   return db.prepare(`
     SELECT f.* FROM families f

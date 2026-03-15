@@ -11,6 +11,7 @@ import {
   addChildToFamily,
   getChildrenOfFamily,
   getFamiliesOfPerson,
+  searchFamilies,
 } from '../../src/api/families';
 
 let db: Database.Database;
@@ -70,6 +71,24 @@ describe('families', () => {
     expect(children).toHaveLength(2);
     expect(children[0].relationship_type).toBe('biological');
     expect(children[1].relationship_type).toBe('adopted');
+  });
+
+  it('searches families by partner name', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const b = createPerson(db, { given_name: 'Anna', surname: 'Larsson', sex: 'F' });
+    createFamily(db, { partner_a_id: a.id, partner_b_id: b.id, union_type: 'marriage' });
+    createFamily(db, {}); // no partners
+
+    const results = searchFamilies(db, 'Svensson');
+    expect(results).toHaveLength(1);
+    expect(results[0].partner_a_given_name).toBe('Erik');
+    expect(results[0].partner_a_surname).toBe('Svensson');
+
+    const byPartnerB = searchFamilies(db, 'Larsson');
+    expect(byPartnerB).toHaveLength(1);
+
+    const noMatch = searchFamilies(db, 'zzz_nomatch');
+    expect(noMatch).toHaveLength(0);
   });
 
   it('gets families for a person (as partner and child)', () => {

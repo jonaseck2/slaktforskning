@@ -41,6 +41,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('families:addChild', (familyId, personId, relType) => families.addChildToFamily(db, familyId as string, personId as string, relType as Parameters<typeof families.addChildToFamily>[3]));
   wrapHandler('families:getChildren', (familyId) => families.getChildrenOfFamily(db, familyId as string));
   wrapHandler('families:getForPerson', (personId) => families.getFamiliesOfPerson(db, personId as string));
+  wrapHandler('families:search', (query) => families.searchFamilies(db, query as string));
 
   // Events
   wrapHandler('events:create', (data) => events.createEvent(db, data as Parameters<typeof events.createEvent>[1]));
@@ -56,6 +57,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('sources:list', () => sources.listSources(db));
   wrapHandler('sources:update', (id, data) => sources.updateSource(db, id as string, data as Parameters<typeof sources.updateSource>[2]));
   wrapHandler('sources:delete', (id) => sources.deleteSource(db, id as string));
+  wrapHandler('sources:search', (query) => sources.searchSources(db, query as string));
 
   // Citations
   wrapHandler('citations:create', (data) => sources.createCitation(db, data as Parameters<typeof sources.createCitation>[1]));

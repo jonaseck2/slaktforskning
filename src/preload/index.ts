@@ -20,6 +20,7 @@ const api = {
     addChild: (familyId: string, personId: string, relType?: string) => ipcRenderer.invoke('families:addChild', familyId, personId, relType),
     getChildren: (familyId: string) => ipcRenderer.invoke('families:getChildren', familyId),
     getForPerson: (personId: string) => ipcRenderer.invoke('families:getForPerson', personId),
+    search: (query: string) => ipcRenderer.invoke('families:search', query),
   },
   events: {
     create: (data: Record<string, unknown>) => ipcRenderer.invoke('events:create', data),
@@ -35,6 +36,7 @@ const api = {
     list: () => ipcRenderer.invoke('sources:list'),
     update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('sources:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('sources:delete', id),
+    search: (query: string) => ipcRenderer.invoke('sources:search', query),
   },
   citations: {
     create: (data: Record<string, unknown>) => ipcRenderer.invoke('citations:create', data),

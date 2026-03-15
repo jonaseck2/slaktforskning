@@ -7,4 +7,16 @@ export default defineConfig({
   use: {
     trace: 'on-first-retry',
   },
+  projects: [
+    {
+      name: 'smoke',
+      testMatch: 'app.test.ts',
+      timeout: 60000,
+    },
+    {
+      name: 'gui',
+      testMatch: 'gui.test.ts',
+      timeout: 120000,
+    },
+  ],
 });

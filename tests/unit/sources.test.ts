@@ -9,6 +9,7 @@ import {
   listSources,
   updateSource,
   deleteSource,
+  searchSources,
   createCitation,
   getCitation,
   getCitationsForSource,
@@ -47,6 +48,17 @@ describe('sources', () => {
     const updated = updateSource(db, source.id, { title: 'Final Title', author: 'Author' });
     expect(updated!.title).toBe('Final Title');
     expect(updated!.author).toBe('Author');
+  });
+
+  it('searches sources by title, author, and publication info', () => {
+    createSource(db, { title: 'Swedish Church Records', author: 'Riksarkivet' });
+    createSource(db, { title: 'US Federal Census', author: 'Census Bureau', publication_info: 'Washington DC' });
+
+    expect(searchSources(db, 'Swedish')).toHaveLength(1);
+    expect(searchSources(db, 'Riksarkivet')).toHaveLength(1);
+    expect(searchSources(db, 'Washington')).toHaveLength(1);
+    expect(searchSources(db, 'Census')).toHaveLength(1);
+    expect(searchSources(db, 'zzz_nomatch')).toHaveLength(0);
   });
 
   it('deletes a source and cascades to citations', () => {
