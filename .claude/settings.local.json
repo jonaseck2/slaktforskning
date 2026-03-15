@@ -31,7 +31,10 @@
       "Bash(npx playwright test --reporter=list)",
       "Bash(git add .gitignore CLAUDE.md forge.config.ts package.json package-lock.json src/api/events.ts src/api/families.ts src/api/persons.ts src/api/sources.ts src/main/database.ts vite.main.config.ts vitest.config.mts playwright.config.ts tests/)",
       "Bash(git config commit.gpgsign)",
-      "Bash(git config --local commit.gpgsign false)"
+      "Bash(git config --local commit.gpgsign false)",
+      "Bash(ls *.md)",
+      "Bash(mkdir -p .claude/skills)",
+      "Bash(mv skills/* .claude/skills/)"
     ]
   }
 }
