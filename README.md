@@ -80,6 +80,13 @@ npm run make
 | Agent interface | MCP (stdio) |
 | Language | TypeScript |
 
+## Testing
+
+```bash
+npm test              # Unit tests (Vitest, 30 tests)
+npx playwright test   # E2E tests (app launch + MCP server)
+```
+
 ## Project Structure
 
 ```
@@ -89,8 +96,19 @@ src/
 ├── preload/    # Context bridge (renderer ↔ main)
 ├── renderer/   # Vue 3 UI
 └── mcp/        # MCP server for agent access
-skills/         # Claude skills for genealogy research
+.claude/
+├── SPEC.md     # Product spec and design decisions
+└── skills/     # Claude skills for genealogy research
+tests/
+├── unit/       # Vitest API layer tests
+└── e2e/        # Playwright smoke tests
 ```
+
+## Documentation
+
+- **[README.md](README.md)** — This file. Quick start and overview for humans.
+- **[CLAUDE.md](CLAUDE.md)** — Agent instructions. Architecture, commands, conventions.
+- **[.claude/SPEC.md](.claude/SPEC.md)** — Product spec. Vision, design decisions, roadmap, data model rationale.
 
 ## License
 
