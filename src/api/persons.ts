@@ -22,7 +22,7 @@ export function createPerson(
 }
 
 export function getPerson(db: Database.Database, id: string): Person | null {
-  return db.prepare(`SELECT *, living as living FROM persons WHERE id = ?`).get(id) as Person | null;
+  return (db.prepare(`SELECT *, living as living FROM persons WHERE id = ?`).get(id) as Person) ?? null;
 }
 
 export function listPersons(db: Database.Database): (Person & { given_name: string; surname: string })[] {

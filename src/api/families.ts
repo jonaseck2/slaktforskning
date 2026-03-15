@@ -14,7 +14,7 @@ export function createFamily(
 }
 
 export function getFamily(db: Database.Database, id: string): Family | null {
-  return db.prepare(`SELECT * FROM families WHERE id = ?`).get(id) as Family | null;
+  return (db.prepare(`SELECT * FROM families WHERE id = ?`).get(id) as Family) ?? null;
 }
 
 export function listFamilies(db: Database.Database): Family[] {

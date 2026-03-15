@@ -66,8 +66,42 @@ npm start          # Launch the Electron app in dev mode
 npm run package    # Package for current platform
 npm run make       # Build distributable installers
 npm run lint       # Run ESLint
+npm test           # Run unit tests (Vitest, 30 tests)
+npx playwright test  # Run E2E tests (app launch + MCP server)
 npx tsx src/mcp/server.ts  # Run MCP server standalone
 ```
+
+## Testing
+
+### Unit Tests (Vitest)
+
+Unit tests live in `tests/unit/` and cover the api/ layer with an in-memory SQLite database. Config: `vitest.config.mts`.
+
+```
+tests/unit/
+├── helpers.ts         # createTestDb() — in-memory SQLite with schema
+├── persons.test.ts    # Person + PersonName CRUD
+├── families.test.ts   # Family + child linking
+├── events.test.ts     # Life events
+└── sources.test.ts    # Sources + citations
+```
+
+Run with `npm test`. The test script rebuilds better-sqlite3 for system Node before running.
+
+### E2E Tests (Playwright)
+
+E2E tests live in `tests/e2e/` and verify the app launches and the MCP server responds. Config: `playwright.config.ts`.
+
+- **App smoke test:** Spawns `electron-forge start`, verifies it outputs "Launched Electron"
+- **MCP server test:** Spawns the MCP server, sends an `initialize` JSON-RPC message, verifies a `serverInfo` response
+
+Run with `npx playwright test`.
+
+### Native Module Note
+
+better-sqlite3 is a native C++ addon. It must be compiled for the correct Node version:
+- **Unit tests:** `npm rebuild better-sqlite3` (compiles for system Node)
+- **Electron app:** `npx electron-rebuild -f -w better-sqlite3` (compiles for Electron's Node)
 
 ## MCP Server
 

@@ -36,7 +36,7 @@ export function createEvent(
 }
 
 export function getEvent(db: Database.Database, id: string): GenealogyEvent | null {
-  return db.prepare(`SELECT * FROM events WHERE id = ?`).get(id) as GenealogyEvent | null;
+  return (db.prepare(`SELECT * FROM events WHERE id = ?`).get(id) as GenealogyEvent) ?? null;
 }
 
 export function getEventsForPerson(db: Database.Database, personId: string): GenealogyEvent[] {

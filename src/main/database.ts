@@ -7,7 +7,7 @@ let db: Database.Database | null = null;
 
 export function getDatabase(): Database.Database {
   if (db) return db;
-  const dbPath = path.join(app.getPath('userData'), 'slaktforskning.db');
+  const dbPath = process.env.SLAKTFORSKNING_DB || path.join(app.getPath('userData'), 'slaktforskning.db');
   db = new Database(dbPath);
   initializeSchema(db);
   return db;
