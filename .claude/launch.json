@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "electron-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["electron-forge", "start"],
+      "port": 5173
+    }
+  ]
+}
