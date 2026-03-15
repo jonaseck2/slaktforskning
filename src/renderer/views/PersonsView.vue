@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>Persons</h2>
-      <button @click="addPerson">Add Person</button>
+      <button @click="showAddForm = true">Add Person</button>
     </div>
     <div v-if="persons.length === 0" class="empty">
       No persons yet. Click "Add Person" to get started.
@@ -13,41 +13,103 @@
           <th>Given Name</th>
           <th>Surname</th>
           <th>Sex</th>
+          <th>Living</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="person in persons" :key="person.id">
+        <tr
+          v-for="person in persons"
+          :key="person.id"
+          class="clickable-row"
+          @click="goToDetail(person.id)"
+        >
           <td>{{ person.given_name }}</td>
           <td>{{ person.surname }}</td>
-          <td>{{ person.sex }}</td>
+          <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
+          <td>{{ person.living ? 'Yes' : 'No' }}</td>
           <td>
-            <button class="btn-sm" @click="removePerson(person.id)">Delete</button>
+            <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">Delete</button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Add Person Modal -->
+    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
+      <div class="modal">
+        <h3>Add Person</h3>
+        <form @submit.prevent="addPerson">
+          <label>
+            Given Name
+            <input v-model="form.given_name" type="text" required autofocus />
+          </label>
+          <label>
+            Surname
+            <input v-model="form.surname" type="text" />
+          </label>
+          <label>
+            Sex
+            <div class="radio-group">
+              <label class="radio-label">
+                <input v-model="form.sex" type="radio" value="M" /> Male
+              </label>
+              <label class="radio-label">
+                <input v-model="form.sex" type="radio" value="F" /> Female
+              </label>
+              <label class="radio-label">
+                <input v-model="form.sex" type="radio" value="U" /> Unknown
+              </label>
+            </div>
+          </label>
+          <label class="checkbox-label">
+            <input v-model="form.living" type="checkbox" /> Living
+          </label>
+          <label>
+            Notes
+            <textarea v-model="form.notes" rows="2" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="showAddForm = false">Cancel</button>
+            <button type="submit">Add Person</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-declare const window: Window & { api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> };
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
 
 interface PersonRow {
   id: string;
   given_name: string;
   surname: string;
   sex: string;
+  living: number;
 }
 
+const router = useRouter();
 const persons = ref<PersonRow[]>([]);
+const showAddForm = ref(false);
+const form = reactive({
+  given_name: '',
+  surname: '',
+  sex: 'U',
+  living: true,
+  notes: '',
+});
 
 async function load() {
   if (!window.api) return;
   try {
-    persons.value = await window.api.persons.list() as PersonRow[];
+    persons.value = (await window.api.persons.list()) as PersonRow[];
   } catch (err) {
     console.error('[PersonsView] load failed:', err);
   }
@@ -55,11 +117,20 @@ async function load() {
 
 async function addPerson() {
   if (!window.api) return;
-  const given = prompt('Given name:');
-  if (!given) return;
-  const surname = prompt('Surname:');
   try {
-    await window.api.persons.create({ given_name: given, surname: surname ?? '' });
+    await window.api.persons.create({
+      given_name: form.given_name,
+      surname: form.surname,
+      sex: form.sex,
+      living: form.living,
+      notes: form.notes,
+    });
+    showAddForm.value = false;
+    form.given_name = '';
+    form.surname = '';
+    form.sex = 'U';
+    form.living = true;
+    form.notes = '';
     await load();
   } catch (err) {
     console.error('[PersonsView] addPerson failed:', err);
@@ -68,12 +139,17 @@ async function addPerson() {
 
 async function removePerson(id: string) {
   if (!window.api) return;
+  if (!confirm('Delete this person? This cannot be undone.')) return;
   try {
     await window.api.persons.delete(id);
     await load();
   } catch (err) {
     console.error('[PersonsView] removePerson failed:', err);
   }
+}
+
+function goToDetail(id: string) {
+  router.push(`/persons/${id}`);
 }
 
 onMounted(load);
@@ -95,7 +171,8 @@ onMounted(load);
   width: 100%;
   border-collapse: collapse;
 }
-.data-table th, .data-table td {
+.data-table th,
+.data-table td {
   padding: 8px 12px;
   border-bottom: 1px solid #ddd;
   text-align: left;
@@ -103,6 +180,31 @@ onMounted(load);
 .data-table th {
   background: #eee;
   font-weight: 600;
+}
+.clickable-row {
+  cursor: pointer;
+}
+.clickable-row:hover {
+  background: #f0f4ff;
+}
+.sex-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sex-M {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.sex-F {
+  background: #fce7f3;
+  color: #be185d;
+}
+.sex-U {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 button {
   background: #2c3e50;
@@ -112,10 +214,85 @@ button {
   border-radius: 4px;
   cursor: pointer;
 }
-button:hover { opacity: 0.9; }
+button:hover {
+  opacity: 0.9;
+}
 .btn-sm {
   padding: 4px 8px;
   font-size: 12px;
-  background: #e74c3c;
+}
+.btn-delete {
+  background: #fee;
+  color: #c0392b;
+}
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+.modal h3 {
+  margin: 0 0 16px;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+form input[type='text'],
+form textarea {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.radio-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 2px;
+}
+.radio-label {
+  font-weight: normal;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+  font-weight: normal;
+  cursor: pointer;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+.btn-cancel {
+  background: #e0e0e0;
+  color: #333;
 }
 </style>

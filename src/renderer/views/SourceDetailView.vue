@@ -1,0 +1,324 @@
+<template>
+  <div v-if="source" class="source-detail">
+    <div class="detail-header">
+      <button class="btn-back" @click="$router.push('/sources')">&larr; Back</button>
+      <h2>{{ source.title }}</h2>
+    </div>
+
+    <!-- Source Fields -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>Source Details</h4>
+      </div>
+      <div class="field-grid">
+        <label>
+          Title
+          <input v-model="editFields.title" type="text" @blur="saveField('title')" />
+        </label>
+        <label>
+          Author
+          <input v-model="editFields.author" type="text" @blur="saveField('author')" />
+        </label>
+        <label>
+          Source Type
+          <select v-model="editFields.source_type" @change="saveField('source_type')">
+            <option value="">— None —</option>
+            <option v-for="st in SOURCE_TYPES" :key="st.value" :value="st.value">
+              {{ st.label }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Publication Info
+          <input
+            v-model="editFields.publication_info"
+            type="text"
+            @blur="saveField('publication_info')"
+          />
+        </label>
+        <label>
+          Repository
+          <input v-model="editFields.repository" type="text" @blur="saveField('repository')" />
+        </label>
+        <label>
+          URL
+          <input v-model="editFields.url" type="url" @blur="saveField('url')" />
+        </label>
+      </div>
+    </section>
+
+    <!-- Citations Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>Citations</h4>
+        <button class="btn-add" @click="showCitationForm = true">+ Add Citation</button>
+      </div>
+      <div v-if="citations.length === 0" class="empty-hint">No citations yet.</div>
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th>Confidence</th>
+            <th>Transcription</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="cit in citations" :key="cit.id">
+            <td>{{ cit.page || '—' }}</td>
+            <td>
+              <span :class="'confidence-badge confidence-' + cit.confidence">
+                {{ CONFIDENCE_LEVELS.find((c) => c.value === cit.confidence)?.label ?? cit.confidence }}
+              </span>
+            </td>
+            <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
+            <td>
+              <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <CitationForm
+      v-if="showCitationForm"
+      :source-id="source.id"
+      @close="showCitationForm = false"
+      @saved="onCitationSaved"
+    />
+  </div>
+  <div v-else class="empty">Loading...</div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import CitationForm from '../components/CitationForm.vue';
+import { SOURCE_TYPES, CONFIDENCE_LEVELS } from '../constants/eventTypes';
+
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
+
+interface SourceData {
+  id: string;
+  title: string;
+  author: string;
+  publication_info: string;
+  repository: string;
+  url: string;
+  source_type: string;
+}
+
+interface CitationRow {
+  id: string;
+  page: string;
+  confidence: number;
+  transcription: string;
+  notes: string;
+  date_accessed: string;
+}
+
+const route = useRoute();
+const sourceId = route.params.id as string;
+
+const source = ref<SourceData | null>(null);
+const citations = ref<CitationRow[]>([]);
+const showCitationForm = ref(false);
+
+const editFields = reactive({
+  title: '',
+  author: '',
+  source_type: '',
+  publication_info: '',
+  repository: '',
+  url: '',
+});
+
+function truncate(text: string, max: number): string {
+  if (!text) return '—';
+  return text.length > max ? text.slice(0, max) + '...' : text;
+}
+
+async function load() {
+  if (!window.api) return;
+  try {
+    source.value = (await window.api.sources.get(sourceId)) as SourceData | null;
+    if (!source.value) return;
+
+    editFields.title = source.value.title;
+    editFields.author = source.value.author;
+    editFields.source_type = source.value.source_type;
+    editFields.publication_info = source.value.publication_info;
+    editFields.repository = source.value.repository;
+    editFields.url = source.value.url;
+
+    citations.value = (await window.api.citations.forSource(sourceId)) as CitationRow[];
+  } catch (err) {
+    console.error('[SourceDetailView] load failed:', err);
+  }
+}
+
+async function saveField(field: string) {
+  if (!window.api || !source.value) return;
+  const val = editFields[field as keyof typeof editFields];
+  if (val === source.value[field as keyof SourceData]) return;
+  try {
+    await window.api.sources.update(sourceId, { [field]: val });
+    (source.value as Record<string, unknown>)[field] = val;
+  } catch (err) {
+    console.error(`[SourceDetailView] saveField(${field}) failed:`, err);
+  }
+}
+
+async function removeCitation(id: string) {
+  if (!window.api) return;
+  if (!confirm('Delete this citation?')) return;
+  try {
+    await window.api.citations.delete(id);
+    await load();
+  } catch (err) {
+    console.error('[SourceDetailView] removeCitation failed:', err);
+  }
+}
+
+function onCitationSaved() {
+  showCitationForm.value = false;
+  load();
+}
+
+onMounted(load);
+</script>
+
+<style scoped>
+.source-detail {
+  max-width: 700px;
+}
+.detail-header {
+  margin-bottom: 24px;
+}
+.detail-header h2 {
+  margin: 8px 0 0;
+}
+.btn-back {
+  background: none;
+  border: none;
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 4px 0;
+  font-size: 14px;
+}
+.btn-back:hover {
+  text-decoration: underline;
+}
+.detail-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.section-header h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.btn-add {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+.field-grid input,
+.field-grid select {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.empty-hint {
+  color: #999;
+  font-size: 13px;
+  padding: 12px 0;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th,
+.data-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+.data-table th {
+  background: #f8f8f8;
+  font-weight: 600;
+  font-size: 12px;
+  color: #666;
+}
+.transcription-cell {
+  color: #555;
+  font-style: italic;
+  max-width: 300px;
+}
+.confidence-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.confidence-0 {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.confidence-1 {
+  background: #fef3c7;
+  color: #92400e;
+}
+.confidence-2 {
+  background: #e0f2fe;
+  color: #075985;
+}
+.confidence-3 {
+  background: #dcfce7;
+  color: #166534;
+}
+.btn-sm {
+  padding: 2px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.btn-delete {
+  background: #fee;
+  color: #c0392b;
+}
+.empty {
+  color: #999;
+  padding: 40px;
+  text-align: center;
+}
+</style>
