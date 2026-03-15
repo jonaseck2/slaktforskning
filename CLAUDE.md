@@ -140,9 +140,14 @@ The MCP server uses the same SQLite database as the Electron app. The DB path de
 
 Each `BrowserWindow` runs an independent Vue app instance. All windows share the same main process and SQLite database. New windows: `Cmd+N` / `Ctrl+N`.
 
+## Related Docs
+
+- **`.claude/SPEC.md`** — Product spec: vision, design decisions, data model rationale, roadmap
+- **`README.md`** — Human-facing quick start and overview
+
 ## Skills
 
-The `skills/` directory contains genealogy-specific Claude skills:
+The `.claude/skills/` directory contains genealogy-specific Claude skills:
 
 - **data-modeling** — Genealogy data schema design guidance
 - **gedcom** — GEDCOM format parsing, validation, compliance
