@@ -16,6 +16,12 @@
 3. **[2026-03-15] GPG signing fails in non-interactive agent context**
    Do instead: if GPG signing is enabled and commit fails with "Bad PIN", tell user immediately and suggest `git config --local commit.gpgsign false`.
 
+4. **[2026-03-15] Keep SPEC.md in sync with actual implementation state**
+   Do instead: when completing or starting work, update `.claude/SPEC.md` checkboxes and move items between sections. The spec is the single source of truth for what's done and what's planned.
+
+5. **[2026-03-15] Write plans to files, not context**
+   Do instead: always persist plans, specs, and implementation notes to disk immediately. Context can be lost at any time. Never keep large plans only in conversation context.
+
 ## Shell & Command Reliability
 1. **[2026-03-15] node-sqlite3-wasm uses array parameter binding**
    Do instead: always pass parameters as arrays — `stmt.run([a, b])`, `stmt.get([id])`, `stmt.all([x, y])`. Spread args (`stmt.run(a, b)`) only bind the first parameter.
@@ -26,14 +32,23 @@
 3. **[2026-03-15] node-sqlite3-wasm has no `.pragma()` method**
    Do instead: use `db.exec('PRAGMA journal_mode = WAL')` instead of `db.pragma('journal_mode = WAL')`.
 
+4. **[2026-03-15] Vite build output paths are relative to `root`**
+   Do instead: when `root` is set (e.g. `src/renderer`), `outDir` resolves relative to it. Use `resolve()` for absolute paths. The renderer config needs `outDir: resolve('.vite/renderer/main_window')` to land in the project root `.vite/` dir that Forge packages.
+
+5. **[2026-03-15] Vite main + preload builds share output dir — filenames collide**
+   Do instead: set `entryFileNames: 'preload.js'` in `vite.preload.config.ts` to avoid both producing `index.js` in `.vite/build/`.
+
 ## Domain Behavior Guardrails
 1. **[2026-03-15] API layer must stay Electron-free**
    Do instead: never import from `electron` in `src/api/`. All api/ functions take `db: Database` as first arg. Both IPC handlers and MCP server consume the same api/.
 
-2. **[2026-03-15] Vite must externalize node-sqlite3-wasm**
-   Do instead: keep `node-sqlite3-wasm` and all `builtinModules` in `vite.main.config.ts` → `build.rollupOptions.external`.
+2. **[2026-03-15] Vite bundles node-sqlite3-wasm JS, copies WASM file separately**
+   Do instead: do NOT externalize node-sqlite3-wasm (Forge won't ship node_modules). Let Vite bundle the JS. Use a `closeBundle` plugin hook to copy `node-sqlite3-wasm.wasm` to `.vite/build/`.
 
-3. **[2026-03-15] Research before fixing — the approach may be the problem**
+3. **[2026-03-15] Emscripten creates `.db.lock` directories that go stale on crash**
+   Do instead: before opening the database, check for stale `.lock` directories and remove them. This is implemented in both `database.ts` and `server.ts`.
+
+4. **[2026-03-15] Research before fixing — the approach may be the problem**
    Do instead: when a tool/library causes repeated friction, research alternatives before applying more workarounds. The switch from better-sqlite3 to node-sqlite3-wasm exemplifies this.
 
 ## User Directives
@@ -45,3 +60,6 @@
 
 3. **[2026-03-15] Keep it simple — avoid unnecessary complexity**
    Do instead: prefer simple solutions over elaborate workarounds. WASM-based SQLite eliminated all native module rebuild complexity.
+
+4. **[2026-03-15] Use modal dialogs for create/edit, not page navigation**
+   Do instead: for data entry forms, use modal dialogs so the user stays in context. Reserve page navigation for detail views (viewing a full record).
