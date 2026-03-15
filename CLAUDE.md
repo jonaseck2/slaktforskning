@@ -34,9 +34,11 @@ src/
 │   └── index.ts
 ├── renderer/      # Vue 3 application
 │   ├── App.vue    # Root layout with sidebar navigation
-│   ├── router.ts  # Routes: /, /families, /sources
+│   ├── router.ts  # Routes: /, /families, /sources, /persons/:id, /families/:id, /sources/:id
 │   ├── main.ts    # Vue bootstrap
-│   └── views/     # Page components (PersonsView, FamiliesView, SourcesView)
+│   ├── views/     # List views (Persons, Families, Sources) + detail views (*DetailView)
+│   ├── components/# Shared: PersonPicker, DateInput, EventForm, EventList, CitationForm
+│   └── constants/ # GEDCOM event types, date types, confidence levels, source types
 └── mcp/           # MCP server (runs standalone via tsx)
     └── server.ts  # Tool definitions wrapping api/ functions
 ```
@@ -133,6 +135,10 @@ The MCP server uses the same SQLite database as the Electron app. The DB path de
 5. Expose via preload in `src/preload/index.ts`
 6. Add MCP tools in `src/mcp/server.ts`
 7. Build Vue UI in `src/renderer/`
+8. **Update documentation** — After completing a feature, update all relevant docs:
+   - `README.md` — User-facing overview, features, quick start, project structure
+   - `CLAUDE.md` — Agent-facing architecture, commands, conventions
+   - `.claude/SPEC.md` — Mark items as done, update implementation status
 
 ## Multi-Window
 
@@ -194,3 +200,5 @@ The `napkin` and `simplify` skills are also recommended but come built-in with C
 - Dates stored as ISO strings; genealogy dates use `date_type` + `date_original` to preserve uncertainty
 - SQLite in WAL mode with foreign keys enforced
 - No global database singletons in api/ — always pass `db` as parameter
+- **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `.claude/SPEC.md` to reflect the new state. Documentation for both agents and humans must stay in sync with the codebase.
+- **Always commit ALL files** — Use `git add -A` when committing. Never selectively skip files.

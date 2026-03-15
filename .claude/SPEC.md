@@ -147,67 +147,20 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 - [x] Renderer build output included in packaged app (asar)
 - [x] Debug logging in IPC handlers
 
-### Current UI Limitations (what needs fixing)
+### Done (v0.2.0 — Genealogy Data Entry UI)
 
-The three existing views use bare `prompt()` dialogs and only capture a fraction of each entity's fields:
+Replaced `prompt()` dialogs with proper form-based data entry exposing the full GEDCOM-aligned data model.
 
-- **PersonsView** — `prompt()` for given_name + surname only. No sex, living, notes. No click-through to detail.
-- **FamiliesView** — Creates with hardcoded `union_type: 'unknown'`. No partner selection, no children UI. No click-through.
-- **SourcesView** — `prompt()` for title only. No author, publication_info, repository, URL, source_type. No click-through.
-- **No Events UI** — Events exist in the API/schema but have zero UI exposure.
-- **No Citations UI** — Citations exist in the API/schema but have zero UI exposure.
-- **No Place management UI** — Places exist in the schema but have zero UI exposure.
-- **No detail/edit views** — Only list + delete. Cannot view or edit an individual record.
-
----
-
-## Next Up: Genealogy Data Entry UI (v0.2.0)
-
-Replace the minimal `prompt()` dialogs with proper form-based data entry that exposes the full GEDCOM-aligned data model.
-
-### Design Principles
-
-1. **Modal dialogs for create/edit** — Stay in context, no page navigation for simple operations
-2. **Progressive disclosure** — Essential fields first, optional fields in expandable sections
-3. **No new dependencies** — Native HTML form elements, no UI framework
-4. **Reuse existing IPC** — All channels already wired, just need Vue components to call them
-
-### Shared Components to Build
-
-| Component | Purpose |
-|-----------|---------|
-| `src/renderer/components/PersonPicker.vue` | Searchable dropdown to select an existing person (typeahead via `persons:search`). Used by families (partner selection), events (person link), citations (person link). |
-| `src/renderer/components/DateInput.vue` | Compound input: date_type dropdown (exact/about/before/after/between/calculated/unknown) + date_value + date_value_end (for "between") + date_original text field. |
-| `src/renderer/components/EventForm.vue` | Modal dialog for creating/editing events. Fields: event_type (GEDCOM dropdown), DateInput, place, description. Props: personId or familyId. |
-| `src/renderer/components/EventList.vue` | Compact table of events for a person or family. Columns: type, date, place, description. Add/edit/delete buttons. |
-| `src/renderer/components/CitationForm.vue` | Modal dialog for creating citations. Fields: source picker, page, confidence (0-3 with labels), date_accessed, transcription, notes, linked event or person. |
-| `src/renderer/constants/eventTypes.ts` | Constants defining all GEDCOM event types with labels, split into person events and family events. |
-
-### Views to Build
-
-| View | Route | Description |
-|------|-------|-------------|
-| `PersonDetailView.vue` | `/persons/:id` | Header (name + sex + living), names list (add/edit/delete), events (EventList), families this person belongs to, citations, notes |
-| `FamilyDetailView.vue` | `/families/:id` | Partners (PersonPicker), union type, children list (PersonPicker + relationship_type), family events (EventList) |
-| `SourceDetailView.vue` | `/sources/:id` | Editable fields (title, author, etc.), citations list with confidence labels, "Add Citation" button |
-
-### Views to Update
-
-| View | Changes |
-|------|---------|
-| `PersonsView.vue` | Replace `prompt()` with modal form (given_name, surname, sex, living, notes). Make rows clickable → `/persons/:id`. Add sex + living columns. |
-| `FamiliesView.vue` | Replace hardcoded create with modal form (union_type, partner_a, partner_b via PersonPicker, notes). Make rows clickable → `/families/:id`. Show partner names. |
-| `SourcesView.vue` | Replace `prompt()` with full form (title, author, publication_info, repository, url, source_type). Make rows clickable → `/sources/:id`. |
-| `router.ts` | Add routes: `/persons/:id`, `/families/:id`, `/sources/:id` |
-
-### Verification Plan
-
-1. `npm test` — all 30 existing unit tests still pass
-2. `npm start` — app launches, all three list views render
-3. **Person flow**: Add Person → fill form → appears in list → click → detail view → add event (birth with date) → add name (married name)
-4. **Family flow**: Add Family → pick partners + union type → click → detail → add child → add marriage event
-5. **Source flow**: Add Source → fill all fields → click → detail → add citation with confidence + transcription
-6. **Cross-linking**: Create person + birth event → create source → add citation linking source to birth event
+- [x] **Shared components**: PersonPicker (typeahead search), DateInput (compound date with type/value/end/original), EventForm (modal create/edit), EventList (table with CRUD), CitationForm (modal with confidence levels)
+- [x] **Constants**: GEDCOM event types (22 types, person vs family split), date types, confidence levels, source types, union types, relationship types, name types
+- [x] **PersonDetailView** (`/persons/:id`): Header with sex badge + deceased indicator, names list (add/edit with name_type), EventList, families section (with partner name enrichment), notes (auto-save)
+- [x] **FamilyDetailView** (`/families/:id`): Partners with PersonPicker (auto-save), union type/notes, children list (PersonPicker + relationship_type), family EventList
+- [x] **SourceDetailView** (`/sources/:id`): Editable field grid (auto-save), citations table with confidence badges, CitationForm
+- [x] **PersonsView updated**: Modal form (given_name, surname, sex, living, notes), clickable rows → detail, sex + living columns
+- [x] **FamiliesView updated**: Modal with PersonPicker for partners + union_type, clickable rows → detail, partner names in table
+- [x] **SourcesView updated**: Full form modal (title, author, source_type, publication_info, repository, url), clickable rows → detail
+- [x] **Router**: Added `/persons/:id`, `/families/:id`, `/sources/:id` detail routes
+- [x] All 30 unit tests passing, app launches correctly
 
 ---
 

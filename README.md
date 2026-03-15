@@ -9,6 +9,9 @@ A cross-platform desktop genealogy application. Store, organize, and research yo
 - **Cross-platform** — Runs on macOS, Windows, and Linux
 - **Agent-friendly** — Built-in MCP server lets AI agents read and write genealogy data
 - **Research-grade data model** — Supports the Genealogical Proof Standard with proper source → citation → assertion separation
+- **GEDCOM-aligned events** — Birth, death, marriage, divorce, christening, burial, census, immigration, emigration, naturalization, occupation, residence, education, military, and more
+- **Flexible dates** — Exact, approximate, before, after, between, and unknown date types with original source text preserved
+- **Source citations** — Link sources to events or persons with confidence levels (0–3) and verbatim transcriptions
 
 ## Quick Start
 
@@ -20,7 +23,11 @@ npm install
 npm start
 ```
 
-The app opens with a sidebar navigation for Persons, Families, and Sources. Use **Cmd+N** (macOS) or **Ctrl+N** (Windows/Linux) to open additional windows.
+The app opens with a sidebar navigation for **Persons**, **Families**, and **Sources**.
+
+- **Click "Add Person/Family/Source"** to open a form dialog
+- **Click any row** to open its detail view (events, names, children, citations)
+- **Cmd+N** (macOS) or **Ctrl+N** (Windows/Linux) to open additional windows
 
 ## Data Model
 
@@ -91,17 +98,20 @@ npx playwright test   # E2E tests (app launch + MCP server)
 
 ```
 src/
-├── api/        # Business logic (pure TypeScript, no Electron deps)
-├── main/       # Electron main process (windows, database, IPC)
-├── preload/    # Context bridge (renderer ↔ main)
-├── renderer/   # Vue 3 UI
-└── mcp/        # MCP server for agent access
+├── api/              # Business logic (pure TypeScript, no Electron deps)
+├── main/             # Electron main process (windows, database, IPC)
+├── preload/          # Context bridge (renderer ↔ main)
+├── renderer/
+│   ├── views/        # List views + detail views (Person, Family, Source)
+│   ├── components/   # Shared: PersonPicker, DateInput, EventForm/List, CitationForm
+│   └── constants/    # GEDCOM event types, date types, confidence levels
+└── mcp/              # MCP server for agent access
 .claude/
-├── SPEC.md     # Product spec and design decisions
-└── skills/     # Claude skills for genealogy research
+├── SPEC.md           # Product spec, roadmap, implementation status
+└── skills/           # Claude skills (commit, test, electron-dev, mcp-dev, domain)
 tests/
-├── unit/       # Vitest API layer tests
-└── e2e/        # Playwright smoke tests
+├── unit/             # Vitest API layer tests
+└── e2e/              # Playwright smoke tests
 ```
 
 ## Documentation
