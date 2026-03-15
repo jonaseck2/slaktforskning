@@ -46,7 +46,11 @@ const persons = ref<PersonRow[]>([]);
 
 async function load() {
   if (!window.api) return;
-  persons.value = await window.api.persons.list() as PersonRow[];
+  try {
+    persons.value = await window.api.persons.list() as PersonRow[];
+  } catch (err) {
+    console.error('[PersonsView] load failed:', err);
+  }
 }
 
 async function addPerson() {
@@ -54,14 +58,22 @@ async function addPerson() {
   const given = prompt('Given name:');
   if (!given) return;
   const surname = prompt('Surname:');
-  await window.api.persons.create({ given_name: given, surname: surname ?? '' });
-  await load();
+  try {
+    await window.api.persons.create({ given_name: given, surname: surname ?? '' });
+    await load();
+  } catch (err) {
+    console.error('[PersonsView] addPerson failed:', err);
+  }
 }
 
 async function removePerson(id: string) {
   if (!window.api) return;
-  await window.api.persons.delete(id);
-  await load();
+  try {
+    await window.api.persons.delete(id);
+    await load();
+  } catch (err) {
+    console.error('[PersonsView] removePerson failed:', err);
+  }
 }
 
 onMounted(load);

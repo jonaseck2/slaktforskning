@@ -46,21 +46,33 @@ const sourceList = ref<SourceRow[]>([]);
 
 async function load() {
   if (!window.api) return;
-  sourceList.value = await window.api.sources.list() as SourceRow[];
+  try {
+    sourceList.value = await window.api.sources.list() as SourceRow[];
+  } catch (err) {
+    console.error('[SourcesView] load failed:', err);
+  }
 }
 
 async function addSource() {
   if (!window.api) return;
   const title = prompt('Source title:');
   if (!title) return;
-  await window.api.sources.create({ title });
-  await load();
+  try {
+    await window.api.sources.create({ title });
+    await load();
+  } catch (err) {
+    console.error('[SourcesView] addSource failed:', err);
+  }
 }
 
 async function removeSource(id: string) {
   if (!window.api) return;
-  await window.api.sources.delete(id);
-  await load();
+  try {
+    await window.api.sources.delete(id);
+    await load();
+  } catch (err) {
+    console.error('[SourcesView] removeSource failed:', err);
+  }
 }
 
 onMounted(load);

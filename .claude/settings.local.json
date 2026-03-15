@@ -49,7 +49,15 @@
       "Bash(rm -rf \"/Users/jonasahnstedt/Library/Application Support/Släktforskning/slaktforskning.db\" \"/Users/jonasahnstedt/Library/Application Support/Släktforskning/slaktforskning.db.lock\")",
       "Bash(git add .claude/settings.local.json src/main/database.ts src/mcp/server.ts)",
       "Bash(database file\" or \"database is locked\" errors.:*)",
-      "Bash(ls /Users/jonasahnstedt/git/slaktforskning/.git/*.lock)"
+      "Bash(ls /Users/jonasahnstedt/git/slaktforskning/.git/*.lock)",
+      "mcp__slaktforskning__create_person",
+      "mcp__slaktforskning__create_family",
+      "mcp__slaktforskning__list_persons",
+      "Bash(pkill -f \"electron-forge\")",
+      "Bash(pkill -f \"Släktforskning\")",
+      "Bash(lsof -i :5172 -i :5173 -i :5174)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(lsof -i :5173)"
     ]
   }
 }

@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   build: {
+    emptyOutDir: false,
     rollupOptions: {
       external: [
         'electron',

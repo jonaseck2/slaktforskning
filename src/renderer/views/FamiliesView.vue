@@ -43,19 +43,31 @@ const families = ref<FamilyRow[]>([]);
 
 async function load() {
   if (!window.api) return;
-  families.value = await window.api.families.list() as FamilyRow[];
+  try {
+    families.value = await window.api.families.list() as FamilyRow[];
+  } catch (err) {
+    console.error('[FamiliesView] load failed:', err);
+  }
 }
 
 async function addFamily() {
   if (!window.api) return;
-  await window.api.families.create({ union_type: 'unknown' });
-  await load();
+  try {
+    await window.api.families.create({ union_type: 'unknown' });
+    await load();
+  } catch (err) {
+    console.error('[FamiliesView] addFamily failed:', err);
+  }
 }
 
 async function removeFamily(id: string) {
   if (!window.api) return;
-  await window.api.families.delete(id);
-  await load();
+  try {
+    await window.api.families.delete(id);
+    await load();
+  } catch (err) {
+    console.error('[FamiliesView] removeFamily failed:', err);
+  }
 }
 
 onMounted(load);
