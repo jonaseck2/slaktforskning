@@ -1,4 +1,4 @@
-# Product Spec: Släktforskning
+# Plan: Släktforskning
 
 ## Vision
 
@@ -31,34 +31,6 @@ A local-first, cross-platform desktop genealogy application that gives researche
 - **Prisma / Drizzle ORM** — Rejected in favor of raw SQL for simplicity and full control over genealogy-specific queries.
 - **PostgreSQL** — Rejected: local-first goal means no server process. SQLite is the right fit.
 
-## Data Model
-
-The schema follows the Genealogical Proof Standard. Core entities:
-
-```
-persons ──── person_names (1:many — birth, married, alias, aka)
-         ├── events (1:many — birth, death, baptism, etc.)
-         └── person_family_links (many) ──► families
-                                               ├── partner_a (person)
-                                               ├── partner_b (person)
-                                               └── events (marriage, divorce, etc.)
-
-sources ──── citations (1:many)
-                 └── linked to events or persons
-                     with confidence (0-3) and verbatim transcription
-
-places (hierarchical, with optional lat/lng)
-```
-
-### Key Design Decisions
-
-- **Multiple names per person** — People change names (marriage, adoption, immigration). Each name has a type and optional date range.
-- **Gender-neutral partnerships** — Families use `partner_a` / `partner_b`, not husband/wife.
-- **Relationship types on child links** — biological, adopted, foster, step, unknown.
-- **Flexible dates** — `date_type` (exact/about/before/after/between/calculated/unknown) + `date_original` preserves what the source actually says.
-- **UUIDs for all IDs** — No auto-increment; safe for merge/sync scenarios.
-- **Confidence on citations** — 0-3 scale matching GEDCOM's QUAY (quality assessment).
-
 ## Architecture
 
 ```
@@ -70,78 +42,6 @@ src/mcp/     → MCP server (standalone, same API layer)
 ```
 
 **Key principle:** `src/api/` is the single source of truth. Both the Electron IPC handlers and the MCP server call the same functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
-
-## GEDCOM Compatibility
-
-The data model is designed for GEDCOM roundtrip fidelity:
-
-| App Entity | GEDCOM 5.5.1 | GEDCOM 7.0 |
-|-----------|-------------|-----------|
-| Person | INDI | INDIVIDUAL_RECORD |
-| PersonName | INDI.NAME | INDIVIDUAL_RECORD.PERSONAL_NAME |
-| Family | FAM | FAMILY_RECORD |
-| PersonFamilyLink | FAM.CHIL + INDI.FAMC | FAMILY_RECORD.CHIL |
-| Event | INDI.BIRT/DEAT/etc, FAM.MARR/etc | EVENT_DETAIL |
-| Place | PLAC | PLACE |
-| Source | SOUR (level 0) | SOURCE_RECORD |
-| Citation | SOUR (inline) | SOURCE_CITATION |
-
-See the `gedcom` skill in `.claude/skills/gedcom/` for full GEDCOM reference.
-
-### GEDCOM Event Types
-
-The app should support these standard GEDCOM individual events:
-- **Vital:** birth, death, christening, burial, baptism
-- **Legal/civic:** immigration, emigration, naturalization, census
-- **Life milestones:** occupation, residence, education, military service, retirement, graduation
-- **Religious:** confirmation, ordination
-- **Estate:** will, probate
-- **Other:** custom/other
-
-Family events: marriage, divorce, census, other.
-
-Date qualifiers: exact, about, before, after, between, calculated, unknown — plus `date_original` to preserve source text verbatim (e.g., "abt. 1845", "before Christmas 1900").
-
-## MCP Server Tools
-
-The MCP server runs standalone (`npx tsx src/mcp/server.ts`) and provides:
-
-### Data tools
-
-| Tool | Description |
-|------|-------------|
-| create_person | Create person with name and sex |
-| get_person | Get person by ID |
-| list_persons | List all persons |
-| search_persons | Search by name |
-| update_person | Update sex, living, notes |
-| delete_person | Delete a person |
-| create_family | Create family unit with partners |
-| add_child_to_family | Link a child to a family |
-| list_families | List all families |
-| add_event | Add life event (birth, death, etc.) |
-| get_events_for_person | Get events for a person |
-| add_source | Create a source record |
-| add_citation | Link source to event/person |
-| list_sources | List all sources |
-
-The server shares the same SQLite database as the Electron app. Override the DB path with `SLAKTFORSKNING_DB` env var.
-
-### UI tools (requires Electron app to be running)
-
-When the Electron app is running, it starts a local HTTP server on port 19241 (override with `SLAKTFORSKNING_UI_PORT`). The MCP server's UI tools call this HTTP bridge to observe and control the live app window.
-
-| Tool | Description |
-|------|-------------|
-| ui_screenshot | Capture the current window as a PNG image |
-| ui_navigate | Navigate to a route path (e.g. `/search?q=Erik`) |
-| ui_get_dom | Get the full rendered HTML of the current view |
-| ui_click | Click an element by CSS selector |
-| ui_execute_js | Run arbitrary JavaScript in the renderer and return the result |
-
-**Design:** The Electron main process starts an HTTP server (`src/main/ui-server.ts`) that wraps `webContents` APIs. The standalone MCP server calls `http://127.0.0.1:19241` for UI operations. If the app is not running, UI tools return a descriptive error. The renderer exposes `window.__vue_router` so `ui_navigate` can push Vue Router routes cleanly.
-
-This enables agentic GUI testing workflows: seed data with data tools → navigate to the relevant view → assert the rendered DOM or screenshot matches expectations.
 
 ---
 
@@ -165,20 +65,6 @@ This enables agentic GUI testing workflows: seed data with data tools → naviga
 - [x] Renderer build output included in packaged app (asar)
 - [x] Debug logging in IPC handlers
 
-### Done (v0.2.1 — Global Search)
-
-- [x] `searchFamilies` and `searchSources` API functions
-- [x] `families:search` and `sources:search` IPC channels + preload
-- [x] `/search` route with `SearchView.vue` — results in three sections (Persons, Families, Sources)
-- [x] Sidebar search input in `App.vue` navigates to `/search?q=...` on Enter
-
-### Done (v0.2.2 — MCP UI Tools)
-
-- [x] `src/main/ui-server.ts` — HTTP server (port 19241) wrapping `webContents` APIs
-- [x] UI tools in MCP server: `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
-- [x] `window.__vue_router` exposed in renderer for clean route pushes
-- [x] Graceful error when app is not running
-
 ### Done (v0.2.0 — Genealogy Data Entry UI)
 
 Replaced `prompt()` dialogs with proper form-based data entry exposing the full GEDCOM-aligned data model.
@@ -194,11 +80,29 @@ Replaced `prompt()` dialogs with proper form-based data entry exposing the full 
 - [x] **Router**: Added `/persons/:id`, `/families/:id`, `/sources/:id` detail routes
 - [x] All 30 unit tests passing, app launches correctly
 
+### Done (v0.2.1 — Global Search)
+
+- [x] `searchFamilies` and `searchSources` API functions
+- [x] `families:search` and `sources:search` IPC channels + preload
+- [x] `/search` route with `SearchView.vue` — results in three sections (Persons, Families, Sources)
+- [x] Sidebar search input in `App.vue` navigates to `/search?q=...` on Enter
+
+### Done (v0.2.2 — MCP UI Tools)
+
+- [x] `src/main/ui-server.ts` — HTTP server (port 19241) wrapping `webContents` APIs
+- [x] UI tools in MCP server: `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
+- [x] `window.__vue_router` exposed in renderer for clean route pushes
+- [x] Graceful error when app is not running
+
 ---
 
-## Future Roadmap
+## Roadmap
 
-### v0.3.0 — Add Related Person from Detail View
+### v0.3.0 — Research-Focused Data Entry
+
+Two features that make the app research-grade: adding related persons in context, and making evidence visible everywhere.
+
+#### Add Related Person from Detail View
 
 The primary workflow in genealogy research is: you're looking at a person and you discover a related person (parent, spouse, child) in a source. You want to add that person *and* the relationship in one action, not create the person separately and then wire up the family.
 
@@ -217,6 +121,39 @@ Each action opens a modal with:
 On save, both the person and the family link are created in a single transaction, and the detail view refreshes.
 
 This replaces the current workflow of: navigate to Persons list → Add Person → navigate back → navigate to Families → create/find family → add the person as partner/child.
+
+#### Evidence Visibility & Citation Affordances
+
+The data model already supports Source → Citation → Event/Person linking, but the GUI hides this. Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
+
+**Unsourced indicators**
+
+- Events in `EventList` show a citation count badge (e.g. "2 sources") or an "unsourced" warning indicator when no citations exist for that event.
+- `PersonDetailView` shows an overall evidence summary: how many events are sourced vs. unsourced.
+- `FamilyDetailView` shows the same for family events.
+
+**"Cite" action on events**
+
+- Each event row in `EventList` gets a "Cite" button that opens `CitationForm` pre-linked to that event's `event_id`.
+- After saving, the citation count badge updates immediately.
+
+**"Cite" action on persons**
+
+- `PersonDetailView` gets a "Cite Person" button (for general identity citations not tied to a specific event).
+- Opens `CitationForm` with the `person_id` pre-filled.
+
+**Citation list on detail views**
+
+- `PersonDetailView` shows a "Citations" section listing all citations linked to the person (both directly via `person_id` and indirectly via their events).
+- Clicking a citation navigates to the source detail view.
+
+**Optional source prompt on event creation**
+
+- `EventForm` includes an optional "Source" section at the bottom: source picker + page/transcription fields.
+- When filled, creating the event also creates a citation in one step.
+- When left empty, the event is created without a citation (but shows the "unsourced" indicator).
+
+This ensures the GUI encourages evidence-based research without blocking data entry when a source isn't immediately at hand.
 
 ### v0.4.0 — Visualization & Navigation
 - [ ] Family tree visualization (pedigree chart, descendant chart)
