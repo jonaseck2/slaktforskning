@@ -25,6 +25,11 @@ async function main() {
   const dir = path.dirname(dbPath);
   const fs = await import('node:fs');
   fs.mkdirSync(dir, { recursive: true });
+  // Clean up stale Emscripten lock directories from crashed runs
+  const lockPath = dbPath + '.lock';
+  if (fs.existsSync(lockPath) && fs.statSync(lockPath).isDirectory()) {
+    fs.rmSync(lockPath, { recursive: true });
+  }
 
   const db = new Database(dbPath);
   initializeSchema(db);

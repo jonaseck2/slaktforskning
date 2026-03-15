@@ -44,7 +44,12 @@
       "Bash(node -e \":*)",
       "Bash(git add .claude/SPEC.md .claude/napkin.md .claude/settings.local.json CLAUDE.md README.md forge.config.ts package-lock.json package.json src/api/events.ts src/api/families.ts src/api/persons.ts src/api/schema.ts src/api/sources.ts src/main/database.ts src/mcp/server.ts tests/unit/helpers.ts vite.main.config.ts)",
       "Bash(npm run package)",
-      "Bash(npx asar list \"/Users/jonasahnstedt/git/slaktforskning/out/Släktforskning-darwin-arm64/Släktforskning.app/Contents/Resources/app.asar\")"
+      "Bash(npx asar list \"/Users/jonasahnstedt/git/slaktforskning/out/Släktforskning-darwin-arm64/Släktforskning.app/Contents/Resources/app.asar\")",
+      "Bash(lsof \"/Users/jonasahnstedt/Library/Application Support/Släktforskning/slaktforskning.db\")",
+      "Bash(rm -rf \"/Users/jonasahnstedt/Library/Application Support/Släktforskning/slaktforskning.db\" \"/Users/jonasahnstedt/Library/Application Support/Släktforskning/slaktforskning.db.lock\")",
+      "Bash(git add .claude/settings.local.json src/main/database.ts src/mcp/server.ts)",
+      "Bash(database file\" or \"database is locked\" errors.:*)",
+      "Bash(ls /Users/jonasahnstedt/git/slaktforskning/.git/*.lock)"
     ]
   }
 }
