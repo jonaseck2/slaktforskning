@@ -71,38 +71,6 @@ src/mcp/     → MCP server (standalone, same API layer)
 
 **Key principle:** `src/api/` is the single source of truth. Both the Electron IPC handlers and the MCP server call the same functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
 
-## Current State (v0.1.0)
-
-### Implemented
-
-- [x] SQLite database with full schema (persons, names, families, links, events, places, sources, citations)
-- [x] API layer with CRUD for all entities
-- [x] Electron app with multi-window support (Cmd/Ctrl+N)
-- [x] Vue 3 renderer with sidebar navigation
-- [x] Views for Persons, Families, Sources (basic list + create forms)
-- [x] IPC bridge connecting renderer to API layer
-- [x] MCP server with 14 tools covering all CRUD operations
-- [x] Unit tests (30 tests, Vitest) covering the full API layer
-- [x] E2E tests (Playwright) for app launch and MCP server connectivity
-- [x] Project documentation (CLAUDE.md for agents, README.md for humans)
-
-### Not Yet Implemented
-
-- [ ] Person detail view (timeline of events, family connections)
-- [ ] Family tree visualization (pedigree chart, descendant chart)
-- [ ] Place management UI and place autocomplete
-- [ ] GEDCOM 5.5.1 import/export
-- [ ] GEDCOM 7.0 support
-- [ ] Media attachments (photos, documents)
-- [ ] Assertion layer (Source → Citation → Assertion, per Genealogical Proof Standard)
-- [ ] Search across all entities
-- [ ] Merge/deduplicate persons
-- [ ] Print/export reports
-- [ ] Keyboard navigation and accessibility
-- [ ] Data backup and restore
-- [ ] Undo/redo
-- [ ] Dark mode
-
 ## GEDCOM Compatibility
 
 The data model is designed for GEDCOM roundtrip fidelity:
@@ -119,6 +87,20 @@ The data model is designed for GEDCOM roundtrip fidelity:
 | Citation | SOUR (inline) | SOURCE_CITATION |
 
 See the `gedcom` skill in `.claude/skills/gedcom/` for full GEDCOM reference.
+
+### GEDCOM Event Types
+
+The app should support these standard GEDCOM individual events:
+- **Vital:** birth, death, christening, burial, baptism
+- **Legal/civic:** immigration, emigration, naturalization, census
+- **Life milestones:** occupation, residence, education, military service, retirement, graduation
+- **Religious:** confirmation, ordination
+- **Estate:** will, probate
+- **Other:** custom/other
+
+Family events: marriage, divorce, census, other.
+
+Date qualifiers: exact, about, before, after, between, calculated, unknown — plus `date_original` to preserve source text verbatim (e.g., "abt. 1845", "before Christmas 1900").
 
 ## MCP Server Tools
 
@@ -142,3 +124,113 @@ The MCP server runs standalone (`npx tsx src/mcp/server.ts`) and provides:
 | list_sources | List all sources |
 
 The server shares the same SQLite database as the Electron app. Override the DB path with `SLAKTFORSKNING_DB` env var.
+
+---
+
+## Implementation Status
+
+### Done (v0.1.0)
+
+- [x] SQLite database with full schema (persons, names, families, links, events, places, sources, citations)
+- [x] API layer with CRUD for all entities (persons, families, events, sources, citations, places)
+- [x] Electron app with multi-window support (Cmd/Ctrl+N)
+- [x] Vue 3 renderer with sidebar navigation (Persons, Families, Sources)
+- [x] IPC bridge connecting renderer to API layer (all channels wired)
+- [x] MCP server with 14 tools covering all CRUD operations
+- [x] Unit tests (30 tests, Vitest) covering the full API layer
+- [x] E2E tests (Playwright) for app launch and MCP server connectivity
+- [x] Project documentation (CLAUDE.md for agents, README.md for humans)
+- [x] Migrated from better-sqlite3 to node-sqlite3-wasm (no more native rebuild issues)
+- [x] WASM loading works in both dev and packaged builds
+- [x] Stale Emscripten lock file cleanup on database open
+- [x] Preload script filename collision fixed (preload.js vs index.js)
+- [x] Renderer build output included in packaged app (asar)
+- [x] Debug logging in IPC handlers
+
+### Current UI Limitations (what needs fixing)
+
+The three existing views use bare `prompt()` dialogs and only capture a fraction of each entity's fields:
+
+- **PersonsView** — `prompt()` for given_name + surname only. No sex, living, notes. No click-through to detail.
+- **FamiliesView** — Creates with hardcoded `union_type: 'unknown'`. No partner selection, no children UI. No click-through.
+- **SourcesView** — `prompt()` for title only. No author, publication_info, repository, URL, source_type. No click-through.
+- **No Events UI** — Events exist in the API/schema but have zero UI exposure.
+- **No Citations UI** — Citations exist in the API/schema but have zero UI exposure.
+- **No Place management UI** — Places exist in the schema but have zero UI exposure.
+- **No detail/edit views** — Only list + delete. Cannot view or edit an individual record.
+
+---
+
+## Next Up: Genealogy Data Entry UI (v0.2.0)
+
+Replace the minimal `prompt()` dialogs with proper form-based data entry that exposes the full GEDCOM-aligned data model.
+
+### Design Principles
+
+1. **Modal dialogs for create/edit** — Stay in context, no page navigation for simple operations
+2. **Progressive disclosure** — Essential fields first, optional fields in expandable sections
+3. **No new dependencies** — Native HTML form elements, no UI framework
+4. **Reuse existing IPC** — All channels already wired, just need Vue components to call them
+
+### Shared Components to Build
+
+| Component | Purpose |
+|-----------|---------|
+| `src/renderer/components/PersonPicker.vue` | Searchable dropdown to select an existing person (typeahead via `persons:search`). Used by families (partner selection), events (person link), citations (person link). |
+| `src/renderer/components/DateInput.vue` | Compound input: date_type dropdown (exact/about/before/after/between/calculated/unknown) + date_value + date_value_end (for "between") + date_original text field. |
+| `src/renderer/components/EventForm.vue` | Modal dialog for creating/editing events. Fields: event_type (GEDCOM dropdown), DateInput, place, description. Props: personId or familyId. |
+| `src/renderer/components/EventList.vue` | Compact table of events for a person or family. Columns: type, date, place, description. Add/edit/delete buttons. |
+| `src/renderer/components/CitationForm.vue` | Modal dialog for creating citations. Fields: source picker, page, confidence (0-3 with labels), date_accessed, transcription, notes, linked event or person. |
+| `src/renderer/constants/eventTypes.ts` | Constants defining all GEDCOM event types with labels, split into person events and family events. |
+
+### Views to Build
+
+| View | Route | Description |
+|------|-------|-------------|
+| `PersonDetailView.vue` | `/persons/:id` | Header (name + sex + living), names list (add/edit/delete), events (EventList), families this person belongs to, citations, notes |
+| `FamilyDetailView.vue` | `/families/:id` | Partners (PersonPicker), union type, children list (PersonPicker + relationship_type), family events (EventList) |
+| `SourceDetailView.vue` | `/sources/:id` | Editable fields (title, author, etc.), citations list with confidence labels, "Add Citation" button |
+
+### Views to Update
+
+| View | Changes |
+|------|---------|
+| `PersonsView.vue` | Replace `prompt()` with modal form (given_name, surname, sex, living, notes). Make rows clickable → `/persons/:id`. Add sex + living columns. |
+| `FamiliesView.vue` | Replace hardcoded create with modal form (union_type, partner_a, partner_b via PersonPicker, notes). Make rows clickable → `/families/:id`. Show partner names. |
+| `SourcesView.vue` | Replace `prompt()` with full form (title, author, publication_info, repository, url, source_type). Make rows clickable → `/sources/:id`. |
+| `router.ts` | Add routes: `/persons/:id`, `/families/:id`, `/sources/:id` |
+
+### Verification Plan
+
+1. `npm test` — all 30 existing unit tests still pass
+2. `npm start` — app launches, all three list views render
+3. **Person flow**: Add Person → fill form → appears in list → click → detail view → add event (birth with date) → add name (married name)
+4. **Family flow**: Add Family → pick partners + union type → click → detail → add child → add marriage event
+5. **Source flow**: Add Source → fill all fields → click → detail → add citation with confidence + transcription
+6. **Cross-linking**: Create person + birth event → create source → add citation linking source to birth event
+
+---
+
+## Future Roadmap
+
+### v0.3.0 — Visualization & Navigation
+- [ ] Family tree visualization (pedigree chart, descendant chart)
+- [ ] Search across all entities (persons, families, sources, events)
+- [ ] Place management UI and place autocomplete
+
+### v0.4.0 — GEDCOM Import/Export
+- [ ] GEDCOM 5.5.1 import
+- [ ] GEDCOM 5.5.1 export
+- [ ] GEDCOM 7.0 support
+
+### v0.5.0 — Research Tools
+- [ ] Assertion layer (Source → Citation → Assertion, per Genealogical Proof Standard)
+- [ ] Merge/deduplicate persons
+- [ ] Media attachments (photos, documents)
+
+### v0.6.0 — Polish
+- [ ] Print/export reports (ancestor charts, family group sheets)
+- [ ] Keyboard navigation and accessibility
+- [ ] Data backup and restore
+- [ ] Undo/redo
+- [ ] Dark mode
