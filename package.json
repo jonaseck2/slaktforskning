@@ -10,7 +10,10 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "test": "npm rebuild better-sqlite3 && vitest run",
+    "test:watch": "npm rebuild better-sqlite3 && vitest",
+    "test:e2e": "npx electron-rebuild -f -w better-sqlite3 && playwright test"
   },
   "keywords": [],
   "author": {
@@ -28,6 +31,8 @@
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
     "@electron/fuses": "^1.8.0",
+    "@electron/rebuild": "^3.7.2",
+    "@playwright/test": "^1.58.2",
     "@types/better-sqlite3": "^7.6.13",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/uuid": "^10.0.0",
@@ -37,9 +42,11 @@
     "electron": "41.0.2",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
+    "playwright": "^1.58.2",
     "tsx": "^4.21.0",
     "typescript": "~4.5.4",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

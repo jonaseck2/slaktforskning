@@ -15,7 +15,7 @@ export function createSource(
 }
 
 export function getSource(db: Database.Database, id: string): Source | null {
-  return db.prepare(`SELECT * FROM sources WHERE id = ?`).get(id) as Source | null;
+  return (db.prepare(`SELECT * FROM sources WHERE id = ?`).get(id) as Source) ?? null;
 }
 
 export function listSources(db: Database.Database): Source[] {
@@ -60,7 +60,7 @@ export function createCitation(
 }
 
 export function getCitation(db: Database.Database, id: string): Citation | null {
-  return db.prepare(`SELECT * FROM citations WHERE id = ?`).get(id) as Citation | null;
+  return (db.prepare(`SELECT * FROM citations WHERE id = ?`).get(id) as Citation) ?? null;
 }
 
 export function getCitationsForSource(db: Database.Database, sourceId: string): Citation[] {
