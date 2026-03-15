@@ -58,7 +58,14 @@
       "Bash(lsof -i :5172 -i :5173 -i :5174)",
       "Bash(pkill -f \"vite\")",
       "Bash(lsof -i :5173)",
-      "Bash(pkill -f \"node.*5173\")"
+      "Bash(pkill -f \"node.*5173\")",
+      "Bash(npx tsc --noEmit --project tsconfig.json)",
+      "Bash(pkill -f \"Electron\")",
+      "Bash(git add -A)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "slaktforskning"
+  ]
 }
