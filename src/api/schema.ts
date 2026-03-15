@@ -1,8 +1,8 @@
-import type Database from 'better-sqlite3';
+import type { Database } from 'node-sqlite3-wasm';
 
-export function initializeSchema(db: Database.Database): void {
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+export function initializeSchema(db: Database): void {
+  db.exec('PRAGMA journal_mode = WAL');
+  db.exec('PRAGMA foreign_keys = ON');
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS persons (

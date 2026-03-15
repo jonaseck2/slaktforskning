@@ -19,7 +19,7 @@ A local-first, cross-platform desktop genealogy application that gives researche
 | Desktop framework | Electron 41 | Rich ecosystem, agent-friendly (Playwright/DevTools), cross-platform, mature |
 | Frontend | Vue 3 + Pinia | Lightweight, good TS support, less opinionated than React for a desktop app |
 | Build system | Electron Forge + Vite | Official Electron tooling, fast HMR, good native module support |
-| Database | SQLite via better-sqlite3 | Zero-config, single-file, embeddable, synchronous API for simplicity |
+| Database | SQLite via node-sqlite3-wasm | Zero-config, single-file, WASM-based — no native rebuild needed for Electron vs system Node |
 | Agent interface | MCP (stdio transport) | Standard protocol for AI tool use; Claude, GPT, etc. can call it directly |
 | Language | TypeScript throughout | Single language for main process, renderer, API layer, and MCP server |
 
@@ -27,7 +27,8 @@ A local-first, cross-platform desktop genealogy application that gives researche
 
 - **Tauri** — Smaller binary, Rust backend. Rejected: less mature agent tooling (no Playwright for WebView2), smaller ecosystem.
 - **React** — More popular but heavier; Vue's Composition API fits the desktop UI better.
-- **Prisma / Drizzle ORM** — Rejected in favor of raw better-sqlite3 for simplicity and full control over genealogy-specific queries.
+- **better-sqlite3** — Native C++ addon with excellent performance, but requires recompilation when switching between system Node and Electron's Node fork. Replaced with node-sqlite3-wasm to eliminate the constant rebuild problem.
+- **Prisma / Drizzle ORM** — Rejected in favor of raw SQL for simplicity and full control over genealogy-specific queries.
 - **PostgreSQL** — Rejected: local-first goal means no server process. SQLite is the right fit.
 
 ## Data Model

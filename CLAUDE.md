@@ -11,7 +11,7 @@ Släktforskning is a cross-platform desktop genealogy application built with Ele
 - **Runtime:** Electron 41 (Chromium + Node.js)
 - **Frontend:** Vue 3 + Vue Router + Pinia (state management)
 - **Build:** Electron Forge + Vite
-- **Database:** SQLite via better-sqlite3 (WAL mode, foreign keys enabled)
+- **Database:** SQLite via node-sqlite3-wasm (WAL mode, foreign keys enabled)
 - **MCP Server:** @modelcontextprotocol/sdk (stdio transport)
 - **Language:** TypeScript throughout
 
@@ -86,7 +86,7 @@ tests/unit/
 └── sources.test.ts    # Sources + citations
 ```
 
-Run with `npm test`. The test script rebuilds better-sqlite3 for system Node before running.
+Run with `npm test`.
 
 ### E2E Tests (Playwright)
 
@@ -97,11 +97,9 @@ E2E tests live in `tests/e2e/` and verify the app launches and the MCP server re
 
 Run with `npx playwright test`.
 
-### Native Module Note
+### SQLite Note
 
-better-sqlite3 is a native C++ addon. It must be compiled for the correct Node version:
-- **Unit tests:** `npm rebuild better-sqlite3` (compiles for system Node)
-- **Electron app:** `npx electron-rebuild -f -w better-sqlite3` (compiles for Electron's Node)
+The project uses `node-sqlite3-wasm` (pure WebAssembly) instead of `better-sqlite3` (native C++ addon). This eliminates the need to rebuild native modules when switching between system Node and Electron — the same WASM binary works in both environments. Key API difference: parameter binding uses arrays (`stmt.run([a, b])`) instead of spread args (`stmt.run(a, b)`).
 
 ## MCP Server
 

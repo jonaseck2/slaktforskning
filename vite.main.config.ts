@@ -6,14 +6,13 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'electron',
-        'better-sqlite3',
+        'node-sqlite3-wasm',
         ...builtinModules,
         ...builtinModules.map((m) => `node:${m}`),
       ],
     },
   },
   resolve: {
-    // Ensure better-sqlite3 bindings can resolve
     conditions: ['node'],
   },
 });
