@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import Database from 'better-sqlite3';
+import { Database } from 'node-sqlite3-wasm';
 import path from 'node:path';
 import os from 'node:os';
 import { initializeSchema } from '../api/schema';

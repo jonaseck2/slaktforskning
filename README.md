@@ -76,7 +76,7 @@ npm run make
 | Desktop shell | Electron 41 |
 | Frontend | Vue 3 + Vue Router + Pinia |
 | Build | Electron Forge + Vite |
-| Database | SQLite (better-sqlite3) |
+| Database | SQLite (node-sqlite3-wasm) |
 | Agent interface | MCP (stdio) |
 | Language | TypeScript |
 
