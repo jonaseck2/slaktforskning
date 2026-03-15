@@ -61,7 +61,8 @@
       "Bash(pkill -f \"node.*5173\")",
       "Bash(npx tsc --noEmit --project tsconfig.json)",
       "Bash(pkill -f \"Electron\")",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(gh api repos/anthropics/skills/contents/skills --jq '.[].name')"
     ]
   },
   "enableAllProjectMcpServers": true,
