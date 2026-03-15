@@ -28,6 +28,8 @@ function createWindow(): BrowserWindow {
     );
   }
 
+  win.webContents.openDevTools();
+
   return win;
 }
 
