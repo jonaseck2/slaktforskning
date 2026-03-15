@@ -42,15 +42,18 @@ interface FamilyRow {
 const families = ref<FamilyRow[]>([]);
 
 async function load() {
+  if (!window.api) return;
   families.value = await window.api.families.list() as FamilyRow[];
 }
 
 async function addFamily() {
+  if (!window.api) return;
   await window.api.families.create({ union_type: 'unknown' });
   await load();
 }
 
 async function removeFamily(id: string) {
+  if (!window.api) return;
   await window.api.families.delete(id);
   await load();
 }

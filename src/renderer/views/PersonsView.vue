@@ -45,10 +45,12 @@ interface PersonRow {
 const persons = ref<PersonRow[]>([]);
 
 async function load() {
+  if (!window.api) return;
   persons.value = await window.api.persons.list() as PersonRow[];
 }
 
 async function addPerson() {
+  if (!window.api) return;
   const given = prompt('Given name:');
   if (!given) return;
   const surname = prompt('Surname:');
@@ -57,6 +59,7 @@ async function addPerson() {
 }
 
 async function removePerson(id: string) {
+  if (!window.api) return;
   await window.api.persons.delete(id);
   await load();
 }

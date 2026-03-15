@@ -34,7 +34,8 @@
       "Bash(git config --local commit.gpgsign false)",
       "Bash(ls *.md)",
       "Bash(mkdir -p .claude/skills)",
-      "Bash(mv skills/* .claude/skills/)"
+      "Bash(mv skills/* .claude/skills/)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

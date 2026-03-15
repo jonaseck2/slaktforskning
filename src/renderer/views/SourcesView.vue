@@ -45,10 +45,12 @@ interface SourceRow {
 const sourceList = ref<SourceRow[]>([]);
 
 async function load() {
+  if (!window.api) return;
   sourceList.value = await window.api.sources.list() as SourceRow[];
 }
 
 async function addSource() {
+  if (!window.api) return;
   const title = prompt('Source title:');
   if (!title) return;
   await window.api.sources.create({ title });
@@ -56,6 +58,7 @@ async function addSource() {
 }
 
 async function removeSource(id: string) {
+  if (!window.api) return;
   await window.api.sources.delete(id);
   await load();
 }
