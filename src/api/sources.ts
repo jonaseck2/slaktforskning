@@ -40,6 +40,15 @@ export function updateSource(
   return getSource(db, id);
 }
 
+export function searchSources(db: Database, query: string): Source[] {
+  const like = `%${query}%`;
+  return db.prepare(`
+    SELECT * FROM sources
+    WHERE title LIKE ? OR author LIKE ? OR publication_info LIKE ?
+    ORDER BY title
+  `).all([like, like, like]) as Source[];
+}
+
 export function deleteSource(db: Database, id: string): boolean {
   return db.prepare(`DELETE FROM sources WHERE id = ?`).run([id]).changes > 0;
 }

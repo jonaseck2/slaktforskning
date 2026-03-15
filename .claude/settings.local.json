@@ -69,7 +69,9 @@
       "Bash(npx skills add davila7/claude-code-templates --skill excalidraw -y -g)",
       "Bash(npx skills add browserbase/skills -y -g)",
       "Bash(rm ~/.claude/skills/excalidraw)",
-      "Bash(rm -rf ~/.agents/skills/excalidraw)"
+      "Bash(rm -rf ~/.agents/skills/excalidraw)",
+      "Bash(npx playwright:*)",
+      "Bash(lsof:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

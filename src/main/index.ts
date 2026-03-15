@@ -3,6 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
+import { startUiServer, stopUiServer } from './ui-server';
 
 if (started) {
   app.quit();
@@ -10,6 +11,8 @@ if (started) {
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
+
+let activeWindow: BrowserWindow | null = null;
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -29,6 +32,10 @@ function createWindow(): BrowserWindow {
   }
 
   win.webContents.openDevTools();
+
+  activeWindow = win;
+  win.on('focus', () => { activeWindow = win; });
+  win.on('closed', () => { if (activeWindow === win) activeWindow = null; });
 
   return win;
 }
@@ -80,6 +87,7 @@ app.on('ready', () => {
   registerIpcHandlers();
   buildMenu();
   createWindow();
+  startUiServer(() => activeWindow);
 });
 
 app.on('window-all-closed', () => {
@@ -95,5 +103,6 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+  stopUiServer();
   closeDatabase();
 });

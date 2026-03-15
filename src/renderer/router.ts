@@ -5,6 +5,7 @@ import FamiliesView from './views/FamiliesView.vue';
 import FamilyDetailView from './views/FamilyDetailView.vue';
 import SourcesView from './views/SourcesView.vue';
 import SourceDetailView from './views/SourceDetailView.vue';
+import SearchView from './views/SearchView.vue';
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -15,5 +16,6 @@ export const router = createRouter({
     { path: '/families/:id', component: FamilyDetailView },
     { path: '/sources', component: SourcesView },
     { path: '/sources/:id', component: SourceDetailView },
+    { path: '/search', component: SearchView },
   ],
 });

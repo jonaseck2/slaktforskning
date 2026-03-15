@@ -106,6 +106,8 @@ Date qualifiers: exact, about, before, after, between, calculated, unknown — p
 
 The MCP server runs standalone (`npx tsx src/mcp/server.ts`) and provides:
 
+### Data tools
+
 | Tool | Description |
 |------|-------------|
 | create_person | Create person with name and sex |
@@ -124,6 +126,22 @@ The MCP server runs standalone (`npx tsx src/mcp/server.ts`) and provides:
 | list_sources | List all sources |
 
 The server shares the same SQLite database as the Electron app. Override the DB path with `SLAKTFORSKNING_DB` env var.
+
+### UI tools (requires Electron app to be running)
+
+When the Electron app is running, it starts a local HTTP server on port 19241 (override with `SLAKTFORSKNING_UI_PORT`). The MCP server's UI tools call this HTTP bridge to observe and control the live app window.
+
+| Tool | Description |
+|------|-------------|
+| ui_screenshot | Capture the current window as a PNG image |
+| ui_navigate | Navigate to a route path (e.g. `/search?q=Erik`) |
+| ui_get_dom | Get the full rendered HTML of the current view |
+| ui_click | Click an element by CSS selector |
+| ui_execute_js | Run arbitrary JavaScript in the renderer and return the result |
+
+**Design:** The Electron main process starts an HTTP server (`src/main/ui-server.ts`) that wraps `webContents` APIs. The standalone MCP server calls `http://127.0.0.1:19241` for UI operations. If the app is not running, UI tools return a descriptive error. The renderer exposes `window.__vue_router` so `ui_navigate` can push Vue Router routes cleanly.
+
+This enables agentic GUI testing workflows: seed data with data tools → navigate to the relevant view → assert the rendered DOM or screenshot matches expectations.
 
 ---
 
@@ -146,6 +164,20 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 - [x] Preload script filename collision fixed (preload.js vs index.js)
 - [x] Renderer build output included in packaged app (asar)
 - [x] Debug logging in IPC handlers
+
+### Done (v0.2.1 — Global Search)
+
+- [x] `searchFamilies` and `searchSources` API functions
+- [x] `families:search` and `sources:search` IPC channels + preload
+- [x] `/search` route with `SearchView.vue` — results in three sections (Persons, Families, Sources)
+- [x] Sidebar search input in `App.vue` navigates to `/search?q=...` on Enter
+
+### Done (v0.2.2 — MCP UI Tools)
+
+- [x] `src/main/ui-server.ts` — HTTP server (port 19241) wrapping `webContents` APIs
+- [x] UI tools in MCP server: `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
+- [x] `window.__vue_router` exposed in renderer for clean route pushes
+- [x] Graceful error when app is not running
 
 ### Done (v0.2.0 — Genealogy Data Entry UI)
 

@@ -2,6 +2,14 @@
   <div class="app">
     <nav class="sidebar">
       <h1>Släktforskning</h1>
+      <form class="sidebar-search" @submit.prevent="submitSearch">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search…"
+          class="sidebar-search-input"
+        />
+      </form>
       <router-link to="/">Persons</router-link>
       <router-link to="/families">Families</router-link>
       <router-link to="/sources">Sources</router-link>
@@ -11,6 +19,21 @@
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+const searchQuery = ref('');
+
+function submitSearch() {
+  const q = searchQuery.value.trim();
+  if (!q) return;
+  router.push({ path: '/search', query: { q } });
+  searchQuery.value = '';
+}
+</script>
 
 <style>
 * {
@@ -45,6 +68,28 @@ body {
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-search {
+  margin-bottom: 8px;
+}
+.sidebar-search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.sidebar-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+.sidebar-search-input:focus {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar a {

@@ -160,6 +160,69 @@ async function main() {
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
+  // UI tools — require the Electron app to be running
+  const UI_PORT = process.env.SLAKTFORSKNING_UI_PORT
+    ? parseInt(process.env.SLAKTFORSKNING_UI_PORT)
+    : 19241;
+  const UI_BASE = `http://127.0.0.1:${UI_PORT}`;
+
+  async function uiPost(path: string, body?: unknown): Promise<unknown> {
+    try {
+      const res = await fetch(`${UI_BASE}${path}`, {
+        method: 'POST',
+        headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      return res.json();
+    } catch {
+      throw new Error('App UI not reachable — make sure the Electron app is running (npm start).');
+    }
+  }
+
+  async function uiGet(path: string): Promise<string> {
+    try {
+      const res = await fetch(`${UI_BASE}${path}`);
+      return res.text();
+    } catch {
+      throw new Error('App UI not reachable — make sure the Electron app is running (npm start).');
+    }
+  }
+
+  server.tool('ui_screenshot', 'Take a screenshot of the current app window. Returns a PNG image.', {}, async () => {
+    const result = await uiPost('/screenshot') as { data: string; error?: string };
+    if (result.error) return { content: [{ type: 'text', text: `Error: ${result.error}` }] };
+    return { content: [{ type: 'image', data: result.data, mimeType: 'image/png' }] };
+  });
+
+  server.tool('ui_navigate', 'Navigate the app to a route path (e.g. "/search?q=Erik", "/persons/123", "/families").', {
+    path: z.string().describe('Vue Router path to navigate to, e.g. "/search?q=Erik"'),
+  }, async (args) => {
+    const result = await uiPost('/navigate', { path: args.path }) as { ok?: boolean; error?: string };
+    if (result.error) return { content: [{ type: 'text', text: `Error: ${result.error}` }] };
+    return { content: [{ type: 'text', text: `Navigated to ${args.path}` }] };
+  });
+
+  server.tool('ui_get_dom', 'Get the full rendered HTML of the current app view. Use this to verify what is displayed on screen.', {}, async () => {
+    const html = await uiGet('/dom');
+    return { content: [{ type: 'text', text: html }] };
+  });
+
+  server.tool('ui_click', 'Click an element in the app by CSS selector.', {
+    selector: z.string().describe('CSS selector for the element to click, e.g. "button.btn-delete", "a[href=\'/families\']"'),
+  }, async (args) => {
+    const result = await uiPost('/click', { selector: args.selector }) as { ok?: boolean; error?: string };
+    if (result.error) return { content: [{ type: 'text', text: `Error: ${result.error}` }] };
+    return { content: [{ type: 'text', text: `Clicked: ${args.selector}` }] };
+  });
+
+  server.tool('ui_execute_js', 'Run JavaScript in the renderer process and return the result. Useful for reading state, querying the DOM, or triggering actions.', {
+    code: z.string().describe('JavaScript expression or statement to execute in the renderer'),
+  }, async (args) => {
+    const result = await uiPost('/execute_js', { code: args.code }) as { result?: unknown; error?: string };
+    if (result.error) return { content: [{ type: 'text', text: `Error: ${result.error}` }] };
+    return { content: [{ type: 'text', text: JSON.stringify(result.result, null, 2) }] };
+  });
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
