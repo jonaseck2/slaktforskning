@@ -145,12 +145,48 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 
 ## Skills
 
-The `.claude/skills/` directory contains genealogy-specific Claude skills:
+### Project Skills (`.claude/skills/` — checked into repo)
 
-- **data-modeling** — Genealogy data schema design guidance
-- **gedcom** — GEDCOM format parsing, validation, compliance
-- **interview-synthesis** — Extract insights from user research
-- **web-research** — Competitive analysis of genealogy platforms
+| Skill | Trigger | Purpose |
+|-------|---------|---------|
+| `/commit` | When committing | Always `git add -A`, compose message, never skip files |
+| `/test` | When running/writing tests | Unit test patterns (Vitest), E2E patterns (Playwright) |
+| `/electron-dev` | When launching/debugging the app | Dev mode, IPC debugging, common issues, architecture |
+| `/mcp-dev` | When adding/testing MCP tools | Tool patterns, server testing, end-to-end checklist |
+| `/data-modeling` | Schema design questions | Genealogy data model guidance |
+| `/gedcom` | GEDCOM import/export work | GEDCOM 5.5.1/7.0 parsing, validation, compliance |
+| `/interview-synthesis` | Processing user research | Extract insights from interviews/surveys |
+| `/web-research` | Competitive analysis | Research genealogy platforms and features |
+
+### Required Global Skills (`~/.claude/skills/` — install on each machine)
+
+These skills are assumed to be available but are NOT in the repo (they're personal/global). Install them on a new machine with:
+
+```bash
+# Anthropic official — UI design system
+npx skills add anthropics/skills --skill frontend-design -y -g
+
+# Browserbase — browser automation (browser, fetch, functions)
+npx skills add browserbase/skills -y -g
+```
+
+After running these commands, `~/.claude/skills/` should contain:
+
+| Skill | Source | Purpose |
+|-------|--------|---------|
+| `frontend-design` | `anthropics/skills` | Design system & aesthetic philosophy for UI generation |
+| `browser` | `browserbase/skills` | Automate web browser interactions |
+| `fetch` | `browserbase/skills` | Fetch and process web content |
+| `functions` | `browserbase/skills` | Serverless browser automation |
+
+The `napkin` and `simplify` skills are also recommended but come built-in with Claude Code.
+
+### Built-in Skills (always available, no install needed)
+
+- `anthropic-skills:skill-creator` — Create and optimize skills
+- `anthropic-skills:pdf`, `anthropic-skills:docx`, `anthropic-skills:xlsx`, `anthropic-skills:pptx` — Document formats
+- `napkin` — Per-repo runbook (auto-curated every session)
+- `simplify` — Code review for reuse, quality, efficiency
 
 ## Conventions
 
