@@ -86,6 +86,24 @@ async function main() {
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
+  server.tool('add_person_name', 'Add an alternate name to a person (married, alias, aka)', {
+    person_id: z.string().describe('Person ID'),
+    given_name: z.string().optional().describe('Given/first name'),
+    surname: z.string().optional().describe('Surname/family name'),
+    name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional().describe('Name type (default: birth)'),
+  }, async (args) => {
+    const { person_id, ...data } = args;
+    const name = persons.addPersonName(db, person_id, data);
+    return { content: [{ type: 'text', text: JSON.stringify(name, null, 2) }] };
+  });
+
+  server.tool('get_person_names', 'Get all names for a person', {
+    person_id: z.string().describe('Person ID'),
+  }, async (args) => {
+    const list = persons.getPersonNames(db, args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
   // Family tools
   server.tool('create_family', 'Create a family unit', {
     partner_a_id: z.string().optional().describe('First partner person ID'),
@@ -105,9 +123,56 @@ async function main() {
     return { content: [{ type: 'text', text: JSON.stringify(link, null, 2) }] };
   });
 
+  server.tool('get_family', 'Get a family by ID', {
+    id: z.string().describe('Family ID'),
+  }, async (args) => {
+    const family = families.getFamily(db, args.id);
+    return { content: [{ type: 'text', text: family ? JSON.stringify(family, null, 2) : 'Family not found' }] };
+  });
+
   server.tool('list_families', 'List all families', {}, async () => {
     const list = families.listFamilies(db);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('update_family', 'Update a family', {
+    id: z.string().describe('Family ID'),
+    partner_a_id: z.string().optional(),
+    partner_b_id: z.string().optional(),
+    union_type: z.enum(['marriage', 'civil_union', 'cohabitation', 'unknown']).optional(),
+    notes: z.string().optional(),
+  }, async (args) => {
+    const { id, ...data } = args;
+    const family = families.updateFamily(db, id, data);
+    return { content: [{ type: 'text', text: family ? JSON.stringify(family, null, 2) : 'Family not found' }] };
+  });
+
+  server.tool('delete_family', 'Delete a family', {
+    id: z.string().describe('Family ID'),
+  }, async (args) => {
+    const ok = families.deleteFamily(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.tool('get_children_of_family', 'Get all children linked to a family', {
+    family_id: z.string().describe('Family ID'),
+  }, async (args) => {
+    const list = families.getChildrenOfFamily(db, args.family_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('get_families_of_person', 'Get all families a person belongs to (as partner or child)', {
+    person_id: z.string().describe('Person ID'),
+  }, async (args) => {
+    const list = families.getFamiliesOfPerson(db, args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('search_families', 'Search families by partner name', {
+    query: z.string().describe('Search query'),
+  }, async (args) => {
+    const results = families.searchFamilies(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
   // Event tools
@@ -116,12 +181,21 @@ async function main() {
     person_id: z.string().optional().describe('Person ID (for individual events)'),
     family_id: z.string().optional().describe('Family ID (for family events like marriage)'),
     date_value: z.string().optional().describe('Date in ISO format (YYYY-MM-DD)'),
+    date_value_end: z.string().optional().describe('End date for "between" date type (YYYY-MM-DD)'),
     date_type: z.enum(['exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown']).optional(),
     date_original: z.string().optional().describe('Original date text as found in source'),
+    place_id: z.string().optional().describe('Place ID'),
     description: z.string().optional(),
   }, async (args) => {
     const event = events.createEvent(db, args);
     return { content: [{ type: 'text', text: JSON.stringify(event, null, 2) }] };
+  });
+
+  server.tool('get_event', 'Get a single event by ID', {
+    id: z.string().describe('Event ID'),
+  }, async (args) => {
+    const event = events.getEvent(db, args.id);
+    return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
   });
 
   server.tool('get_events_for_person', 'Get all events for a person', {
@@ -129,6 +203,35 @@ async function main() {
   }, async (args) => {
     const list = events.getEventsForPerson(db, args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('get_events_for_family', 'Get all events for a family', {
+    family_id: z.string().describe('Family ID'),
+  }, async (args) => {
+    const list = events.getEventsForFamily(db, args.family_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('update_event', 'Update an event', {
+    id: z.string().describe('Event ID'),
+    event_type: z.string().optional(),
+    date_value: z.string().optional(),
+    date_value_end: z.string().optional(),
+    date_type: z.enum(['exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown']).optional(),
+    date_original: z.string().optional(),
+    place_id: z.string().optional(),
+    description: z.string().optional(),
+  }, async (args) => {
+    const { id, ...data } = args;
+    const event = events.updateEvent(db, id, data);
+    return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
+  });
+
+  server.tool('delete_event', 'Delete an event', {
+    id: z.string().describe('Event ID'),
+  }, async (args) => {
+    const ok = events.deleteEvent(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
   // Source tools
@@ -155,9 +258,72 @@ async function main() {
     return { content: [{ type: 'text', text: JSON.stringify(citation, null, 2) }] };
   });
 
+  server.tool('get_source', 'Get a source by ID', {
+    id: z.string().describe('Source ID'),
+  }, async (args) => {
+    const source = sources.getSource(db, args.id);
+    return { content: [{ type: 'text', text: source ? JSON.stringify(source, null, 2) : 'Source not found' }] };
+  });
+
   server.tool('list_sources', 'List all sources', {}, async () => {
     const list = sources.listSources(db);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('update_source', 'Update a source', {
+    id: z.string().describe('Source ID'),
+    title: z.string().optional(),
+    author: z.string().optional(),
+    publication_info: z.string().optional(),
+    repository: z.string().optional(),
+    url: z.string().optional(),
+    source_type: z.string().optional(),
+  }, async (args) => {
+    const { id, ...data } = args;
+    const source = sources.updateSource(db, id, data);
+    return { content: [{ type: 'text', text: source ? JSON.stringify(source, null, 2) : 'Source not found' }] };
+  });
+
+  server.tool('delete_source', 'Delete a source', {
+    id: z.string().describe('Source ID'),
+  }, async (args) => {
+    const ok = sources.deleteSource(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.tool('search_sources', 'Search sources by title, author, or publication info', {
+    query: z.string().describe('Search query'),
+  }, async (args) => {
+    const results = sources.searchSources(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  server.tool('get_citation', 'Get a citation by ID', {
+    id: z.string().describe('Citation ID'),
+  }, async (args) => {
+    const citation = sources.getCitation(db, args.id);
+    return { content: [{ type: 'text', text: citation ? JSON.stringify(citation, null, 2) : 'Citation not found' }] };
+  });
+
+  server.tool('get_citations_for_source', 'Get all citations for a source', {
+    source_id: z.string().describe('Source ID'),
+  }, async (args) => {
+    const list = sources.getCitationsForSource(db, args.source_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('get_citations_for_event', 'Get all citations for an event', {
+    event_id: z.string().describe('Event ID'),
+  }, async (args) => {
+    const list = sources.getCitationsForEvent(db, args.event_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('delete_citation', 'Delete a citation', {
+    id: z.string().describe('Citation ID'),
+  }, async (args) => {
+    const ok = sources.deleteCitation(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
   // UI tools — require the Electron app to be running
