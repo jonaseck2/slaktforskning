@@ -149,6 +149,37 @@ class AppDriver {
       `window.api.sources.create(${JSON.stringify(data)})`
     );
   }
+
+  async createEvent(data: {
+    event_type: string;
+    date_original?: string;
+    relationship_id?: string;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.events.create(${JSON.stringify(data)})`,
+    );
+  }
+
+  async addEventParticipant(data: {
+    event_id: string;
+    person_id: string;
+    role: string;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.eventParticipants.add(${JSON.stringify(data)})`,
+    );
+  }
+
+  async createCitation(data: {
+    source_id: string;
+    event_id?: string;
+    person_id?: string;
+    confidence?: number;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.citations.create(${JSON.stringify(data)})`,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -450,5 +481,106 @@ test.describe('Screenshots', () => {
     expect(png[1]).toBe(0x50); // P
     expect(png[2]).toBe(0x4e); // N
     expect(png[3]).toBe(0x47); // G
+  });
+});
+
+test.describe('Citation Badges', () => {
+  test('new event shows Unsourced badge', async () => {
+    const person = await app.createPerson({ given_name: 'Olof', surname: 'Osourced' });
+    const event = await app.createEvent({ event_type: 'birth', date_original: '1850' });
+    await app.addEventParticipant({ event_id: event.id, person_id: person.id, role: 'primary' });
+
+    await app.navigate(`/persons/${person.id}`);
+    await app.waitForText('Olof Osourced');
+    await app.expectText('Unsourced');
+  });
+
+  test('event with one citation shows source count badge', async () => {
+    const person = await app.createPerson({ given_name: 'Birgitta', surname: 'Sourced' });
+    const event = await app.createEvent({ event_type: 'birth', date_original: '1860' });
+    await app.addEventParticipant({ event_id: event.id, person_id: person.id, role: 'primary' });
+    const source = await app.createSource({ title: 'Kyrkbok Badge Test' });
+    await app.createCitation({ source_id: source.id, event_id: event.id, confidence: 2 });
+
+    await app.navigate(`/persons/${person.id}`);
+    await app.waitForText('Birgitta Sourced');
+    await app.expectNoText('Unsourced');
+    // Badge text contains the count
+    const dom = await app.getDom();
+    expect(dom).toContain('source-count-badge');
+  });
+
+  test('evidence summary shows sourced/total count', async () => {
+    const person = await app.createPerson({ given_name: 'Greta', surname: 'Summary' });
+    const evt1 = await app.createEvent({ event_type: 'birth', date_original: '1870' });
+    await app.addEventParticipant({ event_id: evt1.id, person_id: person.id, role: 'primary' });
+    const source = await app.createSource({ title: 'Kyrkbok Summary Test' });
+    await app.createCitation({ source_id: source.id, event_id: evt1.id, confidence: 2 });
+    const evt2 = await app.createEvent({ event_type: 'death', date_original: '1940' });
+    await app.addEventParticipant({ event_id: evt2.id, person_id: person.id, role: 'primary' });
+
+    await app.navigate(`/persons/${person.id}`);
+    await app.waitForText('Greta Summary');
+    // Evidence summary div present: "1 of 2 events sourced"
+    const dom = await app.getDom();
+    expect(dom).toContain('evidence-summary');
+  });
+});
+
+test.describe('Add Related Person', () => {
+  let basePerson: { id: string };
+
+  test.beforeAll(async () => {
+    basePerson = await app.createPerson({ given_name: 'Ingrid', surname: 'Baseperson' });
+  });
+
+  test('Add Parent button creates a person and shows new relationship', async () => {
+    await app.navigate(`/persons/${basePerson.id}`);
+    await app.waitForText('Ingrid Baseperson');
+
+    // Click the first .btn-rel-add (Add Parent)
+    await app.executeJs(`document.querySelectorAll('.btn-rel-add')[0].click()`);
+    await app.settle();
+
+    await app.fillInput('.modal input[type="text"]', 'Sven');
+    await app.settle();
+
+    await app.click('.modal button[type="submit"]');
+    await app.settle(800);
+
+    await app.navigate(`/persons/${basePerson.id}`);
+    await app.waitForText('Sven');
+  });
+
+  test('Add Child button creates a person and shows new relationship', async () => {
+    await app.navigate(`/persons/${basePerson.id}`);
+    await app.waitForText('Ingrid Baseperson');
+
+    // Click the third .btn-rel-add (Add Child)
+    await app.executeJs(`document.querySelectorAll('.btn-rel-add')[2].click()`);
+    await app.settle();
+
+    await app.fillInput('.modal input[type="text"]', 'Lisa');
+    await app.click('.modal button[type="submit"]');
+    await app.settle(800);
+
+    await app.navigate(`/persons/${basePerson.id}`);
+    await app.waitForText('Lisa');
+  });
+
+  test('Add Spouse button creates a person and shows new relationship', async () => {
+    await app.navigate(`/persons/${basePerson.id}`);
+    await app.waitForText('Ingrid Baseperson');
+
+    // Click the second .btn-rel-add (Add Spouse)
+    await app.executeJs(`document.querySelectorAll('.btn-rel-add')[1].click()`);
+    await app.settle();
+
+    await app.fillInput('.modal input[type="text"]', 'Erik');
+    await app.click('.modal button[type="submit"]');
+    await app.settle(800);
+
+    await app.navigate(`/persons/${basePerson.id}`);
+    await app.waitForText('Erik');
   });
 });
