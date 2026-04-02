@@ -31,8 +31,12 @@
         </thead>
         <tbody>
           <tr v-for="name in names" :key="name.id">
-            <td>{{ name.given_name }}</td>
-            <td>{{ name.surname }}</td>
+            <td>
+              <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>{{ name.given_name }}
+            </td>
+            <td>
+              {{ name.surname }}<span v-if="name.name_suffix"> {{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
+            </td>
             <td><span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span></td>
             <td class="actions-cell">
               <button class="btn-sm btn-edit" @click="openEditName(name)">{{ $t('common.edit') }}</button>
@@ -101,6 +105,60 @@
       />
     </section>
 
+    <!-- Identifiers Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('identifiers.title') }}</h4>
+        <button class="btn-add" @click="showAddIdentifier = true">{{ $t('identifiers.add') }}</button>
+      </div>
+      <div v-if="identifiers.length === 0" class="empty-hint">{{ $t('identifiers.none') }}</div>
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>{{ $t('identifiers.type') }}</th>
+            <th>{{ $t('identifiers.value') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="ident in identifiers" :key="ident.id">
+            <td><span class="type-badge">{{ $t('identifiers.types.' + ident.identifier_type) }}</span></td>
+            <td>{{ ident.identifier_value }}</td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-delete" @click="removeIdentifier(ident.id)">{{ $t('common.delete') }}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-if="showAddIdentifier" class="modal-overlay" @click.self="showAddIdentifier = false">
+        <div class="modal">
+          <h3>{{ $t('identifiers.addTitle') }}</h3>
+          <form @submit.prevent="addIdentifier">
+            <label>
+              {{ $t('identifiers.type') }}
+              <select v-model="newIdentifier.identifier_type">
+                <option value="familysearch">FamilySearch</option>
+                <option value="ancestry">Ancestry</option>
+                <option value="riksarkivet">Riksarkivet</option>
+                <option value="personnummer">Personnummer</option>
+                <option value="refn">{{ $t('identifiers.types.refn') }}</option>
+                <option value="rin">RIN</option>
+                <option value="other">{{ $t('identifiers.types.other') }}</option>
+              </select>
+            </label>
+            <label>
+              {{ $t('identifiers.value') }}
+              <input v-model="newIdentifier.identifier_value" type="text" required />
+            </label>
+            <div class="modal-actions">
+              <button type="button" class="btn-cancel" @click="showAddIdentifier = false">{{ $t('common.cancel') }}</button>
+              <button type="submit">{{ $t('common.save') }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <CitationForm
       v-if="showCitePersonForm"
       :person-id="person.id"
@@ -137,6 +195,27 @@
               </option>
             </select>
           </label>
+          <label>
+            {{ $t('names.prefix') }}
+            <input v-model="nameForm.name_prefix" type="text" :placeholder="$t('names.prefixPlaceholder')" />
+          </label>
+          <label>
+            {{ $t('names.suffix') }}
+            <input v-model="nameForm.name_suffix" type="text" :placeholder="$t('names.suffixPlaceholder')" />
+          </label>
+          <label>
+            {{ $t('names.qualifier') }}
+            <select v-model="nameForm.name_qualifier">
+              <option value="">—</option>
+              <option value="patronymic">{{ $t('names.qualifierPatronymic') }}</option>
+              <option value="matronymic">{{ $t('names.qualifierMatronymic') }}</option>
+              <option value="particle">{{ $t('names.qualifierParticle') }}</option>
+            </select>
+          </label>
+          <label v-if="nameForm.name_qualifier === 'patronymic' || nameForm.name_qualifier === 'matronymic'">
+            {{ $t('names.patronymicBase') }}
+            <input v-model="nameForm.patronymic_base" type="text" :placeholder="$t('names.patronymicBasePlaceholder')" />
+          </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showNameForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('personDetail.addNameTitle') }}</button>
@@ -164,6 +243,27 @@
                 {{ $t('nameTypes.' + nt) }}
               </option>
             </select>
+          </label>
+          <label>
+            {{ $t('names.prefix') }}
+            <input v-model="editNameForm.name_prefix" type="text" :placeholder="$t('names.prefixPlaceholder')" />
+          </label>
+          <label>
+            {{ $t('names.suffix') }}
+            <input v-model="editNameForm.name_suffix" type="text" :placeholder="$t('names.suffixPlaceholder')" />
+          </label>
+          <label>
+            {{ $t('names.qualifier') }}
+            <select v-model="editNameForm.name_qualifier">
+              <option value="">—</option>
+              <option value="patronymic">{{ $t('names.qualifierPatronymic') }}</option>
+              <option value="matronymic">{{ $t('names.qualifierMatronymic') }}</option>
+              <option value="particle">{{ $t('names.qualifierParticle') }}</option>
+            </select>
+          </label>
+          <label v-if="editNameForm.name_qualifier === 'patronymic' || editNameForm.name_qualifier === 'matronymic'">
+            {{ $t('names.patronymicBase') }}
+            <input v-model="editNameForm.patronymic_base" type="text" :placeholder="$t('names.patronymicBasePlaceholder')" />
           </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showEditNameForm = false">{{ $t('common.cancel') }}</button>
@@ -198,10 +298,14 @@ interface PersonData {
 
 interface NameRow {
   id: string;
-  given_name: string;
-  surname: string;
+  given_name: string | null;
+  surname: string | null;
   name_type: string;
   sort_order: number;
+  name_prefix: string | null;
+  name_suffix: string | null;
+  patronymic_base: string | null;
+  name_qualifier: string | null;
 }
 
 interface RelRow {
@@ -234,17 +338,35 @@ const evidenceSourced = ref(0);
 const evidenceTotal = ref(0);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 
+interface IdentifierRow {
+  id: string;
+  identifier_type: string;
+  identifier_value: string;
+}
+
 const nameForm = reactive({
   given_name: '',
   surname: '',
   name_type: 'married',
+  name_prefix: '',
+  name_suffix: '',
+  name_qualifier: '',
+  patronymic_base: '',
 });
 
 const editNameForm = reactive({
   given_name: '',
   surname: '',
   name_type: 'birth',
+  name_prefix: '',
+  name_suffix: '',
+  name_qualifier: '',
+  patronymic_base: '',
 });
+
+const identifiers = ref<IdentifierRow[]>([]);
+const showAddIdentifier = ref(false);
+const newIdentifier = reactive({ identifier_type: 'familysearch', identifier_value: '' });
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
   if (!subtype) return '';
@@ -305,6 +427,8 @@ async function load() {
       }),
     );
     evidenceSourced.value = counts.reduce((a, b) => a + b, 0);
+
+    await loadIdentifiers();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
   }
@@ -317,11 +441,19 @@ async function addName() {
       given_name: nameForm.given_name,
       surname: nameForm.surname,
       name_type: nameForm.name_type,
+      name_prefix: nameForm.name_prefix || null,
+      name_suffix: nameForm.name_suffix || null,
+      name_qualifier: nameForm.name_qualifier || null,
+      patronymic_base: nameForm.patronymic_base || null,
     });
     showNameForm.value = false;
     nameForm.given_name = '';
     nameForm.surname = '';
     nameForm.name_type = 'married';
+    nameForm.name_prefix = '';
+    nameForm.name_suffix = '';
+    nameForm.name_qualifier = '';
+    nameForm.patronymic_base = '';
     await load();
   } catch (err) {
     console.error('[PersonDetailView] addName failed:', err);
@@ -330,9 +462,13 @@ async function addName() {
 
 function openEditName(name: NameRow) {
   editingNameId.value = name.id;
-  editNameForm.given_name = name.given_name;
-  editNameForm.surname = name.surname;
+  editNameForm.given_name = name.given_name ?? '';
+  editNameForm.surname = name.surname ?? '';
   editNameForm.name_type = name.name_type;
+  editNameForm.name_prefix = name.name_prefix ?? '';
+  editNameForm.name_suffix = name.name_suffix ?? '';
+  editNameForm.name_qualifier = name.name_qualifier ?? '';
+  editNameForm.patronymic_base = name.patronymic_base ?? '';
   showEditNameForm.value = true;
 }
 
@@ -343,6 +479,10 @@ async function saveEditName() {
       given_name: editNameForm.given_name,
       surname: editNameForm.surname,
       name_type: editNameForm.name_type,
+      name_prefix: editNameForm.name_prefix || null,
+      name_suffix: editNameForm.name_suffix || null,
+      name_qualifier: editNameForm.name_qualifier || null,
+      patronymic_base: editNameForm.patronymic_base || null,
     });
     showEditNameForm.value = false;
     editingNameId.value = null;
@@ -355,6 +495,41 @@ async function saveEditName() {
 async function removeName(id: string) {
   if (!window.api) return;
   console.warn('Delete name not yet implemented via IPC');
+}
+
+async function loadIdentifiers() {
+  if (!window.api) return;
+  try {
+    identifiers.value = (await window.api.persons.getIdentifiers(personId)) as IdentifierRow[];
+  } catch (err) {
+    console.error('[PersonDetailView] loadIdentifiers failed:', err);
+  }
+}
+
+async function addIdentifier() {
+  if (!window.api) return;
+  if (!newIdentifier.identifier_value.trim()) return;
+  try {
+    await window.api.persons.addIdentifier(personId, {
+      identifier_type: newIdentifier.identifier_type,
+      identifier_value: newIdentifier.identifier_value,
+    });
+    newIdentifier.identifier_value = '';
+    showAddIdentifier.value = false;
+    await loadIdentifiers();
+  } catch (err) {
+    console.error('[PersonDetailView] addIdentifier failed:', err);
+  }
+}
+
+async function removeIdentifier(id: string) {
+  if (!window.api) return;
+  try {
+    await window.api.persons.deleteIdentifier(id);
+    await loadIdentifiers();
+  } catch (err) {
+    console.error('[PersonDetailView] removeIdentifier failed:', err);
+  }
 }
 
 async function saveNotes() {
@@ -605,5 +780,17 @@ form select {
 }
 .btn-rel-add:hover {
   background: #e2e8f0;
+}
+.name-prefix {
+  color: #6b7280;
+  font-style: italic;
+}
+.name-qual-badge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 11px;
+  margin-left: 4px;
 }
 </style>
