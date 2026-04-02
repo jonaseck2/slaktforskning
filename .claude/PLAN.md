@@ -193,26 +193,26 @@ CREATE TABLE assertions (
 Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
 
 **Unsourced indicators:**
-- Events in `EventList` show a citation count badge (e.g. "2 sources") or an "unsourced" warning indicator
-- `PersonDetailView` shows an evidence summary: how many events are sourced vs. unsourced
-- A "research audit" view aggregates all unsourced entities across the tree
+- [x] Events in `EventList` show a citation count badge (e.g. "2 sources") or an "unsourced" warning indicator
+- [x] `PersonDetailView` shows an evidence summary: how many events are sourced vs. unsourced
+- [ ] A "research audit" view aggregates all unsourced entities across the tree — deferred to v0.6.0
 
 **"Cite" action on events, persons, and relationships:**
-- Each event row in `EventList` gets a "Cite" button → opens `CitationForm` pre-linked to that event's `event_id`
-- `PersonDetailView` gets a "Cite Person" button → opens `CitationForm` with `person_id` pre-filled
-- Relationship views get a "Cite Relationship" button → opens `CitationForm` with `relationship_id` pre-filled
+- [x] Each event row in `EventList` gets a "Cite" button → opens `CitationForm` pre-linked to that event's `event_id`
+- [x] `PersonDetailView` gets a "Cite Person" button → opens `CitationForm` with `person_id` pre-filled
+- [x] Relationship views get a "Cite Relationship" button → opens `CitationForm` with `relationship_id` pre-filled
 
 **Optional source prompt on event creation:**
-- `EventForm` includes an optional "Source" section at the bottom (source picker + page/transcription)
-- When filled, creating the event also creates a citation in one step
-- When empty, event is created without a citation (shows "unsourced" indicator)
+- [x] `EventForm` includes an optional "Source" section at the bottom (source picker + page)
+- [x] When filled, creating the event also creates a citation in one step
+- [x] When empty, event is created without a citation (shows "unsourced" indicator)
 
 #### Add Related Person from Detail View
 
 From the person detail view, the user can:
-- **Add Parent** — Creates a new person + creates a `parent_child` relationship (or joins an existing couple relationship if one parent already exists)
-- **Add Spouse/Partner** — Creates a new person + creates a `couple` relationship. Prompts for subtype (marriage, civil_union, etc.)
-- **Add Child** — Creates a new person + creates a `parent_child` relationship
+- [x] **Add Parent** — Creates a new person + creates a `parent_child` relationship
+- [x] **Add Spouse/Partner** — Creates a new person + creates a `couple` relationship. Prompts for subtype (marriage, civil_union, etc.)
+- [x] **Add Child** — Creates a new person + creates a `parent_child` relationship
 
 Each action opens a modal with new person fields + relationship context pre-filled. Both person and relationship are created in a single transaction.
 
