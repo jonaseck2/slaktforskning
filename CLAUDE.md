@@ -209,101 +209,9 @@ deleteCitation(db, id) → boolean
 2. **Preload** (`src/preload/index.ts`): Maps channels to `window.api.*` via `contextBridge`
 3. **Renderer**: Vue components call `window.api.persons.create(...)` etc.
 
-### Complete `window.api` Surface
+### window.api Surface + IPC Channel Mapping
 
-This is what Vue components call. Every method returns a `Promise`.
-
-```typescript
-window.api.persons.create(data)            // → Person
-window.api.persons.get(id)                 // → Person | null
-window.api.persons.list()                  // → (Person & { given_name, surname })[]
-window.api.persons.update(id, data)        // → Person | null
-window.api.persons.delete(id)              // → boolean
-window.api.persons.search(query)           // → (Person & { given_name, surname })[]
-window.api.persons.addName(personId, data)        // → PersonName
-window.api.persons.getNames(personId)             // → PersonName[]
-window.api.persons.updateName(id, data)           // → PersonName | null
-window.api.persons.deleteName(id)                 // → boolean
-window.api.persons.addIdentifier(personId, data)  // → PersonIdentifier
-window.api.persons.getIdentifiers(personId)       // → PersonIdentifier[]
-window.api.persons.deleteIdentifier(id)           // → boolean
-
-window.api.relationships.create(data)              // → Relationship
-window.api.relationships.get(id)                   // → Relationship | null
-window.api.relationships.list()                    // → Relationship[]
-window.api.relationships.update(id, data)          // → Relationship | null
-window.api.relationships.delete(id)                // → boolean
-window.api.relationships.getForPerson(personId)    // → Relationship[]
-window.api.relationships.search(query)             // → (Relationship & names)[]
-
-window.api.eventParticipants.add(data)             // → EventParticipant
-window.api.eventParticipants.getForEvent(eventId)  // → EventParticipant[]
-window.api.eventParticipants.remove(id)            // → boolean
-
-window.api.events.create(data)             // → GenealogyEvent
-window.api.events.get(id)                  // → GenealogyEvent | null
-window.api.events.forPerson(personId)      // → GenealogyEvent[]  (via event_participants)
-window.api.events.forRelationship(relId)   // → GenealogyEvent[]
-window.api.events.update(id, data)         // → GenealogyEvent | null
-window.api.events.delete(id)               // → boolean
-
-window.api.sources.create(data)            // → Source
-window.api.sources.get(id)                 // → Source | null
-window.api.sources.list()                  // → Source[]
-window.api.sources.update(id, data)        // → Source | null
-window.api.sources.delete(id)              // → boolean
-
-window.api.citations.create(data)          // → Citation
-window.api.citations.get(id)               // → Citation | null
-window.api.citations.forSource(sourceId)   // → Citation[]
-window.api.citations.forEvent(eventId)     // → Citation[]
-window.api.citations.delete(id)            // → boolean
-```
-
-### IPC Channel → API Function Mapping
-
-| IPC Channel | API Function |
-|-------------|-------------|
-| `persons:create` | `persons.createPerson(db, data)` |
-| `persons:get` | `persons.getPerson(db, id)` |
-| `persons:list` | `persons.listPersons(db)` |
-| `persons:update` | `persons.updatePerson(db, id, data)` |
-| `persons:delete` | `persons.deletePerson(db, id)` |
-| `persons:search` | `persons.searchPersons(db, query)` |
-| `persons:addName` | `persons.addPersonName(db, personId, data)` |
-| `persons:getNames` | `persons.getPersonNames(db, personId)` |
-| `persons:updateName` | `persons.updatePersonName(db, id, data)` |
-| `persons:deleteName` | `persons.deletePersonName(db, id)` |
-| `persons:addIdentifier` | `persons.addPersonIdentifier(db, personId, data)` |
-| `persons:getIdentifiers` | `persons.getPersonIdentifiers(db, personId)` |
-| `persons:deleteIdentifier` | `persons.deletePersonIdentifier(db, id)` |
-| `relationships:create` | `relationships.createRelationship(db, data)` |
-| `relationships:get` | `relationships.getRelationship(db, id)` |
-| `relationships:list` | `relationships.listRelationships(db)` |
-| `relationships:update` | `relationships.updateRelationship(db, id, data)` |
-| `relationships:delete` | `relationships.deleteRelationship(db, id)` |
-| `relationships:getForPerson` | `relationships.getRelationshipsOfPerson(db, personId)` |
-| `relationships:search` | `relationships.searchRelationships(db, query)` |
-| `eventParticipants:add` | `relationships.addEventParticipant(db, data)` |
-| `eventParticipants:getForEvent` | `relationships.getEventParticipants(db, eventId)` |
-| `eventParticipants:remove` | `relationships.removeEventParticipant(db, id)` |
-| `events:create` | `events.createEvent(db, data)` |
-| `events:get` | `events.getEvent(db, id)` |
-| `events:forPerson` | `events.getEventsForPerson(db, personId)` |
-| `events:forRelationship` | `events.getEventsForRelationship(db, relationshipId)` |
-| `events:update` | `events.updateEvent(db, id, data)` |
-| `events:delete` | `events.deleteEvent(db, id)` |
-| `sources:create` | `sources.createSource(db, data)` |
-| `sources:get` | `sources.getSource(db, id)` |
-| `sources:list` | `sources.listSources(db)` |
-| `sources:update` | `sources.updateSource(db, id, data)` |
-| `sources:delete` | `sources.deleteSource(db, id)` |
-| `citations:create` | `sources.createCitation(db, data)` |
-| `citations:get` | `sources.getCitation(db, id)` |
-| `citations:forSource` | `sources.getCitationsForSource(db, sourceId)` |
-| `citations:forEvent` | `sources.getCitationsForEvent(db, eventId)` |
-| `citations:delete` | `sources.deleteCitation(db, id)` |
-
+See `.claude/IPC_REFERENCE.md` for the complete `window.api` surface and IPC channel → API function mapping table.
 ---
 
 ## Vue Component Patterns
@@ -468,33 +376,7 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 ## Adding New Features
 
-Follow this checklist in order:
-
-1. Define types in `src/api/types.ts`
-2. Add/update schema in `src/api/schema.ts` (idempotent DDL)
-3. Implement CRUD functions in `src/api/*.ts` (pure TS, db as first arg)
-4. Write unit tests in `tests/unit/` using `createTestDb()`
-5. Register IPC handlers in `src/main/ipc.ts` using `wrapHandler(channel, fn)`
-6. Expose via preload in `src/preload/index.ts`
-7. Add MCP tools in `src/mcp/server.ts` (thin wrapper, Zod schema, JSON response)
-8. Build Vue UI in `src/renderer/` (Composition API, `<script setup>`)
-9. Run `npm test && npx playwright test`
-10. **Update documentation**: `README.md`, `CLAUDE.md`, `.claude/PLAN.md`
-
-### Adding a New IPC Channel
-
-```typescript
-// 1. src/main/ipc.ts — add handler
-wrapHandler('things:create', (data) => things.createThing(getDatabase(), data));
-
-// 2. src/preload/index.ts — add to api object
-things: {
-  create: (data) => ipcRenderer.invoke('things:create', data),
-},
-
-// 3. Vue component — call it
-await window.api.things.create({ name: 'test' });
-```
+Use the `/add-feature` skill — it contains the full 10-step checklist, SQLite quirks, IPC patterns, MCP tool patterns, and Vue component patterns.
 
 ---
 
@@ -523,8 +405,9 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `README.md` | Humans | Quick start, features, project structure |
 | `CLAUDE.md` | Agents | This file. Complete architecture reference |
 | `.claude/PLAN.md` | Both | Vision, implementation status, roadmap |
-| `.claude/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility |
-| `.claude/MCP.md` | Both | MCP server tools and UI bridge reference |
+| `.claude/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility (also bundled in `/data-modeling` skill) |
+| `.claude/MCP.md` | Both | MCP server tools (also bundled in `/mcp-dev` skill) |
+| `.claude/IPC_REFERENCE.md` | Agents | Complete `window.api` surface + IPC channel mapping |
 | `.claude/napkin.md` | Agents | Per-repo runbook with recurring gotchas |
 
 ## Skills
@@ -536,8 +419,9 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `/commit` | When committing | Always `git add -A`, compose message, never skip files |
 | `/test` | When running/writing tests | Unit test patterns (Vitest), E2E patterns (Playwright) |
 | `/electron-dev` | When launching/debugging the app | Dev mode, IPC debugging, common issues |
-| `/mcp-dev` | When adding/testing MCP tools | Tool patterns, server testing, checklist |
-| `/data-modeling` | Schema design questions | Genealogy data model guidance |
+| `/add-feature` | Adding any new feature or entity | Full 10-step checklist: schema → API → IPC → MCP → Vue |
+| `/mcp-dev` | When adding/testing MCP tools | Tool patterns, server testing, tool reference |
+| `/data-modeling` | Schema design questions | GEDCOM-X model, this project's schema reference |
 | `/gedcom` | GEDCOM import/export | GEDCOM 5.5.1/7.0 parsing, validation |
 | `/interview-synthesis` | Processing user research | Extract insights from interviews |
 | `/web-research` | Competitive analysis | Research genealogy platforms |
