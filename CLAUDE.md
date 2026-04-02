@@ -222,6 +222,7 @@ window.api.persons.delete(id)              // → boolean
 window.api.persons.search(query)           // → (Person & { given_name, surname })[]
 window.api.persons.addName(personId, data)        // → PersonName
 window.api.persons.getNames(personId)             // → PersonName[]
+window.api.persons.updateName(id, data)           // → PersonName | null
 window.api.persons.deleteName(id)                 // → boolean
 window.api.persons.addIdentifier(personId, data)  // → PersonIdentifier
 window.api.persons.getIdentifiers(personId)       // → PersonIdentifier[]
@@ -271,6 +272,7 @@ window.api.citations.delete(id)            // → boolean
 | `persons:search` | `persons.searchPersons(db, query)` |
 | `persons:addName` | `persons.addPersonName(db, personId, data)` |
 | `persons:getNames` | `persons.getPersonNames(db, personId)` |
+| `persons:updateName` | `persons.updatePersonName(db, id, data)` |
 | `persons:deleteName` | `persons.deletePersonName(db, id)` |
 | `persons:addIdentifier` | `persons.addPersonIdentifier(db, personId, data)` |
 | `persons:getIdentifiers` | `persons.getPersonIdentifiers(db, personId)` |
@@ -450,7 +452,7 @@ Data tools wrapping the same api/ functions, plus UI tools. Runs standalone via 
 
 DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
-**Person tools:** `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`, `delete_person_name`, `add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`
+**Person tools:** `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`, `update_person_name`, `delete_person_name`, `add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`
 
 **Relationship tools:** `create_relationship`, `get_relationship`, `list_relationships`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`, `search_relationships`
 

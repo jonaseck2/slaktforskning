@@ -37,7 +37,7 @@ async function main() {
 
   const server = new McpServer({
     name: 'slaktforskning',
-    version: '0.3.0',
+    version: '0.3.1',
   });
 
   // Person tools
@@ -108,6 +108,25 @@ async function main() {
     const list = persons.getPersonNames(db, args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
+
+  server.tool('update_person_name', 'Update a person name record', {
+    id: z.string(),
+    given_name: z.string().optional(),
+    surname: z.string().optional(),
+    name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional(),
+    name_prefix: z.string().optional(),
+    name_suffix: z.string().optional(),
+    patronymic_base: z.string().optional(),
+    name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
+  }, async ({ id, ...data }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify(persons.updatePersonName(db, id, data)) }] })
+  );
+
+  server.tool('delete_person_name', 'Delete a person name record', {
+    id: z.string(),
+  }, async ({ id }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify({ deleted: persons.deletePersonName(db, id) }) }] })
+  );
 
   server.tool('add_person_identifier', 'Add an external identifier to a person (FamilySearch ID, Ancestry ID, etc.)', {
     person_id: z.string(),
