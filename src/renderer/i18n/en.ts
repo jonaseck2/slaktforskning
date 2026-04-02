@@ -44,6 +44,7 @@ export default {
     noRelationships: 'No relationships recorded.',
     notesPlaceholder: 'Add notes about this person\u2026',
     addNameTitle: 'Add Name',
+    editNameTitle: 'Edit Name',
     back: '\u2190 Back',
     citePersonTitle: 'Cite Person',
     addParent: '+ Add Parent',
@@ -207,8 +208,12 @@ export default {
   relTypes: {
     couple: 'Couple',
     parent_child: 'Parent-Child',
+    parent: 'Parent',
+    child: 'Child',
+    partner: 'Partner',
     sibling: 'Sibling',
     godparent: 'Godparent',
+    godchild: 'Godchild',
     other: 'Other',
   },
   coupleSubtypes: {

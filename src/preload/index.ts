@@ -10,6 +10,7 @@ const api = {
     search: (query: string) => ipcRenderer.invoke('persons:search', query),
     addName: (personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addName', personId, data),
     getNames: (personId: string) => ipcRenderer.invoke('persons:getNames', personId),
+    updateName: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:updateName', id, data),
   },
   relationships: {
     create: (data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data),

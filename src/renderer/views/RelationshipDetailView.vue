@@ -15,7 +15,7 @@
       </div>
       <div class="persons-grid">
         <label>
-          {{ $t('relationships.person1') }}
+          {{ person1Label }}
           <PersonPicker
             v-model="relationship.person1_id"
             :placeholder="$t('relationshipDetail.selectPerson')"
@@ -23,7 +23,7 @@
           />
         </label>
         <label>
-          {{ $t('relationships.person2') }}
+          {{ person2Label }}
           <PersonPicker
             v-model="relationship.person2_id"
             :placeholder="$t('relationshipDetail.selectPerson')"
@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import CitationForm from '../components/CitationForm.vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -112,13 +112,31 @@ interface RelData {
   notes: string;
 }
 
-useI18n();
+const { t } = useI18n();
 const route = useRoute();
 const relId = route.params.id as string;
 
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
 const showCiteForm = ref(false);
+
+const person1Label = computed(() => {
+  const type = relationship.value?.type;
+  if (type === 'parent_child') return t('relTypes.parent');
+  if (type === 'couple') return t('relTypes.partner');
+  if (type === 'sibling') return t('relTypes.sibling');
+  if (type === 'godparent') return t('relTypes.godparent');
+  return t('relationships.person1');
+});
+
+const person2Label = computed(() => {
+  const type = relationship.value?.type;
+  if (type === 'parent_child') return t('relTypes.child');
+  if (type === 'couple') return t('relTypes.partner');
+  if (type === 'sibling') return t('relTypes.sibling');
+  if (type === 'godparent') return t('relTypes.godchild');
+  return t('relationships.person2');
+});
 
 async function load() {
   if (!window.api) return;

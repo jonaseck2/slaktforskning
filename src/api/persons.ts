@@ -89,3 +89,19 @@ export function addPersonName(
 export function getPersonNames(db: Database, personId: string): PersonName[] {
   return db.prepare(`SELECT * FROM person_names WHERE person_id = ? ORDER BY sort_order`).all([personId]) as PersonName[];
 }
+
+export function updatePersonName(
+  db: Database,
+  id: string,
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type'>>
+): PersonName | null {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  if (data.given_name !== undefined) { fields.push('given_name = ?'); values.push(data.given_name); }
+  if (data.surname !== undefined) { fields.push('surname = ?'); values.push(data.surname); }
+  if (data.name_type !== undefined) { fields.push('name_type = ?'); values.push(data.name_type); }
+  if (fields.length === 0) return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
+  values.push(id);
+  db.prepare(`UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`).run(values);
+  return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
+}

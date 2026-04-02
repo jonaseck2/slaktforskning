@@ -25,8 +25,14 @@
           @click="goToDetail(rel.id)"
         >
           <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
-          <td>{{ rel.person1_name || '—' }}</td>
-          <td>{{ rel.person2_name || '—' }}</td>
+          <td>
+            {{ rel.person1_name || '—' }}
+            <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
+          </td>
+          <td>
+            {{ rel.person2_name || '—' }}
+            <span v-if="roleLabel2(rel.type)" class="role-label">{{ roleLabel2(rel.type) }}</span>
+          </td>
           <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
           <td>
             <button class="btn-sm btn-delete" @click.stop="removeRelationship(rel.id)">{{ $t('common.delete') }}</button>
@@ -124,6 +130,22 @@ const form = reactive({
   person2_id: null as string | null,
   notes: '',
 });
+
+function roleLabel1(type: string): string {
+  if (type === 'parent_child') return t('relTypes.parent');
+  if (type === 'couple') return t('relTypes.partner');
+  if (type === 'sibling') return t('relTypes.sibling');
+  if (type === 'godparent') return t('relTypes.godparent');
+  return '';
+}
+
+function roleLabel2(type: string): string {
+  if (type === 'parent_child') return t('relTypes.child');
+  if (type === 'couple') return t('relTypes.partner');
+  if (type === 'sibling') return t('relTypes.sibling');
+  if (type === 'godparent') return t('relTypes.godchild');
+  return '';
+}
 
 function getSubtypeLabel(type: string, subtype: string): string {
   if (type === 'couple') return t('coupleSubtypes.' + subtype);
@@ -245,6 +267,12 @@ onMounted(load);
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 12px;
+}
+.role-label {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-top: 1px;
 }
 button {
   background: #2c3e50;

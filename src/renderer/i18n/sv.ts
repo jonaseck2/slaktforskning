@@ -44,6 +44,7 @@ export default {
     noRelationships: 'Inga relationer registrerade.',
     notesPlaceholder: 'Lägg till anteckningar om denna person\u2026',
     addNameTitle: 'Lägg till namn',
+    editNameTitle: 'Redigera namn',
     back: '\u2190 Tillbaka',
     citePersonTitle: 'Citera person',
     addParent: '+ Lägg till förälder',
@@ -207,8 +208,12 @@ export default {
   relTypes: {
     couple: 'Par',
     parent_child: 'Förälder-Barn',
+    parent: 'Förälder',
+    child: 'Barn',
+    partner: 'Partner',
     sibling: 'Syskon',
     godparent: 'Fadder',
+    godchild: 'Gudbarn',
     other: 'Övrigt',
   },
   coupleSubtypes: {
