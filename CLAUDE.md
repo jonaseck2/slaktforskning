@@ -116,7 +116,8 @@ Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
 ```typescript
 Person           { id, sex: 'M'|'F'|'U', living: boolean, notes, created_at, updated_at }
-PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order }
+PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order, name_prefix?, name_suffix?, patronymic_base?, name_qualifier? }
+PersonIdentifier { id, person_id, identifier_type: 'familysearch'|'ancestry'|'riksarkivet'|'personnummer'|'refn'|'rin'|'other', identifier_value, created_at }
 Relationship     { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
 EventParticipant { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
 GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, description, relationship_id?, created_at, updated_at }
@@ -219,8 +220,12 @@ window.api.persons.list()                  // → (Person & { given_name, surnam
 window.api.persons.update(id, data)        // → Person | null
 window.api.persons.delete(id)              // → boolean
 window.api.persons.search(query)           // → (Person & { given_name, surname })[]
-window.api.persons.addName(personId, data) // → PersonName
-window.api.persons.getNames(personId)      // → PersonName[]
+window.api.persons.addName(personId, data)        // → PersonName
+window.api.persons.getNames(personId)             // → PersonName[]
+window.api.persons.deleteName(id)                 // → boolean
+window.api.persons.addIdentifier(personId, data)  // → PersonIdentifier
+window.api.persons.getIdentifiers(personId)       // → PersonIdentifier[]
+window.api.persons.deleteIdentifier(id)           // → boolean
 
 window.api.relationships.create(data)              // → Relationship
 window.api.relationships.get(id)                   // → Relationship | null
@@ -266,6 +271,10 @@ window.api.citations.delete(id)            // → boolean
 | `persons:search` | `persons.searchPersons(db, query)` |
 | `persons:addName` | `persons.addPersonName(db, personId, data)` |
 | `persons:getNames` | `persons.getPersonNames(db, personId)` |
+| `persons:deleteName` | `persons.deletePersonName(db, id)` |
+| `persons:addIdentifier` | `persons.addPersonIdentifier(db, personId, data)` |
+| `persons:getIdentifiers` | `persons.getPersonIdentifiers(db, personId)` |
+| `persons:deleteIdentifier` | `persons.deletePersonIdentifier(db, id)` |
 | `relationships:create` | `relationships.createRelationship(db, data)` |
 | `relationships:get` | `relationships.getRelationship(db, id)` |
 | `relationships:list` | `relationships.listRelationships(db)` |
@@ -441,7 +450,7 @@ Data tools wrapping the same api/ functions, plus UI tools. Runs standalone via 
 
 DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
-**Person tools:** `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`
+**Person tools:** `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`, `delete_person_name`, `add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`
 
 **Relationship tools:** `create_relationship`, `get_relationship`, `list_relationships`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`, `search_relationships`
 
