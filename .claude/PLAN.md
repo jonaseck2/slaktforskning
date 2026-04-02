@@ -124,7 +124,11 @@ This replaces the current workflow of: navigate to Persons list → Add Person �
 
 #### Evidence Visibility & Citation Affordances
 
-The data model already supports Source → Citation → Event/Person linking, but the GUI hides this. Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
+The data model already supports Source → Citation → Event/Person linking, but the GUI hides this and citations can't link to families. Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
+
+**Schema: add `family_id` to citations**
+
+Currently `citations` has `event_id` and `person_id` but no `family_id`. Add `family_id TEXT REFERENCES families(id) ON DELETE SET NULL` so sources can be linked directly to families (e.g. a marriage certificate cites the family, not just the marriage event). Update the Citation type, API functions (`getCitationsForFamily`), IPC channel, preload, and MCP tools accordingly.
 
 **Unsourced indicators**
 
@@ -132,19 +136,17 @@ The data model already supports Source → Citation → Event/Person linking, bu
 - `PersonDetailView` shows an overall evidence summary: how many events are sourced vs. unsourced.
 - `FamilyDetailView` shows the same for family events.
 
-**"Cite" action on events**
+**"Cite" action on events, persons, and families**
 
 - Each event row in `EventList` gets a "Cite" button that opens `CitationForm` pre-linked to that event's `event_id`.
-- After saving, the citation count badge updates immediately.
-
-**"Cite" action on persons**
-
-- `PersonDetailView` gets a "Cite Person" button (for general identity citations not tied to a specific event).
-- Opens `CitationForm` with the `person_id` pre-filled.
+- `PersonDetailView` gets a "Cite Person" button (for general identity citations not tied to a specific event). Opens `CitationForm` with `person_id` pre-filled.
+- `FamilyDetailView` gets a "Cite Family" button. Opens `CitationForm` with `family_id` pre-filled.
+- After saving, citation count badges update immediately.
 
 **Citation list on detail views**
 
 - `PersonDetailView` shows a "Citations" section listing all citations linked to the person (both directly via `person_id` and indirectly via their events).
+- `FamilyDetailView` shows a "Citations" section listing all citations linked to the family (via `family_id` and family events).
 - Clicking a citation navigates to the source detail view.
 
 **Optional source prompt on event creation**
