@@ -554,3 +554,4 @@ npx skills add browserbase/skills -y -g
 - **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `.claude/PLAN.md`
 - **Always commit ALL files** — Use `git add -A`. Never selectively skip files.
 - **Write plans to files, not context** — Persist implementation plans to `.claude/plans/` immediately (e.g. `.claude/plans/YYYY-MM-DD-description.md`). Context can be lost. When asked to "continue according to plan", look there for the most recent plan file.
+- **Keep plan files and roadmap in sync** — When adding a plan file in `.claude/plans/`, add a matching milestone to `.claude/PLAN.md` roadmap with a pointer to the plan file. When completing a milestone, mark it done in both the plan file (checkboxes) and `.claude/PLAN.md`. The roadmap is the index; the plan files are the detail.

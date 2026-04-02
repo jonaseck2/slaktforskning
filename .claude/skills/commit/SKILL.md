@@ -39,3 +39,14 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 - **NEVER skip hooks** (no `--no-verify`)
 - Do not commit files that contain secrets (.env, credentials). Warn the user if such files are staged.
 - **Review `git status` carefully** — if unexpected files appear (build artifacts, generated files not in `.gitignore`), flag them to the user before committing rather than silently including them.
+
+## Plan + Roadmap sync
+
+If the commit completes a milestone (or part of one) that has a plan file in `.claude/plans/`:
+- Mark the completed task checkboxes in the plan file (`- [x]`)
+- Update `.claude/PLAN.md` to mark the milestone done or partially done
+- Include these doc updates in the same commit
+
+If the commit introduces a new plan file:
+- Check that `.claude/PLAN.md` has a matching milestone entry pointing to the plan file
+- If missing, add it before committing
