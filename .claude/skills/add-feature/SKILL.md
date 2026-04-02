@@ -173,6 +173,10 @@ declare const window: Window & {
 ### i18n
 Add strings to both `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English fallback). Use `$t('key')` in templates.
 
+## Before implementing a non-trivial feature
+
+Use `superpowers:writing-plans` to write a plan first. Existing plans in `.claude/plans/` (and `.claude/plans/archive/`) are good templates — they show the expected task structure, file map format, and TDD step granularity for this codebase.
+
 ## After implementing
 
 Use the `/test` skill to run and write tests. Then commit with `/commit`.
