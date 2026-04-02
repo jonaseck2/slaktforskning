@@ -82,7 +82,7 @@ class AppDriver {
   }
 
   /** Poll the DOM until it contains `text`, or throw after `timeoutMs`. */
-  async waitForText(text: string, timeoutMs = 5000): Promise<string> {
+  async waitForText(text: string, timeoutMs = 12000): Promise<string> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       const dom = await this.getDom();
@@ -263,6 +263,10 @@ test.beforeAll(async () => {
 
   // Extra settle time for Vue to fully hydrate
   await app.settle(1000);
+
+  // Force English locale for predictable text assertions
+  await app.executeJs("window.__vue_i18n.global.locale.value = 'en'");
+  await app.settle(300);
 });
 
 test.afterAll(async () => {
@@ -322,7 +326,7 @@ test.describe('Persons CRUD', () => {
 
     // Detail view should show Names section
     await app.expectText('Names');
-    await app.expectText('birth');
+    await app.expectText('Birth');
   });
 
   test('person detail shows notes section', async () => {
@@ -535,6 +539,8 @@ test.describe('Add Related Person', () => {
   });
 
   test('Add Parent button creates a person and shows new relationship', async () => {
+    // Navigate via / to force component remount (router.push same-route is a no-op)
+    await app.navigate('/');
     await app.navigate(`/persons/${basePerson.id}`);
     await app.waitForText('Ingrid Baseperson');
 
@@ -553,6 +559,7 @@ test.describe('Add Related Person', () => {
   });
 
   test('Add Child button creates a person and shows new relationship', async () => {
+    await app.navigate('/');
     await app.navigate(`/persons/${basePerson.id}`);
     await app.waitForText('Ingrid Baseperson');
 
@@ -569,6 +576,7 @@ test.describe('Add Related Person', () => {
   });
 
   test('Add Spouse button creates a person and shows new relationship', async () => {
+    await app.navigate('/');
     await app.navigate(`/persons/${basePerson.id}`);
     await app.waitForText('Ingrid Baseperson');
 

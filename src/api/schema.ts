@@ -61,11 +61,9 @@ export function initializeSchema(db: Database): void {
       date_original TEXT NOT NULL DEFAULT '',
       place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
       description TEXT NOT NULL DEFAULT '',
-      relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-    CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
 
     CREATE TABLE IF NOT EXISTS event_participants (
       id TEXT PRIMARY KEY,
@@ -99,8 +97,6 @@ export function initializeSchema(db: Database): void {
       notes TEXT NOT NULL DEFAULT '',
       event_id TEXT REFERENCES events(id) ON DELETE SET NULL,
       person_id TEXT REFERENCES persons(id) ON DELETE SET NULL,
-      relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL,
-      place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_citations_source_id ON citations(source_id);
@@ -120,5 +116,24 @@ export function initializeSchema(db: Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_assertions_citation_id ON assertions(citation_id);
+  `);
+
+  // v0.3.0 column migrations — idempotent (skips if column already present)
+  const eventCols = (db.prepare('PRAGMA table_info(events)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!eventCols.includes('relationship_id')) {
+    db.exec(`ALTER TABLE events ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
+  }
+
+  const citationCols = (db.prepare('PRAGMA table_info(citations)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!citationCols.includes('relationship_id')) {
+    db.exec(`ALTER TABLE citations ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
+  }
+  if (!citationCols.includes('place_id')) {
+    db.exec(`ALTER TABLE citations ADD COLUMN place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
+  }
+
+  // Indexes that depend on migrated columns — run after migrations
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
   `);
 }

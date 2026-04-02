@@ -93,7 +93,20 @@
       "WebFetch(domain:www.arkivdigital.net)",
       "WebFetch(domain:www.syniumsoftware.com)",
       "WebFetch(domain:help.heredis.com)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(git worktree:*)",
+      "Bash(git -C /Users/jonasahnstedt/git/slaktforskning/.worktrees/v030-evidence branch)",
+      "Bash(git -C /Users/jonasahnstedt/git/slaktforskning log main --oneline -3)",
+      "Bash(git -C /Users/jonasahnstedt/git/slaktforskning checkout main)",
+      "Bash(git -C /Users/jonasahnstedt/git/slaktforskning pull)",
+      "Bash(git -C /Users/jonasahnstedt/git/slaktforskning merge feature/v030-evidence-and-add-related)",
+      "Bash(git branch:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
+      "Bash(git -C /Users/jonasahnstedt/git/slaktforskning merge feature/component-and-e2e-tests)",
+      "Bash(mkdir -p .claude/plans)",
+      "Bash(mv docs/superpowers/plans/*.md .claude/plans/)"
     ]
   },
   "enableAllProjectMcpServers": true,
