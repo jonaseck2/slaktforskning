@@ -79,16 +79,6 @@ See `.claude/plans/archive/2026-04-02-gedcomx-name-parts-and-identifiers.md` for
 
 ## Roadmap
 
-### v0.3.1 — GEDCOM-X Name Parts + Person Identifiers (Done)
-
-See `.claude/plans/archive/2026-04-02-gedcomx-name-parts-and-identifiers.md` for the full implementation plan.
-
-- [x] Extend `person_names` with `name_prefix`, `name_suffix`, `patronymic_base`, `name_qualifier` — enables Swedish patronymics (Eriksson/Eriksdotter) and noble particles (von Linné)
-- [x] New `person_identifiers` table — typed external IDs (FamilySearch, Ancestry, Riksarkivet, personnummer, REFN, RIN)
-- [x] API + IPC + MCP tools for person identifiers (`add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`)
-- [x] PersonDetailView: prefix/suffix/qualifier displayed in names table; fields added to add/edit name modals
-- [x] PersonDetailView: external identifiers section (add/delete)
-
 ### v0.3.2 — PersonDetailView UX Improvements
 
 See `.claude/plans/2026-04-02-person-detail-ux.md` for the full implementation plan.

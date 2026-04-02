@@ -38,8 +38,8 @@ If this feature completes or partially completes a milestone:
 
 If the milestone is **fully complete**:
 - Move the plan file from `.claude/plans/` to `.claude/plans/archive/`
-- Update the `PLAN.md` pointer to the archived path
-- Add a brief "Done" summary note
+- Add a one-line "Done (vX.Y.Z — ...)" summary to the **Implementation Status** section in `PLAN.md`, with a pointer to the archived plan file
+- Remove the milestone's heading and checkbox list from the **Roadmap** section entirely — the Implementation Status entry is the permanent record; the Roadmap should only contain future work
 
 ### 4. `README.md` — user-facing doc
 
