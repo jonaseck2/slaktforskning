@@ -146,6 +146,24 @@ export function initializeSchema(db: Database): void {
     db.exec(`ALTER TABLE citations ADD COLUMN place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
   }
 
+  // v0.4.0 places column migrations — idempotent
+  const placesCols = (db.prepare('PRAGMA table_info(places)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!placesCols.includes('place_type')) {
+    db.exec(`ALTER TABLE places ADD COLUMN place_type TEXT`);
+  }
+  if (!placesCols.includes('parent_place_id')) {
+    db.exec(`ALTER TABLE places ADD COLUMN parent_place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
+  }
+  if (!placesCols.includes('date_from')) {
+    db.exec(`ALTER TABLE places ADD COLUMN date_from TEXT`);
+  }
+  if (!placesCols.includes('date_to')) {
+    db.exec(`ALTER TABLE places ADD COLUMN date_to TEXT`);
+  }
+  if (!placesCols.includes('notes')) {
+    db.exec(`ALTER TABLE places ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
+  }
+
   // Indexes that depend on migrated columns — run after migrations
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
