@@ -24,6 +24,26 @@ describe('createPlace', () => {
   });
 });
 
+describe('getPlace', () => {
+  it('returns the place by id', () => {
+    const p = createPlace(db, { name: 'Björkvik' });
+    expect(getPlace(db, p.id)?.name).toBe('Björkvik');
+  });
+  it('returns null for unknown id', () => {
+    expect(getPlace(db, 'nonexistent')).toBeNull();
+  });
+});
+
+describe('listPlaces', () => {
+  it('returns all places sorted by name', () => {
+    createPlace(db, { name: 'Örebro' });
+    createPlace(db, { name: 'Arboga' });
+    const list = listPlaces(db);
+    expect(list).toHaveLength(2);
+    expect(list[0].name).toBe('Arboga');
+  });
+});
+
 describe('searchPlaces', () => {
   it('finds places by name substring', () => {
     createPlace(db, { name: 'Björkvik' });
