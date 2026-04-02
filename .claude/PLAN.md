@@ -216,6 +216,20 @@ From the person detail view, the user can:
 
 Each action opens a modal with new person fields + relationship context pre-filled. Both person and relationship are created in a single transaction.
 
+### v0.3.1 — GEDCOM-X Alignment + UX Polish
+
+See `.claude/plans/2026-04-02-gedcomx-name-parts-and-identifiers.md` for the full implementation plan.
+
+- [ ] Extend `person_names` with `name_prefix`, `name_suffix`, `patronymic_base`, `name_qualifier` — enables Swedish patronymics and noble particles
+- [ ] New `person_identifiers` table — typed external IDs (FamilySearch, Ancestry, Riksarkivet, personnummer, REFN, RIN)
+- [ ] API + IPC + MCP tools for person identifiers
+- [ ] PersonDetailView: inline sex editing (select in header)
+- [ ] PersonDetailView: name rows clickable (click = edit modal), delete button only — consistent with relationships
+- [ ] PersonDetailView: name prefix/suffix/qualifier fields in add/edit modals
+- [ ] PersonDetailView: relationships table gains a delete button per row (row click still navigates to detail)
+- [ ] PersonDetailView: external identifiers section (add/delete)
+- [ ] AddRelatedPersonModal: "New / Existing" toggle — allow linking existing persons as parent/spouse/child
+
 ### v0.4.0 — Visualization & Navigation
 - [ ] Family tree visualization (pedigree chart, descendant chart) — uses `relationships` table
 - [ ] Place management UI and place hierarchy browser (farm → parish → härad → county)
