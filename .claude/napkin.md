@@ -11,15 +11,18 @@
    Do instead: run `git status` before committing and stage every modified/untracked file. Never selectively skip files without explicit user instruction.
 
 2. **[2026-03-15] Run tests and verify they pass before committing**
-   Do instead: run `npm test` and `npx playwright test` before each commit. Only commit when green.
+   Do instead: run `npm test` before each commit. Only commit when green. Never commit first and test after — a failing post-commit test leaves a broken commit in history.
 
-3. **[2026-03-15] GPG signing fails in non-interactive agent context**
+3. **[2026-04-03] Bump `package.json` version when completing a milestone**
+   Do instead: at the end of each roadmap version (v0.3.2, v0.4.0, etc.), update `"version"` in `package.json` to match and include it in the final commit.
+
+4. **[2026-03-15] GPG signing fails in non-interactive agent context**
    Do instead: if GPG signing is enabled and commit fails with "Bad PIN", tell user immediately and suggest `git config --local commit.gpgsign false`.
 
-4. **[2026-03-15] Keep PLAN.md in sync with actual implementation state**
+5. **[2026-03-15] Keep PLAN.md in sync with actual implementation state**
    Do instead: when completing or starting work, update `.claude/PLAN.md` checkboxes and move items between sections. The plan is the single source of truth for what's done and what's planned.
 
-5. **[2026-03-15] Write plans to files, not context**
+6. **[2026-03-15] Write plans to files, not context**
    Do instead: always persist plans, specs, and implementation notes to disk immediately. Context can be lost at any time. Never keep large plans only in conversation context.
 
 ## Shell & Command Reliability
