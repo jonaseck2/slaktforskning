@@ -47,6 +47,11 @@ If the commit completes a milestone (or part of one) that has a plan file in `.c
 - Update `.claude/PLAN.md` to mark the milestone done or partially done
 - Include these doc updates in the same commit
 
+If the commit **fully completes** a milestone:
+- Move the plan file from `.claude/plans/` to `.claude/plans/archive/`
+- Update the `.claude/PLAN.md` pointer to the archived path
+- Include the move in the same commit
+
 If the commit introduces a new plan file:
 - Check that `.claude/PLAN.md` has a matching milestone entry pointing to the plan file
 - If missing, add it before committing
