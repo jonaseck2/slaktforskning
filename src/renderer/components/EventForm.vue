@@ -42,7 +42,7 @@
 import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DateInput from './DateInput.vue';
-import { PERSON_EVENT_TYPE_VALUES, FAMILY_EVENT_TYPE_VALUES } from '../constants/eventTypes';
+import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -61,7 +61,7 @@ interface EventData {
 
 const props = defineProps<{
   personId?: string;
-  familyId?: string;
+  relationshipId?: string;
   editingEvent?: EventData | null;
 }>();
 
@@ -72,7 +72,7 @@ const emit = defineEmits<{
 
 useI18n();
 
-const eventTypeValues = props.familyId ? FAMILY_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
+const eventTypeValues = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
 
 const form = reactive({
   event_type: props.editingEvent?.event_type ?? '',
@@ -96,13 +96,20 @@ async function save() {
       description: form.description,
     };
 
-    if (props.personId) data.person_id = props.personId;
-    if (props.familyId) data.family_id = props.familyId;
+    if (props.relationshipId) data.relationship_id = props.relationshipId;
 
     if (props.editingEvent) {
       await window.api.events.update(props.editingEvent.id, data);
     } else {
-      await window.api.events.create(data);
+      const event = (await window.api.events.create(data)) as { id: string };
+      // If this is a person event, add the person as a participant
+      if (props.personId && event.id) {
+        await window.api.eventParticipants.add({
+          event_id: event.id,
+          person_id: props.personId,
+          role: 'primary',
+        });
+      }
     }
     emit('saved');
     emit('close');

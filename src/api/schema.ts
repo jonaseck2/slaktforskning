@@ -26,32 +26,30 @@ export function initializeSchema(db: Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id);
 
-    CREATE TABLE IF NOT EXISTS families (
+    CREATE TABLE IF NOT EXISTS relationships (
       id TEXT PRIMARY KEY,
-      partner_a_id TEXT REFERENCES persons(id) ON DELETE SET NULL,
-      partner_b_id TEXT REFERENCES persons(id) ON DELETE SET NULL,
-      union_type TEXT NOT NULL DEFAULT 'unknown' CHECK(union_type IN ('marriage', 'civil_union', 'cohabitation', 'unknown')),
+      type TEXT NOT NULL CHECK(type IN ('couple', 'parent_child', 'sibling', 'godparent', 'other')),
+      person1_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
+      person2_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
+      subtype TEXT,
       notes TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-
-    CREATE TABLE IF NOT EXISTS person_family_links (
-      id TEXT PRIMARY KEY,
-      person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-      family_id TEXT NOT NULL REFERENCES families(id) ON DELETE CASCADE,
-      relationship_type TEXT NOT NULL DEFAULT 'biological' CHECK(relationship_type IN ('biological', 'adopted', 'foster', 'step', 'unknown')),
-      UNIQUE(person_id, family_id)
-    );
-    CREATE INDEX IF NOT EXISTS idx_person_family_links_family_id ON person_family_links(family_id);
+    CREATE INDEX IF NOT EXISTS idx_relationships_person1_id ON relationships(person1_id);
+    CREATE INDEX IF NOT EXISTS idx_relationships_person2_id ON relationships(person2_id);
 
     CREATE TABLE IF NOT EXISTS places (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       normalized_name TEXT NOT NULL DEFAULT '',
+      place_type TEXT,
       latitude REAL,
       longitude REAL,
-      parent_place_id TEXT REFERENCES places(id) ON DELETE SET NULL
+      parent_place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
+      date_from TEXT,
+      date_to TEXT,
+      notes TEXT NOT NULL DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS events (
@@ -63,13 +61,21 @@ export function initializeSchema(db: Database): void {
       date_original TEXT NOT NULL DEFAULT '',
       place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
       description TEXT NOT NULL DEFAULT '',
-      person_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
-      family_id TEXT REFERENCES families(id) ON DELETE CASCADE,
+      relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-    CREATE INDEX IF NOT EXISTS idx_events_person_id ON events(person_id);
-    CREATE INDEX IF NOT EXISTS idx_events_family_id ON events(family_id);
+    CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
+
+    CREATE TABLE IF NOT EXISTS event_participants (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      role TEXT NOT NULL DEFAULT 'primary',
+      UNIQUE(event_id, person_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_participants_event_id ON event_participants(event_id);
+    CREATE INDEX IF NOT EXISTS idx_event_participants_person_id ON event_participants(person_id);
 
     CREATE TABLE IF NOT EXISTS sources (
       id TEXT PRIMARY KEY,
@@ -92,9 +98,27 @@ export function initializeSchema(db: Database): void {
       transcription TEXT NOT NULL DEFAULT '',
       notes TEXT NOT NULL DEFAULT '',
       event_id TEXT REFERENCES events(id) ON DELETE SET NULL,
-      person_id TEXT REFERENCES persons(id) ON DELETE SET NULL
+      person_id TEXT REFERENCES persons(id) ON DELETE SET NULL,
+      relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL,
+      place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_citations_source_id ON citations(source_id);
     CREATE INDEX IF NOT EXISTS idx_citations_event_id ON citations(event_id);
+
+    CREATE TABLE IF NOT EXISTS assertions (
+      id TEXT PRIMARY KEY,
+      citation_id TEXT NOT NULL REFERENCES citations(id) ON DELETE CASCADE,
+      subject_type TEXT NOT NULL,
+      subject_id TEXT NOT NULL,
+      attribute TEXT NOT NULL DEFAULT '',
+      value TEXT NOT NULL DEFAULT '',
+      value_original TEXT NOT NULL DEFAULT '',
+      confidence INTEGER NOT NULL DEFAULT 0,
+      is_accepted INTEGER NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_assertions_citation_id ON assertions(citation_id);
   `);
 }

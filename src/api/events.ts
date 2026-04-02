@@ -6,8 +6,7 @@ export function createEvent(
   db: Database,
   data: {
     event_type: string;
-    person_id?: string | null;
-    family_id?: string | null;
+    relationship_id?: string | null;
     date_type?: GenealogyEvent['date_type'];
     date_value?: string | null;
     date_value_end?: string | null;
@@ -18,13 +17,12 @@ export function createEvent(
 ): GenealogyEvent {
   const id = uuid();
   db.prepare(`
-    INSERT INTO events (id, event_type, person_id, family_id, date_type, date_value, date_value_end, date_original, place_id, description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, description)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run([
     id,
     data.event_type,
-    data.person_id ?? null,
-    data.family_id ?? null,
+    data.relationship_id ?? null,
     data.date_type ?? 'unknown',
     data.date_value ?? null,
     data.date_value_end ?? null,
@@ -40,11 +38,16 @@ export function getEvent(db: Database, id: string): GenealogyEvent | null {
 }
 
 export function getEventsForPerson(db: Database, personId: string): GenealogyEvent[] {
-  return db.prepare(`SELECT * FROM events WHERE person_id = ? ORDER BY date_value`).all([personId]) as GenealogyEvent[];
+  return db.prepare(`
+    SELECT e.* FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE ep.person_id = ?
+    ORDER BY e.date_value
+  `).all([personId]) as GenealogyEvent[];
 }
 
-export function getEventsForFamily(db: Database, familyId: string): GenealogyEvent[] {
-  return db.prepare(`SELECT * FROM events WHERE family_id = ? ORDER BY date_value`).all([familyId]) as GenealogyEvent[];
+export function getEventsForRelationship(db: Database, relationshipId: string): GenealogyEvent[] {
+  return db.prepare(`SELECT * FROM events WHERE relationship_id = ? ORDER BY date_value`).all([relationshipId]) as GenealogyEvent[];
 }
 
 export function updateEvent(

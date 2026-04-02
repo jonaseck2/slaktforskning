@@ -14,7 +14,7 @@ export const PERSON_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter(
   (t) => !['marriage', 'divorce'].includes(t),
 );
 
-export const FAMILY_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter((t) =>
+export const RELATIONSHIP_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter((t) =>
   ['marriage', 'divorce', 'census', 'other'].includes(t),
 );
 
@@ -30,12 +30,20 @@ export const SOURCE_TYPE_VALUES = [
   'immigration_record', 'book', 'online_database', 'other',
 ] as const;
 
-export const UNION_TYPE_VALUES = [
+export const RELATIONSHIP_TYPE_VALUES = [
+  'couple', 'parent_child', 'sibling', 'godparent', 'other',
+] as const;
+
+export const COUPLE_SUBTYPE_VALUES = [
   'marriage', 'civil_union', 'cohabitation', 'unknown',
 ] as const;
 
-export const RELATIONSHIP_TYPE_VALUES = [
+export const PARENT_CHILD_SUBTYPE_VALUES = [
   'biological', 'adopted', 'foster', 'step', 'unknown',
+] as const;
+
+export const EVENT_PARTICIPANT_ROLE_VALUES = [
+  'primary', 'spouse', 'parent', 'child', 'witness', 'godparent', 'officiant', 'other',
 ] as const;
 
 export const NAME_TYPE_VALUES = [

@@ -49,32 +49,30 @@
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
-    <!-- Families Section -->
+    <!-- Relationships Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>{{ $t('personDetail.families') }}</h4>
+        <h4>{{ $t('personDetail.relationships') }}</h4>
       </div>
-      <div v-if="families.length === 0" class="empty-hint">{{ $t('personDetail.noFamilies') }}</div>
+      <div v-if="rels.length === 0" class="empty-hint">{{ $t('personDetail.noRelationships') }}</div>
       <table v-else class="data-table">
         <thead>
           <tr>
-            <th>{{ $t('personDetail.role') }}</th>
-            <th>{{ $t('personDetail.unionType') }}</th>
-            <th>{{ $t('personDetail.partner') }}</th>
-            <th>{{ $t('common.actions') }}</th>
+            <th>{{ $t('common.type') }}</th>
+            <th>{{ $t('relationshipDetail.subtype') }}</th>
+            <th>{{ $t('common.name') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="fam in families"
-            :key="fam.id"
+            v-for="rel in rels"
+            :key="rel.id"
             class="clickable-row"
-            @click="$router.push(`/families/${fam.id}`)"
+            @click="$router.push(`/relationships/${rel.id}`)"
           >
-            <td>{{ fam.role === 'Partner' ? $t('personDetail.partner') : $t('personDetail.child') }}</td>
-            <td>{{ $t('unionTypes.' + fam.union_type) }}</td>
-            <td>{{ fam.partner_name || '—' }}</td>
-            <td></td>
+            <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
+            <td>{{ rel.subtypeLabel || '—' }}</td>
+            <td>{{ rel.otherPersonName || '—' }}</td>
           </tr>
         </tbody>
       </table>
@@ -151,13 +149,14 @@ interface NameRow {
   sort_order: number;
 }
 
-interface FamilyRow {
+interface RelRow {
   id: string;
-  partner_a_id: string | null;
-  partner_b_id: string | null;
-  union_type: string;
-  role: string;
-  partner_name: string;
+  type: string;
+  person1_id: string | null;
+  person2_id: string | null;
+  subtype: string | null;
+  otherPersonName: string;
+  subtypeLabel: string;
 }
 
 const { t } = useI18n();
@@ -166,7 +165,7 @@ const personId = route.params.id as string;
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
-const families = ref<FamilyRow[]>([]);
+const rels = ref<RelRow[]>([]);
 const primaryName = ref('');
 const notesText = ref('');
 const showNameForm = ref(false);
@@ -177,6 +176,13 @@ const nameForm = reactive({
   surname: '',
   name_type: 'married',
 });
+
+function getSubtypeLabel(type: string, subtype: string | null): string {
+  if (!subtype) return '';
+  if (type === 'couple') return t('coupleSubtypes.' + subtype);
+  if (type === 'parent_child') return t('parentChildSubtypes.' + subtype);
+  return subtype;
+}
 
 async function load() {
   if (!window.api) return;
@@ -191,30 +197,29 @@ async function load() {
       primaryName.value = `${n.given_name} ${n.surname}`.trim();
     }
 
-    const rawFamilies = (await window.api.families.getForPerson(personId)) as Array<{
+    const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{
       id: string;
-      partner_a_id: string | null;
-      partner_b_id: string | null;
-      union_type: string;
+      type: string;
+      person1_id: string | null;
+      person2_id: string | null;
+      subtype: string | null;
     }>;
 
-    const enriched: FamilyRow[] = [];
-    for (const f of rawFamilies) {
-      const isPartnerA = f.partner_a_id === personId;
-      const isPartnerB = f.partner_b_id === personId;
-      const partnerId = isPartnerA ? f.partner_b_id : isPartnerB ? f.partner_a_id : null;
-      let partnerName = '';
-      if (partnerId) {
-        const pNames = (await window.api.persons.getNames(partnerId)) as NameRow[];
-        if (pNames.length > 0) partnerName = `${pNames[0].given_name} ${pNames[0].surname}`.trim();
+    const enriched: RelRow[] = [];
+    for (const r of rawRels) {
+      const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
+      let otherPersonName = '';
+      if (otherId) {
+        const pNames = (await window.api.persons.getNames(otherId)) as NameRow[];
+        if (pNames.length > 0) otherPersonName = `${pNames[0].given_name} ${pNames[0].surname}`.trim();
       }
       enriched.push({
-        ...f,
-        role: isPartnerA || isPartnerB ? 'Partner' : 'Child',
-        partner_name: partnerName,
+        ...r,
+        otherPersonName: otherPersonName || t('common.unknown'),
+        subtypeLabel: getSubtypeLabel(r.type, r.subtype),
       });
     }
-    families.value = enriched;
+    rels.value = enriched;
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
   }

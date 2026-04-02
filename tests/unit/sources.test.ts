@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type Database from 'better-sqlite3';
 import { createTestDb } from './helpers';
-import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import {
   createSource,
@@ -72,8 +71,7 @@ describe('sources', () => {
 
 describe('citations', () => {
   it('creates a citation linking source to event', () => {
-    const person = createPerson(db, { given_name: 'Test', surname: 'T' });
-    const event = createEvent(db, { event_type: 'birth', person_id: person.id });
+    const event = createEvent(db, { event_type: 'birth' });
     const source = createSource(db, { title: 'Birth Record' });
     const citation = createCitation(db, {
       source_id: source.id,
@@ -96,8 +94,7 @@ describe('citations', () => {
   });
 
   it('gets citations for an event', () => {
-    const person = createPerson(db, { given_name: 'Test', surname: 'T' });
-    const event = createEvent(db, { event_type: 'birth', person_id: person.id });
+    const event = createEvent(db, { event_type: 'birth' });
     const source = createSource(db, { title: 'Record' });
     createCitation(db, { source_id: source.id, event_id: event.id });
     expect(getCitationsForEvent(db, event.id)).toHaveLength(1);

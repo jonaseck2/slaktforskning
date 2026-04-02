@@ -1,5 +1,16 @@
 # CLAUDE.md
 
+## Approach
+
+Think before acting. Read existing files before writing code.
+Be concise in output but thorough in reasoning.
+Prefer editing over rewriting whole files.
+Do not re-read files you have already read unless the file may have changed.
+Test your code before declaring done.
+No sycophantic openers or closing fluff.
+Keep solutions simple and direct.
+User instructions always override this file.
+
 Agent instructions for the Släktforskning codebase. This file is the complete reference — an agent should be able to start coding without scanning the repo.
 
 ## Project Overview
@@ -28,10 +39,10 @@ Släktforskning is a cross-platform desktop genealogy app built with Electron + 
 ```
 src/
 ├── api/                          # Pure TypeScript business logic — NO Electron imports
-│   ├── types.ts                  # Domain types (Person, PersonName, Family, etc.)
+│   ├── types.ts                  # Domain types (Person, PersonName, Relationship, etc.)
 │   ├── schema.ts                 # SQLite DDL (CREATE TABLE IF NOT EXISTS)
 │   ├── persons.ts                # Person + PersonName CRUD
-│   ├── families.ts               # Family + PersonFamilyLink CRUD
+│   ├── relationships.ts          # Relationship + EventParticipant CRUD
 │   ├── events.ts                 # Life event CRUD
 │   └── sources.ts                # Source + Citation CRUD
 ├── main/                         # Electron main process
@@ -41,14 +52,14 @@ src/
 ├── preload/                      # contextBridge — exposes window.api
 │   └── index.ts                  # All IPC channels mapped to window.api.*
 ├── renderer/                     # Vue 3 application
-│   ├── App.vue                   # Root layout: sidebar (Persons/Families/Sources) + <router-view>
-│   ├── router.ts                 # Hash-based router with 6 routes
+│   ├── App.vue                   # Root layout: sidebar (Persons/Relationships/Sources) + <router-view>
+│   ├── router.ts                 # Hash-based router with 7 routes
 │   ├── main.ts                   # Vue bootstrap (createApp + router)
 │   ├── views/
 │   │   ├── PersonsView.vue       # Person list + "Add Person" modal
-│   │   ├── PersonDetailView.vue  # Person detail: names, events, families, notes
-│   │   ├── FamiliesView.vue      # Family list + "Add Family" modal (with PersonPicker)
-│   │   ├── FamilyDetailView.vue  # Family detail: partners, children, events
+│   │   ├── PersonDetailView.vue  # Person detail: names, events, relationships, notes
+│   │   ├── RelationshipsView.vue # Relationship list + "Add Relationship" modal (with PersonPicker)
+│   │   ├── RelationshipDetailView.vue # Relationship detail: persons, type/subtype, events
 │   │   ├── SourcesView.vue       # Source list + "Add Source" modal
 │   │   └── SourceDetailView.vue  # Source detail: editable fields, citations
 │   ├── components/
@@ -66,7 +77,7 @@ tests/
 ├── unit/                         # Vitest — tests api/ with in-memory SQLite
 │   ├── helpers.ts                # createTestDb() — fresh :memory: DB with schema
 │   ├── persons.test.ts
-│   ├── families.test.ts
+│   ├── relationships.test.ts
 │   ├── events.test.ts
 │   └── sources.test.ts
 └── e2e/                          # Playwright — process spawning tests
@@ -85,11 +96,12 @@ tests/
 | Path | Component | Description |
 |------|-----------|-------------|
 | `/` | `PersonsView` | Person list with "Add Person" modal |
-| `/persons/:id` | `PersonDetailView` | Person detail with names, events, families |
-| `/families` | `FamiliesView` | Family list with "Add Family" modal |
-| `/families/:id` | `FamilyDetailView` | Family detail with partners, children, events |
+| `/persons/:id` | `PersonDetailView` | Person detail with names, events, relationships, notes |
+| `/relationships` | `RelationshipsView` | Relationship list + "Add Relationship" modal |
+| `/relationships/:id` | `RelationshipDetailView` | Relationship detail: persons, type/subtype, events |
 | `/sources` | `SourcesView` | Source list with "Add Source" modal |
 | `/sources/:id` | `SourceDetailView` | Source detail with editable fields, citations |
+| `/search` | `SearchView` | Global search across persons, relationships, sources |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
@@ -98,30 +110,32 @@ Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 ## Domain Types (`src/api/types.ts`)
 
 ```typescript
-Person       { id, sex: 'M'|'F'|'U', living: boolean, notes, created_at, updated_at }
-PersonName   { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order }
-Family       { id, partner_a_id?, partner_b_id?, union_type: 'marriage'|'civil_union'|'cohabitation'|'unknown', notes, created_at, updated_at }
-PersonFamilyLink { id, person_id, family_id, relationship_type: 'biological'|'adopted'|'foster'|'step'|'unknown' }
-GenealogyEvent { id, event_type, date_type: 'exact'|'about'|'before'|'after'|'between'|'calculated'|'unknown', date_value?, date_value_end?, date_original, place_id?, description, person_id?, family_id?, created_at, updated_at }
-Place        { id, name, normalized_name, latitude?, longitude?, parent_place_id? }
-Source       { id, title, author, publication_info, repository, url, source_type, created_at, updated_at }
-Citation     { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id? }
+Person           { id, sex: 'M'|'F'|'U', living: boolean, notes, created_at, updated_at }
+PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order }
+Relationship     { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
+EventParticipant { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
+GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, description, relationship_id?, created_at, updated_at }
+Place            { id, name, normalized_name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes }
+Source           { id, title, author, publication_info, repository, url, source_type, created_at, updated_at }
+Citation         { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, created_at }
+Assertion        { id, citation_id, subject_type, subject_id, attribute, value, value_original, confidence, is_accepted, notes, created_at } // schema only, UI deferred
 ```
 
 ## Database Schema
 
-8 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
+9 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
 | `persons` | id, sex, living, notes | — |
 | `person_names` | person_id, given_name, surname, name_type, sort_order | person_id → CASCADE |
-| `families` | partner_a_id, partner_b_id, union_type, notes | partner_*_id → SET NULL |
-| `person_family_links` | person_id, family_id, relationship_type (UNIQUE person+family) | both → CASCADE |
-| `places` | name, normalized_name, latitude, longitude, parent_place_id | parent → SET NULL |
-| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, description, person_id, family_id | person/family → CASCADE, place → SET NULL |
+| `relationships` | type, person1_id, person2_id, subtype, notes | person1/person2 → CASCADE |
+| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, description, relationship_id | relationship → SET NULL, place → SET NULL |
+| `event_participants` | event_id, person_id, role (UNIQUE event+person) | both → CASCADE |
+| `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes | parent → SET NULL |
 | `sources` | title, author, publication_info, repository, url, source_type | — |
-| `citations` | source_id, page, confidence, transcription, notes, event_id, person_id | source → CASCADE, event/person → SET NULL |
+| `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id | source → CASCADE, event/person/relationship → SET NULL |
+| `assertions` | citation_id, subject_type, subject_id, attribute, value, confidence, is_accepted | citation → CASCADE |
 
 ---
 
@@ -141,24 +155,26 @@ addPersonName(db, personId, { given_name, surname, name_type? }) → PersonName
 getPersonNames(db, personId) → PersonName[]
 ```
 
-### families.ts
+### relationships.ts
 ```
-createFamily(db, { partner_a_id?, partner_b_id?, union_type?, notes? }) → Family
-getFamily(db, id) → Family | null
-listFamilies(db) → Family[]
-updateFamily(db, id, { partner_a_id?, partner_b_id?, union_type?, notes? }) → Family | null
-deleteFamily(db, id) → boolean
-addChildToFamily(db, familyId, personId, relationshipType = 'biological') → PersonFamilyLink
-getChildrenOfFamily(db, familyId) → PersonFamilyLink[]
-getFamiliesOfPerson(db, personId) → Family[]
+createRelationship(db, { type, person1_id?, person2_id?, subtype?, notes? }) → Relationship
+getRelationship(db, id) → Relationship | null
+listRelationships(db) → Relationship[]
+updateRelationship(db, id, { type?, person1_id?, person2_id?, subtype?, notes? }) → Relationship | null
+deleteRelationship(db, id) → boolean
+getRelationshipsOfPerson(db, personId) → Relationship[]
+searchRelationships(db, query) → (Relationship & { person1_given_name, person1_surname, person2_given_name, person2_surname })[]
+addEventParticipant(db, { event_id, person_id, role? }) → EventParticipant
+getEventParticipants(db, eventId) → EventParticipant[]
+removeEventParticipant(db, id) → boolean
 ```
 
 ### events.ts
 ```
-createEvent(db, { event_type, person_id?, family_id?, date_type?, date_value?, date_value_end?, date_original?, place_id?, description? }) → GenealogyEvent
+createEvent(db, { event_type, relationship_id?, date_type?, date_value?, date_value_end?, date_original?, place_id?, description? }) → GenealogyEvent
 getEvent(db, id) → GenealogyEvent | null
-getEventsForPerson(db, personId) → GenealogyEvent[]
-getEventsForFamily(db, familyId) → GenealogyEvent[]
+getEventsForPerson(db, personId) → GenealogyEvent[]   // via event_participants JOIN
+getEventsForRelationship(db, relationshipId) → GenealogyEvent[]
 updateEvent(db, id, { ...partial fields }) → GenealogyEvent | null
 deleteEvent(db, id) → boolean
 ```
@@ -170,7 +186,7 @@ getSource(db, id) → Source | null
 listSources(db) → Source[]
 updateSource(db, id, { ...partial fields }) → Source | null
 deleteSource(db, id) → boolean
-createCitation(db, { source_id, event_id?, person_id?, page?, confidence?, transcription?, notes?, date_accessed? }) → Citation
+createCitation(db, { source_id, event_id?, person_id?, relationship_id?, place_id?, page?, confidence?, transcription?, notes?, date_accessed? }) → Citation
 getCitation(db, id) → Citation | null
 getCitationsForSource(db, sourceId) → Citation[]
 getCitationsForEvent(db, eventId) → Citation[]
@@ -201,19 +217,22 @@ window.api.persons.search(query)           // → (Person & { given_name, surnam
 window.api.persons.addName(personId, data) // → PersonName
 window.api.persons.getNames(personId)      // → PersonName[]
 
-window.api.families.create(data)           // → Family
-window.api.families.get(id)                // → Family | null
-window.api.families.list()                 // → Family[]
-window.api.families.update(id, data)       // → Family | null
-window.api.families.delete(id)             // → boolean
-window.api.families.addChild(familyId, personId, relType?) // → PersonFamilyLink
-window.api.families.getChildren(familyId)  // → PersonFamilyLink[]
-window.api.families.getForPerson(personId) // → Family[]
+window.api.relationships.create(data)              // → Relationship
+window.api.relationships.get(id)                   // → Relationship | null
+window.api.relationships.list()                    // → Relationship[]
+window.api.relationships.update(id, data)          // → Relationship | null
+window.api.relationships.delete(id)                // → boolean
+window.api.relationships.getForPerson(personId)    // → Relationship[]
+window.api.relationships.search(query)             // → (Relationship & names)[]
+
+window.api.eventParticipants.add(data)             // → EventParticipant
+window.api.eventParticipants.getForEvent(eventId)  // → EventParticipant[]
+window.api.eventParticipants.remove(id)            // → boolean
 
 window.api.events.create(data)             // → GenealogyEvent
 window.api.events.get(id)                  // → GenealogyEvent | null
-window.api.events.forPerson(personId)      // → GenealogyEvent[]
-window.api.events.forFamily(familyId)      // → GenealogyEvent[]
+window.api.events.forPerson(personId)      // → GenealogyEvent[]  (via event_participants)
+window.api.events.forRelationship(relId)   // → GenealogyEvent[]
 window.api.events.update(id, data)         // → GenealogyEvent | null
 window.api.events.delete(id)               // → boolean
 
@@ -242,18 +261,20 @@ window.api.citations.delete(id)            // → boolean
 | `persons:search` | `persons.searchPersons(db, query)` |
 | `persons:addName` | `persons.addPersonName(db, personId, data)` |
 | `persons:getNames` | `persons.getPersonNames(db, personId)` |
-| `families:create` | `families.createFamily(db, data)` |
-| `families:get` | `families.getFamily(db, id)` |
-| `families:list` | `families.listFamilies(db)` |
-| `families:update` | `families.updateFamily(db, id, data)` |
-| `families:delete` | `families.deleteFamily(db, id)` |
-| `families:addChild` | `families.addChildToFamily(db, familyId, personId, relType)` |
-| `families:getChildren` | `families.getChildrenOfFamily(db, familyId)` |
-| `families:getForPerson` | `families.getFamiliesOfPerson(db, personId)` |
+| `relationships:create` | `relationships.createRelationship(db, data)` |
+| `relationships:get` | `relationships.getRelationship(db, id)` |
+| `relationships:list` | `relationships.listRelationships(db)` |
+| `relationships:update` | `relationships.updateRelationship(db, id, data)` |
+| `relationships:delete` | `relationships.deleteRelationship(db, id)` |
+| `relationships:getForPerson` | `relationships.getRelationshipsOfPerson(db, personId)` |
+| `relationships:search` | `relationships.searchRelationships(db, query)` |
+| `eventParticipants:add` | `relationships.addEventParticipant(db, data)` |
+| `eventParticipants:getForEvent` | `relationships.getEventParticipants(db, eventId)` |
+| `eventParticipants:remove` | `relationships.removeEventParticipant(db, id)` |
 | `events:create` | `events.createEvent(db, data)` |
 | `events:get` | `events.getEvent(db, id)` |
 | `events:forPerson` | `events.getEventsForPerson(db, personId)` |
-| `events:forFamily` | `events.getEventsForFamily(db, familyId)` |
+| `events:forRelationship` | `events.getEventsForRelationship(db, relationshipId)` |
 | `events:update` | `events.updateEvent(db, id, data)` |
 | `events:delete` | `events.deleteEvent(db, id)` |
 | `sources:create` | `sources.createSource(db, data)` |
@@ -319,7 +340,7 @@ Used for all create/edit forms. Stays in context (no page navigation).
 
 ### List View Pattern
 
-Used by PersonsView, FamiliesView, SourcesView:
+Used by PersonsView, RelationshipsView, SourcesView:
 - Header with title + "Add" button
 - Table with clickable rows → `router.push('/entity/:id')`
 - Delete button with `@click.stop` to prevent row click
@@ -327,7 +348,7 @@ Used by PersonsView, FamiliesView, SourcesView:
 
 ### Detail View Pattern
 
-Used by PersonDetailView, FamilyDetailView, SourceDetailView:
+Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 - Load entity on mount via `useRoute().params.id`
 - Auto-save on blur/change for editable fields
 - Embedded EventList component for events
@@ -339,22 +360,24 @@ Used by PersonDetailView, FamilyDetailView, SourceDetailView:
 |-----------|-------|-------|-------------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
 | `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Compound date input. Shows `date_value_end` only when type is "between". Preserves original source text. |
-| `EventForm` | `personId?: string`, `familyId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or FAMILY_EVENT_TYPES based on context. |
-| `EventList` | `personId?: string`, `familyId?: string` | — | Event table with edit/delete. Embeds EventForm. Exposes `reload()` method via `defineExpose`. |
+| `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
+| `EventList` | `personId?: string`, `relationshipId?: string` | — | Event table with edit/delete. Embeds EventForm. Exposes `reload()` method via `defineExpose`. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
 
 ### Constants (`src/renderer/constants/eventTypes.ts`)
 
 ```typescript
-EVENT_TYPES          // 22 GEDCOM event types: birth, death, marriage, divorce, ...
-PERSON_EVENT_TYPES   // EVENT_TYPES minus marriage/divorce
-FAMILY_EVENT_TYPES   // marriage, divorce, census, other only
-DATE_TYPES           // exact, about, before, after, between, calculated, unknown
-CONFIDENCE_LEVELS    // 0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary
-SOURCE_TYPES         // vital_record, census, church_record, newspaper, ...
-UNION_TYPES          // marriage, civil_union, cohabitation, unknown
-RELATIONSHIP_TYPES   // biological, adopted, foster, step, unknown
-NAME_TYPES           // birth, married, alias, aka
+EVENT_TYPE_VALUES              // 22 GEDCOM event types: birth, death, marriage, divorce, ...
+PERSON_EVENT_TYPE_VALUES       // EVENT_TYPES minus marriage/divorce
+RELATIONSHIP_EVENT_TYPE_VALUES // marriage, divorce, census, other only
+DATE_TYPE_VALUES               // exact, about, before, after, between, calculated, unknown
+CONFIDENCE_LEVEL_VALUES        // 0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary
+SOURCE_TYPE_VALUES             // vital_record, census, church_record, newspaper, ...
+RELATIONSHIP_TYPE_VALUES       // couple, parent_child, sibling, godparent, other
+COUPLE_SUBTYPE_VALUES          // marriage, civil_union, cohabitation, unknown
+PARENT_CHILD_SUBTYPE_VALUES    // biological, adopted, foster, step, unknown
+EVENT_PARTICIPANT_ROLE_VALUES  // primary, spouse, parent, child, witness, godparent, officiant, other
+NAME_TYPE_VALUES               // birth, married, alias, aka
 ```
 
 ---
@@ -363,7 +386,7 @@ NAME_TYPES           // birth, married, alias, aka
 
 ```bash
 npm start              # Launch Electron app in dev mode (Vite HMR)
-npm test               # Run unit tests (Vitest, 30+ tests)
+npm test               # Run unit tests (Vitest, 37 tests)
 npx playwright test    # Run E2E tests (app launch + MCP server)
 npm run package        # Package for current platform
 npm run make           # Build distributable installers
@@ -398,11 +421,21 @@ Tests live in `tests/e2e/`. Two tests: app launch smoke test + MCP server `initi
 
 ## MCP Server
 
-14 tools wrapping the same api/ functions. Runs standalone via `npx tsx src/mcp/server.ts`.
+Data tools wrapping the same api/ functions, plus UI tools. Runs standalone via `npx tsx src/mcp/server.ts`.
 
 DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
-Tools: `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `create_family`, `add_child_to_family`, `list_families`, `add_event`, `get_events_for_person`, `add_source`, `add_citation`, `list_sources`
+**Person tools:** `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`
+
+**Relationship tools:** `create_relationship`, `get_relationship`, `list_relationships`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`, `search_relationships`
+
+**Event participant tools:** `add_event_participant`, `get_event_participants`, `remove_event_participant`
+
+**Event tools:** `add_event`, `get_event`, `get_events_for_person`, `get_events_for_relationship`, `update_event`, `delete_event`
+
+**Source/citation tools:** `add_source`, `get_source`, `list_sources`, `update_source`, `delete_source`, `search_sources`, `add_citation`, `get_citation`, `get_citations_for_source`, `get_citations_for_event`, `delete_citation`
+
+**UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
 
 ---
 

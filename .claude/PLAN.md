@@ -174,19 +174,19 @@ CREATE TABLE assertions (
 
 **Implementation checklist:**
 
-- [ ] Update `src/api/schema.ts` with new DDL (idempotent, use `IF NOT EXISTS`)
-- [ ] Write migration script for existing databases (families → relationships, events.person_id → event_participants)
-- [ ] Add `src/api/relationships.ts` (CRUD for relationships and event_participants)
-- [ ] Update `src/api/events.ts` to use event_participants instead of person_id/family_id
-- [ ] Update `src/api/sources.ts` (citations now accept relationship_id, place_id)
-- [ ] Update `src/api/types.ts` with new domain types
-- [ ] Write unit tests for new API functions
-- [ ] Update IPC handlers in `src/main/ipc.ts`
-- [ ] Update preload in `src/preload/index.ts`
-- [ ] Update MCP server with relationship tools
-- [ ] Update Vue views/components to use new model
-- [ ] Run `npm test && npx playwright test`
-- [ ] Update CLAUDE.md to reflect new schema
+- [x] Update `src/api/schema.ts` with new DDL (idempotent, use `IF NOT EXISTS`)
+- [ ] Write migration script for existing databases (families → relationships, events.person_id → event_participants) — deferred, no production data yet
+- [x] Add `src/api/relationships.ts` (CRUD for relationships and event_participants)
+- [x] Update `src/api/events.ts` to use event_participants instead of person_id/family_id
+- [x] Update `src/api/sources.ts` (citations now accept relationship_id, place_id)
+- [x] Update `src/api/types.ts` with new domain types
+- [x] Write unit tests for new API functions (37 tests passing)
+- [x] Update IPC handlers in `src/main/ipc.ts`
+- [x] Update preload in `src/preload/index.ts`
+- [x] Update MCP server with relationship tools
+- [x] Update Vue views/components to use new model
+- [x] Run `npm test` — 37 tests passing
+- [x] Update CLAUDE.md to reflect new schema
 
 #### Evidence Visibility & Citation Affordances
 

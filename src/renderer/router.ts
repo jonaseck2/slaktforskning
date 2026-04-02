@@ -1,8 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import PersonsView from './views/PersonsView.vue';
 import PersonDetailView from './views/PersonDetailView.vue';
-import FamiliesView from './views/FamiliesView.vue';
-import FamilyDetailView from './views/FamilyDetailView.vue';
+import RelationshipsView from './views/RelationshipsView.vue';
+import RelationshipDetailView from './views/RelationshipDetailView.vue';
 import SourcesView from './views/SourcesView.vue';
 import SourceDetailView from './views/SourceDetailView.vue';
 import SearchView from './views/SearchView.vue';
@@ -12,8 +12,8 @@ export const router = createRouter({
   routes: [
     { path: '/', component: PersonsView },
     { path: '/persons/:id', component: PersonDetailView },
-    { path: '/families', component: FamiliesView },
-    { path: '/families/:id', component: FamilyDetailView },
+    { path: '/relationships', component: RelationshipsView },
+    { path: '/relationships/:id', component: RelationshipDetailView },
     { path: '/sources', component: SourcesView },
     { path: '/sources/:id', component: SourceDetailView },
     { path: '/search', component: SearchView },
