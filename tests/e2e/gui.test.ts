@@ -89,13 +89,41 @@ class AppDriver {
       if (dom.includes(text)) return dom;
       await new Promise((r) => setTimeout(r, 250));
     }
-    throw new Error(`Timed out waiting for "${text}" in DOM`);
+    const finalDom = await this.getDom();
+    const snippet = finalDom.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').slice(0, 3000);
+    throw new Error(`Timed out waiting for "${text}" in DOM\n\nDOM: ${snippet}`);
   }
 
   /** Assert the DOM contains a text string. */
   async expectText(text: string): Promise<void> {
     const dom = await this.getDom();
     expect(dom).toContain(text);
+  }
+
+  /**
+   * Wait for a CSS selector to appear in the DOM and immediately fill its value.
+   * Done in a single executeJs call to avoid a race between two round-trips.
+   */
+  async waitAndFill(selector: string, value: string, timeoutMs = 8000): Promise<void> {
+    await this.executeJs(`
+      new Promise((resolve, reject) => {
+        const deadline = Date.now() + ${timeoutMs};
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+        function check() {
+          const el = document.querySelector(${JSON.stringify(selector)});
+          if (el) {
+            setter.call(el, ${JSON.stringify(value)});
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            resolve(null);
+          } else if (Date.now() > deadline) {
+            reject(new Error('waitAndFill: selector not found: ' + ${JSON.stringify(selector)}));
+          } else {
+            setTimeout(check, 100);
+          }
+        }
+        check();
+      })
+    `);
   }
 
   /** Assert the DOM does NOT contain a text string. */
@@ -546,9 +574,7 @@ test.describe('Add Related Person', () => {
 
     // Click the first .btn-rel-add (Add Parent)
     await app.executeJs(`document.querySelectorAll('.btn-rel-add')[0].click()`);
-    await app.settle();
-
-    await app.fillInput('.modal input[type="text"]', 'Sven');
+    await app.waitAndFill('.modal input[type="text"]', 'Sven');
     await app.settle();
 
     await app.click('.modal button[type="submit"]');
@@ -565,9 +591,7 @@ test.describe('Add Related Person', () => {
 
     // Click the third .btn-rel-add (Add Child)
     await app.executeJs(`document.querySelectorAll('.btn-rel-add')[2].click()`);
-    await app.settle();
-
-    await app.fillInput('.modal input[type="text"]', 'Lisa');
+    await app.waitAndFill('.modal input[type="text"]', 'Lisa');
     await app.click('.modal button[type="submit"]');
     await app.settle(800);
 
@@ -582,9 +606,7 @@ test.describe('Add Related Person', () => {
 
     // Click the second .btn-rel-add (Add Spouse)
     await app.executeJs(`document.querySelectorAll('.btn-rel-add')[1].click()`);
-    await app.settle();
-
-    await app.fillInput('.modal input[type="text"]', 'Erik');
+    await app.waitAndFill('.modal input[type="text"]', 'Erik');
     await app.click('.modal button[type="submit"]');
     await app.settle(800);
 
