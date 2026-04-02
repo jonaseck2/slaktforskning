@@ -44,27 +44,27 @@
         </table>
       </section>
 
-      <!-- Families -->
-      <section v-if="families.length > 0" class="result-section">
-        <h3>{{ $t('nav.families') }} <span class="count">{{ families.length }}</span></h3>
+      <!-- Relationships -->
+      <section v-if="relationships.length > 0" class="result-section">
+        <h3>{{ $t('nav.relationships') }} <span class="count">{{ relationships.length }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>
-              <th>{{ $t('families.partnerA') }}</th>
-              <th>{{ $t('families.partnerB') }}</th>
-              <th>{{ $t('families.unionType') }}</th>
+              <th>{{ $t('common.type') }}</th>
+              <th>{{ $t('relationships.person1') }}</th>
+              <th>{{ $t('relationships.person2') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="f in families"
-              :key="f.id"
+              v-for="r in relationships"
+              :key="r.id"
               class="clickable-row"
-              @click="router.push(`/families/${f.id}`)"
+              @click="router.push(`/relationships/${r.id}`)"
             >
-              <td>{{ [f.partner_a_given_name, f.partner_a_surname].filter(Boolean).join(' ') || '—' }}</td>
-              <td>{{ [f.partner_b_given_name, f.partner_b_surname].filter(Boolean).join(' ') || '—' }}</td>
-              <td>{{ $t('unionTypes.' + f.union_type) }}</td>
+              <td>{{ $t('relTypes.' + r.type) }}</td>
+              <td>{{ [r.person1_given_name, r.person1_surname].filter(Boolean).join(' ') || '—' }}</td>
+              <td>{{ [r.person2_given_name, r.person2_surname].filter(Boolean).join(' ') || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -116,13 +116,13 @@ interface PersonResult {
   living: boolean;
 }
 
-interface FamilyResult {
+interface RelationshipResult {
   id: string;
-  union_type: string;
-  partner_a_given_name: string;
-  partner_a_surname: string;
-  partner_b_given_name: string;
-  partner_b_surname: string;
+  type: string;
+  person1_given_name: string;
+  person1_surname: string;
+  person2_given_name: string;
+  person2_surname: string;
 }
 
 interface SourceResult {
@@ -140,10 +140,10 @@ const inputQuery = ref('');
 const displayedQuery = ref('');
 const searched = ref(false);
 const persons = ref<PersonResult[]>([]);
-const families = ref<FamilyResult[]>([]);
+const relationships = ref<RelationshipResult[]>([]);
 const sources = ref<SourceResult[]>([]);
 
-const totalResults = computed(() => persons.value.length + families.value.length + sources.value.length);
+const totalResults = computed(() => persons.value.length + relationships.value.length + sources.value.length);
 
 async function runSearch() {
   const q = inputQuery.value.trim();
@@ -156,13 +156,13 @@ async function search(q: string) {
   if (!q || !window.api) return;
   displayedQuery.value = q;
   searched.value = true;
-  const [p, f, s] = await Promise.all([
+  const [p, r, s] = await Promise.all([
     window.api.persons.search(q) as Promise<PersonResult[]>,
-    window.api.families.search(q) as Promise<FamilyResult[]>,
+    window.api.relationships.search(q) as Promise<RelationshipResult[]>,
     window.api.sources.search(q) as Promise<SourceResult[]>,
   ]);
   persons.value = p;
-  families.value = f;
+  relationships.value = r;
   sources.value = s;
 }
 

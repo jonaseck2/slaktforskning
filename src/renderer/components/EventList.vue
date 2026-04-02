@@ -32,7 +32,7 @@
     <EventForm
       v-if="showForm"
       :person-id="personId"
-      :family-id="familyId"
+      :relationship-id="relationshipId"
       :editing-event="editingEvent"
       @close="closeForm"
       @saved="onSaved"
@@ -62,7 +62,7 @@ interface EventRow {
 
 const props = defineProps<{
   personId?: string;
-  familyId?: string;
+  relationshipId?: string;
 }>();
 
 const { t } = useI18n();
@@ -75,8 +75,8 @@ async function load() {
   try {
     if (props.personId) {
       events.value = (await window.api.events.forPerson(props.personId)) as EventRow[];
-    } else if (props.familyId) {
-      events.value = (await window.api.events.forFamily(props.familyId)) as EventRow[];
+    } else if (props.relationshipId) {
+      events.value = (await window.api.events.forRelationship(props.relationshipId)) as EventRow[];
     }
   } catch (err) {
     console.error('[EventList] load failed:', err);

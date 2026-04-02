@@ -92,7 +92,8 @@
       "WebFetch(domain:sv.wikipedia.org)",
       "WebFetch(domain:www.arkivdigital.net)",
       "WebFetch(domain:www.syniumsoftware.com)",
-      "WebFetch(domain:help.heredis.com)"
+      "WebFetch(domain:help.heredis.com)",
+      "Bash(npx vitest:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

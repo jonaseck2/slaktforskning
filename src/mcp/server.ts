@@ -6,7 +6,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { initializeSchema } from '../api/schema';
 import * as persons from '../api/persons';
-import * as families from '../api/families';
+import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 
@@ -36,7 +36,7 @@ async function main() {
 
   const server = new McpServer({
     name: 'slaktforskning',
-    version: '0.1.0',
+    version: '0.3.0',
   });
 
   // Person tools
@@ -104,82 +104,92 @@ async function main() {
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
-  // Family tools
-  server.tool('create_family', 'Create a family unit', {
-    partner_a_id: z.string().optional().describe('First partner person ID'),
-    partner_b_id: z.string().optional().describe('Second partner person ID'),
-    union_type: z.enum(['marriage', 'civil_union', 'cohabitation', 'unknown']).optional(),
+  // Relationship tools
+  server.tool('create_relationship', 'Create a relationship between two persons', {
+    type: z.enum(['couple', 'parent_child', 'sibling', 'godparent', 'other']).describe('Relationship type'),
+    person1_id: z.string().optional().describe('Person 1 ID (for parent_child: parent)'),
+    person2_id: z.string().optional().describe('Person 2 ID (for parent_child: child)'),
+    subtype: z.string().optional().describe('Subtype (couple: marriage/civil_union/cohabitation/unknown; parent_child: biological/adopted/foster/step/unknown)'),
+    notes: z.string().optional(),
   }, async (args) => {
-    const family = families.createFamily(db, args);
-    return { content: [{ type: 'text', text: JSON.stringify(family, null, 2) }] };
+    const rel = relationships.createRelationship(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(rel, null, 2) }] };
   });
 
-  server.tool('add_child_to_family', 'Add a child to a family', {
-    family_id: z.string().describe('Family ID'),
-    person_id: z.string().describe('Child person ID'),
-    relationship_type: z.enum(['biological', 'adopted', 'foster', 'step', 'unknown']).optional(),
+  server.tool('get_relationship', 'Get a relationship by ID', {
+    id: z.string().describe('Relationship ID'),
   }, async (args) => {
-    const link = families.addChildToFamily(db, args.family_id, args.person_id, args.relationship_type);
-    return { content: [{ type: 'text', text: JSON.stringify(link, null, 2) }] };
+    const rel = relationships.getRelationship(db, args.id);
+    return { content: [{ type: 'text', text: rel ? JSON.stringify(rel, null, 2) : 'Relationship not found' }] };
   });
 
-  server.tool('get_family', 'Get a family by ID', {
-    id: z.string().describe('Family ID'),
-  }, async (args) => {
-    const family = families.getFamily(db, args.id);
-    return { content: [{ type: 'text', text: family ? JSON.stringify(family, null, 2) : 'Family not found' }] };
-  });
-
-  server.tool('list_families', 'List all families', {}, async () => {
-    const list = families.listFamilies(db);
+  server.tool('list_relationships', 'List all relationships', {}, async () => {
+    const list = relationships.listRelationships(db);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
-  server.tool('update_family', 'Update a family', {
-    id: z.string().describe('Family ID'),
-    partner_a_id: z.string().optional(),
-    partner_b_id: z.string().optional(),
-    union_type: z.enum(['marriage', 'civil_union', 'cohabitation', 'unknown']).optional(),
+  server.tool('update_relationship', 'Update a relationship', {
+    id: z.string().describe('Relationship ID'),
+    type: z.enum(['couple', 'parent_child', 'sibling', 'godparent', 'other']).optional(),
+    person1_id: z.string().optional(),
+    person2_id: z.string().optional(),
+    subtype: z.string().optional(),
     notes: z.string().optional(),
   }, async (args) => {
     const { id, ...data } = args;
-    const family = families.updateFamily(db, id, data);
-    return { content: [{ type: 'text', text: family ? JSON.stringify(family, null, 2) : 'Family not found' }] };
+    const rel = relationships.updateRelationship(db, id, data);
+    return { content: [{ type: 'text', text: rel ? JSON.stringify(rel, null, 2) : 'Relationship not found' }] };
   });
 
-  server.tool('delete_family', 'Delete a family', {
-    id: z.string().describe('Family ID'),
+  server.tool('delete_relationship', 'Delete a relationship', {
+    id: z.string().describe('Relationship ID'),
   }, async (args) => {
-    const ok = families.deleteFamily(db, args.id);
+    const ok = relationships.deleteRelationship(db, args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
-  server.tool('get_children_of_family', 'Get all children linked to a family', {
-    family_id: z.string().describe('Family ID'),
-  }, async (args) => {
-    const list = families.getChildrenOfFamily(db, args.family_id);
-    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
-  });
-
-  server.tool('get_families_of_person', 'Get all families a person belongs to (as partner or child)', {
+  server.tool('get_relationships_of_person', 'Get all relationships for a person', {
     person_id: z.string().describe('Person ID'),
   }, async (args) => {
-    const list = families.getFamiliesOfPerson(db, args.person_id);
+    const list = relationships.getRelationshipsOfPerson(db, args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
-  server.tool('search_families', 'Search families by partner name', {
+  server.tool('search_relationships', 'Search relationships by person name', {
     query: z.string().describe('Search query'),
   }, async (args) => {
-    const results = families.searchFamilies(db, args.query);
+    const results = relationships.searchRelationships(db, args.query);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
+  // Event Participant tools
+  server.tool('add_event_participant', 'Add a person as a participant in an event', {
+    event_id: z.string().describe('Event ID'),
+    person_id: z.string().describe('Person ID'),
+    role: z.enum(['primary', 'spouse', 'parent', 'child', 'witness', 'godparent', 'officiant', 'other']).optional().describe('Participant role (default: primary)'),
+  }, async (args) => {
+    const participant = relationships.addEventParticipant(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(participant, null, 2) }] };
+  });
+
+  server.tool('get_event_participants', 'Get all participants for an event', {
+    event_id: z.string().describe('Event ID'),
+  }, async (args) => {
+    const list = relationships.getEventParticipants(db, args.event_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('remove_event_participant', 'Remove a participant from an event', {
+    id: z.string().describe('Event participant ID'),
+  }, async (args) => {
+    const ok = relationships.removeEventParticipant(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
+  });
+
   // Event tools
-  server.tool('add_event', 'Add a life event to a person or family', {
+  server.tool('add_event', 'Add a life event (optionally linked to a relationship)', {
     event_type: z.string().describe('Event type: birth, death, marriage, baptism, burial, immigration, census, residence, occupation, military, etc.'),
-    person_id: z.string().optional().describe('Person ID (for individual events)'),
-    family_id: z.string().optional().describe('Family ID (for family events like marriage)'),
+    relationship_id: z.string().optional().describe('Relationship ID (for relationship events like marriage)'),
     date_value: z.string().optional().describe('Date in ISO format (YYYY-MM-DD)'),
     date_value_end: z.string().optional().describe('End date for "between" date type (YYYY-MM-DD)'),
     date_type: z.enum(['exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown']).optional(),
@@ -198,17 +208,17 @@ async function main() {
     return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
   });
 
-  server.tool('get_events_for_person', 'Get all events for a person', {
+  server.tool('get_events_for_person', 'Get all events for a person (via event_participants)', {
     person_id: z.string().describe('Person ID'),
   }, async (args) => {
     const list = events.getEventsForPerson(db, args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
-  server.tool('get_events_for_family', 'Get all events for a family', {
-    family_id: z.string().describe('Family ID'),
+  server.tool('get_events_for_relationship', 'Get all events for a relationship', {
+    relationship_id: z.string().describe('Relationship ID'),
   }, async (args) => {
-    const list = events.getEventsForFamily(db, args.family_id);
+    const list = events.getEventsForRelationship(db, args.relationship_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
@@ -221,6 +231,7 @@ async function main() {
     date_original: z.string().optional(),
     place_id: z.string().optional(),
     description: z.string().optional(),
+    relationship_id: z.string().optional(),
   }, async (args) => {
     const { id, ...data } = args;
     const event = events.updateEvent(db, id, data);
@@ -246,10 +257,12 @@ async function main() {
     return { content: [{ type: 'text', text: JSON.stringify(source, null, 2) }] };
   });
 
-  server.tool('add_citation', 'Add a citation linking a source to an event or person', {
+  server.tool('add_citation', 'Add a citation linking a source to an event, person, relationship, or place', {
     source_id: z.string().describe('Source ID'),
     event_id: z.string().optional().describe('Event ID'),
     person_id: z.string().optional().describe('Person ID'),
+    relationship_id: z.string().optional().describe('Relationship ID'),
+    place_id: z.string().optional().describe('Place ID'),
     page: z.string().optional().describe('Page/location within source'),
     transcription: z.string().optional().describe('Verbatim text from source'),
     confidence: z.number().optional().describe('0-3: 0=unreliable, 3=direct primary evidence'),
@@ -360,7 +373,7 @@ async function main() {
     return { content: [{ type: 'image', data: result.data, mimeType: 'image/png' }] };
   });
 
-  server.tool('ui_navigate', 'Navigate the app to a route path (e.g. "/search?q=Erik", "/persons/123", "/families").', {
+  server.tool('ui_navigate', 'Navigate the app to a route path (e.g. "/search?q=Erik", "/persons/123", "/relationships").', {
     path: z.string().describe('Vue Router path to navigate to, e.g. "/search?q=Erik"'),
   }, async (args) => {
     const result = await uiPost('/navigate', { path: args.path }) as { ok?: boolean; error?: string };
@@ -374,7 +387,7 @@ async function main() {
   });
 
   server.tool('ui_click', 'Click an element in the app by CSS selector.', {
-    selector: z.string().describe('CSS selector for the element to click, e.g. "button.btn-delete", "a[href=\'/families\']"'),
+    selector: z.string().describe('CSS selector for the element to click, e.g. "button.btn-delete", "a[href=\'/relationships\']"'),
   }, async (args) => {
     const result = await uiPost('/click', { selector: args.selector }) as { ok?: boolean; error?: string };
     if (result.error) return { content: [{ type: 'text', text: `Error: ${result.error}` }] };

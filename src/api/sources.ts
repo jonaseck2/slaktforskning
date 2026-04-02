@@ -55,15 +55,27 @@ export function deleteSource(db: Database, id: string): boolean {
 
 export function createCitation(
   db: Database,
-  data: { source_id: string; event_id?: string | null; person_id?: string | null; page?: string; confidence?: number; transcription?: string; notes?: string; date_accessed?: string }
+  data: {
+    source_id: string;
+    event_id?: string | null;
+    person_id?: string | null;
+    relationship_id?: string | null;
+    place_id?: string | null;
+    page?: string;
+    confidence?: number;
+    transcription?: string;
+    notes?: string;
+    date_accessed?: string;
+  }
 ): Citation {
   const id = uuid();
   db.prepare(`
-    INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run([
     id, data.source_id, data.page ?? '', data.date_accessed ?? '', data.confidence ?? 0,
-    data.transcription ?? '', data.notes ?? '', data.event_id ?? null, data.person_id ?? null
+    data.transcription ?? '', data.notes ?? '', data.event_id ?? null, data.person_id ?? null,
+    data.relationship_id ?? null, data.place_id ?? null
   ]);
   return getCitation(db, id)!;
 }

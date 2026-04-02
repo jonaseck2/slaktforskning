@@ -11,7 +11,7 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | Tool | Description |
 |------|-------------|
 | create_person | Create person with name and sex |
-| get_person | Get person by ID (includes names, events) |
+| get_person | Get person by ID |
 | list_persons | List all persons |
 | search_persons | Search by name |
 | update_person | Update sex, living, notes |
@@ -19,28 +19,34 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | add_person_name | Add an alternate name (married, alias, aka) |
 | get_person_names | Get all names for a person |
 
-### Families
+### Relationships
 
 | Tool | Description |
 |------|-------------|
-| create_family | Create family unit with partners |
-| get_family | Get family by ID |
-| list_families | List all families |
-| update_family | Update partners, union type, notes |
-| delete_family | Delete a family |
-| add_child_to_family | Link a child to a family |
-| get_children_of_family | Get all children linked to a family |
-| get_families_of_person | Get all families a person belongs to |
-| search_families | Search families by partner name |
+| create_relationship | Create a relationship (couple, parent_child, sibling, godparent, other) |
+| get_relationship | Get relationship by ID |
+| list_relationships | List all relationships |
+| update_relationship | Update type, persons, subtype, notes |
+| delete_relationship | Delete a relationship |
+| get_relationships_of_person | Get all relationships for a person |
+| search_relationships | Search relationships by person name |
+
+### Event Participants
+
+| Tool | Description |
+|------|-------------|
+| add_event_participant | Add a person as participant in an event (with role) |
+| get_event_participants | Get all participants for an event |
+| remove_event_participant | Remove a participant from an event |
 
 ### Events
 
 | Tool | Description |
 |------|-------------|
-| add_event | Add life event (birth, death, etc.) to person or family |
+| add_event | Add life event (optionally linked to a relationship) |
 | get_event | Get event by ID |
-| get_events_for_person | Get all events for a person |
-| get_events_for_family | Get all events for a family |
+| get_events_for_person | Get all events for a person (via event_participants) |
+| get_events_for_relationship | Get all events for a relationship |
 | update_event | Update event fields |
 | delete_event | Delete an event |
 
@@ -54,7 +60,7 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | update_source | Update source fields |
 | delete_source | Delete a source |
 | search_sources | Search sources by title, author, or publication info |
-| add_citation | Link source to event/person with transcription and confidence |
+| add_citation | Link source to event/person/relationship/place with transcription and confidence |
 | get_citation | Get citation by ID |
 | get_citations_for_source | Get all citations for a source |
 | get_citations_for_event | Get all citations for an event |

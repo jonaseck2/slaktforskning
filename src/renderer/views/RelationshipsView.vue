@@ -1,58 +1,76 @@
 <template>
   <div>
     <div class="header">
-      <h2>{{ $t('families.title') }}</h2>
-      <button @click="showAddForm = true">{{ $t('families.addFamily') }}</button>
+      <h2>{{ $t('relationships.title') }}</h2>
+      <button @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
     </div>
-    <div v-if="families.length === 0" class="empty">
-      {{ $t('families.emptyState') }}
+    <div v-if="relationships.length === 0" class="empty">
+      {{ $t('relationships.emptyState') }}
     </div>
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>{{ $t('families.partnerA') }}</th>
-          <th>{{ $t('families.partnerB') }}</th>
-          <th>{{ $t('families.unionType') }}</th>
+          <th>{{ $t('common.type') }}</th>
+          <th>{{ $t('relationships.person1') }}</th>
+          <th>{{ $t('relationships.person2') }}</th>
+          <th>{{ $t('relationshipDetail.subtype') }}</th>
           <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="family in families"
-          :key="family.id"
+          v-for="rel in relationships"
+          :key="rel.id"
           class="clickable-row"
-          @click="goToDetail(family.id)"
+          @click="goToDetail(rel.id)"
         >
-          <td>{{ family.partner_a_name || '—' }}</td>
-          <td>{{ family.partner_b_name || '—' }}</td>
-          <td><span class="union-badge">{{ $t('unionTypes.' + family.union_type) }}</span></td>
+          <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
+          <td>{{ rel.person1_name || '—' }}</td>
+          <td>{{ rel.person2_name || '—' }}</td>
+          <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removeFamily(family.id)">{{ $t('common.delete') }}</button>
+            <button class="btn-sm btn-delete" @click.stop="removeRelationship(rel.id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Add Family Modal -->
+    <!-- Add Relationship Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
       <div class="modal">
-        <h3>{{ $t('families.addFamily') }}</h3>
-        <form @submit.prevent="addFamily">
+        <h3>{{ $t('relationships.addRelationship') }}</h3>
+        <form @submit.prevent="addRelationship">
           <label>
-            {{ $t('families.unionType') }}
-            <select v-model="form.union_type">
-              <option v-for="ut in UNION_TYPE_VALUES" :key="ut" :value="ut">
-                {{ $t('unionTypes.' + ut) }}
+            {{ $t('common.type') }}
+            <select v-model="form.type">
+              <option v-for="rt in RELATIONSHIP_TYPE_VALUES" :key="rt" :value="rt">
+                {{ $t('relTypes.' + rt) }}
+              </option>
+            </select>
+          </label>
+          <label v-if="form.type === 'couple'">
+            {{ $t('relationshipDetail.subtype') }}
+            <select v-model="form.subtype">
+              <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">
+                {{ $t('coupleSubtypes.' + st) }}
+              </option>
+            </select>
+          </label>
+          <label v-if="form.type === 'parent_child'">
+            {{ $t('relationshipDetail.subtype') }}
+            <select v-model="form.subtype">
+              <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">
+                {{ $t('parentChildSubtypes.' + st) }}
               </option>
             </select>
           </label>
           <label>
-            {{ $t('families.partnerA') }}
-            <PersonPicker v-model="form.partner_a_id" :placeholder="$t('families.searchPerson')" />
+            {{ $t('relationships.person1') }}
+            <PersonPicker v-model="form.person1_id" :placeholder="$t('relationships.searchPerson')" />
           </label>
           <label>
-            {{ $t('families.partnerB') }}
-            <PersonPicker v-model="form.partner_b_id" :placeholder="$t('families.searchPerson')" />
+            {{ $t('relationships.person2') }}
+            <PersonPicker v-model="form.person2_id" :placeholder="$t('relationships.searchPerson')" />
           </label>
           <label>
             {{ $t('common.notes') }}
@@ -60,7 +78,7 @@
           </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('families.addFamily') }}</button>
+            <button type="submit">{{ $t('relationships.addRelationship') }}</button>
           </div>
         </form>
       </div>
@@ -73,20 +91,21 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
-import { UNION_TYPE_VALUES } from '../constants/eventTypes';
+import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-interface FamilyRow {
+interface RelRow {
   id: string;
-  partner_a_id: string | null;
-  partner_b_id: string | null;
-  union_type: string;
+  type: string;
+  person1_id: string | null;
+  person2_id: string | null;
+  subtype: string | null;
   notes: string;
-  partner_a_name: string;
-  partner_b_name: string;
+  person1_name: string;
+  person2_name: string;
 }
 
 interface NameRow {
@@ -96,14 +115,21 @@ interface NameRow {
 
 const { t } = useI18n();
 const router = useRouter();
-const families = ref<FamilyRow[]>([]);
+const relationships = ref<RelRow[]>([]);
 const showAddForm = ref(false);
 const form = reactive({
-  union_type: 'marriage',
-  partner_a_id: null as string | null,
-  partner_b_id: null as string | null,
+  type: 'couple' as string,
+  subtype: 'marriage' as string,
+  person1_id: null as string | null,
+  person2_id: null as string | null,
   notes: '',
 });
+
+function getSubtypeLabel(type: string, subtype: string): string {
+  if (type === 'couple') return t('coupleSubtypes.' + subtype);
+  if (type === 'parent_child') return t('parentChildSubtypes.' + subtype);
+  return subtype;
+}
 
 async function getPersonName(id: string | null): Promise<string> {
   if (!id || !window.api) return '';
@@ -119,60 +145,63 @@ async function getPersonName(id: string | null): Promise<string> {
 async function load() {
   if (!window.api) return;
   try {
-    const raw = (await window.api.families.list()) as Array<{
+    const raw = (await window.api.relationships.list()) as Array<{
       id: string;
-      partner_a_id: string | null;
-      partner_b_id: string | null;
-      union_type: string;
+      type: string;
+      person1_id: string | null;
+      person2_id: string | null;
+      subtype: string | null;
       notes: string;
     }>;
-    const enriched: FamilyRow[] = [];
-    for (const f of raw) {
+    const enriched: RelRow[] = [];
+    for (const r of raw) {
       enriched.push({
-        ...f,
-        partner_a_name: await getPersonName(f.partner_a_id),
-        partner_b_name: await getPersonName(f.partner_b_id),
+        ...r,
+        person1_name: await getPersonName(r.person1_id),
+        person2_name: await getPersonName(r.person2_id),
       });
     }
-    families.value = enriched;
+    relationships.value = enriched;
   } catch (err) {
-    console.error('[FamiliesView] load failed:', err);
+    console.error('[RelationshipsView] load failed:', err);
   }
 }
 
-async function addFamily() {
+async function addRelationship() {
   if (!window.api) return;
   try {
-    await window.api.families.create({
-      union_type: form.union_type,
-      partner_a_id: form.partner_a_id,
-      partner_b_id: form.partner_b_id,
+    await window.api.relationships.create({
+      type: form.type,
+      person1_id: form.person1_id,
+      person2_id: form.person2_id,
+      subtype: form.subtype,
       notes: form.notes,
     });
     showAddForm.value = false;
-    form.union_type = 'marriage';
-    form.partner_a_id = null;
-    form.partner_b_id = null;
+    form.type = 'couple';
+    form.subtype = 'marriage';
+    form.person1_id = null;
+    form.person2_id = null;
     form.notes = '';
     await load();
   } catch (err) {
-    console.error('[FamiliesView] addFamily failed:', err);
+    console.error('[RelationshipsView] addRelationship failed:', err);
   }
 }
 
-async function removeFamily(id: string) {
+async function removeRelationship(id: string) {
   if (!window.api) return;
-  if (!confirm(t('families.confirmDelete'))) return;
+  if (!confirm(t('relationships.confirmDelete'))) return;
   try {
-    await window.api.families.delete(id);
+    await window.api.relationships.delete(id);
     await load();
   } catch (err) {
-    console.error('[FamiliesView] removeFamily failed:', err);
+    console.error('[RelationshipsView] removeRelationship failed:', err);
   }
 }
 
 function goToDetail(id: string) {
-  router.push(`/families/${id}`);
+  router.push(`/relationships/${id}`);
 }
 
 onMounted(load);
@@ -210,7 +239,7 @@ onMounted(load);
 .clickable-row:hover {
   background: #f0f4ff;
 }
-.union-badge {
+.type-badge {
   background: #fef3c7;
   color: #92400e;
   padding: 2px 8px;

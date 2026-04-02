@@ -23,10 +23,10 @@ npm install
 npm start
 ```
 
-The app opens with a sidebar navigation for **Persons**, **Families**, and **Sources**.
+The app opens with a sidebar navigation for **Persons**, **Relationships**, and **Sources**.
 
-- **Click "Add Person/Family/Source"** to open a form dialog
-- **Click any row** to open its detail view (events, names, children, citations)
+- **Click "Add Person/Relationship/Source"** to open a form dialog
+- **Click any row** to open its detail view (events, names, relationships, citations)
 - **Cmd+N** (macOS) or **Ctrl+N** (Windows/Linux) to open additional windows
 
 ## Data Model
@@ -34,10 +34,10 @@ The app opens with a sidebar navigation for **Persons**, **Families**, and **Sou
 The database captures the full complexity of genealogical research:
 
 - **Persons** with multiple names (birth, married, alias)
-- **Families** linking partners and children with relationship types (biological, adopted, foster, step)
-- **Events** (birth, death, marriage, baptism, immigration, census, etc.) with flexible date handling (exact, approximate, ranges)
-- **Places** with hierarchical structure and optional coordinates
-- **Sources and Citations** with confidence levels and verbatim transcriptions
+- **Relationships** (couple, parent-child, sibling, godparent) with subtypes (marriage, biological, adopted, etc.)
+- **Events** (birth, death, marriage, baptism, immigration, census, etc.) with flexible date handling and multi-person participation via roles
+- **Places** with hierarchical structure (farm → parish → härad → county), types, and optional coordinates
+- **Sources and Citations** linking to events, persons, relationships, and places with confidence levels and verbatim transcriptions
 
 ## MCP Server
 
@@ -53,10 +53,10 @@ npx tsx src/mcp/server.ts
 
 ### Available Tools
 
-- `create_person`, `list_persons`, `search_persons`, `get_person`, `update_person`, `delete_person`
-- `create_family`, `add_child_to_family`, `list_families`
-- `add_event`, `get_events_for_person`
-- `add_source`, `add_citation`, `list_sources`
+- **Persons:** `create_person`, `list_persons`, `search_persons`, `get_person`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`
+- **Relationships:** `create_relationship`, `list_relationships`, `search_relationships`, `get_relationship`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`
+- **Events:** `add_event`, `get_events_for_person`, `get_events_for_relationship`, `add_event_participant`, `get_event_participants`
+- **Sources:** `add_source`, `add_citation`, `list_sources`, `search_sources`
 
 ### Custom Database Path
 
@@ -90,7 +90,7 @@ npm run make
 ## Testing
 
 ```bash
-npm test              # Unit tests (Vitest, 30 tests)
+npm test              # Unit tests (Vitest, 37 tests)
 npx playwright test   # E2E tests (app launch + MCP server)
 ```
 
@@ -102,7 +102,7 @@ src/
 ├── main/             # Electron main process (windows, database, IPC)
 ├── preload/          # Context bridge (renderer ↔ main)
 ├── renderer/
-│   ├── views/        # List views + detail views (Person, Family, Source)
+│   ├── views/        # List views + detail views (Person, Relationship, Source)
 │   ├── components/   # Shared: PersonPicker, DateInput, EventForm/List, CitationForm
 │   └── constants/    # GEDCOM event types, date types, confidence levels
 └── mcp/              # MCP server for agent access

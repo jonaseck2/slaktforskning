@@ -37,7 +37,7 @@ class AppDriver {
     return res.text();
   }
 
-  /** Push a Vue Router path (e.g. "/", "/families", "/search?q=foo"). */
+  /** Push a Vue Router path (e.g. "/", "/relationships", "/search?q=foo"). */
   async navigate(routePath: string): Promise<void> {
     await this.post('/navigate', { path: routePath });
     await this.settle();
@@ -130,13 +130,14 @@ class AppDriver {
     );
   }
 
-  async createFamily(data: {
-    partner_a_id?: string;
-    partner_b_id?: string;
-    union_type?: string;
+  async createRelationship(data: {
+    type: string;
+    person1_id?: string;
+    person2_id?: string;
+    subtype?: string;
   }): Promise<{ id: string }> {
     return this.executeJs<{ id: string }>(
-      `window.api.families.create(${JSON.stringify(data)})`
+      `window.api.relationships.create(${JSON.stringify(data)})`
     );
   }
 
@@ -305,13 +306,13 @@ test.describe('Persons CRUD', () => {
   });
 });
 
-test.describe('Families CRUD', () => {
-  test('empty families list shows placeholder', async () => {
-    await app.navigate('/families');
-    await app.waitForText('No families yet');
+test.describe('Relationships CRUD', () => {
+  test('empty relationships list shows placeholder', async () => {
+    await app.navigate('/relationships');
+    await app.waitForText('No relationships yet');
   });
 
-  test('create a family', async () => {
+  test('create a relationship', async () => {
     // Seed a second person so we have two partners
     await app.createPerson({
       given_name: 'Anna',
@@ -319,22 +320,22 @@ test.describe('Families CRUD', () => {
       sex: 'F',
     });
 
-    await app.navigate('/families');
+    await app.navigate('/relationships');
     await app.settle();
 
-    // Click "Add Family"
+    // Click "Add Relationship"
     await app.click('button');
     await app.settle();
 
-    // Submit the family form (partners can be set later)
+    // Submit the relationship form (persons can be set later)
     await app.click('.modal button[type="submit"]');
     await app.settle();
 
-    // Should now have one family in the list
-    await app.navigate('/families');
+    // Should now have one relationship in the list
+    await app.navigate('/relationships');
     await app.settle();
     const dom = await app.getDom();
-    // The family should exist (table row present)
+    // The relationship should exist (table row present)
     expect(dom).toContain('data-table');
   });
 });
@@ -413,8 +414,8 @@ test.describe('Navigation', () => {
     await app.navigate('/');
     await app.expectText('Persons');
 
-    await app.navigate('/families');
-    await app.expectText('Families');
+    await app.navigate('/relationships');
+    await app.expectText('Relationships');
 
     await app.navigate('/sources');
     await app.expectText('Sources');

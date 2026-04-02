@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { getDatabase } from './database';
 import * as persons from '../api/persons';
-import * as families from '../api/families';
+import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 
@@ -32,22 +32,25 @@ export function registerIpcHandlers(): void {
   wrapHandler('persons:addName', (personId, data) => persons.addPersonName(db, personId as string, data as Parameters<typeof persons.addPersonName>[2]));
   wrapHandler('persons:getNames', (personId) => persons.getPersonNames(db, personId as string));
 
-  // Families
-  wrapHandler('families:create', (data) => families.createFamily(db, data as Parameters<typeof families.createFamily>[1]));
-  wrapHandler('families:get', (id) => families.getFamily(db, id as string));
-  wrapHandler('families:list', () => families.listFamilies(db));
-  wrapHandler('families:update', (id, data) => families.updateFamily(db, id as string, data as Parameters<typeof families.updateFamily>[2]));
-  wrapHandler('families:delete', (id) => families.deleteFamily(db, id as string));
-  wrapHandler('families:addChild', (familyId, personId, relType) => families.addChildToFamily(db, familyId as string, personId as string, relType as Parameters<typeof families.addChildToFamily>[3]));
-  wrapHandler('families:getChildren', (familyId) => families.getChildrenOfFamily(db, familyId as string));
-  wrapHandler('families:getForPerson', (personId) => families.getFamiliesOfPerson(db, personId as string));
-  wrapHandler('families:search', (query) => families.searchFamilies(db, query as string));
+  // Relationships
+  wrapHandler('relationships:create', (data) => relationships.createRelationship(db, data as Parameters<typeof relationships.createRelationship>[1]));
+  wrapHandler('relationships:get', (id) => relationships.getRelationship(db, id as string));
+  wrapHandler('relationships:list', () => relationships.listRelationships(db));
+  wrapHandler('relationships:update', (id, data) => relationships.updateRelationship(db, id as string, data as Parameters<typeof relationships.updateRelationship>[2]));
+  wrapHandler('relationships:delete', (id) => relationships.deleteRelationship(db, id as string));
+  wrapHandler('relationships:getForPerson', (personId) => relationships.getRelationshipsOfPerson(db, personId as string));
+  wrapHandler('relationships:search', (query) => relationships.searchRelationships(db, query as string));
+
+  // Event Participants
+  wrapHandler('eventParticipants:add', (data) => relationships.addEventParticipant(db, data as Parameters<typeof relationships.addEventParticipant>[1]));
+  wrapHandler('eventParticipants:getForEvent', (eventId) => relationships.getEventParticipants(db, eventId as string));
+  wrapHandler('eventParticipants:remove', (id) => relationships.removeEventParticipant(db, id as string));
 
   // Events
   wrapHandler('events:create', (data) => events.createEvent(db, data as Parameters<typeof events.createEvent>[1]));
   wrapHandler('events:get', (id) => events.getEvent(db, id as string));
   wrapHandler('events:forPerson', (personId) => events.getEventsForPerson(db, personId as string));
-  wrapHandler('events:forFamily', (familyId) => events.getEventsForFamily(db, familyId as string));
+  wrapHandler('events:forRelationship', (relationshipId) => events.getEventsForRelationship(db, relationshipId as string));
   wrapHandler('events:update', (id, data) => events.updateEvent(db, id as string, data as Parameters<typeof events.updateEvent>[2]));
   wrapHandler('events:delete', (id) => events.deleteEvent(db, id as string));
 
