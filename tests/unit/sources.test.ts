@@ -100,6 +100,14 @@ describe('citations', () => {
     expect(getCitationsForEvent(db, event.id)).toHaveLength(1);
   });
 
+  it('gets a citation by id', () => {
+    const source = createSource(db, { title: 'Record' });
+    const citation = createCitation(db, { source_id: source.id, page: 'p. 7' });
+    const fetched = getCitation(db, citation.id);
+    expect(fetched).not.toBeNull();
+    expect(fetched!.page).toBe('p. 7');
+  });
+
   it('deletes a citation', () => {
     const source = createSource(db, { title: 'Record' });
     const citation = createCitation(db, { source_id: source.id });
