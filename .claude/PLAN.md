@@ -75,14 +75,14 @@ Extended `person_names` with prefix/suffix/patronymic/qualifier columns. New `pe
 
 See `.claude/plans/archive/2026-04-02-gedcomx-name-parts-and-identifiers.md` for implementation details.
 
----
-
-## Roadmap
-
 ### Done (v0.3.2 — PersonDetailView UX Improvements)
 Inline sex editing in header; name rows clickable (edit button removed); relationship rows get delete button; AddRelatedPersonModal New/Existing toggle with PersonPicker.
 
-See `.claude/plans/archive/2026-04-02-person-detail-ux.md` for the full implementation plan.
+See `.claude/plans/archive/2026-04-02-person-detail-ux.md` for implementation details.
+
+---
+
+## Roadmap
 
 ### v0.4.0 — Places
 
