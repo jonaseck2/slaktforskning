@@ -12,7 +12,7 @@ This codebase has a strict layered architecture. Every data feature touches all 
 Follow this order. Each step builds on the previous.
 
 1. **Types** — define or extend the TypeScript interface in `src/api/types.ts`
-2. **Schema** — add/alter tables in `src/api/schema.ts` (idempotent `CREATE TABLE IF NOT EXISTS` or migration guard block)
+2. **Schema** — add/alter tables in `src/api/schema.ts`; new tables use `CREATE TABLE IF NOT EXISTS`; new columns on existing tables **must** use a migration guard block (see below)
 3. **API functions** — implement CRUD in `src/api/*.ts` (pure TS, `db: Database` as first arg, no Electron deps)
 4. **Unit tests** — write tests in `tests/unit/` using `createTestDb()` before wiring anything else
 5. **IPC handler** — register in `src/main/ipc.ts` using `wrapHandler(channel, fn)`
@@ -23,6 +23,28 @@ Follow this order. Each step builds on the previous.
 10. **Docs** — update `README.md`, `CLAUDE.md`, `.claude/PLAN.md`, `.claude/DATA_MODEL.md`
 
 ## API Layer (Steps 1-4)
+
+### Database migrations — adding columns to existing tables
+
+`CREATE TABLE IF NOT EXISTS` only creates the table if it doesn't exist — it **never** adds missing columns to an existing database. Any new column on an existing table requires a migration guard at the end of `initializeSchema()` in `src/api/schema.ts`:
+
+```typescript
+// Append inside initializeSchema(), after the main db.exec block.
+// Label with the version that introduced these columns.
+// v0.5.0 migrations
+const thingsCols = (db.prepare('PRAGMA table_info(things)').all([]) as Array<{ name: string }>).map(c => c.name);
+if (!thingsCols.includes('new_column')) {
+  db.exec('ALTER TABLE things ADD COLUMN new_column TEXT');
+}
+if (!thingsCols.includes('another_column')) {
+  db.exec('ALTER TABLE things ADD COLUMN another_column INTEGER NOT NULL DEFAULT 0');
+}
+```
+
+Rules:
+- One `PRAGMA table_info` call per table, then check each new column separately
+- Match the column definition exactly (type, DEFAULT, constraints) to the `CREATE TABLE` statement above
+- **Never skip this** — missing migration = runtime crash for any user with a pre-existing database
 
 ### SQLite quirks (node-sqlite3-wasm)
 
