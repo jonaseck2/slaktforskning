@@ -32,6 +32,9 @@ export function registerIpcHandlers(): void {
   wrapHandler('persons:addName', (personId, data) => persons.addPersonName(db, personId as string, data as Parameters<typeof persons.addPersonName>[2]));
   wrapHandler('persons:getNames', (personId) => persons.getPersonNames(db, personId as string));
   wrapHandler('persons:updateName', (id, data) => persons.updatePersonName(db, id as string, data as Parameters<typeof persons.updatePersonName>[2]));
+  wrapHandler('persons:deleteName', (id: string) =>
+    persons.deletePersonName(db, id)
+  );
   wrapHandler('persons:addIdentifier', (personId, data) =>
     persons.addPersonIdentifier(db, personId as string, data as Parameters<typeof persons.addPersonIdentifier>[2])
   );

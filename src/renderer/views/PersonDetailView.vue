@@ -494,7 +494,12 @@ async function saveEditName() {
 
 async function removeName(id: string) {
   if (!window.api) return;
-  console.warn('Delete name not yet implemented via IPC');
+  try {
+    await window.api.persons.deleteName(id);
+    await load();
+  } catch (err) {
+    console.error('[PersonDetailView] removeName failed:', err);
+  }
 }
 
 async function loadIdentifiers() {

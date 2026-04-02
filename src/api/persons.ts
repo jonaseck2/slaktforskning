@@ -132,6 +132,10 @@ export function updatePersonName(
   return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
 }
 
+export function deletePersonName(db: Database, id: string): boolean {
+  return (db.prepare('DELETE FROM person_names WHERE id = ?').run([id]) as { changes: number }).changes > 0;
+}
+
 export function addPersonIdentifier(
   db: Database,
   personId: string,

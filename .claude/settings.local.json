@@ -116,7 +116,9 @@
       "WebFetch(domain:wiki.phpgedview.net)",
       "WebFetch(domain:user.it.uu.se)",
       "Bash(mkdir -p .claude/plans/archive)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
