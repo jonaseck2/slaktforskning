@@ -10,6 +10,7 @@ import { addPersonIdentifier, getPersonIdentifiers, deletePersonIdentifier } fro
 import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
+import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace } from '../api/places';
 
 function getDbPath(): string {
   const platform = process.platform;
@@ -376,6 +377,61 @@ async function main() {
     id: z.string().describe('Citation ID'),
   }, async (args) => {
     const ok = sources.deleteCitation(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  // Place tools
+  server.tool('add_place', 'Create a new place record', {
+    name: z.string().describe('Place name'),
+    place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional().describe('Place type'),
+    parent_place_id: z.string().optional().describe('Parent place ID'),
+    latitude: z.number().optional().describe('Latitude coordinate'),
+    longitude: z.number().optional().describe('Longitude coordinate'),
+    date_from: z.string().optional().describe('Date from (ISO format)'),
+    date_to: z.string().optional().describe('Date to (ISO format)'),
+    notes: z.string().optional().describe('Notes about the place'),
+  }, async (args) => {
+    const place = createPlace(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
+  });
+
+  server.tool('get_place', 'Get a place by ID', {
+    id: z.string().describe('Place ID'),
+  }, async (args) => {
+    const place = getPlace(db, args.id);
+    return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
+  });
+
+  server.tool('list_places', 'List all places', {}, async () => {
+    const list = listPlaces(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.tool('search_places', 'Search places by name', {
+    query: z.string().describe('Search query'),
+  }, async (args) => {
+    const results = searchPlaces(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  server.tool('update_place', 'Update a place', {
+    id: z.string().describe('Place ID'),
+    name: z.string().optional().describe('Place name'),
+    place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional(),
+    parent_place_id: z.string().optional().nullable().describe('Parent place ID'),
+    latitude: z.number().optional().nullable().describe('Latitude coordinate'),
+    longitude: z.number().optional().nullable().describe('Longitude coordinate'),
+    notes: z.string().optional().describe('Notes about the place'),
+  }, async (args) => {
+    const { id, ...data } = args;
+    const place = updatePlace(db, id, data);
+    return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
+  });
+
+  server.tool('delete_place', 'Delete a place', {
+    id: z.string().describe('Place ID'),
+  }, async (args) => {
+    const ok = deletePlace(db, args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
