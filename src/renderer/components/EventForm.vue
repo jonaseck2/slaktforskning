@@ -21,7 +21,7 @@
 
         <label>
           {{ $t('events.place') }}
-          <input v-model="form.place_name" type="text" :placeholder="$t('events.placePlaceholder')" />
+          <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
         </label>
 
         <label>
@@ -63,6 +63,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DateInput from './DateInput.vue';
+import PlacePicker from './PlacePicker.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -106,7 +107,7 @@ const form = reactive({
   date_value: props.editingEvent?.date_value ?? '',
   date_value_end: props.editingEvent?.date_value_end ?? '',
   date_original: props.editingEvent?.date_original ?? '',
-  place_name: '',
+  place_id: (props.editingEvent?.place_id ?? null) as string | null,
   description: props.editingEvent?.description ?? '',
 });
 
@@ -131,6 +132,7 @@ async function save() {
       date_value: form.date_value || null,
       date_value_end: form.date_type === 'between' ? form.date_value_end || null : null,
       date_original: form.date_original,
+      place_id: form.place_id || null,
       description: form.description,
     };
 
