@@ -52,6 +52,10 @@
    Do instead: when a tool/library causes repeated friction, research alternatives before applying more workarounds. The switch from better-sqlite3 to node-sqlite3-wasm exemplifies this.
 
 ## User Directives
+5. **[2026-04-03] Always merge to main — never ask**
+   Do instead: when finishing a branch, skip the options prompt and immediately merge to main. No PR, no keep-as-is question.
+
+
 1. **[2026-03-15] Commit all files — don't skip any**
    Do instead: always include every changed file when committing. Check `git status` and stage everything.
 
