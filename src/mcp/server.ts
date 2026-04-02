@@ -6,6 +6,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { initializeSchema } from '../api/schema';
 import * as persons from '../api/persons';
+import { addPersonIdentifier, getPersonIdentifiers, deletePersonIdentifier } from '../api/persons';
 import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
@@ -91,6 +92,10 @@ async function main() {
     given_name: z.string().optional().describe('Given/first name'),
     surname: z.string().optional().describe('Surname/family name'),
     name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional().describe('Name type (default: birth)'),
+    name_prefix: z.string().optional().describe('Name prefix (e.g. "von", "af", "de")'),
+    name_suffix: z.string().optional().describe('Name suffix (e.g. "Jr.", "Sr.", "III")'),
+    patronymic_base: z.string().optional().describe('Base name for patronymic/matronymic construction'),
+    name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional().describe('Qualifier for patronymic/particle names'),
   }, async (args) => {
     const { person_id, ...data } = args;
     const name = persons.addPersonName(db, person_id, data);
@@ -103,6 +108,22 @@ async function main() {
     const list = persons.getPersonNames(db, args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
+
+  server.tool('add_person_identifier', 'Add an external identifier to a person (FamilySearch ID, Ancestry ID, etc.)', {
+    person_id: z.string(),
+    identifier_type: z.enum(['familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other']),
+    identifier_value: z.string(),
+  }, async ({ person_id, identifier_type, identifier_value }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify(addPersonIdentifier(db, person_id, { identifier_type, identifier_value })) }] })
+  );
+
+  server.tool('get_person_identifiers', 'Get all external identifiers for a person', { person_id: z.string() },
+    async ({ person_id }) => ({ content: [{ type: 'text', text: JSON.stringify(getPersonIdentifiers(db, person_id)) }] })
+  );
+
+  server.tool('delete_person_identifier', 'Delete an external identifier', { id: z.string() },
+    async ({ id }) => ({ content: [{ type: 'text', text: JSON.stringify({ deleted: deletePersonIdentifier(db, id) }) }] })
+  );
 
   // Relationship tools
   server.tool('create_relationship', 'Create a relationship between two persons', {
