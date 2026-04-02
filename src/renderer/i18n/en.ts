@@ -274,4 +274,5 @@ export default {
       other: 'Other',
     },
   },
+  sex: { M: 'Male', F: 'Female', U: 'Unknown' },
 };

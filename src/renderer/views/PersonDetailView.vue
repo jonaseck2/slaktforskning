@@ -4,7 +4,15 @@
       <button class="btn-back" @click="$router.push('/')">{{ $t('personDetail.back') }}</button>
       <div class="header-info">
         <h2>{{ primaryName }}</h2>
-        <span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span>
+        <select
+          :class="'sex-select sex-' + person.sex"
+          :value="person.sex"
+          @change="updateSex(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="M">{{ $t('sex.M') }}</option>
+          <option value="F">{{ $t('sex.F') }}</option>
+          <option value="U">{{ $t('sex.U') }}</option>
+        </select>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
         <button type="button" class="btn-cite-header" @click="showCitePersonForm = true">{{ $t('personDetail.citePersonTitle') }}</button>
       </div>
@@ -537,6 +545,12 @@ async function removeIdentifier(id: string) {
   }
 }
 
+async function updateSex(sex: string) {
+  if (!window.api || !person.value) return;
+  await window.api.persons.update(personId, { sex });
+  person.value.sex = sex;
+}
+
 async function saveNotes() {
   if (!window.api || !person.value) return;
   if (notesText.value === (person.value.notes || '')) return;
@@ -596,6 +610,21 @@ onMounted(load);
   background: #f3f4f6;
   color: #6b7280;
 }
+.sex-select {
+  padding: 2px 20px 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M0 2l4 4 4-4z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+.sex-select.sex-M { background-color: #dbeafe; color: #1d4ed8; }
+.sex-select.sex-F { background-color: #fce7f3; color: #be185d; }
+.sex-select.sex-U { background-color: #f3f4f6; color: #6b7280; }
 .deceased-badge {
   background: #fef3c7;
   color: #92400e;

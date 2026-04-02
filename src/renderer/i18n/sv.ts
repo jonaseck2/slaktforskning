@@ -274,4 +274,5 @@ export default {
       other: 'Annat',
     },
   },
+  sex: { M: 'Man', F: 'Kvinna', U: 'Okänd' },
 };
