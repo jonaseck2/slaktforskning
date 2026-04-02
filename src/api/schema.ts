@@ -17,8 +17,8 @@ export function initializeSchema(db: Database): void {
     CREATE TABLE IF NOT EXISTS person_names (
       id TEXT PRIMARY KEY,
       person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-      given_name TEXT NOT NULL DEFAULT '',
-      surname TEXT NOT NULL DEFAULT '',
+      given_name TEXT,
+      surname TEXT,
       name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'alias', 'aka')),
       date_from TEXT,
       date_to TEXT,
@@ -26,7 +26,7 @@ export function initializeSchema(db: Database): void {
       name_prefix TEXT,
       name_suffix TEXT,
       patronymic_base TEXT,
-      name_qualifier TEXT
+      name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias'))
     );
     CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id);
 
