@@ -1,43 +1,42 @@
 <template>
   <div v-if="person" class="person-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/')">&larr; Back</button>
+      <button class="btn-back" @click="$router.push('/')">{{ $t('personDetail.back') }}</button>
       <div class="header-info">
         <h2>{{ primaryName }}</h2>
         <span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span>
-        <span v-if="!person.living" class="deceased-badge">Deceased</span>
+        <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
       </div>
     </div>
 
     <!-- Names Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Names</h4>
-        <button class="btn-add" @click="showNameForm = true">+ Add Name</button>
+        <h4>{{ $t('personDetail.names') }}</h4>
+        <button class="btn-add" @click="showNameForm = true">{{ $t('personDetail.addName') }}</button>
       </div>
-      <div v-if="names.length === 0" class="empty-hint">No names recorded.</div>
+      <div v-if="names.length === 0" class="empty-hint">{{ $t('personDetail.noNames') }}</div>
       <table v-else class="data-table">
         <thead>
           <tr>
-            <th>Given Name</th>
-            <th>Surname</th>
-            <th>Type</th>
-            <th>Actions</th>
+            <th>{{ $t('persons.givenName') }}</th>
+            <th>{{ $t('persons.surname') }}</th>
+            <th>{{ $t('common.type') }}</th>
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="name in names" :key="name.id">
             <td>{{ name.given_name }}</td>
             <td>{{ name.surname }}</td>
-            <td><span class="type-badge">{{ name.name_type }}</span></td>
+            <td><span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span></td>
             <td>
-              <!-- Primary name (sort_order 0) is not deletable -->
               <button
                 v-if="name.sort_order > 0"
                 class="btn-sm btn-delete"
                 @click="removeName(name.id)"
               >
-                Delete
+                {{ $t('common.delete') }}
               </button>
             </td>
           </tr>
@@ -53,16 +52,16 @@
     <!-- Families Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Families</h4>
+        <h4>{{ $t('personDetail.families') }}</h4>
       </div>
-      <div v-if="families.length === 0" class="empty-hint">Not linked to any families.</div>
+      <div v-if="families.length === 0" class="empty-hint">{{ $t('personDetail.noFamilies') }}</div>
       <table v-else class="data-table">
         <thead>
           <tr>
-            <th>Role</th>
-            <th>Union Type</th>
-            <th>Partner</th>
-            <th>Actions</th>
+            <th>{{ $t('personDetail.role') }}</th>
+            <th>{{ $t('personDetail.unionType') }}</th>
+            <th>{{ $t('personDetail.partner') }}</th>
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -72,8 +71,8 @@
             class="clickable-row"
             @click="$router.push(`/families/${fam.id}`)"
           >
-            <td>{{ fam.role }}</td>
-            <td>{{ fam.union_type }}</td>
+            <td>{{ fam.role === 'Partner' ? $t('personDetail.partner') : $t('personDetail.child') }}</td>
+            <td>{{ $t('unionTypes.' + fam.union_type) }}</td>
             <td>{{ fam.partner_name || '—' }}</td>
             <td></td>
           </tr>
@@ -84,12 +83,12 @@
     <!-- Notes Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Notes</h4>
+        <h4>{{ $t('common.notes') }}</h4>
       </div>
       <textarea
         v-model="notesText"
         rows="3"
-        placeholder="Add notes about this person..."
+        :placeholder="$t('personDetail.notesPlaceholder')"
         @blur="saveNotes"
       />
     </section>
@@ -97,40 +96,41 @@
     <!-- Add Name Modal -->
     <div v-if="showNameForm" class="modal-overlay" @click.self="showNameForm = false">
       <div class="modal">
-        <h3>Add Name</h3>
+        <h3>{{ $t('personDetail.addNameTitle') }}</h3>
         <form @submit.prevent="addName">
           <label>
-            Given Name
+            {{ $t('persons.givenName') }}
             <input v-model="nameForm.given_name" type="text" required />
           </label>
           <label>
-            Surname
+            {{ $t('persons.surname') }}
             <input v-model="nameForm.surname" type="text" />
           </label>
           <label>
-            Type
+            {{ $t('common.type') }}
             <select v-model="nameForm.name_type">
-              <option v-for="nt in NAME_TYPES" :key="nt.value" :value="nt.value">
-                {{ nt.label }}
+              <option v-for="nt in NAME_TYPE_VALUES" :key="nt" :value="nt">
+                {{ $t('nameTypes.' + nt) }}
               </option>
             </select>
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showNameForm = false">Cancel</button>
-            <button type="submit">Add Name</button>
+            <button type="button" class="btn-cancel" @click="showNameForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('personDetail.addNameTitle') }}</button>
           </div>
         </form>
       </div>
     </div>
   </div>
-  <div v-else class="empty">Loading...</div>
+  <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
-import { NAME_TYPES } from '../constants/eventTypes';
+import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -160,6 +160,7 @@ interface FamilyRow {
   partner_name: string;
 }
 
+const { t } = useI18n();
 const route = useRoute();
 const personId = route.params.id as string;
 
@@ -190,7 +191,6 @@ async function load() {
       primaryName.value = `${n.given_name} ${n.surname}`.trim();
     }
 
-    // Load families
     const rawFamilies = (await window.api.families.getForPerson(personId)) as Array<{
       id: string;
       partner_a_id: string | null;
@@ -240,8 +240,6 @@ async function addName() {
 
 async function removeName(id: string) {
   if (!window.api) return;
-  // person_names cascade-delete isn't exposed via IPC, use direct delete if available
-  // For now we don't have a deleteName IPC — skip
   console.warn('Delete name not yet implemented via IPC');
 }
 

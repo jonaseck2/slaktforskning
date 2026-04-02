@@ -2,7 +2,7 @@
   <div class="date-input">
     <div class="date-row">
       <select :value="dateType" @change="updateDateType($event)">
-        <option v-for="dt in DATE_TYPES" :key="dt.value" :value="dt.value">{{ dt.label }}</option>
+        <option v-for="dt in DATE_TYPE_VALUES" :key="dt" :value="dt">{{ $t('dateTypes.' + dt) }}</option>
       </select>
       <input
         v-if="dateType !== 'unknown'"
@@ -11,7 +11,7 @@
         @input="updateDateValue($event)"
       />
       <template v-if="dateType === 'between'">
-        <span class="date-sep">to</span>
+        <span class="date-sep">{{ $t('dateInput.to') }}</span>
         <input
           type="date"
           :value="dateValueEnd"
@@ -23,7 +23,7 @@
       <input
         type="text"
         :value="dateOriginal"
-        placeholder="Original text (e.g. 'abt. 1845')"
+        :placeholder="$t('dateInput.originalPlaceholder')"
         @input="updateDateOriginal($event)"
       />
     </div>
@@ -31,7 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { DATE_TYPES } from '../constants/eventTypes';
+import { useI18n } from 'vue-i18n';
+import { DATE_TYPE_VALUES } from '../constants/eventTypes';
 
 const props = defineProps<{
   dateType: string;
@@ -46,6 +47,8 @@ const emit = defineEmits<{
   'update:dateValueEnd': [value: string];
   'update:dateOriginal': [value: string];
 }>();
+
+useI18n();
 
 function updateDateType(e: Event) {
   emit('update:dateType', (e.target as HTMLSelectElement).value);

@@ -1,89 +1,43 @@
-export const EVENT_TYPES = [
-  { value: 'birth', label: 'Birth' },
-  { value: 'death', label: 'Death' },
-  { value: 'marriage', label: 'Marriage' },
-  { value: 'divorce', label: 'Divorce' },
-  { value: 'christening', label: 'Christening' },
-  { value: 'burial', label: 'Burial' },
-  { value: 'baptism', label: 'Baptism' },
-  { value: 'confirmation', label: 'Confirmation' },
-  { value: 'ordination', label: 'Ordination' },
-  { value: 'census', label: 'Census' },
-  { value: 'immigration', label: 'Immigration' },
-  { value: 'emigration', label: 'Emigration' },
-  { value: 'naturalization', label: 'Naturalization' },
-  { value: 'occupation', label: 'Occupation' },
-  { value: 'residence', label: 'Residence' },
-  { value: 'education', label: 'Education' },
-  { value: 'graduation', label: 'Graduation' },
-  { value: 'military', label: 'Military Service' },
-  { value: 'retirement', label: 'Retirement' },
-  { value: 'will', label: 'Will' },
-  { value: 'probate', label: 'Probate' },
-  { value: 'other', label: 'Other' },
+// Constants define the valid values. Labels come from i18n translations
+// (keys: eventTypes.*, dateTypes.*, etc.) and are resolved in components.
+
+export const EVENT_TYPE_VALUES = [
+  'birth', 'death', 'marriage', 'divorce', 'christening', 'burial',
+  'baptism', 'confirmation', 'ordination', 'census', 'immigration',
+  'emigration', 'naturalization', 'occupation', 'residence', 'education',
+  'graduation', 'military', 'retirement', 'will', 'probate', 'other',
 ] as const;
 
-export type EventTypeValue = (typeof EVENT_TYPES)[number]['value'];
+export type EventTypeValue = (typeof EVENT_TYPE_VALUES)[number];
 
-export const PERSON_EVENT_TYPES = EVENT_TYPES.filter(
-  (t) => !['marriage', 'divorce'].includes(t.value),
+export const PERSON_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter(
+  (t) => !['marriage', 'divorce'].includes(t),
 );
 
-export const FAMILY_EVENT_TYPES = EVENT_TYPES.filter((t) =>
-  ['marriage', 'divorce', 'census', 'other'].includes(t.value),
+export const FAMILY_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter((t) =>
+  ['marriage', 'divorce', 'census', 'other'].includes(t),
 );
 
-export const DATE_TYPES = [
-  { value: 'exact', label: 'Exact' },
-  { value: 'about', label: 'About' },
-  { value: 'before', label: 'Before' },
-  { value: 'after', label: 'After' },
-  { value: 'between', label: 'Between' },
-  { value: 'calculated', label: 'Calculated' },
-  { value: 'unknown', label: 'Unknown' },
+export const DATE_TYPE_VALUES = [
+  'exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown',
 ] as const;
 
-export const CONFIDENCE_LEVELS = [
-  { value: 0, label: 'Unreliable' },
-  { value: 1, label: 'Questionable' },
-  { value: 2, label: 'Secondary evidence' },
-  { value: 3, label: 'Primary evidence' },
+export const CONFIDENCE_LEVEL_VALUES = [0, 1, 2, 3] as const;
+
+export const SOURCE_TYPE_VALUES = [
+  'vital_record', 'census', 'church_record', 'newspaper', 'photograph',
+  'oral_history', 'letter', 'legal_document', 'military_record',
+  'immigration_record', 'book', 'online_database', 'other',
 ] as const;
 
-export const SOURCE_TYPES = [
-  { value: 'vital_record', label: 'Vital Record' },
-  { value: 'census', label: 'Census' },
-  { value: 'church_record', label: 'Church Record' },
-  { value: 'newspaper', label: 'Newspaper' },
-  { value: 'photograph', label: 'Photograph' },
-  { value: 'oral_history', label: 'Oral History' },
-  { value: 'letter', label: 'Letter / Correspondence' },
-  { value: 'legal_document', label: 'Legal Document' },
-  { value: 'military_record', label: 'Military Record' },
-  { value: 'immigration_record', label: 'Immigration Record' },
-  { value: 'book', label: 'Book' },
-  { value: 'online_database', label: 'Online Database' },
-  { value: 'other', label: 'Other' },
+export const UNION_TYPE_VALUES = [
+  'marriage', 'civil_union', 'cohabitation', 'unknown',
 ] as const;
 
-export const UNION_TYPES = [
-  { value: 'marriage', label: 'Marriage' },
-  { value: 'civil_union', label: 'Civil Union' },
-  { value: 'cohabitation', label: 'Cohabitation' },
-  { value: 'unknown', label: 'Unknown' },
+export const RELATIONSHIP_TYPE_VALUES = [
+  'biological', 'adopted', 'foster', 'step', 'unknown',
 ] as const;
 
-export const RELATIONSHIP_TYPES = [
-  { value: 'biological', label: 'Biological' },
-  { value: 'adopted', label: 'Adopted' },
-  { value: 'foster', label: 'Foster' },
-  { value: 'step', label: 'Step' },
-  { value: 'unknown', label: 'Unknown' },
-] as const;
-
-export const NAME_TYPES = [
-  { value: 'birth', label: 'Birth' },
-  { value: 'married', label: 'Married' },
-  { value: 'alias', label: 'Alias' },
-  { value: 'aka', label: 'Also Known As' },
+export const NAME_TYPE_VALUES = [
+  'birth', 'married', 'alias', 'aka',
 ] as const;

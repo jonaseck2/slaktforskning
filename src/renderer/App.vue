@@ -1,18 +1,23 @@
 <template>
   <div class="app">
     <nav class="sidebar">
-      <h1>Släktforskning</h1>
+      <h1>{{ $t('app.title') }}</h1>
       <form class="sidebar-search" @submit.prevent="submitSearch">
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search…"
+          :placeholder="$t('app.search')"
           class="sidebar-search-input"
         />
       </form>
-      <router-link to="/">Persons</router-link>
-      <router-link to="/families">Families</router-link>
-      <router-link to="/sources">Sources</router-link>
+      <router-link to="/">{{ $t('nav.persons') }}</router-link>
+      <router-link to="/families">{{ $t('nav.families') }}</router-link>
+      <router-link to="/sources">{{ $t('nav.sources') }}</router-link>
+      <div class="sidebar-spacer"></div>
+      <select class="locale-switcher" :value="locale" @change="switchLocale($event)">
+        <option value="sv">Svenska</option>
+        <option value="en">English</option>
+      </select>
     </nav>
     <main class="content">
       <router-view />
@@ -23,8 +28,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { saveLocale } from './i18n';
+import type { SupportedLocale } from './i18n';
 
 const router = useRouter();
+const { locale } = useI18n();
 const searchQuery = ref('');
 
 function submitSearch() {
@@ -32,6 +41,12 @@ function submitSearch() {
   if (!q) return;
   router.push({ path: '/search', query: { q } });
   searchQuery.value = '';
+}
+
+function switchLocale(e: Event) {
+  const val = (e.target as HTMLSelectElement).value as SupportedLocale;
+  locale.value = val;
+  saveLocale(val);
 }
 </script>
 
@@ -103,6 +118,26 @@ body {
 .sidebar a.router-link-active {
   background: rgba(255, 255, 255, 0.1);
   color: white;
+}
+
+.sidebar-spacer {
+  flex: 1;
+}
+
+.locale-switcher {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.locale-switcher option {
+  color: #333;
+  background: white;
 }
 
 .content {

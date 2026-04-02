@@ -1,19 +1,19 @@
 <template>
   <div>
     <div class="header">
-      <h2>Sources</h2>
-      <button @click="showAddForm = true">Add Source</button>
+      <h2>{{ $t('sources.title') }}</h2>
+      <button @click="showAddForm = true">{{ $t('sources.addSource') }}</button>
     </div>
     <div v-if="sourceList.length === 0" class="empty">
-      No sources yet. Click "Add Source" to get started.
+      {{ $t('sources.emptyState') }}
     </div>
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>Title</th>
-          <th>Author</th>
-          <th>Type</th>
-          <th>Actions</th>
+          <th>{{ $t('sources.sourceTitle') }}</th>
+          <th>{{ $t('sources.author') }}</th>
+          <th>{{ $t('common.type') }}</th>
+          <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -25,9 +25,9 @@
         >
           <td>{{ source.title }}</td>
           <td>{{ source.author || '—' }}</td>
-          <td><span v-if="source.source_type" class="type-badge">{{ formatSourceType(source.source_type) }}</span></td>
+          <td><span v-if="source.source_type" class="type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span></td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removeSource(source.id)">Delete</button>
+            <button class="btn-sm btn-delete" @click.stop="removeSource(source.id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -36,40 +36,40 @@
     <!-- Add Source Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
       <div class="modal">
-        <h3>Add Source</h3>
+        <h3>{{ $t('sources.addSource') }}</h3>
         <form @submit.prevent="addSource">
           <label>
-            Title
+            {{ $t('sources.sourceTitle') }}
             <input v-model="form.title" type="text" required autofocus />
           </label>
           <label>
-            Author
+            {{ $t('sources.author') }}
             <input v-model="form.author" type="text" />
           </label>
           <label>
-            Source Type
+            {{ $t('sources.sourceType') }}
             <select v-model="form.source_type">
-              <option value="">— Select —</option>
-              <option v-for="st in SOURCE_TYPES" :key="st.value" :value="st.value">
-                {{ st.label }}
+              <option value="">{{ $t('sources.selectType') }}</option>
+              <option v-for="st in SOURCE_TYPE_VALUES" :key="st" :value="st">
+                {{ $t('sourceTypes.' + st) }}
               </option>
             </select>
           </label>
           <label>
-            Publication Info
-            <input v-model="form.publication_info" type="text" placeholder="Publisher, year, etc." />
+            {{ $t('sources.publicationInfo') }}
+            <input v-model="form.publication_info" type="text" :placeholder="$t('sources.publicationPlaceholder')" />
           </label>
           <label>
-            Repository
-            <input v-model="form.repository" type="text" placeholder="Archive or library name" />
+            {{ $t('sources.repository') }}
+            <input v-model="form.repository" type="text" :placeholder="$t('sources.repositoryPlaceholder')" />
           </label>
           <label>
-            URL
-            <input v-model="form.url" type="url" placeholder="https://..." />
+            {{ $t('sources.url') }}
+            <input v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">Cancel</button>
-            <button type="submit">Add Source</button>
+            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('sources.addSource') }}</button>
           </div>
         </form>
       </div>
@@ -80,7 +80,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { SOURCE_TYPES } from '../constants/eventTypes';
+import { useI18n } from 'vue-i18n';
+import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -93,6 +94,7 @@ interface SourceRow {
   source_type: string;
 }
 
+const { t } = useI18n();
 const router = useRouter();
 const sourceList = ref<SourceRow[]>([]);
 const showAddForm = ref(false);
@@ -104,10 +106,6 @@ const form = reactive({
   repository: '',
   url: '',
 });
-
-function formatSourceType(type: string): string {
-  return SOURCE_TYPES.find((st) => st.value === type)?.label ?? type;
-}
 
 async function load() {
   if (!window.api) return;
@@ -144,7 +142,7 @@ async function addSource() {
 
 async function removeSource(id: string) {
   if (!window.api) return;
-  if (!confirm('Delete this source? This cannot be undone.')) return;
+  if (!confirm(t('sources.confirmDelete'))) return;
   try {
     await window.api.sources.delete(id);
     await load();
