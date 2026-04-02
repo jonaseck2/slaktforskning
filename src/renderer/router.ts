@@ -17,5 +17,7 @@ export const router = createRouter({
     { path: '/sources', component: SourcesView },
     { path: '/sources/:id', component: SourceDetailView },
     { path: '/search', component: SearchView },
+    { path: '/places', component: () => import('./views/PlacesView.vue') },
+    { path: '/places/:id', component: () => import('./views/PlaceDetailView.vue') },
   ],
 });

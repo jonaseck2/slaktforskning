@@ -1,0 +1,118 @@
+<template>
+  <div v-if="place" class="place-detail">
+    <div class="detail-header">
+      <button class="btn-back" @click="$router.push('/places')">← {{ $t('common.back') }}</button>
+      <h2>{{ place.name }}</h2>
+      <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
+    </div>
+
+    <section class="detail-section">
+      <div class="field-grid">
+        <label>{{ $t('places.name') }}
+          <input v-model="editName" type="text" @blur="save({ name: editName })" />
+        </label>
+        <label>{{ $t('places.type') }}
+          <select v-model="editType" @change="save({ place_type: editType || null })">
+            <option value="">—</option>
+            <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">
+              {{ $t('placeTypes.' + pt) }}
+            </option>
+          </select>
+        </label>
+        <label>{{ $t('places.parentPlace') }}
+          <PlacePicker v-model="editParentId" @update:model-value="save({ parent_place_id: $event })" />
+        </label>
+        <label>{{ $t('places.latitude') }}
+          <input v-model.number="editLat" type="number" step="0.000001" @blur="save({ latitude: editLat || null })" />
+        </label>
+        <label>{{ $t('places.longitude') }}
+          <input v-model.number="editLon" type="number" step="0.000001" @blur="save({ longitude: editLon || null })" />
+        </label>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h4>{{ $t('common.notes') }}</h4>
+      <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
+    </section>
+
+    <section v-if="children.length" class="detail-section">
+      <h4>{{ $t('places.childPlaces') }}</h4>
+      <ul class="child-list">
+        <li v-for="child in children" :key="child.id">
+          <a href="#" @click.prevent="$router.push('/places/' + child.id)">{{ child.name }}</a>
+          <span v-if="child.place_type" class="type-badge">{{ $t('placeTypes.' + child.place_type) }}</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+  <div v-else class="empty">{{ $t('common.loading') }}</div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import PlacePicker from '../components/PlacePicker.vue';
+import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
+
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
+
+interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; }
+
+useI18n();
+const route = useRoute();
+const placeId = route.params.id as string;
+const place = ref<PlaceRow | null>(null);
+const children = ref<PlaceRow[]>([]);
+const editName = ref('');
+const editType = ref('');
+const editParentId = ref<string | null>(null);
+const editLat = ref<number | null>(null);
+const editLon = ref<number | null>(null);
+const editNotes = ref('');
+
+async function load() {
+  place.value = (await window.api.places.get(placeId)) as PlaceRow | null;
+  if (!place.value) return;
+  editName.value = place.value.name;
+  editType.value = place.value.place_type ?? '';
+  editParentId.value = place.value.parent_place_id;
+  editLat.value = place.value.latitude;
+  editLon.value = place.value.longitude;
+  editNotes.value = place.value.notes;
+  const all = (await window.api.places.list()) as PlaceRow[];
+  children.value = all.filter(p => p.parent_place_id === placeId);
+}
+
+async function save(data: Record<string, unknown>) {
+  await window.api.places.update(placeId, data);
+  await load();
+}
+
+onMounted(load);
+</script>
+
+<style scoped>
+.place-detail { max-width: 700px; }
+.detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+.detail-header h2 { margin: 0; }
+.btn-back { background: none; border: none; color: #2c3e50; cursor: pointer; padding: 4px 0; font-size: 14px; }
+.btn-back:hover { text-decoration: underline; }
+.type-badge { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
+.detail-section h4 { margin: 0 0 8px; font-size: 15px; }
+.field-grid { display: flex; flex-direction: column; gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #555; }
+input[type='text'], input[type='number'], select, textarea {
+  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit;
+}
+textarea { resize: vertical; }
+.child-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.child-list li { display: flex; align-items: center; gap: 8px; }
+.child-list a { color: #2c3e50; text-decoration: none; font-size: 14px; }
+.child-list a:hover { text-decoration: underline; }
+.empty { color: #999; padding: 40px; text-align: center; }
+</style>
