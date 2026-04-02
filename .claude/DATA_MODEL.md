@@ -54,6 +54,22 @@ A person can have multiple names over time (birth, married, alias, aka).
 | date_from | TEXT | ISO date |
 | date_to | TEXT | ISO date |
 | sort_order | INTEGER | 0 = primary name |
+| name_prefix | TEXT | Title/prefix before given name (e.g. "Dr.", "von") |
+| name_suffix | TEXT | Suffix after surname (e.g. "Jr.", "Sr.") |
+| patronymic_base | TEXT | Base name used for Swedish patronymics (e.g. "Erik" → Eriksson/Eriksdotter) |
+| name_qualifier | TEXT | CHECK ('married_name' \| 'aka' \| 'nick' \| 'immigrant' \| null) |
+
+### person_identifiers
+External IDs linking a person record to identifiers in other systems.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| person_id | TEXT FK | → persons, CASCADE DELETE |
+| identifier_type | TEXT | CHECK 'familysearch' \| 'ancestry' \| 'riksarkivet' \| 'personnummer' \| 'refn' \| 'rin' \| 'other' |
+| identifier_value | TEXT | The actual identifier string |
+| created_at | TEXT | datetime |
+| UNIQUE | | (person_id, identifier_type, identifier_value) |
 
 ### relationships
 **Replaces `families` + `person_family_links`.** A relationship is a typed, sourced connection between two persons. This is the GEDCOM-X model — there is no "Family" entity, only relationships between individuals.
