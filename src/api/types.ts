@@ -10,12 +10,24 @@ export interface Person {
 export interface PersonName {
   id: string;
   person_id: string;
-  given_name: string;
-  surname: string;
+  given_name: string | null;
+  surname: string | null;
   name_type: 'birth' | 'married' | 'alias' | 'aka';
   date_from: string | null;
   date_to: string | null;
   sort_order: number;
+  name_prefix: string | null;
+  name_suffix: string | null;
+  patronymic_base: string | null;
+  name_qualifier: 'patronymic' | 'matronymic' | 'particle' | 'married' | 'alias' | null;
+}
+
+export interface PersonIdentifier {
+  id: string;
+  person_id: string;
+  identifier_type: 'familysearch' | 'ancestry' | 'riksarkivet' | 'personnummer' | 'refn' | 'rin' | 'other';
+  identifier_value: string;
+  created_at: string;
 }
 
 export type RelationshipType = 'couple' | 'parent_child' | 'sibling' | 'godparent' | 'other';

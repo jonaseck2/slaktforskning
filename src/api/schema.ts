@@ -22,9 +22,23 @@ export function initializeSchema(db: Database): void {
       name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'alias', 'aka')),
       date_from TEXT,
       date_to TEXT,
-      sort_order INTEGER NOT NULL DEFAULT 0
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      name_prefix TEXT,
+      name_suffix TEXT,
+      patronymic_base TEXT,
+      name_qualifier TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id);
+
+    CREATE TABLE IF NOT EXISTS person_identifiers (
+      id TEXT PRIMARY KEY,
+      person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      identifier_type TEXT NOT NULL CHECK(identifier_type IN ('familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other')),
+      identifier_value TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(person_id, identifier_type, identifier_value)
+    );
+    CREATE INDEX IF NOT EXISTS idx_person_identifiers_person_id ON person_identifiers(person_id);
 
     CREATE TABLE IF NOT EXISTS relationships (
       id TEXT PRIMARY KEY,
