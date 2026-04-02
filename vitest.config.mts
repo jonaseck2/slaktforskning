@@ -3,6 +3,16 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      include: ['src/api/**/*.ts'],
+      exclude: ['src/api/types.ts', 'src/api/schema.ts'],
+      reporter: ['text', 'lcov'],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+      },
+    },
     projects: [
       {
         test: {

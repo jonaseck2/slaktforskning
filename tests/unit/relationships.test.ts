@@ -79,6 +79,14 @@ describe('relationships', () => {
     expect(getRelationship(db, rel.id)).toBeNull();
   });
 
+  it('getRelationship returns null for nonexistent id', () => {
+    expect(getRelationship(db, 'nonexistent')).toBeNull();
+  });
+
+  it('deleteRelationship returns false for nonexistent id', () => {
+    expect(deleteRelationship(db, 'nonexistent')).toBe(false);
+  });
+
   it('gets relationships of a person (as person1 and person2)', () => {
     const person = createPerson(db, { given_name: 'Test', surname: 'T' });
     const other1 = createPerson(db, { given_name: 'Other1', surname: 'O' });

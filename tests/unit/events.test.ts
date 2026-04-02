@@ -20,6 +20,22 @@ beforeEach(() => {
 });
 
 describe('events', () => {
+  it('gets an event by id', () => {
+    const event = createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
+    const fetched = getEvent(db, event.id);
+    expect(fetched).not.toBeNull();
+    expect(fetched!.id).toBe(event.id);
+    expect(fetched!.event_type).toBe('birth');
+  });
+
+  it('returns null for nonexistent event', () => {
+    expect(getEvent(db, 'nonexistent')).toBeNull();
+  });
+
+  it('deleteEvent returns false for nonexistent id', () => {
+    expect(deleteEvent(db, 'nonexistent')).toBe(false);
+  });
+
   it('creates a birth event', () => {
     const event = createEvent(db, {
       event_type: 'birth',
