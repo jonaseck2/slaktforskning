@@ -65,5 +65,8 @@
 3. **[2026-03-15] Keep it simple — avoid unnecessary complexity**
    Do instead: prefer simple solutions over elaborate workarounds. WASM-based SQLite eliminated all native module rebuild complexity.
 
+5. **[2026-04-03] Completed versions belong in Implementation Status, not Roadmap**
+   Do instead: when marking a milestone done in PLAN.md, move the entry up to the `## Implementation Status` section (above the `---`). The `## Roadmap` section is for future work only.
+
 4. **[2026-03-15] Use modal dialogs for create/edit, not page navigation**
    Do instead: for data entry forms, use modal dialogs so the user stays in context. Reserve page navigation for detail views (viewing a full record).
