@@ -125,7 +125,7 @@ export default {
     confirmDelete: 'Ta bort denna händelse?',
     citeSources: 'Citera',
     unsourced: 'Okänd källa',
-    sources: 'källa | kilder',
+    sources: 'källa | källor',
     addSourceOptional: 'Lägg till källa (valfritt)',
   },
   citations: {
