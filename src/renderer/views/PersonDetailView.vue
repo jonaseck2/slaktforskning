@@ -57,6 +57,11 @@
     <section class="detail-section">
       <div class="section-header">
         <h4>{{ $t('personDetail.relationships') }}</h4>
+        <div class="rel-actions">
+          <button class="btn-rel-add" @click="addRelatedMode = 'parent'; showAddRelated = true">{{ $t('personDetail.addParent') }}</button>
+          <button class="btn-rel-add" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</button>
+          <button class="btn-rel-add" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</button>
+        </div>
       </div>
       <div v-if="rels.length === 0" class="empty-hint">{{ $t('personDetail.noRelationships') }}</div>
       <table v-else class="data-table">
@@ -102,6 +107,14 @@
       @saved="showCitePersonForm = false"
     />
 
+    <AddRelatedPersonModal
+      v-if="showAddRelated"
+      :person-id="person.id"
+      :mode="addRelatedMode"
+      @close="showAddRelated = false"
+      @saved="showAddRelated = false; load()"
+    />
+
     <!-- Add Name Modal -->
     <div v-if="showNameForm" class="modal-overlay" @click.self="showNameForm = false">
       <div class="modal">
@@ -140,6 +153,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
 import CitationForm from '../components/CitationForm.vue';
+import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -182,6 +196,8 @@ const primaryName = ref('');
 const notesText = ref('');
 const showNameForm = ref(false);
 const showCitePersonForm = ref(false);
+const showAddRelated = ref(false);
+const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
 const evidenceSourced = ref(0);
 const evidenceTotal = ref(0);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
@@ -498,5 +514,21 @@ form select {
 .btn-cancel {
   background: #e0e0e0;
   color: #333;
+}
+.rel-actions {
+  display: flex;
+  gap: 6px;
+}
+.btn-rel-add {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-rel-add:hover {
+  background: #e2e8f0;
 }
 </style>
