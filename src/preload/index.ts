@@ -11,6 +11,7 @@ const api = {
     addName: (personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addName', personId, data),
     getNames: (personId: string) => ipcRenderer.invoke('persons:getNames', personId),
     updateName: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:updateName', id, data),
+    deleteName: (id: string) => ipcRenderer.invoke('persons:deleteName', id),
     addIdentifier: (personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addIdentifier', personId, data),
     getIdentifiers: (personId: string) => ipcRenderer.invoke('persons:getIdentifiers', personId),
     deleteIdentifier: (id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id),

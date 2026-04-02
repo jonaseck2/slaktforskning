@@ -11,6 +11,7 @@ import {
   addPersonName,
   getPersonNames,
   updatePersonName,
+  deletePersonName,
   addPersonIdentifier,
   getPersonIdentifiers,
   deletePersonIdentifier,
@@ -113,6 +114,14 @@ describe('persons', () => {
 
   it('updatePersonName returns null for nonexistent id', () => {
     expect(updatePersonName(db, 'nonexistent', { given_name: 'X' })).toBeNull();
+  });
+
+  it('deletes a non-primary name', () => {
+    const person = createPerson(db, {});
+    const name = addPersonName(db, person.id, { given_name: 'Alias', name_type: 'alias' });
+    expect(deletePersonName(db, name.id)).toBe(true);
+    const names = getPersonNames(db, person.id);
+    expect(names.find(n => n.id === name.id)).toBeUndefined();
   });
 
   describe('addPersonName with extended fields', () => {
