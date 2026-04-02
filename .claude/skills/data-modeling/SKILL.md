@@ -1,144 +1,123 @@
 ---
 name: data-modeling
-description: Design data schemas for genealogy apps — persons, families, events, sources, citations, media. Use for schema design, ERDs, or modeling complex family structures.
+description: Design data schemas for genealogy apps — persons, families, events, sources, citations, media. Use for schema design, ERDs, modeling complex family structures, or any question about how the data model works in this project. Also triggers on questions about tables, foreign keys, relationships, or the GEDCOM-X vs GEDCOM alignment.
 ---
 
 # Genealogy Data Modeling
 
-This skill helps design robust data schemas for genealogy applications — covering the core entities, their relationships, and the tricky edge cases that trip up naive designs.
+This skill helps design robust data schemas for genealogy applications.
 
-## Core entities
+**For this project's actual implemented schema**, read `references/schema.md` (in this skill directory). The sections below cover general design principles that inform the schema.
+
+---
+
+## Core Design Philosophy
+
+**Source-first, evidence-based genealogy.** Every claim should be traceable to a source. The model separates evidence (what sources say) from conclusions (what the researcher believes):
+
+```
+EVIDENCE LAYER:   sources → citations → assertions
+CONCLUSION LAYER: persons, relationships, events, places
+```
+
+This three-layer model (Source → Citation → Assertion) follows the Genealogical Proof Standard and is what separates research-grade genealogy from simple tree builders.
+
+---
+
+## Core Entities
 
 ### Person
-The fundamental unit. Key attributes:
-- `id` (UUID)
-- Names: given name, surname, name type (birth, married, alias, also-known-as), date range
-- Sex / gender
-- Living flag (for privacy)
-- Notes
+The fundamental unit.
+- `id` (UUID v4)
+- Names: stored separately as `PersonName` (given, surname, name_type, date range, prefix, suffix, patronymic qualifier)
+- Sex / gender, living flag (for privacy)
+- External identifiers (FamilySearch ID, Ancestry ID, etc.)
 
-**Design note:** A person can have multiple names over time. Store names as a separate `PersonName` entity linked to Person, not as flat fields.
+**Design note:** A person can have multiple names over time. Store as a separate table, not flat fields. Swedish genealogy needs prefix/suffix/patronymic support (von Linné, Eriksson/Eriksdotter).
 
-### Family / Couple
-Represents a partnership (married, cohabiting, unknown). Links two persons.
+### Relationship (GEDCOM-X model — preferred)
+A typed connection between two persons. Replaces the traditional "Family" entity.
+
 - `id`
-- Partner A (person_id)
-- Partner B (person_id)
-- Union type (marriage, civil union, cohabitation, unknown)
-- Start event, end event (see Events)
+- `type`: couple, parent_child, sibling, godparent, other
+- `person1_id`, `person2_id` — roles differ by type:
+  - couple: both partners
+  - parent_child: person1 = parent, person2 = child
+  - sibling: either order
+- `subtype`: for couple (marriage/civil_union/cohabitation/unknown), for parent_child (biological/adopted/foster/step/unknown)
 
-**Design note:** Separate "Family" from "Marriage event" — the relationship exists even if we don't know the marriage date.
+**Why GEDCOM-X over the Family model:** No "Family" entity is needed — relationships between individuals are first-class. A person can be in multiple couples, have multiple parent-child relationships (biological + adoptive), and all relationships are queryable symmetrically.
 
-### Person-Family link
-Links a person to a family as a child.
-- `person_id`
-- `family_id`
-- Relationship type (biological, adopted, foster, step, unknown)
+**GEDCOM roundtrip:** On export, each `couple` relationship becomes a FAM record. `parent_child` relationships are emitted as FAM.CHIL entries.
 
 ### Event
-Something that happened to a person or family at a point in time.
-- `id`
-- Event type (birth, death, marriage, divorce, burial, baptism, immigration, census, residence, occupation, military, etc.)
-- Date (see Date model below)
-- Place (see Place below)
-- Description / notes
-- Subject: person_id or family_id
+Something that happened to one or more persons at a point in time.
+- event_type (birth, death, marriage, divorce, baptism, immigration, census, etc.)
+- Date model (see below)
+- Place reference
+- Links to persons via `EventParticipant` junction table (not a single person_id)
+
+**Design note:** Events belong to persons via a participants table with roles (primary, spouse, parent, child, witness, godparent, officiant). A baptism can have the child as primary, parents as parent-role participants, and a godparent.
 
 ### Date model
-Genealogy dates are often uncertain. Don't use a simple date field. Model:
-- Date type: exact, about (~), before, after, between, calculated, unknown
-- Date value(s): ISO date string(s)
-- Original text (preserve what the source actually says, e.g., "abt 1842")
+Genealogy dates are uncertain. Never use a simple date field.
+- `date_type`: exact, about, before, after, between, calculated, unknown
+- `date_value`: ISO date (YYYY-MM-DD)
+- `date_value_end`: for "between" only
+- `date_original`: verbatim from source (e.g. "Midsommar 1742", "abt 1842")
 
 ### Place
-- `id`
-- Name (as recorded)
-- Normalized name
-- Latitude, longitude (optional)
-- Parent place (for hierarchy: village → county → country)
-- Date range (place names and boundaries change over time)
+Hierarchical. Swedish genealogy needs parish/härad/county structure.
+- Name as recorded, normalized name for search/dedup
+- `place_type`: country, province, county, härad, parish, farm, village, city, other
+- `parent_place_id` for hierarchy (farm → parish → härad → county → country)
+- Lat/long, date range (place names and boundaries change)
 
 ### Source
-A document, record, or artifact that contains information.
-- `id`
-- Title
-- Author
-- Publication info
-- Repository (where it's held)
-- URL / call number
-- Source type (vital record, census, newspaper, photograph, oral history, etc.)
+A physical or digital document, record, or artifact.
+- title, author, publication_info, repository, url
+- `source_type`: vital_record, census, church_record, newspaper, photograph, oral_history, letter, legal_document, military_record, immigration_record, book, online_database, other
 
 ### Citation
-Links a claim in the tree to a source, with location within source.
-- `id`
-- `source_id`
-- Page / film number / URL fragment
-- Date accessed
-- Confidence level
-- Transcription (verbatim text from source)
-- Notes
+Links a source (at a specific location) to any conclusion-layer entity. One citation can simultaneously point to a person, event, relationship, and place.
+- `source_id` + page/location
+- Confidence: 0=unreliable, 1=questionable, 2=secondary, 3=primary (GEDCOM QUAY)
+- Transcription (verbatim text)
+- FK to event, person, relationship, and/or place (all nullable, SET NULL on delete)
 
-### Assertion / Claim
-A specific piece of information derived from a citation. This separates "what the source says" from "what we conclude."
-- `id`
-- `citation_id`
-- Claim type (birth date, birth place, parent-child relationship, etc.)
-- Value
-- Confidence
+### Assertion *(schema present, UI deferred)*
+A specific claim derived from a citation — separates "what the source says" from "what we conclude." When assertions conflict across citations, the researcher decides which to accept.
 
-**Design note:** This three-layer model (Source → Citation → Assertion) follows the Genealogical Proof Standard and is what separates serious genealogy apps from simple tree builders.
-
-### Media
-Photos, documents, audio, video.
-- `id`
-- File reference / URL
-- Media type
-- Title, date, description
-- Links to persons, families, events, places
-
-## Entity-relationship overview
-
-```
-Person ─── PersonName (many)
-       ─── Event (many, as subject)
-       ─── PersonFamilyLink (many) ──► Family
-                                           ├── Partner A (Person)
-                                           ├── Partner B (Person)
-                                           └── Event (many, e.g. marriage)
-
-Citation ──► Source
-Assertion ──► Citation
-Event ──► Assertion (many)
-PersonAttribute ──► Assertion (many)
-
-Media ─── linked to any entity
-Place ─── used by Event
-```
+---
 
 ## Tricky edge cases
 
-- **Unknown parents:** Family can exist with one or both partners null.
-- **Same-sex couples:** Model partners as Partner A / Partner B, not "husband/wife".
-- **Adoptions:** Use the relationship type field on PersonFamilyLink.
-- **Plural marriages:** A person can be linked to multiple families as partner.
-- **Conflicting information:** Multiple assertions for the same fact with different values is valid — let the researcher evaluate evidence.
-- **Living persons:** Flag persons as living; suppress details in public views.
-- **Merged duplicates:** Keep a `merged_into` pointer to handle deduplication without data loss.
+- **Unknown parents:** Relationship can have person1 or person2 null (parent unknown)
+- **Same-sex couples:** person1/person2 have no gender assumption
+- **Plural marriages:** A person can be in multiple couple relationships
+- **Conflicting information:** Multiple assertions for the same fact is valid — evidence conflict is a research finding
+- **Patronymics:** Swedish pre-1963 surnames derived from father's given name (Erik → son: Eriksson, daughter: Eriksdotter). Model with `patronymic_base` + `name_qualifier`
+- **Noble particles:** "von", "af", "de la" → `name_prefix`
+- **Living persons:** `living` flag suppresses details in public-facing views
 
-## Output format
+---
+
+## Output format for schema design
 
 When designing a schema, produce:
 
 1. **Entity list** with key fields and data types
-2. **ERD** as an ASCII diagram or Mermaid `erDiagram` block
-3. **Notes on design decisions** — explain why the model is shaped the way it is
-4. **SQL DDL or JSON Schema** as requested
-5. **GEDCOM mapping** — how entities map to GEDCOM tags (see gedcom skill for details)
+2. **ERD** as ASCII or Mermaid `erDiagram`
+3. **Design decisions** — explain why the model is shaped the way it is
+4. **SQL DDL** or TypeScript interfaces as appropriate
+5. **GEDCOM mapping** — how entities map to GEDCOM 5.5.1 tags
 
 ## GEDCOM compatibility
 
-When designing new entities, consider how they map to GEDCOM 5.5.1 tags (for broad compatibility) and GEDCOM 7.0 structures (for forward-looking designs). See the `/gedcom` skill for tag details. Entities that don't map to a standard GEDCOM tag should use extension mechanisms (`_` prefix in 5.5.1, `SCHMA` in 7.0) to remain interoperable.
+When designing new entities, consider how they map to GEDCOM 5.5.1 tags (for broad compatibility). See the `/gedcom` skill for tag details. Entities without a standard GEDCOM equivalent should use `_`-prefixed custom tags to remain interoperable.
 
-## Recommended starting point for a new app
+---
 
-If the user needs a minimal viable schema, start with: Person, Family, PersonFamilyLink, Event, Place, Source, Citation. Add Assertion layer when the app matures toward research-grade use.
+## Project schema reference
+
+Read `references/schema.md` for the full column-level schema of this project, including the GEDCOM 5.5.1 mapping table, event type list, and Swedish place hierarchy.

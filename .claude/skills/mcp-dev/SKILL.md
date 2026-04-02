@@ -77,7 +77,7 @@ server.tool('tool_name', 'Human-readable description', {
 
 ## Current MCP Tools
 
-See `src/mcp/server.ts` for the authoritative list of tools and their parameter schemas. Each tool is a thin wrapper over a `src/api/` function.
+Read `references/tools.md` (in this skill directory) for the full tool list grouped by domain. `src/mcp/server.ts` is always authoritative — the reference file is a convenience summary.
 
 ## MCP Server Config
 
