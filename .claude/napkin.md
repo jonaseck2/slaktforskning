@@ -7,72 +7,75 @@
 - Each item includes date + "Do instead".
 
 ## Execution & Validation (Highest Priority)
-1. **[2026-03-15] Always commit ALL changed files, including .claude/ config**
-   Do instead: run `git status` before committing and stage every modified/untracked file. Never selectively skip files without explicit user instruction.
 
-2. **[2026-03-15] Run tests and verify they pass before committing**
-   Do instead: run `npm test` before each commit. Only commit when green. Never commit first and test after — a failing post-commit test leaves a broken commit in history.
+1. **[2026-03-15] Run tests and verify they pass before committing**
+   Do instead: run `npm test` before each commit. Only commit when green. Never commit first and test after.
+
+2. **[2026-03-15] Always commit ALL changed files, including .claude/ config**
+   Do instead: run `git status` before committing and stage every modified/untracked file with `git add -A`.
 
 3. **[2026-04-03] Bump `package.json` version when completing a milestone**
-   Do instead: at the end of each roadmap version (v0.3.2, v0.4.0, etc.), update `"version"` in `package.json` to match and include it in the final commit.
+   Do instead: at the end of each roadmap version, update `"version"` in `package.json` and include it in the final commit.
 
-4. **[2026-03-15] GPG signing fails in non-interactive agent context**
-   Do instead: if GPG signing is enabled and commit fails with "Bad PIN", tell user immediately and suggest `git config --local commit.gpgsign false`.
+4. **[2026-04-03] New columns on existing tables need ALTER TABLE migration guards**
+   Do instead: after `CREATE TABLE IF NOT EXISTS`, append an idempotent migration block at the end of `initializeSchema()` — call `PRAGMA table_info(table)`, check each new column name, and run `ALTER TABLE ... ADD COLUMN` if missing. Without this, users with pre-existing DBs crash at runtime.
 
 5. **[2026-03-15] Keep PLAN.md in sync with actual implementation state**
-   Do instead: when completing or starting work, update `.claude/PLAN.md` checkboxes and move items between sections. The plan is the single source of truth for what's done and what's planned.
+   Do instead: update `.claude/PLAN.md` checkboxes and move items between sections as work progresses. Completed versions go in Implementation Status; Roadmap is future-only.
 
 6. **[2026-03-15] Write plans to files, not context**
-   Do instead: always persist plans, specs, and implementation notes to disk immediately. Context can be lost at any time. Never keep large plans only in conversation context.
+   Do instead: persist plans, specs, and brainstorm outputs to disk immediately. Plans go in `.claude/plans/`, brainstorms in `.claude/plans/brainstorm/YYYY-MM-DD-topic/`.
+
+7. **[2026-03-15] GPG signing fails in non-interactive agent context**
+   Do instead: if commit fails with "Bad PIN", tell user and suggest `git config --local commit.gpgsign false`.
 
 ## Shell & Command Reliability
+
 1. **[2026-03-15] node-sqlite3-wasm uses array parameter binding**
-   Do instead: always pass parameters as arrays — `stmt.run([a, b])`, `stmt.get([id])`, `stmt.all([x, y])`. Spread args (`stmt.run(a, b)`) only bind the first parameter.
+   Do instead: always pass parameters as arrays — `stmt.run([a, b])`, `stmt.get([id])`, `stmt.all([x, y])`. Spread args only bind the first parameter.
 
 2. **[2026-03-15] node-sqlite3-wasm `.get()` returns undefined, not null**
    Do instead: always use `?? null` when wrapping `.get()` calls that should return `T | null`.
 
 3. **[2026-03-15] node-sqlite3-wasm has no `.pragma()` method**
-   Do instead: use `db.exec('PRAGMA journal_mode = WAL')` instead of `db.pragma('journal_mode = WAL')`.
+   Do instead: use `db.exec('PRAGMA ...')` — not `.pragma(...)`.
 
 4. **[2026-03-15] Vite build output paths are relative to `root`**
-   Do instead: when `root` is set (e.g. `src/renderer`), `outDir` resolves relative to it. Use `resolve()` for absolute paths. The renderer config needs `outDir: resolve('.vite/renderer/main_window')` to land in the project root `.vite/` dir that Forge packages.
+   Do instead: use `resolve()` for absolute `outDir`. Renderer config needs `outDir: resolve('.vite/renderer/main_window')`.
 
 5. **[2026-03-15] Vite main + preload builds share output dir — filenames collide**
-   Do instead: set `entryFileNames: 'preload.js'` in `vite.preload.config.ts` to avoid both producing `index.js` in `.vite/build/`.
+   Do instead: set `entryFileNames: 'preload.js'` in `vite.preload.config.ts`.
 
 ## Domain Behavior Guardrails
+
 1. **[2026-03-15] API layer must stay Electron-free**
-   Do instead: never import from `electron` in `src/api/`. All api/ functions take `db: Database` as first arg. Both IPC handlers and MCP server consume the same api/.
+   Do instead: never import from `electron` in `src/api/`. All api/ functions take `db: Database` as first arg.
 
 2. **[2026-03-15] Vite bundles node-sqlite3-wasm JS, copies WASM file separately**
-   Do instead: do NOT externalize node-sqlite3-wasm (Forge won't ship node_modules). Let Vite bundle the JS. Use a `closeBundle` plugin hook to copy `node-sqlite3-wasm.wasm` to `.vite/build/`.
+   Do instead: do NOT externalize node-sqlite3-wasm. Use a `closeBundle` plugin hook to copy the `.wasm` file to `.vite/build/`.
 
 3. **[2026-03-15] Emscripten creates `.db.lock` directories that go stale on crash**
-   Do instead: before opening the database, check for stale `.lock` directories and remove them. This is implemented in both `database.ts` and `server.ts`.
-
-4. **[2026-03-15] Research before fixing — the approach may be the problem**
-   Do instead: when a tool/library causes repeated friction, research alternatives before applying more workarounds. The switch from better-sqlite3 to node-sqlite3-wasm exemplifies this.
-
-## User Directives
-5. **[2026-04-03] Always merge to main — never ask**
-   Do instead: when finishing a branch, skip the options prompt and immediately merge to main. No PR, no keep-as-is question.
-
-
-1. **[2026-03-15] Commit all files — don't skip any**
-   Do instead: always include every changed file when committing. Check `git status` and stage everything.
-
-2. **[2026-03-15] Docs split: PLAN.md (roadmap), DATA_MODEL.md (schema), MCP.md (tools)**
-   Do instead: plan/status goes in `.claude/PLAN.md`, data model in `.claude/DATA_MODEL.md`, MCP tools in `.claude/MCP.md`. Skills live in `.claude/skills/`.
-
-3. **[2026-03-15] Keep it simple — avoid unnecessary complexity**
-   Do instead: prefer simple solutions over elaborate workarounds. WASM-based SQLite eliminated all native module rebuild complexity.
-
-5. **[2026-04-03] Completed versions belong in Implementation Status, not Roadmap**
-   Do instead: when marking a milestone done in PLAN.md, move the entry up to the `## Implementation Status` section (above the `---`). The `## Roadmap` section is for future work only.
-
-6. **[2026-04-03] Use `.claude/agents/` templates when dispatching implementer subagents**
-   Do instead: when executing a plan with `subagent-driven-development`, identify the layer of each task (API → `api-implementer`, tests → `test-writer`, IPC/MCP → `ipc-mcp-wirer`, Vue → `vue-ui-builder`, docs → `doc-syncer`) and use the matching template from `.claude/agents/` as the base for the implementer prompt — inject the task-specific details into it rather than writing a prompt from scratch. Phase 1 (api + tests) and Phase 2 (ipc/mcp + vue) can each run in parallel.
+   Do instead: before opening the DB, check for and remove stale `.lock` directories (implemented in `database.ts` and `server.ts`).
 
 4. **[2026-03-15] Use modal dialogs for create/edit, not page navigation**
-   Do instead: for data entry forms, use modal dialogs so the user stays in context. Reserve page navigation for detail views (viewing a full record).
+   Do instead: data entry forms use modals; reserve page navigation for detail views.
+
+## User Directives
+
+1. **[2026-03-15] Commit all files — never selectively skip**
+   Do instead: `git add -A` always. Check `git status` and stage everything.
+
+2. **[2026-04-03] Always merge to main — never ask**
+   Do instead: when finishing a branch, immediately merge to main. No PR, no options prompt.
+
+3. **[2026-04-03] Brainstorm outputs go in `.claude/plans/brainstorm/YYYY-MM-DD-topic/`**
+   Do instead: copy valuable brainstorm HTML files (mockups, comparisons — not waiting screens) there. Link the plan file to its brainstorm dir and vice versa. No "superpowers" in user-visible paths.
+
+4. **[2026-04-03] Use `.claude/agents/` templates when dispatching implementer subagents**
+   Do instead: match each task layer to its template (api-implementer, test-writer, ipc-mcp-wirer, vue-ui-builder, doc-syncer). Inject task-specific details rather than writing prompts from scratch.
+
+5. **[2026-03-15] Docs split: PLAN.md (roadmap), DATA_MODEL.md (schema), MCP.md (tools)**
+   Do instead: plan/status → `.claude/PLAN.md`, data model → `.claude/DATA_MODEL.md`, MCP tools → `.claude/MCP.md`, skills → `.claude/skills/`, plans → `.claude/plans/`.
+
+6. **[2026-03-15] Keep it simple — avoid unnecessary complexity**
+   Do instead: prefer simple solutions. WASM-based SQLite eliminated all native module rebuild complexity.
