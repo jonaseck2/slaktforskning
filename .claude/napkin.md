@@ -71,5 +71,8 @@
 5. **[2026-04-03] Completed versions belong in Implementation Status, not Roadmap**
    Do instead: when marking a milestone done in PLAN.md, move the entry up to the `## Implementation Status` section (above the `---`). The `## Roadmap` section is for future work only.
 
+6. **[2026-04-03] Use `.claude/agents/` templates when dispatching implementer subagents**
+   Do instead: when executing a plan with `subagent-driven-development`, identify the layer of each task (API → `api-implementer`, tests → `test-writer`, IPC/MCP → `ipc-mcp-wirer`, Vue → `vue-ui-builder`, docs → `doc-syncer`) and use the matching template from `.claude/agents/` as the base for the implementer prompt — inject the task-specific details into it rather than writing a prompt from scratch. Phase 1 (api + tests) and Phase 2 (ipc/mcp + vue) can each run in parallel.
+
 4. **[2026-03-15] Use modal dialogs for create/edit, not page navigation**
    Do instead: for data entry forms, use modal dialogs so the user stays in context. Reserve page navigation for detail views (viewing a full record).
