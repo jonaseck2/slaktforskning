@@ -11,7 +11,7 @@ persons ──── person_names (1:many — birth, married, alias, aka)
                                                └── events (marriage, divorce, etc.)
 
 sources ──── citations (1:many)
-                 └── linked to events or persons
+                 └── linked to events, persons, or families
                      with confidence (0-3) and verbatim transcription
 
 places (hierarchical, with optional lat/lng)
