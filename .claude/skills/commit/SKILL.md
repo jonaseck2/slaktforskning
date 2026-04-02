@@ -38,3 +38,4 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 - **NEVER amend** unless explicitly asked — always create a new commit
 - **NEVER skip hooks** (no `--no-verify`)
 - Do not commit files that contain secrets (.env, credentials). Warn the user if such files are staged.
+- **Review `git status` carefully** — if unexpected files appear (build artifacts, generated files not in `.gitignore`), flag them to the user before committing rather than silently including them.

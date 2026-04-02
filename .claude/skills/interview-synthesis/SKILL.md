@@ -1,6 +1,6 @@
 ---
 name: interview-synthesis
-description: Process and synthesize user interview transcripts, notes, or survey responses from genealogists to extract pain points, workflows, mental models, and unmet needs. Use this skill whenever the user has raw interview material — notes, transcripts, quotes, survey responses — and wants to turn it into structured product insights. Trigger when the user pastes interview notes, shares quotes from genealogists, wants to find themes across multiple interviews, or asks to extract user needs from qualitative research. Also useful for synthesizing secondary research like forum threads, Reddit posts, or app store reviews from genealogy users.
+description: Synthesize user interviews, survey responses, or forum threads from genealogists into structured product insights and design prompts.
 ---
 
 # Interview Synthesis for Genealogy Research
@@ -70,3 +70,15 @@ Top 5 product directions suggested by the research.
 - Distinguish between stated needs ("I want X") and inferred needs (what the workaround reveals they actually need).
 - Note when users contradict each other — divergent needs may indicate distinct user segments worth designing for separately.
 - Secondary sources like Reddit's r/Genealogy, GenealogyRooms Facebook groups, or app store reviews are valid input — treat them like interview excerpts.
+
+## Project context
+
+Släktforskning is a local-first, privacy-preserving desktop genealogy app with a built-in MCP server for AI-assisted research. When synthesizing interviews, pay special attention to:
+
+- **Data ownership concerns** — how strongly do genealogists feel about keeping data local vs. cloud?
+- **AI attitudes** — are researchers open to AI-assisted data entry, record matching, or source evaluation? What are their concerns?
+- **Citation friction** — how do researchers currently manage sources and evidence? What's painful about it?
+- **Collaboration patterns** — how do researchers share findings without cloud platforms?
+- **Desktop workflow preferences** — multi-window usage, keyboard shortcuts, bulk operations
+
+These align with Släktforskning's core differentiators. See `.claude/PLAN.md` for the current roadmap to connect insights to planned features.

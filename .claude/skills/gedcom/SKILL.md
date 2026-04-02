@@ -1,6 +1,6 @@
 ---
 name: gedcom
-description: Parse, explain, validate, and work with GEDCOM files — the standard format for exchanging genealogical data between applications. Use this skill whenever the user wants to read or understand a GEDCOM file, design a data model compatible with GEDCOM import/export, check GEDCOM compliance, convert GEDCOM data to another format, or understand what tags and structures a genealogy app must support to be interoperable. Trigger when the user mentions GEDCOM, .ged files, family tree import/export, genealogy data standards, or asks how to make their app compatible with other genealogy tools.
+description: Parse, validate, import/export GEDCOM files (5.5.1 and 7.0). Use for .ged files, genealogy data interchange, or GEDCOM compliance.
 ---
 
 # GEDCOM
@@ -157,4 +157,10 @@ A minimal parser reads line by line:
 3. When level drops, pop the stack
 4. Accumulate CONT/CONC lines into the previous value
 
-For production use, recommend existing libraries: `gedcom` (Python), `read-gedcom` (JS/TS), `Gedcom.sharp` (.NET).
+### Libraries for this project (TypeScript/Node.js)
+
+Since Släktforskning is TypeScript throughout, prefer these when implementing GEDCOM support:
+- **`read-gedcom`** (JS/TS) — browser and Node.js compatible, parses to a queryable tree structure
+- **`gedcom-stream`** (Node.js) — streaming parser, good for large files (100MB+)
+
+For reference, other ecosystems have: `python-gedcom` (Python), `Gedcom.sharp` (.NET).
