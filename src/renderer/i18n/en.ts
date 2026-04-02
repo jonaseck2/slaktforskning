@@ -275,4 +275,5 @@ export default {
     },
   },
   sex: { M: 'Male', F: 'Female', U: 'Unknown' },
+  addRelated: { newPerson: 'New person', existingPerson: 'Existing person', selectPerson: 'Select person', searchPlaceholder: 'Search name\u2026' },
 };
