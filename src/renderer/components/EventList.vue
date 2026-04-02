@@ -18,10 +18,16 @@
         <tr v-for="event in events" :key="event.id">
           <td>
             <span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span>
+            <span
+              v-if="citationCounts[event.id] > 0"
+              class="source-count-badge"
+            >{{ citationCounts[event.id] }} {{ $t('events.sources', citationCounts[event.id]) }}</span>
+            <span v-else class="unsourced-badge">{{ $t('events.unsourced') }}</span>
           </td>
           <td>{{ formatDate(event) }}</td>
           <td>{{ event.description }}</td>
           <td class="actions-cell">
+            <button type="button" class="btn-sm btn-cite" @click="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
             <button type="button" class="btn-sm btn-edit" @click="editEvent(event)">{{ $t('common.edit') }}</button>
             <button type="button" class="btn-sm btn-delete" @click="removeEvent(event.id)">{{ $t('common.delete') }}</button>
           </td>
@@ -37,6 +43,13 @@
       @close="closeForm"
       @saved="onSaved"
     />
+
+    <CitationForm
+      v-if="citingEventId"
+      :event-id="citingEventId"
+      @close="closeCiteForm"
+      @saved="onCiteSaved"
+    />
   </div>
 </template>
 
@@ -44,6 +57,7 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
+import CitationForm from './CitationForm.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -67,8 +81,10 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const events = ref<EventRow[]>([]);
+const citationCounts = ref<Record<string, number>>({});
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
+const citingEventId = ref<string | null>(null);
 
 async function load() {
   if (!window.api) return;
@@ -78,9 +94,21 @@ async function load() {
     } else if (props.relationshipId) {
       events.value = (await window.api.events.forRelationship(props.relationshipId)) as EventRow[];
     }
+    await loadCitationCounts();
   } catch (err) {
     console.error('[EventList] load failed:', err);
   }
+}
+
+async function loadCitationCounts() {
+  const counts: Record<string, number> = {};
+  await Promise.all(
+    events.value.map(async (ev) => {
+      const cits = (await window.api.citations.forEvent(ev.id)) as unknown[];
+      counts[ev.id] = cits.length;
+    }),
+  );
+  citationCounts.value = counts;
 }
 
 function formatDate(event: EventRow): string {
@@ -124,6 +152,19 @@ function closeForm() {
 function onSaved() {
   closeForm();
   load();
+}
+
+function openCiteForm(eventId: string) {
+  citingEventId.value = eventId;
+}
+
+function closeCiteForm() {
+  citingEventId.value = null;
+}
+
+function onCiteSaved() {
+  closeCiteForm();
+  loadCitationCounts();
 }
 
 onMounted(load);
@@ -199,5 +240,25 @@ defineExpose({ reload: load });
 .btn-delete {
   background: #fee;
   color: #c0392b;
+}
+.source-count-badge {
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  margin-left: 6px;
+}
+.unsourced-badge {
+  background: #fef9c3;
+  color: #854d0e;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  margin-left: 6px;
+}
+.btn-cite {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 </style>
