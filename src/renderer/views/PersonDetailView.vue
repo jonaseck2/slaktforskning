@@ -82,6 +82,7 @@
             <th>{{ $t('common.type') }}</th>
             <th>{{ $t('relationshipDetail.subtype') }}</th>
             <th>{{ $t('common.name') }}</th>
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -94,6 +95,11 @@
             <td><span class="type-badge">{{ rel.typeLabel }}</span></td>
             <td>{{ rel.subtypeLabel || '—' }}</td>
             <td>{{ rel.otherPersonName || '—' }}</td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-delete" @click.stop="deleteRelationship(rel.id)">
+                {{ $t('common.delete') }}
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -559,6 +565,12 @@ async function saveNotes() {
   } catch (err) {
     console.error('[PersonDetailView] saveNotes failed:', err);
   }
+}
+
+async function deleteRelationship(id: string) {
+  if (!window.api) return;
+  await window.api.relationships.delete(id);
+  await load();
 }
 
 onMounted(load);
