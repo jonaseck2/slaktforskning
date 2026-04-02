@@ -79,14 +79,10 @@ See `.claude/plans/archive/2026-04-02-gedcomx-name-parts-and-identifiers.md` for
 
 ## Roadmap
 
-### v0.3.2 — PersonDetailView UX Improvements
+### Done (v0.3.2 — PersonDetailView UX Improvements)
+Inline sex editing in header; name rows clickable (edit button removed); relationship rows get delete button; AddRelatedPersonModal New/Existing toggle with PersonPicker.
 
-See `.claude/plans/2026-04-02-person-detail-ux.md` for the full implementation plan.
-
-- [ ] PersonDetailView: inline sex editing — select in header replaces static badge
-- [ ] PersonDetailView: name rows clickable (row click = edit modal); edit button removed; delete button kept with `@click.stop`
-- [ ] PersonDetailView: relationship rows gain a delete button with `@click.stop`; row click still navigates to detail
-- [ ] AddRelatedPersonModal: "New / Existing" toggle — PersonPicker for existing persons; skip person creation when "Existing" is chosen
+See `.claude/plans/archive/2026-04-02-person-detail-ux.md` for the full implementation plan.
 
 ### v0.4.0 — Places
 
