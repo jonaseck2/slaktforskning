@@ -114,7 +114,9 @@
       "Bash(git -C /Users/jonasahnstedt/git/slaktforskning commit -m ':*)",
       "WebFetch(domain:www.tmgtogedcom.com)",
       "WebFetch(domain:wiki.phpgedview.net)",
-      "WebFetch(domain:user.it.uu.se)"
+      "WebFetch(domain:user.it.uu.se)",
+      "Bash(mkdir -p .claude/plans/archive)",
+      "Bash(git mv:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

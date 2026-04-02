@@ -50,171 +50,29 @@ src/mcp/     → MCP server (standalone, same API layer)
 
 ## Implementation Status
 
-### Done (v0.1.0)
-
-- [x] SQLite database with full schema (persons, names, families, links, events, places, sources, citations)
-- [x] API layer with CRUD for all entities (persons, families, events, sources, citations, places)
-- [x] Electron app with multi-window support (Cmd/Ctrl+N)
-- [x] Vue 3 renderer with sidebar navigation (Persons, Families, Sources)
-- [x] IPC bridge connecting renderer to API layer (all channels wired)
-- [x] MCP server with 14 tools covering all CRUD operations
-- [x] Unit tests (Vitest) covering the full API layer
-- [x] E2E tests (Playwright) for app launch and MCP server connectivity
-- [x] Project documentation (CLAUDE.md for agents, README.md for humans)
-- [x] Migrated from better-sqlite3 to node-sqlite3-wasm (no more native rebuild issues)
-- [x] WASM loading works in both dev and packaged builds
-- [x] Stale Emscripten lock file cleanup on database open
-- [x] Preload script filename collision fixed (preload.js vs index.js)
-- [x] Renderer build output included in packaged app (asar)
-- [x] Debug logging in IPC handlers
+### Done (v0.1.0 — Foundation)
+SQLite + API layer + Electron shell + MCP server (14 tools) + unit/E2E tests. Migrated from better-sqlite3 to node-sqlite3-wasm.
 
 ### Done (v0.2.0 — Genealogy Data Entry UI)
-
-Replaced `prompt()` dialogs with proper form-based data entry exposing the full GEDCOM-aligned data model.
-
-- [x] **Shared components**: PersonPicker (typeahead search), DateInput (compound date with type/value/end/original), EventForm (modal create/edit), EventList (table with CRUD), CitationForm (modal with confidence levels)
-- [x] **Constants**: GEDCOM event types (22 types, person vs family split), date types, confidence levels, source types, union types, relationship types, name types
-- [x] **PersonDetailView** (`/persons/:id`): Header with sex badge + deceased indicator, names list (add/edit with name_type), EventList, families section (with partner name enrichment), notes (auto-save)
-- [x] **FamilyDetailView** (`/families/:id`): Partners with PersonPicker (auto-save), union type/notes, children list (PersonPicker + relationship_type), family EventList
-- [x] **SourceDetailView** (`/sources/:id`): Editable field grid (auto-save), citations table with confidence badges, CitationForm
-- [x] **PersonsView updated**: Modal form (given_name, surname, sex, living, notes), clickable rows → detail, sex + living columns
-- [x] **FamiliesView updated**: Modal with PersonPicker for partners + union_type, clickable rows → detail, partner names in table
-- [x] **SourcesView updated**: Full form modal (title, author, source_type, publication_info, repository, url), clickable rows → detail
-- [x] **Router**: Added `/persons/:id`, `/families/:id`, `/sources/:id` detail routes
-- [x] All unit tests passing, app launches correctly
+Full form-based data entry: PersonPicker, DateInput, EventForm, EventList, CitationForm components. Detail views for persons, families, sources. 22 GEDCOM event types, date types, confidence levels.
 
 ### Done (v0.2.1 — Global Search)
-
-- [x] `searchFamilies` and `searchSources` API functions
-- [x] `families:search` and `sources:search` IPC channels + preload
-- [x] `/search` route with `SearchView.vue` — results in three sections (Persons, Families, Sources)
-- [x] Sidebar search input in `App.vue` navigates to `/search?q=...` on Enter
+`/search` route with SearchView across Persons, Families, Sources. Sidebar search input.
 
 ### Done (v0.2.2 — MCP UI Tools)
-
-- [x] `src/main/ui-server.ts` — HTTP server (port 19241) wrapping `webContents` APIs
-- [x] UI tools in MCP server: `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
-- [x] `window.__vue_router` exposed in renderer for clean route pushes
-- [x] Graceful error when app is not running
+HTTP bridge (port 19241) + `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js` MCP tools.
 
 ### Done (v0.2.3 — Swedish i18n + MCP Parity)
+vue-i18n with ~180 strings (SV default, EN fallback). Expanded MCP from 14 → 34 tools matching full IPC surface.
 
-- [x] **vue-i18n**: Swedish (sv) default locale, English (en) fallback, persisted to localStorage
-- [x] **~180 translation strings** covering all UI text: event types, date types, confidence levels, source types, union types, relationship types, name types, all labels/placeholders/titles
-- [x] **Swedish terminology**: Förnamn/Efternamn, Vigsel, Kyrkobok, Husförhörslängd, härad, ca/före/efter date prefixes
-- [x] **Language switcher** in sidebar (SV / EN)
-- [x] All 6 views + 4 components updated to use `$t()` / `useI18n()`
-- [x] **MCP parity**: Expanded MCP server from 14 to 34 tools, matching full IPC surface:
-  - Person: `add_person_name`, `get_person_names`
-  - Family: `get_family`, `update_family`, `delete_family`, `get_children_of_family`, `get_families_of_person`, `search_families`
-  - Events: `get_event`, `get_events_for_family`, `update_event`, `delete_event`
-  - Sources: `get_source`, `update_source`, `delete_source`, `search_sources`
-  - Citations: `get_citation`, `get_citations_for_source`, `get_citations_for_event`, `delete_citation`
-- [x] `.claude/MCP.md` updated to document all 34 data + 5 UI tools
+### Done (v0.3.0 — Relationships + Evidence + Add Related Person)
+Schema migrated from family-centric to GEDCOM-X relationship model (`relationships`, `event_participants`, `assertions` tables). Citation affordances everywhere (badges, Cite buttons, inline source on EventForm). Add Parent/Spouse/Child from PersonDetailView. Component + E2E tests for all v0.3.0 features.
+
+See `.claude/plans/archive/2026-04-02-v030-evidence-and-add-related.md` and `.claude/plans/archive/2026-04-02-component-and-e2e-tests.md` for implementation details.
 
 ---
 
 ## Roadmap
-
-### v0.3.0 — Data Model Migration (Relationships + Evidence)
-
-This version migrates the core schema from a family-centric model to a source-first, relationship-centric model. It is the highest-risk change because it touches all layers (DB, API, IPC, MCP, Vue) and is a breaking schema change. Do it early, before the data model is locked in by more UI.
-
-#### Schema Migration: Relationships + Event Participants
-
-The `families` and `person_family_links` tables are replaced by a `relationships` table (GEDCOM-X model). Events lose their `person_id`/`family_id` columns and gain an `event_participants` junction table. Assertions are added to the schema now, with UI deferred.
-
-See `.claude/DATA_MODEL.md` for the full schema specification.
-
-**New tables:**
-
-```sql
--- Replaces families + person_family_links
-CREATE TABLE relationships (
-  id TEXT PRIMARY KEY,
-  type TEXT NOT NULL,         -- 'couple' | 'parent_child' | 'sibling' | 'godparent' | 'other'
-  person1_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
-  person2_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
-  subtype TEXT,               -- couple: 'marriage'|... parent_child: 'biological'|...
-  notes TEXT,
-  created_at TEXT,
-  updated_at TEXT
-);
-
--- Replaces event.person_id / event.family_id
-CREATE TABLE event_participants (
-  id TEXT PRIMARY KEY,
-  event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
-  person_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
-  role TEXT,                  -- 'primary' | 'spouse' | 'parent' | 'child' | 'witness' | ...
-  UNIQUE(event_id, person_id)
-);
-
--- Assertions: schema now, UI deferred
-CREATE TABLE assertions (
-  id TEXT PRIMARY KEY,
-  citation_id TEXT REFERENCES citations(id) ON DELETE CASCADE,
-  subject_type TEXT,          -- 'person' | 'relationship' | 'event' | 'place'
-  subject_id TEXT,
-  attribute TEXT,
-  value TEXT,
-  value_original TEXT,
-  confidence INTEGER,
-  is_accepted INTEGER,
-  notes TEXT,
-  created_at TEXT
-);
-```
-
-**Modified tables:**
-
-- `events`: Remove `person_id`, `family_id`; add `relationship_id` FK (optional)
-- `citations`: Add `relationship_id` FK, `place_id` FK (in addition to existing `event_id`, `person_id`)
-- `places`: Add `place_type` ('farm' | 'parish' | 'härad' | 'county' | 'province' | 'country' | 'city' | 'village' | 'other'), `date_from`, `date_to`
-
-**Implementation checklist:**
-
-- [x] Update `src/api/schema.ts` with new DDL (idempotent, use `IF NOT EXISTS`)
-- [ ] Write migration script for existing databases (families → relationships, events.person_id → event_participants) — deferred, no production data yet
-- [x] Add `src/api/relationships.ts` (CRUD for relationships and event_participants)
-- [x] Update `src/api/events.ts` to use event_participants instead of person_id/family_id
-- [x] Update `src/api/sources.ts` (citations now accept relationship_id, place_id)
-- [x] Update `src/api/types.ts` with new domain types
-- [x] Write unit tests for new API functions (37 tests passing)
-- [x] Update IPC handlers in `src/main/ipc.ts`
-- [x] Update preload in `src/preload/index.ts`
-- [x] Update MCP server with relationship tools
-- [x] Update Vue views/components to use new model
-- [x] Run `npm test` — 37 tests passing
-- [x] Update CLAUDE.md to reflect new schema
-
-#### Evidence Visibility & Citation Affordances
-
-Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
-
-**Unsourced indicators:**
-- [x] Events in `EventList` show a citation count badge (e.g. "2 sources") or an "unsourced" warning indicator
-- [x] `PersonDetailView` shows an evidence summary: how many events are sourced vs. unsourced
-- [ ] A "research audit" view aggregates all unsourced entities across the tree — deferred to v0.6.0
-
-**"Cite" action on events, persons, and relationships:**
-- [x] Each event row in `EventList` gets a "Cite" button → opens `CitationForm` pre-linked to that event's `event_id`
-- [x] `PersonDetailView` gets a "Cite Person" button → opens `CitationForm` with `person_id` pre-filled
-- [x] Relationship views get a "Cite Relationship" button → opens `CitationForm` with `relationship_id` pre-filled
-
-**Optional source prompt on event creation:**
-- [x] `EventForm` includes an optional "Source" section at the bottom (source picker + page)
-- [x] When filled, creating the event also creates a citation in one step
-- [x] When empty, event is created without a citation (shows "unsourced" indicator)
-
-#### Add Related Person from Detail View
-
-From the person detail view, the user can:
-- [x] **Add Parent** — Creates a new person + creates a `parent_child` relationship
-- [x] **Add Spouse/Partner** — Creates a new person + creates a `couple` relationship. Prompts for subtype (marriage, civil_union, etc.)
-- [x] **Add Child** — Creates a new person + creates a `parent_child` relationship
-
-Each action opens a modal with new person fields + relationship context pre-filled. Both person and relationship are created in a single transaction.
 
 ### v0.3.1 — GEDCOM-X Name Parts + Person Identifiers
 
