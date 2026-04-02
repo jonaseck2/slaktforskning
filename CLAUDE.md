@@ -107,6 +107,8 @@ tests/
 | `/sources` | `SourcesView` | Source list with "Add Source" modal |
 | `/sources/:id` | `SourceDetailView` | Source detail with editable fields, citations |
 | `/search` | `SearchView` | Global search across persons, relationships, sources |
+| `/places` | `PlacesView` | Place list with "Add Place" modal |
+| `/places/:id` | `PlaceDetailView` | Place detail: name, type, parent, lat/lon, child places |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
@@ -183,6 +185,17 @@ getEventsForPerson(db, personId) → GenealogyEvent[]   // via event_participant
 getEventsForRelationship(db, relationshipId) → GenealogyEvent[]
 updateEvent(db, id, { ...partial fields }) → GenealogyEvent | null
 deleteEvent(db, id) → boolean
+```
+
+### places.ts
+```
+createPlace(db, { name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes? }) → Place
+getPlace(db, id) → Place | null
+listPlaces(db) → Place[]
+searchPlaces(db, query) → Place[]
+updatePlace(db, id, { ...partial }) → Place | null
+deletePlace(db, id) → boolean
+findOrCreatePlace(db, name) → Place
 ```
 
 ### sources.ts
@@ -287,6 +300,7 @@ Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 | `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
 | `EventList` | `personId?: string`, `relationshipId?: string` | — | Event table with edit/delete. Embeds EventForm. Exposes `reload()` method via `defineExpose`. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
+| `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
 
 ### Constants (`src/renderer/constants/eventTypes.ts`)
 
@@ -370,6 +384,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 **Event tools:** `add_event`, `get_event`, `get_events_for_person`, `get_events_for_relationship`, `update_event`, `delete_event`
 
 **Source/citation tools:** `add_source`, `get_source`, `list_sources`, `update_source`, `delete_source`, `search_sources`, `add_citation`, `get_citation`, `get_citations_for_source`, `get_citations_for_event`, `delete_citation`
+
+**Place tools:** `add_place`, `get_place`, `list_places`, `search_places`, `update_place`, `delete_place`
 
 **UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
 
