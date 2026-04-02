@@ -34,7 +34,8 @@
             <td>{{ name.given_name }}</td>
             <td>{{ name.surname }}</td>
             <td><span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span></td>
-            <td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-edit" @click="openEditName(name)">{{ $t('common.edit') }}</button>
               <button
                 v-if="name.sort_order > 0"
                 class="btn-sm btn-delete"
@@ -79,7 +80,7 @@
             class="clickable-row"
             @click="$router.push(`/relationships/${rel.id}`)"
           >
-            <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
+            <td><span class="type-badge">{{ rel.typeLabel }}</span></td>
             <td>{{ rel.subtypeLabel || '—' }}</td>
             <td>{{ rel.otherPersonName || '—' }}</td>
           </tr>
@@ -143,6 +144,34 @@
         </form>
       </div>
     </div>
+    <!-- Edit Name Modal -->
+    <div v-if="showEditNameForm" class="modal-overlay" @click.self="showEditNameForm = false">
+      <div class="modal">
+        <h3>{{ $t('personDetail.editNameTitle') }}</h3>
+        <form @submit.prevent="saveEditName">
+          <label>
+            {{ $t('persons.givenName') }}
+            <input v-model="editNameForm.given_name" type="text" required />
+          </label>
+          <label>
+            {{ $t('persons.surname') }}
+            <input v-model="editNameForm.surname" type="text" />
+          </label>
+          <label>
+            {{ $t('common.type') }}
+            <select v-model="editNameForm.name_type">
+              <option v-for="nt in NAME_TYPE_VALUES" :key="nt" :value="nt">
+                {{ $t('nameTypes.' + nt) }}
+              </option>
+            </select>
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="showEditNameForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
@@ -183,6 +212,7 @@ interface RelRow {
   subtype: string | null;
   otherPersonName: string;
   subtypeLabel: string;
+  typeLabel: string;
 }
 
 const { t } = useI18n();
@@ -195,6 +225,8 @@ const rels = ref<RelRow[]>([]);
 const primaryName = ref('');
 const notesText = ref('');
 const showNameForm = ref(false);
+const showEditNameForm = ref(false);
+const editingNameId = ref<string | null>(null);
 const showCitePersonForm = ref(false);
 const showAddRelated = ref(false);
 const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
@@ -206,6 +238,12 @@ const nameForm = reactive({
   given_name: '',
   surname: '',
   name_type: 'married',
+});
+
+const editNameForm = reactive({
+  given_name: '',
+  surname: '',
+  name_type: 'birth',
 });
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
@@ -244,10 +282,15 @@ async function load() {
         const pNames = (await window.api.persons.getNames(otherId)) as NameRow[];
         if (pNames.length > 0) otherPersonName = `${pNames[0].given_name} ${pNames[0].surname}`.trim();
       }
+      let typeLabel = t('relTypes.' + r.type);
+      if (r.type === 'parent_child') {
+        typeLabel = r.person1_id === personId ? t('relTypes.child') : t('relTypes.parent');
+      }
       enriched.push({
         ...r,
         otherPersonName: otherPersonName || t('common.unknown'),
         subtypeLabel: getSubtypeLabel(r.type, r.subtype),
+        typeLabel,
       });
     }
     rels.value = enriched;
@@ -282,6 +325,30 @@ async function addName() {
     await load();
   } catch (err) {
     console.error('[PersonDetailView] addName failed:', err);
+  }
+}
+
+function openEditName(name: NameRow) {
+  editingNameId.value = name.id;
+  editNameForm.given_name = name.given_name;
+  editNameForm.surname = name.surname;
+  editNameForm.name_type = name.name_type;
+  showEditNameForm.value = true;
+}
+
+async function saveEditName() {
+  if (!window.api || !editingNameId.value) return;
+  try {
+    await window.api.persons.updateName(editingNameId.value, {
+      given_name: editNameForm.given_name,
+      surname: editNameForm.surname,
+      name_type: editNameForm.name_type,
+    });
+    showEditNameForm.value = false;
+    editingNameId.value = null;
+    await load();
+  } catch (err) {
+    console.error('[PersonDetailView] saveEditName failed:', err);
   }
 }
 
@@ -436,9 +503,17 @@ onMounted(load);
   border-radius: 3px;
   cursor: pointer;
 }
+.btn-edit {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
 .btn-delete {
   background: #fee;
   color: #c0392b;
+}
+.actions-cell {
+  display: flex;
+  gap: 4px;
 }
 textarea {
   width: 100%;

@@ -31,6 +31,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('persons:search', (query) => persons.searchPersons(db, query as string));
   wrapHandler('persons:addName', (personId, data) => persons.addPersonName(db, personId as string, data as Parameters<typeof persons.addPersonName>[2]));
   wrapHandler('persons:getNames', (personId) => persons.getPersonNames(db, personId as string));
+  wrapHandler('persons:updateName', (id, data) => persons.updatePersonName(db, id as string, data as Parameters<typeof persons.updatePersonName>[2]));
 
   // Relationships
   wrapHandler('relationships:create', (data) => relationships.createRelationship(db, data as Parameters<typeof relationships.createRelationship>[1]));
