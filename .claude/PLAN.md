@@ -216,29 +216,55 @@ From the person detail view, the user can:
 
 Each action opens a modal with new person fields + relationship context pre-filled. Both person and relationship are created in a single transaction.
 
-### v0.3.1 — GEDCOM-X Alignment + UX Polish
+### v0.3.1 — GEDCOM-X Name Parts + Person Identifiers
 
 See `.claude/plans/2026-04-02-gedcomx-name-parts-and-identifiers.md` for the full implementation plan.
 
-- [ ] Extend `person_names` with `name_prefix`, `name_suffix`, `patronymic_base`, `name_qualifier` — enables Swedish patronymics and noble particles
+- [ ] Extend `person_names` with `name_prefix`, `name_suffix`, `patronymic_base`, `name_qualifier` — enables Swedish patronymics (Eriksson/Eriksdotter) and noble particles (von Linné)
 - [ ] New `person_identifiers` table — typed external IDs (FamilySearch, Ancestry, Riksarkivet, personnummer, REFN, RIN)
-- [ ] API + IPC + MCP tools for person identifiers
-- [ ] PersonDetailView: inline sex editing (select in header)
-- [ ] PersonDetailView: name rows clickable (click = edit modal), delete button only — consistent with relationships
-- [ ] PersonDetailView: name prefix/suffix/qualifier fields in add/edit modals
-- [ ] PersonDetailView: relationships table gains a delete button per row (row click still navigates to detail)
+- [ ] API + IPC + MCP tools for person identifiers (`add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`)
+- [ ] PersonDetailView: prefix/suffix/qualifier displayed in names table; fields added to add/edit name modals
 - [ ] PersonDetailView: external identifiers section (add/delete)
-- [ ] AddRelatedPersonModal: "New / Existing" toggle — allow linking existing persons as parent/spouse/child
 
-### v0.4.0 — Visualization & Navigation
+### v0.3.2 — PersonDetailView UX Improvements
+
+See `.claude/plans/2026-04-02-person-detail-ux.md` for the full implementation plan.
+
+- [ ] PersonDetailView: inline sex editing — select in header replaces static badge
+- [ ] PersonDetailView: name rows clickable (row click = edit modal); edit button removed; delete button kept with `@click.stop`
+- [ ] PersonDetailView: relationship rows gain a delete button with `@click.stop`; row click still navigates to detail
+- [ ] AddRelatedPersonModal: "New / Existing" toggle — PersonPicker for existing persons; skip person creation when "Existing" is chosen
+
+### v0.4.0 — Places
+
+See `.claude/plans/2026-04-02-places.md` for the full implementation plan.
+
+**Prerequisite for v0.5.0 GEDCOM import** (PLAC tags need `findOrCreatePlace`).
+
+- [ ] `src/api/places.ts` — createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace, findOrCreatePlace
+- [ ] IPC channels + preload for places
+- [ ] MCP tools: add_place, get_place, list_places, search_places, update_place, delete_place
+- [ ] `PlacePicker` component — typeahead search + inline create (like PersonPicker)
+- [ ] Fix `EventForm` — `place_name` input currently does nothing; replace with PlacePicker, write `place_id` on save
+- [ ] `PlacesView` — place list + add modal; add Places to sidebar
+- [ ] `PlaceDetailView` — edit name/type/hierarchy/coordinates; child places list
+
+### v0.4.1 — Visualization
+
 - [ ] Family tree visualization (pedigree chart, descendant chart) — uses `relationships` table
-- [ ] Place management UI and place hierarchy browser (farm → parish → härad → county)
-- [ ] Place autocomplete on EventForm
 
 ### v0.5.0 — GEDCOM Import/Export
-- [ ] GEDCOM 5.5.1 import: INDI → person, FAM → one `couple` relationship + N `parent_child` relationships
-- [ ] GEDCOM 5.5.1 export: Reconstruct FAM records from `couple` relationships; emit FAM.CHIL from `parent_child` relationships where person1 is a partner in a FAM; witnesses and godparents via WITN custom tag
-- [ ] GEDCOM 7.0 read support
+
+See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Depends on v0.4.0 Places** (`findOrCreatePlace` used for PLAC tags on import).
+
+- [ ] `src/gedcom/parser.ts` — line-by-line parser → `GedcomNode` tree; handles CONT/CONC
+- [ ] `src/gedcom/date.ts` — GEDCOM date strings → `{ date_type, date_value, date_value_end, date_original }`
+- [ ] `src/gedcom/importer.ts` — INDI/FAM/SOUR → api/ calls; places via `findOrCreatePlace`; drops REPO, SUBM, OBJE, LDS ordinances
+- [ ] `src/gedcom/exporter.ts` — DB → `.ged` string; INDI/FAM/MARR/DIV/places/sources/citations
+- [ ] IPC: `gedcom:import` (file dialog → parse → import) + `gedcom:export` (generate → save dialog)
+- [ ] MCP tools: `import_gedcom(file_path)`, `export_gedcom(file_path?)`
+- [ ] Import/Export buttons on PersonsView
+- [ ] **What is dropped on import:** REPO as entity (text only), SUBM, OBJE/multimedia, ASSO, LDS ordinances, `_` custom tags
 
 ### v0.6.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
