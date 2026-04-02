@@ -177,6 +177,20 @@ Add strings to both `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/render
 
 Use `superpowers:writing-plans` to write a plan first. Existing plans in `.claude/plans/` (and `.claude/plans/archive/`) are good templates — they show the expected task structure, file map format, and TDD step granularity for this codebase.
 
+## Speeding up with subagents
+
+The checklist maps to four focused subagent templates in `.claude/agents/`:
+
+| Agent | Steps | Can run in parallel with |
+|-------|-------|--------------------------|
+| `api-implementer` | 1–3 | test-writer (after signatures are committed) |
+| `test-writer` | 4 | — |
+| `ipc-mcp-wirer` | 5–7 | vue-ui-builder |
+| `vue-ui-builder` | 8 | ipc-mcp-wirer |
+| `doc-syncer` | 10 | — |
+
+Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent.
+
 ## After implementing
 
 Use the `/test` skill to run and write tests. Then commit with `/commit`.
