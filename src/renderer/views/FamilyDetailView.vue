@@ -1,29 +1,29 @@
 <template>
   <div v-if="family" class="family-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/families')">&larr; Back</button>
-      <h2>Family</h2>
+      <button class="btn-back" @click="$router.push('/families')">{{ $t('familyDetail.back') }}</button>
+      <h2>{{ $t('familyDetail.title') }}</h2>
     </div>
 
     <!-- Partners Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Partners</h4>
+        <h4>{{ $t('familyDetail.partners') }}</h4>
       </div>
       <div class="partners-grid">
         <label>
-          Partner A
+          {{ $t('families.partnerA') }}
           <PersonPicker
             v-model="family.partner_a_id"
-            placeholder="Select partner..."
+            :placeholder="$t('familyDetail.selectPartner')"
             @update:model-value="(v) => updateFamily({ partner_a_id: v })"
           />
         </label>
         <label>
-          Partner B
+          {{ $t('families.partnerB') }}
           <PersonPicker
             v-model="family.partner_b_id"
-            placeholder="Select partner..."
+            :placeholder="$t('familyDetail.selectPartner')"
             @update:model-value="(v) => updateFamily({ partner_b_id: v })"
           />
         </label>
@@ -33,23 +33,23 @@
     <!-- Union Info -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Union</h4>
+        <h4>{{ $t('familyDetail.union') }}</h4>
       </div>
       <div class="union-fields">
         <label>
-          Type
+          {{ $t('common.type') }}
           <select :value="family.union_type" @change="updateUnionType($event)">
-            <option v-for="ut in UNION_TYPES" :key="ut.value" :value="ut.value">
-              {{ ut.label }}
+            <option v-for="ut in UNION_TYPE_VALUES" :key="ut" :value="ut">
+              {{ $t('unionTypes.' + ut) }}
             </option>
           </select>
         </label>
         <label>
-          Notes
+          {{ $t('common.notes') }}
           <textarea
             v-model="notesText"
             rows="2"
-            placeholder="Optional notes..."
+            :placeholder="$t('familyDetail.notesPlaceholder')"
             @blur="saveNotes"
           />
         </label>
@@ -59,15 +59,15 @@
     <!-- Children Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Children</h4>
-        <button class="btn-add" @click="showChildForm = true">+ Add Child</button>
+        <h4>{{ $t('familyDetail.children') }}</h4>
+        <button class="btn-add" @click="showChildForm = true">{{ $t('familyDetail.addChild') }}</button>
       </div>
-      <div v-if="children.length === 0" class="empty-hint">No children linked.</div>
+      <div v-if="children.length === 0" class="empty-hint">{{ $t('familyDetail.noChildren') }}</div>
       <table v-else class="data-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Relationship</th>
+            <th>{{ $t('common.name') }}</th>
+            <th>{{ $t('familyDetail.relationship') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -78,7 +78,7 @@
             @click="$router.push(`/persons/${child.person_id}`)"
           >
             <td>{{ child.name }}</td>
-            <td><span class="type-badge">{{ child.relationship_type }}</span></td>
+            <td><span class="type-badge">{{ $t('relationshipTypes.' + child.relationship_type) }}</span></td>
           </tr>
         </tbody>
       </table>
@@ -92,37 +92,38 @@
     <!-- Add Child Modal -->
     <div v-if="showChildForm" class="modal-overlay" @click.self="showChildForm = false">
       <div class="modal">
-        <h3>Add Child</h3>
+        <h3>{{ $t('familyDetail.addChildTitle') }}</h3>
         <form @submit.prevent="addChild">
           <label>
-            Person
-            <PersonPicker v-model="childForm.person_id" placeholder="Search for a person..." />
+            {{ $t('familyDetail.person') }}
+            <PersonPicker v-model="childForm.person_id" :placeholder="$t('families.searchPerson')" />
           </label>
           <label>
-            Relationship
+            {{ $t('familyDetail.relationship') }}
             <select v-model="childForm.relationship_type">
-              <option v-for="rt in RELATIONSHIP_TYPES" :key="rt.value" :value="rt.value">
-                {{ rt.label }}
+              <option v-for="rt in RELATIONSHIP_TYPE_VALUES" :key="rt" :value="rt">
+                {{ $t('relationshipTypes.' + rt) }}
               </option>
             </select>
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showChildForm = false">Cancel</button>
-            <button type="submit" :disabled="!childForm.person_id">Add Child</button>
+            <button type="button" class="btn-cancel" @click="showChildForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit" :disabled="!childForm.person_id">{{ $t('familyDetail.addChildTitle') }}</button>
           </div>
         </form>
       </div>
     </div>
   </div>
-  <div v-else class="empty">Loading...</div>
+  <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
 import EventList from '../components/EventList.vue';
-import { UNION_TYPES, RELATIONSHIP_TYPES } from '../constants/eventTypes';
+import { UNION_TYPE_VALUES, RELATIONSHIP_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -148,6 +149,7 @@ interface NameRow {
   surname: string;
 }
 
+const { t } = useI18n();
 const route = useRoute();
 const familyId = route.params.id as string;
 
@@ -168,7 +170,6 @@ async function load() {
     if (!family.value) return;
     notesText.value = family.value.notes || '';
 
-    // Load children
     const links = (await window.api.families.getChildren(familyId)) as Array<{
       id: string;
       person_id: string;
@@ -186,7 +187,7 @@ async function load() {
       enriched.push({
         link_id: link.id,
         person_id: link.person_id,
-        name: name || '(unknown)',
+        name: name || t('common.unknown'),
         relationship_type: link.relationship_type,
       });
     }

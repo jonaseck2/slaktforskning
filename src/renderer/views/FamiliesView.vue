@@ -1,19 +1,19 @@
 <template>
   <div>
     <div class="header">
-      <h2>Families</h2>
-      <button @click="showAddForm = true">Add Family</button>
+      <h2>{{ $t('families.title') }}</h2>
+      <button @click="showAddForm = true">{{ $t('families.addFamily') }}</button>
     </div>
     <div v-if="families.length === 0" class="empty">
-      No families yet. Click "Add Family" to get started.
+      {{ $t('families.emptyState') }}
     </div>
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>Partner A</th>
-          <th>Partner B</th>
-          <th>Union Type</th>
-          <th>Actions</th>
+          <th>{{ $t('families.partnerA') }}</th>
+          <th>{{ $t('families.partnerB') }}</th>
+          <th>{{ $t('families.unionType') }}</th>
+          <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -25,9 +25,9 @@
         >
           <td>{{ family.partner_a_name || '—' }}</td>
           <td>{{ family.partner_b_name || '—' }}</td>
-          <td><span class="union-badge">{{ family.union_type }}</span></td>
+          <td><span class="union-badge">{{ $t('unionTypes.' + family.union_type) }}</span></td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removeFamily(family.id)">Delete</button>
+            <button class="btn-sm btn-delete" @click.stop="removeFamily(family.id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -36,31 +36,31 @@
     <!-- Add Family Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
       <div class="modal">
-        <h3>Add Family</h3>
+        <h3>{{ $t('families.addFamily') }}</h3>
         <form @submit.prevent="addFamily">
           <label>
-            Union Type
+            {{ $t('families.unionType') }}
             <select v-model="form.union_type">
-              <option v-for="ut in UNION_TYPES" :key="ut.value" :value="ut.value">
-                {{ ut.label }}
+              <option v-for="ut in UNION_TYPE_VALUES" :key="ut" :value="ut">
+                {{ $t('unionTypes.' + ut) }}
               </option>
             </select>
           </label>
           <label>
-            Partner A
-            <PersonPicker v-model="form.partner_a_id" placeholder="Search for a person..." />
+            {{ $t('families.partnerA') }}
+            <PersonPicker v-model="form.partner_a_id" :placeholder="$t('families.searchPerson')" />
           </label>
           <label>
-            Partner B
-            <PersonPicker v-model="form.partner_b_id" placeholder="Search for a person..." />
+            {{ $t('families.partnerB') }}
+            <PersonPicker v-model="form.partner_b_id" :placeholder="$t('families.searchPerson')" />
           </label>
           <label>
-            Notes
+            {{ $t('common.notes') }}
             <textarea v-model="form.notes" rows="2" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">Cancel</button>
-            <button type="submit">Add Family</button>
+            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('families.addFamily') }}</button>
           </div>
         </form>
       </div>
@@ -71,8 +71,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
-import { UNION_TYPES } from '../constants/eventTypes';
+import { UNION_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -93,6 +94,7 @@ interface NameRow {
   surname: string;
 }
 
+const { t } = useI18n();
 const router = useRouter();
 const families = ref<FamilyRow[]>([]);
 const showAddForm = ref(false);
@@ -160,7 +162,7 @@ async function addFamily() {
 
 async function removeFamily(id: string) {
   if (!window.api) return;
-  if (!confirm('Delete this family? This cannot be undone.')) return;
+  if (!confirm(t('families.confirmDelete'))) return;
   try {
     await window.api.families.delete(id);
     await load();

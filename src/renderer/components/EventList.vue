@@ -1,31 +1,29 @@
 <template>
   <div class="event-list">
     <div class="section-header">
-      <h4>Events</h4>
-      <button type="button" class="btn-add" @click="showForm = true">+ Add Event</button>
+      <h4>{{ $t('events.title') }}</h4>
+      <button type="button" class="btn-add" @click="showForm = true">{{ $t('events.addEvent') }}</button>
     </div>
-    <div v-if="events.length === 0" class="empty-hint">No events recorded.</div>
+    <div v-if="events.length === 0" class="empty-hint">{{ $t('events.noEvents') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Actions</th>
+          <th>{{ $t('common.type') }}</th>
+          <th>{{ $t('events.date') }}</th>
+          <th>{{ $t('events.description') }}</th>
+          <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="event in events" :key="event.id">
           <td>
-            <span class="event-badge">{{ formatEventType(event.event_type) }}</span>
+            <span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span>
           </td>
           <td>{{ formatDate(event) }}</td>
           <td>{{ event.description }}</td>
           <td class="actions-cell">
-            <button type="button" class="btn-sm btn-edit" @click="editEvent(event)">Edit</button>
-            <button type="button" class="btn-sm btn-delete" @click="removeEvent(event.id)">
-              Delete
-            </button>
+            <button type="button" class="btn-sm btn-edit" @click="editEvent(event)">{{ $t('common.edit') }}</button>
+            <button type="button" class="btn-sm btn-delete" @click="removeEvent(event.id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -44,8 +42,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
-import { EVENT_TYPES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -67,6 +65,7 @@ const props = defineProps<{
   familyId?: string;
 }>();
 
+const { t } = useI18n();
 const events = ref<EventRow[]>([]);
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
@@ -84,20 +83,16 @@ async function load() {
   }
 }
 
-function formatEventType(type: string): string {
-  return EVENT_TYPES.find((t) => t.value === type)?.label ?? type;
-}
-
 function formatDate(event: EventRow): string {
   if (event.date_original) return event.date_original;
   if (!event.date_value) return '';
   const prefix =
     event.date_type === 'about'
-      ? 'abt. '
+      ? t('datePrefix.about')
       : event.date_type === 'before'
-        ? 'bef. '
+        ? t('datePrefix.before')
         : event.date_type === 'after'
-          ? 'aft. '
+          ? t('datePrefix.after')
           : '';
   if (event.date_type === 'between' && event.date_value_end) {
     return `${event.date_value} – ${event.date_value_end}`;
@@ -112,7 +107,7 @@ function editEvent(event: EventRow) {
 
 async function removeEvent(id: string) {
   if (!window.api) return;
-  if (!confirm('Delete this event?')) return;
+  if (!confirm(t('events.confirmDelete'))) return;
   try {
     await window.api.events.delete(id);
     await load();

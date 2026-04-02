@@ -1,17 +1,17 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
-      <h3>{{ editingEvent ? 'Edit Event' : 'Add Event' }}</h3>
+      <h3>{{ editingEvent ? $t('events.editEvent') : $t('events.addEventTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
-          Event Type
+          {{ $t('events.eventType') }}
           <select v-model="form.event_type" required>
-            <option value="" disabled>Select type...</option>
-            <option v-for="et in eventTypes" :key="et.value" :value="et.value">{{ et.label }}</option>
+            <option value="" disabled>{{ $t('events.selectType') }}</option>
+            <option v-for="et in eventTypeValues" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
           </select>
         </label>
 
-        <label>Date</label>
+        <label>{{ $t('events.date') }}</label>
         <DateInput
           v-model:dateType="form.date_type"
           v-model:dateValue="form.date_value"
@@ -20,18 +20,18 @@
         />
 
         <label>
-          Place
-          <input v-model="form.place_name" type="text" placeholder="e.g. Stockholm, Sweden" />
+          {{ $t('events.place') }}
+          <input v-model="form.place_name" type="text" :placeholder="$t('events.placePlaceholder')" />
         </label>
 
         <label>
-          Description
-          <textarea v-model="form.description" rows="2" placeholder="Optional details..." />
+          {{ $t('events.description') }}
+          <textarea v-model="form.description" rows="2" :placeholder="$t('events.descriptionPlaceholder')" />
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" @click="$emit('close')">Cancel</button>
-          <button type="submit">{{ editingEvent ? 'Save' : 'Add Event' }}</button>
+          <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
+          <button type="submit">{{ editingEvent ? $t('common.save') : $t('events.addEventTitle') }}</button>
         </div>
       </form>
     </div>
@@ -40,8 +40,9 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DateInput from './DateInput.vue';
-import { PERSON_EVENT_TYPES, FAMILY_EVENT_TYPES } from '../constants/eventTypes';
+import { PERSON_EVENT_TYPE_VALUES, FAMILY_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -69,7 +70,9 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-const eventTypes = props.familyId ? FAMILY_EVENT_TYPES : PERSON_EVENT_TYPES;
+useI18n();
+
+const eventTypeValues = props.familyId ? FAMILY_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
 
 const form = reactive({
   event_type: props.editingEvent?.event_type ?? '',

@@ -1,20 +1,20 @@
 <template>
   <div>
     <div class="header">
-      <h2>Persons</h2>
-      <button @click="showAddForm = true">Add Person</button>
+      <h2>{{ $t('persons.title') }}</h2>
+      <button @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
     </div>
     <div v-if="persons.length === 0" class="empty">
-      No persons yet. Click "Add Person" to get started.
+      {{ $t('persons.emptyState') }}
     </div>
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>Given Name</th>
-          <th>Surname</th>
-          <th>Sex</th>
-          <th>Living</th>
-          <th>Actions</th>
+          <th>{{ $t('persons.givenName') }}</th>
+          <th>{{ $t('persons.surname') }}</th>
+          <th>{{ $t('persons.sex') }}</th>
+          <th>{{ $t('persons.living') }}</th>
+          <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -27,9 +27,9 @@
           <td>{{ person.given_name }}</td>
           <td>{{ person.surname }}</td>
           <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
-          <td>{{ person.living ? 'Yes' : 'No' }}</td>
+          <td>{{ person.living ? $t('common.yes') : $t('common.no') }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">Delete</button>
+            <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -38,40 +38,40 @@
     <!-- Add Person Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
       <div class="modal">
-        <h3>Add Person</h3>
+        <h3>{{ $t('persons.addPerson') }}</h3>
         <form @submit.prevent="addPerson">
           <label>
-            Given Name
+            {{ $t('persons.givenName') }}
             <input v-model="form.given_name" type="text" required autofocus />
           </label>
           <label>
-            Surname
+            {{ $t('persons.surname') }}
             <input v-model="form.surname" type="text" />
           </label>
           <label>
-            Sex
+            {{ $t('persons.sex') }}
             <div class="radio-group">
               <label class="radio-label">
-                <input v-model="form.sex" type="radio" value="M" /> Male
+                <input v-model="form.sex" type="radio" value="M" /> {{ $t('persons.male') }}
               </label>
               <label class="radio-label">
-                <input v-model="form.sex" type="radio" value="F" /> Female
+                <input v-model="form.sex" type="radio" value="F" /> {{ $t('persons.female') }}
               </label>
               <label class="radio-label">
-                <input v-model="form.sex" type="radio" value="U" /> Unknown
+                <input v-model="form.sex" type="radio" value="U" /> {{ $t('persons.sexUnknown') }}
               </label>
             </div>
           </label>
           <label class="checkbox-label">
-            <input v-model="form.living" type="checkbox" /> Living
+            <input v-model="form.living" type="checkbox" /> {{ $t('persons.living') }}
           </label>
           <label>
-            Notes
+            {{ $t('common.notes') }}
             <textarea v-model="form.notes" rows="2" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">Cancel</button>
-            <button type="submit">Add Person</button>
+            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('persons.addPerson') }}</button>
           </div>
         </form>
       </div>
@@ -82,6 +82,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -95,6 +96,7 @@ interface PersonRow {
   living: number;
 }
 
+const { t } = useI18n();
 const router = useRouter();
 const persons = ref<PersonRow[]>([]);
 const showAddForm = ref(false);
@@ -139,7 +141,7 @@ async function addPerson() {
 
 async function removePerson(id: string) {
   if (!window.api) return;
-  if (!confirm('Delete this person? This cannot be undone.')) return;
+  if (!confirm(t('persons.confirmDelete'))) return;
   try {
     await window.api.persons.delete(id);
     await load();

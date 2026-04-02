@@ -1,32 +1,32 @@
 <template>
   <div>
     <div class="search-header">
-      <h2>Search</h2>
+      <h2>{{ $t('search.title') }}</h2>
       <form class="search-form" @submit.prevent="runSearch">
         <input
           v-model="inputQuery"
           type="text"
-          placeholder="Search persons, families, sources…"
+          :placeholder="$t('search.placeholder')"
           class="search-input"
           autofocus
         />
-        <button type="submit">Search</button>
+        <button type="submit">{{ $t('search.button') }}</button>
       </form>
     </div>
 
-    <div v-if="!searched" class="empty">Enter a name or keyword to search.</div>
-    <div v-else-if="totalResults === 0" class="empty">No results for "{{ displayedQuery }}".</div>
+    <div v-if="!searched" class="empty">{{ $t('search.emptyState') }}</div>
+    <div v-else-if="totalResults === 0" class="empty">{{ $t('search.noResults', { query: displayedQuery }) }}</div>
 
     <template v-else>
       <!-- Persons -->
       <section v-if="persons.length > 0" class="result-section">
-        <h3>Persons <span class="count">{{ persons.length }}</span></h3>
+        <h3>{{ $t('nav.persons') }} <span class="count">{{ persons.length }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Sex</th>
-              <th>Living</th>
+              <th>{{ $t('common.name') }}</th>
+              <th>{{ $t('persons.sex') }}</th>
+              <th>{{ $t('persons.living') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -38,7 +38,7 @@
             >
               <td>{{ [p.given_name, p.surname].filter(Boolean).join(' ') || '—' }}</td>
               <td>{{ p.sex }}</td>
-              <td>{{ p.living ? 'Yes' : 'No' }}</td>
+              <td>{{ p.living ? $t('common.yes') : $t('common.no') }}</td>
             </tr>
           </tbody>
         </table>
@@ -46,13 +46,13 @@
 
       <!-- Families -->
       <section v-if="families.length > 0" class="result-section">
-        <h3>Families <span class="count">{{ families.length }}</span></h3>
+        <h3>{{ $t('nav.families') }} <span class="count">{{ families.length }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>
-              <th>Partner A</th>
-              <th>Partner B</th>
-              <th>Union Type</th>
+              <th>{{ $t('families.partnerA') }}</th>
+              <th>{{ $t('families.partnerB') }}</th>
+              <th>{{ $t('families.unionType') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -64,7 +64,7 @@
             >
               <td>{{ [f.partner_a_given_name, f.partner_a_surname].filter(Boolean).join(' ') || '—' }}</td>
               <td>{{ [f.partner_b_given_name, f.partner_b_surname].filter(Boolean).join(' ') || '—' }}</td>
-              <td>{{ f.union_type }}</td>
+              <td>{{ $t('unionTypes.' + f.union_type) }}</td>
             </tr>
           </tbody>
         </table>
@@ -72,13 +72,13 @@
 
       <!-- Sources -->
       <section v-if="sources.length > 0" class="result-section">
-        <h3>Sources <span class="count">{{ sources.length }}</span></h3>
+        <h3>{{ $t('nav.sources') }} <span class="count">{{ sources.length }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Type</th>
+              <th>{{ $t('sources.sourceTitle') }}</th>
+              <th>{{ $t('sources.author') }}</th>
+              <th>{{ $t('common.type') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +90,7 @@
             >
               <td>{{ s.title || '—' }}</td>
               <td>{{ s.author || '—' }}</td>
-              <td>{{ s.source_type || '—' }}</td>
+              <td>{{ s.source_type ? $t('sourceTypes.' + s.source_type) : '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -102,6 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -131,6 +132,7 @@ interface SourceResult {
   source_type: string;
 }
 
+useI18n();
 const route = useRoute();
 const router = useRouter();
 

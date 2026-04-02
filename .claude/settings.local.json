@@ -71,7 +71,8 @@
       "Bash(rm ~/.claude/skills/excalidraw)",
       "Bash(rm -rf ~/.agents/skills/excalidraw)",
       "Bash(npx playwright:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(npm install:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

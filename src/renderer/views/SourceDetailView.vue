@@ -1,47 +1,43 @@
 <template>
   <div v-if="source" class="source-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/sources')">&larr; Back</button>
+      <button class="btn-back" @click="$router.push('/sources')">{{ $t('sourceDetail.back') }}</button>
       <h2>{{ source.title }}</h2>
     </div>
 
     <!-- Source Fields -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Source Details</h4>
+        <h4>{{ $t('sourceDetail.title') }}</h4>
       </div>
       <div class="field-grid">
         <label>
-          Title
+          {{ $t('sources.sourceTitle') }}
           <input v-model="editFields.title" type="text" @blur="saveField('title')" />
         </label>
         <label>
-          Author
+          {{ $t('sources.author') }}
           <input v-model="editFields.author" type="text" @blur="saveField('author')" />
         </label>
         <label>
-          Source Type
+          {{ $t('sources.sourceType') }}
           <select v-model="editFields.source_type" @change="saveField('source_type')">
-            <option value="">— None —</option>
-            <option v-for="st in SOURCE_TYPES" :key="st.value" :value="st.value">
-              {{ st.label }}
+            <option value="">{{ $t('sourceDetail.noType') }}</option>
+            <option v-for="st in SOURCE_TYPE_VALUES" :key="st" :value="st">
+              {{ $t('sourceTypes.' + st) }}
             </option>
           </select>
         </label>
         <label>
-          Publication Info
-          <input
-            v-model="editFields.publication_info"
-            type="text"
-            @blur="saveField('publication_info')"
-          />
+          {{ $t('sources.publicationInfo') }}
+          <input v-model="editFields.publication_info" type="text" @blur="saveField('publication_info')" />
         </label>
         <label>
-          Repository
+          {{ $t('sources.repository') }}
           <input v-model="editFields.repository" type="text" @blur="saveField('repository')" />
         </label>
         <label>
-          URL
+          {{ $t('sources.url') }}
           <input v-model="editFields.url" type="url" @blur="saveField('url')" />
         </label>
       </div>
@@ -50,17 +46,17 @@
     <!-- Citations Section -->
     <section class="detail-section">
       <div class="section-header">
-        <h4>Citations</h4>
-        <button class="btn-add" @click="showCitationForm = true">+ Add Citation</button>
+        <h4>{{ $t('sourceDetail.citations') }}</h4>
+        <button class="btn-add" @click="showCitationForm = true">{{ $t('sourceDetail.addCitation') }}</button>
       </div>
-      <div v-if="citations.length === 0" class="empty-hint">No citations yet.</div>
+      <div v-if="citations.length === 0" class="empty-hint">{{ $t('sourceDetail.noCitations') }}</div>
       <table v-else class="data-table">
         <thead>
           <tr>
-            <th>Page</th>
-            <th>Confidence</th>
-            <th>Transcription</th>
-            <th>Actions</th>
+            <th>{{ $t('sourceDetail.page') }}</th>
+            <th>{{ $t('sourceDetail.confidence') }}</th>
+            <th>{{ $t('sourceDetail.transcription') }}</th>
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -68,12 +64,12 @@
             <td>{{ cit.page || '—' }}</td>
             <td>
               <span :class="'confidence-badge confidence-' + cit.confidence">
-                {{ CONFIDENCE_LEVELS.find((c) => c.value === cit.confidence)?.label ?? cit.confidence }}
+                {{ $t('confidenceLevels.' + cit.confidence) }}
               </span>
             </td>
             <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
             <td>
-              <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">Delete</button>
+              <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">{{ $t('common.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -87,14 +83,15 @@
       @saved="onCitationSaved"
     />
   </div>
-  <div v-else class="empty">Loading...</div>
+  <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import CitationForm from '../components/CitationForm.vue';
-import { SOURCE_TYPES, CONFIDENCE_LEVELS } from '../constants/eventTypes';
+import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -119,6 +116,7 @@ interface CitationRow {
   date_accessed: string;
 }
 
+const { t } = useI18n();
 const route = useRoute();
 const sourceId = route.params.id as string;
 
@@ -173,7 +171,7 @@ async function saveField(field: string) {
 
 async function removeCitation(id: string) {
   if (!window.api) return;
-  if (!confirm('Delete this citation?')) return;
+  if (!confirm(t('sourceDetail.confirmDeleteCitation'))) return;
   try {
     await window.api.citations.delete(id);
     await load();
@@ -289,22 +287,10 @@ onMounted(load);
   font-size: 12px;
   white-space: nowrap;
 }
-.confidence-0 {
-  background: #fee2e2;
-  color: #991b1b;
-}
-.confidence-1 {
-  background: #fef3c7;
-  color: #92400e;
-}
-.confidence-2 {
-  background: #e0f2fe;
-  color: #075985;
-}
-.confidence-3 {
-  background: #dcfce7;
-  color: #166534;
-}
+.confidence-0 { background: #fee2e2; color: #991b1b; }
+.confidence-1 { background: #fef3c7; color: #92400e; }
+.confidence-2 { background: #e0f2fe; color: #075985; }
+.confidence-3 { background: #dcfce7; color: #166534; }
 .btn-sm {
   padding: 2px 8px;
   font-size: 12px;

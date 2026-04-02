@@ -1,52 +1,48 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
-      <h3>Add Citation</h3>
+      <h3>{{ $t('citations.addTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
-          Source
+          {{ $t('citations.source') }}
           <select v-model="form.source_id" required>
-            <option value="" disabled>Select a source...</option>
+            <option value="" disabled>{{ $t('citations.selectSource') }}</option>
             <option v-for="src in sources" :key="src.id" :value="src.id">{{ src.title }}</option>
           </select>
         </label>
 
         <label>
-          Page / Location
-          <input v-model="form.page" type="text" placeholder="e.g. p. 42, Entry #15" />
+          {{ $t('citations.pageLocation') }}
+          <input v-model="form.page" type="text" :placeholder="$t('citations.pagePlaceholder')" />
         </label>
 
         <label>
-          Confidence
+          {{ $t('citations.confidence') }}
           <select v-model.number="form.confidence">
-            <option v-for="cl in CONFIDENCE_LEVELS" :key="cl.value" :value="cl.value">
-              {{ cl.value }} — {{ cl.label }}
+            <option v-for="val in CONFIDENCE_LEVEL_VALUES" :key="val" :value="val">
+              {{ val }} — {{ $t('confidenceLevels.' + val) }}
             </option>
           </select>
         </label>
 
         <label>
-          Transcription
-          <textarea
-            v-model="form.transcription"
-            rows="3"
-            placeholder="Verbatim text from the source..."
-          />
+          {{ $t('citations.transcription') }}
+          <textarea v-model="form.transcription" rows="3" :placeholder="$t('citations.transcriptionPlaceholder')" />
         </label>
 
         <label>
-          Notes
-          <textarea v-model="form.notes" rows="2" placeholder="Optional notes..." />
+          {{ $t('citations.notes') }}
+          <textarea v-model="form.notes" rows="2" :placeholder="$t('citations.notesPlaceholder')" />
         </label>
 
         <label>
-          Date Accessed
+          {{ $t('citations.dateAccessed') }}
           <input v-model="form.date_accessed" type="date" />
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" @click="$emit('close')">Cancel</button>
-          <button type="submit">Add Citation</button>
+          <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
+          <button type="submit">{{ $t('citations.addTitle') }}</button>
         </div>
       </form>
     </div>
@@ -55,7 +51,8 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue';
-import { CONFIDENCE_LEVELS } from '../constants/eventTypes';
+import { useI18n } from 'vue-i18n';
+import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -77,6 +74,7 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
+useI18n();
 const sources = ref<SourceRow[]>([]);
 
 const form = reactive({
