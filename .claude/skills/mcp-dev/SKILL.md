@@ -75,24 +75,9 @@ server.tool('tool_name', 'Human-readable description', {
 5. Add to preload in `src/preload/index.ts`
 6. Test: `npm test && npx playwright test`
 
-## Current MCP Tools (14)
+## Current MCP Tools
 
-| Tool | API Function |
-|------|-------------|
-| `create_person` | `persons.createPerson(db, args)` |
-| `list_persons` | `persons.listPersons(db)` |
-| `search_persons` | `persons.searchPersons(db, args.query)` |
-| `get_person` | `persons.getPerson(db, args.id)` |
-| `update_person` | `persons.updatePerson(db, id, data)` |
-| `delete_person` | `persons.deletePerson(db, args.id)` |
-| `create_family` | `families.createFamily(db, args)` |
-| `add_child_to_family` | `families.addChildToFamily(db, ...)` |
-| `list_families` | `families.listFamilies(db)` |
-| `add_event` | `events.createEvent(db, args)` |
-| `get_events_for_person` | `events.getEventsForPerson(db, id)` |
-| `add_source` | `sources.createSource(db, args)` |
-| `add_citation` | `sources.createCitation(db, args)` |
-| `list_sources` | `sources.listSources(db)` |
+See `src/mcp/server.ts` for the authoritative list of tools and their parameter schemas. Each tool is a thin wrapper over a `src/api/` function.
 
 ## MCP Server Config
 

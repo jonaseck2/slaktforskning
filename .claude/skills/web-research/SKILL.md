@@ -1,6 +1,6 @@
 ---
 name: web-research
-description: Research existing genealogy applications by fetching and analyzing their websites to identify UX patterns, features, pricing models, and competitive gaps. Use this skill whenever the user wants to understand the competitive landscape for a genealogy app, analyze what Ancestry, MyHeritage, FamilySearch, Findmypast, or other genealogy platforms offer, identify market opportunities, or gather inspiration for features and design. Trigger when the user asks things like "what does Ancestry do?", "what features do genealogy apps have?", "research the competition", or "find gaps in existing genealogy tools".
+description: Research genealogy apps (Ancestry, FamilySearch, MyHeritage, etc.) to identify features, UX patterns, pricing, and competitive gaps.
 ---
 
 # Genealogy App Web Research
@@ -53,6 +53,17 @@ Bulleted list of underserved needs or missing features that a new app could addr
 
 ### Recommendations for a New App
 Top 3-5 strategic opportunities based on the research.
+
+## Project context
+
+Släktforskning differentiates on being **local-first** (no cloud, no subscription), **agent-friendly** (built-in MCP server for AI assistance), and **research-grade** (Source → Citation model). When researching competitors, pay special attention to:
+
+- **Data ownership & privacy** — most competitors require cloud accounts. How do they handle data export/portability?
+- **AI integration** — are competitors adding AI features? How do they compare to native MCP tool access?
+- **Citation workflows** — this is a known pain point. How do competitors handle source attachment and evidence evaluation?
+- **Desktop vs. web vs. mobile** — Släktforskning is desktop-first. What do desktop competitors (RootsMagic, Gramps, MacFamilyTree) do well that web-first platforms don't?
+
+See `.claude/PLAN.md` for the current roadmap — focus research on features relevant to upcoming work.
 
 ## Tips
 

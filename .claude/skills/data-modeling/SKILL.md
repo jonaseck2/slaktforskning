@@ -1,6 +1,6 @@
 ---
 name: data-modeling
-description: Design data schemas and entity-relationship models for genealogy applications, including persons, family relationships, life events, sources, citations, and media. Use this skill whenever the user wants to model genealogy data, design a database schema for a family tree app, think through how to represent complex family structures (adoptions, remarriages, unknown parents), or figure out how to handle evidence and citations. Trigger when the user asks about data models, schema design, how to store genealogy data, how to represent family relationships in a database, or wants an ERD or schema for a genealogy app.
+description: Design data schemas for genealogy apps — persons, families, events, sources, citations, media. Use for schema design, ERDs, or modeling complex family structures.
 ---
 
 # Genealogy Data Modeling
@@ -134,6 +134,10 @@ When designing a schema, produce:
 3. **Notes on design decisions** — explain why the model is shaped the way it is
 4. **SQL DDL or JSON Schema** as requested
 5. **GEDCOM mapping** — how entities map to GEDCOM tags (see gedcom skill for details)
+
+## GEDCOM compatibility
+
+When designing new entities, consider how they map to GEDCOM 5.5.1 tags (for broad compatibility) and GEDCOM 7.0 structures (for forward-looking designs). See the `/gedcom` skill for tag details. Entities that don't map to a standard GEDCOM tag should use extension mechanisms (`_` prefix in 5.5.1, `SCHMA` in 7.0) to remain interoperable.
 
 ## Recommended starting point for a new app
 

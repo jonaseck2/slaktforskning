@@ -9,7 +9,7 @@ description: Run tests, write new tests, and verify code changes. Use when imple
 
 ### Unit tests (API layer)
 ```bash
-npm test              # Run all 30+ unit tests (Vitest)
+npm test              # Run all unit tests (Vitest)
 npm run test:watch    # Watch mode for active development
 ```
 
@@ -89,6 +89,13 @@ E2E tests live in `tests/e2e/` and use Playwright (not browser Playwright — pr
 - `SLAKTFORSKNING_DB` env var pointed at a temp file
 - Process spawning with timeout (30s for app, 15s for MCP)
 - Cleanup: `fs.rmSync(dbPath)` after test
+
+## When Tests Fail
+
+- **Read the error message first** — don't blindly re-run or change code.
+- **Check if it's a test bug or a code bug** — the test may have wrong expectations after a legitimate code change.
+- **For SQLite errors** — remember `db.get()` returns `undefined` not `null`, and parameter binding uses arrays.
+- **For E2E timeouts** — check if a previous Electron process is still running (`pkill -f "electron-forge"`).
 
 ## When to Run Tests
 

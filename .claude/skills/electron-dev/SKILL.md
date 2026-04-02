@@ -104,19 +104,4 @@ npm start
 
 ## Adding New IPC Channels
 
-When a new api/ function needs UI exposure:
-
-1. Add handler in `src/main/ipc.ts` using `wrapHandler()`:
-   ```typescript
-   wrapHandler('things:create', (data) => things.createThing(getDatabase(), data));
-   ```
-2. Add to preload in `src/preload/index.ts`:
-   ```typescript
-   things: {
-     create: (data) => ipcRenderer.invoke('things:create', data),
-   },
-   ```
-3. Call from Vue component:
-   ```typescript
-   await window.api.things.create({ ... });
-   ```
+See the "Adding a New IPC Channel" section in `CLAUDE.md` for the step-by-step pattern.
