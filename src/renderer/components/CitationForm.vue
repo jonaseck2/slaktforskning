@@ -67,6 +67,7 @@ const props = defineProps<{
   sourceId?: string;
   eventId?: string;
   personId?: string;
+  relationshipId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -104,6 +105,7 @@ async function save() {
     };
     if (props.eventId) data.event_id = props.eventId;
     if (props.personId) data.person_id = props.personId;
+    if (props.relationshipId) data.relationship_id = props.relationshipId;
 
     await window.api.citations.create(data);
     emit('saved');

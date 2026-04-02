@@ -2,7 +2,10 @@
   <div v-if="relationship" class="relationship-detail">
     <div class="detail-header">
       <button class="btn-back" @click="$router.push('/relationships')">{{ $t('relationshipDetail.back') }}</button>
-      <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
+      <div class="header-row">
+        <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
+        <button type="button" class="btn-cite-header" @click="showCiteForm = true">{{ $t('relationshipDetail.citeRelationship') }}</button>
+      </div>
     </div>
 
     <!-- Persons Section -->
@@ -76,12 +79,20 @@
     <section class="detail-section">
       <EventList :relationship-id="relationship.id" />
     </section>
+
+    <CitationForm
+      v-if="showCiteForm && relationship"
+      :relationship-id="relationship.id"
+      @close="showCiteForm = false"
+      @saved="showCiteForm = false"
+    />
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import CitationForm from '../components/CitationForm.vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
@@ -107,6 +118,7 @@ const relId = route.params.id as string;
 
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
+const showCiteForm = ref(false);
 
 async function load() {
   if (!window.api) return;
@@ -156,9 +168,6 @@ onMounted(load);
 .detail-header {
   margin-bottom: 24px;
 }
-.detail-header h2 {
-  margin: 8px 0 0;
-}
 .btn-back {
   background: none;
   border: none;
@@ -169,6 +178,24 @@ onMounted(load);
 }
 .btn-back:hover {
   text-decoration: underline;
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.header-row h2 {
+  margin: 0;
+}
+.btn-cite-header {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
 }
 .detail-section {
   margin-bottom: 24px;
