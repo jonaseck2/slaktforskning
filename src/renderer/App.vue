@@ -13,6 +13,7 @@
       <router-link to="/">{{ $t('nav.persons') }}</router-link>
       <router-link to="/relationships">{{ $t('nav.relationships') }}</router-link>
       <router-link to="/sources">{{ $t('nav.sources') }}</router-link>
+      <router-link to="/places">{{ $t('places.title') }}</router-link>
       <div class="sidebar-spacer"></div>
       <select class="locale-switcher" :value="locale" @change="switchLocale($event)">
         <option value="sv">Svenska</option>

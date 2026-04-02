@@ -21,6 +21,7 @@ export default {
     type: 'Typ',
     name: 'Namn',
     unknown: '(okänd)',
+    back: 'Tillbaka',
   },
   persons: {
     title: 'Personer',
