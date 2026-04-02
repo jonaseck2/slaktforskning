@@ -11,6 +11,9 @@ import {
   addPersonName,
   getPersonNames,
   updatePersonName,
+  addPersonIdentifier,
+  getPersonIdentifiers,
+  deletePersonIdentifier,
 } from '../../src/api/persons';
 
 let db: Database.Database;
@@ -110,5 +113,44 @@ describe('persons', () => {
 
   it('updatePersonName returns null for nonexistent id', () => {
     expect(updatePersonName(db, 'nonexistent', { given_name: 'X' })).toBeNull();
+  });
+
+  describe('addPersonName with extended fields', () => {
+    it('stores name_prefix and name_suffix', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Carl', surname: 'Linné', name_prefix: 'von' });
+      expect(name.name_prefix).toBe('von');
+      expect(name.name_suffix).toBeNull();
+    });
+
+    it('stores patronymic_base and name_qualifier', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Lars', surname: 'Eriksson', patronymic_base: 'Erik', name_qualifier: 'patronymic' });
+      expect(name.patronymic_base).toBe('Erik');
+      expect(name.name_qualifier).toBe('patronymic');
+    });
+  });
+});
+
+describe('person identifiers', () => {
+  it('adds and retrieves an identifier', () => {
+    const person = createPerson(db, {});
+    const ident = addPersonIdentifier(db, person.id, { identifier_type: 'familysearch', identifier_value: 'L123-XYZ' });
+    expect(ident.identifier_type).toBe('familysearch');
+    const list = getPersonIdentifiers(db, person.id);
+    expect(list).toHaveLength(1);
+  });
+
+  it('deletes an identifier', () => {
+    const person = createPerson(db, {});
+    const ident = addPersonIdentifier(db, person.id, { identifier_type: 'ancestry', identifier_value: 'A456' });
+    expect(deletePersonIdentifier(db, ident.id)).toBe(true);
+    expect(getPersonIdentifiers(db, person.id)).toHaveLength(0);
+  });
+
+  it('enforces uniqueness per person/type/value', () => {
+    const person = createPerson(db, {});
+    addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: 'R789' });
+    expect(() => addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: 'R789' })).toThrow();
   });
 });

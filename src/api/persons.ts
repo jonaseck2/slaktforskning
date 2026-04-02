@@ -1,6 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
-import type { Person, PersonName } from './types';
+import type { Person, PersonName, PersonIdentifier } from './types';
 
 export function createPerson(
   db: Database,
@@ -74,15 +74,37 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
 export function addPersonName(
   db: Database,
   personId: string,
-  data: { given_name: string; surname: string; name_type?: PersonName['name_type'] }
+  data: {
+    given_name?: string | null;
+    surname?: string | null;
+    name_type?: PersonName['name_type'];
+    date_from?: string | null;
+    date_to?: string | null;
+    sort_order?: number;
+    name_prefix?: string | null;
+    name_suffix?: string | null;
+    patronymic_base?: string | null;
+    name_qualifier?: PersonName['name_qualifier'];
+  }
 ): PersonName {
   const id = uuid();
   const maxOrder = db.prepare(
     `SELECT COALESCE(MAX(sort_order), -1) as max_order FROM person_names WHERE person_id = ?`
   ).get([personId]) as { max_order: number };
-  db.prepare(
-    `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order) VALUES (?, ?, ?, ?, ?, ?)`
-  ).run([id, personId, data.given_name, data.surname, data.name_type ?? 'birth', maxOrder.max_order + 1]);
+  db.prepare(`
+    INSERT INTO person_names
+      (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order,
+       name_prefix, name_suffix, patronymic_base, name_qualifier)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run([
+    id, personId,
+    data.given_name ?? null, data.surname ?? null,
+    data.name_type ?? 'birth',
+    data.date_from ?? null, data.date_to ?? null,
+    data.sort_order ?? (maxOrder.max_order + 1),
+    data.name_prefix ?? null, data.name_suffix ?? null,
+    data.patronymic_base ?? null, data.name_qualifier ?? null,
+  ]);
   return db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName;
 }
 
@@ -104,4 +126,24 @@ export function updatePersonName(
   values.push(id);
   db.prepare(`UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`).run(values);
   return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
+}
+
+export function addPersonIdentifier(
+  db: Database,
+  personId: string,
+  data: { identifier_type: PersonIdentifier['identifier_type']; identifier_value: string }
+): PersonIdentifier {
+  const id = uuid();
+  db.prepare(
+    `INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)`
+  ).run([id, personId, data.identifier_type, data.identifier_value, new Date().toISOString()]);
+  return db.prepare('SELECT * FROM person_identifiers WHERE id = ?').get([id]) as PersonIdentifier;
+}
+
+export function getPersonIdentifiers(db: Database, personId: string): PersonIdentifier[] {
+  return db.prepare('SELECT * FROM person_identifiers WHERE person_id = ? ORDER BY created_at ASC').all([personId]) as PersonIdentifier[];
+}
+
+export function deletePersonIdentifier(db: Database, id: string): boolean {
+  return (db.prepare('DELETE FROM person_identifiers WHERE id = ?').run([id]) as { changes: number }).changes > 0;
 }
