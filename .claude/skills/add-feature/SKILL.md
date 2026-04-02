@@ -74,7 +74,7 @@ describe('things', () => {
 });
 ```
 
-Run after writing: `npm test`
+Run after writing: `npm test -- --coverage` — verify thresholds still pass (80% lines and functions on `src/api/`)
 
 ## IPC Layer (Steps 5-6)
 
