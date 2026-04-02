@@ -4,6 +4,7 @@ import * as persons from '../api/persons';
 import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
+import * as places from '../api/places';
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -81,4 +82,13 @@ export function registerIpcHandlers(): void {
   wrapHandler('citations:forSource', (sourceId) => sources.getCitationsForSource(db, sourceId as string));
   wrapHandler('citations:forEvent', (eventId) => sources.getCitationsForEvent(db, eventId as string));
   wrapHandler('citations:delete', (id) => sources.deleteCitation(db, id as string));
+
+  // Places
+  wrapHandler('places:create', (data) => places.createPlace(db, data as Parameters<typeof places.createPlace>[1]));
+  wrapHandler('places:get', (id) => places.getPlace(db, id as string));
+  wrapHandler('places:list', () => places.listPlaces(db));
+  wrapHandler('places:search', (query) => places.searchPlaces(db, query as string));
+  wrapHandler('places:update', (id, data) => places.updatePlace(db, id as string, data as Parameters<typeof places.updatePlace>[2]));
+  wrapHandler('places:delete', (id) => places.deletePlace(db, id as string));
+  wrapHandler('places:findOrCreate', (name) => places.findOrCreatePlace(db, name as string));
 }

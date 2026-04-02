@@ -53,6 +53,15 @@ const api = {
     forEvent: (eventId: string) => ipcRenderer.invoke('citations:forEvent', eventId),
     delete: (id: string) => ipcRenderer.invoke('citations:delete', id),
   },
+  places: {
+    create: (data: unknown) => ipcRenderer.invoke('places:create', data),
+    get: (id: string) => ipcRenderer.invoke('places:get', id),
+    list: () => ipcRenderer.invoke('places:list'),
+    search: (query: string) => ipcRenderer.invoke('places:search', query),
+    update: (id: string, data: unknown) => ipcRenderer.invoke('places:update', id, data),
+    delete: (id: string) => ipcRenderer.invoke('places:delete', id),
+    findOrCreate: (name: string) => ipcRenderer.invoke('places:findOrCreate', name),
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);
