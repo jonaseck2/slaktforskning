@@ -80,23 +80,14 @@ Inline sex editing in header; name rows clickable (edit button removed); relatio
 
 See `.claude/plans/archive/2026-04-02-person-detail-ux.md` for implementation details.
 
+### Done (v0.4.0 — Places)
+Full places layer: `src/api/places.ts` (7 functions including `findOrCreatePlace`), IPC + preload, 6 MCP tools, `PlacePicker` component, `EventForm` fix (now saves `place_id`), `PlacesView` + `PlaceDetailView`, sidebar entry and routes.
+
+See `.claude/plans/archive/2026-04-02-places.md` for the implementation plan.
+
 ---
 
 ## Roadmap
-
-### v0.4.0 — Places
-
-See `.claude/plans/2026-04-02-places.md` for the full implementation plan.
-
-**Prerequisite for v0.5.0 GEDCOM import** (PLAC tags need `findOrCreatePlace`).
-
-- [ ] `src/api/places.ts` — createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace, findOrCreatePlace
-- [ ] IPC channels + preload for places
-- [ ] MCP tools: add_place, get_place, list_places, search_places, update_place, delete_place
-- [ ] `PlacePicker` component — typeahead search + inline create (like PersonPicker)
-- [ ] Fix `EventForm` — `place_name` input currently does nothing; replace with PlacePicker, write `place_id` on save
-- [ ] `PlacesView` — place list + add modal; add Places to sidebar
-- [ ] `PlaceDetailView` — edit name/type/hierarchy/coordinates; child places list
 
 ### v0.4.1 — Visualization
 
