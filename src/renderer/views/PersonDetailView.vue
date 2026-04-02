@@ -38,7 +38,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="name in names" :key="name.id">
+          <tr v-for="name in names" :key="name.id" class="clickable-row" @click="openEditName(name)">
             <td>
               <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>{{ name.given_name }}
             </td>
@@ -47,11 +47,10 @@
             </td>
             <td><span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span></td>
             <td class="actions-cell">
-              <button class="btn-sm btn-edit" @click="openEditName(name)">{{ $t('common.edit') }}</button>
               <button
                 v-if="name.sort_order > 0"
                 class="btn-sm btn-delete"
-                @click="removeName(name.id)"
+                @click.stop="removeName(name.id)"
               >
                 {{ $t('common.delete') }}
               </button>
