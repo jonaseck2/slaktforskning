@@ -10,7 +10,8 @@ A local-first, cross-platform desktop genealogy application that gives researche
 2. **Multi-window** — Desktop-class UX with multiple simultaneous windows into the same database (e.g., person detail + family view side-by-side).
 3. **Cross-platform** — Runs on macOS, Windows, and Linux from a single codebase.
 4. **Agent-friendly** — A built-in MCP server lets AI agents perform full CRUD operations on the database without the UI, enabling agentic workflows like automated data entry, research assistance, and GEDCOM import.
-5. **Research-grade** — Data model follows the Genealogical Proof Standard: Source → Citation → Assertion. Preserves uncertainty, conflicting evidence, and original source text.
+5. **Source-first** — Every claim in the database should be traceable to a source. The app warns on unsourced entities and provides citation affordances everywhere — but does not block entry when a source isn't yet at hand.
+6. **Research-grade** — Data model follows the Genealogical Proof Standard: Source → Citation → Assertion. Preserves uncertainty, conflicting evidence, and original source text.
 
 ## Tech Decisions
 
@@ -22,6 +23,7 @@ A local-first, cross-platform desktop genealogy application that gives researche
 | Database | SQLite via node-sqlite3-wasm | Zero-config, single-file, WASM-based — no native rebuild needed for Electron vs system Node |
 | Agent interface | MCP (stdio transport) | Standard protocol for AI tool use; Claude, GPT, etc. can call it directly |
 | Language | TypeScript throughout | Single language for main process, renderer, API layer, and MCP server |
+| i18n | vue-i18n | Swedish default locale, English fallback, persisted to localStorage |
 
 ### Alternatives Considered
 
@@ -30,6 +32,7 @@ A local-first, cross-platform desktop genealogy application that gives researche
 - **better-sqlite3** — Native C++ addon with excellent performance, but requires recompilation when switching between system Node and Electron's Node fork. Replaced with node-sqlite3-wasm to eliminate the constant rebuild problem.
 - **Prisma / Drizzle ORM** — Rejected in favor of raw SQL for simplicity and full control over genealogy-specific queries.
 - **PostgreSQL** — Rejected: local-first goal means no server process. SQLite is the right fit.
+- **GEDCOM-X interchange** — GEDCOM-X is the conceptual inspiration for the relationship model, but it is not widely supported by any Swedish genealogy platform. GEDCOM 5.5.1 is the interchange standard; the internal model roundtrips to/from it.
 
 ## Architecture
 
@@ -37,7 +40,7 @@ A local-first, cross-platform desktop genealogy application that gives researche
 src/api/     → Pure business logic (zero Electron deps)
 src/main/    → Electron main process (windows, DB, IPC)
 src/preload/ → Context bridge (renderer ↔ main)
-src/renderer/→ Vue 3 UI
+src/renderer/→ Vue 3 UI (Swedish default locale)
 src/mcp/     → MCP server (standalone, same API layer)
 ```
 
@@ -55,7 +58,7 @@ src/mcp/     → MCP server (standalone, same API layer)
 - [x] Vue 3 renderer with sidebar navigation (Persons, Families, Sources)
 - [x] IPC bridge connecting renderer to API layer (all channels wired)
 - [x] MCP server with 14 tools covering all CRUD operations
-- [x] Unit tests (30 tests, Vitest) covering the full API layer
+- [x] Unit tests (Vitest) covering the full API layer
 - [x] E2E tests (Playwright) for app launch and MCP server connectivity
 - [x] Project documentation (CLAUDE.md for agents, README.md for humans)
 - [x] Migrated from better-sqlite3 to node-sqlite3-wasm (no more native rebuild issues)
@@ -78,7 +81,7 @@ Replaced `prompt()` dialogs with proper form-based data entry exposing the full 
 - [x] **FamiliesView updated**: Modal with PersonPicker for partners + union_type, clickable rows → detail, partner names in table
 - [x] **SourcesView updated**: Full form modal (title, author, source_type, publication_info, repository, url), clickable rows → detail
 - [x] **Router**: Added `/persons/:id`, `/families/:id`, `/sources/:id` detail routes
-- [x] All 30 unit tests passing, app launches correctly
+- [x] All unit tests passing, app launches correctly
 
 ### Done (v0.2.1 — Global Search)
 
@@ -94,80 +97,138 @@ Replaced `prompt()` dialogs with proper form-based data entry exposing the full 
 - [x] `window.__vue_router` exposed in renderer for clean route pushes
 - [x] Graceful error when app is not running
 
+### Done (v0.2.3 — Swedish i18n + MCP Parity)
+
+- [x] **vue-i18n**: Swedish (sv) default locale, English (en) fallback, persisted to localStorage
+- [x] **~180 translation strings** covering all UI text: event types, date types, confidence levels, source types, union types, relationship types, name types, all labels/placeholders/titles
+- [x] **Swedish terminology**: Förnamn/Efternamn, Vigsel, Kyrkobok, Husförhörslängd, härad, ca/före/efter date prefixes
+- [x] **Language switcher** in sidebar (SV / EN)
+- [x] All 6 views + 4 components updated to use `$t()` / `useI18n()`
+- [x] **MCP parity**: Expanded MCP server from 14 to 34 tools, matching full IPC surface:
+  - Person: `add_person_name`, `get_person_names`
+  - Family: `get_family`, `update_family`, `delete_family`, `get_children_of_family`, `get_families_of_person`, `search_families`
+  - Events: `get_event`, `get_events_for_family`, `update_event`, `delete_event`
+  - Sources: `get_source`, `update_source`, `delete_source`, `search_sources`
+  - Citations: `get_citation`, `get_citations_for_source`, `get_citations_for_event`, `delete_citation`
+- [x] `.claude/MCP.md` updated to document all 34 data + 5 UI tools
+
 ---
 
 ## Roadmap
 
-### v0.3.0 — Research-Focused Data Entry
+### v0.3.0 — Data Model Migration (Relationships + Evidence)
 
-Two features that make the app research-grade: adding related persons in context, and making evidence visible everywhere.
+This version migrates the core schema from a family-centric model to a source-first, relationship-centric model. It is the highest-risk change because it touches all layers (DB, API, IPC, MCP, Vue) and is a breaking schema change. Do it early, before the data model is locked in by more UI.
 
-#### Add Related Person from Detail View
+#### Schema Migration: Relationships + Event Participants
 
-The primary workflow in genealogy research is: you're looking at a person and you discover a related person (parent, spouse, child) in a source. You want to add that person *and* the relationship in one action, not create the person separately and then wire up the family.
+The `families` and `person_family_links` tables are replaced by a `relationships` table (GEDCOM-X model). Events lose their `person_id`/`family_id` columns and gain an `event_participants` junction table. Assertions are added to the schema now, with UI deferred.
 
-**Feature: "Add Related Person" from PersonDetailView**
+See `.claude/DATA_MODEL.md` for the full schema specification.
 
-From the person detail view, the user can:
-- **Add Parent** — Creates a new person + creates/finds a family where the current person is a child. If one parent already exists in a family, the new person is added as the other partner.
-- **Add Spouse/Partner** — Creates a new person + creates a new family with both as partners. Prompts for union type.
-- **Add Child** — Creates a new person + adds them as a child to an existing family (if the current person is a partner in one), or creates a new family first.
+**New tables:**
 
-Each action opens a modal with:
-1. New person fields (given name, surname, sex)
-2. Relationship context (automatically set: e.g. "Child of [current person]", "Spouse of [current person]")
-3. Optional: select existing family (if the current person has multiple families) or create new
+```sql
+-- Replaces families + person_family_links
+CREATE TABLE relationships (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,         -- 'couple' | 'parent_child' | 'sibling' | 'godparent' | 'other'
+  person1_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
+  person2_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
+  subtype TEXT,               -- couple: 'marriage'|... parent_child: 'biological'|...
+  notes TEXT,
+  created_at TEXT,
+  updated_at TEXT
+);
 
-On save, both the person and the family link are created in a single transaction, and the detail view refreshes.
+-- Replaces event.person_id / event.family_id
+CREATE TABLE event_participants (
+  id TEXT PRIMARY KEY,
+  event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
+  person_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
+  role TEXT,                  -- 'primary' | 'spouse' | 'parent' | 'child' | 'witness' | ...
+  UNIQUE(event_id, person_id)
+);
 
-This replaces the current workflow of: navigate to Persons list → Add Person → navigate back → navigate to Families → create/find family → add the person as partner/child.
+-- Assertions: schema now, UI deferred
+CREATE TABLE assertions (
+  id TEXT PRIMARY KEY,
+  citation_id TEXT REFERENCES citations(id) ON DELETE CASCADE,
+  subject_type TEXT,          -- 'person' | 'relationship' | 'event' | 'place'
+  subject_id TEXT,
+  attribute TEXT,
+  value TEXT,
+  value_original TEXT,
+  confidence INTEGER,
+  is_accepted INTEGER,
+  notes TEXT,
+  created_at TEXT
+);
+```
+
+**Modified tables:**
+
+- `events`: Remove `person_id`, `family_id`; add `relationship_id` FK (optional)
+- `citations`: Add `relationship_id` FK, `place_id` FK (in addition to existing `event_id`, `person_id`)
+- `places`: Add `place_type` ('farm' | 'parish' | 'härad' | 'county' | 'province' | 'country' | 'city' | 'village' | 'other'), `date_from`, `date_to`
+
+**Implementation checklist:**
+
+- [ ] Update `src/api/schema.ts` with new DDL (idempotent, use `IF NOT EXISTS`)
+- [ ] Write migration script for existing databases (families → relationships, events.person_id → event_participants)
+- [ ] Add `src/api/relationships.ts` (CRUD for relationships and event_participants)
+- [ ] Update `src/api/events.ts` to use event_participants instead of person_id/family_id
+- [ ] Update `src/api/sources.ts` (citations now accept relationship_id, place_id)
+- [ ] Update `src/api/types.ts` with new domain types
+- [ ] Write unit tests for new API functions
+- [ ] Update IPC handlers in `src/main/ipc.ts`
+- [ ] Update preload in `src/preload/index.ts`
+- [ ] Update MCP server with relationship tools
+- [ ] Update Vue views/components to use new model
+- [ ] Run `npm test && npx playwright test`
+- [ ] Update CLAUDE.md to reflect new schema
 
 #### Evidence Visibility & Citation Affordances
 
-The data model already supports Source → Citation → Event/Person linking, but the GUI hides this and citations can't link to families. Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
+Every claim in the database should visibly trace back to a source, and it should be easy to add citations from where you're working — not just from the source detail view.
 
-**Schema: add `family_id` to citations**
+**Unsourced indicators:**
+- Events in `EventList` show a citation count badge (e.g. "2 sources") or an "unsourced" warning indicator
+- `PersonDetailView` shows an evidence summary: how many events are sourced vs. unsourced
+- A "research audit" view aggregates all unsourced entities across the tree
 
-Currently `citations` has `event_id` and `person_id` but no `family_id`. Add `family_id TEXT REFERENCES families(id) ON DELETE SET NULL` so sources can be linked directly to families (e.g. a marriage certificate cites the family, not just the marriage event). Update the Citation type, API functions (`getCitationsForFamily`), IPC channel, preload, and MCP tools accordingly.
+**"Cite" action on events, persons, and relationships:**
+- Each event row in `EventList` gets a "Cite" button → opens `CitationForm` pre-linked to that event's `event_id`
+- `PersonDetailView` gets a "Cite Person" button → opens `CitationForm` with `person_id` pre-filled
+- Relationship views get a "Cite Relationship" button → opens `CitationForm` with `relationship_id` pre-filled
 
-**Unsourced indicators**
+**Optional source prompt on event creation:**
+- `EventForm` includes an optional "Source" section at the bottom (source picker + page/transcription)
+- When filled, creating the event also creates a citation in one step
+- When empty, event is created without a citation (shows "unsourced" indicator)
 
-- Events in `EventList` show a citation count badge (e.g. "2 sources") or an "unsourced" warning indicator when no citations exist for that event.
-- `PersonDetailView` shows an overall evidence summary: how many events are sourced vs. unsourced.
-- `FamilyDetailView` shows the same for family events.
+#### Add Related Person from Detail View
 
-**"Cite" action on events, persons, and families**
+From the person detail view, the user can:
+- **Add Parent** — Creates a new person + creates a `parent_child` relationship (or joins an existing couple relationship if one parent already exists)
+- **Add Spouse/Partner** — Creates a new person + creates a `couple` relationship. Prompts for subtype (marriage, civil_union, etc.)
+- **Add Child** — Creates a new person + creates a `parent_child` relationship
 
-- Each event row in `EventList` gets a "Cite" button that opens `CitationForm` pre-linked to that event's `event_id`.
-- `PersonDetailView` gets a "Cite Person" button (for general identity citations not tied to a specific event). Opens `CitationForm` with `person_id` pre-filled.
-- `FamilyDetailView` gets a "Cite Family" button. Opens `CitationForm` with `family_id` pre-filled.
-- After saving, citation count badges update immediately.
-
-**Citation list on detail views**
-
-- `PersonDetailView` shows a "Citations" section listing all citations linked to the person (both directly via `person_id` and indirectly via their events).
-- `FamilyDetailView` shows a "Citations" section listing all citations linked to the family (via `family_id` and family events).
-- Clicking a citation navigates to the source detail view.
-
-**Optional source prompt on event creation**
-
-- `EventForm` includes an optional "Source" section at the bottom: source picker + page/transcription fields.
-- When filled, creating the event also creates a citation in one step.
-- When left empty, the event is created without a citation (but shows the "unsourced" indicator).
-
-This ensures the GUI encourages evidence-based research without blocking data entry when a source isn't immediately at hand.
+Each action opens a modal with new person fields + relationship context pre-filled. Both person and relationship are created in a single transaction.
 
 ### v0.4.0 — Visualization & Navigation
-- [ ] Family tree visualization (pedigree chart, descendant chart)
-- [ ] Place management UI and place autocomplete
+- [ ] Family tree visualization (pedigree chart, descendant chart) — uses `relationships` table
+- [ ] Place management UI and place hierarchy browser (farm → parish → härad → county)
+- [ ] Place autocomplete on EventForm
 
 ### v0.5.0 — GEDCOM Import/Export
-- [ ] GEDCOM 5.5.1 import
-- [ ] GEDCOM 5.5.1 export
-- [ ] GEDCOM 7.0 support
+- [ ] GEDCOM 5.5.1 import: INDI → person, FAM → one `couple` relationship + N `parent_child` relationships
+- [ ] GEDCOM 5.5.1 export: Reconstruct FAM records from `couple` relationships; emit FAM.CHIL from `parent_child` relationships where person1 is a partner in a FAM; witnesses and godparents via WITN custom tag
+- [ ] GEDCOM 7.0 read support
 
 ### v0.6.0 — Research Tools
-- [ ] Assertion layer (Source → Citation → Assertion, per Genealogical Proof Standard)
+- [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
+- [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap
 - [ ] Merge/deduplicate persons
 - [ ] Media attachments (photos, documents)
 
