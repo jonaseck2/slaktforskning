@@ -1,0 +1,33 @@
+{
+  "name": "Släktforskning",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "postCreateCommand": "npm install && npx playwright install chromium",
+
+  // Environment variable so E2E tests know to use a temp DB path
+  "remoteEnv": {
+    "DISPLAY": ":99"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "vitest.explorer",
+        "ms-playwright.playwright"
+      ],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+
+  // Forward the MCP server port if run as HTTP in future; 9229 for Node debugger
+  "forwardPorts": [9229]
+}

@@ -89,6 +89,11 @@ tests/
 ├── MCP.md                        # MCP server tools and UI bridge reference
 ├── napkin.md                     # Per-repo runbook (auto-curated)
 └── skills/                       # Claude skills (commit, test, electron-dev, etc.)
+
+.devcontainer/
+├── devcontainer.json             # VS Code dev container config (Node 22, extensions)
+├── Dockerfile                    # Node 22 + Electron Linux deps + Xvfb
+└── xvfb-start.sh                 # Helper: start virtual display before E2E tests
 ```
 
 ### Routes
@@ -392,6 +397,17 @@ npm run package        # Package for current platform
 npm run make           # Build distributable installers
 npm run lint           # Run ESLint
 npx tsx src/mcp/server.ts  # Run MCP server standalone
+```
+
+### In the Dev Container
+
+`npm start` does not work (no display). Everything else works:
+
+```bash
+npm test                                # unit + component tests — no display needed
+source .devcontainer/xvfb-start.sh     # start Xvfb on :99 (once per session)
+npx playwright test                     # E2E tests (requires Xvfb running)
+npm run package                         # produces a Linux distributable
 ```
 
 ## Testing
