@@ -10,5 +10,6 @@ app.use(router);
 app.use(i18n);
 app.mount('#app');
 
-// Expose router for MCP ui_navigate tool
-(window as Window & { __vue_router: typeof router }).__vue_router = router;
+// Expose router and i18n for MCP ui_navigate tool and E2E locale switching
+(window as Window & { __vue_router: typeof router; __vue_i18n: typeof i18n }).__vue_router = router;
+(window as Window & { __vue_router: typeof router; __vue_i18n: typeof i18n }).__vue_i18n = i18n;

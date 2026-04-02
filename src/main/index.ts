@@ -5,6 +5,13 @@ import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { startUiServer, stopUiServer } from './ui-server';
 
+// Suppress EPIPE errors (occur when stdout pipe closes, e.g. during E2E tests).
+// Without this, a single console.log to a closed pipe kills the main process.
+process.on('uncaughtException', (err) => {
+  if ((err as NodeJS.ErrnoException).code === 'EPIPE') return;
+  throw err;
+});
+
 if (started) {
   app.quit();
 }
