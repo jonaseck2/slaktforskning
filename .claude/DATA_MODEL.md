@@ -1,58 +1,243 @@
 # Data Model
 
-The schema follows the Genealogical Proof Standard. Core entities:
+## Philosophy
+
+**Source-first, evidence-based genealogy.** Every claim in the database should be traceable to a source. Nothing is blocked without a source — the UI warns on unsourced entities and provides a research audit view — but the data model is designed so citations are natural first-class links, not afterthoughts.
+
+The model is inspired by **GEDCOM-X** conceptually (Relationship instead of Family, clean source separation) but uses **GEDCOM 5.5.1 as the interchange format** on import/export, since that is what every relevant platform speaks.
+
+---
+
+## Core Architecture
 
 ```
-persons ──── person_names (1:many — birth, married, alias, aka)
-         ├── events (1:many — birth, death, baptism, etc.)
-         └── person_family_links (many) ──► families
-                                               ├── partner_a (person)
-                                               ├── partner_b (person)
-                                               └── events (marriage, divorce, etc.)
+EVIDENCE LAYER
+  sources → citations → [assertions — schema present, UI deferred]
 
-sources ──── citations (1:many)
-                 └── linked to events, persons, or families
-                     with confidence (0-3) and verbatim transcription
-
-places (hierarchical, with optional lat/lng)
+CONCLUSION LAYER
+  persons, relationships, events, places
+  (each entity/field = a conclusion, potentially unsourced → warned)
 ```
 
-## Key Design Decisions
+Citations link to any conclusion-layer entity:
+- `citations.person_id` — a source supports something about this person
+- `citations.relationship_id` — a source supports this relationship
+- `citations.event_id` — a source supports this event
+- `citations.place_id` — a source documents this place
 
-- **Multiple names per person** — People change names (marriage, adoption, immigration). Each name has a type and optional date range.
-- **Gender-neutral partnerships** — Families use `partner_a` / `partner_b`, not husband/wife.
-- **Relationship types on child links** — biological, adopted, foster, step, unknown.
-- **Flexible dates** — `date_type` (exact/about/before/after/between/calculated/unknown) + `date_original` preserves what the source actually says.
-- **UUIDs for all IDs** — No auto-increment; safe for merge/sync scenarios.
-- **Confidence on citations** — 0-3 scale matching GEDCOM's QUAY (quality assessment).
+---
 
-## GEDCOM Compatibility
+## Entities
 
-The data model is designed for GEDCOM roundtrip fidelity:
+### persons
+The fundamental unit. Unchanged from v0.1.
 
-| App Entity | GEDCOM 5.5.1 | GEDCOM 7.0 |
-|-----------|-------------|-----------|
-| Person | INDI | INDIVIDUAL_RECORD |
-| PersonName | INDI.NAME | INDIVIDUAL_RECORD.PERSONAL_NAME |
-| Family | FAM | FAMILY_RECORD |
-| PersonFamilyLink | FAM.CHIL + INDI.FAMC | FAMILY_RECORD.CHIL |
-| Event | INDI.BIRT/DEAT/etc, FAM.MARR/etc | EVENT_DETAIL |
-| Place | PLAC | PLACE |
-| Source | SOUR (level 0) | SOURCE_RECORD |
-| Citation | SOUR (inline) | SOURCE_CITATION |
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| sex | TEXT | 'M' \| 'F' \| 'U' |
+| living | INTEGER | boolean — suppresses details in public views |
+| notes | TEXT | |
+| created_at | TEXT | datetime |
+| updated_at | TEXT | datetime |
 
-See the `gedcom` skill in `.claude/skills/gedcom/` for full GEDCOM reference.
+### person_names
+A person can have multiple names over time (birth, married, alias, aka).
 
-## GEDCOM Event Types
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| person_id | TEXT FK | → persons, CASCADE DELETE |
+| given_name | TEXT | |
+| surname | TEXT | |
+| name_type | TEXT | 'birth' \| 'married' \| 'alias' \| 'aka' |
+| date_from | TEXT | ISO date |
+| date_to | TEXT | ISO date |
+| sort_order | INTEGER | 0 = primary name |
 
-The app supports these standard GEDCOM individual events:
-- **Vital:** birth, death, christening, burial, baptism
-- **Legal/civic:** immigration, emigration, naturalization, census
-- **Life milestones:** occupation, residence, education, military service, retirement, graduation
-- **Religious:** confirmation, ordination
-- **Estate:** will, probate
-- **Other:** custom/other
+### relationships
+**Replaces `families` + `person_family_links`.** A relationship is a typed, sourced connection between two persons. This is the GEDCOM-X model — there is no "Family" entity, only relationships between individuals.
 
-Family events: marriage, divorce, census, other.
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| type | TEXT | 'couple' \| 'parent_child' \| 'sibling' \| 'godparent' \| 'other' |
+| person1_id | TEXT FK | → persons, CASCADE DELETE. For couple: partner. For parent_child: **parent**. For sibling: either. |
+| person2_id | TEXT FK | → persons, CASCADE DELETE. For couple: partner. For parent_child: **child**. For sibling: either. |
+| subtype | TEXT | For couple: 'marriage' \| 'civil_union' \| 'cohabitation' \| 'unknown'. For parent_child: 'biological' \| 'adopted' \| 'foster' \| 'step' \| 'unknown'. |
+| notes | TEXT | |
+| created_at | TEXT | datetime |
+| updated_at | TEXT | datetime |
 
-Date qualifiers: exact, about, before, after, between, calculated, unknown — plus `date_original` to preserve source text verbatim (e.g., "abt. 1845", "before Christmas 1900").
+**GEDCOM roundtrip:** On export, each `couple` relationship becomes a FAM record. `parent_child` relationships where person1 is a partner in a couple are emitted as FAM.CHIL. On import, FAM → one `couple` + N `parent_child` rows.
+
+### events
+Events belong to **one or more persons** via `event_participants`. An event can have multiple participants with roles — marriage has two spouses, adoption has a child and a parent, a witness at a baptism is also a participant. Events optionally reference the relationship they are part of.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| event_type | TEXT | See event types below |
+| date_type | TEXT | 'exact' \| 'about' \| 'before' \| 'after' \| 'between' \| 'calculated' \| 'unknown' |
+| date_value | TEXT | ISO date (YYYY-MM-DD) |
+| date_value_end | TEXT | For 'between' only |
+| date_original | TEXT | Verbatim from source, e.g. "Midsommar 1742" |
+| place_id | TEXT FK | → places, SET NULL |
+| description | TEXT | |
+| relationship_id | TEXT FK | → relationships, SET NULL. Optional: links a marriage event to the couple relationship. |
+| created_at | TEXT | datetime |
+| updated_at | TEXT | datetime |
+
+### event_participants
+Junction table linking events to persons with roles.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| event_id | TEXT FK | → events, CASCADE DELETE |
+| person_id | TEXT FK | → persons, CASCADE DELETE |
+| role | TEXT | 'primary' \| 'spouse' \| 'parent' \| 'child' \| 'witness' \| 'godparent' \| 'officiant' \| 'other' |
+| UNIQUE | | (event_id, person_id) |
+
+### places
+Hierarchical places including Swedish-specific types. Places are sourced entities — a farm name recorded in a document needs a citation just like a person's name.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| name | TEXT | Name as recorded in source |
+| normalized_name | TEXT | Standardized name for search/dedup |
+| place_type | TEXT | 'country' \| 'province' \| 'county' \| 'härad' \| 'parish' \| 'farm' \| 'village' \| 'city' \| 'other' |
+| parent_place_id | TEXT FK | → places, SET NULL. Hierarchy: farm → parish → härad → county → country |
+| latitude | REAL | |
+| longitude | REAL | |
+| date_from | TEXT | ISO date — when this name/boundary became valid |
+| date_to | TEXT | ISO date — when this name/boundary ended |
+| notes | TEXT | |
+
+### sources
+A physical or digital document, record, or artifact.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| title | TEXT | |
+| author | TEXT | |
+| publication_info | TEXT | |
+| repository | TEXT | Archive or library holding the source |
+| url | TEXT | |
+| source_type | TEXT | 'vital_record' \| 'census' \| 'church_record' \| 'newspaper' \| 'photograph' \| 'oral_history' \| 'letter' \| 'legal_document' \| 'military_record' \| 'immigration_record' \| 'book' \| 'online_database' \| 'other' |
+| created_at | TEXT | datetime |
+| updated_at | TEXT | datetime |
+
+### citations
+Links a source (at a specific location) to any conclusion-layer entity. A citation can point to a person, a relationship, an event, and/or a place simultaneously — e.g. a household examination record cites the person, their residence event, and the farm.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| source_id | TEXT FK | → sources, CASCADE DELETE |
+| page | TEXT | Page, entry, film number, URL fragment, etc. |
+| date_accessed | TEXT | ISO date |
+| confidence | INTEGER | 0–3 (QUAY: 0=unreliable, 1=questionable, 2=secondary, 3=primary) |
+| transcription | TEXT | Verbatim text from source |
+| notes | TEXT | |
+| event_id | TEXT FK | → events, SET NULL |
+| person_id | TEXT FK | → persons, SET NULL |
+| relationship_id | TEXT FK | → relationships, SET NULL |
+| place_id | TEXT FK | → places, SET NULL |
+| created_at | TEXT | datetime |
+
+### assertions *(schema present, UI deferred)*
+The GPS layer between a citation and a conclusion. Records what a specific citation actually claims, separately from what the researcher has concluded. When assertions conflict across citations, the researcher decides which to accept.
+
+Schema is created at startup (idempotent DDL) but no UI or API functions expose it yet. This future-proofs the schema without blocking current development.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| citation_id | TEXT FK | → citations, CASCADE DELETE |
+| subject_type | TEXT | 'person' \| 'relationship' \| 'event' \| 'place' |
+| subject_id | TEXT | FK to the relevant table |
+| attribute | TEXT | 'birth_date' \| 'name' \| 'residence' \| 'relationship_type' \| 'sex' \| etc. |
+| value | TEXT | The asserted value |
+| value_original | TEXT | Verbatim from source |
+| confidence | INTEGER | 0–3 |
+| is_accepted | INTEGER | 1 = researcher accepts this as basis for conclusion |
+| notes | TEXT | Researcher's analysis |
+| created_at | TEXT | datetime |
+
+---
+
+## Unsourced Indicators
+
+Rather than blocking saves, the app warns on unsourced entities. Citation coverage is computed at query time:
+
+- **Person unsourced:** no citations with `person_id = this person` AND no citations on any event where this person is a participant
+- **Relationship unsourced:** no citations with `relationship_id = this relationship`
+- **Event unsourced:** no citations with `event_id = this event`
+- **Place unsourced:** no citations with `place_id = this place`
+
+A "research audit" view aggregates all unsourced entities in one place.
+
+---
+
+## Entity-Relationship Diagram
+
+```
+persons ──── person_names (many)
+        └─── event_participants (many) ──► events ──── places
+                                               └── relationship_id?
+
+relationships ──── [person1, person2] ──► persons
+              └─── event_participants (via relationship_id on events)
+
+sources ──── citations ──────────────────┬──► events
+                         │               ├──► persons
+                         │               ├──► relationships
+                         └──► assertions └──► places
+```
+
+---
+
+## GEDCOM 5.5.1 Mapping
+
+| App Entity | GEDCOM 5.5.1 | Notes |
+|-----------|-------------|-------|
+| Person | INDI | Direct mapping |
+| PersonName | INDI.NAME | name_type → NAME.TYPE |
+| Relationship (couple) | FAM | Reconstructed on export |
+| Relationship (parent_child) | FAM.CHIL + INDI.FAMC | parent1=HUSB or WIFE, child=CHIL |
+| Event | INDI.BIRT/DEAT/etc, FAM.MARR | event_participants with role='primary' → INDI event; relationship_id present → FAM event |
+| EventParticipant (witness) | INDI.EVEN.WITN | Custom tag — preserved on roundtrip |
+| Place | PLAC | Hierarchical via comma-separated PLAC values |
+| Source | SOUR (level 0) | Direct mapping |
+| Citation | SOUR (inline) | confidence → QUAY, transcription → DATA.TEXT |
+| Assertion | No GEDCOM equivalent | Dropped on export; rebuilt from citations on import |
+
+---
+
+## Event Types
+
+### Person events (individual)
+birth, death, christening, burial, baptism, confirmation, ordination, immigration, emigration, naturalization, census, occupation, residence, education, graduation, military, retirement, will, probate, other
+
+### Multi-person events (via event_participants)
+marriage, divorce, adoption — these attach to 2+ persons with roles
+
+### All events can be sourced
+Every event row can have one or more citations via `citations.event_id`.
+
+---
+
+## Place Hierarchy (Swedish)
+
+```
+Sverige (country)
+  └── Södermanlands län (county / province)
+        └── Rönö härad (härad)
+              └── Björkvik parish (parish)
+                    └── Stensäter (farm)
+```
+
+A farm's `parent_place_id` points to its parish. A person's residence event points to the farm directly. The hierarchy is traversable upward for display and search.
