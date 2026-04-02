@@ -9,8 +9,9 @@ description: Run tests, write new tests, and verify code changes. Use when imple
 
 ### Unit tests (API layer)
 ```bash
-npm test              # Run all unit tests (Vitest)
-npm run test:watch    # Watch mode for active development
+npm test                   # Run all unit + component tests (Vitest)
+npm test -- --coverage     # Run with coverage report (v8, src/api/ only)
+npm run test:watch         # Watch mode for active development
 ```
 
 ### E2E tests (app launch + MCP server)
@@ -22,6 +23,9 @@ npx playwright test   # Run both E2E tests
 ```bash
 npm test && npx playwright test
 ```
+
+### Coverage thresholds
+`vitest.config.mts` enforces **80% lines and functions** on `src/api/`. The build fails if coverage drops below. Current baseline: ~90% statements, 100% lines, 100% functions.
 
 ## Writing Unit Tests
 
@@ -72,10 +76,12 @@ describe('things', () => {
 
 ### What to test for each CRUD function:
 1. **Create** — returns entity with UUID id, fields match input, defaults work
-2. **Get by ID** — returns entity, returns null for missing ID
+2. **Get by ID** — returns entity; **returns null for missing ID** (not undefined — api/ uses `?? null`)
 3. **List** — returns array, respects ordering
 4. **Update** — changes specified fields, leaves others untouched, returns updated entity
-5. **Delete** — returns true on success, false for missing ID, cascades correctly
+5. **Delete** — returns true on success; **returns false for missing ID**; cascades correctly (verify child rows are gone)
+
+Negative cases (null returns, false returns) are easy to skip and frequently missed. Always include them.
 
 ## E2E Tests
 
@@ -100,6 +106,7 @@ E2E tests live in `tests/e2e/` and use Playwright (not browser Playwright — pr
 ## When to Run Tests
 
 - **After changing any `src/api/*.ts` file** → `npm test`
+- **After adding a new API function** → `npm test -- --coverage` to verify thresholds still pass
 - **After changing IPC, preload, or main process** → `npx playwright test`
 - **Before every commit** → `npm test && npx playwright test`
 - **When adding a new feature** → write unit tests for the api/ functions FIRST, then implement

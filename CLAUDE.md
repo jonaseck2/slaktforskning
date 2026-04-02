@@ -310,7 +310,8 @@ NAME_TYPE_VALUES               // birth, married, alias, aka
 
 ```bash
 npm start              # Launch Electron app in dev mode (Vite HMR)
-npm test               # Run unit tests (Vitest, 37 tests)
+npm test               # Run unit tests (Vitest, 68 tests)
+npm test -- --coverage # Run with coverage report (80% threshold on src/api/)
 npx playwright test    # Run E2E tests (app launch + MCP server)
 npm run package        # Package for current platform
 npm run make           # Build distributable installers
