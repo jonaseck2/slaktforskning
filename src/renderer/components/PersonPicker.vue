@@ -62,9 +62,9 @@ watch(
   () => props.modelValue,
   async (id) => {
     if (id && window.api) {
-      const person = (await window.api.persons.get(id)) as PersonResult | null;
-      if (person) {
-        searchQuery.value = `${person.given_name} ${person.surname}`.trim();
+      const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+      if (names.length > 0) {
+        searchQuery.value = `${names[0].given_name} ${names[0].surname}`.trim();
       }
     } else if (!id) {
       searchQuery.value = '';
