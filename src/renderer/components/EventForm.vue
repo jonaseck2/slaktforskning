@@ -29,6 +29,27 @@
           <textarea v-model="form.description" rows="2" :placeholder="$t('events.descriptionPlaceholder')" />
         </label>
 
+        <!-- Optional source — only on create -->
+        <div v-if="!editingEvent" class="source-toggle">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="addSource" />
+            {{ $t('events.addSourceOptional') }}
+          </label>
+        </div>
+        <template v-if="addSource && !editingEvent">
+          <label>
+            {{ $t('citations.source') }}
+            <select v-model="sourceForm.source_id">
+              <option value="" disabled>{{ $t('citations.selectSource') }}</option>
+              <option v-for="src in sources" :key="src.id" :value="src.id">{{ src.title }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('citations.pageLocation') }}
+            <input v-model="sourceForm.page" type="text" :placeholder="$t('citations.pagePlaceholder')" />
+          </label>
+        </template>
+
         <div class="modal-actions">
           <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
           <button type="submit">{{ editingEvent ? $t('common.save') : $t('events.addEventTitle') }}</button>
@@ -39,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DateInput from './DateInput.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
@@ -57,6 +78,11 @@ interface EventData {
   date_original: string;
   place_id: string | null;
   description: string;
+}
+
+interface SourceRow {
+  id: string;
+  title: string;
 }
 
 const props = defineProps<{
@@ -84,6 +110,18 @@ const form = reactive({
   description: props.editingEvent?.description ?? '',
 });
 
+const addSource = ref(false);
+const sources = ref<SourceRow[]>([]);
+const sourceForm = reactive({
+  source_id: '',
+  page: '',
+});
+
+onMounted(async () => {
+  if (!window.api) return;
+  sources.value = (await window.api.sources.list()) as SourceRow[];
+});
+
 async function save() {
   if (!window.api) return;
   try {
@@ -102,13 +140,22 @@ async function save() {
       await window.api.events.update(props.editingEvent.id, data);
     } else {
       const event = (await window.api.events.create(data)) as { id: string };
-      // If this is a person event, add the person as a participant
       if (props.personId && event.id) {
         await window.api.eventParticipants.add({
           event_id: event.id,
           person_id: props.personId,
           role: 'primary',
         });
+      }
+      if (addSource.value && sourceForm.source_id && event.id) {
+        const citData: Record<string, unknown> = {
+          source_id: sourceForm.source_id,
+          page: sourceForm.page,
+          confidence: 2,
+          event_id: event.id,
+        };
+        if (props.personId) citData.person_id = props.personId;
+        await window.api.citations.create(citData);
       }
     }
     emit('saved');
@@ -186,5 +233,21 @@ textarea {
 .btn-cancel {
   background: #e0e0e0;
   color: #333;
+}
+.source-toggle {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+}
+.checkbox-label input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 </style>
