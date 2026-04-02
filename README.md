@@ -66,6 +66,33 @@ By default the database is stored in your OS app data directory. Override with:
 SLAKTFORSKNING_DB=/path/to/my.db npx tsx src/mcp/server.ts
 ```
 
+## Dev Container
+
+A dev container is included for working on the project without a local Node/Electron setup.
+
+```bash
+# Open in VS Code — it will prompt to reopen in container
+code .
+```
+
+**What works in the container:**
+
+```bash
+npm test              # Unit + component tests (no display needed)
+npm run lint
+npm run package       # Builds a Linux distributable
+npx tsx src/mcp/server.ts  # MCP server
+```
+
+**E2E tests** require a virtual display:
+
+```bash
+source .devcontainer/xvfb-start.sh   # start Xvfb on :99
+npx playwright test
+```
+
+`npm start` (the Electron GUI) does not work in a headless container.
+
 ## Building
 
 ```bash

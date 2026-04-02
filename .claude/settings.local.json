@@ -106,7 +106,8 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
       "Bash(git -C /Users/jonasahnstedt/git/slaktforskning merge feature/component-and-e2e-tests)",
       "Bash(mkdir -p .claude/plans)",
-      "Bash(mv docs/superpowers/plans/*.md .claude/plans/)"
+      "Bash(mv docs/superpowers/plans/*.md .claude/plans/)",
+      "Bash(chmod +x /Users/jonasahnstedt/git/slaktforskning/.devcontainer/xvfb-start.sh)"
     ]
   },
   "enableAllProjectMcpServers": true,
