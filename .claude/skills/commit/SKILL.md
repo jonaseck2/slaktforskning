@@ -49,8 +49,9 @@ If the commit completes a milestone (or part of one) that has a plan file in `.c
 
 If the commit **fully completes** a milestone:
 - Move the plan file from `.claude/plans/` to `.claude/plans/archive/`
-- Update the `.claude/PLAN.md` pointer to the archived path
-- Include the move in the same commit
+- Add a one-line "Done (vX.Y.Z — ...)" entry to the **Implementation Status** section in `.claude/PLAN.md`, with a pointer to the archived plan file
+- **Remove the milestone's heading and checkbox list from the Roadmap section** — the Implementation Status entry is the permanent record; the Roadmap must only contain future work
+- Include all of the above in the same commit
 
 If the commit introduces a new plan file:
 - Check that `.claude/PLAN.md` has a matching milestone entry pointing to the plan file
