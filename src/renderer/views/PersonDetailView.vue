@@ -6,6 +6,10 @@
         <h2>{{ primaryName }}</h2>
         <span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
+        <button type="button" class="btn-cite-header" @click="showCitePersonForm = true">{{ $t('personDetail.citePersonTitle') }}</button>
+      </div>
+      <div v-if="evidenceTotal > 0" class="evidence-summary">
+        {{ $t('personDetail.evidenceSummary', { sourced: evidenceSourced, total: evidenceTotal }) }}
       </div>
     </div>
 
@@ -91,6 +95,13 @@
       />
     </section>
 
+    <CitationForm
+      v-if="showCitePersonForm"
+      :person-id="person.id"
+      @close="showCitePersonForm = false"
+      @saved="showCitePersonForm = false"
+    />
+
     <!-- Add Name Modal -->
     <div v-if="showNameForm" class="modal-overlay" @click.self="showNameForm = false">
       <div class="modal">
@@ -128,6 +139,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
+import CitationForm from '../components/CitationForm.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -169,6 +181,9 @@ const rels = ref<RelRow[]>([]);
 const primaryName = ref('');
 const notesText = ref('');
 const showNameForm = ref(false);
+const showCitePersonForm = ref(false);
+const evidenceSourced = ref(0);
+const evidenceTotal = ref(0);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 
 const nameForm = reactive({
@@ -220,6 +235,17 @@ async function load() {
       });
     }
     rels.value = enriched;
+
+    // Evidence summary
+    const evs = (await window.api.events.forPerson(personId)) as Array<{ id: string }>;
+    evidenceTotal.value = evs.length;
+    const counts = await Promise.all(
+      evs.map(async (ev) => {
+        const cits = (await window.api.citations.forEvent(ev.id)) as unknown[];
+        return cits.length > 0 ? 1 : 0;
+      }),
+    );
+    evidenceSourced.value = counts.reduce((a, b) => a + b, 0);
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
   }
@@ -313,6 +339,20 @@ onMounted(load);
   padding: 2px 10px;
   border-radius: 10px;
   font-size: 12px;
+}
+.btn-cite-header {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.evidence-summary {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
 }
 .detail-section {
   margin-bottom: 24px;
