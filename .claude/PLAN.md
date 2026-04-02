@@ -91,7 +91,15 @@ See `.claude/plans/archive/2026-04-02-places.md` for the implementation plan.
 
 ### v0.4.1 — Visualization
 
-- [ ] Family tree visualization (pedigree chart, descendant chart) — uses `relationships` table
+See `.claude/plans/2026-04-03-visualization.md` for the full design and implementation plan.
+
+- [ ] `VisualizationView.vue` — route `/visualisering/:personId`, tab switcher, focal person header
+- [ ] `PedigreeChart.vue` — ancestor tree SVG, 3 generations, click-to-navigate
+- [ ] HourglassChart.vue` — ancestors + descendants SVG, couple connector dots
+- [ ] `TimelineChart.vue` — lifespans on a time axis, auto-scaling X axis
+- [ ] Sidebar reorder — Visualisering moves to top
+- [ ] PersonDetailView — "Visa i träd →" button
+- [ ] i18n strings — sv + en for all new UI text
 
 ### v0.5.0 — GEDCOM Import/Export
 
