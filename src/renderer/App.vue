@@ -20,7 +20,7 @@
       </select>
     </nav>
     <main class="content">
-      <router-view />
+      <router-view :key="$route.fullPath" />
     </main>
   </div>
 </template>
