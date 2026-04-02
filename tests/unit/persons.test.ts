@@ -153,4 +153,8 @@ describe('person identifiers', () => {
     addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: 'R789' });
     expect(() => addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: 'R789' })).toThrow();
   });
+
+  it('returns false for nonexistent id', () => {
+    expect(deletePersonIdentifier(db, 'nonexistent-id')).toBe(false);
+  });
 });

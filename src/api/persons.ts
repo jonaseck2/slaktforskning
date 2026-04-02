@@ -115,13 +115,17 @@ export function getPersonNames(db: Database, personId: string): PersonName[] {
 export function updatePersonName(
   db: Database,
   id: string,
-  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type'>>
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier'>>
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
   if (data.given_name !== undefined) { fields.push('given_name = ?'); values.push(data.given_name); }
   if (data.surname !== undefined) { fields.push('surname = ?'); values.push(data.surname); }
   if (data.name_type !== undefined) { fields.push('name_type = ?'); values.push(data.name_type); }
+  if (data.name_prefix !== undefined) { fields.push('name_prefix = ?'); values.push(data.name_prefix); }
+  if (data.name_suffix !== undefined) { fields.push('name_suffix = ?'); values.push(data.name_suffix); }
+  if (data.patronymic_base !== undefined) { fields.push('patronymic_base = ?'); values.push(data.patronymic_base); }
+  if (data.name_qualifier !== undefined) { fields.push('name_qualifier = ?'); values.push(data.name_qualifier); }
   if (fields.length === 0) return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
   values.push(id);
   db.prepare(`UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`).run(values);
