@@ -10,6 +10,7 @@ import {
   searchPersons,
   addPersonName,
   getPersonNames,
+  updatePersonName,
 } from '../../src/api/persons';
 
 let db: Database.Database;
@@ -87,5 +88,27 @@ describe('persons', () => {
     expect(names[0].name_type).toBe('birth');
     expect(names[1].name_type).toBe('married');
     expect(names[1].sort_order).toBe(1);
+  });
+
+  it('updates a person name', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
+    const nameId = getPersonNames(db, person.id)[0].id;
+    const updated = updatePersonName(db, nameId, { given_name: 'Anne', surname: 'Johansson', name_type: 'alias' });
+    expect(updated).not.toBeNull();
+    expect(updated!.given_name).toBe('Anne');
+    expect(updated!.surname).toBe('Johansson');
+    expect(updated!.name_type).toBe('alias');
+  });
+
+  it('updatePersonName with no fields returns existing name unchanged', () => {
+    const person = createPerson(db, { given_name: 'Erik', surname: 'Karlsson' });
+    const nameId = getPersonNames(db, person.id)[0].id;
+    const result = updatePersonName(db, nameId, {});
+    expect(result!.given_name).toBe('Erik');
+    expect(result!.surname).toBe('Karlsson');
+  });
+
+  it('updatePersonName returns null for nonexistent id', () => {
+    expect(updatePersonName(db, 'nonexistent', { given_name: 'X' })).toBeNull();
   });
 });
