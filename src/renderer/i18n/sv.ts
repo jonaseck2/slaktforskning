@@ -275,4 +275,5 @@ export default {
     },
   },
   sex: { M: 'Man', F: 'Kvinna', U: 'Okänd' },
+  addRelated: { newPerson: 'Ny person', existingPerson: 'Befintlig person', selectPerson: 'Välj person', searchPlaceholder: 'Sök namn\u2026' },
 };
