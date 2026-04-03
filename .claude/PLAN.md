@@ -111,6 +111,17 @@ GEDCOM 5.5.1 parser (`parseGedcom`), date parser (`parseGedcomDate`/`formatGedco
 
 ## Roadmap
 
+### v0.6.5 — Genney Export Profile
+
+See `.claude/plans/2026-04-03-genney-export.md` for the full implementation plan. **Depends on v0.6.2 Genney Import.**
+
+- [ ] `buildSwedishPlaceName(db, placeId)` in `swedishPlace.ts` — walk `parent_place_id` chain to reconstruct "Socken, Härad, Län, Sverige"
+- [ ] `ExportOptions { profile?: 'genney' }` interface; `exportGedcom` accepts it
+- [ ] Genney export extensions: hierarchical PLAC strings, `_UID` from identifiers, `_YHAPLOGROUP`/`_MHAPLOGROUP` extracted from notes
+- [ ] `gedcom:export` IPC + `export_gedcom` MCP gain optional `profile?: 'genney'`
+- [ ] ImportExportView: "Exportera till Genney 4.1" section
+- [ ] Unit tests: roundtrip place chain, `_UID`, haplogroup extraction
+
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
 - [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap
