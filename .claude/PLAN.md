@@ -114,9 +114,23 @@ Investigated and rejected 2026-04-03. Genney 4.1 uses Apache Derby internally an
 
 ## Roadmap
 
-### v0.6.3 — Extended GEDCOM Roundtrip
+### v0.6.3 — Database Switcher
 
-See `.claude/plans/2026-04-03-gedcom-extended.md` for the full implementation plan. **Depends on v0.6.2.**
+See `.claude/plans/2026-04-03-database-switcher.md` for the full implementation plan.
+
+Lets the user create new databases and switch between previously used ones. Prerequisite for GEDCOM import without overwriting the active tree. The active database is remembered across launches.
+
+- [ ] `src/main/settings.ts` — `AppSettings`, `loadSettings`, `saveSettings` (JSON in userData)
+- [ ] `src/main/database.ts` — `switchDatabase`, update `getDatabase` to consult settings
+- [ ] IPC: `db:getCurrent`, `db:getRecent`, `db:createNew`, `db:openExisting`; broadcast `db:switched` to all windows
+- [ ] Preload: `window.api.db.*`
+- [ ] `DatabaseView.vue` at `/database` — current path, recent list, New/Open buttons
+- [ ] `App.vue` — sidebar link above Import/Export; reload on `db:switched`
+- [ ] i18n sv + en
+
+### v0.6.4 — Extended GEDCOM Roundtrip
+
+See `.claude/plans/2026-04-03-gedcom-extended.md` for the full implementation plan. **Depends on v0.6.3 (Database Switcher).**
 
 Makes export → import lossless by using GEDCOM 5.5.1's standard extension mechanisms. No profile flag — the extended output becomes the new default. Other apps ignore the `_`-prefixed custom tags per spec.
 
@@ -133,7 +147,7 @@ Makes export → import lossless by using GEDCOM 5.5.1's standard extension mech
 
 ### v0.7.1 — Assertion GEDCOM Export
 
-**Depends on:** v0.7.0 (Assertions UI) and v0.6.3 (Extended GEDCOM Roundtrip).
+**Depends on:** v0.7.0 (Assertions UI) and v0.6.4 (Extended GEDCOM Roundtrip).
 
 Extends the GEDCOM export with custom `0 @Ax@ _ASSN` top-level records so that
 research conclusions survive a roundtrip. Other apps ignore these records entirely.
