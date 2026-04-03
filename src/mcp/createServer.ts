@@ -456,6 +456,10 @@ export function createMcpServer(db: Database): McpServer {
       date_from: z.string().optional().describe('Date from (ISO format)'),
       date_to: z.string().optional().describe('Date to (ISO format)'),
       notes: z.string().optional().describe('Notes about the place'),
+      street: z.string().optional().describe('Street name and number'),
+      postal_code: z.string().optional().describe('Postal code'),
+      city: z.string().optional().describe('City name'),
+      country: z.string().optional().describe('Country name or ISO code'),
     },
   }, async (args) => {
     const place = createPlace(db, args);
@@ -493,6 +497,10 @@ export function createMcpServer(db: Database): McpServer {
       latitude: z.number().optional().nullable().describe('Latitude coordinate'),
       longitude: z.number().optional().nullable().describe('Longitude coordinate'),
       notes: z.string().optional().describe('Notes about the place'),
+      street: z.string().optional().describe('Street name and number'),
+      postal_code: z.string().optional().describe('Postal code'),
+      city: z.string().optional().describe('City name'),
+      country: z.string().optional().describe('Country name or ISO code'),
     },
   }, async (args) => {
     const { id, ...data } = args;

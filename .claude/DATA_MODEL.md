@@ -130,6 +130,12 @@ Hierarchical places including Swedish-specific types. Places are sourced entitie
 | date_from | TEXT | ISO date — when this name/boundary became valid |
 | date_to | TEXT | ISO date — when this name/boundary ended |
 | notes | TEXT | |
+| street | TEXT | Street name and number, e.g. "Tvärgatan 5" (nullable) |
+| postal_code | TEXT | Postal code, e.g. "35243" (nullable) |
+| city | TEXT | City name (nullable; may differ from `name` when `name` is a street address) |
+| country | TEXT | Country name or ISO code, e.g. "Sverige" (nullable) |
+
+These four address columns align with GEDCOM-X `Address` on `PlaceDescription`. In GEDCOM 5.5.1 they map to `ADDR`/`ADR1` → `street`, `CITY` → `city`, `POST` → `postal_code`, `CTRY` → `country` on the containing event's `PLAC`. `stateOrProvince` and `nonAdminArea` are covered by the hierarchy (`parent_place_id`) and `name`/`place_type` respectively.
 
 ### sources
 A physical or digital document, record, or artifact.

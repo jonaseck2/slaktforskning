@@ -89,21 +89,12 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 ### Done (v0.5.2 — Sourcing & Citation Consistency)
 `CitationBadge` component; `getCitationsForPerson/Relationship/Place` API + IPC + MCP; Cite button + badge in PersonDetailView, RelationshipDetailView, PlaceDetailView headers; badges in PersonsView list. See `.claude/plans/archive/2026-04-03-sourcing-and-citations.md`.
 
+### Done (v0.5.3 — Place Address Fields)
+`street`, `postal_code`, `city`, `country` columns on `places`; `createPlace`/`updatePlace` accept new fields; MCP `add_place`/`update_place` schemas updated; PlaceDetailView Address section; PlacePicker shows postal_code/city subtitle. See `.claude/plans/archive/2026-04-03-place-address.md`.
+
 ---
 
 ## Roadmap
-
-### v0.5.3 — Place Address Fields
-
-See `.claude/plans/2026-04-03-place-address.md` for the full plan.
-
-- [ ] Schema: `street`, `postal_code`, `city`, `country` columns on `places` + idempotent migration guards
-- [ ] Types + API: `createPlace`/`updatePlace` accept new fields
-- [ ] MCP: update `add_place` + `update_place` input schemas
-- [ ] PlaceDetailView: "Adress" section with four inline-edit fields in 2-column grid
-- [ ] PlacePicker: show `postal_code`/`city` subtitle in dropdown for disambiguation
-- [ ] i18n sv/en strings
-- [ ] Unit tests (places) + MCP tests
 
 ### v0.5.4 — Tilltalsnamn (Preferred/Call Name)
 

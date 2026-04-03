@@ -135,17 +135,17 @@ This helps users pick the right place when two places have similar names.
 
 ## Implementation Steps
 
-- [ ] **1. Schema** — add `street`, `postal_code`, `city`, `country` columns to `places` DDL in `schema.ts`; add idempotent migration block
-- [ ] **2. Types** — add four optional fields to `Place` in `src/api/types.ts`
-- [ ] **3. API** — update `createPlace` + `updatePlace` in `src/api/places.ts` to accept and persist new fields
-- [ ] **4. MCP** — add four optional fields to `add_place` + `update_place` input schemas in `createServer.ts`
-- [ ] **5. PlaceDetailView** — add "Adress" section with four `@blur`-saving inputs in the 2-column grid
-- [ ] **6. PlacePicker** — show `postal_code`/`city` as a muted subtitle line in the dropdown when present
-- [ ] **7. i18n** — add sv/en strings for "Adress", "Gata", "Postnummer", "Stad", "Land"
-- [ ] **8. Unit tests** — in `tests/unit/places.test.ts`: create place with address fields; update address fields; verify roundtrip; `searchPlaces` still finds by name
-- [ ] **9. MCP tests** — add `add_place` + `update_place` address field coverage in `tests/unit/mcp.test.ts`
-- [ ] **10. Docs** — update `DATA_MODEL.md` places section, `CLAUDE.md` domain types, `MCP.md` tool input schemas, `PLAN.md`
-- [ ] **11. Skills** — see below
+- [x] **1. Schema** — add `street`, `postal_code`, `city`, `country` columns to `places` DDL in `schema.ts`; add idempotent migration block
+- [x] **2. Types** — add four optional fields to `Place` in `src/api/types.ts`
+- [x] **3. API** — update `createPlace` + `updatePlace` in `src/api/places.ts` to accept and persist new fields
+- [x] **4. MCP** — add four optional fields to `add_place` + `update_place` input schemas in `createServer.ts`
+- [x] **5. PlaceDetailView** — add "Adress" section with four `@blur`-saving inputs in the 2-column grid
+- [x] **6. PlacePicker** — show `postal_code`/`city` as a muted subtitle line in the dropdown when present
+- [x] **7. i18n** — add sv/en strings for "Adress", "Gata", "Postnummer", "Stad", "Land"
+- [x] **8. Unit tests** — in `tests/unit/places.test.ts`: create place with address fields; update address fields; verify roundtrip; `searchPlaces` still finds by name
+- [x] **9. MCP tests** — add `add_place` + `update_place` address field coverage in `tests/unit/mcp.test.ts`
+- [x] **10. Docs** — update `DATA_MODEL.md` places section, `CLAUDE.md` domain types, `MCP.md` tool input schemas, `PLAN.md`
+- [x] **11. Skills** — see below
 
 ---
 

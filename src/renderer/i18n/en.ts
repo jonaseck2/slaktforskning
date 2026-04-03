@@ -300,6 +300,11 @@ export default {
     childPlaces: 'Child places',
     detailsTitle: 'Place Details',
     citeSources: 'Cite',
+    address: 'Address',
+    street: 'Street',
+    postalCode: 'Postal Code',
+    city: 'City',
+    country: 'Country',
   },
   visualization: {
     tab: {

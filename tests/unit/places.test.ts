@@ -22,6 +22,22 @@ describe('createPlace', () => {
     expect(parish.parent_place_id).toBe(country.id);
     expect(parish.place_type).toBe('parish');
   });
+
+  it('stores address fields', () => {
+    const p = createPlace(db, { name: 'Tvärgatan 5', street: 'Tvärgatan 5', postal_code: '35243', city: 'Växjö', country: 'Sverige' });
+    expect(p.street).toBe('Tvärgatan 5');
+    expect(p.postal_code).toBe('35243');
+    expect(p.city).toBe('Växjö');
+    expect(p.country).toBe('Sverige');
+  });
+
+  it('defaults address fields to null when not provided', () => {
+    const p = createPlace(db, { name: 'Björkvik' });
+    expect(p.street).toBeNull();
+    expect(p.postal_code).toBeNull();
+    expect(p.city).toBeNull();
+    expect(p.country).toBeNull();
+  });
 });
 
 describe('getPlace', () => {
@@ -74,6 +90,23 @@ describe('updatePlace', () => {
     const p = createPlace(db, { name: 'Björkvik' });
     const updated = updatePlace(db, p.id, { notes: 'Parish in Södermanland' });
     expect(updated?.notes).toBe('Parish in Södermanland');
+  });
+
+  it('updates address fields', () => {
+    const p = createPlace(db, { name: 'Tvärgatan 5' });
+    const updated = updatePlace(db, p.id, { street: 'Tvärgatan 5', postal_code: '35243', city: 'Växjö', country: 'Sverige' });
+    expect(updated?.street).toBe('Tvärgatan 5');
+    expect(updated?.postal_code).toBe('35243');
+    expect(updated?.city).toBe('Växjö');
+    expect(updated?.country).toBe('Sverige');
+  });
+
+  it('searchPlaces still finds by name after address update', () => {
+    const p = createPlace(db, { name: 'Tvärgatan 5' });
+    updatePlace(db, p.id, { city: 'Växjö' });
+    const results = searchPlaces(db, 'tvärgatan');
+    expect(results).toHaveLength(1);
+    expect(results[0].city).toBe('Växjö');
   });
 });
 

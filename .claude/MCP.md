@@ -69,6 +69,17 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | get_citations_for_place | Get all citations attached to a place |
 | delete_citation | Delete a citation |
 
+### Places
+
+| Tool | Description |
+|------|-------------|
+| add_place | Create a place record (name, place_type, parent_place_id, lat/lon, date_from/to, notes, street, postal_code, city, country) |
+| get_place | Get place by ID |
+| list_places | List all places |
+| search_places | Search places by name |
+| update_place | Update place fields including address fields |
+| delete_place | Delete a place |
+
 ## UI Tools (requires Electron app to be running)
 
 When the Electron app is running, it starts a local HTTP server on port 19241 (override with `SLAKTFORSKNING_UI_PORT`). The MCP server's UI tools call this HTTP bridge to observe and control the live app window.
