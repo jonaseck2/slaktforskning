@@ -336,4 +336,8 @@ export default {
     city: 'City',
     other: 'Other',
   },
+  gedcom: {
+    import: 'Import GEDCOM',
+    export: 'Export GEDCOM',
+  },
 };

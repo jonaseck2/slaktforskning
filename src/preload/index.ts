@@ -56,6 +56,10 @@ const api = {
     forPlace: (placeId: string) => ipcRenderer.invoke('citations:forPlace', placeId),
     delete: (id: string) => ipcRenderer.invoke('citations:delete', id),
   },
+  gedcom: {
+    import: () => ipcRenderer.invoke('gedcom:import'),
+    export: () => ipcRenderer.invoke('gedcom:export'),
+  },
   places: {
     create: (data: unknown) => ipcRenderer.invoke('places:create', data),
     get: (id: string) => ipcRenderer.invoke('places:get', id),

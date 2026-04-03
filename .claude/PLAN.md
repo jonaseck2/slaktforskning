@@ -98,6 +98,9 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 ### Done (v0.5.5 — Search Across All Name Records)
 `searchPersons` searches all `person_names` rows via EXISTS subquery — finds by married surname or preferred_name on any name record, not just the primary. See `.claude/plans/archive/2026-04-03-name-search.md`.
 
+### Done (v0.6.0 — GEDCOM Import/Export)
+GEDCOM 5.5.1 parser (`parseGedcom`), date parser (`parseGedcomDate`/`formatGedcomDate`), importer (INDI/FAM/SOUR → api/ calls, places via `findOrCreatePlace`), exporter (INDI/FAM/HUSB/WIFE/CHIL/events/sources/citations), IPC (`gedcom:import`/`gedcom:export` with Electron file dialogs), MCP tools (`import_gedcom`, `export_gedcom`), Import/Export buttons on PersonsView. 31 unit tests. See `.claude/plans/archive/2026-04-03-gedcom.md`.
+
 ### Done (v0.5.6 — PersonName Component & Consistent Underline)
 `PersonName.vue` shared component + `nameUtils.ts` utility extract the tilltalsnamn underline into one place. All name-rendering sites updated: RelationshipsView, SearchView, VisualizationView header, PersonPicker dropdown, and all three SVG charts (PedigreeChart, HourglassChart, TimelineChart via `<tspan text-decoration>`). Duplicate `givenNameParts()` functions and CSS removed from PersonsView and PersonDetailView. See `.claude/plans/archive/2026-04-03-person-name-component.md`.
 
@@ -105,18 +108,6 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 
 ## Roadmap
 
-### v0.6.0 — GEDCOM Import/Export
-
-See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Depends on v0.4.0 Places** (`findOrCreatePlace` used for PLAC tags on import).
-
-- [ ] `src/gedcom/parser.ts` — line-by-line parser → `GedcomNode` tree; handles CONT/CONC
-- [ ] `src/gedcom/date.ts` — GEDCOM date strings → `{ date_type, date_value, date_value_end, date_original }`
-- [ ] `src/gedcom/importer.ts` — INDI/FAM/SOUR → api/ calls; places via `findOrCreatePlace`; drops REPO, SUBM, OBJE, LDS ordinances
-- [ ] `src/gedcom/exporter.ts` — DB → `.ged` string; INDI/FAM/MARR/DIV/places/sources/citations
-- [ ] IPC: `gedcom:import` (file dialog → parse → import) + `gedcom:export` (generate → save dialog)
-- [ ] MCP tools: `import_gedcom(file_path)`, `export_gedcom(file_path?)`
-- [ ] Import/Export buttons on PersonsView
-- [ ] **What is dropped on import:** REPO as entity (text only), SUBM, OBJE/multimedia, ASSO, LDS ordinances, `_` custom tags
 
 ### v0.6.1 — Tree Sanity Checks (Data Quality)
 
