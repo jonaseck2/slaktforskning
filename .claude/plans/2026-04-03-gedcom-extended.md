@@ -25,6 +25,7 @@ These are valid GEDCOM 5.5.1 that every compliant reader supports:
 
 | Feature | Tag structure | Preserves |
 |---------|--------------|-----------|
+| Preferred / call name | `2 NICK <name>` under NAME | `person_names.preferred_name` — `NICK` is the most widely supported GEDCOM encoding for call name. Semantics are imprecise (NICK conflates nickname and call name) but this is standard practice across all major genealogy apps. |
 | Coordinates on place | `3 MAP` / `4 LATI N57.7` / `4 LONG E12.0` | `places.latitude`, `places.longitude` |
 | Address on place | `3 ADDR` / `4 ADR1` / `4 POST` / `4 CITY` / `4 CTRY` | `places.street/postal_code/city/country` |
 | Parent-child subtype | `2 PEDI biological` on CHIL in FAM | `relationship.subtype` (biological/adopted/foster/step) |
@@ -42,7 +43,6 @@ Ignored by other apps, round-tripped by ours:
 | Tag | Location | Level | Preserves |
 |-----|----------|-------|-----------|
 | `_LIVING` | INDI | 1 | `persons.living` (written only when `true`) |
-| `_PREF` | NAME | 2 | `person_names.preferred_name` |
 | `_PATR` | NAME | 2 | `person_names.patronymic_base` |
 | `_NQUAL` | NAME | 2 | `person_names.name_qualifier` |
 | `_DATE_FROM` | NAME | 2 | `person_names.date_from` |
@@ -51,7 +51,7 @@ Ignored by other apps, round-tripped by ours:
 | `_ANID` | INDI | 1 | identifier_type: `ancestry` |
 | `_RAID` | INDI | 1 | identifier_type: `riksarkivet` |
 | `_PNUMMER` | INDI | 1 | identifier_type: `personnummer` |
-| `_SUBTYPE` | FAM | 1 | `relationships.subtype` for couple (civil_union/cohabitation/unknown) |
+| `_SUBTYPE` | FAM | 1 | `relationships.subtype` for couple (civil_union/cohabitation/unmarried/unknown) |
 | `_RELNOTES` | FAM | 1 | `relationships.notes` |
 | `_PTYPE` | PLAC | 3 | `places.place_type` |
 | `_PNOTES` | PLAC | 3 | `places.notes` |
@@ -161,7 +161,7 @@ All changes to the exporter are unconditional — no new options parameter neede
 
 Order of additions:
 1. `_LIVING` on INDI
-2. `_PREF`, `_PATR`, `_NQUAL`, `_DATE_FROM`, `_DATE_TO` on NAME records
+2. `NICK` (preferred_name), `_PATR`, `_NQUAL`, `_DATE_FROM`, `_DATE_TO` on NAME records
 3. `_FSI`, `_ANID`, `_RAID`, `_PNUMMER` from person_identifiers
 4. ASSO blocks for non-primary event participants and sibling/godparent/other rels
 5. `SOUR` blocks directly on INDI (person-level citations)
@@ -183,7 +183,7 @@ Each reader must be:
 
 Key additions:
 - `_LIVING` → set `persons.living = true`
-- `_PREF`, `_PATR`, `_NQUAL`, `_DATE_FROM`, `_DATE_TO` on NAME → pass to `addPersonName`
+- `NICK` on NAME → `preferred_name`; `_PATR`, `_NQUAL`, `_DATE_FROM`, `_DATE_TO` on NAME → pass to `addPersonName`
 - `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` → `addPersonIdentifier` with correct type
 - ASSO with `_EVID` → post-pass: link to event as non-primary participant
 - ASSO with `RELA Sibling`/`RELA Godparent`/`RELA Other` → post-pass: `createRelationship` (deduplicated)
@@ -204,7 +204,7 @@ Key additions:
 
 Add roundtrip tests for each new field:
 - `living: true` → survives roundtrip
-- `preferred_name` → survives roundtrip
+- `preferred_name` → survives roundtrip via `NICK` (readable by all standard GEDCOM apps)
 - `patronymic_base` → survives roundtrip (without needing Genney profile)
 - `date_from`/`date_to` on name → survive
 - `familysearch` identifier → survives
