@@ -136,6 +136,15 @@ Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3
 
 ## Roadmap
 
+### v0.6.6 — Collapsible Visualisation Nodes
+Interactive expand/collapse buttons on hourglass and pedigree chart nodes.
+See `.claude/plans/2026-04-03-collapsible-viz.md`.
+
+- [ ] `CollapseButton` type + pruning logic in `chartLayout.ts`
+- [ ] Unit tests for collapse pruning and button placement
+- [ ] SVG chevron buttons in HourglassChart.vue and PedigreeChart.vue
+- [ ] Hourglass default-collapsed state for distant branches
+
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
 - [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap
