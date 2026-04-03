@@ -182,7 +182,8 @@
       "Bash(pdftotext \"/Users/jonasahnstedt/.claude/projects/-Users-jonasahnstedt-git-slaktforskning/ae3b0ff9-5a7e-4db5-8341-b17133fb59eb/tool-results/webfetch-1775222227078-d25u1r.pdf\" -)",
       "Read(//Users/jonasahnstedt/git/slaktforskning/**)",
       "WebFetch(domain:notiser.xn--trby-loa.se)",
-      "WebFetch(domain:www.webtrees.net)"
+      "WebFetch(domain:www.webtrees.net)",
+      "Edit(/.claude/skills/commit/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
