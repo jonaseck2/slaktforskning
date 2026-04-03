@@ -7,6 +7,9 @@
     </div>
 
     <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('places.detailsTitle') }}</h4>
+      </div>
       <div class="field-grid">
         <label>{{ $t('places.name') }}
           <input v-model="editName" type="text" @blur="save({ name: editName })" />
@@ -19,7 +22,7 @@
             </option>
           </select>
         </label>
-        <label>{{ $t('places.parentPlace') }}
+        <label class="full-width">{{ $t('places.parentPlace') }}
           <PlacePicker v-model="editParentId" @update:model-value="save({ parent_place_id: $event })" />
         </label>
         <label>{{ $t('places.latitude') }}
@@ -104,7 +107,10 @@ onMounted(load);
 .type-badge { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
 .detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
 .detail-section h4 { margin: 0 0 8px; font-size: 15px; }
-.field-grid { display: flex; flex-direction: column; gap: 12px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.section-header h4 { margin: 0; font-size: 15px; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.full-width { grid-column: 1 / -1; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #555; }
 input[type='text'], input[type='number'], select, textarea {
   padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit;

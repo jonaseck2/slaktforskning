@@ -57,6 +57,10 @@ export default {
     coupleSubtype: 'Relationship Type',
     addAndLink: 'Create and Link',
     evidenceSummary: '{sourced} of {total} events sourced',
+    detailsTitle: 'Person Details',
+    statusLabel: 'Status',
+    statusLiving: 'Living',
+    statusDeceased: 'Deceased',
   },
   relationships: {
     title: 'Relationships',
@@ -290,6 +294,7 @@ export default {
     latitude: 'Latitude',
     longitude: 'Longitude',
     childPlaces: 'Child places',
+    detailsTitle: 'Place Details',
   },
   placeTypes: {
     country: 'Country',

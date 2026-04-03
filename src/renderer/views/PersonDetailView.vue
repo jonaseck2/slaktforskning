@@ -4,15 +4,6 @@
       <button class="btn-back" @click="$router.push('/')">{{ $t('personDetail.back') }}</button>
       <div class="header-info">
         <h2>{{ primaryName }}</h2>
-        <select
-          :class="'sex-select sex-' + person.sex"
-          :value="person.sex"
-          @change="updateSex(($event.target as HTMLSelectElement).value)"
-        >
-          <option value="M">{{ $t('sex.M') }}</option>
-          <option value="F">{{ $t('sex.F') }}</option>
-          <option value="U">{{ $t('sex.U') }}</option>
-        </select>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
         <button type="button" class="btn-cite-header" @click="showCitePersonForm = true">{{ $t('personDetail.citePersonTitle') }}</button>
       </div>
@@ -20,6 +11,34 @@
         {{ $t('personDetail.evidenceSummary', { sourced: evidenceSourced, total: evidenceTotal }) }}
       </div>
     </div>
+
+    <!-- Person Details -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('personDetail.detailsTitle') }}</h4>
+      </div>
+      <div class="field-grid">
+        <label>
+          {{ $t('persons.sex') }}
+          <select
+            :class="'sex-select sex-' + editSex"
+            v-model="editSex"
+            @change="updateSex(editSex)"
+          >
+            <option value="M">{{ $t('sex.M') }}</option>
+            <option value="F">{{ $t('sex.F') }}</option>
+            <option value="U">{{ $t('sex.U') }}</option>
+          </select>
+        </label>
+        <label>
+          {{ $t('personDetail.statusLabel') }}
+          <select v-model="editLiving" @change="updateLiving(editLiving)">
+            <option :value="1">{{ $t('personDetail.statusLiving') }}</option>
+            <option :value="0">{{ $t('personDetail.statusDeceased') }}</option>
+          </select>
+        </label>
+      </div>
+    </section>
 
     <!-- Names Section -->
     <section class="detail-section">
@@ -347,6 +366,8 @@ const editingNameId = ref<string | null>(null);
 const showCitePersonForm = ref(false);
 const showAddRelated = ref(false);
 const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
+const editSex = ref('U');
+const editLiving = ref(1);
 const evidenceSourced = ref(0);
 const evidenceTotal = ref(0);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
@@ -394,6 +415,8 @@ async function load() {
     person.value = (await window.api.persons.get(personId)) as PersonData | null;
     if (!person.value) return;
     notesText.value = person.value.notes || '';
+    editSex.value = person.value.sex;
+    editLiving.value = person.value.living;
 
     names.value = (await window.api.persons.getNames(personId)) as NameRow[];
     if (names.value.length > 0) {
@@ -556,6 +579,12 @@ async function updateSex(sex: string) {
   person.value.sex = sex;
 }
 
+async function updateLiving(living: number) {
+  if (!window.api || !person.value) return;
+  await window.api.persons.update(personId, { living });
+  person.value.living = living;
+}
+
 async function saveNotes() {
   if (!window.api || !person.value) return;
   if (notesText.value === (person.value.notes || '')) return;
@@ -671,6 +700,26 @@ onMounted(load);
 .section-header h4 {
   margin: 0;
   font-size: 15px;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+.field-grid select {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
 }
 .btn-add {
   background: #2c3e50;
