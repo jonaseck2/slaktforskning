@@ -1,11 +1,14 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from './parser';
+import type { Place } from '../api/types';
 import { parseGedcomDate } from './date';
 import { createPerson, addPersonName, addPersonIdentifier } from '../api/persons';
 import { createRelationship, addEventParticipant } from '../api/relationships';
 import { createEvent } from '../api/events';
 import { createSource, createCitation } from '../api/sources';
 import { findOrCreatePlace } from '../api/places';
+import { findOrCreateSwedishPlace } from './swedishPlace';
+import { extractPatronymic } from './swedishNames';
 
 const PERSON_EVENT_TAGS: Record<string, string> = {
   BIRT: 'birth', DEAT: 'death', CHR: 'christening', BURI: 'burial',
@@ -33,14 +36,15 @@ function importEventNode(
   evNode: GedcomNode,
   appType: string,
   sourceMap: Map<string, string>,
-  opts: { relationship_id?: string | null }
+  opts: { relationship_id?: string | null },
+  resolvePlaceFn: (db: Database, name: string) => Place
 ) {
   const dateNode = getChild(evNode, 'DATE');
   const placeName = getChild(evNode, 'PLAC')?.value;
   const parsed = dateNode
     ? parseGedcomDate(dateNode.value)
     : { date_type: 'unknown' as const, date_value: null, date_value_end: null, date_original: '' };
-  const place = placeName ? findOrCreatePlace(db, placeName) : null;
+  const place = placeName ? resolvePlaceFn(db, placeName) : null;
   const noteValue = getChild(evNode, 'NOTE')?.value ?? '';
 
   const event = createEvent(db, {
@@ -75,7 +79,16 @@ function importEventNode(
   return event;
 }
 
-export function importGedcom(db: Database, tree: GedcomNode[]): void {
+export interface ImportOptions {
+  /** Import profile. 'genney' enables Genney 4.1-specific extensions:
+   *  Swedish hierarchical places, patronymic detection, _UID/_YHAPLOGROUP/_MHAPLOGROUP tags. */
+  profile?: 'genney';
+}
+
+export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
+  const isGenney = options?.profile === 'genney';
+  const resolvePlaceFn = isGenney ? findOrCreateSwedishPlace : findOrCreatePlace;
+
   // Phase 1: SOUR records
   const sourceMap = new Map<string, string>(); // xref → app source id
   for (const node of tree) {
@@ -95,7 +108,16 @@ export function importGedcom(db: Database, tree: GedcomNode[]): void {
     if (node.tag !== 'INDI' || !node.xref) continue;
 
     const sex = (getChild(node, 'SEX')?.value ?? 'U') as 'M' | 'F' | 'U';
-    const notes = getChild(node, 'NOTE')?.value ?? '';
+    let notes = getChild(node, 'NOTE')?.value ?? '';
+
+    // Genney 4.1: haplogroup tags → append to notes
+    if (isGenney) {
+      const yHaplo = getChild(node, '_YHAPLOGROUP')?.value;
+      const mHaplo = getChild(node, '_MHAPLOGROUP')?.value;
+      if (yHaplo) notes = notes ? `${notes}\nY-DNA: ${yHaplo}` : `Y-DNA: ${yHaplo}`;
+      if (mHaplo) notes = notes ? `${notes}\nmtDNA: ${mHaplo}` : `mtDNA: ${mHaplo}`;
+    }
+
     const person = createPerson(db, { sex, notes: notes || undefined });
     personMap.set(node.xref, person.id);
 
@@ -111,26 +133,37 @@ export function importGedcom(db: Database, tree: GedcomNode[]): void {
       const suffix = getChild(nameNode, 'NSFX')?.value ?? null;
       const rawType = getChild(nameNode, 'TYPE')?.value?.toUpperCase();
       const name_type = rawType === 'MARRIED' ? 'married' : rawType === 'AKA' ? 'aka' : rawType === 'ALIAS' ? 'alias' : 'birth';
+
+      // Genney 4.1: detect patronymic surnames
+      const patronymic_base = isGenney && surname ? extractPatronymic(surname) : null;
+
       addPersonName(db, person.id, {
         given_name: given,
         surname,
         name_prefix: prefix,
         name_suffix: suffix,
         name_type: name_type as 'birth' | 'married' | 'alias' | 'aka',
+        patronymic_base,
       });
     }
 
-    // External identifiers
+    // External identifiers: REFN, RIN (base GEDCOM)
     for (const refn of getChildren(node, 'REFN')) {
       if (refn.value) addPersonIdentifier(db, person.id, { identifier_type: 'refn', identifier_value: refn.value });
     }
     const rin = getChild(node, 'RIN');
     if (rin?.value) addPersonIdentifier(db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
 
+    // Genney 4.1: _UID → person_identifiers
+    if (isGenney) {
+      const uid = getChild(node, '_UID');
+      if (uid?.value) addPersonIdentifier(db, person.id, { identifier_type: 'other', identifier_value: `Genney UID: ${uid.value}` });
+    }
+
     // Person events
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = importEventNode(db, evNode, appType, sourceMap, {});
+        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn);
         addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
       }
     }
@@ -155,7 +188,7 @@ export function importGedcom(db: Database, tree: GedcomNode[]): void {
     // Family events
     for (const [gedTag, appType] of Object.entries(FAMILY_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id });
+        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn);
       }
     }
 

@@ -7,6 +7,7 @@ import * as events from '../api/events';
 import * as sources from '../api/sources';
 import * as places from '../api/places';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
+import type { ImportOptions } from '../gedcom/importer';
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -98,7 +99,8 @@ export function registerIpcHandlers(): void {
   wrapHandler('places:findOrCreate', (name) => places.findOrCreatePlace(db, name as string));
 
   // GEDCOM
-  wrapHandler('gedcom:import', async () => {
+  wrapHandler('gedcom:import', async (opts) => {
+    const options = opts as ImportOptions | undefined;
     const result = await dialog.showOpenDialog({
       title: 'Import GEDCOM File',
       filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom'] }],
@@ -107,7 +109,7 @@ export function registerIpcHandlers(): void {
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     const text = fs.readFileSync(result.filePaths[0], 'utf-8');
     const tree = parseGedcom(text);
-    importGedcom(getDatabase(), tree);
+    importGedcom(getDatabase(), tree, options);
     return { imported: true, filePath: result.filePaths[0] };
   });
 

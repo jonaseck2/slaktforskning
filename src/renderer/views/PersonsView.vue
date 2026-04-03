@@ -3,6 +3,7 @@
     <div class="header">
       <h2>{{ $t('persons.title') }}</h2>
       <div class="header-actions">
+        <button class="btn-secondary" @click="showGenneyModal = true">{{ $t('gedcom.importFromGenney') }}</button>
         <button class="btn-secondary" @click="handleImportGedcom">{{ $t('gedcom.import') }}</button>
         <button class="btn-secondary" @click="handleExportGedcom">{{ $t('gedcom.export') }}</button>
         <button @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
@@ -41,6 +42,18 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Genney Import Modal -->
+    <div v-if="showGenneyModal" class="modal-overlay" @click.self="showGenneyModal = false">
+      <div class="modal">
+        <h3>{{ $t('gedcom.genneyModalTitle') }}</h3>
+        <p class="genney-instructions">{{ $t('gedcom.genneyInstructions') }}</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" @click="showGenneyModal = false">{{ $t('common.cancel') }}</button>
+          <button type="button" @click="handleImportFromGenney">{{ $t('gedcom.genneyPickFile') }}</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Add Person Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
@@ -111,6 +124,7 @@ const router = useRouter();
 const persons = ref<PersonRow[]>([]);
 const personCitationCounts = ref<Record<string, number>>({});
 const showAddForm = ref(false);
+const showGenneyModal = ref(false);
 const form = reactive({
   given_name: '',
   surname: '',
@@ -118,6 +132,13 @@ const form = reactive({
   living: true,
   notes: '',
 });
+
+async function handleImportFromGenney() {
+  if (!window.api) return;
+  showGenneyModal.value = false;
+  const result = (await window.api.gedcom.import({ profile: 'genney' })) as { imported?: boolean; canceled?: boolean };
+  if (result.imported) await load();
+}
 
 async function handleImportGedcom() {
   if (!window.api) return;
@@ -291,6 +312,12 @@ button:hover {
 }
 .modal h3 {
   margin: 0 0 16px;
+}
+.genney-instructions {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 20px;
+  line-height: 1.5;
 }
 form {
   display: flex;

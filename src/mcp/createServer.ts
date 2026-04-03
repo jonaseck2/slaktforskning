@@ -8,6 +8,7 @@ import * as events from '../api/events';
 import * as sources from '../api/sources';
 import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace } from '../api/places';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
+import type { ImportOptions } from '../gedcom/importer';
 
 export function createMcpServer(db: Database): McpServer {
   const server = new McpServer({
@@ -521,16 +522,18 @@ export function createMcpServer(db: Database): McpServer {
 
   // GEDCOM tools
   server.registerTool('import_gedcom', {
-    description: 'Import a GEDCOM 5.5.1 file from disk into the database',
+    description: 'Import a GEDCOM 5.5.1 file from disk into the database. Use profile "genney" for Genney 4.1 exports to enable Swedish hierarchical places, patronymic detection, and Genney custom tags.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to the .ged file to import'),
+      profile: z.enum(['genney']).optional().describe('Import profile. "genney" enables Genney 4.1 extensions: Swedish hierarchical places, patronymic detection, _UID/_YHAPLOGROUP/_MHAPLOGROUP tags.'),
     },
   }, async (args) => {
     const fs = await import('fs');
     const text = fs.readFileSync(args.file_path, 'utf-8');
     const tree = parseGedcom(text);
-    importGedcom(db, tree);
-    return { content: [{ type: 'text', text: JSON.stringify({ imported: true, file_path: args.file_path }) }] };
+    const options: ImportOptions = args.profile ? { profile: args.profile } : {};
+    importGedcom(db, tree, options);
+    return { content: [{ type: 'text', text: JSON.stringify({ imported: true, file_path: args.file_path, profile: args.profile ?? null }) }] };
   });
 
   server.registerTool('export_gedcom', {

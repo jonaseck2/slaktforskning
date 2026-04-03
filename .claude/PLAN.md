@@ -101,28 +101,15 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 ### Done (v0.6.0 — GEDCOM Import/Export)
 GEDCOM 5.5.1 parser (`parseGedcom`), date parser (`parseGedcomDate`/`formatGedcomDate`), importer (INDI/FAM/SOUR → api/ calls, places via `findOrCreatePlace`), exporter (INDI/FAM/HUSB/WIFE/CHIL/events/sources/citations), IPC (`gedcom:import`/`gedcom:export` with Electron file dialogs), MCP tools (`import_gedcom`, `export_gedcom`), Import/Export buttons on PersonsView. 31 unit tests. See `.claude/plans/archive/2026-04-03-gedcom.md`.
 
+### Done (v0.6.2 — Genney Import Profile)
+`swedishPlace.ts` (hierarchical Swedish place parser), `swedishNames.ts` (patronymic detector), `importer.ts` extended with `profile: 'genney'` option: `_UID`/`_YHAPLOGROUP`/`_MHAPLOGROUP` tags, patronymic detection, Swedish place hierarchy. `gedcom:import` IPC + `import_gedcom` MCP gain optional `profile` param. "Importera från Genney" button + modal in PersonsView. 231 unit tests. See `.claude/plans/archive/2026-04-03-genney-import.md`.
+
 ### Done (v0.5.6 — PersonName Component & Consistent Underline)
 `PersonName.vue` shared component + `nameUtils.ts` utility extract the tilltalsnamn underline into one place. All name-rendering sites updated: RelationshipsView, SearchView, VisualizationView header, PersonPicker dropdown, and all three SVG charts (PedigreeChart, HourglassChart, TimelineChart via `<tspan text-decoration>`). Duplicate `givenNameParts()` functions and CSS removed from PersonsView and PersonDetailView. See `.claude/plans/archive/2026-04-03-person-name-component.md`.
 
 ---
 
 ## Roadmap
-
-
-### v0.6.2 — Genney Import Profile (Swedish GEDCOM)
-
-See `.claude/plans/2026-04-03-genney-import.md` for the full implementation plan. **Depends on v0.6.0 GEDCOM Import.**
-
-[Genney](https://genny.se) is the leading Swedish genealogy desktop application. Its export format is GEDCOM 5.5.1, so this milestone is an additive profile layer on top of the base GEDCOM importer — not a separate importer.
-
-- [ ] `src/gedcom/swedishPlace.ts` — hierarchical Swedish place parser; "Socken, Härad, Län, Sverige" → chain of `Place` records with `parent_place_id`
-- [ ] `src/gedcom/swedishNames.ts` — patronymic detector; "Johansson" → `patronymic_base: "Johan"`, "Persdotter" → `"Per"`, hereditary surnames → null
-- [ ] Extend `src/gedcom/importer.ts` — Genney custom tags: `_UID`/`REFN`/`RIN` → `person_identifiers`; `_YHAPLOGROUP`/`_MHAPLOGROUP` → `persons.notes`; name type mapping (`BIRTH`/`MARRIED`/`AKA`)
-- [ ] Unit tests: `swedishPlace.test.ts`, `swedishNames.test.ts`, Genney-tagged INDI fixtures in `gedcom.test.ts`
-- [ ] IPC `gedcom:import` gains optional `profile: 'genney'` flag routing through Swedish extensions
-- [ ] MCP `import_gedcom` gains optional `profile?: 'genney'` parameter
-- [ ] "Importera från Genney" button in PersonsView — modal with step-by-step Genney export instructions + file picker
-- [ ] **What is dropped:** Genney XML format (schema undocumented), media/OBJE, DNA match data (haplogroup stored in notes only)
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
