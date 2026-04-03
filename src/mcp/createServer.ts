@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { Database } from 'node-sqlite3-wasm';
+import { initializeSchema } from '../api/schema';
 import * as persons from '../api/persons';
 import { addPersonIdentifier, getPersonIdentifiers, deletePersonIdentifier } from '../api/persons';
 import * as relationships from '../api/relationships';
@@ -10,7 +11,9 @@ import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePla
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 
-export function createMcpServer(db: Database): McpServer {
+export function createMcpServer(initialDb: Database, initialDbPath?: string): McpServer {
+  let db = initialDb;
+  let currentDbPath = initialDbPath ?? 'unknown';
   const server = new McpServer({
     name: 'slaktforskning',
     version: '0.3.1',
@@ -549,6 +552,35 @@ export function createMcpServer(db: Database): McpServer {
       return { content: [{ type: 'text', text: JSON.stringify({ exported: true, file_path: args.file_path }) }] };
     }
     return { content: [{ type: 'text', text: gedText }] };
+  });
+
+  // Database tools
+  // Database tools
+  server.registerTool('get_current_database', {
+    description: 'Get the path of the currently open database file.',
+  }, async () => {
+    const nodePath = await import('node:path');
+    return { content: [{ type: 'text', text: JSON.stringify({ path: currentDbPath, name: nodePath.default.basename(currentDbPath) }, null, 2) }] };
+  });
+
+  server.registerTool('switch_database', {
+    description: 'Close the current database and open a different one. Creates the file if it does not exist. All subsequent tool calls will operate on the new database.',
+    inputSchema: {
+      path: z.string().describe('Absolute path to the SQLite database file to open'),
+    },
+  }, async (args) => {
+    const fs = await import('node:fs');
+    const nodePath = await import('node:path');
+    fs.mkdirSync(nodePath.default.dirname(args.path), { recursive: true });
+    const lockPath = args.path + '.lock';
+    if (fs.existsSync(lockPath) && fs.statSync(lockPath).isDirectory()) {
+      fs.rmSync(lockPath, { recursive: true });
+    }
+    db.close();
+    db = new Database(args.path);
+    initializeSchema(db);
+    currentDbPath = args.path;
+    return { content: [{ type: 'text', text: JSON.stringify({ switched: true, path: args.path, name: nodePath.default.basename(args.path) }, null, 2) }] };
   });
 
   return server;

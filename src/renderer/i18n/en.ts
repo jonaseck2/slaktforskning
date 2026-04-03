@@ -345,6 +345,16 @@ export default {
     genneyModalTitle: 'Import from Genney 4.1',
     genneyPickFile: 'Choose .ged file\u2026',
   },
+  database: {
+    nav: 'Database',
+    title: 'Database',
+    current: 'Active database',
+    recent: 'Recently used',
+    noRecent: 'No previous databases.',
+    createNew: 'New database\u2026',
+    openOther: 'Open other\u2026',
+    switchedTo: 'Opened: {name}',
+  },
   importExport: {
     title: 'Import / Export',
     genneyTitle: 'Import from Genney 4.1',

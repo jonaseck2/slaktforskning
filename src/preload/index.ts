@@ -60,6 +60,14 @@ const api = {
     import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
     export: () => ipcRenderer.invoke('gedcom:export'),
   },
+  db: {
+    getCurrent: () => ipcRenderer.invoke('db:getCurrent'),
+    getRecent: () => ipcRenderer.invoke('db:getRecent'),
+    createNew: () => ipcRenderer.invoke('db:createNew'),
+    openExisting: () => ipcRenderer.invoke('db:openExisting'),
+    switchTo: (dbPath: string) => ipcRenderer.invoke('db:switchTo', dbPath),
+    onSwitched: (cb: () => void) => ipcRenderer.on('db:switched', cb),
+  },
   places: {
     create: (data: unknown) => ipcRenderer.invoke('places:create', data),
     get: (id: string) => ipcRenderer.invoke('places:get', id),

@@ -20,7 +20,7 @@ async function main() {
   const db = new Database(dbPath);
   initializeSchema(db);
 
-  const server = createMcpServer(db);
+  const server = createMcpServer(db, dbPath);
 
   // UI tools — require the Electron app to be running
   const UI_PORT = process.env.SLAKTFORSKNING_UI_PORT

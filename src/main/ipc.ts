@@ -1,6 +1,8 @@
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog, BrowserWindow } from 'electron';
 import * as fs from 'fs';
-import { getDatabase } from './database';
+import * as path from 'path';
+import { getDatabase, getCurrentDatabasePath, switchDatabase } from './database';
+import { loadSettings } from './settings';
 import * as persons from '../api/persons';
 import * as relationships from '../api/relationships';
 import * as events from '../api/events';
@@ -111,6 +113,47 @@ export function registerIpcHandlers(): void {
     const tree = parseGedcom(text);
     importGedcom(getDatabase(), tree, options);
     return { imported: true, filePath: result.filePaths[0] };
+  });
+
+  // Database switching
+  wrapHandler('db:getCurrent', () => {
+    const dbPath = getCurrentDatabasePath();
+    return { path: dbPath, name: path.basename(dbPath) };
+  });
+
+  wrapHandler('db:getRecent', () => {
+    const { recentDatabases } = loadSettings();
+    return recentDatabases.map(p => ({ path: p, name: path.basename(p) }));
+  });
+
+  ipcMain.handle('db:createNew', async () => {
+    const result = await dialog.showSaveDialog({
+      title: 'Ny databas',
+      defaultPath: 'slaktforskning.db',
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    switchDatabase(result.filePath);
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
+    return { path: result.filePath, name: path.basename(result.filePath) };
+  });
+
+  ipcMain.handle('db:switchTo', async (_e, dbPath: string) => {
+    switchDatabase(dbPath);
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
+    return { path: dbPath, name: path.basename(dbPath) };
+  });
+
+  ipcMain.handle('db:openExisting', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Öppna databas',
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+    switchDatabase(result.filePaths[0]);
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
+    return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
   });
 
   wrapHandler('gedcom:export', async () => {

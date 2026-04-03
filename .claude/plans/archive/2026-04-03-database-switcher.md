@@ -2,7 +2,7 @@
 
 **Version:** v0.6.3
 **Date:** 2026-04-03
-**Status:** Not started
+**Status:** Done
 **Prerequisite for:** v0.6.4 (Extended GEDCOM Roundtrip) — import into a fresh database without overwriting the active one
 
 ## Goal

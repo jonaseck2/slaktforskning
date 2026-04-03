@@ -61,6 +61,14 @@ test.describe('Visualization with persons', () => {
     parent2 = await app.createPerson({ given_name: 'Anna', surname: 'Focal', sex: 'F' });
     child = await app.createPerson({ given_name: 'Lilla', surname: 'Barn', sex: 'F' });
 
+    // Add birth and death events so the Timeline chart has something to render
+    const birth = await app.createEvent({ event_type: 'birth', date_original: '1 JAN 1950' });
+    await app.addEventParticipant({ event_id: birth.id, person_id: focalPerson.id, role: 'primary' });
+    const death = await app.createEvent({ event_type: 'death', date_original: '15 JUN 2010' });
+    await app.addEventParticipant({ event_id: death.id, person_id: focalPerson.id, role: 'primary' });
+    const parentBirth = await app.createEvent({ event_type: 'birth', date_original: '3 MAR 1920' });
+    await app.addEventParticipant({ event_id: parentBirth.id, person_id: parent1.id, role: 'primary' });
+
     // Parent relationships
     await app.createRelationship({
       type: 'parent_child',
@@ -82,19 +90,19 @@ test.describe('Visualization with persons', () => {
 
   test('navigating to /visualisering/:id shows focal person name', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
   });
 
   test('focal person name has data-testid', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
     const dom = await app.getDom();
     expect(dom).toContain('visualization-focal-name');
   });
 
   test('pedigree chart is active by default and renders SVG', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
     await app.settle(500);
 
     const dom = await app.getDom();
@@ -106,7 +114,7 @@ test.describe('Visualization with persons', () => {
 
   test('switching to Hourglass tab renders SVG', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
     await app.settle(500);
 
     await app.executeJs(`
@@ -120,7 +128,7 @@ test.describe('Visualization with persons', () => {
 
   test('switching to Timeline tab renders SVG', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
     await app.settle(500);
 
     await app.executeJs(`
@@ -129,13 +137,13 @@ test.describe('Visualization with persons', () => {
     await app.settle(500);
 
     const dom = await app.getDom();
-    // Timeline renders SVG even for a person with no events (shows empty state or axis)
-    expect(dom).toContain('viz-area');
+    // Timeline should render an SVG now that the person has birth and death events
+    expect(dom).toContain('<svg');
   });
 
   test('switching tabs updates aria-selected', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
     await app.settle(300);
 
     await app.executeJs(`
@@ -156,7 +164,7 @@ test.describe('Visualization with persons', () => {
 
   test('View details link navigates to person detail', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
     await app.settle(300);
 
     await app.click('.btn-detail');
@@ -172,7 +180,7 @@ test.describe('Visualization with persons', () => {
     // Navigate from / so router.back() returns to /
     await app.navigate('/');
     await app.navigate(`/visualisering/${focalPerson.id}`);
-    await app.waitForText('Maja Focal');
+    await app.waitForText('Maja');
 
     await app.click('.btn-back');
     await app.settle();

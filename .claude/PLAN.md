@@ -96,6 +96,7 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 `preferred_name` on `person_names`; `getDisplayGivenName()` helper; `listPersons`/`searchPersons` return and search by preferred_name; MCP `add_person_name`/`update_person_name` accept preferred_name; PersonDetailView underlines tilltalsnamn token in name rows and shows input field for birth names; PersonsView + PersonPicker display call name. See `.claude/plans/archive/2026-04-03-preferred-name.md`.
 
 ### Done (v0.5.5 — Search Across All Name Records)
+
 `searchPersons` searches all `person_names` rows via EXISTS subquery — finds by married surname or preferred_name on any name record, not just the primary. See `.claude/plans/archive/2026-04-03-name-search.md`.
 
 ### Done (v0.6.0 — GEDCOM Import/Export)
@@ -110,23 +111,12 @@ Investigated and rejected 2026-04-03. Genney 4.1 uses Apache Derby internally an
 ### Done (v0.5.6 — PersonName Component & Consistent Underline)
 `PersonName.vue` shared component + `nameUtils.ts` utility extract the tilltalsnamn underline into one place. All name-rendering sites updated: RelationshipsView, SearchView, VisualizationView header, PersonPicker dropdown, and all three SVG charts (PedigreeChart, HourglassChart, TimelineChart via `<tspan text-decoration>`). Duplicate `givenNameParts()` functions and CSS removed from PersonsView and PersonDetailView. See `.claude/plans/archive/2026-04-03-person-name-component.md`.
 
+### Done (v0.6.3 — Database Switcher)
+`settings.ts` (lastDatabase/recentDatabases in userData/settings.json); `switchDatabase()` + `getCurrentDatabasePath()` in database.ts; IPC `db:getCurrent`, `db:getRecent`, `db:createNew`, `db:openExisting`, `db:switchTo` with `db:switched` broadcast; `window.api.db.*` preload; `DatabaseView.vue` at `/database`; sidebar link in App.vue; `get_current_database` + `switch_database` MCP tools; 2 new MCP unit tests; E2E viz tests fixed (PersonName span structure + birth/death events). See `.claude/plans/archive/2026-04-03-database-switcher.md`.
+
 ---
 
 ## Roadmap
-
-### v0.6.3 — Database Switcher
-
-See `.claude/plans/2026-04-03-database-switcher.md` for the full implementation plan.
-
-Lets the user create new databases and switch between previously used ones. Prerequisite for GEDCOM import without overwriting the active tree. The active database is remembered across launches.
-
-- [ ] `src/main/settings.ts` — `AppSettings`, `loadSettings`, `saveSettings` (JSON in userData)
-- [ ] `src/main/database.ts` — `switchDatabase`, update `getDatabase` to consult settings
-- [ ] IPC: `db:getCurrent`, `db:getRecent`, `db:createNew`, `db:openExisting`; broadcast `db:switched` to all windows
-- [ ] Preload: `window.api.db.*`
-- [ ] `DatabaseView.vue` at `/database` — current path, recent list, New/Open buttons
-- [ ] `App.vue` — sidebar link above Import/Export; reload on `db:switched`
-- [ ] i18n sv + en
 
 ### v0.6.4 — Extended GEDCOM Roundtrip
 

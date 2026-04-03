@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
 import { createTestDb } from './helpers';
 import { createMcpServer } from '../../src/mcp/createServer';
 
@@ -515,5 +518,44 @@ describe('places', () => {
     const updated = await call('update_place', { id: place.id, street: 'Tvärgatan 7' }) as any;
     expect(updated.street).toBe('Tvärgatan 7');
     expect(updated.city).toBe('Växjö');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Database switching
+// ---------------------------------------------------------------------------
+
+describe('database switching', () => {
+  it('get_current_database returns a path and name', async () => {
+    const result = await call('get_current_database') as any;
+    expect(typeof result.path).toBe('string');
+    expect(typeof result.name).toBe('string');
+  });
+
+  it('switch_database opens a new empty database', async () => {
+    // Create a person in the current DB
+    await call('create_person', { given_name: 'Before', surname: 'Switch' });
+    const before = await call('list_persons') as any[];
+    expect(before).toHaveLength(1);
+
+    // Switch to a new temp DB
+    const tmpPath = path.join(os.tmpdir(), `mcp-test-switch-${Date.now()}.db`);
+    try {
+      const result = await call('switch_database', { path: tmpPath }) as any;
+      expect(result.switched).toBe(true);
+      expect(result.path).toBe(tmpPath);
+
+      // New DB should be empty
+      const after = await call('list_persons') as any[];
+      expect(after).toHaveLength(0);
+
+      // get_current_database should reflect the switch
+      const info = await call('get_current_database') as any;
+      expect(info.path).toBe(tmpPath);
+    } finally {
+      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+      const lockPath = tmpPath + '.lock';
+      if (fs.existsSync(lockPath)) fs.rmSync(lockPath, { recursive: true });
+    }
   });
 });
