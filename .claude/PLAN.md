@@ -135,18 +135,12 @@ Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3
 ### Done (v0.6.6 — Collapsible Visualisation Nodes)
 `CollapseButton` interface + pruning logic in `chartLayout.ts`; `collapsed: Set<string>` ref drives a `computed` layout in both chart components; ▲/▼/▶ SVG buttons collapse/expand ancestor subtrees (:up), children (:down), and spouses (:right); hourglass auto-collapses ancestors beyond grandparents on load; 14 new unit tests (284 total). See `.claude/plans/archive/2026-04-03-collapsible-viz.md`.
 
+### Done (v0.6.7 — Per-Node Descendant Collapse)
+Every descendant node with children gets a ↓ button. `leafCount` is collapse-aware (non-focal collapsed nodes count as 1 leaf), `placeDescendants` skips recursion for collapsed non-focal nodes, `descNodeMap` drives ↓ button generation for all descendant boxes with children. 4 new unit tests (288 total). See `.claude/plans/archive/2026-04-03-descendant-collapse.md`.
+
 ---
 
 ## Roadmap
-
-### v0.6.7 — Per-Node Descendant Collapse
-Any descendant node with children gets a ↓ button (not just focal).
-See `.claude/plans/2026-04-03-descendant-collapse.md`.
-
-- [ ] Make `leafCount` collapse-aware for non-focal nodes
-- [ ] Skip recursion in `placeDescendants` for collapsed non-focal nodes
-- [ ] Add ↓ buttons for all descendant boxes with children in original tree
-- [ ] Unit tests for per-node descendant collapse
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations

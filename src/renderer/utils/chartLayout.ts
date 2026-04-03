@@ -283,6 +283,7 @@ export function computeHourglassLayout(
 
   function leafCount(node: DescendantNode, depth: number): number {
     if (depth >= M || node.children.length === 0) return 1;
+    if (depth > 0 && collapsed.has(`${node.person.id}:down`)) return 1;
     return node.children.reduce((sum, child) => sum + leafCount(child, depth + 1), 0);
   }
 
@@ -386,33 +387,36 @@ export function computeHourglassLayout(
     }
 
     if (depth < M && node.children.length > 0) {
-      const rowY  = depth === 0 ? focalRowY : descRowY(depth);
-      const forkY = rowY + BOX_H + GEN_GAP / 2;
-      // At depth 0 with a spouse, connect from the marriage line (mid-box) not the box bottom
-      const lineStartY = depth === 0 && depth0StartY !== undefined ? depth0StartY : rowY + BOX_H;
+      const childrenCollapsed = depth > 0 && collapsed.has(`${node.person.id}:down`);
+      if (!childrenCollapsed) {
+        const rowY  = depth === 0 ? focalRowY : descRowY(depth);
+        const forkY = rowY + BOX_H + GEN_GAP / 2;
+        // At depth 0 with a spouse, connect from the marriage line (mid-box) not the box bottom
+        const lineStartY = depth === 0 && depth0StartY !== undefined ? depth0StartY : rowY + BOX_H;
 
-      lines.push({ x1: nodeCX, y1: lineStartY, x2: nodeCX, y2: forkY });
+        lines.push({ x1: nodeCX, y1: lineStartY, x2: nodeCX, y2: forkY });
 
-      // Compute child center Xs
-      const childCXs: number[] = [];
-      let cLeft = leftX;
-      for (const child of node.children) {
-        const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
-        childCXs.push(cLeft + cWidth / 2);
-        cLeft += cWidth + V_GAP;
-      }
+        // Compute child center Xs
+        const childCXs: number[] = [];
+        let cLeft = leftX;
+        for (const child of node.children) {
+          const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
+          childCXs.push(cLeft + cWidth / 2);
+          cLeft += cWidth + V_GAP;
+        }
 
-      if (childCXs.length > 1) {
-        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[childCXs.length - 1], y2: forkY });
-      }
+        if (childCXs.length > 1) {
+          lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[childCXs.length - 1], y2: forkY });
+        }
 
-      cLeft = leftX;
-      for (let ci = 0; ci < node.children.length; ci++) {
-        const child  = node.children[ci];
-        const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
-        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
-        placeDescendants(child, depth + 1, cLeft);
-        cLeft += cWidth + V_GAP;
+        cLeft = leftX;
+        for (let ci = 0; ci < node.children.length; ci++) {
+          const child  = node.children[ci];
+          const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
+          lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
+          placeDescendants(child, depth + 1, cLeft);
+          cLeft += cWidth + V_GAP;
+        }
       }
     }
   }
@@ -470,36 +474,55 @@ export function computeHourglassLayout(
 
   // ── Collapse buttons ─────────────────────────────────────────────────────
 
+  // Index all descendant nodes for button generation
+  const descNodeMap = new Map<string, DescendantNode>();
+  function indexDescendants(node: DescendantNode): void {
+    descNodeMap.set(node.person.id, node);
+    for (const child of node.children) indexDescendants(child);
+  }
+  indexDescendants(descendantRoot);
+
   const collapseButtons: CollapseButton[] = [];
 
   for (const box of boxes) {
     const k = personToAhnen.get(box.person.id);
-    if (k === undefined) continue; // spouse box
-
-    if (k === 1) {
-      // Focal: ↓ for children, → for spouses
-      if (descendantRoot.children.length > 0) {
+    if (k !== undefined) {
+      // Ancestor or focal box
+      if (k === 1) {
+        // Focal: ↓ for children, → for spouses
+        if (descendantRoot.children.length > 0) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: !collapsed.has(`${box.person.id}:down`),
+          });
+        }
+        if (spouses.length > 0) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'right',
+            cx: box.x + BOX_W + 10, cy: box.y + BOX_H / 2,
+            isExpanded: !collapsed.has(`${box.person.id}:right`),
+          });
+        }
+      } else {
+        // Ancestor: ↑ if parents exist in original tree
+        const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
+        if (hasParents) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'up',
+            cx: box.x + BOX_W / 2, cy: box.y - 10,
+            isExpanded: !collapsed.has(`${box.person.id}:up`),
+          });
+        }
+      }
+    } else {
+      // Descendant box (spouses are not in descNodeMap, so they're skipped)
+      const descNode = descNodeMap.get(box.person.id);
+      if (descNode && descNode.children.length > 0) {
         collapseButtons.push({
           personId: box.person.id, direction: 'down',
           cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
           isExpanded: !collapsed.has(`${box.person.id}:down`),
-        });
-      }
-      if (spouses.length > 0) {
-        collapseButtons.push({
-          personId: box.person.id, direction: 'right',
-          cx: box.x + BOX_W + 10, cy: box.y + BOX_H / 2,
-          isExpanded: !collapsed.has(`${box.person.id}:right`),
-        });
-      }
-    } else {
-      // Ancestor: ↑ if parents exist in original tree
-      const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
-      if (hasParents) {
-        collapseButtons.push({
-          personId: box.person.id, direction: 'up',
-          cx: box.x + BOX_W / 2, cy: box.y - 10,
-          isExpanded: !collapsed.has(`${box.person.id}:up`),
         });
       }
     }
