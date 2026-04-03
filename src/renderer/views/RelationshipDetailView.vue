@@ -8,31 +8,6 @@
       </div>
     </div>
 
-    <!-- Persons Section -->
-    <section class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('relationshipDetail.persons') }}</h4>
-      </div>
-      <div class="persons-grid">
-        <label>
-          {{ person1Label }}
-          <PersonPicker
-            v-model="relationship.person1_id"
-            :placeholder="$t('relationshipDetail.selectPerson')"
-            @update:model-value="(v) => updateRel({ person1_id: v })"
-          />
-        </label>
-        <label>
-          {{ person2Label }}
-          <PersonPicker
-            v-model="relationship.person2_id"
-            :placeholder="$t('relationshipDetail.selectPerson')"
-            @update:model-value="(v) => updateRel({ person2_id: v })"
-          />
-        </label>
-      </div>
-    </section>
-
     <!-- Type & Subtype -->
     <section class="detail-section">
       <div class="section-header">
@@ -70,6 +45,31 @@
             rows="2"
             :placeholder="$t('relationshipDetail.notesPlaceholder')"
             @blur="saveNotes"
+          />
+        </label>
+      </div>
+    </section>
+
+    <!-- Persons Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('relationshipDetail.persons') }}</h4>
+      </div>
+      <div class="persons-grid">
+        <label>
+          {{ person1Label }}
+          <PersonPicker
+            v-model="relationship.person1_id"
+            :placeholder="$t('relationshipDetail.selectPerson')"
+            @update:model-value="(v) => updateRel({ person1_id: v })"
+          />
+        </label>
+        <label>
+          {{ person2Label }}
+          <PersonPicker
+            v-model="relationship.person2_id"
+            :placeholder="$t('relationshipDetail.selectPerson')"
+            @update:model-value="(v) => updateRel({ person2_id: v })"
           />
         </label>
       </div>

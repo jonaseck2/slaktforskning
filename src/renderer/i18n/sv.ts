@@ -57,6 +57,10 @@ export default {
     coupleSubtype: 'Relationstyp',
     addAndLink: 'Skapa och koppla',
     evidenceSummary: '{sourced} av {total} händelser med källa',
+    detailsTitle: 'Personuppgifter',
+    statusLabel: 'Status',
+    statusLiving: 'Levande',
+    statusDeceased: 'Avliden',
   },
   relationships: {
     title: 'Relationer',
@@ -290,6 +294,7 @@ export default {
     latitude: 'Latitud',
     longitude: 'Longitud',
     childPlaces: 'Underliggande orter',
+    detailsTitle: 'Platsuppgifter',
   },
   placeTypes: {
     country: 'Land',
