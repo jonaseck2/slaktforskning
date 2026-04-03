@@ -89,6 +89,15 @@ See `.claude/plans/archive/2026-04-02-places.md` for the implementation plan.
 
 ## Roadmap
 
+### v0.4.1-pre — Detail View UX Consistency
+
+See `.claude/plans/2026-04-03-detail-view-ux-consistency.md` for the full plan and audit findings.
+
+- [ ] PersonDetailView — "Person Details" section (sex + living inline-edit), sex removed from header
+- [ ] RelationshipDetailView — swap section order: Type first, then Persons
+- [ ] PlaceDetailView — add "Place Details" section heading + 2-column layout
+- [ ] `ux-reviewer.md` agent template + vue-ui-builder UX conventions update
+
 ### v0.4.1 — Visualization
 
 See `.claude/plans/2026-04-03-visualization.md` for the full design and implementation plan.

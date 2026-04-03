@@ -128,12 +128,45 @@ If this task wires new api/ functions, their `window.api.*` methods will be desc
 - Delete button inside the row uses `@click.stop` to prevent navigation
 - Load data in `onMounted`
 
-## Detail view pattern (PersonDetailView, SourceDetailView style)
+## Detail view pattern (SourceDetailView is the reference)
 
-- Load entity via `useRoute().params.id` in `onMounted`
-- Auto-save editable fields on `@blur` or `@change` — no save button
-- Sections for related entities (embed `EventList` etc.)
-- Back link to list view
+Every detail view follows this exact layout. **Do not deviate.**
+
+```
+← Back button
+<h2>Entity display name</h2>   [optional action buttons: Cite, etc.]
+[optional evidence/status line]
+
+─── Entity Details (ALWAYS FIRST) ─────────
+  2-column field-grid
+  Each field: <label> wrapping <input> or <select>
+  Text: saves on @blur  |  Selects: saves on @change
+  No Save button — all changes are immediate
+
+─── Related entities (events, names, etc.) ─
+  section-header with h4 + optional Add button
+  table or list
+```
+
+**Rules — enforce all of them:**
+1. Entity Details section is **always first** — before names, events, relationships, etc.
+2. Header contains **only** back button + `<h2>` + action buttons. No inputs, no selects, no badges that substitute for edit controls.
+3. Every DB column (except id, created_at, updated_at) has an edit control in the Entity Details section.
+4. Auto-save: `@blur` for text, `@change` for selects. Never a Save button for inline fields.
+5. Every `<section>` has `<div class="section-header"><h4>...</h4></div>` — never a bare `<h4>`.
+6. 2-column field-grid (`grid-template-columns: 1fr 1fr`). Wide fields (pickers, textareas) use `grid-column: 1 / -1`.
+
+**CSS constants for detail views:**
+```css
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #555; }
+.field-grid input, .field-grid select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit; }
+.full-width { grid-column: 1 / -1; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.section-header h4 { margin: 0; font-size: 15px; }
+```
+
+Load entity via `useRoute().params.id` in `onMounted`. Sections for related entities embed `EventList` etc. Back link to list view.
 
 ## i18n
 
