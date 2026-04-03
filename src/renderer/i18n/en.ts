@@ -4,6 +4,7 @@ export default {
     search: 'Search\u2026',
   },
   nav: {
+    visualization: 'Visualisation',
     persons: 'Persons',
     relationships: 'Relationships',
     sources: 'Sources',
@@ -61,6 +62,7 @@ export default {
     statusLabel: 'Status',
     statusLiving: 'Living',
     statusDeceased: 'Deceased',
+    viewInTree: 'Show in tree',
   },
   relationships: {
     title: 'Relationships',
@@ -295,6 +297,23 @@ export default {
     longitude: 'Longitude',
     childPlaces: 'Child places',
     detailsTitle: 'Place Details',
+  },
+  visualization: {
+    tab: {
+      pedigree: 'Pedigree',
+      hourglass: 'Hourglass',
+      timeline: 'Timeline',
+    },
+    generation: {
+      grandparents: 'Grandparents',
+      parents: 'Parents',
+      focal: 'Focal Person',
+      children: 'Children',
+    },
+    empty: 'Add a person to start visualizing.',
+    selectPerson: 'Select focal person\u2026',
+    viewDetail: 'View details',
+    today: 'Today',
   },
   placeTypes: {
     country: 'Country',
