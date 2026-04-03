@@ -18,11 +18,7 @@
         <tr v-for="event in events" :key="event.id" class="clickable-row" @click="editEvent(event)">
           <td>
             <span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span>
-            <span
-              v-if="citationCounts[event.id] > 0"
-              class="source-count-badge"
-            >{{ citationCounts[event.id] }} {{ $t('events.sources', citationCounts[event.id]) }}</span>
-            <span v-else class="unsourced-badge">{{ $t('events.unsourced') }}</span>
+            <CitationBadge :count="citationCounts[event.id] ?? 0" />
           </td>
           <td>{{ formatDate(event) }}</td>
           <td>{{ event.description }}</td>
@@ -57,6 +53,7 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
 import CitationForm from './CitationForm.vue';
+import CitationBadge from './CitationBadge.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -241,22 +238,6 @@ defineExpose({ reload: load });
 .btn-delete {
   background: #fee;
   color: #c0392b;
-}
-.source-count-badge {
-  background: #dcfce7;
-  color: #166534;
-  padding: 2px 7px;
-  border-radius: 10px;
-  font-size: 11px;
-  margin-left: 6px;
-}
-.unsourced-badge {
-  background: #fef9c3;
-  color: #854d0e;
-  padding: 2px 7px;
-  border-radius: 10px;
-  font-size: 11px;
-  margin-left: 6px;
 }
 .btn-cite {
   background: #eff6ff;

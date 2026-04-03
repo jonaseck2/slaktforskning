@@ -81,6 +81,9 @@ export function registerIpcHandlers(): void {
   wrapHandler('citations:get', (id) => sources.getCitation(db, id as string));
   wrapHandler('citations:forSource', (sourceId) => sources.getCitationsForSource(db, sourceId as string));
   wrapHandler('citations:forEvent', (eventId) => sources.getCitationsForEvent(db, eventId as string));
+  wrapHandler('citations:forPerson', (personId) => sources.getCitationsForPerson(db, personId as string));
+  wrapHandler('citations:forRelationship', (relationshipId) => sources.getCitationsForRelationship(db, relationshipId as string));
+  wrapHandler('citations:forPlace', (placeId) => sources.getCitationsForPlace(db, placeId as string));
   wrapHandler('citations:delete', (id) => sources.deleteCitation(db, id as string));
 
   // Places

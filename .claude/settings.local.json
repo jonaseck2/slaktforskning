@@ -150,7 +150,8 @@
       "Bash(node -e \"const m = require\\('@modelcontextprotocol/sdk'\\); console.log\\(Object.keys\\(m\\)\\)\")",
       "mcp__slaktforskning__search_places",
       "mcp__slaktforskning__add_place",
-      "Edit(/.claude/skills/add-feature/**)"
+      "Edit(/.claude/skills/add-feature/**)",
+      "Bash(git stash:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans"

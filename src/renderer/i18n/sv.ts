@@ -297,6 +297,7 @@ export default {
     longitude: 'Longitud',
     childPlaces: 'Underliggande orter',
     detailsTitle: 'Platsuppgifter',
+    citeSources: 'Citera',
   },
   visualization: {
     tab: {

@@ -209,6 +209,9 @@ createCitation(db, { source_id, event_id?, person_id?, relationship_id?, place_i
 getCitation(db, id) → Citation | null
 getCitationsForSource(db, sourceId) → Citation[]
 getCitationsForEvent(db, eventId) → Citation[]
+getCitationsForPerson(db, personId) → Citation[]
+getCitationsForRelationship(db, relationshipId) → Citation[]
+getCitationsForPlace(db, placeId) → Citation[]
 deleteCitation(db, id) → boolean
 ```
 

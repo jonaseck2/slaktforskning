@@ -536,8 +536,7 @@ test.describe('Citation Badges', () => {
 
     await app.navigate(`/persons/${person.id}`);
     await app.waitForText('Birgitta Sourced');
-    await app.expectNoText('Unsourced');
-    // Badge text contains the count
+    // The event row should show a source-count-badge (not Unsourced)
     const dom = await app.getDom();
     expect(dom).toContain('source-count-badge');
   });

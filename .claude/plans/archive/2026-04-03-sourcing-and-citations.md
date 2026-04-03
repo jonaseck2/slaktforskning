@@ -146,19 +146,19 @@ Beyond the badges, add these UI signals to reinforce the source-first principle:
 
 ## Implementation Steps
 
-- [ ] **1. API** — add `getCitationsForPerson`, `getCitationsForRelationship`, `getCitationsForPlace` to `src/api/sources.ts`
-- [ ] **2. IPC** — wire three new channels in `src/main/ipc.ts`
-- [ ] **3. Preload** — expose on `window.api.sources.*`
-- [ ] **4. CitationForm** — add `placeId` prop + pass `place_id` to API call
-- [ ] **5. CitationBadge.vue** — extract reusable badge component from EventList; update EventList to use it
-- [ ] **6. PersonDetailView** — load person citation count on mount; show CitationBadge next to Cite button
-- [ ] **7. RelationshipDetailView** — same as PersonDetailView
-- [ ] **8. PlaceDetailView** — load place citation count; show CitationBadge + Cite button in header; wire CitationForm with `placeId`
-- [ ] **9. MCP tools** — add `get_citations_for_person`, `get_citations_for_relationship`, `get_citations_for_place` to `createServer.ts`
-- [ ] **10. Unit tests** — add tests for the three new API functions in `tests/unit/sources.test.ts`
-- [ ] **11. MCP tests** — add tests for the three new MCP tools in `tests/unit/mcp.test.ts`
-- [ ] **12. Component tests** — test that CitationBadge shows correct badge; test PlaceDetailView cite button renders
-- [ ] **13. Docs** — update `CLAUDE.md` (IPC surface), `MCP.md`, `PLAN.md`
+- [x] **1. API** — add `getCitationsForPerson`, `getCitationsForRelationship`, `getCitationsForPlace` to `src/api/sources.ts`
+- [x] **2. IPC** — wire three new channels in `src/main/ipc.ts`
+- [x] **3. Preload** — expose on `window.api.sources.*`
+- [x] **4. CitationForm** — add `placeId` prop + pass `place_id` to API call
+- [x] **5. CitationBadge.vue** — extract reusable badge component from EventList; update EventList to use it
+- [x] **6. PersonDetailView** — load person citation count on mount; show CitationBadge next to Cite button
+- [x] **7. RelationshipDetailView** — same as PersonDetailView
+- [x] **8. PlaceDetailView** — load place citation count; show CitationBadge + Cite button in header; wire CitationForm with `placeId`
+- [x] **9. MCP tools** — add `get_citations_for_person`, `get_citations_for_relationship`, `get_citations_for_place` to `createServer.ts`
+- [x] **10. Unit tests** — add tests for the three new API functions in `tests/unit/sources.test.ts`
+- [x] **11. MCP tests** — add tests for the three new MCP tools in `tests/unit/mcp.test.ts`
+- [x] **12. Component tests** — test that CitationBadge shows correct badge; test PlaceDetailView cite button renders
+- [x] **13. Docs** — update `CLAUDE.md` (IPC surface), `MCP.md`, `PLAN.md`
 
 ---
 

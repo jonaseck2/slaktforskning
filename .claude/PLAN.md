@@ -86,22 +86,12 @@ Pedigree/Hourglass/Timeline SVG charts; click-to-navigate; `chartLayout.ts` + `c
 ### Done (v0.5.1 — UI Consistency Polish)
 EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width: 100%` for consistent sizing everywhere; PlaceDetailView parent place constrained to grid column. See `.claude/plans/archive/2026-04-03-ui-consistency.md`.
 
+### Done (v0.5.2 — Sourcing & Citation Consistency)
+`CitationBadge` component; `getCitationsForPerson/Relationship/Place` API + IPC + MCP; Cite button + badge in PersonDetailView, RelationshipDetailView, PlaceDetailView headers; badges in PersonsView list. See `.claude/plans/archive/2026-04-03-sourcing-and-citations.md`.
+
 ---
 
 ## Roadmap
-
-### v0.5.2 — Sourcing & Citation Consistency
-
-See `.claude/plans/2026-04-03-sourcing-and-citations.md` for the full plan.
-
-- [ ] API: `getCitationsForPerson`, `getCitationsForRelationship`, `getCitationsForPlace`
-- [ ] IPC + preload: wire three new channels
-- [ ] CitationForm: add `placeId` prop
-- [ ] `CitationBadge.vue`: extract reusable badge component from EventList
-- [ ] PersonDetailView + RelationshipDetailView: Unsourced badge in header (Cite button already exists)
-- [ ] PlaceDetailView: full citation affordance (Cite button + CitationBadge + CitationForm)
-- [ ] MCP: `get_citations_for_person`, `get_citations_for_relationship`, `get_citations_for_place`
-- [ ] Unit + component + MCP tests
 
 ### v0.5.3 — Place Address Fields
 

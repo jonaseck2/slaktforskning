@@ -297,6 +297,7 @@ export default {
     longitude: 'Longitude',
     childPlaces: 'Child places',
     detailsTitle: 'Place Details',
+    citeSources: 'Cite',
   },
   visualization: {
     tab: {
