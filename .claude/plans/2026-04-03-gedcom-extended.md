@@ -101,12 +101,12 @@ Write one `ASSO` block per non-primary `EventParticipant`:
 On re-import: collect ASSO blocks from each INDI; after all events are created,
 match by `_EVID` and call `addEventParticipant`.
 
-### For sibling / godparent relationships
+### For sibling / godparent / other relationships
 
 Write under the first person's INDI:
 ```
 1 ASSO @I2@
-2 RELA Sibling
+2 RELA Sibling        ← or Godparent, or Other
 ```
 
 Write under the second person's INDI:
@@ -116,16 +116,41 @@ Write under the second person's INDI:
 ```
 
 On re-import: after all persons are created, scan each INDI's ASSO blocks. For
-each `RELA Sibling` or `RELA Godparent`, call `createRelationship` only once
-(deduplicate by checking if the pair already exists).
+each `RELA Sibling`, `RELA Godparent`, or `RELA Other`, call `createRelationship`
+only once (deduplicate by checking if the pair already exists).
+
+## Place-level Citations via `_PLAC` Records
+
+GEDCOM 5.5.1 has no top-level place records — `0 @P1@ PLAC` is not valid. A
+citation attached to a place (not via any event) has nowhere to live in standard
+GEDCOM. Solution: emit custom top-level records:
+
+```
+0 @P1@ _PLAC
+1 _PLAC_ID <uuid>      ← links back to our place record
+1 SOUR @S1@
+2 PAGE p. 42
+2 QUAY 2
+2 NOTE Optional citation note
+2 _ACCESSED 2024-03-01
+```
+
+The exporter emits one `0 @Px@ _PLAC` record per place that has at least one
+direct citation. The importer reads `_PLAC` records after the main pass, looks up
+the place by `_PLAC_ID`, and creates the citations.
+
+Other apps ignore `_PLAC` records entirely (unrecognised level-0 tags are skipped
+per GEDCOM spec).
+
+Add to exporter Step 1 as item 12, importer Step 2 correspondingly, and add a
+roundtrip unit test.
 
 ## What Still Cannot Be Expressed
 
 | Field | Reason |
 |-------|--------|
-| `Assertion` | Research-layer metadata with no GEDCOM parallel — deferred to v0.7.0 |
-| Place-level citations | No standard PLAC SOUR; deferred (low priority) |
-| `relationships.type = 'other'` | Arbitrary — write as `ASSO` with `RELA Other` and accept that re-import loses the distinction |
+| `Assertion` | Research-layer evidence evaluation (GPS standard) — no GEDCOM parallel; deferred to v0.7.0 UI milestone |
+| `relationships.type = 'other'` | Removed from scope — not needed |
 
 ## Implementation Plan
 
@@ -138,7 +163,7 @@ Order of additions:
 1. `_LIVING` on INDI
 2. `_PREF`, `_PATR`, `_NQUAL`, `_DATE_FROM`, `_DATE_TO` on NAME records
 3. `_FSI`, `_ANID`, `_RAID`, `_PNUMMER` from person_identifiers
-4. ASSO blocks for non-primary event participants and sibling/godparent rels
+4. ASSO blocks for non-primary event participants and sibling/godparent/other rels
 5. `SOUR` blocks directly on INDI (person-level citations)
 6. `SOUR` blocks directly on FAM (relationship-level citations)
 7. `_SUBTYPE`, `_RELNOTES` on FAM
@@ -146,6 +171,7 @@ Order of additions:
 9. PLAC sub-tags: `MAP`/`LATI`/`LONG`, `ADDR`, `_PTYPE`, `_PNOTES`, `_DATE_FROM`, `_DATE_TO`, `_PLAC_ID`
 10. `_URL`, `_STYPE`, `REPO` on SOUR
 11. `NOTE`, `_CITNOTES`, `_ACCESSED` on SOUR citation blocks
+12. `0 @Px@ _PLAC` records for place-level citations
 
 ### Step 2 — Extend `importGedcom`
 **File:** `src/gedcom/importer.ts`
@@ -160,7 +186,8 @@ Key additions:
 - `_PREF`, `_PATR`, `_NQUAL`, `_DATE_FROM`, `_DATE_TO` on NAME → pass to `addPersonName`
 - `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` → `addPersonIdentifier` with correct type
 - ASSO with `_EVID` → post-pass: link to event as non-primary participant
-- ASSO with `RELA Sibling`/`RELA Godparent` → post-pass: `createRelationship` (deduplicated)
+- ASSO with `RELA Sibling`/`RELA Godparent`/`RELA Other` → post-pass: `createRelationship` (deduplicated)
+- `_PLAC` level-0 records → post-pass: look up place by `_PLAC_ID`, create citations
 - Person-level SOUR → `createCitation` with `person_id`
 - Family-level SOUR → `createCitation` with `relationship_id`
 - `_SUBTYPE`, `_RELNOTES` on FAM → `updateRelationship` after creation
@@ -190,6 +217,7 @@ Add roundtrip tests for each new field:
 - Source url + source_type → survive
 - Citation notes → survive
 - `_PLAC_ID` lookup skips name matching → existing place record reused
+- Place-level citation → survives via `_PLAC` top-level record
 
 ### Step 4 — Docs
 Update `README.md`, `CLAUDE.md`, `.claude/PLAN.md`, `.claude/MCP.md`.
