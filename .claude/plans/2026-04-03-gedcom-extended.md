@@ -149,7 +149,7 @@ roundtrip unit test.
 
 | Field | Reason |
 |-------|--------|
-| `Assertion` | Research-layer evidence evaluation (GPS standard) — no GEDCOM parallel; deferred to v0.7.0 UI milestone |
+| `Assertion` | Research-layer evidence evaluation (GPS standard) — deferred to v0.7.1 which adds `_ASSN` custom records after the v0.7.0 Assertions UI is built |
 | `relationships.type = 'other'` | Removed from scope — not needed |
 
 ## Implementation Plan
