@@ -87,8 +87,8 @@ function onBlur() {
 </script>
 
 <style scoped>
-.place-picker { position: relative; }
-.place-picker input { font-size: 14px; }
+.place-picker { position: relative; width: 100%; box-sizing: border-box; }
+.place-picker input { font-size: 14px; width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
 .dropdown {
   position: absolute;
   top: 100%;

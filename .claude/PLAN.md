@@ -83,17 +83,12 @@ Inline-edit polish across PersonDetailView, RelationshipDetailView, PlaceDetailV
 ### Done (v0.5.0 — Visualization)
 Pedigree/Hourglass/Timeline SVG charts; click-to-navigate; `chartLayout.ts` + `chartData.ts` utilities. See `.claude/plans/archive/2026-04-03-visualization-impl.md`.
 
+### Done (v0.5.1 — UI Consistency Polish)
+EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width: 100%` for consistent sizing everywhere; PlaceDetailView parent place constrained to grid column. See `.claude/plans/archive/2026-04-03-ui-consistency.md`.
+
 ---
 
 ## Roadmap
-
-### v0.5.1 — UI Consistency Polish
-
-See `.claude/plans/2026-04-03-ui-consistency.md` for the full plan.
-
-- [ ] EventList: remove Edit button, make entire row clickable (consistent with all other lists)
-- [ ] PlaceDetailView: fix parent place input width (remove full-width span, match 2-column grid)
-- [ ] Update component tests for row-click behaviour
 
 ### v0.5.2 — Sourcing & Citation Consistency
 
