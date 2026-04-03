@@ -443,6 +443,7 @@ async function load() {
   try {
     person.value = (await window.api.persons.get(personId)) as PersonData | null;
     if (!person.value) return;
+    localStorage.setItem('viz-focal-person', personId);
     notesText.value = person.value.notes || '';
     editSex.value = person.value.sex;
     editLiving.value = person.value.living;
