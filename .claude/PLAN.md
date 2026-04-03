@@ -66,34 +66,22 @@ HTTP bridge (port 19241) + `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_cli
 vue-i18n with ~180 strings (SV default, EN fallback). Expanded MCP from 14 → 34 tools matching full IPC surface.
 
 ### Done (v0.3.0 — Relationships + Evidence + Add Related Person)
-Schema migrated from family-centric to GEDCOM-X relationship model (`relationships`, `event_participants`, `assertions` tables). Citation affordances everywhere (badges, Cite buttons, inline source on EventForm). Add Parent/Spouse/Child from PersonDetailView. Component + E2E tests for all v0.3.0 features.
-
-See `.claude/plans/archive/2026-04-02-v030-evidence-and-add-related.md` and `.claude/plans/archive/2026-04-02-component-and-e2e-tests.md` for implementation details.
+GEDCOM-X relationship model, citation affordances, Add Related Person modal. See `.claude/plans/archive/2026-04-02-v030-evidence-and-add-related.md`.
 
 ### Done (v0.3.1 — GEDCOM-X Name Parts + Person Identifiers)
-Extended `person_names` with prefix/suffix/patronymic/qualifier columns. New `person_identifiers` table with typed external IDs. Full API + IPC + MCP + Vue UI. Also implemented `deletePersonName`.
-
-See `.claude/plans/archive/2026-04-02-gedcomx-name-parts-and-identifiers.md` for implementation details.
+Name prefix/suffix/patronymic/qualifier columns; `person_identifiers` table with typed external IDs. See `.claude/plans/archive/2026-04-02-gedcomx-name-parts-and-identifiers.md`.
 
 ### Done (v0.3.2 — PersonDetailView UX Improvements)
-Inline sex editing in header; name rows clickable (edit button removed); relationship rows get delete button; AddRelatedPersonModal New/Existing toggle with PersonPicker.
-
-See `.claude/plans/archive/2026-04-02-person-detail-ux.md` for implementation details.
+Inline sex editing; clickable name rows; relationship delete button; AddRelatedPersonModal New/Existing toggle. See `.claude/plans/archive/2026-04-02-person-detail-ux.md`.
 
 ### Done (v0.4.0 — Places)
-Full places layer: `src/api/places.ts` (7 functions including `findOrCreatePlace`), IPC + preload, 6 MCP tools, `PlacePicker` component, `EventForm` fix (now saves `place_id`), `PlacesView` + `PlaceDetailView`, sidebar entry and routes.
-
-See `.claude/plans/archive/2026-04-02-places.md` for the implementation plan.
+Full places layer: API, IPC, 6 MCP tools, PlacePicker, PlacesView + PlaceDetailView. See `.claude/plans/archive/2026-04-02-places.md`.
 
 ### Done (v0.4.1 — Minor Fixes & UX Consistency)
-PersonDetailView "Person Details" section (sex + living inline-edit, sex removed from header). RelationshipDetailView Type-first section order. PlaceDetailView "Place Details" heading + 2-column layout. ux-reviewer + vue-ui-builder agent templates updated.
-
-See `.claude/plans/archive/2026-04-03-detail-view-ux-consistency.md` for full plan.
+Inline-edit polish across PersonDetailView, RelationshipDetailView, PlaceDetailView. See `.claude/plans/archive/2026-04-03-detail-view-ux-consistency.md`.
 
 ### Done (v0.5.0 — Visualization)
-VisualizationView with Pedigree/Hourglass/Timeline SVG chart tabs. Click-to-navigate person boxes. Sidebar reordered (Visualisering at top). PersonDetailView "Visa i träd →" button. i18n strings sv + en. Pure layout utilities (`chartLayout.ts`, `chartData.ts`) with 20 unit tests + component tests for VisualizationView and PedigreeChart (108 total tests).
-
-See `.claude/plans/archive/2026-04-03-visualization.md` (design) and `.claude/plans/archive/2026-04-03-visualization-impl.md` (implementation) for full plans.
+Pedigree/Hourglass/Timeline SVG charts; click-to-navigate; `chartLayout.ts` + `chartData.ts` utilities. See `.claude/plans/archive/2026-04-03-visualization-impl.md`.
 
 ---
 
@@ -162,8 +150,20 @@ See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
 - [ ] Media attachments (photos, documents)
 
 ### v0.8.0 — Polish
-- [ ] Print/export reports (ancestor charts, family group sheets)
 - [ ] Keyboard navigation and accessibility
 - [ ] Data backup and restore
 - [ ] Undo/redo
 - [ ] Dark mode
+
+### v0.9.0 — Printable Output
+
+See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
+
+- [ ] IPC: `print:print` (OS print dialog) + `print:exportPdf` (save PDF via `printToPDF`)
+- [ ] `ReportsView` at `/reports` — three tabs: Ancestor Chart, Family Group Sheet, Individual Summary
+- [ ] `AncestorChartReport.vue` — pedigree SVG reusing `chartData.ts`, configurable generations
+- [ ] `FamilyGroupSheet.vue` — couple + events + children, structured A4 layout
+- [ ] `IndividualSummary.vue` — full person record: names, events, relationships, citations
+- [ ] Print CSS (`@media print`) per report component; preview area in ReportsView
+- [ ] Sidebar entry "Rapporter"; i18n sv/en
+- [ ] Component tests for report components
