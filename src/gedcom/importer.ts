@@ -340,21 +340,23 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
     const person1Id = husbXref ? personMap.get(husbXref) ?? null : null;
     const person2Id = wifeXref ? personMap.get(wifeXref) ?? null : null;
 
+    // Infer couple subtype: _SUBTYPE from extended export takes precedence;
+    // fall back to inferring 'marriage' from a MARR event in the FAM record.
+    const extSubtype = getChild(node, '_SUBTYPE')?.value;
+    const hasMarr = getChildren(node, 'MARR').length > 0;
+    const coupleSubtype = extSubtype ?? (hasMarr ? 'marriage' : 'unknown');
+
     const couple = createRelationship(db, {
       type: 'couple',
       person1_id: person1Id,
       person2_id: person2Id,
-      subtype: 'unknown',
+      subtype: coupleSubtype,
     });
 
-    // Extended couple metadata
-    const subtype = getChild(node, '_SUBTYPE')?.value;
+    // Extended couple metadata (notes only — subtype already applied above)
     const relnotes = getChild(node, '_RELNOTES')?.value;
-    if (subtype || relnotes) {
-      const updates: Parameters<typeof updateRelationship>[2] = {};
-      if (subtype) updates.subtype = subtype;
-      if (relnotes) updates.notes = relnotes;
-      updateRelationship(db, couple.id, updates);
+    if (relnotes) {
+      updateRelationship(db, couple.id, { notes: relnotes });
     }
 
     // Family events

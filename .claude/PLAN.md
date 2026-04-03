@@ -126,6 +126,9 @@ No transaction around `importGedcom` caused ~25k auto-commits, writing ~1.6 GB t
 ### Fix — GEDCOM import CPU saturation (statement cache)
 After the transaction fix, a 70k-line import still ran at ~100% CPU for 1–2 min because every API call recompiled its SQL via `db.prepare()`. Added `withStatementCache(db)` — a Proxy that caches compiled statements per unique SQL — reducing ~50k compiles to ~20 for the full import. See `.claude/plans/archive/2026-04-03-gedcom-import-cpu.md`.
 
+### Fix — GEDCOM import: couple subtype always 'unknown'
+Married couples imported from standard GEDCOM (including Genney) showed `subtype: 'unknown'` because the importer only checked for `_SUBTYPE` (our own extended tag). Standard GEDCOM indicates marriage via a `MARR` event under the FAM record. Fixed by inferring `subtype: 'marriage'` when `MARR` is present. See `.claude/plans/archive/2026-04-03-gedcom-couple-subtype.md`.
+
 ---
 
 ## Roadmap

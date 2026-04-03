@@ -202,9 +202,23 @@ describe('importGedcom', () => {
     ].join('\n');
     importGedcom(db, parseGedcom(ged));
     const rels = listRelationships(db);
-    expect(rels.some(r => r.type === 'couple')).toBe(true);
+    const couple = rels.find(r => r.type === 'couple');
+    expect(couple).toBeTruthy();
+    expect(couple?.subtype).toBe('marriage');
     const places = listPlaces(db);
     expect(places.some(p => p.name === 'Göteborg')).toBe(true);
+  });
+
+  it('sets couple subtype to unknown when no MARR event', () => {
+    const ged = [
+      '0 @I1@ INDI\n1 NAME Erik /Larsson/\n1 SEX M',
+      '0 @I2@ INDI\n1 NAME Anna /Karlsdotter/\n1 SEX F',
+      '0 @F1@ FAM\n1 HUSB @I1@\n1 WIFE @I2@',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged));
+    const couple = listRelationships(db).find(r => r.type === 'couple');
+    expect(couple?.subtype).toBe('unknown');
   });
 
   it('imports REFN and RIN as person identifiers', () => {
