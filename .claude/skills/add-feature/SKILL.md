@@ -206,8 +206,8 @@ declare const window: Window & {
 - `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
 - `DateInput` — compound date input with genealogy date types
 - `EventForm` / `EventList` — event CRUD, embeds in detail views; event rows are clickable (no Edit button)
-- `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`)
-- `CitationBadge` — green count / yellow "Unsourced" badge (added in v0.5.2; use everywhere citations are relevant)
+- `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`); wire `:place-id` for place views
+- `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`
 
 ### UI consistency rules
 - **Picker inputs fill their container** — `PersonPicker` and `PlacePicker` both have `width: 100%` on their root. Place them inside a `<label>` or grid cell and they will fill it. Never wrap them in a `class="full-width"` override.

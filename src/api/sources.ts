@@ -92,6 +92,18 @@ export function getCitationsForEvent(db: Database, eventId: string): Citation[] 
   return db.prepare(`SELECT * FROM citations WHERE event_id = ?`).all([eventId]) as Citation[];
 }
 
+export function getCitationsForPerson(db: Database, personId: string): Citation[] {
+  return db.prepare(`SELECT * FROM citations WHERE person_id = ?`).all([personId]) as Citation[];
+}
+
+export function getCitationsForRelationship(db: Database, relationshipId: string): Citation[] {
+  return db.prepare(`SELECT * FROM citations WHERE relationship_id = ?`).all([relationshipId]) as Citation[];
+}
+
+export function getCitationsForPlace(db: Database, placeId: string): Citation[] {
+  return db.prepare(`SELECT * FROM citations WHERE place_id = ?`).all([placeId]) as Citation[];
+}
+
 export function deleteCitation(db: Database, id: string): boolean {
   return db.prepare(`DELETE FROM citations WHERE id = ?`).run([id]).changes > 0;
 }

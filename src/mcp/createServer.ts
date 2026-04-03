@@ -412,6 +412,30 @@ export function createMcpServer(db: Database): McpServer {
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
+  server.registerTool('get_citations_for_person', {
+    description: 'Get all citations attached to a person',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async (args) => {
+    const list = sources.getCitationsForPerson(db, args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_citations_for_relationship', {
+    description: 'Get all citations attached to a relationship',
+    inputSchema: { relationship_id: z.string().describe('Relationship ID') },
+  }, async (args) => {
+    const list = sources.getCitationsForRelationship(db, args.relationship_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_citations_for_place', {
+    description: 'Get all citations attached to a place',
+    inputSchema: { place_id: z.string().describe('Place ID') },
+  }, async (args) => {
+    const list = sources.getCitationsForPlace(db, args.place_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
   server.registerTool('delete_citation', {
     description: 'Delete a citation',
     inputSchema: { id: z.string().describe('Citation ID') },

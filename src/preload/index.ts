@@ -51,6 +51,9 @@ const api = {
     get: (id: string) => ipcRenderer.invoke('citations:get', id),
     forSource: (sourceId: string) => ipcRenderer.invoke('citations:forSource', sourceId),
     forEvent: (eventId: string) => ipcRenderer.invoke('citations:forEvent', eventId),
+    forPerson: (personId: string) => ipcRenderer.invoke('citations:forPerson', personId),
+    forRelationship: (relationshipId: string) => ipcRenderer.invoke('citations:forRelationship', relationshipId),
+    forPlace: (placeId: string) => ipcRenderer.invoke('citations:forPlace', placeId),
     delete: (id: string) => ipcRenderer.invoke('citations:delete', id),
   },
   places: {

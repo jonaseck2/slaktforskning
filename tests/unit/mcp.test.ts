@@ -403,6 +403,33 @@ describe('citations', () => {
   it('returns "Not found" when deleting unknown citation', async () => {
     expect(await call('delete_citation', { id: 'nonexistent' })).toBe('Not found');
   });
+
+  it('gets citations for a person', async () => {
+    const person = await call('create_person', { given_name: 'Anna' }) as any;
+    const source = await call('add_source', { title: 'Record' }) as any;
+    await call('add_citation', { source_id: source.id, person_id: person.id });
+    const list = await call('get_citations_for_person', { person_id: person.id }) as any[];
+    expect(list).toHaveLength(1);
+    expect(await call('get_citations_for_person', { person_id: 'nonexistent' })).toHaveLength(0);
+  });
+
+  it('gets citations for a relationship', async () => {
+    const rel = await call('create_relationship', { type: 'couple' }) as any;
+    const source = await call('add_source', { title: 'Record' }) as any;
+    await call('add_citation', { source_id: source.id, relationship_id: rel.id });
+    const list = await call('get_citations_for_relationship', { relationship_id: rel.id }) as any[];
+    expect(list).toHaveLength(1);
+    expect(await call('get_citations_for_relationship', { relationship_id: 'nonexistent' })).toHaveLength(0);
+  });
+
+  it('gets citations for a place', async () => {
+    const place = await call('add_place', { name: 'Stockholm' }) as any;
+    const source = await call('add_source', { title: 'Record' }) as any;
+    await call('add_citation', { source_id: source.id, place_id: place.id });
+    const list = await call('get_citations_for_place', { place_id: place.id }) as any[];
+    expect(list).toHaveLength(1);
+    expect(await call('get_citations_for_place', { place_id: 'nonexistent' })).toHaveLength(0);
+  });
 });
 
 // ---------------------------------------------------------------------------

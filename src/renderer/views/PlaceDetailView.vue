@@ -4,6 +4,8 @@
       <button class="btn-back" @click="$router.push('/places')">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
+      <CitationBadge :count="placeCitationCount" />
+      <button type="button" class="btn-cite-header" @click="showCiteForm = true">{{ $t('places.citeSources') }}</button>
     </div>
 
     <section class="detail-section">
@@ -48,6 +50,12 @@
         </li>
       </ul>
     </section>
+    <CitationForm
+      v-if="showCiteForm"
+      :place-id="place.id"
+      @close="showCiteForm = false"
+      @saved="showCiteForm = false; load()"
+    />
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
@@ -57,6 +65,8 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
+import CitationBadge from '../components/CitationBadge.vue';
+import CitationForm from '../components/CitationForm.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -76,6 +86,8 @@ const editParentId = ref<string | null>(null);
 const editLat = ref<number | null>(null);
 const editLon = ref<number | null>(null);
 const editNotes = ref('');
+const placeCitationCount = ref(0);
+const showCiteForm = ref(false);
 
 async function load() {
   place.value = (await window.api.places.get(placeId)) as PlaceRow | null;
@@ -88,6 +100,8 @@ async function load() {
   editNotes.value = place.value.notes;
   const all = (await window.api.places.list()) as PlaceRow[];
   children.value = all.filter(p => p.parent_place_id === placeId);
+  const placeCits = (await window.api.citations.forPlace(placeId)) as unknown[];
+  placeCitationCount.value = placeCits.length;
 }
 
 async function save(data: Record<string, unknown>) {
@@ -104,6 +118,7 @@ onMounted(load);
 .detail-header h2 { margin: 0; }
 .btn-back { background: none; border: none; color: #2c3e50; cursor: pointer; padding: 4px 0; font-size: 14px; }
 .btn-back:hover { text-decoration: underline; }
+.btn-cite-header { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 .type-badge { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
 .detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
 .detail-section h4 { margin: 0 0 8px; font-size: 15px; }

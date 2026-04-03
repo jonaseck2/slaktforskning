@@ -48,6 +48,9 @@ window.api.citations.create(data)                  // → Citation
 window.api.citations.get(id)                       // → Citation | null
 window.api.citations.forSource(sourceId)           // → Citation[]
 window.api.citations.forEvent(eventId)             // → Citation[]
+window.api.citations.forPerson(personId)           // → Citation[]
+window.api.citations.forRelationship(relId)        // → Citation[]
+window.api.citations.forPlace(placeId)             // → Citation[]
 window.api.citations.delete(id)                    // → boolean
 ```
 
@@ -93,4 +96,7 @@ window.api.citations.delete(id)                    // → boolean
 | `citations:get` | `sources.getCitation(db, id)` |
 | `citations:forSource` | `sources.getCitationsForSource(db, sourceId)` |
 | `citations:forEvent` | `sources.getCitationsForEvent(db, eventId)` |
+| `citations:forPerson` | `sources.getCitationsForPerson(db, personId)` |
+| `citations:forRelationship` | `sources.getCitationsForRelationship(db, relationshipId)` |
+| `citations:forPlace` | `sources.getCitationsForPlace(db, placeId)` |
 | `citations:delete` | `sources.deleteCitation(db, id)` |

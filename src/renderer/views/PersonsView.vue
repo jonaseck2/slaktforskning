@@ -24,7 +24,7 @@
           class="clickable-row"
           @click="goToDetail(person.id)"
         >
-          <td>{{ person.given_name }}</td>
+          <td>{{ person.given_name }} <CitationBadge :count="personCitationCounts[person.id] ?? 0" /></td>
           <td>{{ person.surname }}</td>
           <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
           <td>{{ person.living ? $t('common.yes') : $t('common.no') }}</td>
@@ -83,6 +83,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import CitationBadge from '../components/CitationBadge.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -99,6 +100,7 @@ interface PersonRow {
 const { t } = useI18n();
 const router = useRouter();
 const persons = ref<PersonRow[]>([]);
+const personCitationCounts = ref<Record<string, number>>({});
 const showAddForm = ref(false);
 const form = reactive({
   given_name: '',
@@ -112,6 +114,14 @@ async function load() {
   if (!window.api) return;
   try {
     persons.value = (await window.api.persons.list()) as PersonRow[];
+    const counts: Record<string, number> = {};
+    await Promise.all(
+      persons.value.map(async (p) => {
+        const cits = (await window.api.citations.forPerson(p.id)) as unknown[];
+        counts[p.id] = cits.length;
+      }),
+    );
+    personCitationCounts.value = counts;
   } catch (err) {
     console.error('[PersonsView] load failed:', err);
   }

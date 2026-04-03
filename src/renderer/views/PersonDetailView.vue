@@ -5,6 +5,7 @@
       <div class="header-info">
         <h2>{{ primaryName }}</h2>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
+        <CitationBadge :count="personCitationCount" />
         <button type="button" class="btn-cite-header" @click="showCitePersonForm = true">{{ $t('personDetail.citePersonTitle') }}</button>
         <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
       </div>
@@ -196,7 +197,7 @@
       v-if="showCitePersonForm"
       :person-id="person.id"
       @close="showCitePersonForm = false"
-      @saved="showCitePersonForm = false"
+      @saved="showCitePersonForm = false; load()"
     />
 
     <AddRelatedPersonModal
@@ -315,6 +316,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
 import CitationForm from '../components/CitationForm.vue';
+import CitationBadge from '../components/CitationBadge.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
@@ -365,6 +367,7 @@ const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingNameId = ref<string | null>(null);
 const showCitePersonForm = ref(false);
+const personCitationCount = ref(0);
 const showAddRelated = ref(false);
 const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
 const editSex = ref('U');
@@ -453,6 +456,10 @@ async function load() {
       });
     }
     rels.value = enriched;
+
+    // Person-level citation count
+    const personCits = (await window.api.citations.forPerson(personId)) as unknown[];
+    personCitationCount.value = personCits.length;
 
     // Evidence summary
     const evs = (await window.api.events.forPerson(personId)) as Array<{ id: string }>;

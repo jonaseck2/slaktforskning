@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import type Database from 'better-sqlite3';
 import { createTestDb } from './helpers';
 import { createEvent } from '../../src/api/events';
+import { createPerson } from '../../src/api/persons';
+import { createRelationship } from '../../src/api/relationships';
+import { createPlace } from '../../src/api/places';
 import {
   createSource,
   getSource,
@@ -13,6 +16,9 @@ import {
   getCitation,
   getCitationsForSource,
   getCitationsForEvent,
+  getCitationsForPerson,
+  getCitationsForRelationship,
+  getCitationsForPlace,
   deleteCitation,
 } from '../../src/api/sources';
 
@@ -113,5 +119,30 @@ describe('citations', () => {
     const citation = createCitation(db, { source_id: source.id });
     expect(deleteCitation(db, citation.id)).toBe(true);
     expect(getCitation(db, citation.id)).toBeNull();
+  });
+
+  it('gets citations for a person', () => {
+    const person = createPerson(db, {});
+    const source = createSource(db, { title: 'Record' });
+    createCitation(db, { source_id: source.id, person_id: person.id });
+    createCitation(db, { source_id: source.id, person_id: person.id });
+    expect(getCitationsForPerson(db, person.id)).toHaveLength(2);
+    expect(getCitationsForPerson(db, 'nonexistent')).toHaveLength(0);
+  });
+
+  it('gets citations for a relationship', () => {
+    const rel = createRelationship(db, { type: 'couple' });
+    const source = createSource(db, { title: 'Record' });
+    createCitation(db, { source_id: source.id, relationship_id: rel.id });
+    expect(getCitationsForRelationship(db, rel.id)).toHaveLength(1);
+    expect(getCitationsForRelationship(db, 'nonexistent')).toHaveLength(0);
+  });
+
+  it('gets citations for a place', () => {
+    const place = createPlace(db, { name: 'Stockholm' });
+    const source = createSource(db, { title: 'Record' });
+    createCitation(db, { source_id: source.id, place_id: place.id });
+    expect(getCitationsForPlace(db, place.id)).toHaveLength(1);
+    expect(getCitationsForPlace(db, 'nonexistent')).toHaveLength(0);
   });
 });

@@ -64,6 +64,9 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | get_citation | Get citation by ID |
 | get_citations_for_source | Get all citations for a source |
 | get_citations_for_event | Get all citations for an event |
+| get_citations_for_person | Get all citations attached to a person |
+| get_citations_for_relationship | Get all citations attached to a relationship |
+| get_citations_for_place | Get all citations attached to a place |
 | delete_citation | Delete a citation |
 
 ## UI Tools (requires Electron app to be running)

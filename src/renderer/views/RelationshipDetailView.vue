@@ -4,6 +4,7 @@
       <button class="btn-back" @click="$router.push('/relationships')">{{ $t('relationshipDetail.back') }}</button>
       <div class="header-row">
         <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
+        <CitationBadge :count="relCitationCount" />
         <button type="button" class="btn-cite-header" @click="showCiteForm = true">{{ $t('relationshipDetail.citeRelationship') }}</button>
       </div>
     </div>
@@ -84,7 +85,7 @@
       v-if="showCiteForm && relationship"
       :relationship-id="relationship.id"
       @close="showCiteForm = false"
-      @saved="showCiteForm = false"
+      @saved="showCiteForm = false; load()"
     />
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
@@ -93,6 +94,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import CitationForm from '../components/CitationForm.vue';
+import CitationBadge from '../components/CitationBadge.vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
@@ -119,6 +121,7 @@ const relId = route.params.id as string;
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
 const showCiteForm = ref(false);
+const relCitationCount = ref(0);
 
 const person1Label = computed(() => {
   const type = relationship.value?.type;
@@ -144,6 +147,8 @@ async function load() {
     relationship.value = (await window.api.relationships.get(relId)) as RelData | null;
     if (!relationship.value) return;
     notesText.value = relationship.value.notes || '';
+    const relCits = (await window.api.citations.forRelationship(relId)) as unknown[];
+    relCitationCount.value = relCits.length;
   } catch (err) {
     console.error('[RelationshipDetailView] load failed:', err);
   }
