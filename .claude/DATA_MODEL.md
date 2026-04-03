@@ -58,6 +58,7 @@ A person can have multiple names over time (birth, married, alias, aka).
 | name_suffix | TEXT | Suffix after surname (e.g. "Jr.", "Sr.") |
 | patronymic_base | TEXT | Base name used for Swedish patronymics (e.g. "Erik" → Eriksson/Eriksdotter) |
 | name_qualifier | TEXT | CHECK ('married_name' \| 'aka' \| 'nick' \| 'immigrant' \| null) |
+| preferred_name | TEXT | Tilltalsnamn — the specific given name used in daily life (e.g. "Linda" when full given name is "Eva Linda Marie") |
 
 ### person_identifiers
 External IDs linking a person record to identifiers in other systems.

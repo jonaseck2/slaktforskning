@@ -26,7 +26,8 @@ export function initializeSchema(db: Database): void {
       name_prefix TEXT,
       name_suffix TEXT,
       patronymic_base TEXT,
-      name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias'))
+      name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias')),
+      preferred_name TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id);
 
@@ -164,6 +165,10 @@ export function initializeSchema(db: Database): void {
   }
   if (!personNamesCols.includes('name_qualifier')) {
     db.exec(`ALTER TABLE person_names ADD COLUMN name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias'))`);
+  }
+  // v0.5.4 preferred_name (tilltalsnamn)
+  if (!personNamesCols.includes('preferred_name')) {
+    db.exec('ALTER TABLE person_names ADD COLUMN preferred_name TEXT');
   }
 
   const placesCols = (db.prepare('PRAGMA table_info(places)').all([]) as Array<{ name: string }>).map(c => c.name);

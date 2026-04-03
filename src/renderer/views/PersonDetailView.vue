@@ -61,7 +61,15 @@
         <tbody>
           <tr v-for="name in names" :key="name.id" class="clickable-row" @click="openEditName(name)">
             <td>
-              <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>{{ name.given_name }}
+              <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
+              <template v-if="name.preferred_name && name.given_name">
+                <template v-for="(token, i) in name.given_name.split(' ')" :key="i">
+                  <u v-if="token === name.preferred_name" class="preferred-token">{{ token }}</u>
+                  <span v-else>{{ token }}</span>
+                  <span v-if="i < name.given_name.split(' ').length - 1"> </span>
+                </template>
+              </template>
+              <template v-else>{{ name.given_name }}</template>
             </td>
             <td>
               {{ name.surname }}<span v-if="name.name_suffix"> {{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
@@ -250,6 +258,10 @@
             {{ $t('names.patronymicBase') }}
             <input v-model="nameForm.patronymic_base" type="text" :placeholder="$t('names.patronymicBasePlaceholder')" />
           </label>
+          <label v-if="nameForm.name_type === 'birth'">
+            {{ $t('persons.preferredName') }}
+            <input v-model="nameForm.preferred_name" type="text" :placeholder="$t('persons.preferredNamePlaceholder')" />
+          </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showNameForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('personDetail.addNameTitle') }}</button>
@@ -299,6 +311,10 @@
             {{ $t('names.patronymicBase') }}
             <input v-model="editNameForm.patronymic_base" type="text" :placeholder="$t('names.patronymicBasePlaceholder')" />
           </label>
+          <label v-if="editNameForm.name_type === 'birth'">
+            {{ $t('persons.preferredName') }}
+            <input v-model="editNameForm.preferred_name" type="text" :placeholder="$t('persons.preferredNamePlaceholder')" />
+          </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showEditNameForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('common.save') }}</button>
@@ -341,6 +357,7 @@ interface NameRow {
   name_suffix: string | null;
   patronymic_base: string | null;
   name_qualifier: string | null;
+  preferred_name: string | null;
 }
 
 interface RelRow {
@@ -390,6 +407,7 @@ const nameForm = reactive({
   name_suffix: '',
   name_qualifier: '',
   patronymic_base: '',
+  preferred_name: '',
 });
 
 const editNameForm = reactive({
@@ -400,6 +418,7 @@ const editNameForm = reactive({
   name_suffix: '',
   name_qualifier: '',
   patronymic_base: '',
+  preferred_name: '',
 });
 
 const identifiers = ref<IdentifierRow[]>([]);
@@ -425,7 +444,8 @@ async function load() {
     names.value = (await window.api.persons.getNames(personId)) as NameRow[];
     if (names.value.length > 0) {
       const n = names.value[0];
-      primaryName.value = `${n.given_name} ${n.surname}`.trim();
+      const displayGiven = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
+      primaryName.value = `${displayGiven} ${n.surname ?? ''}`.trim();
     }
 
     const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{
@@ -489,6 +509,7 @@ async function addName() {
       name_suffix: nameForm.name_suffix || null,
       name_qualifier: nameForm.name_qualifier || null,
       patronymic_base: nameForm.patronymic_base || null,
+      preferred_name: nameForm.preferred_name || null,
     });
     showNameForm.value = false;
     nameForm.given_name = '';
@@ -498,6 +519,7 @@ async function addName() {
     nameForm.name_suffix = '';
     nameForm.name_qualifier = '';
     nameForm.patronymic_base = '';
+    nameForm.preferred_name = '';
     await load();
   } catch (err) {
     console.error('[PersonDetailView] addName failed:', err);
@@ -513,6 +535,7 @@ function openEditName(name: NameRow) {
   editNameForm.name_suffix = name.name_suffix ?? '';
   editNameForm.name_qualifier = name.name_qualifier ?? '';
   editNameForm.patronymic_base = name.patronymic_base ?? '';
+  editNameForm.preferred_name = name.preferred_name ?? '';
   showEditNameForm.value = true;
 }
 
@@ -527,6 +550,7 @@ async function saveEditName() {
       name_suffix: editNameForm.name_suffix || null,
       name_qualifier: editNameForm.name_qualifier || null,
       patronymic_base: editNameForm.patronymic_base || null,
+      preferred_name: editNameForm.preferred_name || null,
     });
     showEditNameForm.value = false;
     editingNameId.value = null;
@@ -903,5 +927,9 @@ form select {
   border-radius: 8px;
   font-size: 11px;
   margin-left: 4px;
+}
+.preferred-token {
+  text-decoration: underline;
+  text-decoration-style: solid;
 }
 </style>

@@ -20,6 +20,7 @@ export interface PersonName {
   name_suffix: string | null;
   patronymic_base: string | null;
   name_qualifier: 'patronymic' | 'matronymic' | 'particle' | 'married' | 'alias' | null;
+  preferred_name: string | null;
 }
 
 export interface PersonIdentifier {

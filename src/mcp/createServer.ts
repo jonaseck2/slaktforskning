@@ -74,13 +74,14 @@ export function createMcpServer(db: Database): McpServer {
     description: 'Add an alternate name to a person (married, alias, aka)',
     inputSchema: {
       person_id: z.string().describe('Person ID'),
-      given_name: z.string().optional().describe('Given/first name'),
+      given_name: z.string().optional().describe('Full legal given names, e.g. "Eva Linda Marie"'),
       surname: z.string().optional().describe('Surname/family name'),
       name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional().describe('Name type (default: birth)'),
       name_prefix: z.string().optional(),
       name_suffix: z.string().optional(),
       patronymic_base: z.string().optional(),
       name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
+      preferred_name: z.string().optional().describe('Tilltalsnamn — the specific given name used in daily life, e.g. "Linda"'),
     },
   }, async (args) => {
     const { person_id, ...data } = args;
@@ -107,6 +108,7 @@ export function createMcpServer(db: Database): McpServer {
       name_suffix: z.string().optional(),
       patronymic_base: z.string().optional(),
       name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
+      preferred_name: z.string().optional().describe('Tilltalsnamn — the specific given name used in daily life'),
     },
   }, async ({ id, ...data }) =>
     ({ content: [{ type: 'text', text: JSON.stringify(persons.updatePersonName(db, id, data)) }] })
