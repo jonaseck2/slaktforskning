@@ -40,11 +40,13 @@ function hourglass(
   parents: [PersonNode | null, PersonNode | null] = [null, null],
   grandparents: [PersonNode | null, PersonNode | null, PersonNode | null, PersonNode | null] = [null, null, null, null],
   children: PersonNode[] = [],
+  spouses: PersonNode[] = [],
 ): HourglassTree {
   return {
     ancestors: pedigree3(focal, parents, grandparents),
     descendantRoot: { person: focal, children: children.map(c => ({ person: c, children: [] })) },
     descendantGenerations: 3,
+    spouses,
   };
 }
 
@@ -138,6 +140,26 @@ describe('computeHourglassLayout', () => {
     const h1 = computeHourglassLayout(hourglass(p('f'))).svgHeight;
     const h2 = computeHourglassLayout(hourglass(p('f'), [null, null], [null, null, null, null], [p('c1')])).svgHeight;
     expect(h2).toBeGreaterThan(h1);
+  });
+
+  it('places spouse boxes at the same row as focal, to the right', () => {
+    const { boxes } = computeHourglassLayout(
+      hourglass(p('f'), [null, null], [null, null, null, null], [], [p('s1'), p('s2')]),
+    );
+    const focal  = boxes.find(b => b.isFocal)!;
+    const spouse = boxes.find(b => b.person.id === 's1')!;
+    expect(spouse.y).toBe(focal.y);
+    expect(spouse.x).toBeGreaterThan(focal.x + BOX_W);
+  });
+
+  it('extends svgWidth when spouses exceed ancestor section width', () => {
+    const many = Array.from({ length: 6 }, (_, i) => p(`s${i}`));
+    const { svgWidth } = computeHourglassLayout(
+      hourglass(p('f'), [null, null], [null, null, null, null], [], many),
+    );
+    // With 6 spouses the right edge must exceed what ancestor/descendant section alone provides
+    const withoutSpouses = computeHourglassLayout(hourglass(p('f'))).svgWidth;
+    expect(svgWidth).toBeGreaterThan(withoutSpouses);
   });
 
   it('grandchildren appear below children', () => {

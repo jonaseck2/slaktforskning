@@ -102,14 +102,24 @@ async function fetchDescendantTree(
 }
 
 /**
- * Fetch an hourglass tree: 3 ancestor levels above focal + 3 descendant levels below.
+ * Fetch an hourglass tree: 3 ancestor levels above focal + 3 descendant levels below
+ * + couple partners (spouses) of the focal person.
  */
 export async function fetchHourglassTree(focalId: string): Promise<HourglassTree> {
-  const [ancestors, descendantRoot] = await Promise.all([
+  const [ancestors, descendantRoot, rawRels] = await Promise.all([
     fetchPedigreeTree(focalId, 4), // focal + 3 ancestor levels (parents, gp, ggp)
     fetchDescendantTree(focalId, 0, 3), // 3 descendant levels (children, gc, ggc)
-  ]);
-  return { ancestors, descendantRoot, descendantGenerations: 3 };
+    window.api.relationships.getForPerson(focalId),
+  ]) as [PedigreeTree, DescendantNode, RawRel[]];
+
+  const spouseIds = rawRels
+    .filter(r => r.type === 'couple')
+    .map(r => (r.person1_id === focalId ? r.person2_id : r.person1_id))
+    .filter((id): id is string => id !== null && id !== focalId);
+
+  const spouses = await Promise.all(spouseIds.map(fetchPersonNode));
+
+  return { ancestors, descendantRoot, descendantGenerations: 3, spouses };
 }
 
 export async function fetchTimelineEntries(focalId: string): Promise<TimelineEntry[]> {
