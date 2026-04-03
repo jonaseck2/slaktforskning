@@ -25,10 +25,7 @@
           @click="goToDetail(person.id)"
         >
           <td>
-            <template v-for="part in givenNameParts(person)" :key="part.text + part.underline">
-              <u v-if="part.underline" class="preferred-token">{{ part.text }}</u>
-              <span v-else>{{ part.text }}</span>
-            </template>
+            <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name" />
             <CitationBadge :count="personCitationCounts[person.id] ?? 0" />
           </td>
           <td>{{ person.surname }}</td>
@@ -90,6 +87,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationBadge from '../components/CitationBadge.vue';
+import PersonName from '../components/PersonName.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -165,16 +163,6 @@ async function removePerson(id: string) {
   } catch (err) {
     console.error('[PersonsView] removePerson failed:', err);
   }
-}
-
-function givenNameParts(person: PersonRow): { text: string; underline: boolean }[] {
-  const parts: { text: string; underline: boolean }[] = [];
-  const tokens = (person.given_name ?? '').split(' ');
-  for (let i = 0; i < tokens.length; i++) {
-    if (i > 0) parts.push({ text: ' ', underline: false });
-    parts.push({ text: tokens[i], underline: tokens[i] === person.preferred_name });
-  }
-  return parts;
 }
 
 function goToDetail(id: string) {
@@ -323,9 +311,5 @@ form textarea {
 .btn-cancel {
   background: #e0e0e0;
   color: #333;
-}
-.preferred-token {
-  text-decoration: underline;
-  text-decoration-style: solid;
 }
 </style>

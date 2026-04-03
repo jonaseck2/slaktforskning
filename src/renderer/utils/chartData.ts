@@ -8,7 +8,7 @@ declare const window: Window & {
 };
 
 type RawPerson  = { id: string; sex: string; living: boolean };
-type RawName    = { given_name: string | null; surname: string | null; sort_order: number };
+type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; sort_order: number };
 type RawEvent   = { event_type: string; date_value: string | null };
 type RawRel     = { type: string; person1_id: string | null; person2_id: string | null };
 
@@ -27,12 +27,13 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
 
   if (!person) throw new Error(`Person not found: ${id}`);
   const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0]
-    ?? { given_name: null, surname: null };
+    ?? { given_name: null, surname: null, preferred_name: null };
 
   return {
     id,
     givenName: primary.given_name,
     surname: primary.surname,
+    preferredName: primary.preferred_name ?? null,
     sex: person.sex as 'M' | 'F' | 'U',
     living: Boolean(person.living),
     birthYear: extractYear(events.find(e => e.event_type === 'birth')?.date_value),

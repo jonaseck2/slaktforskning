@@ -62,10 +62,7 @@
           <tr v-for="name in names" :key="name.id" class="clickable-row" @click="openEditName(name)">
             <td>
               <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
-              <template v-for="part in givenNameParts(name)" :key="part.text + part.underline">
-                <u v-if="part.underline" class="preferred-token">{{ part.text }}</u>
-                <span v-else>{{ part.text }}</span>
-              </template>
+              <PersonName :given-name="name.given_name" :preferred-name="name.preferred_name" />
             </td>
             <td>
               {{ name.surname }}<span v-if="name.name_suffix"> {{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
@@ -330,6 +327,7 @@ import EventList from '../components/EventList.vue';
 import CitationForm from '../components/CitationForm.vue';
 import CitationBadge from '../components/CitationBadge.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
+import PersonName from '../components/PersonName.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -420,16 +418,6 @@ const editNameForm = reactive({
 const identifiers = ref<IdentifierRow[]>([]);
 const showAddIdentifier = ref(false);
 const newIdentifier = reactive({ identifier_type: 'familysearch', identifier_value: '' });
-
-function givenNameParts(name: NameRow): { text: string; underline: boolean }[] {
-  const parts: { text: string; underline: boolean }[] = [];
-  const tokens = (name.given_name ?? '').split(' ');
-  for (let i = 0; i < tokens.length; i++) {
-    if (i > 0) parts.push({ text: ' ', underline: false });
-    parts.push({ text: tokens[i], underline: tokens[i] === name.preferred_name });
-  }
-  return parts;
-}
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
   if (!subtype) return '';
@@ -934,9 +922,5 @@ form select {
   border-radius: 8px;
   font-size: 11px;
   margin-left: 4px;
-}
-.preferred-token {
-  text-decoration: underline;
-  text-decoration-style: solid;
 }
 </style>

@@ -95,16 +95,15 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 ### Done (v0.5.4 — Tilltalsnamn)
 `preferred_name` on `person_names`; `getDisplayGivenName()` helper; `listPersons`/`searchPersons` return and search by preferred_name; MCP `add_person_name`/`update_person_name` accept preferred_name; PersonDetailView underlines tilltalsnamn token in name rows and shows input field for birth names; PersonsView + PersonPicker display call name. See `.claude/plans/archive/2026-04-03-preferred-name.md`.
 
+### Done (v0.5.5 — Search Across All Name Records)
+`searchPersons` searches all `person_names` rows via EXISTS subquery — finds by married surname or preferred_name on any name record, not just the primary. See `.claude/plans/archive/2026-04-03-name-search.md`.
+
+### Done (v0.5.6 — PersonName Component & Consistent Underline)
+`PersonName.vue` shared component + `nameUtils.ts` utility extract the tilltalsnamn underline into one place. All name-rendering sites updated: RelationshipsView, SearchView, VisualizationView header, PersonPicker dropdown, and all three SVG charts (PedigreeChart, HourglassChart, TimelineChart via `<tspan text-decoration>`). Duplicate `givenNameParts()` functions and CSS removed from PersonsView and PersonDetailView. See `.claude/plans/archive/2026-04-03-person-name-component.md`.
+
 ---
 
 ## Roadmap
-
-### v0.5.5 — Search Across All Name Records
-
-See `.claude/plans/2026-04-03-name-search.md` for the full plan.
-
-- [ ] `searchPersons` searches all `person_names` rows via EXISTS subquery (finds by married name, preferred_name on any name record)
-- [ ] Unit tests: search by married surname, search by non-primary preferred_name
 
 ### v0.6.0 — GEDCOM Import/Export
 
@@ -130,6 +129,21 @@ See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
 - [ ] PersonDetailView inline banner for errors/warnings
 - [ ] Sidebar "Datakvalitet" entry with error count badge
 - [ ] Unit tests: `checks.test.ts` with known-bad and clean DB seeds; MCP tests
+
+### v0.6.2 — Genney Import Profile (Swedish GEDCOM)
+
+See `.claude/plans/2026-04-03-genney-import.md` for the full implementation plan. **Depends on v0.6.0 GEDCOM Import.**
+
+[Genney](https://genny.se) is the leading Swedish genealogy desktop application. Its export format is GEDCOM 5.5.1, so this milestone is an additive profile layer on top of the base GEDCOM importer — not a separate importer.
+
+- [ ] `src/gedcom/swedishPlace.ts` — hierarchical Swedish place parser; "Socken, Härad, Län, Sverige" → chain of `Place` records with `parent_place_id`
+- [ ] `src/gedcom/swedishNames.ts` — patronymic detector; "Johansson" → `patronymic_base: "Johan"`, "Persdotter" → `"Per"`, hereditary surnames → null
+- [ ] Extend `src/gedcom/importer.ts` — Genney custom tags: `_UID`/`REFN`/`RIN` → `person_identifiers`; `_YHAPLOGROUP`/`_MHAPLOGROUP` → `persons.notes`; name type mapping (`BIRTH`/`MARRIED`/`AKA`)
+- [ ] Unit tests: `swedishPlace.test.ts`, `swedishNames.test.ts`, Genney-tagged INDI fixtures in `gedcom.test.ts`
+- [ ] IPC `gedcom:import` gains optional `profile: 'genney'` flag routing through Swedish extensions
+- [ ] MCP `import_gedcom` gains optional `profile?: 'genney'` parameter
+- [ ] "Importera från Genney" button in PersonsView — modal with step-by-step Genney export instructions + file picker
+- [ ] **What is dropped:** Genney XML format (schema undocumented), media/OBJE, DNA match data (haplogroup stored in notes only)
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations

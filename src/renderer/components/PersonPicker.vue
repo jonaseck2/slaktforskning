@@ -19,7 +19,7 @@
         class="picker-option"
         @mousedown.prevent="select(person)"
       >
-        <span class="picker-name">{{ person.preferred_name ?? person.given_name?.split(' ')[0] ?? '' }} {{ person.surname }}</span>
+        <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" /></span>
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
     </ul>
@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import PersonName from './PersonName.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;

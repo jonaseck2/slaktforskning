@@ -4,7 +4,9 @@
       <button class="btn-back" @click="$router.back()">{{ $t('personDetail.back') }}</button>
       <template v-if="focalPerson">
         <div class="focal-info">
-          <h2 data-testid="visualization-focal-name">{{ focalName }}</h2>
+          <h2 data-testid="visualization-focal-name">
+            <PersonName :given-name="focalGivenName" :surname="focalSurname" :preferred-name="focalPreferredName" />
+          </h2>
           <router-link :to="'/persons/' + personId" class="btn-detail">{{ $t('visualization.viewDetail') }} →</router-link>
         </div>
       </template>
@@ -66,6 +68,7 @@ import { useI18n } from 'vue-i18n';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
+import PersonName from '../components/PersonName.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -79,7 +82,9 @@ const route = useRoute();
 const router = useRouter();
 
 const focalPerson = ref<Person | null>(null);
-const focalName = ref('');
+const focalGivenName = ref<string | null>(null);
+const focalSurname = ref<string | null>(null);
+const focalPreferredName = ref<string | null>(null);
 const noPersonsExist = ref(false);
 
 type TabName = 'pedigree' | 'hourglass' | 'timeline';
@@ -124,9 +129,11 @@ async function load() {
   }
   focalPerson.value = person;
 
-  const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; sort_order: number }>;
+  const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; sort_order: number }>;
   const primary = names.sort((a, b) => a.sort_order - b.sort_order)[0];
-  focalName.value = primary ? [primary.given_name, primary.surname].filter(Boolean).join(' ') : '(okänd)';
+  focalGivenName.value = primary?.given_name ?? null;
+  focalSurname.value = primary?.surname ?? null;
+  focalPreferredName.value = primary?.preferred_name ?? null;
 }
 
 watch(() => route.params.personId, load);

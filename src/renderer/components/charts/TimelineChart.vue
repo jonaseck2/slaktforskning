@@ -49,7 +49,11 @@
           :x="LEFT - 8" :y="bar.y + bar.h / 2 + (ROW_H - bar.h) / 2"
           class="row-label" :class="{ 'focal-label': bar.isFocal }"
           text-anchor="end" dominant-baseline="middle"
-        >{{ truncate(personName(bar.person), 22) }}</text>
+        ><tspan
+            v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName), 22)"
+            :key="pi"
+            :text-decoration="part.underline ? 'underline' : undefined"
+          >{{ part.text }}</tspan></text>
 
         <rect
           v-if="!bar.hasNoDate"
@@ -82,6 +86,7 @@ import { useI18n } from 'vue-i18n';
 import { computeTimelineLayout } from '../../utils/chartLayout';
 import { fetchTimelineEntries } from '../../utils/chartData';
 import type { TimelineLayout, PersonNode } from '../../utils/chartLayout';
+import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
 
@@ -99,14 +104,6 @@ const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 8
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#bbb' };
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#bbb'; }
-
-function personName(p: PersonNode): string {
-  return [p.givenName, p.surname].filter(Boolean).join(' ') || '(okänd)';
-}
-
-function truncate(str: string, max: number): string {
-  return str.length > max ? str.slice(0, max - 1) + '…' : str;
-}
 
 async function load() {
   if (!props.personId) return;

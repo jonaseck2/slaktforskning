@@ -26,11 +26,21 @@
         >
           <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
           <td>
-            {{ rel.person1_name || '—' }}
+            <PersonName
+              v-if="rel.person1_given_name || rel.person1_surname"
+              :given-name="rel.person1_given_name"
+              :surname="rel.person1_surname"
+              :preferred-name="rel.person1_preferred_name"
+            /><span v-else>—</span>
             <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
           </td>
           <td>
-            {{ rel.person2_name || '—' }}
+            <PersonName
+              v-if="rel.person2_given_name || rel.person2_surname"
+              :given-name="rel.person2_given_name"
+              :surname="rel.person2_surname"
+              :preferred-name="rel.person2_preferred_name"
+            /><span v-else>—</span>
             <span v-if="roleLabel2(rel.type)" class="role-label">{{ roleLabel2(rel.type) }}</span>
           </td>
           <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
@@ -97,6 +107,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
+import PersonName from '../components/PersonName.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -110,13 +121,18 @@ interface RelRow {
   person2_id: string | null;
   subtype: string | null;
   notes: string;
-  person1_name: string;
-  person2_name: string;
+  person1_given_name: string;
+  person1_surname: string;
+  person1_preferred_name: string | null;
+  person2_given_name: string;
+  person2_surname: string;
+  person2_preferred_name: string | null;
 }
 
 interface NameRow {
   given_name: string;
   surname: string;
+  preferred_name: string | null;
 }
 
 const { t } = useI18n();
@@ -153,15 +169,15 @@ function getSubtypeLabel(type: string, subtype: string): string {
   return subtype;
 }
 
-async function getPersonName(id: string | null): Promise<string> {
-  if (!id || !window.api) return '';
+async function getPersonNameRow(id: string | null): Promise<{ given_name: string; surname: string; preferred_name: string | null }> {
+  if (!id || !window.api) return { given_name: '', surname: '', preferred_name: null };
   try {
     const names = (await window.api.persons.getNames(id)) as NameRow[];
-    if (names.length > 0) return `${names[0].given_name} ${names[0].surname}`.trim();
+    if (names.length > 0) return { given_name: names[0].given_name, surname: names[0].surname, preferred_name: names[0].preferred_name };
   } catch {
     /* ignore */
   }
-  return '';
+  return { given_name: '', surname: '', preferred_name: null };
 }
 
 async function load() {
@@ -177,10 +193,16 @@ async function load() {
     }>;
     const enriched: RelRow[] = [];
     for (const r of raw) {
+      const p1 = await getPersonNameRow(r.person1_id);
+      const p2 = await getPersonNameRow(r.person2_id);
       enriched.push({
         ...r,
-        person1_name: await getPersonName(r.person1_id),
-        person2_name: await getPersonName(r.person2_id),
+        person1_given_name: p1.given_name,
+        person1_surname: p1.surname,
+        person1_preferred_name: p1.preferred_name,
+        person2_given_name: p2.given_name,
+        person2_surname: p2.surname,
+        person2_preferred_name: p2.preferred_name,
       });
     }
     relationships.value = enriched;
