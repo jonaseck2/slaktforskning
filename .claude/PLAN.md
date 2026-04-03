@@ -139,7 +139,20 @@ See `.claude/plans/2026-04-03-genney-export.md` for the full implementation plan
 - [ ] Merge/deduplicate persons
 - [ ] Media attachments (photos, documents)
 
-### v0.7.1 — Tree Sanity Checks (Data Quality)
+### v0.7.1 — Assertion GEDCOM Export
+
+**Depends on:** v0.7.0 (Assertions UI) and v0.6.3 (Extended GEDCOM Roundtrip).
+
+Extends the GEDCOM export with custom `0 @Ax@ _ASSN` top-level records so that
+research conclusions survive a roundtrip. Other apps ignore these records entirely.
+
+- [ ] Custom `_ASSN` record format: `_SUBJECT_TYPE`, `_SUBJECT_ID`, `_ATTRIBUTE`, `_VALUE`, `_CONFIDENCE`, `_ACCEPTED`, `SOUR @Sx@`, `NOTE`
+- [ ] Exporter: emit one `_ASSN` record per `assertions` row
+- [ ] Importer: read `_ASSN` records in a post-pass; recreate assertions linked to the correct subject UUIDs (matched via `_PLAC_ID` for places, person/source xref maps for others)
+- [ ] Unit tests: assertion roundtrip for person/event/relationship/place subjects
+- [ ] Docs update
+
+### v0.7.2 — Tree Sanity Checks (Data Quality)
 
 See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
 
