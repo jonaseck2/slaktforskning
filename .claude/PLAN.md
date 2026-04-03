@@ -114,20 +114,12 @@ Investigated and rejected 2026-04-03. Genney 4.1 uses Apache Derby internally an
 ### Done (v0.6.3 — Database Switcher)
 `settings.ts` (lastDatabase/recentDatabases in userData/settings.json); `switchDatabase()` + `getCurrentDatabasePath()` in database.ts; IPC `db:getCurrent`, `db:getRecent`, `db:createNew`, `db:openExisting`, `db:switchTo` with `db:switched` broadcast; `window.api.db.*` preload; `DatabaseView.vue` at `/database`; sidebar link in App.vue; `get_current_database` + `switch_database` MCP tools; 2 new MCP unit tests; E2E viz tests fixed (PersonName span structure + birth/death events). See `.claude/plans/archive/2026-04-03-database-switcher.md`.
 
+### Done (v0.6.4 — Extended GEDCOM Roundtrip)
+Export → import lossless cycle using GEDCOM 5.5.1 extension mechanisms. Exporter: `_LIVING`, `NICK`/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary event participants + sibling/godparent/other rels with `_EVID` cross-DB matching, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR`/`_PTYPE`/`_PNOTES`/`_PLAC_ID` on PLAC, `_URL`/`_STYPE`/`REPO` on SOUR, citation `NOTE`/`_ACCESSED`, `0 _PLAC` records for place-level citations. Importer: all new tags, 5-phase processing (SOUR → INDI → FAM → ASSO post-pass → _PLAC post-pass), place deduplication via `_PLAC_ID`. 29 new roundtrip unit tests (262 total). See `.claude/plans/archive/2026-04-03-gedcom-extended.md`.
+
 ---
 
 ## Roadmap
-
-### v0.6.4 — Extended GEDCOM Roundtrip
-
-See `.claude/plans/2026-04-03-gedcom-extended.md` for the full implementation plan. **Depends on v0.6.3 (Database Switcher).**
-
-Makes export → import lossless by using GEDCOM 5.5.1's standard extension mechanisms. No profile flag — the extended output becomes the new default. Other apps ignore the `_`-prefixed custom tags per spec.
-
-- [ ] Exporter: `_LIVING`, `NICK` (preferred_name)/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary participants + sibling/godparent/other rels, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR` on PLAC, `_PLAC_ID`, `_URL`/`_STYPE` on SOUR, citation `NOTE`/`_ACCESSED`, `0 _PLAC` records for place-level citations
-- [ ] Importer: read all new tags above; `_PLAC_ID` enables exact place deduplication; `_PLAC` records restore place-level citations
-- [ ] Roundtrip unit tests for every new field
-- [ ] Docs update
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
