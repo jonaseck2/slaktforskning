@@ -123,6 +123,9 @@ All IPC handler closures captured a single `db` object at startup; after `switch
 ### Fix — GEDCOM import timeout + Genney preferred name asterisk
 No transaction around `importGedcom` caused ~25k auto-commits, writing ~1.6 GB to WAL and timing out on a real 70k-line Genney file. Wrapped in a single BEGIN/COMMIT. Also: Genney asterisk notation in given names now correctly extracts tilltalsnamn into `preferred_name`. 3 new tests (265 total). See `.claude/plans/archive/2026-04-03-gedcom-import-performance.md`.
 
+### Fix — GEDCOM import CPU saturation (statement cache)
+After the transaction fix, a 70k-line import still ran at ~100% CPU for 1–2 min because every API call recompiled its SQL via `db.prepare()`. Added `withStatementCache(db)` — a Proxy that caches compiled statements per unique SQL — reducing ~50k compiles to ~20 for the full import. See `.claude/plans/archive/2026-04-03-gedcom-import-cpu.md`.
+
 ---
 
 ## Roadmap

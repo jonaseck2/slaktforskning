@@ -472,6 +472,31 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
 }
 
 /**
+ * Wraps a Database so that db.prepare(sql) compiles each unique SQL string only
+ * once per import. The ~50k prepare() calls in a large import otherwise dominate
+ * CPU time. All SQLite operations here are synchronous and single-threaded, so
+ * reusing a compiled statement across calls is safe.
+ * BEGIN/COMMIT/ROLLBACK are called on the real db (not the proxy) so they are
+ * never cached.
+ */
+function withStatementCache(db: Database): Database {
+  const cache = new Map<string, ReturnType<typeof db.prepare>>();
+  return new Proxy(db, {
+    get(target, prop) {
+      if (prop === 'prepare') {
+        return (sql: string) => {
+          let stmt = cache.get(sql);
+          if (!stmt) { stmt = target.prepare(sql); cache.set(sql, stmt); }
+          return stmt;
+        };
+      }
+      const val = (target as unknown as Record<string | symbol, unknown>)[prop];
+      return typeof val === 'function' ? (val as (...a: unknown[]) => unknown).bind(target) : val;
+    },
+  }) as unknown as Database;
+}
+
+/**
  * Imports a parsed GEDCOM tree into the database inside a single transaction.
  * Without a transaction, SQLite auto-commits every statement, causing thousands
  * of WAL flushes (measured at ~1.6 GB for a 70k-line file). One commit at the
@@ -481,7 +506,7 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
 export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
   db.prepare('BEGIN').run([]);
   try {
-    doImportGedcom(db, tree, options);
+    doImportGedcom(withStatementCache(db), tree, options);
     db.prepare('COMMIT').run([]);
   } catch (err) {
     db.prepare('ROLLBACK').run([]);
