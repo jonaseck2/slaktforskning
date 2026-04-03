@@ -121,7 +121,9 @@ export function registerIpcHandlers(): void {
 
   wrapHandler('db:getRecent', () => {
     const { recentDatabases } = loadSettings();
-    return recentDatabases.map(p => ({ path: p, name: path.basename(p) }));
+    return recentDatabases
+      .filter(p => fs.existsSync(p))
+      .map(p => ({ path: p, name: path.basename(p) }));
   });
 
   ipcMain.handle('db:createNew', async () => {
