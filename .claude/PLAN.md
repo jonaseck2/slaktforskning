@@ -109,18 +109,6 @@ GEDCOM 5.5.1 parser (`parseGedcom`), date parser (`parseGedcomDate`/`formatGedco
 ## Roadmap
 
 
-### v0.6.1 — Tree Sanity Checks (Data Quality)
-
-See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
-
-- [ ] `src/api/checks.ts` — CheckResult type + ~25 checks across 6 categories (chronological, parenthood age, family structure, relationship integrity, geographic, completeness)
-- [ ] IPC + preload: `checks:runAll`, `checks:forPerson`
-- [ ] MCP: `run_checks`, `run_checks_for_person`
-- [ ] `QualityView` at `/quality` — grouped by severity, filter chips, re-run button
-- [ ] PersonDetailView inline banner for errors/warnings
-- [ ] Sidebar "Datakvalitet" entry with error count badge
-- [ ] Unit tests: `checks.test.ts` with known-bad and clean DB seeds; MCP tests
-
 ### v0.6.2 — Genney Import Profile (Swedish GEDCOM)
 
 See `.claude/plans/2026-04-03-genney-import.md` for the full implementation plan. **Depends on v0.6.0 GEDCOM Import.**
@@ -141,6 +129,18 @@ See `.claude/plans/2026-04-03-genney-import.md` for the full implementation plan
 - [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap
 - [ ] Merge/deduplicate persons
 - [ ] Media attachments (photos, documents)
+
+### v0.7.1 — Tree Sanity Checks (Data Quality)
+
+See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
+
+- [ ] `src/api/checks.ts` — CheckResult type + ~25 checks across 6 categories (chronological, parenthood age, family structure, relationship integrity, geographic, completeness)
+- [ ] IPC + preload: `checks:runAll`, `checks:forPerson`
+- [ ] MCP: `run_checks`, `run_checks_for_person`
+- [ ] `QualityView` at `/quality` — grouped by severity, filter chips, re-run button
+- [ ] PersonDetailView inline banner for errors/warnings
+- [ ] Sidebar "Datakvalitet" entry with error count badge
+- [ ] Unit tests: `checks.test.ts` with known-bad and clean DB seeds; MCP tests
 
 ### v0.8.0 — Polish
 - [ ] Keyboard navigation and accessibility
