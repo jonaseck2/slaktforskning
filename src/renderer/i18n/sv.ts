@@ -148,6 +148,8 @@ export default {
     notes: 'Anteckningar',
     notesPlaceholder: 'Valfria anteckningar\u2026',
     dateAccessed: 'Åtkomstdatum',
+    none: 'Inga hänvisningar',
+    confirmDelete: 'Ta bort hänvisningen?',
   },
   dateInput: {
     to: 'till',

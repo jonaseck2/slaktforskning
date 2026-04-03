@@ -148,6 +148,8 @@ export default {
     notes: 'Notes',
     notesPlaceholder: 'Optional notes\u2026',
     dateAccessed: 'Date Accessed',
+    none: 'No citations',
+    confirmDelete: 'Delete this citation?',
   },
   dateInput: {
     to: 'to',
