@@ -8,15 +8,6 @@
           <router-link :to="'/persons/' + personId" class="btn-detail">{{ $t('visualization.viewDetail') }} →</router-link>
         </div>
       </template>
-      <template v-else>
-        <div class="focal-picker">
-          <PersonPicker
-            :model-value="null"
-            :placeholder="$t('visualization.selectPerson')"
-            @select="handlePersonSelect"
-          />
-        </div>
-      </template>
     </div>
 
     <template v-if="focalPerson">
@@ -72,7 +63,6 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import PersonPicker from '../components/PersonPicker.vue';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
@@ -106,10 +96,6 @@ function navigateTo(id: string) {
   router.push('/visualisering/' + id);
 }
 
-function handlePersonSelect(person: PersonWithName) {
-  router.push('/visualisering/' + person.id);
-}
-
 async function load() {
   const id = personId.value;
   if (!id) {
@@ -119,10 +105,13 @@ async function load() {
       router.replace('/visualisering/' + last);
       return;
     }
-    // Check if any persons exist to show appropriate empty state
+    // Auto-select first person or show empty state
     const persons = (await window.api.persons.list()) as PersonWithName[];
-    noPersonsExist.value = persons.length === 0;
-    focalPerson.value = null;
+    if (persons.length > 0) {
+      router.replace('/visualisering/' + persons[0].id);
+    } else {
+      noPersonsExist.value = true;
+    }
     return;
   }
 
@@ -197,11 +186,6 @@ onMounted(load);
 }
 
 .btn-detail:hover { background: #dcfce7; }
-
-.focal-picker {
-  flex: 1;
-  max-width: 320px;
-}
 
 .viz-tabs {
   display: flex;
