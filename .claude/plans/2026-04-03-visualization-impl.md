@@ -1,4 +1,4 @@
-# v0.4.1 Visualization — Implementation Plan
+# v0.5.0 Visualization — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
