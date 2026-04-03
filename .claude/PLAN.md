@@ -111,6 +111,17 @@ GEDCOM 5.5.1 parser (`parseGedcom`), date parser (`parseGedcomDate`/`formatGedco
 
 ## Roadmap
 
+### v0.6.3 — Extended GEDCOM Roundtrip
+
+See `.claude/plans/2026-04-03-gedcom-extended.md` for the full implementation plan. **Depends on v0.6.2.**
+
+Makes export → import lossless by using GEDCOM 5.5.1's standard extension mechanisms. No profile flag — the extended output becomes the new default. Other apps ignore the `_`-prefixed custom tags per spec.
+
+- [ ] Exporter: `_LIVING`, `_PREF`/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary participants + sibling/godparent rels, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR` on PLAC, `_PLAC_ID`, `_URL`/`_STYPE` on SOUR, citation `NOTE`/`_ACCESSED`
+- [ ] Importer: read all new tags above; `_PLAC_ID` enables exact place deduplication
+- [ ] Roundtrip unit tests for every new field
+- [ ] Docs update
+
 ### v0.6.5 — Genney Export Profile
 
 See `.claude/plans/2026-04-03-genney-export.md` for the full implementation plan. **Depends on v0.6.2 Genney Import.**
