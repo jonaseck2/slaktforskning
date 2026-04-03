@@ -117,8 +117,8 @@ See `.claude/plans/2026-04-03-gedcom-extended.md` for the full implementation pl
 
 Makes export → import lossless by using GEDCOM 5.5.1's standard extension mechanisms. No profile flag — the extended output becomes the new default. Other apps ignore the `_`-prefixed custom tags per spec.
 
-- [ ] Exporter: `_LIVING`, `_PREF`/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary participants + sibling/godparent rels, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR` on PLAC, `_PLAC_ID`, `_URL`/`_STYPE` on SOUR, citation `NOTE`/`_ACCESSED`
-- [ ] Importer: read all new tags above; `_PLAC_ID` enables exact place deduplication
+- [ ] Exporter: `_LIVING`, `_PREF`/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary participants + sibling/godparent/other rels, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR` on PLAC, `_PLAC_ID`, `_URL`/`_STYPE` on SOUR, citation `NOTE`/`_ACCESSED`, `0 _PLAC` records for place-level citations
+- [ ] Importer: read all new tags above; `_PLAC_ID` enables exact place deduplication; `_PLAC` records restore place-level citations
 - [ ] Roundtrip unit tests for every new field
 - [ ] Docs update
 
