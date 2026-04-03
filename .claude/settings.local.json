@@ -172,7 +172,17 @@
       "Bash(npx tsx:*)",
       "WebFetch(domain:genny.se)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(p.version\\)\")",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "Bash(java -version)",
+      "WebFetch(domain:phabricator.wikimedia.org)",
+      "Bash(brew install:*)",
+      "WebFetch(domain:slaktforskning.blogspot.com)",
+      "WebFetch(domain:www.tcgr.bufton.org)",
+      "Bash(pdftotext \"/Users/jonasahnstedt/.claude/projects/-Users-jonasahnstedt-git-slaktforskning/ae3b0ff9-5a7e-4db5-8341-b17133fb59eb/tool-results/webfetch-1775222229829-yxby49.pdf\" -)",
+      "Bash(pdftotext \"/Users/jonasahnstedt/.claude/projects/-Users-jonasahnstedt-git-slaktforskning/ae3b0ff9-5a7e-4db5-8341-b17133fb59eb/tool-results/webfetch-1775222227078-d25u1r.pdf\" -)",
+      "Read(//Users/jonasahnstedt/git/slaktforskning/**)",
+      "WebFetch(domain:notiser.xn--trby-loa.se)",
+      "WebFetch(domain:www.webtrees.net)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

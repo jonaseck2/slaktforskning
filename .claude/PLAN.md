@@ -104,6 +104,9 @@ GEDCOM 5.5.1 parser (`parseGedcom`), date parser (`parseGedcomDate`/`formatGedco
 ### Done (v0.6.2 — Genney Import Profile)
 `swedishPlace.ts` (hierarchical Swedish place parser), `swedishNames.ts` (patronymic detector), `importer.ts` extended with `profile: 'genney'` option: `_UID`/`_YHAPLOGROUP`/`_MHAPLOGROUP` tags, patronymic detection, Swedish place hierarchy. `gedcom:import` IPC + `import_gedcom` MCP gain optional `profile` param. "Importera från Genney" button + modal in PersonsView. 231 unit tests. See `.claude/plans/archive/2026-04-03-genney-import.md`.
 
+### Rejected (v0.6.5 — Genney Export Profile) + (v0.6.6 — Genney Roundtrip)
+Investigated and rejected 2026-04-03. Genney 4.1 uses Apache Derby internally and has two export modes: a proprietary "Genney" extended format (lossless into Genney) and standard GEDCOM 5.5 (lossy). All custom `_`-prefixed tags we write (v0.6.3) are silently stripped when re-exported from Genney — a true lossless roundtrip is impossible. Encoding mismatches (`_REL` vs `_SUBTYPE`, `*`-encoded tilltalsnamn, `_UID` vs `REFN`) add further complexity without benefit. Decision: Genney roundtrip is best-effort by design. Users needing lossless roundtrip use the internal extended GEDCOM (v0.6.3). See `.claude/plans/archive/2026-04-03-genney-export-roundtrip.md` for the full analysis.
+
 ### Done (v0.5.6 — PersonName Component & Consistent Underline)
 `PersonName.vue` shared component + `nameUtils.ts` utility extract the tilltalsnamn underline into one place. All name-rendering sites updated: RelationshipsView, SearchView, VisualizationView header, PersonPicker dropdown, and all three SVG charts (PedigreeChart, HourglassChart, TimelineChart via `<tspan text-decoration>`). Duplicate `givenNameParts()` functions and CSS removed from PersonsView and PersonDetailView. See `.claude/plans/archive/2026-04-03-person-name-component.md`.
 
@@ -117,21 +120,10 @@ See `.claude/plans/2026-04-03-gedcom-extended.md` for the full implementation pl
 
 Makes export → import lossless by using GEDCOM 5.5.1's standard extension mechanisms. No profile flag — the extended output becomes the new default. Other apps ignore the `_`-prefixed custom tags per spec.
 
-- [ ] Exporter: `_LIVING`, `_PREF`/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary participants + sibling/godparent/other rels, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR` on PLAC, `_PLAC_ID`, `_URL`/`_STYPE` on SOUR, citation `NOTE`/`_ACCESSED`, `0 _PLAC` records for place-level citations
+- [ ] Exporter: `_LIVING`, `NICK` (preferred_name)/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary participants + sibling/godparent/other rels, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR` on PLAC, `_PLAC_ID`, `_URL`/`_STYPE` on SOUR, citation `NOTE`/`_ACCESSED`, `0 _PLAC` records for place-level citations
 - [ ] Importer: read all new tags above; `_PLAC_ID` enables exact place deduplication; `_PLAC` records restore place-level citations
 - [ ] Roundtrip unit tests for every new field
 - [ ] Docs update
-
-### v0.6.5 — Genney Export Profile
-
-See `.claude/plans/2026-04-03-genney-export.md` for the full implementation plan. **Depends on v0.6.2 Genney Import.**
-
-- [ ] `buildSwedishPlaceName(db, placeId)` in `swedishPlace.ts` — walk `parent_place_id` chain to reconstruct "Socken, Härad, Län, Sverige"
-- [ ] `ExportOptions { profile?: 'genney' }` interface; `exportGedcom` accepts it
-- [ ] Genney export extensions: hierarchical PLAC strings, `_UID` from identifiers, `_YHAPLOGROUP`/`_MHAPLOGROUP` extracted from notes
-- [ ] `gedcom:export` IPC + `export_gedcom` MCP gain optional `profile?: 'genney'`
-- [ ] ImportExportView: "Exportera till Genney 4.1" section
-- [ ] Unit tests: roundtrip place chain, `_UID`, haplogroup extraction
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
