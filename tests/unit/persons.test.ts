@@ -85,6 +85,21 @@ describe('persons', () => {
     expect(results[0].given_name).toBe('Erik');
   });
 
+  it('finds person by married surname', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
+    addPersonName(db, person.id, { given_name: 'Anna', surname: 'Ahnstedt', name_type: 'married' });
+    const results = searchPersons(db, 'Ahnstedt');
+    expect(results).toHaveLength(1);
+    expect(results[0].surname).toBe('Nord'); // display uses primary name
+  });
+
+  it('finds person by preferred_name on a non-primary name record', () => {
+    const person = createPerson(db, { given_name: 'Eva Anna-Greta', surname: 'Nord' });
+    addPersonName(db, person.id, { given_name: 'Eva Anna-Greta', surname: 'Ahnstedt', name_type: 'married', preferred_name: 'Anna-Greta' });
+    const results = searchPersons(db, 'Anna-Greta');
+    expect(results.some(p => p.id === person.id)).toBe(true);
+  });
+
   it('adds multiple names to a person', () => {
     const person = createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
     addPersonName(db, person.id, { given_name: 'Anna', surname: 'Bergström', name_type: 'married' });

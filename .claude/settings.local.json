@@ -157,7 +157,14 @@
       "Bash(perl -pi -e 's/- \\\\[ \\\\]/- [x]/g' /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-03-place-address.md)",
       "Bash(mv /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-03-place-address.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/)",
       "Edit(/.claude/skills/data-modeling/**)",
-      "Edit(/.claude/skills/gedcom/**)"
+      "Edit(/.claude/skills/gedcom/**)",
+      "mcp__slaktforskning__list_sources",
+      "mcp__slaktforskning__update_place",
+      "mcp__slaktforskning__add_person_name",
+      "mcp__slaktforskning__create_relationship",
+      "mcp__slaktforskning__get_relationships_of_person",
+      "mcp__slaktforskning__update_relationship",
+      "mcp__slaktforskning__delete_person"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

@@ -99,6 +99,13 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 
 ## Roadmap
 
+### v0.5.5 — Search Across All Name Records
+
+See `.claude/plans/2026-04-03-name-search.md` for the full plan.
+
+- [ ] `searchPersons` searches all `person_names` rows via EXISTS subquery (finds by married name, preferred_name on any name record)
+- [ ] Unit tests: search by married surname, search by non-primary preferred_name
+
 ### v0.6.0 — GEDCOM Import/Export
 
 See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Depends on v0.4.0 Places** (`findOrCreatePlace` used for PLAC tags on import).

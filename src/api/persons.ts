@@ -75,8 +75,12 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
-    WHERE pn.given_name LIKE ? OR pn.surname LIKE ?
-       OR pn.preferred_name LIKE ? OR p.notes LIKE ?
+    WHERE p.notes LIKE ?
+       OR EXISTS (
+         SELECT 1 FROM person_names n
+         WHERE n.person_id = p.id
+           AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
+       )
     ORDER BY pn.surname, pn.given_name
   `).all([like, like, like, like]) as (Person & { given_name: string; surname: string; preferred_name: string | null })[];
 }
