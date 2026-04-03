@@ -1,7 +1,7 @@
 // src/renderer/utils/chartData.ts
 // Fetches PersonNode trees from window.api for use by chart components.
 
-import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry } from './chartLayout';
+import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode } from './chartLayout';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -41,63 +41,75 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
   };
 }
 
-export async function fetchPedigreeTree(focalId: string): Promise<PedigreeTree> {
-  const [focal, rawRels] = await Promise.all([
-    fetchPersonNode(focalId),
-    window.api.relationships.getForPerson(focalId),
-  ]) as [PersonNode, RawRel[]];
+/**
+ * Fetch an ahnentafel ancestor tree up to `generations` levels (including focal).
+ * Default: 5 generations (focal + 4 ancestor levels = up to 16 great-great-grandparents).
+ */
+export async function fetchPedigreeTree(focalId: string, generations = 5): Promise<PedigreeTree> {
+  const nodes = new Map<number, PersonNode>();
 
-  // Parents: parent_child rels where focal is person2 (the child)
-  const parentIds = rawRels
-    .filter(r => r.type === 'parent_child' && r.person2_id === focalId)
-    .map(r => r.person1_id)
-    .filter((id): id is string => id !== null)
-    .slice(0, 2);
+  async function fetchAncestors(personId: string, ahnNum: number, gen: number): Promise<void> {
+    if (gen < generations) {
+      const [node, rawRels] = await Promise.all([
+        fetchPersonNode(personId),
+        window.api.relationships.getForPerson(personId),
+      ]) as [PersonNode, RawRel[]];
 
-  const parents = (await Promise.all([
-    parentIds[0] ? fetchPersonNode(parentIds[0]) : null,
-    parentIds[1] ? fetchPersonNode(parentIds[1]) : null,
-  ])) as [PersonNode | null, PersonNode | null];
+      nodes.set(ahnNum, node);
 
-  const gpPairs = await Promise.all(
-    parents.map(async (parent): Promise<[PersonNode | null, PersonNode | null]> => {
-      if (!parent) return [null, null];
-      const pRels = (await window.api.relationships.getForPerson(parent.id)) as RawRel[];
-      const gpIds = pRels
-        .filter(r => r.type === 'parent_child' && r.person2_id === parent.id)
+      const parentIds = rawRels
+        .filter(r => r.type === 'parent_child' && r.person2_id === personId)
         .map(r => r.person1_id)
         .filter((id): id is string => id !== null)
         .slice(0, 2);
-      return [
-        gpIds[0] ? await fetchPersonNode(gpIds[0]) : null,
-        gpIds[1] ? await fetchPersonNode(gpIds[1]) : null,
-      ];
-    })
-  );
 
-  return {
-    focal,
-    parents,
-    grandparents: [...gpPairs[0], ...gpPairs[1]] as [
-      PersonNode | null, PersonNode | null, PersonNode | null, PersonNode | null,
-    ],
-  };
+      await Promise.all(parentIds.map((pid, i) => fetchAncestors(pid, ahnNum * 2 + i, gen + 1)));
+    } else {
+      nodes.set(ahnNum, await fetchPersonNode(personId));
+    }
+  }
+
+  await fetchAncestors(focalId, 1, 1);
+  return { nodes, generations };
 }
 
+/**
+ * Fetch a descendant tree up to `maxDepth` levels below the given person.
+ */
+async function fetchDescendantTree(
+  personId: string,
+  depth: number,
+  maxDepth: number,
+): Promise<DescendantNode> {
+  if (depth < maxDepth) {
+    const [node, rawRels] = await Promise.all([
+      fetchPersonNode(personId),
+      window.api.relationships.getForPerson(personId),
+    ]) as [PersonNode, RawRel[]];
+
+    const childIds = rawRels
+      .filter(r => r.type === 'parent_child' && r.person1_id === personId)
+      .map(r => r.person2_id)
+      .filter((id): id is string => id !== null);
+
+    const children = await Promise.all(
+      childIds.map(id => fetchDescendantTree(id, depth + 1, maxDepth)),
+    );
+    return { person: node, children };
+  } else {
+    return { person: await fetchPersonNode(personId), children: [] };
+  }
+}
+
+/**
+ * Fetch an hourglass tree: 3 ancestor levels above focal + 3 descendant levels below.
+ */
 export async function fetchHourglassTree(focalId: string): Promise<HourglassTree> {
-  const [pedigree, rawRels] = await Promise.all([
-    fetchPedigreeTree(focalId),
-    window.api.relationships.getForPerson(focalId),
-  ]) as [PedigreeTree, RawRel[]];
-
-  // Children: parent_child rels where focal is person1 (the parent)
-  const childIds = rawRels
-    .filter(r => r.type === 'parent_child' && r.person1_id === focalId)
-    .map(r => r.person2_id)
-    .filter((id): id is string => id !== null);
-
-  const children = await Promise.all(childIds.map(fetchPersonNode));
-  return { ...pedigree, children };
+  const [ancestors, descendantRoot] = await Promise.all([
+    fetchPedigreeTree(focalId, 4), // focal + 3 ancestor levels (parents, gp, ggp)
+    fetchDescendantTree(focalId, 0, 3), // 3 descendant levels (children, gc, ggc)
+  ]);
+  return { ancestors, descendantRoot, descendantGenerations: 3 };
 }
 
 export async function fetchTimelineEntries(focalId: string): Promise<TimelineEntry[]> {

@@ -69,7 +69,7 @@ const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
 const loading = ref(true);
-const layout = ref<ChartLayout>({ boxes: [], lines: [], svgWidth: 585, svgHeight: 256 });
+const layout = ref<ChartLayout>({ boxes: [], lines: [], svgWidth: 995, svgHeight: 1024 });
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#ccc'; }
