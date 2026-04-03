@@ -277,6 +277,10 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
 
   const focalCX = baseSvgWidth / 2;
 
+  // CX of the i-th spouse (0-indexed): one H_GAP from focal, then V_GAP between.
+  // Defined here so coupleJunctionX can reference it before the spouse-box loop.
+  const spouseCXOf = (i: number) => focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
+
   function placeDescendants(node: DescendantNode, depth: number, leftX: number): void {
     const subWidth = leafCount(node, depth) * (BOX_W + V_GAP) - V_GAP;
     const nodeCX   = leftX + subWidth / 2;
@@ -323,16 +327,19 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
     }
   }
 
-  const descStartX = focalCX - descSectionWidth / 2;
+  // When a single spouse is present, drop the descendant tree from the midpoint
+  // between focal and that spouse (standard genealogy-tree convention: children
+  // come from the couple line, not from one parent alone).
+  const coupleJunctionX = spouses.length > 0
+    ? (focalCX + spouseCXOf(0)) / 2
+    : focalCX;
+  const descStartX = coupleJunctionX - descSectionWidth / 2;
   placeDescendants(descendantRoot, 0, descStartX);
 
   // ── Spouse boxes and connectors ──────────────────────────────────────────
   // Spouses are placed to the right of focal at the same row, connected by a
   // horizontal line. Each marriage is a separate box; multiple spouses chain
   // rightward so the history of remarriages reads left-to-right.
-
-  // CX of the i-th spouse (0-indexed): one H_GAP from focal, then V_GAP between
-  const spouseCXOf = (i: number) => focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
   const spouseRightEdge = spouses.length > 0
     ? spouseCXOf(spouses.length - 1) + BOX_W / 2 + PAD
