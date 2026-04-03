@@ -39,7 +39,11 @@
           font-size="12" font-weight="600"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
           :fill="box.isFocal ? 'white' : '#333'"
-        >{{ truncate(personName(box.person), 20) }}</text>
+        ><tspan
+            v-for="(part, pi) in truncateNameParts(fullNameParts(box.person.givenName, box.person.surname, box.person.preferredName), 20)"
+            :key="pi"
+            :text-decoration="part.underline ? 'underline' : undefined"
+          >{{ part.text }}</tspan></text>
         <text
           :x="box.x + 12" :y="box.y + 32"
           font-size="10"
@@ -57,6 +61,7 @@ import { useI18n } from 'vue-i18n';
 import { computePedigreeLayout } from '../../utils/chartLayout';
 import { fetchPedigreeTree } from '../../utils/chartData';
 import type { ChartLayout, BoxLayout, PersonNode } from '../../utils/chartLayout';
+import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
 
@@ -75,20 +80,12 @@ function boxFill(box: BoxLayout): string {
   return 'white';
 }
 
-function personName(p: PersonNode): string {
-  return [p.givenName, p.surname].filter(Boolean).join(' ') || '(okänd)';
-}
-
 function personDates(p: PersonNode): string {
   const b = p.birthYear;
   const d = p.deathYear;
   if (b && d) return `${b}–${d}`;
   if (b) return p.living ? `f. ${b}` : `${b}–`;
   return '';
-}
-
-function truncate(str: string, max: number): string {
-  return str.length > max ? str.slice(0, max - 1) + '…' : str;
 }
 
 async function load() {

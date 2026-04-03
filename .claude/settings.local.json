@@ -164,11 +164,18 @@
       "mcp__slaktforskning__create_relationship",
       "mcp__slaktforskning__get_relationships_of_person",
       "mcp__slaktforskning__update_relationship",
-      "mcp__slaktforskning__delete_person"
+      "mcp__slaktforskning__delete_person",
+      "WebFetch(domain:www.birthday.se)",
+      "WebFetch(domain:www.ratsit.se)",
+      "Bash(npx tsx -e ':*)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('productName:', p.productName, 'name:', p.name\\)\")",
+      "Bash(npx tsx:*)",
+      "WebFetch(domain:genny.se)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
-      "/Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive"
+      "/Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive",
+      "/Users/jonasahnstedt/Library/Application Support/slaktforskning/slaktforskning.db.lock"
     ]
   },
   "enableAllProjectMcpServers": true,
