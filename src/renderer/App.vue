@@ -16,6 +16,7 @@
       <router-link to="/places">{{ $t('places.title') }}</router-link>
       <router-link to="/sources">{{ $t('nav.sources') }}</router-link>
       <div class="sidebar-spacer"></div>
+      <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
       <select class="locale-switcher" :value="locale" @change="switchLocale($event)">
         <option value="sv">Svenska</option>
         <option value="en">English</option>
@@ -124,6 +125,19 @@ body {
 
 .sidebar-spacer {
   flex: 1;
+}
+
+.nav-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 12px !important;
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.nav-bottom:hover,
+.nav-bottom.router-link-active {
+  color: white !important;
 }
 
 .locale-switcher {

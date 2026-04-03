@@ -21,5 +21,6 @@ export const router = createRouter({
     { path: '/places/:id', component: () => import('./views/PlaceDetailView.vue') },
     { path: '/visualisering', component: () => import('./views/VisualizationView.vue') },
     { path: '/visualisering/:personId', component: () => import('./views/VisualizationView.vue') },
+    { path: '/import-export', component: () => import('./views/ImportExportView.vue') },
   ],
 });
