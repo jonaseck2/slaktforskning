@@ -6,6 +6,7 @@
         <h2>{{ primaryName }}</h2>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
         <button type="button" class="btn-cite-header" @click="showCitePersonForm = true">{{ $t('personDetail.citePersonTitle') }}</button>
+        <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
       </div>
       <div v-if="evidenceTotal > 0" class="evidence-summary">
         {{ $t('personDetail.evidenceSummary', { sourced: evidenceSourced, total: evidenceTotal }) }}
@@ -676,6 +677,15 @@ onMounted(load);
   background: #eff6ff;
   color: #1d4ed8;
   border: 1px solid #bfdbfe;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-view-tree {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
   padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;

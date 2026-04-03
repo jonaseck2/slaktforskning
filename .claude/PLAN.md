@@ -85,26 +85,19 @@ Full places layer: `src/api/places.ts` (7 functions including `findOrCreatePlace
 
 See `.claude/plans/archive/2026-04-02-places.md` for the implementation plan.
 
----
-
-## Roadmap
-
 ### Done (v0.4.1 — Minor Fixes & UX Consistency)
 PersonDetailView "Person Details" section (sex + living inline-edit, sex removed from header). RelationshipDetailView Type-first section order. PlaceDetailView "Place Details" heading + 2-column layout. ux-reviewer + vue-ui-builder agent templates updated.
 
 See `.claude/plans/archive/2026-04-03-detail-view-ux-consistency.md` for full plan.
 
-### v0.5.0 — Visualization
+### Done (v0.5.0 — Visualization)
+VisualizationView with Pedigree/Hourglass/Timeline SVG chart tabs. Click-to-navigate person boxes. Sidebar reordered (Visualisering at top). PersonDetailView "Visa i träd →" button. i18n strings sv + en.
 
-See `.claude/plans/2026-04-03-visualization.md` for the full design and implementation plan.
+See `.claude/plans/archive/2026-04-03-visualization.md` for the full design and implementation plan.
 
-- [ ] `VisualizationView.vue` — route `/visualisering/:personId`, tab switcher, focal person header
-- [ ] `PedigreeChart.vue` — ancestor tree SVG, 3 generations, click-to-navigate
-- [ ] `HourglassChart.vue` — ancestors + descendants SVG, couple connector dots
-- [ ] `TimelineChart.vue` — lifespans on a time axis, auto-scaling X axis
-- [ ] Sidebar reorder — Visualisering moves to top
-- [ ] PersonDetailView — "Visa i träd →" button
-- [ ] i18n strings — sv + en for all new UI text
+---
+
+## Roadmap
 
 ### v0.6.0 — GEDCOM Import/Export
 

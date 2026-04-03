@@ -4,6 +4,7 @@ export default {
     search: 'Sök\u2026',
   },
   nav: {
+    visualization: 'Visualisering',
     persons: 'Personer',
     relationships: 'Relationer',
     sources: 'Källor',
@@ -61,6 +62,7 @@ export default {
     statusLabel: 'Status',
     statusLiving: 'Levande',
     statusDeceased: 'Avliden',
+    viewInTree: 'Visa i träd',
   },
   relationships: {
     title: 'Relationer',
@@ -295,6 +297,23 @@ export default {
     longitude: 'Longitud',
     childPlaces: 'Underliggande orter',
     detailsTitle: 'Platsuppgifter',
+  },
+  visualization: {
+    tab: {
+      pedigree: 'Stamtavla',
+      hourglass: 'Timglas',
+      timeline: 'Tidslinje',
+    },
+    generation: {
+      grandparents: 'Mor-/Farföräldrar',
+      parents: 'Föräldrar',
+      focal: 'Fokusperson',
+      children: 'Barn',
+    },
+    empty: 'Lägg till en person för att börja visualisera.',
+    selectPerson: 'Välj fokusperson\u2026',
+    viewDetail: 'Visa detaljer',
+    today: 'Idag',
   },
   placeTypes: {
     country: 'Land',

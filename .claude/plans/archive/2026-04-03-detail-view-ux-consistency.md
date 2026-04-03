@@ -1,7 +1,7 @@
 # Plan: Detail View UX Consistency
 
 **Date:** 2026-04-03
-**Status:** Pending
+**Status:** Done
 
 ## Audit findings
 

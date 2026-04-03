@@ -130,6 +130,9 @@
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/viz-mockup.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/viz-styles.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/cytoscape-vs-svg.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)"
+    ],
+    "additionalDirectories": [
+      "/Users/jonasahnstedt/git/slaktforskning/.claude/plans"
     ]
   },
   "enableAllProjectMcpServers": true,

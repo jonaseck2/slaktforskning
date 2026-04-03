@@ -19,5 +19,7 @@ export const router = createRouter({
     { path: '/search', component: SearchView },
     { path: '/places', component: () => import('./views/PlacesView.vue') },
     { path: '/places/:id', component: () => import('./views/PlaceDetailView.vue') },
+    { path: '/visualisering', component: () => import('./views/VisualizationView.vue') },
+    { path: '/visualisering/:personId', component: () => import('./views/VisualizationView.vue') },
   ],
 });
