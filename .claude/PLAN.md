@@ -139,6 +139,15 @@ Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3
 
 ## Roadmap
 
+### v0.6.7 — Per-Node Descendant Collapse
+Any descendant node with children gets a ↓ button (not just focal).
+See `.claude/plans/2026-04-03-descendant-collapse.md`.
+
+- [ ] Make `leafCount` collapse-aware for non-focal nodes
+- [ ] Skip recursion in `placeDescendants` for collapsed non-focal nodes
+- [ ] Add ↓ buttons for all descendant boxes with children in original tree
+- [ ] Unit tests for per-node descendant collapse
+
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
 - [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap
