@@ -202,12 +202,17 @@ declare const window: Window & {
 - Sections for related entities (events, names, citations) with embedded components
 
 ### Shared components to reuse
-- `PersonPicker` — searchable autocomplete for selecting a person
-- `PlacePicker` — searchable autocomplete for selecting/creating a place
+- `PersonPicker` — searchable autocomplete for selecting a person; has `width: 100%` so it fills any container
+- `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
 - `DateInput` — compound date input with genealogy date types
-- `EventForm` / `EventList` — event CRUD, embeds in detail views
+- `EventForm` / `EventList` — event CRUD, embeds in detail views; event rows are clickable (no Edit button)
 - `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`)
 - `CitationBadge` — green count / yellow "Unsourced" badge (added in v0.5.2; use everywhere citations are relevant)
+
+### UI consistency rules
+- **Picker inputs fill their container** — `PersonPicker` and `PlacePicker` both have `width: 100%` on their root. Place them inside a `<label>` or grid cell and they will fill it. Never wrap them in a `class="full-width"` override.
+- **Clickable rows, no Edit buttons** — all list/table rows are clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`. This applies to events, persons, relationships, sources, and places.
+- **2-column field-grid** — detail views use `display: grid; grid-template-columns: 1fr 1fr`. Only use `grid-column: 1 / -1` for a field that genuinely needs extra width (e.g. a long textarea). Never use it for picker inputs.
 
 ### i18n
 Add strings to both `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English fallback). Use `$t('key')` in templates.

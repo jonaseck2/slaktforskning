@@ -30,9 +30,9 @@ Small polish pass fixing two specific inconsistencies identified in the UI.
 
 ## Implementation Steps
 
-- [ ] **EventList.vue** — remove `.btn-edit` button; add `@click="editEvent(event)"` on `<tr>`; add `@click.stop` on Cite and Delete action buttons
-- [ ] **PlaceDetailView.vue** — fix parent place `label` grid-column styling to match Name/Type column width
-- [ ] **Tests** — update any component tests that reference the edit button; add a test that row click opens EventForm
+- [x] **EventList.vue** — remove `.btn-edit` button; add `@click="editEvent(event)"` on `<tr>`; add `@click.stop` on Cite and Delete action buttons
+- [x] **PlaceDetailView.vue** — remove `full-width` class from parent place label; fix `PersonPicker` + `PlacePicker` to have `width: 100%` on root so they fill any container consistently
+- [x] **Tests** — update any component tests that reference the edit button; add a test that row click opens EventForm
 
 ---
 

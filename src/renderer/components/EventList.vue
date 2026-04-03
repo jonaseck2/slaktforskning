@@ -15,7 +15,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="event in events" :key="event.id">
+        <tr v-for="event in events" :key="event.id" class="clickable-row" @click="editEvent(event)">
           <td>
             <span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span>
             <span
@@ -27,9 +27,8 @@
           <td>{{ formatDate(event) }}</td>
           <td>{{ event.description }}</td>
           <td class="actions-cell">
-            <button type="button" class="btn-sm btn-cite" @click="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
-            <button type="button" class="btn-sm btn-edit" @click="editEvent(event)">{{ $t('common.edit') }}</button>
-            <button type="button" class="btn-sm btn-delete" @click="removeEvent(event.id)">{{ $t('common.delete') }}</button>
+            <button type="button" class="btn-sm btn-cite" @click.stop="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
+            <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -222,6 +221,12 @@ defineExpose({ reload: load });
   font-size: 12px;
   white-space: nowrap;
 }
+.clickable-row {
+  cursor: pointer;
+}
+.clickable-row:hover td {
+  background: #f5f5f5;
+}
 .actions-cell {
   white-space: nowrap;
 }
@@ -232,10 +237,6 @@ defineExpose({ reload: load });
   border-radius: 3px;
   cursor: pointer;
   margin-right: 4px;
-}
-.btn-edit {
-  background: #e8e8e8;
-  color: #333;
 }
 .btn-delete {
   background: #fee;

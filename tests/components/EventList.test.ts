@@ -76,4 +76,35 @@ describe('EventList citation badges', () => {
     // CitationForm renders inside EventList — its content includes a form
     expect(wrapper.html()).toContain('modal');
   });
+
+  it('clicking a row opens the EventForm', async () => {
+    mockForPerson.mockResolvedValue([sampleEvent]);
+    mockForEvent.mockResolvedValue([]);
+
+    const wrapper = mount(EventList, {
+      global: { plugins: [i18n] },
+      props: { personId: 'person-1' },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('.modal-overlay').exists()).toBe(false);
+    await wrapper.find('.clickable-row').trigger('click');
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('.modal-overlay').exists()).toBe(true);
+  });
+
+  it('has no Edit button — rows are clickable instead', async () => {
+    mockForPerson.mockResolvedValue([sampleEvent]);
+    mockForEvent.mockResolvedValue([]);
+
+    const wrapper = mount(EventList, {
+      global: { plugins: [i18n] },
+      props: { personId: 'person-1' },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('.btn-edit').exists()).toBe(false);
+    expect(wrapper.find('.clickable-row').exists()).toBe(true);
+  });
 });

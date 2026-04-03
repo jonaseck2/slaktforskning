@@ -22,7 +22,7 @@
             </option>
           </select>
         </label>
-        <label class="full-width">{{ $t('places.parentPlace') }}
+        <label>{{ $t('places.parentPlace') }}
           <PlacePicker v-model="editParentId" @update:model-value="save({ parent_place_id: $event })" />
         </label>
         <label>{{ $t('places.latitude') }}

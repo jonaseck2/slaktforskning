@@ -113,6 +113,8 @@ function onBlur() {
 <style scoped>
 .person-picker {
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 .picker-input-wrap {
   display: flex;
