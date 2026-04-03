@@ -56,3 +56,32 @@ If the commit **fully completes** a milestone:
 If the commit introduces a new plan file:
 - Check that `.claude/PLAN.md` has a matching milestone entry pointing to the plan file
 - If missing, add it before committing
+
+## Documenting fixes without a prior plan
+
+Significant bugfixes and unplanned improvements should also be archived, even when no plan file was written beforehand. Write the archive file directly into `.claude/plans/archive/` (skip the `plans/` staging step):
+
+**When to archive a fix:**
+- Root cause was non-obvious or took investigation to find
+- Fix touches a cross-cutting concern (e.g. IPC lifecycle, transaction handling)
+- Future agents would benefit from knowing why the code is written a certain way
+
+**Archive file format** (same frontmatter as plan files):
+
+```markdown
+# Fix: Short title
+
+## Problem
+What the bug was and how it manifested.
+
+## Root Cause
+The underlying cause, with file:line references where helpful.
+
+## Fix
+What was changed and why.
+
+## Files Changed
+- `path/to/file.ts` — what changed
+```
+
+Add a one-line entry to `.claude/PLAN.md` **Implementation Status** pointing to the archive file. No Roadmap entry is needed for fixes.

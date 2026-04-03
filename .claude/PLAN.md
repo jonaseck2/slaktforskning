@@ -117,6 +117,12 @@ Investigated and rejected 2026-04-03. Genney 4.1 uses Apache Derby internally an
 ### Done (v0.6.4 — Extended GEDCOM Roundtrip)
 Export → import lossless cycle using GEDCOM 5.5.1 extension mechanisms. Exporter: `_LIVING`, `NICK`/`_PATR`/`_NQUAL`/`_DATE_FROM`/`_DATE_TO` on NAME, `_FSI`/`_ANID`/`_RAID`/`_PNUMMER` identifiers, `ASSO` for non-primary event participants + sibling/godparent/other rels with `_EVID` cross-DB matching, person/family-level `SOUR`, `PEDI` on CHIL, `MAP`/`ADDR`/`_PTYPE`/`_PNOTES`/`_PLAC_ID` on PLAC, `_URL`/`_STYPE`/`REPO` on SOUR, citation `NOTE`/`_ACCESSED`, `0 _PLAC` records for place-level citations. Importer: all new tags, 5-phase processing (SOUR → INDI → FAM → ASSO post-pass → _PLAC post-pass), place deduplication via `_PLAC_ID`. 29 new roundtrip unit tests (262 total). See `.claude/plans/archive/2026-04-03-gedcom-extended.md`.
 
+### Fix — Stale IPC database reference after switchDatabase
+All IPC handler closures captured a single `db` object at startup; after `switchDatabase()` that object was closed, causing `SQLite3Error: Database already closed` on any subsequent call. Fixed by calling `getDatabase()` per-invocation in every handler. See `.claude/plans/archive/2026-04-03-ipc-stale-db.md`.
+
+### Fix — GEDCOM import timeout + Genney preferred name asterisk
+No transaction around `importGedcom` caused ~25k auto-commits, writing ~1.6 GB to WAL and timing out on a real 70k-line Genney file. Wrapped in a single BEGIN/COMMIT. Also: Genney asterisk notation in given names now correctly extracts tilltalsnamn into `preferred_name`. 3 new tests (265 total). See `.claude/plans/archive/2026-04-03-gedcom-import-performance.md`.
+
 ---
 
 ## Roadmap
