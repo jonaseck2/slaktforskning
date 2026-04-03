@@ -132,18 +132,12 @@ Married couples imported from standard GEDCOM (including Genney) showed `subtype
 ### Done (v0.6.5 — Chart Enhancements: depth, zoom/scroll, spouses)
 Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3 descendant levels; all three charts scroll natively + zoom via Ctrl+scroll/pinch with cursor-anchored math; zoom persisted to `localStorage` per chart so navigation doesn't reset it; spouses added to hourglass view (horizontal chain to the right of focal). See `.claude/plans/archive/2026-04-03-chart-enhancements.md`.
 
+### Done (v0.6.6 — Collapsible Visualisation Nodes)
+`CollapseButton` interface + pruning logic in `chartLayout.ts`; `collapsed: Set<string>` ref drives a `computed` layout in both chart components; ▲/▼/▶ SVG buttons collapse/expand ancestor subtrees (:up), children (:down), and spouses (:right); hourglass auto-collapses ancestors beyond grandparents on load; 14 new unit tests (284 total). See `.claude/plans/archive/2026-04-03-collapsible-viz.md`.
+
 ---
 
 ## Roadmap
-
-### v0.6.6 — Collapsible Visualisation Nodes
-Interactive expand/collapse buttons on hourglass and pedigree chart nodes.
-See `.claude/plans/2026-04-03-collapsible-viz.md`.
-
-- [ ] `CollapseButton` type + pruning logic in `chartLayout.ts`
-- [ ] Unit tests for collapse pruning and button placement
-- [ ] SVG chevron buttons in HourglassChart.vue and PedigreeChart.vue
-- [ ] Hourglass default-collapsed state for distant branches
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations

@@ -38,7 +38,7 @@ Pass `collapsed` into `computeHourglassLayout` (and `computePedigreeLayout`) as 
 
 ## Implementation steps
 
-- [ ] **Step 1 — Layout API**
+- [x] **Step 1 — Layout API**
   Add `collapsed: Set<string>` optional parameter to `computeHourglassLayout` and `computePedigreeLayout`. Before building boxes/lines, prune the input tree:
   - If `"k:up"` is in collapsed for ahnentafel node k, remove k's ancestors from the ancestor Map.
   - If `"focal:down"` is in collapsed, drop all children from `descendantRoot`.
@@ -54,26 +54,26 @@ Pass `collapsed` into `computeHourglassLayout` (and `computePedigreeLayout`) as 
   }
   ```
 
-- [ ] **Step 2 — Unit tests**
+- [x] **Step 2 — Unit tests**
   In `chartLayout.test.ts`, add tests:
   - `computeHourglassLayout` with one node collapsed returns fewer boxes
   - `collapseButtons` array is populated with correct positions
   - Collapsed node still shows its own box (just not its branch)
 
-- [ ] **Step 3 — SVG rendering (HourglassChart.vue + PedigreeChart.vue)**
+- [x] **Step 3 — SVG rendering (HourglassChart.vue + PedigreeChart.vue)**
   Render each `CollapseButton` as an SVG `<g>` containing:
   - A `<circle>` (r=8, fill white, stroke #aaa, hover: fill #f0f0f0)
   - A Unicode chevron `<text>` (↑ ↓ ← →, font-size 10, centered)
   Wire `@click.stop` to call `toggle(btn.personId, btn.direction)`.
   Pass `collapsed.value` to the layout compute call so it re-runs reactively.
 
-- [ ] **Step 4 — Hourglass default state**
+- [x] **Step 4 — Hourglass default state**
   On initial load, auto-collapse distant branches so the chart isn't overwhelming:
   - Ancestors beyond 2 levels start collapsed (can be expanded)
   - Descendants beyond 1 level start collapsed
   - Spouses visible by default (already shown)
 
-- [ ] **Step 5 — Pedigree collapse**
+- [x] **Step 5 — Pedigree collapse**
   Pedigree chart is ancestors-only. Each node gets an ↑ button (expand/collapse its own parents). No ↓ or sibling buttons needed for pedigree.
 
 ---
