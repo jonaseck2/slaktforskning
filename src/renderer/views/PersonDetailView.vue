@@ -62,14 +62,10 @@
           <tr v-for="name in names" :key="name.id" class="clickable-row" @click="openEditName(name)">
             <td>
               <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
-              <template v-if="name.preferred_name && name.given_name">
-                <template v-for="(token, i) in name.given_name.split(' ')" :key="i">
-                  <u v-if="token === name.preferred_name" class="preferred-token">{{ token }}</u>
-                  <span v-else>{{ token }}</span>
-                  <span v-if="i < name.given_name.split(' ').length - 1"> </span>
-                </template>
+              <template v-for="part in givenNameParts(name)" :key="part.text + part.underline">
+                <u v-if="part.underline" class="preferred-token">{{ part.text }}</u>
+                <span v-else>{{ part.text }}</span>
               </template>
-              <template v-else>{{ name.given_name }}</template>
             </td>
             <td>
               {{ name.surname }}<span v-if="name.name_suffix"> {{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
@@ -424,6 +420,16 @@ const editNameForm = reactive({
 const identifiers = ref<IdentifierRow[]>([]);
 const showAddIdentifier = ref(false);
 const newIdentifier = reactive({ identifier_type: 'familysearch', identifier_value: '' });
+
+function givenNameParts(name: NameRow): { text: string; underline: boolean }[] {
+  const parts: { text: string; underline: boolean }[] = [];
+  const tokens = (name.given_name ?? '').split(' ');
+  for (let i = 0; i < tokens.length; i++) {
+    if (i > 0) parts.push({ text: ' ', underline: false });
+    parts.push({ text: tokens[i], underline: tokens[i] === name.preferred_name });
+  }
+  return parts;
+}
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
   if (!subtype) return '';
