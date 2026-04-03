@@ -6,7 +6,6 @@ import { i18n } from './setup';
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: { personId: 'test-id' } }),
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
-  RouterLink: { template: '<a><slot /></a>' },
 }));
 
 vi.mock('../../src/renderer/components/charts/PedigreeChart.vue', () => ({
