@@ -147,6 +147,21 @@ export function initializeSchema(db: Database): void {
   }
 
   // v0.4.0 places column migrations — idempotent
+  // v0.3.1 migration: person_names gained name_prefix, name_suffix, patronymic_base, name_qualifier
+  const personNamesCols = (db.prepare('PRAGMA table_info(person_names)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!personNamesCols.includes('name_prefix')) {
+    db.exec(`ALTER TABLE person_names ADD COLUMN name_prefix TEXT`);
+  }
+  if (!personNamesCols.includes('name_suffix')) {
+    db.exec(`ALTER TABLE person_names ADD COLUMN name_suffix TEXT`);
+  }
+  if (!personNamesCols.includes('patronymic_base')) {
+    db.exec(`ALTER TABLE person_names ADD COLUMN patronymic_base TEXT`);
+  }
+  if (!personNamesCols.includes('name_qualifier')) {
+    db.exec(`ALTER TABLE person_names ADD COLUMN name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias'))`);
+  }
+
   const placesCols = (db.prepare('PRAGMA table_info(places)').all([]) as Array<{ name: string }>).map(c => c.name);
   if (!placesCols.includes('place_type')) {
     db.exec(`ALTER TABLE places ADD COLUMN place_type TEXT`);
