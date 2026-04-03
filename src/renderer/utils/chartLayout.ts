@@ -281,7 +281,7 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
   // Defined here so coupleJunctionX can reference it before the spouse-box loop.
   const spouseCXOf = (i: number) => focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  function placeDescendants(node: DescendantNode, depth: number, leftX: number): void {
+  function placeDescendants(node: DescendantNode, depth: number, leftX: number, depth0StartY?: number): void {
     const subWidth = leafCount(node, depth) * (BOX_W + V_GAP) - V_GAP;
     const nodeCX   = leftX + subWidth / 2;
 
@@ -300,8 +300,10 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
     if (depth < M && node.children.length > 0) {
       const rowY  = depth === 0 ? focalRowY : descRowY(depth);
       const forkY = rowY + BOX_H + GEN_GAP / 2;
+      // At depth 0 with a spouse, connect from the marriage line (mid-box) not the box bottom
+      const lineStartY = depth === 0 && depth0StartY !== undefined ? depth0StartY : rowY + BOX_H;
 
-      lines.push({ x1: nodeCX, y1: rowY + BOX_H, x2: nodeCX, y2: forkY });
+      lines.push({ x1: nodeCX, y1: lineStartY, x2: nodeCX, y2: forkY });
 
       // Compute child center Xs
       const childCXs: number[] = [];
@@ -334,7 +336,10 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
     ? (focalCX + spouseCXOf(0)) / 2
     : focalCX;
   const descStartX = coupleJunctionX - descSectionWidth / 2;
-  placeDescendants(descendantRoot, 0, descStartX);
+  // When there's a spouse, the marriage line is at BOX_H/2; start the children
+  // connector there so it visually meets the marriage line without a gap.
+  const coupleLineY = spouses.length > 0 ? focalRowY + BOX_H / 2 : undefined;
+  placeDescendants(descendantRoot, 0, descStartX, coupleLineY);
 
   // ── Spouse boxes and connectors ──────────────────────────────────────────
   // Spouses are placed to the right of focal at the same row, connected by a
