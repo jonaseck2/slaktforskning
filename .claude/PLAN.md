@@ -89,28 +89,28 @@ See `.claude/plans/archive/2026-04-02-places.md` for the implementation plan.
 
 ## Roadmap
 
-### v0.4.1-pre — Detail View UX Consistency
-
-See `.claude/plans/2026-04-03-detail-view-ux-consistency.md` for the full plan and audit findings.
+### v0.4.1 — Minor Fixes & UX Consistency
 
 - [ ] PersonDetailView — "Person Details" section (sex + living inline-edit), sex removed from header
 - [ ] RelationshipDetailView — swap section order: Type first, then Persons
 - [ ] PlaceDetailView — add "Place Details" section heading + 2-column layout
 - [ ] `ux-reviewer.md` agent template + vue-ui-builder UX conventions update
 
-### v0.4.1 — Visualization
+See `.claude/plans/2026-04-03-detail-view-ux-consistency.md` for full plan.
+
+### v0.5.0 — Visualization
 
 See `.claude/plans/2026-04-03-visualization.md` for the full design and implementation plan.
 
 - [ ] `VisualizationView.vue` — route `/visualisering/:personId`, tab switcher, focal person header
 - [ ] `PedigreeChart.vue` — ancestor tree SVG, 3 generations, click-to-navigate
-- [ ] HourglassChart.vue` — ancestors + descendants SVG, couple connector dots
+- [ ] `HourglassChart.vue` — ancestors + descendants SVG, couple connector dots
 - [ ] `TimelineChart.vue` — lifespans on a time axis, auto-scaling X axis
 - [ ] Sidebar reorder — Visualisering moves to top
 - [ ] PersonDetailView — "Visa i träd →" button
 - [ ] i18n strings — sv + en for all new UI text
 
-### v0.5.0 — GEDCOM Import/Export
+### v0.6.0 — GEDCOM Import/Export
 
 See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Depends on v0.4.0 Places** (`findOrCreatePlace` used for PLAC tags on import).
 
@@ -123,13 +123,13 @@ See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Dep
 - [ ] Import/Export buttons on PersonsView
 - [ ] **What is dropped on import:** REPO as entity (text only), SUBM, OBJE/multimedia, ASSO, LDS ordinances, `_` custom tags
 
-### v0.6.0 — Research Tools
+### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
 - [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap
 - [ ] Merge/deduplicate persons
 - [ ] Media attachments (photos, documents)
 
-### v0.7.0 — Polish
+### v0.8.0 — Polish
 - [ ] Print/export reports (ancestor charts, family group sheets)
 - [ ] Keyboard navigation and accessibility
 - [ ] Data backup and restore

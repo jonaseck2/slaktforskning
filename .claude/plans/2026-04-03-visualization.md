@@ -1,4 +1,4 @@
-# Design: v0.4.1 — Visualization
+# Design: v0.5.0 — Visualization
 
 **Date:** 2026-04-03
 **Status:** Approved
