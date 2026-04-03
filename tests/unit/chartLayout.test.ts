@@ -282,6 +282,59 @@ describe('collapse — computeHourglassLayout', () => {
   });
 });
 
+describe('collapse — per-node descendant collapse', () => {
+  function hourglassWithGrandchild(): HourglassTree {
+    const focal = p('f');
+    const child = p('c');
+    const gc = p('gc');
+    return {
+      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
+      descendantRoot: { person: focal, children: [{ person: child, children: [{ person: gc, children: [] }] }] },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+  }
+
+  it('collapseButtons includes down button for non-focal child with children', () => {
+    const { collapseButtons } = computeHourglassLayout(hourglassWithGrandchild());
+    expect(collapseButtons.some(b => b.personId === 'c' && b.direction === 'down')).toBe(true);
+  });
+
+  it('collapsing child:down hides grandchildren but keeps child box', () => {
+    const tree = hourglassWithGrandchild();
+    const { boxes } = computeHourglassLayout(tree, new Set(['c:down']));
+    expect(boxes.find(b => b.person.id === 'gc')).toBeUndefined();
+    expect(boxes.find(b => b.person.id === 'c')).toBeDefined();
+  });
+
+  it('child:down button isExpanded=false when collapsed', () => {
+    const { collapseButtons } = computeHourglassLayout(hourglassWithGrandchild(), new Set(['c:down']));
+    const btn = collapseButtons.find(b => b.personId === 'c' && b.direction === 'down');
+    expect(btn!.isExpanded).toBe(false);
+  });
+
+  it('leafCount shrinks when a non-focal child is collapsed', () => {
+    const focal = p('f');
+    const c1 = p('c1');
+    const c2 = p('c2');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
+      descendantRoot: {
+        person: focal,
+        children: [
+          { person: c1, children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }] },
+          { person: c2, children: [] },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { svgWidth: widthExpanded } = computeHourglassLayout(tree);
+    const { svgWidth: widthCollapsed } = computeHourglassLayout(tree, new Set(['c1:down']));
+    expect(widthCollapsed).toBeLessThan(widthExpanded);
+  });
+});
+
 describe('computeTimelineLayout', () => {
   it('returns one bar per entry', () => {
     const entries = [
