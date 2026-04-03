@@ -35,16 +35,32 @@ export interface ChartLayout {
   svgHeight: number;
 }
 
+/**
+ * Ahnentafel-indexed ancestor tree.
+ * Key 1 = focal, 2 = father, 3 = mother, 4 = pat.grandfather, …
+ * `generations` includes focal (e.g. 5 = focal + 4 ancestor levels).
+ */
 export interface PedigreeTree {
-  focal: PersonNode;
-  // parents[0] and parents[1] (either may be null)
-  parents: [PersonNode | null, PersonNode | null];
-  // grandparents[0,1] = parents[0]'s parents; grandparents[2,3] = parents[1]'s parents
-  grandparents: [PersonNode | null, PersonNode | null, PersonNode | null, PersonNode | null];
+  nodes: Map<number, PersonNode>;
+  generations: number;
 }
 
-export interface HourglassTree extends PedigreeTree {
-  children: PersonNode[];
+/** Recursive descendant tree node. */
+export interface DescendantNode {
+  person: PersonNode;
+  children: DescendantNode[];
+}
+
+/**
+ * Hourglass tree: ancestor section (ahnentafel) above focal,
+ * descendant tree below.
+ * `ancestors.generations` = focal + ancestor levels shown above.
+ * `descendantGenerations` = levels below focal.
+ */
+export interface HourglassTree {
+  ancestors: PedigreeTree;
+  descendantRoot: DescendantNode;
+  descendantGenerations: number;
 }
 
 export interface BarLayout {
@@ -81,7 +97,7 @@ export interface TimelineEntry {
 
 export const BOX_W = 155;
 export const BOX_H = 44;
-export const V_GAP = 20;   // vertical gap between sibling boxes
+export const V_GAP = 20;   // vertical gap between sibling boxes (pedigree) / horizontal gap (hourglass)
 export const H_GAP = 50;   // horizontal gap between pedigree generations
 export const GEN_GAP = 60; // vertical gap between hourglass generations
 const PAD = 10;
@@ -89,64 +105,64 @@ const ROW_H = BOX_H + V_GAP; // 64
 
 // ─── Pedigree ─────────────────────────────────────────────────────────────────
 
+/**
+ * Lay out a pedigree chart (focal at left, ancestors going right).
+ * Handles any number of generations via ahnentafel numbering.
+ */
 export function computePedigreeLayout(tree: PedigreeTree): ChartLayout {
+  const { nodes, generations: G } = tree;
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
-  const genX = [PAD, PAD + BOX_W + H_GAP, PAD + 2 * (BOX_W + H_GAP)];
-  // genX = [10, 215, 420]
+  const totalLeaves = 1 << (G - 1); // 2^(G-1)
 
-  const gpSlotY = [0, 1, 2, 3].map(i => PAD + i * ROW_H);
-  const gpSlotCY = gpSlotY.map(y => y + BOX_H / 2);
-  // gpSlotCY = [32, 96, 160, 224]
+  const svgWidth  = PAD + G * BOX_W + (G - 1) * H_GAP + PAD;
+  const svgHeight = PAD + totalLeaves * ROW_H - V_GAP + PAD;
 
-  const parentSlotCY = [
-    (gpSlotCY[0] + gpSlotCY[1]) / 2, // 64
-    (gpSlotCY[2] + gpSlotCY[3]) / 2, // 192
-  ];
+  const genXOf = (g: number) => PAD + g * (BOX_W + H_GAP);
 
-  const focalCY = (parentSlotCY[0] + parentSlotCY[1]) / 2; // 128
+  const centerYOf = (k: number): number => {
+    const g = Math.floor(Math.log2(k));
+    const slotsPerPerson = totalLeaves >> g;
+    const pos = k - (1 << g);
+    return PAD + ((pos + 0.5) * slotsPerPerson - 0.5) * ROW_H + BOX_H / 2;
+  };
 
-  const svgWidth = genX[2] + BOX_W + PAD;       // 585
-  const svgHeight = PAD + 4 * ROW_H - V_GAP + PAD; // 256
-
-  boxes.push({ person: tree.focal, isFocal: true, x: genX[0], y: focalCY - BOX_H / 2, w: BOX_W, h: BOX_H });
-
-  const forkX01 = genX[0] + BOX_W + H_GAP / 2; // 190
-
-  const activePCYs = tree.parents
-    .map((p, i) => (p ? parentSlotCY[i] : null))
-    .filter((cy): cy is number => cy !== null);
-
-  if (activePCYs.length > 0) {
-    lines.push({ x1: genX[0] + BOX_W, y1: focalCY, x2: forkX01, y2: focalCY });
-    lines.push({ x1: forkX01, y1: Math.min(...activePCYs), x2: forkX01, y2: Math.max(...activePCYs) });
+  // Place boxes
+  for (const [k, person] of nodes) {
+    const g = Math.floor(Math.log2(k));
+    boxes.push({
+      person,
+      isFocal: k === 1,
+      x: genXOf(g),
+      y: centerYOf(k) - BOX_H / 2,
+      w: BOX_W,
+      h: BOX_H,
+    });
   }
 
-  for (let pi = 0; pi < 2; pi++) {
-    const parent = tree.parents[pi];
-    if (!parent) continue;
-    const pcy = parentSlotCY[pi];
-    boxes.push({ person: parent, isFocal: false, x: genX[1], y: pcy - BOX_H / 2, w: BOX_W, h: BOX_H });
-    lines.push({ x1: forkX01, y1: pcy, x2: genX[1], y2: pcy });
+  // Draw connector lines: for each person, connect rightward to present parents
+  for (const [k] of nodes) {
+    const g = Math.floor(Math.log2(k));
+    if (g >= G - 1) continue; // at rightmost generation, no parents to draw
 
-    const forkX12 = genX[1] + BOX_W + H_GAP / 2; // 395
+    const fatherK = k * 2;
+    const motherK = k * 2 + 1;
+    const father  = nodes.get(fatherK);
+    const mother  = nodes.get(motherK);
+    if (!father && !mother) continue;
 
-    const activeGPCYs = [tree.grandparents[pi * 2], tree.grandparents[pi * 2 + 1]]
-      .map((gp, gi) => (gp ? gpSlotCY[pi * 2 + gi] : null))
-      .filter((cy): cy is number => cy !== null);
+    const cy    = centerYOf(k);
+    const forkX = genXOf(g) + BOX_W + H_GAP / 2;
 
-    if (activeGPCYs.length > 0) {
-      lines.push({ x1: genX[1] + BOX_W, y1: pcy, x2: forkX12, y2: pcy });
-      lines.push({ x1: forkX12, y1: Math.min(...activeGPCYs), x2: forkX12, y2: Math.max(...activeGPCYs) });
-    }
+    lines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
 
-    for (let gi = 0; gi < 2; gi++) {
-      const gp = tree.grandparents[pi * 2 + gi];
-      if (!gp) continue;
-      const gpIdx = pi * 2 + gi;
-      lines.push({ x1: forkX12, y1: gpSlotCY[gpIdx], x2: genX[2], y2: gpSlotCY[gpIdx] });
-      boxes.push({ person: gp, isFocal: false, x: genX[2], y: gpSlotY[gpIdx], w: BOX_W, h: BOX_H });
+    const pCYs = ([father ? centerYOf(fatherK) : null, mother ? centerYOf(motherK) : null]
+      .filter((y): y is number => y !== null));
+
+    lines.push({ x1: forkX, y1: Math.min(...pCYs), x2: forkX, y2: Math.max(...pCYs) });
+    for (const pcy of pCYs) {
+      lines.push({ x1: forkX, y1: pcy, x2: genXOf(g + 1), y2: pcy });
     }
   }
 
@@ -155,109 +171,164 @@ export function computePedigreeLayout(tree: PedigreeTree): ChartLayout {
 
 // ─── Hourglass ────────────────────────────────────────────────────────────────
 
+/**
+ * Lay out an hourglass chart.
+ * Ancestors fan out upward; descendants fan out downward.
+ * Both sections are horizontally centered over the focal person.
+ */
 export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
-  const GP_INNER_GAP = 10;
-  const FAMILY_GAP = 60;
-  const svgWidth = 4 * BOX_W + 2 * GP_INNER_GAP + FAMILY_GAP + 2 * PAD;
-  // svgWidth = 720
+  const { ancestors, descendantRoot, descendantGenerations: M } = tree;
+  const { nodes: ancestorNodes, generations } = ancestors;
+  const A = generations - 1; // ancestor levels above focal
 
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
-  const gpX = [
-    PAD,
-    PAD + BOX_W + GP_INNER_GAP,
-    PAD + 2 * BOX_W + GP_INNER_GAP + FAMILY_GAP,
-    PAD + 3 * BOX_W + 2 * GP_INNER_GAP + FAMILY_GAP,
-  ]; // [10, 175, 390, 555]
+  // ── Ancestor geometry ────────────────────────────────────────────────────
 
-  const gpCX = gpX.map(x => x + BOX_W / 2); // [87.5, 252.5, 467.5, 632.5]
+  const totalAncestorLeaves = 1 << A; // 2^A
+  // Width of the ancestor section (content, no padding)
+  const ancestorSectionWidth = totalAncestorLeaves * (BOX_W + V_GAP) - V_GAP;
 
-  const parentCX = [
-    (gpCX[0] + gpCX[1]) / 2, // 170
-    (gpCX[2] + gpCX[3]) / 2, // 550
-  ];
+  // ── Descendant geometry ──────────────────────────────────────────────────
 
-  const focalCX = svgWidth / 2; // 360
-
-  const gpRowY      = PAD;                            // 10
-  const parentRowY  = PAD + BOX_H + GEN_GAP;          // 114
-  const focalRowY   = PAD + 2 * (BOX_H + GEN_GAP);   // 218
-  const childRowY   = PAD + 3 * (BOX_H + GEN_GAP);   // 322
-
-  const forkY_gp_parent    = gpRowY + BOX_H + GEN_GAP / 2;    // 84
-  const forkY_parent_focal = parentRowY + BOX_H + GEN_GAP / 2; // 188
-  const forkY_focal_child  = focalRowY + BOX_H + GEN_GAP / 2;  // 292
-
-  // Grandparent boxes
-  for (let i = 0; i < 4; i++) {
-    const gp = tree.grandparents[i];
-    if (!gp) continue;
-    boxes.push({ person: gp, isFocal: false, x: gpX[i], y: gpRowY, w: BOX_W, h: BOX_H });
+  function leafCount(node: DescendantNode, depth: number): number {
+    if (depth >= M || node.children.length === 0) return 1;
+    return node.children.reduce((sum, child) => sum + leafCount(child, depth + 1), 0);
   }
 
-  // Parent boxes + GP→Parent connectors
-  for (let pi = 0; pi < 2; pi++) {
-    const gp0 = tree.grandparents[pi * 2];
-    const gp1 = tree.grandparents[pi * 2 + 1];
-    const activeGPCXs = [gp0, gp1]
-      .map((gp, gi) => (gp ? gpCX[pi * 2 + gi] : null))
-      .filter((cx): cx is number => cx !== null);
+  const totalDescLeaves  = M > 0 ? leafCount(descendantRoot, 0) : 1;
+  const descSectionWidth = totalDescLeaves * (BOX_W + V_GAP) - V_GAP;
 
-    if (activeGPCXs.length > 0) {
-      for (const cx of activeGPCXs) {
-        lines.push({ x1: cx, y1: gpRowY + BOX_H, x2: cx, y2: forkY_gp_parent });
+  // ── SVG dimensions ───────────────────────────────────────────────────────
+
+  const svgWidth = Math.max(ancestorSectionWidth, descSectionWidth) + 2 * PAD;
+
+  // Shift the narrower section so both are centered at svgWidth/2
+  const ancestorOffset = (svgWidth - 2 * PAD - ancestorSectionWidth) / 2;
+
+  // Row Y helpers
+  // Ancestor rows count down from top; focal = PAD + A*(BOX_H+GEN_GAP)
+  const focalRowY = PAD + A * (BOX_H + GEN_GAP);
+  const ancestorRowY = (g: number) => PAD + (A - g) * (BOX_H + GEN_GAP);
+  const descRowY     = (d: number) => focalRowY + d * (BOX_H + GEN_GAP);
+
+  // Center X of ancestor with ahnentafel k
+  const ancestorCX = (k: number): number => {
+    const g = Math.floor(Math.log2(k));
+    const slotsPerPerson = totalAncestorLeaves >> g;
+    const pos = k - (1 << g);
+    const centerSlot = (pos + 0.5) * slotsPerPerson - 0.5;
+    return PAD + ancestorOffset + centerSlot * (BOX_W + V_GAP) + BOX_W / 2;
+  };
+
+  // ── Place ancestor boxes ─────────────────────────────────────────────────
+
+  for (const [k, person] of ancestorNodes) {
+    const g = Math.floor(Math.log2(k));
+    boxes.push({
+      person,
+      isFocal: k === 1,
+      x: ancestorCX(k) - BOX_W / 2,
+      y: ancestorRowY(g),
+      w: BOX_W,
+      h: BOX_H,
+    });
+  }
+
+  // ── Ancestor connector lines ─────────────────────────────────────────────
+  // For each non-top ancestor, draw lines from it upward toward its parents.
+
+  for (const [k] of ancestorNodes) {
+    const g = Math.floor(Math.log2(k));
+    if (g >= A) continue; // top generation has no parents in tree
+
+    const fatherK = k * 2;
+    const motherK = k * 2 + 1;
+    const father  = ancestorNodes.get(fatherK);
+    const mother  = ancestorNodes.get(motherK);
+    if (!father && !mother) continue;
+
+    const kCX   = ancestorCX(k);
+    const kRowY = ancestorRowY(g);
+    // Fork is midway between k's row top and parent's row bottom
+    const forkY = kRowY - GEN_GAP / 2;
+
+    // Vertical line upward from k to fork
+    lines.push({ x1: kCX, y1: kRowY, x2: kCX, y2: forkY });
+
+    const pCXs = ([father ? ancestorCX(fatherK) : null, mother ? ancestorCX(motherK) : null]
+      .filter((cx): cx is number => cx !== null));
+
+    if (pCXs.length > 1) {
+      lines.push({ x1: Math.min(...pCXs), y1: forkY, x2: Math.max(...pCXs), y2: forkY });
+    }
+
+    const parentRowBottom = ancestorRowY(g + 1) + BOX_H;
+    for (const pcx of pCXs) {
+      lines.push({ x1: pcx, y1: forkY, x2: pcx, y2: parentRowBottom });
+    }
+  }
+
+  // ── Descendant subtree layout ────────────────────────────────────────────
+
+  const focalCX = svgWidth / 2;
+
+  function placeDescendants(node: DescendantNode, depth: number, leftX: number): void {
+    const subWidth = leafCount(node, depth) * (BOX_W + V_GAP) - V_GAP;
+    const nodeCX   = leftX + subWidth / 2;
+
+    // Focal box is already placed by the ancestor loop; skip depth === 0
+    if (depth > 0) {
+      boxes.push({
+        person:  node.person,
+        isFocal: false,
+        x: nodeCX - BOX_W / 2,
+        y: descRowY(depth),
+        w: BOX_W,
+        h: BOX_H,
+      });
+    }
+
+    if (depth < M && node.children.length > 0) {
+      const rowY  = depth === 0 ? focalRowY : descRowY(depth);
+      const forkY = rowY + BOX_H + GEN_GAP / 2;
+
+      lines.push({ x1: nodeCX, y1: rowY + BOX_H, x2: nodeCX, y2: forkY });
+
+      // Compute child center Xs
+      const childCXs: number[] = [];
+      let cLeft = leftX;
+      for (const child of node.children) {
+        const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
+        childCXs.push(cLeft + cWidth / 2);
+        cLeft += cWidth + V_GAP;
       }
-      lines.push({ x1: Math.min(...activeGPCXs), y1: forkY_gp_parent, x2: Math.max(...activeGPCXs), y2: forkY_gp_parent });
-      if (tree.parents[pi]) {
-        lines.push({ x1: parentCX[pi], y1: forkY_gp_parent, x2: parentCX[pi], y2: parentRowY });
+
+      if (childCXs.length > 1) {
+        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[childCXs.length - 1], y2: forkY });
+      }
+
+      cLeft = leftX;
+      for (let ci = 0; ci < node.children.length; ci++) {
+        const child  = node.children[ci];
+        const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
+        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
+        placeDescendants(child, depth + 1, cLeft);
+        cLeft += cWidth + V_GAP;
       }
     }
-
-    const parent = tree.parents[pi];
-    if (!parent) continue;
-    boxes.push({ person: parent, isFocal: false, x: parentCX[pi] - BOX_W / 2, y: parentRowY, w: BOX_W, h: BOX_H });
   }
 
-  // Focal box
-  boxes.push({ person: tree.focal, isFocal: true, x: focalCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H });
+  const descStartX = focalCX - descSectionWidth / 2;
+  placeDescendants(descendantRoot, 0, descStartX);
 
-  // Parent→Focal connectors
-  const activeParentCXs = tree.parents
-    .map((p, i) => (p ? parentCX[i] : null))
-    .filter((cx): cx is number => cx !== null);
+  // ── SVG height ───────────────────────────────────────────────────────────
 
-  if (activeParentCXs.length > 0) {
-    for (const cx of activeParentCXs) {
-      lines.push({ x1: cx, y1: parentRowY + BOX_H, x2: cx, y2: forkY_parent_focal });
-    }
-    lines.push({ x1: Math.min(...activeParentCXs), y1: forkY_parent_focal, x2: Math.max(...activeParentCXs), y2: forkY_parent_focal });
-    lines.push({ x1: focalCX, y1: forkY_parent_focal, x2: focalCX, y2: focalRowY });
-  }
-
-  // Focal→Children connectors + child boxes
-  let svgHeight = focalRowY + BOX_H + PAD;
-
-  if (tree.children.length > 0) {
-    const count = tree.children.length;
-    const totalW = count * BOX_W + (count - 1) * V_GAP;
-    const startX = (svgWidth - totalW) / 2;
-
-    lines.push({ x1: focalCX, y1: focalRowY + BOX_H, x2: focalCX, y2: forkY_focal_child });
-    if (count > 1) {
-      const firstCX = startX + BOX_W / 2;
-      const lastCX = startX + (count - 1) * (BOX_W + V_GAP) + BOX_W / 2;
-      lines.push({ x1: firstCX, y1: forkY_focal_child, x2: lastCX, y2: forkY_focal_child });
-    }
-
-    for (let ci = 0; ci < count; ci++) {
-      const cx = startX + ci * (BOX_W + V_GAP) + BOX_W / 2;
-      lines.push({ x1: cx, y1: forkY_focal_child, x2: cx, y2: childRowY });
-      boxes.push({ person: tree.children[ci], isFocal: false, x: startX + ci * (BOX_W + V_GAP), y: childRowY, w: BOX_W, h: BOX_H });
-    }
-
-    svgHeight = childRowY + BOX_H + PAD;
-  }
+  const deepestDescRow = M > 0 && descendantRoot.children.length > 0
+    ? descRowY(M)
+    : focalRowY;
+  const svgHeight = deepestDescRow + BOX_H + PAD;
 
   return { boxes, lines, svgWidth, svgHeight };
 }
