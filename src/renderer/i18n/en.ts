@@ -8,6 +8,7 @@ export default {
     persons: 'Persons',
     relationships: 'Relationships',
     sources: 'Sources',
+    importExport: 'Import / Export',
   },
   common: {
     cancel: 'Cancel',
@@ -343,5 +344,18 @@ export default {
     genneyInstructions: 'Export your Genney 4.1 database as GEDCOM: File \u2192 Export GEDCOM (.ged) \u2192 Save',
     genneyModalTitle: 'Import from Genney 4.1',
     genneyPickFile: 'Choose .ged file\u2026',
+  },
+  importExport: {
+    title: 'Import / Export',
+    genneyTitle: 'Import from Genney 4.1',
+    genneyDesc: 'Imports GEDCOM files exported from Genney with support for Swedish place hierarchies, patronymics, and Genney-specific fields.',
+    gedcomImportTitle: 'Import GEDCOM',
+    gedcomImportDesc: 'Imports a GEDCOM 5.5.1 file from any genealogy application.',
+    gedcomExportTitle: 'Export GEDCOM',
+    gedcomExportDesc: 'Exports the entire tree as a GEDCOM 5.5.1 file.',
+    importSuccess: 'Imported: {file}',
+    importError: 'Import failed.',
+    exportSuccess: 'Exported: {file}',
+    exportError: 'Export failed.',
   },
 };

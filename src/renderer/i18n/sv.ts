@@ -8,6 +8,7 @@ export default {
     persons: 'Personer',
     relationships: 'Relationer',
     sources: 'Källor',
+    importExport: 'Import / Export',
   },
   common: {
     cancel: 'Avbryt',
@@ -343,5 +344,18 @@ export default {
     genneyInstructions: 'Exportera din Genney 4.1-databas som GEDCOM: Arkiv → Exportera GEDCOM (.ged) → Spara',
     genneyModalTitle: 'Importera från Genney 4.1',
     genneyPickFile: 'Välj .ged-fil\u2026',
+  },
+  importExport: {
+    title: 'Import / Export',
+    genneyTitle: 'Importera från Genney 4.1',
+    genneyDesc: 'Importerar GEDCOM-filer exporterade från Genney med stöd för svenska ortshierarkier, patronymikon och Genney-specifika fält.',
+    gedcomImportTitle: 'Importera GEDCOM',
+    gedcomImportDesc: 'Importerar en GEDCOM 5.5.1-fil från valfritt program.',
+    gedcomExportTitle: 'Exportera GEDCOM',
+    gedcomExportDesc: 'Exporterar hela trädet som en GEDCOM 5.5.1-fil.',
+    importSuccess: 'Importerat: {file}',
+    importError: 'Import misslyckades.',
+    exportSuccess: 'Exporterat: {file}',
+    exportError: 'Export misslyckades.',
   },
 };
