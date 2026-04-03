@@ -91,9 +91,9 @@ PersonDetailView "Person Details" section (sex + living inline-edit, sex removed
 See `.claude/plans/archive/2026-04-03-detail-view-ux-consistency.md` for full plan.
 
 ### Done (v0.5.0 — Visualization)
-VisualizationView with Pedigree/Hourglass/Timeline SVG chart tabs. Click-to-navigate person boxes. Sidebar reordered (Visualisering at top). PersonDetailView "Visa i träd →" button. i18n strings sv + en.
+VisualizationView with Pedigree/Hourglass/Timeline SVG chart tabs. Click-to-navigate person boxes. Sidebar reordered (Visualisering at top). PersonDetailView "Visa i träd →" button. i18n strings sv + en. Pure layout utilities (`chartLayout.ts`, `chartData.ts`) with 20 unit tests + component tests for VisualizationView and PedigreeChart (108 total tests).
 
-See `.claude/plans/archive/2026-04-03-visualization.md` for the full design and implementation plan.
+See `.claude/plans/archive/2026-04-03-visualization.md` (design) and `.claude/plans/archive/2026-04-03-visualization-impl.md` (implementation) for full plans.
 
 ---
 
