@@ -226,6 +226,120 @@ describe('importGedcom', () => {
 });
 
 // ──────────────────────────────────────────────
+// Importer — Genney 4.1 profile
+// ──────────────────────────────────────────────
+describe('importGedcom (Genney profile)', () => {
+  it('stores _UID as a person identifier', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Erik /Larsson/',
+      '1 _UID A1B2C3D4-E5F6-7890-ABCD-EF1234567890',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    const identifiers = getPersonIdentifiers(db, persons[0].id);
+    expect(identifiers.some(i => i.identifier_type === 'other' && i.identifier_value.includes('A1B2C3D4'))).toBe(true);
+  });
+
+  it('appends _YHAPLOGROUP to person notes', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Erik /Larsson/',
+      '1 _YHAPLOGROUP R1b',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    expect(persons[0].notes).toContain('Y-DNA: R1b');
+  });
+
+  it('appends _MHAPLOGROUP to person notes', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Anna /Persdotter/',
+      '1 _MHAPLOGROUP H1',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    expect(persons[0].notes).toContain('mtDNA: H1');
+  });
+
+  it('appends both haplogroups when both are present', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Erik /Larsson/',
+      '1 _YHAPLOGROUP R1b',
+      '1 _MHAPLOGROUP H1',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    expect(persons[0].notes).toContain('Y-DNA: R1b');
+    expect(persons[0].notes).toContain('mtDNA: H1');
+  });
+
+  it('detects patronymic surname and sets patronymic_base', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Lars /Eriksson/',
+      '1 SEX M',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    const names = getPersonNames(db, persons[0].id);
+    expect(names[0].patronymic_base).toBe('Erik');
+  });
+
+  it('creates hierarchical place chain from Swedish PLAC string', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Lars /Eriksson/',
+      '1 BIRT',
+      '2 DATE 1842',
+      '2 PLAC Fässberg, Mölndals landsförsamling, Göteborgs och Bohus, Sverige',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const places = listPlaces(db);
+    expect(places.some(p => p.name === 'Fässberg')).toBe(true);
+    expect(places.some(p => p.name === 'Sverige')).toBe(true);
+    expect(places).toHaveLength(4);
+    // Verify parent chain
+    const innermost = places.find(p => p.name === 'Fässberg')!;
+    expect(innermost.parent_place_id).not.toBeNull();
+  });
+
+  it('does not set patronymic_base without genney profile', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Lars /Eriksson/',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged)); // no profile
+    const persons = listPersons(db);
+    const names = getPersonNames(db, persons[0].id);
+    expect(names[0].patronymic_base).toBeNull();
+  });
+
+  it('creates flat place without genney profile', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 BIRT',
+      '2 PLAC Fässberg, Mölndals landsförsamling, Göteborgs och Bohus, Sverige',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged)); // no profile
+    const places = listPlaces(db);
+    // Base importer calls findOrCreatePlace with full string → 1 flat place
+    expect(places).toHaveLength(1);
+    expect(places[0].name).toContain('Fässberg');
+  });
+});
+
+// ──────────────────────────────────────────────
 // Exporter
 // ──────────────────────────────────────────────
 describe('exportGedcom', () => {

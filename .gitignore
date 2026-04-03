@@ -9,3 +9,4 @@ playwright-report/
 coverage/
 .worktrees/
 .superpowers/
+export-import/

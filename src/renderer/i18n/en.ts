@@ -339,5 +339,9 @@ export default {
   gedcom: {
     import: 'Import GEDCOM',
     export: 'Export GEDCOM',
+    importFromGenney: 'Import from Genney',
+    genneyInstructions: 'Export your Genney 4.1 database as GEDCOM: File \u2192 Export GEDCOM (.ged) \u2192 Save',
+    genneyModalTitle: 'Import from Genney 4.1',
+    genneyPickFile: 'Choose .ged file\u2026',
   },
 };

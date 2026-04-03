@@ -57,7 +57,7 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke('citations:delete', id),
   },
   gedcom: {
-    import: () => ipcRenderer.invoke('gedcom:import'),
+    import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
     export: () => ipcRenderer.invoke('gedcom:export'),
   },
   places: {
