@@ -7,6 +7,7 @@ import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace } from '../api/places';
+import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 
 export function createMcpServer(db: Database): McpServer {
   const server = new McpServer({
@@ -516,6 +517,35 @@ export function createMcpServer(db: Database): McpServer {
   }, async (args) => {
     const ok = deletePlace(db, args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  // GEDCOM tools
+  server.registerTool('import_gedcom', {
+    description: 'Import a GEDCOM 5.5.1 file from disk into the database',
+    inputSchema: {
+      file_path: z.string().describe('Absolute path to the .ged file to import'),
+    },
+  }, async (args) => {
+    const fs = await import('fs');
+    const text = fs.readFileSync(args.file_path, 'utf-8');
+    const tree = parseGedcom(text);
+    importGedcom(db, tree);
+    return { content: [{ type: 'text', text: JSON.stringify({ imported: true, file_path: args.file_path }) }] };
+  });
+
+  server.registerTool('export_gedcom', {
+    description: 'Export the entire database as GEDCOM 5.5.1. If file_path is provided, writes to disk; otherwise returns the content.',
+    inputSchema: {
+      file_path: z.string().optional().describe('Absolute path to write the .ged file. If omitted, returns GEDCOM content as text.'),
+    },
+  }, async (args) => {
+    const gedText = exportGedcom(db);
+    if (args.file_path) {
+      const fs = await import('fs');
+      fs.writeFileSync(args.file_path, gedText, 'utf-8');
+      return { content: [{ type: 'text', text: JSON.stringify({ exported: true, file_path: args.file_path }) }] };
+    }
+    return { content: [{ type: 'text', text: gedText }] };
   });
 
   return server;

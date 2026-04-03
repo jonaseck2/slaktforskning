@@ -2,7 +2,11 @@
   <div>
     <div class="header">
       <h2>{{ $t('persons.title') }}</h2>
-      <button @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
+      <div class="header-actions">
+        <button class="btn-secondary" @click="handleImportGedcom">{{ $t('gedcom.import') }}</button>
+        <button class="btn-secondary" @click="handleExportGedcom">{{ $t('gedcom.export') }}</button>
+        <button @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
+      </div>
     </div>
     <div v-if="persons.length === 0" class="empty">
       {{ $t('persons.emptyState') }}
@@ -115,6 +119,17 @@ const form = reactive({
   notes: '',
 });
 
+async function handleImportGedcom() {
+  if (!window.api) return;
+  const result = (await window.api.gedcom.import()) as { imported?: boolean; canceled?: boolean };
+  if (result.imported) await load();
+}
+
+async function handleExportGedcom() {
+  if (!window.api) return;
+  await window.api.gedcom.export();
+}
+
 async function load() {
   if (!window.api) return;
   try {
@@ -179,6 +194,21 @@ onMounted(load);
   align-items: center;
   margin-bottom: 16px;
 }
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-secondary {
+  background: #f5f5f5;
+  color: #444;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-secondary:hover { background: #e8e8e8; }
 .empty {
   color: #999;
   padding: 40px;

@@ -170,7 +170,9 @@
       "Bash(npx tsx -e ':*)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('productName:', p.productName, 'name:', p.name\\)\")",
       "Bash(npx tsx:*)",
-      "WebFetch(domain:genny.se)"
+      "WebFetch(domain:genny.se)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(npm version:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

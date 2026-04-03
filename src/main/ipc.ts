@@ -1,10 +1,12 @@
-import { ipcMain } from 'electron';
+import { ipcMain, dialog } from 'electron';
+import * as fs from 'fs';
 import { getDatabase } from './database';
 import * as persons from '../api/persons';
 import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 import * as places from '../api/places';
+import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -94,4 +96,30 @@ export function registerIpcHandlers(): void {
   wrapHandler('places:update', (id, data) => places.updatePlace(db, id as string, data as Parameters<typeof places.updatePlace>[2]));
   wrapHandler('places:delete', (id) => places.deletePlace(db, id as string));
   wrapHandler('places:findOrCreate', (name) => places.findOrCreatePlace(db, name as string));
+
+  // GEDCOM
+  wrapHandler('gedcom:import', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Import GEDCOM File',
+      filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom'] }],
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+    const text = fs.readFileSync(result.filePaths[0], 'utf-8');
+    const tree = parseGedcom(text);
+    importGedcom(getDatabase(), tree);
+    return { imported: true, filePath: result.filePaths[0] };
+  });
+
+  wrapHandler('gedcom:export', async () => {
+    const result = await dialog.showSaveDialog({
+      title: 'Export GEDCOM File',
+      defaultPath: 'family-tree.ged',
+      filters: [{ name: 'GEDCOM Files', extensions: ['ged'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    const gedText = exportGedcom(getDatabase());
+    fs.writeFileSync(result.filePath, gedText, 'utf-8');
+    return { exported: true, filePath: result.filePath };
+  });
 }

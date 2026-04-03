@@ -336,4 +336,8 @@ export default {
     city: 'Stad',
     other: 'Annat',
   },
+  gedcom: {
+    import: 'Importera GEDCOM',
+    export: 'Exportera GEDCOM',
+  },
 };
