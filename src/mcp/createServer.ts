@@ -1,0 +1,488 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { Database } from 'node-sqlite3-wasm';
+import * as persons from '../api/persons';
+import { addPersonIdentifier, getPersonIdentifiers, deletePersonIdentifier } from '../api/persons';
+import * as relationships from '../api/relationships';
+import * as events from '../api/events';
+import * as sources from '../api/sources';
+import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace } from '../api/places';
+
+export function createMcpServer(db: Database): McpServer {
+  const server = new McpServer({
+    name: 'slaktforskning',
+    version: '0.3.1',
+  });
+
+  // Person tools
+  server.registerTool('create_person', {
+    description: 'Create a new person',
+    inputSchema: {
+      given_name: z.string().optional().describe('Given/first name'),
+      surname: z.string().optional().describe('Surname/family name'),
+      sex: z.enum(['M', 'F', 'U']).optional().describe('Sex: M, F, or U (unknown)'),
+    },
+  }, async (args) => {
+    const person = persons.createPerson(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(person, null, 2) }] };
+  });
+
+  server.registerTool('list_persons', { description: 'List all persons' }, async () => {
+    const list = persons.listPersons(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('search_persons', {
+    description: 'Search persons by name',
+    inputSchema: { query: z.string().describe('Search query') },
+  }, async (args) => {
+    const results = persons.searchPersons(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  server.registerTool('get_person', {
+    description: 'Get a person by ID',
+    inputSchema: { id: z.string().describe('Person ID') },
+  }, async (args) => {
+    const person = persons.getPerson(db, args.id);
+    return { content: [{ type: 'text', text: person ? JSON.stringify(person, null, 2) : 'Person not found' }] };
+  });
+
+  server.registerTool('update_person', {
+    description: 'Update a person',
+    inputSchema: {
+      id: z.string().describe('Person ID'),
+      sex: z.enum(['M', 'F', 'U']).optional(),
+      living: z.boolean().optional(),
+      notes: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const person = persons.updatePerson(db, id, data);
+    return { content: [{ type: 'text', text: person ? JSON.stringify(person, null, 2) : 'Person not found' }] };
+  });
+
+  server.registerTool('delete_person', {
+    description: 'Delete a person',
+    inputSchema: { id: z.string().describe('Person ID') },
+  }, async (args) => {
+    const ok = persons.deletePerson(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('add_person_name', {
+    description: 'Add an alternate name to a person (married, alias, aka)',
+    inputSchema: {
+      person_id: z.string().describe('Person ID'),
+      given_name: z.string().optional().describe('Given/first name'),
+      surname: z.string().optional().describe('Surname/family name'),
+      name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional().describe('Name type (default: birth)'),
+      name_prefix: z.string().optional(),
+      name_suffix: z.string().optional(),
+      patronymic_base: z.string().optional(),
+      name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
+    },
+  }, async (args) => {
+    const { person_id, ...data } = args;
+    const name = persons.addPersonName(db, person_id, data);
+    return { content: [{ type: 'text', text: JSON.stringify(name, null, 2) }] };
+  });
+
+  server.registerTool('get_person_names', {
+    description: 'Get all names for a person',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async (args) => {
+    const list = persons.getPersonNames(db, args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_person_name', {
+    description: 'Update a person name record',
+    inputSchema: {
+      id: z.string(),
+      given_name: z.string().optional(),
+      surname: z.string().optional(),
+      name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional(),
+      name_prefix: z.string().optional(),
+      name_suffix: z.string().optional(),
+      patronymic_base: z.string().optional(),
+      name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
+    },
+  }, async ({ id, ...data }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify(persons.updatePersonName(db, id, data)) }] })
+  );
+
+  server.registerTool('delete_person_name', {
+    description: 'Delete a person name record',
+    inputSchema: { id: z.string() },
+  }, async ({ id }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify({ deleted: persons.deletePersonName(db, id) }) }] })
+  );
+
+  server.registerTool('add_person_identifier', {
+    description: 'Add an external identifier to a person (FamilySearch ID, Ancestry ID, etc.)',
+    inputSchema: {
+      person_id: z.string(),
+      identifier_type: z.enum(['familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other']),
+      identifier_value: z.string(),
+    },
+  }, async ({ person_id, identifier_type, identifier_value }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify(addPersonIdentifier(db, person_id, { identifier_type, identifier_value })) }] })
+  );
+
+  server.registerTool('get_person_identifiers', {
+    description: 'Get all external identifiers for a person',
+    inputSchema: { person_id: z.string() },
+  }, async ({ person_id }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify(getPersonIdentifiers(db, person_id)) }] })
+  );
+
+  server.registerTool('delete_person_identifier', {
+    description: 'Delete an external identifier',
+    inputSchema: { id: z.string() },
+  }, async ({ id }) =>
+    ({ content: [{ type: 'text', text: JSON.stringify({ deleted: deletePersonIdentifier(db, id) }) }] })
+  );
+
+  // Relationship tools
+  server.registerTool('create_relationship', {
+    description: 'Create a relationship between two persons',
+    inputSchema: {
+      type: z.enum(['couple', 'parent_child', 'sibling', 'godparent', 'other']).describe('Relationship type'),
+      person1_id: z.string().optional().describe('Person 1 ID (for parent_child: parent)'),
+      person2_id: z.string().optional().describe('Person 2 ID (for parent_child: child)'),
+      subtype: z.string().optional(),
+      notes: z.string().optional(),
+    },
+  }, async (args) => {
+    const rel = relationships.createRelationship(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(rel, null, 2) }] };
+  });
+
+  server.registerTool('get_relationship', {
+    description: 'Get a relationship by ID',
+    inputSchema: { id: z.string().describe('Relationship ID') },
+  }, async (args) => {
+    const rel = relationships.getRelationship(db, args.id);
+    return { content: [{ type: 'text', text: rel ? JSON.stringify(rel, null, 2) : 'Relationship not found' }] };
+  });
+
+  server.registerTool('list_relationships', { description: 'List all relationships' }, async () => {
+    const list = relationships.listRelationships(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_relationship', {
+    description: 'Update a relationship',
+    inputSchema: {
+      id: z.string().describe('Relationship ID'),
+      type: z.enum(['couple', 'parent_child', 'sibling', 'godparent', 'other']).optional(),
+      person1_id: z.string().optional(),
+      person2_id: z.string().optional(),
+      subtype: z.string().optional(),
+      notes: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const rel = relationships.updateRelationship(db, id, data);
+    return { content: [{ type: 'text', text: rel ? JSON.stringify(rel, null, 2) : 'Relationship not found' }] };
+  });
+
+  server.registerTool('delete_relationship', {
+    description: 'Delete a relationship',
+    inputSchema: { id: z.string().describe('Relationship ID') },
+  }, async (args) => {
+    const ok = relationships.deleteRelationship(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('get_relationships_of_person', {
+    description: 'Get all relationships for a person',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async (args) => {
+    const list = relationships.getRelationshipsOfPerson(db, args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('search_relationships', {
+    description: 'Search relationships by person name',
+    inputSchema: { query: z.string().describe('Search query') },
+  }, async (args) => {
+    const results = relationships.searchRelationships(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  // Event participant tools
+  server.registerTool('add_event_participant', {
+    description: 'Add a person as a participant in an event',
+    inputSchema: {
+      event_id: z.string().describe('Event ID'),
+      person_id: z.string().describe('Person ID'),
+      role: z.enum(['primary', 'spouse', 'parent', 'child', 'witness', 'godparent', 'officiant', 'other']).optional().describe('Participant role (default: primary)'),
+    },
+  }, async (args) => {
+    const participant = relationships.addEventParticipant(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(participant, null, 2) }] };
+  });
+
+  server.registerTool('get_event_participants', {
+    description: 'Get all participants for an event',
+    inputSchema: { event_id: z.string().describe('Event ID') },
+  }, async (args) => {
+    const list = relationships.getEventParticipants(db, args.event_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('remove_event_participant', {
+    description: 'Remove a participant from an event',
+    inputSchema: { id: z.string().describe('Event participant ID') },
+  }, async (args) => {
+    const ok = relationships.removeEventParticipant(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
+  });
+
+  // Event tools
+  server.registerTool('add_event', {
+    description: 'Add a life event (optionally linked to a relationship)',
+    inputSchema: {
+      event_type: z.string().describe('Event type: birth, death, marriage, baptism, burial, immigration, census, residence, occupation, military, etc.'),
+      relationship_id: z.string().optional().describe('Relationship ID (for relationship events like marriage)'),
+      date_value: z.string().optional().describe('Date in ISO format (YYYY-MM-DD)'),
+      date_value_end: z.string().optional().describe('End date for "between" date type (YYYY-MM-DD)'),
+      date_type: z.enum(['exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown']).optional(),
+      date_original: z.string().optional().describe('Original date text as found in source'),
+      place_id: z.string().optional().describe('Place ID'),
+      description: z.string().optional(),
+    },
+  }, async (args) => {
+    const event = events.createEvent(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(event, null, 2) }] };
+  });
+
+  server.registerTool('get_event', {
+    description: 'Get a single event by ID',
+    inputSchema: { id: z.string().describe('Event ID') },
+  }, async (args) => {
+    const event = events.getEvent(db, args.id);
+    return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
+  });
+
+  server.registerTool('get_events_for_person', {
+    description: 'Get all events for a person (via event_participants)',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async (args) => {
+    const list = events.getEventsForPerson(db, args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_events_for_relationship', {
+    description: 'Get all events for a relationship',
+    inputSchema: { relationship_id: z.string().describe('Relationship ID') },
+  }, async (args) => {
+    const list = events.getEventsForRelationship(db, args.relationship_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_event', {
+    description: 'Update an event',
+    inputSchema: {
+      id: z.string().describe('Event ID'),
+      event_type: z.string().optional(),
+      date_value: z.string().optional(),
+      date_value_end: z.string().optional(),
+      date_type: z.enum(['exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown']).optional(),
+      date_original: z.string().optional(),
+      place_id: z.string().optional(),
+      description: z.string().optional(),
+      relationship_id: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const event = events.updateEvent(db, id, data);
+    return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
+  });
+
+  server.registerTool('delete_event', {
+    description: 'Delete an event',
+    inputSchema: { id: z.string().describe('Event ID') },
+  }, async (args) => {
+    const ok = events.deleteEvent(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  // Source tools
+  server.registerTool('add_source', {
+    description: 'Add a source record',
+    inputSchema: {
+      title: z.string().describe('Source title'),
+      author: z.string().optional(),
+      source_type: z.string().optional().describe('Type: vital_record, census, newspaper, photograph, oral_history, etc.'),
+      url: z.string().optional(),
+      repository: z.string().optional(),
+    },
+  }, async (args) => {
+    const source = sources.createSource(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(source, null, 2) }] };
+  });
+
+  server.registerTool('get_source', {
+    description: 'Get a source by ID',
+    inputSchema: { id: z.string().describe('Source ID') },
+  }, async (args) => {
+    const source = sources.getSource(db, args.id);
+    return { content: [{ type: 'text', text: source ? JSON.stringify(source, null, 2) : 'Source not found' }] };
+  });
+
+  server.registerTool('list_sources', { description: 'List all sources' }, async () => {
+    const list = sources.listSources(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_source', {
+    description: 'Update a source',
+    inputSchema: {
+      id: z.string().describe('Source ID'),
+      title: z.string().optional(),
+      author: z.string().optional(),
+      publication_info: z.string().optional(),
+      repository: z.string().optional(),
+      url: z.string().optional(),
+      source_type: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const source = sources.updateSource(db, id, data);
+    return { content: [{ type: 'text', text: source ? JSON.stringify(source, null, 2) : 'Source not found' }] };
+  });
+
+  server.registerTool('delete_source', {
+    description: 'Delete a source',
+    inputSchema: { id: z.string().describe('Source ID') },
+  }, async (args) => {
+    const ok = sources.deleteSource(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('search_sources', {
+    description: 'Search sources by title, author, or publication info',
+    inputSchema: { query: z.string().describe('Search query') },
+  }, async (args) => {
+    const results = sources.searchSources(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  server.registerTool('add_citation', {
+    description: 'Add a citation linking a source to an event, person, relationship, or place',
+    inputSchema: {
+      source_id: z.string().describe('Source ID'),
+      event_id: z.string().optional().describe('Event ID'),
+      person_id: z.string().optional().describe('Person ID'),
+      relationship_id: z.string().optional().describe('Relationship ID'),
+      place_id: z.string().optional().describe('Place ID'),
+      page: z.string().optional().describe('Page/location within source'),
+      transcription: z.string().optional().describe('Verbatim text from source'),
+      confidence: z.number().optional().describe('0-3: 0=unreliable, 3=direct primary evidence'),
+    },
+  }, async (args) => {
+    const citation = sources.createCitation(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(citation, null, 2) }] };
+  });
+
+  server.registerTool('get_citation', {
+    description: 'Get a citation by ID',
+    inputSchema: { id: z.string().describe('Citation ID') },
+  }, async (args) => {
+    const citation = sources.getCitation(db, args.id);
+    return { content: [{ type: 'text', text: citation ? JSON.stringify(citation, null, 2) : 'Citation not found' }] };
+  });
+
+  server.registerTool('get_citations_for_source', {
+    description: 'Get all citations for a source',
+    inputSchema: { source_id: z.string().describe('Source ID') },
+  }, async (args) => {
+    const list = sources.getCitationsForSource(db, args.source_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_citations_for_event', {
+    description: 'Get all citations for an event',
+    inputSchema: { event_id: z.string().describe('Event ID') },
+  }, async (args) => {
+    const list = sources.getCitationsForEvent(db, args.event_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('delete_citation', {
+    description: 'Delete a citation',
+    inputSchema: { id: z.string().describe('Citation ID') },
+  }, async (args) => {
+    const ok = sources.deleteCitation(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  // Place tools
+  server.registerTool('add_place', {
+    description: 'Create a new place record',
+    inputSchema: {
+      name: z.string().describe('Place name'),
+      place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional().describe('Place type'),
+      parent_place_id: z.string().optional().describe('Parent place ID'),
+      latitude: z.number().optional().describe('Latitude coordinate'),
+      longitude: z.number().optional().describe('Longitude coordinate'),
+      date_from: z.string().optional().describe('Date from (ISO format)'),
+      date_to: z.string().optional().describe('Date to (ISO format)'),
+      notes: z.string().optional().describe('Notes about the place'),
+    },
+  }, async (args) => {
+    const place = createPlace(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
+  });
+
+  server.registerTool('get_place', {
+    description: 'Get a place by ID',
+    inputSchema: { id: z.string().describe('Place ID') },
+  }, async (args) => {
+    const place = getPlace(db, args.id);
+    return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
+  });
+
+  server.registerTool('list_places', { description: 'List all places' }, async () => {
+    const list = listPlaces(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('search_places', {
+    description: 'Search places by name',
+    inputSchema: { query: z.string().describe('Search query') },
+  }, async (args) => {
+    const results = searchPlaces(db, args.query);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  server.registerTool('update_place', {
+    description: 'Update a place',
+    inputSchema: {
+      id: z.string().describe('Place ID'),
+      name: z.string().optional().describe('Place name'),
+      place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional(),
+      parent_place_id: z.string().optional().nullable().describe('Parent place ID'),
+      latitude: z.number().optional().nullable().describe('Latitude coordinate'),
+      longitude: z.number().optional().nullable().describe('Longitude coordinate'),
+      notes: z.string().optional().describe('Notes about the place'),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const place = updatePlace(db, id, data);
+    return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
+  });
+
+  server.registerTool('delete_place', {
+    description: 'Delete a place',
+    inputSchema: { id: z.string().describe('Place ID') },
+  }, async (args) => {
+    const ok = deletePlace(db, args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  return server;
+}

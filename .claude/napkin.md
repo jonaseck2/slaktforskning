@@ -29,6 +29,14 @@
 7. **[2026-03-15] GPG signing fails in non-interactive agent context**
    Do instead: if commit fails with "Bad PIN", tell user and suggest `git config --local commit.gpgsign false`.
 
+## MCP Server
+
+1. **[2026-04-03] MCP server fails to start if `path` is not imported in server.ts**
+   Do instead: verify `import path from 'node:path'` is present at the top of `src/mcp/server.ts`. Test with `echo '{"jsonrpc":"2.0","id":1,"method":"initialize",...}' | npx tsx src/mcp/server.ts` before assuming config issue.
+
+2. **[2026-04-03] Use MCP tools (not one-off tsx scripts) for DB operations in a session**
+   Do instead: check that slaktforskning MCP server is connected and use its tools (`search_persons`, `add_event`, etc.). If the server shows "failed" in Claude Code, fix the crash and ask user to reconnect.
+
 ## Shell & Command Reliability
 
 1. **[2026-03-15] node-sqlite3-wasm uses array parameter binding**
