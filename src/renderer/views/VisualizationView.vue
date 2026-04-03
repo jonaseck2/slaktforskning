@@ -145,7 +145,6 @@ onMounted(load);
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 1100px;
 }
 
 .viz-header {
@@ -219,7 +218,8 @@ onMounted(load);
 
 .viz-area {
   flex: 1;
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .empty-state {
