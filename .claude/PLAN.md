@@ -103,6 +103,18 @@ See `.claude/plans/2026-04-03-sourcing-and-citations.md` for the full plan.
 - [ ] MCP: `get_citations_for_person`, `get_citations_for_relationship`, `get_citations_for_place`
 - [ ] Unit + component + MCP tests
 
+### v0.5.3 — Place Address Fields
+
+See `.claude/plans/2026-04-03-place-address.md` for the full plan.
+
+- [ ] Schema: `street`, `postal_code`, `city`, `country` columns on `places` + idempotent migration guards
+- [ ] Types + API: `createPlace`/`updatePlace` accept new fields
+- [ ] MCP: update `add_place` + `update_place` input schemas
+- [ ] PlaceDetailView: "Adress" section with four inline-edit fields in 2-column grid
+- [ ] PlacePicker: show `postal_code`/`city` subtitle in dropdown for disambiguation
+- [ ] i18n sv/en strings
+- [ ] Unit tests (places) + MCP tests
+
 ### v0.5.4 — Tilltalsnamn (Preferred/Call Name)
 
 See `.claude/plans/2026-04-03-preferred-name.md` for the full plan.
