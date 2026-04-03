@@ -92,19 +92,12 @@ EventList rows clickable (no Edit button); PlacePicker + PersonPicker get `width
 ### Done (v0.5.3 — Place Address Fields)
 `street`, `postal_code`, `city`, `country` columns on `places`; `createPlace`/`updatePlace` accept new fields; MCP `add_place`/`update_place` schemas updated; PlaceDetailView Address section; PlacePicker shows postal_code/city subtitle. See `.claude/plans/archive/2026-04-03-place-address.md`.
 
+### Done (v0.5.4 — Tilltalsnamn)
+`preferred_name` on `person_names`; `getDisplayGivenName()` helper; `listPersons`/`searchPersons` return and search by preferred_name; MCP `add_person_name`/`update_person_name` accept preferred_name; PersonDetailView underlines tilltalsnamn token in name rows and shows input field for birth names; PersonsView + PersonPicker display call name. See `.claude/plans/archive/2026-04-03-preferred-name.md`.
+
 ---
 
 ## Roadmap
-
-### v0.5.4 — Tilltalsnamn (Preferred/Call Name)
-
-See `.claude/plans/2026-04-03-preferred-name.md` for the full plan.
-
-- [ ] Schema: `preferred_name TEXT` column on `person_names` + idempotent migration
-- [ ] API: `addPersonName`/`updatePersonName` accept `preferred_name`; `listPersons`/`searchPersons` use it as display name
-- [ ] IPC + MCP: expose `preferred_name` on name tools
-- [ ] Vue: underline tilltalsnamn in name rows; PersonsView + PersonPicker show call name
-- [ ] Tests: unit tests for `preferred_name` storage + display helper; MCP tests
 
 ### v0.6.0 — GEDCOM Import/Export
 

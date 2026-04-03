@@ -117,6 +117,19 @@ describe('person names', () => {
     expect(updated.surname).toBe('New');
   });
 
+  it('stores and retrieves preferred_name (tilltalsnamn)', async () => {
+    const person = await call('create_person', { given_name: 'Eva Linda Marie', surname: 'Karlsson' }) as any;
+    const name = await call('add_person_name', {
+      person_id: person.id,
+      given_name: 'Eva Linda Marie',
+      surname: 'Karlsson',
+      preferred_name: 'Linda',
+    }) as any;
+    expect(name.preferred_name).toBe('Linda');
+    const updated = await call('update_person_name', { id: name.id, preferred_name: 'Eva' }) as any;
+    expect(updated.preferred_name).toBe('Eva');
+  });
+
   it('deletes a person name', async () => {
     const person = await call('create_person', { given_name: 'Anna', surname: 'Svensson' }) as any;
     const name = await call('add_person_name', { person_id: person.id, given_name: 'Anna', name_type: 'aka' }) as any;

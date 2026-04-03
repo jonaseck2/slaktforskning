@@ -15,6 +15,7 @@ import {
   addPersonIdentifier,
   getPersonIdentifiers,
   deletePersonIdentifier,
+  getDisplayGivenName,
 } from '../../src/api/persons';
 
 let db: Database.Database;
@@ -138,6 +139,69 @@ describe('persons', () => {
       expect(name.patronymic_base).toBe('Erik');
       expect(name.name_qualifier).toBe('patronymic');
     });
+
+    it('stores and retrieves preferred_name', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Eva Linda Marie', surname: 'Karlsson', preferred_name: 'Linda' });
+      expect(name.preferred_name).toBe('Linda');
+    });
+
+    it('preferred_name defaults to null when not provided', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
+      expect(name.preferred_name).toBeNull();
+    });
+  });
+
+  describe('updatePersonName with preferred_name', () => {
+    it('sets preferred_name', () => {
+      const person = createPerson(db, { given_name: 'Eva Linda Marie', surname: 'Karlsson' });
+      const nameId = getPersonNames(db, person.id)[0].id;
+      const updated = updatePersonName(db, nameId, { preferred_name: 'Linda' });
+      expect(updated!.preferred_name).toBe('Linda');
+    });
+
+    it('clears preferred_name with null', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Eva Linda Marie', surname: 'Test', preferred_name: 'Linda' });
+      const updated = updatePersonName(db, name.id, { preferred_name: null });
+      expect(updated!.preferred_name).toBeNull();
+    });
+  });
+
+  describe('listPersons with preferred_name', () => {
+    it('returns preferred_name from primary name', () => {
+      const person = createPerson(db, { given_name: 'Eva Linda Marie', surname: 'Karlsson' });
+      const nameId = getPersonNames(db, person.id)[0].id;
+      updatePersonName(db, nameId, { preferred_name: 'Linda' });
+      const list = listPersons(db);
+      const found = list.find(p => p.id === person.id);
+      expect(found!.preferred_name).toBe('Linda');
+    });
+  });
+
+  describe('searchPersons with preferred_name', () => {
+    it('finds person by preferred_name', () => {
+      const person = createPerson(db, { given_name: 'Eva Linda Marie', surname: 'Karlsson' });
+      const nameId = getPersonNames(db, person.id)[0].id;
+      updatePersonName(db, nameId, { preferred_name: 'Linda' });
+      const results = searchPersons(db, 'Linda');
+      expect(results.some(p => p.id === person.id)).toBe(true);
+    });
+  });
+});
+
+describe('getDisplayGivenName', () => {
+  it('returns preferred_name when set', () => {
+    expect(getDisplayGivenName({ given_name: 'Eva Linda Marie', preferred_name: 'Linda' })).toBe('Linda');
+  });
+
+  it('returns first token of given_name when no preferred_name', () => {
+    expect(getDisplayGivenName({ given_name: 'Eva Linda Marie', preferred_name: null })).toBe('Eva');
+  });
+
+  it('returns empty string when both are null', () => {
+    expect(getDisplayGivenName({ given_name: null, preferred_name: null })).toBe('');
   });
 });
 

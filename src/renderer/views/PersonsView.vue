@@ -24,7 +24,7 @@
           class="clickable-row"
           @click="goToDetail(person.id)"
         >
-          <td>{{ person.given_name }} <CitationBadge :count="personCitationCounts[person.id] ?? 0" /></td>
+          <td>{{ person.preferred_name ?? person.given_name?.split(' ')[0] ?? '' }} <CitationBadge :count="personCitationCounts[person.id] ?? 0" /></td>
           <td>{{ person.surname }}</td>
           <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
           <td>{{ person.living ? $t('common.yes') : $t('common.no') }}</td>
@@ -93,6 +93,7 @@ interface PersonRow {
   id: string;
   given_name: string;
   surname: string;
+  preferred_name: string | null;
   sex: string;
   living: number;
 }

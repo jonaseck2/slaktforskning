@@ -19,7 +19,7 @@
         class="picker-option"
         @mousedown.prevent="select(person)"
       >
-        <span class="picker-name">{{ person.given_name }} {{ person.surname }}</span>
+        <span class="picker-name">{{ person.preferred_name ?? person.given_name?.split(' ')[0] ?? '' }} {{ person.surname }}</span>
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
     </ul>
@@ -37,6 +37,7 @@ interface PersonResult {
   id: string;
   given_name: string;
   surname: string;
+  preferred_name: string | null;
   sex: string;
 }
 
@@ -62,9 +63,11 @@ watch(
   () => props.modelValue,
   async (id) => {
     if (id && window.api) {
-      const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+      const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null }>;
       if (names.length > 0) {
-        searchQuery.value = `${names[0].given_name} ${names[0].surname}`.trim();
+        const n = names[0];
+        const displayGiven = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
+        searchQuery.value = `${displayGiven} ${n.surname}`.trim();
       }
     } else if (!id) {
       searchQuery.value = '';
@@ -90,7 +93,8 @@ function onInput(e: Event) {
 }
 
 function select(person: PersonResult) {
-  searchQuery.value = `${person.given_name} ${person.surname}`.trim();
+  const displayGiven = person.preferred_name ?? person.given_name?.split(' ')[0] ?? '';
+  searchQuery.value = `${displayGiven} ${person.surname}`.trim();
   emit('update:modelValue', person.id);
   emit('select', person);
   open.value = false;

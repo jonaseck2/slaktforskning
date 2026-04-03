@@ -25,15 +25,24 @@ export function getPerson(db: Database, id: string): Person | null {
   return (db.prepare(`SELECT *, living as living FROM persons WHERE id = ?`).get([id]) as Person) ?? null;
 }
 
-export function listPersons(db: Database): (Person & { given_name: string; surname: string })[] {
+/**
+ * Returns the preferred given name for display: preferred_name if set,
+ * otherwise the first token of given_name.
+ */
+export function getDisplayGivenName(name: { given_name: string | null; preferred_name: string | null }): string {
+  if (name.preferred_name) return name.preferred_name;
+  return name.given_name?.split(' ')[0] ?? '';
+}
+
+export function listPersons(db: Database): (Person & { given_name: string; surname: string; preferred_name: string | null })[] {
   return db.prepare(`
-    SELECT p.*, pn.given_name, pn.surname
+    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name
     FROM persons p
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
     ORDER BY pn.surname, pn.given_name
-  `).all() as (Person & { given_name: string; surname: string })[];
+  `).all() as (Person & { given_name: string; surname: string; preferred_name: string | null })[];
 }
 
 export function updatePerson(
@@ -58,17 +67,18 @@ export function deletePerson(db: Database, id: string): boolean {
   return result.changes > 0;
 }
 
-export function searchPersons(db: Database, query: string): (Person & { given_name: string; surname: string })[] {
+export function searchPersons(db: Database, query: string): (Person & { given_name: string; surname: string; preferred_name: string | null })[] {
   const like = `%${query}%`;
   return db.prepare(`
-    SELECT p.*, pn.given_name, pn.surname
+    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name
     FROM persons p
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
-    WHERE pn.given_name LIKE ? OR pn.surname LIKE ? OR p.notes LIKE ?
+    WHERE pn.given_name LIKE ? OR pn.surname LIKE ?
+       OR pn.preferred_name LIKE ? OR p.notes LIKE ?
     ORDER BY pn.surname, pn.given_name
-  `).all([like, like, like]) as (Person & { given_name: string; surname: string })[];
+  `).all([like, like, like, like]) as (Person & { given_name: string; surname: string; preferred_name: string | null })[];
 }
 
 export function addPersonName(
@@ -85,6 +95,7 @@ export function addPersonName(
     name_suffix?: string | null;
     patronymic_base?: string | null;
     name_qualifier?: PersonName['name_qualifier'];
+    preferred_name?: string | null;
   }
 ): PersonName {
   const id = uuid();
@@ -94,8 +105,8 @@ export function addPersonName(
   db.prepare(`
     INSERT INTO person_names
       (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order,
-       name_prefix, name_suffix, patronymic_base, name_qualifier)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run([
     id, personId,
     data.given_name ?? null, data.surname ?? null,
@@ -104,6 +115,7 @@ export function addPersonName(
     data.sort_order ?? (maxOrder.max_order + 1),
     data.name_prefix ?? null, data.name_suffix ?? null,
     data.patronymic_base ?? null, data.name_qualifier ?? null,
+    data.preferred_name ?? null,
   ]);
   return db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName;
 }
@@ -115,7 +127,7 @@ export function getPersonNames(db: Database, personId: string): PersonName[] {
 export function updatePersonName(
   db: Database,
   id: string,
-  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier'>>
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name'>>
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -126,6 +138,7 @@ export function updatePersonName(
   if (data.name_suffix !== undefined) { fields.push('name_suffix = ?'); values.push(data.name_suffix); }
   if (data.patronymic_base !== undefined) { fields.push('patronymic_base = ?'); values.push(data.patronymic_base); }
   if (data.name_qualifier !== undefined) { fields.push('name_qualifier = ?'); values.push(data.name_qualifier); }
+  if (data.preferred_name !== undefined) { fields.push('preferred_name = ?'); values.push(data.preferred_name); }
   if (fields.length === 0) return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
   values.push(id);
   db.prepare(`UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`).run(values);
