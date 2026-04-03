@@ -88,6 +88,7 @@ function onBlur() {
 
 <style scoped>
 .place-picker { position: relative; }
+.place-picker input { font-size: 14px; }
 .dropdown {
   position: absolute;
   top: 100%;
@@ -107,11 +108,11 @@ function onBlur() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
 }
 .dropdown-item:hover { background: #f0f4ff; }
 .place-type {
-  font-size: 11px;
+  font-size: 12px;
   color: #999;
 }
 .create-new { color: #1d4ed8; font-style: italic; }
