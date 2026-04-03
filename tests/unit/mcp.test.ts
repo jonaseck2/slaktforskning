@@ -485,4 +485,22 @@ describe('places', () => {
     }) as any;
     expect(city.parent_place_id).toBe(country.id);
   });
+
+  it('stores and updates address fields', async () => {
+    const place = await call('add_place', {
+      name: 'Tvärgatan 5',
+      street: 'Tvärgatan 5',
+      postal_code: '35243',
+      city: 'Växjö',
+      country: 'Sverige',
+    }) as any;
+    expect(place.street).toBe('Tvärgatan 5');
+    expect(place.postal_code).toBe('35243');
+    expect(place.city).toBe('Växjö');
+    expect(place.country).toBe('Sverige');
+
+    const updated = await call('update_place', { id: place.id, street: 'Tvärgatan 7' }) as any;
+    expect(updated.street).toBe('Tvärgatan 7');
+    expect(updated.city).toBe('Växjö');
+  });
 });

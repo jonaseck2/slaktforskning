@@ -63,7 +63,11 @@ export function initializeSchema(db: Database): void {
       parent_place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
       date_from TEXT,
       date_to TEXT,
-      notes TEXT NOT NULL DEFAULT ''
+      notes TEXT NOT NULL DEFAULT '',
+      street TEXT,
+      postal_code TEXT,
+      city TEXT,
+      country TEXT
     );
 
     CREATE TABLE IF NOT EXISTS events (
@@ -177,6 +181,19 @@ export function initializeSchema(db: Database): void {
   }
   if (!placesCols.includes('notes')) {
     db.exec(`ALTER TABLE places ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
+  }
+  // v0.5.3 address fields
+  if (!placesCols.includes('street')) {
+    db.exec('ALTER TABLE places ADD COLUMN street TEXT');
+  }
+  if (!placesCols.includes('postal_code')) {
+    db.exec('ALTER TABLE places ADD COLUMN postal_code TEXT');
+  }
+  if (!placesCols.includes('city')) {
+    db.exec('ALTER TABLE places ADD COLUMN city TEXT');
+  }
+  if (!placesCols.includes('country')) {
+    db.exec('ALTER TABLE places ADD COLUMN country TEXT');
   }
 
   // Indexes that depend on migrated columns — run after migrations

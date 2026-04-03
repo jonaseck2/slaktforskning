@@ -300,6 +300,11 @@ export default {
     childPlaces: 'Underliggande orter',
     detailsTitle: 'Platsuppgifter',
     citeSources: 'Citera',
+    address: 'Adress',
+    street: 'Gata',
+    postalCode: 'Postnummer',
+    city: 'Stad',
+    country: 'Land',
   },
   visualization: {
     tab: {

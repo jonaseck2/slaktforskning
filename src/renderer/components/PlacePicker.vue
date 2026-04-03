@@ -16,8 +16,11 @@
         class="dropdown-item"
         @mousedown.prevent="select(place)"
       >
-        <span class="place-name">{{ place.name }}</span>
-        <span v-if="place.place_type" class="place-type">{{ $t('placeTypes.' + place.place_type) }}</span>
+        <div class="place-main">
+          <span class="place-name">{{ place.name }}</span>
+          <span v-if="place.place_type" class="place-type">{{ $t('placeTypes.' + place.place_type) }}</span>
+        </div>
+        <div v-if="place.postal_code || place.city" class="place-subtitle">{{ [place.postal_code, place.city].filter(Boolean).join(' ') }}</div>
       </div>
       <div
         v-if="query.length > 1 && results.every(r => r.name.toLowerCase() !== query.toLowerCase())"
@@ -38,7 +41,7 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-interface PlaceRow { id: string; name: string; place_type: string | null; }
+interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; }
 
 const props = defineProps<{
   modelValue: string | null;
@@ -106,9 +109,18 @@ function onBlur() {
   padding: 8px 12px;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+.place-main {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+}
+.place-subtitle {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
 }
 .dropdown-item:hover { background: #f0f4ff; }
 .place-type {

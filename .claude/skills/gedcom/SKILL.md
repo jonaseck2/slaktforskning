@@ -130,6 +130,24 @@ GEDCOM 5.5.1 PLAC is a free-text comma-separated hierarchy: `"Björkvik, Rönö 
 
 **On export:** Use `place.name` directly as the PLAC value.
 
+## ADDR (address) handling
+
+GEDCOM 5.5.1 has no `ADDR` directly on `PLAC` tags. The `ADDR` structure appears on the containing event (e.g. `RESI`):
+
+```
+1 RESI
+  2 PLAC Tvärgatan 5, Växjö, Sverige
+  2 ADDR Tvärgatan 5
+    3 ADR1 Tvärgatan 5
+    3 CITY Växjö
+    3 POST 35243
+    3 CTRY Sverige
+```
+
+**On import:** When a `RESI` (or other event) has both `PLAC` and `ADDR`, populate the address columns on the corresponding place record from `ADR1` → `street`, `CITY` → `city`, `POST` → `postal_code`, `CTRY` → `country`. Use `updatePlace(db, place.id, { street, city, postal_code, country })`.
+
+**On export:** If a place has `street` set, emit `ADDR`/`ADR1`/`CITY`/`POST`/`CTRY` below the event's `PLAC` tag.
+
 ## NAME format
 
 GEDCOM NAME format: `Given /Surname/ Suffix` or just `Given /Surname/`

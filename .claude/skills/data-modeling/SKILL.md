@@ -72,6 +72,7 @@ Hierarchical. Swedish genealogy needs parish/härad/county structure.
 - `place_type`: country, province, county, härad, parish, farm, village, city, other
 - `parent_place_id` for hierarchy (farm → parish → härad → county → country)
 - Lat/long, date range (place names and boundaries change)
+- Address fields (v0.5.3): `street`, `postal_code`, `city`, `country` — all nullable TEXT; align with GEDCOM-X `Address` on `PlaceDescription`. In GEDCOM 5.5.1 these map to `ADR1`/`CITY`/`POST`/`CTRY` on the containing event's `ADDR` structure.
 
 ### Source
 A physical or digital document, record, or artifact.

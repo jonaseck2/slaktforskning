@@ -81,6 +81,10 @@ export interface Place {
   date_from: string | null;
   date_to: string | null;
   notes: string;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country: string | null;
 }
 
 export interface Source {

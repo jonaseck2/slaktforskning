@@ -37,6 +37,26 @@
     </section>
 
     <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('places.address') }}</h4>
+      </div>
+      <div class="field-grid">
+        <label>{{ $t('places.street') }}
+          <input v-model="editStreet" type="text" @blur="save({ street: editStreet || null })" />
+        </label>
+        <label>{{ $t('places.postalCode') }}
+          <input v-model="editPostalCode" type="text" @blur="save({ postal_code: editPostalCode || null })" />
+        </label>
+        <label>{{ $t('places.city') }}
+          <input v-model="editCity" type="text" @blur="save({ city: editCity || null })" />
+        </label>
+        <label>{{ $t('places.country') }}
+          <input v-model="editCountry" type="text" @blur="save({ country: editCountry || null })" />
+        </label>
+      </div>
+    </section>
+
+    <section class="detail-section">
       <h4>{{ $t('common.notes') }}</h4>
       <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
     </section>
@@ -73,7 +93,7 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; }
+interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
 useI18n();
 const route = useRoute();
@@ -86,6 +106,10 @@ const editParentId = ref<string | null>(null);
 const editLat = ref<number | null>(null);
 const editLon = ref<number | null>(null);
 const editNotes = ref('');
+const editStreet = ref('');
+const editPostalCode = ref('');
+const editCity = ref('');
+const editCountry = ref('');
 const placeCitationCount = ref(0);
 const showCiteForm = ref(false);
 
@@ -98,6 +122,10 @@ async function load() {
   editLat.value = place.value.latitude;
   editLon.value = place.value.longitude;
   editNotes.value = place.value.notes;
+  editStreet.value = place.value.street ?? '';
+  editPostalCode.value = place.value.postal_code ?? '';
+  editCity.value = place.value.city ?? '';
+  editCountry.value = place.value.country ?? '';
   const all = (await window.api.places.list()) as PlaceRow[];
   children.value = all.filter(p => p.parent_place_id === placeId);
   const placeCits = (await window.api.citations.forPlace(placeId)) as unknown[];
