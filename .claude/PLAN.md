@@ -122,13 +122,13 @@ See `.claude/plans/2026-04-03-sourcing-and-citations.md` for the full plan.
 
 ### v0.5.4 — Tilltalsnamn (Preferred/Call Name)
 
-See `.claude/plans/2026-04-03-tilltalsnamn.md` for the full plan.
+See `.claude/plans/2026-04-03-preferred-name.md` for the full plan.
 
-- [ ] Schema: `call_name TEXT` column on `person_names` + idempotent migration
-- [ ] API: `addPersonName`/`updatePersonName` accept `call_name`; `listPersons`/`searchPersons` use it as display name
-- [ ] IPC + MCP: expose `call_name` on name tools
+- [ ] Schema: `preferred_name TEXT` column on `person_names` + idempotent migration
+- [ ] API: `addPersonName`/`updatePersonName` accept `preferred_name`; `listPersons`/`searchPersons` use it as display name
+- [ ] IPC + MCP: expose `preferred_name` on name tools
 - [ ] Vue: underline tilltalsnamn in name rows; PersonsView + PersonPicker show call name
-- [ ] Tests: unit tests for `call_name` storage + display helper; MCP tests
+- [ ] Tests: unit tests for `preferred_name` storage + display helper; MCP tests
 
 ### v0.6.0 — GEDCOM Import/Export
 
