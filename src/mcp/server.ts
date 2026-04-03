@@ -2,8 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { Database } from 'node-sqlite3-wasm';
-import path from 'node:path';
-import os from 'node:os';
 import { initializeSchema } from '../api/schema';
 import * as persons from '../api/persons';
 import { addPersonIdentifier, getPersonIdentifiers, deletePersonIdentifier } from '../api/persons';
@@ -11,19 +9,10 @@ import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace } from '../api/places';
-
-function getDbPath(): string {
-  const platform = process.platform;
-  if (platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Application Support', 'slaktforskning', 'slaktforskning.db');
-  } else if (platform === 'win32') {
-    return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'slaktforskning', 'slaktforskning.db');
-  }
-  return path.join(os.homedir(), '.config', 'slaktforskning', 'slaktforskning.db');
-}
+import { getDefaultDbPath } from '../shared/dbPath';
 
 async function main() {
-  const dbPath = process.env.SLAKTFORSKNING_DB || getDbPath();
+  const dbPath = process.env.SLAKTFORSKNING_DB || getDefaultDbPath();
   const dir = path.dirname(dbPath);
   const fs = await import('node:fs');
   fs.mkdirSync(dir, { recursive: true });

@@ -129,7 +129,15 @@
       "Bash(mkdir -p /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/viz-mockup.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/viz-styles.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)",
-      "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/cytoscape-vs-svg.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)"
+      "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/cytoscape-vs-svg.html /Users/jonasahnstedt/git/slaktforskning/.claude/plans/brainstorm/2026-04-03-visualization/)",
+      "mcp__slaktforskning__search_persons",
+      "WebFetch(domain:www.hitta.se)",
+      "mcp__slaktforskning__add_source",
+      "mcp__slaktforskning__add_event",
+      "mcp__slaktforskning__add_event_participant",
+      "mcp__slaktforskning__add_citation",
+      "mcp__slaktforskning__ui_screenshot",
+      "mcp__slaktforskning__ui_execute_js"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans"
