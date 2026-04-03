@@ -129,6 +129,9 @@ After the transaction fix, a 70k-line import still ran at ~100% CPU for 1–2 mi
 ### Fix — GEDCOM import: couple subtype always 'unknown'
 Married couples imported from standard GEDCOM (including Genney) showed `subtype: 'unknown'` because the importer only checked for `_SUBTYPE` (our own extended tag). Standard GEDCOM indicates marriage via a `MARR` event under the FAM record. Fixed by inferring `subtype: 'marriage'` when `MARR` is present. See `.claude/plans/archive/2026-04-03-gedcom-couple-subtype.md`.
 
+### Done (v0.6.5 — Chart Enhancements: depth, zoom/scroll, spouses)
+Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3 descendant levels; all three charts scroll natively + zoom via Ctrl+scroll/pinch with cursor-anchored math; zoom persisted to `localStorage` per chart so navigation doesn't reset it; spouses added to hourglass view (horizontal chain to the right of focal). See `.claude/plans/archive/2026-04-03-chart-enhancements.md`.
+
 ---
 
 ## Roadmap

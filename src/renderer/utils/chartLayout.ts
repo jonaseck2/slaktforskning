@@ -53,7 +53,7 @@ export interface DescendantNode {
 
 /**
  * Hourglass tree: ancestor section (ahnentafel) above focal,
- * descendant tree below.
+ * descendant tree below, and spouses displayed to the right of focal.
  * `ancestors.generations` = focal + ancestor levels shown above.
  * `descendantGenerations` = levels below focal.
  */
@@ -61,6 +61,7 @@ export interface HourglassTree {
   ancestors: PedigreeTree;
   descendantRoot: DescendantNode;
   descendantGenerations: number;
+  spouses: PersonNode[];
 }
 
 export interface BarLayout {
@@ -177,7 +178,7 @@ export function computePedigreeLayout(tree: PedigreeTree): ChartLayout {
  * Both sections are horizontally centered over the focal person.
  */
 export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
-  const { ancestors, descendantRoot, descendantGenerations: M } = tree;
+  const { ancestors, descendantRoot, descendantGenerations: M, spouses = [] } = tree;
   const { nodes: ancestorNodes, generations } = ancestors;
   const A = generations - 1; // ancestor levels above focal
 
@@ -202,10 +203,12 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
 
   // ── SVG dimensions ───────────────────────────────────────────────────────
 
-  const svgWidth = Math.max(ancestorSectionWidth, descSectionWidth) + 2 * PAD;
+  // baseSvgWidth centres the ancestor/descendant layout; focalCX is fixed at its midpoint.
+  // svgWidth may be wider if spouses extend past the right edge.
+  const baseSvgWidth = Math.max(ancestorSectionWidth, descSectionWidth) + 2 * PAD;
 
-  // Shift the narrower section so both are centered at svgWidth/2
-  const ancestorOffset = (svgWidth - 2 * PAD - ancestorSectionWidth) / 2;
+  // Shift the narrower section so both are centered at baseSvgWidth/2
+  const ancestorOffset = (baseSvgWidth - 2 * PAD - ancestorSectionWidth) / 2;
 
   // Row Y helpers
   // Ancestor rows count down from top; focal = PAD + A*(BOX_H+GEN_GAP)
@@ -272,7 +275,7 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
 
   // ── Descendant subtree layout ────────────────────────────────────────────
 
-  const focalCX = svgWidth / 2;
+  const focalCX = baseSvgWidth / 2;
 
   function placeDescendants(node: DescendantNode, depth: number, leftX: number): void {
     const subWidth = leafCount(node, depth) * (BOX_W + V_GAP) - V_GAP;
@@ -322,6 +325,41 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
 
   const descStartX = focalCX - descSectionWidth / 2;
   placeDescendants(descendantRoot, 0, descStartX);
+
+  // ── Spouse boxes and connectors ──────────────────────────────────────────
+  // Spouses are placed to the right of focal at the same row, connected by a
+  // horizontal line. Each marriage is a separate box; multiple spouses chain
+  // rightward so the history of remarriages reads left-to-right.
+
+  // CX of the i-th spouse (0-indexed): one H_GAP from focal, then V_GAP between
+  const spouseCXOf = (i: number) => focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
+
+  const spouseRightEdge = spouses.length > 0
+    ? spouseCXOf(spouses.length - 1) + BOX_W / 2 + PAD
+    : 0;
+
+  const svgWidth = Math.max(baseSvgWidth, spouseRightEdge);
+
+  if (spouses.length > 0) {
+    const lineY = focalRowY + BOX_H / 2;
+    // Single horizontal line from focal's right edge through all spouse centres
+    lines.push({
+      x1: focalCX + BOX_W / 2,
+      y1: lineY,
+      x2: spouseCXOf(spouses.length - 1) + BOX_W / 2,
+      y2: lineY,
+    });
+    for (let i = 0; i < spouses.length; i++) {
+      boxes.push({
+        person:  spouses[i],
+        isFocal: false,
+        x: spouseCXOf(i) - BOX_W / 2,
+        y: focalRowY,
+        w: BOX_W,
+        h: BOX_H,
+      });
+    }
+  }
 
   // ── SVG height ───────────────────────────────────────────────────────────
 

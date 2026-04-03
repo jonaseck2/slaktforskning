@@ -1,12 +1,18 @@
 // src/renderer/utils/useChartZoom.ts
 // Shared zoom/pan composable for chart components.
 // - Regular scroll: native browser scroll (panning)
-// - Ctrl+scroll or two-finger pinch (macOS): zoom centered at cursor
-import { ref, nextTick } from 'vue';
+// - Ctrl+scroll or two-finger pinch (macOS): zoom centred at cursor
+// - zoom persisted to localStorage so navigation doesn't reset it
+import { ref, watch, nextTick } from 'vue';
 
-export function useChartZoom(defaultZoom = 1) {
-  const zoom = ref(defaultZoom);
+export function useChartZoom(defaultZoom = 1, storageKey?: string) {
+  const saved = storageKey ? parseFloat(localStorage.getItem(storageKey) ?? '') : NaN;
+  const zoom = ref(Number.isFinite(saved) ? saved : defaultZoom);
   const scrollRef = ref<HTMLDivElement | null>(null);
+
+  if (storageKey) {
+    watch(zoom, (v) => localStorage.setItem(storageKey, String(v)));
+  }
 
   function onWheel(e: WheelEvent) {
     // Only intercept Ctrl+wheel (also catches macOS trackpad pinch)
@@ -38,7 +44,7 @@ export function useChartZoom(defaultZoom = 1) {
 
   function zoomIn()    { zoom.value = Math.min(5, zoom.value * 1.25); }
   function zoomOut()   { zoom.value = Math.max(0.2, zoom.value / 1.25); }
-  function resetZoom() { zoom.value = 1; }
+  function resetZoom() { zoom.value = defaultZoom; }
 
   return { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom };
 }

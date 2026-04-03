@@ -112,7 +112,7 @@ const ROW_H = 36;
 const loading = ref(true);
 const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 800, svgHeight: 100, axisY: 60 });
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom();
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-timeline');
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#bbb' };
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#bbb'; }
