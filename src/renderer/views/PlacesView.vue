@@ -112,15 +112,14 @@ onMounted(load);
   background: #2c3e50;
   color: white;
   border: none;
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
 }
 .empty { color: #999; padding: 40px; text-align: center; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.data-table th, .data-table td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
-.data-table th { background: #f8f8f8; font-weight: 600; font-size: 12px; color: #666; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 8px 12px; border-bottom: 1px solid #ddd; text-align: left; }
+.data-table th { background: #eee; font-weight: 600; }
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f0f4ff; }
 .btn-sm { padding: 2px 8px; font-size: 12px; border: none; border-radius: 3px; cursor: pointer; }
