@@ -2,7 +2,7 @@
 
 **Version:** v0.6.4
 **Date:** 2026-04-03
-**Status:** Not started
+**Status:** Done
 **Depends on:** v0.6.3 (Database Switcher)
 
 ## Goal
