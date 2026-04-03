@@ -1,82 +1,91 @@
 <template>
-  <div class="timeline-chart">
-    <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
-    <svg
-      v-else-if="layout.bars.length > 0"
-      :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
-      width="100%"
-      :style="{ maxWidth: layout.svgWidth + 'px' }"
-      data-testid="timeline-svg"
-    >
-      <!-- Axis -->
-      <line
-        :x1="LEFT" :y1="layout.axisY"
-        :x2="layout.svgWidth - RIGHT" :y2="layout.axisY"
-        stroke="#ddd" stroke-width="1"
-      />
-      <!-- Tick marks -->
-      <g v-for="tick in layout.ticks" :key="tick.year">
-        <line
-          :x1="tick.x" :y1="TOP"
-          :x2="tick.x" :y2="layout.axisY"
-          stroke="#f0f0f0" stroke-width="1"
-        />
-        <text
-          :x="tick.x" :y="layout.axisY + 16"
-          class="tick-label" text-anchor="middle"
-        >{{ tick.year }}</text>
-      </g>
-      <!-- Today line -->
-      <line
-        :x1="layout.todayX" :y1="TOP - 4"
-        :x2="layout.todayX" :y2="layout.axisY"
-        stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 3"
-      />
-      <text
-        :x="layout.todayX" :y="TOP - 8"
-        class="today-label" text-anchor="middle"
-      >{{ $t('visualization.today') }}</text>
+  <div class="chart-outer">
+    <div class="chart-scroll" ref="scrollRef" @wheel="onWheel">
+      <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
+      <template v-else-if="layout.bars.length > 0">
+        <svg
+          :width="layout.svgWidth * zoom"
+          :height="layout.svgHeight * zoom"
+          :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
+          data-testid="timeline-svg"
+        >
+          <!-- Axis -->
+          <line
+            :x1="LEFT" :y1="layout.axisY"
+            :x2="layout.svgWidth - RIGHT" :y2="layout.axisY"
+            stroke="#ddd" stroke-width="1"
+          />
+          <!-- Tick marks -->
+          <g v-for="tick in layout.ticks" :key="tick.year">
+            <line
+              :x1="tick.x" :y1="TOP"
+              :x2="tick.x" :y2="layout.axisY"
+              stroke="#f0f0f0" stroke-width="1"
+            />
+            <text
+              :x="tick.x" :y="layout.axisY + 16"
+              class="tick-label" text-anchor="middle"
+            >{{ tick.year }}</text>
+          </g>
+          <!-- Today line -->
+          <line
+            :x1="layout.todayX" :y1="TOP - 4"
+            :x2="layout.todayX" :y2="layout.axisY"
+            stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 3"
+          />
+          <text
+            :x="layout.todayX" :y="TOP - 8"
+            class="today-label" text-anchor="middle"
+          >{{ $t('visualization.today') }}</text>
 
-      <!-- Person bars -->
-      <g
-        v-for="bar in layout.bars"
-        :key="bar.person.id"
-        :data-testid="'timeline-row-' + bar.person.id"
-        :class="['timeline-row', { focal: bar.isFocal }]"
-        @click="!bar.isFocal && $emit('navigate', bar.person.id)"
-      >
-        <text
-          :x="LEFT - 8" :y="bar.y + bar.h / 2 + (ROW_H - bar.h) / 2"
-          class="row-label" :class="{ 'focal-label': bar.isFocal }"
-          text-anchor="end" dominant-baseline="middle"
-        ><tspan
-            v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName), 22)"
-            :key="pi"
-            :text-decoration="part.underline ? 'underline' : undefined"
-          >{{ part.text }}</tspan></text>
+          <!-- Person bars -->
+          <g
+            v-for="bar in layout.bars"
+            :key="bar.person.id"
+            :data-testid="'timeline-row-' + bar.person.id"
+            :class="['timeline-row', { focal: bar.isFocal }]"
+            @click="!bar.isFocal && $emit('navigate', bar.person.id)"
+          >
+            <text
+              :x="LEFT - 8" :y="bar.y + bar.h / 2 + (ROW_H - bar.h) / 2"
+              class="row-label" :class="{ 'focal-label': bar.isFocal }"
+              text-anchor="end" dominant-baseline="middle"
+            ><tspan
+                v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName), 22)"
+                :key="pi"
+                :text-decoration="part.underline ? 'underline' : undefined"
+              >{{ part.text }}</tspan></text>
 
-        <rect
-          v-if="!bar.hasNoDate"
-          :x="bar.x" :y="bar.y"
-          :width="bar.w" :height="bar.h"
-          :fill="bar.isFocal ? '#2c3e50' : sexColor(bar.person.sex)"
-          :opacity="bar.person.living ? 1 : 0.7"
-          rx="3"
-        />
-        <text
-          v-else
-          :x="LEFT + 4" :y="bar.y + bar.h / 2"
-          class="no-date-label" dominant-baseline="middle"
-        >?</text>
-        <!-- Living arrow -->
-        <text
-          v-if="!bar.hasNoDate && bar.isOpen"
-          :x="bar.x + bar.w + 4" :y="bar.y + bar.h / 2"
-          class="living-arrow" dominant-baseline="middle"
-        >→</text>
-      </g>
-    </svg>
-    <div v-else-if="!loading" class="chart-empty">—</div>
+            <rect
+              v-if="!bar.hasNoDate"
+              :x="bar.x" :y="bar.y"
+              :width="bar.w" :height="bar.h"
+              :fill="bar.isFocal ? '#2c3e50' : sexColor(bar.person.sex)"
+              :opacity="bar.person.living ? 1 : 0.7"
+              rx="3"
+            />
+            <text
+              v-else
+              :x="LEFT + 4" :y="bar.y + bar.h / 2"
+              class="no-date-label" dominant-baseline="middle"
+            >?</text>
+            <!-- Living arrow -->
+            <text
+              v-if="!bar.hasNoDate && bar.isOpen"
+              :x="bar.x + bar.w + 4" :y="bar.y + bar.h / 2"
+              class="living-arrow" dominant-baseline="middle"
+            >→</text>
+          </g>
+        </svg>
+      </template>
+      <div v-else-if="!loading" class="chart-empty">—</div>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
+      <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
+      <button class="zoom-btn" @click="zoomOut">−</button>
+      <button class="zoom-btn" @click="resetZoom" title="Reset zoom">↺</button>
+    </div>
   </div>
 </template>
 
@@ -85,6 +94,7 @@ import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeTimelineLayout } from '../../utils/chartLayout';
 import { fetchTimelineEntries } from '../../utils/chartData';
+import { useChartZoom } from '../../utils/useChartZoom';
 import type { TimelineLayout, PersonNode } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
@@ -93,7 +103,7 @@ useI18n();
 const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
-// Match chartLayout.ts constants (exported via the module but convenient to mirror here)
+// Mirror constants from chartLayout.ts
 const LEFT = 164;
 const RIGHT = 30;
 const TOP = 20;
@@ -101,6 +111,8 @@ const ROW_H = 36;
 
 const loading = ref(true);
 const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 800, svgHeight: 100, axisY: 60 });
+
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom();
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#bbb' };
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#bbb'; }
@@ -121,7 +133,18 @@ onMounted(load);
 </script>
 
 <style scoped>
-.timeline-chart { width: 100%; }
+.chart-outer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.chart-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
 .chart-loading { color: #999; padding: 40px; text-align: center; }
 .chart-empty { color: #bbb; padding: 40px; text-align: center; }
 .timeline-row { cursor: pointer; }
@@ -133,4 +156,36 @@ onMounted(load);
 .today-label { fill: #ef4444; font-size: 11px; font-family: inherit; }
 .no-date-label { fill: #ccc; font-size: 14px; font-family: inherit; }
 .living-arrow { fill: #888; font-size: 13px; font-family: inherit; }
+
+.zoom-controls {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 3px 5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+.zoom-btn {
+  background: none;
+  border: none;
+  padding: 2px 7px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 3px;
+  color: #555;
+  line-height: 1.4;
+}
+.zoom-btn:hover { background: #f0f0f0; }
+.zoom-level {
+  padding: 0 4px;
+  font-size: 12px;
+  color: #666;
+  min-width: 38px;
+  text-align: center;
+}
 </style>
