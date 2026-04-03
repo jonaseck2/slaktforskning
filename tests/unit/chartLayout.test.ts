@@ -181,6 +181,107 @@ describe('computeHourglassLayout', () => {
   });
 });
 
+describe('collapse — computePedigreeLayout', () => {
+  it('returns no collapseButtons when no one has parents', () => {
+    const { collapseButtons } = computePedigreeLayout(pedigree3(p('f')));
+    expect(collapseButtons).toHaveLength(0);
+  });
+
+  it('focal gets a collapse button when parents exist', () => {
+    const { collapseButtons } = computePedigreeLayout(pedigree3(p('f'), [p('p0'), null]));
+    const btn = collapseButtons.find(b => b.personId === 'f');
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('up');
+    expect(btn!.isExpanded).toBe(true);
+  });
+
+  it('collapsing focal:up removes parent boxes but keeps focal', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')]);
+    const { boxes } = computePedigreeLayout(tree, new Set(['f:up']));
+    expect(boxes).toHaveLength(1);
+    expect(boxes[0].person.id).toBe('f');
+  });
+
+  it('collapsing parent:up removes grandparent boxes', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), null, null]);
+    const { boxes } = computePedigreeLayout(tree, new Set(['p0:up']));
+    expect(boxes.find(b => b.person.id === 'gp0')).toBeUndefined();
+    expect(boxes.find(b => b.person.id === 'gp1')).toBeUndefined();
+    // focal and both parents still visible
+    expect(boxes).toHaveLength(3);
+  });
+
+  it('collapsed node still shows its own box', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')]);
+    const { boxes } = computePedigreeLayout(tree, new Set(['f:up']));
+    expect(boxes.some(b => b.person.id === 'f')).toBe(true);
+  });
+
+  it('button isExpanded=false when branch is collapsed', () => {
+    const tree = pedigree3(p('f'), [p('p0'), null]);
+    const { collapseButtons } = computePedigreeLayout(tree, new Set(['f:up']));
+    const btn = collapseButtons.find(b => b.personId === 'f');
+    expect(btn!.isExpanded).toBe(false);
+  });
+});
+
+describe('collapse — computeHourglassLayout', () => {
+  it('returns no collapseButtons for lone focal', () => {
+    const { collapseButtons } = computeHourglassLayout(hourglass(p('f')));
+    expect(collapseButtons).toHaveLength(0);
+  });
+
+  it('focal gets down button when children exist', () => {
+    const { collapseButtons } = computeHourglassLayout(
+      hourglass(p('f'), [null, null], [null, null, null, null], [p('c1')]),
+    );
+    expect(collapseButtons.some(b => b.personId === 'f' && b.direction === 'down')).toBe(true);
+  });
+
+  it('focal gets right button when spouses exist', () => {
+    const { collapseButtons } = computeHourglassLayout(
+      hourglass(p('f'), [null, null], [null, null, null, null], [], [p('s1')]),
+    );
+    expect(collapseButtons.some(b => b.personId === 'f' && b.direction === 'right')).toBe(true);
+  });
+
+  it('ancestor with parents gets up button', () => {
+    const { collapseButtons } = computeHourglassLayout(
+      hourglass(p('f'), [p('par'), null], [p('gp'), null, null, null]),
+    );
+    expect(collapseButtons.some(b => b.personId === 'par' && b.direction === 'up')).toBe(true);
+  });
+
+  it('collapsing focal:down hides all children', () => {
+    const tree = hourglass(p('f'), [null, null], [null, null, null, null], [p('c1'), p('c2')]);
+    const { boxes } = computeHourglassLayout(tree, new Set(['f:down']));
+    expect(boxes.find(b => b.person.id === 'c1')).toBeUndefined();
+    expect(boxes.find(b => b.person.id === 'c2')).toBeUndefined();
+  });
+
+  it('collapsing focal:right hides spouses', () => {
+    const tree = hourglass(p('f'), [null, null], [null, null, null, null], [], [p('s1')]);
+    const { boxes } = computeHourglassLayout(tree, new Set(['f:right']));
+    expect(boxes.find(b => b.person.id === 's1')).toBeUndefined();
+  });
+
+  it('collapsing ancestor:up hides their parents', () => {
+    const f = p('f');
+    const par = p('par');
+    const gp = p('gp');
+    const tree = hourglass(f, [par, null], [gp, null, null, null]);
+    const { boxes } = computeHourglassLayout(tree, new Set([`${par.id}:up`]));
+    expect(boxes.find(b => b.person.id === gp.id)).toBeUndefined();
+    expect(boxes.find(b => b.person.id === par.id)).toBeDefined();
+  });
+
+  it('collapsed focal still renders focal box', () => {
+    const tree = hourglass(p('f'), [null, null], [null, null, null, null], [p('c1')]);
+    const { boxes } = computeHourglassLayout(tree, new Set(['f:down']));
+    expect(boxes.some(b => b.isFocal)).toBe(true);
+  });
+});
+
 describe('computeTimelineLayout', () => {
   it('returns one bar per entry', () => {
     const entries = [

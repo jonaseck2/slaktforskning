@@ -52,6 +52,27 @@
             :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
           >{{ personDates(box.person) }}</text>
         </g>
+        <g
+          v-for="btn in layout.collapseButtons"
+          :key="`${btn.personId}:${btn.direction}`"
+          class="collapse-btn"
+          @click.stop="toggle(btn.personId, btn.direction)"
+        >
+          <circle
+            :cx="btn.cx" :cy="btn.cy" r="8"
+            :fill="btn.isExpanded ? 'white' : '#888'"
+            :stroke="btn.isExpanded ? '#aaa' : '#555'"
+            stroke-width="1.5"
+          />
+          <text
+            :x="btn.cx" :y="btn.cy"
+            text-anchor="middle" dominant-baseline="central"
+            font-size="9"
+            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+            :fill="btn.isExpanded ? '#666' : 'white'"
+            style="pointer-events: none; user-select: none;"
+          >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
+        </g>
       </svg>
     </div>
     <div class="zoom-controls">
@@ -64,12 +85,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout } from '../../utils/chartLayout';
 import { fetchHourglassTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { ChartLayout, BoxLayout, PersonNode } from '../../utils/chartLayout';
+import type { BoxLayout, PersonNode, HourglassTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
@@ -78,7 +99,21 @@ const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
 const loading = ref(true);
-const layout = ref<ChartLayout>({ boxes: [], lines: [], svgWidth: 1400, svgHeight: 688 });
+const tree = ref<HourglassTree | null>(null);
+const collapsed = ref(new Set<string>());
+
+const layout = computed(() => {
+  if (!tree.value) return { boxes: [], lines: [], svgWidth: 1400, svgHeight: 688, collapseButtons: [] };
+  return computeHourglassLayout(tree.value, collapsed.value);
+});
+
+function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
+  const key = `${personId}:${dir}`;
+  const next = new Set(collapsed.value);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  collapsed.value = next;
+}
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-hourglass');
 
@@ -103,8 +138,18 @@ async function load() {
   if (!props.personId) return;
   loading.value = true;
   try {
-    const tree = await fetchHourglassTree(props.personId);
-    layout.value = computeHourglassLayout(tree);
+    tree.value = await fetchHourglassTree(props.personId);
+    // Default: collapse ancestors beyond 2 levels (great-grandparents+).
+    // Grandparents (ahnentafel generation g=2) get :up collapsed so that their
+    // parents (great-grandparents, g=3) are hidden until the user expands them.
+    const defaultCollapsed = new Set<string>();
+    if (tree.value) {
+      for (const [k, person] of tree.value.ancestors.nodes) {
+        const g = Math.floor(Math.log2(k));
+        if (g >= 2) defaultCollapsed.add(`${person.id}:up`);
+      }
+    }
+    collapsed.value = defaultCollapsed;
   } finally {
     loading.value = false;
   }
@@ -130,6 +175,8 @@ onMounted(load);
 .chart-loading { color: #999; padding: 40px; text-align: center; }
 .person-box.clickable { cursor: pointer; }
 .person-box.clickable:hover rect:first-child { opacity: 0.9; }
+.collapse-btn { cursor: pointer; }
+.collapse-btn:hover circle { opacity: 0.7; }
 
 .zoom-controls {
   position: absolute;

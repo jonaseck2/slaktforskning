@@ -28,11 +28,20 @@ export interface Line {
   y2: number;
 }
 
+export interface CollapseButton {
+  personId: string;
+  direction: 'up' | 'down' | 'left' | 'right';
+  cx: number;
+  cy: number;
+  isExpanded: boolean;
+}
+
 export interface ChartLayout {
   boxes: BoxLayout[];
   lines: Line[];
   svgWidth: number;
   svgHeight: number;
+  collapseButtons: CollapseButton[];
 }
 
 /**
@@ -110,8 +119,35 @@ const ROW_H = BOX_H + V_GAP; // 64
  * Lay out a pedigree chart (focal at left, ancestors going right).
  * Handles any number of generations via ahnentafel numbering.
  */
-export function computePedigreeLayout(tree: PedigreeTree): ChartLayout {
-  const { nodes, generations: G } = tree;
+export function computePedigreeLayout(
+  tree: PedigreeTree,
+  collapsed: Set<string> = new Set(),
+): ChartLayout {
+  const { nodes: originalNodes, generations: G } = tree;
+
+  // Map personId → ahnentafel key (for button generation)
+  const personToAhnen = new Map<string, number>();
+  for (const [k, person] of originalNodes) {
+    personToAhnen.set(person.id, k);
+  }
+
+  // Prune collapsed ancestor subtrees
+  function removeSubtree(nodes: Map<number, PersonNode>, k: number): void {
+    if (!nodes.has(k)) return;
+    nodes.delete(k);
+    removeSubtree(nodes, k * 2);
+    removeSubtree(nodes, k * 2 + 1);
+  }
+
+  const prunedNodes = new Map(originalNodes);
+  for (const [k, person] of originalNodes) {
+    if (collapsed.has(`${person.id}:up`)) {
+      removeSubtree(prunedNodes, k * 2);
+      removeSubtree(prunedNodes, k * 2 + 1);
+    }
+  }
+
+  const nodes = prunedNodes;
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
@@ -167,7 +203,24 @@ export function computePedigreeLayout(tree: PedigreeTree): ChartLayout {
     }
   }
 
-  return { boxes, lines, svgWidth, svgHeight };
+  // Generate collapse buttons: ↑ button on right side of each box with parents in original tree
+  const collapseButtons: CollapseButton[] = [];
+  for (const box of boxes) {
+    const k = personToAhnen.get(box.person.id);
+    if (k === undefined) continue;
+    const hasParents = originalNodes.has(k * 2) || originalNodes.has(k * 2 + 1);
+    if (hasParents) {
+      collapseButtons.push({
+        personId: box.person.id,
+        direction: 'up',
+        cx: box.x + BOX_W + 10,
+        cy: box.y + BOX_H / 2,
+        isExpanded: !collapsed.has(`${box.person.id}:up`),
+      });
+    }
+  }
+
+  return { boxes, lines, svgWidth, svgHeight, collapseButtons };
 }
 
 // ─── Hourglass ────────────────────────────────────────────────────────────────
@@ -177,9 +230,44 @@ export function computePedigreeLayout(tree: PedigreeTree): ChartLayout {
  * Ancestors fan out upward; descendants fan out downward.
  * Both sections are horizontally centered over the focal person.
  */
-export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
+export function computeHourglassLayout(
+  tree: HourglassTree,
+  collapsed: Set<string> = new Set(),
+): ChartLayout {
   const { ancestors, descendantRoot, descendantGenerations: M, spouses = [] } = tree;
-  const { nodes: ancestorNodes, generations } = ancestors;
+  const { generations } = ancestors;
+  const originalAncestorNodes = ancestors.nodes;
+  const focalPerson = originalAncestorNodes.get(1);
+  const focalId = focalPerson?.id ?? '';
+
+  // Map personId → ahnentafel key (for button generation and pruning)
+  const personToAhnen = new Map<string, number>();
+  for (const [k, person] of originalAncestorNodes) {
+    personToAhnen.set(person.id, k);
+  }
+
+  // Prune collapsed ancestor subtrees
+  function removeSubtree(nodes: Map<number, PersonNode>, k: number): void {
+    if (!nodes.has(k)) return;
+    nodes.delete(k);
+    removeSubtree(nodes, k * 2);
+    removeSubtree(nodes, k * 2 + 1);
+  }
+
+  const prunedAncestorNodes = new Map(originalAncestorNodes);
+  for (const [k, person] of originalAncestorNodes) {
+    if (k >= 2 && collapsed.has(`${person.id}:up`)) {
+      removeSubtree(prunedAncestorNodes, k * 2);
+      removeSubtree(prunedAncestorNodes, k * 2 + 1);
+    }
+  }
+
+  const ancestorNodes = prunedAncestorNodes;
+  const effectiveDescRoot = collapsed.has(`${focalId}:down`)
+    ? { person: descendantRoot.person, children: [] as DescendantNode[] }
+    : descendantRoot;
+  const effectiveSpouses = collapsed.has(`${focalId}:right`) ? [] : spouses;
+
   const A = generations - 1; // ancestor levels above focal
 
   const boxes: BoxLayout[] = [];
@@ -198,7 +286,7 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
     return node.children.reduce((sum, child) => sum + leafCount(child, depth + 1), 0);
   }
 
-  const totalDescLeaves  = M > 0 ? leafCount(descendantRoot, 0) : 1;
+  const totalDescLeaves  = M > 0 ? leafCount(effectiveDescRoot, 0) : 1;
   const descSectionWidth = totalDescLeaves * (BOX_W + V_GAP) - V_GAP;
 
   // ── SVG dimensions ───────────────────────────────────────────────────────
@@ -332,38 +420,38 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
   // When a single spouse is present, drop the descendant tree from the midpoint
   // between focal and that spouse (standard genealogy-tree convention: children
   // come from the couple line, not from one parent alone).
-  const coupleJunctionX = spouses.length > 0
+  const coupleJunctionX = effectiveSpouses.length > 0
     ? (focalCX + spouseCXOf(0)) / 2
     : focalCX;
   const descStartX = coupleJunctionX - descSectionWidth / 2;
   // When there's a spouse, the marriage line is at BOX_H/2; start the children
   // connector there so it visually meets the marriage line without a gap.
-  const coupleLineY = spouses.length > 0 ? focalRowY + BOX_H / 2 : undefined;
-  placeDescendants(descendantRoot, 0, descStartX, coupleLineY);
+  const coupleLineY = effectiveSpouses.length > 0 ? focalRowY + BOX_H / 2 : undefined;
+  placeDescendants(effectiveDescRoot, 0, descStartX, coupleLineY);
 
   // ── Spouse boxes and connectors ──────────────────────────────────────────
   // Spouses are placed to the right of focal at the same row, connected by a
   // horizontal line. Each marriage is a separate box; multiple spouses chain
   // rightward so the history of remarriages reads left-to-right.
 
-  const spouseRightEdge = spouses.length > 0
-    ? spouseCXOf(spouses.length - 1) + BOX_W / 2 + PAD
+  const spouseRightEdge = effectiveSpouses.length > 0
+    ? spouseCXOf(effectiveSpouses.length - 1) + BOX_W / 2 + PAD
     : 0;
 
   const svgWidth = Math.max(baseSvgWidth, spouseRightEdge);
 
-  if (spouses.length > 0) {
+  if (effectiveSpouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
     // Single horizontal line from focal's right edge through all spouse centres
     lines.push({
       x1: focalCX + BOX_W / 2,
       y1: lineY,
-      x2: spouseCXOf(spouses.length - 1) + BOX_W / 2,
+      x2: spouseCXOf(effectiveSpouses.length - 1) + BOX_W / 2,
       y2: lineY,
     });
-    for (let i = 0; i < spouses.length; i++) {
+    for (let i = 0; i < effectiveSpouses.length; i++) {
       boxes.push({
-        person:  spouses[i],
+        person:  effectiveSpouses[i],
         isFocal: false,
         x: spouseCXOf(i) - BOX_W / 2,
         y: focalRowY,
@@ -375,12 +463,49 @@ export function computeHourglassLayout(tree: HourglassTree): ChartLayout {
 
   // ── SVG height ───────────────────────────────────────────────────────────
 
-  const deepestDescRow = M > 0 && descendantRoot.children.length > 0
+  const deepestDescRow = M > 0 && effectiveDescRoot.children.length > 0
     ? descRowY(M)
     : focalRowY;
   const svgHeight = deepestDescRow + BOX_H + PAD;
 
-  return { boxes, lines, svgWidth, svgHeight };
+  // ── Collapse buttons ─────────────────────────────────────────────────────
+
+  const collapseButtons: CollapseButton[] = [];
+
+  for (const box of boxes) {
+    const k = personToAhnen.get(box.person.id);
+    if (k === undefined) continue; // spouse box
+
+    if (k === 1) {
+      // Focal: ↓ for children, → for spouses
+      if (descendantRoot.children.length > 0) {
+        collapseButtons.push({
+          personId: box.person.id, direction: 'down',
+          cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+          isExpanded: !collapsed.has(`${box.person.id}:down`),
+        });
+      }
+      if (spouses.length > 0) {
+        collapseButtons.push({
+          personId: box.person.id, direction: 'right',
+          cx: box.x + BOX_W + 10, cy: box.y + BOX_H / 2,
+          isExpanded: !collapsed.has(`${box.person.id}:right`),
+        });
+      }
+    } else {
+      // Ancestor: ↑ if parents exist in original tree
+      const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
+      if (hasParents) {
+        collapseButtons.push({
+          personId: box.person.id, direction: 'up',
+          cx: box.x + BOX_W / 2, cy: box.y - 10,
+          isExpanded: !collapsed.has(`${box.person.id}:up`),
+        });
+      }
+    }
+  }
+
+  return { boxes, lines, svgWidth, svgHeight, collapseButtons };
 }
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────
