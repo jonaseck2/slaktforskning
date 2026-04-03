@@ -137,7 +137,17 @@
       "mcp__slaktforskning__add_event_participant",
       "mcp__slaktforskning__add_citation",
       "mcp__slaktforskning__ui_screenshot",
-      "mcp__slaktforskning__ui_execute_js"
+      "mcp__slaktforskning__ui_execute_js",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('productName', d.get\\('name'\\)\\)\\)\")",
+      "Skill(fetch)",
+      "Skill(fetch:*)",
+      "Read(//Users/jonasahnstedt/.claude/**)",
+      "Bash(timeout 10 npx tsx src/mcp/server.ts)",
+      "mcp__slaktforskning__get_person_names",
+      "mcp__slaktforskning__get_events_for_person",
+      "mcp__slaktforskning__update_person_name",
+      "Bash(node -e \"const m = require\\('@modelcontextprotocol/sdk/inMemory.js'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const m = require\\('@modelcontextprotocol/sdk'\\); console.log\\(Object.keys\\(m\\)\\)\")"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans"
