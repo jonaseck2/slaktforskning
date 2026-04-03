@@ -17,10 +17,17 @@ Follow this order. Each step builds on the previous.
 4. **Unit tests** — write tests in `tests/unit/` using `createTestDb()` before wiring anything else
 5. **IPC handler** — register in `src/main/ipc.ts` using `wrapHandler(channel, fn)`
 6. **Preload** — expose on `window.api.*` in `src/preload/index.ts`
-7. **MCP tool** — add thin wrapper in `src/mcp/server.ts` (Zod schema, JSON response)
+7. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
 8. **Vue UI** — build component or extend view in `src/renderer/`
 9. **Verify** — `npm test && npx playwright test`
-10. **Docs** — update `README.md`, `CLAUDE.md`, `.claude/PLAN.md`, `.claude/DATA_MODEL.md`
+10. **Docs** — update `README.md`, `CLAUDE.md`, `.claude/PLAN.md`, `.claude/DATA_MODEL.md`, `.claude/IPC_REFERENCE.md`, `.claude/MCP.md`
+11. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
+    - New entity type or schema column → `data-modeling` skill
+    - New MCP tools → `mcp-dev` skill
+    - New shared Vue component → `add-feature` skill (Shared components list)
+    - New IPC channels → `add-feature` skill (IPC section) + `CLAUDE.md`
+    - New data quality / check category → `add-feature` skill or dedicated skill
+    - GEDCOM mapping changes → `gedcom` skill
 
 ## API Layer (Steps 1-4)
 
@@ -128,19 +135,27 @@ See `.claude/IPC_REFERENCE.md` for the complete existing `window.api` surface an
 
 ## MCP Layer (Step 7)
 
+MCP tools live in `src/mcp/createServer.ts` (not `server.ts` — that file only handles DB setup and UI tools). Use `registerTool()`, not the deprecated `tool()`:
+
 ```typescript
-// src/mcp/server.ts
-server.tool('create_thing', 'Create a new thing', {
-  name: z.string().describe('The name of the thing'),
+// src/mcp/createServer.ts — inside createMcpServer(db)
+server.registerTool('create_thing', {
+  description: 'Create a new thing',
+  inputSchema: {
+    name: z.string().describe('The name of the thing'),
+  },
 }, async ({ name }) => {
   const result = things.createThing(db, { name });
   return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
 });
 ```
 
+Add corresponding tests in `tests/unit/mcp.test.ts` using the `call()` helper (InMemoryTransport pattern).
+
 Rules:
 - The tool is a **thin wrapper** — all logic stays in `src/api/`
-- Add `.describe()` to every Zod parameter
+- Use `registerTool()` not `tool()` — the 4-arg `tool()` overload is deprecated
+- Add `.describe()` to every Zod parameter in `inputSchema`
 - Handle not-found: return `{ content: [{ type: 'text', text: 'Thing not found' }] }`
 - Use `JSON.stringify(result, null, 2)` for readable output
 
@@ -188,9 +203,11 @@ declare const window: Window & {
 
 ### Shared components to reuse
 - `PersonPicker` — searchable autocomplete for selecting a person
+- `PlacePicker` — searchable autocomplete for selecting/creating a place
 - `DateInput` — compound date input with genealogy date types
 - `EventForm` / `EventList` — event CRUD, embeds in detail views
-- `CitationForm` — attach a source citation to any entity
+- `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`)
+- `CitationBadge` — green count / yellow "Unsourced" badge (added in v0.5.2; use everywhere citations are relevant)
 
 ### i18n
 Add strings to both `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English fallback). Use `$t('key')` in templates.

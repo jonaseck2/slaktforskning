@@ -99,6 +99,37 @@ See `.claude/plans/archive/2026-04-03-visualization.md` (design) and `.claude/pl
 
 ## Roadmap
 
+### v0.5.1 — UI Consistency Polish
+
+See `.claude/plans/2026-04-03-ui-consistency.md` for the full plan.
+
+- [ ] EventList: remove Edit button, make entire row clickable (consistent with all other lists)
+- [ ] PlaceDetailView: fix parent place input width (remove full-width span, match 2-column grid)
+- [ ] Update component tests for row-click behaviour
+
+### v0.5.2 — Sourcing & Citation Consistency
+
+See `.claude/plans/2026-04-03-sourcing-and-citations.md` for the full plan.
+
+- [ ] API: `getCitationsForPerson`, `getCitationsForRelationship`, `getCitationsForPlace`
+- [ ] IPC + preload: wire three new channels
+- [ ] CitationForm: add `placeId` prop
+- [ ] `CitationBadge.vue`: extract reusable badge component from EventList
+- [ ] PersonDetailView + RelationshipDetailView: Unsourced badge in header (Cite button already exists)
+- [ ] PlaceDetailView: full citation affordance (Cite button + CitationBadge + CitationForm)
+- [ ] MCP: `get_citations_for_person`, `get_citations_for_relationship`, `get_citations_for_place`
+- [ ] Unit + component + MCP tests
+
+### v0.5.4 — Tilltalsnamn (Preferred/Call Name)
+
+See `.claude/plans/2026-04-03-tilltalsnamn.md` for the full plan.
+
+- [ ] Schema: `call_name TEXT` column on `person_names` + idempotent migration
+- [ ] API: `addPersonName`/`updatePersonName` accept `call_name`; `listPersons`/`searchPersons` use it as display name
+- [ ] IPC + MCP: expose `call_name` on name tools
+- [ ] Vue: underline tilltalsnamn in name rows; PersonsView + PersonPicker show call name
+- [ ] Tests: unit tests for `call_name` storage + display helper; MCP tests
+
 ### v0.6.0 — GEDCOM Import/Export
 
 See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Depends on v0.4.0 Places** (`findOrCreatePlace` used for PLAC tags on import).
@@ -111,6 +142,18 @@ See `.claude/plans/2026-04-02-gedcom.md` for the full implementation plan. **Dep
 - [ ] MCP tools: `import_gedcom(file_path)`, `export_gedcom(file_path?)`
 - [ ] Import/Export buttons on PersonsView
 - [ ] **What is dropped on import:** REPO as entity (text only), SUBM, OBJE/multimedia, ASSO, LDS ordinances, `_` custom tags
+
+### v0.6.1 — Tree Sanity Checks (Data Quality)
+
+See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
+
+- [ ] `src/api/checks.ts` — CheckResult type + ~25 checks across 6 categories (chronological, parenthood age, family structure, relationship integrity, geographic, completeness)
+- [ ] IPC + preload: `checks:runAll`, `checks:forPerson`
+- [ ] MCP: `run_checks`, `run_checks_for_person`
+- [ ] `QualityView` at `/quality` — grouped by severity, filter chips, re-run button
+- [ ] PersonDetailView inline banner for errors/warnings
+- [ ] Sidebar "Datakvalitet" entry with error count badge
+- [ ] Unit tests: `checks.test.ts` with known-bad and clean DB seeds; MCP tests
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
