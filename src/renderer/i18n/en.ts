@@ -29,7 +29,7 @@ export default {
     addPerson: 'Add Person',
     emptyState: 'No persons yet. Click \u201CAdd Person\u201D to get started.',
     givenName: 'Given Name (full)',
-    preferredName: 'Call Name',
+    preferredName: 'Preferred Name',
     preferredNamePlaceholder: 'e.g. Linda (if full given name is Eva Linda Marie)',
     surname: 'Surname',
     sex: 'Sex',
