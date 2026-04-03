@@ -325,6 +325,47 @@ describe('importGedcom (Genney profile)', () => {
     expect(names[0].patronymic_base).toBeNull();
   });
 
+  it('extracts preferred name from Genney * notation in given name', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Eva Linda* Marie /Ahnstedt/',
+      '1 SEX F',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    const names = getPersonNames(db, persons[0].id);
+    expect(names[0].given_name).toBe('Eva Linda Marie');
+    expect(names[0].preferred_name).toBe('Linda');
+  });
+
+  it('extracts preferred name when * is on first token only', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Lars* Erik /Johansson/',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged), { profile: 'genney' });
+    const persons = listPersons(db);
+    const names = getPersonNames(db, persons[0].id);
+    expect(names[0].given_name).toBe('Lars Erik');
+    expect(names[0].preferred_name).toBe('Lars');
+  });
+
+  it('does not extract * preferred name without genney profile', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Eva Linda* Marie /Ahnstedt/',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged)); // no profile
+    const persons = listPersons(db);
+    const names = getPersonNames(db, persons[0].id);
+    // * is left as-is without genney profile
+    expect(names[0].given_name).toContain('*');
+    expect(names[0].preferred_name).toBeNull();
+  });
+
   it('creates flat place without genney profile', () => {
     const ged = [
       '0 @I1@ INDI',

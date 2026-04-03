@@ -185,7 +185,7 @@ export interface ImportOptions {
   profile?: 'genney';
 }
 
-export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
+function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
   const isGenney = options?.profile === 'genney';
   const resolvePlaceFn = isGenney ? findOrCreateSwedishPlace : findOrCreatePlace;
 
@@ -238,7 +238,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     for (const nameNode of nameNodes) {
       const raw = nameNode.value ?? '';
       const surnameMatch = raw.match(/^(.*?)\/(.+?)\/(.*)$/);
-      const given = (surnameMatch ? surnameMatch[1] : raw).trim() || null;
+      let given = (surnameMatch ? surnameMatch[1] : raw).trim() || null;
       const surname = surnameMatch ? surnameMatch[2].trim() || null : null;
       const prefix = getChild(nameNode, 'NPFX')?.value ?? null;
       const suffix = getChild(nameNode, 'NSFX')?.value ?? null;
@@ -249,6 +249,18 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
       const explicitPatr = getChild(nameNode, '_PATR')?.value ?? null;
       const patronymic_base = explicitPatr ?? (isGenney && surname ? extractPatronymic(surname) : null);
 
+      // Genney marks the preferred name (tilltalsnamn) with * directly after the token.
+      // e.g. "Eva Linda* Marie" → preferred_name = "Linda", given_name = "Eva Linda Marie"
+      let nickName = getChild(nameNode, 'NICK')?.value ?? null;
+      if (isGenney && given && given.includes('*') && !nickName) {
+        const starIdx = given.indexOf('*');
+        const beforeStar = given.slice(0, starIdx).trimEnd();
+        const afterStar = given.slice(starIdx + 1).trimStart();
+        const tokens = beforeStar.split(/\s+/);
+        nickName = tokens[tokens.length - 1] ?? null;
+        given = (beforeStar + (afterStar ? ' ' + afterStar : '')).replace(/\s+/g, ' ').trim() || null;
+      }
+
       addPersonName(db, person.id, {
         given_name: given,
         surname,
@@ -256,7 +268,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
         name_suffix: suffix,
         name_type: name_type as 'birth' | 'married' | 'alias' | 'aka',
         patronymic_base,
-        preferred_name: getChild(nameNode, 'NICK')?.value ?? null,
+        preferred_name: nickName,
         name_qualifier: (getChild(nameNode, '_NQUAL')?.value ?? null) as string | null,
         date_from: getChild(nameNode, '_DATE_FROM')?.value ?? null,
         date_to: getChild(nameNode, '_DATE_TO')?.value ?? null,
@@ -456,5 +468,23 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
         date_accessed: date_accessed || undefined,
       });
     }
+  }
+}
+
+/**
+ * Imports a parsed GEDCOM tree into the database inside a single transaction.
+ * Without a transaction, SQLite auto-commits every statement, causing thousands
+ * of WAL flushes (measured at ~1.6 GB for a 70k-line file). One commit at the
+ * end reduces disk writes by ~3 orders of magnitude.
+ * On error the transaction is rolled back so no partial data is written.
+ */
+export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
+  db.prepare('BEGIN').run([]);
+  try {
+    doImportGedcom(db, tree, options);
+    db.prepare('COMMIT').run([]);
+  } catch (err) {
+    db.prepare('ROLLBACK').run([]);
+    throw err;
   }
 }
