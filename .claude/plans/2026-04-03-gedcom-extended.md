@@ -1,9 +1,9 @@
 # Plan: Extended GEDCOM Roundtrip
 
-**Version:** v0.6.3
+**Version:** v0.6.4
 **Date:** 2026-04-03
 **Status:** Not started
-**Depends on:** v0.6.2 (Genney Import Profile)
+**Depends on:** v0.6.3 (Database Switcher)
 
 ## Goal
 
