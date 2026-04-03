@@ -147,7 +147,10 @@
       "mcp__slaktforskning__get_events_for_person",
       "mcp__slaktforskning__update_person_name",
       "Bash(node -e \"const m = require\\('@modelcontextprotocol/sdk/inMemory.js'\\); console.log\\(Object.keys\\(m\\)\\)\")",
-      "Bash(node -e \"const m = require\\('@modelcontextprotocol/sdk'\\); console.log\\(Object.keys\\(m\\)\\)\")"
+      "Bash(node -e \"const m = require\\('@modelcontextprotocol/sdk'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "mcp__slaktforskning__search_places",
+      "mcp__slaktforskning__add_place",
+      "Edit(/.claude/skills/add-feature/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans"

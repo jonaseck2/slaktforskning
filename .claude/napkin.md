@@ -68,6 +68,17 @@
 4. **[2026-03-15] Use modal dialogs for create/edit, not page navigation**
    Do instead: data entry forms use modals; reserve page navigation for detail views.
 
+## Skills
+
+1. **[2026-04-03] Update skills as part of every feature — not optional**
+   Do instead: after implementing any feature, ask "which skills reference the layer I just changed?" and update them. Checklist: new entity/schema → `data-modeling`; new MCP tools → `mcp-dev`; new shared Vue component → `add-feature` shared components list; new IPC channels → `add-feature` + `CLAUDE.md`; GEDCOM changes → `gedcom`. Skills are how future agents navigate the codebase. Missing a skill update = knowledge debt.
+
+2. **[2026-04-03] Every plan must include a "Skills to Update" section**
+   Do instead: before finalizing any plan file, add a "## Skills to Update" section listing which skills need changes and what to change in each. Use the add-feature checklist as a reference.
+
+3. **[2026-04-03] MCP tools go in `createServer.ts`, not `server.ts`**
+   Do instead: all data tool registrations live in `src/mcp/createServer.ts` using `registerTool()`. `server.ts` only handles DB setup + UI tools. The deprecated `tool()` 4-arg overload must not be used.
+
 ## User Directives
 
 1. **[2026-03-15] Commit all files — never selectively skip**
