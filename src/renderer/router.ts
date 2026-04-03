@@ -22,5 +22,6 @@ export const router = createRouter({
     { path: '/visualisering', component: () => import('./views/VisualizationView.vue') },
     { path: '/visualisering/:personId', component: () => import('./views/VisualizationView.vue') },
     { path: '/import-export', component: () => import('./views/ImportExportView.vue') },
+    { path: '/database', component: () => import('./views/DatabaseView.vue') },
   ],
 });

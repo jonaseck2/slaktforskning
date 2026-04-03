@@ -16,6 +16,7 @@
       <router-link to="/places">{{ $t('places.title') }}</router-link>
       <router-link to="/sources">{{ $t('nav.sources') }}</router-link>
       <div class="sidebar-spacer"></div>
+      <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
       <select class="locale-switcher" :value="locale" @change="switchLocale($event)">
         <option value="sv">Svenska</option>
@@ -29,15 +30,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => unknown>>;
+};
+
 const router = useRouter();
 const { locale } = useI18n();
 const searchQuery = ref('');
+const currentDbName = ref('');
+
+async function loadDbName() {
+  const info = await (window.api.db.getCurrent() as Promise<{ path: string; name: string }>);
+  currentDbName.value = info.name;
+}
+
+onMounted(() => {
+  loadDbName();
+  (window.api.db as unknown as { onSwitched: (cb: () => void) => void }).onSwitched(() => {
+    window.location.reload();
+  });
+});
 
 function submitSearch() {
   const q = searchQuery.value.trim();

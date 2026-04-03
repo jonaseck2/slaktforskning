@@ -47,7 +47,8 @@ src/
 │   └── sources.ts                # Source + Citation CRUD
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
-│   ├── database.ts               # SQLite connection + stale lock cleanup
+│   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
+│   ├── settings.ts               # Persistent settings (lastDatabase, recentDatabases) in userData/settings.json
 │   └── ipc.ts                    # IPC handlers bridging renderer ↔ api/
 ├── preload/                      # contextBridge — exposes window.api
 │   └── index.ts                  # All IPC channels mapped to window.api.*
@@ -109,6 +110,7 @@ tests/
 | `/search` | `SearchView` | Global search across persons, relationships, sources |
 | `/places` | `PlacesView` | Place list with "Add Place" modal |
 | `/places/:id` | `PlaceDetailView` | Place detail: name, type, parent, lat/lon, child places |
+| `/database` | `DatabaseView` | Active database path, recent databases list, New/Open buttons |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
@@ -389,6 +391,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 **Source/citation tools:** `add_source`, `get_source`, `list_sources`, `update_source`, `delete_source`, `search_sources`, `add_citation`, `get_citation`, `get_citations_for_source`, `get_citations_for_event`, `delete_citation`
 
 **Place tools:** `add_place`, `get_place`, `list_places`, `search_places`, `update_place`, `delete_place`
+
+**Database tools:** `get_current_database`, `switch_database`
 
 **UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
 

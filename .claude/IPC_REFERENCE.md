@@ -52,6 +52,13 @@ window.api.citations.forPerson(personId)           // → Citation[]
 window.api.citations.forRelationship(relId)        // → Citation[]
 window.api.citations.forPlace(placeId)             // → Citation[]
 window.api.citations.delete(id)                    // → boolean
+
+window.api.db.getCurrent()                         // → { path: string, name: string }
+window.api.db.getRecent()                          // → { path: string, name: string }[]
+window.api.db.createNew()                          // → { path, name } | { canceled: true }  (Save dialog)
+window.api.db.openExisting()                       // → { path, name } | { canceled: true }  (Open dialog)
+window.api.db.switchTo(path)                       // → { path: string, name: string }
+window.api.db.onSwitched(cb)                       // → void  (ipcRenderer.on listener)
 ```
 
 ## IPC Channel → API Function Mapping
@@ -100,3 +107,8 @@ window.api.citations.delete(id)                    // → boolean
 | `citations:forRelationship` | `sources.getCitationsForRelationship(db, relationshipId)` |
 | `citations:forPlace` | `sources.getCitationsForPlace(db, placeId)` |
 | `citations:delete` | `sources.deleteCitation(db, id)` |
+| `db:getCurrent` | `getCurrentDatabasePath()` → `{ path, name }` |
+| `db:getRecent` | `loadSettings().recentDatabases` → `{ path, name }[]` |
+| `db:createNew` | `dialog.showSaveDialog` → `switchDatabase(path)` → broadcast `db:switched` |
+| `db:openExisting` | `dialog.showOpenDialog` → `switchDatabase(path)` → broadcast `db:switched` |
+| `db:switchTo` | `switchDatabase(path)` → broadcast `db:switched` |
