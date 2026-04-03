@@ -24,7 +24,13 @@
           class="clickable-row"
           @click="goToDetail(person.id)"
         >
-          <td>{{ person.preferred_name ?? person.given_name?.split(' ')[0] ?? '' }} <CitationBadge :count="personCitationCounts[person.id] ?? 0" /></td>
+          <td>
+            <template v-for="part in givenNameParts(person)" :key="part.text + part.underline">
+              <u v-if="part.underline" class="preferred-token">{{ part.text }}</u>
+              <span v-else>{{ part.text }}</span>
+            </template>
+            <CitationBadge :count="personCitationCounts[person.id] ?? 0" />
+          </td>
           <td>{{ person.surname }}</td>
           <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
           <td>{{ person.living ? $t('common.yes') : $t('common.no') }}</td>
@@ -159,6 +165,16 @@ async function removePerson(id: string) {
   } catch (err) {
     console.error('[PersonsView] removePerson failed:', err);
   }
+}
+
+function givenNameParts(person: PersonRow): { text: string; underline: boolean }[] {
+  const parts: { text: string; underline: boolean }[] = [];
+  const tokens = (person.given_name ?? '').split(' ');
+  for (let i = 0; i < tokens.length; i++) {
+    if (i > 0) parts.push({ text: ' ', underline: false });
+    parts.push({ text: tokens[i], underline: tokens[i] === person.preferred_name });
+  }
+  return parts;
 }
 
 function goToDetail(id: string) {
@@ -307,5 +323,9 @@ form textarea {
 .btn-cancel {
   background: #e0e0e0;
   color: #333;
+}
+.preferred-token {
+  text-decoration: underline;
+  text-decoration-style: solid;
 }
 </style>
