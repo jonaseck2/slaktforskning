@@ -47,6 +47,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.8.0 | MCP tools for groups, repositories, research tasks, media (30 tools); MCP verification loop in skills | [archive](plans/archive/2026-04-04-mcp-agent-workflow.md) |
 | Fix | import_gedcom silently swallowed .backup files; add import_genney MCP tool | [archive](plans/archive/2026-04-04-import-genney-mcp-tool.md) |
 | v0.9.3 | Fix Genney import crash: TODO.STATUS integer TypeError | [archive](plans/archive/2026-04-04-fix-genney-todo-status.md) |
+| v0.9.4 | Fix hourglass chart descendant overlap + auto-center focal | [archive](plans/archive/2026-04-04-hourglass-layout-overlap-fix.md) |
 
 ---
 
