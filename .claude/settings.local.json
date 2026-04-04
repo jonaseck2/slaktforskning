@@ -206,7 +206,11 @@
       "Bash(curl -sL \"https://repo1.maven.org/maven2/org/apache/derby/derbyshared/10.17.1.0/derbyshared-10.17.1.0.jar\" -o /tmp/derby-dump/derbyshared.jar)",
       "Bash(grep -n \"v0.7.0\\\\|v0.8\\\\|v0.9\\\\|v1.0\\\\|^$\" /Users/jonasahnstedt/git/slaktforskning/.claude/PLAN.md)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-03-tilltalsnamn-and-smeknamn.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md)",
-      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-03-tilltalsnamn-and-smeknamn.md)"
+      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-03-tilltalsnamn-and-smeknamn.md)",
+      "Bash(docker --version)",
+      "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-04-genney-derby-import.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-04-genney-derby-import.md)",
+      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-04-genney-derby-import.md)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); p.version = '0.6.9'; require\\('fs'\\).writeFileSync\\('./package.json', JSON.stringify\\(p, null, 2\\) + '\\\\n'\\);\")"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

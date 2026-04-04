@@ -10,6 +10,7 @@ import * as sources from '../api/sources';
 import * as places from '../api/places';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
+import { importFromGenney, isDockerAvailable } from '../import/genney/index';
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -112,6 +113,46 @@ export function registerIpcHandlers(): void {
     const tree = parseGedcom(text);
     importGedcom(getDatabase(), tree, options);
     return { imported: true, filePath: result.filePaths[0] };
+  });
+
+  // Genney Derby import
+  wrapHandler('import:genneyCheckDocker', () => {
+    return { available: isDockerAvailable() };
+  });
+
+  wrapHandler('import:genneySelectDerby', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Välj Genney Derby-databasmapp',
+      properties: ['openDirectory'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
+  wrapHandler('import:genneySelectArchive', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Välj Genney-arkivfil (.gcc, .backup)',
+      filters: [{ name: 'Genney-arkiv', extensions: ['gcc', 'backup', 'zip'] }],
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
+  wrapHandler('import:genneyRun', async (opts) => {
+    const options = opts as { sourcePath: string; schema?: string } | undefined;
+    if (!options?.sourcePath) return { error: 'sourcePath is required' };
+    const win = BrowserWindow.getFocusedWindow();
+    const result = await importFromGenney(getDatabase(), options.sourcePath, {
+      schema: options.schema,
+      onProgress: (msg) => {
+        if (win) win.webContents.send('import:genneyProgress', { message: msg });
+      },
+    });
+    if (result.gedcomFallbackPath) {
+      return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
+    }
+    return { imported: true, summary: result.summary };
   });
 
   // Database switching
