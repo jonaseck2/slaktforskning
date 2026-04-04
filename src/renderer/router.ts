@@ -23,5 +23,6 @@ export const router = createRouter({
     { path: '/visualisering/:personId', component: () => import('./views/VisualizationView.vue') },
     { path: '/import-export', component: () => import('./views/ImportExportView.vue') },
     { path: '/database', component: () => import('./views/DatabaseView.vue') },
+    { path: '/quality', component: () => import('./views/QualityView.vue') },
   ],
 });

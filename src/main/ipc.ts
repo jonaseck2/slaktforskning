@@ -15,6 +15,7 @@ import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
+import * as checks from '../api/checks';
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -252,6 +253,10 @@ export function registerIpcHandlers(): void {
   wrapHandler('media:forEntity', (entityType, entityId) => media.getMediaForEntity(getDatabase(), entityType as Parameters<typeof media.getMediaForEntity>[1], entityId as string));
   wrapHandler('media:addLink', (data) => media.addMediaLink(getDatabase(), data as Parameters<typeof media.addMediaLink>[1]));
   wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDatabase(), linkId as string));
+
+  // Checks
+  wrapHandler('checks:runAll', () => checks.runAllChecks(getDatabase()));
+  wrapHandler('checks:forPerson', (personId) => checks.runChecksForPerson(getDatabase(), personId as string));
 
   wrapHandler('gedcom:export', async () => {
     const result = await dialog.showSaveDialog({
