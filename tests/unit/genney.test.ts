@@ -18,8 +18,10 @@ beforeEach(() => {
 function emptyTables(): GenneyTables {
   return {
     PERSON: [], FAMILY: [], COUPLE_FAMILY: [], SPOUSE_FAMILY: [],
-    EVENT: [], EVENT_PLACE: [], SPLACE: [], SOURCE: [],
+    EVENT: [], EVENT_PLACE: [], OWNER_EVENT: [], SPLACE: [], SOURCE: [],
     CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
+    REPO: [], SOURCE_REPO: [], GROUPS: [], GROUP_MEMBER: [],
+    MEDIA: [], OWNER_MEDIA: [], TODO: [],
   };
 }
 
@@ -113,7 +115,7 @@ describe('transformGenney — persons', () => {
   it('appends REMARK text to person notes', () => {
     const tables = emptyTables();
     tables.PERSON = [{ RID: 'I7', SEX: 1, GIVENNAME: 'Erik', NOTE: 'inline note' }];
-    tables.REMARK = [{ OWNER: 'I7', TEXT: 'remark text' }];
+    tables.REMARK = [{ OWNER: 'I7', NOTE: 'remark text' }];
     transformGenney(db, tables);
     const person = listPersons(db)[0];
     expect(person.notes).toContain('inline note');
@@ -239,7 +241,7 @@ describe('transformGenney — events', () => {
     tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
     tables.SPLACE = [{ RID: 1, NAME: 'Skepperstad', TYPE: 2 }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
-    tables.EVENT_PLACE = [{ RID: 'E1', SPLACEID: 1 }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
     transformGenney(db, tables);
     const persons = listPersons(db);
     const events = getEventsForPerson(db, persons[0].id);
@@ -273,7 +275,7 @@ describe('transformGenney — places', () => {
     ];
     tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
-    tables.EVENT_PLACE = [{ RID: 'E1', SPLACEID: 2 }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 2 }];
     transformGenney(db, tables);
     const places = listPlaces(db);
     expect(places).toHaveLength(2);
@@ -290,7 +292,7 @@ describe('transformGenney — places', () => {
     ];
     tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
-    tables.EVENT_PLACE = [{ RID: 'E1', SPLACEID: 2 }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 2 }];
     transformGenney(db, tables);
     const places = listPlaces(db);
     expect(places).toHaveLength(1);
@@ -302,7 +304,7 @@ describe('transformGenney — places', () => {
     tables.SPLACE = [{ RID: 1, NAME: 'Skepperstad', LATITUD: 57.5, LONGITUD: 14.2 }];
     tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
-    tables.EVENT_PLACE = [{ RID: 'E1', SPLACEID: 1 }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
     transformGenney(db, tables);
     const place = listPlaces(db)[0];
     expect(place.latitude).toBeCloseTo(57.5);
@@ -314,7 +316,7 @@ describe('transformGenney — places', () => {
     tables.SPLACE = [{ RID: 1, NAME: 'Unknown', LATITUD: 0, LONGITUD: 0 }];
     tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
-    tables.EVENT_PLACE = [{ RID: 'E1', SPLACEID: 1 }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
     transformGenney(db, tables);
     const place = listPlaces(db)[0];
     expect(place.latitude).toBeNull();

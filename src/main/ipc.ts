@@ -10,7 +10,11 @@ import * as sources from '../api/sources';
 import * as places from '../api/places';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
-import { importFromGenney, isDockerAvailable } from '../import/genney/index';
+import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
+import * as groups from '../api/groups';
+import * as repositories from '../api/repositories';
+import * as researchTasks from '../api/research_tasks';
+import * as media from '../api/media';
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -139,6 +143,19 @@ export function registerIpcHandlers(): void {
     return { canceled: false, path: result.filePaths[0] };
   });
 
+  wrapHandler('import:genneyDiscover', async (opts) => {
+    const options = opts as { sourcePath: string; schema?: string } | undefined;
+    if (!options?.sourcePath) return { error: 'sourcePath is required' };
+    const win = BrowserWindow.getFocusedWindow();
+    const tables = await discoverTables(options.sourcePath, {
+      schema: options.schema,
+      onProgress: (msg) => {
+        if (win) win.webContents.send('import:genneyProgress', { message: msg });
+      },
+    });
+    return { tables };
+  });
+
   wrapHandler('import:genneyRun', async (opts) => {
     const options = opts as { sourcePath: string; schema?: string } | undefined;
     if (!options?.sourcePath) return { error: 'sourcePath is required' };
@@ -197,6 +214,44 @@ export function registerIpcHandlers(): void {
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
   });
+
+  // Groups
+  wrapHandler('groups:list', () => groups.listGroups(getDatabase()));
+  wrapHandler('groups:get', (id) => groups.getGroup(getDatabase(), id as string));
+  wrapHandler('groups:create', (data) => groups.createGroup(getDatabase(), data as Parameters<typeof groups.createGroup>[1]));
+  wrapHandler('groups:update', (id, data) => groups.updateGroup(getDatabase(), id as string, data as Parameters<typeof groups.updateGroup>[2]));
+  wrapHandler('groups:delete', (id) => groups.deleteGroup(getDatabase(), id as string));
+  wrapHandler('groups:addMember', (groupId, personId) => groups.addGroupMember(getDatabase(), groupId as string, personId as string));
+  wrapHandler('groups:removeMember', (groupId, personId) => groups.removeGroupMember(getDatabase(), groupId as string, personId as string));
+  wrapHandler('groups:getMembers', (groupId) => groups.getGroupMembers(getDatabase(), groupId as string));
+  wrapHandler('groups:forPerson', (personId) => groups.getGroupsForPerson(getDatabase(), personId as string));
+
+  // Repositories
+  wrapHandler('repositories:list', () => repositories.listRepositories(getDatabase()));
+  wrapHandler('repositories:get', (id) => repositories.getRepository(getDatabase(), id as string));
+  wrapHandler('repositories:create', (data) => repositories.createRepository(getDatabase(), data as Parameters<typeof repositories.createRepository>[1]));
+  wrapHandler('repositories:update', (id, data) => repositories.updateRepository(getDatabase(), id as string, data as Parameters<typeof repositories.updateRepository>[2]));
+  wrapHandler('repositories:delete', (id) => repositories.deleteRepository(getDatabase(), id as string));
+  wrapHandler('repositories:forSource', (sourceId) => repositories.getRepositoriesForSource(getDatabase(), sourceId as string));
+  wrapHandler('repositories:linkSource', (sourceId, repoId) => repositories.linkSourceRepository(getDatabase(), sourceId as string, repoId as string));
+  wrapHandler('repositories:unlinkSource', (sourceId, repoId) => repositories.unlinkSourceRepository(getDatabase(), sourceId as string, repoId as string));
+
+  // Research tasks
+  wrapHandler('researchTasks:list', () => researchTasks.listResearchTasks(getDatabase()));
+  wrapHandler('researchTasks:get', (id) => researchTasks.getResearchTask(getDatabase(), id as string));
+  wrapHandler('researchTasks:forPerson', (personId) => researchTasks.getResearchTasksForPerson(getDatabase(), personId as string));
+  wrapHandler('researchTasks:create', (data) => researchTasks.createResearchTask(getDatabase(), data as Parameters<typeof researchTasks.createResearchTask>[1]));
+  wrapHandler('researchTasks:update', (id, data) => researchTasks.updateResearchTask(getDatabase(), id as string, data as Parameters<typeof researchTasks.updateResearchTask>[2]));
+  wrapHandler('researchTasks:delete', (id) => researchTasks.deleteResearchTask(getDatabase(), id as string));
+
+  // Media
+  wrapHandler('media:list', () => media.listMedia(getDatabase()));
+  wrapHandler('media:get', (id) => media.getMedia(getDatabase(), id as string));
+  wrapHandler('media:create', (data) => media.createMedia(getDatabase(), data as Parameters<typeof media.createMedia>[1]));
+  wrapHandler('media:delete', (id) => media.deleteMedia(getDatabase(), id as string));
+  wrapHandler('media:forEntity', (entityType, entityId) => media.getMediaForEntity(getDatabase(), entityType as Parameters<typeof media.getMediaForEntity>[1], entityId as string));
+  wrapHandler('media:addLink', (data) => media.addMediaLink(getDatabase(), data as Parameters<typeof media.addMediaLink>[1]));
+  wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDatabase(), linkId as string));
 
   wrapHandler('gedcom:export', async () => {
     const result = await dialog.showSaveDialog({

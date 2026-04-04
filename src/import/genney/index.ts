@@ -18,7 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
-import { unzipSync } from 'fflate';
+import { Unzip, UnzipInflate } from 'fflate';
 import { spawn, spawnSync } from 'child_process';
 import { Worker } from 'worker_threads';
 import type { Database } from 'node-sqlite3-wasm';
@@ -32,8 +32,10 @@ const PARSE_WORKER_CODE = `
 const { workerData, parentPort } = require('worker_threads');
 const tables = {
   PERSON: [], FAMILY: [], COUPLE_FAMILY: [], SPOUSE_FAMILY: [],
-  EVENT: [], EVENT_PLACE: [], SPLACE: [], SOURCE: [],
+  EVENT: [], EVENT_PLACE: [], OWNER_EVENT: [], SPLACE: [], SOURCE: [],
   CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
+  REPO: [], SOURCE_REPO: [], GROUPS: [], GROUP_MEMBER: [],
+  MEDIA: [], OWNER_MEDIA: [], TODO: [],
 };
 for (const line of workerData.ndjson.split('\\n')) {
   const trimmed = line.trim();
@@ -199,6 +201,60 @@ async function runExtractor(
   return runDocker(derbyPath, ['--db-path', '/derby', '--schema', schema], onProgress);
 }
 
+export interface TableDiscovery {
+  name: string;
+  columns: string[];
+  rowCount: number;
+}
+
+/**
+ * List all user tables in a Derby database's schema with column names and row counts.
+ * Useful for investigating what data a Genney database contains.
+ */
+export async function discoverTables(
+  sourcePath: string,
+  options: GenneyImportOptions = {},
+): Promise<TableDiscovery[]> {
+  const { onProgress = () => { /* noop */ } } = options;
+
+  const stat = require('fs').statSync(sourcePath);
+  const isArchive = !stat.isDirectory();
+
+  let derbyPath = sourcePath;
+  let tempDir: string | null = null;
+
+  try {
+    if (isArchive) {
+      const result = await extractArchive(sourcePath, onProgress);
+      tempDir = result.tempDir;
+      if (result.gedcomPath) throw new Error('Archive is encrypted — no Derby database available for discovery.');
+      derbyPath = result.derbyPath;
+    }
+
+    await ensureJars(onProgress);
+    const schema = options.schema ?? await detectSchema(derbyPath, onProgress);
+    const output = await runDocker(
+      derbyPath,
+      ['--db-path', '/derby', '--schema', schema, '--list-tables'],
+      onProgress,
+    );
+
+    for (const line of output.trim().split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const parsed = JSON.parse(trimmed) as { table: string; rows: TableDiscovery[] };
+        if (parsed.table === '__DISCOVERY__') return parsed.rows;
+      } catch { /* skip */ }
+    }
+    return [];
+  } finally {
+    if (tempDir) {
+      try { require('fs').rmSync(tempDir, { recursive: true, force: true }); } catch { /* ignore */ }
+    }
+  }
+}
+
 /**
  * Find DerbyExtractor.java on the host filesystem.
  * Tries multiple candidate paths to handle both dev (source tree) and
@@ -295,15 +351,31 @@ function runDocker(
  */
 function extractZip(archivePath: string, destDir: string): void {
   const data = fs.readFileSync(archivePath);
-  const entries = unzipSync(new Uint8Array(data));
-  for (const [rawPath, content] of Object.entries(entries)) {
-    // Normalise Windows backslash separators and strip any leading slash
-    const normalised = rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
-    if (!normalised || normalised.endsWith('/')) continue; // directory entry
+  const errors: Error[] = [];
+
+  // Streaming Unzip: each entry is written to disk in chunks — never allocates
+  // a full decompressed buffer, so large Derby .backup archives don't OOM.
+  const unzip = new Unzip((stream) => {
+    const normalised = stream.name.replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!normalised || normalised.endsWith('/')) return; // directory entry
+
     const dest = path.join(destDir, ...normalised.split('/'));
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, content);
-  }
+    const fd = fs.openSync(dest, 'w');
+
+    stream.ondata = (err, dat, final) => {
+      if (err) { try { fs.closeSync(fd); } catch { /* ignore */ } errors.push(err); return; }
+      if (dat && dat.length > 0) fs.writeSync(fd, dat);
+      if (final) fs.closeSync(fd);
+    };
+    stream.start();
+  });
+
+  unzip.register(UnzipInflate);
+  // Buffer is a Uint8Array subclass — pass directly; processing is synchronous
+  unzip.push(data, true);
+
+  if (errors.length > 0) throw errors[0];
 }
 
 interface ArchiveResult {
@@ -390,7 +462,8 @@ function findNewestGedcom(baseDir: string): string | null {
 function emptyImportSummary(): ImportSummary {
   return {
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
-    events: 0, places: 0, sources: 0, citations: 0, warnings: [],
+    events: 0, places: 0, sources: 0, citations: 0,
+    groups: 0, repositories: 0, researchTasks: 0, media: 0, warnings: [],
   };
 }
 
