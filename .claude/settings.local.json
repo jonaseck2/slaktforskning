@@ -53,6 +53,9 @@
       "mcp__slaktforskning__create_person",
       "mcp__slaktforskning__create_family",
       "mcp__slaktforskning__list_persons",
+      "mcp__slaktforskning__import_genney",
+      "mcp__slaktforskning__switch_database",
+      "mcp__slaktforskning__get_current_database",
       "Bash(pkill -f \"electron-forge\")",
       "Bash(pkill -f \"Släktforskning\")",
       "Bash(lsof -i :5172 -i :5173 -i :5174)",
@@ -218,7 +221,13 @@
       "WebFetch(domain:www.gensoftreviews.com)",
       "Bash(git rm:*)",
       "Edit(/.claude/skills/mcp-dev/**)",
-      "Edit(/.claude/skills/test/**)"
+      "Edit(/.claude/skills/test/**)",
+      "Bash(SLAKTFORSKNING_DB=/tmp/genney-test.db npx tsx src/mcp/server.ts)",
+      "Bash(nc -q1 localhost)",
+      "Bash(timeout 10 SLAKTFORSKNING_DB=/tmp/genney-test.db npx tsx src/mcp/server.ts)",
+      "Bash(SLAKTFORSKNING_DB=/tmp/genney-test.db timeout 10 npx tsx src/mcp/server.ts)",
+      "Bash(SLAKTFORSKNING_DB=/tmp/genney-test.db timeout 60 npx tsx src/mcp/server.ts)",
+      "Bash(SLAKTFORSKNING_DB=/tmp/genney-test.db timeout 30 npx tsx src/mcp/server.ts)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

@@ -14,6 +14,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
+import { importFromGenney } from '../import/genney/index';
 
 export function createMcpServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -531,18 +532,42 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
 
   // GEDCOM tools
   server.registerTool('import_gedcom', {
-    description: 'Import a GEDCOM 5.5.1 file from disk into the database. Use profile "genney" for Genney 4.1 exports to enable Swedish hierarchical places, patronymic detection, and Genney custom tags.',
+    description: 'Import a GEDCOM 5.5.1 .ged file from disk into the database. Use profile "genney" for Genney 4.1 GEDCOM exports to enable Swedish hierarchical places, patronymic detection, and Genney custom tags. For Genney .backup/.gcc archives, use import_genney instead.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to the .ged file to import'),
       profile: z.enum(['genney']).optional().describe('Import profile. "genney" enables Genney 4.1 extensions: Swedish hierarchical places, patronymic detection, _UID/_YHAPLOGROUP/_MHAPLOGROUP tags.'),
     },
   }, async (args) => {
+    const lower = args.file_path.toLowerCase();
+    if (lower.endsWith('.backup') || lower.endsWith('.gcc')) {
+      return { content: [{ type: 'text', text: 'Error: .backup and .gcc files are Genney archives, not GEDCOM files. Use the import_genney tool instead.' }] };
+    }
     const fs = await import('fs');
     const text = fs.readFileSync(args.file_path, 'utf-8');
     const tree = parseGedcom(text);
     const options: ImportOptions = args.profile ? { profile: args.profile } : {};
     importGedcom(db, tree, options);
     return { content: [{ type: 'text', text: JSON.stringify({ imported: true, file_path: args.file_path, profile: args.profile ?? null }) }] };
+  });
+
+  server.registerTool('import_genney', {
+    description: 'Import a Genney 4.1 archive (.backup or .gcc) or Derby database directory into the database. Downloads Derby extraction tools on first use (~30 MB, requires internet). Requires Java or Docker.',
+    inputSchema: {
+      file_path: z.string().describe('Absolute path to the .backup/.gcc archive or extracted Derby database directory'),
+      schema: z.string().optional().describe('Override the auto-detected Derby schema name'),
+    },
+  }, async (args) => {
+    const messages: string[] = [];
+    try {
+      const result = await importFromGenney(db, args.file_path, {
+        schema: args.schema,
+        onProgress: (msg) => messages.push(msg),
+      });
+      return { content: [{ type: 'text', text: JSON.stringify({ ...result, progress: messages }, null, 2) }] };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { content: [{ type: 'text', text: JSON.stringify({ error: message, progress: messages }, null, 2) }] };
+    }
   });
 
   server.registerTool('export_gedcom', {
