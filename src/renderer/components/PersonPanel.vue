@@ -170,7 +170,7 @@ async function loadPerson(id: string) {
 }
 
 async function loadRelationships(id: string) {
-  const rels = (await window.api.relationships.forPerson(id)) as Array<{
+  const rels = (await window.api.relationships.getForPerson(id)) as Array<{
     id: string; type: string; subtype: string | null;
     person1_id: string | null; person2_id: string | null;
   }>;
