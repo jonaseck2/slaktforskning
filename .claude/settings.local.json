@@ -50,7 +50,9 @@
       "Read(//Users/jonasahnstedt/.claude/**)",
       "Read(//Users/jonasahnstedt/.agents/skills/**)",
       "Bash(claude plugin:*)",
-      "Bash(claude plugins:*)"
+      "Bash(claude plugins:*)",
+      "Bash(bash scripts/start-server.sh --project-dir /Users/jonasahnstedt/git/slaktforskning)",
+      "Bash(bash skills/brainstorming/scripts/start-server.sh --project-dir /Users/jonasahnstedt/git/slaktforskning)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
