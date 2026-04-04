@@ -11,6 +11,21 @@
         <button @click="handleImportFromGenney" :disabled="busy">{{ $t('gedcom.genneyPickFile') }}</button>
       </div>
 
+      <!-- Import directly from Genney Derby database -->
+      <div class="section">
+        <h3>{{ $t('importExport.genneyDerbyTitle') }}</h3>
+        <p class="section-desc">{{ $t('importExport.genneyDerbyDesc') }}</p>
+        <div class="section-buttons">
+          <button @click="handleGenneyDerby('folder')" :disabled="busy">
+            {{ $t('importExport.genneyDerbySelectFolder') }}
+          </button>
+          <button @click="handleGenneyDerby('archive')" :disabled="busy">
+            {{ $t('importExport.genneyDerbySelectArchive') }}
+          </button>
+        </div>
+        <p v-if="genneyProgress" class="section-progress">{{ genneyProgress }}</p>
+      </div>
+
       <!-- Import GEDCOM -->
       <div class="section">
         <h3>{{ $t('importExport.gedcomImportTitle') }}</h3>
@@ -42,11 +57,58 @@ const { t } = useI18n();
 const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
+const genneyProgress = ref('');
 
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   statusMessage.value = msg;
   statusType.value = type;
   setTimeout(() => { statusMessage.value = ''; }, 4000);
+}
+
+async function handleGenneyDerby(mode: 'folder' | 'archive') {
+  if (busy.value) return;
+
+  const dockerCheck = await window.api.import.genneyCheckDocker() as { available: boolean };
+  if (!dockerCheck.available) {
+    setStatus(t('importExport.genneyDerbyNoDocker'), 'error');
+    return;
+  }
+
+  const picked = mode === 'folder'
+    ? await window.api.import.genneySelectDerby() as { canceled: boolean; path?: string }
+    : await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
+  if (picked.canceled || !picked.path) return;
+
+  busy.value = true;
+  genneyProgress.value = t('importExport.genneyDerbyRunning');
+
+  window.api.import.onProgress((msg: string) => { genneyProgress.value = msg; });
+
+  try {
+    const result = await window.api.import.genneyRun({ sourcePath: picked.path }) as {
+      imported?: boolean;
+      gedcomFallback?: boolean;
+      gedcomPath?: string;
+      summary?: { persons: number; events: number; citations: number };
+      error?: string;
+    };
+
+    if (result.gedcomFallback) {
+      genneyProgress.value = t('importExport.genneyDerbyFallback');
+      const gedResult = await window.api.gedcom.import({ profile: 'genney' }) as { imported?: boolean; canceled?: boolean; filePath?: string };
+      if (gedResult.imported) setStatus(t('importExport.importSuccess', { file: gedResult.filePath ?? '' }));
+    } else if (result.imported && result.summary) {
+      const s = result.summary;
+      setStatus(t('importExport.genneyDerbySuccess', { persons: s.persons, events: s.events, citations: s.citations }));
+    } else if (result.error) {
+      setStatus(t('importExport.genneyDerbyError', { error: result.error }), 'error');
+    }
+  } catch (err) {
+    setStatus(t('importExport.genneyDerbyError', { error: err instanceof Error ? err.message : String(err) }), 'error');
+  } finally {
+    busy.value = false;
+    genneyProgress.value = '';
+  }
 }
 
 async function handleImportFromGenney() {
@@ -132,6 +194,19 @@ h2 {
   border-left: 3px solid #2c3e50;
   padding: 8px 12px;
   border-radius: 0 4px 4px 0;
+  margin: 0;
+}
+
+.section-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.section-progress {
+  font-size: 13px;
+  color: #555;
+  font-style: italic;
   margin: 0;
 }
 

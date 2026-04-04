@@ -60,6 +60,13 @@ const api = {
     import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
     export: () => ipcRenderer.invoke('gedcom:export'),
   },
+  import: {
+    genneyCheckDocker: () => ipcRenderer.invoke('import:genneyCheckDocker'),
+    genneySelectDerby: () => ipcRenderer.invoke('import:genneySelectDerby'),
+    genneySelectArchive: () => ipcRenderer.invoke('import:genneySelectArchive'),
+    genneyRun: (opts: unknown) => ipcRenderer.invoke('import:genneyRun', opts),
+    onProgress: (cb: (msg: string) => void) => ipcRenderer.on('import:genneyProgress', (_e, data: { message: string }) => cb(data.message)),
+  },
   db: {
     getCurrent: () => ipcRenderer.invoke('db:getCurrent'),
     getRecent: () => ipcRenderer.invoke('db:getRecent'),
