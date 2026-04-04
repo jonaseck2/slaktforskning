@@ -138,6 +138,9 @@ Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3
 ### Done (v0.6.7 — Per-Node Descendant Collapse)
 Every descendant node with children gets a ↓ button. `leafCount` is collapse-aware (non-focal collapsed nodes count as 1 leaf), `placeDescendants` skips recursion for collapsed non-focal nodes, `descNodeMap` drives ↓ button generation for all descendant boxes with children. 4 new unit tests (288 total). See `.claude/plans/archive/2026-04-03-descendant-collapse.md`.
 
+### Fix — Nickname insertion position + asterisk notation in UI
+Nickname now renders right after the preferred-name token (`Elisabeth "Lisa" Cathrina`); `parseAsteriskNotation` utility added so the name form accepts `Elisabeth* Cathrina` as input; `listPersons`/`searchPersons` return `nickname` so PersonsView and PersonPicker show it; GEDCOM uses only asterisk (no `_TILLTALS`); asterisk parsing is now profile-agnostic. See `.claude/plans/archive/2026-04-04-nickname-display-and-asterisk-ui.md`.
+
 ### Done (v0.6.8 — Tilltalsnamn + Smeknamn separation)
 `nickname` column on `person_names`; `addPersonName`/`updatePersonName` accept `nickname`; `fullNameParts` renders nickname in double quotes between given name and surname; `PersonName.vue` gets `nickname` prop; PersonDetailView Smeknamn input in both Add/Edit name modals; GEDCOM import re-maps NICK → nickname and `_TILLTALS` → preferred_name; exporter emits asterisk + `_TILLTALS` for preferred_name and NICK for nickname; MCP tools updated; 12 new unit tests (300 total). See `.claude/plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md`.
 

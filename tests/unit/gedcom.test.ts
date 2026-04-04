@@ -366,7 +366,7 @@ describe('importGedcom (Genney profile)', () => {
     expect(names[0].preferred_name).toBe('Lars');
   });
 
-  it('does not extract * preferred name without genney profile', () => {
+  it('extracts * preferred name for any profile (asterisk is universal)', () => {
     const ged = [
       '0 @I1@ INDI',
       '1 NAME Eva Linda* Marie /Ahnstedt/',
@@ -375,9 +375,8 @@ describe('importGedcom (Genney profile)', () => {
     importGedcom(db, parseGedcom(ged)); // no profile
     const persons = listPersons(db);
     const names = getPersonNames(db, persons[0].id);
-    // * is left as-is without genney profile
-    expect(names[0].given_name).toContain('*');
-    expect(names[0].preferred_name).toBeNull();
+    expect(names[0].given_name).toBe('Eva Linda Marie');
+    expect(names[0].preferred_name).toBe('Linda');
   });
 
   it('creates flat place without genney profile', () => {
@@ -479,13 +478,15 @@ describe('Extended GEDCOM roundtrip — persons', () => {
     expect(persons2[0].living).toBeTruthy();
   });
 
-  it('preferred_name survives roundtrip via _TILLTALS + asterisk', () => {
+  it('preferred_name survives roundtrip via asterisk in NAME', () => {
     const p = createPerson(db, { sex: 'F' });
     addPersonName(db, p.id, { given_name: 'Anna Maria', surname: 'Eriksson', preferred_name: 'Maria' });
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
     const names2 = getPersonNames(db2, persons2[0].id);
     expect(names2[0].preferred_name).toBe('Maria');
+    // given_name stripped of asterisk
+    expect(names2[0].given_name).toBe('Anna Maria');
   });
 
   it('nickname survives roundtrip via NICK', () => {
