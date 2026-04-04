@@ -105,6 +105,10 @@ See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
 - [ ] `ReportsView` at `/reports` — Ancestor Chart, Family Group Sheet, Individual Summary tabs
 - [ ] Print CSS + preview area
 
+### Agent & Developer Tooling
+- [ ] MCP tools for groups, repositories, research_tasks, media (see `.claude/plans/2026-04-04-mcp-agent-workflow.md`)
+- [ ] MCP verification loop integrated into standard feature development workflow
+
 ### Polish [feature]
 - [ ] Keyboard navigation and accessibility
 - [ ] Data backup and restore

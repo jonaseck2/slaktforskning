@@ -58,6 +58,8 @@ A person can have multiple names over time (birth, married, alias, aka).
 | name_suffix | TEXT | Suffix after surname (e.g. "Jr.", "Sr.") |
 | patronymic_base | TEXT | Base name used for Swedish patronymics (e.g. "Erik" → Eriksson/Eriksdotter) |
 | name_qualifier | TEXT | CHECK ('married_name' \| 'aka' \| 'nick' \| 'immigrant' \| null) |
+| preferred_name | TEXT | Tilltalsnamn — specific given name used in daily life |
+| nickname | TEXT | Smeknamn / informal name |
 
 ### person_identifiers
 External IDs linking a person record to identifiers in other systems.
@@ -99,6 +101,8 @@ Events belong to **one or more persons** via `event_participants`. An event can 
 | date_value_end | TEXT | For 'between' only |
 | date_original | TEXT | Verbatim from source, e.g. "Midsommar 1742" |
 | place_id | TEXT FK | → places, SET NULL |
+| place_address | TEXT | Verbatim address text from source — not linked to a Place row |
+| cause | TEXT | Cause of event (e.g. "cholera") — applicable to any event type |
 | description | TEXT | |
 | relationship_id | TEXT FK | → relationships, SET NULL. Optional: links a marriage event to the couple relationship. |
 | created_at | TEXT | datetime |
@@ -130,6 +134,10 @@ Hierarchical places including Swedish-specific types. Places are sourced entitie
 | date_from | TEXT | ISO date — when this name/boundary became valid |
 | date_to | TEXT | ISO date — when this name/boundary ended |
 | notes | TEXT | |
+| street | TEXT | Street name and number (nullable) |
+| postal_code | TEXT | Postal code (nullable) |
+| city | TEXT | City name (nullable) |
+| country | TEXT | Country name or ISO code (nullable) |
 
 ### sources
 A physical or digital document, record, or artifact.
@@ -143,6 +151,8 @@ A physical or digital document, record, or artifact.
 | repository | TEXT | Archive or library holding the source |
 | url | TEXT | |
 | source_type | TEXT | 'vital_record' \| 'census' \| 'church_record' \| 'newspaper' \| 'photograph' \| 'oral_history' \| 'letter' \| 'legal_document' \| 'military_record' \| 'immigration_record' \| 'book' \| 'online_database' \| 'other' |
+| call_number | TEXT | Repository call number or shelf mark |
+| abstract | TEXT | Source abstract / summary text |
 | created_at | TEXT | datetime |
 | updated_at | TEXT | datetime |
 
@@ -162,6 +172,89 @@ Links a source (at a specific location) to any conclusion-layer entity. A citati
 | person_id | TEXT FK | → persons, SET NULL |
 | relationship_id | TEXT FK | → relationships, SET NULL |
 | place_id | TEXT FK | → places, SET NULL |
+| created_at | TEXT | datetime |
+
+### groups
+Research workflow tags for persons.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| name | TEXT | e.g. "Emigrated to America", "I'm here" |
+| notes | TEXT | |
+| created_at | TEXT | datetime |
+
+### group_members
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| group_id | TEXT FK | → groups, CASCADE DELETE |
+| person_id | TEXT FK | → persons, CASCADE DELETE |
+| UNIQUE | | (group_id, person_id) |
+
+### repositories
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| name | TEXT | Archive or library name |
+| address | TEXT | |
+| city | TEXT | |
+| postal_code | TEXT | |
+| state | TEXT | |
+| country | TEXT | |
+| phone | TEXT | |
+| email | TEXT | |
+| web | TEXT | |
+| call_number | TEXT | |
+| notes | TEXT | |
+| created_at | TEXT | datetime |
+
+### source_repositories
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| source_id | TEXT FK | → sources, CASCADE DELETE |
+| repository_id | TEXT FK | → repositories, CASCADE DELETE |
+| UNIQUE | | (source_id, repository_id) |
+
+### research_tasks
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| person_id | TEXT FK | → persons, CASCADE DELETE. Nullable |
+| priority | INTEGER | 1–3 |
+| status | TEXT | 'open' \| 'in_progress' \| 'done' \| 'stopped' |
+| task | TEXT | What to investigate |
+| notes | TEXT | Background / context |
+| result | TEXT | Findings |
+| created_at | TEXT | datetime |
+| updated_at | TEXT | datetime |
+
+### media
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| file_ref | TEXT | File path or external reference |
+| title | TEXT | |
+| format | TEXT | MIME type or format string |
+| notes | TEXT | |
+| is_printable | INTEGER | boolean |
+| created_at | TEXT | datetime |
+
+### media_links
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| media_id | TEXT FK | → media, CASCADE DELETE |
+| entity_type | TEXT | 'person' \| 'event' \| 'relationship' \| 'place' \| 'source' |
+| entity_id | TEXT | FK to the relevant table |
+| link_type | INTEGER | Optional — e.g. primary photo |
 | created_at | TEXT | datetime |
 
 ### assertions *(schema present, UI deferred)*

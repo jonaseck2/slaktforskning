@@ -216,7 +216,8 @@
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\({...p.dependencies, ...p.devDependencies}, null, 2\\)\\)\")",
       "Bash(node -e \"require\\('cross-zip'\\); console.log\\('available:', require.resolve\\('cross-zip'\\)\\)\")",
       "WebFetch(domain:www.gensoftreviews.com)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Edit(/.claude/skills/mcp-dev/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

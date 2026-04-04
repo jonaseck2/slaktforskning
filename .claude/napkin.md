@@ -42,20 +42,21 @@
 1. **[2026-04-03] Security hook false-positive on SQLite's `db.exec` method**
    Do instead: the project hook flags the string `db.exec` followed by an open-paren as potential shell injection. It is a false positive for the SQLite `Database` method. Avoid writing that exact token sequence in plan files, PLAN.md, skill docs, or commit messages. Use `db.prepare('...').run([])` in source code instead (works identically). In existing code already using it the hook only fires when editing those files.
 
-2. **[2026-03-15] node-sqlite3-wasm uses array parameter binding**
-   Do instead: always pass parameters as arrays — `stmt.run([a, b])`, `stmt.get([id])`, `stmt.all([x, y])`. Spread args only bind the first parameter.
-
-2. **[2026-03-15] node-sqlite3-wasm `.get()` returns undefined, not null**
-   Do instead: always use `?? null` when wrapping `.get()` calls that should return `T | null`.
-
-3. **[2026-03-15] node-sqlite3-wasm has no `.pragma()` method**
-   Do instead: use `db.exec('PRAGMA ...')` — not `.pragma(...)`.
-
-4. **[2026-03-15] Vite build output paths are relative to `root`**
+2. **[2026-03-15] Vite build output paths are relative to `root`**
    Do instead: use `resolve()` for absolute `outDir`. Renderer config needs `outDir: resolve('.vite/renderer/main_window')`.
 
-5. **[2026-03-15] Vite main + preload builds share output dir — filenames collide**
+3. **[2026-03-15] Vite main + preload builds share output dir — filenames collide**
    Do instead: set `entryFileNames: 'preload.js'` in `vite.preload.config.ts`.
+
+(node-sqlite3-wasm quirks moved to `add-feature` skill — array binding, get() undefined, no .pragma().)
+
+## Testing
+
+1. **[2026-04-04] Import transform tests must assert DB-level outcomes, not just match fixtures**
+   Do instead: after a transform test runs, query the DB and assert actual row counts/values — e.g. `expect(listPlaces(db)).toHaveLength(2)`. If the test fixtures mirror a buggy assumption (e.g. wrong column names), a fixture-only test will silently pass while the bug exists. DB-level assertions catch this. Root cause: the EVENT_PLACE and REMARK column bugs in Genney import were in both the transform code AND the test fixtures — only discovered against real data.
+
+2. **[2026-04-04] Use MCP + UI tools to verify new UI features in the running app**
+   Do instead: after `npm test` passes, seed data via MCP tools, then call `ui_navigate()`, `ui_screenshot()`, and `ui_get_dom()` to confirm the feature renders correctly in the live app. See `.claude/plans/2026-04-04-mcp-agent-workflow.md` for the full workflow. Faster than writing a Playwright test for every feature during development.
 
 ## Domain Behavior Guardrails
 
@@ -73,14 +74,10 @@
 
 ## Skills
 
-1. **[2026-04-03] Update skills as part of every feature — not optional**
-   Do instead: after implementing any feature, ask "which skills reference the layer I just changed?" and update them. Checklist: new entity/schema → `data-modeling`; new MCP tools → `mcp-dev`; new shared Vue component → `add-feature` shared components list; new IPC channels → `add-feature` + `CLAUDE.md`; GEDCOM changes → `gedcom`. Skills are how future agents navigate the codebase. Missing a skill update = knowledge debt.
-
-2. **[2026-04-03] Every plan must include a "Skills to Update" section**
+1. **[2026-04-03] Every plan must include a "Skills to Update" section**
    Do instead: before finalizing any plan file, add a "## Skills to Update" section listing which skills need changes and what to change in each. Use the add-feature checklist as a reference.
 
-3. **[2026-04-03] MCP tools go in `createServer.ts`, not `server.ts`**
-   Do instead: all data tool registrations live in `src/mcp/createServer.ts` using `registerTool()`. `server.ts` only handles DB setup + UI tools. The deprecated `tool()` 4-arg overload must not be used.
+(MCP tool registration pattern moved to `mcp-dev` skill. Skill update checklist moved to `add-feature` skill step 11.)
 
 ## User Directives
 

@@ -53,6 +53,49 @@ window.api.citations.forRelationship(relId)        // → Citation[]
 window.api.citations.forPlace(placeId)             // → Citation[]
 window.api.citations.delete(id)                    // → boolean
 
+window.api.places.create(data)                     // → Place
+window.api.places.get(id)                          // → Place | null
+window.api.places.list()                           // → Place[]
+window.api.places.search(query)                    // → Place[]
+window.api.places.update(id, data)                 // → Place | null
+window.api.places.delete(id)                       // → boolean
+window.api.places.findOrCreate(name)               // → Place
+window.api.places.getPath(id)                      // → Place[]  (ancestor chain)
+
+window.api.groups.list()                           // → Group[]
+window.api.groups.get(id)                          // → Group | null
+window.api.groups.create(data)                     // → Group
+window.api.groups.update(id, data)                 // → Group | null
+window.api.groups.delete(id)                       // → boolean
+window.api.groups.addMember(groupId, personId)     // → GroupMember
+window.api.groups.removeMember(groupId, personId)  // → boolean
+window.api.groups.getMembers(groupId)              // → GroupMember[]
+window.api.groups.forPerson(personId)              // → Group[]
+
+window.api.repositories.list()                           // → Repository[]
+window.api.repositories.get(id)                          // → Repository | null
+window.api.repositories.create(data)                     // → Repository
+window.api.repositories.update(id, data)                 // → Repository | null
+window.api.repositories.delete(id)                       // → boolean
+window.api.repositories.forSource(sourceId)              // → Repository[]
+window.api.repositories.linkSource(sourceId, repoId)     // → void
+window.api.repositories.unlinkSource(sourceId, repoId)   // → boolean
+
+window.api.researchTasks.list()                          // → ResearchTask[]
+window.api.researchTasks.get(id)                         // → ResearchTask | null
+window.api.researchTasks.forPerson(personId)             // → ResearchTask[]
+window.api.researchTasks.create(data)                    // → ResearchTask
+window.api.researchTasks.update(id, data)                // → ResearchTask | null
+window.api.researchTasks.delete(id)                      // → boolean
+
+window.api.media.list()                                  // → Media[]
+window.api.media.get(id)                                 // → Media | null
+window.api.media.create(data)                            // → Media
+window.api.media.delete(id)                              // → boolean
+window.api.media.forEntity(entityType, entityId)         // → (Media & { link_id, link_type })[]
+window.api.media.addLink(data)                           // → MediaLink
+window.api.media.removeLink(linkId)                      // → boolean
+
 window.api.db.getCurrent()                         // → { path: string, name: string }
 window.api.db.getRecent()                          // → { path: string, name: string }[]
 window.api.db.createNew()                          // → { path, name } | { canceled: true }  (Save dialog)
@@ -107,6 +150,44 @@ window.api.db.onSwitched(cb)                       // → void  (ipcRenderer.on 
 | `citations:forRelationship` | `sources.getCitationsForRelationship(db, relationshipId)` |
 | `citations:forPlace` | `sources.getCitationsForPlace(db, placeId)` |
 | `citations:delete` | `sources.deleteCitation(db, id)` |
+| `places:create` | `places.createPlace(db, data)` |
+| `places:get` | `places.getPlace(db, id)` |
+| `places:list` | `places.listPlaces(db)` |
+| `places:search` | `places.searchPlaces(db, query)` |
+| `places:update` | `places.updatePlace(db, id, data)` |
+| `places:delete` | `places.deletePlace(db, id)` |
+| `places:findOrCreate` | `places.findOrCreatePlace(db, name)` |
+| `places:getPath` | `places.getPlacePath(db, id)` |
+| `groups:list` | `groups.listGroups(db)` |
+| `groups:get` | `groups.getGroup(db, id)` |
+| `groups:create` | `groups.createGroup(db, data)` |
+| `groups:update` | `groups.updateGroup(db, id, data)` |
+| `groups:delete` | `groups.deleteGroup(db, id)` |
+| `groups:addMember` | `groups.addGroupMember(db, groupId, personId)` |
+| `groups:removeMember` | `groups.removeGroupMember(db, groupId, personId)` |
+| `groups:getMembers` | `groups.getGroupMembers(db, groupId)` |
+| `groups:forPerson` | `groups.getGroupsForPerson(db, personId)` |
+| `repositories:list` | `repositories.listRepositories(db)` |
+| `repositories:get` | `repositories.getRepository(db, id)` |
+| `repositories:create` | `repositories.createRepository(db, data)` |
+| `repositories:update` | `repositories.updateRepository(db, id, data)` |
+| `repositories:delete` | `repositories.deleteRepository(db, id)` |
+| `repositories:forSource` | `repositories.getRepositoriesForSource(db, sourceId)` |
+| `repositories:linkSource` | `repositories.linkSourceRepository(db, sourceId, repoId)` |
+| `repositories:unlinkSource` | `repositories.unlinkSourceRepository(db, sourceId, repoId)` |
+| `researchTasks:list` | `researchTasks.listResearchTasks(db)` |
+| `researchTasks:get` | `researchTasks.getResearchTask(db, id)` |
+| `researchTasks:forPerson` | `researchTasks.getResearchTasksForPerson(db, personId)` |
+| `researchTasks:create` | `researchTasks.createResearchTask(db, data)` |
+| `researchTasks:update` | `researchTasks.updateResearchTask(db, id, data)` |
+| `researchTasks:delete` | `researchTasks.deleteResearchTask(db, id)` |
+| `media:list` | `media.listMedia(db)` |
+| `media:get` | `media.getMedia(db, id)` |
+| `media:create` | `media.createMedia(db, data)` |
+| `media:delete` | `media.deleteMedia(db, id)` |
+| `media:forEntity` | `media.getMediaForEntity(db, entityType, entityId)` |
+| `media:addLink` | `media.addMediaLink(db, data)` |
+| `media:removeLink` | `media.removeMediaLink(db, linkId)` |
 | `db:getCurrent` | `getCurrentDatabasePath()` → `{ path, name }` |
 | `db:getRecent` | `loadSettings().recentDatabases` → `{ path, name }[]` |
 | `db:createNew` | `dialog.showSaveDialog` → `switchDatabase(path)` → broadcast `db:switched` |
