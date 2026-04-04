@@ -32,7 +32,6 @@ const DERBY_JARS = [
 const MAVEN_BASE = `https://repo1.maven.org/maven2/org/apache/derby`;
 
 const LIB_DIR = path.join(__dirname, 'lib');
-const EXTRACTOR_JAVA = path.join(__dirname, 'DerbyExtractor.java');
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -135,7 +134,7 @@ function downloadFile(url: string, dest: string): Promise<void> {
 
 async function detectSchema(derbyPath: string, onProgress: (msg: string) => void): Promise<string> {
   onProgress('Detecting schema…');
-  const output = await runDocker(derbyPath, ['--list-schemas']);
+  const output = await runDocker(derbyPath, ['--db-path', '/derby', '--list-schemas']);
   const schemas = output.trim().split('\n').filter(Boolean);
   if (schemas.length === 1) return schemas[0].trim();
   if (schemas.length > 1) {
@@ -157,49 +156,65 @@ async function runExtractor(
   return runDocker(derbyPath, ['--db-path', '/derby', '--schema', schema]);
 }
 
+/**
+ * Find DerbyExtractor.java on the host filesystem.
+ * Tries multiple candidate paths to handle both dev (source tree) and
+ * packaged builds (resources directory).
+ */
+function findExtractorJava(): string {
+  const candidates = [
+    // Dev mode: process.cwd() is the project root
+    path.join(process.cwd(), 'src', 'import', 'genney', 'DerbyExtractor.java'),
+    // Dev mode: relative to .vite/build/ (3 levels up to project root)
+    path.join(__dirname, '..', '..', '..', 'src', 'import', 'genney', 'DerbyExtractor.java'),
+    // Packaged build: next to the bundle
+    path.join(__dirname, 'DerbyExtractor.java'),
+  ];
+  for (const p of candidates) {
+    try { if (fs.existsSync(p)) return p; } catch { /* skip */ }
+  }
+  throw new Error(
+    'DerbyExtractor.java not found. ' +
+    `Tried:\n${candidates.join('\n')}`
+  );
+}
+
 function runDocker(derbyPath: string, extraArgs: string[]): Promise<string> {
+  // Copy jars + DerbyExtractor.java to a temp work dir, then mount that dir.
+  // This avoids __dirname path issues in the Vite bundle.
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'derby-work-'));
+  try {
+    for (const jar of DERBY_JARS) {
+      fs.copyFileSync(path.join(LIB_DIR, jar.name), path.join(workDir, jar.name));
+    }
+    fs.copyFileSync(findExtractorJava(), path.join(workDir, 'DerbyExtractor.java'));
+  } catch (err) {
+    try { fs.rmSync(workDir, { recursive: true, force: true }); } catch { /* ignore */ }
+    return Promise.reject(err);
+  }
+
   return new Promise((resolve, reject) => {
-    // Build classpath args for javac and java inside Docker
-    const jarNames = DERBY_JARS.map(j => `/work/${j.name}`).join(':');
-    const compileCmd = `javac -cp '${jarNames}' /work/DerbyExtractor.java -d /work`;
-    const runCmd = `java -cp '/work:${jarNames}' DerbyExtractor ${extraArgs.join(' ')}`;
-    const shellCmd = `${compileCmd} && ${runCmd}`;
-
-    const args = [
-      'run', '--rm',
-      '-v', `${derbyPath}:/derby:ro`,
-      '-v', `${LIB_DIR}:/work/lib:ro`,
-      '-v', `${EXTRACTOR_JAVA}:/work/DerbyExtractor.java:ro`,
-      // Use a named volume for work dir so we can write .class files
-      '--tmpfs', '/work',
-      'eclipse-temurin:21-jdk-alpine',
-      'sh', '-c',
-      // Copy jars and source to /work, then compile and run
-      `cp /work/lib/*.jar /work/ && cp /work/DerbyExtractor.java /work/Extract.java 2>/dev/null; ${compileCmd} && ${runCmd}`,
-    ];
-
-    // Simpler: use a single tmpfs-backed work dir with copies
-    const simplifiedShell = [
-      'mkdir -p /tmp/work',
-      `cp /work_lib/*.jar /tmp/work/ 2>/dev/null || true`,
-      `cp /src/DerbyExtractor.java /tmp/work/`,
-      `cd /tmp/work && javac -cp '/tmp/work/*' DerbyExtractor.java`,
-      `java -cp '/tmp/work:/tmp/work/*' DerbyExtractor ${extraArgs.join(' ')}`,
+    const jarPaths = DERBY_JARS.map(j => `/work/${j.name}`).join(':');
+    const shellCmd = [
+      `cd /work`,
+      `javac -cp '${jarPaths}' DerbyExtractor.java`,
+      `java -cp '/work:${jarPaths}' DerbyExtractor ${extraArgs.join(' ')}`,
     ].join(' && ');
 
     const dockerArgs = [
       'run', '--rm',
+      '-v', `${workDir}:/work`,
       '-v', `${derbyPath}:/derby:ro`,
-      '-v', `${LIB_DIR}:/work_lib:ro`,
-      '-v', `${__dirname}:/src:ro`,
       'eclipse-temurin:21-jdk-alpine',
-      'sh', '-c', simplifiedShell,
+      'sh', '-c', shellCmd,
     ];
 
     const result = spawnSync('docker', dockerArgs, {
       encoding: 'utf-8',
-      maxBuffer: 256 * 1024 * 1024, // 256MB
+      maxBuffer: 256 * 1024 * 1024,
     });
+
+    try { fs.rmSync(workDir, { recursive: true, force: true }); } catch { /* ignore */ }
 
     if (result.error) { reject(result.error); return; }
     if (result.status !== 0) {
