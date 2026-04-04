@@ -10,11 +10,26 @@
           class="sidebar-search-input"
         />
       </form>
-      <router-link to="/visualisering">{{ $t('nav.visualization') }}</router-link>
-      <router-link to="/">{{ $t('nav.persons') }}</router-link>
-      <router-link to="/relationships">{{ $t('nav.relationships') }}</router-link>
-      <router-link to="/places">{{ $t('places.title') }}</router-link>
-      <router-link to="/sources">{{ $t('nav.sources') }}</router-link>
+      <router-link to="/visualisering" class="nav-item">
+        <span class="nav-icon">🌳</span>
+        <span class="nav-label">{{ $t('nav.tree') }}</span>
+      </router-link>
+      <router-link to="/" class="nav-item">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">{{ $t('nav.persons') }}</span>
+      </router-link>
+      <router-link to="/relationships" class="nav-item">
+        <span class="nav-icon">🔗</span>
+        <span class="nav-label">{{ $t('nav.relationships') }}</span>
+      </router-link>
+      <router-link to="/places" class="nav-item">
+        <span class="nav-icon">📍</span>
+        <span class="nav-label">{{ $t('places.title') }}</span>
+      </router-link>
+      <router-link to="/sources" class="nav-item">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">{{ $t('nav.sources') }}</span>
+      </router-link>
       <div class="sidebar-spacer"></div>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
@@ -90,20 +105,21 @@ body {
 }
 
 .sidebar {
-  width: 200px;
+  width: 110px;
   background: #2c3e50;
   color: white;
-  padding: 20px;
+  padding: 16px 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .sidebar h1 {
-  font-size: 16px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
 }
 
 .sidebar-search {
@@ -128,18 +144,28 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.sidebar a {
-  color: rgba(255, 255, 255, 0.7);
+.sidebar a,
+.nav-item {
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 8px 6px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
 }
 
 .sidebar a:hover,
-.sidebar a.router-link-active {
-  background: rgba(255, 255, 255, 0.1);
+.sidebar a.router-link-active,
+.nav-item:hover,
+.nav-item.router-link-active {
+  background: rgba(255, 255, 255, 0.12);
   color: white;
 }
+
+.nav-icon { font-size: 18px; line-height: 1; }
+.nav-label { font-size: 10px; text-align: center; }
 
 .sidebar-spacer {
   flex: 1;
