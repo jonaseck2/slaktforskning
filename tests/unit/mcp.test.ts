@@ -755,3 +755,56 @@ describe('media', () => {
     expect(await call('get_media_for_entity', { entity_type: 'person', entity_id: person.id })).toHaveLength(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GEDCOM / Genney import
+// ---------------------------------------------------------------------------
+
+describe('import_gedcom', () => {
+  it('rejects a .backup file with a clear error instead of silently succeeding', async () => {
+    // Regression: previously import_gedcom read binary archives as UTF-8 text,
+    // called parseGedcom on garbage, imported nothing, and returned { imported: true }.
+    const tmpPath = path.join(os.tmpdir(), `test-${Date.now()}.backup`);
+    fs.writeFileSync(tmpPath, Buffer.from([0x50, 0x4b, 0x03, 0x04])); // ZIP magic bytes
+    try {
+      const result = await call('import_gedcom', { file_path: tmpPath }) as string;
+      expect(result).toContain('Error');
+      expect(result).toContain('import_genney');
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('rejects a .gcc file with a clear error', async () => {
+    const tmpPath = path.join(os.tmpdir(), `test-${Date.now()}.gcc`);
+    fs.writeFileSync(tmpPath, 'not gedcom');
+    try {
+      const result = await call('import_gedcom', { file_path: tmpPath }) as string;
+      expect(result).toContain('Error');
+      expect(result).toContain('import_genney');
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('imports a minimal GEDCOM .ged file and returns imported:true', async () => {
+    const gedcom = '0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Anna /Svensson/\n0 TRLR\n';
+    const tmpPath = path.join(os.tmpdir(), `test-${Date.now()}.ged`);
+    fs.writeFileSync(tmpPath, gedcom, 'utf-8');
+    try {
+      const result = await call('import_gedcom', { file_path: tmpPath }) as any;
+      expect(result.imported).toBe(true);
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+});
+
+describe('import_genney', () => {
+  it('returns an error (not a crash) when given a non-existent path', async () => {
+    const result = await call('import_genney', { file_path: '/tmp/does-not-exist.backup' }) as any;
+    // Should return an error object, not throw
+    expect(result.error).toBeDefined();
+    expect(typeof result.error).toBe('string');
+  });
+});
