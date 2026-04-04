@@ -252,9 +252,8 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
       // Genney marks the preferred name (tilltalsnamn) with * directly after the token.
       // e.g. "Eva Linda* Marie" → preferred_name = "Linda", given_name = "Eva Linda Marie"
       const nickname = getChild(nameNode, 'NICK')?.value ?? null;
-      const tilltals = getChild(nameNode, '_TILLTALS')?.value ?? null;
-      let preferred_name: string | null = tilltals;
-      if (!preferred_name && isGenney && given && given.includes('*')) {
+      let preferred_name: string | null = null;
+      if (given && given.includes('*')) {
         const starIdx = given.indexOf('*');
         const beforeStar = given.slice(0, starIdx).trimEnd();
         const afterStar = given.slice(starIdx + 1).trimStart();

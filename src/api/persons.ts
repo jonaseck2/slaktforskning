@@ -34,15 +34,15 @@ export function getDisplayGivenName(name: { given_name: string | null; preferred
   return name.given_name?.split(' ')[0] ?? '';
 }
 
-export function listPersons(db: Database): (Person & { given_name: string; surname: string; preferred_name: string | null })[] {
+export function listPersons(db: Database): (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[] {
   return db.prepare(`
-    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name
+    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
     ORDER BY pn.surname, pn.given_name
-  `).all() as (Person & { given_name: string; surname: string; preferred_name: string | null })[];
+  `).all() as (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[];
 }
 
 export function updatePerson(
@@ -67,10 +67,10 @@ export function deletePerson(db: Database, id: string): boolean {
   return result.changes > 0;
 }
 
-export function searchPersons(db: Database, query: string): (Person & { given_name: string; surname: string; preferred_name: string | null })[] {
+export function searchPersons(db: Database, query: string): (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[] {
   const like = `%${query}%`;
   return db.prepare(`
-    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name
+    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
@@ -82,7 +82,7 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
            AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
        )
     ORDER BY pn.surname, pn.given_name
-  `).all([like, like, like, like]) as (Person & { given_name: string; surname: string; preferred_name: string | null })[];
+  `).all([like, like, like, like]) as (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[];
 }
 
 export function addPersonName(

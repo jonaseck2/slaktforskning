@@ -16,23 +16,61 @@ export function givenNameParts(givenName: string | null, preferredName: string |
   return parts;
 }
 
-/** Full name parts: given name tokens (with underline) + optional nickname in quotes + optional surname. */
+/**
+ * Full name parts: given name tokens (with underline on preferred token),
+ * nickname in quotes inserted right after the preferred name token (or after
+ * all given names when no preferred name), then surname.
+ *
+ * Example: givenName="Elisabeth Cathrina", preferredName="Elisabeth", nickname="Lisa"
+ *   → Elisabeth[u] "Lisa" Cathrina
+ */
 export function fullNameParts(
   givenName: string | null,
   surname: string | null,
   preferredName: string | null,
   nickname?: string | null,
 ): NamePart[] {
-  const parts = givenNameParts(givenName, preferredName);
-  if (nickname) {
+  const parts: NamePart[] = [];
+  const tokens = (givenName ?? '').split(' ').filter(t => t.length > 0);
+  let nicknameInserted = false;
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (i > 0) parts.push({ text: ' ', underline: false });
+    const isPreferred = !!preferredName && tokens[i] === preferredName;
+    parts.push({ text: tokens[i], underline: isPreferred });
+    if (isPreferred && nickname) {
+      parts.push({ text: ' ', underline: false });
+      parts.push({ text: `"${nickname}"`, underline: false });
+      nicknameInserted = true;
+    }
+  }
+
+  if (nickname && !nicknameInserted) {
     if (parts.length > 0) parts.push({ text: ' ', underline: false });
     parts.push({ text: `"${nickname}"`, underline: false });
   }
+
   if (surname) {
     if (parts.length > 0) parts.push({ text: ' ', underline: false });
     parts.push({ text: surname, underline: false });
   }
   return parts;
+}
+
+/**
+ * Parses asterisk notation from a raw given-name string.
+ * "Elisabeth* Cathrina" → { given_name: "Elisabeth Cathrina", preferred_name: "Elisabeth" }
+ * "Elisabeth Cathrina"  → { given_name: "Elisabeth Cathrina", preferred_name: null }
+ */
+export function parseAsteriskNotation(raw: string): { given_name: string; preferred_name: string | null } {
+  const idx = raw.indexOf('*');
+  if (idx === -1) return { given_name: raw.trim(), preferred_name: null };
+  const beforeStar = raw.slice(0, idx).trimEnd();
+  const afterStar = raw.slice(idx + 1).trimStart();
+  const tokens = beforeStar.split(/\s+/).filter(Boolean);
+  const preferred_name = tokens[tokens.length - 1] ?? null;
+  const given_name = (beforeStar + (afterStar ? ' ' + afterStar : '')).replace(/\s+/g, ' ').trim();
+  return { given_name: given_name || raw.trim(), preferred_name };
 }
 
 /** Truncates a parts array to at most maxLen visible characters, appending '…' if cut. */

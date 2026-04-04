@@ -110,8 +110,7 @@ export function exportGedcom(db: Database): string {
       if (n.name_type && n.name_type !== 'birth') {
         lines.push(`2 TYPE ${n.name_type.toUpperCase()}`);
       }
-      // Extended name fields — preferred_name as _TILLTALS (canonical) + nickname as NICK (standard)
-      if (n.preferred_name) lines.push(`2 _TILLTALS ${n.preferred_name}`);
+      // Extended name fields — nickname as NICK (standard GEDCOM)
       if (n.nickname) lines.push(`2 NICK ${n.nickname}`);
       if (n.patronymic_base) lines.push(`2 _PATR ${n.patronymic_base}`);
       if (n.name_qualifier) lines.push(`2 _NQUAL ${n.name_qualifier}`);

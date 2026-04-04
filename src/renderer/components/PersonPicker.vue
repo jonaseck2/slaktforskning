@@ -19,7 +19,7 @@
         class="picker-option"
         @mousedown.prevent="select(person)"
       >
-        <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" /></span>
+        <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" :nickname="person.nickname" /></span>
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
     </ul>
@@ -39,6 +39,7 @@ interface PersonResult {
   given_name: string;
   surname: string;
   preferred_name: string | null;
+  nickname: string | null;
   sex: string;
 }
 

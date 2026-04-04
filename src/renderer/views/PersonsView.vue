@@ -27,7 +27,7 @@
           @click="goToDetail(person.id)"
         >
           <td>
-            <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name" />
+            <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name" :nickname="person.nickname" />
             <CitationBadge :count="personCitationCounts[person.id] ?? 0" />
           </td>
           <td>{{ person.surname }}</td>
@@ -100,6 +100,7 @@ interface PersonRow {
   given_name: string;
   surname: string;
   preferred_name: string | null;
+  nickname: string | null;
   sex: string;
   living: number;
 }

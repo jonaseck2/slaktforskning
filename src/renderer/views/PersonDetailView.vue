@@ -337,6 +337,7 @@ import CitationBadge from '../components/CitationBadge.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonName from '../components/PersonName.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
+import { parseAsteriskNotation } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -507,15 +508,17 @@ async function load() {
 async function addName() {
   if (!window.api) return;
   try {
+    const { given_name: parsedGiven, preferred_name: parsedPreferred } = parseAsteriskNotation(nameForm.given_name);
+    const resolvedPreferred = nameForm.preferred_name || parsedPreferred || null;
     await window.api.persons.addName(personId, {
-      given_name: nameForm.given_name,
+      given_name: parsedGiven,
       surname: nameForm.surname,
       name_type: nameForm.name_type,
       name_prefix: nameForm.name_prefix || null,
       name_suffix: nameForm.name_suffix || null,
       name_qualifier: nameForm.name_qualifier || null,
       patronymic_base: nameForm.patronymic_base || null,
-      preferred_name: nameForm.preferred_name || null,
+      preferred_name: resolvedPreferred,
       nickname: nameForm.nickname || null,
     });
     showNameForm.value = false;
@@ -551,15 +554,17 @@ function openEditName(name: NameRow) {
 async function saveEditName() {
   if (!window.api || !editingNameId.value) return;
   try {
+    const { given_name: parsedGiven, preferred_name: parsedPreferred } = parseAsteriskNotation(editNameForm.given_name);
+    const resolvedPreferred = editNameForm.preferred_name || parsedPreferred || null;
     await window.api.persons.updateName(editingNameId.value, {
-      given_name: editNameForm.given_name,
+      given_name: parsedGiven,
       surname: editNameForm.surname,
       name_type: editNameForm.name_type,
       name_prefix: editNameForm.name_prefix || null,
       name_suffix: editNameForm.name_suffix || null,
       name_qualifier: editNameForm.name_qualifier || null,
       patronymic_base: editNameForm.patronymic_base || null,
-      preferred_name: editNameForm.preferred_name || null,
+      preferred_name: resolvedPreferred,
       nickname: editNameForm.nickname || null,
     });
     showEditNameForm.value = false;
