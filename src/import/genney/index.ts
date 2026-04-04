@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
+import { unzipSync } from 'fflate';
 import { spawn, spawnSync } from 'child_process';
 import { Worker } from 'worker_threads';
 import type { Database } from 'node-sqlite3-wasm';
@@ -288,45 +289,21 @@ function runDocker(
 // ── Archive support (.gcc / .backup) ───────────────────────────────────────
 
 /**
- * Repair Windows-style backslash path separators in extracted zip contents.
- *
- * Windows zip entries use '\' as the directory separator. macOS/Linux unzip
- * treats '\' as a valid filename character, so "seg0\c660.dat" becomes a
- * single flat file rather than a file inside a "seg0" directory. This function
- * walks the tree and moves any file whose name contains '\' into the correct
- * subdirectory, repeating until no such files remain.
+ * Extract a zip archive using fflate (pure JS — no external process needed).
+ * Entry paths are normalised: backslashes → forward slashes, leading slashes
+ * stripped. Works correctly with Windows-created Genney .backup archives.
  */
-function fixWindowsPaths(baseDir: string): void {
-  let iterations = 0;
-  let found: boolean;
-  do {
-    found = false;
-    const toFix: { from: string; to: string }[] = [];
-
-    function scan(dir: string): void {
-      let entries: fs.Dirent[];
-      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-      for (const entry of entries) {
-        if (entry.name.includes('\\')) {
-          const parts = entry.name.split('\\').filter(Boolean);
-          const destDir = parts.length > 1 ? path.join(dir, ...parts.slice(0, -1)) : dir;
-          toFix.push({ from: path.join(dir, entry.name), to: path.join(destDir, parts[parts.length - 1]) });
-        } else if (entry.isDirectory()) {
-          scan(path.join(dir, entry.name));
-        }
-      }
-    }
-
-    scan(baseDir);
-    for (const { from, to } of toFix) {
-      try {
-        fs.mkdirSync(path.dirname(to), { recursive: true });
-        fs.renameSync(from, to);
-        found = true;
-      } catch { /* skip — another entry may have already created the target */ }
-    }
-    iterations++;
-  } while (found && iterations < 20);
+function extractZip(archivePath: string, destDir: string): void {
+  const data = fs.readFileSync(archivePath);
+  const entries = unzipSync(new Uint8Array(data));
+  for (const [rawPath, content] of Object.entries(entries)) {
+    // Normalise Windows backslash separators and strip any leading slash
+    const normalised = rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!normalised || normalised.endsWith('/')) continue; // directory entry
+    const dest = path.join(destDir, ...normalised.split('/'));
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, content);
+  }
 }
 
 interface ArchiveResult {
@@ -340,18 +317,7 @@ async function extractArchive(archivePath: string, onProgress: (msg: string) => 
   onProgress('Extracting archive…');
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'genney-import-'));
 
-  // Unzip (macOS unzip / Linux unzip)
-  // unzip exit codes: 0=success, 1=success with warnings (e.g. backslash path separators), ≥2=error
-  const unzipResult = spawnSync('unzip', ['-q', archivePath, '-d', tempDir], { encoding: 'utf-8' });
-  if (unzipResult.status !== null && unzipResult.status > 1) {
-    throw new Error(`Failed to unzip archive: ${unzipResult.stderr || 'unknown error'}`);
-  }
-
-  // Genney backups created on Windows use backslash as the zip path separator.
-  // macOS/Linux unzip treats backslash as a valid filename character, producing
-  // flat files like "database\seg0\c660.dat" instead of a real directory tree.
-  // Repair the structure before searching for Derby dirs.
-  fixWindowsPaths(tempDir);
+  extractZip(archivePath, tempDir);
 
   // Find Derby database directories (contain service.properties)
   const derbyPaths = findDerbyDirs(tempDir);
