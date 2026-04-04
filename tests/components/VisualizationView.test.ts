@@ -20,6 +20,9 @@ vi.mock('../../src/renderer/components/charts/TimelineChart.vue', () => ({
 vi.mock('../../src/renderer/components/PersonPicker.vue', () => ({
   default: { template: '<div class="stub-picker" />', props: ['modelValue', 'placeholder'], emits: ['select', 'update:modelValue'] },
 }));
+vi.mock('../../src/renderer/components/PersonPanel.vue', () => ({
+  default: { template: '<div class="stub-person-panel" />', props: ['personId'], emits: ['focus', 'select'] },
+}));
 
 describe('VisualizationView', () => {
   beforeEach(() => {
