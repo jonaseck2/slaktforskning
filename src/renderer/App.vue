@@ -30,6 +30,13 @@
         <span class="nav-icon">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
+      <router-link to="/quality" class="nav-item">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-label">
+          {{ $t('quality.nav') }}
+          <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
+        </span>
+      </router-link>
       <div class="sidebar-spacer"></div>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
@@ -59,14 +66,24 @@ const router = useRouter();
 const { locale } = useI18n();
 const searchQuery = ref('');
 const currentDbName = ref('');
+const qualityErrorCount = ref(0);
 
 async function loadDbName() {
   const info = await (window.api.db.getCurrent() as Promise<{ path: string; name: string }>);
   currentDbName.value = info.name;
 }
 
+async function loadQualityBadge() {
+  if (!window.api?.checks) return;
+  try {
+    const results = (await (window.api.checks as Record<string, (...args: unknown[]) => Promise<unknown>>).runAll()) as Array<{ severity: string }>;
+    qualityErrorCount.value = results.filter(r => r.severity === 'error').length;
+  } catch { /* ignore */ }
+}
+
 onMounted(() => {
   loadDbName();
+  loadQualityBadge();
   (window.api.db as unknown as { onSwitched: (cb: () => void) => void }).onSwitched(() => {
     window.location.reload();
   });
@@ -198,6 +215,19 @@ body {
 .locale-switcher option {
   color: #333;
   background: white;
+}
+
+.error-badge {
+  display: inline-block;
+  background: #e53e3e;
+  color: white;
+  border-radius: 8px;
+  padding: 0px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+  line-height: 16px;
 }
 
 .content {

@@ -12,6 +12,7 @@ import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
+import { runAllChecks, runChecksForPerson } from '../api/checks';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 import { importFromGenney } from '../import/genney/index';
@@ -889,7 +890,22 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
     return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
   });
 
-  // Database tools
+  // Checks tools
+  server.registerTool('run_checks', {
+    description: 'Run all data quality checks across the entire database and return a list of issues found',
+  }, async () => {
+    const results = runAllChecks(db);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  server.registerTool('run_checks_for_person', {
+    description: 'Run data quality checks for a specific person and return any issues found',
+    inputSchema: { id: z.string().describe('Person ID') },
+  }, async ({ id }) => {
+    const results = runChecksForPerson(db, id);
+    return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
   // Database tools
   server.registerTool('get_current_database', {
     description: 'Get the path of the currently open database file.',

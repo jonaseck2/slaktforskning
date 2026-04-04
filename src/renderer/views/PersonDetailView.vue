@@ -1,5 +1,18 @@
 <template>
   <div v-if="person" class="person-detail">
+    <div v-if="checkIssues.length > 0" class="issues-banner" :class="hasBannerErrors ? 'banner-error' : 'banner-warning'">
+      <span class="banner-icon">{{ hasBannerErrors ? '⚠️' : '⚠' }}</span>
+      <span>{{ $t('quality.issuesBanner', { count: checkIssues.length }) }}</span>
+      <button class="banner-toggle" @click="showIssueDetails = !showIssueDetails">
+        {{ showIssueDetails ? $t('quality.hideDetails') : $t('quality.showDetails') }}
+      </button>
+      <div v-if="showIssueDetails" class="banner-details">
+        <div v-for="issue in checkIssues" :key="issue.code" class="banner-issue">
+          <span :class="['banner-severity', 'badge-' + issue.severity]">{{ $t('quality.severity.' + issue.severity) }}</span>
+          <span>{{ issue.message }}</span>
+        </div>
+      </div>
+    </div>
     <div class="detail-header">
       <button class="btn-back" @click="$router.push('/')">{{ $t('personDetail.back') }}</button>
       <div class="header-info">
@@ -328,7 +341,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
@@ -375,6 +388,15 @@ interface RelRow {
   typeLabel: string;
 }
 
+interface CheckResult {
+  code: string;
+  severity: 'error' | 'warning' | 'notice';
+  message: string;
+  personIds: string[];
+  eventIds?: string[];
+  relationshipIds?: string[];
+}
+
 const { t } = useI18n();
 const route = useRoute();
 const personId = route.params.id as string;
@@ -396,6 +418,10 @@ const editLiving = ref(1);
 const evidenceSourced = ref(0);
 const evidenceTotal = ref(0);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
+
+const checkIssues = ref<CheckResult[]>([]);
+const showIssueDetails = ref(false);
+const hasBannerErrors = computed(() => checkIssues.value.some(r => r.severity === 'error'));
 
 interface IdentifierRow {
   id: string;
@@ -649,7 +675,20 @@ async function deleteRelationship(id: string) {
   await load();
 }
 
-onMounted(load);
+async function loadChecks(id: string) {
+  if (!window.api) return;
+  try {
+    const all = (await window.api.checks.forPerson(id)) as CheckResult[];
+    checkIssues.value = all.filter(r => r.severity === 'error' || r.severity === 'warning');
+  } catch (err) {
+    console.error('[PersonDetailView] loadChecks failed:', err);
+  }
+}
+
+onMounted(async () => {
+  await load();
+  loadChecks(personId);
+});
 </script>
 
 <style scoped>
@@ -943,4 +982,21 @@ form select {
   font-size: 11px;
   margin-left: 4px;
 }
+.issues-banner {
+  padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;
+  border-left: 4px solid;
+}
+.banner-error { background: #fff5f5; border-color: #e53e3e; }
+.banner-warning { background: #fffbeb; border-color: #d69e2e; }
+.banner-toggle {
+  margin-left: 12px; background: none; border: 1px solid currentColor;
+  border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px;
+}
+.banner-details { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.banner-issue { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.banner-severity {
+  font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 8px; text-transform: uppercase;
+}
+.badge-error { background: #feb2b2; color: #742a2a; }
+.badge-warning { background: #fef3c7; color: #78350f; }
 </style>

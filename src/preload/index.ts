@@ -115,6 +115,10 @@ const api = {
     update: (id: string, data: unknown) => ipcRenderer.invoke('researchTasks:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('researchTasks:delete', id),
   },
+  checks: {
+    runAll: () => ipcRenderer.invoke('checks:runAll'),
+    forPerson: (personId: string) => ipcRenderer.invoke('checks:forPerson', personId),
+  },
   media: {
     list: () => ipcRenderer.invoke('media:list'),
     get: (id: string) => ipcRenderer.invoke('media:get', id),

@@ -52,6 +52,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v1.0.1 | Fix Genney SEX encoding (0=M, 1=F) and LIVING flag (1=deceased) | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
 | v1.0.2 | Fix hourglass female-focal spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
 | v1.1.0 | EVENT.cause UI: Orsak field in EventForm/EventList + GEDCOM 2 CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
+| v1.2.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
 
 ---
 
@@ -93,15 +94,6 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [ ] Exporter: emit one `_ASSN` record per `assertions` row
 - [ ] Importer: read `_ASSN` records in a post-pass, recreate assertions
 - [ ] Unit tests: assertion roundtrip for person/event/relationship/place subjects
-
-### Tree Sanity Checks [feature]
-See `.claude/plans/2026-04-03-sanity-checks.md` for the full plan.
-- [ ] `src/api/checks.ts` — CheckResult type + ~25 checks across 6 categories
-- [ ] IPC + preload: `checks:runAll`, `checks:forPerson`
-- [ ] MCP: `run_checks`, `run_checks_for_person`
-- [ ] `QualityView` at `/quality` — grouped by severity, filter chips, re-run button
-- [ ] PersonDetailView inline banner for errors/warnings
-- [ ] Sidebar "Datakvalitet" entry with error count badge
 
 ### Printable Output [feature]
 See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
