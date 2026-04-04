@@ -111,6 +111,10 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
 - [ ] Investigate which Genney column carries the address vs. the place hierarchy; fix the transform to write address fields directly
 
+### Fix: QualityView — auto-run checks on navigation [fix]
+- [ ] Remove the "Kör kontroller" button from QualityView
+- [ ] Run checks automatically when the view is mounted (same trigger the badge already uses)
+
 ### Fix: Relationship EventList missing citation badges [fix]
 - [ ] EventList in RelationshipDetailView context doesn't show CitationBadge / unsourced indicator on event rows — wire it the same as in PersonDetailView
 
