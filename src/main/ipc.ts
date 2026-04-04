@@ -97,6 +97,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('places:update', (id, data) => places.updatePlace(getDatabase(), id as string, data as Parameters<typeof places.updatePlace>[2]));
   wrapHandler('places:delete', (id) => places.deletePlace(getDatabase(), id as string));
   wrapHandler('places:findOrCreate', (name) => places.findOrCreatePlace(getDatabase(), name as string));
+  wrapHandler('places:getPath', (id) => places.getPlacePath(getDatabase(), id as string));
 
   // GEDCOM
   wrapHandler('gedcom:import', async (opts) => {

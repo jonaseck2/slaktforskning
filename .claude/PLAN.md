@@ -142,6 +142,20 @@ Every descendant node with children gets a ↓ button. `leafCount` is collapse-a
 
 ## Roadmap
 
+### v0.6.8 — Tilltalsnamn + Smeknamn separation
+Separate preferred given name (tilltalsnamn, marked with asterisk) from nickname (smeknamn, from GEDCOM NICK).
+See `.claude/plans/2026-04-03-tilltalsnamn-and-smeknamn.md`.
+
+- [ ] Schema: add `nickname` column to `person_names`
+- [ ] API: `addPersonName`/`updatePersonName` accept `nickname`
+- [ ] Display: `fullNameParts` shows nickname in quotes, e.g. `Susanna "Sanna" Johansson`
+- [ ] PersonName component: `nickname` prop
+- [ ] PersonDetailView: Smeknamn input field
+- [ ] GEDCOM import: NICK → nickname (not preferred_name); asterisk → preferred_name
+- [ ] GEDCOM export: nickname → NICK; preferred_name → asterisk + `_TILLTALS`
+- [ ] MCP: `nickname` param in `add_person_name`/`update_person_name`
+- [ ] Unit tests
+
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations
 - [ ] Research audit view — all unsourced entities in one place, ranked by evidence gap

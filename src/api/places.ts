@@ -46,11 +46,28 @@ export function listPlaces(db: Database): Place[] {
   return db.prepare('SELECT * FROM places ORDER BY name ASC').all([]) as Place[];
 }
 
-export function searchPlaces(db: Database, query: string): Place[] {
+export function searchPlaces(db: Database, query: string): (Place & { parent_name: string | null })[] {
   const q = `%${normalize(query)}%`;
-  return db.prepare(
-    'SELECT * FROM places WHERE normalized_name LIKE ? ORDER BY name ASC LIMIT 20'
-  ).all([q]) as Place[];
+  return db.prepare(`
+    SELECT p.*, parent.name as parent_name
+    FROM places p
+    LEFT JOIN places parent ON parent.id = p.parent_place_id
+    WHERE p.normalized_name LIKE ?
+    ORDER BY p.name ASC LIMIT 20
+  `).all([q]) as (Place & { parent_name: string | null })[];
+}
+
+/** Returns the full path of a place as a comma-separated string, e.g. "Fröderyd, Jönköpings län". */
+export function getPlacePath(db: Database, id: string): string {
+  const parts: string[] = [];
+  let currentId: string | null = id;
+  while (currentId) {
+    const row = db.prepare('SELECT name, parent_place_id FROM places WHERE id = ?').get([currentId]) as { name: string; parent_place_id: string | null } | undefined;
+    if (!row) break;
+    parts.push(row.name);
+    currentId = row.parent_place_id ?? null;
+  }
+  return parts.join(', ');
 }
 
 export function updatePlace(
