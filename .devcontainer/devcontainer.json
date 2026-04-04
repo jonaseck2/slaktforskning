@@ -5,10 +5,10 @@
   },
 
   "mounts": [
-    "source=claude-credentials,target=/home/node/.claude,type=volume"
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached"
   ],
 
-  "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium",
+  "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/check-claude-skills.sh || true",
   "postStartCommand": "bash .devcontainer/xvfb-start.sh",
 
   // Environment variable so E2E tests know to use a temp DB path
