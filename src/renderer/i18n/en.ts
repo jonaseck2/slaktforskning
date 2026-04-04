@@ -5,6 +5,7 @@ export default {
   },
   nav: {
     visualization: 'Visualisation',
+    tree: 'Tree',
     persons: 'Persons',
     relationships: 'Relationships',
     sources: 'Sources',
@@ -327,6 +328,15 @@ export default {
     selectPerson: 'Select focal person\u2026',
     viewDetail: 'View details',
     today: 'Today',
+  },
+  panel: {
+    noPersonSelected: 'Click a person in the tree',
+    showInTree: 'Show in tree',
+    open: 'Open',
+    events: 'Events',
+    relationships: 'Relationships',
+    notes: 'Notes',
+    noNotes: 'No notes',
   },
   placeTypes: {
     country: 'Country',
