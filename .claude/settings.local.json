@@ -210,7 +210,8 @@
       "Bash(docker --version)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-04-genney-derby-import.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-04-genney-derby-import.md)",
       "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-04-genney-derby-import.md)",
-      "Bash(node -e \"const p = require\\('./package.json'\\); p.version = '0.6.9'; require\\('fs'\\).writeFileSync\\('./package.json', JSON.stringify\\(p, null, 2\\) + '\\\\n'\\);\")"
+      "Bash(node -e \"const p = require\\('./package.json'\\); p.version = '0.6.9'; require\\('fs'\\).writeFileSync\\('./package.json', JSON.stringify\\(p, null, 2\\) + '\\\\n'\\);\")",
+      "Bash(unzip -l /Users/jonasahnstedt/git/slaktforskning/export-import/Linda_Ahnstedt.gcc)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

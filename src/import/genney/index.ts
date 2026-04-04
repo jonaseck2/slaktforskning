@@ -224,8 +224,9 @@ async function extractArchive(archivePath: string, onProgress: (msg: string) => 
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'genney-import-'));
 
   // Unzip (macOS unzip / Linux unzip)
+  // unzip exit codes: 0=success, 1=success with warnings (e.g. backslash path separators), ≥2=error
   const unzipResult = spawnSync('unzip', ['-q', archivePath, '-d', tempDir], { encoding: 'utf-8' });
-  if (unzipResult.status !== 0) {
+  if (unzipResult.status !== null && unzipResult.status > 1) {
     throw new Error(`Failed to unzip archive: ${unzipResult.stderr || 'unknown error'}`);
   }
 
@@ -257,6 +258,11 @@ async function extractArchive(archivePath: string, onProgress: (msg: string) => 
 
 function findDerbyDirs(baseDir: string): string[] {
   const results: string[] = [];
+  // Check if the root itself is a Derby DB
+  if (fs.existsSync(path.join(baseDir, 'service.properties'))) {
+    results.push(baseDir);
+    return results;
+  }
   function walk(dir: string): void {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
