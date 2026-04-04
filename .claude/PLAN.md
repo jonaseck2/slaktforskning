@@ -50,6 +50,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.9.4 | Fix hourglass chart descendant overlap + auto-center focal | [archive](plans/archive/2026-04-04-hourglass-layout-overlap-fix.md) |
 | v1.0.0 | Visualisation as primary view: person panel, drag resize, icon sidebar | [archive](plans/archive/2026-04-04-viz-primary-view.md) |
 | v1.0.1 | Fix Genney SEX encoding (0=M, 1=F) and LIVING flag (1=deceased) | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
+| v1.0.2 | Fix hourglass female-focal spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
 
 ---
 
