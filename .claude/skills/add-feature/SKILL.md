@@ -19,7 +19,7 @@ Follow this order. Each step builds on the previous.
 6. **Preload** — expose on `window.api.*` in `src/preload/index.ts`
 7. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
 8. **Vue UI** — build component or extend view in `src/renderer/`
-9. **Verify** — `npm test && npx playwright test`
+9. **Verify** — `npm test && npx playwright test`; for UI features, also use the MCP verification loop (see below)
 10. **Docs** — update `README.md`, `CLAUDE.md`, `.claude/PLAN.md`, `.claude/DATA_MODEL.md`, `.claude/IPC_REFERENCE.md`, `.claude/MCP.md`
 11. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
     - New entity type or schema column → `data-modeling` skill
@@ -103,7 +103,7 @@ export function deleteThing(db: Database, id: string): boolean {
 // tests/unit/things.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
-import { createThing, deleteThing } from '../../src/api/things';
+import { createThing, deleteThing, listThings } from '../../src/api/things';
 
 let db: any;
 beforeEach(() => { db = createTestDb(); });
@@ -121,6 +121,26 @@ describe('things', () => {
 ```
 
 Run after writing: `npm test -- --coverage` — verify thresholds still pass (80% lines and functions on `src/api/`)
+
+### Critical: test DB state, not just return values
+
+For any feature involving transforms or imports, tests must assert the actual database state — not just the return value of the function. **Return-value-only tests can silently pass while the feature is broken.**
+
+```typescript
+// WRONG — only checks the return value
+it('imports places', () => {
+  const result = transformGenney(db, tables);
+  expect(result.places).toBeGreaterThan(0); // passes even if DB insert failed
+});
+
+// RIGHT — asserts DB state
+it('imports places into the database', () => {
+  transformGenney(db, tables);
+  expect(listPlaces(db).length).toBeGreaterThan(0); // fails if insert was skipped
+});
+```
+
+**Why this matters:** The EVENT_PLACE column name bug in Genney import was invisible to tests because the test fixtures mirrored the same wrong column names. Only a DB-state assertion (`listPlaces(db).length > 0`) would have caught it. Any test that mirrors assumptions from the code under test cannot catch mismatches between those assumptions and reality.
 
 ## IPC Layer (Steps 5-6)
 
@@ -233,6 +253,23 @@ declare const window: Window & {
 
 ### i18n
 Add strings to both `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English fallback). Use `$t('key')` in templates.
+
+## MCP Verification Loop (Step 9 — for UI features)
+
+After `npm test` passes, if the feature includes a new or modified Vue view, verify it in the running app using the MCP server's UI tools:
+
+```
+1. Confirm app is running (npm start or check with ui_screenshot)
+2. Seed realistic test data via MCP data tools (create_person, add_event, etc.)
+3. ui_navigate("/your-new-route")
+4. ui_screenshot()   → visual confirmation the view renders
+5. ui_get_dom()      → assert specific elements exist (table rows, labels, etc.)
+6. ui_click()        → exercise primary interactions (add, delete, status change)
+```
+
+The MCP server shares the same SQLite database as the running app — data seeded via MCP is immediately visible in the app. This loop is faster than writing a Playwright test for every feature, and it tests the full IPC → Vue rendering stack that unit tests don't cover.
+
+See `.claude/plans/2026-04-04-mcp-agent-workflow.md` for the full MCP workflow design.
 
 ## Before implementing a non-trivial feature
 

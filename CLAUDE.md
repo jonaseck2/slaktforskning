@@ -44,7 +44,12 @@ src/
 │   ├── persons.ts                # Person + PersonName CRUD
 │   ├── relationships.ts          # Relationship + EventParticipant CRUD
 │   ├── events.ts                 # Life event CRUD
-│   └── sources.ts                # Source + Citation CRUD
+│   ├── places.ts                 # Place CRUD + findOrCreate + getPlacePath
+│   ├── sources.ts                # Source + Citation CRUD
+│   ├── groups.ts                 # Group + GroupMember CRUD
+│   ├── repositories.ts           # Repository CRUD + source links
+│   ├── research_tasks.ts         # ResearchTask CRUD
+│   └── media.ts                  # Media + MediaLink CRUD
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
@@ -72,7 +77,8 @@ src/
 │   └── constants/
 │       └── eventTypes.ts         # GEDCOM event types, date types, confidence levels, etc.
 └── mcp/
-    └── server.ts                 # MCP server — thin wrappers over api/ functions
+    ├── createServer.ts           # MCP tools — thin wrappers over api/ functions
+    └── server.ts                 # Entry point: DB setup + launches createServer
 
 tests/
 ├── unit/                         # Vitest — tests api/ with in-memory SQLite
@@ -120,32 +126,45 @@ Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
 ```typescript
 Person           { id, sex: 'M'|'F'|'U', living: boolean, notes, created_at, updated_at }
-PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order, name_prefix?, name_suffix?, patronymic_base?, name_qualifier?, preferred_name? }
+PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order, name_prefix?, name_suffix?, patronymic_base?, name_qualifier?, preferred_name?, nickname? }
 PersonIdentifier { id, person_id, identifier_type: 'familysearch'|'ancestry'|'riksarkivet'|'personnummer'|'refn'|'rin'|'other', identifier_value, created_at }
 Relationship     { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
 EventParticipant { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
-GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, description, relationship_id?, created_at, updated_at }
+GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, place_address?, cause?, description, relationship_id?, created_at, updated_at }
 Place            { id, name, normalized_name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes, street?, postal_code?, city?, country? }
-Source           { id, title, author, publication_info, repository, url, source_type, created_at, updated_at }
+Source           { id, title, author, publication_info, repository, url, source_type, call_number?, abstract?, created_at, updated_at }
 Citation         { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, created_at }
 Assertion        { id, citation_id, subject_type, subject_id, attribute, value, value_original, confidence, is_accepted, notes, created_at } // schema only, UI deferred
+Group            { id, name, notes, created_at }
+GroupMember      { id, group_id, person_id }
+Repository       { id, name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes, created_at }
+ResearchTask     { id, person_id?, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
+Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
+MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, created_at }
 ```
 
 ## Database Schema
 
-9 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
+16 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
 | `persons` | id, sex, living, notes | — |
-| `person_names` | person_id, given_name, surname, name_type, sort_order | person_id → CASCADE |
+| `person_names` | person_id, given_name, surname, name_type, sort_order, preferred_name, nickname | person_id → CASCADE |
 | `relationships` | type, person1_id, person2_id, subtype, notes | person1/person2 → CASCADE |
-| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, description, relationship_id | relationship → SET NULL, place → SET NULL |
+| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description, relationship_id | relationship → SET NULL, place → SET NULL |
 | `event_participants` | event_id, person_id, role (UNIQUE event+person) | both → CASCADE |
-| `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes | parent → SET NULL |
-| `sources` | title, author, publication_info, repository, url, source_type | — |
+| `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes, street, postal_code, city, country | parent → SET NULL |
+| `sources` | title, author, publication_info, repository, url, source_type, call_number, abstract | — |
 | `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id | source → CASCADE, event/person/relationship → SET NULL |
 | `assertions` | citation_id, subject_type, subject_id, attribute, value, confidence, is_accepted | citation → CASCADE |
+| `groups` | name, notes | — |
+| `group_members` | group_id, person_id (UNIQUE) | group → CASCADE, person → CASCADE |
+| `repositories` | name, address, city, postal_code, state, country, phone, email, web, call_number, notes | — |
+| `source_repositories` | source_id, repository_id (UNIQUE) | both → CASCADE |
+| `research_tasks` | person_id, priority, status, task, notes, result | person → CASCADE |
+| `media` | file_ref, title, format, notes, is_printable | — |
+| `media_links` | media_id, entity_type, entity_id, link_type | media → CASCADE |
 
 ---
 
@@ -202,7 +221,7 @@ findOrCreatePlace(db, name) → Place
 
 ### sources.ts
 ```
-createSource(db, { title?, author?, publication_info?, repository?, url?, source_type? }) → Source
+createSource(db, { title?, author?, publication_info?, repository?, url?, source_type?, call_number?, abstract? }) → Source
 getSource(db, id) → Source | null
 listSources(db) → Source[]
 updateSource(db, id, { ...partial fields }) → Source | null
@@ -215,6 +234,52 @@ getCitationsForPerson(db, personId) → Citation[]
 getCitationsForRelationship(db, relationshipId) → Citation[]
 getCitationsForPlace(db, placeId) → Citation[]
 deleteCitation(db, id) → boolean
+```
+
+### groups.ts
+```
+createGroup(db, { name, notes? }) → Group
+getGroup(db, id) → Group | null
+listGroups(db) → Group[]
+updateGroup(db, id, { name?, notes? }) → Group | null
+deleteGroup(db, id) → boolean
+addGroupMember(db, groupId, personId) → GroupMember
+removeGroupMember(db, groupId, personId) → boolean
+getGroupMembers(db, groupId) → GroupMember[]
+getGroupsForPerson(db, personId) → Group[]
+```
+
+### repositories.ts
+```
+createRepository(db, { name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes? }) → Repository
+getRepository(db, id) → Repository | null
+listRepositories(db) → Repository[]
+updateRepository(db, id, { ...partial }) → Repository | null
+deleteRepository(db, id) → boolean
+linkSourceRepository(db, sourceId, repositoryId) → void
+unlinkSourceRepository(db, sourceId, repositoryId) → boolean
+getRepositoriesForSource(db, sourceId) → Repository[]
+```
+
+### research_tasks.ts
+```
+createResearchTask(db, { task, notes?, result?, person_id?, priority?, status? }) → ResearchTask
+getResearchTask(db, id) → ResearchTask | null
+listResearchTasks(db) → ResearchTask[]
+getResearchTasksForPerson(db, personId) → ResearchTask[]
+updateResearchTask(db, id, { task?, notes?, result?, status?, priority? }) → ResearchTask | null
+deleteResearchTask(db, id) → boolean
+```
+
+### media.ts
+```
+createMedia(db, { title, file_ref?, format?, notes?, is_printable? }) → Media
+getMedia(db, id) → Media | null
+listMedia(db) → Media[]
+deleteMedia(db, id) → boolean
+addMediaLink(db, { media_id, entity_type, entity_id, link_type? }) → MediaLink
+getMediaForEntity(db, entityType, entityId) → (Media & { link_id, link_type })[]
+removeMediaLink(db, linkId) → boolean
 ```
 
 ---

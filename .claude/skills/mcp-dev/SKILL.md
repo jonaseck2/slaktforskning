@@ -44,16 +44,19 @@ Use ToolSearch to find and call the `slaktforskning` MCP tools directly:
 
 ## Adding a New MCP Tool
 
-Follow this pattern in `src/mcp/server.ts`:
+MCP tools live in `src/mcp/createServer.ts` (not `server.ts` — that file only handles DB setup and launches the server). Use `registerTool()`, not the deprecated `tool()` overload:
 
 ```typescript
-server.tool('tool_name', 'Human-readable description', {
-  // Zod schema for parameters
-  param_name: z.string().describe('What this param does'),
-  optional_param: z.string().optional().describe('Optional field'),
-}, async (args) => {
+// src/mcp/createServer.ts — inside createMcpServer(db)
+server.registerTool('tool_name', {
+  description: 'Human-readable description',
+  inputSchema: {
+    param_name: z.string().describe('What this param does'),
+    optional_param: z.string().optional().describe('Optional field'),
+  },
+}, async ({ param_name, optional_param }) => {
   // Call the api/ function — NEVER put business logic here
-  const result = apiModule.someFunction(db, args);
+  const result = apiModule.someFunction(db, { param_name, optional_param });
   return {
     content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
   };
@@ -62,7 +65,7 @@ server.tool('tool_name', 'Human-readable description', {
 
 ### Rules:
 1. **The MCP tool is a thin wrapper** — all logic lives in `src/api/`. The tool just calls the api function and returns JSON.
-2. **Use Zod schemas** for parameter validation (imported as `z` from `'zod'`).
+2. **Use `registerTool()`** not `tool()` — the 4-arg `tool()` overload is deprecated.
 3. **Add `.describe()` to every parameter** — agents read these to understand what to pass.
 4. **Return JSON in `content[0].text`** — always `JSON.stringify(result, null, 2)`.
 5. **Handle not-found cases** — return a human-readable message like `'Person not found'`.
@@ -70,7 +73,7 @@ server.tool('tool_name', 'Human-readable description', {
 ### End-to-end checklist for a new tool:
 1. Implement the function in `src/api/*.ts`
 2. Write unit tests in `tests/unit/`
-3. Add the MCP tool in `src/mcp/server.ts`
+3. Add the MCP tool in `src/mcp/createServer.ts`
 4. Add the IPC handler in `src/main/ipc.ts`
 5. Add to preload in `src/preload/index.ts`
 6. Test: `npm test && npx playwright test`
