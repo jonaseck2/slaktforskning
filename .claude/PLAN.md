@@ -43,6 +43,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | Genney import CPU saturation (per-row db.prepare) | [archive](plans/archive/2026-04-04-genney-cpu-saturation.md) |
 | Fix | Genney .backup extraction: use fflate (pure JS) instead of unzip subprocess | [archive](plans/archive/2026-04-04-genney-windows-paths.md) |
 | Fix | Genney EVENT_PLACE column names wrong (RID/SPLACEID→EVENT/PLACE); REMARK.TEXT→NOTE | [archive](plans/archive/2026-04-04-genney-column-bugs.md) |
+| v0.7.1 | Docs/tests/skills sync: 4 test files for v0.7.0 entities, skill updates, coverage to 88% | — |
+| v0.8.0 | MCP tools for groups, repositories, research tasks, media (30 tools); MCP verification loop in skills | [archive](plans/archive/2026-04-04-mcp-agent-workflow.md) |
 
 ---
 
@@ -104,10 +106,6 @@ See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
 - [ ] IPC: `print:print` + `print:exportPdf`
 - [ ] `ReportsView` at `/reports` — Ancestor Chart, Family Group Sheet, Individual Summary tabs
 - [ ] Print CSS + preview area
-
-### Agent & Developer Tooling
-- [x] MCP tools for groups, repositories, research_tasks, media (see `.claude/plans/2026-04-04-mcp-agent-workflow.md`)
-- [ ] MCP verification loop integrated into standard feature development workflow
 
 ### Polish [feature]
 - [ ] Keyboard navigation and accessibility

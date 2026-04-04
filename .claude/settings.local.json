@@ -217,7 +217,8 @@
       "Bash(node -e \"require\\('cross-zip'\\); console.log\\('available:', require.resolve\\('cross-zip'\\)\\)\")",
       "WebFetch(domain:www.gensoftreviews.com)",
       "Bash(git rm:*)",
-      "Edit(/.claude/skills/mcp-dev/**)"
+      "Edit(/.claude/skills/mcp-dev/**)",
+      "Edit(/.claude/skills/test/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

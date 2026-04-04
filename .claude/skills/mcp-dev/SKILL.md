@@ -5,6 +5,55 @@ description: Add new MCP tools, test the MCP server, and debug MCP communication
 
 # MCP Dev Skill
 
+## Three Modes of Use
+
+The MCP server is not just an API surface — it is the primary tool for agents to develop, test, and research in the running app.
+
+### Mode 1: Agent-Driven Development
+
+Seed test data and verify new UI features without touching the app manually:
+
+```
+1. create_person / add_event / ... — seed realistic test data
+2. ui_navigate("/your-new-route") — go to the view
+3. ui_screenshot()                — visual confirmation it renders
+4. ui_get_dom()                   — assert specific elements exist in the DOM
+5. ui_click("button.add")         — exercise primary interactions
+```
+
+**The MCP server shares the same SQLite database as the running app.** Data seeded via MCP tools is immediately visible in the app — no restart needed.
+
+### Mode 2: Acceptance Testing After Feature Implementation
+
+After implementing a UI feature (e.g. ResearchTasksView), before committing:
+
+1. Ensure the app is running (`npm start` or check with `ui_screenshot`)
+2. Seed data via MCP: `create_research_task`, `create_person`, etc.
+3. `ui_navigate("/research-tasks")` → verify the view loads
+4. `ui_get_dom()` → assert tasks appear in the table
+5. `ui_click()` → test status change, filter, add/delete interactions
+
+This is faster than writing a full Playwright E2E test and covers the full IPC → Vue rendering stack that unit tests don't reach.
+
+### Mode 3: Active Research Session
+
+During genealogy research, use MCP tools to query and update data:
+
+- `search_persons("Nilsson")` → find candidates
+- `get_events_for_person(id)` → see what's already known
+- `add_event(...)` → record a newly found birth record
+- `get_research_tasks_for_person(id)` → check open tasks
+- `get_current_database` → confirm which DB is active before making changes
+
+### Session Start Checklist
+
+At the start of any session where UI work or research will happen:
+1. Call `get_current_database` — confirm which DB is active
+2. If the app is not running, UI tools (`ui_screenshot`, `ui_navigate`, etc.) will return errors — data tools still work
+3. Data tools operate directly on SQLite; they do not require the Electron app to be running
+
+---
+
 ## Running the MCP Server
 
 ### Standalone (for testing)

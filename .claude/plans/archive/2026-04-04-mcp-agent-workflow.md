@@ -125,7 +125,7 @@ At the start of a session where UI work will be done:
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| ~~Add MCP tools for groups/repos/tasks/media~~ | ~~High~~ | Done in v0.7.2 |
-| Update `add-feature` skill with MCP verification step | Medium | Workflow improvement |
-| Update `mcp-dev` references/tools.md | After above | Stays authoritative |
+| ~~Add MCP tools for groups/repos/tasks/media~~ | ~~High~~ | Done in v0.8.0 |
+| ~~Update `add-feature` skill with MCP verification step~~ | ~~Medium~~ | Done in v0.7.1 |
+| ~~Update `mcp-dev` references/tools.md~~ | ~~After above~~ | Done in v0.8.0 |
 | Write a quick integration test using MCP | Low | Could be a Playwright test |

@@ -67,7 +67,85 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | `get_citation` | Get citation by ID |
 | `get_citations_for_source` | Get all citations for a source |
 | `get_citations_for_event` | Get all citations for an event |
+| `get_citations_for_person` | Get all citations attached to a person |
+| `get_citations_for_relationship` | Get all citations attached to a relationship |
+| `get_citations_for_place` | Get all citations attached to a place |
 | `delete_citation` | Delete a citation |
+
+## Place Tools
+
+| Tool | Description |
+|------|-------------|
+| `add_place` | Create a place record (name, place_type, parent_place_id, lat/lon, date_from/to, notes, street, postal_code, city, country) |
+| `get_place` | Get place by ID |
+| `list_places` | List all places |
+| `search_places` | Search places by name |
+| `update_place` | Update place fields including address fields |
+| `delete_place` | Delete a place |
+
+## Group Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_group` | Create a group |
+| `get_group` | Get group by ID |
+| `list_groups` | List all groups |
+| `update_group` | Update group name or notes |
+| `delete_group` | Delete a group |
+| `add_group_member` | Add a person to a group |
+| `remove_group_member` | Remove a person from a group |
+| `get_group_members` | Get all members of a group |
+| `get_groups_for_person` | Get all groups a person belongs to |
+
+## Repository Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_repository` | Create a repository (archive, library, etc.) |
+| `get_repository` | Get repository by ID |
+| `list_repositories` | List all repositories |
+| `update_repository` | Update repository fields |
+| `delete_repository` | Delete a repository |
+| `link_source_repository` | Link a source to a repository |
+| `unlink_source_repository` | Remove the link between a source and a repository |
+| `get_repositories_for_source` | Get all repositories linked to a source |
+
+## Research Task Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_research_task` | Create a research task (optionally linked to a person) |
+| `get_research_task` | Get research task by ID |
+| `list_research_tasks` | List all research tasks |
+| `get_research_tasks_for_person` | Get all research tasks for a person |
+| `update_research_task` | Update task, status, priority, notes, or result |
+| `delete_research_task` | Delete a research task |
+
+## Media Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_media` | Create a media record (title, file_ref, format, notes, is_printable) |
+| `get_media` | Get media by ID |
+| `list_media` | List all media records |
+| `delete_media` | Delete a media record |
+| `add_media_link` | Link media to an entity (person, event, relationship, place, source) |
+| `get_media_for_entity` | Get all media linked to an entity |
+| `remove_media_link` | Remove a media link by its link ID |
+
+## Database Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_current_database` | Get the path and filename of the currently open database |
+| `switch_database` | Close the current database and open a different one (creates file if needed) |
+
+## GEDCOM Tools
+
+| Tool | Description |
+|------|-------------|
+| `import_gedcom` | Import a GEDCOM 5.5.1 file from disk (supports "genney" profile) |
+| `export_gedcom` | Export the entire database as GEDCOM 5.5.1 (to file or as text) |
 
 ## UI Tools (requires Electron app running)
 

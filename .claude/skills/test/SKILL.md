@@ -96,6 +96,36 @@ E2E tests live in `tests/e2e/` and use Playwright (not browser Playwright — pr
 - Process spawning with timeout (30s for app, 15s for MCP)
 - Cleanup: `fs.rmSync(dbPath)` after test
 
+## MCP-Assisted Verification (UI Features)
+
+After `npm test` passes, verify new UI features in the live app using the MCP server's tools. This is faster than writing a Playwright test for every feature and covers the full IPC → Vue rendering stack.
+
+**Requires:** the Electron app running (`npm start`).
+
+### Verification loop
+
+```
+1. get_current_database        — confirm you're on the right DB
+2. create_person / add_event / create_research_task / ...
+                               — seed realistic test data
+3. ui_navigate("/your-route")  — go to the affected view
+4. ui_screenshot()             — visual confirmation it renders
+5. ui_get_dom()                — assert specific elements exist (table rows, labels, etc.)
+6. ui_click("button.add")      — exercise primary interactions
+```
+
+### When to use it
+
+- After building any new Vue view or component
+- When a UI bug is reported and hard to reproduce via unit tests
+- To confirm IPC wiring is correct end-to-end (unit tests don't reach the preload layer)
+
+### Notes
+
+- MCP data tools work without the Electron app — they go straight to SQLite
+- UI tools (`ui_navigate`, `ui_screenshot`, `ui_get_dom`, `ui_click`) require the app to be running; they return a descriptive error if it's not
+- The MCP server and the running app share the same SQLite DB — data seeded via MCP is immediately visible in the app
+
 ## When Tests Fail
 
 - **Read the error message first** — don't blindly re-run or change code.
