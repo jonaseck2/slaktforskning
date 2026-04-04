@@ -59,7 +59,7 @@ describe('parseNdJson', () => {
 describe('transformGenney — persons', () => {
   it('imports a male person with given name and surname', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars Erik', SURNAME: 'Svensson' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars Erik', SURNAME: 'Svensson' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
     expect(persons).toHaveLength(1);
@@ -68,9 +68,9 @@ describe('transformGenney — persons', () => {
     expect(persons[0].surname).toBe('Svensson');
   });
 
-  it('imports a female person (SEX=0)', () => {
+  it('imports a female person (SEX=1)', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I2', SEX: 0, GIVENNAME: 'Anna', SURNAME: 'Larsson' }];
+    tables.PERSON = [{ RID: 'I2', SEX: 1, GIVENNAME: 'Anna', SURNAME: 'Larsson' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
     expect(persons[0].sex).toBe('F');
@@ -85,7 +85,7 @@ describe('transformGenney — persons', () => {
 
   it('extracts preferred_name from asterisk notation', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I4', SEX: 1, GIVENNAME: 'Stig Ingvar* Raine', SURNAME: 'Ahlgren' }];
+    tables.PERSON = [{ RID: 'I4', SEX: 0, GIVENNAME: 'Stig Ingvar* Raine', SURNAME: 'Ahlgren' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
     const names = getPersonNames(db, persons[0].id);
@@ -95,7 +95,7 @@ describe('transformGenney — persons', () => {
 
   it('imports nickname', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I5', SEX: 0, GIVENNAME: 'Elisabeth', NICKNAME: 'Lisa' }];
+    tables.PERSON = [{ RID: 'I5', SEX: 1, GIVENNAME: 'Elisabeth', NICKNAME: 'Lisa' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
     const names = getPersonNames(db, persons[0].id);
@@ -104,7 +104,7 @@ describe('transformGenney — persons', () => {
 
   it('imports name_prefix and name_suffix', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I6', SEX: 1, GIVENNAME: 'Karl', SURNAME: 'Johansson', PREFIX: 'dr', SUFFIX: 'jr' }];
+    tables.PERSON = [{ RID: 'I6', SEX: 0, GIVENNAME: 'Karl', SURNAME: 'Johansson', PREFIX: 'dr', SUFFIX: 'jr' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
     const names = getPersonNames(db, persons[0].id);
@@ -114,7 +114,7 @@ describe('transformGenney — persons', () => {
 
   it('appends REMARK text to person notes', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I7', SEX: 1, GIVENNAME: 'Erik', NOTE: 'inline note' }];
+    tables.PERSON = [{ RID: 'I7', SEX: 0, GIVENNAME: 'Erik', NOTE: 'inline note' }];
     tables.REMARK = [{ OWNER: 'I7', NOTE: 'remark text' }];
     transformGenney(db, tables);
     const person = listPersons(db)[0];
@@ -125,8 +125,8 @@ describe('transformGenney — persons', () => {
   it('returns correct person count in summary', () => {
     const tables = emptyTables();
     tables.PERSON = [
-      { RID: 'I1', SEX: 1, GIVENNAME: 'Lars' },
-      { RID: 'I2', SEX: 0, GIVENNAME: 'Anna' },
+      { RID: 'I1', SEX: 0, GIVENNAME: 'Lars' },
+      { RID: 'I2', SEX: 1, GIVENNAME: 'Anna' },
     ];
     const summary = transformGenney(db, tables);
     expect(summary.persons).toBe(2);
@@ -139,8 +139,8 @@ describe('transformGenney — couple relationships', () => {
   it('creates couple relationship from FAMILY', () => {
     const tables = emptyTables();
     tables.PERSON = [
-      { RID: 'I1', SEX: 1, GIVENNAME: 'Lars', SURNAME: 'Svensson' },
-      { RID: 'I2', SEX: 0, GIVENNAME: 'Anna', SURNAME: 'Larsson' },
+      { RID: 'I1', SEX: 0, GIVENNAME: 'Lars', SURNAME: 'Svensson' },
+      { RID: 'I2', SEX: 1, GIVENNAME: 'Anna', SURNAME: 'Larsson' },
     ];
     tables.FAMILY = [{ RID: 'F1', HUSBAND: 'I1', WIFE: 'I2' }];
     const summary = transformGenney(db, tables);
@@ -152,8 +152,8 @@ describe('transformGenney — couple relationships', () => {
   it('maps SPOUSE_FAMILY RELATIONTYPE=3 to subtype=marriage', () => {
     const tables = emptyTables();
     tables.PERSON = [
-      { RID: 'I1', SEX: 1, GIVENNAME: 'Lars' },
-      { RID: 'I2', SEX: 0, GIVENNAME: 'Anna' },
+      { RID: 'I1', SEX: 0, GIVENNAME: 'Lars' },
+      { RID: 'I2', SEX: 1, GIVENNAME: 'Anna' },
     ];
     tables.FAMILY = [{ RID: 'F1', HUSBAND: 'I1', WIFE: 'I2' }];
     tables.SPOUSE_FAMILY = [{ FAMILY: 'F1', PERSON: 'I1', RELATIONTYPE: 3 }];
@@ -169,9 +169,9 @@ describe('transformGenney — parent_child relationships', () => {
   it('creates parent_child relationships from COUPLE_FAMILY', () => {
     const tables = emptyTables();
     tables.PERSON = [
-      { RID: 'I1', SEX: 1, GIVENNAME: 'Lars' },
-      { RID: 'I2', SEX: 0, GIVENNAME: 'Anna' },
-      { RID: 'I3', SEX: 1, GIVENNAME: 'Petter' },
+      { RID: 'I1', SEX: 0, GIVENNAME: 'Lars' },
+      { RID: 'I2', SEX: 1, GIVENNAME: 'Anna' },
+      { RID: 'I3', SEX: 0, GIVENNAME: 'Petter' },
     ];
     tables.COUPLE_FAMILY = [{ PERSON: 'I3', FATHER: 'I1', MOTHER: 'I2', FATHERLINK: 'birth', MOTHERLINK: 'birth' }];
     const summary = transformGenney(db, tables);
@@ -184,8 +184,8 @@ describe('transformGenney — parent_child relationships', () => {
   it('maps FATHERLINK=adopted to subtype=adopted', () => {
     const tables = emptyTables();
     tables.PERSON = [
-      { RID: 'I1', SEX: 1, GIVENNAME: 'Lars' },
-      { RID: 'I2', SEX: 1, GIVENNAME: 'Petter' },
+      { RID: 'I1', SEX: 0, GIVENNAME: 'Lars' },
+      { RID: 'I2', SEX: 0, GIVENNAME: 'Petter' },
     ];
     tables.COUPLE_FAMILY = [{ PERSON: 'I2', FATHER: 'I1', FATHERLINK: 'adopted' }];
     transformGenney(db, tables);
@@ -199,7 +199,7 @@ describe('transformGenney — parent_child relationships', () => {
 describe('transformGenney — events', () => {
   it('imports a birth event for a person', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', DATE: '15 APR 1850', OWNER: 'I1' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
@@ -213,8 +213,8 @@ describe('transformGenney — events', () => {
   it('imports a marriage event for a family', () => {
     const tables = emptyTables();
     tables.PERSON = [
-      { RID: 'I1', SEX: 1, GIVENNAME: 'Lars' },
-      { RID: 'I2', SEX: 0, GIVENNAME: 'Anna' },
+      { RID: 'I1', SEX: 0, GIVENNAME: 'Lars' },
+      { RID: 'I2', SEX: 1, GIVENNAME: 'Anna' },
     ];
     tables.FAMILY = [{ RID: 'F1', HUSBAND: 'I1', WIFE: 'I2' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'MARR', DATE: 'ABT 1875', OWNER: 'F1' }];
@@ -228,7 +228,7 @@ describe('transformGenney — events', () => {
 
   it('handles unknown event type as other', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'UNKNOWN_TYPE', OWNER: 'I1' }];
     transformGenney(db, tables);
     const persons = listPersons(db);
@@ -238,7 +238,7 @@ describe('transformGenney — events', () => {
 
   it('links event to SPLACE via EVENT_PLACE', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.SPLACE = [{ RID: 1, NAME: 'Skepperstad', TYPE: 2 }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
@@ -254,7 +254,7 @@ describe('transformGenney — events', () => {
 
   it('returns correct event count in summary', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [
       { RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' },
       { RID: 'E2', TYPE: 'DEAT', OWNER: 'I1' },
@@ -273,7 +273,7 @@ describe('transformGenney — places', () => {
       { RID: 1, NAME: 'Jönköpings län', TYPE: 1 },
       { RID: 2, NAME: 'Skepperstad', TYPE: 2, PARENT: 1 },
     ];
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 2 }];
     transformGenney(db, tables);
@@ -290,7 +290,7 @@ describe('transformGenney — places', () => {
       { RID: 1, NAME: 'Unreferenced place' },
       { RID: 2, NAME: 'Used place' },
     ];
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 2 }];
     transformGenney(db, tables);
@@ -302,7 +302,7 @@ describe('transformGenney — places', () => {
   it('imports lat/lon when non-zero', () => {
     const tables = emptyTables();
     tables.SPLACE = [{ RID: 1, NAME: 'Skepperstad', LATITUD: 57.5, LONGITUD: 14.2 }];
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
     transformGenney(db, tables);
@@ -314,7 +314,7 @@ describe('transformGenney — places', () => {
   it('does not import zero lat/lon as coordinates', () => {
     const tables = emptyTables();
     tables.SPLACE = [{ RID: 1, NAME: 'Unknown', LATITUD: 0, LONGITUD: 0 }];
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
     transformGenney(db, tables);
@@ -347,7 +347,7 @@ describe('transformGenney — sources and citations', () => {
 
   it('links citation to event', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.SOURCE = [{ RID: 'S1', TITLE: 'HFL' }];
     tables.CITATION = [{ RID: 'C1', WHEREINTEXT: 'p. 12', CERTAINTY: 2 }];
@@ -364,7 +364,7 @@ describe('transformGenney — sources and citations', () => {
 
   it('maps CERTAINTY=-1 to confidence=0', () => {
     const tables = emptyTables();
-    tables.PERSON = [{ RID: 'I1', SEX: 1, GIVENNAME: 'Lars' }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
     tables.SOURCE = [{ RID: 'S1', TITLE: 'HFL' }];
     tables.CITATION = [{ RID: 'C1', CERTAINTY: -1 }];
