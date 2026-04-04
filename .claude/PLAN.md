@@ -106,3 +106,19 @@ See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
 - [ ] Data backup and restore
 - [ ] Undo/redo
 - [ ] Dark mode
+
+### Editable Citations in SourceDetailView [fix]
+- [ ] Click a citation row in SourceDetailView to open an edit modal (same pattern as other inline edits)
+- [ ] Edit fields: page, confidence, transcription, notes, date_accessed
+
+### Fix: Genney import — address stored as parent place [fix]
+- [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
+- [ ] Investigate which Genney column carries the address vs. the place hierarchy; fix the transform to write address fields directly
+
+### Fix: Relationship EventList missing citation badges [fix]
+- [ ] EventList in RelationshipDetailView context doesn't show CitationBadge / unsourced indicator on event rows — wire it the same as in PersonDetailView
+
+### Investigation: Citation Model Rethink [investigation]
+See `.claude/plans/2026-04-04-citation-model-investigation.md` for the investigation document.
+- [ ] Resolve open questions (see investigation doc)
+- [ ] Design replacement model if investigation concludes direct citations should be removed
