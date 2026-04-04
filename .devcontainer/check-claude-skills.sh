@@ -24,12 +24,4 @@ for plugin in "${PLUGINS[@]}"; do
 done
 
 echo ""
-echo "Installing required legacy skills (browserbase)..."
-
-# Legacy skills (npx skills add — idempotent). napkin is built-in, not needed here.
-npx skills add browserbase/skills --skill browser -y -g
-npx skills add browserbase/skills --skill fetch -y -g
-npx skills add browserbase/skills --skill functions -y -g
-
-echo ""
 echo "✓ All required Claude skills installed."
