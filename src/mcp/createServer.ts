@@ -8,6 +8,10 @@ import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 import { createPlace, getPlace, listPlaces, searchPlaces, updatePlace, deletePlace } from '../api/places';
+import * as groups from '../api/groups';
+import * as repositories from '../api/repositories';
+import * as researchTasks from '../api/research_tasks';
+import * as media from '../api/media';
 import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 
@@ -554,6 +558,310 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
       return { content: [{ type: 'text', text: JSON.stringify({ exported: true, file_path: args.file_path }) }] };
     }
     return { content: [{ type: 'text', text: gedText }] };
+  });
+
+  // Group tools
+  server.registerTool('create_group', {
+    description: 'Create a new group',
+    inputSchema: {
+      name: z.string().describe('Group name'),
+      notes: z.string().optional().describe('Notes about the group'),
+    },
+  }, async (args) => {
+    const group = groups.createGroup(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(group, null, 2) }] };
+  });
+
+  server.registerTool('get_group', {
+    description: 'Get a group by ID',
+    inputSchema: { id: z.string().describe('Group ID') },
+  }, async ({ id }) => {
+    const group = groups.getGroup(db, id);
+    return { content: [{ type: 'text', text: group ? JSON.stringify(group, null, 2) : 'Group not found' }] };
+  });
+
+  server.registerTool('list_groups', { description: 'List all groups' }, async () => {
+    const list = groups.listGroups(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_group', {
+    description: 'Update a group',
+    inputSchema: {
+      id: z.string().describe('Group ID'),
+      name: z.string().optional().describe('Group name'),
+      notes: z.string().optional().describe('Notes about the group'),
+    },
+  }, async ({ id, ...data }) => {
+    const group = groups.updateGroup(db, id, data);
+    return { content: [{ type: 'text', text: group ? JSON.stringify(group, null, 2) : 'Group not found' }] };
+  });
+
+  server.registerTool('delete_group', {
+    description: 'Delete a group',
+    inputSchema: { id: z.string().describe('Group ID') },
+  }, async ({ id }) => {
+    const ok = groups.deleteGroup(db, id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('add_group_member', {
+    description: 'Add a person to a group',
+    inputSchema: {
+      group_id: z.string().describe('Group ID'),
+      person_id: z.string().describe('Person ID'),
+    },
+  }, async ({ group_id, person_id }) => {
+    const member = groups.addGroupMember(db, group_id, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(member, null, 2) }] };
+  });
+
+  server.registerTool('remove_group_member', {
+    description: 'Remove a person from a group',
+    inputSchema: {
+      group_id: z.string().describe('Group ID'),
+      person_id: z.string().describe('Person ID'),
+    },
+  }, async ({ group_id, person_id }) => {
+    const ok = groups.removeGroupMember(db, group_id, person_id);
+    return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
+  });
+
+  server.registerTool('get_group_members', {
+    description: 'Get all members of a group',
+    inputSchema: { group_id: z.string().describe('Group ID') },
+  }, async ({ group_id }) => {
+    const list = groups.getGroupMembers(db, group_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_groups_for_person', {
+    description: 'Get all groups a person belongs to',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const list = groups.getGroupsForPerson(db, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  // Repository tools
+  server.registerTool('create_repository', {
+    description: 'Create a new repository (archive, library, etc.)',
+    inputSchema: {
+      name: z.string().describe('Repository name'),
+      address: z.string().optional().describe('Street address'),
+      city: z.string().optional().describe('City'),
+      postal_code: z.string().optional().describe('Postal code'),
+      state: z.string().optional().describe('State or region'),
+      country: z.string().optional().describe('Country'),
+      phone: z.string().optional().describe('Phone number'),
+      email: z.string().optional().describe('Email address'),
+      web: z.string().optional().describe('Website URL'),
+      call_number: z.string().optional().describe('Call number or reference'),
+      notes: z.string().optional().describe('Notes about the repository'),
+    },
+  }, async (args) => {
+    const repo = repositories.createRepository(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(repo, null, 2) }] };
+  });
+
+  server.registerTool('get_repository', {
+    description: 'Get a repository by ID',
+    inputSchema: { id: z.string().describe('Repository ID') },
+  }, async ({ id }) => {
+    const repo = repositories.getRepository(db, id);
+    return { content: [{ type: 'text', text: repo ? JSON.stringify(repo, null, 2) : 'Repository not found' }] };
+  });
+
+  server.registerTool('list_repositories', { description: 'List all repositories' }, async () => {
+    const list = repositories.listRepositories(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_repository', {
+    description: 'Update a repository',
+    inputSchema: {
+      id: z.string().describe('Repository ID'),
+      name: z.string().optional(),
+      address: z.string().optional(),
+      city: z.string().optional(),
+      postal_code: z.string().optional(),
+      state: z.string().optional(),
+      country: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      web: z.string().optional(),
+      call_number: z.string().optional(),
+      notes: z.string().optional(),
+    },
+  }, async ({ id, ...data }) => {
+    const repo = repositories.updateRepository(db, id, data);
+    return { content: [{ type: 'text', text: repo ? JSON.stringify(repo, null, 2) : 'Repository not found' }] };
+  });
+
+  server.registerTool('delete_repository', {
+    description: 'Delete a repository',
+    inputSchema: { id: z.string().describe('Repository ID') },
+  }, async ({ id }) => {
+    const ok = repositories.deleteRepository(db, id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('link_source_repository', {
+    description: 'Link a source to a repository',
+    inputSchema: {
+      source_id: z.string().describe('Source ID'),
+      repository_id: z.string().describe('Repository ID'),
+    },
+  }, async ({ source_id, repository_id }) => {
+    repositories.linkSourceRepository(db, source_id, repository_id);
+    return { content: [{ type: 'text', text: JSON.stringify({ linked: true }) }] };
+  });
+
+  server.registerTool('unlink_source_repository', {
+    description: 'Remove the link between a source and a repository',
+    inputSchema: {
+      source_id: z.string().describe('Source ID'),
+      repository_id: z.string().describe('Repository ID'),
+    },
+  }, async ({ source_id, repository_id }) => {
+    const ok = repositories.unlinkSourceRepository(db, source_id, repository_id);
+    return { content: [{ type: 'text', text: ok ? 'Unlinked' : 'Not found' }] };
+  });
+
+  server.registerTool('get_repositories_for_source', {
+    description: 'Get all repositories linked to a source',
+    inputSchema: { source_id: z.string().describe('Source ID') },
+  }, async ({ source_id }) => {
+    const list = repositories.getRepositoriesForSource(db, source_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  // Research task tools
+  server.registerTool('create_research_task', {
+    description: 'Create a new research task',
+    inputSchema: {
+      task: z.string().describe('Description of the research task'),
+      person_id: z.string().optional().describe('Person ID this task relates to'),
+      priority: z.number().optional().describe('Priority (lower = higher priority, default 0)'),
+      status: z.enum(['open', 'in_progress', 'done', 'stopped']).optional().describe('Task status (default: open)'),
+      notes: z.string().optional().describe('Notes about the task'),
+      result: z.string().optional().describe('Result of completed research'),
+    },
+  }, async (args) => {
+    const task = researchTasks.createResearchTask(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(task, null, 2) }] };
+  });
+
+  server.registerTool('get_research_task', {
+    description: 'Get a research task by ID',
+    inputSchema: { id: z.string().describe('Research task ID') },
+  }, async ({ id }) => {
+    const task = researchTasks.getResearchTask(db, id);
+    return { content: [{ type: 'text', text: task ? JSON.stringify(task, null, 2) : 'Research task not found' }] };
+  });
+
+  server.registerTool('list_research_tasks', { description: 'List all research tasks' }, async () => {
+    const list = researchTasks.listResearchTasks(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_research_tasks_for_person', {
+    description: 'Get all research tasks for a person',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const list = researchTasks.getResearchTasksForPerson(db, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_research_task', {
+    description: 'Update a research task',
+    inputSchema: {
+      id: z.string().describe('Research task ID'),
+      task: z.string().optional().describe('Task description'),
+      status: z.enum(['open', 'in_progress', 'done', 'stopped']).optional(),
+      priority: z.number().optional(),
+      notes: z.string().optional(),
+      result: z.string().optional().describe('Result of completed research'),
+    },
+  }, async ({ id, ...data }) => {
+    const task = researchTasks.updateResearchTask(db, id, data);
+    return { content: [{ type: 'text', text: task ? JSON.stringify(task, null, 2) : 'Research task not found' }] };
+  });
+
+  server.registerTool('delete_research_task', {
+    description: 'Delete a research task',
+    inputSchema: { id: z.string().describe('Research task ID') },
+  }, async ({ id }) => {
+    const ok = researchTasks.deleteResearchTask(db, id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  // Media tools
+  server.registerTool('create_media', {
+    description: 'Create a new media record',
+    inputSchema: {
+      title: z.string().describe('Media title or filename'),
+      file_ref: z.string().optional().describe('File path or reference'),
+      format: z.string().optional().describe('File format (e.g. jpg, pdf, mp4)'),
+      notes: z.string().optional().describe('Notes about the media'),
+      is_printable: z.boolean().optional().describe('Whether this media can be printed (default: false)'),
+    },
+  }, async (args) => {
+    const item = media.createMedia(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(item, null, 2) }] };
+  });
+
+  server.registerTool('get_media', {
+    description: 'Get a media record by ID',
+    inputSchema: { id: z.string().describe('Media ID') },
+  }, async ({ id }) => {
+    const item = media.getMedia(db, id);
+    return { content: [{ type: 'text', text: item ? JSON.stringify(item, null, 2) : 'Media not found' }] };
+  });
+
+  server.registerTool('list_media', { description: 'List all media records' }, async () => {
+    const list = media.listMedia(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('delete_media', {
+    description: 'Delete a media record',
+    inputSchema: { id: z.string().describe('Media ID') },
+  }, async ({ id }) => {
+    const ok = media.deleteMedia(db, id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('add_media_link', {
+    description: 'Link a media record to an entity (person, event, relationship, place, or source)',
+    inputSchema: {
+      media_id: z.string().describe('Media ID'),
+      entity_type: z.enum(['person', 'event', 'relationship', 'place', 'source']).describe('Entity type'),
+      entity_id: z.string().describe('Entity ID'),
+      link_type: z.string().optional().describe('Link type (e.g. "portrait", "document")'),
+    },
+  }, async (args) => {
+    const link = media.addMediaLink(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(link, null, 2) }] };
+  });
+
+  server.registerTool('get_media_for_entity', {
+    description: 'Get all media linked to an entity',
+    inputSchema: {
+      entity_type: z.enum(['person', 'event', 'relationship', 'place', 'source']).describe('Entity type'),
+      entity_id: z.string().describe('Entity ID'),
+    },
+  }, async ({ entity_type, entity_id }) => {
+    const list = media.getMediaForEntity(db, entity_type, entity_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('remove_media_link', {
+    description: 'Remove a media link by its link ID',
+    inputSchema: { link_id: z.string().describe('Media link ID') },
+  }, async ({ link_id }) => {
+    const ok = media.removeMediaLink(db, link_id);
+    return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
   });
 
   // Database tools

@@ -559,3 +559,199 @@ describe('database switching', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+describe('groups', () => {
+  it('creates, retrieves, updates, and deletes a group', async () => {
+    const group = await call('create_group', { name: 'Emigranter', notes: 'Moved to USA' }) as any;
+    expect(group.id).toBeDefined();
+    expect(group.name).toBe('Emigranter');
+
+    const fetched = await call('get_group', { id: group.id }) as any;
+    expect(fetched.id).toBe(group.id);
+
+    const updated = await call('update_group', { id: group.id, name: 'Emigrants' }) as any;
+    expect(updated.name).toBe('Emigrants');
+
+    const list = await call('list_groups') as any[];
+    expect(list).toHaveLength(1);
+
+    expect(await call('delete_group', { id: group.id })).toBe('Deleted');
+    expect(await call('get_group', { id: group.id })).toBe('Group not found');
+  });
+
+  it('returns "Group not found" for unknown id', async () => {
+    expect(await call('get_group', { id: 'nonexistent' })).toBe('Group not found');
+  });
+
+  it('adds and removes group members', async () => {
+    const group = await call('create_group', { name: 'TestGroup' }) as any;
+    const person = await call('create_person', { given_name: 'Anna' }) as any;
+
+    const member = await call('add_group_member', { group_id: group.id, person_id: person.id }) as any;
+    expect(member.group_id).toBe(group.id);
+    expect(member.person_id).toBe(person.id);
+
+    const members = await call('get_group_members', { group_id: group.id }) as any[];
+    expect(members).toHaveLength(1);
+
+    const personGroups = await call('get_groups_for_person', { person_id: person.id }) as any[];
+    expect(personGroups).toHaveLength(1);
+    expect(personGroups[0].id).toBe(group.id);
+
+    expect(await call('remove_group_member', { group_id: group.id, person_id: person.id })).toBe('Removed');
+    expect(await call('get_group_members', { group_id: group.id })).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Repositories
+// ---------------------------------------------------------------------------
+
+describe('repositories', () => {
+  it('creates, retrieves, updates, and deletes a repository', async () => {
+    const repo = await call('create_repository', {
+      name: 'Riksarkivet',
+      city: 'Stockholm',
+      country: 'Sverige',
+      web: 'https://www.riksarkivet.se',
+    }) as any;
+    expect(repo.id).toBeDefined();
+    expect(repo.name).toBe('Riksarkivet');
+    expect(repo.city).toBe('Stockholm');
+
+    const fetched = await call('get_repository', { id: repo.id }) as any;
+    expect(fetched.id).toBe(repo.id);
+
+    const updated = await call('update_repository', { id: repo.id, city: 'Marieberg' }) as any;
+    expect(updated.city).toBe('Marieberg');
+
+    const list = await call('list_repositories') as any[];
+    expect(list).toHaveLength(1);
+
+    expect(await call('delete_repository', { id: repo.id })).toBe('Deleted');
+    expect(await call('get_repository', { id: repo.id })).toBe('Repository not found');
+  });
+
+  it('returns "Repository not found" for unknown id', async () => {
+    expect(await call('get_repository', { id: 'nonexistent' })).toBe('Repository not found');
+  });
+
+  it('links and unlinks source-repository associations', async () => {
+    const repo = await call('create_repository', { name: 'Archive' }) as any;
+    const source = await call('add_source', { title: 'Parish record' }) as any;
+
+    const linked = await call('link_source_repository', { source_id: source.id, repository_id: repo.id }) as any;
+    expect(linked.linked).toBe(true);
+
+    const repos = await call('get_repositories_for_source', { source_id: source.id }) as any[];
+    expect(repos).toHaveLength(1);
+    expect(repos[0].id).toBe(repo.id);
+
+    expect(await call('unlink_source_repository', { source_id: source.id, repository_id: repo.id })).toBe('Unlinked');
+    expect(await call('get_repositories_for_source', { source_id: source.id })).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Research tasks
+// ---------------------------------------------------------------------------
+
+describe('research tasks', () => {
+  it('creates, retrieves, updates, and deletes a task', async () => {
+    const task = await call('create_research_task', {
+      task: 'Find birth record for Anna',
+      priority: 1,
+      status: 'open',
+    }) as any;
+    expect(task.id).toBeDefined();
+    expect(task.task).toBe('Find birth record for Anna');
+    expect(task.status).toBe('open');
+
+    const fetched = await call('get_research_task', { id: task.id }) as any;
+    expect(fetched.id).toBe(task.id);
+
+    const updated = await call('update_research_task', {
+      id: task.id,
+      status: 'done',
+      result: 'Found in Husförhörslängd 1843',
+    }) as any;
+    expect(updated.status).toBe('done');
+    expect(updated.result).toBe('Found in Husförhörslängd 1843');
+
+    const list = await call('list_research_tasks') as any[];
+    expect(list).toHaveLength(1);
+
+    expect(await call('delete_research_task', { id: task.id })).toBe('Deleted');
+    expect(await call('get_research_task', { id: task.id })).toBe('Research task not found');
+  });
+
+  it('returns "Research task not found" for unknown id', async () => {
+    expect(await call('get_research_task', { id: 'nonexistent' })).toBe('Research task not found');
+  });
+
+  it('gets research tasks for a person', async () => {
+    const person = await call('create_person', { given_name: 'Erik' }) as any;
+    await call('create_research_task', { task: 'Find birth record', person_id: person.id });
+    await call('create_research_task', { task: 'Unrelated task' });
+
+    const forPerson = await call('get_research_tasks_for_person', { person_id: person.id }) as any[];
+    expect(forPerson).toHaveLength(1);
+    expect(forPerson[0].task).toBe('Find birth record');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Media
+// ---------------------------------------------------------------------------
+
+describe('media', () => {
+  it('creates, retrieves, and deletes a media record', async () => {
+    const item = await call('create_media', {
+      title: 'Baptism photo',
+      file_ref: '/photos/baptism.jpg',
+      format: 'jpg',
+      is_printable: true,
+    }) as any;
+    expect(item.id).toBeDefined();
+    expect(item.title).toBe('Baptism photo');
+
+    const fetched = await call('get_media', { id: item.id }) as any;
+    expect(fetched.id).toBe(item.id);
+
+    const list = await call('list_media') as any[];
+    expect(list).toHaveLength(1);
+
+    expect(await call('delete_media', { id: item.id })).toBe('Deleted');
+    expect(await call('get_media', { id: item.id })).toBe('Media not found');
+  });
+
+  it('returns "Media not found" for unknown id', async () => {
+    expect(await call('get_media', { id: 'nonexistent' })).toBe('Media not found');
+  });
+
+  it('links media to entities and retrieves by entity', async () => {
+    const item = await call('create_media', { title: 'Portrait' }) as any;
+    const person = await call('create_person', { given_name: 'Anna' }) as any;
+
+    const link = await call('add_media_link', {
+      media_id: item.id,
+      entity_type: 'person',
+      entity_id: person.id,
+      link_type: 'portrait',
+    }) as any;
+    expect(link.media_id).toBe(item.id);
+    expect(link.entity_id).toBe(person.id);
+
+    const linked = await call('get_media_for_entity', { entity_type: 'person', entity_id: person.id }) as any[];
+    expect(linked).toHaveLength(1);
+    expect(linked[0].title).toBe('Portrait');
+    expect(linked[0].link_type).toBe('portrait');
+
+    expect(await call('remove_media_link', { link_id: link.id })).toBe('Removed');
+    expect(await call('get_media_for_entity', { entity_type: 'person', entity_id: person.id })).toHaveLength(0);
+  });
+});

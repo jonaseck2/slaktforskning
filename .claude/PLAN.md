@@ -106,7 +106,7 @@ See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
 - [ ] Print CSS + preview area
 
 ### Agent & Developer Tooling
-- [ ] MCP tools for groups, repositories, research_tasks, media (see `.claude/plans/2026-04-04-mcp-agent-workflow.md`)
+- [x] MCP tools for groups, repositories, research_tasks, media (see `.claude/plans/2026-04-04-mcp-agent-workflow.md`)
 - [ ] MCP verification loop integrated into standard feature development workflow
 
 ### Polish [feature]
