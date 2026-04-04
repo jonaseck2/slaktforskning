@@ -19,8 +19,39 @@ import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
 import { spawn, spawnSync } from 'child_process';
+import { Worker } from 'worker_threads';
 import type { Database } from 'node-sqlite3-wasm';
-import { transformGenney, parseNdJson, type ImportSummary } from './transform';
+import { transformGenney, type GenneyTables, type ImportSummary } from './transform';
+// parseNdJson is used inside PARSE_WORKER_CODE (eval worker), not imported directly
+
+// Parses NDJSON off the main thread using an eval worker (no build changes needed).
+// JSON.parse on large tables (e.g. 5910 citation rows) would otherwise block
+// the Electron main process event loop for several seconds.
+const PARSE_WORKER_CODE = `
+const { workerData, parentPort } = require('worker_threads');
+const tables = {
+  PERSON: [], FAMILY: [], COUPLE_FAMILY: [], SPOUSE_FAMILY: [],
+  EVENT: [], EVENT_PLACE: [], SPLACE: [], SOURCE: [],
+  CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
+};
+for (const line of workerData.ndjson.split('\\n')) {
+  const trimmed = line.trim();
+  if (!trimmed) continue;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed.table && Array.isArray(parsed.rows)) tables[parsed.table] = parsed.rows;
+  } catch {}
+}
+parentPort.postMessage(tables);
+`;
+
+function parseNdJsonInWorker(ndjson: string): Promise<GenneyTables> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(PARSE_WORKER_CODE, { eval: true, workerData: { ndjson } });
+    worker.once('message', (tables: GenneyTables) => resolve(tables));
+    worker.once('error', reject);
+  });
+}
 
 // ── Derby jar coordinates (Apache Derby 10.17.1.0 on Maven Central) ────────
 const DERBY_VERSION = '10.17.1.0';
@@ -83,7 +114,8 @@ export async function importFromGenney(
     onProgress(`Importing schema: ${schema}`);
 
     const ndjson = await runExtractor(derbyPath, schema, onProgress);
-    const tables = parseNdJson(ndjson);
+    onProgress('Parsing Derby output…');
+    const tables = await parseNdJsonInWorker(ndjson);
 
     onProgress('Transforming and importing data…');
     // Single transaction: without this each API call is its own autocommit,
