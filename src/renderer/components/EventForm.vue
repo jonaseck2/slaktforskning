@@ -29,6 +29,11 @@
           <textarea v-model="form.description" rows="2" :placeholder="$t('events.descriptionPlaceholder')" />
         </label>
 
+        <label v-if="CAUSE_APPLICABLE_TYPES.includes(form.event_type)">
+          {{ $t('events.cause') }}
+          <input v-model="form.cause" type="text" :placeholder="$t('events.causePlaceholder')" />
+        </label>
+
         <!-- Optional source — only on create -->
         <div v-if="!editingEvent" class="source-toggle">
           <label class="checkbox-label">
@@ -66,6 +71,8 @@ import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 
+const CAUSE_APPLICABLE_TYPES = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
+
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
@@ -79,6 +86,7 @@ interface EventData {
   date_original: string;
   place_id: string | null;
   description: string;
+  cause: string | null;
 }
 
 interface SourceRow {
@@ -109,6 +117,7 @@ const form = reactive({
   date_original: props.editingEvent?.date_original ?? '',
   place_id: (props.editingEvent?.place_id ?? null) as string | null,
   description: props.editingEvent?.description ?? '',
+  cause: props.editingEvent?.cause ?? '',
 });
 
 const addSource = ref(false);
@@ -134,6 +143,7 @@ async function save() {
       date_original: form.date_original,
       place_id: form.place_id || null,
       description: form.description,
+      cause: form.cause || null,
     };
 
     if (props.relationshipId) data.relationship_id = props.relationshipId;
