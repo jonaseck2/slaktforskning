@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
@@ -128,10 +128,15 @@ const sourceForm = reactive({
   page: '',
 });
 
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') emit('close');
+}
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeydown);
   if (!window.api) return;
   sources.value = (await window.api.sources.list()) as SourceRow[];
 });
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 async function save() {
   if (!window.api) return;

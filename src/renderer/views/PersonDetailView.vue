@@ -341,7 +341,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
@@ -456,6 +456,17 @@ const editNameForm = reactive({
 const identifiers = ref<IdentifierRow[]>([]);
 const showAddIdentifier = ref(false);
 const newIdentifier = reactive({ identifier_type: 'familysearch', identifier_value: '' });
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    showNameForm.value = false;
+    showEditNameForm.value = false;
+    showAddIdentifier.value = false;
+    showCitePersonForm.value = false;
+  }
+}
+onMounted(() => window.addEventListener('keydown', handleKeydown));
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
   if (!subtype) return '';

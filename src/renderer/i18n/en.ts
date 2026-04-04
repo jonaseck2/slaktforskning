@@ -368,6 +368,11 @@ export default {
     createNew: 'New database\u2026',
     openOther: 'Open other\u2026',
     switchedTo: 'Opened: {name}',
+    backupButton: 'Backup',
+    restoreButton: 'Restore from backup',
+    backupSaved: 'Backup saved: {path}',
+    confirmRestore: 'Restore database from backup? The active database will be closed.',
+    restoreSuccess: 'Database restored.',
   },
   quality: {
     nav: 'Data Quality',

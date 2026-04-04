@@ -368,6 +368,11 @@ export default {
     createNew: 'Ny databas\u2026',
     openOther: '\u00d6ppna annan\u2026',
     switchedTo: '\u00d6ppnade: {name}',
+    backupButton: 'Säkerhetskopiera',
+    restoreButton: 'Återställ från säkerhetskopia',
+    backupSaved: 'Säkerhetskopia sparad: {path}',
+    confirmRestore: 'Återställ databasen från säkerhetskopian? Den aktiva databasen stängs.',
+    restoreSuccess: 'Databas återställd.',
   },
   quality: {
     nav: 'Datakvalitet',

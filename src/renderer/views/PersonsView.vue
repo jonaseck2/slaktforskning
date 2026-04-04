@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationBadge from '../components/CitationBadge.vue';
@@ -110,6 +110,13 @@ const router = useRouter();
 const persons = ref<PersonRow[]>([]);
 const personCitationCounts = ref<Record<string, number>>({});
 const showAddForm = ref(false);
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') showAddForm.value = false;
+}
+onMounted(() => window.addEventListener('keydown', handleKeydown));
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+
 const form = reactive({
   given_name: '',
   surname: '',
