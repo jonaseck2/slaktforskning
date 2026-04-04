@@ -52,6 +52,12 @@ Vue component errors and `console.error` from renderer show up in the DevTools c
 
 ### Common issues
 
+**Wrong Electron binary (macOS binary in Linux container):**
+- Symptom: `Syntax error: "(" unexpected` or `not found` when running `npm start`
+- Cause: `node_modules/electron/dist/` contains macOS binaries from the host mount
+- Fix: `ensure-native-binaries` (baked into the container image)
+- The devcontainer `postCreateCommand` runs this automatically on container creation
+
 **Port 5173 already in use:**
 ```bash
 pkill -f "electron-forge" && pkill -f "Electron" && pkill -f "Släktforskning"
