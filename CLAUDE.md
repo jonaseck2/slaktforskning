@@ -457,6 +457,14 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Place tools:** `add_place`, `get_place`, `list_places`, `search_places`, `update_place`, `delete_place`
 
+**Group tools:** `create_group`, `get_group`, `list_groups`, `update_group`, `delete_group`, `add_group_member`, `remove_group_member`, `get_group_members`, `get_groups_for_person`
+
+**Repository tools:** `create_repository`, `get_repository`, `list_repositories`, `update_repository`, `delete_repository`, `link_source_repository`, `unlink_source_repository`, `get_repositories_for_source`
+
+**Research task tools:** `create_research_task`, `get_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task`
+
+**Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`
+
 **Database tools:** `get_current_database`, `switch_database`
 
 **UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`

@@ -125,7 +125,7 @@ At the start of a session where UI work will be done:
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| Add MCP tools for groups/repos/tasks/media | High | `src/mcp/createServer.ts` — routine wiring |
+| ~~Add MCP tools for groups/repos/tasks/media~~ | ~~High~~ | Done in v0.7.2 |
 | Update `add-feature` skill with MCP verification step | Medium | Workflow improvement |
 | Update `mcp-dev` references/tools.md | After above | Stays authoritative |
 | Write a quick integration test using MCP | Low | Could be a Playwright test |
