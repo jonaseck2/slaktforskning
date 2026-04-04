@@ -57,11 +57,22 @@ export async function fetchPedigreeTree(focalId: string, generations = 5): Promi
 
       nodes.set(ahnNum, node);
 
-      const parentIds = rawRels
+      let parentIds = rawRels
         .filter(r => r.type === 'parent_child' && r.person2_id === personId)
         .map(r => r.person1_id)
         .filter((id): id is string => id !== null)
         .slice(0, 2);
+
+      // Sort parents: male (M) gets even ahnentafel (left/father slot),
+      // female (F) gets odd (right/mother slot). Fetch sex for both before assigning.
+      if (parentIds.length === 2) {
+        const sexes = await Promise.all(
+          parentIds.map(pid => (window.api.persons.get(pid) as Promise<{ sex: string } | null>)),
+        );
+        if (sexes[0]?.sex === 'F' && sexes[1]?.sex !== 'F') {
+          parentIds = [parentIds[1], parentIds[0]];
+        }
+      }
 
       await Promise.all(parentIds.map((pid, i) => fetchAncestors(pid, ahnNum * 2 + i, gen + 1)));
     } else {
