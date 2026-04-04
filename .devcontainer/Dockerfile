@@ -24,7 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxcb-dri3-0 \
     # Virtual display for headless E2E tests
     xvfb \
+    # Java runtime — required for Genney Derby extraction
+    default-jre-headless \
     # General dev utilities
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Claude Code CLI globally
+RUN npm install -g @anthropic-ai/claude-code
