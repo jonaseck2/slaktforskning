@@ -64,6 +64,8 @@ export interface GenealogyEvent {
   date_value_end: string | null;
   date_original: string;
   place_id: string | null;
+  place_address: string | null;
+  cause: string | null;
   description: string;
   relationship_id: string | null;
   created_at: string;
@@ -97,6 +99,8 @@ export interface Source {
   repository: string;
   url: string;
   source_type: string;
+  call_number: string | null;
+  abstract: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +117,70 @@ export interface Citation {
   person_id: string | null;
   relationship_id: string | null;
   place_id: string | null;
+  created_at: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  notes: string;
+  created_at: string;
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  person_id: string;
+}
+
+export interface Repository {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  state: string | null;
+  country: string | null;
+  phone: string | null;
+  email: string | null;
+  web: string | null;
+  call_number: string | null;
+  notes: string;
+  created_at: string;
+}
+
+export type ResearchTaskStatus = 'open' | 'in_progress' | 'done' | 'stopped';
+
+export interface ResearchTask {
+  id: string;
+  person_id: string | null;
+  priority: number;
+  status: ResearchTaskStatus;
+  task: string;
+  notes: string;
+  result: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Media {
+  id: string;
+  file_ref: string | null;
+  title: string;
+  format: string | null;
+  notes: string;
+  is_printable: boolean;
+  created_at: string;
+}
+
+export type MediaLinkEntityType = 'person' | 'event' | 'relationship' | 'place' | 'source';
+
+export interface MediaLink {
+  id: string;
+  media_id: string;
+  entity_type: MediaLinkEntityType;
+  entity_id: string;
+  link_type: number | null;
   created_at: string;
 }
 

@@ -34,6 +34,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.6.7 | Per-node descendant collapse | [archive](plans/archive/2026-04-03-descendant-collapse.md) |
 | v0.6.8 | Tilltalsnamn + smeknamn separation | [archive](plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md) |
 | v0.6.9 | Genney Derby import (Docker + DerbyExtractor.java) | [archive](plans/archive/2026-04-04-genney-derby-import.md) |
+| v0.7.0 | Genney full-fidelity import: groups, repos, tasks, media, places fix, OWNER_EVENT, cause, source abstract | — |
 | Fix | Stale IPC DB ref after switchDatabase | [archive](plans/archive/2026-04-03-ipc-stale-db.md) |
 | Fix | GEDCOM import timeout + asterisk preferred name | [archive](plans/archive/2026-04-03-gedcom-import-performance.md) |
 | Fix | GEDCOM import CPU saturation (statement cache) | [archive](plans/archive/2026-04-03-gedcom-import-cpu.md) |
@@ -41,6 +42,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | Nickname position + asterisk notation in UI | [archive](plans/archive/2026-04-04-nickname-display-and-asterisk-ui.md) |
 | Fix | Genney import CPU saturation (per-row db.prepare) | [archive](plans/archive/2026-04-04-genney-cpu-saturation.md) |
 | Fix | Genney .backup extraction: use fflate (pure JS) instead of unzip subprocess | [archive](plans/archive/2026-04-04-genney-windows-paths.md) |
+| Fix | Genney EVENT_PLACE column names wrong (RID/SPLACEID→EVENT/PLACE); REMARK.TEXT→NOTE | [archive](plans/archive/2026-04-04-genney-column-bugs.md) |
 
 ---
 
@@ -52,7 +54,32 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 - [ ] Assertions UI — view/edit what each citation claims, mark accepted, see conflicts
 - [ ] Research audit view — all unsourced entities ranked by evidence gap
 - [ ] Merge/deduplicate persons
-- [ ] Media attachments (photos, documents)
+
+### Research Tasks UI [feature]
+See `.claude/plans/2026-04-04-research-tasks.md` for the full plan.
+- [ ] ResearchTasksView at `/research-tasks` — list, filter, status chips
+- [ ] PersonDetailView "Forskningstips" section
+- [ ] Sidebar badge for open tasks
+- [ ] MCP tools
+
+### Media Attachments [feature]
+See `.claude/plans/2026-04-04-media.md` for the full plan.
+- [ ] Decide file storage strategy (copy vs reference)
+- [ ] File handling + Genney archive extraction
+- [ ] MediaView at `/media`
+- [ ] Inline sections in PersonDetailView, SourceDetailView, EventList
+
+### Evidence Model & Source UX [feature]
+See `.claude/plans/2026-04-04-evidence-model.md` for the full plan.
+- [ ] CitationBadge on every event row in EventList
+- [ ] "Unsourced" filter on PersonsView
+- [ ] Quick-cite from EventList row
+- [ ] Conflict detection for same event type + different date values
+
+### EVENT.cause UI [feature]
+See `.claude/plans/2026-04-04-event-cause.md` for the full plan.
+- [ ] Show "Orsak" field in EventForm for applicable event types
+- [ ] GEDCOM export: emit `2 CAUS` when cause is set
 
 ### Assertion GEDCOM Export [feature]
 *Depends on: Research Tools + Extended GEDCOM Roundtrip (v0.6.4)*

@@ -8,25 +8,22 @@ import java.util.*;
  * Usage:
  *   java -cp '.:/jars/*' DerbyExtractor --db-path /path/to/derby --schema LINDA_AHNSTEDT
  *   java -cp '.:/jars/*' DerbyExtractor --db-path /path/to/derby --list-schemas
+ *   java -cp '.:/jars/*' DerbyExtractor --db-path /path/to/derby --schema LINDA_AHNSTEDT --list-tables
  */
 public class DerbyExtractor {
-
-    static final String[] TABLES = {
-        "PERSON", "FAMILY", "COUPLE_FAMILY", "SPOUSE_FAMILY",
-        "EVENT", "EVENT_PLACE", "SPLACE", "SOURCE",
-        "CITATION", "CITATION_SOURCE", "OWNER_CITATION", "REMARK"
-    };
 
     public static void main(String[] args) throws Exception {
         String dbPath = null;
         String schema = null;
         boolean listSchemas = false;
+        boolean listTables = false;
 
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
-                case "--db-path":   if (i + 1 < args.length) dbPath = args[++i]; break;
-                case "--schema":    if (i + 1 < args.length) schema = args[++i]; break;
+                case "--db-path":    if (i + 1 < args.length) dbPath = args[++i]; break;
+                case "--schema":     if (i + 1 < args.length) schema = args[++i]; break;
                 case "--list-schemas": listSchemas = true; break;
+                case "--list-tables":  listTables = true; break;
             }
         }
 
@@ -35,9 +32,7 @@ public class DerbyExtractor {
             System.exit(1);
         }
 
-        // Force Derby system home to /tmp to avoid writing derby.log in the DB dir
         System.setProperty("derby.system.home", "/tmp");
-
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
         String url = "jdbc:derby:" + dbPath + ";readOnly=true";
 
@@ -59,8 +54,57 @@ public class DerbyExtractor {
                 System.exit(1);
             }
 
-            for (String table : TABLES) {
-                exportTable(conn, schema, table);
+            // Discover all user tables in this schema
+            List<String> allTables = new ArrayList<>();
+            DatabaseMetaData meta = conn.getMetaData();
+            ResultSet rs = meta.getTables(null, schema.toUpperCase(), "%", new String[]{"TABLE"});
+            while (rs.next()) {
+                allTables.add(rs.getString("TABLE_NAME"));
+            }
+            rs.close();
+
+            if (listTables) {
+                // Emit one JSON object with table names + column names + row counts
+                // {"table":"__DISCOVERY__","rows":[{"name":"PERSON","columns":["RID",...],"rowCount":123},...]}
+                StringBuilder sb = new StringBuilder();
+                sb.append("{\"table\":\"__DISCOVERY__\",\"rows\":[");
+                boolean first = true;
+                for (String tname : allTables) {
+                    if (!first) sb.append(",");
+                    first = false;
+                    sb.append("{\"name\":\"").append(jsonStr(tname)).append("\"");
+
+                    // Column names
+                    sb.append(",\"columns\":[");
+                    ResultSet cols = meta.getColumns(null, schema.toUpperCase(), tname, "%");
+                    boolean firstCol = true;
+                    while (cols.next()) {
+                        if (!firstCol) sb.append(",");
+                        firstCol = false;
+                        sb.append("\"").append(jsonStr(cols.getString("COLUMN_NAME"))).append("\"");
+                    }
+                    cols.close();
+                    sb.append("]");
+
+                    // Row count
+                    long count = 0;
+                    try (Statement stmt = conn.createStatement();
+                         ResultSet countRs = stmt.executeQuery(
+                             "SELECT COUNT(*) FROM \"" + schema + "\".\"" + tname + "\"")) {
+                        if (countRs.next()) count = countRs.getLong(1);
+                    } catch (SQLException e) { /* leave 0 */ }
+                    sb.append(",\"rowCount\":").append(count);
+
+                    sb.append("}");
+                }
+                sb.append("]}");
+                System.out.println(sb);
+                return;
+            }
+
+            // Full export: dump every user table
+            for (String tname : allTables) {
+                exportTable(conn, schema, tname);
             }
         }
     }

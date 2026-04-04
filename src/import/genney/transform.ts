@@ -60,14 +60,16 @@ export interface EventRow {
   DATE?: string | null;    // GEDCOM-style date string
   DESCRIPTION?: string | null;
   NOTE?: string | null;
+  CAUSE?: string | null;
+  ADDRESS?: string | null; // free-text event address
   OWNER?: string | null;   // "I123" (person) or "F123" (family)
   PLACE?: string | null;   // denormalized text (ignored if EVENT_PLACE exists)
   [key: string]: unknown;
 }
 
 export interface EventPlaceRow {
-  RID?: string | null;     // EVENT.RID
-  SPLACEID?: number | null; // SPLACE.RID
+  EVENT?: string | null;  // EVENT.RID
+  PLACE?: number | null;  // SPLACE.RID
   [key: string]: unknown;
 }
 
@@ -88,8 +90,76 @@ export interface SourceRow {
   ABBREVIATION?: string | null;
   AUTHOR?: string | null;
   PUBLICATION?: string | null;
+  CALLNUMBER?: string | null;
+  TEXT?: string | null;    // source abstract
   MEDIATYPE?: number | null;
   NOTE?: string | null;
+  [key: string]: unknown;
+}
+
+export interface RepoRow {
+  RID: string;
+  NAME?: string | null;
+  ADDRESS?: string | null;
+  ADDRESS1?: string | null;
+  ADDRESS2?: string | null;
+  CITY?: string | null;
+  POSTALCODE?: string | null;
+  STATE?: string | null;
+  COUNTRY?: string | null;
+  PHONE1?: string | null;
+  PHONE2?: string | null;
+  EMAIL?: string | null;
+  WEB?: string | null;
+  CALLNUMBER?: string | null;
+  NOTE?: string | null;
+  [key: string]: unknown;
+}
+
+export interface SourceRepoRow {
+  SOURCE?: string | null; // SOURCE.RID
+  REPO?: string | null;   // REPO.RID
+  [key: string]: unknown;
+}
+
+export interface GroupRow {
+  RID: string;
+  NAME?: string | null;
+  NOTE?: string | null;
+  [key: string]: unknown;
+}
+
+export interface GroupMemberRow {
+  GROUPS?: string | null;  // GROUP.RID
+  PERSON?: string | null;  // PERSON.RID
+  [key: string]: unknown;
+}
+
+export interface MediaRow {
+  RID: string;
+  FILEREF?: string | null;
+  TITLE?: string | null;
+  FORMAT?: string | null;
+  NOTE?: string | null;
+  ISPRINTABLE?: number | null;
+  [key: string]: unknown;
+}
+
+export interface OwnerMediaRow {
+  OWNER?: string | null;  // "I123", "E123", "F123", "S123"
+  MEDIA?: string | null;  // MEDIA.RID
+  LINKTYPE?: number | null;
+  [key: string]: unknown;
+}
+
+export interface TodoRow {
+  RID: string;
+  PERSON?: string | null;   // PERSON.RID
+  PRIORITY?: number | null;
+  STATUS?: string | null;   // Genney status string
+  TASK?: string | null;
+  NOTE?: string | null;
+  RESULT?: string | null;
   [key: string]: unknown;
 }
 
@@ -115,9 +185,16 @@ export interface OwnerCitationRow {
   [key: string]: unknown;
 }
 
+export interface OwnerEventRow {
+  OWNER?: string | null;        // "I123" (person) or "F123" (family)
+  EVENT?: string | null;        // EVENT.RID
+  COUPLEFAMILY?: string | null; // COUPLE_FAMILY link (unused for now)
+  [key: string]: unknown;
+}
+
 export interface RemarkRow {
   OWNER?: string | null;    // PERSON.RID
-  TEXT?: string | null;
+  NOTE?: string | null;
   [key: string]: unknown;
 }
 
@@ -128,12 +205,20 @@ export interface GenneyTables {
   SPOUSE_FAMILY: SpouseFamilyRow[];
   EVENT: EventRow[];
   EVENT_PLACE: EventPlaceRow[];
+  OWNER_EVENT: OwnerEventRow[];
   SPLACE: SPlaceRow[];
   SOURCE: SourceRow[];
   CITATION: CitationRow[];
   CITATION_SOURCE: CitationSourceRow[];
   OWNER_CITATION: OwnerCitationRow[];
   REMARK: RemarkRow[];
+  REPO: RepoRow[];
+  SOURCE_REPO: SourceRepoRow[];
+  GROUPS: GroupRow[];
+  GROUP_MEMBER: GroupMemberRow[];
+  MEDIA: MediaRow[];
+  OWNER_MEDIA: OwnerMediaRow[];
+  TODO: TodoRow[];
 }
 
 export interface ImportSummary {
@@ -144,6 +229,10 @@ export interface ImportSummary {
   places: number;
   sources: number;
   citations: number;
+  groups: number;
+  repositories: number;
+  researchTasks: number;
+  media: number;
   warnings: string[];
 }
 
@@ -219,7 +308,9 @@ function parseAsterisk(raw: string): { given: string; preferred: string | null }
 export function transformGenney(db: Database, tables: GenneyTables): ImportSummary {
   const summary: ImportSummary = {
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
-    events: 0, places: 0, sources: 0, citations: 0, warnings: [],
+    events: 0, places: 0, sources: 0, citations: 0,
+    groups: 0, repositories: 0, researchTasks: 0, media: 0,
+    warnings: [],
   };
 
   // Pre-compile all INSERT statements once.
@@ -240,13 +331,34 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
       `INSERT OR IGNORE INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)`
     ),
     insertSource: db.prepare(
-      `INSERT INTO sources (id, title, author, publication_info, source_type) VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO sources (id, title, author, publication_info, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?)`
     ),
     insertRelationship: db.prepare(
       `INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)`
     ),
     insertEvent: db.prepare(
-      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ),
+    insertRepository: db.prepare(
+      `INSERT INTO repositories (id, name, address, city, postal_code, state, country, phone, email, web, call_number, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ),
+    insertSourceRepo: db.prepare(
+      `INSERT OR IGNORE INTO source_repositories (source_id, repository_id) VALUES (?, ?)`
+    ),
+    insertGroup: db.prepare(
+      `INSERT INTO groups (id, name, notes) VALUES (?, ?, ?)`
+    ),
+    insertGroupMember: db.prepare(
+      `INSERT OR IGNORE INTO group_members (id, group_id, person_id) VALUES (?, ?, ?)`
+    ),
+    insertMedia: db.prepare(
+      `INSERT INTO media (id, file_ref, title, format, notes, is_printable) VALUES (?, ?, ?, ?, ?, ?)`
+    ),
+    insertMediaLink: db.prepare(
+      `INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type) VALUES (?, ?, ?, ?, ?)`
+    ),
+    insertResearchTask: db.prepare(
+      `INSERT INTO research_tasks (id, person_id, priority, status, task, notes, result) VALUES (?, ?, ?, ?, ?, ?, ?)`
     ),
     insertParticipant: db.prepare(
       `INSERT OR IGNORE INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)`
@@ -264,7 +376,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   // Collect only SPLACEs referenced by events (+ their ancestors)
   const referencedSplaceIds = new Set<number>();
   for (const ep of tables.EVENT_PLACE) {
-    if (ep.SPLACEID != null) referencedSplaceIds.add(ep.SPLACEID);
+    if (ep.PLACE != null) referencedSplaceIds.add(ep.PLACE);
   }
   function collectAncestors(rid: number): void {
     const sp = splacesById.get(rid);
@@ -301,14 +413,14 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   // Build event→SPLACE lookup
   const eventToSplace = new Map<string, number>();
   for (const ep of tables.EVENT_PLACE) {
-    if (ep.RID && ep.SPLACEID != null) eventToSplace.set(ep.RID, ep.SPLACEID);
+    if (ep.EVENT && ep.PLACE != null) eventToSplace.set(ep.EVENT, ep.PLACE);
   }
 
   // ── 2. Import persons ────────────────────────────────────────────────────
   const personMap = new Map<string, string>(); // Genney I-ID → UUID
   const remarkByOwner = new Map<string, string>();
   for (const r of tables.REMARK) {
-    if (r.OWNER && r.TEXT) remarkByOwner.set(r.OWNER, r.TEXT);
+    if (r.OWNER && r.NOTE) remarkByOwner.set(r.OWNER, r.NOTE);
   }
 
   for (const p of tables.PERSON) {
@@ -355,6 +467,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     const id = crypto.randomUUID();
     stmts.insertSource.run([
       id, title, src.AUTHOR ?? '', src.PUBLICATION ?? '', mapSourceType(src.MEDIATYPE),
+      src.CALLNUMBER ?? null, src.TEXT ?? null,
     ]);
     sourceMap.set(src.RID, id);
     summary.sources++;
@@ -409,6 +522,15 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   }
 
   // ── 6. Import events ─────────────────────────────────────────────────────
+  // Build canonical event→owners map from OWNER_EVENT (preferred over EVENT.OWNER).
+  // OWNER is "I123" (person) or "F123" (family). One event can have multiple owners.
+  const ownerEventMap = new Map<string, string[]>(); // EVENT.RID → [OWNER, ...]
+  for (const oe of tables.OWNER_EVENT) {
+    if (!oe.EVENT || !oe.OWNER) continue;
+    if (!ownerEventMap.has(oe.EVENT)) ownerEventMap.set(oe.EVENT, []);
+    ownerEventMap.get(oe.EVENT)!.push(oe.OWNER);
+  }
+
   const eventMap = new Map<string, string>(); // Genney E-ID → UUID
 
   for (const ev of tables.EVENT) {
@@ -422,9 +544,10 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     const descParts = [ev.DESCRIPTION, ev.NOTE].filter(Boolean);
     const description = descParts.length > 0 ? descParts.join('\n') : '';
 
-    const ownerIsFamily = ev.OWNER?.startsWith('F') ?? false;
-    const rel_id = ownerIsFamily && ev.OWNER ? familyMap.get(ev.OWNER) ?? null : null;
-    const person_id = !ownerIsFamily && ev.OWNER?.startsWith('I') ? personMap.get(ev.OWNER) ?? null : null;
+    // Use OWNER_EVENT as canonical source; fall back to EVENT.OWNER if missing
+    const owners = ownerEventMap.get(ev.RID) ?? (ev.OWNER ? [ev.OWNER] : []);
+    const familyOwner = owners.find(o => o.startsWith('F'));
+    const rel_id = familyOwner ? familyMap.get(familyOwner) ?? null : null;
 
     const id = crypto.randomUUID();
     stmts.insertEvent.run([
@@ -433,12 +556,16 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
       parsedDate?.date_value ?? null,
       parsedDate?.date_value_end ?? null,
       parsedDate?.date_original ?? dateStr,
-      place_id, description,
+      place_id, ev.ADDRESS ?? null, ev.CAUSE ?? null,
+      description,
     ]);
     eventMap.set(ev.RID, id);
 
-    if (person_id) {
-      stmts.insertParticipant.run([crypto.randomUUID(), id, person_id, 'primary']);
+    // Add participants: all person owners get role 'primary'
+    for (const owner of owners) {
+      if (!owner.startsWith('I')) continue;
+      const person_id = personMap.get(owner);
+      if (person_id) stmts.insertParticipant.run([crypto.randomUUID(), id, person_id, 'primary']);
     }
 
     summary.events++;
@@ -488,6 +615,101 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     }
   }
 
+  // ── 8. Import repositories ───────────────────────────────────────────────
+  const repoMap = new Map<string, string>(); // Genney REPO.RID → UUID
+
+  for (const repo of tables.REPO) {
+    if (!repo.RID) continue;
+    const id = crypto.randomUUID();
+    const addressLine = [repo.ADDRESS, repo.ADDRESS1, repo.ADDRESS2].filter(Boolean).join(', ') || null;
+    stmts.insertRepository.run([
+      id, repo.NAME ?? repo.RID,
+      addressLine, repo.CITY ?? null, repo.POSTALCODE ?? null,
+      repo.STATE ?? null, repo.COUNTRY ?? null,
+      repo.PHONE1 ?? null, repo.EMAIL ?? null, repo.WEB ?? null,
+      repo.CALLNUMBER ?? null, repo.NOTE ?? '',
+    ]);
+    repoMap.set(repo.RID, id);
+    summary.repositories++;
+  }
+
+  // Link sources to repositories
+  for (const sr of tables.SOURCE_REPO) {
+    if (!sr.SOURCE || !sr.REPO) continue;
+    const source_id = sourceMap.get(sr.SOURCE);
+    const repo_id = repoMap.get(sr.REPO);
+    if (source_id && repo_id) stmts.insertSourceRepo.run([source_id, repo_id]);
+  }
+
+  // ── 9. Import groups + memberships ──────────────────────────────────────
+  const groupMap = new Map<string, string>(); // Genney GROUP.RID → UUID
+
+  for (const grp of tables.GROUPS) {
+    if (!grp.RID) continue;
+    const id = crypto.randomUUID();
+    stmts.insertGroup.run([id, grp.NAME ?? grp.RID, grp.NOTE ?? '']);
+    groupMap.set(grp.RID, id);
+    summary.groups++;
+  }
+
+  for (const gm of tables.GROUP_MEMBER) {
+    if (!gm.GROUPS || !gm.PERSON) continue;
+    const group_id = groupMap.get(gm.GROUPS);
+    const person_id = personMap.get(gm.PERSON);
+    if (group_id && person_id) {
+      stmts.insertGroupMember.run([crypto.randomUUID(), group_id, person_id]);
+    }
+  }
+
+  // ── 10. Import media + links ─────────────────────────────────────────────
+  const mediaMap = new Map<string, string>(); // Genney MEDIA.RID → UUID
+
+  for (const m of tables.MEDIA) {
+    if (!m.RID) continue;
+    const id = crypto.randomUUID();
+    stmts.insertMedia.run([
+      id, m.FILEREF ?? null, m.TITLE ?? '', m.FORMAT ?? null,
+      m.NOTE ?? '', m.ISPRINTABLE === 1 ? 1 : 0,
+    ]);
+    mediaMap.set(m.RID, id);
+    summary.media++;
+  }
+
+  for (const om of tables.OWNER_MEDIA) {
+    if (!om.OWNER || !om.MEDIA) continue;
+    const media_id = mediaMap.get(om.MEDIA);
+    if (!media_id) continue;
+
+    let entity_type: string | null = null;
+    let entity_id: string | null = null;
+
+    if (om.OWNER.startsWith('I')) { entity_type = 'person'; entity_id = personMap.get(om.OWNER) ?? null; }
+    else if (om.OWNER.startsWith('E')) { entity_type = 'event'; entity_id = eventMap.get(om.OWNER) ?? null; }
+    else if (om.OWNER.startsWith('F')) { entity_type = 'relationship'; entity_id = familyMap.get(om.OWNER) ?? null; }
+    else if (om.OWNER.startsWith('S')) { entity_type = 'source'; entity_id = sourceMap.get(om.OWNER) ?? null; }
+
+    if (entity_type && entity_id) {
+      stmts.insertMediaLink.run([crypto.randomUUID(), media_id, entity_type, entity_id, om.LINKTYPE ?? null]);
+    }
+  }
+
+  // ── 11. Import research tasks (TODO) ─────────────────────────────────────
+  const GENNEY_TODO_STATUS: Record<string, string> = {
+    'open': 'open', 'in progress': 'in_progress', 'done': 'done', 'stopped': 'stopped',
+  };
+
+  for (const todo of tables.TODO) {
+    if (!todo.RID) continue;
+    const person_id = todo.PERSON ? personMap.get(todo.PERSON) ?? null : null;
+    const status = GENNEY_TODO_STATUS[(todo.STATUS ?? '').toLowerCase()] ?? 'open';
+    stmts.insertResearchTask.run([
+      crypto.randomUUID(), person_id,
+      todo.PRIORITY ?? 0, status,
+      todo.TASK ?? '', todo.NOTE ?? '', todo.RESULT ?? '',
+    ]);
+    summary.researchTasks++;
+  }
+
   return summary;
 }
 
@@ -506,8 +728,10 @@ export function parseNdJson(output: string): GenneyTables {
   }
   return {
     PERSON: [], FAMILY: [], COUPLE_FAMILY: [], SPOUSE_FAMILY: [],
-    EVENT: [], EVENT_PLACE: [], SPLACE: [], SOURCE: [],
+    EVENT: [], EVENT_PLACE: [], OWNER_EVENT: [], SPLACE: [], SOURCE: [],
     CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
+    REPO: [], SOURCE_REPO: [], GROUPS: [], GROUP_MEMBER: [],
+    MEDIA: [], OWNER_MEDIA: [], TODO: [],
     ...tables,
   } as GenneyTables;
 }

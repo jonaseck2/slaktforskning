@@ -136,6 +136,78 @@ export function initializeSchema(db: Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_assertions_citation_id ON assertions(citation_id);
+
+    CREATE TABLE IF NOT EXISTS groups (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS group_members (
+      id TEXT PRIMARY KEY,
+      group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+      person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      UNIQUE(group_id, person_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
+    CREATE INDEX IF NOT EXISTS idx_group_members_person_id ON group_members(person_id);
+
+    CREATE TABLE IF NOT EXISTS repositories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      address TEXT,
+      city TEXT,
+      postal_code TEXT,
+      state TEXT,
+      country TEXT,
+      phone TEXT,
+      email TEXT,
+      web TEXT,
+      call_number TEXT,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS source_repositories (
+      source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+      repository_id TEXT NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
+      PRIMARY KEY (source_id, repository_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS research_tasks (
+      id TEXT PRIMARY KEY,
+      person_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
+      priority INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'in_progress', 'done', 'stopped')),
+      task TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      result TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_research_tasks_person_id ON research_tasks(person_id);
+
+    CREATE TABLE IF NOT EXISTS media (
+      id TEXT PRIMARY KEY,
+      file_ref TEXT,
+      title TEXT NOT NULL DEFAULT '',
+      format TEXT,
+      notes TEXT NOT NULL DEFAULT '',
+      is_printable INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS media_links (
+      id TEXT PRIMARY KEY,
+      media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+      entity_type TEXT NOT NULL CHECK(entity_type IN ('person', 'event', 'relationship', 'place', 'source')),
+      entity_id TEXT NOT NULL,
+      link_type INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_media_links_media_id ON media_links(media_id);
+    CREATE INDEX IF NOT EXISTS idx_media_links_entity ON media_links(entity_type, entity_id);
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)
@@ -204,6 +276,23 @@ export function initializeSchema(db: Database): void {
   }
   if (!placesCols.includes('country')) {
     db.exec('ALTER TABLE places ADD COLUMN country TEXT');
+  }
+
+  // v0.7.0 events: cause + place_address
+  if (!eventCols.includes('cause')) {
+    db.exec('ALTER TABLE events ADD COLUMN cause TEXT');
+  }
+  if (!eventCols.includes('place_address')) {
+    db.exec('ALTER TABLE events ADD COLUMN place_address TEXT');
+  }
+
+  // v0.7.0 sources: call_number + abstract
+  const sourcesCols = (db.prepare('PRAGMA table_info(sources)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!sourcesCols.includes('call_number')) {
+    db.exec('ALTER TABLE sources ADD COLUMN call_number TEXT');
+  }
+  if (!sourcesCols.includes('abstract')) {
+    db.exec('ALTER TABLE sources ADD COLUMN abstract TEXT');
   }
 
   // Indexes that depend on migrated columns — run after migrations
