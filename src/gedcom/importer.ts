@@ -251,13 +251,15 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
 
       // Genney marks the preferred name (tilltalsnamn) with * directly after the token.
       // e.g. "Eva Linda* Marie" → preferred_name = "Linda", given_name = "Eva Linda Marie"
-      let nickName = getChild(nameNode, 'NICK')?.value ?? null;
-      if (isGenney && given && given.includes('*') && !nickName) {
+      const nickname = getChild(nameNode, 'NICK')?.value ?? null;
+      const tilltals = getChild(nameNode, '_TILLTALS')?.value ?? null;
+      let preferred_name: string | null = tilltals;
+      if (!preferred_name && isGenney && given && given.includes('*')) {
         const starIdx = given.indexOf('*');
         const beforeStar = given.slice(0, starIdx).trimEnd();
         const afterStar = given.slice(starIdx + 1).trimStart();
         const tokens = beforeStar.split(/\s+/);
-        nickName = tokens[tokens.length - 1] ?? null;
+        preferred_name = tokens[tokens.length - 1] ?? null;
         given = (beforeStar + (afterStar ? ' ' + afterStar : '')).replace(/\s+/g, ' ').trim() || null;
       }
 
@@ -268,7 +270,8 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
         name_suffix: suffix,
         name_type: name_type as 'birth' | 'married' | 'alias' | 'aka',
         patronymic_base,
-        preferred_name: nickName,
+        preferred_name,
+        nickname,
         name_qualifier: (getChild(nameNode, '_NQUAL')?.value ?? null) as string | null,
         date_from: getChild(nameNode, '_DATE_FROM')?.value ?? null,
         date_to: getChild(nameNode, '_DATE_TO')?.value ?? null,

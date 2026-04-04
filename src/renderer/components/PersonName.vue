@@ -15,9 +15,10 @@ const props = defineProps<{
   givenName: string | null;
   surname?: string | null;
   preferredName: string | null;
+  nickname?: string | null;
 }>();
 
-const parts = computed(() => fullNameParts(props.givenName ?? null, props.surname ?? null, props.preferredName));
+const parts = computed(() => fullNameParts(props.givenName ?? null, props.surname ?? null, props.preferredName, props.nickname ?? null));
 </script>
 
 <style scoped>

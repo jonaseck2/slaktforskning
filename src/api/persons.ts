@@ -100,6 +100,7 @@ export function addPersonName(
     patronymic_base?: string | null;
     name_qualifier?: PersonName['name_qualifier'];
     preferred_name?: string | null;
+    nickname?: string | null;
   }
 ): PersonName {
   const id = uuid();
@@ -109,8 +110,8 @@ export function addPersonName(
   db.prepare(`
     INSERT INTO person_names
       (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order,
-       name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run([
     id, personId,
     data.given_name ?? null, data.surname ?? null,
@@ -119,7 +120,7 @@ export function addPersonName(
     data.sort_order ?? (maxOrder.max_order + 1),
     data.name_prefix ?? null, data.name_suffix ?? null,
     data.patronymic_base ?? null, data.name_qualifier ?? null,
-    data.preferred_name ?? null,
+    data.preferred_name ?? null, data.nickname ?? null,
   ]);
   return db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName;
 }
@@ -131,7 +132,7 @@ export function getPersonNames(db: Database, personId: string): PersonName[] {
 export function updatePersonName(
   db: Database,
   id: string,
-  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name'>>
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname'>>
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -143,6 +144,7 @@ export function updatePersonName(
   if (data.patronymic_base !== undefined) { fields.push('patronymic_base = ?'); values.push(data.patronymic_base); }
   if (data.name_qualifier !== undefined) { fields.push('name_qualifier = ?'); values.push(data.name_qualifier); }
   if (data.preferred_name !== undefined) { fields.push('preferred_name = ?'); values.push(data.preferred_name); }
+  if (data.nickname !== undefined) { fields.push('nickname = ?'); values.push(data.nickname); }
   if (fields.length === 0) return (db.prepare(`SELECT * FROM person_names WHERE id = ?`).get([id]) as PersonName) ?? null;
   values.push(id);
   db.prepare(`UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`).run(values);

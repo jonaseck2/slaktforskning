@@ -32,6 +32,8 @@ export default {
     givenName: 'Given Name (full)',
     preferredName: 'Preferred Name',
     preferredNamePlaceholder: 'e.g. Linda (if full given name is Eva Linda Marie)',
+    nickname: 'Nickname',
+    nicknamePlaceholder: 'e.g. Sanna (name used by friends and family)',
     surname: 'Surname',
     sex: 'Sex',
     living: 'Living',

@@ -32,6 +32,8 @@ export default {
     givenName: 'Förnamn (fullständigt)',
     preferredName: 'Tilltalsnamn',
     preferredNamePlaceholder: 't.ex. Linda (om fullständigt förnamn är Eva Linda Marie)',
+    nickname: 'Smeknamn',
+    nicknamePlaceholder: 't.ex. Sanna (kallas så av vänner och familj)',
     surname: 'Efternamn',
     sex: 'Kön',
     living: 'Levande',

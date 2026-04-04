@@ -479,13 +479,37 @@ describe('Extended GEDCOM roundtrip — persons', () => {
     expect(persons2[0].living).toBeTruthy();
   });
 
-  it('preferred_name survives roundtrip via NICK', () => {
+  it('preferred_name survives roundtrip via _TILLTALS + asterisk', () => {
     const p = createPerson(db, { sex: 'F' });
     addPersonName(db, p.id, { given_name: 'Anna Maria', surname: 'Eriksson', preferred_name: 'Maria' });
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
     const names2 = getPersonNames(db2, persons2[0].id);
     expect(names2[0].preferred_name).toBe('Maria');
+  });
+
+  it('nickname survives roundtrip via NICK', () => {
+    const p = createPerson(db, { sex: 'F' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', nickname: 'Nanna' });
+    const db2 = roundtrip(db);
+    const persons2 = listPersons(db2);
+    const names2 = getPersonNames(db2, persons2[0].id);
+    expect(names2[0].nickname).toBe('Nanna');
+  });
+
+  it('NICK on import maps to nickname (not preferred_name)', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 NAME Anna /Eriksson/',
+      '2 NICK Nanna',
+      '1 SEX F',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const names = getPersonNames(db, persons[0].id);
+    expect(names[0].nickname).toBe('Nanna');
+    expect(names[0].preferred_name).toBeNull();
   });
 
   it('patronymic_base survives roundtrip via _PATR', () => {

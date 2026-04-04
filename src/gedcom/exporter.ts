@@ -93,7 +93,15 @@ export function exportGedcom(db: Database): string {
 
     const names = getPersonNames(db, p.id);
     for (const n of names) {
-      const given = n.given_name ?? '';
+      const rawGiven = n.given_name ?? '';
+      // Encode tilltalsnamn as asterisk in NAME for Genney compatibility
+      let given = rawGiven;
+      if (n.preferred_name && rawGiven) {
+        given = rawGiven.replace(
+          new RegExp(`(^|\\s)(${n.preferred_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(\\s|$)`),
+          `$1$2*$3`,
+        ).trimEnd();
+      }
       const sur = n.surname ? `/${n.surname}/` : '';
       const nameStr = `${given} ${sur}`.trim();
       lines.push(`1 NAME ${nameStr}`);
@@ -102,8 +110,9 @@ export function exportGedcom(db: Database): string {
       if (n.name_type && n.name_type !== 'birth') {
         lines.push(`2 TYPE ${n.name_type.toUpperCase()}`);
       }
-      // Extended name fields
-      if (n.preferred_name) lines.push(`2 NICK ${n.preferred_name}`);
+      // Extended name fields — preferred_name as _TILLTALS (canonical) + nickname as NICK (standard)
+      if (n.preferred_name) lines.push(`2 _TILLTALS ${n.preferred_name}`);
+      if (n.nickname) lines.push(`2 NICK ${n.nickname}`);
       if (n.patronymic_base) lines.push(`2 _PATR ${n.patronymic_base}`);
       if (n.name_qualifier) lines.push(`2 _NQUAL ${n.name_qualifier}`);
       if (n.date_from) lines.push(`2 _DATE_FROM ${n.date_from}`);
