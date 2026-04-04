@@ -18,7 +18,7 @@ import { parseGedcomDate } from '../../gedcom/date';
 export interface PersonRow {
   RID: string;             // "I123"
   UID?: string | null;
-  SEX?: number | null;     // 0=F, 1=M, null=U
+  SEX?: number | null;     // 0=M, 1=F, null=U
   GIVENNAME?: string | null;
   SURNAME?: string | null;
   NICKNAME?: string | null;
@@ -432,13 +432,14 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
       preferred_name = parsed.preferred;
     }
 
-    const sex: 'M' | 'F' | 'U' = p.SEX === 1 ? 'M' : p.SEX === 0 ? 'F' : 'U';
+    const sex: 'M' | 'F' | 'U' = p.SEX === 0 ? 'M' : p.SEX === 1 ? 'F' : 'U';
     const remark = remarkByOwner.get(p.RID);
     const noteParts = [p.NOTE, remark].filter(Boolean);
     const notes = noteParts.length > 0 ? noteParts.join('\n') : '';
 
     const id = crypto.randomUUID();
-    stmts.insertPerson.run([id, sex, p.LIVING === 1 ? 1 : 0, notes]);
+    // LIVING=1 means deceased in Genney; null/0 means alive
+    stmts.insertPerson.run([id, sex, p.LIVING === 1 ? 0 : 1, notes]);
     personMap.set(p.RID, id);
 
     if (given || p.SURNAME) {
