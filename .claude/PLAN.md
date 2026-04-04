@@ -144,6 +144,9 @@ Nickname now renders right after the preferred-name token (`Elisabeth "Lisa" Cat
 ### Done (v0.6.8 — Tilltalsnamn + Smeknamn separation)
 `nickname` column on `person_names`; `addPersonName`/`updatePersonName` accept `nickname`; `fullNameParts` renders nickname in double quotes between given name and surname; `PersonName.vue` gets `nickname` prop; PersonDetailView Smeknamn input in both Add/Edit name modals; GEDCOM import re-maps NICK → nickname and `_TILLTALS` → preferred_name; exporter emits asterisk + `_TILLTALS` for preferred_name and NICK for nickname; MCP tools updated; 12 new unit tests (300 total). See `.claude/plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md`.
 
+### Fix — Genney import CPU saturation (per-row db.prepare)
+`transformGenney` called API layer functions per row, causing ~31,000 `db.prepare()` calls (each crossing the JS→WASM boundary). Rewrote to pre-compile all INSERT statements once before the loops. Also removed SELECT-after-INSERT and MAX(sort_order) queries that were unnecessary during bulk import. See `.claude/plans/archive/2026-04-04-genney-cpu-saturation.md`.
+
 ### Done (v0.6.9 — Genney Derby Import)
 `DerbyExtractor.java` dumps Genney's Apache Derby schema to NDJSON via Docker (`eclipse-temurin:21-jdk-alpine`); `transform.ts` maps all Genney tables (PERSON, FAMILY, COUPLE_FAMILY, SPOUSE_FAMILY, EVENT, EVENT_PLACE, SPLACE, SOURCE, CITATION, OWNER_CITATION, REMARK) to our API; `index.ts` orchestrates jar download, schema detection, Docker invocation, and .gcc/.backup extraction with encryption detection + GEDCOM fallback; IPC handlers + preload wired; Derby import section added to ImportExportView; 38 new unit tests (335 total). See `.claude/plans/archive/2026-04-04-genney-derby-import.md`.
 

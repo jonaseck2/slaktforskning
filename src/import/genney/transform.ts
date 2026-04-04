@@ -2,14 +2,15 @@
  * Genney Derby → Släktforskning transform.
  * Maps Genney schema rows (exported as JSON by DerbyExtractor.java) to our API types.
  * Pure logic: no Electron/IPC/UI dependencies.
+ *
+ * Performance note: all INSERT statements are pre-compiled once before the loops.
+ * Each db.prepare() call crosses the JS→WASM boundary and compiles SQL. Calling it
+ * per row would produce ~31,000 compilations for a typical Genney database (833 persons,
+ * 3008 events, 5910 citations), saturating the CPU for minutes. Reusing statements
+ * reduces this to ~9 compilations total.
  */
 
 import type { Database } from 'node-sqlite3-wasm';
-import * as personsApi from '../../api/persons';
-import * as relationshipsApi from '../../api/relationships';
-import * as eventsApi from '../../api/events';
-import * as sourcesApi from '../../api/sources';
-import * as placesApi from '../../api/places';
 import { parseGedcomDate } from '../../gedcom/date';
 
 // ── Genney row shapes ──────────────────────────────────────────────────────
@@ -170,9 +171,8 @@ function mapSplaceType(type: number | null | undefined): string | null {
   return SPLACE_TYPE[type] ?? 'other';
 }
 
-function mapSourceType(mediatype: number | null | undefined): string | null {
-  // Genney media types are integers; map broadly
-  if (mediatype == null) return null;
+function mapSourceType(mediatype: number | null | undefined): string {
+  if (mediatype == null) return '';
   const map: Record<number, string> = {
     1: 'book', 2: 'vital_record', 3: 'church_record', 4: 'census',
     5: 'newspaper', 6: 'photograph', 7: 'other',
@@ -222,6 +222,40 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     events: 0, places: 0, sources: 0, citations: 0, warnings: [],
   };
 
+  // Pre-compile all INSERT statements once.
+  // Each db.prepare() crosses the JS→WASM boundary and compiles SQL.
+  // Reusing prepared statements avoids ~31,000 redundant compilations that
+  // would otherwise saturate the CPU for a typical Genney database.
+  const stmts = {
+    insertPlace: db.prepare(
+      `INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ),
+    insertPerson: db.prepare(
+      `INSERT INTO persons (id, sex, living, notes) VALUES (?, ?, ?, ?)`
+    ),
+    insertPersonName: db.prepare(
+      `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order, name_prefix, name_suffix, preferred_name, nickname) VALUES (?, ?, ?, ?, 'birth', 0, ?, ?, ?, ?)`
+    ),
+    insertPersonIdentifier: db.prepare(
+      `INSERT OR IGNORE INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)`
+    ),
+    insertSource: db.prepare(
+      `INSERT INTO sources (id, title, author, publication_info, source_type) VALUES (?, ?, ?, ?, ?)`
+    ),
+    insertRelationship: db.prepare(
+      `INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)`
+    ),
+    insertEvent: db.prepare(
+      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ),
+    insertParticipant: db.prepare(
+      `INSERT OR IGNORE INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)`
+    ),
+    insertCitation: db.prepare(
+      `INSERT INTO citations (id, source_id, event_id, person_id, relationship_id, page, confidence, transcription, notes, date_accessed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ),
+  };
+
   // ── 1. Import SPLACE records (parents before children) ───────────────────
   const splaceFlatMap = new Map<number, string>(); // SPLACE.RID → place UUID
   const splacesById = new Map<number, SPlaceRow>();
@@ -249,19 +283,16 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     if (!sp) return;
     if (sp.PARENT != null && !importedSplaces.has(sp.PARENT)) importSplace(sp.PARENT);
 
-    const parentUuid = sp.PARENT != null ? splaceFlatMap.get(sp.PARENT) : undefined;
+    const parentUuid = sp.PARENT != null ? splaceFlatMap.get(sp.PARENT) ?? null : null;
     const lat = sp.LATITUD != null && sp.LATITUD !== 0 ? sp.LATITUD : null;
     const lon = sp.LONGITUD != null && sp.LONGITUD !== 0 ? sp.LONGITUD : null;
-
-    const place = placesApi.createPlace(db, {
-      name: sp.NAME ?? `Place ${rid}`,
-      place_type: mapSplaceType(sp.TYPE),
-      parent_place_id: parentUuid ?? null,
-      latitude: lat,
-      longitude: lon,
-      notes: sp.NOTE ?? null,
-    });
-    splaceFlatMap.set(rid, place.id);
+    const name = sp.NAME ?? `Place ${rid}`;
+    const id = crypto.randomUUID();
+    stmts.insertPlace.run([
+      id, name, name.toLowerCase().trim().replace(/\s+/g, ' '),
+      mapSplaceType(sp.TYPE), parentUuid, lat, lon, sp.NOTE ?? '',
+    ]);
+    splaceFlatMap.set(rid, id);
     importedSplaces.add(rid);
     summary.places++;
   }
@@ -292,36 +323,25 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     const sex: 'M' | 'F' | 'U' = p.SEX === 1 ? 'M' : p.SEX === 0 ? 'F' : 'U';
     const remark = remarkByOwner.get(p.RID);
     const noteParts = [p.NOTE, remark].filter(Boolean);
-    const notes = noteParts.length > 0 ? noteParts.join('\n') : null;
+    const notes = noteParts.length > 0 ? noteParts.join('\n') : '';
 
-    const person = personsApi.createPerson(db, {
-      sex,
-      living: p.LIVING === 1 ? true : undefined,
-      notes: notes ?? undefined,
-    });
-    personMap.set(p.RID, person.id);
+    const id = crypto.randomUUID();
+    stmts.insertPerson.run([id, sex, p.LIVING === 1 ? 1 : 0, notes]);
+    personMap.set(p.RID, id);
 
     if (given || p.SURNAME) {
-      personsApi.addPersonName(db, person.id, {
-        given_name: given,
-        surname: p.SURNAME ?? null,
-        name_type: 'birth',
-        preferred_name,
-        nickname: p.NICKNAME ?? null,
-        name_prefix: p.PREFIX ?? null,
-        name_suffix: p.SUFFIX ?? null,
-      });
+      stmts.insertPersonName.run([
+        crypto.randomUUID(), id,
+        given ?? null, p.SURNAME ?? null,
+        p.PREFIX ?? null, p.SUFFIX ?? null,
+        preferred_name, p.NICKNAME ?? null,
+      ]);
     }
 
     if (p.UID) {
-      try {
-        personsApi.addPersonIdentifier(db, person.id, {
-          identifier_type: 'other',
-          identifier_value: String(p.UID),
-        });
-      } catch {
-        // non-fatal
-      }
+      stmts.insertPersonIdentifier.run([
+        crypto.randomUUID(), id, 'other', String(p.UID), new Date().toISOString(),
+      ]);
     }
 
     summary.persons++;
@@ -332,13 +352,11 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
 
   for (const src of tables.SOURCE) {
     const title = (src.TITLE || src.ABBREVIATION || '').trim();
-    const source = sourcesApi.createSource(db, {
-      title: title || undefined,
-      author: src.AUTHOR ?? null,
-      publication_info: src.PUBLICATION ?? null,
-      source_type: mapSourceType(src.MEDIATYPE) ?? undefined,
-    });
-    sourceMap.set(src.RID, source.id);
+    const id = crypto.randomUUID();
+    stmts.insertSource.run([
+      id, title, src.AUTHOR ?? '', src.PUBLICATION ?? '', mapSourceType(src.MEDIATYPE),
+    ]);
+    sourceMap.set(src.RID, id);
     summary.sources++;
   }
 
@@ -352,18 +370,13 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   }
 
   for (const fam of tables.FAMILY) {
-    const p1 = fam.HUSBAND ? personMap.get(fam.HUSBAND) : undefined;
-    const p2 = fam.WIFE ? personMap.get(fam.WIFE) : undefined;
+    const p1 = fam.HUSBAND ? personMap.get(fam.HUSBAND) ?? null : null;
+    const p2 = fam.WIFE ? personMap.get(fam.WIFE) ?? null : null;
     const subtype = mapCoupleSubtype(spouseRelType.get(fam.RID));
 
-    const rel = relationshipsApi.createRelationship(db, {
-      type: 'couple',
-      person1_id: p1 ?? null,
-      person2_id: p2 ?? null,
-      subtype,
-      notes: fam.NOTE ?? null,
-    });
-    familyMap.set(fam.RID, rel.id);
+    const id = crypto.randomUUID();
+    stmts.insertRelationship.run([id, 'couple', p1, p2, subtype ?? null, fam.NOTE ?? '']);
+    familyMap.set(fam.RID, id);
     summary.coupleRelationships++;
   }
 
@@ -375,12 +388,10 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     if (cf.FATHER) {
       const fatherId = personMap.get(cf.FATHER);
       if (fatherId) {
-        relationshipsApi.createRelationship(db, {
-          type: 'parent_child',
-          person1_id: fatherId,
-          person2_id: childId,
-          subtype: mapParentChildSubtype(cf.FATHERLINK),
-        });
+        stmts.insertRelationship.run([
+          crypto.randomUUID(), 'parent_child', fatherId, childId,
+          mapParentChildSubtype(cf.FATHERLINK) ?? null, '',
+        ]);
         summary.parentChildRelationships++;
       }
     }
@@ -388,12 +399,10 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     if (cf.MOTHER) {
       const motherId = personMap.get(cf.MOTHER);
       if (motherId) {
-        relationshipsApi.createRelationship(db, {
-          type: 'parent_child',
-          person1_id: motherId,
-          person2_id: childId,
-          subtype: mapParentChildSubtype(cf.MOTHERLINK),
-        });
+        stmts.insertRelationship.run([
+          crypto.randomUUID(), 'parent_child', motherId, childId,
+          mapParentChildSubtype(cf.MOTHERLINK) ?? null, '',
+        ]);
         summary.parentChildRelationships++;
       }
     }
@@ -408,33 +417,28 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     const parsedDate = dateStr ? parseGedcomDate(dateStr) : null;
 
     const splaceRid = eventToSplace.get(ev.RID);
-    const place_id = splaceRid != null ? splaceFlatMap.get(splaceRid) : undefined;
+    const place_id = splaceRid != null ? splaceFlatMap.get(splaceRid) ?? null : null;
 
     const descParts = [ev.DESCRIPTION, ev.NOTE].filter(Boolean);
-    const description = descParts.length > 0 ? descParts.join('\n') : null;
+    const description = descParts.length > 0 ? descParts.join('\n') : '';
 
     const ownerIsFamily = ev.OWNER?.startsWith('F') ?? false;
-    const rel_id = ownerIsFamily && ev.OWNER ? familyMap.get(ev.OWNER) : undefined;
-    const person_id = !ownerIsFamily && ev.OWNER?.startsWith('I') ? personMap.get(ev.OWNER) : undefined;
+    const rel_id = ownerIsFamily && ev.OWNER ? familyMap.get(ev.OWNER) ?? null : null;
+    const person_id = !ownerIsFamily && ev.OWNER?.startsWith('I') ? personMap.get(ev.OWNER) ?? null : null;
 
-    const event = eventsApi.createEvent(db, {
-      event_type,
-      relationship_id: rel_id ?? null,
-      date_type: parsedDate?.date_type ?? 'unknown',
-      date_value: parsedDate?.date_value ?? null,
-      date_value_end: parsedDate?.date_value_end ?? null,
-      date_original: parsedDate?.date_original ?? dateStr,
-      place_id: place_id ?? null,
-      description,
-    });
-    eventMap.set(ev.RID, event.id);
+    const id = crypto.randomUUID();
+    stmts.insertEvent.run([
+      id, event_type, rel_id,
+      parsedDate?.date_type ?? 'unknown',
+      parsedDate?.date_value ?? null,
+      parsedDate?.date_value_end ?? null,
+      parsedDate?.date_original ?? dateStr,
+      place_id, description,
+    ]);
+    eventMap.set(ev.RID, id);
 
     if (person_id) {
-      relationshipsApi.addEventParticipant(db, {
-        event_id: event.id,
-        person_id,
-        role: 'primary',
-      });
+      stmts.insertParticipant.run([crypto.randomUUID(), id, person_id, 'primary']);
     }
 
     summary.events++;
@@ -461,35 +465,25 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
 
     const owners = citOwnerMap.get(cit.RID) ?? [];
     if (owners.length === 0) {
-      // Unlinked citation — import without owner
-      sourcesApi.createCitation(db, {
-        source_id,
-        page: cit.WHEREINTEXT ?? null,
-        confidence: mapConfidence(cit.CERTAINTY),
-        transcription: cit.TEXT ?? null,
-        notes: cit.NOTE ?? null,
-        date_accessed: cit.DATE ?? null,
-      });
+      stmts.insertCitation.run([
+        crypto.randomUUID(), source_id, null, null, null,
+        cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
+        cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
+      ]);
       summary.citations++;
       continue;
     }
 
     for (const owner of owners) {
-      const event_id = owner.startsWith('E') ? eventMap.get(owner) : undefined;
-      const person_id = owner.startsWith('I') ? personMap.get(owner) : undefined;
-      const relationship_id = owner.startsWith('F') ? familyMap.get(owner) : undefined;
+      const event_id = owner.startsWith('E') ? eventMap.get(owner) ?? null : null;
+      const person_id = owner.startsWith('I') ? personMap.get(owner) ?? null : null;
+      const relationship_id = owner.startsWith('F') ? familyMap.get(owner) ?? null : null;
 
-      sourcesApi.createCitation(db, {
-        source_id,
-        event_id: event_id ?? null,
-        person_id: person_id ?? null,
-        relationship_id: relationship_id ?? null,
-        page: cit.WHEREINTEXT ?? null,
-        confidence: mapConfidence(cit.CERTAINTY),
-        transcription: cit.TEXT ?? null,
-        notes: cit.NOTE ?? null,
-        date_accessed: cit.DATE ?? null,
-      });
+      stmts.insertCitation.run([
+        crypto.randomUUID(), source_id, event_id, person_id, relationship_id,
+        cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
+        cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
+      ]);
       summary.citations++;
     }
   }
