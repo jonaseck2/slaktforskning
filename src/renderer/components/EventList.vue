@@ -2,7 +2,7 @@
   <div class="event-list">
     <div class="section-header">
       <h4>{{ $t('events.title') }}</h4>
-      <button type="button" class="btn-add" @click="showForm = true">{{ $t('events.addEvent') }}</button>
+      <button v-if="!props.readonly" type="button" class="btn-add" @click="showForm = true">{{ $t('events.addEvent') }}</button>
     </div>
     <div v-if="events.length === 0" class="empty-hint">{{ $t('events.noEvents') }}</div>
     <table v-else class="data-table">
@@ -16,7 +16,7 @@
       </thead>
       <tbody>
         <template v-for="event in events" :key="event.id">
-          <tr class="clickable-row" @click="editEvent(event)">
+          <tr :class="['clickable-row', { 'non-interactive': props.readonly }]" @click="!props.readonly && editEvent(event)">
             <td>
               <span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span>
               <button
@@ -30,8 +30,10 @@
             <td>{{ formatDate(event) }}</td>
             <td>{{ event.description }}</td>
             <td class="actions-cell">
-              <button type="button" class="btn-sm btn-cite" @click.stop="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
-              <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">{{ $t('common.delete') }}</button>
+              <template v-if="!props.readonly">
+                <button type="button" class="btn-sm btn-cite" @click.stop="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
+                <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">{{ $t('common.delete') }}</button>
+              </template>
             </td>
           </tr>
           <tr v-if="expandedEventId === event.id" class="citations-expansion-row">
@@ -95,6 +97,7 @@ interface EventRow {
 const props = defineProps<{
   personId?: string;
   relationshipId?: string;
+  readonly?: boolean;
 }>();
 
 interface CitationDetail {
@@ -362,4 +365,6 @@ defineExpose({ reload: load });
   font-size: 12px;
   color: #999;
 }
+tr.non-interactive { cursor: default; }
+tr.non-interactive:hover { background: transparent; }
 </style>
