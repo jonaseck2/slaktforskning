@@ -20,7 +20,7 @@
           <span class="place-name">{{ place.name }}</span>
           <span v-if="place.place_type" class="place-type">{{ $t('placeTypes.' + place.place_type) }}</span>
         </div>
-        <div v-if="place.postal_code || place.city" class="place-subtitle">{{ [place.postal_code, place.city].filter(Boolean).join(' ') }}</div>
+        <div v-if="place.parent_name || place.postal_code || place.city" class="place-subtitle">{{ place.parent_name || [place.postal_code, place.city].filter(Boolean).join(' ') }}</div>
       </div>
       <div
         v-if="query.length > 1 && results.every(r => r.name.toLowerCase() !== query.toLowerCase())"
@@ -41,7 +41,7 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; }
+interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; parent_name?: string | null; }
 
 const props = defineProps<{
   modelValue: string | null;
@@ -60,8 +60,8 @@ let debounceTimer: ReturnType<typeof setTimeout>;
 
 watch(() => props.modelValue, async (id) => {
   if (!id) { query.value = ''; return; }
-  const place = (await window.api.places.get(id)) as PlaceRow | null;
-  if (place) query.value = place.name;
+  const path = (await window.api.places.getPath(id)) as string;
+  if (path) query.value = path;
 }, { immediate: true });
 
 function onInput() {
@@ -72,8 +72,9 @@ function onInput() {
   }, 150);
 }
 
-function select(place: PlaceRow) {
-  query.value = place.name;
+async function select(place: PlaceRow) {
+  const path = (await window.api.places.getPath(place.id)) as string;
+  query.value = path || place.name;
   showDropdown.value = false;
   emit('update:modelValue', place.id);
   emit('select', place);

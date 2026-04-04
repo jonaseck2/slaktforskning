@@ -76,6 +76,7 @@ const api = {
     update: (id: string, data: unknown) => ipcRenderer.invoke('places:update', id, data),
     delete: (id: string) => ipcRenderer.invoke('places:delete', id),
     findOrCreate: (name: string) => ipcRenderer.invoke('places:findOrCreate', name),
+    getPath: (id: string) => ipcRenderer.invoke('places:getPath', id),
   },
 };
 
