@@ -151,19 +151,47 @@ export function computePedigreeLayout(
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
-  const totalLeaves = 1 << (G - 1); // 2^(G-1)
-
-  const svgWidth  = PAD + G * BOX_W + (G - 1) * H_GAP + PAD;
-  const svgHeight = PAD + totalLeaves * ROW_H - V_GAP + PAD;
+  const svgWidth = PAD + G * BOX_W + (G - 1) * H_GAP + PAD;
 
   const genXOf = (g: number) => PAD + g * (BOX_W + H_GAP);
 
-  const centerYOf = (k: number): number => {
+  // Compact vertical layout: assign slots only to visible leaves, preserving
+  // genealogical top-to-bottom order (father's family above mother's family).
+  // A node's "virtual leaf position" is where its slot-centre would fall in the
+  // full 2^(G-1)-leaf tree — used purely for sort-order, not for pixel positions.
+  function virtualLeafPos(k: number): number {
     const g = Math.floor(Math.log2(k));
-    const slotsPerPerson = totalLeaves >> g;
     const pos = k - (1 << g);
-    return PAD + ((pos + 0.5) * slotsPerPerson - 0.5) * ROW_H + BOX_H / 2;
-  };
+    return (pos + 0.5) * (1 << (G - 1 - g)) - 0.5;
+  }
+
+  const isLeafNode = (k: number) => !nodes.has(k * 2) && !nodes.has(k * 2 + 1);
+  const leaves = [...nodes.keys()].filter(isLeafNode).sort((a, b) => virtualLeafPos(a) - virtualLeafPos(b));
+  const leafYIndex = new Map<number, number>();
+  leaves.forEach((k, i) => leafYIndex.set(k, i));
+
+  const numLeaves = leaves.length;
+  const svgHeight = PAD + numLeaves * ROW_H - (numLeaves > 1 ? V_GAP : 0) + PAD;
+
+  // Memoised: leaves get a sequential slot; internal nodes average their children.
+  const cyCache = new Map<number, number>();
+  function centerYOf(k: number): number {
+    if (cyCache.has(k)) return cyCache.get(k)!;
+    let cy: number;
+    const idx = leafYIndex.get(k);
+    if (idx !== undefined) {
+      cy = PAD + (idx + 0.5) * ROW_H;
+    } else {
+      const childYs: number[] = [];
+      if (nodes.has(k * 2)) childYs.push(centerYOf(k * 2));
+      if (nodes.has(k * 2 + 1)) childYs.push(centerYOf(k * 2 + 1));
+      cy = childYs.length > 0
+        ? childYs.reduce((a, b) => a + b, 0) / childYs.length
+        : PAD + 0.5 * ROW_H;
+    }
+    cyCache.set(k, cy);
+    return cy;
+  }
 
   // Place boxes
   for (const [k, person] of nodes) {
@@ -263,10 +291,17 @@ export function computeHourglassLayout(
   }
 
   const ancestorNodes = prunedAncestorNodes;
+  const focalIsFemale = focalPerson?.sex === 'F';
+
   const effectiveDescRoot = collapsed.has(`${focalId}:down`)
     ? { person: descendantRoot.person, children: [] as DescendantNode[] }
     : descendantRoot;
-  const effectiveSpouses = collapsed.has(`${focalId}:right`) ? [] : spouses;
+  // Spouses may be collapsed via :right key (original) or :left key (female focal).
+  const effectiveSpouses = (collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`)) ? [] : spouses;
+
+  // When the focal person is female, place spouses to the LEFT so the convention
+  // "male left, female right" holds regardless of who is currently focal.
+  const spouseOnLeft = focalIsFemale && effectiveSpouses.length > 0;
 
   const A = generations - 1; // ancestor levels above focal
 
@@ -324,21 +359,30 @@ export function computeHourglassLayout(
   const spouseOffset = effectiveSpouses.length > 0 ? (BOX_W + H_GAP) / 2 : 0;
 
   // Convert to distances from focalCX.
+  // When spouseOnLeft the couple-junction is LEFT of focal, so:
+  //   descLeft  = spouseOffset + compactLeftFromCJ  (same — junction is left-of-focal)
+  //   descRight = compactRightFromCJ - spouseOffset (junction is left, so right shrinks)
   const descLeftFromFocal  = spouseOffset + compactLeftFromCJ;
-  const descRightFromFocal = spouseOffset + compactRightFromCJ;
+  const descRightFromFocal = spouseOnLeft
+    ? Math.max(BOX_W / 2, compactRightFromCJ - spouseOffset)
+    : spouseOffset + compactRightFromCJ;
 
   // Ancestor section is symmetric around focalCX.
   const ancHalfW = ancestorSectionWidth / 2;
 
-  // Spouse boxes extend to the right of focal.
-  const spouseBoxesRight = effectiveSpouses.length > 0
+  // Extra space needed on the spouse side (left or right depending on orientation).
+  const spouseBoxesExtent = effectiveSpouses.length > 0
     ? BOX_W + H_GAP + (effectiveSpouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
     : 0;
 
-  // Place focal far enough right that nothing clips on the left; add symmetric
-  // right margin; take the larger of ancestor or descendant needs on each side.
-  const focalCX = PAD + Math.max(ancHalfW, descLeftFromFocal);
-  const rightNeeded = Math.max(ancHalfW, descRightFromFocal, spouseBoxesRight);
+  // Place focal far enough from the left edge that nothing clips.
+  // When spouseOnLeft we also need room for the spouse boxes on the left.
+  const focalCX = PAD + (spouseOnLeft
+    ? Math.max(ancHalfW, descLeftFromFocal, spouseBoxesExtent)
+    : Math.max(ancHalfW, descLeftFromFocal));
+  const rightNeeded = spouseOnLeft
+    ? Math.max(ancHalfW, descRightFromFocal)
+    : Math.max(ancHalfW, descRightFromFocal, spouseBoxesExtent);
   const svgWidth = focalCX + rightNeeded + PAD;
 
   // Ancestors are symmetric around focalCX.
@@ -403,10 +447,15 @@ export function computeHourglassLayout(
 
   // ── Descendant subtree layout ────────────────────────────────────────────
 
-  // CX of the i-th spouse (0-indexed): one H_GAP from focal, then V_GAP between.
-  const spouseCXOf = (i: number) => focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
+  // CX of the i-th spouse. When focal is female the spouse goes LEFT of focal.
+  const spouseCXOf = (i: number) => spouseOnLeft
+    ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
+    : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  const coupleJunctionX = focalCX + spouseOffset;
+  // Couple-junction: midway between focal and first spouse.
+  const coupleJunctionX = spouseOnLeft
+    ? focalCX - spouseOffset
+    : focalCX + spouseOffset;
 
   // placeDescendants: spaces children using actual subtree extents so that
   // adjacent sibling subtrees never overlap (always exactly V_GAP apart).
@@ -463,11 +512,12 @@ export function computeHourglassLayout(
 
   if (effectiveSpouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
-    // Single horizontal line from focal's right edge through all spouse centres
+    const lastSpouseCX = spouseCXOf(effectiveSpouses.length - 1);
+    // Horizontal marriage line: spans from focal edge to outermost spouse edge.
     lines.push({
-      x1: focalCX + BOX_W / 2,
+      x1: spouseOnLeft ? lastSpouseCX - BOX_W / 2 : focalCX + BOX_W / 2,
       y1: lineY,
-      x2: spouseCXOf(effectiveSpouses.length - 1) + BOX_W / 2,
+      x2: spouseOnLeft ? focalCX + BOX_W / 2 : lastSpouseCX + BOX_W / 2,
       y2: lineY,
     });
     for (let i = 0; i < effectiveSpouses.length; i++) {
@@ -516,10 +566,13 @@ export function computeHourglassLayout(
           });
         }
         if (spouses.length > 0) {
+          // When focal is female the spouse panel is to the LEFT — use :left key.
+          const spouseDir = focalIsFemale ? 'left' : 'right';
+          const spouseBtnCX = focalIsFemale ? box.x - 10 : box.x + BOX_W + 10;
           collapseButtons.push({
-            personId: box.person.id, direction: 'right',
-            cx: box.x + BOX_W + 10, cy: box.y + BOX_H / 2,
-            isExpanded: !collapsed.has(`${box.person.id}:right`),
+            personId: box.person.id, direction: spouseDir,
+            cx: spouseBtnCX, cy: box.y + BOX_H / 2,
+            isExpanded: !collapsed.has(`${box.person.id}:right`) && !collapsed.has(`${box.person.id}:left`),
           });
         }
       } else {
