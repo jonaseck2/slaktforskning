@@ -280,30 +280,69 @@ export function computeHourglassLayout(
   const ancestorSectionWidth = totalAncestorLeaves * (BOX_W + V_GAP) - V_GAP;
 
   // ── Descendant geometry ──────────────────────────────────────────────────
+  //
+  // Children are placed by spacing adjacent sibling subtrees just V_GAP apart,
+  // then centering the group below the parent.  Leaf nodes take 1 slot (BOX_W).
+  // Nodes with children take as much space as their subtree needs.
+  //
+  // subtreeExtents(node, depth) → [leftExt, rightExt] measured from node's CX.
+  // placeDescendants(node, depth, nodeCX) places boxes/lines recursively.
+  // Both functions use the same spacing logic so layout and sizing agree.
 
-  function leafCount(node: DescendantNode, depth: number): number {
-    if (depth >= M || node.children.length === 0) return 1;
-    if (depth > 0 && collapsed.has(`${node.person.id}:down`)) return 1;
-    return node.children.reduce((sum, child) => sum + leafCount(child, depth + 1), 0);
+  function subtreeExtents(node: DescendantNode, depth: number): [number, number] {
+    const half = BOX_W / 2;
+    if (depth >= M || node.children.length === 0) return [half, half];
+    if (depth > 0 && collapsed.has(`${node.person.id}:down`)) return [half, half];
+
+    const n = node.children.length;
+    const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
+
+    // Offsets of each child's CX from the leftmost child's CX
+    const offsets: number[] = [0];
+    for (let i = 1; i < n; i++) {
+      offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
+    }
+    const totalSpan = offsets[n - 1]; // distance from first to last child CX
+
+    // Group is centred below node: leftmost child at node - totalSpan/2
+    const leftExt  = Math.max(half, totalSpan / 2 + childExts[0][0]);
+    const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]);
+    return [leftExt, rightExt];
   }
 
-  const totalDescLeaves  = M > 0 ? leafCount(effectiveDescRoot, 0) : 1;
-  const descSectionWidth = totalDescLeaves * (BOX_W + V_GAP) - V_GAP;
-
-  // ── SVG dimensions ───────────────────────────────────────────────────────
-
-  // baseSvgWidth centres the ancestor/descendant layout; focalCX is fixed at its midpoint.
-  // svgWidth may be wider if spouses extend past the right edge.
-  const baseSvgWidth = Math.max(ancestorSectionWidth, descSectionWidth) + 2 * PAD;
-
-  // Shift the narrower section so both are centered at baseSvgWidth/2
-  const ancestorOffset = (baseSvgWidth - 2 * PAD - ancestorSectionWidth) / 2;
-
-  // Row Y helpers
+  // Row Y helpers (needed before focalCX is known)
   // Ancestor rows count down from top; focal = PAD + A*(BOX_H+GEN_GAP)
-  const focalRowY = PAD + A * (BOX_H + GEN_GAP);
+  const focalRowY  = PAD + A * (BOX_H + GEN_GAP);
   const ancestorRowY = (g: number) => PAD + (A - g) * (BOX_H + GEN_GAP);
   const descRowY     = (d: number) => focalRowY + d * (BOX_H + GEN_GAP);
+
+  // Compute descendant extents relative to the couple-junction.
+  const [compactLeftFromCJ, compactRightFromCJ] =
+    M > 0 ? subtreeExtents(effectiveDescRoot, 0) : [BOX_W / 2, BOX_W / 2];
+
+  // Spouse offset: couple-junction sits midway between focal and first spouse.
+  const spouseOffset = effectiveSpouses.length > 0 ? (BOX_W + H_GAP) / 2 : 0;
+
+  // Convert to distances from focalCX.
+  const descLeftFromFocal  = spouseOffset + compactLeftFromCJ;
+  const descRightFromFocal = spouseOffset + compactRightFromCJ;
+
+  // Ancestor section is symmetric around focalCX.
+  const ancHalfW = ancestorSectionWidth / 2;
+
+  // Spouse boxes extend to the right of focal.
+  const spouseBoxesRight = effectiveSpouses.length > 0
+    ? BOX_W + H_GAP + (effectiveSpouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
+    : 0;
+
+  // Place focal far enough right that nothing clips on the left; add symmetric
+  // right margin; take the larger of ancestor or descendant needs on each side.
+  const focalCX = PAD + Math.max(ancHalfW, descLeftFromFocal);
+  const rightNeeded = Math.max(ancHalfW, descRightFromFocal, spouseBoxesRight);
+  const svgWidth = focalCX + rightNeeded + PAD;
+
+  // Ancestors are symmetric around focalCX.
+  const ancestorOffset = focalCX - PAD - ancHalfW;
 
   // Center X of ancestor with ahnentafel k
   const ancestorCX = (k: number): number => {
@@ -364,16 +403,14 @@ export function computeHourglassLayout(
 
   // ── Descendant subtree layout ────────────────────────────────────────────
 
-  const focalCX = baseSvgWidth / 2;
-
   // CX of the i-th spouse (0-indexed): one H_GAP from focal, then V_GAP between.
-  // Defined here so coupleJunctionX can reference it before the spouse-box loop.
   const spouseCXOf = (i: number) => focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  function placeDescendants(node: DescendantNode, depth: number, leftX: number, depth0StartY?: number): void {
-    const subWidth = leafCount(node, depth) * (BOX_W + V_GAP) - V_GAP;
-    const nodeCX   = leftX + subWidth / 2;
+  const coupleJunctionX = focalCX + spouseOffset;
 
+  // placeDescendants: spaces children using actual subtree extents so that
+  // adjacent sibling subtrees never overlap (always exactly V_GAP apart).
+  function placeDescendants(node: DescendantNode, depth: number, nodeCX: number, depth0StartY?: number): void {
     // Focal box is already placed by the ancestor loop; skip depth === 0
     if (depth > 0) {
       boxes.push({
@@ -391,58 +428,38 @@ export function computeHourglassLayout(
       if (!childrenCollapsed) {
         const rowY  = depth === 0 ? focalRowY : descRowY(depth);
         const forkY = rowY + BOX_H + GEN_GAP / 2;
-        // At depth 0 with a spouse, connect from the marriage line (mid-box) not the box bottom
         const lineStartY = depth === 0 && depth0StartY !== undefined ? depth0StartY : rowY + BOX_H;
 
         lines.push({ x1: nodeCX, y1: lineStartY, x2: nodeCX, y2: forkY });
 
-        // Compute child center Xs
-        const childCXs: number[] = [];
-        let cLeft = leftX;
-        for (const child of node.children) {
-          const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
-          childCXs.push(cLeft + cWidth / 2);
-          cLeft += cWidth + V_GAP;
-        }
+        const n = node.children.length;
+        const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
 
-        if (childCXs.length > 1) {
-          lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[childCXs.length - 1], y2: forkY });
+        // Compute child CX positions: pack subtrees with V_GAP between edges
+        const offsets: number[] = [0];
+        for (let i = 1; i < n; i++) {
+          offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
         }
+        const totalSpan = offsets[n - 1];
+        const leftmostCX = nodeCX - totalSpan / 2;
+        const childCXs = offsets.map(o => leftmostCX + o);
 
-        cLeft = leftX;
-        for (let ci = 0; ci < node.children.length; ci++) {
-          const child  = node.children[ci];
-          const cWidth = leafCount(child, depth + 1) * (BOX_W + V_GAP) - V_GAP;
+        if (n > 1) {
+          lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
+        }
+        for (let ci = 0; ci < n; ci++) {
           lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
-          placeDescendants(child, depth + 1, cLeft);
-          cLeft += cWidth + V_GAP;
+          placeDescendants(node.children[ci], depth + 1, childCXs[ci]);
         }
       }
     }
   }
 
-  // When a single spouse is present, drop the descendant tree from the midpoint
-  // between focal and that spouse (standard genealogy-tree convention: children
-  // come from the couple line, not from one parent alone).
-  const coupleJunctionX = effectiveSpouses.length > 0
-    ? (focalCX + spouseCXOf(0)) / 2
-    : focalCX;
-  const descStartX = coupleJunctionX - descSectionWidth / 2;
+  const descStartX = coupleJunctionX;
   // When there's a spouse, the marriage line is at BOX_H/2; start the children
   // connector there so it visually meets the marriage line without a gap.
   const coupleLineY = effectiveSpouses.length > 0 ? focalRowY + BOX_H / 2 : undefined;
-  placeDescendants(effectiveDescRoot, 0, descStartX, coupleLineY);
-
-  // ── Spouse boxes and connectors ──────────────────────────────────────────
-  // Spouses are placed to the right of focal at the same row, connected by a
-  // horizontal line. Each marriage is a separate box; multiple spouses chain
-  // rightward so the history of remarriages reads left-to-right.
-
-  const spouseRightEdge = effectiveSpouses.length > 0
-    ? spouseCXOf(effectiveSpouses.length - 1) + BOX_W / 2 + PAD
-    : 0;
-
-  const svgWidth = Math.max(baseSvgWidth, spouseRightEdge);
+  placeDescendants(effectiveDescRoot, 0, descStartX, coupleLineY); // descStartX = coupleJunctionX
 
   if (effectiveSpouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
@@ -470,7 +487,8 @@ export function computeHourglassLayout(
   const deepestDescRow = M > 0 && effectiveDescRoot.children.length > 0
     ? descRowY(M)
     : focalRowY;
-  const svgHeight = deepestDescRow + BOX_H + PAD;
+  // Add 20px below deepest box: 10px to button centre + ~8px button radius + 2px margin.
+  const svgHeight = deepestDescRow + BOX_H + 20 + PAD;
 
   // ── Collapse buttons ─────────────────────────────────────────────────────
 

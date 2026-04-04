@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout } from '../../utils/chartLayout';
 import { fetchHourglassTree } from '../../utils/chartData';
@@ -153,6 +153,16 @@ async function load() {
   } finally {
     loading.value = false;
   }
+  await nextTick();
+  centerOnFocal();
+}
+
+function centerOnFocal() {
+  const focal = layout.value.boxes.find(b => b.isFocal);
+  if (!focal || !scrollRef.value) return;
+  const focalCenterX = (focal.x + focal.w / 2) * zoom.value;
+  const viewportW = (scrollRef.value as HTMLElement).clientWidth;
+  (scrollRef.value as HTMLElement).scrollLeft = Math.max(0, focalCenterX - viewportW / 2);
 }
 
 watch(() => props.personId, load);
