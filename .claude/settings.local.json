@@ -212,7 +212,9 @@
       "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-04-genney-derby-import.md)",
       "Bash(node -e \"const p = require\\('./package.json'\\); p.version = '0.6.9'; require\\('fs'\\).writeFileSync\\('./package.json', JSON.stringify\\(p, null, 2\\) + '\\\\n'\\);\")",
       "Bash(unzip -l /Users/jonasahnstedt/git/slaktforskning/export-import/Linda_Ahnstedt.gcc)",
-      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(p.version\\)\")"
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\({...p.dependencies, ...p.devDependencies}, null, 2\\)\\)\")",
+      "Bash(node -e \"require\\('cross-zip'\\); console.log\\('available:', require.resolve\\('cross-zip'\\)\\)\")"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

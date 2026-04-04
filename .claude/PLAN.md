@@ -40,7 +40,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | GEDCOM couple subtype always 'unknown' | [archive](plans/archive/2026-04-03-gedcom-couple-subtype.md) |
 | Fix | Nickname position + asterisk notation in UI | [archive](plans/archive/2026-04-04-nickname-display-and-asterisk-ui.md) |
 | Fix | Genney import CPU saturation (per-row db.prepare) | [archive](plans/archive/2026-04-04-genney-cpu-saturation.md) |
-| Fix | Genney .backup extraction fails with Windows path separators | [archive](plans/archive/2026-04-04-genney-windows-paths.md) |
+| Fix | Genney .backup extraction: use fflate (pure JS) instead of unzip subprocess | [archive](plans/archive/2026-04-04-genney-windows-paths.md) |
 
 ---
 
