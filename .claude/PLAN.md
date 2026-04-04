@@ -54,6 +54,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v1.1.0 | EVENT.cause UI: Orsak field in EventForm/EventList + GEDCOM 2 CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
 | v1.2.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
 | v1.3.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
+| v1.4.0 | Polish: Escape key closes all modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
 
 ---
 
@@ -97,8 +98,8 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [ ] Unit tests: assertion roundtrip for person/event/relationship/place subjects
 
 ### Polish [feature]
-- [ ] Keyboard navigation and accessibility
-- [ ] Data backup and restore
+- [x] Keyboard navigation — Escape key closes all modals
+- [x] Data backup and restore
 - [ ] Undo/redo
 - [ ] Dark mode
 

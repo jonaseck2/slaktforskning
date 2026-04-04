@@ -270,6 +270,40 @@ export function registerIpcHandlers(): void {
     return { exported: true, filePath: result.filePath };
   });
 
+  // Backup / Restore
+  wrapHandler('backup:backup', async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return { success: false, error: 'No window' };
+
+    const currentPath = getCurrentDatabasePath();
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Spara säkerhetskopia',
+      defaultPath: path.basename(currentPath).replace('.db', '') + '-backup-' + new Date().toISOString().slice(0, 10) + '.db',
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+    });
+    if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
+
+    fs.copyFileSync(currentPath, result.filePath);
+    return { success: true, path: result.filePath };
+  });
+
+  wrapHandler('backup:restore', async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return { success: false, error: 'No window' };
+
+    const result = await dialog.showOpenDialog(win, {
+      title: 'Välj säkerhetskopia',
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { success: false, error: 'Cancelled' };
+
+    const backupPath = result.filePaths[0];
+    switchDatabase(backupPath);
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
+    return { success: true, path: backupPath };
+  });
+
   // Print / PDF
   wrapHandler('print:print', () => {
     const win = BrowserWindow.getFocusedWindow();

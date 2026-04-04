@@ -132,6 +132,10 @@ const api = {
     print: () => ipcRenderer.invoke('print:print'),
     exportPdf: (path?: string) => ipcRenderer.invoke('print:exportPdf', path),
   },
+  backup: {
+    backup: () => ipcRenderer.invoke('backup:backup'),
+    restore: () => ipcRenderer.invoke('backup:restore'),
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);

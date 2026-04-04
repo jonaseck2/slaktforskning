@@ -31,6 +31,12 @@
       <button @click="openExisting">{{ $t('database.openOther') }}</button>
     </section>
 
+    <section class="db-section db-actions">
+      <button @click="backup">{{ $t('database.backupButton') }}</button>
+      <button @click="restore">{{ $t('database.restoreButton') }}</button>
+    </section>
+
+    <div v-if="backupStatus" class="db-status">{{ backupStatus }}</div>
     <div v-if="statusMsg" class="db-status">{{ statusMsg }}</div>
   </div>
 </template>
@@ -50,6 +56,7 @@ interface DbEntry { path: string; name: string }
 const current = ref<DbEntry | null>(null);
 const recent = ref<DbEntry[]>([]);
 const statusMsg = ref('');
+const backupStatus = ref('');
 
 async function load() {
   current.value = await window.api.db.getCurrent() as DbEntry;
@@ -77,6 +84,23 @@ async function openExisting() {
   if (!result.canceled) {
     statusMsg.value = t('database.switchedTo', { name: result.name });
     setTimeout(() => { statusMsg.value = ''; }, 3000);
+  }
+}
+
+async function backup() {
+  const result = await (window.api.backup as Record<string, () => Promise<{ success: boolean; path?: string; error?: string }>>).backup();
+  if (result.success && result.path) {
+    backupStatus.value = t('database.backupSaved', { path: result.path });
+    setTimeout(() => { backupStatus.value = ''; }, 5000);
+  }
+}
+
+async function restore() {
+  if (!confirm(t('database.confirmRestore'))) return;
+  const result = await (window.api.backup as Record<string, () => Promise<{ success: boolean; path?: string; error?: string }>>).restore();
+  if (result.success) {
+    backupStatus.value = t('database.restoreSuccess');
+    setTimeout(() => { backupStatus.value = ''; }, 5000);
   }
 }
 

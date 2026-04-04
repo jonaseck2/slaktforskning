@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
@@ -139,6 +139,13 @@ const { t } = useI18n();
 const router = useRouter();
 const relationships = ref<RelRow[]>([]);
 const showAddForm = ref(false);
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') showAddForm.value = false;
+}
+onMounted(() => window.addEventListener('keydown', handleKeydown));
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+
 const form = reactive({
   type: 'couple' as string,
   subtype: 'marriage' as string,
