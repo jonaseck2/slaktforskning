@@ -86,7 +86,17 @@ export async function importFromGenney(
     const tables = parseNdJson(ndjson);
 
     onProgress('Transforming and importing data…');
-    const summary = transformGenney(db, tables);
+    // Single transaction: without this each API call is its own autocommit,
+    // causing thousands of individual WAL flushes (hundreds of MB of writes).
+    db.exec('BEGIN IMMEDIATE');
+    let summary: ImportSummary;
+    try {
+      summary = transformGenney(db, tables);
+      db.exec('COMMIT');
+    } catch (transformErr) {
+      try { db.exec('ROLLBACK'); } catch { /* ignore */ }
+      throw transformErr;
+    }
 
     return { summary, gedcomFallbackPath };
   } finally {
