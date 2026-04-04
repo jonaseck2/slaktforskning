@@ -5,6 +5,7 @@ export default {
   },
   nav: {
     visualization: 'Visualisering',
+    tree: 'Träd',
     persons: 'Personer',
     relationships: 'Relationer',
     sources: 'Källor',
@@ -327,6 +328,15 @@ export default {
     selectPerson: 'Välj fokusperson\u2026',
     viewDetail: 'Visa detaljer',
     today: 'Idag',
+  },
+  panel: {
+    noPersonSelected: 'Klicka på en person i trädet',
+    showInTree: 'Visa i träd',
+    open: 'Öppna',
+    events: 'Händelser',
+    relationships: 'Relationer',
+    notes: 'Anteckningar',
+    noNotes: 'Inga anteckningar',
   },
   placeTypes: {
     country: 'Land',

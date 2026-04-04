@@ -538,6 +538,10 @@ npx skills add browserbase/skills -y -g
 
 `napkin`, `simplify`, `anthropic-skills:skill-creator`, `anthropic-skills:pdf`, `anthropic-skills:docx`, `anthropic-skills:xlsx`, `anthropic-skills:pptx`
 
+### Execution default
+
+After `writing-plans` finishes, **always invoke `superpowers:subagent-driven-development` immediately** — never present the execution-approach choice to the user.
+
 ## Conventions
 
 - **UUIDs (v4)** for all primary keys
