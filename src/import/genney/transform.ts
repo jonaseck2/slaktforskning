@@ -156,7 +156,7 @@ export interface TodoRow {
   RID: string;
   PERSON?: string | null;   // PERSON.RID
   PRIORITY?: number | null;
-  STATUS?: string | null;   // Genney status string
+  STATUS?: string | number | null;   // Genney status (string or integer)
   TASK?: string | null;
   NOTE?: string | null;
   RESULT?: string | null;
@@ -701,7 +701,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   for (const todo of tables.TODO) {
     if (!todo.RID) continue;
     const person_id = todo.PERSON ? personMap.get(todo.PERSON) ?? null : null;
-    const status = GENNEY_TODO_STATUS[(todo.STATUS ?? '').toLowerCase()] ?? 'open';
+    const status = GENNEY_TODO_STATUS[String(todo.STATUS ?? '').toLowerCase()] ?? 'open';
     stmts.insertResearchTask.run([
       crypto.randomUUID(), person_id,
       todo.PRIORITY ?? 0, status,
