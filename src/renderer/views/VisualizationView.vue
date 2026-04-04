@@ -38,17 +38,17 @@
         <PedigreeChart
           v-if="activeTab === 'pedigree'"
           :person-id="personId"
-          @navigate="selectedPersonId = $event"
+          @navigate="navigateTo"
         />
         <HourglassChart
           v-if="activeTab === 'hourglass'"
           :person-id="personId"
-          @navigate="selectedPersonId = $event"
+          @navigate="navigateTo"
         />
         <TimelineChart
           v-if="activeTab === 'timeline'"
           :person-id="personId"
-          @navigate="selectedPersonId = $event"
+          @navigate="navigateTo"
         />
         <!-- Reopen panel button when panel is closed -->
         <button v-if="!panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
@@ -63,9 +63,7 @@
         <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
           <button class="panel-close-btn" @click="closePanel" title="Dölj panel">◀</button>
           <PersonPanel
-            :person-id="selectedPersonId"
-            @focus="navigateTo"
-            @select="selectedPersonId = $event"
+            :person-id="personId ?? null"
           />
         </div>
       </template>
@@ -100,7 +98,6 @@ const focalGivenName = ref<string | null>(null);
 const focalSurname = ref<string | null>(null);
 const focalPreferredName = ref<string | null>(null);
 const noPersonsExist = ref(false);
-const selectedPersonId = ref<string | null>(null);
 const vizBodyRef = ref<HTMLElement | null>(null);
 
 type TabName = 'pedigree' | 'hourglass' | 'timeline';
@@ -127,12 +124,8 @@ function setTab(tab: TabName) {
 }
 
 function navigateTo(id: string) {
-  selectedPersonId.value = null;
   router.push('/visualisering/' + id);
 }
-
-// Clear selection when focal changes
-watch(personId, () => { selectedPersonId.value = null; });
 
 async function load() {
   const id = personId.value;

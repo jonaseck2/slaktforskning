@@ -19,9 +19,6 @@
           </div>
           <div class="panel-dates">{{ personDates }}</div>
           <div class="panel-actions">
-            <button class="panel-btn" @click="personId && $emit('focus', personId)">
-              🌳 {{ $t('panel.showInTree') }}
-            </button>
             <router-link :to="'/persons/' + personId" class="panel-link">
               {{ $t('panel.open') }} →
             </router-link>
@@ -91,7 +88,6 @@ const { t } = useI18n();
 
 const props = defineProps<{ personId: string | null }>();
 const emit = defineEmits<{
-  focus: [id: string];
   select: [id: string];
 }>();
 
