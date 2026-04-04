@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
-# Check that required global Claude skills are installed.
+# Install all required global Claude plugins and skills.
+# Idempotent — safe to run on an existing machine or in the devcontainer.
 # Run manually on a new machine, or automatically via devcontainer postCreateCommand.
 
-SKILLS_DIR="${HOME}/.claude/skills"
+echo "Installing required Claude plugins..."
 
-# name:install-command pairs
-declare -A REQUIRED=(
-  [napkin]="npx skills add browserbase/skills --skill napkin -y -g"
-  [browser]="npx skills add browserbase/skills --skill browser -y -g"
-  [fetch]="npx skills add browserbase/skills --skill fetch -y -g"
-  [functions]="npx skills add browserbase/skills --skill functions -y -g"
-  [frontend-design]="npx skills add anthropics/skills --skill frontend-design -y -g"
+# Plugins (via claude plugin install — idempotent)
+PLUGINS=(
+  superpowers        # planning, debugging, parallel agents, code review
+  feature-dev        # feature development with codebase exploration
+  code-review        # PR review workflow
+  commit-commands    # commit / push / PR automation
+  code-simplifier    # code quality cleanup
+  mcp-server-dev     # MCP server development (this project has one)
+  frontend-design    # Vue / Electron UI work
+  skill-creator      # create and edit project skills
+  chrome-devtools-mcp # Electron renderer debugging (Chromium-based)
+  github             # PR and issue management
 )
 
-MISSING=()
-for skill in "${!REQUIRED[@]}"; do
-  if [[ ! -d "${SKILLS_DIR}/${skill}" ]]; then
-    MISSING+=("$skill")
-  fi
+for plugin in "${PLUGINS[@]}"; do
+  claude plugin install "$plugin"
 done
 
-if [[ ${#MISSING[@]} -eq 0 ]]; then
-  echo "✓ All required Claude skills are installed."
-  exit 0
-fi
-
-echo "⚠ Missing Claude skills:"
-for skill in "${MISSING[@]}"; do
-  echo "  - ${skill}"
-  echo "    Install: ${REQUIRED[$skill]}"
-done
 echo ""
-echo "Run the install commands above to restore full Claude capabilities."
-exit 1
+echo "Installing required legacy skills (browserbase)..."
+
+# Legacy skills (npx skills add — idempotent). napkin is built-in, not needed here.
+npx skills add browserbase/skills --skill browser -y -g
+npx skills add browserbase/skills --skill fetch -y -g
+npx skills add browserbase/skills --skill functions -y -g
+
+echo ""
+echo "✓ All required Claude skills installed."
