@@ -43,7 +43,11 @@
       "Bash(bash .devcontainer/ensure-native-binaries.sh)",
       "Read(//Users/jonasahnstedt/.claude/skills/**)",
       "Read(//Users/jonasahnstedt/.agents/skills/browser/**)",
-      "Bash(bash /Users/jonasahnstedt/git/slaktforskning/.devcontainer/check-claude-skills.sh)"
+      "Bash(bash /Users/jonasahnstedt/git/slaktforskning/.devcontainer/check-claude-skills.sh)",
+      "Read(//Users/jonasahnstedt/.claude/**)",
+      "Read(//Users/jonasahnstedt/.agents/skills/**)",
+      "Bash(claude plugin:*)",
+      "Bash(claude plugins:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
