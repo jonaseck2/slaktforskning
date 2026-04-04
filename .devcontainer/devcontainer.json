@@ -5,7 +5,7 @@
   },
 
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached"
+    "source=claude-credentials,target=/home/node/.claude,type=volume"
   ],
 
   "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/check-claude-skills.sh || true",
