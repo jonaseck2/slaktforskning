@@ -40,17 +40,34 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 - Do not commit files that contain secrets (.env, credentials). Warn the user if such files are staged.
 - **Review `git status` carefully** — if unexpected files appear (build artifacts, generated files not in `.gitignore`), flag them to the user before committing rather than silently including them.
 
+## Version bumping
+
+Every commit that completes a milestone or fix must bump `package.json` version:
+
+- **New feature** (new UI, new API surface, new MCP tools) → **minor bump** (e.g. 0.6.9 → 0.7.0)
+- **Fix or improvement on existing feature** → **patch bump** (e.g. 0.6.9 → 0.6.10)
+
+Steps:
+1. Determine bump type from the nature of the change.
+2. Read current version from `package.json`.
+3. Calculate new version (bump the right segment, reset lower segments to 0 for minor bumps).
+4. Update `"version"` in `package.json`.
+5. Include `package.json` in the same commit.
+
+The bumped version becomes the canonical version for that milestone — use it in the Implementation Status entry.
+
 ## Plan + Roadmap sync
 
 If the commit completes a milestone (or part of one) that has a plan file in `.claude/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
-- Update `.claude/PLAN.md` to mark the milestone done or partially done
+- Update `.claude/PLAN.md` accordingly
 - Include these doc updates in the same commit
 
 If the commit **fully completes** a milestone:
 - Move the plan file from `.claude/plans/` to `.claude/plans/archive/`
-- Add a one-line "Done (vX.Y.Z — ...)" entry to the **Implementation Status** section in `.claude/PLAN.md`, with a pointer to the archived plan file
-- **Remove the milestone's heading and checkbox list from the Roadmap section** — the Implementation Status entry is the permanent record; the Roadmap must only contain future work
+- Add a row to the **Implementation Status** table in `.claude/PLAN.md`:
+  `| vX.Y.Z | Short description | [archive](plans/archive/filename.md) |`
+- **Remove the milestone's heading and checkbox list from the Roadmap section** — the Implementation Status row is the permanent record; the Roadmap must only contain future work
 - Include all of the above in the same commit
 
 If the commit introduces a new plan file:
@@ -66,7 +83,7 @@ Significant bugfixes and unplanned improvements should also be archived, even wh
 - Fix touches a cross-cutting concern (e.g. IPC lifecycle, transaction handling)
 - Future agents would benefit from knowing why the code is written a certain way
 
-**Archive file format** (same frontmatter as plan files):
+**Archive file format:**
 
 ```markdown
 # Fix: Short title
@@ -84,4 +101,4 @@ What was changed and why.
 - `path/to/file.ts` — what changed
 ```
 
-Add a one-line entry to `.claude/PLAN.md` **Implementation Status** pointing to the archive file. No Roadmap entry is needed for fixes.
+Add a `| Fix | Short description | [archive](...) |` row to `.claude/PLAN.md` **Implementation Status**. No Roadmap entry is needed for fixes.
