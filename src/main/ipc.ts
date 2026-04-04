@@ -269,4 +269,35 @@ export function registerIpcHandlers(): void {
     fs.writeFileSync(result.filePath, gedText, 'utf-8');
     return { exported: true, filePath: result.filePath };
   });
+
+  // Print / PDF
+  wrapHandler('print:print', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+    win.webContents.print({ silent: false, printBackground: false });
+  });
+
+  wrapHandler('print:exportPdf', async (filePath?: unknown) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return { success: false, error: 'No window' };
+
+    let savePath = filePath as string | undefined;
+    if (!savePath) {
+      const result = await dialog.showSaveDialog(win, {
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+        defaultPath: 'export.pdf',
+      });
+      if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
+      savePath = result.filePath;
+    }
+
+    const pdfData = await win.webContents.printToPDF({
+      printBackground: false,
+      pageSize: 'A4',
+      margins: { top: 20, bottom: 20, left: 20, right: 20, marginType: 'custom' },
+    });
+
+    fs.writeFileSync(savePath, pdfData);
+    return { success: true, path: savePath };
+  });
 }

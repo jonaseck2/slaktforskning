@@ -128,6 +128,10 @@ const api = {
     addLink: (data: unknown) => ipcRenderer.invoke('media:addLink', data),
     removeLink: (linkId: string) => ipcRenderer.invoke('media:removeLink', linkId),
   },
+  print: {
+    print: () => ipcRenderer.invoke('print:print'),
+    exportPdf: (path?: string) => ipcRenderer.invoke('print:exportPdf', path),
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);

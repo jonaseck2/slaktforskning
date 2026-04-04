@@ -37,6 +37,10 @@
           <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
         </span>
       </router-link>
+      <router-link to="/reports" class="nav-item">
+        <span class="nav-icon">🖨️</span>
+        <span class="nav-label">{{ $t('reports.nav') }}</span>
+      </router-link>
       <div class="sidebar-spacer"></div>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
