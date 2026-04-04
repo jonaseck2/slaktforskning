@@ -70,8 +70,9 @@ import { useI18n } from 'vue-i18n';
 import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
+import type { EventTypeValue } from '../constants/eventTypes';
 
-const CAUSE_APPLICABLE_TYPES = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
+const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -143,7 +144,7 @@ async function save() {
       date_original: form.date_original,
       place_id: form.place_id || null,
       description: form.description,
-      cause: form.cause || null,
+      cause: CAUSE_APPLICABLE_TYPES.includes(form.event_type as EventTypeValue) ? (form.cause || null) : null,
     };
 
     if (props.relationshipId) data.relationship_id = props.relationshipId;
