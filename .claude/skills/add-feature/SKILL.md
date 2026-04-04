@@ -29,6 +29,23 @@ Follow this order. Each step builds on the previous.
     - New data quality / check category → `add-feature` skill or dedicated skill
     - GEDCOM mapping changes → `gedcom` skill
 
+## Cross-platform rules
+
+Släktforskning targets macOS, Windows, and Linux from a single codebase. The number one source of cross-platform breakage is spawning external processes that are not guaranteed to exist.
+
+**In app code (`src/`):** never `spawn` or `exec` a tool that the user must install separately. Use pure-JS/Node.js libraries instead.
+
+| Don't (app code) | Do instead |
+|------------------|------------|
+| `spawnSync('unzip', ...)` | `fflate.unzipSync()` |
+| `spawnSync('tar', ...)` | a JS tar library |
+| `execFile('ffmpeg', ...)` | a wasm/JS media library |
+| `execFile('convert', ...)` | a wasm/JS image library |
+
+**Exception — explicit user-facing prerequisites:** Docker is an explicit prerequisite for the Genney Derby import. The UI tells the user Docker is required, checks for it before starting, and falls back gracefully when it is absent. This is acceptable because the dependency is intentional, documented, and user-visible. Apply the same bar before adding any new external-process dependency: it must be deliberate, checked, and fallback-handled.
+
+**In tests and dev scripts (`tests/`, `scripts/`, `forge.config.ts`):** spawning processes is fine — test environments control what tools are available.
+
 ## API Layer (Steps 1-4)
 
 ### Database migrations — adding columns to existing tables
