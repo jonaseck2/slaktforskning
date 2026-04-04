@@ -148,6 +148,7 @@ export function exportGedcom(db: Database): string {
         }
       }
       if (ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       const citations = getCitationsForEvent(db, ev.id);
       for (const cit of citations) {
         const srcXr = sourceXref.get(cit.source_id);
@@ -261,6 +262,7 @@ export function exportGedcom(db: Database): string {
         }
       }
       if (ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       const citations = getCitationsForEvent(db, ev.id);
       for (const cit of citations) {
         const srcXr = sourceXref.get(cit.source_id);

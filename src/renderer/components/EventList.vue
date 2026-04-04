@@ -28,10 +28,7 @@
               </button>
             </td>
             <td>{{ formatDate(event) }}</td>
-            <td>
-              {{ event.description }}
-              <span v-if="event.cause" class="event-cause">({{ $t('events.cause') }}: {{ event.cause }})</span>
-            </td>
+            <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
             <td class="actions-cell">
               <template v-if="!props.readonly">
                 <button type="button" class="btn-sm btn-cite" @click.stop="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
