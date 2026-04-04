@@ -14,6 +14,7 @@ export function usePanelResize() {
   const panelWidth = ref(clampWidth(isNaN(stored) ? DEFAULT_WIDTH : stored));
 
   let rafId: number | null = null;
+  let cleanup: (() => void) | null = null;
 
   function startResize(e: MouseEvent, containerEl: HTMLElement) {
     e.preventDefault();
@@ -29,16 +30,19 @@ export function usePanelResize() {
     function onUp() {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      cleanup = null;
       if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
       localStorage.setItem(STORAGE_KEY, String(panelWidth.value));
     }
 
+    cleanup = onUp;
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   }
 
   onUnmounted(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
+    cleanup?.();
   });
 
   return { panelWidth, startResize };
