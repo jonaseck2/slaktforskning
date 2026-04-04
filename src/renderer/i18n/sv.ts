@@ -141,6 +141,8 @@ export default {
     unsourced: 'Okänd källa',
     sources: 'källa | källor',
     addSourceOptional: 'Lägg till källa (valfritt)',
+    cause: 'Orsak',
+    causePlaceholder: 't.ex. hjärtinfarkt',
   },
   citations: {
     addTitle: 'Lägg till hänvisning',

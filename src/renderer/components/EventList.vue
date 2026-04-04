@@ -28,7 +28,10 @@
               </button>
             </td>
             <td>{{ formatDate(event) }}</td>
-            <td>{{ event.description }}</td>
+            <td>
+              {{ event.description }}
+              <span v-if="event.cause" class="event-cause">({{ $t('events.cause') }}: {{ event.cause }})</span>
+            </td>
             <td class="actions-cell">
               <template v-if="!props.readonly">
                 <button type="button" class="btn-sm btn-cite" @click.stop="openCiteForm(event.id)">{{ $t('events.citeSources') }}</button>
@@ -92,6 +95,7 @@ interface EventRow {
   date_original: string;
   place_id: string | null;
   description: string;
+  cause: string | null;
 }
 
 const props = defineProps<{
@@ -367,4 +371,9 @@ defineExpose({ reload: load });
 }
 tr.non-interactive { cursor: default; }
 tr.non-interactive:hover td { background: transparent; }
+.event-cause {
+  color: #666;
+  font-style: italic;
+  font-size: 12px;
+}
 </style>

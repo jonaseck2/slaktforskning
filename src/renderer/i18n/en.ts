@@ -141,6 +141,8 @@ export default {
     unsourced: 'Unsourced',
     sources: 'source | sources',
     addSourceOptional: 'Add Source (optional)',
+    cause: 'Cause',
+    causePlaceholder: 'e.g. heart attack',
   },
   citations: {
     addTitle: 'Add Citation',
