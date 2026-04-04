@@ -18,7 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
-import { execSync, spawnSync } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import type { Database } from 'node-sqlite3-wasm';
 import { transformGenney, parseNdJson, type ImportSummary } from './transform';
 
@@ -134,7 +134,7 @@ function downloadFile(url: string, dest: string): Promise<void> {
 
 async function detectSchema(derbyPath: string, onProgress: (msg: string) => void): Promise<string> {
   onProgress('Detecting schema…');
-  const output = await runDocker(derbyPath, ['--db-path', '/derby', '--list-schemas']);
+  const output = await runDocker(derbyPath, ['--db-path', '/derby', '--list-schemas'], onProgress);
   const schemas = output.trim().split('\n').filter(Boolean);
   if (schemas.length === 1) return schemas[0].trim();
   if (schemas.length > 1) {
@@ -152,8 +152,8 @@ async function runExtractor(
   schema: string,
   onProgress: (msg: string) => void,
 ): Promise<string> {
-  onProgress('Running Derby extractor…');
-  return runDocker(derbyPath, ['--db-path', '/derby', '--schema', schema]);
+  onProgress('Running Derby extractor (this may take a minute on first run while Docker pulls the image)…');
+  return runDocker(derbyPath, ['--db-path', '/derby', '--schema', schema], onProgress);
 }
 
 /**
@@ -179,7 +179,11 @@ function findExtractorJava(): string {
   );
 }
 
-function runDocker(derbyPath: string, extraArgs: string[]): Promise<string> {
+function runDocker(
+  derbyPath: string,
+  extraArgs: string[],
+  onProgress?: (msg: string) => void,
+): Promise<string> {
   // Copy jars + DerbyExtractor.java to a temp work dir, then mount that dir.
   // This avoids __dirname path issues in the Vite bundle.
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'derby-work-'));
@@ -193,35 +197,49 @@ function runDocker(derbyPath: string, extraArgs: string[]): Promise<string> {
     return Promise.reject(err);
   }
 
+  const jarPaths = DERBY_JARS.map(j => `/work/${j.name}`).join(':');
+  const shellCmd = [
+    'cd /work',
+    `javac -cp '${jarPaths}' DerbyExtractor.java`,
+    `java -cp '/work:${jarPaths}' DerbyExtractor ${extraArgs.join(' ')}`,
+  ].join(' && ');
+
+  const dockerArgs = [
+    'run', '--rm',
+    '-v', `${workDir}:/work`,
+    '-v', `${derbyPath}:/derby:ro`,
+    'eclipse-temurin:21-jdk-alpine',
+    'sh', '-c', shellCmd,
+  ];
+
   return new Promise((resolve, reject) => {
-    const jarPaths = DERBY_JARS.map(j => `/work/${j.name}`).join(':');
-    const shellCmd = [
-      `cd /work`,
-      `javac -cp '${jarPaths}' DerbyExtractor.java`,
-      `java -cp '/work:${jarPaths}' DerbyExtractor ${extraArgs.join(' ')}`,
-    ].join(' && ');
+    // Use async spawn so the Electron main process event loop stays alive
+    const child = spawn('docker', dockerArgs);
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
 
-    const dockerArgs = [
-      'run', '--rm',
-      '-v', `${workDir}:/work`,
-      '-v', `${derbyPath}:/derby:ro`,
-      'eclipse-temurin:21-jdk-alpine',
-      'sh', '-c', shellCmd,
-    ];
-
-    const result = spawnSync('docker', dockerArgs, {
-      encoding: 'utf-8',
-      maxBuffer: 256 * 1024 * 1024,
+    child.stdout.on('data', (chunk: Buffer) => stdoutChunks.push(chunk));
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderrChunks.push(chunk);
+      // Forward Docker pull / stderr progress lines to the UI
+      const line = chunk.toString().trim();
+      if (line && onProgress) onProgress(line.slice(0, 120));
     });
 
-    try { fs.rmSync(workDir, { recursive: true, force: true }); } catch { /* ignore */ }
+    child.on('error', (err) => {
+      try { fs.rmSync(workDir, { recursive: true, force: true }); } catch { /* ignore */ }
+      reject(err);
+    });
 
-    if (result.error) { reject(result.error); return; }
-    if (result.status !== 0) {
-      reject(new Error(`Docker extractor failed (exit ${result.status}):\n${result.stderr}`));
-      return;
-    }
-    resolve(result.stdout);
+    child.on('close', (code) => {
+      try { fs.rmSync(workDir, { recursive: true, force: true }); } catch { /* ignore */ }
+      if (code !== 0) {
+        const stderr = Buffer.concat(stderrChunks).toString();
+        reject(new Error(`Docker extractor failed (exit ${code}):\n${stderr}`));
+        return;
+      }
+      resolve(Buffer.concat(stdoutChunks).toString('utf-8'));
+    });
   });
 }
 
