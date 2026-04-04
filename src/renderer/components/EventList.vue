@@ -366,5 +366,5 @@ defineExpose({ reload: load });
   color: #999;
 }
 tr.non-interactive { cursor: default; }
-tr.non-interactive:hover { background: transparent; }
+tr.non-interactive:hover td { background: transparent; }
 </style>
