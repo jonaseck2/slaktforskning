@@ -33,3 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Claude Code CLI globally
 RUN npm install -g @anthropic-ai/claude-code
+
+# Helper: ensure native binaries match the container platform (Linux x64)
+COPY ensure-native-binaries.sh /usr/local/bin/ensure-native-binaries
+RUN chmod +x /usr/local/bin/ensure-native-binaries

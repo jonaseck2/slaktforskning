@@ -4,7 +4,11 @@
     "dockerfile": "Dockerfile"
   },
 
-  "postCreateCommand": "npm install && npx playwright install chromium",
+  "mounts": [
+    "source=claude-credentials,target=/home/node/.claude,type=volume"
+  ],
+
+  "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium",
   "postStartCommand": "bash .devcontainer/xvfb-start.sh",
 
   // Environment variable so E2E tests know to use a temp DB path
@@ -19,10 +23,11 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "vitest.explorer",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "anthropic.claude-code"
       ],
       "settings": {
-        "typescript.tsdk": "node_modules/typescript/lib",
+        "js/ts.tsdk.path": "node_modules/typescript/lib",
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
       }
