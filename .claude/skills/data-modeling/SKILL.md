@@ -119,6 +119,57 @@ When designing new entities, consider how they map to GEDCOM 5.5.1 tags (for bro
 
 ---
 
+## SQLite bulk-write performance — mandatory rules
+
+Any operation that writes more than ~50 rows **must** use a single transaction. Without this, each `db.prepare().run()` call is its own autocommit, triggering an individual WAL flush to disk. For 800 persons + 5900 citations this produces hundreds of MB of disk writes and takes minutes instead of seconds.
+
+### Rule 1 — Wrap batch writes in one transaction
+
+```typescript
+db.exec('BEGIN IMMEDIATE');
+try {
+  for (const row of rows) createThing(db, row);
+  db.exec('COMMIT');
+} catch (err) {
+  try { db.exec('ROLLBACK'); } catch { /* ignore */ }
+  throw err;
+}
+```
+
+`BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). Use it for any import or migration that writes multiple rows.
+
+### Rule 2 — Keep CPU work off the main Electron process
+
+`JSON.parse`, bulk data transformation, and long loops block the Node.js event loop in the Electron main process, freezing the UI. For any operation that takes more than ~0.5s:
+
+**JSON parsing of large outputs** — move to a `worker_threads` Worker (eval mode requires no build changes):
+
+```typescript
+import { Worker } from 'worker_threads';
+
+const WORKER_CODE = `
+const { workerData, parentPort } = require('worker_threads');
+// ... CPU-intensive work here ...
+parentPort.postMessage(result);
+`;
+
+function runInWorker(data: unknown): Promise<Result> {
+  return new Promise((resolve, reject) => {
+    const w = new Worker(WORKER_CODE, { eval: true, workerData: data });
+    w.once('message', resolve);
+    w.once('error', reject);
+  });
+}
+```
+
+**Child processes** (Docker, shell commands): always use async `spawn`, never `spawnSync`. The sync variant blocks the event loop for the entire child process duration.
+
+### Why this keeps coming up
+
+This was independently discovered twice — once during GEDCOM import and once during Genney Derby import. The pattern is always the same: import works fine for small test datasets, then hangs for minutes on real data. The fix is always: (1) wrap in transaction, (2) move CPU work off main thread.
+
+---
+
 ## Project schema reference
 
 Read `references/schema.md` for the full column-level schema of this project, including the GEDCOM 5.5.1 mapping table, event type list, and Swedish place hierarchy.
