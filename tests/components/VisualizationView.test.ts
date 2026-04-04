@@ -40,10 +40,10 @@ describe('VisualizationView', () => {
     expect(wrapper.text()).toContain('Magnus Eriksson');
   });
 
-  it('renders the pedigree chart tab by default', async () => {
+  it('renders the hourglass chart tab by default', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n] } });
     await flushPromises();
-    expect(wrapper.find('.stub-pedigree').exists()).toBe(true);
+    expect(wrapper.find('.stub-hourglass').exists()).toBe(true);
   });
 
   it('switches to hourglass tab when clicked', async () => {

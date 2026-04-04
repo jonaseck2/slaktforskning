@@ -1,62 +1,74 @@
 <template>
   <div class="visualization-view">
-    <div class="viz-header">
-      <button class="btn-back" @click="$router.back()">{{ $t('personDetail.back') }}</button>
-      <template v-if="focalPerson">
-        <div class="focal-info">
-          <h2 data-testid="visualization-focal-name">
-            <PersonName :given-name="focalGivenName" :surname="focalSurname" :preferred-name="focalPreferredName" />
-          </h2>
-          <router-link :to="'/persons/' + personId" class="btn-detail">{{ $t('visualization.viewDetail') }} →</router-link>
-        </div>
-      </template>
+    <!-- Tab bar -->
+    <div v-if="focalPerson" class="viz-tabs" role="tablist">
+      <div class="viz-focal-label" data-testid="visualization-focal-name">
+        <PersonName
+          :given-name="focalGivenName"
+          :surname="focalSurname"
+          :preferred-name="focalPreferredName"
+        />
+      </div>
+      <button
+        role="tab" :aria-selected="activeTab === 'pedigree'"
+        :class="['tab', { active: activeTab === 'pedigree' }]"
+        data-testid="tab-pedigree" @click="setTab('pedigree')"
+      >{{ $t('visualization.tab.pedigree') }}</button>
+      <button
+        role="tab" :aria-selected="activeTab === 'hourglass'"
+        :class="['tab', { active: activeTab === 'hourglass' }]"
+        data-testid="tab-hourglass" @click="setTab('hourglass')"
+      >{{ $t('visualization.tab.hourglass') }}</button>
+      <button
+        role="tab" :aria-selected="activeTab === 'timeline'"
+        :class="['tab', { active: activeTab === 'timeline' }]"
+        data-testid="tab-timeline" @click="setTab('timeline')"
+      >{{ $t('visualization.tab.timeline') }}</button>
     </div>
 
-    <template v-if="focalPerson">
-      <div class="viz-tabs" role="tablist">
-        <button
-          role="tab"
-          :aria-selected="activeTab === 'pedigree'"
-          :class="['tab', { active: activeTab === 'pedigree' }]"
-          data-testid="tab-pedigree"
-          @click="setTab('pedigree')"
-        >{{ $t('visualization.tab.pedigree') }}</button>
-        <button
-          role="tab"
-          :aria-selected="activeTab === 'hourglass'"
-          :class="['tab', { active: activeTab === 'hourglass' }]"
-          data-testid="tab-hourglass"
-          @click="setTab('hourglass')"
-        >{{ $t('visualization.tab.hourglass') }}</button>
-        <button
-          role="tab"
-          :aria-selected="activeTab === 'timeline'"
-          :class="['tab', { active: activeTab === 'timeline' }]"
-          data-testid="tab-timeline"
-          @click="setTab('timeline')"
-        >{{ $t('visualization.tab.timeline') }}</button>
-      </div>
-      <div class="viz-area" data-testid="viz-area">
+    <!-- Empty state -->
+    <div v-if="noPersonsExist" class="empty-state" data-testid="viz-empty">
+      {{ $t('visualization.empty') }}
+    </div>
+
+    <!-- Chart + panel body -->
+    <div v-else-if="focalPerson" class="viz-body" ref="vizBodyRef" data-testid="viz-area">
+      <!-- Chart area -->
+      <div class="viz-chart-area">
         <PedigreeChart
           v-if="activeTab === 'pedigree'"
           :person-id="personId"
-          @navigate="navigateTo"
+          @navigate="selectedPersonId = $event"
         />
         <HourglassChart
           v-if="activeTab === 'hourglass'"
           :person-id="personId"
-          @navigate="navigateTo"
+          @navigate="selectedPersonId = $event"
         />
         <TimelineChart
           v-if="activeTab === 'timeline'"
           :person-id="personId"
-          @navigate="navigateTo"
+          @navigate="selectedPersonId = $event"
         />
+        <!-- Reopen panel button when panel is closed -->
+        <button v-if="!panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
       </div>
-    </template>
 
-    <div v-else-if="noPersonsExist" class="empty-state" data-testid="viz-empty">
-      {{ $t('visualization.empty') }}
+      <!-- Drag handle + panel -->
+      <template v-if="panelOpen">
+        <div
+          class="panel-drag-handle"
+          @mousedown="(e) => startResize(e, vizBodyRef!)"
+        ></div>
+        <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
+          <button class="panel-close-btn" @click="closePanel" title="Dölj panel">◀</button>
+          <PersonPanel
+            :person-id="selectedPersonId"
+            @focus="navigateTo"
+            @select="selectedPersonId = $event"
+          />
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -69,6 +81,8 @@ import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonName from '../components/PersonName.vue';
+import PersonPanel from '../components/PersonPanel.vue';
+import { usePanelResize } from '../composables/usePanelResize';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -86,9 +100,24 @@ const focalGivenName = ref<string | null>(null);
 const focalSurname = ref<string | null>(null);
 const focalPreferredName = ref<string | null>(null);
 const noPersonsExist = ref(false);
+const selectedPersonId = ref<string | null>(null);
+const vizBodyRef = ref<HTMLElement | null>(null);
 
 type TabName = 'pedigree' | 'hourglass' | 'timeline';
-const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'pedigree');
+const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
+
+// Panel open/closed
+const panelOpen = ref(localStorage.getItem('viz-panel-open') !== 'false');
+function openPanel() {
+  panelOpen.value = true;
+  localStorage.setItem('viz-panel-open', 'true');
+}
+function closePanel() {
+  panelOpen.value = false;
+  localStorage.setItem('viz-panel-open', 'false');
+}
+
+const { panelWidth, startResize } = usePanelResize();
 
 const personId = computed(() => route.params.personId as string | undefined);
 
@@ -98,37 +127,27 @@ function setTab(tab: TabName) {
 }
 
 function navigateTo(id: string) {
+  selectedPersonId.value = null;
   router.push('/visualisering/' + id);
 }
+
+// Clear selection when focal changes
+watch(personId, () => { selectedPersonId.value = null; });
 
 async function load() {
   const id = personId.value;
   if (!id) {
-    // No personId in route — check localStorage for last viewed
     const last = localStorage.getItem('viz-focal-person');
-    if (last) {
-      router.replace('/visualisering/' + last);
-      return;
-    }
-    // Auto-select first person or show empty state
+    if (last) { router.replace('/visualisering/' + last); return; }
     const persons = (await window.api.persons.list()) as PersonWithName[];
-    if (persons.length > 0) {
-      router.replace('/visualisering/' + persons[0].id);
-    } else {
-      noPersonsExist.value = true;
-    }
+    if (persons.length > 0) { router.replace('/visualisering/' + persons[0].id); }
+    else { noPersonsExist.value = true; }
     return;
   }
-
   localStorage.setItem('viz-focal-person', id);
-
   const person = (await window.api.persons.get(id)) as Person | null;
-  if (!person) {
-    focalPerson.value = null;
-    return;
-  }
+  if (!person) { focalPerson.value = null; return; }
   focalPerson.value = person;
-
   const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; sort_order: number }>;
   const primary = names.sort((a, b) => a.sort_order - b.sort_order)[0];
   focalGivenName.value = primary?.given_name ?? null;
@@ -147,80 +166,113 @@ onMounted(load);
   height: 100%;
 }
 
-.viz-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.focal-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.focal-info h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.btn-back {
-  background: none;
-  border: 1px solid #ccc;
-  padding: 5px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #555;
-  white-space: nowrap;
-}
-
-.btn-back:hover { background: #f5f5f5; }
-
-.btn-detail {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.btn-detail:hover { background: #dcfce7; }
-
+/* Tab bar */
 .viz-tabs {
   display: flex;
+  align-items: center;
   gap: 4px;
-  margin-bottom: 16px;
   border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 0;
+  padding: 0 12px;
+  flex-shrink: 0;
+  background: white;
 }
-
+.viz-focal-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-right: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
 .tab {
   background: none;
   border: none;
-  padding: 8px 18px;
+  padding: 10px 16px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   border-radius: 4px 4px 0 0;
+  white-space: nowrap;
 }
-
 .tab:hover { color: #2c3e50; background: #f9f9f9; }
 .tab.active { color: #2c3e50; border-bottom-color: #2c3e50; font-weight: 600; }
 
-.viz-area {
+/* Body: chart + panel */
+.viz-body {
   flex: 1;
+  display: flex;
+  flex-direction: row;
   min-height: 0;
+  position: relative;
+}
+.viz-chart-area {
+  flex: 1;
+  min-width: 0;
+  position: relative;
   overflow: hidden;
 }
+
+/* Panel reopen button */
+.panel-open-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: #999;
+  font-size: 11px;
+  z-index: 10;
+}
+.panel-open-btn:hover { color: #555; background: #f5f5f5; }
+
+/* Drag handle */
+.panel-drag-handle {
+  width: 6px;
+  background: #e8e8e8;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.1s;
+}
+.panel-drag-handle:hover { background: #c0c0c0; }
+
+/* Panel */
+.viz-panel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-left: 1px solid #e0e0e0;
+  position: relative;
+  overflow: hidden;
+  min-width: 200px;
+  max-width: 520px;
+}
+.panel-close-btn {
+  position: absolute;
+  top: 8px;
+  left: -1px;
+  z-index: 10;
+  background: white;
+  border: 1px solid #ddd;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  padding: 4px 5px;
+  cursor: pointer;
+  color: #bbb;
+  font-size: 10px;
+  line-height: 1;
+  transform: translateX(-100%);
+}
+.panel-close-btn:hover { color: #555; }
 
 .empty-state {
   color: #999;
