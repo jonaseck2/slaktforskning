@@ -24,5 +24,6 @@ export const router = createRouter({
     { path: '/import-export', component: () => import('./views/ImportExportView.vue') },
     { path: '/database', component: () => import('./views/DatabaseView.vue') },
     { path: '/quality', component: () => import('./views/QualityView.vue') },
+    { path: '/reports', component: () => import('./views/ReportsView.vue') },
   ],
 });

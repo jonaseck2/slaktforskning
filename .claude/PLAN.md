@@ -53,6 +53,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v1.0.2 | Fix hourglass female-focal spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
 | v1.1.0 | EVENT.cause UI: Orsak field in EventForm/EventList + GEDCOM 2 CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
 | v1.2.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
+| v1.3.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
 
 ---
 
@@ -94,12 +95,6 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [ ] Exporter: emit one `_ASSN` record per `assertions` row
 - [ ] Importer: read `_ASSN` records in a post-pass, recreate assertions
 - [ ] Unit tests: assertion roundtrip for person/event/relationship/place subjects
-
-### Printable Output [feature]
-See `.claude/plans/2026-04-03-printable-output.md` for the full plan.
-- [ ] IPC: `print:print` + `print:exportPdf`
-- [ ] `ReportsView` at `/reports` — Ancestor Chart, Family Group Sheet, Individual Summary tabs
-- [ ] Print CSS + preview area
 
 ### Polish [feature]
 - [ ] Keyboard navigation and accessibility
