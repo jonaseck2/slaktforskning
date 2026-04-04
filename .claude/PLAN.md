@@ -55,6 +55,15 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
+### Visualisation as primary view [feature]
+See `.claude/plans/2026-04-04-viz-primary-view.md` for the full plan.
+- [ ] `PersonPanel.vue` — collapsible right-side panel with events, relationships, notes
+- [ ] `VisualizationView.vue` — flex layout with panel slot, toggle, `selectedPersonId`
+- [ ] Chart components — add `select` emit; VisualizationView wires it to panel
+- [ ] Panel + section open/closed state persisted in localStorage
+- [ ] "Visa i träd" re-focus button in panel header
+- [ ] i18n keys for panel strings
+
 ### Research Tools [feature]
 - [ ] Assertions UI — view/edit what each citation claims, mark accepted, see conflicts
 - [ ] Research audit view — all unsourced entities ranked by evidence gap
