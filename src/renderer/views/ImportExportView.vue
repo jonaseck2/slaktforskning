@@ -7,21 +7,11 @@
       <div class="section">
         <h3>{{ $t('importExport.genneyTitle') }}</h3>
         <p class="section-desc">{{ $t('importExport.genneyDesc') }}</p>
-        <p class="section-instructions">{{ $t('gedcom.genneyInstructions') }}</p>
-        <button @click="handleImportFromGenney" :disabled="busy">{{ $t('gedcom.genneyPickFile') }}</button>
-      </div>
-
-      <!-- Import directly from Genney Derby database -->
-      <div class="section">
-        <h3>{{ $t('importExport.genneyDerbyTitle') }}</h3>
-        <p class="section-desc">{{ $t('importExport.genneyDerbyDesc') }}</p>
         <div class="section-buttons">
-          <button @click="handleGenneyDerby('folder')" :disabled="busy">
-            {{ $t('importExport.genneyDerbySelectFolder') }}
-          </button>
           <button @click="handleGenneyDerby('archive')" :disabled="busy">
             {{ $t('importExport.genneyDerbySelectArchive') }}
           </button>
+          <button @click="handleImportFromGenney" :disabled="busy">{{ $t('gedcom.genneyPickFile') }}</button>
         </div>
         <p v-if="genneyProgress" class="section-progress">{{ genneyProgress }}</p>
       </div>
