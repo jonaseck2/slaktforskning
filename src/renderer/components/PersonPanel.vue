@@ -19,7 +19,7 @@
           </div>
           <div class="panel-dates">{{ personDates }}</div>
           <div class="panel-actions">
-            <button class="panel-btn" @click="$emit('focus', personId)">
+            <button class="panel-btn" @click="personId && $emit('focus', personId)">
               🌳 {{ $t('panel.showInTree') }}
             </button>
             <router-link :to="'/persons/' + personId" class="panel-link">
@@ -146,14 +146,17 @@ function relLabel(rel: RelRow): string {
 
 async function loadPerson(id: string) {
   const raw = (await window.api.persons.get(id)) as { id: string; sex: string; living: boolean; notes: string | null } | null;
+  if (props.personId !== id) return;
   if (!raw) { person.value = null; return; }
 
   const names = (await window.api.persons.getNames(id)) as NameData[];
+  if (props.personId !== id) return;
   const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
   primaryName.value = sorted[0] ?? null;
 
   // Get birth/death years from events
   const events = (await window.api.events.forPerson(id)) as Array<{ event_type: string; date_value: string | null }>;
+  if (props.personId !== id) return;
   const birth = events.find(e => e.event_type === 'birth');
   const death = events.find(e => e.event_type === 'death');
   const parseYear = (v: string | null) => v ? parseInt(v.slice(0, 4)) || null : null;
