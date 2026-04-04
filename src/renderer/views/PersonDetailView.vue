@@ -62,7 +62,7 @@
           <tr v-for="name in names" :key="name.id" class="clickable-row" @click="openEditName(name)">
             <td>
               <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
-              <PersonName :given-name="name.given_name" :preferred-name="name.preferred_name" />
+              <PersonName :given-name="name.given_name" :preferred-name="name.preferred_name" :nickname="name.nickname" />
             </td>
             <td>
               {{ name.surname }}<span v-if="name.name_suffix"> {{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
@@ -255,6 +255,10 @@
             {{ $t('persons.preferredName') }}
             <input v-model="nameForm.preferred_name" type="text" :placeholder="$t('persons.preferredNamePlaceholder')" />
           </label>
+          <label>
+            {{ $t('persons.nickname') }}
+            <input v-model="nameForm.nickname" type="text" :placeholder="$t('persons.nicknamePlaceholder')" />
+          </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showNameForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('personDetail.addNameTitle') }}</button>
@@ -308,6 +312,10 @@
             {{ $t('persons.preferredName') }}
             <input v-model="editNameForm.preferred_name" type="text" :placeholder="$t('persons.preferredNamePlaceholder')" />
           </label>
+          <label>
+            {{ $t('persons.nickname') }}
+            <input v-model="editNameForm.nickname" type="text" :placeholder="$t('persons.nicknamePlaceholder')" />
+          </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showEditNameForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('common.save') }}</button>
@@ -352,6 +360,7 @@ interface NameRow {
   patronymic_base: string | null;
   name_qualifier: string | null;
   preferred_name: string | null;
+  nickname: string | null;
 }
 
 interface RelRow {
@@ -402,6 +411,7 @@ const nameForm = reactive({
   name_qualifier: '',
   patronymic_base: '',
   preferred_name: '',
+  nickname: '',
 });
 
 const editNameForm = reactive({
@@ -413,6 +423,7 @@ const editNameForm = reactive({
   name_qualifier: '',
   patronymic_base: '',
   preferred_name: '',
+  nickname: '',
 });
 
 const identifiers = ref<IdentifierRow[]>([]);
@@ -505,6 +516,7 @@ async function addName() {
       name_qualifier: nameForm.name_qualifier || null,
       patronymic_base: nameForm.patronymic_base || null,
       preferred_name: nameForm.preferred_name || null,
+      nickname: nameForm.nickname || null,
     });
     showNameForm.value = false;
     nameForm.given_name = '';
@@ -515,6 +527,7 @@ async function addName() {
     nameForm.name_qualifier = '';
     nameForm.patronymic_base = '';
     nameForm.preferred_name = '';
+    nameForm.nickname = '';
     await load();
   } catch (err) {
     console.error('[PersonDetailView] addName failed:', err);
@@ -531,6 +544,7 @@ function openEditName(name: NameRow) {
   editNameForm.name_qualifier = name.name_qualifier ?? '';
   editNameForm.patronymic_base = name.patronymic_base ?? '';
   editNameForm.preferred_name = name.preferred_name ?? '';
+  editNameForm.nickname = name.nickname ?? '';
   showEditNameForm.value = true;
 }
 
@@ -546,6 +560,7 @@ async function saveEditName() {
       name_qualifier: editNameForm.name_qualifier || null,
       patronymic_base: editNameForm.patronymic_base || null,
       preferred_name: editNameForm.preferred_name || null,
+      nickname: editNameForm.nickname || null,
     });
     showEditNameForm.value = false;
     editingNameId.value = null;

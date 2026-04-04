@@ -96,16 +96,18 @@ Add nickname parameter to both tools Zod schemas in src/mcp/createServer.ts.
 
 ---
 
-## Files to change
+## Files changed
 
-- src/api/schema.ts — nickname column + migration
-- src/api/types.ts — nickname on PersonName
-- src/api/persons.ts — accept nickname in add/update
-- src/renderer/utils/nameUtils.ts — fullNameParts nickname support
-- src/renderer/components/PersonName.vue — nickname prop
-- src/renderer/views/PersonDetailView.vue — Smeknamn input
-- src/gedcom/importer.ts — NICK -> nickname
-- src/gedcom/exporter.ts — nickname -> NICK, preferred_name -> _TILLTALS + asterisk
-- src/mcp/createServer.ts — nickname in add/update_person_name tools
-- tests/unit/persons.test.ts — nickname tests
-- tests/unit/gedcom.test.ts — roundtrip tests
+- [x] src/api/schema.ts — nickname column + migration
+- [x] src/api/types.ts — nickname on PersonName
+- [x] src/api/persons.ts — accept nickname in add/update
+- [x] src/renderer/utils/nameUtils.ts — fullNameParts nickname support
+- [x] src/renderer/components/PersonName.vue — nickname prop
+- [x] src/renderer/views/PersonDetailView.vue — Smeknamn input
+- [x] src/renderer/i18n/sv.ts + en.ts — nickname/nicknamePlaceholder strings
+- [x] src/gedcom/importer.ts — NICK → nickname, _TILLTALS → preferred_name
+- [x] src/gedcom/exporter.ts — nickname → NICK, preferred_name → asterisk + _TILLTALS
+- [x] src/mcp/createServer.ts — nickname in add/update_person_name tools
+- [x] tests/unit/persons.test.ts — nickname tests
+- [x] tests/unit/nameUtils.test.ts — new file, fullNameParts nickname tests
+- [x] tests/unit/gedcom.test.ts — roundtrip tests updated + new NICK→nickname test

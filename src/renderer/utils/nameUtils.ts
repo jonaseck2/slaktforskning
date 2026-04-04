@@ -16,13 +16,18 @@ export function givenNameParts(givenName: string | null, preferredName: string |
   return parts;
 }
 
-/** Full name parts: given name tokens (with underline) + optional surname. */
+/** Full name parts: given name tokens (with underline) + optional nickname in quotes + optional surname. */
 export function fullNameParts(
   givenName: string | null,
   surname: string | null,
   preferredName: string | null,
+  nickname?: string | null,
 ): NamePart[] {
   const parts = givenNameParts(givenName, preferredName);
+  if (nickname) {
+    if (parts.length > 0) parts.push({ text: ' ', underline: false });
+    parts.push({ text: `"${nickname}"`, underline: false });
+  }
   if (surname) {
     if (parts.length > 0) parts.push({ text: ' ', underline: false });
     parts.push({ text: surname, underline: false });

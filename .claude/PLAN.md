@@ -138,23 +138,24 @@ Pedigree expanded to 5 generations (ahnentafel Map); hourglass to 4 ancestor + 3
 ### Done (v0.6.7 — Per-Node Descendant Collapse)
 Every descendant node with children gets a ↓ button. `leafCount` is collapse-aware (non-focal collapsed nodes count as 1 leaf), `placeDescendants` skips recursion for collapsed non-focal nodes, `descNodeMap` drives ↓ button generation for all descendant boxes with children. 4 new unit tests (288 total). See `.claude/plans/archive/2026-04-03-descendant-collapse.md`.
 
+### Done (v0.6.8 — Tilltalsnamn + Smeknamn separation)
+`nickname` column on `person_names`; `addPersonName`/`updatePersonName` accept `nickname`; `fullNameParts` renders nickname in double quotes between given name and surname; `PersonName.vue` gets `nickname` prop; PersonDetailView Smeknamn input in both Add/Edit name modals; GEDCOM import re-maps NICK → nickname and `_TILLTALS` → preferred_name; exporter emits asterisk + `_TILLTALS` for preferred_name and NICK for nickname; MCP tools updated; 12 new unit tests (300 total). See `.claude/plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md`.
+
 ---
 
 ## Roadmap
 
-### v0.6.8 — Tilltalsnamn + Smeknamn separation
-Separate preferred given name (tilltalsnamn, marked with asterisk) from nickname (smeknamn, from GEDCOM NICK).
-See `.claude/plans/2026-04-03-tilltalsnamn-and-smeknamn.md`.
+### v0.6.9 — Genney Derby Import
+Import genealogy data directly from Genney's Apache Derby database — bypassing GEDCOM for richer data (coordinates, Swedish place hierarchy, groups, TODOs, research notes).
+See `.claude/plans/2026-04-04-genney-derby-import.md`.
 
-- [ ] Schema: add `nickname` column to `person_names`
-- [ ] API: `addPersonName`/`updatePersonName` accept `nickname`
-- [ ] Display: `fullNameParts` shows nickname in quotes, e.g. `Susanna "Sanna" Johansson`
-- [ ] PersonName component: `nickname` prop
-- [ ] PersonDetailView: Smeknamn input field
-- [ ] GEDCOM import: NICK → nickname (not preferred_name); asterisk → preferred_name
-- [ ] GEDCOM export: nickname → NICK; preferred_name → asterisk + `_TILLTALS`
-- [ ] MCP: `nickname` param in `add_person_name`/`update_person_name`
-- [ ] Unit tests
+- [ ] Phase 1 — Derby extractor: `DerbyExtractor.java` + Docker wrapper in `src/import/genney/`
+- [ ] Phase 2 — Transform + import: `transform.ts` maps Genney schema → slaktforskning API
+- [ ] Phase 3 — UI: "Importera från Genney" option in DatabaseView, auto-detects schema name
+- [ ] Phase 4 — .gcc/.backup support: unzip, detect encryption, fallback to GEDCOM if encrypted
+- [ ] Unit tests for transform logic; integration test against `export-import/test/`
+
+**Dependencies:** Requires Docker (or temporary Homebrew Java install). v0.6.8 preferred (for nickname field) but not strictly required.
 
 ### v0.7.0 — Research Tools
 - [ ] Assertions UI — the schema exists from v0.3; this milestone builds the UI: view/edit what each citation claims, mark assertions as accepted, see conflicts across citations

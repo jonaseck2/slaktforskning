@@ -21,6 +21,7 @@ export interface PersonName {
   patronymic_base: string | null;
   name_qualifier: 'patronymic' | 'matronymic' | 'particle' | 'married' | 'alias' | null;
   preferred_name: string | null;
+  nickname: string | null;
 }
 
 export interface PersonIdentifier {

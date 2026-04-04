@@ -166,6 +166,18 @@ describe('persons', () => {
       const name = addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
       expect(name.preferred_name).toBeNull();
     });
+
+    it('stores and retrieves nickname', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Susanna', surname: 'Johansson', nickname: 'Sanna' });
+      expect(name.nickname).toBe('Sanna');
+    });
+
+    it('nickname defaults to null when not provided', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
+      expect(name.nickname).toBeNull();
+    });
   });
 
   describe('updatePersonName with preferred_name', () => {
@@ -181,6 +193,20 @@ describe('persons', () => {
       const name = addPersonName(db, person.id, { given_name: 'Eva Linda Marie', surname: 'Test', preferred_name: 'Linda' });
       const updated = updatePersonName(db, name.id, { preferred_name: null });
       expect(updated!.preferred_name).toBeNull();
+    });
+
+    it('sets nickname', () => {
+      const person = createPerson(db, { given_name: 'Susanna', surname: 'Johansson' });
+      const nameId = getPersonNames(db, person.id)[0].id;
+      const updated = updatePersonName(db, nameId, { nickname: 'Sanna' });
+      expect(updated!.nickname).toBe('Sanna');
+    });
+
+    it('clears nickname with null', () => {
+      const person = createPerson(db, {});
+      const name = addPersonName(db, person.id, { given_name: 'Susanna', surname: 'Test', nickname: 'Sanna' });
+      const updated = updatePersonName(db, name.id, { nickname: null });
+      expect(updated!.nickname).toBeNull();
     });
   });
 

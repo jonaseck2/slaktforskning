@@ -87,6 +87,7 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
       patronymic_base: z.string().optional(),
       name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
       preferred_name: z.string().optional().describe('Tilltalsnamn — the specific given name used in daily life, e.g. "Linda"'),
+      nickname: z.string().optional().describe('Smeknamn — informal nickname used by friends and family, e.g. "Sanna"'),
     },
   }, async (args) => {
     const { person_id, ...data } = args;
@@ -114,6 +115,7 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
       patronymic_base: z.string().optional(),
       name_qualifier: z.enum(['patronymic', 'matronymic', 'particle', 'married', 'alias']).optional(),
       preferred_name: z.string().optional().describe('Tilltalsnamn — the specific given name used in daily life'),
+      nickname: z.string().optional().describe('Smeknamn — informal nickname used by friends and family'),
     },
   }, async ({ id, ...data }) =>
     ({ content: [{ type: 'text', text: JSON.stringify(persons.updatePersonName(db, id, data)) }] })
