@@ -135,7 +135,13 @@ const REL_TYPE_LABELS: Record<string, string> = {
   godparent: 'Fadder', other: 'Annan',
 };
 function relLabel(rel: RelRow): string {
-  return rel.subtype ?? REL_TYPE_LABELS[rel.type] ?? rel.type;
+  if (rel.subtype) {
+    const ns = rel.type === 'couple' ? 'coupleSubtypes' : 'parentChildSubtypes';
+    const key = `${ns}.${rel.subtype}`;
+    const label = t(key);
+    return label !== key ? label : rel.subtype;
+  }
+  return REL_TYPE_LABELS[rel.type] ?? rel.type;
 }
 
 // ── Data loading ─────────────────────────────────────────────────────────────
