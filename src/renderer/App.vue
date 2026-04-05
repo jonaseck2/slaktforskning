@@ -108,6 +108,10 @@ onMounted(() => {
   (window.api.db as unknown as { onSwitched: (cb: () => void) => void }).onSwitched(() => {
     window.location.reload();
   });
+  window.addEventListener('data-imported', () => {
+    loadQualityBadge();
+    loadResearchBadge();
+  });
 });
 
 function submitSearch() {
