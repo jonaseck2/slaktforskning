@@ -65,6 +65,13 @@
                   <input v-model="editForm.task" type="text" required />
                 </label>
                 <label>
+                  {{ $t('persons.title') }}
+                  <div class="person-edit-row">
+                    <PersonPicker v-model="editForm.person_id" :placeholder="$t('researchTasks.selectPersonOptional')" />
+                    <router-link v-if="editForm.person_id" :to="'/persons/' + editForm.person_id" class="person-link person-link-btn" @click.stop>{{ $t('common.view') }} →</router-link>
+                  </div>
+                </label>
+                <label>
                   {{ $t('researchTasks.notes') }}
                   <textarea v-model="editForm.notes" rows="2" />
                 </label>
@@ -205,17 +212,19 @@ const editForm = reactive({
   result: '',
   status: 'open' as 'open' | 'in_progress' | 'done' | 'stopped',
   priority: 1,
+  person_id: null as string | null,
 });
 
 async function load() {
   const raw = (await window.api.researchTasks.list()) as ResearchTask[];
-  // Enrich with person names
+  // Enrich with person names using getNames (persons.get returns no name fields)
   const enriched = await Promise.all(raw.map(async (task) => {
     if (task.person_id) {
       try {
-        const person = (await window.api.persons.get(task.person_id)) as { given_name?: string; surname?: string } | null;
-        if (person) {
-          const name = [person.given_name, person.surname].filter(Boolean).join(' ');
+        const names = (await window.api.persons.getNames(task.person_id)) as Array<{ given_name?: string; surname?: string }>;
+        if (names.length > 0) {
+          const n = names[0];
+          const name = [n.given_name, n.surname].filter(Boolean).join(' ');
           return { ...task, person_name: name || undefined };
         }
       } catch { /* ignore */ }
@@ -237,6 +246,7 @@ function toggleExpand(id: string) {
   editForm.result = task.result ?? '';
   editForm.status = task.status;
   editForm.priority = task.priority;
+  editForm.person_id = task.person_id ?? null;
   expandedId.value = id;
 }
 
@@ -254,6 +264,7 @@ async function saveEdit(id: string) {
     result: editForm.result,
     status: editForm.status,
     priority: editForm.priority,
+    person_id: editForm.person_id || undefined,
   });
   expandedId.value = null;
   await load();
@@ -287,6 +298,21 @@ onMounted(load);
 </script>
 
 <style scoped>
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+.data-table th {
+  background: #eee;
+  font-weight: 600;
+}
+
 .clickable-row { cursor: pointer; }
 .clickable-row:hover td { background: #f0f4ff; }
 
@@ -384,6 +410,21 @@ onMounted(load);
 }
 
 .person-link:hover { text-decoration: underline; }
+
+.person-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.person-edit-row > :first-child {
+  flex: 1;
+}
+
+.person-link-btn {
+  white-space: nowrap;
+  font-size: 13px;
+}
 
 .actions-cell {
   text-align: right;

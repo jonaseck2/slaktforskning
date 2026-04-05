@@ -61,6 +61,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | Relationship EventList: wire CitationBadge on event rows | — |
 | v1.6.0 | Research Tasks UI: ResearchTasksView, PersonDetailView section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
 | Fix | Reactive quality badge: use contextBridge onDataChanged pattern (postMessage doesn't cross contextIsolation) | [archive](plans/archive/2026-04-05-fix-reactive-quality-badge.md) |
+| Fix | ResearchTasksView: table styling, empty person column (persons.get has no names), person editing in expanded row, reactive badge | [archive](plans/archive/2026-04-05-research-tasks-view-fixes.md) |
 
 ---
 

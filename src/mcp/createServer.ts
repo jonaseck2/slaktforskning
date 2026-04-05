@@ -808,6 +808,7 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
       priority: z.number().optional(),
       notes: z.string().optional(),
       result: z.string().optional().describe('Result of completed research'),
+      person_id: z.string().nullable().optional().describe('Link to a person (null to unlink)'),
     },
   }, async ({ id, ...data }) => {
     const task = researchTasks.updateResearchTask(db, id, data);

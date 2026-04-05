@@ -113,9 +113,12 @@ onMounted(() => {
     loadResearchBadge();
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
+  let researchDebounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
     if (qualityDebounce) clearTimeout(qualityDebounce);
     qualityDebounce = setTimeout(loadQualityBadge, 800);
+    if (researchDebounce) clearTimeout(researchDebounce);
+    researchDebounce = setTimeout(loadResearchBadge, 400);
   });
 });
 
