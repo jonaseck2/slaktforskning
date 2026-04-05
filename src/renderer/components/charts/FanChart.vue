@@ -10,6 +10,16 @@
         :viewBox="`0 0 ${FAN_SVG_SIZE} ${FAN_SVG_SIZE}`"
         data-testid="fan-svg"
       >
+        <!-- Curved text paths in defs (only when curvedText is on) -->
+        <defs v-if="curvedText">
+          <path
+            v-for="seg in nonFocalSegments"
+            :key="`tp-${seg.ahnNum}`"
+            :id="`tp-${seg.ahnNum}`"
+            :d="seg.textPathD"
+          />
+        </defs>
+
         <!-- Non-focal segments -->
         <g
           v-for="seg in nonFocalSegments"
@@ -27,52 +37,70 @@
           <!-- Hover tooltip via native SVG title (works in Electron WebView) -->
           <title v-if="seg.person">{{ tooltipLabel(seg) }}</title>
 
-          <!-- Text for gen 1–5 (gen 6 is too narrow) -->
-          <!-- Gen 1-2: given name + surname on two lines; gen 3-5: surname only -->
-          <g
-            v-if="seg.person && seg.generation <= 5"
-            :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`"
-          >
-            <!-- Gen 1-2: given name line -->
+          <!-- Curved text mode: single line following the arc -->
+          <template v-if="curvedText && seg.person && seg.generation <= 5">
             <text
-              v-if="seg.generation <= 2 && givenLabel(seg)"
-              :x="seg.textX"
-              :y="seg.textY"
-              :dy="birthYear(seg) ? '-10' : '-5'"
               text-anchor="middle"
-              dominant-baseline="central"
               :font-size="nameFontSize(seg.generation)"
               font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
               font-weight="600"
               fill="white"
               style="pointer-events: none; user-select: none;"
-            >{{ givenLabel(seg) }}</text>
-            <!-- Gen 1-2: surname / gen 3-5: surname-only -->
-            <text
-              :x="seg.textX"
-              :y="seg.textY"
-              :dy="seg.generation <= 2 ? (birthYear(seg) ? '2' : '5') : (birthYear(seg) && seg.generation <= 4 ? '-5' : '0')"
-              text-anchor="middle"
-              dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              font-weight="600"
-              fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ surnameLabel(seg) }}</text>
-            <text
-              v-if="seg.generation <= 4 && birthYear(seg)"
-              :x="seg.textX"
-              :y="seg.textY"
-              :dy="seg.generation <= 2 ? '13' : '6'"
-              text-anchor="middle"
-              dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ birthYear(seg) }}</text>
-          </g>
+            >
+              <textPath
+                :href="`#tp-${seg.ahnNum}`"
+                startOffset="50%"
+              >{{ curvedLabel(seg) }}</textPath>
+            </text>
+          </template>
+
+          <!-- Straight tangential text: gen 1-2 given+surname on two lines, gen 3-5 surname only -->
+          <template v-else-if="!curvedText && seg.person && seg.generation <= 5">
+            <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
+              <!-- Gen 1-2: given name line -->
+              <text
+                v-if="seg.generation <= 2 && givenLabel(seg)"
+                :x="seg.textX"
+                :y="seg.textY"
+                :dy="lifespan(seg) ? '-10' : '-5'"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="nameFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                font-weight="600"
+                fill="white"
+                style="pointer-events: none; user-select: none;"
+              >{{ givenLabel(seg) }}</text>
+              <!-- Surname line (all gens) -->
+              <text
+                :x="seg.textX"
+                :y="seg.textY"
+                :dy="seg.generation <= 2
+                  ? (lifespan(seg) ? '2' : '5')
+                  : (lifespan(seg) && seg.generation <= 4 ? '-5' : '0')"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="nameFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                font-weight="600"
+                fill="white"
+                style="pointer-events: none; user-select: none;"
+              >{{ surnameLabel(seg) }}</text>
+              <!-- Dates (gen 1-4) -->
+              <text
+                v-if="seg.generation <= 4 && lifespan(seg)"
+                :x="seg.textX"
+                :y="seg.textY"
+                :dy="seg.generation <= 2 ? '13' : '6'"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="dateFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                fill="rgba(255,255,255,0.75)"
+                style="pointer-events: none; user-select: none;"
+              >{{ lifespan(seg) }}</text>
+            </g>
+          </template>
         </g>
 
         <!-- Focal person circle (rendered on top of segments) -->
@@ -81,30 +109,27 @@
           :cx="FAN_CX" :cy="FAN_CY" r="50"
           :fill="focalSegment.fill"
         />
+        <!-- Focal name: up to 3 lines (wraps at most twice) -->
         <text
-          v-if="focalSegment?.person && focalGivenName"
-          :x="FAN_CX" :y="FAN_CY - 14"
+          v-for="(line, i) in focalNameLines"
+          :key="i"
+          :x="FAN_CX"
+          :y="focalLineY(i, focalNameLines.length)"
           text-anchor="middle"
-          font-size="11"
+          dominant-baseline="central"
+          :font-size="focalNameLines.length > 2 ? 9 : 10"
           font-weight="600"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
           fill="white"
           style="pointer-events: none; user-select: none;"
-        >{{ focalGivenName }}</text>
+        >{{ line }}</text>
+        <!-- Focal dates -->
         <text
-          v-if="focalSegment?.person && focalSurname"
-          :x="FAN_CX" :y="FAN_CY + 1"
+          v-if="focalSegment?.person && focalDates"
+          :x="FAN_CX"
+          :y="focalLineY(focalNameLines.length, focalNameLines.length)"
           text-anchor="middle"
-          font-size="11"
-          font-weight="600"
-          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          fill="white"
-          style="pointer-events: none; user-select: none;"
-        >{{ focalSurname }}</text>
-        <text
-          v-if="focalSegment?.person"
-          :x="FAN_CX" :y="FAN_CY + 16"
-          text-anchor="middle"
+          dominant-baseline="central"
           font-size="8"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
           fill="rgba(255,255,255,0.65)"
@@ -118,6 +143,13 @@
       <button class="zoom-btn" @click="decrGens" :disabled="selectedGens <= 1">−</button>
       <span class="zoom-level">{{ selectedGens }}</span>
       <button class="zoom-btn" @click="incrGens" :disabled="selectedGens >= 6">+</button>
+      <span class="zoom-sep">|</span>
+      <button
+        class="zoom-btn"
+        :class="{ active: curvedText }"
+        @click="curvedText = !curvedText"
+        title="Böj text längs cirkeln"
+      >⌒</button>
       <span class="zoom-sep">|</span>
       <button class="zoom-btn" @click="zoomIn" title="Zoom in">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
@@ -144,6 +176,7 @@ const emit = defineEmits<{ navigate: [id: string] }>();
 const loading = ref(true);
 const tree = ref<PedigreeTree | null>(null);
 const selectedGens = ref(6);
+const curvedText = ref(false);
 const outerRef = ref<HTMLElement | null>(null);
 const containerSize = ref(700);
 
@@ -178,13 +211,53 @@ const layout = computed<FanSegment[]>(() =>
 const focalSegment = computed(() => layout.value.find(s => s.isFocal) ?? null);
 const nonFocalSegments = computed(() => layout.value.filter(s => !s.isFocal));
 
-const focalGivenName = computed(() => {
+// Split a string into lines of at most maxChars, up to maxLines lines.
+function wrapText(text: string, maxChars: number, maxLines: number): string[] {
+  if (text.length <= maxChars) return [text];
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let current = '';
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (!current) {
+      current = word;
+    } else if ((current + ' ' + word).length <= maxChars) {
+      current += ' ' + word;
+    } else {
+      lines.push(current);
+      // On the last allowed line, absorb all remaining words without wrapping
+      if (lines.length >= maxLines - 1) {
+        current = words.slice(i).join(' ');
+        break;
+      }
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+// Focal name lines: given name (1 line) + surname (up to 2 lines) = up to 3 total.
+const focalNameLines = computed((): string[] => {
   const p = focalSegment.value?.person;
-  if (!p) return '';
-  return p.preferredName ?? p.givenName ?? '';
+  if (!p) return [];
+  const given = p.preferredName ?? p.givenName ?? '';
+  const surname = p.surname ?? '';
+  const lines: string[] = [];
+  if (given) lines.push(given);
+  if (surname) lines.push(...wrapText(surname, 11, 2));
+  return lines;
 });
 
-const focalSurname = computed(() => focalSegment.value?.person?.surname ?? '');
+// Y position for focal text lines, centered around FAN_CY.
+// We offset by how many date lines follow (1 if dates exist).
+function focalLineY(lineIndex: number, totalNameLines: number): number {
+  const hasDates = !!focalDates.value;
+  const totalLines = totalNameLines + (hasDates ? 1 : 0);
+  const lineHeight = totalLines > 3 ? 10 : 12;
+  const startY = FAN_CY - ((totalLines - 1) / 2) * lineHeight;
+  return startY + lineIndex * lineHeight;
+}
 
 const focalDates = computed(() => {
   const p = focalSegment.value?.person;
@@ -196,8 +269,7 @@ const focalDates = computed(() => {
 
 function givenLabel(seg: FanSegment): string {
   if (!seg.person || seg.generation > 2) return '';
-  const p = seg.person;
-  return p.preferredName ?? p.givenName ?? '';
+  return seg.person.preferredName ?? seg.person.givenName ?? '';
 }
 
 function surnameLabel(seg: FanSegment): string {
@@ -205,8 +277,25 @@ function surnameLabel(seg: FanSegment): string {
   return seg.person.surname ?? seg.person.givenName ?? '';
 }
 
-function birthYear(seg: FanSegment): string {
-  return seg.person?.birthYear ? String(seg.person.birthYear) : '';
+// Full name for curved single-line label.
+function curvedLabel(seg: FanSegment): string {
+  if (!seg.person) return '';
+  const p = seg.person;
+  if (seg.generation <= 2) {
+    const given = p.preferredName ?? p.givenName ?? '';
+    const surname = p.surname ?? '';
+    return given && surname ? `${given} ${surname}` : given || surname;
+  }
+  return p.surname ?? p.givenName ?? '';
+}
+
+// Lifespan: "BIRTH–DEATH", "BIRTH–", or "BIRTH".
+function lifespan(seg: FanSegment): string {
+  const p = seg.person;
+  if (!p) return '';
+  if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
+  if (p.birthYear) return p.living ? `f. ${p.birthYear}` : `${p.birthYear}–`;
+  return '';
 }
 
 function tooltipLabel(seg: FanSegment): string {
@@ -293,6 +382,7 @@ onMounted(load);
   line-height: 1.4;
 }
 .zoom-btn:hover { background: #f0f0f0; }
+.zoom-btn.active { background: #e0eaf5; color: #2060a0; }
 .zoom-level {
   padding: 0 4px;
   font-size: 12px;
