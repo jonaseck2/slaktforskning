@@ -375,7 +375,7 @@ Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 ### Constants (`src/renderer/constants/eventTypes.ts`)
 
 ```typescript
-EVENT_TYPE_VALUES              // 22 GEDCOM event types: birth, death, marriage, divorce, ...
+EVENT_TYPE_VALUES              // 23 GEDCOM event types: birth, death, marriage, divorce, ..., mention, other
 PERSON_EVENT_TYPE_VALUES       // EVENT_TYPES minus marriage/divorce
 RELATIONSHIP_EVENT_TYPE_VALUES // marriage, divorce, census, other only
 DATE_TYPE_VALUES               // exact, about, before, after, between, calculated, unknown
