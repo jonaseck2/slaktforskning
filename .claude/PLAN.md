@@ -73,6 +73,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers, all api/ refactored | — |
 | v0.21.0 | Persons list: single JOIN query (birth/death date/place), load-more pagination (100/page), remove Living column | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
 | v0.22.0 | View caching: keep-alive + dataVersion store, onActivated reload guard in 5 list views | [archive](plans/archive/2026-04-05-view-caching.md) |
+| v0.22.3 | PersonsView infinite scroll + RelationshipsView N+1 IPC fix (paginated JOIN query) | — |
+| Fix | v0.22.4: PersonsView UI lockup — correlated subqueries + idx_events_event_type + idx_person_names_person_sort | [archive](plans/archive/fix-personsview-lockup.md) |
 
 ---
 

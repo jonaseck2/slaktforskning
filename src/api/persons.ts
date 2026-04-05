@@ -196,28 +196,40 @@ const PERSON_LIST_BASE_QUERY = `
     p.sex,
     COALESCE(pn.given_name, '') AS given_name,
     COALESCE(pn.surname, '')    AS surname,
-    birth.date_original         AS birth_date,
-    bp.name                     AS birth_place,
-    death.date_original         AS death_date,
-    dp.name                     AS death_place
+    (
+      SELECT e.date_original
+      FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id AND e.event_type = 'birth'
+      WHERE ep.person_id = p.id
+      LIMIT 1
+    ) AS birth_date,
+    (
+      SELECT pl.name
+      FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id AND e.event_type = 'birth'
+      LEFT JOIN places pl ON pl.id = e.place_id
+      WHERE ep.person_id = p.id
+      LIMIT 1
+    ) AS birth_place,
+    (
+      SELECT e.date_original
+      FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
+      WHERE ep.person_id = p.id
+      LIMIT 1
+    ) AS death_date,
+    (
+      SELECT pl.name
+      FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
+      LEFT JOIN places pl ON pl.id = e.place_id
+      WHERE ep.person_id = p.id
+      LIMIT 1
+    ) AS death_place
   FROM persons p
   LEFT JOIN person_names pn
     ON pn.person_id = p.id
     AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
-  LEFT JOIN (
-    SELECT ep.person_id, e.date_original, e.place_id
-    FROM events e
-    JOIN event_participants ep ON ep.event_id = e.id
-    WHERE e.event_type = 'birth'
-  ) birth ON birth.person_id = p.id
-  LEFT JOIN places bp ON bp.id = birth.place_id
-  LEFT JOIN (
-    SELECT ep.person_id, e.date_original, e.place_id
-    FROM events e
-    JOIN event_participants ep ON ep.event_id = e.id
-    WHERE e.event_type = 'death'
-  ) death ON death.person_id = p.id
-  LEFT JOIN places dp ON dp.id = death.place_id
 `;
 
 const PERSON_LIST_QUERY = `${PERSON_LIST_BASE_QUERY} ORDER BY pn.surname, pn.given_name`;
