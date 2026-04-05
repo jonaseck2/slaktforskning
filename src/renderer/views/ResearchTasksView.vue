@@ -26,7 +26,7 @@
           <th>{{ $t('researchTasks.status') }}</th>
           <th>{{ $t('persons.title') }}</th>
           <th>{{ $t('researchTasks.task') }}</th>
-          <th></th>
+          <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -332,41 +332,6 @@ onMounted(load);
   color: white;
 }
 
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.data-table th {
-  text-align: left;
-  padding: 10px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.data-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid #f3f4f6;
-  font-size: 14px;
-  vertical-align: middle;
-}
-
-.clickable-row {
-  cursor: pointer;
-}
-
-.clickable-row:hover td {
-  background: #f9fafb;
-}
 
 .priority-badge {
   display: inline-block;
