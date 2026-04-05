@@ -78,6 +78,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.23.0 | QualityView: standard table layout, caching (Pinia store), background refresh, ignore/unignore per check, person names column | — |
 | Fix | v0.23.1: Remove 500-ancestor limit from Ancestor Book export | — |
 | Fix | v0.23.2: ReportsView full-width + auto-fit zoom with +/−/Fit controls | — |
+| Fix | v0.23.3: Circle chart gen 5-6 radial text — deeper rings, full name+dates visible | — |
 
 ---
 
