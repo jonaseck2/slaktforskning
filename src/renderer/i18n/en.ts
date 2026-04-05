@@ -45,6 +45,12 @@ export default {
     female: 'Female',
     sexUnknown: 'Unknown',
     confirmDelete: 'Delete this person? This cannot be undone.',
+    birthDate: 'Birth date',
+    birthPlace: 'Birth place',
+    deathDate: 'Death date',
+    deathPlace: 'Death place',
+    showingOf: 'Showing {shown} of {total} persons',
+    loadMore: 'Load more',
   },
   personDetail: {
     deceased: 'Deceased',

@@ -45,6 +45,12 @@ export default {
     female: 'Kvinna',
     sexUnknown: 'Okänt',
     confirmDelete: 'Ta bort denna person? Detta kan inte ångras.',
+    birthDate: 'Födelsedag',
+    birthPlace: 'Födelseort',
+    deathDate: 'Dödsdag',
+    deathPlace: 'Dödsort',
+    showingOf: 'Visar {shown} av {total} personer',
+    loadMore: 'Ladda fler',
   },
   personDetail: {
     deceased: 'Avliden',
