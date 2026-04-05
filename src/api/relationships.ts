@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Relationship, EventParticipant, RelationshipType, EventParticipantRole } from './types';
+import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 export function createRelationship(
   db: Database,
@@ -13,19 +14,19 @@ export function createRelationship(
   }
 ): Relationship {
   const id = uuid();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run([id, data.type, data.person1_id ?? null, data.person2_id ?? null, data.subtype ?? null, data.notes ?? '']);
+  `, [id, data.type, data.person1_id ?? null, data.person2_id ?? null, data.subtype ?? null, data.notes ?? '']);
   return getRelationship(db, id)!;
 }
 
 export function getRelationship(db: Database, id: string): Relationship | null {
-  return (db.prepare(`SELECT * FROM relationships WHERE id = ?`).get([id]) as Relationship) ?? null;
+  return queryOne<Relationship>(db, `SELECT * FROM relationships WHERE id = ?`, [id]) ?? null;
 }
 
 export function listRelationships(db: Database): Relationship[] {
-  return db.prepare(`SELECT * FROM relationships ORDER BY created_at`).all() as Relationship[];
+  return queryAll<Relationship>(db, `SELECT * FROM relationships ORDER BY created_at`);
 }
 
 export function updateRelationship(
@@ -42,20 +43,20 @@ export function updateRelationship(
   if (fields.length === 0) return getRelationship(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  db.prepare(`UPDATE relationships SET ${fields.join(', ')} WHERE id = ?`).run(values);
+  runSql(db, `UPDATE relationships SET ${fields.join(', ')} WHERE id = ?`, values);
   return getRelationship(db, id);
 }
 
 export function deleteRelationship(db: Database, id: string): boolean {
-  return db.prepare(`DELETE FROM relationships WHERE id = ?`).run([id]).changes > 0;
+  return runSqlChanges(db, `DELETE FROM relationships WHERE id = ?`, [id]) > 0;
 }
 
 export function getRelationshipsOfPerson(db: Database, personId: string): Relationship[] {
-  return db.prepare(`
+  return queryAll<Relationship>(db, `
     SELECT * FROM relationships
     WHERE person1_id = ? OR person2_id = ?
     ORDER BY type, created_at
-  `).all([personId, personId]) as Relationship[];
+  `, [personId, personId]);
 }
 
 export function searchRelationships(
@@ -63,7 +64,7 @@ export function searchRelationships(
   query: string
 ): (Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null })[] {
   const like = `%${query}%`;
-  return db.prepare(`
+  return queryAll<Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null }>(db, `
     SELECT DISTINCT r.*,
       COALESCE(pn1.given_name, '') as person1_given_name,
       COALESCE(pn1.surname, '') as person1_surname,
@@ -81,7 +82,7 @@ export function searchRelationships(
     WHERE pn1.given_name LIKE ? OR pn1.surname LIKE ?
        OR pn2.given_name LIKE ? OR pn2.surname LIKE ?
     ORDER BY pn1.surname, pn1.given_name
-  `).all([like, like, like, like]) as unknown as (Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null })[];
+  `, [like, like, like, like]);
 }
 
 // Event Participants
@@ -95,17 +96,17 @@ export function addEventParticipant(
   }
 ): EventParticipant {
   const id = uuid();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO event_participants (id, event_id, person_id, role)
     VALUES (?, ?, ?, ?)
-  `).run([id, data.event_id, data.person_id, data.role ?? 'primary']);
-  return db.prepare(`SELECT * FROM event_participants WHERE id = ?`).get([id]) as EventParticipant;
+  `, [id, data.event_id, data.person_id, data.role ?? 'primary']);
+  return queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id])!;
 }
 
 export function getEventParticipants(db: Database, eventId: string): EventParticipant[] {
-  return db.prepare(`SELECT * FROM event_participants WHERE event_id = ?`).all([eventId]) as EventParticipant[];
+  return queryAll<EventParticipant>(db, `SELECT * FROM event_participants WHERE event_id = ?`, [eventId]);
 }
 
 export function removeEventParticipant(db: Database, id: string): boolean {
-  return db.prepare(`DELETE FROM event_participants WHERE id = ?`).run([id]).changes > 0;
+  return runSqlChanges(db, `DELETE FROM event_participants WHERE id = ?`, [id]) > 0;
 }

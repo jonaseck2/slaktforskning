@@ -70,6 +70,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | Circle chart zoom: flex-shrink bug, center-anchored +/- buttons, curved text line spacing | [archive](plans/archive/2026-04-05-circle-chart-zoom-fixes.md) |
 | v0.20.7 | GEDCOM import completeness: engagement/adoption types, CAUS, TITL, NOTE xrefs, ImportReport UI | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
 | Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/fix-wasm-oom-after-large-gedcom-import.md) |
+| Fix | v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers, all api/ refactored | — |
 
 ---
 

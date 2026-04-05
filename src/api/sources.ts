@@ -1,25 +1,26 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Source, Citation } from './types';
+import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 export function createSource(
   db: Database,
   data: Partial<Omit<Source, 'id' | 'created_at' | 'updated_at'>>
 ): Source {
   const id = uuid();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO sources (id, title, author, publication_info, repository, url, source_type)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run([id, data.title ?? '', data.author ?? '', data.publication_info ?? '', data.repository ?? '', data.url ?? '', data.source_type ?? '']);
+  `, [id, data.title ?? '', data.author ?? '', data.publication_info ?? '', data.repository ?? '', data.url ?? '', data.source_type ?? '']);
   return getSource(db, id)!;
 }
 
 export function getSource(db: Database, id: string): Source | null {
-  return (db.prepare(`SELECT * FROM sources WHERE id = ?`).get([id]) as Source) ?? null;
+  return queryOne<Source>(db, `SELECT * FROM sources WHERE id = ?`, [id]) ?? null;
 }
 
 export function listSources(db: Database): Source[] {
-  return db.prepare(`SELECT * FROM sources ORDER BY title`).all() as Source[];
+  return queryAll<Source>(db, `SELECT * FROM sources ORDER BY title`);
 }
 
 export function updateSource(
@@ -36,21 +37,21 @@ export function updateSource(
   if (fields.length === 0) return getSource(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  db.prepare(`UPDATE sources SET ${fields.join(', ')} WHERE id = ?`).run(values);
+  runSql(db, `UPDATE sources SET ${fields.join(', ')} WHERE id = ?`, values);
   return getSource(db, id);
 }
 
 export function searchSources(db: Database, query: string): Source[] {
   const like = `%${query}%`;
-  return db.prepare(`
+  return queryAll<Source>(db, `
     SELECT * FROM sources
     WHERE title LIKE ? OR author LIKE ? OR publication_info LIKE ?
     ORDER BY title
-  `).all([like, like, like]) as Source[];
+  `, [like, like, like]);
 }
 
 export function deleteSource(db: Database, id: string): boolean {
-  return db.prepare(`DELETE FROM sources WHERE id = ?`).run([id]).changes > 0;
+  return runSqlChanges(db, `DELETE FROM sources WHERE id = ?`, [id]) > 0;
 }
 
 export function createCitation(
@@ -69,10 +70,10 @@ export function createCitation(
   }
 ): Citation {
   const id = uuid();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run([
+  `, [
     id, data.source_id, data.page ?? '', data.date_accessed ?? '', data.confidence ?? 0,
     data.transcription ?? '', data.notes ?? '', data.event_id ?? null, data.person_id ?? null,
     data.relationship_id ?? null, data.place_id ?? null
@@ -81,31 +82,31 @@ export function createCitation(
 }
 
 export function getCitation(db: Database, id: string): Citation | null {
-  return (db.prepare(`SELECT * FROM citations WHERE id = ?`).get([id]) as Citation) ?? null;
+  return queryOne<Citation>(db, `SELECT * FROM citations WHERE id = ?`, [id]) ?? null;
 }
 
 export function getCitationsForSource(db: Database, sourceId: string): Citation[] {
-  return db.prepare(`SELECT * FROM citations WHERE source_id = ?`).all([sourceId]) as Citation[];
+  return queryAll<Citation>(db, `SELECT * FROM citations WHERE source_id = ?`, [sourceId]);
 }
 
 export function getCitationsForEvent(db: Database, eventId: string): Citation[] {
-  return db.prepare(`SELECT * FROM citations WHERE event_id = ?`).all([eventId]) as Citation[];
+  return queryAll<Citation>(db, `SELECT * FROM citations WHERE event_id = ?`, [eventId]);
 }
 
 export function getCitationsForPerson(db: Database, personId: string): Citation[] {
-  return db.prepare(`SELECT * FROM citations WHERE person_id = ?`).all([personId]) as Citation[];
+  return queryAll<Citation>(db, `SELECT * FROM citations WHERE person_id = ?`, [personId]);
 }
 
 export function getCitationsForRelationship(db: Database, relationshipId: string): Citation[] {
-  return db.prepare(`SELECT * FROM citations WHERE relationship_id = ?`).all([relationshipId]) as Citation[];
+  return queryAll<Citation>(db, `SELECT * FROM citations WHERE relationship_id = ?`, [relationshipId]);
 }
 
 export function getCitationsForPlace(db: Database, placeId: string): Citation[] {
-  return db.prepare(`SELECT * FROM citations WHERE place_id = ?`).all([placeId]) as Citation[];
+  return queryAll<Citation>(db, `SELECT * FROM citations WHERE place_id = ?`, [placeId]);
 }
 
 export function deleteCitation(db: Database, id: string): boolean {
-  return db.prepare(`DELETE FROM citations WHERE id = ?`).run([id]).changes > 0;
+  return runSqlChanges(db, `DELETE FROM citations WHERE id = ?`, [id]) > 0;
 }
 
 export function updateCitation(
@@ -118,6 +119,6 @@ export function updateCitation(
   if (fields.length === 0) return getCitation(db, id);
   const setClauses = fields.map(f => `${f} = ?`).join(', ');
   const vals = fields.map(f => (updates as Record<string, unknown>)[f]);
-  db.prepare(`UPDATE citations SET ${setClauses} WHERE id = ?`).run([...vals, id]);
+  runSql(db, `UPDATE citations SET ${setClauses} WHERE id = ?`, [...vals, id]);
   return getCitation(db, id);
 }

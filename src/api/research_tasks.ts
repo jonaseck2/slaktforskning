@@ -1,5 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { ResearchTask, ResearchTaskStatus } from './types';
+import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 export function createResearchTask(db: Database, data: {
   person_id?: string | null;
@@ -10,27 +11,27 @@ export function createResearchTask(db: Database, data: {
   result?: string;
 }): ResearchTask {
   const id = crypto.randomUUID();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO research_tasks (id, person_id, priority, status, task, notes, result)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run([
+  `, [
     id, data.person_id ?? null, data.priority ?? 0,
     data.status ?? 'open', data.task,
     data.notes ?? '', data.result ?? '',
   ]);
-  return db.prepare('SELECT * FROM research_tasks WHERE id = ?').get([id]) as ResearchTask;
+  return queryOne<ResearchTask>(db, 'SELECT * FROM research_tasks WHERE id = ?', [id])!;
 }
 
 export function getResearchTask(db: Database, id: string): ResearchTask | null {
-  return (db.prepare('SELECT * FROM research_tasks WHERE id = ?').get([id]) ?? null) as ResearchTask | null;
+  return queryOne<ResearchTask>(db, 'SELECT * FROM research_tasks WHERE id = ?', [id]) ?? null;
 }
 
 export function listResearchTasks(db: Database): ResearchTask[] {
-  return db.prepare('SELECT * FROM research_tasks ORDER BY priority DESC, created_at').all([]) as ResearchTask[];
+  return queryAll<ResearchTask>(db, 'SELECT * FROM research_tasks ORDER BY priority DESC, created_at');
 }
 
 export function getResearchTasksForPerson(db: Database, personId: string): ResearchTask[] {
-  return db.prepare('SELECT * FROM research_tasks WHERE person_id = ? ORDER BY priority DESC, created_at').all([personId]) as ResearchTask[];
+  return queryAll<ResearchTask>(db, 'SELECT * FROM research_tasks WHERE person_id = ? ORDER BY priority DESC, created_at', [personId]);
 }
 
 export function updateResearchTask(db: Database, id: string, data: {
@@ -52,10 +53,10 @@ export function updateResearchTask(db: Database, id: string, data: {
   if (fields.length === 0) return getResearchTask(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  db.prepare(`UPDATE research_tasks SET ${fields.join(', ')} WHERE id = ?`).run(values);
+  runSql(db, `UPDATE research_tasks SET ${fields.join(', ')} WHERE id = ?`, values);
   return getResearchTask(db, id);
 }
 
 export function deleteResearchTask(db: Database, id: string): boolean {
-  return ((db.prepare('DELETE FROM research_tasks WHERE id = ?').run([id]) as { changes: number }).changes) > 0;
+  return runSqlChanges(db, 'DELETE FROM research_tasks WHERE id = ?', [id]) > 0;
 }

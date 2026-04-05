@@ -1,5 +1,6 @@
 import { Database } from 'node-sqlite3-wasm';
 import { Place } from './types';
+import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 function normalize(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -23,10 +24,10 @@ export function createPlace(
   }
 ): Place {
   const id = crypto.randomUUID();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, date_from, date_to, notes, street, postal_code, city, country)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run([
+  `, [
     id, data.name, normalize(data.name),
     data.place_type ?? null, data.parent_place_id ?? null,
     data.latitude ?? null, data.longitude ?? null,
@@ -39,22 +40,22 @@ export function createPlace(
 }
 
 export function getPlace(db: Database, id: string): Place | null {
-  return (db.prepare('SELECT * FROM places WHERE id = ?').get([id]) as Place | undefined) ?? null;
+  return queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [id]) ?? null;
 }
 
 export function listPlaces(db: Database): Place[] {
-  return db.prepare('SELECT * FROM places ORDER BY name ASC').all([]) as Place[];
+  return queryAll<Place>(db, 'SELECT * FROM places ORDER BY name ASC');
 }
 
 export function searchPlaces(db: Database, query: string): (Place & { parent_name: string | null })[] {
   const q = `%${normalize(query)}%`;
-  return db.prepare(`
+  return queryAll<Place & { parent_name: string | null }>(db, `
     SELECT p.*, parent.name as parent_name
     FROM places p
     LEFT JOIN places parent ON parent.id = p.parent_place_id
     WHERE p.normalized_name LIKE ?
     ORDER BY p.name ASC LIMIT 20
-  `).all([q]) as (Place & { parent_name: string | null })[];
+  `, [q]);
 }
 
 /** Returns the full path of a place as a comma-separated string, e.g. "Fröderyd, Jönköpings län". */
@@ -62,7 +63,7 @@ export function getPlacePath(db: Database, id: string): string {
   const parts: string[] = [];
   let currentId: string | null = id;
   while (currentId) {
-    const row = db.prepare('SELECT name, parent_place_id FROM places WHERE id = ?').get([currentId]) as { name: string; parent_place_id: string | null } | undefined;
+    const row = queryOne<{ name: string; parent_place_id: string | null }>(db, 'SELECT name, parent_place_id FROM places WHERE id = ?', [currentId]);
     if (!row) break;
     parts.push(row.name);
     currentId = row.parent_place_id ?? null;
@@ -78,14 +79,14 @@ export function updatePlace(
   const existing = getPlace(db, id);
   if (!existing) return null;
   const name = data.name ?? existing.name;
-  db.prepare(`
+  runSql(db, `
     UPDATE places SET
       name = ?, normalized_name = ?, place_type = ?,
       parent_place_id = ?, latitude = ?, longitude = ?,
       date_from = ?, date_to = ?, notes = ?,
       street = ?, postal_code = ?, city = ?, country = ?
     WHERE id = ?
-  `).run([
+  `, [
     name, normalize(name),
     data.place_type ?? existing.place_type,
     data.parent_place_id ?? existing.parent_place_id,
@@ -104,12 +105,12 @@ export function updatePlace(
 }
 
 export function deletePlace(db: Database, id: string): boolean {
-  return db.prepare('DELETE FROM places WHERE id = ?').run([id]).changes > 0;
+  return runSqlChanges(db, 'DELETE FROM places WHERE id = ?', [id]) > 0;
 }
 
 export function findOrCreatePlace(db: Database, name: string): Place {
   const norm = normalize(name);
-  const existing = db.prepare('SELECT * FROM places WHERE normalized_name = ? LIMIT 1').get([norm]) as Place | undefined;
+  const existing = queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? LIMIT 1', [norm]);
   if (existing) return existing;
   return createPlace(db, { name: name.trim() });
 }
