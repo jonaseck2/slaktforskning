@@ -90,7 +90,7 @@
               <text
                 v-if="givenLabel(seg)"
                 :x="seg.textX" :y="seg.textY"
-                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-13' : '-5'"
+                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-12' : '-4'"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -99,7 +99,7 @@
               >{{ givenLabel(seg) }}</text>
               <text
                 :x="seg.textX" :y="seg.textY"
-                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-2' : '5') : '0'"
+                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-4' : '4') : '0'"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -108,7 +108,7 @@
               >{{ surnameLabel(seg) }}</text>
               <text
                 v-if="birthLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="9"
+                :x="seg.textX" :y="seg.textY" dy="4"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -117,7 +117,7 @@
               >{{ birthLabel(seg) }}</text>
               <text
                 v-if="deathLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="20"
+                :x="seg.textX" :y="seg.textY" dy="12"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -134,7 +134,7 @@
               <text
                 v-if="givenLabel(seg)"
                 :x="seg.textX" :y="seg.textY"
-                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-13' : '-5'"
+                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-12' : '-4'"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -143,7 +143,7 @@
               >{{ givenLabel(seg) }}</text>
               <text
                 :x="seg.textX" :y="seg.textY"
-                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-2' : '5') : '0'"
+                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-4' : '4') : '0'"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -152,7 +152,7 @@
               >{{ surnameLabel(seg) }}</text>
               <text
                 v-if="birthLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="9"
+                :x="seg.textX" :y="seg.textY" dy="4"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -161,7 +161,7 @@
               >{{ birthLabel(seg) }}</text>
               <text
                 v-if="deathLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="20"
+                :x="seg.textX" :y="seg.textY" dy="12"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
