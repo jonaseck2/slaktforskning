@@ -275,7 +275,13 @@ export function registerIpcHandlers(): void {
   wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDatabase(), linkId as string));
 
   // Checks
-  wrapHandler('checks:runAll', () => checks.runAllChecks(getDatabase()));
+  wrapHandler('checks:runAll', () => {
+    const db = getDatabase();
+    const raw = checks.runAllChecks(db);
+    const allIds = [...new Set(raw.flatMap(r => r.personIds))];
+    const nameMap = persons.getPersonDisplayNames(db, allIds);
+    return raw.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
+  });
   wrapHandler('checks:forPerson', (personId) => checks.runChecksForPerson(getDatabase(), personId as string));
 
   wrapHandler('gedcom:export', async () => {
