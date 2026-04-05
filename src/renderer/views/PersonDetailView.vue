@@ -782,6 +782,11 @@ async function loadChecks(id: string) {
 onMounted(async () => {
   await load();
   loadChecks(personId);
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => loadChecks(personId), 400);
+  });
 });
 </script>
 
