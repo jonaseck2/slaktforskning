@@ -298,5 +298,7 @@ export function initializeSchema(db: Database): void {
   // Indexes that depend on migrated columns — run after migrations
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
+    CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type);
+    CREATE INDEX IF NOT EXISTS idx_person_names_person_sort ON person_names(person_id, sort_order);
   `);
 }
