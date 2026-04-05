@@ -18,72 +18,104 @@
           class="ab-svg"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <!-- Arc paths for curved text labels -->
+          <!-- Arc paths for curved text labels (gen 1–4) -->
           <defs>
             <path v-for="seg in nonFocalSegments" :key="`tpg-${seg.ahnNum}`" :id="`tpg-${seg.ahnNum}`" :d="seg.textPathGivenD" />
             <path v-for="seg in nonFocalSegments" :key="`tp-${seg.ahnNum}`"  :id="`tp-${seg.ahnNum}`"  :d="seg.textPathD" />
-            <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDateD" />
+            <path v-for="seg in nonFocalSegments" :key="`tpb-${seg.ahnNum}`" :id="`tpb-${seg.ahnNum}`" :d="seg.textPathBirthD" />
+            <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDeathD" />
           </defs>
 
           <!-- Non-focal segments (rendered below focal circle) -->
           <g v-for="seg in nonFocalSegments" :key="seg.ahnNum">
             <a v-if="seg.person" :href="`#person-${seg.person.id}`">
               <path :d="seg.pathD" :fill="seg.fill" stroke="white" stroke-width="0.5" />
-              <!-- Curved text labels (gen 1–5) -->
-              <template v-if="seg.generation <= 5">
-                <!-- Given name arc (gen 1–4) -->
-                <text
-                  v-if="seg.generation <= 4 && givenLabel(seg)"
-                  text-anchor="middle"
+
+              <!-- Curved text (gen 1–4) -->
+              <template v-if="seg.generation <= 4">
+                <text v-if="givenLabel(seg)" text-anchor="middle"
                   :font-size="nameFontSize(seg.generation)"
-                  font-family="Georgia, serif" font-weight="600" fill="white"
-                >
+                  font-family="Georgia, serif" font-weight="600" fill="white">
                   <textPath :href="`#tpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
                 </text>
-                <!-- Surname arc -->
-                <text
-                  text-anchor="middle"
+                <text text-anchor="middle"
                   :font-size="nameFontSize(seg.generation)"
-                  font-family="Georgia, serif" font-weight="600" fill="white"
-                >
+                  font-family="Georgia, serif" font-weight="600" fill="white">
                   <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
                 </text>
-                <!-- Date arc (gen 1–4) -->
-                <text
-                  v-if="seg.generation <= 4 && segLifespan(seg)"
-                  text-anchor="middle"
+                <text v-if="birthLabel(seg)" text-anchor="middle"
                   :font-size="dateFontSize(seg.generation)"
-                  font-family="Georgia, serif" fill="rgba(255,255,255,0.75)"
-                >
-                  <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ segLifespan(seg) }}</textPath>
+                  font-family="Georgia, serif" fill="rgba(255,255,255,0.75)">
+                  <textPath :href="`#tpb-${seg.ahnNum}`" startOffset="50%">{{ birthLabel(seg) }}</textPath>
                 </text>
+                <text v-if="deathLabel(seg)" text-anchor="middle"
+                  :font-size="dateFontSize(seg.generation)"
+                  font-family="Georgia, serif" fill="rgba(255,255,255,0.75)">
+                  <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ deathLabel(seg) }}</textPath>
+                </text>
+              </template>
+
+              <!-- Radial straight text (gen 5–6) -->
+              <template v-else>
+                <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
+                  <text v-if="givenLabel(seg)"
+                    :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
+                    text-anchor="middle" dominant-baseline="central"
+                    :font-size="nameFontSize(seg.generation)"
+                    font-family="Georgia, serif" font-weight="600" fill="white"
+                    style="pointer-events: none; user-select: none;"
+                  >{{ givenLabel(seg) }}</text>
+                  <text
+                    :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
+                    text-anchor="middle" dominant-baseline="central"
+                    :font-size="nameFontSize(seg.generation)"
+                    font-family="Georgia, serif" font-weight="600" fill="white"
+                    style="pointer-events: none; user-select: none;"
+                  >{{ surnameLabel(seg) }}</text>
+                  <text v-if="birthLabel(seg)"
+                    :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
+                    text-anchor="middle" dominant-baseline="central"
+                    :font-size="dateFontSize(seg.generation)"
+                    font-family="Georgia, serif" fill="rgba(255,255,255,0.75)"
+                    style="pointer-events: none; user-select: none;"
+                  >{{ birthLabel(seg) }}</text>
+                  <text v-if="deathLabel(seg)"
+                    :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
+                    text-anchor="middle" dominant-baseline="central"
+                    :font-size="dateFontSize(seg.generation)"
+                    font-family="Georgia, serif" fill="rgba(255,255,255,0.75)"
+                    style="pointer-events: none; user-select: none;"
+                  >{{ deathLabel(seg) }}</text>
+                </g>
               </template>
             </a>
             <path v-else :d="seg.pathD" :fill="seg.fill" stroke="white" stroke-width="0.5" />
           </g>
 
           <!-- Focal circle (on top) -->
-          <circle
-            v-if="focalSeg"
-            :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50"
-            :fill="focalSeg.fill"
-          />
+          <circle v-if="focalSeg" :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSeg.fill" />
           <!-- Focal name lines -->
           <text
-            v-for="(line, i) in focalNameLines"
-            :key="i"
+            v-for="(line, i) in focalNameLines" :key="i"
             :x="CIRCLE_CX" :y="focalLineY(i, focalNameLines.length)"
             text-anchor="middle" dominant-baseline="central"
             :font-size="focalNameLines.length > 2 ? 9 : 10"
             font-weight="600" font-family="Georgia, serif" fill="white"
           >{{ line }}</text>
-          <!-- Focal dates -->
+          <!-- Focal birth -->
           <text
-            v-if="focalSeg?.person && focalDates"
+            v-if="focalSeg?.person?.birthDate"
             :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length, focalNameLines.length)"
             text-anchor="middle" dominant-baseline="central"
             font-size="8" font-family="Georgia, serif" fill="rgba(255,255,255,0.65)"
-          >{{ focalDates }}</text>
+          >* {{ focalSeg.person.birthDate }}</text>
+          <!-- Focal death -->
+          <text
+            v-if="focalSeg?.person?.deathDate"
+            :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
+            text-anchor="middle" dominant-baseline="central"
+            font-size="8" font-family="Georgia, serif" fill="rgba(255,255,255,0.65)"
+          >† {{ focalSeg.person.deathDate }}</text>
         </svg>
       </section>
 
@@ -304,10 +336,11 @@ function displayName(p: PersonNode): string {
 }
 
 function lifespanStr(p: PersonNode): string {
-  if (!p.birthYear && !p.deathYear) return '';
-  const birth = p.birthYear ? String(p.birthYear) : '?';
-  const death = p.deathYear ? String(p.deathYear) : '';
-  return `(${birth}–${death})`;
+  if (!p.birthDate && !p.deathDate) return '';
+  const parts: string[] = [];
+  if (p.birthDate) parts.push(`* ${p.birthDate}`);
+  if (p.deathDate) parts.push(`\u2020 ${p.deathDate}`);
+  return `(${parts.join('  ')})`;
 }
 
 function formatDate(ev: RawEvent): string {
@@ -353,9 +386,9 @@ function subtypeLabel(t: string): string {
   return m[t] ?? t;
 }
 
-// ── SVG text helpers (same logic as CircleChart.vue) ──────────────────────────
+// ── SVG text helpers (mirrors CircleChart.vue) ────────────────────────────────
 function givenLabel(seg: CircleSegment): string {
-  if (!seg.person || seg.generation > 4) return '';
+  if (!seg.person) return '';
   return seg.person.preferredName ?? seg.person.givenName ?? '';
 }
 
@@ -364,22 +397,36 @@ function surnameLabel(seg: CircleSegment): string {
   return seg.person.surname ?? seg.person.givenName ?? '';
 }
 
-function segLifespan(seg: CircleSegment): string {
-  const p = seg.person;
-  if (!p) return '';
-  if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
-  if (p.birthYear) return p.living ? `f. ${p.birthYear}` : `${p.birthYear}–`;
-  return '';
+function birthLabel(seg: CircleSegment): string {
+  return seg.person?.birthDate ? `* ${seg.person.birthDate}` : '';
+}
+
+function deathLabel(seg: CircleSegment): string {
+  return seg.person?.deathDate ? `\u2020 ${seg.person.deathDate}` : '';
 }
 
 function nameFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 10, 2: 9, 3: 8.5, 4: 8, 5: 7 };
-  return sizes[gen] ?? 7;
+  const sizes: Record<number, number> = { 1: 10, 2: 9, 3: 8.5, 4: 8, 5: 7, 6: 5.5 };
+  return sizes[gen] ?? 5.5;
 }
 
 function dateFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 8, 2: 7.5, 3: 7, 4: 6.5 };
-  return sizes[gen] ?? 6.5;
+  const sizes: Record<number, number> = { 1: 8, 2: 7.5, 3: 7, 4: 6.5, 5: 6, 6: 5 };
+  return sizes[gen] ?? 5;
+}
+
+function lineDy(seg: CircleSegment): { given: string; surname: string; birth: string; death: string } {
+  const hasDates = !!(birthLabel(seg) || deathLabel(seg));
+  const hasGiven = !!givenLabel(seg);
+  const gap = seg.generation >= 6 ? 7 : 10;
+  const h = gap * 1.5;
+  const q = gap * 0.5;
+  return {
+    given:   hasDates ? String(-Math.round(h)) : String(-Math.round(q)),
+    surname: hasGiven ? (hasDates ? String(-Math.round(q)) : String(Math.round(q))) : '0',
+    birth:   String(Math.round(q)),
+    death:   String(Math.round(h)),
+  };
 }
 
 function wrapText(text: string, maxChars: number, maxLines: number): string[] {
@@ -418,20 +465,13 @@ const focalNameLines = computed((): string[] => {
 });
 
 function focalLineY(lineIndex: number, totalNameLines: number): number {
-  const hasDates = !!focalDates.value;
-  const totalLines = totalNameLines + (hasDates ? 1 : 0);
+  const p = focalSeg.value?.person;
+  const dateLines = p ? (p.birthDate ? 1 : 0) + (p.deathDate ? 1 : 0) : 0;
+  const totalLines = totalNameLines + dateLines;
   const lineHeight = totalLines > 3 ? 10 : 12;
   const startY = CIRCLE_CY - ((totalLines - 1) / 2) * lineHeight;
   return startY + lineIndex * lineHeight;
 }
-
-const focalDates = computed(() => {
-  const p = focalSeg.value?.person;
-  if (!p) return '';
-  if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
-  if (p.birthYear) return p.living ? `f. ${p.birthYear}` : `${p.birthYear}–`;
-  return '';
-});
 
 const focalDisplayName = computed(() => {
   const p = focalSeg.value?.person ?? allData.value[0]?.person;
