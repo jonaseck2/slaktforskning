@@ -61,6 +61,7 @@
             v-model="relationship.person1_id"
             :placeholder="$t('relationshipDetail.selectPerson')"
             @update:model-value="(v) => updateRel({ person1_id: v })"
+            @select="selectPerson"
           />
         </label>
         <label>
@@ -69,6 +70,7 @@
             v-model="relationship.person2_id"
             :placeholder="$t('relationshipDetail.selectPerson')"
             @update:model-value="(v) => updateRel({ person2_id: v })"
+            @select="selectPerson"
           />
         </label>
       </div>
@@ -90,6 +92,8 @@ import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
 import EventList from '../components/EventList.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
+import { useFocusStore } from '../stores/focus';
+import { fullNameParts } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -107,6 +111,7 @@ interface RelData {
 const { t } = useI18n();
 const route = useRoute();
 const relId = route.params.id as string;
+const focusStore = useFocusStore();
 
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
@@ -127,6 +132,11 @@ const person2Label = computed(() => {
   if (type === 'godparent') return t('relTypes.godchild');
   return t('relationships.person2');
 });
+
+function selectPerson(person: { id: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }) {
+  const name = fullNameParts(person.given_name ?? null, person.surname ?? null, person.preferred_name ?? null, person.nickname ?? null).map(p => p.text).join('');
+  focusStore.set(person.id, name);
+}
 
 async function load() {
   if (!window.api) return;

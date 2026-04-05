@@ -40,15 +40,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="m in members" :key="m.person_id">
+        <tr v-for="m in members" :key="m.person_id" class="clickable-row" @click="goToPerson(m)">
           <td>
-            <router-link :to="'/persons/' + m.person_id" class="person-link">
+            <span class="person-link">
               <PersonName :given-name="m.given_name" :surname="m.surname" :preferred-name="m.preferred_name" :nickname="m.nickname" />
-            </router-link>
+            </span>
           </td>
           <td>{{ m.sex || '–' }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click="removeMember(m.person_id)">{{ $t('common.delete') }}</button>
+            <button class="btn-sm btn-delete" @click.stop="removeMember(m.person_id)">{{ $t('common.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -58,9 +58,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import PersonPicker from '../components/PersonPicker.vue';
 import PersonName from '../components/PersonName.vue';
+import { useFocusStore } from '../stores/focus';
+import { fullNameParts } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -77,7 +79,9 @@ interface MemberRow {
 }
 
 const route = useRoute();
+const router = useRouter();
 const groupId = route.params.id as string;
+const focusStore = useFocusStore();
 
 const group = ref<Group | null>(null);
 const editName = ref('');
@@ -85,6 +89,12 @@ const editNotes = ref('');
 const members = ref<MemberRow[]>([]);
 const showAddMember = ref(false);
 const newMemberId = ref<string | null>(null);
+
+function goToPerson(m: MemberRow) {
+  const name = fullNameParts(m.given_name ?? null, m.surname ?? null, m.preferred_name ?? null, m.nickname ?? null).map(p => p.text).join('');
+  focusStore.set(m.person_id, name);
+  router.push('/persons/' + m.person_id);
+}
 
 async function load() {
   if (!window.api) return;
@@ -200,8 +210,9 @@ onMounted(load);
   text-align: left;
 }
 .data-table th { background: #eee; font-weight: 600; }
-.person-link { color: #3498db; text-decoration: none; }
-.person-link:hover { text-decoration: underline; }
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background: #f0f4ff; }
+.person-link { color: #3498db; }
 button { background: #2c3e50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
 button:hover { opacity: 0.9; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
