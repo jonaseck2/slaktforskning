@@ -62,8 +62,11 @@
         ></div>
         <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
           <button class="panel-close-btn" @click="closePanel" title="Dölj panel">◀</button>
+          <div v-if="selectedPersonId && selectedPersonId !== personId" class="panel-show-in-tree">
+            <button class="btn-show-in-tree" @click="showInTree(selectedPersonId!)">{{ $t('panel.showInTree') }} →</button>
+          </div>
           <PersonPanel
-            :person-id="personId ?? null"
+            :person-id="selectedPersonId ?? personId ?? null"
           />
         </div>
       </template>
@@ -81,6 +84,8 @@ import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonName from '../components/PersonName.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
+import { useFocusStore } from '../stores/focus';
+import { fullNameParts } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -92,6 +97,7 @@ interface PersonWithName extends Person { given_name: string; surname: string; }
 useI18n();
 const route = useRoute();
 const router = useRouter();
+const focusStore = useFocusStore();
 
 const focalPerson = ref<Person | null>(null);
 const focalGivenName = ref<string | null>(null);
@@ -99,6 +105,9 @@ const focalSurname = ref<string | null>(null);
 const focalPreferredName = ref<string | null>(null);
 const noPersonsExist = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
+
+// Selected node in the chart (may differ from chart focal person)
+const selectedPersonId = ref<string | null>(null);
 
 type TabName = 'pedigree' | 'hourglass' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
@@ -123,7 +132,25 @@ function setTab(tab: TabName) {
   localStorage.setItem('viz-tab', tab);
 }
 
+async function selectNode(id: string) {
+  selectedPersonId.value = id;
+  if (!panelOpen.value) openPanel();
+  // Set app-wide focus without re-centering the chart
+  try {
+    const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number }>;
+    const primary = names.sort((a, b) => a.sort_order - b.sort_order)[0];
+    const name = fullNameParts(primary?.given_name ?? null, primary?.surname ?? null, primary?.preferred_name ?? null, primary?.nickname ?? null).map(p => p.text).join('');
+    focusStore.set(id, name);
+  } catch { /* ignore */ }
+}
+
 function navigateTo(id: string) {
+  // Single-click on chart node: set focus without re-centering
+  selectNode(id);
+}
+
+function showInTree(id: string) {
+  // Explicitly change the chart focal person (re-centers the chart)
   router.push('/visualisering/' + id);
 }
 
@@ -141,11 +168,13 @@ async function load() {
   const person = (await window.api.persons.get(id)) as Person | null;
   if (!person) { focalPerson.value = null; return; }
   focalPerson.value = person;
-  const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; sort_order: number }>;
+  const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number }>;
   const primary = names.sort((a, b) => a.sort_order - b.sort_order)[0];
   focalGivenName.value = primary?.given_name ?? null;
   focalSurname.value = primary?.surname ?? null;
   focalPreferredName.value = primary?.preferred_name ?? null;
+  // Show focal person in panel unless user has already selected a different node
+  if (!selectedPersonId.value) selectedPersonId.value = id;
 }
 
 watch(() => route.params.personId, load);
@@ -266,6 +295,24 @@ onMounted(load);
   transform: translateX(-100%);
 }
 .panel-close-btn:hover { color: #555; }
+
+/* Show in tree button */
+.panel-show-in-tree {
+  padding: 8px 12px 0;
+  flex-shrink: 0;
+}
+.btn-show-in-tree {
+  width: 100%;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+.btn-show-in-tree:hover { opacity: 0.9; }
 
 .empty-state {
   color: #999;
