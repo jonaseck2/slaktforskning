@@ -77,4 +77,19 @@ describe('computeFanLayout', () => {
     expect(fill8r).toBeGreaterThan(106);
     expect(fill8r).toBe(fill9r);
   });
+
+  it('non-focal pathD starts with M and contains an A arc command', () => {
+    const segs = computeFanLayout(makeTree(3));
+    const nonFocal = segs.filter(s => !s.isFocal);
+    for (const seg of nonFocal) {
+      expect(seg.pathD).toMatch(/^M /);
+      expect(seg.pathD).toContain(' A ');
+    }
+  });
+
+  it('focal pathD is empty string', () => {
+    const tree: PedigreeTree = { nodes: new Map([[1, makeNode('1')]]), generations: 7 };
+    const focal = computeFanLayout(tree).find(s => s.isFocal)!;
+    expect(focal.pathD).toBe('');
+  });
 });
