@@ -18,7 +18,7 @@ IPC: `researchTasks:list`, `researchTasks:get`, `researchTasks:forPerson`, `rese
 
 ## Tasks
 
-- [ ] **MCP tools** — `add_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task` in `src/mcp/createServer.ts`
+- [x] **MCP tools** — `create_research_task`, `get_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task` *(implemented v0.8.0)*
 - [ ] **ResearchTasksView** — global list at `/research-tasks`
   - Table: priority badge, status chip, person name (linked), task text, created date
   - Filter chips: Open / In Progress / Done / Stopped + person picker

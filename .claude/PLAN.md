@@ -55,6 +55,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v1.2.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
 | v1.3.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
 | v1.4.0 | Polish: Escape key closes all modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
+| Investigation | GEDCOM Citation Roundtrip: keep current INDI.SOUR/FAM.SOUR behavior (no code changes) | [archive](plans/archive/2026-04-05-gedcom-citation-roundtrip.md) |
 
 ---
 
@@ -72,7 +73,7 @@ See `.claude/plans/2026-04-04-research-tasks.md` for the full plan.
 - [ ] ResearchTasksView at `/research-tasks` — list, filter, status chips
 - [ ] PersonDetailView "Forskningstips" section
 - [ ] Sidebar badge for open tasks
-- [ ] MCP tools
+- [x] MCP tools *(v0.8.0)*
 
 ### Media Attachments [feature]
 See `.claude/plans/2026-04-04-media.md` for the full plan.
@@ -103,9 +104,12 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [ ] Undo/redo
 - [ ] Dark mode
 
-### Editable Citations in SourceDetailView [fix]
-- [ ] Click a citation row in SourceDetailView to open an edit modal (same pattern as other inline edits)
-- [ ] Edit fields: page, confidence, transcription, notes, date_accessed
+### Evidence Model Simplification [feature]
+See `.claude/plans/2026-04-05-evidence-model-simplification.md` for the full plan.
+- [ ] Add `mention` event type (eventTypes + i18n)
+- [ ] Add `updateCitation` API + IPC + preload + CitationEditModal in SourceDetailView
+- [ ] Remove direct cite buttons/badges from PersonDetailView, RelationshipDetailView, PlaceDetailView
+- [ ] Fix Genney importer: person-owned citations → MENTION events
 
 ### Fix: Genney import — address stored as parent place [fix]
 - [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
@@ -118,7 +122,3 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 ### Fix: Relationship EventList missing citation badges [fix]
 - [ ] EventList in RelationshipDetailView context doesn't show CitationBadge / unsourced indicator on event rows — wire it the same as in PersonDetailView
 
-### Investigation: Citation Model Rethink [investigation]
-See `.claude/plans/2026-04-04-citation-model-investigation.md` for the investigation document.
-- [ ] Resolve open questions (see investigation doc)
-- [ ] Design replacement model if investigation concludes direct citations should be removed

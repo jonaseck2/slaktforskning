@@ -190,6 +190,7 @@ export default {
     retirement: 'Pension',
     will: 'Testamente',
     probate: 'Bouppteckning',
+    mention: 'Omnämning',
     other: 'Övrigt',
   },
   dateTypes: {

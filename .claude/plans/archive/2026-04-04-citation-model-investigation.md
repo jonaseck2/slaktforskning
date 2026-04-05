@@ -1,5 +1,25 @@
 # Investigation: Citation Model Rethink
 
+## Resolution (2026-04-05)
+
+Decisions reached after review. Implementation: `.claude/plans/2026-04-05-evidence-model-simplification.md`. GEDCOM-specific questions deferred: `.claude/plans/2026-04-05-gedcom-citation-roundtrip.md`.
+
+| Question | Decision |
+|----------|----------|
+| Q1 — Proof of existence event | Add `mention` event type. User-initiated path for "source mentions person without specific life event." |
+| Q2 — Name citations | Not addressed — name citations have no current UI surface; deferred. |
+| Q3 — Place citations | Drop from UI. Place evidence comes from people's events at that place + notes. Schema column stays for GEDCOM compat. |
+| Q4 — Relationship citations | Remove from UI. Evidence flows through events (e.g. marriage event). |
+| Q5 — Migration of existing data | No migration. All data comes from imports; fix importers going forward. |
+| Q6 — GEDCOM INDI.SOUR | Deferred — see GEDCOM citation roundtrip investigation. |
+| Q7 — Assertions | Deferred until user demand. Quality checks handle conflict detection adequately. |
+| Q8 — Research tasks | No change. Research tasks remain person-scoped; unsourced queries use event citations. |
+| Q9 — MCP tools | No change. `get_citations_for_person` returns person_id citations (import artifacts); still valid. |
+
+Schema columns `person_id`, `relationship_id`, `place_id` on `citations` are kept for GEDCOM import roundtrip. They are not exposed as user actions in the UI.
+
+---
+
 ## The Proposal
 
 Replace direct citations on persons, places, and relationships with event-based citations only. Instead of `citations.person_id`, `citations.place_id`, and `citations.relationship_id`, all evidence would be attached to events. This would be a major schema and UX change.

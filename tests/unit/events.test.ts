@@ -97,4 +97,10 @@ describe('events', () => {
     expect(deleteEvent(db, event.id)).toBe(true);
     expect(getEvent(db, event.id)).toBeNull();
   });
+
+  it('creates a mention event', () => {
+    const ev = createEvent(db, { event_type: 'mention', date_type: 'unknown' });
+    expect(ev.event_type).toBe('mention');
+    expect(getEvent(db, ev.id)?.event_type).toBe('mention');
+  });
 });
