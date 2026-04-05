@@ -1,6 +1,7 @@
 <template>
   <div class="chart-outer">
-    <div class="chart-scroll" ref="scrollRef" @wheel="onWheel">
+    <div :class="['chart-scroll', { panning: isPanning }]" ref="scrollRef" @wheel="onWheel"
+         @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp">
       <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
       <svg
         v-else
@@ -115,7 +116,7 @@ function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
   collapsed.value = next;
 }
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-hourglass');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-hourglass');
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#ccc'; }
@@ -181,6 +182,14 @@ onMounted(load);
   flex: 1;
   min-height: 0;
   overflow: auto;
+  cursor: grab;
+}
+.chart-scroll.panning {
+  cursor: grabbing;
+  user-select: none;
+}
+.chart-scroll.panning * {
+  cursor: grabbing;
 }
 .chart-loading { color: #999; padding: 40px; text-align: center; }
 .person-box.clickable { cursor: pointer; }
