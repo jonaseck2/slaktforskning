@@ -1,6 +1,6 @@
 # Plan: Släktforskning
 
-Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MCP server for AI agent access. Full architecture reference: `CLAUDE.md`. Historical context: `.claude/plans/archive/plan.md`.
+Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MCP server for AI agent access. Full architecture reference: `CLAUDE.md`. Historical context: `.claude/plans/archive/PLAN.md`.
 
 ---
 
@@ -69,12 +69,12 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.20.0 | Ancestor Book Export: static SVG circle chart, ahnentafel list, person summaries, internal PDF links | [archive](plans/archive/2026-04-05-ancestor-book.md) |
 | Fix | Circle chart zoom: flex-shrink bug, center-anchored +/- buttons, curved text line spacing | [archive](plans/archive/2026-04-05-circle-chart-zoom-fixes.md) |
 | v0.20.7 | GEDCOM import completeness: engagement/adoption types, CAUS, TITL, NOTE xrefs, ImportReport UI | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
-| Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/fix-wasm-oom-after-large-gedcom-import.md) |
+| Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/2026-04-05-fix-wasm-oom-after-large-gedcom-import.md) |
 | Fix | v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers, all api/ refactored | — |
 | v0.21.0 | Persons list: single JOIN query (birth/death date/place), load-more pagination (100/page), remove Living column | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
 | v0.22.0 | View caching: keep-alive + dataVersion store, onActivated reload guard in 5 list views | [archive](plans/archive/2026-04-05-view-caching.md) |
 | v0.22.3 | PersonsView infinite scroll + RelationshipsView N+1 IPC fix (paginated JOIN query) | — |
-| Fix | v0.22.4: PersonsView UI lockup — correlated subqueries + idx_events_event_type + idx_person_names_person_sort | [archive](plans/archive/fix-personsview-lockup.md) |
+| Fix | v0.22.4: PersonsView UI lockup — correlated subqueries + idx_events_event_type + idx_person_names_person_sort | [archive](plans/archive/2026-04-05-fix-personsview-lockup.md) |
 | v0.23.0 | QualityView: standard table layout, caching (Pinia store), background refresh, ignore/unignore per check, person names column | — |
 | Fix | v0.23.1: Remove 500-ancestor limit from Ancestor Book export | — |
 | Fix | v0.23.2: ReportsView full-width + auto-fit zoom with +/−/Fit controls | — |
