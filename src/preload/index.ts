@@ -1,42 +1,52 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+// After any mutating IPC call resolves, dispatch a data-changed event so
+// App.vue can refresh the quality badge without polling.
+function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...args: T) => Promise<R> {
+  return async (...args: T) => {
+    const result = await fn(...args);
+    window.dispatchEvent(new CustomEvent('data-changed'));
+    return result;
+  };
+}
+
 const api = {
   persons: {
-    create: (data: Record<string, unknown>) => ipcRenderer.invoke('persons:create', data),
+    create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('persons:create', data)),
     get: (id: string) => ipcRenderer.invoke('persons:get', id),
     list: () => ipcRenderer.invoke('persons:list'),
-    update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:update', id, data),
-    delete: (id: string) => ipcRenderer.invoke('persons:delete', id),
+    update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:update', id, data)),
+    delete: mutating((id: string) => ipcRenderer.invoke('persons:delete', id)),
     search: (query: string) => ipcRenderer.invoke('persons:search', query),
-    addName: (personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addName', personId, data),
+    addName: mutating((personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addName', personId, data)),
     getNames: (personId: string) => ipcRenderer.invoke('persons:getNames', personId),
-    updateName: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:updateName', id, data),
-    deleteName: (id: string) => ipcRenderer.invoke('persons:deleteName', id),
-    addIdentifier: (personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addIdentifier', personId, data),
+    updateName: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:updateName', id, data)),
+    deleteName: mutating((id: string) => ipcRenderer.invoke('persons:deleteName', id)),
+    addIdentifier: mutating((personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addIdentifier', personId, data)),
     getIdentifiers: (personId: string) => ipcRenderer.invoke('persons:getIdentifiers', personId),
-    deleteIdentifier: (id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id),
+    deleteIdentifier: mutating((id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id)),
   },
   relationships: {
-    create: (data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data),
+    create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data)),
     get: (id: string) => ipcRenderer.invoke('relationships:get', id),
     list: () => ipcRenderer.invoke('relationships:list'),
-    update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('relationships:update', id, data),
-    delete: (id: string) => ipcRenderer.invoke('relationships:delete', id),
+    update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('relationships:update', id, data)),
+    delete: mutating((id: string) => ipcRenderer.invoke('relationships:delete', id)),
     getForPerson: (personId: string) => ipcRenderer.invoke('relationships:getForPerson', personId),
     search: (query: string) => ipcRenderer.invoke('relationships:search', query),
   },
   eventParticipants: {
-    add: (data: Record<string, unknown>) => ipcRenderer.invoke('eventParticipants:add', data),
+    add: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('eventParticipants:add', data)),
     getForEvent: (eventId: string) => ipcRenderer.invoke('eventParticipants:getForEvent', eventId),
-    remove: (id: string) => ipcRenderer.invoke('eventParticipants:remove', id),
+    remove: mutating((id: string) => ipcRenderer.invoke('eventParticipants:remove', id)),
   },
   events: {
-    create: (data: Record<string, unknown>) => ipcRenderer.invoke('events:create', data),
+    create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('events:create', data)),
     get: (id: string) => ipcRenderer.invoke('events:get', id),
     forPerson: (personId: string) => ipcRenderer.invoke('events:forPerson', personId),
     forRelationship: (relationshipId: string) => ipcRenderer.invoke('events:forRelationship', relationshipId),
-    update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('events:update', id, data),
-    delete: (id: string) => ipcRenderer.invoke('events:delete', id),
+    update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('events:update', id, data)),
+    delete: mutating((id: string) => ipcRenderer.invoke('events:delete', id)),
   },
   sources: {
     create: (data: Record<string, unknown>) => ipcRenderer.invoke('sources:create', data),
