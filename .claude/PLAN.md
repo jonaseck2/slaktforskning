@@ -48,25 +48,25 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | import_gedcom silently swallowed .backup files; add import_genney MCP tool | [archive](plans/archive/2026-04-04-import-genney-mcp-tool.md) |
 | v0.9.3 | Fix Genney import crash: TODO.STATUS integer TypeError | [archive](plans/archive/2026-04-04-fix-genney-todo-status.md) |
 | v0.9.4 | Fix hourglass chart descendant overlap + auto-center focal | [archive](plans/archive/2026-04-04-hourglass-layout-overlap-fix.md) |
-| v1.0.0 | Visualisation as primary view: person panel, drag resize, icon sidebar | [archive](plans/archive/2026-04-04-viz-primary-view.md) |
-| v1.0.1 | Fix Genney SEX encoding (0=M, 1=F) and LIVING flag (1=deceased) | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
-| v1.0.2 | Fix hourglass female-focal spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
-| v1.1.0 | EVENT.cause UI: Orsak field in EventForm/EventList + GEDCOM 2 CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
-| v1.2.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
-| v1.3.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
-| v1.4.0 | Polish: Escape key closes all modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
+| v0.10.0 | Visualisation as primary view: person panel, drag resize, icon sidebar | [archive](plans/archive/2026-04-04-viz-primary-view.md) |
+| v0.10.1 | Fix Genney SEX encoding (0=M, 1=F) and LIVING flag (1=deceased) | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
+| v0.10.2 | Fix hourglass female-focal spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
+| v0.11.0 | EVENT.cause UI: Orsak field in EventForm/EventList + GEDCOM 2 CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
+| v0.12.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
+| v0.13.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
+| v0.14.0 | Polish: Escape key closes all modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
 | Investigation | GEDCOM Citation Roundtrip: keep current INDI.SOUR/FAM.SOUR behavior (no code changes) | [archive](plans/archive/2026-04-05-gedcom-citation-roundtrip.md) |
-| v1.5.0 | Evidence Model Simplification: mention event, citation editing, removed entity-level cite buttons, Genney MENTION import | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
+| v0.15.0 | Evidence Model Simplification: mention event, citation editing, removed entity-level cite buttons, Genney MENTION import | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
 | Fix | QualityView: auto-run checks on mount, removed manual run button | — |
 | Fix | Relationship EventList: wire CitationBadge on event rows | — |
-| v1.6.0 | Research Tasks UI: ResearchTasksView, PersonDetailView section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
+| v0.16.0 | Research Tasks UI: ResearchTasksView, PersonDetailView section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
 | Fix | Reactive quality badge: use contextBridge onDataChanged pattern (postMessage doesn't cross contextIsolation) | [archive](plans/archive/2026-04-05-fix-reactive-quality-badge.md) |
 | Fix | ResearchTasksView: table styling, empty person column (persons.get has no names), person editing in expanded row, reactive badge | [archive](plans/archive/2026-04-05-research-tasks-view-fixes.md) |
 | Fix | Consistent name rendering: nickname + preferred_name propagated to all views, charts, reports | [archive](plans/archive/2026-04-05-consistent-name-rendering.md) |
-| v1.7.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
-| v1.8.0 | Navigation focus persistence: Pinia store, sidebar indicator, cross-view selected person, viz single-click | [archive](plans/archive/2026-04-05-nav-focus-persistence.md) |
-| v1.9.0 | Circle chart: full-circle 360° ancestor view, 6 generations, branch-based colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
-| v2.0.0 | Ancestor Book Export: static SVG circle chart, ahnentafel list, person summaries, internal PDF links | [archive](plans/archive/2026-04-05-ancestor-book.md) |
+| v0.17.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
+| v0.18.0 | Navigation focus persistence: Pinia store, sidebar indicator, cross-view selected person, viz single-click | [archive](plans/archive/2026-04-05-nav-focus-persistence.md) |
+| v0.19.0 | Circle chart: full-circle 360° ancestor view, 6 generations, branch-based colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
+| v0.20.0 | Ancestor Book Export: static SVG circle chart, ahnentafel list, person summaries, internal PDF links | [archive](plans/archive/2026-04-05-ancestor-book.md) |
 | Fix | Circle chart zoom: flex-shrink bug, center-anchored +/- buttons, curved text line spacing | [archive](plans/archive/2026-04-05-circle-chart-zoom-fixes.md) |
 
 ---

@@ -1010,7 +1010,7 @@ Expected: 440 tests pass.
 
 3. In `.claude/PLAN.md`, add to Implementation Status table:
    ```
-   | v1.7.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui.md) |
+   | v0.17.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui.md) |
    ```
    Also add a spec doc pointer in the Roadmap section removal — remove the `### Groups` item from Roadmap if present (it's not currently there, so just add the Implementation Status row).
 
@@ -1025,5 +1025,5 @@ git commit -m "feat(groups): complete Groups UI — views, GroupPicker, PersonDe
 - GroupPicker: autocomplete with create-new, used in PersonDetailView
 - PersonDetailView: Groups section with chips, GroupPicker inline
 - App.vue: Groups nav link, 👥 for Persons, ⚠️ for Quality
-- Bump to v1.7.0"
+- Bump to v0.17.0"
 ```
