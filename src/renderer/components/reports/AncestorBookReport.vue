@@ -23,44 +23,48 @@
           class="ab-svg"
           xmlns="http://www.w3.org/2000/svg"
         >
+          <!-- Arc paths for curved text labels -->
+          <defs>
+            <path v-for="seg in nonFocalSegments" :key="`tpg-${seg.ahnNum}`" :id="`tpg-${seg.ahnNum}`" :d="seg.textPathGivenD" />
+            <path v-for="seg in nonFocalSegments" :key="`tp-${seg.ahnNum}`"  :id="`tp-${seg.ahnNum}`"  :d="seg.textPathD" />
+            <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDateD" />
+          </defs>
+
           <!-- Non-focal segments (rendered below focal circle) -->
           <g v-for="seg in nonFocalSegments" :key="seg.ahnNum">
             <a v-if="seg.person" :href="`#person-${seg.person.id}`">
               <path :d="seg.pathD" :fill="seg.fill" stroke="white" stroke-width="0.5" />
+              <!-- Curved text labels (gen 1–5) -->
+              <template v-if="seg.generation <= 5">
+                <!-- Given name arc (gen 1–4) -->
+                <text
+                  v-if="seg.generation <= 4 && givenLabel(seg)"
+                  text-anchor="middle"
+                  :font-size="nameFontSize(seg.generation)"
+                  font-family="Georgia, serif" font-weight="600" fill="white"
+                >
+                  <textPath :href="`#tpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
+                </text>
+                <!-- Surname arc -->
+                <text
+                  text-anchor="middle"
+                  :font-size="nameFontSize(seg.generation)"
+                  font-family="Georgia, serif" font-weight="600" fill="white"
+                >
+                  <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
+                </text>
+                <!-- Date arc (gen 1–4) -->
+                <text
+                  v-if="seg.generation <= 4 && segLifespan(seg)"
+                  text-anchor="middle"
+                  :font-size="dateFontSize(seg.generation)"
+                  font-family="Georgia, serif" fill="rgba(255,255,255,0.75)"
+                >
+                  <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ segLifespan(seg) }}</textPath>
+                </text>
+              </template>
             </a>
             <path v-else :d="seg.pathD" :fill="seg.fill" stroke="white" stroke-width="0.5" />
-
-            <!-- Straight tangential text (gen 1–5 only) -->
-            <g
-              v-if="seg.person && seg.generation <= 5"
-              :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`"
-            >
-              <!-- Given name (gen 1–4) -->
-              <text
-                v-if="seg.generation <= 4 && givenLabel(seg)"
-                :x="seg.textX" :y="seg.textY"
-                :dy="segLifespan(seg) ? '-9' : '-5'"
-                text-anchor="middle" dominant-baseline="central"
-                :font-size="nameFontSize(seg.generation)"
-                font-family="Georgia, serif" font-weight="600" fill="white"
-              >{{ givenLabel(seg) }}</text>
-              <!-- Surname -->
-              <text
-                :x="seg.textX" :y="seg.textY"
-                :dy="seg.generation <= 4 ? (segLifespan(seg) ? '2' : '5') : '0'"
-                text-anchor="middle" dominant-baseline="central"
-                :font-size="nameFontSize(seg.generation)"
-                font-family="Georgia, serif" font-weight="600" fill="white"
-              >{{ surnameLabel(seg) }}</text>
-              <!-- Dates (gen 1–4) -->
-              <text
-                v-if="seg.generation <= 4 && segLifespan(seg)"
-                :x="seg.textX" :y="seg.textY" dy="13"
-                text-anchor="middle" dominant-baseline="central"
-                :font-size="dateFontSize(seg.generation)"
-                font-family="Georgia, serif" fill="rgba(255,255,255,0.75)"
-              >{{ segLifespan(seg) }}</text>
-            </g>
           </g>
 
           <!-- Focal circle (on top) -->
