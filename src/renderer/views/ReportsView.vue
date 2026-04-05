@@ -112,9 +112,11 @@ const individualPersonId = ref<string | null>(null);
 async function getPersonName(id: string | null): Promise<string> {
   if (!id || !window.api) return '?';
   try {
-    const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+    const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string | null; surname: string | null; preferred_name: string | null }>;
     if (names.length > 0) {
-      return [names[0].given_name, names[0].surname].filter(Boolean).join(' ') || '?';
+      const n = names[0];
+      const first = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
+      return [first, n.surname].filter(Boolean).join(' ') || '?';
     }
   } catch { /* ignore */ }
   return '?';

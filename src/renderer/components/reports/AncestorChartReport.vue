@@ -45,7 +45,8 @@ const focalName = computed(() => {
   if (!tree.value) return '';
   const focal = tree.value.nodes.get(1);
   if (!focal) return '';
-  return [focal.givenName, focal.surname].filter(Boolean).join(' ');
+  const first = focal.preferredName ?? focal.givenName?.split(' ')[0] ?? '';
+  return [first, focal.surname].filter(Boolean).join(' ');
 });
 
 interface EntryRow { ahnNum: number; name: string; years: string; }
@@ -60,7 +61,8 @@ const generationRows = computed<GenRow[]>(() => {
     for (let n = start; n < start * 2; n++) {
       const p = tree.value.nodes.get(n);
       if (!p) continue;
-      const name = [p.givenName, p.surname].filter(Boolean).join(' ');
+      const first = p.preferredName ?? p.givenName?.split(' ')[0] ?? '';
+      const name = [first, p.surname].filter(Boolean).join(' ');
       const birthStr = p.birthYear != null ? String(p.birthYear) : '?';
       const deathStr = p.deathYear != null ? String(p.deathYear) : '';
       const years = deathStr ? `${birthStr}–${deathStr}` : birthStr !== '?' ? `f. ${birthStr}` : '';

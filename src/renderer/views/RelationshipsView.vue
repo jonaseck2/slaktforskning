@@ -31,6 +31,7 @@
               :given-name="rel.person1_given_name"
               :surname="rel.person1_surname"
               :preferred-name="rel.person1_preferred_name"
+              :nickname="rel.person1_nickname"
             /><span v-else>—</span>
             <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
           </td>
@@ -40,6 +41,7 @@
               :given-name="rel.person2_given_name"
               :surname="rel.person2_surname"
               :preferred-name="rel.person2_preferred_name"
+              :nickname="rel.person2_nickname"
             /><span v-else>—</span>
             <span v-if="roleLabel2(rel.type)" class="role-label">{{ roleLabel2(rel.type) }}</span>
           </td>
@@ -124,15 +126,18 @@ interface RelRow {
   person1_given_name: string;
   person1_surname: string;
   person1_preferred_name: string | null;
+  person1_nickname: string | null;
   person2_given_name: string;
   person2_surname: string;
   person2_preferred_name: string | null;
+  person2_nickname: string | null;
 }
 
 interface NameRow {
   given_name: string;
   surname: string;
   preferred_name: string | null;
+  nickname: string | null;
 }
 
 const { t } = useI18n();
@@ -176,15 +181,15 @@ function getSubtypeLabel(type: string, subtype: string): string {
   return subtype;
 }
 
-async function getPersonNameRow(id: string | null): Promise<{ given_name: string; surname: string; preferred_name: string | null }> {
-  if (!id || !window.api) return { given_name: '', surname: '', preferred_name: null };
+async function getPersonNameRow(id: string | null): Promise<{ given_name: string; surname: string; preferred_name: string | null; nickname: string | null }> {
+  if (!id || !window.api) return { given_name: '', surname: '', preferred_name: null, nickname: null };
   try {
     const names = (await window.api.persons.getNames(id)) as NameRow[];
-    if (names.length > 0) return { given_name: names[0].given_name, surname: names[0].surname, preferred_name: names[0].preferred_name };
+    if (names.length > 0) return { given_name: names[0].given_name, surname: names[0].surname, preferred_name: names[0].preferred_name, nickname: names[0].nickname };
   } catch {
     /* ignore */
   }
-  return { given_name: '', surname: '', preferred_name: null };
+  return { given_name: '', surname: '', preferred_name: null, nickname: null };
 }
 
 async function load() {
@@ -207,9 +212,11 @@ async function load() {
         person1_given_name: p1.given_name,
         person1_surname: p1.surname,
         person1_preferred_name: p1.preferred_name,
+        person1_nickname: p1.nickname,
         person2_given_name: p2.given_name,
         person2_surname: p2.surname,
         person2_preferred_name: p2.preferred_name,
+        person2_nickname: p2.nickname,
       });
     }
     relationships.value = enriched;

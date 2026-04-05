@@ -41,7 +41,7 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="box.isFocal ? 'white' : '#333'"
           ><tspan
-              v-for="(part, pi) in truncateNameParts(fullNameParts(box.person.givenName, box.person.surname, box.person.preferredName), 20)"
+              v-for="(part, pi) in truncateNameParts(fullNameParts(box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname), 20)"
               :key="pi"
               :text-decoration="part.underline ? 'underline' : undefined"
             >{{ part.text }}</tspan></text>

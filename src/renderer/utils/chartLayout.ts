@@ -6,6 +6,7 @@ export interface PersonNode {
   givenName: string | null;
   surname: string | null;
   preferredName: string | null;
+  nickname: string | null;
   sex: 'M' | 'F' | 'U';
   living: boolean;
   birthYear: number | null;

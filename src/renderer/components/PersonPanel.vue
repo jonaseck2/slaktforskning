@@ -15,6 +15,7 @@
               :given-name="primaryName?.given_name ?? null"
               :surname="primaryName?.surname ?? null"
               :preferred-name="primaryName?.preferred_name ?? null"
+              :nickname="primaryName?.nickname ?? null"
             />
           </div>
           <div class="panel-dates">{{ personDates }}</div>
@@ -94,7 +95,7 @@ const emit = defineEmits<{
 // ── Local state ──────────────────────────────────────────────────────────────
 
 interface PersonData { id: string; sex: 'M' | 'F' | 'U'; living: boolean; notes: string | null; birthYear: number | null; deathYear: number | null; }
-interface NameData { given_name: string; surname: string; preferred_name: string | null; sort_order: number; }
+interface NameData { given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; }
 interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; }
 
 const person = ref<PersonData | null>(null);

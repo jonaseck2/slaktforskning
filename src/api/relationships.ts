@@ -61,14 +61,18 @@ export function getRelationshipsOfPerson(db: Database, personId: string): Relati
 export function searchRelationships(
   db: Database,
   query: string
-): (Relationship & { person1_given_name: string; person1_surname: string; person2_given_name: string; person2_surname: string })[] {
+): (Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null })[] {
   const like = `%${query}%`;
   return db.prepare(`
     SELECT DISTINCT r.*,
       COALESCE(pn1.given_name, '') as person1_given_name,
       COALESCE(pn1.surname, '') as person1_surname,
+      pn1.preferred_name as person1_preferred_name,
+      pn1.nickname as person1_nickname,
       COALESCE(pn2.given_name, '') as person2_given_name,
-      COALESCE(pn2.surname, '') as person2_surname
+      COALESCE(pn2.surname, '') as person2_surname,
+      pn2.preferred_name as person2_preferred_name,
+      pn2.nickname as person2_nickname
     FROM relationships r
     LEFT JOIN person_names pn1 ON pn1.person_id = r.person1_id
       AND pn1.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person1_id)
@@ -77,7 +81,7 @@ export function searchRelationships(
     WHERE pn1.given_name LIKE ? OR pn1.surname LIKE ?
        OR pn2.given_name LIKE ? OR pn2.surname LIKE ?
     ORDER BY pn1.surname, pn1.given_name
-  `).all([like, like, like, like]) as unknown as (Relationship & { person1_given_name: string; person1_surname: string; person2_given_name: string; person2_surname: string })[];
+  `).all([like, like, like, like]) as unknown as (Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null })[];
 }
 
 // Event Participants

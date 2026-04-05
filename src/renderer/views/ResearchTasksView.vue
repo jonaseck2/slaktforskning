@@ -44,11 +44,11 @@
             </td>
             <td>
               <router-link
-                v-if="task.person_id && task.person_name"
+                v-if="task.person_id && (task.person_given_name || task.person_surname)"
                 :to="'/persons/' + task.person_id"
                 class="person-link"
                 @click.stop
-              >{{ task.person_name }}</router-link>
+              ><PersonName :given-name="task.person_given_name ?? null" :surname="task.person_surname ?? null" :preferred-name="task.person_preferred_name ?? null" :nickname="task.person_nickname ?? null" /></router-link>
               <span v-else>—</span>
             </td>
             <td class="task-text">{{ task.task }}</td>
@@ -159,6 +159,7 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
+import PersonName from '../components/PersonName.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -172,7 +173,10 @@ interface ResearchTask {
   notes?: string;
   result?: string;
   person_id?: string;
-  person_name?: string;
+  person_given_name?: string | null;
+  person_surname?: string | null;
+  person_preferred_name?: string | null;
+  person_nickname?: string | null;
   priority: number;
   status: 'open' | 'in_progress' | 'done' | 'stopped';
   created_at: string;
@@ -221,11 +225,10 @@ async function load() {
   const enriched = await Promise.all(raw.map(async (task) => {
     if (task.person_id) {
       try {
-        const names = (await window.api.persons.getNames(task.person_id)) as Array<{ given_name?: string; surname?: string }>;
+        const names = (await window.api.persons.getNames(task.person_id)) as Array<{ given_name?: string | null; surname?: string | null; preferred_name?: string | null; nickname?: string | null }>;
         if (names.length > 0) {
           const n = names[0];
-          const name = [n.given_name, n.surname].filter(Boolean).join(' ');
-          return { ...task, person_name: name || undefined };
+          return { ...task, person_given_name: n.given_name ?? null, person_surname: n.surname ?? null, person_preferred_name: n.preferred_name ?? null, person_nickname: n.nickname ?? null };
         }
       } catch { /* ignore */ }
     }
