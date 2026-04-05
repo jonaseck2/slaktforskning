@@ -66,7 +66,14 @@
       </select>
     </nav>
     <main class="content">
-      <router-view :key="$route.fullPath" />
+      <router-view v-slot="{ Component, route }">
+        <keep-alive :include="CACHED_VIEWS">
+          <component
+            :is="Component"
+            :key="CACHED_VIEWS.includes(route.name as string) ? (route.name as string) : route.fullPath"
+          />
+        </keep-alive>
+      </router-view>
     </main>
   </div>
 </template>
@@ -88,6 +95,7 @@ const router = useRouter();
 const { locale } = useI18n();
 const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
+const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
 const searchQuery = ref('');
 const currentDbName = ref('');
 const qualityErrorCount = ref(0);
