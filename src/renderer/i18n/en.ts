@@ -190,6 +190,7 @@ export default {
     retirement: 'Retirement',
     will: 'Will',
     probate: 'Probate',
+    mention: 'Mention',
     other: 'Other',
   },
   dateTypes: {

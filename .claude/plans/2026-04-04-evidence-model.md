@@ -1,5 +1,19 @@
 # Investigation: Evidence Model — GPS, Assertions, and Source UX
 
+## Decision Summary (2026-04-05)
+
+The investigation concluded in favour of a source-first, event-centric model. Key decisions:
+
+- **Citations attach to events only** (as the primary UX path). The `citations.person_id`, `citations.relationship_id`, and `citations.place_id` columns are retained in the schema for GEDCOM import compatibility but are no longer exposed as user-initiated actions.
+- **`mention` event type added** — the intentional replacement for vague person-level citations. "This source mentions this person" is now modeled as a MENTION event, which can be cited normally.
+- **Place citations removed from UI** — place evidence flows from people's events at that place + notes. No cite button on PlaceDetailView.
+- **Assertions deferred** — the `assertions` table remains schema-only until user demand. The existing data quality checks (QualityView) cover conflict detection adequately for now.
+- **Implementation plan**: `.claude/plans/2026-04-05-evidence-model-simplification.md`
+
+The action items below remain valid for the next phase of source UX work (CitationBadge on event rows, quick-cite, unsourced filter, conflict detection).
+
+---
+
 ## The Question
 Should Släktforskning adopt the Genealogical Proof Standard (GPS) or a formal assertion model? Or should it focus instead on frictionless source attachment that nudges users toward good evidencing habits without imposing a formal process?
 
@@ -75,21 +89,32 @@ The `assertions` table exists for future use (Assertion GEDCOM export, advanced 
 
 **Keep the person-event model** as primary. It matches how data is imported (GEDCOM, Genney) and how users think.
 
-The assertion model can be layered on top later: an assertion is simply a citation + a specific claimed value for a specific attribute. The current `citations` table with `event_id`, `person_id`, `relationship_id`, `place_id` already captures "this citation supports this entity." Assertions would add granularity ("this citation specifically claims the birth year is 1882").
+**Citation anchors (updated 2026-04-05):** The `citations` table retains `event_id`, `person_id`, `relationship_id`, and `place_id` columns. However, only `event_id` is the active UX path. The other three are preserved for import roundtrip:
+- `person_id`: populated by GEDCOM `INDI.SOUR` on import; GEDCOM-specific decision pending (see `.claude/plans/2026-04-05-gedcom-citation-roundtrip.md`). Genney imports now create MENTION events instead.
+- `relationship_id`: populated by GEDCOM `FAM.SOUR` on import; GEDCOM-specific decision pending.
+- `place_id`: import artifact only; no new user-created place citations.
 
-**Suggested next data model evolution (not for this session)**:
-- Add `event_claims` table: `(event_id, citation_id, field, claimed_value, confidence, is_accepted)` — a lightweight assertion that lives on events and integrates naturally with the event view.
-- This is simpler than the full `assertions` table and fits the person-event model.
+The `mention` event type is the canonical way to say "this source mentions this person" without tying to a specific life event.
 
-## Immediate action items
+The assertion model can be layered on top later: an assertion is a citation + a specific claimed value for a specific attribute. The `assertions` table (schema-only) is the right vehicle for this when user demand emerges.
+
+**Suggested next data model evolution (if/when assertions are needed)**:
+- Expose the existing `assertions` table: `(citation_id, subject_type, subject_id, attribute, value, confidence, is_accepted)`.
+- Alternatively, an `event_claims` table: `(event_id, citation_id, field, claimed_value, confidence, is_accepted)` — scoped to events only, simpler than the full assertions model.
+
+## Remaining action items
+
+*(Items covered by the evidence-model-simplification plan are excluded here.)*
 
 - [ ] Add `CitationBadge` to all event rows in EventList (already a shared component, wire `:event-id`)
-- [ ] Add "Unsourced" filter to PersonsView (persons with 0 citations on all their events)
+- [ ] Add "Unsourced" filter to PersonsView (persons with 0 citations on any of their events — event-based, not person_id-based)
 - [ ] Make citation modal accessible from EventList row directly (not just inside EventForm)
 - [ ] Add recently-used sources to citation source picker
-- [ ] Investigate conflict detection: query persons where 2+ citations give different date_value for same event_type — surface as data quality check
+- [ ] Conflict detection: surface persons where 2+ citations give different `date_value` for the same `event_type` — already partially addressed by QualityView data quality checks; may be sufficient
 
 ## Related plans
-- `.claude/plans/2026-04-03-sanity-checks.md` — data quality checks (planned)
-- `.claude/plans/2026-04-04-event-cause.md` — cause field design
-- `.claude/plans/2026-04-03-printable-output.md` — printable reports that need citations
+- `.claude/plans/archive/2026-04-04-sanity-checks.md` — data quality checks (implemented, v1.2.0)
+- `.claude/plans/archive/2026-04-04-event-cause.md` — cause field design (implemented, v1.1.0)
+- `.claude/plans/archive/2026-04-04-printable-output.md` — printable reports (implemented, v1.3.0)
+- `.claude/plans/2026-04-05-evidence-model-simplification.md` — cite button removal, mention event, citation editing (in progress)
+- `.claude/plans/archive/2026-04-04-citation-model-investigation.md` — citation model rethink (resolved)
