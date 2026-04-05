@@ -72,18 +72,13 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/fix-wasm-oom-after-large-gedcom-import.md) |
 | Fix | v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers, all api/ refactored | — |
 | v0.21.0 | Persons list: single JOIN query (birth/death date/place), load-more pagination (100/page), remove Living column | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
+| v0.22.0 | View caching: keep-alive + dataVersion store, onActivated reload guard in 5 list views | [archive](plans/archive/2026-04-05-view-caching.md) |
 
 ---
 
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
-
-### View Caching: keep-alive + dataVersion invalidation [feature]
-See `.claude/plans/2026-04-05-view-caching.md` for the full plan.
-- [ ] dataVersion Pinia store
-- [ ] App.vue: increment on mutations + import, keep-alive template
-- [ ] onActivated reload guards in PersonsView, RelationshipsView, SourcesView, PlacesView, GroupsView
 
 ### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
