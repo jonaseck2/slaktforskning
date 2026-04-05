@@ -82,7 +82,8 @@ export interface FanSegment {
   generation: number;
   person: PersonNode | null;
   pathD: string;        // empty string for focal (rendered as <circle>)
-  textPathD: string;    // arc at mid-radius for curved textPath rendering
+  textPathD: string;    // arc at mid-radius for curved name textPath
+  textPathDateD: string; // arc offset inward/outward for curved date line
   fill: string;
   textX: number;
   textY: number;
@@ -125,9 +126,10 @@ export function computeFanLayout(tree: PedigreeTree, maxGen = 6): FanSegment[] {
       const flip = normT > 90 && normT <= 270;
       const textAngle = tangentialBase + (flip ? 180 : 0);
 
-      // Arc path for curved textPath rendering at mid-radius.
+      // Arc paths for curved textPath rendering.
       // Upper half (sin(midDeg) < 0): CW arc reads left→right.
       // Lower half: reversed CCW arc so text still reads left→right.
+      // Date line sits 9px inside (upper) or outside (lower) the name arc.
       const largeArcMid = sweepDeg > 180 ? 1 : 0;
       const [mx1, my1] = arcXY(rMid, startDeg);
       const [mx2, my2] = arcXY(rMid, endDeg);
@@ -136,8 +138,16 @@ export function computeFanLayout(tree: PedigreeTree, maxGen = 6): FanSegment[] {
         ? `M ${fmt(mx1)},${fmt(my1)} A ${rMid},${rMid} 0 ${largeArcMid},1 ${fmt(mx2)},${fmt(my2)}`
         : `M ${fmt(mx2)},${fmt(my2)} A ${rMid},${rMid} 0 ${largeArcMid},0 ${fmt(mx1)},${fmt(my1)}`;
 
+      // Date arc: inward for upper half (visually below name), outward for lower half.
+      const rDate = inUpperHalf ? rMid - 9 : rMid + 9;
+      const [dx1, dy1] = arcXY(rDate, startDeg);
+      const [dx2, dy2] = arcXY(rDate, endDeg);
+      const textPathDateD = isFocal ? '' : inUpperHalf
+        ? `M ${fmt(dx1)},${fmt(dy1)} A ${rDate},${rDate} 0 ${largeArcMid},1 ${fmt(dx2)},${fmt(dy2)}`
+        : `M ${fmt(dx2)},${fmt(dy2)} A ${rDate},${rDate} 0 ${largeArcMid},0 ${fmt(dx1)},${fmt(dy1)}`;
+
       segments.push({
-        ahnNum, generation: gen, person, pathD, textPathD, fill,
+        ahnNum, generation: gen, person, pathD, textPathD, textPathDateD, fill,
         textX, textY, textAngle, midAngle: midDeg, sweepDeg,
         isEmpty, isFocal,
       });

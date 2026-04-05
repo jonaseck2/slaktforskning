@@ -18,6 +18,12 @@
             :id="`tp-${seg.ahnNum}`"
             :d="seg.textPathD"
           />
+          <path
+            v-for="seg in nonFocalSegments"
+            :key="`tpd-${seg.ahnNum}`"
+            :id="`tpd-${seg.ahnNum}`"
+            :d="seg.textPathDateD"
+          />
         </defs>
 
         <!-- Non-focal segments -->
@@ -37,7 +43,7 @@
           <!-- Hover tooltip via native SVG title (works in Electron WebView) -->
           <title v-if="seg.person">{{ tooltipLabel(seg) }}</title>
 
-          <!-- Curved text mode: single line following the arc -->
+          <!-- Curved text mode: name + date each following their own arc -->
           <template v-if="curvedText && seg.person && seg.generation <= 5">
             <text
               text-anchor="middle"
@@ -47,22 +53,29 @@
               fill="white"
               style="pointer-events: none; user-select: none;"
             >
-              <textPath
-                :href="`#tp-${seg.ahnNum}`"
-                startOffset="50%"
-              >{{ curvedLabel(seg) }}</textPath>
+              <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ curvedLabel(seg) }}</textPath>
+            </text>
+            <text
+              v-if="seg.generation <= 4 && lifespan(seg)"
+              text-anchor="middle"
+              :font-size="dateFontSize(seg.generation)"
+              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              fill="rgba(255,255,255,0.75)"
+              style="pointer-events: none; user-select: none;"
+            >
+              <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ lifespan(seg) }}</textPath>
             </text>
           </template>
 
-          <!-- Straight tangential text: gen 1-2 given+surname on two lines, gen 3-5 surname only -->
+          <!-- Straight tangential text: given name + surname on two lines for gen 1-4, surname only for gen 5 -->
           <template v-else-if="!curvedText && seg.person && seg.generation <= 5">
             <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
-              <!-- Gen 1-2: given name line -->
+              <!-- Given name line (gen 1-4) -->
               <text
-                v-if="seg.generation <= 2 && givenLabel(seg)"
+                v-if="seg.generation <= 4 && givenLabel(seg)"
                 :x="seg.textX"
                 :y="seg.textY"
-                :dy="lifespan(seg) ? '-10' : '-5'"
+                :dy="lifespan(seg) ? '-9' : '-5'"
                 text-anchor="middle"
                 dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
@@ -71,13 +84,13 @@
                 fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ givenLabel(seg) }}</text>
-              <!-- Surname line (all gens) -->
+              <!-- Surname line -->
               <text
                 :x="seg.textX"
                 :y="seg.textY"
-                :dy="seg.generation <= 2
+                :dy="seg.generation <= 4
                   ? (lifespan(seg) ? '2' : '5')
-                  : (lifespan(seg) && seg.generation <= 4 ? '-5' : '0')"
+                  : '0'"
                 text-anchor="middle"
                 dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
@@ -91,7 +104,7 @@
                 v-if="seg.generation <= 4 && lifespan(seg)"
                 :x="seg.textX"
                 :y="seg.textY"
-                :dy="seg.generation <= 2 ? '13' : '6'"
+                dy="13"
                 text-anchor="middle"
                 dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
@@ -268,7 +281,7 @@ const focalDates = computed(() => {
 });
 
 function givenLabel(seg: FanSegment): string {
-  if (!seg.person || seg.generation > 2) return '';
+  if (!seg.person || seg.generation > 4) return '';
   return seg.person.preferredName ?? seg.person.givenName ?? '';
 }
 
@@ -277,11 +290,11 @@ function surnameLabel(seg: FanSegment): string {
   return seg.person.surname ?? seg.person.givenName ?? '';
 }
 
-// Full name for curved single-line label.
+// Full name on one line for curved text (gen 1-4), surname only for gen 5.
 function curvedLabel(seg: FanSegment): string {
   if (!seg.person) return '';
   const p = seg.person;
-  if (seg.generation <= 2) {
+  if (seg.generation <= 4) {
     const given = p.preferredName ?? p.givenName ?? '';
     const surname = p.surname ?? '';
     return given && surname ? `${given} ${surname}` : given || surname;
