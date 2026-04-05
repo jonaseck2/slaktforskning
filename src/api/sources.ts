@@ -107,3 +107,17 @@ export function getCitationsForPlace(db: Database, placeId: string): Citation[] 
 export function deleteCitation(db: Database, id: string): boolean {
   return db.prepare(`DELETE FROM citations WHERE id = ?`).run([id]).changes > 0;
 }
+
+export function updateCitation(
+  db: Database,
+  id: string,
+  updates: Partial<Pick<Citation, 'page' | 'confidence' | 'transcription' | 'notes' | 'date_accessed'>>
+): Citation | null {
+  const allowed = ['page', 'confidence', 'transcription', 'notes', 'date_accessed'] as const;
+  const fields = allowed.filter(k => k in updates);
+  if (fields.length === 0) return getCitation(db, id);
+  const setClauses = fields.map(f => `${f} = ?`).join(', ');
+  const vals = fields.map(f => (updates as Record<string, unknown>)[f]);
+  db.prepare(`UPDATE citations SET ${setClauses} WHERE id = ?`).run([...vals, id]);
+  return getCitation(db, id);
+}
