@@ -230,8 +230,12 @@ declare const window: Window & {
 
 ### List view pattern (PersonsView, RelationshipsView, SourcesView)
 - Header + "Add" button opens modal
+- Count label: `{{ $t('persons.showingOf', { shown: items.length, total }) }}`
 - `<table>` with clickable rows navigating to `router.push('/things/:id')`
 - Delete button uses `@click.stop` to prevent row navigation
+- **Infinite scroll** via IntersectionObserver on a `<div ref="sentinel" class="scroll-sentinel">` after the table — **never use a "Load More" button**
+- Backend must use a `listPage(limit, offset)` query that JOINs all display data in one SQL statement — no per-row IPC calls (N+1 anti-pattern)
+- See `frontend-design` skill → "Data loading pattern" for the full IntersectionObserver template
 
 ### Detail view pattern (PersonDetailView, SourceDetailView)
 - Load entity in `onMounted` via `useRoute().params.id`

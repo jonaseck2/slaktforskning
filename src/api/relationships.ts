@@ -29,6 +29,38 @@ export function listRelationships(db: Database): Relationship[] {
   return queryAll<Relationship>(db, `SELECT * FROM relationships ORDER BY created_at`);
 }
 
+type RelWithNames = Relationship & {
+  person1_given_name: string; person1_surname: string;
+  person1_preferred_name: string | null; person1_nickname: string | null;
+  person2_given_name: string; person2_surname: string;
+  person2_preferred_name: string | null; person2_nickname: string | null;
+};
+
+export function countRelationships(db: Database): number {
+  return (queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM relationships`) ?? { n: 0 }).n;
+}
+
+export function listRelationshipsPage(db: Database, limit: number, offset: number): RelWithNames[] {
+  return queryAll<RelWithNames>(db, `
+    SELECT r.*,
+      COALESCE(pn1.given_name, '') as person1_given_name,
+      COALESCE(pn1.surname, '') as person1_surname,
+      pn1.preferred_name as person1_preferred_name,
+      pn1.nickname as person1_nickname,
+      COALESCE(pn2.given_name, '') as person2_given_name,
+      COALESCE(pn2.surname, '') as person2_surname,
+      pn2.preferred_name as person2_preferred_name,
+      pn2.nickname as person2_nickname
+    FROM relationships r
+    LEFT JOIN person_names pn1 ON pn1.person_id = r.person1_id
+      AND pn1.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person1_id)
+    LEFT JOIN person_names pn2 ON pn2.person_id = r.person2_id
+      AND pn2.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person2_id)
+    ORDER BY r.created_at
+    LIMIT ? OFFSET ?
+  `, [limit, offset]);
+}
+
 export function updateRelationship(
   db: Database,
   id: string,
