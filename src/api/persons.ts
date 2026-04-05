@@ -181,7 +181,7 @@ export function deletePersonIdentifier(db: Database, id: string): boolean {
 
 export type PersonListItem = {
   id: string;
-  sex: 'M' | 'F' | 'U';
+  sex: Person['sex'];
   given_name: string;
   surname: string;
   birth_date: string | null;
@@ -190,7 +190,7 @@ export type PersonListItem = {
   death_place: string | null;
 };
 
-const PERSON_LIST_QUERY = `
+const PERSON_LIST_BASE_QUERY = `
   SELECT
     p.id,
     p.sex,
@@ -218,8 +218,9 @@ const PERSON_LIST_QUERY = `
     WHERE e.event_type = 'death'
   ) death ON death.person_id = p.id
   LEFT JOIN places dp ON dp.id = death.place_id
-  ORDER BY pn.surname, pn.given_name
 `;
+
+const PERSON_LIST_QUERY = `${PERSON_LIST_BASE_QUERY} ORDER BY pn.surname, pn.given_name`;
 
 export function listPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
   return queryAll<PersonListItem>(db, `${PERSON_LIST_QUERY} LIMIT ? OFFSET ?`, [limit, offset]);
@@ -232,33 +233,7 @@ export function countPersons(db: Database): number {
 export function searchPersonsWithDetails(db: Database, query: string): PersonListItem[] {
   const like = `%${query}%`;
   return queryAll<PersonListItem>(db, `
-    SELECT
-      p.id,
-      p.sex,
-      COALESCE(pn.given_name, '') AS given_name,
-      COALESCE(pn.surname, '')    AS surname,
-      birth.date_original         AS birth_date,
-      bp.name                     AS birth_place,
-      death.date_original         AS death_date,
-      dp.name                     AS death_place
-    FROM persons p
-    LEFT JOIN person_names pn
-      ON pn.person_id = p.id
-      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
-    LEFT JOIN (
-      SELECT ep.person_id, e.date_original, e.place_id
-      FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE e.event_type = 'birth'
-    ) birth ON birth.person_id = p.id
-    LEFT JOIN places bp ON bp.id = birth.place_id
-    LEFT JOIN (
-      SELECT ep.person_id, e.date_original, e.place_id
-      FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE e.event_type = 'death'
-    ) death ON death.person_id = p.id
-    LEFT JOIN places dp ON dp.id = death.place_id
+    ${PERSON_LIST_BASE_QUERY}
     WHERE p.notes LIKE ?
        OR EXISTS (
          SELECT 1 FROM person_names n
