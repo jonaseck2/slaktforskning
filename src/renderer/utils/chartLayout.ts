@@ -309,10 +309,55 @@ export function computeHourglassLayout(
   const lines: Line[] = [];
 
   // ── Ancestor geometry ────────────────────────────────────────────────────
+  //
+  // Compact horizontal layout: only visible leaf nodes get individual slots,
+  // preserving genealogical left-to-right order.  Internal nodes are centred
+  // over their children — the same algorithm as the pedigree chart's vertical
+  // layout but rotated 90°.  This means parents are never spread wider than
+  // their children actually require.
 
-  const totalAncestorLeaves = 1 << A; // 2^A
-  // Width of the ancestor section (content, no padding)
-  const ancestorSectionWidth = totalAncestorLeaves * (BOX_W + V_GAP) - V_GAP;
+  function virtualAncestorLeafPos(k: number): number {
+    const g = Math.floor(Math.log2(k));
+    const pos = k - (1 << g);
+    return (pos + 0.5) * (1 << (A - g)) - 0.5;
+  }
+
+  const isAncestorLeaf = (k: number) => !ancestorNodes.has(k * 2) && !ancestorNodes.has(k * 2 + 1);
+  const ancestorLeaves = [...ancestorNodes.keys()]
+    .filter(isAncestorLeaf)
+    .sort((a, b) => virtualAncestorLeafPos(a) - virtualAncestorLeafPos(b));
+  const leafXIndex = new Map<number, number>();
+  ancestorLeaves.forEach((k, i) => leafXIndex.set(k, i));
+
+  const numAncestorLeaves = ancestorLeaves.length;
+  const ancestorSectionWidth = numAncestorLeaves > 0
+    ? numAncestorLeaves * (BOX_W + V_GAP) - V_GAP
+    : BOX_W;
+
+  // Relative CX of ancestor k (offset from left edge of ancestor section).
+  const relCXCache = new Map<number, number>();
+  function ancestorRelCX(k: number): number {
+    if (relCXCache.has(k)) return relCXCache.get(k)!;
+    const idx = leafXIndex.get(k);
+    let relCX: number;
+    if (idx !== undefined) {
+      relCX = idx * (BOX_W + V_GAP) + BOX_W / 2;
+    } else {
+      const childCXs: number[] = [];
+      if (ancestorNodes.has(k * 2)) childCXs.push(ancestorRelCX(k * 2));
+      if (ancestorNodes.has(k * 2 + 1)) childCXs.push(ancestorRelCX(k * 2 + 1));
+      relCX = childCXs.length > 0
+        ? childCXs.reduce((a, b) => a + b, 0) / childCXs.length
+        : BOX_W / 2;
+    }
+    relCXCache.set(k, relCX);
+    return relCX;
+  }
+
+  // Focal's offset within the ancestor section, giving asymmetric extents.
+  const focalRelCX      = ancestorRelCX(1);
+  const ancLeftFromFocal  = focalRelCX;
+  const ancRightFromFocal = ancestorSectionWidth - focalRelCX;
 
   // ── Descendant geometry ──────────────────────────────────────────────────
   //
@@ -367,9 +412,6 @@ export function computeHourglassLayout(
     ? Math.max(BOX_W / 2, compactRightFromCJ - spouseOffset)
     : spouseOffset + compactRightFromCJ;
 
-  // Ancestor section is symmetric around focalCX.
-  const ancHalfW = ancestorSectionWidth / 2;
-
   // Extra space needed on the spouse side (left or right depending on orientation).
   const spouseBoxesExtent = effectiveSpouses.length > 0
     ? BOX_W + H_GAP + (effectiveSpouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
@@ -378,24 +420,15 @@ export function computeHourglassLayout(
   // Place focal far enough from the left edge that nothing clips.
   // When spouseOnLeft we also need room for the spouse boxes on the left.
   const focalCX = PAD + (spouseOnLeft
-    ? Math.max(ancHalfW, descLeftFromFocal, spouseBoxesExtent)
-    : Math.max(ancHalfW, descLeftFromFocal));
+    ? Math.max(ancLeftFromFocal, descLeftFromFocal, spouseBoxesExtent)
+    : Math.max(ancLeftFromFocal, descLeftFromFocal));
   const rightNeeded = spouseOnLeft
-    ? Math.max(ancHalfW, descRightFromFocal)
-    : Math.max(ancHalfW, descRightFromFocal, spouseBoxesExtent);
+    ? Math.max(ancRightFromFocal, descRightFromFocal)
+    : Math.max(ancRightFromFocal, descRightFromFocal, spouseBoxesExtent);
   const svgWidth = focalCX + rightNeeded + PAD;
 
-  // Ancestors are symmetric around focalCX.
-  const ancestorOffset = focalCX - PAD - ancHalfW;
-
-  // Center X of ancestor with ahnentafel k
-  const ancestorCX = (k: number): number => {
-    const g = Math.floor(Math.log2(k));
-    const slotsPerPerson = totalAncestorLeaves >> g;
-    const pos = k - (1 << g);
-    const centerSlot = (pos + 0.5) * slotsPerPerson - 0.5;
-    return PAD + ancestorOffset + centerSlot * (BOX_W + V_GAP) + BOX_W / 2;
-  };
+  // Absolute CX of ancestor k
+  const ancestorCX = (k: number): number => focalCX - focalRelCX + ancestorRelCX(k);
 
   // ── Place ancestor boxes ─────────────────────────────────────────────────
 
