@@ -839,3 +839,130 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
     expect(cits2[0].page).toBe('p. 7');
   });
 });
+
+// ──────────────────────────────────────────────
+// GEDCOM import completeness (Task 3)
+// ──────────────────────────────────────────────
+describe('GEDCOM import completeness', () => {
+  it('CAUS under DEAT imported as event.cause', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Per /Persson/
+1 DEAT
+2 DATE 19 MAR 1953
+2 CAUS Skelettcancer
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const death = events.find(e => e.event_type === 'death');
+    expect(death).toBeTruthy();
+    expect(death?.cause).toBe('Skelettcancer');
+  });
+
+  it('ENGA imported as engagement event, TYPE prepended to description', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Anna /Svensson/
+1 ENGA
+2 TYPE Sambo
+2 DATE ABT 2020
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const enga = events.find(e => e.event_type === 'engagement');
+    expect(enga).toBeTruthy();
+    expect(enga?.description).toBe('Sambo');
+  });
+
+  it('ADOP imported as adoption event', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Lars /Andersson/
+1 ADOP
+2 DATE 1955
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const adop = events.find(e => e.event_type === 'adoption');
+    expect(adop).toBeTruthy();
+  });
+
+  it('TITL on INDI imported as occupation event', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Karin /Johansson/
+1 TITL Sömmerska, bondmora
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const occu = events.find(e => e.event_type === 'occupation');
+    expect(occu).toBeTruthy();
+    expect(occu?.description).toBe('Sömmerska, bondmora');
+  });
+
+  it('top-level NOTE xref resolved to content in person.notes', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @N1@ NOTE This is a shared note.
+0 @I1@ INDI
+1 NAME Erik /Lindqvist/
+1 NOTE @N1@
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    expect(persons[0].notes).toBe('This is a shared note.');
+  });
+
+  it('engagement event roundtrips via export (ENGA tag appears)', () => {
+    const p = createPerson(db, { sex: 'F' });
+    addPersonName(db, p.id, { given_name: 'Maria', surname: 'Nilsson' });
+    const ev = createEvent(db, { event_type: 'engagement', date_original: 'ABT 2020' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('1 ENGA');
+  });
+
+  it('ImportReport contains correct counts and OBJE warning', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Per /Persson/
+1 BIRT
+2 DATE 1900
+1 DEAT
+2 DATE 1970
+2 CAUS Hjärtinfarkt
+1 OBJE
+2 FILE C:\\Photos\\per.jpg
+0 @I2@ INDI
+1 NAME Anna /Persson/
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 1930
+0 TRLR`;
+    const tree = parseGedcom(ged);
+    const report = importGedcom(db, tree);
+    expect(report.persons).toBe(2);
+    expect(report.families).toBe(1);
+    expect(report.events['birth']).toBe(1);
+    expect(report.events['death']).toBe(1);
+    expect(report.events['marriage']).toBe(1);
+    expect(report.warnings.some(w => w.includes('OBJE'))).toBe(true);
+  });
+});

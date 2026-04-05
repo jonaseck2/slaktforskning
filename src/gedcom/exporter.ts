@@ -19,7 +19,7 @@ const EVENT_TYPE_TO_TAG: Record<string, string> = {
   residence: 'RESI', education: 'EDUC', emigration: 'EMIG',
   immigration: 'IMMI', naturalization: 'NATU', census: 'CENS',
   probate: 'PROB', will: 'WILL', graduation: 'GRAD', retirement: 'RETI',
-  marriage: 'MARR', divorce: 'DIV', other: 'EVEN',
+  marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP', other: 'EVEN',
 };
 
 function capitalizeFirst(s: string): string {

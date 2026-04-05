@@ -32,6 +32,41 @@
     </div>
 
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
+
+    <!-- Import report modal -->
+    <div v-if="showImportReport && importReport" class="modal-overlay" @click.self="showImportReport = false">
+      <div class="modal">
+        <h3>{{ $t('importExport.importReportTitle') }}</h3>
+        <ul class="report-counts">
+          <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
+          <li>{{ $t('importExport.importReportFamilies', { n: importReport.families }) }}</li>
+          <li>{{ $t('importExport.importReportEvents', { n: Object.values(importReport.events).reduce((a, b) => a + b, 0) }) }}</li>
+          <li>{{ $t('importExport.importReportSources', { n: importReport.sources }) }}</li>
+          <li>{{ $t('importExport.importReportPlaces', { n: importReport.places }) }}</li>
+          <li>{{ $t('importExport.importReportCitations', { n: importReport.citations }) }}</li>
+        </ul>
+        <div v-if="Object.keys(importReport.events).length > 0" class="report-section">
+          <ul class="report-event-list">
+            <li v-for="(count, type) in importReport.events" :key="type">{{ type }}: {{ count }}</li>
+          </ul>
+        </div>
+        <div v-if="importReport.warnings.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportWarnings') }}</p>
+          <ul>
+            <li v-for="(w, i) in importReport.warnings" :key="i">{{ w }}</li>
+          </ul>
+        </div>
+        <div v-if="importReport.skipped.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportSkipped') }}</p>
+          <ul>
+            <li v-for="s in importReport.skipped" :key="s.tag">{{ s.tag }}: {{ s.count }}</li>
+          </ul>
+        </div>
+        <div class="modal-actions">
+          <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -48,6 +83,13 @@ const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const genneyProgress = ref('');
+const showImportReport = ref(false);
+const importReport = ref<{
+  persons: number; families: number; events: Record<string, number>;
+  sources: number; places: number; citations: number;
+  skipped: { tag: string; count: number }[];
+  warnings: string[];
+} | null>(null);
 
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   statusMessage.value = msg;
@@ -126,10 +168,29 @@ async function handleImportGedcom() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.import()) as { imported?: boolean; canceled?: boolean; filePath?: string };
+    const result = (await window.api.gedcom.import()) as {
+      imported?: boolean;
+      canceled?: boolean;
+      filePath?: string;
+      report?: {
+        persons: number;
+        families: number;
+        events: Record<string, number>;
+        sources: number;
+        places: number;
+        citations: number;
+        skipped: { tag: string; count: number }[];
+        warnings: string[];
+      };
+    };
     if (result.imported) {
-      setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
       window.dispatchEvent(new CustomEvent('data-imported'));
+      if (result.report) {
+        importReport.value = result.report;
+        showImportReport.value = true;
+      } else {
+        setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
+      }
     }
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');
@@ -246,5 +307,79 @@ button:disabled {
 .status.error {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 320px;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.report-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.report-section {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+
+.report-section-label {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.report-section ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 13px;
+  color: #444;
+}
+
+.report-event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
 }
 </style>

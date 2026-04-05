@@ -343,23 +343,23 @@ No change to export needed for the report — it's import-only.
 
 ## Tasks
 
-- [ ] Add `'engagement'` and `'adoption'` to `EVENT_TYPE_VALUES` in eventTypes.ts
-- [ ] Add Swedish + English i18n labels for both types
-- [ ] Add `ENGA: 'engagement'` and `ADOP: 'adoption'` to `PERSON_EVENT_TAGS` in importer
-- [ ] Extract `CAUS` in `importEventNode` → `event.cause`
-- [ ] Extract `TYPE` subtag in `importEventNode` → prepend to description
-- [ ] Add `TITL` handler in INDI processing block → `'occupation'` event
-- [ ] Build `noteMap` in first pass; add `resolveNote` helper; update all NOTE reads
-- [ ] Add `engagement: 'ENGA'` and `adoption: 'ADOP'` to `EVENT_TYPE_TO_TAG` in exporter
-- [ ] Tests: CAUS import
-- [ ] Tests: ENGA import with TYPE
-- [ ] Tests: ADOP import
-- [ ] Tests: TITL import
-- [ ] Tests: top-level NOTE xref resolution
-- [ ] Tests: engagement roundtrip export
-- [ ] Change importer return type to `ImportReport`; accumulate counts and skipped tags
-- [ ] Update `gedcom:import` IPC handler to return report on success
-- [ ] Renderer: show import result modal/panel with counts and skipped-tag list
-- [ ] Tests: ImportReport shape (counts correct, OBJE in skipped)
-- [ ] Run `npm test` — all tests pass
-- [ ] Commit + version bump (patch)
+- [x] Add `'engagement'` and `'adoption'` to `EVENT_TYPE_VALUES` in eventTypes.ts
+- [x] Add Swedish + English i18n labels for both types
+- [x] Add `ENGA: 'engagement'` and `ADOP: 'adoption'` to `PERSON_EVENT_TAGS` in importer
+- [x] Extract `CAUS` in `importEventNode` → `event.cause`
+- [x] Extract `TYPE` subtag in `importEventNode` → prepend to description
+- [x] Add `TITL` handler in INDI processing block → `'occupation'` event
+- [x] Build `noteMap` in first pass; add `resolveNote` helper; update all NOTE reads
+- [x] Add `engagement: 'ENGA'` and `adoption: 'ADOP'` to `EVENT_TYPE_TO_TAG` in exporter
+- [x] Tests: CAUS import
+- [x] Tests: ENGA import with TYPE
+- [x] Tests: ADOP import
+- [x] Tests: TITL import
+- [x] Tests: top-level NOTE xref resolution
+- [x] Tests: engagement roundtrip export
+- [x] Change importer return type to `ImportReport`; accumulate counts and skipped tags
+- [x] Update `gedcom:import` IPC handler to return report on success
+- [x] Renderer: show import result modal/panel with counts and skipped-tag list
+- [x] Tests: ImportReport shape (counts correct, OBJE in skipped)
+- [x] Run `npm test` — all tests pass
+- [x] Commit + version bump (patch)

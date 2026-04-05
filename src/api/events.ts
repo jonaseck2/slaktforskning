@@ -12,13 +12,14 @@ export function createEvent(
     date_value_end?: string | null;
     date_original?: string;
     place_id?: string | null;
+    cause?: string | null;
     description?: string;
   }
 ): GenealogyEvent {
   const id = uuid();
   db.prepare(`
-    INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, cause, description)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run([
     id,
     data.event_type,
@@ -28,6 +29,7 @@ export function createEvent(
     data.date_value_end ?? null,
     data.date_original ?? '',
     data.place_id ?? null,
+    data.cause ?? null,
     data.description ?? ''
   ]);
   return getEvent(db, id)!;

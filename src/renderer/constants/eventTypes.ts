@@ -5,7 +5,9 @@ export const EVENT_TYPE_VALUES = [
   'birth', 'death', 'marriage', 'divorce', 'christening', 'burial',
   'baptism', 'confirmation', 'ordination', 'census', 'immigration',
   'emigration', 'naturalization', 'occupation', 'residence', 'education',
-  'graduation', 'military', 'retirement', 'will', 'probate', 'mention', 'other',
+  'graduation', 'military', 'retirement', 'will', 'probate', 'mention',
+  'engagement', 'adoption',
+  'other',
 ] as const;
 
 export type EventTypeValue = (typeof EVENT_TYPE_VALUES)[number];
