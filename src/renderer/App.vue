@@ -322,4 +322,10 @@ body {
   padding: 24px;
   overflow-y: auto;
 }
+
+@media print {
+  .sidebar { display: none !important; }
+  .app { display: block; height: auto; }
+  .content { padding: 0; height: auto; overflow: visible; }
+}
 </style>
