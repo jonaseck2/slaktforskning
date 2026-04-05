@@ -371,6 +371,9 @@ onMounted(load);
   align-items: center;
   justify-content: center;
 }
+.chart-scroll > svg {
+  flex-shrink: 0;
+}
 .chart-loading { color: #999; padding: 40px; text-align: center; }
 
 .circle-seg.clickable { cursor: pointer; }

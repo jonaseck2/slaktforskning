@@ -147,8 +147,8 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
           : `M ${fmt(p2x)},${fmt(p2y)} A ${r},${r} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
       }
 
-      const rGiven = inUpperHalf ? rMid + 8 : rMid - 8;
-      const rDate  = inUpperHalf ? rMid - 9 : rMid + 9;
+      const rGiven = inUpperHalf ? rMid + 11 : rMid - 11;
+      const rDate  = inUpperHalf ? rMid - 10 : rMid + 10;
 
       const textPathGivenD = isFocal ? '' : arcPath(rGiven);
       const textPathD      = isFocal ? '' : arcPath(rMid);
