@@ -80,12 +80,19 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.23.2: ReportsView full-width + auto-fit zoom with +/−/Fit controls | — |
 | Fix | v0.23.3: Circle chart gen 5-6 radial text — deeper rings, full name+dates visible | — |
 | Fix | v0.23.4: All charts: `* ISO` birth + `† ISO` death on separate lines; BOX_H 44→54; fix circle curved-mode gen 5-6 gone; fix circle scroll overflow | — |
+| Fix | v0.23.5: Circle gen 6 color lightening reduction; Reports auto-use focal person (remove PersonPicker) | — |
 
 ---
 
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
+
+### Shared CircleChartSvg component [refactor]
+See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
+- [ ] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
+- [ ] Use in `CircleChart.vue` (interactive)
+- [ ] Use in `AncestorBookReport.vue` (print/export)
 
 ### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
