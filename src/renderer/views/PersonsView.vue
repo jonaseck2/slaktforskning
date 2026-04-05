@@ -24,7 +24,7 @@
           v-for="person in persons"
           :key="person.id"
           class="clickable-row"
-          @click="goToDetail(person.id)"
+          @click="goToDetail(person)"
         >
           <td>
             <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name" :nickname="person.nickname" />
@@ -90,6 +90,8 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationBadge from '../components/CitationBadge.vue';
 import PersonName from '../components/PersonName.vue';
+import { useFocusStore } from '../stores/focus';
+import { fullNameParts } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -107,6 +109,7 @@ interface PersonRow {
 
 const { t } = useI18n();
 const router = useRouter();
+const focusStore = useFocusStore();
 const persons = ref<PersonRow[]>([]);
 const personCitationCounts = ref<Record<string, number>>({});
 const showAddForm = ref(false);
@@ -179,8 +182,10 @@ async function removePerson(id: string) {
   }
 }
 
-function goToDetail(id: string) {
-  router.push(`/persons/${id}`);
+function goToDetail(person: PersonRow) {
+  const name = fullNameParts(person.given_name ?? null, person.surname ?? null, person.preferred_name ?? null, person.nickname ?? null).map(p => p.text).join('');
+  focusStore.set(person.id, name);
+  router.push(`/persons/${person.id}`);
 }
 
 onMounted(load);
