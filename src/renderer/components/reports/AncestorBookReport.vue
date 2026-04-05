@@ -206,9 +206,6 @@
       </section>
 
     </template>
-    <div v-else-if="!loading && !error && !props.personId" class="ab-empty">
-      Välj en person för att generera stamtavlan.
-    </div>
   </div>
 </template>
 
@@ -401,6 +398,7 @@ function wrapText(text: string, maxChars: number, maxLines: number): string[] {
       lines.push(current);
       if (lines.length >= maxLines - 1) {
         current = words.slice(i).join(' ');
+        if (current.length > maxChars) current = current.slice(0, maxChars - 1) + '…';
         break;
       }
       current = word;
