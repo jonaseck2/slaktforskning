@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { GenealogyEvent } from './types';
+import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 export function createEvent(
   db: Database,
@@ -17,10 +18,10 @@ export function createEvent(
   }
 ): GenealogyEvent {
   const id = uuid();
-  db.prepare(`
+  runSql(db, `
     INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, cause, description)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run([
+  `, [
     id,
     data.event_type,
     data.relationship_id ?? null,
@@ -36,20 +37,20 @@ export function createEvent(
 }
 
 export function getEvent(db: Database, id: string): GenealogyEvent | null {
-  return (db.prepare(`SELECT * FROM events WHERE id = ?`).get([id]) as GenealogyEvent) ?? null;
+  return queryOne<GenealogyEvent>(db, `SELECT * FROM events WHERE id = ?`, [id]) ?? null;
 }
 
 export function getEventsForPerson(db: Database, personId: string): GenealogyEvent[] {
-  return db.prepare(`
+  return queryAll<GenealogyEvent>(db, `
     SELECT e.* FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
     WHERE ep.person_id = ?
     ORDER BY e.date_value
-  `).all([personId]) as GenealogyEvent[];
+  `, [personId]);
 }
 
 export function getEventsForRelationship(db: Database, relationshipId: string): GenealogyEvent[] {
-  return db.prepare(`SELECT * FROM events WHERE relationship_id = ? ORDER BY date_value`).all([relationshipId]) as GenealogyEvent[];
+  return queryAll<GenealogyEvent>(db, `SELECT * FROM events WHERE relationship_id = ? ORDER BY date_value`, [relationshipId]);
 }
 
 export function updateEvent(
@@ -66,10 +67,10 @@ export function updateEvent(
   if (fields.length === 0) return getEvent(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  db.prepare(`UPDATE events SET ${fields.join(', ')} WHERE id = ?`).run(values);
+  runSql(db, `UPDATE events SET ${fields.join(', ')} WHERE id = ?`, values);
   return getEvent(db, id);
 }
 
 export function deleteEvent(db: Database, id: string): boolean {
-  return db.prepare(`DELETE FROM events WHERE id = ?`).run([id]).changes > 0;
+  return runSqlChanges(db, `DELETE FROM events WHERE id = ?`, [id]) > 0;
 }

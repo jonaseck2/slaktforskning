@@ -591,13 +591,26 @@ function doImportGedcom(
  */
 function withStatementCache(db: Database): { proxy: Database; finalize(): void } {
   const cache = new Map<string, ReturnType<typeof db.prepare>>();
+  // Return a proxy wrapper around the real statement that ignores finalize() calls.
+  // This lets callers (e.g. src/api/db.ts helpers) safely call finalize() after each
+  // use without killing the cached statement. The cache's own finalize() method
+  // cleans up all real statements when the import transaction completes.
+  function wrapStatement(stmt: ReturnType<typeof db.prepare>) {
+    return new Proxy(stmt, {
+      get(target, prop) {
+        if (prop === 'finalize') return () => { /* no-op: cache owns the lifetime */ };
+        const val = (target as unknown as Record<string | symbol, unknown>)[prop];
+        return typeof val === 'function' ? (val as (...a: unknown[]) => unknown).bind(target) : val;
+      },
+    });
+  }
   const proxy = new Proxy(db, {
     get(target, prop) {
       if (prop === 'prepare') {
         return (sql: string) => {
           let stmt = cache.get(sql);
           if (!stmt) { stmt = target.prepare(sql); cache.set(sql, stmt); }
-          return stmt;
+          return wrapStatement(stmt);
         };
       }
       const val = (target as unknown as Record<string | symbol, unknown>)[prop];
