@@ -217,7 +217,8 @@ function primaryName(names: RawName[]): string {
   if (!names.length) return '';
   const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
   const n = sorted[0];
-  return [n.given_name, n.surname].filter(Boolean).join(' ');
+  const first = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
+  return [first, n.surname].filter(Boolean).join(' ');
 }
 
 function nameTypeLabel(t: string): string {

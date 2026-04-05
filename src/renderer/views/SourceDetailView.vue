@@ -167,17 +167,17 @@ async function resolveEntityLabel(cit: CitationRow): Promise<{ label: string; ro
       const participants = await window.api.eventParticipants.getForEvent(cit.event_id) as Array<{ person_id: string; role: string }>;
       const primary = participants.find(p => p.role === 'primary') ?? participants[0];
       if (primary) {
-        const names = await window.api.persons.getNames(primary.person_id) as Array<{ given_name: string; surname: string; sort_order: number }>;
+        const names = await window.api.persons.getNames(primary.person_id) as Array<{ given_name: string | null; surname: string | null; preferred_name: string | null; sort_order: number }>;
         const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
-        const personName = sorted ? [sorted.given_name, sorted.surname].filter(Boolean).join(' ') : '?';
+        const personName = sorted ? ([sorted.preferred_name ?? sorted.given_name?.split(' ')[0] ?? '', sorted.surname].filter(Boolean).join(' ') || '?') : '?';
         return { label: `${personName} – ${eventLabel}${dateStr}`, route: `/persons/${primary.person_id}` };
       }
       return { label: `${eventLabel}${dateStr}`, route: '' };
     }
     if (cit.person_id) {
-      const names = await window.api.persons.getNames(cit.person_id) as Array<{ given_name: string; surname: string; sort_order: number }>;
+      const names = await window.api.persons.getNames(cit.person_id) as Array<{ given_name: string | null; surname: string | null; preferred_name: string | null; sort_order: number }>;
       const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
-      const personName = sorted ? [sorted.given_name, sorted.surname].filter(Boolean).join(' ') : '?';
+      const personName = sorted ? ([sorted.preferred_name ?? sorted.given_name?.split(' ')[0] ?? '', sorted.surname].filter(Boolean).join(' ') || '?') : '?';
       return { label: personName, route: `/persons/${cit.person_id}` };
     }
     if (cit.relationship_id) {

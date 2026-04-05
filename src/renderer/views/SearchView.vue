@@ -36,7 +36,7 @@
               class="clickable-row"
               @click="router.push(`/persons/${p.id}`)"
             >
-              <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" /></td>
+              <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" /></td>
               <td>{{ p.sex }}</td>
               <td>{{ p.living ? $t('common.yes') : $t('common.no') }}</td>
             </tr>
@@ -63,8 +63,8 @@
               @click="router.push(`/relationships/${r.id}`)"
             >
               <td>{{ $t('relTypes.' + r.type) }}</td>
-              <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" /></td>
-              <td><PersonName :given-name="r.person2_given_name" :surname="r.person2_surname" :preferred-name="r.person2_preferred_name ?? null" /></td>
+              <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" :nickname="r.person1_nickname ?? null" /></td>
+              <td><PersonName :given-name="r.person2_given_name" :surname="r.person2_surname" :preferred-name="r.person2_preferred_name ?? null" :nickname="r.person2_nickname ?? null" /></td>
             </tr>
           </tbody>
         </table>
@@ -114,6 +114,7 @@ interface PersonResult {
   given_name: string;
   surname: string;
   preferred_name: string | null;
+  nickname: string | null;
   sex: string;
   living: boolean;
 }
@@ -124,9 +125,11 @@ interface RelationshipResult {
   person1_given_name: string;
   person1_surname: string;
   person1_preferred_name?: string | null;
+  person1_nickname?: string | null;
   person2_given_name: string;
   person2_surname: string;
   person2_preferred_name?: string | null;
+  person2_nickname?: string | null;
 }
 
 interface SourceResult {

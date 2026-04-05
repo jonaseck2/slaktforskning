@@ -73,6 +73,19 @@ export function parseAsteriskNotation(raw: string): { given_name: string; prefer
   return { given_name: given_name || raw.trim(), preferred_name };
 }
 
+/**
+ * Plain-string display name for non-component contexts (reports, dropdowns, audit strings).
+ * Uses preferred_name if set, otherwise the first token of given_name, then appends surname.
+ */
+export function formatPersonName(name: {
+  given_name?: string | null;
+  surname?: string | null;
+  preferred_name?: string | null;
+}): string {
+  const first = name.preferred_name ?? name.given_name?.split(' ')[0] ?? '';
+  return [first, name.surname].filter(Boolean).join(' ');
+}
+
 /** Truncates a parts array to at most maxLen visible characters, appending '…' if cut. */
 export function truncateNameParts(parts: NamePart[], maxLen: number): NamePart[] {
   const full = parts.map(p => p.text).join('');

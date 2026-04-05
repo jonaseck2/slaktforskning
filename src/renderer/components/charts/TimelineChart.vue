@@ -51,7 +51,7 @@
               class="row-label" :class="{ 'focal-label': bar.isFocal }"
               text-anchor="end" dominant-baseline="middle"
             ><tspan
-                v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName), 22)"
+                v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName, bar.person.nickname), 22)"
                 :key="pi"
                 :text-decoration="part.underline ? 'underline' : undefined"
               >{{ part.text }}</tspan></text>
