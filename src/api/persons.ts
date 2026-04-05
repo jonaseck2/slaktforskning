@@ -255,3 +255,22 @@ export function searchPersonsWithDetails(db: Database, query: string): PersonLis
     ORDER BY pn.surname, pn.given_name
   `, [like, like, like, like]);
 }
+
+export function getPersonDisplayNames(db: Database, ids: string[]): Map<string, string> {
+  if (ids.length === 0) return new Map();
+  const placeholders = ids.map(() => '?').join(',');
+  const rows = queryAll<{ person_id: string; given_name: string; surname: string }>(db, `
+    SELECT pn.person_id,
+           COALESCE(pn.given_name, '') AS given_name,
+           COALESCE(pn.surname, '')    AS surname
+    FROM person_names pn
+    WHERE pn.person_id IN (${placeholders})
+      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = pn.person_id)
+  `, ids);
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    const name = [row.given_name, row.surname].filter(Boolean).join(' ');
+    map.set(row.person_id, name || '?');
+  }
+  return map;
+}
