@@ -82,6 +82,7 @@ export interface FanSegment {
   generation: number;
   person: PersonNode | null;
   pathD: string;        // empty string for focal (rendered as <circle>)
+  textPathD: string;    // arc at mid-radius for curved textPath rendering
   fill: string;
   textX: number;
   textY: number;
@@ -124,8 +125,19 @@ export function computeFanLayout(tree: PedigreeTree, maxGen = 6): FanSegment[] {
       const flip = normT > 90 && normT <= 270;
       const textAngle = tangentialBase + (flip ? 180 : 0);
 
+      // Arc path for curved textPath rendering at mid-radius.
+      // Upper half (sin(midDeg) < 0): CW arc reads left→right.
+      // Lower half: reversed CCW arc so text still reads left→right.
+      const largeArcMid = sweepDeg > 180 ? 1 : 0;
+      const [mx1, my1] = arcXY(rMid, startDeg);
+      const [mx2, my2] = arcXY(rMid, endDeg);
+      const inUpperHalf = Math.sin(toRad(midDeg)) < 0;
+      const textPathD = isFocal ? '' : inUpperHalf
+        ? `M ${fmt(mx1)},${fmt(my1)} A ${rMid},${rMid} 0 ${largeArcMid},1 ${fmt(mx2)},${fmt(my2)}`
+        : `M ${fmt(mx2)},${fmt(my2)} A ${rMid},${rMid} 0 ${largeArcMid},0 ${fmt(mx1)},${fmt(my1)}`;
+
       segments.push({
-        ahnNum, generation: gen, person, pathD, fill,
+        ahnNum, generation: gen, person, pathD, textPathD, fill,
         textX, textY, textAngle, midAngle: midDeg, sweepDeg,
         isEmpty, isFocal,
       });
