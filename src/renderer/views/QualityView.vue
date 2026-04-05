@@ -89,11 +89,9 @@ const filteredResults = computed(() => {
 onMounted(() => {
   runChecks();
   let debounce: ReturnType<typeof setTimeout> | null = null;
-  window.addEventListener('message', (e) => {
-    if (e.data?.type === 'data-changed') {
-      if (debounce) clearTimeout(debounce);
-      debounce = setTimeout(runChecks, 800);
-    }
+  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(runChecks, 800);
   });
 });
 
