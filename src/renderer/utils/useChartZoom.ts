@@ -42,8 +42,29 @@ export function useChartZoom(defaultZoom = 1, storageKey?: string) {
     });
   }
 
-  function zoomIn()    { zoom.value = Math.min(5, zoom.value * 1.25); }
-  function zoomOut()   { zoom.value = Math.max(0.2, zoom.value / 1.25); }
+  function applyZoom(factor: number) {
+    const scroller = scrollRef.value;
+    if (!scroller) {
+      zoom.value = Math.max(0.2, Math.min(5, zoom.value * factor));
+      return;
+    }
+    const { clientWidth, clientHeight, scrollLeft, scrollTop } = scroller;
+    // Anchor to center of visible area
+    const cx = clientWidth / 2;
+    const cy = clientHeight / 2;
+    const logicalX = (scrollLeft + cx) / zoom.value;
+    const logicalY = (scrollTop  + cy) / zoom.value;
+    const newZoom = Math.max(0.2, Math.min(5, zoom.value * factor));
+    zoom.value = newZoom;
+    nextTick(() => {
+      if (!scrollRef.value) return;
+      scrollRef.value.scrollLeft = logicalX * newZoom - cx;
+      scrollRef.value.scrollTop  = logicalY * newZoom - cy;
+    });
+  }
+
+  function zoomIn()    { applyZoom(1.25); }
+  function zoomOut()   { applyZoom(1 / 1.25); }
   function resetZoom() { zoom.value = defaultZoom; }
 
   return { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom };
