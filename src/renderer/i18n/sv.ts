@@ -11,6 +11,7 @@ export default {
     sources: 'Källor',
     importExport: 'Import / Export',
     groups: 'Grupper',
+    focusPerson: 'Fokusperson',
   },
   common: {
     cancel: 'Avbryt',
