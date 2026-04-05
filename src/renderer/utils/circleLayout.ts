@@ -149,11 +149,14 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
           : `M ${fmt(p2x)},${fmt(p2y)} A ${r},${r} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
       }
 
-      const rGiven = inUpperHalf ? rMid + 11 : rMid - 11;
-      const rDate  = inUpperHalf ? rMid - 10 : rMid + 10;
+      // Match straight-mode dy offsets: given=−9 outward, surname=+2 inward, dates=+13 inward.
+      // This keeps the text block centred at the same radial position in both modes.
+      const rGiven   = inUpperHalf ? rMid + 6  : rMid - 6;
+      const rSurname = inUpperHalf ? rMid - 5  : rMid + 5;
+      const rDate    = inUpperHalf ? rMid - 16 : rMid + 16;
 
       const textPathGivenD = isFocal ? '' : arcPath(rGiven);
-      const textPathD      = isFocal ? '' : arcPath(rMid);
+      const textPathD      = isFocal ? '' : arcPath(rSurname);
       const textPathDateD  = isFocal ? '' : arcPath(rDate);
 
       segments.push({
