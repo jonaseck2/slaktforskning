@@ -21,7 +21,7 @@ const PERSON_EVENT_TAGS: Record<string, string> = {
 };
 
 const FAMILY_EVENT_TAGS: Record<string, string> = {
-  MARR: 'marriage', DIV: 'divorce', CENS: 'census', EVEN: 'other',
+  MARR: 'marriage', DIV: 'divorce', CENS: 'census', ENGA: 'engagement', EVEN: 'other',
 };
 
 function getChild(node: GedcomNode, tag: string): GedcomNode | undefined {
@@ -227,7 +227,7 @@ const KNOWN_INDI_TAGS = new Set([
 const KNOWN_FAM_TAGS = new Set([
   'HUSB', 'WIFE', 'CHIL', 'SOUR', 'NOTE', '_SUBTYPE', '_RELNOTES', 'CHAN',
   // FAMILY_EVENT_TAGS keys:
-  'MARR', 'DIV', 'CENS', 'EVEN',
+  'MARR', 'DIV', 'CENS', 'ENGA', 'EVEN',
   'OBJE',
 ]);
 
