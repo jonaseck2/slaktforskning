@@ -98,6 +98,57 @@
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
+    <!-- Research Tasks Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('researchTasks.title') }}</h4>
+        <button class="btn-add" @click="showAddTaskModal = true">+ {{ $t('researchTasks.addTask') }}</button>
+      </div>
+      <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
+      <div v-else class="task-list">
+        <div v-for="task in personTasks" :key="task.id" class="task-row">
+          <span
+            :class="['status-chip', 'status-' + task.status]"
+            @click="cycleTaskStatus(task)"
+            :title="$t('researchTasks.status')"
+          >{{ $t('researchTasks.statuses.' + task.status) }}</span>
+          <span class="task-text">{{ task.task }}</span>
+          <span v-if="task.result" class="task-result">— {{ task.result }}</span>
+          <button class="btn-sm btn-delete" @click="deletePersonTask(task.id)">{{ $t('common.delete') }}</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add Research Task Modal -->
+    <div v-if="showAddTaskModal" class="modal-overlay" @click.self="showAddTaskModal = false">
+      <div class="modal">
+        <h3>{{ $t('researchTasks.addTask') }}</h3>
+        <form @submit.prevent="createPersonTask">
+          <label>
+            {{ $t('researchTasks.task') }} *
+            <input v-model="taskForm.task" type="text" required autofocus />
+          </label>
+          <label>
+            {{ $t('researchTasks.priority') }}
+            <select v-model="taskForm.priority">
+              <option :value="0">0</option>
+              <option :value="1">1</option>
+              <option :value="2">2</option>
+              <option :value="3">3</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('researchTasks.notes') }}
+            <textarea v-model="taskForm.notes" rows="2" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="showAddTaskModal = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Relationships Section -->
     <section class="detail-section">
       <div class="section-header">
@@ -444,6 +495,55 @@ const identifiers = ref<IdentifierRow[]>([]);
 const showAddIdentifier = ref(false);
 const newIdentifier = reactive({ identifier_type: 'familysearch', identifier_value: '' });
 
+// Research tasks
+interface ResearchTask {
+  id: string;
+  task: string;
+  notes?: string;
+  result?: string;
+  person_id?: string;
+  priority: number;
+  status: 'open' | 'in_progress' | 'done' | 'stopped';
+}
+const personTasks = ref<ResearchTask[]>([]);
+const showAddTaskModal = ref(false);
+const taskForm = reactive({ task: '', priority: 1, notes: '' });
+const STATUS_CYCLE: Array<'open' | 'in_progress' | 'done' | 'stopped'> = ['open', 'in_progress', 'done', 'stopped'];
+
+async function loadPersonTasks() {
+  if (!window.api?.researchTasks) return;
+  personTasks.value = (await window.api.researchTasks.forPerson(personId)) as ResearchTask[];
+}
+
+async function cycleTaskStatus(task: ResearchTask) {
+  const idx = STATUS_CYCLE.indexOf(task.status);
+  const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  await window.api.researchTasks.update(task.id, { status: next });
+  task.status = next;
+}
+
+async function createPersonTask() {
+  if (!taskForm.task.trim()) return;
+  await window.api.researchTasks.create({
+    task: taskForm.task,
+    notes: taskForm.notes || undefined,
+    person_id: personId,
+    priority: taskForm.priority,
+    status: 'open',
+  });
+  taskForm.task = '';
+  taskForm.notes = '';
+  taskForm.priority = 1;
+  showAddTaskModal.value = false;
+  await loadPersonTasks();
+}
+
+async function deletePersonTask(id: string) {
+  if (!confirm('Ta bort denna uppgift?')) return;
+  await window.api.researchTasks.delete(id);
+  await loadPersonTasks();
+}
+
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     showNameForm.value = false;
@@ -519,6 +619,7 @@ async function load() {
     evidenceSourced.value = counts.reduce((a, b) => a + b, 0);
 
     await loadIdentifiers();
+    await loadPersonTasks();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
   }
@@ -983,4 +1084,31 @@ form select {
 }
 .badge-error { background: #feb2b2; color: #742a2a; }
 .badge-warning { background: #fef3c7; color: #78350f; }
+/* Research tasks */
+.task-list { display: flex; flex-direction: column; gap: 6px; }
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 13px;
+}
+.task-text { flex: 1; }
+.task-result { color: #6b7280; font-style: italic; font-size: 12px; }
+.status-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.status-open { background: #dbeafe; color: #1d4ed8; }
+.status-in_progress { background: #fef3c7; color: #92400e; }
+.status-done { background: #d1fae5; color: #065f46; }
+.status-stopped { background: #f3f4f6; color: #6b7280; }
 </style>

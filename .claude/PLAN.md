@@ -59,6 +59,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v1.5.0 | Evidence Model Simplification: mention event, citation editing, removed entity-level cite buttons, Genney MENTION import | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
 | Fix | QualityView: auto-run checks on mount, removed manual run button | — |
 | Fix | Relationship EventList: wire CitationBadge on event rows | — |
+| v1.6.0 | Research Tasks UI: ResearchTasksView, PersonDetailView section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
 
 ---
 
@@ -70,13 +71,6 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 - [ ] Assertions UI — view/edit what each citation claims, mark accepted, see conflicts
 - [ ] Research audit view — all unsourced entities ranked by evidence gap
 - [ ] Merge/deduplicate persons
-
-### Research Tasks UI [feature]
-See `.claude/plans/2026-04-04-research-tasks.md` for the full plan.
-- [ ] ResearchTasksView at `/research-tasks` — list, filter, status chips
-- [ ] PersonDetailView "Forskningstips" section
-- [ ] Sidebar badge for open tasks
-- [x] MCP tools *(v0.8.0)*
 
 ### Media Attachments [feature]
 See `.claude/plans/2026-04-04-media.md` for the full plan.

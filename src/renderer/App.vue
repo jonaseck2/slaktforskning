@@ -30,6 +30,13 @@
         <span class="nav-icon">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
+      <router-link to="/research-tasks" class="nav-item">
+        <span class="nav-icon">🔬</span>
+        <span class="nav-label">
+          {{ $t('researchTasks.nav') }}
+          <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
+        </span>
+      </router-link>
       <router-link to="/quality" class="nav-item">
         <span class="nav-icon">🔍</span>
         <span class="nav-label">
@@ -71,10 +78,19 @@ const { locale } = useI18n();
 const searchQuery = ref('');
 const currentDbName = ref('');
 const qualityErrorCount = ref(0);
+const openTaskCount = ref(0);
 
 async function loadDbName() {
   const info = await (window.api.db.getCurrent() as Promise<{ path: string; name: string }>);
   currentDbName.value = info.name;
+}
+
+async function loadResearchBadge() {
+  if (!window.api?.researchTasks) return;
+  try {
+    const tasks = (await (window.api.researchTasks as Record<string, (...args: unknown[]) => Promise<unknown>>).list()) as Array<{ status: string }>;
+    openTaskCount.value = tasks.filter(t => t.status === 'open' || t.status === 'in_progress').length;
+  } catch { /* ignore */ }
 }
 
 async function loadQualityBadge() {
@@ -88,6 +104,7 @@ async function loadQualityBadge() {
 onMounted(() => {
   loadDbName();
   loadQualityBadge();
+  loadResearchBadge();
   (window.api.db as unknown as { onSwitched: (cb: () => void) => void }).onSwitched(() => {
     window.location.reload();
   });
