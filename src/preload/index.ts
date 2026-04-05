@@ -28,6 +28,8 @@ const api = {
     addIdentifier: mutating((personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addIdentifier', personId, data)),
     getIdentifiers: (personId: string) => ipcRenderer.invoke('persons:getIdentifiers', personId),
     deleteIdentifier: mutating((id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id)),
+    listPage: (limit: number, offset: number) => ipcRenderer.invoke('persons:listPage', limit, offset),
+    searchWithDetails: (query: string) => ipcRenderer.invoke('persons:searchWithDetails', query),
   },
   relationships: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data)),
