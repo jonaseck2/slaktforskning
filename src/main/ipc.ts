@@ -54,6 +54,16 @@ export function registerIpcHandlers(): void {
   wrapHandler('persons:deleteIdentifier', (id) =>
     persons.deletePersonIdentifier(getDatabase(), id as string)
   );
+  wrapHandler('persons:listPage', (limit, offset) => {
+    const db = getDatabase();
+    return {
+      persons: persons.listPersonsPage(db, limit as number, offset as number),
+      total: persons.countPersons(db),
+    };
+  });
+  wrapHandler('persons:searchWithDetails', (query) =>
+    persons.searchPersonsWithDetails(getDatabase(), query as string)
+  );
 
   // Relationships
   wrapHandler('relationships:create', (data) => relationships.createRelationship(getDatabase(), data as Parameters<typeof relationships.createRelationship>[1]));
