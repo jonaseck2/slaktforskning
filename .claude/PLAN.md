@@ -101,6 +101,22 @@ See `.claude/plans/2026-04-04-media.md` for the full plan.
 - [ ] MediaView at `/media`
 - [ ] Inline sections in PersonDetailView, SourceDetailView, EventList
 
+### GEDCOM Import Completeness [feature]
+See `.claude/plans/2026-04-05-gedcom-import-completeness.md` for the full plan.
+- [ ] Add `engagement` + `adoption` event types + i18n labels
+- [ ] Importer: ENGA, ADOP, CAUS, TYPE subtag, TITL-on-INDI, top-level NOTE xref
+- [ ] Exporter: ENGA/ADOP tag mapping
+- [ ] Import report: counts of persons/events/sources imported + list of skipped tags
+- [ ] Tests: CAUS, ENGA, ADOP, TITL, NOTE xref, roundtrip, ImportReport shape
+
+### GEDCOM Media Import/Export [feature]
+*Depends on: Media Attachments feature above*
+See `.claude/plans/2026-04-05-gedcom-media-import.md` for the full plan.
+- [ ] Schema: `is_missing` column on `media` table
+- [ ] Importer: parse inline + top-level OBJE records; link to person/family/event
+- [ ] Exporter: emit OBJE blocks for person/family/event media
+- [ ] Tests: inline OBJE, top-level reference, export roundtrip
+
 ### Evidence Model & Source UX [feature]
 See `.claude/plans/2026-04-04-evidence-model.md` for the full plan.
 - [ ] CitationBadge on every event row in EventList
