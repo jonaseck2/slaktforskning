@@ -431,6 +431,7 @@ export default {
     },
     filterAll: 'All',
     noTasks: 'No research tasks',
+    selectPersonOptional: 'Select person (optional)',
   },
   importExport: {
     title: 'Import / Export',
