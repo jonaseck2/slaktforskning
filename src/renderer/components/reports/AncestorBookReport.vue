@@ -607,10 +607,12 @@ async function load() {
   allData.value = [];
   segments.value = [];
   try {
-    // Fetch BFS ancestor tree + 6-gen pedigree tree for SVG in parallel
+    // Fetch BFS ancestor tree + 6-gen pedigree tree for SVG in parallel.
+    // fetchPedigreeTree needs generations=7 to populate gen 6 (ahnNums 64–127);
+    // the depth counter starts at 1, so generations=N yields gen 0..(N-1) in the chart.
     const [ancestorResult, pedigreeTree] = await Promise.all([
       fetchAllAncestors(props.personId),
-      fetchPedigreeTree(props.personId, 6),
+      fetchPedigreeTree(props.personId, 7),
     ]);
 
     const { ancestors } = ancestorResult;
