@@ -77,6 +77,24 @@
       </div>
       <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
     </div>
+
+    <!-- Ancestor Book Tab -->
+    <div v-if="activeTab === 'ancestorBook'" class="tab-content">
+      <div class="controls">
+        <label>
+          {{ $t('reports.ancestorBook.pickPerson') }}
+          <PersonPicker v-model="ancestorBookPersonId" :placeholder="$t('reports.selectPerson')" />
+        </label>
+      </div>
+      <div class="print-actions">
+        <button class="btn-print" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
+        <button class="btn-pdf" :disabled="!ancestorBookPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+      </div>
+      <div v-if="ancestorBookPersonId" class="print-preview">
+        <AncestorBookReport :person-id="ancestorBookPersonId" />
+      </div>
+      <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
+    </div>
   </div>
 </template>
 
@@ -87,6 +105,7 @@ import PersonPicker from '../components/PersonPicker.vue';
 import AncestorChartReport from '../components/reports/AncestorChartReport.vue';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
+import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -96,11 +115,12 @@ interface RelationshipOption { id: string; label: string; }
 
 const { t } = useI18n();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook'>('ancestor');
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
   { id: 'individual', label: t('reports.tabIndividual') },
+  { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
 ]);
 
 const ancestorRootId = ref<string | null>(null);
@@ -108,6 +128,7 @@ const ancestorGenerations = ref(4);
 const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
 const individualPersonId = ref<string | null>(null);
+const ancestorBookPersonId = ref<string | null>(null);
 
 async function getPersonName(id: string | null): Promise<string> {
   if (!id || !window.api) return '?';
