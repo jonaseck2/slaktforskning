@@ -58,6 +58,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Investigation | GEDCOM Citation Roundtrip: keep current INDI.SOUR/FAM.SOUR behavior (no code changes) | [archive](plans/archive/2026-04-05-gedcom-citation-roundtrip.md) |
 | v1.5.0 | Evidence Model Simplification: mention event, citation editing, removed entity-level cite buttons, Genney MENTION import | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
 | Fix | QualityView: auto-run checks on mount, removed manual run button | — |
+| Fix | Relationship EventList: wire CitationBadge on event rows | — |
 
 ---
 
@@ -109,7 +110,4 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 ### Fix: Genney import — address stored as parent place [fix]
 - [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
 - [ ] Investigate which Genney column carries the address vs. the place hierarchy; fix the transform to write address fields directly
-
-### Fix: Relationship EventList missing citation badges [fix]
-- [ ] EventList in RelationshipDetailView context doesn't show CitationBadge / unsourced indicator on event rows — wire it the same as in PersonDetailView
 
