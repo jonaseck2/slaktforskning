@@ -8,7 +8,7 @@ import * as relationships from '../api/relationships';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 import * as places from '../api/places';
-import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
+import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
 import * as groups from '../api/groups';
@@ -117,7 +117,7 @@ export function registerIpcHandlers(): void {
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
-    const text = fs.readFileSync(result.filePaths[0], 'utf-8');
+    const text = readGedcomFile(result.filePaths[0]);
     const tree = parseGedcom(text);
     const report = importGedcom(getDatabase(), tree, options);
     return { imported: true, filePath: result.filePaths[0], report };
