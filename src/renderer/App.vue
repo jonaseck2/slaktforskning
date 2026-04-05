@@ -78,6 +78,7 @@ import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { useFocusStore } from './stores/focus';
+import { useDataVersionStore } from './stores/dataVersion';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => unknown>>;
@@ -86,6 +87,7 @@ declare const window: Window & {
 const router = useRouter();
 const { locale } = useI18n();
 const focusStore = useFocusStore();
+const dataVersionStore = useDataVersionStore();
 const searchQuery = ref('');
 const currentDbName = ref('');
 const qualityErrorCount = ref(0);
@@ -120,12 +122,14 @@ onMounted(() => {
     window.location.reload();
   });
   window.addEventListener('data-imported', () => {
+    dataVersionStore.increment();
     loadQualityBadge();
     loadResearchBadge();
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
   let researchDebounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
+    dataVersionStore.increment();
     if (qualityDebounce) clearTimeout(qualityDebounce);
     qualityDebounce = setTimeout(loadQualityBadge, 800);
     if (researchDebounce) clearTimeout(researchDebounce);
