@@ -76,7 +76,7 @@
               <PersonName :given-name="name.given_name" :preferred-name="name.preferred_name" :nickname="name.nickname" />
             </td>
             <td>
-              {{ name.surname }}<span v-if="name.name_suffix"> {{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
+              {{ name.surname }}{{ name.name_suffix ? ' ' : '' }}<span v-if="name.name_suffix" class="name-suffix">{{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
             </td>
             <td><span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span></td>
             <td class="actions-cell">
@@ -1060,7 +1060,8 @@ form select {
 .btn-rel-add:hover {
   background: #e2e8f0;
 }
-.name-prefix {
+.name-prefix,
+.name-suffix {
   color: #6b7280;
   font-style: italic;
 }
