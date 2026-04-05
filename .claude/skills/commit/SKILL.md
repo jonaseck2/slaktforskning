@@ -44,8 +44,9 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 
 Every commit that completes a milestone or fix must bump `package.json` version:
 
-- **New feature** (new UI, new API surface, new MCP tools) → **minor bump** (e.g. 0.6.9 → 0.7.0)
+- **New feature** (new UI, new API surface, new MCP tools) → **minor bump** (e.g. 0.6.9 → 0.7.0, 0.9.3 → 0.10.0)
 - **Fix or improvement on existing feature** → **patch bump** (e.g. 0.6.9 → 0.6.10)
+- **Major version stays at 0** until the first official release. Minor bumps past 9 go to 10, 11, … — never bump the major.
 
 Steps:
 1. Determine bump type from the nature of the change.

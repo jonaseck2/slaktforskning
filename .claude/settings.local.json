@@ -64,13 +64,15 @@
       "Bash(sed -i '' -e 's|fan chart|circle chart|g' -e 's|Fan Chart|Circle Chart|g' -e 's|FanChart|CircleChart|g' -e 's|fanLayout|circleLayout|g' -e 's|FanSegment|CircleSegment|g' -e 's|computeFanLayout|computeCircleLayout|g' -e 's|FAN_CX|CIRCLE_CX|g' -e 's|FAN_CY|CIRCLE_CY|g' -e 's|FAN_SVG_SIZE|CIRCLE_SVG_SIZE|g' -e 's|viz-zoom-fan|viz-zoom-circle|g' -e 's|fan-svg|circle-svg|g' -e 's|tab-fan|tab-circle|g' .claude/plans/archive/2026-04-05-circle-chart.md)",
       "Bash(sed -i '' 's|2026-04-05-fan-chart\\\\.md|2026-04-05-circle-chart.md|g' .claude/PLAN.md)",
       "Bash(mv /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-05-ancestor-book.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-05-ancestor-book.md)",
-      "Bash(mv /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-05-ancestor-book-impl.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-05-ancestor-book-impl.md)"
+      "Bash(mv /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-05-ancestor-book-impl.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-05-ancestor-book-impl.md)",
+      "Edit(/.claude/skills/commit/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive",
       "/Users/jonasahnstedt/Library/Application Support/slaktforskning/slaktforskning.db.lock",
-      "/Users/jonasahnstedt/git/slaktforskning/.claude/skills"
+      "/Users/jonasahnstedt/git/slaktforskning/.claude/skills",
+      "/Users/jonasahnstedt/git/slaktforskning/.claude"
     ]
   },
   "enableAllProjectMcpServers": true,

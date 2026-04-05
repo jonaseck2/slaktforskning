@@ -733,5 +733,5 @@ EOF
 ## Post-implementation
 
 After all tasks are done, update `.claude/PLAN.md`:
-- Add `| v1.9.0 | Fan chart: full-circle 360° ancestor view, 6 generations, branch colors | [archive](plans/archive/2026-04-05-fan-chart.md) |` to Implementation Status
+- Add `| v0.19.0 | Fan chart: full-circle 360° ancestor view, 6 generations, branch colors | [archive](plans/archive/2026-04-05-fan-chart.md) |` to Implementation Status
 - Move this plan file from `.claude/plans/` to `.claude/plans/archive/`
