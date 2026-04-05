@@ -1,6 +1,7 @@
 // src/renderer/utils/useChartZoom.ts
 // Shared zoom/pan composable for chart components.
 // - Regular scroll: native browser scroll (panning)
+// - Mouse drag: drag-to-pan (updates scrollLeft/scrollTop)
 // - Ctrl+scroll or two-finger pinch (macOS): zoom centred at cursor
 // - zoom persisted to localStorage so navigation doesn't reset it
 import { ref, watch, nextTick } from 'vue';
@@ -67,5 +68,31 @@ export function useChartZoom(defaultZoom = 1, storageKey?: string) {
   function zoomOut()   { applyZoom(1 / 1.25); }
   function resetZoom() { zoom.value = defaultZoom; }
 
-  return { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom };
+  // --- Drag-to-pan ---
+  const isPanning = ref(false);
+  const panStart = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 };
+
+  function onMouseDown(e: MouseEvent) {
+    if (e.button !== 0) return;
+    const scroller = scrollRef.value;
+    if (!scroller) return;
+    isPanning.value = true;
+    panStart.x = e.clientX;
+    panStart.y = e.clientY;
+    panStart.scrollLeft = scroller.scrollLeft;
+    panStart.scrollTop  = scroller.scrollTop;
+    e.preventDefault(); // prevent text-selection drag
+  }
+
+  function onMouseMove(e: MouseEvent) {
+    if (!isPanning.value) return;
+    const scroller = scrollRef.value;
+    if (!scroller) return;
+    scroller.scrollLeft = panStart.scrollLeft - (e.clientX - panStart.x);
+    scroller.scrollTop  = panStart.scrollTop  - (e.clientY - panStart.y);
+  }
+
+  function onMouseUp() { isPanning.value = false; }
+
+  return { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp };
 }
