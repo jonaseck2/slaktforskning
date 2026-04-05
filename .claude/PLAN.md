@@ -56,6 +56,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v1.3.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
 | v1.4.0 | Polish: Escape key closes all modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
 | Investigation | GEDCOM Citation Roundtrip: keep current INDI.SOUR/FAM.SOUR behavior (no code changes) | [archive](plans/archive/2026-04-05-gedcom-citation-roundtrip.md) |
+| v1.5.0 | Evidence Model Simplification: mention event, citation editing, removed entity-level cite buttons, Genney MENTION import | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
 
 ---
 
@@ -103,13 +104,6 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [x] Data backup and restore
 - [ ] Undo/redo
 - [ ] Dark mode
-
-### Evidence Model Simplification [feature]
-See `.claude/plans/2026-04-05-evidence-model-simplification.md` for the full plan.
-- [ ] Add `mention` event type (eventTypes + i18n)
-- [ ] Add `updateCitation` API + IPC + preload + CitationEditModal in SourceDetailView
-- [ ] Remove direct cite buttons/badges from PersonDetailView, RelationshipDetailView, PlaceDetailView
-- [ ] Fix Genney importer: person-owned citations → MENTION events
 
 ### Fix: Genney import — address stored as parent place [fix]
 - [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
