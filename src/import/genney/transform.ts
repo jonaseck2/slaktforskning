@@ -603,12 +603,22 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     }
 
     for (const owner of owners) {
-      const event_id = owner.startsWith('E') ? eventMap.get(owner) ?? null : null;
-      const person_id = owner.startsWith('I') ? personMap.get(owner) ?? null : null;
+      let event_id = owner.startsWith('E') ? eventMap.get(owner) ?? null : null;
       const relationship_id = owner.startsWith('F') ? familyMap.get(owner) ?? null : null;
 
+      if (owner.startsWith('I')) {
+        const person_id = personMap.get(owner);
+        if (person_id) {
+          const mentionId = crypto.randomUUID();
+          stmts.insertEvent.run([mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, '']);
+          stmts.insertParticipant.run([crypto.randomUUID(), mentionId, person_id, 'primary']);
+          event_id = mentionId;
+          summary.events++;
+        }
+      }
+
       stmts.insertCitation.run([
-        crypto.randomUUID(), source_id, event_id, person_id, relationship_id,
+        crypto.randomUUID(), source_id, event_id, null, relationship_id,
         cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
         cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
       ]);
