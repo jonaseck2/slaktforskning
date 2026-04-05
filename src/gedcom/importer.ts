@@ -16,6 +16,7 @@ const PERSON_EVENT_TAGS: Record<string, string> = {
   RESI: 'residence', EDUC: 'education', EMIG: 'emigration',
   IMMI: 'immigration', NATU: 'naturalization', CENS: 'census',
   PROB: 'probate', WILL: 'will', GRAD: 'graduation', RETI: 'retirement',
+  ENGA: 'engagement', ADOP: 'adoption',
   EVEN: 'other',
 };
 
@@ -121,6 +122,16 @@ function resolvePlace(
   return place;
 }
 
+function resolveNote(node: GedcomNode, noteMap: Map<string, string>): string {
+  const noteNode = getChild(node, 'NOTE');
+  if (!noteNode) return '';
+  const val = noteNode.value ?? '';
+  if (val.startsWith('@') && val.endsWith('@')) {
+    return noteMap.get(val) ?? '';
+  }
+  return val;
+}
+
 function importEventNode(
   db: Database,
   evNode: GedcomNode,
@@ -130,6 +141,7 @@ function importEventNode(
   resolvePlaceFn: (db: Database, name: string) => Place,
   placeIdMap: Map<string, string>,
   eventIdMap: Map<string, string>,
+  noteMap: Map<string, string>,
 ) {
   const dateNode = getChild(evNode, 'DATE');
   const placNode = getChild(evNode, 'PLAC');
@@ -137,7 +149,12 @@ function importEventNode(
     ? parseGedcomDate(dateNode.value)
     : { date_type: 'unknown' as const, date_value: null, date_value_end: null, date_original: '' };
   const place = placNode ? resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
-  const noteValue = getChild(evNode, 'NOTE')?.value ?? '';
+  const causeValue = getChild(evNode, 'CAUS')?.value ?? null;
+  const typeValue = getChild(evNode, 'TYPE')?.value ?? '';
+  const noteRaw = resolveNote(evNode, noteMap);
+  const noteValue = typeValue && noteRaw
+    ? `${typeValue}: ${noteRaw}`
+    : typeValue || noteRaw;
 
   const event = createEvent(db, {
     event_type: appType,
@@ -147,6 +164,7 @@ function importEventNode(
     date_original: parsed.date_original,
     place_id: place?.id ?? null,
     relationship_id: opts.relationship_id ?? null,
+    cause: causeValue,
     description: noteValue,
   });
 
@@ -185,7 +203,39 @@ export interface ImportOptions {
   profile?: 'genney';
 }
 
-function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
+export interface ImportReport {
+  persons: number;
+  families: number;
+  events: Record<string, number>;   // event_type → count
+  sources: number;
+  places: number;
+  citations: number;
+  skipped: { tag: string; count: number }[];  // unrecognised level-1 INDI/FAM tags
+  warnings: string[];                          // e.g. "12 OBJE records skipped"
+}
+
+const KNOWN_INDI_TAGS = new Set([
+  'NAME', 'SEX', '_LIVING', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',
+  '_UID', '_FSI', '_ANID', '_RAID', '_PNUMMER', '_YHAPLOGROUP', '_MHAPLOGROUP',
+  'FAMC', 'FAMS', 'CHAN',
+  // PERSON_EVENT_TAGS keys:
+  'BIRT', 'DEAT', 'CHR', 'BURI', 'BAPM', 'CONF', 'OCCU', 'RESI', 'EDUC',
+  'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
+  'TITL', 'OBJE',
+]);
+
+const KNOWN_FAM_TAGS = new Set([
+  'HUSB', 'WIFE', 'CHIL', 'SOUR', 'NOTE', '_SUBTYPE', '_RELNOTES', 'CHAN',
+  // FAMILY_EVENT_TAGS keys:
+  'MARR', 'DIV', 'CENS', 'EVEN',
+  'OBJE',
+]);
+
+function doImportGedcom(
+  db: Database,
+  tree: GedcomNode[],
+  options?: ImportOptions,
+): { skipped: { tag: string; count: number }[]; warnings: string[] } {
   const isGenney = options?.profile === 'genney';
   const resolvePlaceFn = isGenney ? findOrCreateSwedishPlace : findOrCreatePlace;
 
@@ -193,6 +243,17 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
   const placeIdMap = new Map<string, string>();  // old place UUID → current DB place UUID
   const eventIdMap = new Map<string, string>();  // old event UUID → current DB event UUID
   const assoData: Array<{ personId: string; assoNode: GedcomNode }> = [];
+
+  // Report accumulators
+  const skippedTags = new Map<string, number>();
+  let objeCount = 0;
+
+  // ── Phase 0: NOTE records ─────────────────────────────────────────────────
+  const noteMap = new Map<string, string>();
+  for (const node of tree) {
+    if (node.tag !== 'NOTE' || !node.xref) continue;
+    noteMap.set(node.xref, node.value ?? '');
+  }
 
   // ── Phase 1: SOUR records ──────────────────────────────────────────────────
   const sourceMap = new Map<string, string>(); // xref → app source id
@@ -216,7 +277,7 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
 
     const sex = (getChild(node, 'SEX')?.value ?? 'U') as 'M' | 'F' | 'U';
     const living = getChild(node, '_LIVING')?.value === 'Y';
-    let notes = getChild(node, 'NOTE')?.value ?? '';
+    let notes = resolveNote(node, noteMap);
 
     // Genney 4.1: haplogroup tags → append to notes
     if (isGenney) {
@@ -303,9 +364,25 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
     // Person events
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn, placeIdMap, eventIdMap);
+        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn, placeIdMap, eventIdMap, noteMap);
         addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
       }
+    }
+
+    // TITL directly on INDI → occupation event (standalone title/role, no date)
+    for (const titlNode of getChildren(node, 'TITL')) {
+      if (!titlNode.value) continue;
+      const event = createEvent(db, {
+        event_type: 'occupation',
+        date_type: 'unknown',
+        date_value: null,
+        date_value_end: null,
+        date_original: '',
+        place_id: null,
+        relationship_id: null,
+        description: titlNode.value,
+      });
+      addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
     }
 
     // Person-level citations (SOUR directly on INDI, not under an event)
@@ -330,6 +407,14 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
     // Collect ASSO blocks for post-processing (Phase 4)
     for (const assoNode of getChildren(node, 'ASSO')) {
       assoData.push({ personId: person.id, assoNode });
+    }
+
+    // Count unrecognised top-level INDI tags
+    for (const child of node.children) {
+      if (child.tag === 'OBJE') { objeCount++; continue; }
+      if (!KNOWN_INDI_TAGS.has(child.tag)) {
+        skippedTags.set(child.tag, (skippedTags.get(child.tag) ?? 0) + 1);
+      }
     }
   }
 
@@ -364,7 +449,7 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
     // Family events
     for (const [gedTag, appType] of Object.entries(FAMILY_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap);
+        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap);
       }
     }
 
@@ -395,6 +480,14 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
           notes: citNotes || undefined,
           date_accessed: date_accessed || undefined,
         });
+      }
+    }
+
+    // Count unrecognised top-level FAM tags
+    for (const child of node.children) {
+      if (child.tag === 'OBJE') { objeCount++; continue; }
+      if (!KNOWN_FAM_TAGS.has(child.tag)) {
+        skippedTags.set(child.tag, (skippedTags.get(child.tag) ?? 0) + 1);
       }
     }
   }
@@ -473,6 +566,14 @@ function doImportGedcom(db: Database, tree: GedcomNode[], options?: ImportOption
       });
     }
   }
+
+  // Build and return partial report
+  const skipped = Array.from(skippedTags.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count);
+  const warnings: string[] = [];
+  if (objeCount > 0) warnings.push(`${objeCount} OBJE record(s) skipped (media import not yet supported)`);
+  return { skipped, warnings };
 }
 
 /**
@@ -506,14 +607,50 @@ function withStatementCache(db: Database): Database {
  * of WAL flushes (measured at ~1.6 GB for a 70k-line file). One commit at the
  * end reduces disk writes by ~3 orders of magnitude.
  * On error the transaction is rolled back so no partial data is written.
+ * Returns an ImportReport with counts of what was imported.
  */
-export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): void {
+export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): ImportReport {
+  // Snapshot row counts before import
+  const personsBefore   = (db.prepare('SELECT COUNT(*) as n FROM persons').get([]) as { n: number }).n;
+  const familiesBefore  = (db.prepare("SELECT COUNT(*) as n FROM relationships WHERE type='couple'").get([]) as { n: number }).n;
+  const sourcesBefore   = (db.prepare('SELECT COUNT(*) as n FROM sources').get([]) as { n: number }).n;
+  const placesBefore    = (db.prepare('SELECT COUNT(*) as n FROM places').get([]) as { n: number }).n;
+  const citationsBefore = (db.prepare('SELECT COUNT(*) as n FROM citations').get([]) as { n: number }).n;
+  const evBeforeRows    = db.prepare('SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type').all([]) as { event_type: string; cnt: number }[];
+  const evBefore        = new Map<string, number>(evBeforeRows.map(r => [r.event_type, r.cnt]));
+
   db.prepare('BEGIN').run([]);
+  let partial: { skipped: { tag: string; count: number }[]; warnings: string[] };
   try {
-    doImportGedcom(withStatementCache(db), tree, options);
+    partial = doImportGedcom(withStatementCache(db), tree, options);
     db.prepare('COMMIT').run([]);
   } catch (err) {
     db.prepare('ROLLBACK').run([]);
     throw err;
   }
+
+  // Snapshot row counts after import
+  const personsAfter   = (db.prepare('SELECT COUNT(*) as n FROM persons').get([]) as { n: number }).n;
+  const familiesAfter  = (db.prepare("SELECT COUNT(*) as n FROM relationships WHERE type='couple'").get([]) as { n: number }).n;
+  const sourcesAfter   = (db.prepare('SELECT COUNT(*) as n FROM sources').get([]) as { n: number }).n;
+  const placesAfter    = (db.prepare('SELECT COUNT(*) as n FROM places').get([]) as { n: number }).n;
+  const citationsAfter = (db.prepare('SELECT COUNT(*) as n FROM citations').get([]) as { n: number }).n;
+  const evAfterRows    = db.prepare('SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type').all([]) as { event_type: string; cnt: number }[];
+
+  const events: Record<string, number> = {};
+  for (const r of evAfterRows) {
+    const delta = r.cnt - (evBefore.get(r.event_type) ?? 0);
+    if (delta > 0) events[r.event_type] = delta;
+  }
+
+  return {
+    persons:   personsAfter   - personsBefore,
+    families:  familiesAfter  - familiesBefore,
+    events,
+    sources:   sourcesAfter   - sourcesBefore,
+    places:    placesAfter    - placesBefore,
+    citations: citationsAfter - citationsBefore,
+    skipped:   partial.skipped,
+    warnings:  partial.warnings,
+  };
 }

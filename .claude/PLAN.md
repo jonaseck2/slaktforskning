@@ -68,6 +68,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.19.0 | Circle chart: full-circle 360° ancestor view, 6 generations, branch-based colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
 | v0.20.0 | Ancestor Book Export: static SVG circle chart, ahnentafel list, person summaries, internal PDF links | [archive](plans/archive/2026-04-05-ancestor-book.md) |
 | Fix | Circle chart zoom: flex-shrink bug, center-anchored +/- buttons, curved text line spacing | [archive](plans/archive/2026-04-05-circle-chart-zoom-fixes.md) |
+| v0.20.7 | GEDCOM import completeness: engagement/adoption types, CAUS, TITL, NOTE xrefs, ImportReport UI | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
 
 ---
 
@@ -100,14 +101,6 @@ See `.claude/plans/2026-04-04-media.md` for the full plan.
 - [ ] File handling + Genney archive extraction
 - [ ] MediaView at `/media`
 - [ ] Inline sections in PersonDetailView, SourceDetailView, EventList
-
-### GEDCOM Import Completeness [feature]
-See `.claude/plans/2026-04-05-gedcom-import-completeness.md` for the full plan.
-- [ ] Add `engagement` + `adoption` event types + i18n labels
-- [ ] Importer: ENGA, ADOP, CAUS, TYPE subtag, TITL-on-INDI, top-level NOTE xref
-- [ ] Exporter: ENGA/ADOP tag mapping
-- [ ] Import report: counts of persons/events/sources imported + list of skipped tags
-- [ ] Tests: CAUS, ENGA, ADOP, TITL, NOTE xref, roundtrip, ImportReport shape
 
 ### GEDCOM Media Import/Export [feature]
 *Depends on: Media Attachments feature above*

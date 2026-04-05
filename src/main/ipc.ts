@@ -119,8 +119,8 @@ export function registerIpcHandlers(): void {
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     const text = fs.readFileSync(result.filePaths[0], 'utf-8');
     const tree = parseGedcom(text);
-    importGedcom(getDatabase(), tree, options);
-    return { imported: true, filePath: result.filePaths[0] };
+    const report = importGedcom(getDatabase(), tree, options);
+    return { imported: true, filePath: result.filePaths[0], report };
   });
 
   // Genney Derby import
