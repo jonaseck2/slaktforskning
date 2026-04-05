@@ -593,8 +593,16 @@ async function load() {
       ),
     );
 
-    // Sort by ahnentafel number (focal first, then parents, then grandparents…)
-    allData.value = entries.sort((a, b) => a.ahnNum - b.ahnNum);
+    // Sort by ahnentafel number, then deduplicate by person.id (endogamy safety).
+    // A person who appears at multiple ahnentafel slots keeps the lowest slot;
+    // all links use person.id so they still resolve to a single unique section.
+    const sorted = entries.sort((a, b) => a.ahnNum - b.ahnNum);
+    const seenIds = new Set<string>();
+    allData.value = sorted.filter(entry => {
+      if (seenIds.has(entry.person.id)) return false;
+      seenIds.add(entry.person.id);
+      return true;
+    });
   } catch (err) {
     console.error('[AncestorBookReport] load failed:', err);
     error.value = 'Kunde inte ladda stamtavlan.';

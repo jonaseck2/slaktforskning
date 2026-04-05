@@ -456,14 +456,8 @@ export default {
     exportPdf: 'Export PDF',
     tabAncestorBook: 'Ancestor Book',
     ancestorBook: {
-      title: 'Ancestor Book',
       pickPerson: 'Select focal person',
-      generationN: 'Generation {n}',
-      limitWarning: 'More than 500 ancestors found — export shows the 500 closest.',
       noPersonSelected: 'Select a person to generate the ancestor book.',
-      exportDate: 'Exported {date}',
-      ahnentafelList: 'Ahnentafel List',
-      summaries: 'Personal Summaries',
     },
   },
   researchTasks: {
