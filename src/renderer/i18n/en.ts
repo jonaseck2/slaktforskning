@@ -470,6 +470,7 @@ export default {
     selectCoupleFirst: 'Select a couple to show preview.',
     print: 'Print',
     exportPdf: 'Export PDF',
+    zoomFit: 'Fit',
     tabAncestorBook: 'Ancestor Book',
     ancestorBook: {
       pickPerson: 'Select focal person',

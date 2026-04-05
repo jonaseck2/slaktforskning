@@ -470,6 +470,7 @@ export default {
     selectCoupleFirst: 'Välj ett par för att visa förhandsgranskning.',
     print: 'Skriv ut',
     exportPdf: 'Exportera PDF',
+    zoomFit: 'Anpassa',
     tabAncestorBook: 'Stamtavla',
     ancestorBook: {
       pickPerson: 'Välj rotperson',
