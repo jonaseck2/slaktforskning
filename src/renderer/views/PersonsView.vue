@@ -51,11 +51,7 @@
         </tbody>
       </table>
 
-      <div v-if="persons.length < total" class="load-more">
-        <button :disabled="loading" @click="loadMore">
-          {{ loading ? $t('common.loading') : $t('persons.loadMore') }}
-        </button>
-      </div>
+      <div ref="sentinel" class="scroll-sentinel"></div>
     </template>
 
     <!-- Add Person Modal -->
@@ -100,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
@@ -136,12 +132,33 @@ const total = ref(0);
 const offset = ref(0);
 const loading = ref(false);
 const showAddForm = ref(false);
+const sentinel = ref<HTMLElement | null>(null);
+
+let observer: IntersectionObserver | null = null;
+
+watch(sentinel, (el) => {
+  if (observer) { observer.disconnect(); observer = null; }
+  if (!el) return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && persons.value.length < total.value && !loading.value) {
+        loadMore();
+      }
+    },
+    // Trigger ~50 rows (~40px each) before the sentinel enters the viewport
+    { rootMargin: '2000px 0px' }
+  );
+  observer.observe(el);
+});
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') showAddForm.value = false;
 }
 onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+  if (observer) observer.disconnect();
+});
 
 const form = reactive({
   given_name: '',
@@ -282,11 +299,7 @@ onActivated(async () => {
 .sex-M { background: #dbeafe; color: #1d4ed8; }
 .sex-F { background: #fce7f3; color: #be185d; }
 .sex-U { background: #f3f4f6; color: #6b7280; }
-.load-more {
-  display: flex;
-  justify-content: center;
-  padding: 16px 0;
-}
+.scroll-sentinel { height: 1px; }
 button {
   background: #2c3e50;
   color: white;
