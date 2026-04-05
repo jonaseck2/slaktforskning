@@ -23,10 +23,7 @@
     <div v-if="activeTab === 'ancestor'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <label>
-            {{ $t('reports.rootPerson') }}
-            <PersonPicker v-model="ancestorRootId" :placeholder="$t('reports.selectPerson')" />
-          </label>
+          <span v-if="focusStore.personName" class="focal-person-display">{{ focusStore.personName }}</span>
           <label>
             {{ $t('reports.generations') }}
             <select v-model="ancestorGenerations">
@@ -80,10 +77,7 @@
     <div v-if="activeTab === 'individual'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <label>
-            {{ $t('reports.person') }}
-            <PersonPicker v-model="individualPersonId" :placeholder="$t('reports.selectPerson')" />
-          </label>
+          <span v-if="focusStore.personName" class="focal-person-display">{{ focusStore.personName }}</span>
         </div>
         <div class="print-actions">
           <button class="btn-print" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
@@ -102,10 +96,7 @@
     <div v-if="activeTab === 'ancestorBook'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <label>
-            {{ $t('reports.ancestorBook.pickPerson') }}
-            <PersonPicker v-model="ancestorBookPersonId" :placeholder="$t('reports.selectPerson')" />
-          </label>
+          <span v-if="focusStore.personName" class="focal-person-display">{{ focusStore.personName }}</span>
         </div>
         <div class="print-actions">
           <button class="btn-print" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
@@ -125,8 +116,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import PersonPicker from '../components/PersonPicker.vue';
 import AncestorChartReport from '../components/reports/AncestorChartReport.vue';
+import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
@@ -139,6 +130,8 @@ interface RelationshipOption { id: string; label: string; }
 
 const { t } = useI18n();
 
+const focusStore = useFocusStore();
+
 const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook'>('ancestor');
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -147,12 +140,12 @@ const tabs = computed(() => [
   { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
 ]);
 
-const ancestorRootId = ref<string | null>(null);
+const ancestorRootId = computed(() => focusStore.personId);
 const ancestorGenerations = ref(4);
 const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
-const individualPersonId = ref<string | null>(null);
-const ancestorBookPersonId = ref<string | null>(null);
+const individualPersonId = computed(() => focusStore.personId);
+const ancestorBookPersonId = computed(() => focusStore.personId);
 
 // --- Zoom ---
 // Natural preview width in px (A4 at 96dpi ≈ 794px).
@@ -283,7 +276,13 @@ async function exportPdf() {
   gap: 16px;
   flex-wrap: wrap;
 }
-.controls { display: flex; gap: 16px; flex-wrap: wrap; }
+.focal-person-display {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  align-self: center;
+}
+.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 .controls label {
   display: flex; flex-direction: column; gap: 4px;
   font-size: 13px; font-weight: 600; color: #555; min-width: 200px;
