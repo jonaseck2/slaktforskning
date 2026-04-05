@@ -11,6 +11,7 @@ export default {
     sources: 'Sources',
     importExport: 'Import / Export',
     groups: 'Groups',
+    focusPerson: 'Focus person',
   },
   common: {
     cancel: 'Cancel',

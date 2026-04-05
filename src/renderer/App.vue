@@ -12,6 +12,12 @@
           class="sidebar-search-input"
         />
       </form>
+      <div v-if="focusStore.personId" class="focus-indicator">
+        <span class="focus-label">{{ $t('nav.focusPerson') }}</span>
+        <router-link :to="'/persons/' + focusStore.personId" class="focus-name">
+          {{ focusStore.personName }}
+        </router-link>
+      </div>
       <div class="nav-section-label">NAVIGERA</div>
       <router-link to="/visualisering" class="nav-item">
         <span class="nav-icon">🌳</span>
@@ -71,6 +77,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
+import { useFocusStore } from './stores/focus';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => unknown>>;
@@ -78,6 +85,7 @@ declare const window: Window & {
 
 const router = useRouter();
 const { locale } = useI18n();
+const focusStore = useFocusStore();
 const searchQuery = ref('');
 const currentDbName = ref('');
 const qualityErrorCount = ref(0);
@@ -201,6 +209,32 @@ body {
 .sidebar-search-input:focus {
   background: rgba(255, 255, 255, 0.2);
 }
+
+.focus-indicator {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  border-left: 3px solid rgba(100, 180, 255, 0.7);
+}
+.focus-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+}
+.focus-name {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.focus-name:hover { color: white; text-decoration: underline; }
 
 .nav-section-label {
   font-size: 10px;
