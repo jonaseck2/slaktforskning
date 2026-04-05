@@ -130,7 +130,7 @@ The entity's own editable fields (the DB columns) go into a 2-column grid **befo
 
 **Auto-save rules:**
 - Text fields: `@blur="save()"`
-- Selects / checkboxes: `@change="save()`
+- Selects / checkboxes: `@change="save()"`
 - Never add a Save button for inline-edit fields
 - Never save on every keystroke (`@input`) — only on blur/change
 
@@ -302,4 +302,4 @@ onUnmounted(() => window.removeEventListener('data-imported', load));
 
 ## UX reviewer
 
-After implementing a new view, invoke the `ux-reviewer` agent with a specific task prompt to validate it against the patterns in `ux-reviewer.md`. Fix any `ISSUES_FOUND` before committing.
+After implementing a new view, invoke the `ux-reviewer` agent (`.claude/agents/ux-reviewer.md`) with a specific task prompt to validate it against the established patterns. Fix any `ISSUES_FOUND` before committing.
