@@ -63,6 +63,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | Reactive quality badge: use contextBridge onDataChanged pattern (postMessage doesn't cross contextIsolation) | [archive](plans/archive/2026-04-05-fix-reactive-quality-badge.md) |
 | Fix | ResearchTasksView: table styling, empty person column (persons.get has no names), person editing in expanded row, reactive badge | [archive](plans/archive/2026-04-05-research-tasks-view-fixes.md) |
 | Fix | Consistent name rendering: nickname + preferred_name propagated to all views, charts, reports | [archive](plans/archive/2026-04-05-consistent-name-rendering.md) |
+| v1.7.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
 
 ---
 

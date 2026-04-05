@@ -189,6 +189,30 @@
       </table>
     </section>
 
+    <!-- Groups Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('groups.title') }} <span class="count-badge">({{ personGroups.length }})</span></h4>
+        <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true">+ {{ $t('groups.addMember') }}</button>
+      </div>
+      <div class="group-chips">
+        <div v-for="g in personGroups" :key="g.id" class="group-chip">
+          <router-link :to="'/groups/' + g.id" class="chip-name">{{ g.name }}</router-link>
+          <button class="chip-remove" @click="removeFromGroup(g.id)" :title="$t('groups.confirmRemoveMember')">×</button>
+        </div>
+        <div v-if="personGroups.length === 0 && !showGroupPicker" class="empty-hint">{{ $t('groups.noGroups') }}</div>
+      </div>
+      <div v-if="showGroupPicker" class="group-picker-row">
+        <GroupPicker
+          :person-id="personId"
+          :exclude-ids="personGroups.map(g => g.id)"
+          @added="showGroupPicker = false; loadPersonGroups()"
+          @cancel="showGroupPicker = false"
+        />
+        <button class="btn-cancel-inline" @click="showGroupPicker = false">{{ $t('common.cancel') }}</button>
+      </div>
+    </section>
+
     <!-- Notes Section -->
     <section class="detail-section">
       <div class="section-header">
@@ -389,6 +413,7 @@ import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonName from '../components/PersonName.vue';
+import GroupPicker from '../components/GroupPicker.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 import { parseAsteriskNotation } from '../utils/nameUtils';
 
@@ -507,12 +532,25 @@ interface ResearchTask {
 }
 const personTasks = ref<ResearchTask[]>([]);
 const showAddTaskModal = ref(false);
+
+interface PersonGroup { id: string; name: string; }
+const personGroups = ref<PersonGroup[]>([]);
+const showGroupPicker = ref(false);
 const taskForm = reactive({ task: '', priority: 1, notes: '' });
 const STATUS_CYCLE: Array<'open' | 'in_progress' | 'done' | 'stopped'> = ['open', 'in_progress', 'done', 'stopped'];
 
 async function loadPersonTasks() {
   if (!window.api?.researchTasks) return;
   personTasks.value = (await window.api.researchTasks.forPerson(personId)) as ResearchTask[];
+}
+
+async function loadPersonGroups() {
+  personGroups.value = (await window.api.groups.forPerson(personId)) as PersonGroup[];
+}
+
+async function removeFromGroup(groupId: string) {
+  await window.api.groups.removeMember(groupId, personId);
+  await loadPersonGroups();
 }
 
 async function cycleTaskStatus(task: ResearchTask) {
@@ -620,6 +658,7 @@ async function load() {
 
     await loadIdentifiers();
     await loadPersonTasks();
+    await loadPersonGroups();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
   }
@@ -1117,4 +1156,45 @@ form select {
 .status-in_progress { background: #fef3c7; color: #92400e; }
 .status-done { background: #d1fae5; color: #065f46; }
 .status-stopped { background: #f3f4f6; color: #6b7280; }
+.count-badge { font-weight: 400; color: #888; font-size: 13px; }
+.group-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 4px 8px 4px 12px;
+  font-size: 13px;
+}
+.chip-name { color: #3730a3; text-decoration: none; font-weight: 500; }
+.chip-name:hover { text-decoration: underline; }
+.chip-remove {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.chip-remove:hover { color: #c0392b; }
+.group-picker-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.group-picker-row > :first-child { flex: 1; }
+.btn-cancel-inline {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
 </style>
