@@ -16,7 +16,12 @@ import {
   getPersonIdentifiers,
   deletePersonIdentifier,
   getDisplayGivenName,
+  listPersonsPage,
+  countPersons,
+  searchPersonsWithDetails,
 } from '../../src/api/persons';
+import { createEvent } from '../../src/api/events';
+import { addEventParticipant } from '../../src/api/relationships';
 
 let db: Database.Database;
 
@@ -270,5 +275,66 @@ describe('person identifiers', () => {
 
   it('returns false for nonexistent id', () => {
     expect(deletePersonIdentifier(db, 'nonexistent-id')).toBe(false);
+  });
+});
+
+describe('listPersonsPage / countPersons / searchPersonsWithDetails', () => {
+  it('returns basic PersonListItem shape', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Andersson', sex: 'M' });
+    const result = listPersonsPage(db, 100, 0);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe(p.id);
+    expect(result[0].sex).toBe('M');
+    expect(result[0].given_name).toBe('Erik');
+    expect(result[0].surname).toBe('Andersson');
+    expect(result[0].birth_date).toBeNull();
+    expect(result[0].birth_place).toBeNull();
+    expect(result[0].death_date).toBeNull();
+    expect(result[0].death_place).toBeNull();
+  });
+
+  it('joins birth and death date', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Berg', sex: 'F' });
+    const birth = createEvent(db, { event_type: 'birth', date_original: '1 JAN 1900' });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+    const death = createEvent(db, { event_type: 'death', date_original: '15 MAR 1980' });
+    addEventParticipant(db, { event_id: death.id, person_id: p.id, role: 'primary' });
+
+    const result = listPersonsPage(db, 100, 0);
+    const row = result.find(r => r.id === p.id)!;
+    expect(row.birth_date).toBe('1 JAN 1900');
+    expect(row.death_date).toBe('15 MAR 1980');
+    expect(row.birth_place).toBeNull();
+  });
+
+  it('respects LIMIT and OFFSET', () => {
+    for (let i = 0; i < 5; i++) {
+      createPerson(db, { given_name: `Person${i}`, surname: 'Test' });
+    }
+    const page1 = listPersonsPage(db, 3, 0);
+    const page2 = listPersonsPage(db, 3, 3);
+    expect(page1).toHaveLength(3);
+    expect(page2).toHaveLength(2);
+    const ids1 = page1.map(r => r.id);
+    const ids2 = page2.map(r => r.id);
+    expect(ids1.some(id => ids2.includes(id))).toBe(false);
+  });
+
+  it('countPersons returns total', () => {
+    createPerson(db, { given_name: 'A', surname: 'A' });
+    createPerson(db, { given_name: 'B', surname: 'B' });
+    expect(countPersons(db)).toBe(2);
+  });
+
+  it('searchPersonsWithDetails matches by name and includes birth data', () => {
+    const p = createPerson(db, { given_name: 'Karl', surname: 'Johansson', sex: 'M' });
+    const birth = createEvent(db, { event_type: 'birth', date_original: '5 MAJ 1850' });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+    createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
+
+    const results = searchPersonsWithDetails(db, 'Karl');
+    expect(results).toHaveLength(1);
+    expect(results[0].given_name).toBe('Karl');
+    expect(results[0].birth_date).toBe('5 MAJ 1850');
   });
 });
