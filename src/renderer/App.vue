@@ -97,7 +97,7 @@ async function loadQualityBadge() {
   if (!window.api?.checks) return;
   try {
     const results = (await (window.api.checks as Record<string, (...args: unknown[]) => Promise<unknown>>).runAll()) as Array<{ severity: string }>;
-    qualityErrorCount.value = results.filter(r => r.severity === 'error').length;
+    qualityErrorCount.value = results.filter(r => r.severity === 'error' || r.severity === 'warning').length;
   } catch { /* ignore */ }
 }
 
