@@ -417,6 +417,7 @@ import GroupPicker from '../components/GroupPicker.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 import { fullNameParts } from '../utils/nameUtils';
 import { parseAsteriskNotation } from '../utils/nameUtils';
+import { useFocusStore } from '../stores/focus';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -466,6 +467,7 @@ interface CheckResult {
 const { t } = useI18n();
 const route = useRoute();
 const personId = route.params.id as string;
+const focusStore = useFocusStore();
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
@@ -616,6 +618,7 @@ async function load() {
       primaryName.value = fullNameParts(n.given_name ?? null, n.surname ?? null, n.preferred_name ?? null, n.nickname ?? null)
         .map(p => p.text).join('');
     }
+    focusStore.set(personId, primaryName.value);
 
     const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{
       id: string;
