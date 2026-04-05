@@ -583,10 +583,15 @@ function doImportGedcom(
  * reusing a compiled statement across calls is safe.
  * BEGIN/COMMIT/ROLLBACK are called on the real db (not the proxy) so they are
  * never cached.
+ *
+ * IMPORTANT: Call finalize() after the import to release all compiled statements
+ * from the WASM heap. node-sqlite3-wasm prepared statements live in WASM memory;
+ * JavaScript GC does not free them. Leaving them alive exhausts the WASM heap and
+ * causes subsequent SQLite operations to fail with "out of memory".
  */
-function withStatementCache(db: Database): Database {
+function withStatementCache(db: Database): { proxy: Database; finalize(): void } {
   const cache = new Map<string, ReturnType<typeof db.prepare>>();
-  return new Proxy(db, {
+  const proxy = new Proxy(db, {
     get(target, prop) {
       if (prop === 'prepare') {
         return (sql: string) => {
@@ -599,6 +604,15 @@ function withStatementCache(db: Database): Database {
       return typeof val === 'function' ? (val as (...a: unknown[]) => unknown).bind(target) : val;
     },
   }) as unknown as Database;
+  return {
+    proxy,
+    finalize() {
+      for (const stmt of cache.values()) {
+        try { (stmt as unknown as { finalize(): void }).finalize(); } catch { /* ignore */ }
+      }
+      cache.clear();
+    },
+  };
 }
 
 /**
@@ -619,14 +633,17 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   const evBeforeRows    = db.prepare('SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type').all([]) as { event_type: string; cnt: number }[];
   const evBefore        = new Map<string, number>(evBeforeRows.map(r => [r.event_type, r.cnt]));
 
+  const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   db.prepare('BEGIN').run([]);
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[] };
   try {
-    partial = doImportGedcom(withStatementCache(db), tree, options);
+    partial = doImportGedcom(cachedDb, tree, options);
     db.prepare('COMMIT').run([]);
   } catch (err) {
     db.prepare('ROLLBACK').run([]);
     throw err;
+  } finally {
+    finalizeCache(); // free all compiled statements from the WASM heap
   }
 
   // Snapshot row counts after import
