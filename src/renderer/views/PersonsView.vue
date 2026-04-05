@@ -100,12 +100,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
+import { useDataVersionStore } from '../stores/dataVersion';
+const dataVersionStore = useDataVersionStore();
+let loadedVersion = -1;
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -214,7 +217,17 @@ function goToDetail(person: PersonListItem) {
   router.push(`/persons/${person.id}`);
 }
 
-onMounted(load);
+onMounted(async () => {
+  await load();
+  loadedVersion = dataVersionStore.version;
+});
+
+onActivated(async () => {
+  if (dataVersionStore.version !== loadedVersion) {
+    await load();
+    loadedVersion = dataVersionStore.version;
+  }
+});
 </script>
 
 <style scoped>
