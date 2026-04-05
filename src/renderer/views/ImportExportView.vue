@@ -86,10 +86,14 @@ async function handleGenneyDerby(mode: 'folder' | 'archive') {
     if (result.gedcomFallback) {
       genneyProgress.value = t('importExport.genneyDerbyFallback');
       const gedResult = await window.api.gedcom.import({ profile: 'genney' }) as { imported?: boolean; canceled?: boolean; filePath?: string };
-      if (gedResult.imported) setStatus(t('importExport.importSuccess', { file: gedResult.filePath ?? '' }));
+      if (gedResult.imported) {
+        setStatus(t('importExport.importSuccess', { file: gedResult.filePath ?? '' }));
+        window.dispatchEvent(new CustomEvent('data-imported'));
+      }
     } else if (result.imported && result.summary) {
       const s = result.summary;
       setStatus(t('importExport.genneyDerbySuccess', { persons: s.persons, events: s.events, citations: s.citations }));
+      window.dispatchEvent(new CustomEvent('data-imported'));
     } else if (result.error) {
       setStatus(t('importExport.genneyDerbyError', { error: result.error }), 'error');
     }
@@ -106,7 +110,10 @@ async function handleImportFromGenney() {
   busy.value = true;
   try {
     const result = (await window.api.gedcom.import({ profile: 'genney' })) as { imported?: boolean; canceled?: boolean; filePath?: string };
-    if (result.imported) setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
+    if (result.imported) {
+      setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
+      window.dispatchEvent(new CustomEvent('data-imported'));
+    }
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');
     console.error('[ImportExport] Genney import failed:', err);
@@ -120,7 +127,10 @@ async function handleImportGedcom() {
   busy.value = true;
   try {
     const result = (await window.api.gedcom.import()) as { imported?: boolean; canceled?: boolean; filePath?: string };
-    if (result.imported) setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
+    if (result.imported) {
+      setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
+      window.dispatchEvent(new CustomEvent('data-imported'));
+    }
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');
     console.error('[ImportExport] GEDCOM import failed:', err);
