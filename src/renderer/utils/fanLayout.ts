@@ -81,9 +81,10 @@ export interface FanSegment {
   ahnNum: number;
   generation: number;
   person: PersonNode | null;
-  pathD: string;        // empty string for focal (rendered as <circle>)
-  textPathD: string;    // arc at mid-radius for curved name textPath
-  textPathDateD: string; // arc offset inward/outward for curved date line
+  pathD: string;          // empty string for focal (rendered as <circle>)
+  textPathGivenD: string; // arc for given-name line (line 1, offset outward/inward)
+  textPathD: string;      // arc at mid-radius for surname / single-line name
+  textPathDateD: string;  // arc further in/out for date line
   fill: string;
   textX: number;
   textY: number;
@@ -127,27 +128,34 @@ export function computeFanLayout(tree: PedigreeTree, maxGen = 6): FanSegment[] {
       const textAngle = tangentialBase + (flip ? 180 : 0);
 
       // Arc paths for curved textPath rendering.
-      // Upper half (sin(midDeg) < 0): CW arc reads left→right.
-      // Lower half: reversed CCW arc so text still reads left→right.
-      // Date line sits 9px inside (upper) or outside (lower) the name arc.
+      // Upper half (sin(midDeg) < 0): CW arc reads left→right; ascenders point outward.
+      //   → given name (line 1) at rMid+8 (outer = visually higher)
+      //   → surname   (line 2) at rMid
+      //   → date      (line 3) at rMid-9 (inner = visually lower)
+      // Lower half: reversed CCW arc; ascenders point inward.
+      //   → given name at rMid-8 (inner = visually higher)
+      //   → surname   at rMid
+      //   → date      at rMid+9 (outer = visually lower)
       const largeArcMid = sweepDeg > 180 ? 1 : 0;
-      const [mx1, my1] = arcXY(rMid, startDeg);
-      const [mx2, my2] = arcXY(rMid, endDeg);
       const inUpperHalf = Math.sin(toRad(midDeg)) < 0;
-      const textPathD = isFocal ? '' : inUpperHalf
-        ? `M ${fmt(mx1)},${fmt(my1)} A ${rMid},${rMid} 0 ${largeArcMid},1 ${fmt(mx2)},${fmt(my2)}`
-        : `M ${fmt(mx2)},${fmt(my2)} A ${rMid},${rMid} 0 ${largeArcMid},0 ${fmt(mx1)},${fmt(my1)}`;
 
-      // Date arc: inward for upper half (visually below name), outward for lower half.
-      const rDate = inUpperHalf ? rMid - 9 : rMid + 9;
-      const [dx1, dy1] = arcXY(rDate, startDeg);
-      const [dx2, dy2] = arcXY(rDate, endDeg);
-      const textPathDateD = isFocal ? '' : inUpperHalf
-        ? `M ${fmt(dx1)},${fmt(dy1)} A ${rDate},${rDate} 0 ${largeArcMid},1 ${fmt(dx2)},${fmt(dy2)}`
-        : `M ${fmt(dx2)},${fmt(dy2)} A ${rDate},${rDate} 0 ${largeArcMid},0 ${fmt(dx1)},${fmt(dy1)}`;
+      function arcPath(r: number): string {
+        const [p1x, p1y] = arcXY(r, startDeg);
+        const [p2x, p2y] = arcXY(r, endDeg);
+        return inUpperHalf
+          ? `M ${fmt(p1x)},${fmt(p1y)} A ${r},${r} 0 ${largeArcMid},1 ${fmt(p2x)},${fmt(p2y)}`
+          : `M ${fmt(p2x)},${fmt(p2y)} A ${r},${r} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
+      }
+
+      const rGiven = inUpperHalf ? rMid + 8 : rMid - 8;
+      const rDate  = inUpperHalf ? rMid - 9 : rMid + 9;
+
+      const textPathGivenD = isFocal ? '' : arcPath(rGiven);
+      const textPathD      = isFocal ? '' : arcPath(rMid);
+      const textPathDateD  = isFocal ? '' : arcPath(rDate);
 
       segments.push({
-        ahnNum, generation: gen, person, pathD, textPathD, textPathDateD, fill,
+        ahnNum, generation: gen, person, pathD, textPathGivenD, textPathD, textPathDateD, fill,
         textX, textY, textAngle, midAngle: midDeg, sweepDeg,
         isEmpty, isFocal,
       });
