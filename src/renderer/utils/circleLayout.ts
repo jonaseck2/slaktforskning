@@ -119,29 +119,31 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
       const fill  = computeFill(ahnNum, gen, isEmpty);
 
       const rMid = (rInner + rOuter) / 2;
-      const [textX, textY] = arcXY(rMid, midDeg);
 
-      // Tangential text (perpendicular to radius = runs along the arc)
-      const tangentialBase = midDeg + 90;
+      // For gen 1 (father/mother), shift text 45° toward the top so its orientation
+      // matches the adjacent gen-2 grandparent segments.
+      // Father (pos=0): midDeg=0° → textMidDeg=−45° (top-right, upper half)
+      // Mother (pos=1): midDeg=180° → textMidDeg=225°/−135° (top-left, upper half)
+      // All other generations: textMidDeg = midDeg (no shift).
+      const textMidDeg = gen === 1 ? midDeg + (pos === 0 ? -45 : +45) : midDeg;
+
+      const [textX, textY] = arcXY(rMid, textMidDeg);
+
+      // Tangential text angle (for straight-text mode), based on shifted text position
+      const tangentialBase = textMidDeg + 90;
       const normT = ((tangentialBase % 360) + 360) % 360;
       const flip = normT > 90 && normT <= 270;
       const textAngle = tangentialBase + (flip ? 180 : 0);
 
-      // Arc paths for curved textPath rendering.
-      // Upper half (sin(midDeg) < 0): CW arc reads left→right; ascenders point outward.
-      //   → given name (line 1) at rMid+8 (outer = visually higher)
-      //   → surname   (line 2) at rMid
-      //   → date      (line 3) at rMid-9 (inner = visually lower)
-      // Lower half: reversed CCW arc; ascenders point inward.
-      //   → given name at rMid-8 (inner = visually higher)
-      //   → surname   at rMid
-      //   → date      at rMid+9 (outer = visually lower)
+      // Arc paths for curved textPath rendering, centered around textMidDeg.
+      const textStartDeg = textMidDeg - sweepDeg / 2;
+      const textEndDeg   = textMidDeg + sweepDeg / 2;
       const largeArcMid = sweepDeg > 180 ? 1 : 0;
-      const inUpperHalf = Math.sin(toRad(midDeg)) < 0;
+      const inUpperHalf = Math.sin(toRad(textMidDeg)) < 0;
 
       function arcPath(r: number): string {
-        const [p1x, p1y] = arcXY(r, startDeg);
-        const [p2x, p2y] = arcXY(r, endDeg);
+        const [p1x, p1y] = arcXY(r, textStartDeg);
+        const [p2x, p2y] = arcXY(r, textEndDeg);
         return inUpperHalf
           ? `M ${fmt(p1x)},${fmt(p1y)} A ${r},${r} 0 ${largeArcMid},1 ${fmt(p2x)},${fmt(p2y)}`
           : `M ${fmt(p2x)},${fmt(p2y)} A ${r},${r} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
