@@ -72,12 +72,11 @@
             </text>
           </template>
 
-          <!-- Straight tangential text: given name + surname on two lines for gen 1-4, surname only for gen 5 -->
-          <template v-else-if="!curvedText && seg.person && seg.generation <= 5">
+          <!-- Straight tangential text (gen 1-4): given + surname + dates, stacked radially -->
+          <template v-else-if="!curvedText && seg.person && seg.generation <= 4">
             <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
-              <!-- Given name line (gen 1-4) -->
               <text
-                v-if="seg.generation <= 4 && givenLabel(seg)"
+                v-if="givenLabel(seg)"
                 :x="seg.textX"
                 :y="seg.textY"
                 :dy="lifespan(seg) ? '-9' : '-5'"
@@ -89,13 +88,10 @@
                 fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ givenLabel(seg) }}</text>
-              <!-- Surname line -->
               <text
                 :x="seg.textX"
                 :y="seg.textY"
-                :dy="seg.generation <= 4
-                  ? (lifespan(seg) ? '2' : '5')
-                  : '0'"
+                :dy="lifespan(seg) ? '2' : '5'"
                 text-anchor="middle"
                 dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
@@ -104,9 +100,53 @@
                 fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ surnameLabel(seg) }}</text>
-              <!-- Dates (gen 1-4) -->
               <text
-                v-if="seg.generation <= 4 && lifespan(seg)"
+                v-if="lifespan(seg)"
+                :x="seg.textX"
+                :y="seg.textY"
+                dy="13"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="dateFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                fill="rgba(255,255,255,0.75)"
+                style="pointer-events: none; user-select: none;"
+              >{{ lifespan(seg) }}</text>
+            </g>
+          </template>
+
+          <!-- Straight radial text (gen 5-6): text rotated 90° so it reads outward from center.
+               dy offsets now shift tangentially (stacking lines along the arc width).
+               The deeper ring (68-58px) gives enough radial space for full name + dates. -->
+          <template v-else-if="!curvedText && seg.person && seg.generation >= 5">
+            <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
+              <text
+                v-if="givenLabel(seg)"
+                :x="seg.textX"
+                :y="seg.textY"
+                :dy="lifespan(seg) ? '-9' : '-5'"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="nameFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                font-weight="600"
+                fill="white"
+                style="pointer-events: none; user-select: none;"
+              >{{ givenLabel(seg) }}</text>
+              <text
+                :x="seg.textX"
+                :y="seg.textY"
+                :dy="givenLabel(seg) ? (lifespan(seg) ? '2' : '5') : '0'"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="nameFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                font-weight="600"
+                fill="white"
+                style="pointer-events: none; user-select: none;"
+              >{{ surnameLabel(seg) }}</text>
+              <text
+                v-if="lifespan(seg)"
                 :x="seg.textX"
                 :y="seg.textY"
                 dy="13"
@@ -286,7 +326,7 @@ const focalDates = computed(() => {
 });
 
 function givenLabel(seg: CircleSegment): string {
-  if (!seg.person || seg.generation > 4) return '';
+  if (!seg.person) return '';
   return seg.person.preferredName ?? seg.person.givenName ?? '';
 }
 
@@ -328,13 +368,13 @@ function tooltipLabel(seg: CircleSegment): string {
 }
 
 function nameFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 10, 2: 9, 3: 8.5, 4: 8, 5: 7 };
-  return sizes[gen] ?? 7;
+  const sizes: Record<number, number> = { 1: 10, 2: 9, 3: 8.5, 4: 8, 5: 7, 6: 6.5 };
+  return sizes[gen] ?? 6.5;
 }
 
 function dateFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 8, 2: 7.5, 3: 7, 4: 6.5 };
-  return sizes[gen] ?? 6.5;
+  const sizes: Record<number, number> = { 1: 8, 2: 7.5, 3: 7, 4: 6.5, 5: 6, 6: 6 };
+  return sizes[gen] ?? 6;
 }
 
 async function load() {

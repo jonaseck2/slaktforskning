@@ -2,18 +2,20 @@
 
 import type { PedigreeTree, PersonNode } from './chartLayout';
 
-export const CIRCLE_CX = 350;
-export const CIRCLE_CY = 350;
-export const CIRCLE_SVG_SIZE = 700;
+export const CIRCLE_CX = 400;
+export const CIRCLE_CY = 400;
+export const CIRCLE_SVG_SIZE = 800;
 
+// Rings 5-6 are deeper than 1-4 because gen5+ text is rotated 90° (radial)
+// and needs the extra radial depth to display full name + dates.
 const RINGS: Array<{ rInner: number; rOuter: number }> = [
   { rInner: 0,   rOuter: 50  },
   { rInner: 50,  rOuter: 105 },
   { rInner: 105, rOuter: 165 },
   { rInner: 165, rOuter: 220 },
   { rInner: 220, rOuter: 268 },
-  { rInner: 268, rOuter: 310 },
-  { rInner: 310, rOuter: 344 },
+  { rInner: 268, rOuter: 336 },  // Gen 5: 68px deep (was 42)
+  { rInner: 336, rOuter: 394 },  // Gen 6: 58px deep (was 34)
 ];
 
 const BRANCH_BASE: readonly string[] = [
@@ -88,8 +90,9 @@ export interface CircleSegment {
   fill: string;
   textX: number;
   textY: number;
-  textAngle: number;    // degrees — apply as rotate(textAngle, textX, textY)
-  midAngle: number;     // segment midpoint angle, from –90° (top), clockwise
+  textAngle: number;        // tangential rotation — gen 1-4
+  textAngleRadial: number;  // radial rotation (90° from tangential) — gen 5-6
+  midAngle: number;         // segment midpoint angle, from –90° (top), clockwise
   sweepDeg: number;
   isEmpty: boolean;
   isFocal: boolean;
@@ -129,11 +132,18 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
 
       const [textX, textY] = arcXY(rMid, textMidDeg);
 
-      // Tangential text angle (for straight-text mode), based on shifted text position
+      // Tangential text angle (for straight-text mode gen 1-4), based on shifted text position
       const tangentialBase = textMidDeg + 90;
       const normT = ((tangentialBase % 360) + 360) % 360;
       const flip = normT > 90 && normT <= 270;
       const textAngle = tangentialBase + (flip ? 180 : 0);
+
+      // Radial text angle (for gen 5-6): text reads outward along the radius.
+      // dy offsets shift tangentially (perpendicular to reading direction),
+      // allowing multiple lines to stack within the arc width.
+      const normR = ((textMidDeg % 360) + 360) % 360;
+      const flipR = normR > 90 && normR <= 270;
+      const textAngleRadial = textMidDeg + (flipR ? 180 : 0);
 
       // Arc paths for curved textPath rendering, centered around textMidDeg.
       const textStartDeg = textMidDeg - sweepDeg / 2;
@@ -161,7 +171,7 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
 
       segments.push({
         ahnNum, generation: gen, person, pathD, textPathGivenD, textPathD, textPathDateD, fill,
-        textX, textY, textAngle, midAngle: midDeg, sweepDeg,
+        textX, textY, textAngle, textAngleRadial, midAngle: midDeg, sweepDeg,
         isEmpty, isFocal,
       });
     }
