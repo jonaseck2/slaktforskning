@@ -323,7 +323,7 @@ export default {
   visualization: {
     tab: {
       pedigree: 'Stamtavla',
-      fan: 'Cirkel',
+      circle: 'Cirkel',
       hourglass: 'Timglas',
       timeline: 'Tidslinje',
     },
