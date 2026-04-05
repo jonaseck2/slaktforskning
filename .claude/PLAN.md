@@ -71,18 +71,13 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.20.7 | GEDCOM import completeness: engagement/adoption types, CAUS, TITL, NOTE xrefs, ImportReport UI | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
 | Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/fix-wasm-oom-after-large-gedcom-import.md) |
 | Fix | v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers, all api/ refactored | — |
+| v0.21.0 | Persons list: single JOIN query (birth/death date/place), load-more pagination (100/page), remove Living column | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
 
 ---
 
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
-
-### Persons List: Query Optimization + Load-More Pagination [feature]
-See `.claude/plans/2026-04-05-persons-list-pagination.md` for the full plan.
-- [ ] New `listPersonsPage` / `countPersons` / `searchPersonsWithDetails` API functions with JOIN query
-- [ ] IPC channels: `persons:listPage`, `persons:searchWithDetails`
-- [ ] PersonsView: 100-per-page load-more, birth/death columns, remove Living column
 
 ### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
