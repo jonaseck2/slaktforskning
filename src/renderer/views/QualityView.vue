@@ -26,20 +26,13 @@
         <div
           v-for="r in filteredResults"
           :key="r.code + r.personIds.join()"
-          :class="['result-row', 'severity-' + r.severity]"
+          :class="['result-row', 'severity-' + r.severity, { clickable: r.personIds.length > 0 }]"
+          @click="r.personIds.length > 0 && router.push('/persons/' + r.personIds[0])"
         >
           <span :class="['severity-badge', 'badge-' + r.severity]">
             {{ $t('quality.severity.' + r.severity) }}
           </span>
           <span class="result-message">{{ r.message }}</span>
-          <span class="result-links">
-            <router-link
-              v-for="pid in r.personIds"
-              :key="pid"
-              :to="'/persons/' + pid"
-              class="result-link"
-            >{{ $t('quality.viewPerson') }}</router-link>
-          </span>
         </div>
       </div>
     </template>
@@ -49,6 +42,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -64,6 +58,7 @@ interface CheckResult {
 }
 
 const { t } = useI18n();
+const router = useRouter();
 
 const loading = ref(false);
 const hasRun = ref(false);
@@ -136,7 +131,7 @@ async function runChecks() {
 .badge-warning { background: #fef3c7; color: #78350f; }
 .badge-notice { background: #bfdbfe; color: #1e3a8a; }
 .result-message { flex: 1; font-size: 13px; }
-.result-links { display: flex; gap: 6px; }
-.result-link { font-size: 12px; color: #1d4ed8; text-decoration: underline; }
+.result-row.clickable { cursor: pointer; }
+.result-row.clickable:hover { filter: brightness(0.96); }
 .empty-hint { color: #999; font-size: 13px; padding: 20px 0; }
 </style>
