@@ -131,7 +131,6 @@ onMounted(load);
 .detail-header h2 { margin: 0; }
 .btn-back { background: none; border: none; color: #2c3e50; cursor: pointer; padding: 4px 0; font-size: 14px; }
 .btn-back:hover { text-decoration: underline; }
-.btn-cite-header { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 .type-badge { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
 .detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
 .detail-section h4 { margin: 0 0 8px; font-size: 15px; }

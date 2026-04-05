@@ -196,15 +196,6 @@ onMounted(load);
 .header-row h2 {
   margin: 0;
 }
-.btn-cite-header {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-  padding: 4px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-}
 .detail-section {
   margin-bottom: 24px;
   padding-bottom: 16px;
