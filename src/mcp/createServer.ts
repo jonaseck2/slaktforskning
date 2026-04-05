@@ -13,7 +13,7 @@ import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
-import { parseGedcom, importGedcom, exportGedcom } from '../gedcom';
+import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 import { importFromGenney } from '../import/genney/index';
 
@@ -544,7 +544,7 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
       return { content: [{ type: 'text', text: 'Error: .backup and .gcc files are Genney archives, not GEDCOM files. Use the import_genney tool instead.' }] };
     }
     const fs = await import('fs');
-    const text = fs.readFileSync(args.file_path, 'utf-8');
+    const text = readGedcomFile(args.file_path);
     const tree = parseGedcom(text);
     const options: ImportOptions = args.profile ? { profile: args.profile } : {};
     importGedcom(db, tree, options);
