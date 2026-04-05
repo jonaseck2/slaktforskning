@@ -39,6 +39,7 @@ export function updateResearchTask(db: Database, id: string, data: {
   task?: string;
   notes?: string;
   result?: string;
+  person_id?: string | null;
 }): ResearchTask | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -47,6 +48,7 @@ export function updateResearchTask(db: Database, id: string, data: {
   if (data.task !== undefined) { fields.push('task = ?'); values.push(data.task); }
   if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
   if (data.result !== undefined) { fields.push('result = ?'); values.push(data.result); }
+  if ('person_id' in data) { fields.push('person_id = ?'); values.push(data.person_id ?? null); }
   if (fields.length === 0) return getResearchTask(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);

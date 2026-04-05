@@ -25,6 +25,7 @@ export default {
     name: 'Name',
     unknown: '(unknown)',
     back: 'Back',
+    view: 'View',
   },
   persons: {
     title: 'Persons',
