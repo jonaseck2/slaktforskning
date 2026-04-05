@@ -1,11 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-// After any mutating IPC call resolves, dispatch a data-changed event so
-// App.vue can refresh the quality badge without polling.
+// Registry of callbacks to invoke after any mutating IPC call.
+// Uses the same contextBridge pattern as db.onSwitched — the only reliable
+// way to call back into the renderer from the preload's isolated context.
+const dataChangedListeners: Array<() => void> = [];
+
 function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...args: T) => Promise<R> {
   return async (...args: T) => {
     const result = await fn(...args);
-    window.postMessage({ type: 'data-changed' }, '*');
+    dataChangedListeners.forEach(cb => cb());
     return result;
   };
 }
@@ -147,6 +150,7 @@ const api = {
     backup: () => ipcRenderer.invoke('backup:backup'),
     restore: () => ipcRenderer.invoke('backup:restore'),
   },
+  onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
 };
 
 contextBridge.exposeInMainWorld('api', api);
