@@ -454,6 +454,17 @@ export default {
     selectCoupleFirst: 'Välj ett par för att visa förhandsgranskning.',
     print: 'Skriv ut',
     exportPdf: 'Exportera PDF',
+    tabAncestorBook: 'Stamtavla',
+    ancestorBook: {
+      title: 'Stamtavla',
+      pickPerson: 'Välj rotperson',
+      generationN: 'Generation {n}',
+      limitWarning: 'Mer än 500 förfäder hittades — exporten visar de 500 närmaste.',
+      noPersonSelected: 'Välj en person för att generera stamtavlan.',
+      exportDate: 'Exporterad {date}',
+      ahnentafelList: 'Ahnentavla',
+      summaries: 'Personsammanfattningar',
+    },
   },
   researchTasks: {
     title: 'Forskningstips',
