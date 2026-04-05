@@ -69,6 +69,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.20.0 | Ancestor Book Export: static SVG circle chart, ahnentafel list, person summaries, internal PDF links | [archive](plans/archive/2026-04-05-ancestor-book.md) |
 | Fix | Circle chart zoom: flex-shrink bug, center-anchored +/- buttons, curved text line spacing | [archive](plans/archive/2026-04-05-circle-chart-zoom-fixes.md) |
 | v0.20.7 | GEDCOM import completeness: engagement/adoption types, CAUS, TITL, NOTE xrefs, ImportReport UI | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
+| Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/fix-wasm-oom-after-large-gedcom-import.md) |
 
 ---
 
