@@ -73,6 +73,14 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
+### Ancestor Book Export [feature]
+See `.claude/plans/2026-04-05-ancestor-book.md` for the full plan.
+- [ ] `fetchAllAncestors` utility (BFS, no generation cap, 500-person limit)
+- [ ] Static circle chart SVG with anchor links
+- [ ] Ahnentafel list with links
+- [ ] Person summary pages with inter-linking
+- [ ] New "Stamtavla" tab in ReportsView
+
 ### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
 
