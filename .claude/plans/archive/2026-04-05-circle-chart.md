@@ -1,10 +1,10 @@
-# Fan Chart Implementation Plan
+# Circle Chart Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a full-circle (360°) fan chart ancestor view as a new "Cirkel" tab in VisualizationView, showing 6 generations with four branch-based colors.
+**Goal:** Add a full-circle (360°) circle chart ancestor view as a new "Cirkel" tab in VisualizationView, showing 6 generations with four branch-based colors.
 
-**Architecture:** Pure SVG arc paths computed in `src/renderer/utils/fanLayout.ts`, rendered by `src/renderer/components/charts/FanChart.vue`. Reuses `fetchPedigreeTree(focalId, 7)` (already returns a `Map<ahnentafelNumber, PersonNode>`), the `useChartZoom` composable, and the `navigate` event pattern from PedigreeChart/HourglassChart. No new dependencies, no schema or IPC changes.
+**Architecture:** Pure SVG arc paths computed in `src/renderer/utils/circleLayout.ts`, rendered by `src/renderer/components/charts/CircleChart.vue`. Reuses `fetchPedigreeTree(focalId, 7)` (already returns a `Map<ahnentafelNumber, PersonNode>`), the `useChartZoom` composable, and the `navigate` event pattern from PedigreeChart/HourglassChart. No new dependencies, no schema or IPC changes.
 
 **Tech Stack:** TypeScript, Vue 3 (Composition API, `<script setup>`), SVG, Vitest.
 
@@ -25,20 +25,20 @@ Before starting, read these files once:
 
 | File | Action |
 |------|--------|
-| `src/renderer/utils/fanLayout.ts` | **Create** — pure layout algorithm |
-| `tests/unit/fanLayout.test.ts` | **Create** — unit tests |
-| `src/renderer/components/charts/FanChart.vue` | **Create** — SVG component |
+| `src/renderer/utils/circleLayout.ts` | **Create** — pure layout algorithm |
+| `tests/unit/circleLayout.test.ts` | **Create** — unit tests |
+| `src/renderer/components/charts/CircleChart.vue` | **Create** — SVG component |
 | `src/renderer/views/VisualizationView.vue` | **Modify** — add Fan tab |
 | `src/renderer/i18n/sv.ts` | **Modify** — add `visualization.tab.fan` |
 | `src/renderer/i18n/en.ts` | **Modify** — add `visualization.tab.fan` |
 
 ---
 
-## Task 1: fanLayout.ts — types and layout algorithm
+## Task 1: circleLayout.ts — types and layout algorithm
 
 **Files:**
-- Create: `src/renderer/utils/fanLayout.ts`
-- Create: `tests/unit/fanLayout.test.ts`
+- Create: `src/renderer/utils/circleLayout.ts`
+- Create: `tests/unit/circleLayout.test.ts`
 
 ### Segment geometry
 
@@ -74,9 +74,9 @@ Lighten the base color by `(g - 2) * 12%` per generation beyond gen 2. Empty slo
 - [ ] **Step 1: Write failing tests**
 
 ```typescript
-// tests/unit/fanLayout.test.ts
+// tests/unit/circleLayout.test.ts
 import { describe, it, expect } from 'vitest';
-import { computeFanLayout } from '../../src/renderer/utils/fanLayout';
+import { computeCircleLayout } from '../../src/renderer/utils/circleLayout';
 import type { PedigreeTree, PersonNode } from '../../src/renderer/utils/chartLayout';
 
 function makeNode(id: string): PersonNode {
@@ -92,19 +92,19 @@ function makeTree(maxAhn: number): PedigreeTree {
   return { nodes, generations: 7 };
 }
 
-describe('computeFanLayout', () => {
+describe('computeCircleLayout', () => {
   it('always returns exactly 127 segments', () => {
     // Empty tree (only focal)
     const treeEmpty: PedigreeTree = { nodes: new Map([[1, makeNode('1')]]), generations: 7 };
-    expect(computeFanLayout(treeEmpty)).toHaveLength(127);
+    expect(computeCircleLayout(treeEmpty)).toHaveLength(127);
 
     // Full 6-gen tree
-    expect(computeFanLayout(makeTree(127))).toHaveLength(127);
+    expect(computeCircleLayout(makeTree(127))).toHaveLength(127);
   });
 
   it('focal segment has isFocal=true, generation=0, ahnNum=1', () => {
     const tree: PedigreeTree = { nodes: new Map([[1, makeNode('1')]]), generations: 7 };
-    const focal = computeFanLayout(tree).find(s => s.ahnNum === 1)!;
+    const focal = computeCircleLayout(tree).find(s => s.ahnNum === 1)!;
     expect(focal.isFocal).toBe(true);
     expect(focal.generation).toBe(0);
     expect(focal.isEmpty).toBe(false);
@@ -113,14 +113,14 @@ describe('computeFanLayout', () => {
 
   it('marks missing ancestors as empty with null person', () => {
     const tree: PedigreeTree = { nodes: new Map([[1, makeNode('1')]]), generations: 7 };
-    const nonFocal = computeFanLayout(tree).filter(s => !s.isFocal);
+    const nonFocal = computeCircleLayout(tree).filter(s => !s.isFocal);
     expect(nonFocal).toHaveLength(126);
     expect(nonFocal.every(s => s.isEmpty)).toBe(true);
     expect(nonFocal.every(s => s.person === null)).toBe(true);
   });
 
   it('each generation covers exactly 360 degrees', () => {
-    const segs = computeFanLayout(makeTree(127));
+    const segs = computeCircleLayout(makeTree(127));
     for (let g = 0; g <= 6; g++) {
       const total = segs
         .filter(s => s.generation === g)
@@ -130,17 +130,17 @@ describe('computeFanLayout', () => {
   });
 
   it('ahnentafel 4 gets base paternal-grandfather blue fill', () => {
-    const segs = computeFanLayout(makeTree(7));
+    const segs = computeCircleLayout(makeTree(7));
     expect(segs.find(s => s.ahnNum === 4)!.fill).toBe('#6a9cc0');
   });
 
   it('ahnentafel 5 gets base paternal-grandmother green fill', () => {
-    const segs = computeFanLayout(makeTree(7));
+    const segs = computeCircleLayout(makeTree(7));
     expect(segs.find(s => s.ahnNum === 5)!.fill).toBe('#6aaa78');
   });
 
   it('deeper generations of same branch are lighter', () => {
-    const segs = computeFanLayout(makeTree(127));
+    const segs = computeCircleLayout(makeTree(127));
     // ahnentafel 4 → gen 2 (no lighten); 8 → gen 3 (+1 step); 16 → gen 4 (+2 steps)
     const r4  = parseInt(segs.find(s => s.ahnNum === 4)!.fill.slice(1, 3), 16);
     const r8  = parseInt(segs.find(s => s.ahnNum === 8)!.fill.slice(1, 3), 16);
@@ -150,7 +150,7 @@ describe('computeFanLayout', () => {
   });
 
   it('ahnentafel 8 and 9 are in the same blue branch as ahnentafel 4', () => {
-    const segs = computeFanLayout(makeTree(15));
+    const segs = computeCircleLayout(makeTree(15));
     // Both 8 and 9 descend from grandparent 4 (paternal-grandfather)
     const fill8  = segs.find(s => s.ahnNum === 8)!.fill;
     const fill9  = segs.find(s => s.ahnNum === 9)!.fill;
@@ -166,22 +166,22 @@ describe('computeFanLayout', () => {
 - [ ] **Step 2: Run tests to confirm they fail**
 
 ```bash
-npm test -- fanLayout
+npm test -- circleLayout
 ```
 
-Expected: 8 failures with "Cannot find module '../../src/renderer/utils/fanLayout'".
+Expected: 8 failures with "Cannot find module '../../src/renderer/utils/circleLayout'".
 
-- [ ] **Step 3: Implement fanLayout.ts**
+- [ ] **Step 3: Implement circleLayout.ts**
 
 ```typescript
-// src/renderer/utils/fanLayout.ts
-// Pure layout algorithm for the 360° fan chart. No DOM, no IPC.
+// src/renderer/utils/circleLayout.ts
+// Pure layout algorithm for the 360° circle chart. No DOM, no IPC.
 
 import type { PedigreeTree, PersonNode } from './chartLayout';
 
-export const FAN_CX = 350;
-export const FAN_CY = 350;
-export const FAN_SVG_SIZE = 700;
+export const CIRCLE_CX = 350;
+export const CIRCLE_CY = 350;
+export const CIRCLE_SVG_SIZE = 700;
 
 const RINGS: Array<{ rInner: number; rOuter: number }> = [
   { rInner: 0,   rOuter: 32  },
@@ -228,8 +228,8 @@ function toRad(deg: number): number { return (deg * Math.PI) / 180; }
 
 function arcXY(r: number, angleDeg: number): [number, number] {
   return [
-    FAN_CX + r * Math.cos(toRad(angleDeg)),
-    FAN_CY + r * Math.sin(toRad(angleDeg)),
+    CIRCLE_CX + r * Math.cos(toRad(angleDeg)),
+    CIRCLE_CY + r * Math.sin(toRad(angleDeg)),
   ];
 }
 
@@ -241,7 +241,7 @@ function buildPath(rInner: number, rOuter: number, startDeg: number, endDeg: num
   const [ox2, oy2] = arcXY(rOuter, endDeg);
   if (rInner === 0) {
     // Pie slice to center (gen 1 only)
-    return `M ${fmt(FAN_CX)},${fmt(FAN_CY)} L ${fmt(ox1)},${fmt(oy1)} A ${rOuter},${rOuter} 0 ${largeArc},1 ${fmt(ox2)},${fmt(oy2)} Z`;
+    return `M ${fmt(CIRCLE_CX)},${fmt(CIRCLE_CY)} L ${fmt(ox1)},${fmt(oy1)} A ${rOuter},${rOuter} 0 ${largeArc},1 ${fmt(ox2)},${fmt(oy2)} Z`;
   }
   const [ix1, iy1] = arcXY(rInner, startDeg);
   const [ix2, iy2] = arcXY(rInner, endDeg);
@@ -255,7 +255,7 @@ function buildPath(rInner: number, rOuter: number, startDeg: number, endDeg: num
   ].join(' ');
 }
 
-export interface FanSegment {
+export interface CircleSegment {
   ahnNum: number;
   generation: number;
   person: PersonNode | null;
@@ -270,8 +270,8 @@ export interface FanSegment {
   isFocal: boolean;
 }
 
-export function computeFanLayout(tree: PedigreeTree): FanSegment[] {
-  const segments: FanSegment[] = [];
+export function computeCircleLayout(tree: PedigreeTree): CircleSegment[] {
+  const segments: CircleSegment[] = [];
 
   for (let gen = 0; gen <= 6; gen++) {
     const count = Math.pow(2, gen);
@@ -316,7 +316,7 @@ export function computeFanLayout(tree: PedigreeTree): FanSegment[] {
 - [ ] **Step 4: Run tests to confirm they pass**
 
 ```bash
-npm test -- fanLayout
+npm test -- circleLayout
 ```
 
 Expected: 8 passing.
@@ -324,32 +324,32 @@ Expected: 8 passing.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat: add fanLayout.ts with computeFanLayout + tests"
+git add -A && git commit -m "feat: add circleLayout.ts with computeCircleLayout + tests"
 ```
 
 ---
 
-## Task 2: FanChart.vue — SVG component
+## Task 2: CircleChart.vue — SVG component
 
 **Files:**
-- Create: `src/renderer/components/charts/FanChart.vue`
+- Create: `src/renderer/components/charts/CircleChart.vue`
 
 This component mirrors the structure of `PedigreeChart.vue`: loads data on mount, watches `personId`, renders SVG, zooms with the composable, emits `navigate`.
 
-- [ ] **Step 1: Create FanChart.vue**
+- [ ] **Step 1: Create CircleChart.vue**
 
 ```vue
-<!-- src/renderer/components/charts/FanChart.vue -->
+<!-- src/renderer/components/charts/CircleChart.vue -->
 <template>
   <div class="chart-outer">
     <div class="chart-scroll" ref="scrollRef" @wheel="onWheel">
       <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
       <svg
         v-else
-        :width="FAN_SVG_SIZE * zoom"
-        :height="FAN_SVG_SIZE * zoom"
-        :viewBox="`0 0 ${FAN_SVG_SIZE} ${FAN_SVG_SIZE}`"
-        data-testid="fan-svg"
+        :width="CIRCLE_SVG_SIZE * zoom"
+        :height="CIRCLE_SVG_SIZE * zoom"
+        :viewBox="`0 0 ${CIRCLE_SVG_SIZE} ${CIRCLE_SVG_SIZE}`"
+        data-testid="circle-svg"
       >
         <!-- Non-focal segments -->
         <g
@@ -401,12 +401,12 @@ This component mirrors the structure of `PedigreeChart.vue`: loads data on mount
         <!-- Focal person circle (rendered on top of segments) -->
         <circle
           v-if="focalSegment"
-          :cx="FAN_CX" :cy="FAN_CY" r="32"
+          :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="32"
           :fill="focalSegment.fill"
         />
         <text
           v-if="focalSegment?.person"
-          :x="FAN_CX" :y="FAN_CY - 7"
+          :x="CIRCLE_CX" :y="CIRCLE_CY - 7"
           text-anchor="middle"
           font-size="10"
           font-weight="600"
@@ -416,7 +416,7 @@ This component mirrors the structure of `PedigreeChart.vue`: loads data on mount
         >{{ focalName }}</text>
         <text
           v-if="focalSegment?.person"
-          :x="FAN_CX" :y="FAN_CY + 6"
+          :x="CIRCLE_CX" :y="CIRCLE_CY + 6"
           text-anchor="middle"
           font-size="8"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -438,7 +438,7 @@ This component mirrors the structure of `PedigreeChart.vue`: loads data on mount
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeFanLayout, FAN_CX, FAN_CY, FAN_SVG_SIZE, type FanSegment } from '../../utils/fanLayout';
+import { computeCircleLayout, CIRCLE_CX, CIRCLE_CY, CIRCLE_SVG_SIZE, type CircleSegment } from '../../utils/circleLayout';
 import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import { fullNameParts } from '../../utils/nameUtils';
@@ -452,10 +452,10 @@ const emit = defineEmits<{ navigate: [id: string] }>();
 const loading = ref(true);
 const tree = ref<PedigreeTree | null>(null);
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-fan');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-circle');
 
-const layout = computed<FanSegment[]>(() =>
-  tree.value ? computeFanLayout(tree.value) : [],
+const layout = computed<CircleSegment[]>(() =>
+  tree.value ? computeCircleLayout(tree.value) : [],
 );
 
 const focalSegment = computed(() => layout.value.find(s => s.isFocal) ?? null);
@@ -476,7 +476,7 @@ const focalDates = computed(() => {
   return '';
 });
 
-function primaryLabel(seg: FanSegment): string {
+function primaryLabel(seg: CircleSegment): string {
   if (!seg.person) return '';
   const p = seg.person;
   if (seg.generation <= 2) {
@@ -488,11 +488,11 @@ function primaryLabel(seg: FanSegment): string {
   return p.surname ?? p.givenName ?? '';
 }
 
-function birthYear(seg: FanSegment): string {
+function birthYear(seg: CircleSegment): string {
   return seg.person?.birthYear ? String(seg.person.birthYear) : '';
 }
 
-function tooltipLabel(seg: FanSegment): string {
+function tooltipLabel(seg: CircleSegment): string {
   const p = seg.person!;
   const name = fullNameParts(p.givenName, p.surname, p.preferredName, p.nickname)
     .map(pt => pt.text).join('');
@@ -585,12 +585,12 @@ onMounted(load);
 npm test
 ```
 
-Expected: all existing tests pass (FanChart.vue has no unit test — it's a Vue component, tested via the running app).
+Expected: all existing tests pass (CircleChart.vue has no unit test — it's a Vue component, tested via the running app).
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add -A && git commit -m "feat: add FanChart.vue SVG component"
+git add -A && git commit -m "feat: add CircleChart.vue SVG component"
 ```
 
 ---
@@ -636,7 +636,7 @@ In `src/renderer/i18n/en.ts`, same location:
 // After:
     tab: {
       pedigree: 'Pedigree',
-      fan: 'Fan Chart',
+      fan: 'Circle Chart',
       hourglass: 'Hourglass',
       timeline: 'Timeline',
     },
@@ -654,11 +654,11 @@ type TabName = 'pedigree' | 'hourglass' | 'timeline';
 type TabName = 'pedigree' | 'fan' | 'hourglass' | 'timeline';
 ```
 
-Add the import for FanChart near the other chart imports (around line 82):
+Add the import for CircleChart near the other chart imports (around line 82):
 
 ```typescript
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
-import FanChart from '../components/charts/FanChart.vue';      // add this line
+import CircleChart from '../components/charts/CircleChart.vue';      // add this line
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 ```
@@ -672,14 +672,14 @@ In the `<div class="viz-tabs">` block (around line 4–27), insert the Fan tab b
 <button
   role="tab" :aria-selected="activeTab === 'fan'"
   :class="['tab', { active: activeTab === 'fan' }]"
-  data-testid="tab-fan" @click="setTab('fan')"
+  data-testid="tab-circle" @click="setTab('fan')"
 >{{ $t('visualization.tab.fan') }}</button>
 ```
 
-In the chart area (inside `<div class="viz-chart-area">`), add the FanChart after PedigreeChart:
+In the chart area (inside `<div class="viz-chart-area">`), add the CircleChart after PedigreeChart:
 
 ```html
-<FanChart
+<CircleChart
   v-if="activeTab === 'fan'"
   :person-id="personId"
   @navigate="navigateTo"
@@ -702,7 +702,7 @@ npm start
 
 1. Open Visualisering tab in the sidebar.
 2. Confirm the new "Cirkel" tab appears between Pedigree and Hourglass.
-3. Click "Cirkel" — fan chart renders with focal person at center.
+3. Click "Cirkel" — circle chart renders with focal person at center.
 4. Verify branch colors: father's side (top-left half) is blue-ish, mother's side (top-right half) is warm-ish.
 5. Hover over a populated segment — tooltip shows name + dates.
 6. Click a populated segment — PersonPanel updates, focus store updates (name appears in sidebar focus indicator).
@@ -717,9 +717,9 @@ Update `"version"` in `package.json` to `"1.9.0"`.
 
 ```bash
 git add -A && git commit -m "$(cat <<'EOF'
-feat: add fan chart (Cirkel) visualization tab
+feat: add circle chart (Cirkel) visualization tab
 
-Full-circle 360° ancestor fan chart showing 6 generations.
+Full-circle 360° ancestor circle chart showing 6 generations.
 Branch-based colors: four muted tones for paternal/maternal lines.
 Reuses fetchPedigreeTree, useChartZoom, and navigate event pattern.
 

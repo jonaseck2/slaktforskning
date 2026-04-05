@@ -1,10 +1,10 @@
-# Fan Chart Implementation Design
+# Circle Chart Implementation Design
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add a full-circle (360°) fan chart ancestor view as a new tab in VisualizationView, showing 6 generations with branch-based color coding.
+**Goal:** Add a full-circle (360°) circle chart ancestor view as a new tab in VisualizationView, showing 6 generations with branch-based color coding.
 
-**Architecture:** Pure SVG arc paths computed in a new `fanLayout.ts` module, rendered by a new `FanChart.vue` component. Reuses existing `fetchPedigreeTree` data, `useChartZoom` composable, and the `navigate` event pattern from other charts. No new dependencies.
+**Architecture:** Pure SVG arc paths computed in a new `circleLayout.ts` module, rendered by a new `CircleChart.vue` component. Reuses existing `fetchPedigreeTree` data, `useChartZoom` composable, and the `navigate` event pattern from other charts. No new dependencies.
 
 ---
 
@@ -85,7 +85,7 @@ Gen 6 segments show no text. A native SVG `<title>` on each segment provides a h
 - **Click populated segment** → emits `navigate(personId)`. `VisualizationView.navigateTo` handles it identically to other charts (sets focus store, sets `selectedPersonId`).
 - **Click empty segment** → no-op.
 - **Hover** → 10% opacity darken on segment fill.
-- **Zoom** → `useChartZoom` composable, persisted as `viz-zoom-fan` in localStorage.
+- **Zoom** → `useChartZoom` composable, persisted as `viz-zoom-circle` in localStorage.
 - **No collapse/expand buttons** — all 6 generations are always rendered; missing ancestors show as empty segments.
 
 ---
@@ -102,7 +102,7 @@ Pedigree | Cirkel | Timglas | Tidslinje
 
 i18n additions:
 - `sv.ts`: `visualization: { tab: { fan: 'Cirkel' } }`
-- `en.ts`: `visualization: { tab: { fan: 'Fan Chart' } }`
+- `en.ts`: `visualization: { tab: { fan: 'Circle Chart' } }`
 
 ---
 
@@ -110,21 +110,21 @@ i18n additions:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/renderer/utils/fanLayout.ts` | Create | `computeFanLayout(tree, cx, cy)` → `FanSegment[]`. Pure math, no DOM/IPC. |
-| `src/renderer/components/charts/FanChart.vue` | Create | SVG render, zoom, click handler |
-| `src/renderer/views/VisualizationView.vue` | Modify | Add Fan tab, import FanChart |
+| `src/renderer/utils/circleLayout.ts` | Create | `computeCircleLayout(tree, cx, cy)` → `CircleSegment[]`. Pure math, no DOM/IPC. |
+| `src/renderer/components/charts/CircleChart.vue` | Create | SVG render, zoom, click handler |
+| `src/renderer/views/VisualizationView.vue` | Modify | Add Fan tab, import CircleChart |
 | `src/renderer/i18n/sv.ts` | Modify | Add `visualization.tab.fan` |
 | `src/renderer/i18n/en.ts` | Modify | Add `visualization.tab.fan` |
-| `tests/unit/fanLayout.test.ts` | Create | Unit tests for `computeFanLayout` |
+| `tests/unit/circleLayout.test.ts` | Create | Unit tests for `computeCircleLayout` |
 
 No schema changes. No IPC changes. No MCP changes.
 
 ---
 
-## `FanSegment` type (output of `computeFanLayout`)
+## `CircleSegment` type (output of `computeCircleLayout`)
 
 ```typescript
-export interface FanSegment {
+export interface CircleSegment {
   ahnNum: number;          // ahnentafel number (1 = focal)
   generation: number;      // 0 = focal, 1 = parents, …, 6
   person: PersonNode | null;  // null = empty slot
@@ -141,7 +141,7 @@ export interface FanSegment {
 
 ---
 
-## Unit tests (`fanLayout.test.ts`)
+## Unit tests (`circleLayout.test.ts`)
 
 - Focal person at ahnentafel 1 → `generation === 0`, correct center circle
 - Gen 1 produces exactly 4 segments covering 360° total

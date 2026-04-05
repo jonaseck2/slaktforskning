@@ -1,4 +1,4 @@
-<!-- src/renderer/components/charts/FanChart.vue -->
+<!-- src/renderer/components/charts/CircleChart.vue -->
 <template>
   <div class="chart-outer" ref="outerRef">
     <div class="chart-scroll" ref="scrollRef" @wheel="onWheel">
@@ -7,8 +7,8 @@
         v-else
         :width="svgDisplaySize"
         :height="svgDisplaySize"
-        :viewBox="`0 0 ${FAN_SVG_SIZE} ${FAN_SVG_SIZE}`"
-        data-testid="fan-svg"
+        :viewBox="`0 0 ${CIRCLE_SVG_SIZE} ${CIRCLE_SVG_SIZE}`"
+        data-testid="circle-svg"
       >
         <!-- Curved text paths in defs (only when curvedText is on) -->
         <defs v-if="curvedText">
@@ -21,7 +21,7 @@
         <g
           v-for="seg in nonFocalSegments"
           :key="seg.ahnNum"
-          :class="['fan-seg', { clickable: !seg.isEmpty }]"
+          :class="['circle-seg', { clickable: !seg.isEmpty }]"
           @click="!seg.isEmpty && $emit('navigate', seg.person!.id)"
         >
           <path
@@ -124,14 +124,14 @@
         <!-- Focal person circle (rendered on top of segments) -->
         <circle
           v-if="focalSegment"
-          :cx="FAN_CX" :cy="FAN_CY" r="50"
+          :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50"
           :fill="focalSegment.fill"
         />
         <!-- Focal name: up to 3 lines (wraps at most twice) -->
         <text
           v-for="(line, i) in focalNameLines"
           :key="i"
-          :x="FAN_CX"
+          :x="CIRCLE_CX"
           :y="focalLineY(i, focalNameLines.length)"
           text-anchor="middle"
           dominant-baseline="central"
@@ -144,7 +144,7 @@
         <!-- Focal dates -->
         <text
           v-if="focalSegment?.person && focalDates"
-          :x="FAN_CX"
+          :x="CIRCLE_CX"
           :y="focalLineY(focalNameLines.length, focalNameLines.length)"
           text-anchor="middle"
           dominant-baseline="central"
@@ -180,7 +180,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeFanLayout, FAN_CX, FAN_CY, FAN_SVG_SIZE, type FanSegment } from '../../utils/fanLayout';
+import { computeCircleLayout, CIRCLE_CX, CIRCLE_CY, CIRCLE_SVG_SIZE, type CircleSegment } from '../../utils/circleLayout';
 import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import { fullNameParts } from '../../utils/nameUtils';
@@ -198,7 +198,7 @@ const curvedText = ref(false);
 const outerRef = ref<HTMLElement | null>(null);
 const containerSize = ref(700);
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-fan');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-circle');
 
 // Scale SVG to fill container, then apply zoom on top
 const svgDisplaySize = computed(() => containerSize.value * zoom.value);
@@ -222,8 +222,8 @@ onUnmounted(() => {
 function incrGens() { if (selectedGens.value < 6) selectedGens.value++; }
 function decrGens() { if (selectedGens.value > 1) selectedGens.value--; }
 
-const layout = computed<FanSegment[]>(() =>
-  tree.value ? computeFanLayout(tree.value, selectedGens.value) : [],
+const layout = computed<CircleSegment[]>(() =>
+  tree.value ? computeCircleLayout(tree.value, selectedGens.value) : [],
 );
 
 const focalSegment = computed(() => layout.value.find(s => s.isFocal) ?? null);
@@ -267,13 +267,13 @@ const focalNameLines = computed((): string[] => {
   return lines;
 });
 
-// Y position for focal text lines, centered around FAN_CY.
+// Y position for focal text lines, centered around CIRCLE_CY.
 // We offset by how many date lines follow (1 if dates exist).
 function focalLineY(lineIndex: number, totalNameLines: number): number {
   const hasDates = !!focalDates.value;
   const totalLines = totalNameLines + (hasDates ? 1 : 0);
   const lineHeight = totalLines > 3 ? 10 : 12;
-  const startY = FAN_CY - ((totalLines - 1) / 2) * lineHeight;
+  const startY = CIRCLE_CY - ((totalLines - 1) / 2) * lineHeight;
   return startY + lineIndex * lineHeight;
 }
 
@@ -285,18 +285,18 @@ const focalDates = computed(() => {
   return '';
 });
 
-function givenLabel(seg: FanSegment): string {
+function givenLabel(seg: CircleSegment): string {
   if (!seg.person || seg.generation > 4) return '';
   return seg.person.preferredName ?? seg.person.givenName ?? '';
 }
 
-function surnameLabel(seg: FanSegment): string {
+function surnameLabel(seg: CircleSegment): string {
   if (!seg.person) return '';
   return seg.person.surname ?? seg.person.givenName ?? '';
 }
 
 // Full name on one line for curved text (gen 1-4), surname only for gen 5.
-function curvedLabel(seg: FanSegment): string {
+function curvedLabel(seg: CircleSegment): string {
   if (!seg.person) return '';
   const p = seg.person;
   if (seg.generation <= 4) {
@@ -308,7 +308,7 @@ function curvedLabel(seg: FanSegment): string {
 }
 
 // Lifespan: "BIRTH–DEATH", "BIRTH–", or "BIRTH".
-function lifespan(seg: FanSegment): string {
+function lifespan(seg: CircleSegment): string {
   const p = seg.person;
   if (!p) return '';
   if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
@@ -316,7 +316,7 @@ function lifespan(seg: FanSegment): string {
   return '';
 }
 
-function tooltipLabel(seg: FanSegment): string {
+function tooltipLabel(seg: CircleSegment): string {
   if (!seg.person) return '';
   const p = seg.person;
   const name = fullNameParts(p.givenName, p.surname, p.preferredName, p.nickname)
@@ -373,8 +373,8 @@ onMounted(load);
 }
 .chart-loading { color: #999; padding: 40px; text-align: center; }
 
-.fan-seg.clickable { cursor: pointer; }
-.fan-seg.clickable:hover path { opacity: 0.85; }
+.circle-seg.clickable { cursor: pointer; }
+.circle-seg.clickable:hover path { opacity: 0.85; }
 
 .zoom-controls {
   position: absolute;

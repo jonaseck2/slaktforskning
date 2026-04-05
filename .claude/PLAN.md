@@ -65,7 +65,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | Consistent name rendering: nickname + preferred_name propagated to all views, charts, reports | [archive](plans/archive/2026-04-05-consistent-name-rendering.md) |
 | v1.7.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
 | v1.8.0 | Navigation focus persistence: Pinia store, sidebar indicator, cross-view selected person, viz single-click | [archive](plans/archive/2026-04-05-nav-focus-persistence.md) |
-| v1.9.0 | Fan chart: full-circle 360° ancestor view, 6 generations, branch-based colors | [archive](plans/archive/2026-04-05-fan-chart.md) |
+| v1.9.0 | Circle chart: full-circle 360° ancestor view, 6 generations, branch-based colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
 
 ---
 

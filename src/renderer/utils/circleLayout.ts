@@ -1,10 +1,10 @@
-// Pure layout algorithm for the 360° fan chart. No DOM, no IPC.
+// Pure layout algorithm for the 360° circle chart. No DOM, no IPC.
 
 import type { PedigreeTree, PersonNode } from './chartLayout';
 
-export const FAN_CX = 350;
-export const FAN_CY = 350;
-export const FAN_SVG_SIZE = 700;
+export const CIRCLE_CX = 350;
+export const CIRCLE_CY = 350;
+export const CIRCLE_SVG_SIZE = 700;
 
 const RINGS: Array<{ rInner: number; rOuter: number }> = [
   { rInner: 0,   rOuter: 50  },
@@ -51,8 +51,8 @@ function toRad(deg: number): number { return (deg * Math.PI) / 180; }
 
 function arcXY(r: number, angleDeg: number): [number, number] {
   return [
-    FAN_CX + r * Math.cos(toRad(angleDeg)),
-    FAN_CY + r * Math.sin(toRad(angleDeg)),
+    CIRCLE_CX + r * Math.cos(toRad(angleDeg)),
+    CIRCLE_CY + r * Math.sin(toRad(angleDeg)),
   ];
 }
 
@@ -63,7 +63,7 @@ function buildPath(rInner: number, rOuter: number, startDeg: number, endDeg: num
   const [ox1, oy1] = arcXY(rOuter, startDeg);
   const [ox2, oy2] = arcXY(rOuter, endDeg);
   if (rInner === 0) {
-    return `M ${fmt(FAN_CX)},${fmt(FAN_CY)} L ${fmt(ox1)},${fmt(oy1)} A ${rOuter},${rOuter} 0 ${largeArc},1 ${fmt(ox2)},${fmt(oy2)} Z`;
+    return `M ${fmt(CIRCLE_CX)},${fmt(CIRCLE_CY)} L ${fmt(ox1)},${fmt(oy1)} A ${rOuter},${rOuter} 0 ${largeArc},1 ${fmt(ox2)},${fmt(oy2)} Z`;
   }
   const [ix1, iy1] = arcXY(rInner, startDeg);
   const [ix2, iy2] = arcXY(rInner, endDeg);
@@ -77,7 +77,7 @@ function buildPath(rInner: number, rOuter: number, startDeg: number, endDeg: num
   ].join(' ');
 }
 
-export interface FanSegment {
+export interface CircleSegment {
   ahnNum: number;
   generation: number;
   person: PersonNode | null;
@@ -95,8 +95,8 @@ export interface FanSegment {
   isFocal: boolean;
 }
 
-export function computeFanLayout(tree: PedigreeTree, maxGen = 6): FanSegment[] {
-  const segments: FanSegment[] = [];
+export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegment[] {
+  const segments: CircleSegment[] = [];
   const limit = Math.min(Math.max(maxGen, 1), 6);
 
   for (let gen = 0; gen <= limit; gen++) {

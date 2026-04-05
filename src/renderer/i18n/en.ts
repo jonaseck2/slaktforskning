@@ -323,7 +323,7 @@ export default {
   visualization: {
     tab: {
       pedigree: 'Pedigree',
-      fan: 'Fan Chart',
+      circle: 'Circle Chart',
       hourglass: 'Hourglass',
       timeline: 'Timeline',
     },
