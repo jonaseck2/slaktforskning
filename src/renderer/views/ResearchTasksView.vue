@@ -114,7 +114,7 @@
           </label>
           <label>
             {{ $t('persons.title') }}
-            <PersonPicker v-model="addForm.person_id" :placeholder="$t('researchTasks.title') + ' (valfri)'" />
+            <PersonPicker v-model="addForm.person_id" :placeholder="$t('researchTasks.selectPersonOptional')" />
           </label>
           <label>
             {{ $t('researchTasks.priority') }}

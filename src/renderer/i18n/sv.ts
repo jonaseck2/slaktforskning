@@ -431,6 +431,7 @@ export default {
     },
     filterAll: 'Alla',
     noTasks: 'Inga forskningstips',
+    selectPersonOptional: 'Välj person (valfri)',
   },
   importExport: {
     title: 'Import / Export',
