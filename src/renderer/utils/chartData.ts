@@ -172,32 +172,36 @@ export async function fetchAllAncestors(
     const { personId, ahnNum } = queue.shift()!;
     if (ancestors.has(ahnNum)) continue;
 
-    const [node, rawRels] = await Promise.all([
-      fetchPersonNode(personId),
-      window.api.relationships.getForPerson(personId) as Promise<RawRel[]>,
-    ]);
-    ancestors.set(ahnNum, node);
+    try {
+      const [node, rawRels] = await Promise.all([
+        fetchPersonNode(personId),
+        window.api.relationships.getForPerson(personId) as Promise<RawRel[]>,
+      ]);
+      ancestors.set(ahnNum, node);
 
-    let parentIds = rawRels
-      .filter(r => r.type === 'parent_child' && r.person2_id === personId)
-      .map(r => r.person1_id)
-      .filter((id): id is string => id !== null)
-      .slice(0, 2);
+      let parentIds = rawRels
+        .filter(r => r.type === 'parent_child' && r.person2_id === personId)
+        .map(r => r.person1_id)
+        .filter((id): id is string => id !== null)
+        .slice(0, 2);
 
-    // Sort parents: male (M) → even ahnentafel (father), female (F) → odd (mother).
-    if (parentIds.length === 2) {
-      const sexes = await Promise.all(
-        parentIds.map(pid =>
-          (window.api.persons.get(pid) as Promise<{ sex: string } | null>),
-        ),
-      );
-      if (sexes[0]?.sex === 'F' && sexes[1]?.sex !== 'F') {
-        parentIds = [parentIds[1], parentIds[0]];
+      // Sort parents: male (M) → even ahnentafel (father), female (F) → odd (mother).
+      if (parentIds.length === 2) {
+        const sexes = await Promise.all(
+          parentIds.map(pid =>
+            (window.api.persons.get(pid) as Promise<{ sex: string } | null>),
+          ),
+        );
+        if (sexes[0]?.sex === 'F' && sexes[1]?.sex !== 'F') {
+          parentIds = [parentIds[1], parentIds[0]];
+        }
       }
-    }
 
-    for (let i = 0; i < parentIds.length; i++) {
-      queue.push({ personId: parentIds[i], ahnNum: ahnNum * 2 + i });
+      for (let i = 0; i < parentIds.length; i++) {
+        queue.push({ personId: parentIds[i], ahnNum: ahnNum * 2 + i });
+      }
+    } catch {
+      // Skip missing or deleted ancestors; continue building the rest of the tree.
     }
   }
 
