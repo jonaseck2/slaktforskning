@@ -44,7 +44,10 @@ function checkBirthAfterDeath(db: Database): CheckResult[] {
     JOIN event_participants epd ON epd.person_id = p.id
     JOIN events d ON d.id = epd.event_id AND d.event_type = 'death'
       AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
-    WHERE b.date_value > d.date_value
+    WHERE SUBSTR(b.date_value, 1, 4) > SUBSTR(d.date_value, 1, 4)
+       OR (SUBSTR(b.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
+           AND LENGTH(b.date_value) >= 10 AND LENGTH(d.date_value) >= 10
+           AND b.date_value > d.date_value)
   `).all([]) as Array<{ person_id: string; birth_id: string; birth_date: string; death_id: string; death_date: string }>;
 
   return rows.map(r => ({
@@ -71,7 +74,10 @@ function checkEventAfterDeath(db: Database): CheckResult[] {
       AND e.event_type NOT IN ('death','burial','will','probate')
       AND e.date_type NOT IN ('unknown')
       AND e.date_value IS NOT NULL
-      AND e.date_value > d.date_value
+      AND (SUBSTR(e.date_value, 1, 4) > SUBSTR(d.date_value, 1, 4)
+           OR (SUBSTR(e.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
+               AND LENGTH(e.date_value) >= 10 AND LENGTH(d.date_value) >= 10
+               AND e.date_value > d.date_value))
   `).all([]) as Array<{ person_id: string; event_id: string; event_type: string; event_date: string; death_id: string; death_date: string }>;
 
   const eventTypeLabels: Record<string, string> = {
@@ -105,7 +111,10 @@ function checkBurialBeforeDeath(db: Database): CheckResult[] {
     JOIN event_participants epd ON epd.person_id = p.id
     JOIN events d ON d.id = epd.event_id AND d.event_type = 'death'
       AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
-    WHERE b.date_value < d.date_value
+    WHERE SUBSTR(b.date_value, 1, 4) < SUBSTR(d.date_value, 1, 4)
+       OR (SUBSTR(b.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
+           AND LENGTH(b.date_value) >= 10 AND LENGTH(d.date_value) >= 10
+           AND b.date_value < d.date_value)
   `).all([]) as Array<{ person_id: string; burial_id: string; burial_date: string; death_id: string; death_date: string }>;
 
   return rows.map(r => ({
@@ -657,7 +666,10 @@ function checkMarriageAfterDeath(db: Database): CheckResult[] {
       AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
     WHERE e.event_type = 'marriage'
       AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-      AND e.date_value > d.date_value
+      AND (SUBSTR(e.date_value, 1, 4) > SUBSTR(d.date_value, 1, 4)
+           OR (SUBSTR(e.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
+               AND LENGTH(e.date_value) >= 10 AND LENGTH(d.date_value) >= 10
+               AND e.date_value > d.date_value))
   `).all([]) as Array<{ marriage_id: string; marriage_date: string; person_id: string; death_id: string; death_date: string }>;
 
   return rows.map(r => ({
@@ -682,7 +694,10 @@ function checkMarriageBeforeBirth(db: Database): CheckResult[] {
       AND b.date_type IN ('exact','calculated') AND b.date_value IS NOT NULL
     WHERE e.event_type = 'marriage'
       AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-      AND e.date_value < b.date_value
+      AND (SUBSTR(e.date_value, 1, 4) < SUBSTR(b.date_value, 1, 4)
+           OR (SUBSTR(e.date_value, 1, 4) = SUBSTR(b.date_value, 1, 4)
+               AND LENGTH(e.date_value) >= 10 AND LENGTH(b.date_value) >= 10
+               AND e.date_value < b.date_value))
   `).all([]) as Array<{ marriage_id: string; marriage_date: string; person_id: string; birth_id: string; birth_date: string }>;
 
   return rows.map(r => ({

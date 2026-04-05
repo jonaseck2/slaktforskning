@@ -287,6 +287,9 @@ onMounted(load);
 </script>
 
 <style scoped>
+.clickable-row { cursor: pointer; }
+.clickable-row:hover td { background: #f0f4ff; }
+
 .research-tasks {
   max-width: 900px;
 }
