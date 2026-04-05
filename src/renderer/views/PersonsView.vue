@@ -6,39 +6,57 @@
         <button @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
       </div>
     </div>
-    <div v-if="persons.length === 0" class="empty">
+
+    <div v-if="persons.length === 0 && !loading" class="empty">
       {{ $t('persons.emptyState') }}
     </div>
-    <table v-else class="data-table">
-      <thead>
-        <tr>
-          <th>{{ $t('persons.givenName') }}</th>
-          <th>{{ $t('persons.surname') }}</th>
-          <th>{{ $t('persons.sex') }}</th>
-          <th>{{ $t('persons.living') }}</th>
-          <th>{{ $t('common.actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="person in persons"
-          :key="person.id"
-          class="clickable-row"
-          @click="goToDetail(person)"
-        >
-          <td>
-            <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name" :nickname="person.nickname" />
-            <CitationBadge :count="personCitationCounts[person.id] ?? 0" />
-          </td>
-          <td>{{ person.surname }}</td>
-          <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
-          <td>{{ person.living ? $t('common.yes') : $t('common.no') }}</td>
-          <td>
-            <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">{{ $t('common.delete') }}</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+    <template v-else>
+      <p class="count-label">
+        {{ $t('persons.showingOf', { shown: persons.length, total }) }}
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ $t('persons.givenName') }}</th>
+            <th>{{ $t('persons.surname') }}</th>
+            <th>{{ $t('persons.sex') }}</th>
+            <th>{{ $t('persons.birthDate') }}</th>
+            <th>{{ $t('persons.birthPlace') }}</th>
+            <th>{{ $t('persons.deathDate') }}</th>
+            <th>{{ $t('persons.deathPlace') }}</th>
+            <th>{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="person in persons"
+            :key="person.id"
+            class="clickable-row"
+            @click="goToDetail(person)"
+          >
+            <td>
+              <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
+            </td>
+            <td>{{ person.surname }}</td>
+            <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
+            <td>{{ person.birth_date ?? '' }}</td>
+            <td>{{ person.birth_place ?? '' }}</td>
+            <td>{{ person.death_date ?? '' }}</td>
+            <td>{{ person.death_place ?? '' }}</td>
+            <td>
+              <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">{{ $t('common.delete') }}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-if="persons.length < total" class="load-more">
+        <button :disabled="loading" @click="loadMore">
+          {{ loading ? $t('common.loading') : $t('persons.loadMore') }}
+        </button>
+      </div>
+    </template>
 
     <!-- Add Person Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
@@ -67,9 +85,6 @@
               </label>
             </div>
           </label>
-          <label class="checkbox-label">
-            <input v-model="form.living" type="checkbox" /> {{ $t('persons.living') }}
-          </label>
           <label>
             {{ $t('common.notes') }}
             <textarea v-model="form.notes" rows="2" />
@@ -88,7 +103,6 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import CitationBadge from '../components/CitationBadge.vue';
 import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
@@ -97,21 +111,27 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-interface PersonRow {
+interface PersonListItem {
   id: string;
+  sex: string;
   given_name: string;
   surname: string;
-  preferred_name: string | null;
-  nickname: string | null;
-  sex: string;
-  living: number;
+  birth_date: string | null;
+  birth_place: string | null;
+  death_date: string | null;
+  death_place: string | null;
 }
+
+const PAGE_SIZE = 100;
 
 const { t } = useI18n();
 const router = useRouter();
 const focusStore = useFocusStore();
-const persons = ref<PersonRow[]>([]);
-const personCitationCounts = ref<Record<string, number>>({});
+
+const persons = ref<PersonListItem[]>([]);
+const total = ref(0);
+const offset = ref(0);
+const loading = ref(false);
 const showAddForm = ref(false);
 
 function handleKeydown(e: KeyboardEvent) {
@@ -124,28 +144,36 @@ const form = reactive({
   given_name: '',
   surname: '',
   sex: 'U',
-  living: true,
   notes: '',
 });
 
-
 async function load() {
   if (!window.api) return;
+  loading.value = true;
   try {
-    persons.value = (await window.api.persons.list()) as PersonRow[];
-    const counts: Record<string, number> = {};
-    await Promise.all(
-      persons.value.map(async (p) => {
-        const events = (await window.api.events.forPerson(p.id)) as Array<{ id: string }>;
-        const citArrays = await Promise.all(
-          events.map(e => window.api.citations.forEvent(e.id) as Promise<unknown[]>),
-        );
-        counts[p.id] = citArrays.reduce((sum, arr) => sum + arr.length, 0);
-      }),
-    );
-    personCitationCounts.value = counts;
+    const result = await window.api.persons.listPage(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
+    persons.value = result.persons;
+    total.value = result.total;
+    offset.value = PAGE_SIZE;
   } catch (err) {
     console.error('[PersonsView] load failed:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadMore() {
+  if (!window.api || loading.value) return;
+  loading.value = true;
+  try {
+    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
+    persons.value = [...persons.value, ...result.persons];
+    total.value = result.total;
+    offset.value += PAGE_SIZE;
+  } catch (err) {
+    console.error('[PersonsView] loadMore failed:', err);
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -156,14 +184,12 @@ async function addPerson() {
       given_name: form.given_name,
       surname: form.surname,
       sex: form.sex,
-      living: form.living,
       notes: form.notes,
     });
     showAddForm.value = false;
     form.given_name = '';
     form.surname = '';
     form.sex = 'U';
-    form.living = true;
     form.notes = '';
     await load();
   } catch (err) {
@@ -182,8 +208,8 @@ async function removePerson(id: string) {
   }
 }
 
-function goToDetail(person: PersonRow) {
-  const name = fullNameParts(person.given_name ?? null, person.surname ?? null, person.preferred_name ?? null, person.nickname ?? null).map(p => p.text).join('');
+function goToDetail(person: PersonListItem) {
+  const name = fullNameParts(person.given_name ?? null, person.surname ?? null, null, null).map(p => p.text).join('');
   focusStore.set(person.id, name);
   router.push(`/persons/${person.id}`);
 }
@@ -196,12 +222,17 @@ onMounted(load);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 .header-actions {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+.count-label {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
 }
 .empty {
   color: #999;
@@ -235,17 +266,13 @@ onMounted(load);
   font-size: 12px;
   font-weight: 600;
 }
-.sex-M {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-.sex-F {
-  background: #fce7f3;
-  color: #be185d;
-}
-.sex-U {
-  background: #f3f4f6;
-  color: #6b7280;
+.sex-M { background: #dbeafe; color: #1d4ed8; }
+.sex-F { background: #fce7f3; color: #be185d; }
+.sex-U { background: #f3f4f6; color: #6b7280; }
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
 }
 button {
   background: #2c3e50;
@@ -255,22 +282,14 @@ button {
   border-radius: 4px;
   cursor: pointer;
 }
-button:hover {
-  opacity: 0.9;
-}
-.btn-sm {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-.btn-delete {
-  background: #fee;
-  color: #c0392b;
-}
-/* Modal */
+button:hover { opacity: 0.9; }
+button:disabled { opacity: 0.5; cursor: default; }
+.btn-sm { padding: 4px 8px; font-size: 12px; }
+.btn-delete { background: #fee; color: #c0392b; }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0,0,0,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -281,11 +300,9 @@ button:hover {
   border-radius: 8px;
   padding: 24px;
   width: 420px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
-.modal h3 {
-  margin: 0 0 16px;
-}
+.modal h3 { margin: 0 0 16px; }
 form {
   display: flex;
   flex-direction: column;
@@ -319,21 +336,11 @@ form textarea {
   gap: 4px;
   cursor: pointer;
 }
-.checkbox-label {
-  flex-direction: row !important;
-  align-items: center;
-  gap: 6px;
-  font-weight: normal;
-  cursor: pointer;
-}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
 }
-.btn-cancel {
-  background: #e0e0e0;
-  color: #333;
-}
+.btn-cancel { background: #e0e0e0; color: #333; }
 </style>
