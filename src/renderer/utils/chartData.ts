@@ -12,12 +12,6 @@ type RawName    = { given_name: string | null; surname: string | null; preferred
 type RawEvent   = { event_type: string; date_value: string | null };
 type RawRel     = { type: string; person1_id: string | null; person2_id: string | null };
 
-function extractYear(v: string | null | undefined): number | null {
-  if (!v) return null;
-  const m = v.match(/\d{4}/);
-  return m ? parseInt(m[0], 10) : null;
-}
-
 export async function fetchPersonNode(id: string): Promise<PersonNode> {
   const [person, names, events] = await Promise.all([
     window.api.persons.get(id),
@@ -37,8 +31,8 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
     nickname: primary.nickname ?? null,
     sex: person.sex as 'M' | 'F' | 'U',
     living: Boolean(person.living),
-    birthYear: extractYear(events.find(e => e.event_type === 'birth')?.date_value),
-    deathYear: extractYear(events.find(e => e.event_type === 'death')?.date_value),
+    birthDate: events.find(e => e.event_type === 'birth')?.date_value ?? null,
+    deathDate: events.find(e => e.event_type === 'death')?.date_value ?? null,
   };
 }
 

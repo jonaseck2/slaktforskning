@@ -11,7 +11,7 @@ import type { PersonNode, PedigreeTree, HourglassTree } from '../../src/renderer
 function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
   return {
     id, givenName: 'Test', surname: 'Person', preferredName: null,
-    sex: 'U', living: true, birthYear: null, deathYear: null,
+    sex: 'U', living: true, birthDate: null, deathDate: null,
     ...overrides,
   };
 }
@@ -338,26 +338,26 @@ describe('collapse — per-node descendant collapse', () => {
 describe('computeTimelineLayout', () => {
   it('returns one bar per entry', () => {
     const entries = [
-      { person: p('f', { birthYear: 1978 }), isFocal: true },
-      { person: p('x', { birthYear: 1950, deathYear: 2010 }), isFocal: false },
+      { person: p('f', { birthDate: '1978' }), isFocal: true },
+      { person: p('x', { birthDate: '1950', deathDate: '2010' }), isFocal: false },
     ];
     expect(computeTimelineLayout(entries, 2024).bars).toHaveLength(2);
   });
 
-  it('marks persons with no death year as open (living bar)', () => {
-    const entries = [{ person: p('f', { birthYear: 1978 }), isFocal: true }];
+  it('marks persons with no death date as open (living bar)', () => {
+    const entries = [{ person: p('f', { birthDate: '1978' }), isFocal: true }];
     expect(computeTimelineLayout(entries, 2024).bars[0].isOpen).toBe(true);
   });
 
-  it('marks persons with a death year as closed', () => {
-    const entries = [{ person: p('x', { birthYear: 1900, deathYear: 1980 }), isFocal: false }];
+  it('marks persons with a death date as closed', () => {
+    const entries = [{ person: p('x', { birthDate: '1900', deathDate: '1980' }), isFocal: false }];
     expect(computeTimelineLayout(entries, 2024).bars[0].isOpen).toBe(false);
   });
 
-  it('sorts oldest birth year to top (first in array)', () => {
+  it('sorts oldest birth date to top (first in array)', () => {
     const entries = [
-      { person: p('young', { birthYear: 1980 }), isFocal: false },
-      { person: p('old', { birthYear: 1920 }), isFocal: false },
+      { person: p('young', { birthDate: '1980' }), isFocal: false },
+      { person: p('old', { birthDate: '1920' }), isFocal: false },
     ];
     const { bars } = computeTimelineLayout(entries, 2024);
     expect(bars[0].person.id).toBe('old');
@@ -365,14 +365,14 @@ describe('computeTimelineLayout', () => {
   });
 
   it('generates decade tick marks', () => {
-    const entries = [{ person: p('f', { birthYear: 1950 }), isFocal: true }];
+    const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
     const { ticks } = computeTimelineLayout(entries, 2000);
     expect(ticks.length).toBeGreaterThan(0);
     ticks.forEach(t => expect(t.year % 10).toBe(0));
   });
 
   it('includes a todayX value', () => {
-    const entries = [{ person: p('f', { birthYear: 1950 }), isFocal: true }];
+    const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
     const { todayX } = computeTimelineLayout(entries, 2000);
     expect(todayX).toBeGreaterThan(0);
   });

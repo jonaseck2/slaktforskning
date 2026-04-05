@@ -9,8 +9,15 @@ export interface PersonNode {
   nickname: string | null;
   sex: 'M' | 'F' | 'U';
   living: boolean;
-  birthYear: number | null;
-  deathYear: number | null;
+  birthDate: string | null;  // ISO date string e.g. "1850-03-15" or partial "1850"
+  deathDate: string | null;
+}
+
+/** Extracts the 4-digit year from an ISO date string. Used for timeline positioning. */
+export function yearFromDate(d: string | null): number | null {
+  if (!d) return null;
+  const m = d.match(/\d{4}/);
+  return m ? parseInt(m[0], 10) : null;
 }
 
 export interface BoxLayout {
@@ -107,7 +114,7 @@ export interface TimelineEntry {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const BOX_W = 155;
-export const BOX_H = 44;
+export const BOX_H = 54;
 export const V_GAP = 20;   // vertical gap between sibling boxes (pedigree) / horizontal gap (hourglass)
 export const H_GAP = 50;   // horizontal gap between pedigree generations
 export const GEN_GAP = 60; // vertical gap between hourglass generations
@@ -648,7 +655,7 @@ const TL_AXIS_H = 30;
 
 export function computeTimelineLayout(entries: TimelineEntry[], currentYear: number): TimelineLayout {
   const years = entries
-    .flatMap(e => [e.person.birthYear, e.person.deathYear])
+    .flatMap(e => [yearFromDate(e.person.birthDate), yearFromDate(e.person.deathDate)])
     .filter((y): y is number => y !== null);
 
   let minYear: number;
@@ -668,8 +675,8 @@ export function computeTimelineLayout(entries: TimelineEntry[], currentYear: num
   maxYear = Math.ceil(maxYear / 10) * 10;
 
   const sorted = [...entries].sort((a, b) => {
-    const ay = a.person.birthYear ?? Infinity;
-    const by = b.person.birthYear ?? Infinity;
+    const ay = yearFromDate(a.person.birthDate) ?? Infinity;
+    const by = yearFromDate(b.person.birthDate) ?? Infinity;
     return ay - by;
   });
 
@@ -678,7 +685,8 @@ export function computeTimelineLayout(entries: TimelineEntry[], currentYear: num
   const xOfYear = (year: number) => TL_LEFT_MARGIN + (year - minYear) * scale;
 
   const bars: BarLayout[] = sorted.map((entry, i) => {
-    const { birthYear, deathYear } = entry.person;
+    const birthYear = yearFromDate(entry.person.birthDate);
+    const deathYear = yearFromDate(entry.person.deathDate);
     const isOpen = deathYear === null;
     const hasNoDate = birthYear === null;
     const startYear = birthYear ?? minYear;

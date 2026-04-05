@@ -79,6 +79,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.23.1: Remove 500-ancestor limit from Ancestor Book export | — |
 | Fix | v0.23.2: ReportsView full-width + auto-fit zoom with +/−/Fit controls | — |
 | Fix | v0.23.3: Circle chart gen 5-6 radial text — deeper rings, full name+dates visible | — |
+| Fix | v0.23.4: All charts: `* ISO` birth + `† ISO` death on separate lines; BOX_H 44→54; fix circle curved-mode gen 5-6 gone; fix circle scroll overflow | — |
 
 ---
 

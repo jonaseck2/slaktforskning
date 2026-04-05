@@ -83,10 +83,11 @@ export interface CircleSegment {
   ahnNum: number;
   generation: number;
   person: PersonNode | null;
-  pathD: string;          // empty string for focal (rendered as <circle>)
-  textPathGivenD: string; // arc for given-name line (line 1, offset outward/inward)
-  textPathD: string;      // arc at mid-radius for surname / single-line name
-  textPathDateD: string;  // arc further in/out for date line
+  pathD: string;           // empty string for focal (rendered as <circle>)
+  textPathGivenD: string;  // arc for given-name line (line 1, offset outward)
+  textPathD: string;       // arc at mid-radius for surname
+  textPathBirthD: string;  // arc for birth date line (★ ISO)
+  textPathDeathD: string;  // arc for death date line († ISO)
   fill: string;
   textX: number;
   textY: number;
@@ -159,19 +160,22 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
           : `M ${fmt(p2x)},${fmt(p2y)} A ${r},${r} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
       }
 
-      // Match straight-mode dy offsets: given=−9 outward, surname=+2 inward, dates=+13 inward.
-      // This keeps the text block centred at the same radial position in both modes.
-      const rGiven   = inUpperHalf ? rMid + 6  : rMid - 6;
-      const rSurname = inUpperHalf ? rMid - 5  : rMid + 5;
-      const rDate    = inUpperHalf ? rMid - 16 : rMid + 16;
+      // Arc radii for 4 text lines: given (outward), surname (mid), birth, death (inward).
+      // Mirrors the straight-mode dy offsets: given=−13, surname=−2, birth=+9, death=+20.
+      const rGiven  = inUpperHalf ? rMid + 8  : rMid - 8;
+      const rSurname = inUpperHalf ? rMid - 2  : rMid + 2;
+      const rBirth  = inUpperHalf ? rMid - 12 : rMid + 12;
+      const rDeath  = inUpperHalf ? rMid - 21 : rMid + 21;
 
       const textPathGivenD = isFocal ? '' : arcPath(rGiven);
       const textPathD      = isFocal ? '' : arcPath(rSurname);
-      const textPathDateD  = isFocal ? '' : arcPath(rDate);
+      const textPathBirthD = isFocal ? '' : arcPath(rBirth);
+      const textPathDeathD = isFocal ? '' : arcPath(rDeath);
 
       segments.push({
-        ahnNum, generation: gen, person, pathD, textPathGivenD, textPathD, textPathDateD, fill,
-        textX, textY, textAngle, textAngleRadial, midAngle: midDeg, sweepDeg,
+        ahnNum, generation: gen, person, pathD,
+        textPathGivenD, textPathD, textPathBirthD, textPathDeathD,
+        fill, textX, textY, textAngle, textAngleRadial, midAngle: midDeg, sweepDeg,
         isEmpty, isFocal,
       });
     }

@@ -5,7 +5,7 @@ import type { PedigreeTree, PersonNode } from '../../src/renderer/utils/chartLay
 function makeNode(id: string): PersonNode {
   return {
     id, givenName: 'Test', surname: 'Nilsson', preferredName: null,
-    nickname: null, sex: 'M', living: false, birthYear: 1900, deathYear: 1980,
+    nickname: null, sex: 'M', living: false, birthDate: '1900', deathDate: '1980',
   };
 }
 
