@@ -623,36 +623,53 @@ function withStatementCache(db: Database): { proxy: Database; finalize(): void }
  * On error the transaction is rolled back so no partial data is written.
  * Returns an ImportReport with counts of what was imported.
  */
+/** Prepare, run once, finalize immediately — avoids leaking WASM heap memory. */
+function runSql(db: Database, sql: string): void {
+  const stmt = db.prepare(sql);
+  try { stmt.run([]); } finally { (stmt as unknown as { finalize(): void }).finalize(); }
+}
+function queryOne<T>(db: Database, sql: string): T {
+  const stmt = db.prepare(sql);
+  try { return stmt.get([]) as T; }
+  finally { (stmt as unknown as { finalize(): void }).finalize(); }
+}
+function queryAll<T>(db: Database, sql: string): T[] {
+  const stmt = db.prepare(sql);
+  try { return stmt.all([]) as T[]; }
+  finally { (stmt as unknown as { finalize(): void }).finalize(); }
+}
+
 export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): ImportReport {
-  // Snapshot row counts before import
-  const personsBefore   = (db.prepare('SELECT COUNT(*) as n FROM persons').get([]) as { n: number }).n;
-  const familiesBefore  = (db.prepare("SELECT COUNT(*) as n FROM relationships WHERE type='couple'").get([]) as { n: number }).n;
-  const sourcesBefore   = (db.prepare('SELECT COUNT(*) as n FROM sources').get([]) as { n: number }).n;
-  const placesBefore    = (db.prepare('SELECT COUNT(*) as n FROM places').get([]) as { n: number }).n;
-  const citationsBefore = (db.prepare('SELECT COUNT(*) as n FROM citations').get([]) as { n: number }).n;
-  const evBeforeRows    = db.prepare('SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type').all([]) as { event_type: string; cnt: number }[];
+  // Snapshot row counts before import (each statement finalized immediately)
+  const personsBefore   = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons').n;
+  const familiesBefore  = queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'").n;
+  const sourcesBefore   = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources').n;
+  const placesBefore    = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places').n;
+  const citationsBefore = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM citations').n;
+  const evBeforeRows    = queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
   const evBefore        = new Map<string, number>(evBeforeRows.map(r => [r.event_type, r.cnt]));
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
-  db.prepare('BEGIN').run([]);
+  runSql(db, 'BEGIN');
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[] };
   try {
     partial = doImportGedcom(cachedDb, tree, options);
-    db.prepare('COMMIT').run([]);
+    runSql(db, 'COMMIT');
   } catch (err) {
-    db.prepare('ROLLBACK').run([]);
+    runSql(db, 'ROLLBACK');
     throw err;
   } finally {
     finalizeCache(); // free all compiled statements from the WASM heap
+    runSql(db, 'PRAGMA shrink_memory'); // release SQLite page cache back to WASM heap
   }
 
-  // Snapshot row counts after import
-  const personsAfter   = (db.prepare('SELECT COUNT(*) as n FROM persons').get([]) as { n: number }).n;
-  const familiesAfter  = (db.prepare("SELECT COUNT(*) as n FROM relationships WHERE type='couple'").get([]) as { n: number }).n;
-  const sourcesAfter   = (db.prepare('SELECT COUNT(*) as n FROM sources').get([]) as { n: number }).n;
-  const placesAfter    = (db.prepare('SELECT COUNT(*) as n FROM places').get([]) as { n: number }).n;
-  const citationsAfter = (db.prepare('SELECT COUNT(*) as n FROM citations').get([]) as { n: number }).n;
-  const evAfterRows    = db.prepare('SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type').all([]) as { event_type: string; cnt: number }[];
+  // Snapshot row counts after import (each statement finalized immediately)
+  const personsAfter   = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons').n;
+  const familiesAfter  = queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'").n;
+  const sourcesAfter   = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources').n;
+  const placesAfter    = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places').n;
+  const citationsAfter = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM citations').n;
+  const evAfterRows    = queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
 
   const events: Record<string, number> = {};
   for (const r of evAfterRows) {
