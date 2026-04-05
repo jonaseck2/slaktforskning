@@ -656,16 +656,12 @@ function handleAnchorClick(e: MouseEvent) {
 
 /* ── Title page ── */
 .ab-title-page {
-  min-height: 60mm;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px 0 32px;
-  border-bottom: 2px solid #ccc;
-  margin-bottom: 32px;
-  page-break-after: always;
+  padding: 24px 0 16px;
 }
 .ab-title {
   font-size: 28px;
