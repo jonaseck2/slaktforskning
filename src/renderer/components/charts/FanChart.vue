@@ -34,7 +34,8 @@
           >
             <text
               :x="seg.textX"
-              :y="seg.textY - (seg.generation <= 4 ? 5 : 0)"
+              :y="seg.textY"
+              :dy="seg.generation <= 4 ? '-5' : '0'"
               text-anchor="middle"
               dominant-baseline="central"
               :font-size="nameFontSize(seg.generation)"
@@ -46,7 +47,8 @@
             <text
               v-if="seg.generation <= 4 && birthYear(seg)"
               :x="seg.textX"
-              :y="seg.textY + 6"
+              :y="seg.textY"
+              dy="6"
               text-anchor="middle"
               dominant-baseline="central"
               :font-size="dateFontSize(seg.generation)"
@@ -150,7 +152,8 @@ function birthYear(seg: FanSegment): string {
 }
 
 function tooltipLabel(seg: FanSegment): string {
-  const p = seg.person!;
+  if (!seg.person) return '';
+  const p = seg.person;
   const name = fullNameParts(p.givenName, p.surname, p.preferredName, p.nickname)
     .map(pt => pt.text).join('');
   const dates = p.birthYear && p.deathYear
