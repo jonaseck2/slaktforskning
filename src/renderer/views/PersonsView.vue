@@ -133,8 +133,11 @@ async function load() {
     const counts: Record<string, number> = {};
     await Promise.all(
       persons.value.map(async (p) => {
-        const cits = (await window.api.citations.forPerson(p.id)) as unknown[];
-        counts[p.id] = cits.length;
+        const events = (await window.api.events.forPerson(p.id)) as Array<{ id: string }>;
+        const citArrays = await Promise.all(
+          events.map(e => window.api.citations.forEvent(e.id) as Promise<unknown[]>),
+        );
+        counts[p.id] = citArrays.reduce((sum, arr) => sum + arr.length, 0);
       }),
     );
     personCitationCounts.value = counts;
