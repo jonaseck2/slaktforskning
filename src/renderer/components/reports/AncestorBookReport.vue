@@ -1,5 +1,5 @@
 <template>
-  <div class="ancestor-book">
+  <div class="ancestor-book" @click.capture="handleAnchorClick">
     <div v-if="loading" class="ab-loading">Laddar stamtavla…</div>
     <div v-else-if="error" class="ab-error">{{ error }}</div>
     <template v-else-if="allData.length > 0">
@@ -612,6 +612,20 @@ async function load() {
 }
 
 watch(() => props.personId, load, { immediate: true });
+
+// Intercept anchor clicks in preview — scroll to target instead of letting the
+// hash router navigate away. In print context there are no click events so
+// the real href="#person-{id}" links remain intact for PDF bookmarks.
+function handleAnchorClick(e: MouseEvent) {
+  const anchor = (e.target as Element).closest('a[href^="#"]');
+  if (!anchor) return;
+  const href = anchor.getAttribute('href');
+  if (!href) return;
+  const target = document.querySelector(href);
+  if (!target) return;
+  e.preventDefault();
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 
 <style scoped>
