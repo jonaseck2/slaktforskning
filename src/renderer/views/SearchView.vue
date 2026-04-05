@@ -34,7 +34,7 @@
               v-for="p in persons"
               :key="p.id"
               class="clickable-row"
-              @click="router.push(`/persons/${p.id}`)"
+              @click="goToPerson(p)"
             >
               <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" /></td>
               <td>{{ p.sex }}</td>
@@ -104,6 +104,8 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
+import { useFocusStore } from '../stores/focus';
+import { fullNameParts } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -142,6 +144,7 @@ interface SourceResult {
 useI18n();
 const route = useRoute();
 const router = useRouter();
+const focusStore = useFocusStore();
 
 const inputQuery = ref('');
 const displayedQuery = ref('');
@@ -151,6 +154,12 @@ const relationships = ref<RelationshipResult[]>([]);
 const sources = ref<SourceResult[]>([]);
 
 const totalResults = computed(() => persons.value.length + relationships.value.length + sources.value.length);
+
+function goToPerson(p: PersonResult) {
+  const name = fullNameParts(p.given_name ?? null, p.surname ?? null, p.preferred_name ?? null, p.nickname ?? null).map(pt => pt.text).join('');
+  focusStore.set(p.id, name);
+  router.push(`/persons/${p.id}`);
+}
 
 async function runSearch() {
   const q = inputQuery.value.trim();
