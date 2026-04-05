@@ -53,6 +53,7 @@
       <table v-else class="data-table">
         <thead>
           <tr>
+            <th>{{ $t('sourceDetail.entity') }}</th>
             <th>{{ $t('sourceDetail.page') }}</th>
             <th>{{ $t('sourceDetail.confidence') }}</th>
             <th>{{ $t('sourceDetail.transcription') }}</th>
@@ -61,6 +62,11 @@
         </thead>
         <tbody>
           <tr v-for="cit in citations" :key="cit.id">
+            <td>
+              <a v-if="cit.entityRoute" class="entity-link" @click.prevent="router.push(cit.entityRoute)" href="#">{{ cit.entityLabel }}</a>
+              <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
+              <span v-else class="muted">—</span>
+            </td>
             <td>{{ cit.page || '—' }}</td>
             <td>
               <span :class="'confidence-badge confidence-' + cit.confidence">
@@ -95,7 +101,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
@@ -122,10 +128,18 @@ interface CitationRow {
   transcription: string;
   notes: string;
   date_accessed: string;
+  event_id: string | null;
+  person_id: string | null;
+  relationship_id: string | null;
+  place_id: string | null;
+  // resolved after load
+  entityLabel?: string;
+  entityRoute?: string;
 }
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const sourceId = route.params.id as string;
 
 const source = ref<SourceData | null>(null);
@@ -141,6 +155,41 @@ const editFields = reactive({
   repository: '',
   url: '',
 });
+
+async function resolveEntityLabel(cit: CitationRow): Promise<{ label: string; route: string } | null> {
+  try {
+    if (cit.event_id) {
+      const ev = await window.api.events.get(cit.event_id) as { event_type: string; date_value: string | null } | null;
+      if (!ev) return null;
+      const eventLabel = t('eventTypes.' + ev.event_type);
+      const dateStr = ev.date_value ? ` (${ev.date_value})` : '';
+      // Find primary participant to name the event
+      const participants = await window.api.eventParticipants.getForEvent(cit.event_id) as Array<{ person_id: string; role: string }>;
+      const primary = participants.find(p => p.role === 'primary') ?? participants[0];
+      if (primary) {
+        const names = await window.api.persons.getNames(primary.person_id) as Array<{ given_name: string; surname: string; sort_order: number }>;
+        const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+        const personName = sorted ? [sorted.given_name, sorted.surname].filter(Boolean).join(' ') : '?';
+        return { label: `${personName} – ${eventLabel}${dateStr}`, route: `/persons/${primary.person_id}` };
+      }
+      return { label: `${eventLabel}${dateStr}`, route: '' };
+    }
+    if (cit.person_id) {
+      const names = await window.api.persons.getNames(cit.person_id) as Array<{ given_name: string; surname: string; sort_order: number }>;
+      const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+      const personName = sorted ? [sorted.given_name, sorted.surname].filter(Boolean).join(' ') : '?';
+      return { label: personName, route: `/persons/${cit.person_id}` };
+    }
+    if (cit.relationship_id) {
+      return { label: t('nav.relationships'), route: `/relationships/${cit.relationship_id}` };
+    }
+    if (cit.place_id) {
+      const place = await window.api.places.get(cit.place_id) as { name: string } | null;
+      return place ? { label: place.name, route: `/places/${cit.place_id}` } : null;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
 
 function truncate(text: string, max: number): string {
   if (!text) return '—';
@@ -160,7 +209,16 @@ async function load() {
     editFields.repository = source.value.repository;
     editFields.url = source.value.url;
 
-    citations.value = (await window.api.citations.forSource(sourceId)) as CitationRow[];
+    const rawCits = (await window.api.citations.forSource(sourceId)) as CitationRow[];
+    citations.value = rawCits;
+    // Resolve entity labels in parallel
+    await Promise.all(rawCits.map(async (cit) => {
+      const resolved = await resolveEntityLabel(cit);
+      if (resolved) {
+        cit.entityLabel = resolved.label;
+        cit.entityRoute = resolved.route;
+      }
+    }));
   } catch (err) {
     console.error('[SourceDetailView] load failed:', err);
   }
@@ -285,6 +343,12 @@ onMounted(load);
   font-size: 12px;
   color: #666;
 }
+.entity-link {
+  color: #1565c0;
+  text-decoration: none;
+  cursor: pointer;
+}
+.entity-link:hover { text-decoration: underline; }
 .transcription-cell {
   color: #555;
   font-style: italic;

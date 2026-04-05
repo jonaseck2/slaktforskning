@@ -110,6 +110,7 @@ export default {
     citations: 'Hänvisningar',
     addCitation: '+ Lägg till hänvisning',
     noCitations: 'Inga hänvisningar ännu.',
+    entity: 'Kopplad till',
     page: 'Sida',
     confidence: 'Tillförlitlighet',
     transcription: 'Transkription',

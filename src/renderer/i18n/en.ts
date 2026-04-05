@@ -110,6 +110,7 @@ export default {
     citations: 'Citations',
     addCitation: '+ Add Citation',
     noCitations: 'No citations yet.',
+    entity: 'Linked to',
     page: 'Page',
     confidence: 'Confidence',
     transcription: 'Transcription',
