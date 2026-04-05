@@ -4,8 +4,6 @@
       <button class="btn-back" @click="$router.push('/places')">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
-      <CitationBadge :count="placeCitationCount" />
-      <button type="button" class="btn-cite-header" @click="showCiteForm = true">{{ $t('places.citeSources') }}</button>
     </div>
 
     <section class="detail-section">
@@ -70,12 +68,6 @@
         </li>
       </ul>
     </section>
-    <CitationForm
-      v-if="showCiteForm"
-      :place-id="place.id"
-      @close="showCiteForm = false"
-      @saved="showCiteForm = false; load()"
-    />
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
@@ -85,8 +77,6 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
-import CitationBadge from '../components/CitationBadge.vue';
-import CitationForm from '../components/CitationForm.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -110,9 +100,6 @@ const editStreet = ref('');
 const editPostalCode = ref('');
 const editCity = ref('');
 const editCountry = ref('');
-const placeCitationCount = ref(0);
-const showCiteForm = ref(false);
-
 async function load() {
   place.value = (await window.api.places.get(placeId)) as PlaceRow | null;
   if (!place.value) return;
@@ -128,8 +115,6 @@ async function load() {
   editCountry.value = place.value.country ?? '';
   const all = (await window.api.places.list()) as PlaceRow[];
   children.value = all.filter(p => p.parent_place_id === placeId);
-  const placeCits = (await window.api.citations.forPlace(placeId)) as unknown[];
-  placeCitationCount.value = placeCits.length;
 }
 
 async function save(data: Record<string, unknown>) {

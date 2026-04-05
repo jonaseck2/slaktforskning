@@ -18,8 +18,6 @@
       <div class="header-info">
         <h2>{{ primaryName }}</h2>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
-        <CitationBadge :count="personCitationCount" />
-        <button type="button" class="btn-cite-header" @click="showCitePersonForm = true">{{ $t('personDetail.citePersonTitle') }}</button>
         <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
       </div>
       <div v-if="evidenceTotal > 0" class="evidence-summary">
@@ -207,13 +205,6 @@
       </div>
     </section>
 
-    <CitationForm
-      v-if="showCitePersonForm"
-      :person-id="person.id"
-      @close="showCitePersonForm = false"
-      @saved="showCitePersonForm = false; load()"
-    />
-
     <AddRelatedPersonModal
       v-if="showAddRelated"
       :person-id="person.id"
@@ -345,8 +336,6 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
-import CitationForm from '../components/CitationForm.vue';
-import CitationBadge from '../components/CitationBadge.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonName from '../components/PersonName.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
@@ -409,8 +398,6 @@ const notesText = ref('');
 const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingNameId = ref<string | null>(null);
-const showCitePersonForm = ref(false);
-const personCitationCount = ref(0);
 const showAddRelated = ref(false);
 const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
 const editSex = ref('U');
@@ -462,7 +449,6 @@ function handleKeydown(e: KeyboardEvent) {
     showNameForm.value = false;
     showEditNameForm.value = false;
     showAddIdentifier.value = false;
-    showCitePersonForm.value = false;
   }
 }
 onMounted(() => window.addEventListener('keydown', handleKeydown));
@@ -520,10 +506,6 @@ async function load() {
       });
     }
     rels.value = enriched;
-
-    // Person-level citation count
-    const personCits = (await window.api.citations.forPerson(personId)) as unknown[];
-    personCitationCount.value = personCits.length;
 
     // Evidence summary
     const evs = (await window.api.events.forPerson(personId)) as Array<{ id: string }>;
