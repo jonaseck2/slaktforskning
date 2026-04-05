@@ -146,6 +146,7 @@ export default {
   },
   citations: {
     addTitle: 'Lägg till hänvisning',
+    editTitle: 'Redigera hänvisning',
     source: 'Källa',
     selectSource: 'Välj en källa\u2026',
     pageLocation: 'Sida / Plats',
