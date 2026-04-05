@@ -7,13 +7,13 @@ export const FAN_CY = 350;
 export const FAN_SVG_SIZE = 700;
 
 const RINGS: Array<{ rInner: number; rOuter: number }> = [
-  { rInner: 0,   rOuter: 32  },
-  { rInner: 32,  rOuter: 85  },
-  { rInner: 85,  rOuter: 145 },
-  { rInner: 145, rOuter: 205 },
-  { rInner: 205, rOuter: 255 },
-  { rInner: 255, rOuter: 300 },
-  { rInner: 300, rOuter: 338 },
+  { rInner: 0,   rOuter: 50  },
+  { rInner: 50,  rOuter: 105 },
+  { rInner: 105, rOuter: 165 },
+  { rInner: 165, rOuter: 220 },
+  { rInner: 220, rOuter: 268 },
+  { rInner: 268, rOuter: 310 },
+  { rInner: 310, rOuter: 344 },
 ];
 
 const BRANCH_BASE: readonly string[] = [
@@ -92,10 +92,11 @@ export interface FanSegment {
   isFocal: boolean;
 }
 
-export function computeFanLayout(tree: PedigreeTree): FanSegment[] {
+export function computeFanLayout(tree: PedigreeTree, maxGen = 6): FanSegment[] {
   const segments: FanSegment[] = [];
+  const limit = Math.min(Math.max(maxGen, 1), 6);
 
-  for (let gen = 0; gen <= 6; gen++) {
+  for (let gen = 0; gen <= limit; gen++) {
     const count = Math.pow(2, gen);
     const firstAhn = Math.pow(2, gen);
     const sweepDeg = 360 / count;
@@ -117,9 +118,11 @@ export function computeFanLayout(tree: PedigreeTree): FanSegment[] {
       const rMid = (rInner + rOuter) / 2;
       const [textX, textY] = arcXY(rMid, midDeg);
 
-      const normMid = ((midDeg % 360) + 360) % 360;
-      const flip = normMid > 90 && normMid <= 270;
-      const textAngle = midDeg + (flip ? 180 : 0);
+      // Tangential text (perpendicular to radius = runs along the arc)
+      const tangentialBase = midDeg + 90;
+      const normT = ((tangentialBase % 360) + 360) % 360;
+      const flip = normT > 90 && normT <= 270;
+      const textAngle = tangentialBase + (flip ? 180 : 0);
 
       segments.push({
         ahnNum, generation: gen, person, pathD, fill,
