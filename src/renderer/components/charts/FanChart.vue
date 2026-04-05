@@ -12,18 +12,9 @@
       >
         <!-- Curved text paths in defs (only when curvedText is on) -->
         <defs v-if="curvedText">
-          <path
-            v-for="seg in nonFocalSegments"
-            :key="`tp-${seg.ahnNum}`"
-            :id="`tp-${seg.ahnNum}`"
-            :d="seg.textPathD"
-          />
-          <path
-            v-for="seg in nonFocalSegments"
-            :key="`tpd-${seg.ahnNum}`"
-            :id="`tpd-${seg.ahnNum}`"
-            :d="seg.textPathDateD"
-          />
+          <path v-for="seg in nonFocalSegments" :key="`tpg-${seg.ahnNum}`" :id="`tpg-${seg.ahnNum}`" :d="seg.textPathGivenD" />
+          <path v-for="seg in nonFocalSegments" :key="`tp-${seg.ahnNum}`"  :id="`tp-${seg.ahnNum}`"  :d="seg.textPathD" />
+          <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDateD" />
         </defs>
 
         <!-- Non-focal segments -->
@@ -43,8 +34,21 @@
           <!-- Hover tooltip via native SVG title (works in Electron WebView) -->
           <title v-if="seg.person">{{ tooltipLabel(seg) }}</title>
 
-          <!-- Curved text mode: name + date each following their own arc -->
+          <!-- Curved text mode: given name + surname + date each on their own arc -->
           <template v-if="curvedText && seg.person && seg.generation <= 5">
+            <!-- Given name arc (gen 1-4 only) -->
+            <text
+              v-if="seg.generation <= 4 && givenLabel(seg)"
+              text-anchor="middle"
+              :font-size="nameFontSize(seg.generation)"
+              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              font-weight="600"
+              fill="white"
+              style="pointer-events: none; user-select: none;"
+            >
+              <textPath :href="`#tpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
+            </text>
+            <!-- Surname arc -->
             <text
               text-anchor="middle"
               :font-size="nameFontSize(seg.generation)"
@@ -53,8 +57,9 @@
               fill="white"
               style="pointer-events: none; user-select: none;"
             >
-              <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ curvedLabel(seg) }}</textPath>
+              <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
             </text>
+            <!-- Date arc (gen 1-4 only) -->
             <text
               v-if="seg.generation <= 4 && lifespan(seg)"
               text-anchor="middle"
