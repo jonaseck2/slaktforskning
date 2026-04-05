@@ -4,11 +4,6 @@
     <div v-else-if="error" class="ab-error">{{ error }}</div>
     <template v-else-if="allData.length > 0">
 
-      <!-- Limit warning (shown in preview, hidden at print) -->
-      <div v-if="limitReached" class="ab-limit-warning">
-        Mer än 500 förfäder hittades — exporten visar de 500 närmaste.
-      </div>
-
       <!-- 1. Title page -->
       <section class="ab-title-page">
         <h1 class="ab-title">{{ focalDisplayName }}</h1>
@@ -294,7 +289,6 @@ const props = defineProps<{ personId: string }>();
 // ── State ──────────────────────────────────────────────────────────────────────
 const loading = ref(false);
 const error = ref<string | null>(null);
-const limitReached = ref(false);
 const allData = ref<AncestorEntry[]>([]);
 const segments = ref<CircleSegment[]>([]);
 const exportDate = new Date().toLocaleDateString('sv-SE');
@@ -572,8 +566,6 @@ async function load() {
   error.value = null;
   allData.value = [];
   segments.value = [];
-  limitReached.value = false;
-
   try {
     // Fetch BFS ancestor tree + 6-gen pedigree tree for SVG in parallel
     const [ancestorResult, pedigreeTree] = await Promise.all([
@@ -581,7 +573,6 @@ async function load() {
       fetchPedigreeTree(props.personId, 6),
     ]);
 
-    limitReached.value = ancestorResult.limitReached;
     const { ancestors } = ancestorResult;
 
     // Build ancestor ID set (used for link eligibility)
@@ -648,15 +639,6 @@ function handleAnchorClick(e: MouseEvent) {
   padding: 16px 0;
 }
 .ab-error { color: #c00; }
-
-.ab-limit-warning {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
 
 /* ── Title page ── */
 .ab-title-page {
@@ -816,7 +798,6 @@ function handleAnchorClick(e: MouseEvent) {
 
 /* ── Print overrides ── */
 @media print {
-  .ab-limit-warning { display: none; }
   .ab-person-summary { break-inside: avoid; }
   .ab-gen-group { break-inside: avoid; }
   .ab-table { font-size: 10px; }

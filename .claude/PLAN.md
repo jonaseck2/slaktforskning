@@ -76,6 +76,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.22.3 | PersonsView infinite scroll + RelationshipsView N+1 IPC fix (paginated JOIN query) | — |
 | Fix | v0.22.4: PersonsView UI lockup — correlated subqueries + idx_events_event_type + idx_person_names_person_sort | [archive](plans/archive/fix-personsview-lockup.md) |
 | v0.23.0 | QualityView: standard table layout, caching (Pinia store), background refresh, ignore/unignore per check, person names column | — |
+| Fix | v0.23.1: Remove 500-ancestor limit from Ancestor Book export | — |
 
 ---
 

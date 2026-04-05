@@ -161,14 +161,13 @@ export async function fetchTimelineEntries(focalId: string): Promise<TimelineEnt
  */
 export async function fetchAllAncestors(
   focalId: string,
-  limit = 500,
 ): Promise<{ ancestors: Map<number, PersonNode>; limitReached: boolean }> {
   const ancestors = new Map<number, PersonNode>();
   const queue: Array<{ personId: string; ahnNum: number }> = [
     { personId: focalId, ahnNum: 1 },
   ];
 
-  while (queue.length > 0 && ancestors.size < limit) {
+  while (queue.length > 0) {
     const { personId, ahnNum } = queue.shift()!;
     if (ancestors.has(ahnNum)) continue;
 
@@ -205,5 +204,5 @@ export async function fetchAllAncestors(
     }
   }
 
-  return { ancestors, limitReached: ancestors.size >= limit };
+  return { ancestors, limitReached: false };
 }
