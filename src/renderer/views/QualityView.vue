@@ -2,9 +2,6 @@
   <div class="quality-view">
     <div class="view-header">
       <h2>{{ $t('quality.title') }}</h2>
-      <button @click="runChecks" :disabled="loading" class="btn-run">
-        {{ loading ? $t('common.loading') : $t('quality.runChecks') }}
-      </button>
     </div>
 
     <div v-if="!hasRun" class="empty-hint">{{ $t('quality.notRun') }}</div>
@@ -50,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 declare const window: Window & {
@@ -93,6 +90,8 @@ const filteredResults = computed(() => {
   return sorted.filter(r => r.severity === activeFilter.value);
 });
 
+onMounted(() => { runChecks(); });
+
 async function runChecks() {
   if (!window.api) return;
   loading.value = true;
@@ -111,11 +110,6 @@ async function runChecks() {
 .quality-view { max-width: 900px; }
 .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .view-header h2 { margin: 0; }
-.btn-run {
-  background: #2c3e50; color: white; border: none;
-  padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;
-}
-.btn-run:disabled { opacity: 0.6; cursor: default; }
 .summary-bar {
   font-size: 14px; color: #555; margin-bottom: 12px;
   padding: 8px 12px; background: #f8f8f8; border-radius: 4px;
