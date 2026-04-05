@@ -69,6 +69,7 @@
             </td>
             <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
             <td>
+              <button class="btn-sm btn-edit" @click="editingCitation = cit">{{ $t('common.edit') }}</button>
               <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">{{ $t('common.delete') }}</button>
             </td>
           </tr>
@@ -82,6 +83,12 @@
       @close="showCitationForm = false"
       @saved="onCitationSaved"
     />
+    <CitationEditModal
+      v-if="editingCitation"
+      :citation="editingCitation"
+      @close="editingCitation = null"
+      @saved="editingCitation = null; load()"
+    />
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
@@ -91,6 +98,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationForm from '../components/CitationForm.vue';
+import CitationEditModal from '../components/CitationEditModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -123,6 +131,7 @@ const sourceId = route.params.id as string;
 const source = ref<SourceData | null>(null);
 const citations = ref<CitationRow[]>([]);
 const showCitationForm = ref(false);
+const editingCitation = ref<CitationRow | null>(null);
 
 const editFields = reactive({
   title: '',
@@ -301,6 +310,11 @@ onMounted(load);
 .btn-delete {
   background: #fee;
   color: #c0392b;
+}
+.btn-edit {
+  background: #e8f4fd;
+  color: #1565c0;
+  margin-right: 4px;
 }
 .empty {
   color: #999;

@@ -146,6 +146,7 @@ export default {
   },
   citations: {
     addTitle: 'Add Citation',
+    editTitle: 'Edit citation',
     source: 'Source',
     selectSource: 'Select a source\u2026',
     pageLocation: 'Page / Location',
