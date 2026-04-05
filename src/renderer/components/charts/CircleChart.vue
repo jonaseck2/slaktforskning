@@ -10,11 +10,12 @@
         :viewBox="`0 0 ${CIRCLE_SVG_SIZE} ${CIRCLE_SVG_SIZE}`"
         data-testid="circle-svg"
       >
-        <!-- Curved text paths in defs (only when curvedText is on) -->
+        <!-- Curved text paths in defs (only for gen 1-4 when curvedText is on) -->
         <defs v-if="curvedText">
           <path v-for="seg in nonFocalSegments" :key="`tpg-${seg.ahnNum}`" :id="`tpg-${seg.ahnNum}`" :d="seg.textPathGivenD" />
           <path v-for="seg in nonFocalSegments" :key="`tp-${seg.ahnNum}`"  :id="`tp-${seg.ahnNum}`"  :d="seg.textPathD" />
-          <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDateD" />
+          <path v-for="seg in nonFocalSegments" :key="`tpb-${seg.ahnNum}`" :id="`tpb-${seg.ahnNum}`" :d="seg.textPathBirthD" />
+          <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDeathD" />
         </defs>
 
         <!-- Non-focal segments -->
@@ -34,11 +35,11 @@
           <!-- Hover tooltip via native SVG title (works in Electron WebView) -->
           <title v-if="seg.person">{{ tooltipLabel(seg) }}</title>
 
-          <!-- Curved text mode: given name + surname + date each on their own arc -->
-          <template v-if="curvedText && seg.person && seg.generation <= 5">
-            <!-- Given name arc (gen 1-4 only) -->
+          <!-- Curved text mode (gen 1-4): given + surname + birth + death on separate arcs -->
+          <template v-if="curvedText && seg.person && seg.generation <= 4">
+            <!-- Given name arc -->
             <text
-              v-if="seg.generation <= 4 && givenLabel(seg)"
+              v-if="givenLabel(seg)"
               text-anchor="middle"
               :font-size="nameFontSize(seg.generation)"
               font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -59,104 +60,114 @@
             >
               <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
             </text>
-            <!-- Date arc (gen 1-4 only) -->
+            <!-- Birth arc -->
             <text
-              v-if="seg.generation <= 4 && lifespan(seg)"
+              v-if="birthLabel(seg)"
               text-anchor="middle"
               :font-size="dateFontSize(seg.generation)"
               font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
               fill="rgba(255,255,255,0.75)"
               style="pointer-events: none; user-select: none;"
             >
-              <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ lifespan(seg) }}</textPath>
+              <textPath :href="`#tpb-${seg.ahnNum}`" startOffset="50%">{{ birthLabel(seg) }}</textPath>
+            </text>
+            <!-- Death arc -->
+            <text
+              v-if="deathLabel(seg)"
+              text-anchor="middle"
+              :font-size="dateFontSize(seg.generation)"
+              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              fill="rgba(255,255,255,0.75)"
+              style="pointer-events: none; user-select: none;"
+            >
+              <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ deathLabel(seg) }}</textPath>
             </text>
           </template>
 
-          <!-- Straight tangential text (gen 1-4): given + surname + dates, stacked radially -->
-          <template v-else-if="!curvedText && seg.person && seg.generation <= 4">
+          <!-- Straight tangential text (gen 1-4) OR curved mode gen 5-6 fallback -->
+          <template v-else-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
             <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
               <text
                 v-if="givenLabel(seg)"
-                :x="seg.textX"
-                :y="seg.textY"
-                :dy="lifespan(seg) ? '-9' : '-5'"
-                text-anchor="middle"
-                dominant-baseline="central"
+                :x="seg.textX" :y="seg.textY"
+                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-13' : '-5'"
+                text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                font-weight="600"
-                fill="white"
+                font-weight="600" fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ givenLabel(seg) }}</text>
               <text
-                :x="seg.textX"
-                :y="seg.textY"
-                :dy="lifespan(seg) ? '2' : '5'"
-                text-anchor="middle"
-                dominant-baseline="central"
+                :x="seg.textX" :y="seg.textY"
+                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-2' : '5') : '0'"
+                text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                font-weight="600"
-                fill="white"
+                font-weight="600" fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ surnameLabel(seg) }}</text>
               <text
-                v-if="lifespan(seg)"
-                :x="seg.textX"
-                :y="seg.textY"
-                dy="13"
-                text-anchor="middle"
-                dominant-baseline="central"
+                v-if="birthLabel(seg)"
+                :x="seg.textX" :y="seg.textY" dy="9"
+                text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
                 fill="rgba(255,255,255,0.75)"
                 style="pointer-events: none; user-select: none;"
-              >{{ lifespan(seg) }}</text>
+              >{{ birthLabel(seg) }}</text>
+              <text
+                v-if="deathLabel(seg)"
+                :x="seg.textX" :y="seg.textY" dy="20"
+                text-anchor="middle" dominant-baseline="central"
+                :font-size="dateFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                fill="rgba(255,255,255,0.75)"
+                style="pointer-events: none; user-select: none;"
+              >{{ deathLabel(seg) }}</text>
             </g>
           </template>
 
-          <!-- Straight radial text (gen 5-6): text rotated 90° so it reads outward from center.
-               dy offsets now shift tangentially (stacking lines along the arc width).
-               The deeper ring (68-58px) gives enough radial space for full name + dates. -->
-          <template v-else-if="!curvedText && seg.person && seg.generation >= 5">
+          <!-- Radial text (gen 5-6, always — curved text not practical at these widths).
+               dy offsets shift tangentially (stacking lines along the arc width). -->
+          <template v-else-if="seg.person && seg.generation >= 5">
             <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
               <text
                 v-if="givenLabel(seg)"
-                :x="seg.textX"
-                :y="seg.textY"
-                :dy="lifespan(seg) ? '-9' : '-5'"
-                text-anchor="middle"
-                dominant-baseline="central"
+                :x="seg.textX" :y="seg.textY"
+                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-13' : '-5'"
+                text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                font-weight="600"
-                fill="white"
+                font-weight="600" fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ givenLabel(seg) }}</text>
               <text
-                :x="seg.textX"
-                :y="seg.textY"
-                :dy="givenLabel(seg) ? (lifespan(seg) ? '2' : '5') : '0'"
-                text-anchor="middle"
-                dominant-baseline="central"
+                :x="seg.textX" :y="seg.textY"
+                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-2' : '5') : '0'"
+                text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                font-weight="600"
-                fill="white"
+                font-weight="600" fill="white"
                 style="pointer-events: none; user-select: none;"
               >{{ surnameLabel(seg) }}</text>
               <text
-                v-if="lifespan(seg)"
-                :x="seg.textX"
-                :y="seg.textY"
-                dy="13"
-                text-anchor="middle"
-                dominant-baseline="central"
+                v-if="birthLabel(seg)"
+                :x="seg.textX" :y="seg.textY" dy="9"
+                text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
                 fill="rgba(255,255,255,0.75)"
                 style="pointer-events: none; user-select: none;"
-              >{{ lifespan(seg) }}</text>
+              >{{ birthLabel(seg) }}</text>
+              <text
+                v-if="deathLabel(seg)"
+                :x="seg.textX" :y="seg.textY" dy="20"
+                text-anchor="middle" dominant-baseline="central"
+                :font-size="dateFontSize(seg.generation)"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                fill="rgba(255,255,255,0.75)"
+                style="pointer-events: none; user-select: none;"
+              >{{ deathLabel(seg) }}</text>
             </g>
           </template>
         </g>
@@ -181,9 +192,9 @@
           fill="white"
           style="pointer-events: none; user-select: none;"
         >{{ line }}</text>
-        <!-- Focal dates -->
+        <!-- Focal birth -->
         <text
-          v-if="focalSegment?.person && focalDates"
+          v-if="focalSegment?.person?.birthDate"
           :x="CIRCLE_CX"
           :y="focalLineY(focalNameLines.length, focalNameLines.length)"
           text-anchor="middle"
@@ -192,7 +203,19 @@
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
           fill="rgba(255,255,255,0.65)"
           style="pointer-events: none; user-select: none;"
-        >{{ focalDates }}</text>
+        >* {{ focalSegment.person.birthDate }}</text>
+        <!-- Focal death -->
+        <text
+          v-if="focalSegment?.person?.deathDate"
+          :x="CIRCLE_CX"
+          :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
+          text-anchor="middle"
+          dominant-baseline="central"
+          font-size="8"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          fill="rgba(255,255,255,0.65)"
+          style="pointer-events: none; user-select: none;"
+        >† {{ focalSegment.person.deathDate }}</text>
       </svg>
     </div>
 
@@ -308,22 +331,15 @@ const focalNameLines = computed((): string[] => {
 });
 
 // Y position for focal text lines, centered around CIRCLE_CY.
-// We offset by how many date lines follow (1 if dates exist).
+// totalDateLines = number of date lines (0, 1, or 2) following the name lines.
 function focalLineY(lineIndex: number, totalNameLines: number): number {
-  const hasDates = !!focalDates.value;
-  const totalLines = totalNameLines + (hasDates ? 1 : 0);
+  const p = focalSegment.value?.person;
+  const dateLines = p ? (p.birthDate ? 1 : 0) + (p.deathDate ? 1 : 0) : 0;
+  const totalLines = totalNameLines + dateLines;
   const lineHeight = totalLines > 3 ? 10 : 12;
   const startY = CIRCLE_CY - ((totalLines - 1) / 2) * lineHeight;
   return startY + lineIndex * lineHeight;
 }
-
-const focalDates = computed(() => {
-  const p = focalSegment.value?.person;
-  if (!p) return '';
-  if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
-  if (p.birthYear) return p.living ? `f. ${p.birthYear}` : `${p.birthYear}–`;
-  return '';
-});
 
 function givenLabel(seg: CircleSegment): string {
   if (!seg.person) return '';
@@ -347,13 +363,12 @@ function curvedLabel(seg: CircleSegment): string {
   return p.surname ?? p.givenName ?? '';
 }
 
-// Lifespan: "BIRTH–DEATH", "BIRTH–", or "BIRTH".
-function lifespan(seg: CircleSegment): string {
-  const p = seg.person;
-  if (!p) return '';
-  if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
-  if (p.birthYear) return p.living ? `f. ${p.birthYear}` : `${p.birthYear}–`;
-  return '';
+function birthLabel(seg: CircleSegment): string {
+  return seg.person?.birthDate ? `* ${seg.person.birthDate}` : '';
+}
+
+function deathLabel(seg: CircleSegment): string {
+  return seg.person?.deathDate ? `\u2020 ${seg.person.deathDate}` : '';
 }
 
 function tooltipLabel(seg: CircleSegment): string {
@@ -361,10 +376,9 @@ function tooltipLabel(seg: CircleSegment): string {
   const p = seg.person;
   const name = fullNameParts(p.givenName, p.surname, p.preferredName, p.nickname)
     .map(pt => pt.text).join('');
-  const dates = p.birthYear && p.deathYear
-    ? ` (${p.birthYear}–${p.deathYear})`
-    : p.birthYear ? ` (${p.birthYear}–)` : '';
-  return name + dates;
+  const birth = p.birthDate ? ` * ${p.birthDate}` : '';
+  const death = p.deathDate ? ` \u2020 ${p.deathDate}` : '';
+  return name + birth + death;
 }
 
 function nameFontSize(gen: number): number {
@@ -408,8 +422,8 @@ onMounted(load);
   height: 100%;
   overflow: auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: safe center;
+  justify-content: safe center;
 }
 .chart-scroll > svg {
   flex-shrink: 0;

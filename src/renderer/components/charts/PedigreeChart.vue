@@ -47,11 +47,19 @@
               :text-decoration="part.underline ? 'underline' : undefined"
             >{{ part.text }}</tspan></text>
           <text
-            :x="box.x + 12" :y="box.y + 32"
+            v-if="box.person.birthDate"
+            :x="box.x + 12" :y="box.y + 30"
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
-          >{{ personDates(box.person) }}</text>
+          >* {{ box.person.birthDate }}</text>
+          <text
+            v-if="box.person.deathDate"
+            :x="box.x + 12" :y="box.y + 43"
+            font-size="10"
+            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+            :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
+          >† {{ box.person.deathDate }}</text>
         </g>
         <g
           v-for="btn in layout.collapseButtons"
@@ -127,13 +135,6 @@ function boxFill(box: BoxLayout): string {
   return 'white';
 }
 
-function personDates(p: PersonNode): string {
-  const b = p.birthYear;
-  const d = p.deathYear;
-  if (b && d) return `${b}–${d}`;
-  if (b) return p.living ? `f. ${b}` : `${b}–`;
-  return '';
-}
 
 async function load() {
   if (!props.personId) return;
