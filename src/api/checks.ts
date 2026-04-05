@@ -66,16 +66,25 @@ function checkEventAfterDeath(db: Database): CheckResult[] {
       AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
     JOIN event_participants epe ON epe.person_id = p.id
     JOIN events e ON e.id = epe.event_id
-      AND e.event_type NOT IN ('death','burial')
+      AND e.event_type NOT IN ('death','burial','will','probate')
       AND e.date_type NOT IN ('unknown')
       AND e.date_value IS NOT NULL
       AND e.date_value > d.date_value
   `).all([]) as Array<{ person_id: string; event_id: string; event_type: string; event_date: string; death_id: string; death_date: string }>;
 
+  const eventTypeLabels: Record<string, string> = {
+    birth: 'Födselhändelse', christening: 'Dop', baptism: 'Dop', confirmation: 'Konfirmation',
+    ordination: 'Ordination', census: 'Folkräkning', immigration: 'Invandring',
+    emigration: 'Utvandring', naturalization: 'Medborgarskap', occupation: 'Yrke',
+    residence: 'Boende', education: 'Utbildning', graduation: 'Examen',
+    military: 'Militärtjänst', retirement: 'Pension', marriage: 'Giftermål',
+    divorce: 'Skilsmässa', mention: 'Omnämning', other: 'Övrigt',
+  };
+
   return rows.map(r => ({
     code: 'EVENT_AFTER_DEATH',
     severity: 'error' as CheckSeverity,
-    message: `Händelse av typ '${r.event_type}' (${r.event_date}) sker efter dödsdatum (${r.death_date})`,
+    message: `${eventTypeLabels[r.event_type] ?? r.event_type} (${r.event_date}) sker efter dödsdatum (${r.death_date})`,
     personIds: [r.person_id],
     eventIds: [r.event_id, r.death_id],
   }));
