@@ -323,6 +323,7 @@ export default {
   visualization: {
     tab: {
       pedigree: 'Pedigree',
+      fan: 'Fan Chart',
       hourglass: 'Hourglass',
       timeline: 'Timeline',
     },
