@@ -71,6 +71,29 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
+### Navigation Focus Persistence [feature]
+See `.claude/plans/2026-04-05-nav-focus-persistence.md` for the full plan.
+- [ ] Pinia focus store (`src/renderer/stores/focus.ts`) — personId + personName
+- [ ] PersonDetailView sets focus on mount
+- [ ] PersonsView sets focus on row click
+- [ ] SearchView, RelationshipDetailView, GroupDetailView set focus on person click
+- [ ] Sidebar focus indicator (below search, above NAVIGERA)
+- [ ] VisualizationView: single-click sets focus without re-centering chart; "Show in tree" button changes chart focal
+
+### Workflow Analysis [research]
+*High user-focus task — do this in a dedicated session with real usage data.*
+
+Define primary user objectives (add person, record event with source, link family, etc.), map each to current click counts and navigation steps, identify highest-friction paths, and produce a prioritized improvement backlog.
+
+Inputs needed before starting:
+- [ ] User session recording or observation (which tasks are done most often?)
+- [ ] Heuristic walkthrough of the 5 most common workflows against the current UI
+- [ ] Comparison: click count before vs. proposed UI changes
+
+Output: a ranked list of UX improvements with before/after click counts, ready to be planned as individual features.
+
+Use the `interview-synthesis` skill if user research data is available.
+
 ### Research Tools [feature]
 - [ ] Assertions UI — view/edit what each citation claims, mark accepted, see conflicts
 - [ ] Research audit view — all unsourced entities ranked by evidence gap
