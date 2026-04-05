@@ -89,8 +89,7 @@
             <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
               <text
                 v-if="givenLabel(seg)"
-                :x="seg.textX" :y="seg.textY"
-                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-15' : '-5'"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -98,8 +97,7 @@
                 style="pointer-events: none; user-select: none;"
               >{{ givenLabel(seg) }}</text>
               <text
-                :x="seg.textX" :y="seg.textY"
-                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-5' : '5') : '0'"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -108,7 +106,7 @@
               >{{ surnameLabel(seg) }}</text>
               <text
                 v-if="birthLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="5"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -117,7 +115,7 @@
               >{{ birthLabel(seg) }}</text>
               <text
                 v-if="deathLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="15"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -128,13 +126,13 @@
           </template>
 
           <!-- Radial text (gen 5-6, always — curved text not practical at these widths).
-               dy offsets shift tangentially (stacking lines along the arc width). -->
+               dy offsets shift tangentially (stacking lines along the arc width).
+               Gen 6 uses tighter 7px gaps; gen 5 uses 10px. -->
           <template v-else-if="seg.person && seg.generation >= 5">
             <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
               <text
                 v-if="givenLabel(seg)"
-                :x="seg.textX" :y="seg.textY"
-                :dy="(birthLabel(seg) || deathLabel(seg)) ? '-15' : '-5'"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -142,8 +140,7 @@
                 style="pointer-events: none; user-select: none;"
               >{{ givenLabel(seg) }}</text>
               <text
-                :x="seg.textX" :y="seg.textY"
-                :dy="givenLabel(seg) ? ((birthLabel(seg) || deathLabel(seg)) ? '-5' : '5') : '0'"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="nameFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -152,7 +149,7 @@
               >{{ surnameLabel(seg) }}</text>
               <text
                 v-if="birthLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="5"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -161,7 +158,7 @@
               >{{ birthLabel(seg) }}</text>
               <text
                 v-if="deathLabel(seg)"
-                :x="seg.textX" :y="seg.textY" dy="15"
+                :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
                 text-anchor="middle" dominant-baseline="central"
                 :font-size="dateFontSize(seg.generation)"
                 font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -382,13 +379,29 @@ function tooltipLabel(seg: CircleSegment): string {
 }
 
 function nameFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 10, 2: 9, 3: 8.5, 4: 8, 5: 7, 6: 6.5 };
-  return sizes[gen] ?? 6.5;
+  const sizes: Record<number, number> = { 1: 10, 2: 9, 3: 8.5, 4: 8, 5: 7, 6: 5.5 };
+  return sizes[gen] ?? 5.5;
 }
 
 function dateFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 8, 2: 7.5, 3: 7, 4: 6.5, 5: 6, 6: 6 };
-  return sizes[gen] ?? 6;
+  const sizes: Record<number, number> = { 1: 8, 2: 7.5, 3: 7, 4: 6.5, 5: 6, 6: 5 };
+  return sizes[gen] ?? 5;
+}
+
+// Per-generation dy offsets for radial/straight text stacking.
+// Gen 6 arc width ≈35.8px so we use 7px gaps; all others use 10px gaps.
+function lineDy(seg: CircleSegment): { given: string; surname: string; birth: string; death: string } {
+  const hasDates = !!(birthLabel(seg) || deathLabel(seg));
+  const hasGiven = !!givenLabel(seg);
+  const gap = seg.generation >= 6 ? 7 : 10;
+  const h = gap * 1.5;  // half-span for 4 lines
+  const q = gap * 0.5;  // quarter-span
+  return {
+    given:   hasDates ? String(-Math.round(h)) : String(-Math.round(q)),
+    surname: hasGiven ? (hasDates ? String(-Math.round(q)) : String(Math.round(q))) : '0',
+    birth:   String(Math.round(q)),
+    death:   String(Math.round(h)),
+  };
 }
 
 async function load() {
