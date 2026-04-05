@@ -94,6 +94,9 @@ export function registerIpcHandlers(): void {
   wrapHandler('citations:forRelationship', (relationshipId) => sources.getCitationsForRelationship(getDatabase(), relationshipId as string));
   wrapHandler('citations:forPlace', (placeId) => sources.getCitationsForPlace(getDatabase(), placeId as string));
   wrapHandler('citations:delete', (id) => sources.deleteCitation(getDatabase(), id as string));
+  wrapHandler('citations:update', (id, updates) =>
+    sources.updateCitation(getDatabase(), id as string, updates as Parameters<typeof sources.updateCitation>[2])
+  );
 
   // Places
   wrapHandler('places:create', (data) => places.createPlace(getDatabase(), data as Parameters<typeof places.createPlace>[1]));

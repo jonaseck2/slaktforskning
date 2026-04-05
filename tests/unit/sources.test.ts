@@ -20,6 +20,7 @@ import {
   getCitationsForRelationship,
   getCitationsForPlace,
   deleteCitation,
+  updateCitation,
 } from '../../src/api/sources';
 
 let db: Database.Database;
@@ -144,5 +145,29 @@ describe('citations', () => {
     createCitation(db, { source_id: source.id, place_id: place.id });
     expect(getCitationsForPlace(db, place.id)).toHaveLength(1);
     expect(getCitationsForPlace(db, 'nonexistent')).toHaveLength(0);
+  });
+
+  it('updateCitation updates editable fields', () => {
+    const source = createSource(db, { title: 'Test', source_type: 'other' });
+    const event = createEvent(db, { event_type: 'birth', date_type: 'unknown' });
+    const cit = createCitation(db, { source_id: source.id, event_id: event.id });
+
+    const updated = updateCitation(db, cit.id, {
+      page: 'p. 42',
+      confidence: 3,
+      transcription: 'Verbatim text from source',
+    });
+
+    expect(updated?.page).toBe('p. 42');
+    expect(updated?.confidence).toBe(3);
+    expect(updated?.transcription).toBe('Verbatim text from source');
+    expect(updated?.notes).toBe(cit.notes);
+  });
+
+  it('updateCitation with empty updates returns citation unchanged', () => {
+    const source = createSource(db, { title: 'Test', source_type: 'other' });
+    const cit = createCitation(db, { source_id: source.id, page: 'p. 1' });
+    const result = updateCitation(db, cit.id, {});
+    expect(result?.page).toBe('p. 1');
   });
 });

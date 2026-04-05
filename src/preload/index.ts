@@ -55,6 +55,7 @@ const api = {
     forRelationship: (relationshipId: string) => ipcRenderer.invoke('citations:forRelationship', relationshipId),
     forPlace: (placeId: string) => ipcRenderer.invoke('citations:forPlace', placeId),
     delete: (id: string) => ipcRenderer.invoke('citations:delete', id),
+    update: (id: string, updates: Record<string, unknown>) => ipcRenderer.invoke('citations:update', id, updates),
   },
   gedcom: {
     import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
