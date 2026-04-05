@@ -35,6 +35,7 @@ const api = {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data)),
     get: (id: string) => ipcRenderer.invoke('relationships:get', id),
     list: () => ipcRenderer.invoke('relationships:list'),
+    listPage: (limit: number, offset: number) => ipcRenderer.invoke('relationships:listPage', limit, offset),
     update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('relationships:update', id, data)),
     delete: mutating((id: string) => ipcRenderer.invoke('relationships:delete', id)),
     getForPerson: (personId: string) => ipcRenderer.invoke('relationships:getForPerson', personId),

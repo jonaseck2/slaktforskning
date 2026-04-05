@@ -4,7 +4,10 @@
       <h2>{{ $t('relationships.title') }}</h2>
       <button @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
     </div>
-    <div v-if="relationships.length === 0" class="empty">
+    <p v-if="total > 0" class="count-label">
+      {{ $t('persons.showingOf', { shown: relationships.length, total }) }}
+    </p>
+    <div v-if="relationships.length === 0 && !loading" class="empty">
       {{ $t('relationships.emptyState') }}
     </div>
     <table v-else class="data-table">
@@ -52,6 +55,7 @@
         </tr>
       </tbody>
     </table>
+    <div ref="sentinel" class="scroll-sentinel"></div>
 
     <!-- Add Relationship Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
@@ -105,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
@@ -136,23 +140,41 @@ interface RelRow {
   person2_nickname: string | null;
 }
 
-interface NameRow {
-  given_name: string;
-  surname: string;
-  preferred_name: string | null;
-  nickname: string | null;
-}
+const PAGE_SIZE = 100;
 
 const { t } = useI18n();
 const router = useRouter();
 const relationships = ref<RelRow[]>([]);
+const total = ref(0);
+const offset = ref(0);
+const loading = ref(false);
 const showAddForm = ref(false);
+const sentinel = ref<HTMLElement | null>(null);
+
+let observer: IntersectionObserver | null = null;
+
+watch(sentinel, (el) => {
+  if (observer) { observer.disconnect(); observer = null; }
+  if (!el) return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && relationships.value.length < total.value && !loading.value) {
+        loadMore();
+      }
+    },
+    { rootMargin: '2000px 0px' }
+  );
+  observer.observe(el);
+});
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') showAddForm.value = false;
 }
 onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+  if (observer) observer.disconnect();
+});
 
 const form = reactive({
   type: 'couple' as string,
@@ -184,47 +206,33 @@ function getSubtypeLabel(type: string, subtype: string): string {
   return subtype;
 }
 
-async function getPersonNameRow(id: string | null): Promise<{ given_name: string; surname: string; preferred_name: string | null; nickname: string | null }> {
-  if (!id || !window.api) return { given_name: '', surname: '', preferred_name: null, nickname: null };
-  try {
-    const names = (await window.api.persons.getNames(id)) as NameRow[];
-    if (names.length > 0) return { given_name: names[0].given_name, surname: names[0].surname, preferred_name: names[0].preferred_name, nickname: names[0].nickname };
-  } catch {
-    /* ignore */
-  }
-  return { given_name: '', surname: '', preferred_name: null, nickname: null };
-}
-
 async function load() {
   if (!window.api) return;
+  loading.value = true;
   try {
-    const raw = (await window.api.relationships.list()) as Array<{
-      id: string;
-      type: string;
-      person1_id: string | null;
-      person2_id: string | null;
-      subtype: string | null;
-      notes: string;
-    }>;
-    const enriched: RelRow[] = [];
-    for (const r of raw) {
-      const p1 = await getPersonNameRow(r.person1_id);
-      const p2 = await getPersonNameRow(r.person2_id);
-      enriched.push({
-        ...r,
-        person1_given_name: p1.given_name,
-        person1_surname: p1.surname,
-        person1_preferred_name: p1.preferred_name,
-        person1_nickname: p1.nickname,
-        person2_given_name: p2.given_name,
-        person2_surname: p2.surname,
-        person2_preferred_name: p2.preferred_name,
-        person2_nickname: p2.nickname,
-      });
-    }
-    relationships.value = enriched;
+    const result = await window.api.relationships.listPage(PAGE_SIZE, 0) as { relationships: RelRow[]; total: number };
+    relationships.value = result.relationships;
+    total.value = result.total;
+    offset.value = PAGE_SIZE;
   } catch (err) {
     console.error('[RelationshipsView] load failed:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadMore() {
+  if (!window.api || loading.value) return;
+  loading.value = true;
+  try {
+    const result = await window.api.relationships.listPage(PAGE_SIZE, offset.value) as { relationships: RelRow[]; total: number };
+    relationships.value = [...relationships.value, ...result.relationships];
+    total.value = result.total;
+    offset.value += PAGE_SIZE;
+  } catch (err) {
+    console.error('[RelationshipsView] loadMore failed:', err);
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -304,6 +312,12 @@ onActivated(async () => {
   background: #eee;
   font-weight: 600;
 }
+.count-label {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
+}
+.scroll-sentinel { height: 1px; }
 .clickable-row {
   cursor: pointer;
 }

@@ -140,11 +140,19 @@ The entity's own editable fields (the DB columns) go into a 2-column grid **befo
 
 Standard list view structure:
 1. `<div class="header">` — title + Add button
-2. Empty state: `<div class="empty">{{ $t('entity.emptyState') }}</div>`
-3. Data table: `<table class="data-table">`
+2. Count label: `<p class="count-label">{{ $t('persons.showingOf', { shown: items.length, total }) }}</p>`
+3. Empty state: `<div class="empty">{{ $t('entity.emptyState') }}</div>`
+4. Data table: `<table class="data-table">`
+5. Scroll sentinel: `<div ref="sentinel" class="scroll-sentinel"></div>` — triggers infinite scroll
 
 ```html
-<table class="data-table">
+<p v-if="total > 0" class="count-label">
+  {{ $t('persons.showingOf', { shown: items.length, total }) }}
+</p>
+<div v-if="items.length === 0 && !loading" class="empty">
+  {{ $t('entity.emptyState') }}
+</div>
+<table v-else class="data-table">
   <thead>
     <tr>
       <th>{{ $t('field.name') }}</th>
@@ -167,9 +175,16 @@ Standard list view structure:
     </tr>
   </tbody>
 </table>
+<div ref="sentinel" class="scroll-sentinel"></div>
+```
+
+```css
+.count-label { font-size: 13px; color: #666; margin: 0 0 8px; }
+.scroll-sentinel { height: 1px; }
 ```
 
 Rules:
+- **Never use a "Load More" button** — use infinite scroll (IntersectionObserver on the sentinel)
 - `@click.stop` on delete to prevent row navigation
 - Actions column is always last
 - Delete requires `confirm()` before calling API
@@ -283,20 +298,65 @@ declare const window: Window & {
 
 ## Data loading pattern
 
+List views use paginated loading with infinite scroll — never load all rows at once.
+
 ```typescript
+import { ref, watch, onMounted, onActivated, onUnmounted } from 'vue';
+
+const PAGE_SIZE = 100;
 const items = ref<ItemRow[]>([]);
+const total = ref(0);
+const offset = ref(0);
+const loading = ref(false);
+const sentinel = ref<HTMLElement | null>(null);
+
+let observer: IntersectionObserver | null = null;
+
+watch(sentinel, (el) => {
+  if (observer) { observer.disconnect(); observer = null; }
+  if (!el) return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && items.value.length < total.value && !loading.value) {
+        loadMore();
+      }
+    },
+    // Trigger ~50 rows (~40px each) before the sentinel enters the viewport
+    { rootMargin: '2000px 0px' }
+  );
+  observer.observe(el);
+});
 
 async function load() {
-  items.value = (await window.api.entity.list()) as ItemRow[];
+  loading.value = true;
+  try {
+    const result = await window.api.entity.listPage(PAGE_SIZE, 0) as { items: ItemRow[]; total: number };
+    items.value = result.items;
+    total.value = result.total;
+    offset.value = PAGE_SIZE;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadMore() {
+  if (loading.value) return;
+  loading.value = true;
+  try {
+    const result = await window.api.entity.listPage(PAGE_SIZE, offset.value) as { items: ItemRow[]; total: number };
+    items.value = [...items.value, ...result.items];
+    total.value = result.total;
+    offset.value += PAGE_SIZE;
+  } finally {
+    loading.value = false;
+  }
 }
 
 onMounted(load);
-
-// Re-load after data changes (import, etc.)
-window.addEventListener('data-imported', load);
-// Clean up:
-onUnmounted(() => window.removeEventListener('data-imported', load));
+onUnmounted(() => { if (observer) observer.disconnect(); });
 ```
+
+The backend `listPage` query must JOIN related tables to return all display data in one query — never fetch related data row-by-row in the view (N+1 anti-pattern).
 
 ---
 

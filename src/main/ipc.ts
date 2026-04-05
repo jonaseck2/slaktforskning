@@ -69,6 +69,13 @@ export function registerIpcHandlers(): void {
   wrapHandler('relationships:create', (data) => relationships.createRelationship(getDatabase(), data as Parameters<typeof relationships.createRelationship>[1]));
   wrapHandler('relationships:get', (id) => relationships.getRelationship(getDatabase(), id as string));
   wrapHandler('relationships:list', () => relationships.listRelationships(getDatabase()));
+  wrapHandler('relationships:listPage', (limit, offset) => {
+    const db = getDatabase();
+    return {
+      relationships: relationships.listRelationshipsPage(db, limit as number, offset as number),
+      total: relationships.countRelationships(db),
+    };
+  });
   wrapHandler('relationships:update', (id, data) => relationships.updateRelationship(getDatabase(), id as string, data as Parameters<typeof relationships.updateRelationship>[2]));
   wrapHandler('relationships:delete', (id) => relationships.deleteRelationship(getDatabase(), id as string));
   wrapHandler('relationships:getForPerson', (personId) => relationships.getRelationshipsOfPerson(getDatabase(), personId as string));
