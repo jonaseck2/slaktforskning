@@ -15,6 +15,11 @@
         data-testid="tab-pedigree" @click="setTab('pedigree')"
       >{{ $t('visualization.tab.pedigree') }}</button>
       <button
+        role="tab" :aria-selected="activeTab === 'fan'"
+        :class="['tab', { active: activeTab === 'fan' }]"
+        data-testid="tab-fan" @click="setTab('fan')"
+      >{{ $t('visualization.tab.fan') }}</button>
+      <button
         role="tab" :aria-selected="activeTab === 'hourglass'"
         :class="['tab', { active: activeTab === 'hourglass' }]"
         data-testid="tab-hourglass" @click="setTab('hourglass')"
@@ -37,6 +42,11 @@
       <div class="viz-chart-area">
         <PedigreeChart
           v-if="activeTab === 'pedigree'"
+          :person-id="personId"
+          @navigate="navigateTo"
+        />
+        <FanChart
+          v-if="activeTab === 'fan'"
           :person-id="personId"
           @navigate="navigateTo"
         />
@@ -79,6 +89,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
+import FanChart from '../components/charts/FanChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonName from '../components/PersonName.vue';
@@ -109,7 +120,7 @@ const vizBodyRef = ref<HTMLElement | null>(null);
 // Selected node in the chart (may differ from chart focal person)
 const selectedPersonId = ref<string | null>(null);
 
-type TabName = 'pedigree' | 'hourglass' | 'timeline';
+type TabName = 'pedigree' | 'fan' | 'hourglass' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
 
 // Panel open/closed
