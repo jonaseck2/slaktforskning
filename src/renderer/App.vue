@@ -15,7 +15,7 @@
         <span class="nav-label">{{ $t('nav.tree') }}</span>
       </router-link>
       <router-link to="/" class="nav-item">
-        <span class="nav-icon">👤</span>
+        <span class="nav-icon">👥</span>
         <span class="nav-label">{{ $t('nav.persons') }}</span>
       </router-link>
       <router-link to="/relationships" class="nav-item">
@@ -30,6 +30,10 @@
         <span class="nav-icon">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
+      <router-link to="/groups" class="nav-item">
+        <span class="nav-icon">🏷️</span>
+        <span class="nav-label">{{ $t('nav.groups') }}</span>
+      </router-link>
       <router-link to="/research-tasks" class="nav-item">
         <span class="nav-icon">🔬</span>
         <span class="nav-label">
@@ -38,7 +42,7 @@
         </span>
       </router-link>
       <router-link to="/quality" class="nav-item">
-        <span class="nav-icon">🔍</span>
+        <span class="nav-icon">⚠️</span>
         <span class="nav-label">
           {{ $t('quality.nav') }}
           <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
