@@ -42,7 +42,7 @@ function computeFill(ahnNum: number, gen: number, isEmpty: boolean): string {
   } else {
     const rootAhn = ahnNum >> (gen - 2);    // lands in range 4–7
     const branchIdx = rootAhn - 4;          // 0–3
-    base = lightenHex(BRANCH_BASE[branchIdx] ?? '#ccc', (gen - 2) * 0.12);
+    base = lightenHex(BRANCH_BASE[branchIdx] ?? '#cccccc', (gen - 2) * 0.12);
   }
   return isEmpty ? lightenHex(base, 0.55) : base;
 }
