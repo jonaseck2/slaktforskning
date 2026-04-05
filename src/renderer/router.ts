@@ -26,5 +26,7 @@ export const router = createRouter({
     { path: '/quality', component: () => import('./views/QualityView.vue') },
     { path: '/reports', component: () => import('./views/ReportsView.vue') },
     { path: '/research-tasks', component: () => import('./views/ResearchTasksView.vue') },
+    { path: '/groups', component: () => import('./views/GroupsView.vue') },
+    { path: '/groups/:id', component: () => import('./views/GroupDetailView.vue') },
   ],
 });
