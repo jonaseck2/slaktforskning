@@ -415,6 +415,7 @@ import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonName from '../components/PersonName.vue';
 import GroupPicker from '../components/GroupPicker.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
+import { fullNameParts } from '../utils/nameUtils';
 import { parseAsteriskNotation } from '../utils/nameUtils';
 
 declare const window: Window & {
@@ -612,8 +613,8 @@ async function load() {
     names.value = (await window.api.persons.getNames(personId)) as NameRow[];
     if (names.value.length > 0) {
       const n = names.value[0];
-      const displayGiven = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
-      primaryName.value = `${displayGiven} ${n.surname ?? ''}`.trim();
+      primaryName.value = fullNameParts(n.given_name ?? null, n.surname ?? null, n.preferred_name ?? null, n.nickname ?? null)
+        .map(p => p.text).join('');
     }
 
     const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{

@@ -1,7 +1,9 @@
 <template>
   <div class="app">
     <nav class="sidebar">
-      <h1>{{ $t('app.title') }}</h1>
+      <div class="sidebar-header">
+        <span class="sidebar-title">{{ $t('app.title') }}</span>
+      </div>
       <form class="sidebar-search" @submit.prevent="submitSearch">
         <input
           v-model="searchQuery"
@@ -10,6 +12,7 @@
           class="sidebar-search-input"
         />
       </form>
+      <div class="nav-section-label">NAVIGERA</div>
       <router-link to="/visualisering" class="nav-item">
         <span class="nav-icon">🌳</span>
         <span class="nav-label">{{ $t('nav.tree') }}</span>
@@ -36,17 +39,13 @@
       </router-link>
       <router-link to="/research-tasks" class="nav-item">
         <span class="nav-icon">🔬</span>
-        <span class="nav-label">
-          {{ $t('researchTasks.nav') }}
-          <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
-        </span>
+        <span class="nav-label">{{ $t('researchTasks.nav') }}</span>
+        <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
       </router-link>
       <router-link to="/quality" class="nav-item">
         <span class="nav-icon">⚠️</span>
-        <span class="nav-label">
-          {{ $t('quality.nav') }}
-          <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
-        </span>
+        <span class="nav-label">{{ $t('quality.nav') }}</span>
+        <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
       <router-link to="/reports" class="nav-item">
         <span class="nav-icon">🖨️</span>
@@ -159,25 +158,30 @@ body {
 }
 
 .sidebar {
-  width: 110px;
+  width: 185px;
   background: #2c3e50;
   color: white;
-  padding: 16px 8px;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
-.sidebar h1 {
+.sidebar-header {
+  padding: 4px 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.sidebar-title {
   font-size: 13px;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  text-align: center;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .sidebar-search {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .sidebar-search-input {
   width: 100%;
@@ -198,16 +202,24 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 2px 10px 6px;
+}
+
 .sidebar a,
 .nav-item {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  padding: 8px 6px;
+  padding: 7px 10px;
   border-radius: 6px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 3px;
+  gap: 8px;
 }
 
 .sidebar a:hover,
@@ -218,8 +230,8 @@ body {
   color: white;
 }
 
-.nav-icon { font-size: 18px; line-height: 1; }
-.nav-label { font-size: 10px; text-align: center; }
+.nav-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
+.nav-label { font-size: 13px; flex: 1; }
 
 .sidebar-spacer {
   flex: 1;
@@ -227,15 +239,17 @@ body {
 
 .nav-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: 12px !important;
+  padding-top: 10px !important;
   margin-top: 4px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45) !important;
+  flex-direction: row;
+  gap: 6px;
 }
 
 .nav-bottom:hover,
 .nav-bottom.router-link-active {
-  color: white !important;
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .locale-switcher {
@@ -255,16 +269,18 @@ body {
 }
 
 .error-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #e53e3e;
   color: white;
   border-radius: 8px;
-  padding: 0px 5px;
+  padding: 0 5px;
   font-size: 10px;
   font-weight: 700;
-  margin-left: 4px;
-  vertical-align: middle;
-  line-height: 16px;
+  min-width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .content {
