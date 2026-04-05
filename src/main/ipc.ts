@@ -331,7 +331,7 @@ export function registerIpcHandlers(): void {
     const pdfData = await win.webContents.printToPDF({
       printBackground: false,
       pageSize: 'A4',
-      margins: { top: 20, bottom: 20, left: 20, right: 20, marginType: 'custom' },
+      margins: { marginType: 'printableArea' },
     });
 
     fs.writeFileSync(savePath, pdfData);
