@@ -32,7 +32,7 @@
           <span :class="['severity-badge', 'badge-' + r.severity]">
             {{ $t('quality.severity.' + r.severity) }}
           </span>
-          <span class="result-message">{{ r.message }}</span>
+          <span class="result-message">{{ checkMessage(r) }}</span>
         </div>
       </div>
     </template>
@@ -52,6 +52,7 @@ interface CheckResult {
   code: string;
   severity: 'error' | 'warning' | 'notice';
   message: string;
+  messageParams?: Record<string, string | number>;
   personIds: string[];
   eventIds?: string[];
   relationshipIds?: string[];
@@ -85,7 +86,22 @@ const filteredResults = computed(() => {
   return sorted.filter(r => r.severity === activeFilter.value);
 });
 
-onMounted(() => { runChecks(); });
+onMounted(() => {
+  runChecks();
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+  window.addEventListener('message', (e) => {
+    if (e.data?.type === 'data-changed') {
+      if (debounce) clearTimeout(debounce);
+      debounce = setTimeout(runChecks, 800);
+    }
+  });
+});
+
+function checkMessage(r: CheckResult): string {
+  const key = 'quality.checks.' + r.code;
+  const translated = t(key, r.messageParams ?? {});
+  return translated !== key ? translated : r.message;
+}
 
 async function runChecks() {
   if (!window.api) return;

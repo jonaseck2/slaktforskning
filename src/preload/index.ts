@@ -5,7 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...args: T) => Promise<R> {
   return async (...args: T) => {
     const result = await fn(...args);
-    window.dispatchEvent(new CustomEvent('data-changed'));
+    window.postMessage({ type: 'data-changed' }, '*');
     return result;
   };
 }

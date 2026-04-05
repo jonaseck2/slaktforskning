@@ -113,9 +113,11 @@ onMounted(() => {
     loadResearchBadge();
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
-  window.addEventListener('data-changed', () => {
-    if (qualityDebounce) clearTimeout(qualityDebounce);
-    qualityDebounce = setTimeout(loadQualityBadge, 800);
+  window.addEventListener('message', (e) => {
+    if (e.data?.type === 'data-changed') {
+      if (qualityDebounce) clearTimeout(qualityDebounce);
+      qualityDebounce = setTimeout(loadQualityBadge, 800);
+    }
   });
 });
 

@@ -5,7 +5,8 @@ export type CheckSeverity = 'error' | 'warning' | 'notice';
 export interface CheckResult {
   code: string;
   severity: CheckSeverity;
-  message: string;
+  message: string; // Swedish fallback
+  messageParams?: Record<string, string | number>; // for i18n interpolation in renderer
   personIds: string[];
   eventIds?: string[];
   relationshipIds?: string[];
@@ -50,6 +51,7 @@ function checkBirthAfterDeath(db: Database): CheckResult[] {
     code: 'BIRTH_AFTER_DEATH',
     severity: 'error' as CheckSeverity,
     message: `Födelsedag (${r.birth_date}) är efter dödsdatum (${r.death_date})`,
+    messageParams: { birthDate: r.birth_date, deathDate: r.death_date },
     personIds: [r.person_id],
     eventIds: [r.birth_id, r.death_id],
   }));
@@ -85,6 +87,7 @@ function checkEventAfterDeath(db: Database): CheckResult[] {
     code: 'EVENT_AFTER_DEATH',
     severity: 'error' as CheckSeverity,
     message: `${eventTypeLabels[r.event_type] ?? r.event_type} (${r.event_date}) sker efter dödsdatum (${r.death_date})`,
+    messageParams: { eventType: eventTypeLabels[r.event_type] ?? r.event_type, eventDate: r.event_date, deathDate: r.death_date },
     personIds: [r.person_id],
     eventIds: [r.event_id, r.death_id],
   }));
@@ -109,6 +112,7 @@ function checkBurialBeforeDeath(db: Database): CheckResult[] {
     code: 'BURIAL_BEFORE_DEATH',
     severity: 'error' as CheckSeverity,
     message: `Begravning (${r.burial_date}) sker före dödsdatum (${r.death_date})`,
+    messageParams: { burialDate: r.burial_date, deathDate: r.death_date },
     personIds: [r.person_id],
     eventIds: [r.burial_id, r.death_id],
   }));
@@ -138,6 +142,7 @@ function checkLifespan(db: Database): CheckResult[] {
         code: 'LIFESPAN_OVER_120',
         severity: 'warning',
         message: `Livsspan på ${span} år överstiger 120 år (född ${r.birth_year}, död ${r.death_year})`,
+        messageParams: { span, birthYear: r.birth_year, deathYear: r.death_year },
         personIds: [r.person_id],
         eventIds: [r.birth_id, r.death_id],
       });
@@ -146,6 +151,7 @@ function checkLifespan(db: Database): CheckResult[] {
         code: 'LIFESPAN_OVER_105',
         severity: 'notice',
         message: `Livsspan på ${span} år överstiger 105 år (född ${r.birth_year}, död ${r.death_year})`,
+        messageParams: { span, birthYear: r.birth_year, deathYear: r.death_year },
         personIds: [r.person_id],
         eventIds: [r.birth_id, r.death_id],
       });
@@ -171,6 +177,7 @@ function checkFutureDates(db: Database): CheckResult[] {
       code: 'FUTURE_BIRTH',
       severity: 'error',
       message: `Födelsedag (${r.date_value}) är i framtiden`,
+      messageParams: { date: r.date_value },
       personIds: [r.person_id],
       eventIds: [r.event_id],
     });
@@ -190,6 +197,7 @@ function checkFutureDates(db: Database): CheckResult[] {
       code: 'FUTURE_DEATH',
       severity: 'error',
       message: `Dödsdatum (${r.date_value}) är i framtiden`,
+      messageParams: { date: r.date_value },
       personIds: [r.person_id],
       eventIds: [r.event_id],
     });
@@ -217,6 +225,7 @@ function checkBaptismLate(db: Database): CheckResult[] {
     code: 'BAPTISM_LATE',
     severity: 'notice' as CheckSeverity,
     message: `Dop (${r.bap_year}) sker mer än 10 år efter födseln (${r.birth_year})`,
+    messageParams: { baptismYear: r.bap_year, birthYear: r.birth_year },
     personIds: [r.person_id],
     eventIds: [r.baptism_id, r.birth_id],
   }));
@@ -239,6 +248,7 @@ function checkDeathWithoutBirth(db: Database): CheckResult[] {
     code: 'DEATH_WITHOUT_BIRTH',
     severity: 'notice' as CheckSeverity,
     message: `Person har dödshändelse men saknar födelsehändelse`,
+    messageParams: {},
     personIds: [r.person_id],
     eventIds: [r.death_id],
   }));
@@ -259,6 +269,7 @@ function checkNoBirthEvent(db: Database): CheckResult[] {
     code: 'NO_BIRTH_EVENT',
     severity: 'notice' as CheckSeverity,
     message: `Person saknar födelsehändelse`,
+    messageParams: {},
     personIds: [r.person_id],
   }));
 }
@@ -314,6 +325,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'PARENT_BORN_AFTER_CHILD',
         severity: 'error',
         message: `Föräldern (född ${r.parent_birth_year}) är inte äldre än barnet (född ${r.child_birth_year})`,
+        messageParams: { parentBirthYear: r.parent_birth_year, childBirthYear: r.child_birth_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -322,6 +334,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'PARENT_TOO_YOUNG',
         severity: 'error',
         message: `Föräldern var under 10 år gammal vid barnets födelse (förälder: ${r.parent_birth_year}, barn: ${r.child_birth_year})`,
+        messageParams: { parentBirthYear: r.parent_birth_year, childBirthYear: r.child_birth_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -330,6 +343,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'PARENT_VERY_YOUNG',
         severity: 'warning',
         message: `Föräldern var under 15 år gammal vid barnets födelse (förälder: ${r.parent_birth_year}, barn: ${r.child_birth_year})`,
+        messageParams: { parentBirthYear: r.parent_birth_year, childBirthYear: r.child_birth_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -338,6 +352,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'PARENT_YOUNG',
         severity: 'notice',
         message: `Föräldern var under 18 år gammal vid barnets födelse (förälder: ${r.parent_birth_year}, barn: ${r.child_birth_year})`,
+        messageParams: { parentBirthYear: r.parent_birth_year, childBirthYear: r.child_birth_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -348,6 +363,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'MOTHER_TOO_OLD',
         severity: 'warning',
         message: `Modern (född ${r.parent_birth_year}) var över 58 år gammal vid barnets födelse (${r.child_birth_year})`,
+        messageParams: { parentBirthYear: r.parent_birth_year, childBirthYear: r.child_birth_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -358,6 +374,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'FATHER_TOO_OLD',
         severity: 'warning',
         message: `Fadern (född ${r.parent_birth_year}) var över 90 år gammal vid barnets födelse (${r.child_birth_year})`,
+        messageParams: { parentBirthYear: r.parent_birth_year, childBirthYear: r.child_birth_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -368,6 +385,7 @@ function checkParenthoodAge(db: Database): CheckResult[] {
         code: 'CHILD_BORN_AFTER_PARENT_DEATH',
         severity: 'warning',
         message: `Barnet (född ${r.child_birth_year}) är fött mer än ett år efter moderns död (${r.parent_death_year})`,
+        messageParams: { childBirthYear: r.child_birth_year, parentDeathYear: r.parent_death_year },
         personIds: [r.parent_id, r.child_id],
         relationshipIds: [r.rel_id],
       });
@@ -415,6 +433,7 @@ function checkSiblingAgeLarge(db: Database): CheckResult[] {
         code: 'SIBLING_AGE_GAP_LARGE',
         severity: 'notice',
         message: `Syskon har ett födelseårsintervall på ${maxYear - minYear} år (${minYear}–${maxYear})`,
+        messageParams: { span: maxYear - minYear, minYear, maxYear },
         personIds,
         relationshipIds: children.map(c => c.rel_id),
       });
@@ -438,6 +457,7 @@ function checkDuplicateParentChild(db: Database): CheckResult[] {
     code: 'DUPLICATE_PARENT_CHILD',
     severity: 'error' as CheckSeverity,
     message: `Person är registrerad som sitt eget barn i ett förälder–barn-förhållande`,
+    messageParams: {},
     personIds: [r.person1_id],
     relationshipIds: [r.rel_id],
   }));
@@ -458,6 +478,7 @@ function checkMultipleBiologicalParents(db: Database): CheckResult[] {
     code: 'MULTIPLE_BIRTH_PARENTS',
     severity: 'warning' as CheckSeverity,
     message: `Person har ${r.cnt} biologiska föräldrar registrerade (max 2 förväntas)`,
+    messageParams: { count: r.cnt },
     personIds: [r.person_id],
   }));
 }
@@ -476,6 +497,7 @@ function checkNoParents(db: Database): CheckResult[] {
     code: 'NO_PARENTS',
     severity: 'notice' as CheckSeverity,
     message: `Person har inga registrerade föräldrar`,
+    messageParams: {},
     personIds: [r.person_id],
   }));
 }
@@ -538,6 +560,7 @@ function checkCircularAncestry(db: Database): CheckResult[] {
         code: 'CIRCULAR_ANCESTRY',
         severity: 'error',
         message: `Person förekommer som sin egen förfader (cyklisk härstamning)`,
+        messageParams: {},
         personIds: [id],
       });
     }
@@ -564,6 +587,7 @@ function checkDuplicateRelationship(db: Database): CheckResult[] {
     code: 'DUPLICATE_RELATIONSHIP',
     severity: 'warning' as CheckSeverity,
     message: `Duplicerat förhållande av typ '${r.type}' mellan samma två personer`,
+    messageParams: { type: r.type },
     personIds: [r.person1_id, r.person2_id],
     relationshipIds: [r.rel1_id, r.rel2_id],
   }));
@@ -602,6 +626,7 @@ function checkMarriageAge(db: Database): CheckResult[] {
         code: 'MARRIED_BEFORE_12',
         severity: 'error',
         message: `Person gifte sig vid ${age} år (${m.marriage_year}), under 12 år`,
+        messageParams: { age, year: m.marriage_year },
         personIds: [m.person_id],
         eventIds: [m.event_id],
       });
@@ -610,6 +635,7 @@ function checkMarriageAge(db: Database): CheckResult[] {
         code: 'MARRIED_BEFORE_16',
         severity: 'warning',
         message: `Person gifte sig vid ${age} år (${m.marriage_year}), under 16 år`,
+        messageParams: { age, year: m.marriage_year },
         personIds: [m.person_id],
         eventIds: [m.event_id],
       });
@@ -638,6 +664,7 @@ function checkMarriageAfterDeath(db: Database): CheckResult[] {
     code: 'MARRIAGE_AFTER_DEATH',
     severity: 'error' as CheckSeverity,
     message: `Giftermål (${r.marriage_date}) sker efter personens dödsdatum (${r.death_date})`,
+    messageParams: { marriageDate: r.marriage_date, deathDate: r.death_date },
     personIds: [r.person_id],
     eventIds: [r.marriage_id, r.death_id],
   }));
@@ -662,6 +689,7 @@ function checkMarriageBeforeBirth(db: Database): CheckResult[] {
     code: 'MARRIAGE_BEFORE_BIRTH',
     severity: 'error' as CheckSeverity,
     message: `Giftermål (${r.marriage_date}) sker före personens födelsedag (${r.birth_date})`,
+    messageParams: { marriageDate: r.marriage_date, birthDate: r.birth_date },
     personIds: [r.person_id],
     eventIds: [r.marriage_id, r.birth_id],
   }));
@@ -681,6 +709,7 @@ function checkCoupleWithSelf(db: Database): CheckResult[] {
     code: 'COUPLE_WITH_SELF',
     severity: 'error' as CheckSeverity,
     message: `Person är registrerad i ett parförhållande med sig själv`,
+    messageParams: {},
     personIds: [r.person1_id],
     relationshipIds: [r.rel_id],
   }));
@@ -730,6 +759,7 @@ function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
         code: 'SIMULTANEOUS_DISTANT_LOCATIONS',
         severity: 'warning',
         message: `Två händelser på samma datum (${r.date_value}) är ${Math.round(km)} km från varandra`,
+        messageParams: { date: r.date_value, km: Math.round(km) },
         personIds: [r.person_id],
         eventIds: [r.event1_id, r.event2_id],
       });
@@ -756,6 +786,7 @@ function checkNoName(db: Database): CheckResult[] {
     code: 'NO_NAME',
     severity: 'notice' as CheckSeverity,
     message: `Person saknar namnuppgifter`,
+    messageParams: {},
     personIds: [r.person_id],
   }));
 }
@@ -773,6 +804,7 @@ function checkLivingWithDeathEvent(db: Database): CheckResult[] {
     code: 'LIVING_WITH_DEATH_EVENT',
     severity: 'warning' as CheckSeverity,
     message: `Person är markerad som levande men har en registrerad dödshändelse`,
+    messageParams: {},
     personIds: [r.person_id],
     eventIds: [r.death_id],
   }));
@@ -794,6 +826,7 @@ function checkNotLivingWithoutDeathEvent(db: Database): CheckResult[] {
     code: 'NOT_LIVING_WITHOUT_DEATH',
     severity: 'notice' as CheckSeverity,
     message: `Person är markerad som ej levande men saknar dödshändelse`,
+    messageParams: {},
     personIds: [r.person_id],
   }));
 }
@@ -815,6 +848,7 @@ function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): Ch
     code,
     severity: 'notice' as CheckSeverity,
     message: `${messageLabel} saknar källhänvisning`,
+    messageParams: {},
     personIds: [r.person_id],
     eventIds: [r.event_id],
   }));
