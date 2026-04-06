@@ -84,6 +84,11 @@ const api = {
     genneyDiscover: (opts: unknown) => ipcRenderer.invoke('import:genneyDiscover', opts),
     genneyRun: (opts: unknown) => ipcRenderer.invoke('import:genneyRun', opts),
     onProgress: (cb: (msg: string) => void) => ipcRenderer.on('import:genneyProgress', (_e, data: { message: string }) => cb(data.message)),
+    holgerSelectFile: () => ipcRenderer.invoke('import:holgerSelectFile'),
+    holgerSelectMedia: () => ipcRenderer.invoke('import:holgerSelectMedia'),
+    holgerRun: (opts: unknown) => ipcRenderer.invoke('import:holgerRun', opts),
+    onHolgerProgress: (cb: (msg: string) => void) =>
+      ipcRenderer.on('import:holgerProgress', (_e, data: { message: string }) => cb(data.message)),
   },
   db: {
     getCurrent: () => ipcRenderer.invoke('db:getCurrent'),
