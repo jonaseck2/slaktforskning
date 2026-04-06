@@ -266,4 +266,27 @@ describe('normalizeForImport', () => {
       expect(childAll(nameNode!, 'SURN')).toHaveLength(1);
     });
   });
+
+  describe('TRAN → additional NAME node (aka)', () => {
+    it('creates an aka NAME node from a TRAN child on NAME', () => {
+      const gedcom = [
+        '0 @I1@ INDI',
+        '1 NAME Johann /Müller/',
+        '2 TRAN Johan /Miller/',
+        '0 TRLR',
+      ].join('\n');
+      const nodes = parseGedcom(gedcom);
+      const result = normalizeForImport(nodes, '7.0');
+
+      const indi = result.find(n => n.tag === 'INDI');
+      // Get all NAME children of INDI
+      const nameNodes = childAll(indi!, 'NAME');
+      expect(nameNodes).toHaveLength(2);
+      const akaName = nameNodes.find(n =>
+        n.children.some(c => c.tag === 'TYPE' && c.value === 'aka')
+      );
+      expect(akaName).toBeDefined();
+      expect(akaName!.value).toBe('Johan /Miller/');
+    });
+  });
 });

@@ -113,36 +113,6 @@
         </div>
       </div>
 
-      <!-- Relationer section -->
-      <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('relationships')">
-          <span class="panel-chevron">{{ sections.relationships ? '▾' : '▸' }}</span>
-          {{ $t('panel.relationships') }}
-          <span class="panel-section-header-action" @click.stop="showRelationPicker = !showRelationPicker">+ Relation</span>
-        </button>
-        <div v-if="sections.relationships" class="panel-section-body">
-          <!-- Inline relation picker -->
-          <div v-if="showRelationPicker" class="panel-relation-picker">
-            <button class="btn-dark" @click="openAddRelative('parent'); showRelationPicker = false">+ Förälder</button>
-            <button class="btn-dark" @click="openAddRelative('spouse'); showRelationPicker = false">+ Partner</button>
-            <button class="btn-dark" @click="openAddRelative('child'); showRelationPicker = false">+ Barn</button>
-          </div>
-          <div v-if="relationships.length === 0" class="panel-empty-section">—</div>
-          <div
-            v-for="rel in relationships"
-            :key="rel.id"
-            class="panel-rel-row"
-          >
-            <button class="panel-rel-type-btn" @click="openRelEdit(rel)">{{ relLabel(rel) }}</button>
-            <button
-              v-if="rel.otherId"
-              class="panel-rel-person"
-              @click="$emit('select', rel.otherId)"
-            >{{ rel.otherName }}</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Grupper section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('groups')">
@@ -213,33 +183,6 @@
           <label>{{ $t('names.patronymicBase') }}<input v-model="nameFormData.patronymic_base" type="text" /></label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="cancelNameForm">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Relationship edit modal -->
-    <div v-if="editingRel" class="modal-overlay" @click.self="editingRel = null">
-      <div class="modal">
-        <h3>{{ $t('common.edit') }} {{ relLabel(editingRel) }}</h3>
-        <form @submit.prevent="saveRelEdit">
-          <label>{{ $t('common.type') }}
-            <select v-model="relEditForm.subtype">
-              <option value="">—</option>
-              <template v-if="editingRel.type === 'couple'">
-                <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
-              </template>
-              <template v-else-if="editingRel.type === 'parent_child'">
-                <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('parentChildSubtypes.' + st) }}</option>
-              </template>
-            </select>
-          </label>
-          <label>{{ $t('common.notes') }}
-            <textarea v-model="relEditForm.notes" rows="2" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="editingRel = null">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
@@ -370,7 +313,6 @@ const sections = reactive({
   person: loadSection('person', false),
   names: loadSection('names', false),
   events: loadSection('events', true),
-  relationships: loadSection('relationships', false),
   groups: loadSection('groups', false),
   research: loadSection('research', false),
 });
