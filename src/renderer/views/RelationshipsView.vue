@@ -7,7 +7,15 @@
     <p v-if="total > 0" class="count-label">
       {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>
-    <div v-if="relationships.length === 0 && !loading" class="empty">
+    <div v-if="relationships.length > 0" class="filter-chips">
+      <button
+        v-for="f in typeFilters"
+        :key="f.value"
+        :class="['chip', { active: activeTypeFilter === f.value }]"
+        @click="activeTypeFilter = f.value"
+      >{{ f.label }}</button>
+    </div>
+    <div v-if="filteredRelationships.length === 0 && !loading" class="empty">
       {{ $t('relationships.emptyState') }}
     </div>
     <table v-else class="data-table">
@@ -22,7 +30,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="rel in relationships"
+          v-for="rel in filteredRelationships"
           :key="rel.id"
           class="clickable-row"
           @click="goToDetail(rel.id)"
@@ -131,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
@@ -172,6 +180,32 @@ const offset = ref(0);
 const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
+
+const activeTypeFilter = ref<string>('all');
+
+const typeCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const rel of relationships.value) {
+    counts[rel.type] = (counts[rel.type] ?? 0) + 1;
+  }
+  return counts;
+});
+
+const typeFilters = computed(() => [
+  { value: 'all', label: `${t('common.all')} (${relationships.value.length})` },
+  ...RELATIONSHIP_TYPE_VALUES
+    .filter(type => (typeCounts.value[type] ?? 0) > 0)
+    .map(type => ({
+      value: type,
+      label: `${t('relTypes.' + type)} (${typeCounts.value[type] ?? 0})`,
+    })),
+]);
+
+const filteredRelationships = computed(() =>
+  activeTypeFilter.value === 'all'
+    ? relationships.value
+    : relationships.value.filter(r => r.type === activeTypeFilter.value)
+);
 
 let observer: IntersectionObserver | null = null;
 
@@ -231,6 +265,7 @@ function getSubtypeLabel(type: string, subtype: string): string {
 async function load() {
   if (!window.api) return;
   loading.value = true;
+  activeTypeFilter.value = 'all';
   try {
     const result = await window.api.relationships.listPage(PAGE_SIZE, 0) as { relationships: RelRow[]; total: number };
     relationships.value = result.relationships;
@@ -310,6 +345,10 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to RelationshipsView */
+.filter-chips { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.chip { padding: 4px 12px; border-radius: 12px; border: 1px solid #c8d0db; background: #f0f4f8; color: #4a5568; cursor: pointer; font-size: 13px; }
+.chip:hover { background: #e2e8f0; }
+.chip.active { background: #2c3e50; color: white; border-color: #2c3e50; }
 .type-badge {
   background: #fef3c7;
   color: #92400e;

@@ -28,6 +28,7 @@ export default {
     unknown: '(okänd)',
     back: 'Tillbaka',
     view: 'Visa',
+    all: 'Alla',
   },
   persons: {
     title: 'Personer',
