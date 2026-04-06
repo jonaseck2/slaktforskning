@@ -265,6 +265,7 @@ export default {
     civil_union: 'Civil Union',
     cohabitation: 'Cohabitation',
     unknown: 'Unknown',
+    other: 'Other',
   },
   parentChildSubtypes: {
     biological: 'Biological',

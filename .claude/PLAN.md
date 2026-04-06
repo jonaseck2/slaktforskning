@@ -92,6 +92,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.26.2: E2E flaky tests — AbortError retry, missing mutating() wrappers, btn-add selector, viz back/detail buttons | [archive](plans/archive/2026-04-06-e2e-fix-flaky-tests.md) |
 | Fix | v0.26.3: Full name rendering — `formatFullName()` in nameUtils, replaces truncated `primaryName()` in all 4 reports | [archive](plans/archive/2026-04-06-full-name-rendering.md) |
 | v0.26.4–v0.30.1 | Tree-first editing: PersonPanel full redesign (header, Person/Namn/Händelser/Relationer/Källor/Grupper sections) + ⊕ hover buttons on PedigreeChart + HourglassChart | [plan](plans/archive/2026-04-06-tree-first-editing.md) |
+| v0.32.0–v0.35.2 | GEDCOM full standard support: refactor to src/import/gedcom/, 7.0 normalization (SNOTE/EXID/TRAN/PHRASE), ValidationReport with data-loss detail, round-trip export (identifiers, coords, repos, transcription), ADDR/MAP in standard core | [archive](plans/archive/2026-04-06-gedcom-full-support.md) |
 | v0.35.0 | Holger ElevateDB direct import: pure Python binary reader (EDBExtractor.py), TypeScript transform, Docker NDJSON pipeline, IPC/MCP/UI | [archive](plans/archive/2026-04-06-holger-dbisam-import.md) |
 
 ---
@@ -106,16 +107,6 @@ See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 - [x] Media path remapping (Windows → local mediaDir)
 - [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
 - [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
-
-### GEDCOM Full Standard Support [feature]
-See `.claude/plans/2026-04-06-gedcom-full-support.md` for the full plan.
-Full standards-conformant import of GEDCOM 5.5.1, 5.5.5, and 7.0 with data-loss validation.
-- [x] Step 1: Refactor `src/gedcom/importer.ts` → `src/import/gedcom/` (pure refactor, no behavior change)
-- [x] Step 2: Version detection + 5.5.5 acceptance (parse identically to 5.5.1)
-- [x] Step 3: 7.0 normalization layer (SNOTE, EXID, TRAN, PHRASE, CONC, uppercase TYPE)
-- [x] Step 4: Data loss validation report (replace `skipped` array with rich `ValidationReport`)
-- [x] Step 5: Round-trip export improvements (place coords, identifiers, repos, citation transcription)
-- [x] Step 6: Move standard-compliant profile logic to core (ADDR, MAP parsing)
 
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.

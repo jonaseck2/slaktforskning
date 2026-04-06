@@ -14,7 +14,7 @@
           <th>{{ $t('sources.sourceTitle') }}</th>
           <th>{{ $t('sources.author') }}</th>
           <th>{{ $t('common.type') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -27,7 +27,7 @@
           <td>{{ source.title }}</td>
           <td>{{ source.author || '—' }}</td>
           <td><span v-if="source.source_type" class="type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span></td>
-          <td>
+          <td class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="removeSource(source.id)">✕</button>
           </td>
         </tr>
@@ -181,6 +181,7 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to SourcesView */
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .type-badge {
   background: #ede9fe;
   color: #5b21b6;

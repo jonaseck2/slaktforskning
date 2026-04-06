@@ -16,7 +16,7 @@
           <th>{{ $t('media.title_label') }}</th>
           <th>{{ $t('media.format') }}</th>
           <th>{{ $t('media.fileRef') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -116,6 +116,9 @@ onMounted(load);
   vertical-align: middle;
 }
 .actions-cell {
+  width: 1px;
+  white-space: nowrap;
+  text-align: right;
   display: flex;
   gap: 6px;
   align-items: center;

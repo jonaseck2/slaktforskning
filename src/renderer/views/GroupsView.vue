@@ -12,7 +12,7 @@
           <th>{{ $t('groups.name') }}</th>
           <th>{{ $t('groups.members') }}</th>
           <th>{{ $t('groups.notes') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -25,7 +25,7 @@
           <td>{{ g.name }}</td>
           <td>{{ g.memberCount }}</td>
           <td class="notes-cell">{{ g.notes }}</td>
-          <td>
+          <td class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="deleteGroup(g.id)">✕</button>
           </td>
         </tr>
@@ -127,6 +127,7 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to GroupsView */
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .notes-cell {
   color: #777;
   font-size: 13px;

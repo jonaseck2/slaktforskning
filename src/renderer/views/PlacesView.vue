@@ -19,7 +19,7 @@
       <thead>
         <tr>
           <th>{{ $t('places.name') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -154,4 +154,5 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to PlacesView */
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 </style>

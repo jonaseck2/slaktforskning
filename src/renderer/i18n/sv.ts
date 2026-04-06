@@ -265,6 +265,7 @@ export default {
     civil_union: 'Partnerskap',
     cohabitation: 'Samboskap',
     unknown: 'Okänt',
+    other: 'Annat',
   },
   parentChildSubtypes: {
     biological: 'Biologisk',
