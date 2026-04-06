@@ -37,7 +37,7 @@ export const RELATIONSHIP_TYPE_VALUES = [
 ] as const;
 
 export const COUPLE_SUBTYPE_VALUES = [
-  'marriage', 'civil_union', 'cohabitation', 'unknown',
+  'marriage', 'civil_union', 'cohabitation', 'unknown', 'other',
 ] as const;
 
 export const PARENT_CHILD_SUBTYPE_VALUES = [

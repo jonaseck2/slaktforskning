@@ -30,7 +30,7 @@
           <th>{{ $t('researchTasks.status') }}</th>
           <th>{{ $t('persons.title') }}</th>
           <th>{{ $t('researchTasks.task') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -310,6 +310,7 @@ onMounted(load);
 
 <style scoped>
 /* Unique to ResearchTasksView */
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .priority-badge {
   display: inline-block;
   width: 24px;

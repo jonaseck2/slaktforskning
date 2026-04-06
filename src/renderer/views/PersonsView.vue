@@ -25,7 +25,7 @@
             <th>{{ $t('persons.birthPlace') }}</th>
             <th>{{ $t('persons.deathDate') }}</th>
             <th>{{ $t('persons.deathPlace') }}</th>
-            <th>{{ $t('common.actions') }}</th>
+            <th class="actions-cell">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -46,7 +46,7 @@
             <td>{{ person.birth_place ?? '' }}</td>
             <td>{{ person.death_date ?? '' }}</td>
             <td>{{ person.death_place ?? '' }}</td>
-            <td>
+            <td class="actions-cell">
               <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">✕</button>
             </td>
           </tr>
@@ -268,4 +268,5 @@ onActivated(async () => {
 .sex-U { background: #f3f4f6; color: #6b7280; }
 .radio-group { display: flex; gap: 16px; margin-top: 4px; }
 .radio-label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-weight: normal; }
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 </style>

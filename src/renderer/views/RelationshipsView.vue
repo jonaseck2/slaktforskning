@@ -28,7 +28,7 @@
           <th>{{ $t('relationships.person2') }}</th>
           <th>{{ $t('common.type') }}</th>
           <th>{{ $t('relationshipDetail.subtype') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -82,7 +82,7 @@
           </td>
           <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
           <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
-          <td>
+          <td class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="removeRelationship(rel.id)">✕</button>
           </td>
         </tr>
@@ -361,4 +361,5 @@ onActivated(async () => {
   color: #888;
   margin-right: 5px;
 }
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 </style>
