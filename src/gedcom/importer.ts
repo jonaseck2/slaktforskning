@@ -123,6 +123,15 @@ function resolvePlace(
   return place;
 }
 
+function remapHolgerMediaPath(winPath: string, mediaDir: string): string {
+  // Extract the relative path after 'Media\' or 'Media/' (case-insensitive)
+  const idx = winPath.search(/[Mm]edia[/\\]/);
+  if (idx === -1) return winPath;
+  const afterMedia = winPath.slice(idx + 6); // 'Media\' or 'Media/' are both 6 chars
+  const relative = afterMedia.replace(/\\/g, '/');
+  return `${mediaDir.replace(/\/$/, '')}/${relative}`;
+}
+
 function resolveNote(node: GedcomNode, noteMap: Map<string, string>): string {
   const noteNode = getChild(node, 'NOTE');
   if (!noteNode) return '';
@@ -141,13 +150,17 @@ function importObjeNode(
   db: Database,
   objeNode: GedcomNode,
   objeMap: Map<string, string>,
+  options?: ImportOptions,
 ): string | null {
   // Reference to a previously imported top-level OBJE record: `1 OBJE @M1@`
   if (objeNode.value?.startsWith('@')) {
     return objeMap.get(objeNode.value) ?? null;
   }
   // Inline embedded OBJE
-  const file = getChild(objeNode, 'FILE')?.value ?? '';
+  let file = getChild(objeNode, 'FILE')?.value ?? '';
+  if (file && options?.mediaDir) {
+    file = remapHolgerMediaPath(file, options.mediaDir);
+  }
   const form = getChild(objeNode, 'FORM')?.value ?? null;
   const titl = getChild(objeNode, 'TITL')?.value ?? null;
   const note = getChild(objeNode, 'NOTE')?.value ?? '';
@@ -173,6 +186,7 @@ function importEventNode(
   eventIdMap: Map<string, string>,
   noteMap: Map<string, string>,
   objeMap: Map<string, string>,
+  importOptions?: ImportOptions,
 ) {
   const dateNode = getChild(evNode, 'DATE');
   const placNode = getChild(evNode, 'PLAC');
@@ -227,7 +241,7 @@ function importEventNode(
 
   // Event media
   for (const objeNode of getChildren(evNode, 'OBJE')) {
-    const mediaId = importObjeNode(db, objeNode, objeMap);
+    const mediaId = importObjeNode(db, objeNode, objeMap, importOptions);
     if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id });
   }
 
@@ -238,6 +252,9 @@ export interface ImportOptions {
   /** Import profile. 'genney' enables Genney 4.1-specific extensions:
    *  Swedish hierarchical places, patronymic detection, _UID/_YHAPLOGROUP/_MHAPLOGROUP tags. */
   profile?: 'genney' | 'holger';
+  /** Local directory for remapping Windows-style OBJE FILE paths (Holger exports).
+   *  e.g. 'C:\\OurKind\\Media\\P12\\photo.jpg' → '{mediaDir}/P12/photo.jpg' */
+  mediaDir?: string;
 }
 
 export interface ImportReport {
@@ -306,7 +323,10 @@ function doImportGedcom(
   const objeMap = new Map<string, string>(); // xref → app media UUID
   for (const node of tree) {
     if (node.tag !== 'OBJE' || !node.xref) continue;
-    const file = getChild(node, 'FILE')?.value ?? '';
+    let file = getChild(node, 'FILE')?.value ?? '';
+    if (file && options?.mediaDir) {
+      file = remapHolgerMediaPath(file, options.mediaDir);
+    }
     const form = getChild(node, 'FORM')?.value ?? null;
     const titl = getChild(node, 'TITL')?.value ?? null;
     const note = getChild(node, 'NOTE')?.value ?? '';
@@ -444,7 +464,7 @@ function doImportGedcom(
     // Person events
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap);
+        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap, options);
         addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
       }
     }
@@ -491,7 +511,7 @@ function doImportGedcom(
 
     // Person-level media
     for (const objeNode of getChildren(node, 'OBJE')) {
-      const mediaId = importObjeNode(db, objeNode, objeMap);
+      const mediaId = importObjeNode(db, objeNode, objeMap, options);
       if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'person', entity_id: person.id });
     }
 
@@ -549,7 +569,7 @@ function doImportGedcom(
       // engagement event (pre-marriage) and IS imported normally.
       if (isHolger && gedTag === 'ENGA' && !hasMarr) continue;
       for (const evNode of getChildren(node, gedTag)) {
-        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap);
+        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap, options);
       }
     }
 
@@ -589,7 +609,7 @@ function doImportGedcom(
 
     // Family-level media
     for (const objeNode of getChildren(node, 'OBJE')) {
-      const mediaId = importObjeNode(db, objeNode, objeMap);
+      const mediaId = importObjeNode(db, objeNode, objeMap, options);
       if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id });
     }
 
