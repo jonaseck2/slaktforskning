@@ -500,6 +500,7 @@ export default {
     filterAll: 'All',
     noTasks: 'No research tasks',
     selectPersonOptional: 'Select person (optional)',
+    summary: '{count} research tasks · {open} active',
   },
   groups: {
     title: 'Groups',

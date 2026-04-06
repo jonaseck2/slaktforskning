@@ -500,6 +500,7 @@ export default {
     filterAll: 'Alla',
     noTasks: 'Inga forskningstips',
     selectPersonOptional: 'Välj person (valfri)',
+    summary: '{count} forskningsmål · {open} aktiva',
   },
   groups: {
     title: 'Grupper',

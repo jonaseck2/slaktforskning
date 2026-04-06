@@ -5,6 +5,10 @@
       <button class="btn-add" @click="showAddModal = true">{{ $t('researchTasks.addTask') }}</button>
     </div>
 
+    <p v-if="tasks.length > 0" class="count-label">
+      {{ $t('researchTasks.summary', { count: tasks.length, open: openCount }) }}
+    </p>
+
     <!-- Status filter chips -->
     <div class="filter-chips">
       <button
@@ -184,17 +188,21 @@ interface ResearchTask {
 
 const tasks = ref<ResearchTask[]>([]);
 const activeFilter = ref('all');
+
+const openCount = computed(() =>
+  tasks.value.filter(t => t.status === 'open' || t.status === 'in_progress').length
+);
 const expandedId = ref<string | null>(null);
 const showAddModal = ref(false);
 
 const STATUS_CYCLE: Array<'open' | 'in_progress' | 'done' | 'stopped'> = ['open', 'in_progress', 'done', 'stopped'];
 
 const filters = computed(() => [
-  { value: 'all', label: t('researchTasks.filterAll') },
-  { value: 'open', label: t('researchTasks.statuses.open') },
-  { value: 'in_progress', label: t('researchTasks.statuses.in_progress') },
-  { value: 'done', label: t('researchTasks.statuses.done') },
-  { value: 'stopped', label: t('researchTasks.statuses.stopped') },
+  { value: 'all',         label: `${t('researchTasks.filterAll')} (${tasks.value.length})` },
+  { value: 'open',        label: `${t('researchTasks.statuses.open')} (${tasks.value.filter(t => t.status === 'open').length})` },
+  { value: 'in_progress', label: `${t('researchTasks.statuses.in_progress')} (${tasks.value.filter(t => t.status === 'in_progress').length})` },
+  { value: 'done',        label: `${t('researchTasks.statuses.done')} (${tasks.value.filter(t => t.status === 'done').length})` },
+  { value: 'stopped',     label: `${t('researchTasks.statuses.stopped')} (${tasks.value.filter(t => t.status === 'stopped').length})` },
 ]);
 
 const filteredTasks = computed(() => {
