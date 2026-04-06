@@ -22,6 +22,8 @@
           :data-testid="'person-box-' + box.person.id"
           :class="['person-box', { clickable: !box.isFocal }]"
           @click="!box.isFocal && $emit('navigate', box.person.id)"
+          @mouseenter="hoveredPersonId = box.person.id"
+          @mouseleave="hoveredPersonId = null"
         >
           <rect
             :x="box.x" :y="box.y" :width="box.w" :height="box.h"
@@ -60,6 +62,28 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
           >† {{ box.person.deathDate }}</text>
+          <g
+            v-if="hoveredPersonId === box.person.id"
+            class="add-btn"
+            style="cursor: pointer;"
+            @click.stop="openAddPopover(box)"
+          >
+            <circle
+              :cx="box.x + box.w / 2" :cy="box.y + box.h"
+              r="8"
+              fill="white"
+              stroke="#2c3e50"
+              stroke-width="1.5"
+            />
+            <text
+              :x="box.x + box.w / 2" :y="box.y + box.h"
+              font-size="13"
+              text-anchor="middle"
+              dominant-baseline="central"
+              fill="#2c3e50"
+              style="pointer-events: none; user-select: none;"
+            >+</text>
+          </g>
         </g>
         <g
           v-for="btn in layout.collapseButtons"
@@ -90,27 +114,58 @@
       <button class="zoom-btn" @click="zoomOut">−</button>
       <button class="zoom-btn" @click="resetZoom" title="Reset zoom">↺</button>
     </div>
+
+    <!-- Add popover -->
+    <div
+      v-if="addPopover"
+      class="add-popover"
+      :style="{ left: addPopover.x + 'px', top: addPopover.y + 'px' }"
+      @click.stop
+    >
+      <button @click="startAddRelative('parent')">+ Förälder</button>
+      <button @click="startAddRelative('spouse')">+ Partner</button>
+      <button @click="startAddRelative('child')">+ Barn</button>
+    </div>
+
+    <!-- Add related person modal -->
+    <AddRelatedPersonModal
+      v-if="showAddRelative && addRelativePersonId"
+      :person-id="addRelativePersonId"
+      :mode="addRelativeMode"
+      @saved="onRelativeSaved"
+      @close="showAddRelative = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout, maxDescendantDepth } from '../../utils/chartLayout';
 import { fetchHourglassTree, loadAncestorGeneration, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, HourglassTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
+import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 
 useI18n();
 
 const props = defineProps<{ personId: string | undefined }>();
-const emit = defineEmits<{ navigate: [id: string] }>();
+const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
 const loadingMore = ref(false);
 const tree = ref<HourglassTree | null>(null);
 const collapsed = ref(new Set<string>());
+
+// Hover state for ⊕ button
+const hoveredPersonId = ref<string | null>(null);
+
+// Add popover state
+const addPopover = ref<{ personId: string; x: number; y: number } | null>(null);
+const showAddRelative = ref(false);
+const addRelativePersonId = ref<string | null>(null);
+const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
 
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], svgWidth: 1400, svgHeight: 688, collapseButtons: [] };
@@ -170,6 +225,37 @@ function boxFill(box: BoxLayout): string {
   return 'white';
 }
 
+function getPopoverPosition(box: BoxLayout): { x: number; y: number } {
+  const svgEl = scrollRef.value?.querySelector('svg');
+  if (!svgEl) return { x: 0, y: 0 };
+  const rect = svgEl.getBoundingClientRect();
+  const x = rect.left + (box.x + box.w / 2) * zoom.value;
+  const y = rect.top + (box.y + box.h) * zoom.value;
+  return { x, y };
+}
+
+function openAddPopover(box: BoxLayout) {
+  const pos = getPopoverPosition(box);
+  addPopover.value = { personId: box.person.id, x: pos.x, y: pos.y };
+}
+
+function startAddRelative(mode: 'parent' | 'spouse' | 'child') {
+  if (!addPopover.value) return;
+  addRelativePersonId.value = addPopover.value.personId;
+  addRelativeMode.value = mode;
+  addPopover.value = null;
+  showAddRelative.value = true;
+}
+
+function onRelativeSaved() {
+  showAddRelative.value = false;
+  emit('reload');
+}
+
+function onDocumentMousedown() {
+  addPopover.value = null;
+}
+
 async function load() {
   if (!props.personId) return;
   loading.value = true;
@@ -200,7 +286,13 @@ function centerOnFocal() {
 }
 
 watch(() => props.personId, load);
-onMounted(load);
+onMounted(() => {
+  load();
+  document.addEventListener('mousedown', onDocumentMousedown);
+});
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onDocumentMousedown);
+});
 </script>
 
 <style scoped>
@@ -229,6 +321,33 @@ onMounted(load);
 .person-box.clickable:hover rect:first-child { opacity: 0.9; }
 .collapse-btn { cursor: pointer; }
 .collapse-btn:hover circle { opacity: 0.7; }
+
+.add-btn { cursor: pointer; }
+.add-btn:hover circle { opacity: 0.8; }
+
+.add-popover {
+  position: fixed;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 6px;
+  display: flex;
+  gap: 4px;
+  z-index: 1000;
+  transform: translateX(-50%);
+}
+.add-popover button {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.add-popover button:hover { opacity: 0.9; }
 
 .zoom-controls {
   position: absolute;
