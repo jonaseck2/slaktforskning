@@ -121,8 +121,9 @@ function toggleDarkMode() {
   applyDarkMode();
 }
 
+const RAW_TEXT_SIZE = localStorage.getItem('textSize');
 const textSize = ref<'small' | 'medium' | 'large'>(
-  (localStorage.getItem('textSize') as 'small' | 'medium' | 'large') ?? 'small'
+  (RAW_TEXT_SIZE === 'medium' || RAW_TEXT_SIZE === 'large') ? RAW_TEXT_SIZE : 'small'
 );
 
 function applyTextSize() {
