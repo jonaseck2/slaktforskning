@@ -137,8 +137,9 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 ### Polish [feature]
 - [x] Keyboard navigation — Escape key closes all modals
 - [x] Data backup and restore
+- [x] Dark mode — global html.dark CSS overrides, toggle button in sidebar, localStorage persistence
+- [x] Cmd/Ctrl+F — focus sidebar search input
 - [ ] Undo/redo
-- [ ] Dark mode
 
 ### Fix: Genney import — address stored as parent place [fix]
 - [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
