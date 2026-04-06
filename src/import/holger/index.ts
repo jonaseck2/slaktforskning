@@ -18,8 +18,8 @@ import { unzipSync } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
 import { readGedcomFile } from '../../gedcom/encoding';
 import { parseGedcom } from '../../gedcom/parser';
-import { importGedcom } from '../../gedcom/importer';
-import type { ImportReport } from '../../gedcom/importer';
+import { importGedcom } from '../../import/gedcom';
+import type { ImportReport } from '../../import/gedcom';
 
 export interface HolgerImportOptions {
   /** Path to a .ged file, .zip file, or folder */

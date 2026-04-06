@@ -232,7 +232,7 @@ The import report modal gains a new "Data Loss" tab showing `unmappedData` and `
 
 ## Implementation Steps
 
-### Step 1: Refactor `src/gedcom/importer.ts` → `src/import/gedcom/`
+### Step 1: Refactor `src/gedcom/importer.ts` → `src/import/gedcom/` ✅ DONE
 
 - Move `src/gedcom/importer.ts` to `src/import/gedcom/import-core.ts`
 - Extract pure parser into `src/import/gedcom/parser.ts` (already somewhat separate)
