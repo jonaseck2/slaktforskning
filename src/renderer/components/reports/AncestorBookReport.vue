@@ -223,6 +223,18 @@
           <p class="ab-notes">{{ entry.notes }}</p>
         </div>
 
+        <!-- Photos -->
+        <div v-if="entry.media.length > 0" class="ab-subsection">
+          <h3 class="ab-subsection-heading">Foton</h3>
+          <div class="ab-photos">
+            <div v-for="m in entry.media" :key="m.id" class="ab-photo">
+              <img :src="`file://${m.filePath}`" class="ab-photo-img" :alt="m.title ?? ''" />
+              <p v-if="m.notes" class="ab-photo-note">{{ m.notes }}</p>
+              <p v-else-if="m.title" class="ab-photo-note ab-photo-note--title">{{ m.title }}</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Sources -->
         <div v-if="entry.sources.length > 0" class="ab-subsection">
           <h3 class="ab-subsection-heading">Källor</h3>
@@ -869,10 +881,41 @@ function handleAnchorClick(e: MouseEvent) {
 }
 .muted { color: #888; }
 
+.ab-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.ab-photo {
+  flex: 0 0 auto;
+  max-width: 160px;
+}
+.ab-photo-img {
+  display: block;
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+}
+.ab-photo-note {
+  margin: 4px 0 0 0;
+  font-size: 10px;
+  color: #555;
+  line-height: 1.4;
+  white-space: pre-line;
+  max-width: 160px;
+}
+.ab-photo-note--title {
+  font-style: italic;
+  color: #888;
+}
+
 /* ── Print overrides ── */
 @media print {
   .ab-person-summary { break-inside: avoid; }
   .ab-gen-group { break-inside: avoid; }
   .ab-table { font-size: 10px; }
+  .ab-photo { break-inside: avoid; }
 }
 </style>
