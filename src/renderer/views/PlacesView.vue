@@ -5,24 +5,31 @@
       <button class="btn-add" @click="showAddForm = true">{{ $t('places.addTitle') }}</button>
     </div>
     <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
+    <div v-if="places.length > 0" class="filter-chips">
+      <button
+        v-for="f in typeFilters"
+        :key="f.value"
+        :class="['chip', { active: activeTypeFilter === f.value }]"
+        @click="activeTypeFilter = f.value"
+      >{{ f.label }}</button>
+    </div>
     <div v-if="places.length === 0" class="empty">{{ $t('places.none') }}</div>
+    <div v-else-if="filteredPlaces.length === 0" class="empty">{{ $t('places.noMatchingFilter') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>
           <th>{{ $t('places.name') }}</th>
-          <th>{{ $t('places.type') }}</th>
           <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="place in places"
+          v-for="place in filteredPlaces"
           :key="place.id"
           class="clickable-row"
           @click="$router.push('/places/' + place.id)"
         >
           <td>{{ place.name }}</td>
-          <td>{{ place.place_type ? $t('placeTypes.' + place.place_type) : '—' }}</td>
           <td class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="deletePlace(place.id)">
               {{ $t('common.delete') }}
@@ -61,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onActivated, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
@@ -75,9 +82,35 @@ declare const window: Window & {
 
 interface PlaceRow { id: string; name: string; place_type: string | null; }
 
-useI18n();
+const { t } = useI18n();
 const router = useRouter();
 const places = ref<PlaceRow[]>([]);
+const activeTypeFilter = ref<string>('all');
+
+const typeCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const place of places.value) {
+    const key = place.place_type ?? 'other';
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+});
+
+const typeFilters = computed(() => [
+  { value: 'all', label: `${t('common.all')} (${places.value.length})` },
+  ...PLACE_TYPE_VALUES
+    .filter(type => (typeCounts.value[type] ?? 0) > 0)
+    .map(type => ({
+      value: type,
+      label: `${t('placeTypes.' + type)} (${typeCounts.value[type] ?? 0})`,
+    })),
+]);
+
+const filteredPlaces = computed(() =>
+  activeTypeFilter.value === 'all'
+    ? places.value
+    : places.value.filter(p => (p.place_type ?? 'other') === activeTypeFilter.value)
+);
 const showAddForm = ref(false);
 
 function handleKeydown(e: KeyboardEvent) {
@@ -121,63 +154,6 @@ onActivated(async () => {
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.count-label {
-  font-size: 13px;
-  color: #666;
-  margin: 0 0 8px;
-}
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.btn-add:hover { opacity: 0.9; }
-.empty { color: #999; padding: 40px; text-align: center; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { padding: 8px 12px; border-bottom: 1px solid #ddd; text-align: left; }
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
-}
-.clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #f0f4ff; }
-.btn-sm {
-  padding: 3px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-delete { background: #fee2e2; color: #b91c1c; }
-.btn-delete:hover { background: #fecaca; }
-.actions-cell { display: flex; gap: 4px; }
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-  display: flex; align-items: center; justify-content: center; z-index: 1000;
-}
-.modal {
-  background: white; border-radius: 8px; padding: 24px;
-  width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-}
-.modal h3 { margin: 0 0 16px; }
-form { display: flex; flex-direction: column; gap: 12px; }
-form > label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #555; }
-form input[type='text'], form select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-.modal-actions button { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; }
-.modal-actions button[type='submit'] { background: #2c3e50; color: white; }
-.btn-cancel { background: #e0e0e0; color: #333; }
+/* Unique to PlacesView */
+.actions-cell { white-space: nowrap; }
 </style>

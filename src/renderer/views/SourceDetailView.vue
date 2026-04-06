@@ -291,15 +291,6 @@ onMounted(load);
   margin: 0;
   font-size: 15px;
 }
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 4px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-}
 .field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -320,28 +311,6 @@ onMounted(load);
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
-}
-.empty-hint {
-  color: #999;
-  font-size: 13px;
-  padding: 12px 0;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.data-table th,
-.data-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-.data-table th {
-  background: #f8f8f8;
-  font-weight: 600;
-  font-size: 12px;
-  color: #666;
 }
 .entity-link {
   color: #1565c0;
@@ -364,25 +333,9 @@ onMounted(load);
 .confidence-1 { background: #fef3c7; color: #92400e; }
 .confidence-2 { background: #e0f2fe; color: #075985; }
 .confidence-3 { background: #dcfce7; color: #166534; }
-.btn-sm {
-  padding: 2px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-.btn-delete {
-  background: #fee;
-  color: #c0392b;
-}
 .btn-edit {
   background: #e8f4fd;
   color: #1565c0;
   margin-right: 4px;
-}
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
 }
 </style>

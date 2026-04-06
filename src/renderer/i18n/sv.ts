@@ -12,6 +12,14 @@ export default {
     importExport: 'Import / Export',
     groups: 'Grupper',
     focusPerson: 'Fokusperson',
+    settings: 'Inställningar',
+  },
+  settings: {
+    appearance: 'Utseende',
+    light: 'Ljust',
+    dark: 'Mörkt',
+    textSize: 'Textstorlek',
+    language: 'Språk',
   },
   common: {
     cancel: 'Avbryt',
@@ -28,6 +36,7 @@ export default {
     unknown: '(okänd)',
     back: 'Tillbaka',
     view: 'Visa',
+    all: 'Alla',
   },
   persons: {
     title: 'Personer',
@@ -87,6 +96,8 @@ export default {
     person2: 'Person 2',
     searchPerson: 'Sök efter en person\u2026',
     confirmDelete: 'Ta bort denna relation? Detta kan inte ångras.',
+    showingOf: 'Visar {shown} av {total} relationer',
+    noMatchingFilter: 'Inga relationer matchar detta filter.',
   },
   relationshipDetail: {
     title: 'Relation',
@@ -313,6 +324,7 @@ export default {
     title: 'Orter',
     addTitle: 'Lägg till ort',
     none: 'Inga orter',
+    noMatchingFilter: 'Inga platser matchar detta filter.',
     name: 'Namn',
     type: 'Typ',
     parentPlace: 'Överordnad ort',
@@ -496,6 +508,7 @@ export default {
     filterAll: 'Alla',
     noTasks: 'Inga forskningstips',
     selectPersonOptional: 'Välj person (valfri)',
+    summary: '{count} forskningsmål · {open} aktiva',
   },
   groups: {
     title: 'Grupper',
@@ -557,5 +570,6 @@ export default {
     linkedEntities: 'Kopplad till',
     addMedia: 'Lägg till media',
     title_label: 'Titel',
+    missingCount: '{count} saknas',
   },
 };

@@ -1,36 +1,29 @@
 <template>
   <div class="visualization-view">
     <!-- Tab bar -->
-    <div v-if="focalPerson" class="viz-tabs" role="tablist">
+    <div v-if="focalPerson" class="tab-bar" role="tablist">
       <button class="btn-back" @click="router.back()">←</button>
-      <div class="viz-focal-label" data-testid="visualization-focal-name">
-        <PersonName
-          :given-name="focalGivenName"
-          :surname="focalSurname"
-          :preferred-name="focalPreferredName"
-        />
-      </div>
-      <button class="btn-detail" @click="router.push('/persons/' + personId)">{{ $t('visualization.viewDetail') }}</button>
       <button
         role="tab" :aria-selected="activeTab === 'pedigree'"
-        :class="['tab', { active: activeTab === 'pedigree' }]"
+        :class="['tab-btn', { active: activeTab === 'pedigree' }]"
         data-testid="tab-pedigree" @click="setTab('pedigree')"
       >{{ $t('visualization.tab.pedigree') }}</button>
       <button
         role="tab" :aria-selected="activeTab === 'circle'"
-        :class="['tab', { active: activeTab === 'circle' }]"
+        :class="['tab-btn', { active: activeTab === 'circle' }]"
         data-testid="tab-circle" @click="setTab('circle')"
       >{{ $t('visualization.tab.circle') }}</button>
       <button
         role="tab" :aria-selected="activeTab === 'hourglass'"
-        :class="['tab', { active: activeTab === 'hourglass' }]"
+        :class="['tab-btn', { active: activeTab === 'hourglass' }]"
         data-testid="tab-hourglass" @click="setTab('hourglass')"
       >{{ $t('visualization.tab.hourglass') }}</button>
       <button
         role="tab" :aria-selected="activeTab === 'timeline'"
-        :class="['tab', { active: activeTab === 'timeline' }]"
+        :class="['tab-btn', { active: activeTab === 'timeline' }]"
         data-testid="tab-timeline" @click="setTab('timeline')"
       >{{ $t('visualization.tab.timeline') }}</button>
+      <button class="btn-detail" @click="router.push('/persons/' + personId)">{{ $t('visualization.viewDetail') }}</button>
     </div>
 
     <!-- Empty state -->
@@ -99,7 +92,6 @@ import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
-import PersonName from '../components/PersonName.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
@@ -118,9 +110,6 @@ const router = useRouter();
 const focusStore = useFocusStore();
 
 const focalPerson = ref<Person | null>(null);
-const focalGivenName = ref<string | null>(null);
-const focalSurname = ref<string | null>(null);
-const focalPreferredName = ref<string | null>(null);
 const noPersonsExist = ref(false);
 const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
@@ -188,11 +177,6 @@ async function load() {
   const person = (await window.api.persons.get(id)) as Person | null;
   if (!person) { focalPerson.value = null; return; }
   focalPerson.value = person;
-  const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number }>;
-  const primary = names.sort((a, b) => a.sort_order - b.sort_order)[0];
-  focalGivenName.value = primary?.given_name ?? null;
-  focalSurname.value = primary?.surname ?? null;
-  focalPreferredName.value = primary?.preferred_name ?? null;
   // Show focal person in panel unless user has already selected a different node
   if (!selectedPersonId.value) selectedPersonId.value = id;
 }
@@ -216,33 +200,14 @@ onActivated(load);
   height: 100%;
 }
 
-/* Tab bar */
-.viz-tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border-bottom: 2px solid #e5e7eb;
-  padding: 0 12px;
-  flex-shrink: 0;
-  background: white;
-}
-.viz-focal-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-right: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
-}
+/* Back and detail navigation buttons (view-specific) */
 .btn-back {
   background: none;
   border: none;
   color: #2c3e50;
   cursor: pointer;
   padding: 4px 8px;
-  font-size: 16px;
+  font-size: var(--font-lg);
   margin-right: 4px;
 }
 .btn-back:hover { opacity: 0.7; }
@@ -253,24 +218,10 @@ onActivated(load);
   color: #2c3e50;
   cursor: pointer;
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   border-radius: 4px;
 }
 .btn-detail:hover { background: #f0f4f8; }
-.tab {
-  background: none;
-  border: none;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #666;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  border-radius: 4px 4px 0 0;
-  white-space: nowrap;
-}
-.tab:hover { color: #2c3e50; background: #f9f9f9; }
-.tab.active { color: #2c3e50; border-bottom-color: #2c3e50; font-weight: 600; }
 
 /* Body: chart + panel */
 .viz-body {
