@@ -61,6 +61,27 @@ function personIdsWithEvent(db: Database, eventType: string): Set<string> {
   return new Set(rows.map(r => r.person_id));
 }
 
+/**
+ * Returns true only if date string `a` is definitively later than `b`.
+ * Handles mixed precision: year-only ("1777"), year-month ("1777-02"),
+ * full date ("1777-02-12"). Never flags when precision is insufficient —
+ * e.g. birth "1777-02-12" vs death "1777" returns false because we don't
+ * know which month in 1777 the person died.
+ */
+function dateDefinitelyAfter(a: string, b: string): boolean {
+  const aYear = a.substring(0, 4);
+  const bYear = b.substring(0, 4);
+  if (aYear > bYear) return true;
+  if (aYear < bYear) return false;
+  if (a.length < 7 || b.length < 7) return false;
+  const aMonth = a.substring(5, 7);
+  const bMonth = b.substring(5, 7);
+  if (aMonth > bMonth) return true;
+  if (aMonth < bMonth) return false;
+  if (a.length < 10 || b.length < 10) return false;
+  return a.substring(8, 10) > b.substring(8, 10);
+}
+
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -84,7 +105,7 @@ function checkBirthAfterDeath(db: Database): CheckResult[] {
   for (const [personId, deathList] of deaths) {
     for (const d of deathList) {
       for (const b of births.get(personId) ?? []) {
-        if (b.date_value > d.date_value) {
+        if (dateDefinitelyAfter(b.date_value, d.date_value)) {
           results.push({
             code: 'BIRTH_AFTER_DEATH',
             severity: 'error',
@@ -146,7 +167,7 @@ function checkBurialBeforeDeath(db: Database): CheckResult[] {
   for (const [personId, burialList] of burials) {
     for (const b of burialList) {
       for (const d of deaths.get(personId) ?? []) {
-        if (b.date_value < d.date_value) {
+        if (dateDefinitelyAfter(d.date_value, b.date_value)) {
           results.push({
             code: 'BURIAL_BEFORE_DEATH',
             severity: 'error',
