@@ -86,6 +86,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.24.2 | UX design system — all list views match QualityView (GroupsView + PersonsView/RelationshipsView/PlacesView/SourcesView/ResearchTasksView/ReportsView) | [archive](plans/archive/2026-04-05-ux-design-system.md) |
 | Fix | v0.24.1: Quality checks CPU saturation on large trees — 4-way event_participants self-join → 2-query+JS; V8 CPU profiling infrastructure; performance-profiling skill | [archive](plans/archive/2026-04-06-checks-performance.md) |
 | v0.25.0 | GEDCOM media import/export: inline+top-level OBJE on INDI/FAM/events, export OBJE blocks; media section typo fix | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
+| Fix | v0.25.2: Genney import — SPLACE address fields (STREET, POSTALCODE, CITY, COUNTRY) now stored in place address columns | [archive](plans/archive/2026-04-06-genney-address-fields.md) |
 
 ---
 
@@ -141,8 +142,4 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 - [x] Dark mode — global html.dark CSS overrides, toggle button in sidebar, localStorage persistence
 - [x] Cmd/Ctrl+F — focus sidebar search input
 - [ ] Undo/redo
-
-### Fix: Genney import — address stored as parent place [fix]
-- [ ] In the Genney importer, address-like data is incorrectly stored as a parent_place relationship instead of in the place's address fields (street, postal_code, city, country)
-- [ ] Investigate which Genney column carries the address vs. the place hierarchy; fix the transform to write address fields directly
 

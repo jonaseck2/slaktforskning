@@ -81,6 +81,11 @@ export interface SPlaceRow {
   LONGITUD?: number | null;
   NOTE?: string | null;
   TYPE?: number | null;    // 2=parish, etc.
+  // Address fields — present in some Genney databases (analogous to REPO table)
+  STREET?: string | null;
+  POSTALCODE?: string | null;
+  CITY?: string | null;
+  COUNTRY?: string | null;
   [key: string]: unknown;
 }
 
@@ -319,7 +324,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   // would otherwise saturate the CPU for a typical Genney database.
   const stmts = {
     insertPlace: db.prepare(
-      `INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, notes, street, postal_code, city, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
     insertPerson: db.prepare(
       `INSERT INTO persons (id, sex, living, notes) VALUES (?, ?, ?, ?)`
@@ -403,6 +408,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     stmts.insertPlace.run([
       id, name, name.toLowerCase().trim().replace(/\s+/g, ' '),
       mapSplaceType(sp.TYPE), parentUuid, lat, lon, sp.NOTE ?? '',
+      sp.STREET ?? null, sp.POSTALCODE ?? null, sp.CITY ?? null, sp.COUNTRY ?? null,
     ]);
     splaceFlatMap.set(rid, id);
     importedSplaces.add(rid);

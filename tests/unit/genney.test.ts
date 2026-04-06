@@ -322,6 +322,37 @@ describe('transformGenney — places', () => {
     expect(place.latitude).toBeNull();
     expect(place.longitude).toBeNull();
   });
+
+  it('imports SPLACE address fields (STREET, POSTALCODE, CITY, COUNTRY) into place address columns', () => {
+    const tables = emptyTables();
+    tables.SPLACE = [{
+      RID: 1, NAME: 'Sundsvall', TYPE: 3,
+      STREET: 'Storgatan 5', POSTALCODE: '852 31', CITY: 'Sundsvall', COUNTRY: 'Sverige',
+    }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
+    tables.EVENT = [{ RID: 'E1', TYPE: 'RESI', OWNER: 'I1' }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
+    transformGenney(db, tables);
+    const place = listPlaces(db)[0];
+    expect(place.street).toBe('Storgatan 5');
+    expect(place.postal_code).toBe('852 31');
+    expect(place.city).toBe('Sundsvall');
+    expect(place.country).toBe('Sverige');
+  });
+
+  it('leaves address fields null when SPLACE has no address columns', () => {
+    const tables = emptyTables();
+    tables.SPLACE = [{ RID: 1, NAME: 'Skepperstad', TYPE: 2 }];
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
+    tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', OWNER: 'I1' }];
+    tables.EVENT_PLACE = [{ EVENT: 'E1', PLACE: 1 }];
+    transformGenney(db, tables);
+    const place = listPlaces(db)[0];
+    expect(place.street).toBeNull();
+    expect(place.postal_code).toBeNull();
+    expect(place.city).toBeNull();
+    expect(place.country).toBeNull();
+  });
 });
 
 // ── sources & citations ───────────────────────────────────────────────────
