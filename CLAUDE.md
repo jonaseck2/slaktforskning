@@ -498,7 +498,7 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Database tools:** `get_current_database`, `switch_database`
 
-**GEDCOM/import tools:** `import_gedcom` (`.ged` files only — for Genney GEDCOM exports use `profile: "genney"`), `import_genney` (`.backup`/`.gcc` archives or Derby directories), `export_gedcom`
+**GEDCOM/import tools:** `import_gedcom` (`.ged` files only — for Genney GEDCOM exports use `profile: "genney"`), `import_genney` (`.backup`/`.gcc` archives or Derby directories), `import_holger` (`.ged` or `.zip` file or folder containing `.ged` — for Holger/OurKind GEDCOM exports; accepts `media_dir` for remapping Windows OBJE FILE paths to a local directory), `export_gedcom`
 
 **UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
 
