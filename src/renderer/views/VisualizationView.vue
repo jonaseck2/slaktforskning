@@ -43,6 +43,7 @@
           v-if="activeTab === 'pedigree'"
           :person-id="personId"
           @navigate="navigateTo"
+          @reload="load"
         />
         <CircleChart
           v-if="activeTab === 'circle'"
@@ -53,6 +54,7 @@
           v-if="activeTab === 'hourglass'"
           :person-id="personId"
           @navigate="navigateTo"
+          @reload="load"
         />
         <TimelineChart
           v-if="activeTab === 'timeline'"
@@ -76,6 +78,7 @@
           </div>
           <PersonPanel
             :person-id="selectedPersonId ?? personId ?? null"
+            @relative-added="load"
           />
         </div>
       </template>
