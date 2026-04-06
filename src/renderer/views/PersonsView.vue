@@ -250,57 +250,11 @@ onActivated(async () => {
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
+/* Unique to PersonsView */
 .header-actions {
   display: flex;
   gap: 8px;
   align-items: center;
-}
-.count-label {
-  font-size: 13px;
-  color: #666;
-  margin: 0 0 8px;
-}
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th,
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
-}
-.clickable-row {
-  cursor: pointer;
-}
-.clickable-row:hover {
-  background: #f0f4ff;
-}
-.person-link {
-  color: #2563eb;
-  cursor: pointer;
-  text-decoration: none;
-}
-.person-link:hover {
-  text-decoration: underline;
 }
 .sex-badge {
   display: inline-block;
@@ -309,94 +263,9 @@ onActivated(async () => {
   font-size: 12px;
   font-weight: 600;
 }
-.sex-M { background: #dbeafe; color: #1d4ed8; }
-.sex-F { background: #fce7f3; color: #be185d; }
+.sex-M { background: #dbeafe; color: #1e40af; }
+.sex-F { background: #fce7f3; color: #9d174d; }
 .sex-U { background: #f3f4f6; color: #6b7280; }
-.scroll-sentinel { height: 1px; }
-button {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-button:hover { opacity: 0.9; }
-button:disabled { opacity: 0.5; cursor: default; }
-.btn-sm {
-  padding: 3px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-delete { background: #fee2e2; color: #b91c1c; }
-.btn-delete:hover { background: #fecaca; }
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.btn-add:hover { opacity: 0.9; }
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 420px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-}
-.modal h3 { margin: 0 0 16px; }
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-form > label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-}
-form input[type='text'],
-form textarea {
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-}
-.radio-group {
-  display: flex;
-  gap: 16px;
-  margin-top: 2px;
-}
-.radio-label {
-  font-weight: normal;
-  flex-direction: row !important;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-.btn-cancel { background: #e0e0e0; color: #333; }
+.radio-group { display: flex; gap: 16px; margin-top: 4px; }
+.radio-label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-weight: normal; }
 </style>
