@@ -592,7 +592,7 @@ export default {
     title: 'Media',
     nav: 'Media',
     open: 'Open',
-    attach: '+ Media',
+    attach: 'Add Media',
     attachTo: 'Attach to',
     delete: 'Delete',
     noMedia: 'No media attached.',
