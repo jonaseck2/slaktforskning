@@ -1,0 +1,331 @@
+/* ======================================================
+   shared.css — Global design system for Släktforskning
+   Imported once in main.ts. Never scope these classes.
+   ====================================================== */
+
+/* ── 1. CSS custom properties ──────────────────────────── */
+:root {
+  --font-xs:   11px;
+  --font-sm:   13px;
+  --font-base: 14px;
+  --font-md:   15px;
+  --font-lg:   16px;
+}
+
+/* ── 2. Text size tiers (screen only — never affects print/export) */
+@media screen {
+  html.text-medium {
+    --font-xs:   13px;
+    --font-sm:   17px;
+    --font-base: 18px;
+    --font-md:   19px;
+    --font-lg:   20px;
+  }
+  html.text-large {
+    --font-xs:   15px;
+    --font-sm:   21px;
+    --font-base: 22px;
+    --font-md:   23px;
+    --font-lg:   24px;
+  }
+}
+
+/* ── 3. Layout ─────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.count-label {
+  font-size: var(--font-sm);
+  color: #666;
+  margin: 0 0 8px;
+}
+.running-hint {
+  font-size: var(--font-sm);
+  color: #999;
+}
+.empty {
+  color: #999;
+  padding: 40px;
+  text-align: center;
+}
+.empty-hint {
+  color: #999;
+  padding: 40px;
+  text-align: center;
+  font-style: italic;
+}
+.scroll-sentinel { height: 1px; }
+
+/* ── 4. Data table ─────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+.data-table th {
+  background: #eee;
+  font-weight: 600;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  color: #666;
+}
+.data-table td {
+  font-size: var(--font-base);
+}
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background: #f0f4ff; }
+
+/* ── 5. Filter chips ───────────────────────────────────── */
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid #c8d0db;
+  background: #f0f4f8;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: var(--font-sm);
+}
+.chip:hover { background: #e2e8f0; }
+.chip.active {
+  background: #2c3e50;
+  color: white;
+  border-color: #2c3e50;
+}
+
+/* ── 6. Buttons ────────────────────────────────────────── */
+.btn-add {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: var(--font-base);
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-add:hover { opacity: 0.9; }
+
+.btn-sm {
+  padding: 3px 8px;
+  font-size: var(--font-xs);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.btn-delete:hover { background: #fecaca; }
+
+.btn-cancel {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: var(--font-base);
+  font-family: inherit;
+}
+.btn-cancel:hover { background: #d0d0d0; }
+
+/* ── 7. Modal ──────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 450px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+.modal h3 {
+  margin: 0 0 16px;
+  font-size: var(--font-lg);
+}
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #555;
+}
+.modal form input[type='text'],
+.modal form input[type='url'],
+.modal form input[type='number'],
+.modal form select,
+.modal form textarea {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: var(--font-base);
+  font-family: inherit;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+.modal-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-base);
+  font-family: inherit;
+}
+.modal-actions button[type='submit'] {
+  background: #2c3e50;
+  color: white;
+}
+
+/* ── 8. Person links ───────────────────────────────────── */
+.person-link {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: none;
+}
+.person-link:hover { text-decoration: underline; }
+
+/* ── 9. Tabs (Tree + Reports) ──────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  color: #666;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: inherit;
+}
+.tab-btn:hover { color: #2c3e50; }
+.tab-btn.active {
+  color: #2c3e50;
+  font-weight: 600;
+  border-bottom-color: #2c3e50;
+}
+
+/* ── 10. Dark mode (screen only) ───────────────────────── */
+@media screen {
+  html.dark body { background: #111827; color: #e2e8f0; }
+  html.dark .content { background: #111827; }
+
+  /* Tables */
+  html.dark .data-table th { background: #1f2937; color: #9ca3af; border-bottom-color: #374151; }
+  html.dark .data-table td { border-bottom-color: #374151; color: #e2e8f0; }
+  html.dark .clickable-row:hover { background: #1e293b; }
+
+  /* Inputs */
+  html.dark input[type='text'],
+  html.dark input[type='number'],
+  html.dark input[type='email'],
+  html.dark textarea,
+  html.dark select { background: #1f2937; color: #e2e8f0; border-color: #374151; }
+  html.dark input::placeholder,
+  html.dark textarea::placeholder { color: #6b7280; }
+
+  /* Modals */
+  html.dark .modal { background: #1f2937; color: #e2e8f0; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+  html.dark .modal-overlay { background: rgba(0,0,0,0.65); }
+  html.dark .modal h3, html.dark .modal h4 { color: #f3f4f6; }
+
+  /* Buttons */
+  html.dark .btn-add { background: #374151; color: #e2e8f0; }
+  html.dark .btn-add:hover { background: #4b5563; }
+  html.dark .btn-cancel { background: #374151; color: #d1d5db; }
+  html.dark .btn-delete { background: #450a0a; color: #fca5a5; }
+  html.dark .btn-delete:hover { background: #7f1d1d; }
+  html.dark .btn-sm { background: #374151; color: #d1d5db; }
+  html.dark .btn-view-tree { background: #374151; color: #93c5fd; border-color: #374151; }
+  html.dark .btn-back { background: #374151; color: #d1d5db; border-color: #374151; }
+
+  /* Chips */
+  html.dark .chip { background: #1f2937; border-color: #374151; color: #9ca3af; }
+  html.dark .chip:hover { background: #374151; }
+  html.dark .chip.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+
+  /* Badges */
+  html.dark .type-badge { background: #1e293b; color: #94a3b8; border-color: #334155; }
+  html.dark .status-chip { opacity: 0.85; }
+
+  /* Text */
+  html.dark .count-label { color: #6b7280; }
+  html.dark .running-hint { color: #6b7280; }
+  html.dark .empty { color: #4b5563; }
+  html.dark .empty-hint { color: #4b5563; }
+  html.dark label { color: #9ca3af; }
+  html.dark h2, html.dark h3, html.dark h4 { color: #f3f4f6; }
+  html.dark .section-header h4 { color: #f3f4f6; }
+
+  /* Detail views */
+  html.dark .detail-section { border-color: #1f2937; }
+  html.dark .field-grid input,
+  html.dark .field-grid select,
+  html.dark .field-grid textarea { background: #1f2937; color: #e2e8f0; border-color: #374151; }
+
+  /* Links */
+  html.dark .person-link { color: #60a5fa; }
+
+  /* Banners */
+  html.dark .issues-banner { background: #1e2a3a; border-color: #374151; color: #fbbf24; }
+  html.dark .banner-error { background: #2d1a1a; border-color: #7f1d1d; }
+
+  /* Group chips */
+  html.dark .group-chip { background: #1f2937; border-color: #374151; color: #93c5fd; }
+  html.dark .chip-remove { color: #9ca3af; }
+
+  /* Citation badges */
+  html.dark .citation-badge-sourced { background: #14532d; color: #86efac; }
+  html.dark .citation-badge-unsourced { background: #78350f; color: #fcd34d; }
+
+  /* Locale option */
+  html.dark .locale-switcher option { background: #1f2937; color: #e2e8f0; }
+
+  /* Scrollbars */
+  html.dark ::-webkit-scrollbar { background: #1f2937; }
+  html.dark ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+
+  /* Tabs */
+  html.dark .tab-bar { border-bottom-color: #374151; }
+  html.dark .tab-btn { color: #9ca3af; }
+  html.dark .tab-btn:hover { color: #e2e8f0; }
+  html.dark .tab-btn.active { color: #e2e8f0; border-bottom-color: #93c5fd; }
+}
