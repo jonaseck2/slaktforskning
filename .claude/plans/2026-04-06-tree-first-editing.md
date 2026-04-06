@@ -142,24 +142,24 @@
 - Modify: `src/renderer/components/charts/PedigreeChart.vue`
 - Modify: `src/renderer/views/VisualizationView.vue` (handle `relative-added` event to reload chart)
 
-- [ ] **Step 1: Track hover state**
+- [x] **Step 1: Track hover state**
   - Add `hoveredPersonId = ref<string | null>(null)` 
   - Add `@mouseenter="hoveredPersonId = box.person.id"` and `@mouseleave="hoveredPersonId = null"` to each `<g class="person-box">` group
 
-- [ ] **Step 2: Render ⊕ SVG icon**
+- [x] **Step 2: Render ⊕ SVG icon**
   - Inside each `<g class="person-box">`, render a `<g class="add-btn">` conditionally when `hoveredPersonId === box.person.id`
   - Position: centered horizontally on the box, at `box.y + box.h - 8` (bottom edge, half overlapping)
   - SVG circle (`r="8"`, fill white, stroke `#2c3e50`) + text `+` (font-size 12, centered)
   - Add `cursor: pointer` style
 
-- [ ] **Step 3: Popover HTML element**
+- [x] **Step 3: Popover HTML element**
   - Add `addPopover = ref<{ personId: string; x: number; y: number } | null>(null)` 
   - On ⊕ click: compute screen position from the SVG box coordinates + zoom + scroll offset; set `addPopover`
   - Render a `<div class="add-popover">` (position absolute over the chart-outer div) with three buttons: `+ Förälder`, `+ Partner`, `+ Barn`
   - Clicking a button: set `addRelativePersonId` + `addRelativeMode`, show `AddRelatedPersonModal`, hide popover
   - Close popover on outside click (`@click.self` on overlay or a `document` click listener)
 
-- [ ] **Step 4: After save, emit navigate to new person**
+- [x] **Step 4: After save, emit navigate to new person**
   - `AddRelatedPersonModal` emits `saved` — after save, the modal closes. Reload the chart by re-fetching (`load()`) and emit `navigate(newPersonId)` so VisualizationView selects the new person in the panel.
   - Note: the modal doesn't return the new person's id directly. Workaround: intercept in a local `handleAddRelativeSaved()` that emits `'reload'` to VisualizationView; VisualizationView re-fetches the chart tree.
 
