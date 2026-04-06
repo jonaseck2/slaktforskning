@@ -288,6 +288,11 @@ export default {
     aka: 'Även känd som',
   },
   names: {
+    add: 'Lägg till namn',
+    edit: 'Redigera namn',
+    nameType: 'Namntyp',
+    preferredName: 'Tilltalsnamn',
+    nickname: 'Smeknamn',
     prefix: 'Prefix',
     prefixPlaceholder: 'von, af, Dr., Prost.',
     suffix: 'Suffix',

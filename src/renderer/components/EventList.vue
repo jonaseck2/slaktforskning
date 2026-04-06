@@ -244,7 +244,12 @@ async function onCiteSaved() {
 
 onMounted(load);
 
-defineExpose({ reload: load });
+function openAddForm() {
+  editingEvent.value = null;
+  showForm.value = true;
+}
+
+defineExpose({ reload: load, openAddForm });
 </script>
 
 <style scoped>

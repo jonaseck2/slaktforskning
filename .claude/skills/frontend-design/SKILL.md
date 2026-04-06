@@ -233,6 +233,13 @@ Rules:
 | `btn-sm` | Small inline button (table rows) | Smaller padding |
 | `btn-add` | Add in section headers | Muted, small |
 
+**Button label conventions:**
+
+- Use `+ Word` format for buttons that create or add something (e.g., `+ Händelse`, `+ Namn`, `+ Partner`). The `+` is the signal — no other marker needed.
+- For file/folder inputs, use `+ Fil` or `+ Mapp` — never `…` or `Browse` to indicate a dialog opens.
+- Do **not** use `…` (ellipsis) after button labels to indicate a dialog will open.
+- Do **not** use different button colors to communicate different purposes. Color encodes only: blue = primary, red = destructive, gray = cancel. Purpose is communicated through label text and `+` prefix alone.
+
 ---
 
 ## Keyboard handling

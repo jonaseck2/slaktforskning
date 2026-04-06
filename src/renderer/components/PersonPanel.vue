@@ -22,11 +22,6 @@
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
-          <div class="panel-actions">
-            <router-link :to="'/persons/' + personId" class="panel-link">
-              {{ $t('panel.open') }} →
-            </router-link>
-          </div>
           <div class="panel-add-relative-btns">
             <button class="btn-dark" @click="openAddRelative('parent')">+ Förälder</button>
             <button class="btn-dark" @click="openAddRelative('spouse')">+ Partner</button>
@@ -40,6 +35,7 @@
         <button class="panel-section-header" @click="toggleSection('person')">
           <span class="panel-chevron">{{ sections.person ? '▾' : '▸' }}</span>
           Person
+          <router-link :to="'/persons/' + personId" class="panel-section-header-action" @click.stop>Redigera</router-link>
         </button>
         <div v-if="sections.person" class="panel-section-body">
           <div class="compact-form">
@@ -53,7 +49,7 @@
             </div>
             <div class="compact-field">
               <label class="compact-label">Status</label>
-              <select class="compact-control" :value="String(person.living)" @change="updateLiving(($event.target as HTMLSelectElement).value === 'true')">
+              <select class="compact-control" :value="person.living ? 'true' : 'false'" @change="updateLiving(($event.target as HTMLSelectElement).value === 'true')">
                 <option value="true">{{ $t('personDetail.statusLiving') }}</option>
                 <option value="false">{{ $t('personDetail.statusDeceased') }}</option>
               </select>
@@ -104,29 +100,6 @@
             >✕</button>
           </div>
 
-          <!-- Inline name form -->
-          <div v-if="showNameForm" class="panel-name-form">
-            <div class="compact-form">
-              <div class="compact-field">
-                <label class="compact-label">Förnamn</label>
-                <input v-model="nameFormData.given_name" type="text" class="compact-control" />
-              </div>
-              <div class="compact-field">
-                <label class="compact-label">Efternamn</label>
-                <input v-model="nameFormData.surname" type="text" class="compact-control" />
-              </div>
-              <div class="compact-field">
-                <label class="compact-label">Namntyp</label>
-                <select v-model="nameFormData.name_type" class="compact-control">
-                  <option v-for="nt in NAME_TYPE_VALUES" :key="nt" :value="nt">{{ $t('nameTypes.' + nt) }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="panel-name-form-actions">
-              <button class="btn-dark" @click="saveName">Spara</button>
-              <button class="btn-cancel" @click="cancelNameForm">Avbryt</button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -135,9 +108,10 @@
         <button class="panel-section-header" @click="toggleSection('events')">
           <span class="panel-chevron">{{ sections.events ? '▾' : '▸' }}</span>
           {{ $t('panel.events') }}
+          <span class="panel-section-header-action" @click.stop="eventListRef?.openAddForm()">+ {{ $t('events.addEvent') }}</span>
         </button>
         <div v-if="sections.events" class="panel-section-body">
-          <EventList :person-id="personId" />
+          <EventList ref="eventListRef" :person-id="personId" />
         </div>
       </div>
 
@@ -228,6 +202,31 @@
       </div>
     </template>
 
+    <!-- Name form modal -->
+    <div v-if="showNameForm" class="modal-overlay" @click.self="cancelNameForm">
+      <div class="modal">
+        <h3>{{ editingName ? $t('names.edit') : $t('names.add') }}</h3>
+        <form @submit.prevent="saveName">
+          <label>{{ $t('persons.givenName') }}<input v-model="nameFormData.given_name" type="text" autofocus /></label>
+          <label>{{ $t('persons.surname') }}<input v-model="nameFormData.surname" type="text" /></label>
+          <label>{{ $t('names.nameType') }}
+            <select v-model="nameFormData.name_type">
+              <option v-for="nt in NAME_TYPE_VALUES" :key="nt" :value="nt">{{ $t('nameTypes.' + nt) }}</option>
+            </select>
+          </label>
+          <label>{{ $t('names.preferredName') }}<input v-model="nameFormData.preferred_name" type="text" /></label>
+          <label>{{ $t('names.nickname') }}<input v-model="nameFormData.nickname" type="text" /></label>
+          <label>{{ $t('names.prefix') }}<input v-model="nameFormData.name_prefix" type="text" /></label>
+          <label>{{ $t('names.suffix') }}<input v-model="nameFormData.name_suffix" type="text" /></label>
+          <label>{{ $t('names.patronymicBase') }}<input v-model="nameFormData.patronymic_base" type="text" /></label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="cancelNameForm">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Add relative modal -->
     <AddRelatedPersonModal
       v-if="showAddRelative && personId"
@@ -251,6 +250,7 @@
 import { ref, watch, computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
+import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
 import CitationForm from './CitationForm.vue';
@@ -279,7 +279,7 @@ interface PersonData {
   birthLine: string | null;
   deathLine: string | null;
 }
-interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; }
+interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; name_prefix?: string | null; name_suffix?: string | null; name_qualifier?: string | null; patronymic_base?: string | null; }
 interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; }
 interface CitationData { id: string; source_id: string; page: string | null; notes: string | null; confidence: number; }
 interface GroupData { id: string; name: string; notes: string | null; }
@@ -299,6 +299,9 @@ const showRelationPicker = ref(false);
 
 // Citation form state
 const showCitationForm = ref(false);
+
+// EventList ref for triggering add form
+const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 
 // Group picker state
 const showGroupPicker = ref(false);
@@ -361,7 +364,7 @@ async function updateNotes(value: string) {
 
 const showNameForm = ref(false);
 const editingName = ref<NameData | null>(null);
-const nameFormData = reactive({ given_name: '', surname: '', name_type: 'birth' as string });
+const nameFormData = reactive({ given_name: '', surname: '', name_type: 'birth' as string, name_prefix: '', name_suffix: '', name_qualifier: '', patronymic_base: '', preferred_name: '', nickname: '' });
 
 function openNameForm(name: NameData | null) {
   editingName.value = name;
@@ -369,10 +372,22 @@ function openNameForm(name: NameData | null) {
     nameFormData.given_name = name.given_name ?? '';
     nameFormData.surname = name.surname ?? '';
     nameFormData.name_type = name.name_type ?? 'birth';
+    nameFormData.name_prefix = name.name_prefix ?? '';
+    nameFormData.name_suffix = name.name_suffix ?? '';
+    nameFormData.name_qualifier = name.name_qualifier ?? '';
+    nameFormData.patronymic_base = name.patronymic_base ?? '';
+    nameFormData.preferred_name = name.preferred_name ?? '';
+    nameFormData.nickname = name.nickname ?? '';
   } else {
     nameFormData.given_name = '';
     nameFormData.surname = '';
     nameFormData.name_type = 'birth';
+    nameFormData.name_prefix = '';
+    nameFormData.name_suffix = '';
+    nameFormData.name_qualifier = '';
+    nameFormData.patronymic_base = '';
+    nameFormData.preferred_name = '';
+    nameFormData.nickname = '';
   }
   showNameForm.value = true;
 }
@@ -384,18 +399,21 @@ function cancelNameForm() {
 
 async function saveName() {
   if (!props.personId) return;
+  const payload = {
+    given_name: nameFormData.given_name || null,
+    surname: nameFormData.surname || null,
+    name_type: nameFormData.name_type,
+    name_prefix: nameFormData.name_prefix || null,
+    name_suffix: nameFormData.name_suffix || null,
+    name_qualifier: nameFormData.name_qualifier || null,
+    patronymic_base: nameFormData.patronymic_base || null,
+    preferred_name: nameFormData.preferred_name || null,
+    nickname: nameFormData.nickname || null,
+  };
   if (editingName.value?.id) {
-    await window.api.persons.updateName(editingName.value.id, {
-      given_name: nameFormData.given_name,
-      surname: nameFormData.surname,
-      name_type: nameFormData.name_type,
-    });
+    await window.api.persons.updateName(editingName.value.id, payload);
   } else {
-    await window.api.persons.addName(props.personId, {
-      given_name: nameFormData.given_name,
-      surname: nameFormData.surname,
-      name_type: nameFormData.name_type,
-    });
+    await window.api.persons.addName(props.personId, payload);
   }
   showNameForm.value = false;
   editingName.value = null;
@@ -641,20 +659,6 @@ watch(() => props.personId, async (id) => {
   color: #555;
   line-height: 1.5;
 }
-.panel-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.panel-link {
-  font-size: 12px;
-  color: #2980b9;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.panel-link:hover { text-decoration: underline; }
-
 .panel-add-relative-btns {
   display: flex;
   gap: 6px;
@@ -769,16 +773,6 @@ watch(() => props.personId, async (id) => {
   font-size: 12px;
   color: #f0a500;
   flex-shrink: 0;
-}
-.panel-name-form {
-  padding: 4px 14px 8px;
-  border-top: 1px solid #eee;
-  margin-top: 4px;
-}
-.panel-name-form-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
 }
 .btn-cancel {
   background: #f0f0f0;

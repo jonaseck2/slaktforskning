@@ -288,6 +288,11 @@ export default {
     aka: 'Also Known As',
   },
   names: {
+    add: 'Add name',
+    edit: 'Edit name',
+    nameType: 'Name type',
+    preferredName: 'Preferred name',
+    nickname: 'Nickname',
     prefix: 'Prefix',
     prefixPlaceholder: 'von, af, Dr., Rev.',
     suffix: 'Suffix',
