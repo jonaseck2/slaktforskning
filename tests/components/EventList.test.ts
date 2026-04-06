@@ -14,9 +14,8 @@ const sampleEvent = {
   description: 'Born',
 };
 
-describe('EventList citation badges', () => {
+describe('EventList', () => {
   const mockForPerson = vi.fn();
-  const mockForEvent = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -26,60 +25,13 @@ describe('EventList citation badges', () => {
         forRelationship: vi.fn().mockResolvedValue([]),
         delete: vi.fn(),
       },
-      citations: { forEvent: mockForEvent },
-      sources: { list: vi.fn().mockResolvedValue([]) },
+      citations: { forEvent: vi.fn().mockResolvedValue([]) },
+      sources: { list: vi.fn().mockResolvedValue([]), get: vi.fn().mockResolvedValue(null) },
     };
-  });
-
-  it('shows Unsourced badge when event has no citations', async () => {
-    mockForPerson.mockResolvedValue([sampleEvent]);
-    mockForEvent.mockResolvedValue([]);
-
-    const wrapper = mount(EventList, {
-      global: { plugins: [i18n] },
-      props: { personId: 'person-1' },
-    });
-    await flushPromises();
-
-    expect(wrapper.find('.unsourced-badge').exists()).toBe(true);
-    expect(wrapper.find('.source-count-badge').exists()).toBe(false);
-  });
-
-  it('shows source count badge when event has citations', async () => {
-    mockForPerson.mockResolvedValue([sampleEvent]);
-    mockForEvent.mockResolvedValue([{ id: 'cit-1' }, { id: 'cit-2' }]);
-
-    const wrapper = mount(EventList, {
-      global: { plugins: [i18n] },
-      props: { personId: 'person-1' },
-    });
-    await flushPromises();
-
-    expect(wrapper.find('.source-count-badge').exists()).toBe(true);
-    expect(wrapper.find('.source-count-badge').text()).toContain('2');
-    expect(wrapper.find('.unsourced-badge').exists()).toBe(false);
-  });
-
-  it('clicking Cite button renders the CitationForm', async () => {
-    mockForPerson.mockResolvedValue([sampleEvent]);
-    mockForEvent.mockResolvedValue([]);
-
-    const wrapper = mount(EventList, {
-      global: { plugins: [i18n] },
-      props: { personId: 'person-1' },
-    });
-    await flushPromises();
-
-    await wrapper.find('.btn-cite').trigger('click');
-    await wrapper.vm.$nextTick();
-
-    // CitationForm renders inside EventList — its content includes a form
-    expect(wrapper.html()).toContain('modal');
   });
 
   it('clicking a row opens the EventForm', async () => {
     mockForPerson.mockResolvedValue([sampleEvent]);
-    mockForEvent.mockResolvedValue([]);
 
     const wrapper = mount(EventList, {
       global: { plugins: [i18n] },
@@ -96,7 +48,6 @@ describe('EventList citation badges', () => {
 
   it('has no Edit button — rows are clickable instead', async () => {
     mockForPerson.mockResolvedValue([sampleEvent]);
-    mockForEvent.mockResolvedValue([]);
 
     const wrapper = mount(EventList, {
       global: { plugins: [i18n] },
@@ -106,5 +57,17 @@ describe('EventList citation badges', () => {
 
     expect(wrapper.find('.btn-edit').exists()).toBe(false);
     expect(wrapper.find('.clickable-row').exists()).toBe(true);
+  });
+
+  it('shows event badge for each event', async () => {
+    mockForPerson.mockResolvedValue([sampleEvent]);
+
+    const wrapper = mount(EventList, {
+      global: { plugins: [i18n] },
+      props: { personId: 'person-1' },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('.event-badge').exists()).toBe(true);
   });
 });

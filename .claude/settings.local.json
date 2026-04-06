@@ -83,7 +83,8 @@
       "Bash(sed -i '' 's/app\\\\.settle\\(500\\)/app.settle\\(80\\)/g' tests/e2e/gui-*.test.ts)",
       "Bash(sed -i '' 's/app\\\\.settle\\(300\\)/app.settle\\(50\\)/g' tests/e2e/gui-*.test.ts)",
       "Read(//<style scoped>/,/<\\\\/**)",
-      "Bash(awk *)"
+      "Bash(awk *)",
+      "Bash(xxd /Users/jonasahnstedt/git/slaktforskning/export-import/wetransfer_testmaterial_2026-04-05_1624/HolgerData/data/ourkind_V8/Vigtab.EDBTbl)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

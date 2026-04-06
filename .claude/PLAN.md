@@ -106,6 +106,14 @@ See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 - [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
 - [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
 
+### Holger ElevateDB direct import [feature]
+See `.claude/plans/2026-04-06-holger-dbisam-import.md` for the full plan.
+Pure Python binary reverse-engineering of ElevateDB `.EDBTbl` files in Docker — same pattern as Genney Derby extractor. No ElevateSoft tools required.
+- [ ] Task 1: Reverse-engineer record layout (spike — highest risk)
+- [ ] Task 2: Build `EDBExtractor.py` (Docker-ready, stdlib only)
+- [ ] Task 3: TypeScript transform layer
+- [ ] Task 4: Wire into `index.ts`, IPC, MCP, UI
+
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
 - [ ] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
