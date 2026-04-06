@@ -1,5 +1,5 @@
 <template>
-  <div class="media-view">
+  <div>
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
       <button class="btn-add" @click="attachFile">{{ $t('media.attach') }}</button>
@@ -40,6 +40,7 @@
     </table>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';

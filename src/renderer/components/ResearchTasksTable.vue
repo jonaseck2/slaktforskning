@@ -4,7 +4,7 @@
       <tr>
         <th class="th-shrink">{{ $t('researchTasks.priority') }}</th>
         <th class="th-shrink">{{ $t('researchTasks.status') }}</th>
-        <th v-if="showPerson" class="th-shrink">{{ $t('persons.title') }}</th>
+        <th v-if="showPerson" class="th-person">{{ $t('persons.title') }}</th>
         <th>{{ $t('researchTasks.task') }}</th>
         <th class="actions-cell">{{ $t('common.actions') }}</th>
       </tr>
@@ -20,7 +20,7 @@
               :title="$t('researchTasks.status')"
             >{{ $t('researchTasks.statuses.' + task.status) }}</span>
           </td>
-          <td v-if="showPerson">
+          <td v-if="showPerson" class="person-cell">
             <router-link
               v-if="task.person_id && (task.person_given_name || task.person_surname)"
               :to="'/persons/' + task.person_id"
@@ -173,6 +173,8 @@ async function handleDelete(id: string) {
 
 <style scoped>
 .th-shrink { width: 1%; white-space: nowrap; }
+.th-person { width: 180px; white-space: nowrap; }
+.person-cell { white-space: nowrap; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 .priority-badge {
   display: inline-block;
