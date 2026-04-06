@@ -48,6 +48,15 @@ describe('BIRTH_AFTER_DEATH', () => {
     const hit = results.filter(r => r.code === 'BIRTH_AFTER_DEATH' && r.personIds.includes(person.id));
     expect(hit).toHaveLength(0);
   });
+
+  it('does not fire when birth is full-precision but death is year-only in the same year', () => {
+    // "1777-02-12" > "1777" lexicographically but we cannot say birth is after death
+    const { person } = personWithBirth(db, '1777-02-12');
+    addDeathEvent(db, person.id, '1777');
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'BIRTH_AFTER_DEATH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(0);
+  });
 });
 
 describe('FUTURE_BIRTH', () => {
