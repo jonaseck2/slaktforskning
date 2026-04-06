@@ -15,8 +15,11 @@
         @click="activeTypeFilter = f.value"
       >{{ f.label }}</button>
     </div>
-    <div v-if="filteredRelationships.length === 0 && !loading" class="empty">
+    <div v-if="relationships.length === 0 && !loading" class="empty">
       {{ $t('relationships.emptyState') }}
+    </div>
+    <div v-else-if="filteredRelationships.length === 0 && !loading" class="empty">
+      {{ $t('relationships.noMatchingFilter') }}
     </div>
     <table v-else class="data-table">
       <thead>
