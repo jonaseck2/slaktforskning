@@ -25,8 +25,7 @@ import { createEvent } from '../../api/events';
 import { createSource, createCitation } from '../../api/sources';
 import { createMedia, addMediaLink } from '../../api/media';
 import { getPlace, findOrCreatePlace, updatePlace } from '../../api/places';
-import { findOrCreateSwedishPlace } from '../../gedcom/swedishPlace';
-import { extractPatronymic } from '../../gedcom/swedishNames';
+import { resolvePlaceFn as genneyResolvePlaceFn, getPatronymicBase } from './profiles/genney';
 import { holgerEngaSubtype, parseHolgerAdoptionSubtypes } from './profiles/holger';
 
 export interface ImportOptions {
@@ -310,7 +309,7 @@ function doImportGedcom(
 ): { skipped: { tag: string; count: number }[]; warnings: string[] } {
   const isGenney = options?.profile === 'genney';
   const isHolger = options?.profile === 'holger';
-  const resolvePlaceFn = isGenney ? findOrCreateSwedishPlace : findOrCreatePlace;
+  const resolvePlaceFn = isGenney ? genneyResolvePlaceFn : findOrCreatePlace;
 
   // Maps that survive across phases for post-processing
   const placeIdMap = new Map<string, string>();  // old place UUID → current DB place UUID
@@ -411,7 +410,7 @@ function doImportGedcom(
 
       // _PATR overrides genney patronymic detection; both can coexist
       const explicitPatr = getChild(nameNode, '_PATR')?.value ?? null;
-      const patronymic_base = explicitPatr ?? (isGenney && surname ? extractPatronymic(surname) : null);
+      const patronymic_base = explicitPatr ?? (isGenney ? getPatronymicBase(surname) : null);
 
       // Genney marks the preferred name (tilltalsnamn) with * directly after the token.
       // e.g. "Eva Linda* Marie" → preferred_name = "Linda", given_name = "Eva Linda Marie"

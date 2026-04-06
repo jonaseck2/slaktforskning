@@ -34,14 +34,25 @@
           <input v-model="form.cause" type="text" :placeholder="$t('events.causePlaceholder')" />
         </label>
 
-        <!-- Optional source — only on create -->
-        <div v-if="!editingEvent" class="source-toggle">
+        <!-- Citations section when editing -->
+        <div v-if="editingEvent" class="citations-section">
+          <div class="citations-label">{{ $t('citations.title') }}</div>
+          <div v-if="existingCitations.length === 0" class="citations-empty">{{ $t('citations.none') }}</div>
+          <div v-for="cit in existingCitations" :key="cit.id" class="citation-row">
+            <span class="citation-source">{{ cit.sourceTitle }}</span>
+            <span v-if="cit.page" class="citation-page">{{ cit.page }}</span>
+            <button type="button" class="btn-sm btn-delete" @click="deleteCitation(cit.id)">✕</button>
+          </div>
+        </div>
+
+        <!-- Source toggle — for both create and edit -->
+        <div class="source-toggle">
           <label class="checkbox-label">
             <input type="checkbox" v-model="addSource" />
             {{ $t('events.addSourceOptional') }}
           </label>
         </div>
-        <template v-if="addSource && !editingEvent">
+        <template v-if="addSource">
           <label>
             {{ $t('citations.source') }}
             <select v-model="sourceForm.source_id">
@@ -95,6 +106,13 @@ interface SourceRow {
   title: string;
 }
 
+interface CitationRow {
+  id: string;
+  source_id: string;
+  sourceTitle: string;
+  page: string | null;
+}
+
 const props = defineProps<{
   personId?: string;
   relationshipId?: string;
@@ -123,20 +141,41 @@ const form = reactive({
 
 const addSource = ref(false);
 const sources = ref<SourceRow[]>([]);
-const sourceForm = reactive({
-  source_id: '',
-  page: '',
-});
+const sourceForm = reactive({ source_id: '', page: '' });
+const existingCitations = ref<CitationRow[]>([]);
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') emit('close');
 }
+
 onMounted(async () => {
   window.addEventListener('keydown', handleKeydown);
   if (!window.api) return;
   sources.value = (await window.api.sources.list()) as SourceRow[];
+  if (props.editingEvent) {
+    await loadCitations();
+  }
 });
 onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+
+async function loadCitations() {
+  if (!props.editingEvent || !window.api) return;
+  const raw = (await window.api.citations.forEvent(props.editingEvent.id)) as Array<{
+    id: string; source_id: string; page: string | null;
+  }>;
+  existingCitations.value = await Promise.all(
+    raw.map(async (c) => {
+      const src = (await window.api.sources.get(c.source_id)) as { title: string } | null;
+      return { id: c.id, source_id: c.source_id, sourceTitle: src?.title ?? c.source_id, page: c.page };
+    }),
+  );
+}
+
+async function deleteCitation(id: string) {
+  if (!window.api) return;
+  await window.api.citations.delete(id);
+  await loadCitations();
+}
 
 async function save() {
   if (!window.api) return;
@@ -154,28 +193,33 @@ async function save() {
 
     if (props.relationshipId) data.relationship_id = props.relationshipId;
 
+    let eventId: string;
     if (props.editingEvent) {
       await window.api.events.update(props.editingEvent.id, data);
+      eventId = props.editingEvent.id;
     } else {
       const event = (await window.api.events.create(data)) as { id: string };
-      if (props.personId && event.id) {
+      eventId = event.id;
+      if (props.personId && eventId) {
         await window.api.eventParticipants.add({
-          event_id: event.id,
+          event_id: eventId,
           person_id: props.personId,
           role: 'primary',
         });
       }
-      if (addSource.value && sourceForm.source_id && event.id) {
-        const citData: Record<string, unknown> = {
-          source_id: sourceForm.source_id,
-          page: sourceForm.page,
-          confidence: 2,
-          event_id: event.id,
-        };
-        if (props.personId) citData.person_id = props.personId;
-        await window.api.citations.create(citData);
-      }
     }
+
+    if (addSource.value && sourceForm.source_id && eventId) {
+      const citData: Record<string, unknown> = {
+        source_id: sourceForm.source_id,
+        page: sourceForm.page,
+        confidence: 2,
+        event_id: eventId,
+      };
+      if (props.personId) citData.person_id = props.personId;
+      await window.api.citations.create(citData);
+    }
+
     emit('saved');
     emit('close');
   } catch (err) {
@@ -200,5 +244,43 @@ async function save() {
   width: 16px;
   height: 16px;
   cursor: pointer;
+}
+.citations-section {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+  margin-bottom: 4px;
+}
+.citations-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+.citations-empty {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+.citation-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.citation-source {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.citation-page {
+  color: #666;
+  flex-shrink: 0;
 }
 </style>
