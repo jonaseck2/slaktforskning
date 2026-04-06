@@ -91,6 +91,67 @@ export async function fetchPedigreeTree(focalId: string, generations = 5): Promi
 }
 
 /**
+ * Load one generation of ancestors for the person at the given ahnentafel key.
+ * Fetches their parents, checks if THOSE parents have further ancestors,
+ * and returns a new PedigreeTree object (Vue reactivity requires new reference).
+ */
+export async function loadAncestorGeneration(
+  tree: PedigreeTree,
+  ahnNum: number,
+): Promise<PedigreeTree> {
+  const person = tree.nodes.get(ahnNum);
+  if (!person) return tree;
+
+  // Get parent relationships for the person at ahnNum
+  const rawRels = (await window.api.relationships.getForPerson(person.id)) as RawRel[];
+  let parentIds = rawRels
+    .filter(r => r.type === 'parent_child' && r.person2_id === person.id)
+    .map(r => r.person1_id)
+    .filter((id): id is string => id !== null)
+    .slice(0, 2);
+
+  if (parentIds.length === 0) return tree; // nothing to load
+
+  // Sort: male (M) → even ahnentafel (father slot), female (F) → odd (mother slot)
+  if (parentIds.length === 2) {
+    const sexes = await Promise.all(
+      parentIds.map(pid => (window.api.persons.get(pid) as Promise<{ sex: string } | null>)),
+    );
+    if (sexes[0]?.sex === 'F' && sexes[1]?.sex !== 'F') {
+      parentIds = [parentIds[1], parentIds[0]];
+    }
+  }
+
+  const newNodes = new Map(tree.nodes);
+  const newHasMore = new Set(tree.hasMoreAncestors ?? []);
+  newHasMore.delete(ahnNum); // this person's parents are now loaded
+
+  // Fetch each parent node + check if THEY have further parents
+  await Promise.all(parentIds.map(async (pid, i) => {
+    const parentAhnNum = ahnNum * 2 + i;
+    const [parentNode, parentRels] = await Promise.all([
+      fetchPersonNode(pid),
+      (window.api.relationships.getForPerson(pid) as Promise<RawRel[]>),
+    ]);
+    newNodes.set(parentAhnNum, parentNode);
+
+    const gpCount = parentRels
+      .filter(r => r.type === 'parent_child' && r.person2_id === pid && r.person1_id !== null)
+      .length;
+    if (gpCount > 0) newHasMore.add(parentAhnNum);
+  }));
+
+  // Update generations count to cover the newly added depth
+  // ahnNum * 2 is at depth floor(log2(ahnNum)) + 1; generations = that depth + 1
+  const newGenerations = Math.max(
+    tree.generations,
+    Math.floor(Math.log2(ahnNum)) + 2,
+  );
+
+  return { nodes: newNodes, generations: newGenerations, hasMoreAncestors: newHasMore };
+}
+
+/**
  * Fetch a descendant tree up to `maxDepth` levels below the given person.
  * At the deepest generation, also checks for children to populate hasMoreChildren.
  */
