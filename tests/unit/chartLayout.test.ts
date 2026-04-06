@@ -187,41 +187,68 @@ describe('collapse — computePedigreeLayout', () => {
     expect(collapseButtons).toHaveLength(0);
   });
 
-  it('focal gets a collapse button when parents exist', () => {
+  it('focal gets a collapse button when parents exist, direction right', () => {
     const { collapseButtons } = computePedigreeLayout(pedigree3(p('f'), [p('p0'), null]));
     const btn = collapseButtons.find(b => b.personId === 'f');
     expect(btn).toBeDefined();
-    expect(btn!.direction).toBe('up');
+    expect(btn!.direction).toBe('right');
     expect(btn!.isExpanded).toBe(true);
+    expect(btn!.isLoadMore).toBeFalsy();
   });
 
-  it('collapsing focal:up removes parent boxes but keeps focal', () => {
+  it('collapsing focal:right removes parent boxes but keeps focal', () => {
     const tree = pedigree3(p('f'), [p('p0'), p('p1')]);
-    const { boxes } = computePedigreeLayout(tree, new Set(['f:up']));
+    const { boxes } = computePedigreeLayout(tree, new Set(['f:right']));
     expect(boxes).toHaveLength(1);
     expect(boxes[0].person.id).toBe('f');
   });
 
-  it('collapsing parent:up removes grandparent boxes', () => {
+  it('collapsing parent:right removes grandparent boxes', () => {
     const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), null, null]);
-    const { boxes } = computePedigreeLayout(tree, new Set(['p0:up']));
+    const { boxes } = computePedigreeLayout(tree, new Set(['p0:right']));
     expect(boxes.find(b => b.person.id === 'gp0')).toBeUndefined();
     expect(boxes.find(b => b.person.id === 'gp1')).toBeUndefined();
-    // focal and both parents still visible
     expect(boxes).toHaveLength(3);
   });
 
   it('collapsed node still shows its own box', () => {
     const tree = pedigree3(p('f'), [p('p0'), p('p1')]);
-    const { boxes } = computePedigreeLayout(tree, new Set(['f:up']));
+    const { boxes } = computePedigreeLayout(tree, new Set(['f:right']));
     expect(boxes.some(b => b.person.id === 'f')).toBe(true);
   });
 
   it('button isExpanded=false when branch is collapsed', () => {
     const tree = pedigree3(p('f'), [p('p0'), null]);
-    const { collapseButtons } = computePedigreeLayout(tree, new Set(['f:up']));
+    const { collapseButtons } = computePedigreeLayout(tree, new Set(['f:right']));
     const btn = collapseButtons.find(b => b.personId === 'f');
     expect(btn!.isExpanded).toBe(false);
+  });
+
+  it('generates load-more button (isLoadMore=true) for leaf with hasMoreAncestors', () => {
+    const tree: PedigreeTree = {
+      nodes: new Map([[1, p('f')], [2, p('par')]]),
+      generations: 3,
+      hasMoreAncestors: new Set([2]),
+    };
+    const { collapseButtons } = computePedigreeLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('right');
+    expect(btn!.isExpanded).toBe(false);
+  });
+
+  it('does not generate load-more when parent is already loaded (collapse takes priority)', () => {
+    const tree: PedigreeTree = {
+      nodes: new Map([[1, p('f')], [2, p('par')], [4, p('gp')]]),
+      generations: 3,
+      hasMoreAncestors: new Set([2]),
+    };
+    const { collapseButtons } = computePedigreeLayout(tree);
+    // par has a loaded parent (gp at k=4), so gets a collapse button, not load-more
+    const loadMoreBtn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
+    expect(loadMoreBtn).toBeUndefined();
+    const collapseBtn = collapseButtons.find(b => b.personId === 'par' && !b.isLoadMore);
+    expect(collapseBtn).toBeDefined();
   });
 });
 
@@ -332,6 +359,97 @@ describe('collapse — per-node descendant collapse', () => {
     const { svgWidth: widthExpanded } = computeHourglassLayout(tree);
     const { svgWidth: widthCollapsed } = computeHourglassLayout(tree, new Set(['c1:down']));
     expect(widthCollapsed).toBeLessThan(widthExpanded);
+  });
+});
+
+describe('load-more buttons', () => {
+  it('hourglass ancestor leaf with hasMoreAncestors gets a load-more up button', () => {
+    const f = p('f');
+    const par = p('par');
+    const tree: HourglassTree = {
+      ancestors: {
+        nodes: new Map([[1, f], [2, par]]),
+        generations: 3,
+        hasMoreAncestors: new Set([2]),
+      },
+      descendantRoot: { person: f, children: [] },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('up');
+    expect(btn!.isExpanded).toBe(false);
+  });
+
+  it('hourglass ancestor with loaded parents gets collapse button, not load-more', () => {
+    const f = p('f');
+    const par = p('par');
+    const gp = p('gp');
+    const tree: HourglassTree = {
+      ancestors: {
+        nodes: new Map([[1, f], [2, par], [4, gp]]),
+        generations: 3,
+        hasMoreAncestors: new Set([2]),
+      },
+      descendantRoot: { person: f, children: [] },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const loadMoreBtn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
+    expect(loadMoreBtn).toBeUndefined();
+    const collapseBtn = collapseButtons.find(b => b.personId === 'par' && !b.isLoadMore);
+    expect(collapseBtn).toBeDefined();
+  });
+
+  it('hourglass descendant leaf with hasMoreChildren gets a load-more down button', () => {
+    const f = p('f');
+    const c = p('c');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
+      descendantRoot: {
+        person: f,
+        children: [{ person: c, children: [], hasMoreChildren: true }],
+      },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'c' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('down');
+  });
+
+  it('hourglass descendant leaf without hasMoreChildren gets no button', () => {
+    const f = p('f');
+    const c = p('c');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
+      descendantRoot: {
+        person: f,
+        children: [{ person: c, children: [], hasMoreChildren: false }],
+      },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    expect(collapseButtons.find(b => b.personId === 'c')).toBeUndefined();
+  });
+
+  it('hourglass focal with hasMoreChildren and no loaded children gets a load-more down button', () => {
+    const f = p('f');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
+      descendantRoot: { person: f, children: [], hasMoreChildren: true },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'f' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('down');
   });
 });
 

@@ -65,7 +65,7 @@
           v-for="btn in layout.collapseButtons"
           :key="`${btn.personId}:${btn.direction}`"
           class="collapse-btn"
-          @click.stop="toggle(btn.personId, btn.direction)"
+          @click.stop="handleCollapseButton(btn)"
         >
           <circle
             :cx="btn.cx" :cy="btn.cy" r="8"
@@ -97,9 +97,9 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computePedigreeLayout } from '../../utils/chartLayout';
-import { fetchPedigreeTree } from '../../utils/chartData';
+import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { BoxLayout, PersonNode, PedigreeTree } from '../../utils/chartLayout';
+import type { BoxLayout, CollapseButton, PedigreeTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
@@ -108,6 +108,7 @@ const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
 const loading = ref(true);
+const loadingMore = ref(false);
 const tree = ref<PedigreeTree | null>(null);
 const collapsed = ref(new Set<string>());
 
@@ -116,12 +117,37 @@ const layout = computed(() => {
   return computePedigreeLayout(tree.value, collapsed.value);
 });
 
+// Reverse map: personId → ahnentafel key — needed by handleCollapseButton to call loadAncestorGeneration
+const personToAhnen = computed(() => {
+  const m = new Map<string, number>();
+  for (const [k, person] of (tree.value?.nodes ?? [])) {
+    m.set(person.id, k);
+  }
+  return m;
+});
+
 function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
   const key = `${personId}:${dir}`;
   const next = new Set(collapsed.value);
   if (next.has(key)) next.delete(key);
   else next.add(key);
   collapsed.value = next;
+}
+
+async function handleCollapseButton(btn: CollapseButton) {
+  if (!btn.isLoadMore) {
+    toggle(btn.personId, btn.direction);
+    return;
+  }
+  if (loadingMore.value || !tree.value) return;
+  const ahnNum = personToAhnen.value.get(btn.personId);
+  if (ahnNum === undefined) return;
+  loadingMore.value = true;
+  try {
+    tree.value = await loadAncestorGeneration(tree.value, ahnNum);
+  } finally {
+    loadingMore.value = false;
+  }
 }
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-pedigree');
@@ -134,7 +160,6 @@ function boxFill(box: BoxLayout): string {
   if (!box.person.living) return '#f8f8f8';
   return 'white';
 }
-
 
 async function load() {
   if (!props.personId) return;

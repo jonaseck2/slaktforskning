@@ -65,7 +65,7 @@
           v-for="btn in layout.collapseButtons"
           :key="`${btn.personId}:${btn.direction}`"
           class="collapse-btn"
-          @click.stop="toggle(btn.personId, btn.direction)"
+          @click.stop="handleCollapseButton(btn)"
         >
           <circle
             :cx="btn.cx" :cy="btn.cy" r="8"
@@ -96,10 +96,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeHourglassLayout } from '../../utils/chartLayout';
-import { fetchHourglassTree } from '../../utils/chartData';
+import { computeHourglassLayout, maxDescendantDepth } from '../../utils/chartLayout';
+import { fetchHourglassTree, loadAncestorGeneration, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { BoxLayout, PersonNode, HourglassTree } from '../../utils/chartLayout';
+import type { BoxLayout, CollapseButton, HourglassTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
@@ -108,6 +108,7 @@ const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
 const loading = ref(true);
+const loadingMore = ref(false);
 const tree = ref<HourglassTree | null>(null);
 const collapsed = ref(new Set<string>());
 
@@ -116,12 +117,46 @@ const layout = computed(() => {
   return computeHourglassLayout(tree.value, collapsed.value);
 });
 
+// Reverse map: personId → ahnentafel key for the ancestor section
+const ancestorPersonToAhnen = computed(() => {
+  const m = new Map<string, number>();
+  for (const [k, person] of (tree.value?.ancestors.nodes ?? [])) {
+    m.set(person.id, k);
+  }
+  return m;
+});
+
 function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
   const key = `${personId}:${dir}`;
   const next = new Set(collapsed.value);
   if (next.has(key)) next.delete(key);
   else next.add(key);
   collapsed.value = next;
+}
+
+async function handleCollapseButton(btn: CollapseButton) {
+  if (!btn.isLoadMore) {
+    toggle(btn.personId, btn.direction);
+    return;
+  }
+  if (loadingMore.value || !tree.value) return;
+  loadingMore.value = true;
+  try {
+    if (btn.direction === 'up') {
+      // Load one ancestor generation
+      const ahnNum = ancestorPersonToAhnen.value.get(btn.personId);
+      if (ahnNum === undefined) return;
+      const newAncestors = await loadAncestorGeneration(tree.value.ancestors, ahnNum);
+      tree.value = { ...tree.value, ancestors: newAncestors };
+    } else if (btn.direction === 'down') {
+      // Load one descendant generation
+      const newRoot = await loadChildrenForNode(tree.value.descendantRoot, btn.personId);
+      const newDepth = maxDescendantDepth(newRoot);
+      tree.value = { ...tree.value, descendantRoot: newRoot, descendantGenerations: newDepth };
+    }
+  } finally {
+    loadingMore.value = false;
+  }
 }
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-hourglass');
@@ -135,15 +170,12 @@ function boxFill(box: BoxLayout): string {
   return 'white';
 }
 
-
 async function load() {
   if (!props.personId) return;
   loading.value = true;
   try {
     tree.value = await fetchHourglassTree(props.personId);
     // Default: collapse ancestors beyond 2 levels (great-grandparents+).
-    // Grandparents (ahnentafel generation g=2) get :up collapsed so that their
-    // parents (great-grandparents, g=3) are hidden until the user expands them.
     const defaultCollapsed = new Set<string>();
     if (tree.value) {
       for (const [k, person] of tree.value.ancestors.nodes) {
