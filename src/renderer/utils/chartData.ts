@@ -92,6 +92,7 @@ export async function fetchPedigreeTree(focalId: string, generations = 5): Promi
 
 /**
  * Fetch a descendant tree up to `maxDepth` levels below the given person.
+ * At the deepest generation, also checks for children to populate hasMoreChildren.
  */
 async function fetchDescendantTree(
   personId: string,
@@ -112,9 +113,17 @@ async function fetchDescendantTree(
     const children = await Promise.all(
       childIds.map(id => fetchDescendantTree(id, depth + 1, maxDepth)),
     );
-    return { person: node, children };
+    return { person: node, children, hasMoreChildren: false };
   } else {
-    return { person: await fetchPersonNode(personId), children: [] };
+    // Deepest generation: fetch node + check if children exist in DB.
+    const [node, rawRels] = await Promise.all([
+      fetchPersonNode(personId),
+      window.api.relationships.getForPerson(personId),
+    ]) as [PersonNode, RawRel[]];
+    const hasMoreChildren = rawRels.some(
+      r => r.type === 'parent_child' && r.person1_id === personId && r.person2_id !== null,
+    );
+    return { person: node, children: [], hasMoreChildren };
   }
 }
 
