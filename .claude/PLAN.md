@@ -87,21 +87,13 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.24.1: Quality checks CPU saturation on large trees — 4-way event_participants self-join → 2-query+JS; V8 CPU profiling infrastructure; performance-profiling skill | [archive](plans/archive/2026-04-06-checks-performance.md) |
 | v0.25.0 | GEDCOM media import/export: inline+top-level OBJE on INDI/FAM/events, export OBJE blocks; media section typo fix | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
 | Fix | v0.25.2: Genney import — SPLACE address fields (STREET, POSTALCODE, CITY, COUNTRY) now stored in place address columns | [archive](plans/archive/2026-04-06-genney-address-fields.md) |
+| v0.26.0 | Infinite chart expansion: lazy load-more per branch, pedigree arrow ▶ fix | [plan](plans/archive/2026-04-06-infinite-chart-expansion.md) |
 
 ---
 
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
-
-### Infinite chart expansion [feature]
-See `.claude/plans/2026-04-06-infinite-chart-expansion.md` for the full plan.
-- [ ] Add `hasMoreAncestors`/`hasMoreChildren`/`isLoadMore` types + `maxDescendantDepth` to chartLayout.ts
-- [ ] Pedigree collapse direction fix: `'up'` → `'right'` (▶) + load-more buttons in `computePedigreeLayout`
-- [ ] Hourglass load-more buttons in `computeHourglassLayout` (ancestor + descendant)
-- [ ] `fetchPedigreeTree` / `fetchDescendantTree` populate `hasMoreAncestors` / `hasMoreChildren` at leaf generation
-- [ ] `loadAncestorGeneration` + `loadChildrenForNode` in chartData.ts
-- [ ] `PedigreeChart.vue` + `HourglassChart.vue` — async `handleCollapseButton`
 
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.

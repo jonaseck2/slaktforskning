@@ -39,9 +39,11 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
 /**
  * Fetch an ahnentafel ancestor tree up to `generations` levels (including focal).
  * Default: 5 generations (focal + 4 ancestor levels = up to 16 great-great-grandparents).
+ * At the deepest generation, also checks for parents to populate hasMoreAncestors.
  */
 export async function fetchPedigreeTree(focalId: string, generations = 5): Promise<PedigreeTree> {
   const nodes = new Map<number, PersonNode>();
+  const hasMoreAncestors = new Set<number>();
 
   async function fetchAncestors(personId: string, ahnNum: number, gen: number): Promise<void> {
     if (gen < generations) {
@@ -71,16 +73,87 @@ export async function fetchPedigreeTree(focalId: string, generations = 5): Promi
 
       await Promise.all(parentIds.map((pid, i) => fetchAncestors(pid, ahnNum * 2 + i, gen + 1)));
     } else {
-      nodes.set(ahnNum, await fetchPersonNode(personId));
+      // Deepest generation: fetch node + check if parents exist in DB.
+      const [node, rawRels] = await Promise.all([
+        fetchPersonNode(personId),
+        window.api.relationships.getForPerson(personId),
+      ]) as [PersonNode, RawRel[]];
+      nodes.set(ahnNum, node);
+      const parentCount = rawRels
+        .filter(r => r.type === 'parent_child' && r.person2_id === personId && r.person1_id !== null)
+        .length;
+      if (parentCount > 0) hasMoreAncestors.add(ahnNum);
     }
   }
 
   await fetchAncestors(focalId, 1, 1);
-  return { nodes, generations };
+  return { nodes, generations, hasMoreAncestors };
+}
+
+/**
+ * Load one generation of ancestors for the person at the given ahnentafel key.
+ * Fetches their parents, checks if THOSE parents have further ancestors,
+ * and returns a new PedigreeTree object (Vue reactivity requires new reference).
+ */
+export async function loadAncestorGeneration(
+  tree: PedigreeTree,
+  ahnNum: number,
+): Promise<PedigreeTree> {
+  const person = tree.nodes.get(ahnNum);
+  if (!person) return tree;
+
+  // Get parent relationships for the person at ahnNum
+  const rawRels = (await window.api.relationships.getForPerson(person.id)) as RawRel[];
+  let parentIds = rawRels
+    .filter(r => r.type === 'parent_child' && r.person2_id === person.id)
+    .map(r => r.person1_id)
+    .filter((id): id is string => id !== null)
+    .slice(0, 2);
+
+  if (parentIds.length === 0) return tree; // nothing to load
+
+  // Sort: male (M) → even ahnentafel (father slot), female (F) → odd (mother slot)
+  if (parentIds.length === 2) {
+    const sexes = await Promise.all(
+      parentIds.map(pid => (window.api.persons.get(pid) as Promise<{ sex: string } | null>)),
+    );
+    if (sexes[0]?.sex === 'F' && sexes[1]?.sex !== 'F') {
+      parentIds = [parentIds[1], parentIds[0]];
+    }
+  }
+
+  const newNodes = new Map(tree.nodes);
+  const newHasMore = new Set(tree.hasMoreAncestors ?? []);
+  newHasMore.delete(ahnNum); // this person's parents are now loaded
+
+  // Fetch each parent node + check if THEY have further parents
+  await Promise.all(parentIds.map(async (pid, i) => {
+    const parentAhnNum = ahnNum * 2 + i;
+    const [parentNode, parentRels] = await Promise.all([
+      fetchPersonNode(pid),
+      (window.api.relationships.getForPerson(pid) as Promise<RawRel[]>),
+    ]);
+    newNodes.set(parentAhnNum, parentNode);
+
+    const gpCount = parentRels
+      .filter(r => r.type === 'parent_child' && r.person2_id === pid && r.person1_id !== null)
+      .length;
+    if (gpCount > 0) newHasMore.add(parentAhnNum);
+  }));
+
+  // Update generations count to cover the newly added depth
+  // ahnNum * 2 is at depth floor(log2(ahnNum)) + 1; generations = that depth + 1
+  const newGenerations = Math.max(
+    tree.generations,
+    Math.floor(Math.log2(ahnNum)) + 2,
+  );
+
+  return { nodes: newNodes, generations: newGenerations, hasMoreAncestors: newHasMore };
 }
 
 /**
  * Fetch a descendant tree up to `maxDepth` levels below the given person.
+ * At the deepest generation, also checks for children to populate hasMoreChildren.
  */
 async function fetchDescendantTree(
   personId: string,
@@ -101,10 +174,66 @@ async function fetchDescendantTree(
     const children = await Promise.all(
       childIds.map(id => fetchDescendantTree(id, depth + 1, maxDepth)),
     );
-    return { person: node, children };
+    return { person: node, children, hasMoreChildren: false };
   } else {
-    return { person: await fetchPersonNode(personId), children: [] };
+    // Deepest generation: fetch node + check if children exist in DB.
+    const [node, rawRels] = await Promise.all([
+      fetchPersonNode(personId),
+      window.api.relationships.getForPerson(personId),
+    ]) as [PersonNode, RawRel[]];
+    const hasMoreChildren = rawRels.some(
+      r => r.type === 'parent_child' && r.person1_id === personId && r.person2_id !== null,
+    );
+    return { person: node, children: [], hasMoreChildren };
   }
+}
+
+/**
+ * Fetch and attach children for the node identified by targetPersonId, anywhere
+ * in the descendant tree rooted at `root`. Returns a new root object with new
+ * object references along the path to the modified node (Vue reactivity).
+ * Each newly loaded child gets hasMoreChildren set by checking their relationships.
+ */
+export async function loadChildrenForNode(
+  root: DescendantNode,
+  targetPersonId: string,
+): Promise<DescendantNode> {
+  async function updateNode(node: DescendantNode): Promise<DescendantNode> {
+    if (node.person.id === targetPersonId) {
+      // Fetch this person's children
+      const rawRels = (await window.api.relationships.getForPerson(node.person.id)) as RawRel[];
+      const childIds = rawRels
+        .filter(r => r.type === 'parent_child' && r.person1_id === node.person.id)
+        .map(r => r.person2_id)
+        .filter((id): id is string => id !== null);
+
+      const children = await Promise.all(childIds.map(async (cid) => {
+        const [childNode, childRels] = await Promise.all([
+          fetchPersonNode(cid),
+          (window.api.relationships.getForPerson(cid) as Promise<RawRel[]>),
+        ]);
+        const hasMoreChildren = childRels.some(
+          r => r.type === 'parent_child' && r.person1_id === cid && r.person2_id !== null,
+        );
+        return { person: childNode, children: [], hasMoreChildren };
+      }));
+
+      return { ...node, children, hasMoreChildren: false };
+    }
+
+    // Recurse into children, creating new object references only along changed path
+    let changed = false;
+    const newChildren = await Promise.all(node.children.map(async (child) => {
+      const updated = await updateNode(child);
+      if (updated !== child) changed = true;
+      return updated;
+    }));
+
+    if (!changed) return node;
+    return { ...node, children: newChildren };
+  }
+
+  return updateNode(root);
 }
 
 /**

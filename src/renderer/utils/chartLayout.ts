@@ -42,6 +42,7 @@ export interface CollapseButton {
   cx: number;
   cy: number;
   isExpanded: boolean;
+  isLoadMore?: boolean; // true → click fetches new data; false/absent → toggles visibility
 }
 
 export interface ChartLayout {
@@ -56,16 +57,19 @@ export interface ChartLayout {
  * Ahnentafel-indexed ancestor tree.
  * Key 1 = focal, 2 = father, 3 = mother, 4 = pat.grandfather, …
  * `generations` includes focal (e.g. 5 = focal + 4 ancestor levels).
+ * `hasMoreAncestors`: ahnentafel keys where parents exist in DB but are not loaded.
  */
 export interface PedigreeTree {
   nodes: Map<number, PersonNode>;
   generations: number;
+  hasMoreAncestors?: Set<number>;
 }
 
 /** Recursive descendant tree node. */
 export interface DescendantNode {
   person: PersonNode;
   children: DescendantNode[];
+  hasMoreChildren?: boolean; // children exist in DB but not loaded (meaningful at max depth)
 }
 
 /**
@@ -79,6 +83,15 @@ export interface HourglassTree {
   descendantRoot: DescendantNode;
   descendantGenerations: number;
   spouses: PersonNode[];
+}
+
+/**
+ * Returns the actual maximum depth of a descendant tree (0 = focal only).
+ * Used after loadChildrenForNode to update HourglassTree.descendantGenerations.
+ */
+export function maxDescendantDepth(node: DescendantNode, depth = 0): number {
+  if (node.children.length === 0) return depth;
+  return Math.max(...node.children.map(c => maxDescendantDepth(c, depth + 1)));
 }
 
 export interface BarLayout {
@@ -149,7 +162,7 @@ export function computePedigreeLayout(
 
   const prunedNodes = new Map(originalNodes);
   for (const [k, person] of originalNodes) {
-    if (collapsed.has(`${person.id}:up`)) {
+    if (collapsed.has(`${person.id}:right`)) {
       removeSubtree(prunedNodes, k * 2);
       removeSubtree(prunedNodes, k * 2 + 1);
     }
@@ -239,7 +252,9 @@ export function computePedigreeLayout(
     }
   }
 
-  // Generate collapse buttons: ↑ button on right side of each box with parents in original tree
+  // Generate collapse/load-more buttons on right side of each box.
+  // Ancestors expand rightward in pedigree, so direction is 'right' (▶).
+  const hasMore = tree.hasMoreAncestors ?? new Set<number>();
   const collapseButtons: CollapseButton[] = [];
   for (const box of boxes) {
     const k = personToAhnen.get(box.person.id);
@@ -248,10 +263,20 @@ export function computePedigreeLayout(
     if (hasParents) {
       collapseButtons.push({
         personId: box.person.id,
-        direction: 'up',
+        direction: 'right',
         cx: box.x + BOX_W + 10,
         cy: box.y + BOX_H / 2,
-        isExpanded: !collapsed.has(`${box.person.id}:up`),
+        isExpanded: !collapsed.has(`${box.person.id}:right`),
+        isLoadMore: false,
+      });
+    } else if (hasMore.has(k)) {
+      collapseButtons.push({
+        personId: box.person.id,
+        direction: 'right',
+        cx: box.x + BOX_W + 10,
+        cy: box.y + BOX_H / 2,
+        isExpanded: false,
+        isLoadMore: true,
       });
     }
   }
@@ -591,6 +616,7 @@ export function computeHourglassLayout(
   }
   indexDescendants(descendantRoot);
 
+  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
   const collapseButtons: CollapseButton[] = [];
 
   for (const box of boxes) {
@@ -598,44 +624,70 @@ export function computeHourglassLayout(
     if (k !== undefined) {
       // Ancestor or focal box
       if (k === 1) {
-        // Focal: ↓ for children, → for spouses
+        // Focal: ↓ for children, → or ← for spouses
         if (descendantRoot.children.length > 0) {
           collapseButtons.push({
             personId: box.person.id, direction: 'down',
             cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
             isExpanded: !collapsed.has(`${box.person.id}:down`),
+            isLoadMore: false,
+          });
+        } else if (descendantRoot.hasMoreChildren) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: false,
+            isLoadMore: true,
           });
         }
         if (spouses.length > 0) {
-          // When focal is female the spouse panel is to the LEFT — use :left key.
           const spouseDir = focalIsFemale ? 'left' : 'right';
           const spouseBtnCX = focalIsFemale ? box.x - 10 : box.x + BOX_W + 10;
           collapseButtons.push({
             personId: box.person.id, direction: spouseDir,
             cx: spouseBtnCX, cy: box.y + BOX_H / 2,
             isExpanded: !collapsed.has(`${box.person.id}:right`) && !collapsed.has(`${box.person.id}:left`),
+            isLoadMore: false,
           });
         }
       } else {
-        // Ancestor: ↑ if parents exist in original tree
+        // Ancestor: ↑ if parents exist in original tree, or load-more if hasMoreAncestors
         const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
         if (hasParents) {
           collapseButtons.push({
             personId: box.person.id, direction: 'up',
             cx: box.x + BOX_W / 2, cy: box.y - 10,
             isExpanded: !collapsed.has(`${box.person.id}:up`),
+            isLoadMore: false,
+          });
+        } else if (ancestorHasMore.has(k)) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'up',
+            cx: box.x + BOX_W / 2, cy: box.y - 10,
+            isExpanded: false,
+            isLoadMore: true,
           });
         }
       }
     } else {
-      // Descendant box (spouses are not in descNodeMap, so they're skipped)
+      // Descendant box
       const descNode = descNodeMap.get(box.person.id);
-      if (descNode && descNode.children.length > 0) {
-        collapseButtons.push({
-          personId: box.person.id, direction: 'down',
-          cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
-          isExpanded: !collapsed.has(`${box.person.id}:down`),
-        });
+      if (descNode) {
+        if (descNode.children.length > 0) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: !collapsed.has(`${box.person.id}:down`),
+            isLoadMore: false,
+          });
+        } else if (descNode.hasMoreChildren) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: false,
+            isLoadMore: true,
+          });
+        }
       }
     }
   }
