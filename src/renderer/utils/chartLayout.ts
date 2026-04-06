@@ -632,6 +632,13 @@ export function computeHourglassLayout(
             isExpanded: !collapsed.has(`${box.person.id}:down`),
             isLoadMore: false,
           });
+        } else if (descendantRoot.hasMoreChildren) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: false,
+            isLoadMore: true,
+          });
         }
         if (spouses.length > 0) {
           const spouseDir = focalIsFemale ? 'left' : 'right';

@@ -437,6 +437,20 @@ describe('load-more buttons', () => {
     const { collapseButtons } = computeHourglassLayout(tree);
     expect(collapseButtons.find(b => b.personId === 'c')).toBeUndefined();
   });
+
+  it('hourglass focal with hasMoreChildren and no loaded children gets a load-more down button', () => {
+    const f = p('f');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
+      descendantRoot: { person: f, children: [], hasMoreChildren: true },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'f' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('down');
+  });
 });
 
 describe('computeTimelineLayout', () => {
