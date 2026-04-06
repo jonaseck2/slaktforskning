@@ -228,7 +228,7 @@
           <h3 class="ab-subsection-heading">Foton</h3>
           <div class="ab-photos">
             <div v-for="m in entry.media" :key="m.id" class="ab-photo">
-              <img :src="`file://${m.filePath}`" class="ab-photo-img" :alt="m.title ?? ''" />
+              <img :src="m.dataUrl" class="ab-photo-img" :alt="m.title ?? ''" />
               <p v-if="m.notes" class="ab-photo-note">{{ m.notes }}</p>
               <p v-else-if="m.title" class="ab-photo-note ab-photo-note--title">{{ m.title }}</p>
             </div>
@@ -316,7 +316,7 @@ interface EnrichedMedia {
   id: string;
   title: string | null;
   notes: string | null;
-  filePath: string;  // absolute path — only items with a resolved path are kept
+  dataUrl: string;  // base64 data URL — only items that loaded successfully are kept
 }
 
 // ── Domain types ───────────────────────────────────────────────────────────────
@@ -618,13 +618,13 @@ async function fetchAncestorFullData(
     )
   ).filter((s): s is RawSource => s !== null);
 
-  // Fetch person-linked media and resolve file paths
+  // Fetch person-linked media as data URLs (file:// is blocked from http:// origin in dev)
   const enrichedMedia: EnrichedMedia[] = (
     await Promise.all(
       rawMedia.map(async m => {
-        const filePath = (await window.api.media.getFilePath(m.id)) as string | null;
-        if (!filePath) return null;
-        return { id: m.id, title: m.title, notes: m.notes, filePath };
+        const dataUrl = (await window.api.media.readAsDataUrl(m.id)) as string | null;
+        if (!dataUrl) return null;
+        return { id: m.id, title: m.title, notes: m.notes, dataUrl };
       }),
     )
   ).filter((m): m is EnrichedMedia => m !== null);

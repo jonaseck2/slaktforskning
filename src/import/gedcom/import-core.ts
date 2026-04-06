@@ -15,6 +15,8 @@
  *   5   _PLAC records → place-level citations
  */
 
+import { existsSync } from 'fs';
+import { basename } from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
 import { detectGedcomVersion } from './detect';
@@ -239,11 +241,11 @@ function importObjeNode(
   const note = getChild(objeNode, 'NOTE')?.value ?? '';
   const media = createMedia(db, {
     file_ref: file || null,
-    title: titl ?? file ?? undefined,
+    title: titl || (file ? basename(file) : undefined),
     format: form,
     notes: note || undefined,
     is_printable: false,
-    is_missing: true,
+    is_missing: !file || !existsSync(file),
   });
   return media.id;
 }
@@ -410,11 +412,11 @@ function doImportGedcom(
     const note = getChild(node, 'NOTE')?.value ?? '';
     const media = createMedia(db, {
       file_ref: file || null,
-      title: titl ?? file ?? undefined,
+      title: titl || (file ? basename(file) : undefined),
       format: form,
       notes: note || undefined,
       is_printable: false,
-      is_missing: true,
+      is_missing: !file || !existsSync(file),
     });
     objeMap.set(node.xref, media.id);
   }
