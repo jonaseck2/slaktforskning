@@ -18,11 +18,19 @@
               :nickname="primaryName?.nickname ?? null"
             />
           </div>
-          <div class="panel-dates">{{ personDates }}</div>
+          <div class="panel-lifelines">
+            <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
+            <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
+          </div>
           <div class="panel-actions">
             <router-link :to="'/persons/' + personId" class="panel-link">
               {{ $t('panel.open') }} →
             </router-link>
+          </div>
+          <div class="panel-add-relative-btns">
+            <button class="btn-dark" @click="openAddRelative('parent')">+ Förälder</button>
+            <button class="btn-dark" @click="openAddRelative('spouse')">+ Partner</button>
+            <button class="btn-dark" @click="openAddRelative('child')">+ Barn</button>
           </div>
         </div>
       </div>
@@ -72,6 +80,15 @@
         </div>
       </div>
     </template>
+
+    <!-- Add relative modal -->
+    <AddRelatedPersonModal
+      v-if="showAddRelative && personId"
+      :person-id="personId"
+      :mode="addRelativeMode"
+      @close="showAddRelative = false"
+      @saved="onRelativeSaved"
+    />
   </div>
 </template>
 
@@ -80,6 +97,7 @@ import { ref, watch, computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
 import PersonName from './PersonName.vue';
+import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -90,17 +108,40 @@ const { t } = useI18n();
 const props = defineProps<{ personId: string | null }>();
 const emit = defineEmits<{
   select: [id: string];
+  'relative-added': [];
 }>();
 
 // ── Local state ──────────────────────────────────────────────────────────────
 
-interface PersonData { id: string; sex: 'M' | 'F' | 'U'; living: boolean; notes: string | null; birthYear: number | null; deathYear: number | null; }
+interface PersonData {
+  id: string;
+  sex: 'M' | 'F' | 'U';
+  living: boolean;
+  notes: string | null;
+  birthLine: string | null;
+  deathLine: string | null;
+}
 interface NameData { given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; }
 interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; }
 
 const person = ref<PersonData | null>(null);
 const primaryName = ref<NameData | null>(null);
 const relationships = ref<RelRow[]>([]);
+
+// Add relative modal state
+const showAddRelative = ref(false);
+const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
+
+function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
+  addRelativeMode.value = mode;
+  showAddRelative.value = true;
+}
+
+async function onRelativeSaved() {
+  showAddRelative.value = false;
+  if (props.personId) await loadPerson(props.personId);
+  emit('relative-added');
+}
 
 // Section open/closed — persisted per key
 function loadSection(key: string, def: boolean): boolean {
@@ -123,14 +164,6 @@ function toggleSection(key: keyof typeof sections) {
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
 const sexColor = computed(() => SEX_COLORS[person.value?.sex ?? 'U'] ?? '#ccc');
 
-const personDates = computed(() => {
-  const p = person.value;
-  if (!p) return '';
-  if (p.birthYear && p.deathYear) return `${p.birthYear}–${p.deathYear}`;
-  if (p.birthYear) return p.living ? `f. ${p.birthYear}` : `${p.birthYear}–`;
-  return '';
-});
-
 const REL_TYPE_LABELS: Record<string, string> = {
   couple: 'Partner', parent_child: 'Förälder/barn', sibling: 'Syskon',
   godparent: 'Fadder', other: 'Annan',
@@ -145,6 +178,32 @@ function relLabel(rel: RelRow): string {
   return REL_TYPE_LABELS[rel.type] ?? rel.type;
 }
 
+// ── Date formatting ───────────────────────────────────────────────────────────
+
+async function buildDateLine(event: { date_original: string | null; date_value: string | null; place_id: string | null; place_address: string | null } | undefined): Promise<string | null> {
+  if (!event) return null;
+
+  const datePart = (event.date_original && event.date_original.trim())
+    ? event.date_original.trim()
+    : (event.date_value ?? null);
+
+  if (!datePart) return null;
+
+  let placePart: string | null = null;
+  if (event.place_id) {
+    try {
+      const place = (await window.api.places.get(event.place_id)) as { name?: string; city?: string } | null;
+      if (place) placePart = place.city ?? place.name ?? null;
+    } catch {
+      // ignore place fetch errors
+    }
+  } else if (event.place_address && event.place_address.trim()) {
+    placePart = event.place_address.trim();
+  }
+
+  return placePart ? `${datePart}, ${placePart}` : datePart;
+}
+
 // ── Data loading ─────────────────────────────────────────────────────────────
 
 async function loadPerson(id: string) {
@@ -157,20 +216,32 @@ async function loadPerson(id: string) {
   const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
   primaryName.value = sorted[0] ?? null;
 
-  // Get birth/death years from events
-  const events = (await window.api.events.forPerson(id)) as Array<{ event_type: string; date_value: string | null }>;
+  // Get birth/death events with full date + place info
+  const events = (await window.api.events.forPerson(id)) as Array<{
+    event_type: string;
+    date_value: string | null;
+    date_original: string | null;
+    place_id: string | null;
+    place_address: string | null;
+  }>;
   if (props.personId !== id) return;
+
   const birth = events.find(e => e.event_type === 'birth');
   const death = events.find(e => e.event_type === 'death');
-  const parseYear = (v: string | null) => v ? parseInt(v.slice(0, 4)) || null : null;
+
+  const [birthLine, deathLine] = await Promise.all([
+    buildDateLine(birth),
+    buildDateLine(death),
+  ]);
+  if (props.personId !== id) return;
 
   person.value = {
     id: raw.id,
     sex: raw.sex as 'M' | 'F' | 'U',
     living: raw.living,
     notes: raw.notes,
-    birthYear: parseYear(birth?.date_value ?? null),
-    deathYear: parseYear(death?.date_value ?? null),
+    birthLine,
+    deathLine,
   };
 
   await loadRelationships(id);
@@ -231,7 +302,8 @@ watch(() => props.personId, async (id) => {
 /* Header */
 .panel-header {
   display: flex;
-  border-bottom: 1px solid #eee;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
   flex-shrink: 0;
 }
 .panel-sex-bar {
@@ -247,32 +319,25 @@ watch(() => props.personId, async (id) => {
   font-size: 14px;
   font-weight: 600;
   color: #1a2a3a;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.panel-dates {
+.panel-lifelines {
+  margin-bottom: 6px;
+}
+.panel-lifeline {
   font-size: 12px;
-  color: #888;
-  margin-bottom: 8px;
+  color: #555;
+  line-height: 1.5;
 }
 .panel-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 8px;
 }
-.panel-btn {
-  font-size: 12px;
-  padding: 3px 8px;
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #444;
-  white-space: nowrap;
-}
-.panel-btn:hover { background: #e8e8e8; }
 .panel-link {
   font-size: 12px;
   color: #2980b9;
@@ -280,6 +345,22 @@ watch(() => props.personId, async (id) => {
   white-space: nowrap;
 }
 .panel-link:hover { text-decoration: underline; }
+
+.panel-add-relative-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.btn-dark {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-dark:hover { opacity: 0.9; }
 
 /* Sections */
 .panel-section {
