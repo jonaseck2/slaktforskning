@@ -19,6 +19,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
 import { detectGedcomVersion } from './detect';
 import type { GedcomVersion } from './detect';
+import { normalizeForImport } from './normalize';
 import type { Place, Relationship, RelationshipType, EventParticipantRole } from '../../api/types';
 import { parseGedcomDate } from '../../gedcom/date';
 import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
@@ -795,11 +796,14 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   const evBeforeRows    = queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
   const evBefore        = new Map<string, number>(evBeforeRows.map(r => [r.event_type, r.cnt]));
 
+  const version = detectGedcomVersion(tree);
+  const normalizedTree = normalizeForImport(tree, version);
+
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   runSql(db, 'BEGIN');
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[] };
   try {
-    partial = doImportGedcom(cachedDb, tree, options);
+    partial = doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
   } catch (err) {
     runSql(db, 'ROLLBACK');
@@ -824,7 +828,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   }
 
   return {
-    version:   detectGedcomVersion(tree),
+    version,
     persons:   personsAfter   - personsBefore,
     families:  familiesAfter  - familiesBefore,
     events,
