@@ -25,12 +25,12 @@
 **Files:**
 - Modify: `src/renderer/components/PersonPanel.vue`
 
-- [ ] **Step 1: Extend data loading to fetch full birth/death date + place**
+- [x] **Step 1: Extend data loading to fetch full birth/death date + place**
   - In `loadPerson()`, extend the events fetch to also get `date_original`, `date_value`, `place_address`, and `place_id` for birth and death events
   - Load the place name for birth/death via `window.api.places.get(place_id)` if `place_id` is set
   - Store `birthLine` and `deathLine` strings on `person.value` (e.g. `"12 mars 1842, Göteborg"`): prefer `date_original` text; fall back to `date_value` formatted as Swedish locale date
 
-- [ ] **Step 2: Redesign the header template**
+- [x] **Step 2: Redesign the header template**
   - Change header background from `#1a2a3a` to `white` with `border-bottom: 1px solid #e5e7eb`
   - Keep the left sex-color accent bar
   - Replace year-only display with two lines: `* {{ birthLine }}` and `† {{ deathLine }}` (omit line if no data)
@@ -38,7 +38,7 @@
   - Add three dark-blue buttons below the dates: `+ Förälder`, `+ Partner`, `+ Barn`
   - Each button sets `addRelativeMode.value` (`'parent' | 'spouse' | 'child'`) and `showAddRelative.value = true`
 
-- [ ] **Step 3: Wire AddRelatedPersonModal in PersonPanel**
+- [x] **Step 3: Wire AddRelatedPersonModal in PersonPanel**
   - Import `AddRelatedPersonModal`
   - Show it when `showAddRelative` is true, passing `:person-id="personId"` and `:mode="addRelativeMode"`
   - On `@saved`: call `loadPerson(personId)` to refresh dates/header; emit a `'relative-added'` event so VisualizationView can refresh the chart
