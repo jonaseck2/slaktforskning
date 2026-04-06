@@ -189,6 +189,54 @@ async function fetchDescendantTree(
 }
 
 /**
+ * Fetch and attach children for the node identified by targetPersonId, anywhere
+ * in the descendant tree rooted at `root`. Returns a new root object with new
+ * object references along the path to the modified node (Vue reactivity).
+ * Each newly loaded child gets hasMoreChildren set by checking their relationships.
+ */
+export async function loadChildrenForNode(
+  root: DescendantNode,
+  targetPersonId: string,
+): Promise<DescendantNode> {
+  async function updateNode(node: DescendantNode): Promise<DescendantNode> {
+    if (node.person.id === targetPersonId) {
+      // Fetch this person's children
+      const rawRels = (await window.api.relationships.getForPerson(node.person.id)) as RawRel[];
+      const childIds = rawRels
+        .filter(r => r.type === 'parent_child' && r.person1_id === node.person.id)
+        .map(r => r.person2_id)
+        .filter((id): id is string => id !== null);
+
+      const children = await Promise.all(childIds.map(async (cid) => {
+        const [childNode, childRels] = await Promise.all([
+          fetchPersonNode(cid),
+          (window.api.relationships.getForPerson(cid) as Promise<RawRel[]>),
+        ]);
+        const hasMoreChildren = childRels.some(
+          r => r.type === 'parent_child' && r.person1_id === cid && r.person2_id !== null,
+        );
+        return { person: childNode, children: [], hasMoreChildren };
+      }));
+
+      return { ...node, children, hasMoreChildren: false };
+    }
+
+    // Recurse into children, creating new object references only along changed path
+    let changed = false;
+    const newChildren = await Promise.all(node.children.map(async (child) => {
+      const updated = await updateNode(child);
+      if (updated !== child) changed = true;
+      return updated;
+    }));
+
+    if (!changed) return node;
+    return { ...node, children: newChildren };
+  }
+
+  return updateNode(root);
+}
+
+/**
  * Fetch an hourglass tree: 3 ancestor levels above focal + 3 descendant levels below
  * + couple partners (spouses) of the focal person.
  */
