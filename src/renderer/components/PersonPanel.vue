@@ -35,6 +35,101 @@
         </div>
       </div>
 
+      <!-- Person section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('person')">
+          <span class="panel-chevron">{{ sections.person ? '▾' : '▸' }}</span>
+          Person
+        </button>
+        <div v-if="sections.person" class="panel-section-body">
+          <div class="compact-form">
+            <div class="compact-field">
+              <label class="compact-label">Kön</label>
+              <select class="compact-control" :value="person.sex" @change="updateSex(($event.target as HTMLSelectElement).value as 'M' | 'F' | 'U')">
+                <option value="M">{{ $t('sex.M') }}</option>
+                <option value="F">{{ $t('sex.F') }}</option>
+                <option value="U">{{ $t('sex.U') }}</option>
+              </select>
+            </div>
+            <div class="compact-field">
+              <label class="compact-label">Status</label>
+              <select class="compact-control" :value="String(person.living)" @change="updateLiving(($event.target as HTMLSelectElement).value === 'true')">
+                <option value="true">{{ $t('personDetail.statusLiving') }}</option>
+                <option value="false">{{ $t('personDetail.statusDeceased') }}</option>
+              </select>
+            </div>
+            <div class="compact-field">
+              <label class="compact-label">{{ $t('panel.notes') }}</label>
+              <textarea
+                class="compact-control"
+                rows="2"
+                :value="person.notes ?? ''"
+                @blur="updateNotes(($event.target as HTMLTextAreaElement).value)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Namn section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('names')">
+          <span class="panel-chevron">{{ sections.names ? '▾' : '▸' }}</span>
+          Namn
+          <span class="panel-section-header-action" @click.stop="openNameForm(null)">+ Namn</span>
+        </button>
+        <div v-if="sections.names" class="panel-section-body">
+          <div v-if="names.length === 0" class="panel-empty-section">—</div>
+          <div
+            v-for="name in names"
+            :key="name.id"
+            class="panel-name-row"
+            :class="{ 'panel-name-row-clickable': name.sort_order !== 0 }"
+            @click="name.sort_order !== 0 && openNameForm(name)"
+          >
+            <div class="panel-name-row-main">
+              <PersonName
+                :given-name="name.given_name"
+                :surname="name.surname"
+                :preferred-name="name.preferred_name ?? null"
+                :nickname="name.nickname ?? null"
+              />
+              <span class="panel-name-type">{{ $t('nameTypes.' + name.name_type) }}</span>
+            </div>
+            <span v-if="name.sort_order === 0" class="panel-name-star">★</span>
+            <button
+              v-else
+              class="btn-sm btn-delete"
+              @click.stop="deleteName(name.id!)"
+            >✕</button>
+          </div>
+
+          <!-- Inline name form -->
+          <div v-if="showNameForm" class="panel-name-form">
+            <div class="compact-form">
+              <div class="compact-field">
+                <label class="compact-label">Förnamn</label>
+                <input v-model="nameFormData.given_name" type="text" class="compact-control" />
+              </div>
+              <div class="compact-field">
+                <label class="compact-label">Efternamn</label>
+                <input v-model="nameFormData.surname" type="text" class="compact-control" />
+              </div>
+              <div class="compact-field">
+                <label class="compact-label">Namntyp</label>
+                <select v-model="nameFormData.name_type" class="compact-control">
+                  <option v-for="nt in NAME_TYPE_VALUES" :key="nt" :value="nt">{{ $t('nameTypes.' + nt) }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="panel-name-form-actions">
+              <button class="btn-dark" @click="saveName">Spara</button>
+              <button class="btn-cancel" @click="cancelNameForm">Avbryt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Händelser section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('events')">
@@ -42,7 +137,7 @@
           {{ $t('panel.events') }}
         </button>
         <div v-if="sections.events" class="panel-section-body">
-          <EventList :person-id="personId" :readonly="true" />
+          <EventList :person-id="personId" />
         </div>
       </div>
 
@@ -68,17 +163,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Anteckningar section -->
-      <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('notes')">
-          <span class="panel-chevron">{{ sections.notes ? '▾' : '▸' }}</span>
-          {{ $t('panel.notes') }}
-        </button>
-        <div v-if="sections.notes" class="panel-section-body panel-notes">
-          {{ person.notes || $t('panel.noNotes') }}
-        </div>
-      </div>
     </template>
 
     <!-- Add relative modal -->
@@ -98,6 +182,7 @@ import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
 import PersonName from './PersonName.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
+import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -121,11 +206,12 @@ interface PersonData {
   birthLine: string | null;
   deathLine: string | null;
 }
-interface NameData { given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; }
+interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; }
 interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; }
 
 const person = ref<PersonData | null>(null);
 const primaryName = ref<NameData | null>(null);
+const names = ref<NameData[]>([]);
 const relationships = ref<RelRow[]>([]);
 
 // Add relative modal state
@@ -149,14 +235,94 @@ function loadSection(key: string, def: boolean): boolean {
   return v === null ? def : v === 'true';
 }
 const sections = reactive({
+  person: loadSection('person', false),
+  names: loadSection('names', false),
   events: loadSection('events', true),
   relationships: loadSection('relationships', false),
-  notes: loadSection('notes', false),
 });
 
 function toggleSection(key: keyof typeof sections) {
   sections[key] = !sections[key];
   localStorage.setItem(`viz-panel-section-${key}`, String(sections[key]));
+}
+
+// ── Person field updates ──────────────────────────────────────────────────────
+
+async function updateSex(value: 'M' | 'F' | 'U') {
+  if (!props.personId || !person.value) return;
+  await window.api.persons.update(props.personId, { sex: value });
+  person.value.sex = value;
+}
+
+async function updateLiving(value: boolean) {
+  if (!props.personId || !person.value) return;
+  await window.api.persons.update(props.personId, { living: value });
+  person.value.living = value;
+}
+
+async function updateNotes(value: string) {
+  if (!props.personId || !person.value) return;
+  const notes = value.trim() || null;
+  await window.api.persons.update(props.personId, { notes });
+  person.value.notes = notes;
+}
+
+// ── Name form ─────────────────────────────────────────────────────────────────
+
+const showNameForm = ref(false);
+const editingName = ref<NameData | null>(null);
+const nameFormData = reactive({ given_name: '', surname: '', name_type: 'birth' as string });
+
+function openNameForm(name: NameData | null) {
+  editingName.value = name;
+  if (name) {
+    nameFormData.given_name = name.given_name ?? '';
+    nameFormData.surname = name.surname ?? '';
+    nameFormData.name_type = name.name_type ?? 'birth';
+  } else {
+    nameFormData.given_name = '';
+    nameFormData.surname = '';
+    nameFormData.name_type = 'birth';
+  }
+  showNameForm.value = true;
+}
+
+function cancelNameForm() {
+  showNameForm.value = false;
+  editingName.value = null;
+}
+
+async function saveName() {
+  if (!props.personId) return;
+  if (editingName.value?.id) {
+    await window.api.persons.updateName(editingName.value.id, {
+      given_name: nameFormData.given_name,
+      surname: nameFormData.surname,
+      name_type: nameFormData.name_type,
+    });
+  } else {
+    await window.api.persons.addName(props.personId, {
+      given_name: nameFormData.given_name,
+      surname: nameFormData.surname,
+      name_type: nameFormData.name_type,
+    });
+  }
+  showNameForm.value = false;
+  editingName.value = null;
+  await reloadNames(props.personId);
+}
+
+async function deleteName(nameId: string) {
+  if (!props.personId) return;
+  await window.api.persons.deleteName(nameId);
+  await reloadNames(props.personId);
+}
+
+async function reloadNames(id: string) {
+  const fetched = (await window.api.persons.getNames(id)) as NameData[];
+  const sorted = [...fetched].sort((a, b) => a.sort_order - b.sort_order);
+  names.value = sorted;
+  primaryName.value = sorted[0] ?? null;
 }
 
 // ── Derived ──────────────────────────────────────────────────────────────────
@@ -211,10 +377,11 @@ async function loadPerson(id: string) {
   if (props.personId !== id) return;
   if (!raw) { person.value = null; return; }
 
-  const names = (await window.api.persons.getNames(id)) as NameData[];
+  const fetched = (await window.api.persons.getNames(id)) as NameData[];
   if (props.personId !== id) return;
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
+  const sorted = [...fetched].sort((a, b) => a.sort_order - b.sort_order);
   primaryName.value = sorted[0] ?? null;
+  names.value = sorted;
 
   // Get birth/death events with full date + place info
   const events = (await window.api.events.forPerson(id)) as Array<{
@@ -274,6 +441,7 @@ async function loadRelationships(id: string) {
 watch(() => props.personId, async (id) => {
   person.value = null;
   relationships.value = [];
+  names.value = [];
   if (id) await loadPerson(id);
 }, { immediate: true });
 </script>
@@ -383,9 +551,117 @@ watch(() => props.personId, async (id) => {
 }
 .panel-section-header:hover { background: #f0f0f0; }
 .panel-chevron { font-size: 10px; color: #999; }
+.panel-section-header-action {
+  margin-left: auto;
+  background: #2c3e50;
+  color: white;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.panel-section-header-action:hover { opacity: 0.85; }
 .panel-section-body { padding: 4px 0 8px; }
 .panel-empty-section { padding: 4px 14px; color: #bbb; font-size: 12px; }
-.panel-notes { padding: 8px 14px; color: #555; white-space: pre-wrap; font-size: 12px; }
+
+/* Compact form */
+.compact-form {
+  padding: 4px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.compact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.compact-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.4px;
+}
+.compact-control {
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  color: #222;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+}
+.compact-control:focus {
+  outline: none;
+  border-color: #2980b9;
+}
+
+/* Name rows */
+.panel-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px;
+  gap: 6px;
+}
+.panel-name-row-clickable {
+  cursor: pointer;
+}
+.panel-name-row-clickable:hover {
+  background: #f5f7fa;
+}
+.panel-name-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.panel-name-type {
+  font-size: 11px;
+  color: #aaa;
+}
+.panel-name-star {
+  font-size: 12px;
+  color: #f0a500;
+  flex-shrink: 0;
+}
+.panel-name-form {
+  padding: 4px 14px 8px;
+  border-top: 1px solid #eee;
+  margin-top: 4px;
+}
+.panel-name-form-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.btn-cancel {
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-cancel:hover { background: #e0e0e0; }
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.btn-delete:hover { background: #fecaca; }
 
 /* Relationships */
 .panel-rel-row {
