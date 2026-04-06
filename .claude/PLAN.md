@@ -94,6 +94,15 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
+### Infinite chart expansion [feature]
+See `.claude/plans/2026-04-06-infinite-chart-expansion.md` for the full plan.
+- [ ] Add `hasMoreAncestors`/`hasMoreChildren`/`isLoadMore` types + `maxDescendantDepth` to chartLayout.ts
+- [ ] Pedigree collapse direction fix: `'up'` → `'right'` (▶) + load-more buttons in `computePedigreeLayout`
+- [ ] Hourglass load-more buttons in `computeHourglassLayout` (ancestor + descendant)
+- [ ] `fetchPedigreeTree` / `fetchDescendantTree` populate `hasMoreAncestors` / `hasMoreChildren` at leaf generation
+- [ ] `loadAncestorGeneration` + `loadChildrenForNode` in chartData.ts
+- [ ] `PedigreeChart.vue` + `HourglassChart.vue` — async `handleCollapseButton`
+
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
 - [ ] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
