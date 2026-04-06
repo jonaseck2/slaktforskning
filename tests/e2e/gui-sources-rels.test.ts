@@ -17,7 +17,7 @@ const app = new AppDriver(UI_PORT);
 
 test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'sources-rels');
-  await app.settle(1000);
+  await app.settle(150);
   await app.setLocale('en');
 });
 
@@ -84,7 +84,7 @@ test.describe('Sources CRUD', () => {
         }
       }
     `);
-    await app.settle(500);
+    await app.settle(80);
     await app.navigate('/sources');
     await app.expectNoText('To Be Deleted');
   });
@@ -159,7 +159,7 @@ test.describe('Relationships CRUD', () => {
     await app.navigate(`/relationships/${rel.id}`);
     // Wait for the view to fully load (Type section confirms the detail view rendered)
     await app.waitForText('Type');
-    await app.settle(300);
+    await app.settle(50);
     const dom = await app.getDom();
     // CitationBadge renders 'unsourced-badge' when count=0, 'source-count-badge' when count>0
     const hasBadge = dom.includes('unsourced-badge') || dom.includes('source-count-badge');

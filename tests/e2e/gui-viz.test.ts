@@ -17,7 +17,7 @@ const app = new AppDriver(UI_PORT);
 
 test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'viz');
-  await app.settle(1000);
+  await app.settle(150);
   await app.setLocale('en');
 });
 
@@ -103,7 +103,7 @@ test.describe('Visualization with persons', () => {
   test('pedigree chart is active by default and renders SVG', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
-    await app.settle(500);
+    await app.settle(80);
 
     const dom = await app.getDom();
     // Pedigree tab should be active
@@ -115,12 +115,12 @@ test.describe('Visualization with persons', () => {
   test('switching to Hourglass tab renders SVG', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
-    await app.settle(500);
+    await app.settle(80);
 
     await app.executeJs(`
       document.querySelector('[data-testid="tab-hourglass"]').click()
     `);
-    await app.settle(500);
+    await app.settle(80);
 
     const dom = await app.getDom();
     expect(dom).toContain('<svg');
@@ -129,12 +129,12 @@ test.describe('Visualization with persons', () => {
   test('switching to Timeline tab renders SVG', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
-    await app.settle(500);
+    await app.settle(80);
 
     await app.executeJs(`
       document.querySelector('[data-testid="tab-timeline"]').click()
     `);
-    await app.settle(500);
+    await app.settle(80);
 
     const dom = await app.getDom();
     // Timeline should render an SVG now that the person has birth and death events
@@ -144,12 +144,12 @@ test.describe('Visualization with persons', () => {
   test('switching tabs updates aria-selected', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
-    await app.settle(300);
+    await app.settle(50);
 
     await app.executeJs(`
       document.querySelector('[data-testid="tab-hourglass"]').click()
     `);
-    await app.settle(300);
+    await app.settle(50);
 
     const selected = await app.executeJs<string>(
       'document.querySelector("[data-testid=\'tab-hourglass\']").getAttribute("aria-selected")'
@@ -165,10 +165,10 @@ test.describe('Visualization with persons', () => {
   test('View details link navigates to person detail', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
-    await app.settle(300);
+    await app.settle(50);
 
     await app.click('.btn-detail');
-    await app.settle(500);
+    await app.settle(80);
 
     const routePath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.path'

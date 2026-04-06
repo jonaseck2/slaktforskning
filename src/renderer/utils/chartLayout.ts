@@ -172,7 +172,7 @@ export function computePedigreeLayout(
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
-  const svgWidth = PAD + G * BOX_W + (G - 1) * H_GAP + PAD;
+  const svgWidth = PAD + G * BOX_W + (G - 1) * H_GAP + PAD + 10; // button at box.right+10, r=8, stroke=1.5 → need ≥18.75 past box.right; +20 total
 
   const genXOf = (g: number) => PAD + g * (BOX_W + H_GAP);
 
@@ -425,8 +425,10 @@ export function computeHourglassLayout(
 
   // Row Y helpers (needed before focalCX is known)
   // Ancestor rows count down from top; focal = PAD + A*(BOX_H+GEN_GAP)
-  const focalRowY  = PAD + A * (BOX_H + GEN_GAP);
-  const ancestorRowY = (g: number) => PAD + (A - g) * (BOX_H + GEN_GAP);
+  // Extra 8px at top so the ▲ button (radius 8) on the topmost row isn't clipped.
+  const ancestorTopPad = PAD + 8;
+  const focalRowY  = ancestorTopPad + A * (BOX_H + GEN_GAP);
+  const ancestorRowY = (g: number) => ancestorTopPad + (A - g) * (BOX_H + GEN_GAP);
   const descRowY     = (d: number) => focalRowY + d * (BOX_H + GEN_GAP);
 
   // Compute descendant extents relative to the couple-junction.

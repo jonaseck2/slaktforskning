@@ -342,6 +342,7 @@ export default {
       children: 'Barn',
     },
     empty: 'Lägg till en person för att börja visualisera.',
+    noFocalPerson: 'Välj en fokusperson för att visa trädet.',
     selectPerson: 'Välj fokusperson\u2026',
     viewDetail: 'Visa detaljer',
     today: 'Idag',

@@ -134,6 +134,18 @@ async function loadDbName() {
   currentDbName.value = info.name;
 }
 
+async function autoSetFocusPerson() {
+  if (focusStore.personId) return;
+  try {
+    const persons = (await (window.api.persons as Record<string, (...args: unknown[]) => Promise<unknown>>).list()) as Array<{ id: string; given_name: string | null; surname: string | null }>;
+    if (persons.length > 0) {
+      const p = persons[0];
+      const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
+      focusStore.set(p.id, name);
+    }
+  } catch { /* ignore */ }
+}
+
 async function loadResearchBadge() {
   if (!window.api?.researchTasks) return;
   try {
@@ -156,6 +168,7 @@ onMounted(() => {
   loadDbName();
   loadQualityBadge();
   loadResearchBadge();
+  autoSetFocusPerson();
   (window.api.db as unknown as { onSwitched: (cb: () => void) => void }).onSwitched(() => {
     window.location.reload();
   });
@@ -168,6 +181,7 @@ onMounted(() => {
   let researchDebounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
     dataVersionStore.increment();
+    if (!focusStore.personId) autoSetFocusPerson();
     if (qualityDebounce) clearTimeout(qualityDebounce);
     qualityDebounce = setTimeout(loadQualityBadge, 800);
     if (researchDebounce) clearTimeout(researchDebounce);

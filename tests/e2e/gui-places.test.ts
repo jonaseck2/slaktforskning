@@ -17,7 +17,7 @@ const app = new AppDriver(UI_PORT);
 
 test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'places');
-  await app.settle(1000);
+  await app.settle(150);
   await app.setLocale('en');
 });
 
@@ -85,7 +85,7 @@ test.describe('Places CRUD', () => {
         }
       }
     `);
-    await app.settle(500);
+    await app.settle(80);
     await app.navigate('/places');
     await app.expectNoText('To Be Deleted');
   });
@@ -181,7 +181,7 @@ test.describe('Address fields', () => {
       const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Add Event') || b.textContent.includes('Add event'));
       if (btn) btn.click();
     `);
-    await app.settle(500);
+    await app.settle(80);
 
     // Type 'Test' in the PlacePicker search input
     const dom = await app.getDom();
@@ -194,7 +194,7 @@ test.describe('Address fields', () => {
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
       `);
-      await app.settle(500);
+      await app.settle(80);
       const afterDom = await app.getDom();
       // Subtitle should show postal_code + city
       if (afterDom.includes('Teststaden')) {
