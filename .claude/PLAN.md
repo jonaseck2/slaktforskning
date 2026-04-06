@@ -84,6 +84,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.23.7: AncestorBook export circle: gen 6 blank — fetchPedigreeTree needs generations=7 not 6 | — |
 | v0.24.0 | Media Attachments Phase 1–3: is_missing schema, file copy strategy, media:attach/openFile/getFilePath IPC, MediaView, PersonDetailView media section, i18n, unit tests | [plan](plans/2026-04-04-media.md) |
 | Fix | v0.24.1: UX design system — all list views match QualityView (GroupsView + PersonsView/RelationshipsView/PlacesView/SourcesView/ResearchTasksView/ReportsView) | [archive](plans/archive/2026-04-05-ux-design-system.md) |
+| Fix | v0.24.1: Quality checks CPU saturation on large trees — 4-way event_participants self-join → 2-query+JS; V8 CPU profiling infrastructure; performance-profiling skill | [archive](plans/archive/2026-04-06-checks-performance.md) |
 
 ---
 

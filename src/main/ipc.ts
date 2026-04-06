@@ -1,6 +1,8 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
+import * as inspector from 'inspector';
 import { getDatabase, getCurrentDatabasePath, switchDatabase } from './database';
 import { loadSettings } from './settings';
 import * as persons from '../api/persons';
@@ -18,6 +20,38 @@ import * as media from '../api/media';
 import * as checks from '../api/checks';
 
 let importInProgress = false;
+
+// ---------------------------------------------------------------------------
+// CPU profiling helpers — writes .cpuprofile to ~/Desktop for Chrome DevTools
+// ---------------------------------------------------------------------------
+async function captureProfile<T>(label: string, fn: () => T | Promise<T>): Promise<T> {
+  const session = new inspector.Session();
+  session.connect();
+  await new Promise<void>((resolve, reject) =>
+    session.post('Profiler.enable', (err) => (err ? reject(err) : resolve()))
+  );
+  await new Promise<void>((resolve, reject) =>
+    session.post('Profiler.start', (err) => (err ? reject(err) : resolve()))
+  );
+  const t0 = Date.now();
+  let result: T;
+  try {
+    result = await fn();
+  } finally {
+    const profile = await new Promise<inspector.Profiler.Profile>((resolve, reject) =>
+      session.post('Profiler.stop', (_err, params) =>
+        _err ? reject(_err) : resolve(params.profile)
+      )
+    );
+    session.disconnect();
+    const elapsed = Date.now() - t0;
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const outPath = path.join(os.homedir(), 'Desktop', `${label}-${stamp}.cpuprofile`);
+    fs.writeFileSync(outPath, JSON.stringify(profile), 'utf-8');
+    console.log(`[profile] ${label}: ${elapsed}ms → ${outPath}`);
+  }
+  return result!;
+}
 
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
@@ -138,10 +172,12 @@ export function registerIpcHandlers(): void {
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     importInProgress = true;
     try {
-      const text = readGedcomFile(result.filePaths[0]);
-      const tree = parseGedcom(text);
-      const report = importGedcom(getDatabase(), tree, options);
-      return { imported: true, filePath: result.filePaths[0], report };
+      return await captureProfile('gedcom-import', () => {
+        const text = readGedcomFile(result.filePaths[0]);
+        const tree = parseGedcom(text);
+        const report = importGedcom(getDatabase(), tree, options);
+        return { imported: true, filePath: result.filePaths[0], report };
+      });
     } finally {
       importInProgress = false;
     }
@@ -349,20 +385,22 @@ export function registerIpcHandlers(): void {
       console.log('[IPC] checks:runAll skipped — import in progress');
       return [];
     }
-    const db = getDatabase();
-    const raw = checks.runAllChecks(db);
-    // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
-    // can return 20k+ results for large trees, making the name-resolution query very slow.
-    const countByCode = new Map<string, number>();
-    const capped = raw.filter(r => {
-      if (r.severity !== 'notice') return true;
-      const n = (countByCode.get(r.code) ?? 0) + 1;
-      countByCode.set(r.code, n);
-      return n <= 500;
+    return captureProfile('checks-runAll', () => {
+      const db = getDatabase();
+      const raw = checks.runAllChecks(db);
+      // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
+      // can return 20k+ results for large trees, making the name-resolution query very slow.
+      const countByCode = new Map<string, number>();
+      const capped = raw.filter(r => {
+        if (r.severity !== 'notice') return true;
+        const n = (countByCode.get(r.code) ?? 0) + 1;
+        countByCode.set(r.code, n);
+        return n <= 500;
+      });
+      const allIds = [...new Set(capped.flatMap(r => r.personIds))];
+      const nameMap = persons.getPersonDisplayNames(db, allIds);
+      return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
     });
-    const allIds = [...new Set(capped.flatMap(r => r.personIds))];
-    const nameMap = persons.getPersonDisplayNames(db, allIds);
-    return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
   });
   wrapHandler('checks:forPerson', (personId) => checks.runChecksForPerson(getDatabase(), personId as string));
 
