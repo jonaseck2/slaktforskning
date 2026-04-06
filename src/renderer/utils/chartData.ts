@@ -39,9 +39,11 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
 /**
  * Fetch an ahnentafel ancestor tree up to `generations` levels (including focal).
  * Default: 5 generations (focal + 4 ancestor levels = up to 16 great-great-grandparents).
+ * At the deepest generation, also checks for parents to populate hasMoreAncestors.
  */
 export async function fetchPedigreeTree(focalId: string, generations = 5): Promise<PedigreeTree> {
   const nodes = new Map<number, PersonNode>();
+  const hasMoreAncestors = new Set<number>();
 
   async function fetchAncestors(personId: string, ahnNum: number, gen: number): Promise<void> {
     if (gen < generations) {
@@ -71,12 +73,21 @@ export async function fetchPedigreeTree(focalId: string, generations = 5): Promi
 
       await Promise.all(parentIds.map((pid, i) => fetchAncestors(pid, ahnNum * 2 + i, gen + 1)));
     } else {
-      nodes.set(ahnNum, await fetchPersonNode(personId));
+      // Deepest generation: fetch node + check if parents exist in DB.
+      const [node, rawRels] = await Promise.all([
+        fetchPersonNode(personId),
+        window.api.relationships.getForPerson(personId),
+      ]) as [PersonNode, RawRel[]];
+      nodes.set(ahnNum, node);
+      const parentCount = rawRels
+        .filter(r => r.type === 'parent_child' && r.person2_id === personId && r.person1_id !== null)
+        .length;
+      if (parentCount > 0) hasMoreAncestors.add(ahnNum);
     }
   }
 
   await fetchAncestors(focalId, 1, 1);
-  return { nodes, generations };
+  return { nodes, generations, hasMoreAncestors };
 }
 
 /**
