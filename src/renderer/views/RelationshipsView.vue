@@ -5,7 +5,7 @@
       <button class="btn-add" @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
     </div>
     <p v-if="total > 0" class="count-label">
-      {{ $t('persons.showingOf', { shown: relationships.length, total }) }}
+      {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>
     <div v-if="relationships.length === 0 && !loading" class="empty">
       {{ $t('relationships.emptyState') }}

@@ -87,6 +87,7 @@ export default {
     person2: 'Person 2',
     searchPerson: 'Sök efter en person\u2026',
     confirmDelete: 'Ta bort denna relation? Detta kan inte ångras.',
+    showingOf: 'Visar {shown} av {total} relationer',
   },
   relationshipDetail: {
     title: 'Relation',
@@ -557,5 +558,6 @@ export default {
     linkedEntities: 'Kopplad till',
     addMedia: 'Lägg till media',
     title_label: 'Titel',
+    missingCount: '{count} saknas',
   },
 };

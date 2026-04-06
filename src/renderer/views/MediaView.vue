@@ -5,6 +5,9 @@
       <button class="btn-add" @click="attachFile">{{ $t('media.attach') }}</button>
     </div>
 
+    <p v-if="!loading && items.length > 0" class="count-label">
+      {{ items.length }} {{ $t('media.title').toLowerCase() }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
+    </p>
     <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
     <div v-else-if="items.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
     <table v-else class="data-table">
@@ -39,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 declare const window: Window & {
@@ -61,6 +64,7 @@ interface MediaItem {
 
 const items = ref<MediaItem[]>([]);
 const loading = ref(true);
+const missingCount = computed(() => items.value.filter(i => i.is_missing).length);
 
 async function load() {
   loading.value = true;

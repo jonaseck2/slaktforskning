@@ -87,6 +87,7 @@ export default {
     person2: 'Person 2',
     searchPerson: 'Search for a person\u2026',
     confirmDelete: 'Delete this relationship? This cannot be undone.',
+    showingOf: 'Showing {shown} of {total} relationships',
   },
   relationshipDetail: {
     title: 'Relationship',
@@ -557,5 +558,6 @@ export default {
     linkedEntities: 'Linked to',
     addMedia: 'Add media',
     title_label: 'Title',
+    missingCount: '{count} missing',
   },
 };
