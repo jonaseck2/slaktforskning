@@ -9,7 +9,7 @@ import { listRelationships, createRelationship, addEventParticipant, getEventPar
 import { createEvent } from '../../src/api/events';
 import { getEventsForPerson } from '../../src/api/events';
 import { createSource, listSources, createCitation, getCitationsForPerson, getCitationsForRelationship, getCitationsForPlace, getCitationsForEvent } from '../../src/api/sources';
-import { createPlace, listPlaces } from '../../src/api/places';
+import { createPlace, listPlaces, getPlace } from '../../src/api/places';
 import { createMedia, addMediaLink, getMediaForEntity } from '../../src/api/media';
 import { createRepository, linkSourceRepository } from '../../src/api/repositories';
 
@@ -1144,5 +1144,97 @@ describe('exportGedcom — round-trip improvements', () => {
     const repoPos = ged.indexOf('REPO');
     const sourPos = ged.indexOf('0 @S');
     expect(repoPos).toBeLessThan(sourPos);
+  });
+});
+
+// ──────────────────────────────────────────────
+// Standard GEDCOM MAP and ADDR import
+// ──────────────────────────────────────────────
+describe('importGedcom (standard MAP/ADDR)', () => {
+  it('imports MAP coordinates from PLAC sub-tag (no profile)', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 BIRT',
+      '2 PLAC Stockholm',
+      '3 MAP',
+      '4 LATI N59.3300',
+      '4 LONG E18.0700',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    expect(persons).toHaveLength(1);
+    const events = getEventsForPerson(db, persons[0].id);
+    expect(events).toHaveLength(1);
+    const place = getPlace(db, events[0].place_id!);
+    expect(place).not.toBeNull();
+    expect(place!.latitude).toBeCloseTo(59.33, 2);
+    expect(place!.longitude).toBeCloseTo(18.07, 2);
+  });
+
+  it('imports negative MAP coordinates (S/W hemispheres, no profile)', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 DEAT',
+      '2 PLAC Cape Town',
+      '3 MAP',
+      '4 LATI S33.9249',
+      '4 LONG E18.4241',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const place = getPlace(db, events[0].place_id!);
+    expect(place!.latitude).toBeCloseTo(-33.9249, 3);
+    expect(place!.longitude).toBeCloseTo(18.4241, 3);
+  });
+
+  it('imports ADDR on event node into associated place (no profile)', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 RESI',
+      '2 DATE 1920',
+      '2 PLAC Göteborg',
+      '2 ADDR',
+      '3 ADR1 Storgatan 1',
+      '3 CITY Göteborg',
+      '3 POST 41234',
+      '3 CTRY Sverige',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    expect(events).toHaveLength(1);
+    const place = getPlace(db, events[0].place_id!);
+    expect(place).not.toBeNull();
+    expect(place!.street).toBe('Storgatan 1');
+    expect(place!.city).toBe('Göteborg');
+    expect(place!.postal_code).toBe('41234');
+    expect(place!.country).toBe('Sverige');
+  });
+
+  it('creates a place from event ADDR when no PLAC tag present (no profile)', () => {
+    const ged = [
+      '0 @I1@ INDI',
+      '1 RESI',
+      '2 DATE 1900',
+      '2 ADDR',
+      '3 ADR1 Main Street 5',
+      '3 CITY Springfield',
+      '3 CTRY USA',
+      '0 TRLR',
+    ].join('\n');
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    expect(events).toHaveLength(1);
+    expect(events[0].place_id).not.toBeNull();
+    const place = getPlace(db, events[0].place_id!);
+    expect(place).not.toBeNull();
+    expect(place!.city).toBe('Springfield');
+    expect(place!.street).toBe('Main Street 5');
+    expect(place!.country).toBe('USA');
   });
 });

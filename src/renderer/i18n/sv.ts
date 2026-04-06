@@ -590,7 +590,7 @@ export default {
     title: 'Media',
     nav: 'Media',
     open: 'Öppna',
-    attach: '+',
+    attach: '+ media',
     attachTo: 'Bifoga till',
     delete: 'Ta bort',
     noMedia: 'Ingen media bifogad.',

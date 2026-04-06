@@ -94,7 +94,6 @@ onMounted(load);
 
 <style scoped>
 /* Unique to MediaView */
-.media-view { max-width: 900px; }
 
 .file-ref-cell {
   font-family: monospace;

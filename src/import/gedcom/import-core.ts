@@ -262,7 +262,37 @@ function importEventNode(
   const parsed = dateNode
     ? parseGedcomDate(dateNode.value)
     : { date_type: 'unknown' as const, date_value: null, date_value_end: null, date_original: '' };
-  const place = placNode ? resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
+  let place = placNode ? resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
+
+  // Standard GEDCOM 5.5.1: ADDR can appear directly on the event node (not under PLAC).
+  // Apply address fields to the associated place (or create one from ADDR if no PLAC).
+  const evAddrNode = getChild(evNode, 'ADDR');
+  if (evAddrNode) {
+    const street = getChild(evAddrNode, 'ADR1')?.value ?? evAddrNode.value ?? null;
+    const postal_code = getChild(evAddrNode, 'POST')?.value ?? null;
+    const city = getChild(evAddrNode, 'CITY')?.value ?? null;
+    const country = getChild(evAddrNode, 'CTRY')?.value ?? null;
+    if (place) {
+      // Update existing place with ADDR data (don't overwrite existing non-null values)
+      const addrUpdate: Parameters<typeof updatePlace>[2] = {};
+      if (street && !place.street) addrUpdate.street = street;
+      if (postal_code && !place.postal_code) addrUpdate.postal_code = postal_code;
+      if (city && !place.city) addrUpdate.city = city;
+      if (country && !place.country) addrUpdate.country = country;
+      if (Object.keys(addrUpdate).length > 0) updatePlace(db, place.id, addrUpdate);
+    } else if (city || street) {
+      // No PLAC but ADDR present — create a place from the address data
+      const placeName = city ?? street ?? 'Unknown';
+      place = resolvePlaceFn(db, placeName);
+      const addrUpdate: Parameters<typeof updatePlace>[2] = {};
+      if (street) addrUpdate.street = street;
+      if (postal_code) addrUpdate.postal_code = postal_code;
+      if (city) addrUpdate.city = city;
+      if (country) addrUpdate.country = country;
+      if (Object.keys(addrUpdate).length > 0) updatePlace(db, place.id, addrUpdate);
+    }
+  }
+
   const causeValue = getChild(evNode, 'CAUS')?.value ?? null;
   const typeValue = getChild(evNode, 'TYPE')?.value ?? '';
   const noteRaw = resolveNote(evNode, noteMap);
