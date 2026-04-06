@@ -17,11 +17,13 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
 
+let importInProgress = false;
+
 function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {
   ipcMain.handle(channel, async (_e, ...args) => {
     try {
       console.log(`[IPC] ${channel}`, args);
-      const result = handler(...args);
+      const result = await handler(...args);
       console.log(`[IPC] ${channel} → OK`);
       return result;
     } catch (err) {
@@ -134,10 +136,15 @@ export function registerIpcHandlers(): void {
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
-    const text = readGedcomFile(result.filePaths[0]);
-    const tree = parseGedcom(text);
-    const report = importGedcom(getDatabase(), tree, options);
-    return { imported: true, filePath: result.filePaths[0], report };
+    importInProgress = true;
+    try {
+      const text = readGedcomFile(result.filePaths[0]);
+      const tree = parseGedcom(text);
+      const report = importGedcom(getDatabase(), tree, options);
+      return { imported: true, filePath: result.filePaths[0], report };
+    } finally {
+      importInProgress = false;
+    }
   });
 
   // Genney Derby import
@@ -338,11 +345,24 @@ export function registerIpcHandlers(): void {
 
   // Checks
   wrapHandler('checks:runAll', () => {
+    if (importInProgress) {
+      console.log('[IPC] checks:runAll skipped — import in progress');
+      return [];
+    }
     const db = getDatabase();
     const raw = checks.runAllChecks(db);
-    const allIds = [...new Set(raw.flatMap(r => r.personIds))];
+    // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
+    // can return 20k+ results for large trees, making the name-resolution query very slow.
+    const countByCode = new Map<string, number>();
+    const capped = raw.filter(r => {
+      if (r.severity !== 'notice') return true;
+      const n = (countByCode.get(r.code) ?? 0) + 1;
+      countByCode.set(r.code, n);
+      return n <= 500;
+    });
+    const allIds = [...new Set(capped.flatMap(r => r.personIds))];
     const nameMap = persons.getPersonDisplayNames(db, allIds);
-    return raw.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
+    return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
   });
   wrapHandler('checks:forPerson', (personId) => checks.runChecksForPerson(getDatabase(), personId as string));
 

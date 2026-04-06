@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('groups.title') }}</h2>
-      <button @click="showAddForm = true">{{ $t('groups.addGroup') }}</button>
+      <button class="btn-add" @click="showAddForm = true">{{ $t('groups.addGroup') }}</button>
     </div>
     <div v-if="groups.length === 0" class="empty">{{ $t('groups.emptyState') }}</div>
     <table v-else class="data-table">
@@ -149,6 +149,9 @@ onActivated(async () => {
 .data-table th {
   background: #eee;
   font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
 }
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f0f4ff; }
@@ -160,17 +163,11 @@ onActivated(async () => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-button {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-button:hover { opacity: 0.9; }
-.btn-sm { padding: 4px 8px; font-size: 12px; }
-.btn-delete { background: #fee; color: #c0392b; }
+.btn-add { background: #2c3e50; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+.btn-add:hover { opacity: 0.9; }
+.btn-sm { padding: 3px 8px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; }
+.btn-delete { background: #fee2e2; color: #b91c1c; }
+.btn-delete:hover { background: #fecaca; }
 .modal-overlay {
   position: fixed;
   inset: 0;

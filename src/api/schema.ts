@@ -306,6 +306,7 @@ export function initializeSchema(db: Database): void {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
     CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type);
+    CREATE INDEX IF NOT EXISTS idx_events_type_datetype ON events(event_type, date_type);
     CREATE INDEX IF NOT EXISTS idx_person_names_person_sort ON person_names(person_id, sort_order);
   `);
 }
