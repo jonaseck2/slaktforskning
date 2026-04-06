@@ -108,6 +108,15 @@ See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 - [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
 - [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
 
+### GEDCOM 7.0 Export [feature]
+See `.claude/plans/2026-04-06-gedcom-70-export.md` for the full plan.
+- [ ] `isStandardGedcomDate` helper in `src/gedcom/date.ts`
+- [ ] `exportGedcom(db, version)` — header, EXID identifiers
+- [ ] DATE PHRASE for unparseable dates in 7.0
+- [ ] PEDI uppercase + `alias` NAME.TYPE → `AKA`
+- [ ] IPC + preload accept `{ version? }` option
+- [ ] ImportExportView: format selector (5.5.1 / 7.0)
+
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
 - [ ] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
