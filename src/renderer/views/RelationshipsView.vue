@@ -39,6 +39,7 @@
           @click="goToDetail(rel.id)"
         >
           <td>
+            <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
             <router-link v-if="rel.person1_id" :to="'/persons/' + rel.person1_id" class="person-link" @click.stop>
               <PersonName
                 v-if="rel.person1_given_name || rel.person1_surname"
@@ -57,9 +58,9 @@
               />
             </span>
             <span v-else>—</span>
-            <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
           </td>
           <td>
+            <span v-if="roleLabel2(rel.type)" class="role-label">{{ roleLabel2(rel.type) }}</span>
             <router-link v-if="rel.person2_id" :to="'/persons/' + rel.person2_id" class="person-link" @click.stop>
               <PersonName
                 v-if="rel.person2_given_name || rel.person2_surname"
@@ -78,7 +79,6 @@
               />
             </span>
             <span v-else>—</span>
-            <span v-if="roleLabel2(rel.type)" class="role-label">{{ roleLabel2(rel.type) }}</span>
           </td>
           <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
           <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
@@ -356,9 +356,9 @@ onActivated(async () => {
   font-size: 12px;
 }
 .role-label {
-  display: block;
+  display: inline;
   font-size: 11px;
   color: #888;
-  margin-top: 1px;
+  margin-right: 5px;
 }
 </style>
