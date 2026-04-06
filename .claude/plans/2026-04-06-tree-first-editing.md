@@ -170,7 +170,7 @@
 **Files:**
 - Modify: `src/renderer/components/charts/HourglassChart.vue`
 
-- [ ] **Step 1–4:** Same as Task 8, applied to HourglassChart box layout.
+- [x] **Step 1–4:** Same as Task 8, applied to HourglassChart box layout.
   - HourglassChart uses the same `box.x / box.y / box.w / box.h` layout structure — the SVG icon and popover logic are identical.
 
 ---

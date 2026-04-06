@@ -249,7 +249,7 @@ h2 {
 }
 
 .section-instructions {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #444;
   background: #f8f8f8;
   border-left: 3px solid #2c3e50;
@@ -265,7 +265,7 @@ h2 {
 }
 
 .section-progress {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #555;
   font-style: italic;
   margin: 0;
@@ -335,7 +335,7 @@ button:disabled {
 
 .modal h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-lg);
 }
 
 .report-counts {
