@@ -78,11 +78,12 @@
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-05-gedcom-media-import.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-05-gedcom-media-import.md)",
       "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-04-media.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-05-gedcom-media-import.md)",
       "Bash(scripts/start-server.sh --project-dir /Users/jonasahnstedt/git/slaktforskning)",
-      "Bash(sed -i '' 's/app\\\\.settle\\(1000\\)/app.settle\\(150\\)/g' tests/e2e/gui-*.test.ts)",
+      "Bash(sed *)",
       "Bash(sed -i '' 's/app\\\\.settle\\(800\\)/app.settle\\(100\\)/g' tests/e2e/gui-*.test.ts)",
       "Bash(sed -i '' 's/app\\\\.settle\\(500\\)/app.settle\\(80\\)/g' tests/e2e/gui-*.test.ts)",
       "Bash(sed -i '' 's/app\\\\.settle\\(300\\)/app.settle\\(50\\)/g' tests/e2e/gui-*.test.ts)",
-      "Read(//<style scoped>/,/<\\\\/**)"
+      "Read(//<style scoped>/,/<\\\\/**)",
+      "Bash(awk *)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
