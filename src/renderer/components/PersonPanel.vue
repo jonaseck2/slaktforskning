@@ -878,16 +878,16 @@ watch(() => props.personId, async (id) => {
   padding: 4px 14px;
 }
 .panel-rel-type-btn {
-  background: none;
+  background: #f1f5f9;
   border: none;
-  padding: 0;
+  border-radius: 4px;
+  padding: 1px 6px;
   font-size: 11px;
-  color: #888;
+  color: #475569;
   cursor: pointer;
   white-space: nowrap;
-  text-decoration: underline dotted;
 }
-.panel-rel-type-btn:hover { color: #333; }
+.panel-rel-type-btn:hover { background: #e2e8f0; color: #1e293b; }
 .panel-rel-person {
   background: none;
   border: none;
