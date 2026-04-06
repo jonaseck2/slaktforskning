@@ -16,6 +16,19 @@
         <p v-if="genneyProgress" class="section-progress">{{ genneyProgress }}</p>
       </div>
 
+      <!-- Holger / OurKind -->
+      <div class="section">
+        <h3>{{ $t('importExport.holgerTitle') }}</h3>
+        <p class="section-desc">{{ $t('importExport.holgerDesc') }}</p>
+        <div class="section-buttons">
+          <button @click="holgerPickFile" :disabled="busy">{{ $t('importExport.holgerPickFile') }}</button>
+          <button @click="holgerPickMedia" :disabled="busy">{{ $t('importExport.holgerPickMedia') }}</button>
+          <button @click="handleImportFromHolger" :disabled="busy || !holgerSourcePath">{{ $t('importExport.holgerImport') }}</button>
+        </div>
+        <p v-if="holgerSourcePath" class="section-instructions">{{ holgerSourcePath }}<span v-if="holgerMediaDir"> + {{ holgerMediaDir }}</span></p>
+        <p v-if="holgerProgress" class="section-progress">{{ holgerProgress }}</p>
+      </div>
+
       <!-- Import GEDCOM -->
       <div class="section">
         <h3>{{ $t('importExport.gedcomImportTitle') }}</h3>
@@ -83,6 +96,9 @@ const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const genneyProgress = ref('');
+const holgerSourcePath = ref('');
+const holgerMediaDir = ref('');
+const holgerProgress = ref('');
 const showImportReport = ref(false);
 const importReport = ref<{
   persons: number; families: number; events: Record<string, number>;
@@ -161,6 +177,50 @@ async function handleImportFromGenney() {
     console.error('[ImportExport] Genney import failed:', err);
   } finally {
     busy.value = false;
+  }
+}
+
+async function holgerPickFile() {
+  const r = await window.api.import.holgerSelectFile() as { canceled: boolean; path?: string };
+  if (!r.canceled && r.path) holgerSourcePath.value = r.path;
+}
+
+async function holgerPickMedia() {
+  const r = await window.api.import.holgerSelectMedia() as { canceled: boolean; path?: string };
+  if (!r.canceled && r.path) holgerMediaDir.value = r.path;
+}
+
+async function handleImportFromHolger() {
+  if (!holgerSourcePath.value) return;
+  busy.value = true;
+  holgerProgress.value = t('importExport.holgerRunning');
+  window.api.import.onHolgerProgress((msg: string) => { holgerProgress.value = msg; });
+  try {
+    const result = await window.api.import.holgerRun({
+      sourcePath: holgerSourcePath.value,
+      mediaDir: holgerMediaDir.value || undefined,
+    }) as {
+      success: boolean;
+      report?: {
+        persons: number; families: number; events: Record<string, number>;
+        sources: number; places: number; citations: number;
+        skipped: { tag: string; count: number }[];
+        warnings: string[];
+      };
+      error?: string;
+    };
+    if (result.success && result.report) {
+      importReport.value = result.report;
+      showImportReport.value = true;
+      window.dispatchEvent(new CustomEvent('data-imported'));
+    } else {
+      setStatus(t('importExport.holgerError', { error: result.error ?? 'Unknown error' }), 'error');
+    }
+  } catch (err) {
+    setStatus(t('importExport.holgerError', { error: err instanceof Error ? err.message : String(err) }), 'error');
+  } finally {
+    busy.value = false;
+    holgerProgress.value = '';
   }
 }
 
