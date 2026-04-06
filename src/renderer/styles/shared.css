@@ -88,6 +88,9 @@
   text-align: right;
   white-space: nowrap;
 }
+.th-actions {
+  text-align: right;
+}
 
 /* ── 7. Filter chips ───────────────────────────────────── */
 .filter-chips {

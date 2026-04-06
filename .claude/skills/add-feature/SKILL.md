@@ -250,6 +250,91 @@ declare const window: Window & {
 - `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`); wire `:place-id` for place views
 - `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`
 
+### Person Section Component pattern
+
+**Every data section for a person is a self-contained, reusable component** shared between `PersonDetailView` (full editing view) and `PersonPanel` (side panel in VisualizationView). When adding a new per-person section, always make it a component — never inline it in just one view.
+
+#### Existing person section components
+
+| Component | Self-loading | Exposes | Used in |
+|-----------|-------------|---------|---------|
+| `PersonNamesTable` | No (parent passes `names`) | — | Detail, Panel |
+| `PersonNameFormModal` | No | — | Detail, Panel |
+| `EventList` | Yes (`personId` prop) | `openAddForm()` | Detail, Panel |
+| `ResearchTasksTable` | No (parent passes `tasks`) | — | Detail, Panel, ResearchTasksView |
+| `GroupsTable` | No (parent passes `groups`) | — | Detail, Panel, GroupsView |
+| `PersonIdentifiersSection` | Yes | `openAddForm()` | Detail, Panel |
+| `PersonMediaSection` | Yes | `attach()` | Detail, Panel |
+| `PersonChecksSection` | Yes | `reload()` | Detail, Panel |
+
+#### Self-loading section component template
+
+Use this when the section owns its own data (no benefit to the parent holding the array):
+
+```vue
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
+
+export interface ThingRow { id: string; /* ... */ }
+
+const props = defineProps<{ personId: string }>();
+const items = ref<ThingRow[]>([]);
+
+async function load() {
+  items.value = (await window.api.things.forPerson(props.personId)) as ThingRow[];
+}
+
+// Expose any action the parent header button needs to trigger
+defineExpose({ openAddForm: () => { showForm.value = true; } });
+
+watch(() => props.personId, load, { immediate: true });
+</script>
+```
+
+Key rules:
+- Always `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so the component reloads when the panel switches person without being destroyed
+- Export the row interface so parents can type their own refs (e.g. `ref<import('./PersonXxx.vue').ThingRow[]>([])`)
+- Use `defineExpose` when the parent's header button must trigger an action inside the component (add form, file picker, etc.)
+- The parent keeps the `<section>` header with the `<h4>` and action `<button>`; the component renders only the table/content below
+
+#### Parent wiring (PersonDetailView style)
+
+```vue
+<section class="detail-section">
+  <div class="section-header">
+    <h4>{{ $t('things.title') }}</h4>
+    <button class="btn-add" @click="thingsSectionRef?.openAddForm()">+ {{ $t('things.add') }}</button>
+  </div>
+  <PersonThingsSection ref="thingsSectionRef" :person-id="person.id" />
+</section>
+```
+
+```typescript
+import PersonThingsSection from '../components/PersonThingsSection.vue';
+const thingsSectionRef = ref<InstanceType<typeof PersonThingsSection> | null>(null);
+```
+
+#### Parent wiring (PersonPanel style — collapsible with localStorage)
+
+```vue
+<div class="panel-section">
+  <button class="panel-section-header" @click="toggleSection('things')">
+    <span class="panel-chevron">{{ sections.things ? '▾' : '▸' }}</span>
+    {{ $t('things.title') }}
+    <span class="panel-section-header-action" @click.stop="thingsSectionRef?.openAddForm()">+ {{ $t('things.add') }}</span>
+  </button>
+  <div v-if="sections.things" class="panel-section-body">
+    <PersonThingsSection ref="thingsSectionRef" :person-id="personId!" />
+  </div>
+</div>
+```
+
+Add `things: loadSection('things', false)` to the `sections` reactive object.
+
 ### UI consistency rules
 - **Picker inputs fill their container** — `PersonPicker` and `PlacePicker` both have `width: 100%` on their root. Place them inside a `<label>` or grid cell and they will fill it. Never wrap them in a `class="full-width"` override.
 - **Clickable rows, no Edit buttons** — all list/table rows are clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`. This applies to events, persons, relationships, sources, and places.

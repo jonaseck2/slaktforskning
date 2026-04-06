@@ -1,0 +1,115 @@
+<template>
+  <div>
+    <div v-if="issues.length === 0" class="empty-hint">{{ $t('quality.noIssues') }}</div>
+    <table v-else class="data-table">
+      <thead>
+        <tr>
+          <th class="th-shrink">{{ $t('quality.colSeverity') }}</th>
+          <th>{{ $t('quality.colIssue') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(r, i) in issues"
+          :key="r.code + ':' + i"
+          :class="{ 'row-ignored': isIgnored(r) }"
+        >
+          <td class="td-shrink">
+            <span :class="['severity-badge', 'badge-' + r.severity]">
+              {{ $t('quality.severity.' + r.severity) }}
+            </span>
+          </td>
+          <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
+          <td class="actions-cell">
+            <button
+              :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
+              @click="toggleIgnore(r)"
+            >{{ isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore') }}</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
+
+export interface CheckResult {
+  code: string;
+  severity: 'error' | 'warning' | 'notice';
+  message: string;
+  messageParams?: Record<string, string | number>;
+  personIds: string[];
+}
+
+const { t } = useI18n();
+const props = defineProps<{ personId: string }>();
+
+const issues = ref<CheckResult[]>([]);
+
+const STORAGE_KEY = 'quality:ignored';
+const ignoredKeys = ref<Set<string>>(
+  new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as string[])
+);
+
+function ignoreKey(r: CheckResult): string {
+  return `${r.code}:${[...r.personIds].sort().join(',')}`;
+}
+
+function isIgnored(r: CheckResult): boolean {
+  return ignoredKeys.value.has(ignoreKey(r));
+}
+
+function toggleIgnore(r: CheckResult) {
+  const key = ignoreKey(r);
+  if (ignoredKeys.value.has(key)) {
+    ignoredKeys.value.delete(key);
+  } else {
+    ignoredKeys.value.add(key);
+  }
+  ignoredKeys.value = new Set(ignoredKeys.value);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...ignoredKeys.value]));
+}
+
+function checkMessage(r: CheckResult): string {
+  const key = 'quality.checks.' + r.code;
+  const translated = t(key, r.messageParams ?? {});
+  return translated !== key ? translated : r.message;
+}
+
+async function load() {
+  if (!window.api?.checks) return;
+  issues.value = (await window.api.checks.forPerson(props.personId)) as CheckResult[];
+}
+
+defineExpose({ reload: load });
+
+watch(() => props.personId, load, { immediate: true });
+</script>
+
+<style scoped>
+.th-shrink, .td-shrink { width: 1%; white-space: nowrap; }
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
+.severity-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge-error   { background: #feb2b2; color: #742a2a; }
+.badge-warning { background: #fef3c7; color: #78350f; }
+.badge-notice  { background: #bfdbfe; color: #1e3a8a; }
+.row-ignored { opacity: 0.5; }
+.ignored-text { color: #9ca3af; }
+.btn-ignore   { background: #e2e8f0; color: #4a5568; }
+.btn-unignore { background: #c6f6d5; color: #276749; }
+</style>
