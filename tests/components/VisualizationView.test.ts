@@ -9,6 +9,9 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
 }));
 
+vi.mock('../../src/renderer/components/charts/CircleChart.vue', () => ({
+  default: { template: '<div class="stub-circle" />', props: ['personId'], emits: ['navigate'] },
+}));
 vi.mock('../../src/renderer/components/charts/PedigreeChart.vue', () => ({
   default: { template: '<div class="stub-pedigree" />', props: ['personId'], emits: ['navigate'] },
 }));
@@ -62,4 +65,39 @@ describe('VisualizationView', () => {
     expect(wrapper.find('.stub-timeline').exists()).toBe(true);
   });
 
+  // ── ARIA accessibility ──────────────────────────────────────────────────────
+
+  it('tab bar has role="tablist"', async () => {
+    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    await flushPromises();
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(true);
+  });
+
+  it('all tab buttons have role="tab"', async () => {
+    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    await flushPromises();
+    const tabs = wrapper.findAll('[role="tab"]');
+    expect(tabs).toHaveLength(4);
+  });
+
+  it('active tab has aria-selected="true", others "false"', async () => {
+    localStorage.clear(); // default tab is hourglass
+    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    await flushPromises();
+
+    const hourglass = wrapper.find('[data-testid="tab-hourglass"]');
+    const pedigree = wrapper.find('[data-testid="tab-pedigree"]');
+    expect(hourglass.attributes('aria-selected')).toBe('true');
+    expect(pedigree.attributes('aria-selected')).toBe('false');
+  });
+
+  it('aria-selected updates when tab changes', async () => {
+    localStorage.clear();
+    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    await flushPromises();
+
+    await wrapper.find('[data-testid="tab-pedigree"]').trigger('click');
+    expect(wrapper.find('[data-testid="tab-pedigree"]').attributes('aria-selected')).toBe('true');
+    expect(wrapper.find('[data-testid="tab-hourglass"]').attributes('aria-selected')).toBe('false');
+  });
 });
