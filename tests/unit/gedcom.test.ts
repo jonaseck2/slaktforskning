@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { parseGedcomDate, formatGedcomDate } from '../../src/gedcom/date';
-import { importGedcom } from '../../src/gedcom/importer';
+import { importGedcom } from '../../src/import/gedcom';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { listPersons, getPersonNames, getPersonIdentifiers, createPerson, addPersonName, addPersonIdentifier } from '../../src/api/persons';
 import { listRelationships, createRelationship, addEventParticipant, getEventParticipants } from '../../src/api/relationships';

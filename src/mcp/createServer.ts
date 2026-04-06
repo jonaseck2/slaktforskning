@@ -14,7 +14,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
-import type { ImportOptions } from '../gedcom/importer';
+import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney } from '../import/genney/index';
 import { importFromHolger } from '../import/holger/index';
 

@@ -11,7 +11,7 @@ import * as events from '../api/events';
 import * as sources from '../api/sources';
 import * as places from '../api/places';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
-import type { ImportOptions } from '../gedcom/importer';
+import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
 import { importFromHolger } from '../import/holger/index';
 import * as groups from '../api/groups';
