@@ -234,11 +234,6 @@ button {
 button:hover {
   opacity: 0.9;
 }
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
 .result-section {
   margin-bottom: 32px;
 }
@@ -260,26 +255,5 @@ button:hover {
   border-radius: 10px;
   font-size: 12px;
   font-weight: 500;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th,
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 13px;
-}
-.clickable-row {
-  cursor: pointer;
-}
-.clickable-row:hover {
-  background: #f0f4ff;
 }
 </style>

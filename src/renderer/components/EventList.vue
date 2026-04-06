@@ -258,37 +258,6 @@ defineExpose({ reload: load });
   margin: 0;
   font-size: 15px;
 }
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 4px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-}
-.empty-hint {
-  color: #999;
-  font-size: 13px;
-  padding: 12px 0;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.data-table th,
-.data-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-.data-table th {
-  background: #f8f8f8;
-  font-weight: 600;
-  font-size: 12px;
-  color: #666;
-}
 .event-badge {
   background: #eef2ff;
   color: #3b5bdb;
@@ -297,26 +266,8 @@ defineExpose({ reload: load });
   font-size: 12px;
   white-space: nowrap;
 }
-.clickable-row {
-  cursor: pointer;
-}
-.clickable-row:hover td {
-  background: #f5f5f5;
-}
 .actions-cell {
   white-space: nowrap;
-}
-.btn-sm {
-  padding: 2px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  margin-right: 4px;
-}
-.btn-delete {
-  background: #fee;
-  color: #c0392b;
 }
 .btn-cite {
   background: #eff6ff;
