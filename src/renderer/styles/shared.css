@@ -255,6 +255,7 @@
 
   /* Inputs */
   html.dark input[type='text'],
+  html.dark input[type='url'],
   html.dark input[type='number'],
   html.dark input[type='email'],
   html.dark textarea,
@@ -271,9 +272,9 @@
   html.dark .btn-add { background: #374151; color: #e2e8f0; }
   html.dark .btn-add:hover { background: #4b5563; }
   html.dark .btn-cancel { background: #374151; color: #d1d5db; }
+  html.dark .btn-sm { background: #374151; color: #d1d5db; }
   html.dark .btn-delete { background: #450a0a; color: #fca5a5; }
   html.dark .btn-delete:hover { background: #7f1d1d; }
-  html.dark .btn-sm { background: #374151; color: #d1d5db; }
   html.dark .btn-view-tree { background: #374151; color: #93c5fd; border-color: #374151; }
   html.dark .btn-back { background: #374151; color: #d1d5db; border-color: #374151; }
 
