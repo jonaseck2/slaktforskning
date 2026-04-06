@@ -338,6 +338,8 @@ function doImportGedcom(
 
   // ── Phase 2: INDI records ──────────────────────────────────────────────────
   const personMap = new Map<string, string>(); // xref → app person id
+  // Holger: ADOP on INDI → collect subtype override per (personXref, familyXref) pair
+  const holgerAdoptionMap = new Map<string, Map<string, string>>(); // personXref → familyXref → subtype
   for (const node of tree) {
     if (node.tag !== 'INDI' || !node.xref) continue;
 
@@ -359,6 +361,18 @@ function doImportGedcom(
       notes: notes || undefined,
     });
     personMap.set(node.xref, person.id);
+
+    if (isHolger) {
+      for (const adopNode of getChildren(node, 'ADOP')) {
+        const famcNode = getChild(adopNode, 'FAMC');
+        const typeNode = getChild(adopNode, 'TYPE');
+        if (!famcNode) continue;
+        const raw = typeNode?.value?.trim() ?? '';
+        const subtype = raw === 'Fosterbarn' ? 'foster' : raw === 'Adoptivbarn' ? 'adopted' : 'biological';
+        if (!holgerAdoptionMap.has(node.xref!)) holgerAdoptionMap.set(node.xref!, new Map());
+        holgerAdoptionMap.get(node.xref!)!.set(famcNode.value, subtype);
+      }
+    }
 
     // Names
     const nameNodes = getChildren(node, 'NAME');
@@ -545,7 +559,11 @@ function doImportGedcom(
       if (!childId) continue;
       const pedi = getChild(chil, 'PEDI')?.value;
       // 'birth' is the GEDCOM term for biological; everything else maps directly
-      const childSubtype = pedi ? (pedi === 'birth' ? 'biological' : pedi) : 'biological';
+      let childSubtype = pedi ? (pedi === 'birth' ? 'biological' : pedi) : 'biological';
+      if (isHolger) {
+        const adopSubtype = holgerAdoptionMap.get(chil.value)?.get(node.xref ?? '');
+        if (adopSubtype) childSubtype = adopSubtype;
+      }
       if (person1Id) createRelationship(db, { type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: childSubtype });
       if (person2Id) createRelationship(db, { type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: childSubtype });
     }
