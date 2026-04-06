@@ -12,6 +12,14 @@ export default {
     importExport: 'Import / Export',
     groups: 'Grupper',
     focusPerson: 'Fokusperson',
+    settings: 'Inställningar',
+  },
+  settings: {
+    appearance: 'Utseende',
+    light: 'Ljust',
+    dark: 'Mörkt',
+    textSize: 'Textstorlek',
+    language: 'Språk',
   },
   common: {
     cancel: 'Avbryt',
