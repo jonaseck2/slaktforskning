@@ -342,6 +342,7 @@ export default {
       children: 'Children',
     },
     empty: 'Add a person to start visualizing.',
+    noFocalPerson: 'Select a focus person to view the tree.',
     selectPerson: 'Select focal person\u2026',
     viewDetail: 'View details',
     today: 'Today',

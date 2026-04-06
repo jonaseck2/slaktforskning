@@ -36,6 +36,11 @@
       {{ $t('visualization.empty') }}
     </div>
 
+    <!-- No focal person selected -->
+    <div v-else-if="noFocalPerson" class="empty-state" data-testid="viz-no-focal">
+      {{ $t('visualization.noFocalPerson') }}
+    </div>
+
     <!-- Chart + panel body -->
     <div v-else-if="focalPerson" class="viz-body" ref="vizBodyRef" data-testid="viz-area">
       <!-- Chart area -->
@@ -85,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
@@ -115,6 +120,7 @@ const focalGivenName = ref<string | null>(null);
 const focalSurname = ref<string | null>(null);
 const focalPreferredName = ref<string | null>(null);
 const noPersonsExist = ref(false);
+const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
 
 // Selected node in the chart (may differ from chart focal person)
@@ -170,9 +176,10 @@ async function load() {
   if (!id) {
     const last = localStorage.getItem('viz-focal-person');
     if (last) { router.replace('/visualisering/' + last); return; }
+    if (focusStore.personId) { router.replace('/visualisering/' + focusStore.personId); return; }
     const persons = (await window.api.persons.list()) as PersonWithName[];
-    if (persons.length > 0) { router.replace('/visualisering/' + persons[0].id); }
-    else { noPersonsExist.value = true; }
+    noPersonsExist.value = persons.length === 0;
+    noFocalPerson.value = persons.length > 0;
     return;
   }
   localStorage.setItem('viz-focal-person', id);
@@ -188,8 +195,16 @@ async function load() {
   if (!selectedPersonId.value) selectedPersonId.value = id;
 }
 
+// When App.vue auto-sets the focus store after this view is already mounted, navigate to that person
+watch(() => focusStore.personId, (newId) => {
+  if (newId && !personId.value) {
+    router.replace('/visualisering/' + newId);
+  }
+});
+
 watch(() => route.params.personId, load);
 onMounted(load);
+onActivated(load);
 </script>
 
 <style scoped>

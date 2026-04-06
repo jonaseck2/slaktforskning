@@ -142,7 +142,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-w
 input[type='text'], input[type='number'], select, textarea {
   padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit;
 }
-textarea { resize: vertical; }
+textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .child-list li { display: flex; align-items: center; gap: 8px; }
 .child-list a { color: #2c3e50; text-decoration: none; font-size: 14px; }

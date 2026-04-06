@@ -88,6 +88,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.25.0 | GEDCOM media import/export: inline+top-level OBJE on INDI/FAM/events, export OBJE blocks; media section typo fix | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
 | Fix | v0.25.2: Genney import — SPLACE address fields (STREET, POSTALCODE, CITY, COUNTRY) now stored in place address columns | [archive](plans/archive/2026-04-06-genney-address-fields.md) |
 | v0.26.0 | Infinite chart expansion: lazy load-more per branch, pedigree arrow ▶ fix | [plan](plans/archive/2026-04-06-infinite-chart-expansion.md) |
+| Fix | v0.26.1: Pedigree ▶ button and hourglass ▲ button clipped at SVG scroll boundary | [archive](plans/archive/2026-04-06-chart-button-clip-fix.md) |
 
 ---
 

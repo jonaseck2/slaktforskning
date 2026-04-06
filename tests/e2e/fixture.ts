@@ -41,7 +41,7 @@ export async function killProcessGroup(proc: ChildProcess): Promise<void> {
   if (!proc.pid) return;
   const pid = proc.pid;
   try { process.kill(-pid, 'SIGTERM'); } catch { /* already dead */ }
-  await new Promise<void>((r) => setTimeout(r, 2000));
+  await new Promise<void>((r) => setTimeout(r, 500));
   try { process.kill(-pid, 'SIGKILL'); } catch { /* already dead */ }
 }
 
@@ -81,7 +81,8 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
   const baseUrl = `http://127.0.0.1:${port}`;
 
-  const ready = await new Promise<boolean>((resolve) => {
+  // Phase 1: wait for the HTTP server to accept connections
+  const httpReady = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
       console.error(`[e2e:${port}] App did not start in time. Output:\n`, output);
       resolve(false);
@@ -89,7 +90,9 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
     const poll = async () => {
       try {
-        const res = await fetch(`${baseUrl}/dom`);
+        const res = await fetch(`${baseUrl}/dom`, {
+          signal: AbortSignal.timeout(5000),
+        });
         if (res.ok) {
           clearTimeout(timeout);
           resolve(true);
@@ -108,9 +111,44 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
     proc.on('exit', () => { clearTimeout(timeout); resolve(false); });
   });
 
-  if (!ready) {
+  if (!httpReady) {
     await killProcessGroup(proc);
     throw new Error(`Electron app on port ${port} did not start in time`);
+  }
+
+  // Phase 2: wait for the Vue app to mount (window.__vue_router set by renderer)
+  const ready = await new Promise<boolean>((resolve) => {
+    const timeout = setTimeout(() => {
+      console.error(`[e2e:${port}] Vue did not initialize in time.`);
+      resolve(false);
+    }, 30_000);
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`${baseUrl}/execute_js`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: '!!window.__vue_router' }),
+          signal: AbortSignal.timeout(5000),
+        });
+        const body = (await res.json()) as { result?: boolean };
+        if (body.result === true) {
+          clearTimeout(timeout);
+          resolve(true);
+          return;
+        }
+      } catch {
+        // not ready yet
+      }
+      setTimeout(poll, 500);
+    };
+
+    poll();
+  });
+
+  if (!ready) {
+    await killProcessGroup(proc);
+    throw new Error(`Vue app on port ${port} did not initialize in time`);
   }
 
   return { proc, dbPath };
@@ -136,17 +174,33 @@ export class AppDriver {
   }
 
   async post(urlPath: string, body?: unknown): Promise<unknown> {
-    const res = await fetch(`${this.baseUrl}${urlPath}`, {
-      method: 'POST',
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-    return res.json();
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetch(`${this.baseUrl}${urlPath}`, {
+          method: 'POST',
+          headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+          signal: AbortSignal.timeout(15_000),
+        });
+        return res.json();
+      } catch (err) {
+        // Retry on network errors (connection reset, ECONNREFUSED) after a short delay.
+        // Re-throw immediately on non-network errors or on the last attempt.
+        const isNetwork = err instanceof TypeError;
+        if (!isNetwork || attempt === MAX_RETRIES - 1) throw err;
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      }
+    }
+    // Unreachable — the loop always throws or returns, but TypeScript needs this.
+    throw new Error('post: exhausted retries');
   }
 
   /** Get the full rendered HTML of the current view. */
   async getDom(): Promise<string> {
-    const res = await fetch(`${this.baseUrl}/dom`);
+    const res = await fetch(`${this.baseUrl}/dom`, {
+      signal: AbortSignal.timeout(15_000),
+    });
     return res.text();
   }
 
@@ -186,9 +240,9 @@ export class AppDriver {
    * Wait for Vue to settle after a data change.
    * Uses requestAnimationFrame in the renderer, then a small host-side delay.
    */
-  async settle(ms = 300): Promise<void> {
+  async settle(ms = 50): Promise<void> {
     await this.executeJs(
-      'new Promise(r => requestAnimationFrame(() => setTimeout(r, 50)))'
+      'new Promise(r => requestAnimationFrame(r))'
     );
     await new Promise((r) => setTimeout(r, ms));
   }
@@ -199,7 +253,7 @@ export class AppDriver {
     while (Date.now() < deadline) {
       const dom = await this.getDom();
       if (dom.includes(text)) return dom;
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, 100));
     }
     const finalDom = await this.getDom();
     const snippet = finalDom
@@ -282,7 +336,7 @@ export class AppDriver {
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       })()
     `);
-    await this.settle(300);
+    await this.settle(100);
   }
 
   // -- Data helpers: seed via window.api in the renderer -------------------

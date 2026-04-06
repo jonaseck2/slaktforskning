@@ -17,7 +17,7 @@ const app = new AppDriver(UI_PORT);
 
 test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'persons');
-  await app.settle(1000);
+  await app.settle(150);
   await app.setLocale('en');
 });
 
@@ -93,7 +93,7 @@ test.describe('Persons CRUD', () => {
         }
       }
     `);
-    await app.settle(500);
+    await app.settle(80);
     await app.navigate('/');
     await app.expectNoText('Tobias Deleted');
   });
@@ -181,7 +181,7 @@ test.describe('Global Search', () => {
     await app.executeJs(`
       document.querySelector('.sidebar-search-input').closest('form').requestSubmit();
     `);
-    await app.settle(500);
+    await app.settle(80);
 
     const currentPath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.fullPath'
@@ -258,7 +258,7 @@ test.describe('Add Related Person', () => {
     await app.waitAndFill('.modal input[type="text"]', 'Sven');
     await app.settle();
     await app.click('.modal button[type="submit"]');
-    await app.settle(800);
+    await app.settle(100);
 
     await app.navigate('/');
     await app.navigate(`/persons/${basePerson.id}`);
@@ -275,7 +275,7 @@ test.describe('Add Related Person', () => {
     `);
     await app.waitAndFill('.modal input[type="text"]', 'Lisa');
     await app.click('.modal button[type="submit"]');
-    await app.settle(800);
+    await app.settle(100);
 
     await app.navigate('/');
     await app.navigate(`/persons/${basePerson.id}`);
@@ -292,7 +292,7 @@ test.describe('Add Related Person', () => {
     `);
     await app.waitAndFill('.modal input[type="text"]', 'Erik');
     await app.click('.modal button[type="submit"]');
-    await app.settle(800);
+    await app.settle(100);
 
     await app.navigate('/');
     await app.navigate(`/persons/${basePerson.id}`);
