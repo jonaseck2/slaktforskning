@@ -125,36 +125,7 @@ onActivated(async () => {
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th,
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
-}
-.clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #f0f4ff; }
+/* Unique to GroupsView */
 .notes-cell {
   color: #777;
   font-size: 13px;
@@ -163,55 +134,4 @@ onActivated(async () => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.btn-add { background: #2c3e50; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; }
-.btn-add:hover { opacity: 0.9; }
-.btn-sm { padding: 3px 8px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; }
-.btn-delete { background: #fee2e2; color: #b91c1c; }
-.btn-delete:hover { background: #fecaca; }
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 420px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-}
-.modal h3 { margin: 0 0 16px; }
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-form > label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-}
-form input, form textarea {
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-.modal-actions button { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; }
-.modal-actions button[type='submit'] { background: #2c3e50; color: white; }
-.btn-cancel { background: #e0e0e0; color: #333; }
 </style>
