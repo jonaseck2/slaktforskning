@@ -89,6 +89,7 @@ export default {
     searchPerson: 'Search for a person\u2026',
     confirmDelete: 'Delete this relationship? This cannot be undone.',
     showingOf: 'Showing {shown} of {total} relationships',
+    noMatchingFilter: 'No relationships match this filter.',
   },
   relationshipDetail: {
     title: 'Relationship',

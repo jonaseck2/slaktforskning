@@ -89,6 +89,7 @@ export default {
     searchPerson: 'Sök efter en person\u2026',
     confirmDelete: 'Ta bort denna relation? Detta kan inte ångras.',
     showingOf: 'Visar {shown} av {total} relationer',
+    noMatchingFilter: 'Inga relationer matchar detta filter.',
   },
   relationshipDetail: {
     title: 'Relation',
