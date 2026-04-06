@@ -28,7 +28,7 @@
           <td>{{ source.author || '—' }}</td>
           <td><span v-if="source.source_type" class="type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span></td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removeSource(source.id)">{{ $t('common.delete') }}</button>
+            <button class="btn-sm btn-delete" @click.stop="removeSource(source.id)">✕</button>
           </td>
         </tr>
       </tbody>

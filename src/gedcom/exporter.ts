@@ -11,7 +11,8 @@ import {
 } from '../api/sources';
 import { getPlace, listPlaces } from '../api/places';
 import { getMediaForEntity } from '../api/media';
-import type { Place, Citation } from '../api/types';
+import { getRepositoriesForSource } from '../api/repositories';
+import type { Place, Citation, Repository } from '../api/types';
 import { formatGedcomDate } from './date';
 
 const EVENT_TYPE_TO_TAG: Record<string, string> = {
@@ -78,8 +79,38 @@ export function exportGedcom(db: Database): string {
 
   lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
 
-  // ── Sources ────────────────────────────────────────────────────────────────
+  // ── Repositories ───────────────────────────────────────────────────────────
   const sources = listSources(db);
+  // Collect all repositories used by any source, deduplicated by repo id
+  const repoXref = new Map<string, string>();
+  const allRepos = new Map<string, Repository>();
+  sources.forEach(src => {
+    const repos = getRepositoriesForSource(db, src.id);
+    for (const repo of repos) {
+      if (!allRepos.has(repo.id)) {
+        allRepos.set(repo.id, repo);
+      }
+    }
+  });
+  let repoCounter = 0;
+  for (const [repoId, repo] of allRepos) {
+    repoCounter++;
+    const xr = `@R${repoCounter}@`;
+    repoXref.set(repoId, xr);
+    lines.push(`0 ${xr} REPO`);
+    lines.push(`1 NAME ${repo.name}`);
+    if (repo.address) lines.push(`1 ADDR ${repo.address}`);
+    if (repo.city) lines.push(`2 CITY ${repo.city}`);
+    if (repo.postal_code) lines.push(`2 POST ${repo.postal_code}`);
+    if (repo.state) lines.push(`2 STAE ${repo.state}`);
+    if (repo.country) lines.push(`2 CTRY ${repo.country}`);
+    if (repo.phone) lines.push(`1 PHON ${repo.phone}`);
+    if (repo.email) lines.push(`1 EMAIL ${repo.email}`);
+    if (repo.web) lines.push(`1 WWW ${repo.web}`);
+    if (repo.notes) lines.push(`1 NOTE ${repo.notes}`);
+  }
+
+  // ── Sources ────────────────────────────────────────────────────────────────
   const sourceXref = new Map<string, string>();
   sources.forEach((src, i) => {
     const xr = `@S${i + 1}@`;
@@ -88,9 +119,15 @@ export function exportGedcom(db: Database): string {
     if (src.title) lines.push(`1 TITL ${src.title}`);
     if (src.author) lines.push(`1 AUTH ${src.author}`);
     if (src.publication_info) lines.push(`1 PUBL ${src.publication_info}`);
-    if (src.repository) lines.push(`1 REPO ${src.repository}`);
+    if (src.repository) lines.push(`1 _REPO_TEXT ${src.repository}`);
     if (src.url) lines.push(`1 _URL ${src.url}`);
     if (src.source_type) lines.push(`1 _STYPE ${src.source_type}`);
+    // Link to structured REPO records
+    const linkedRepos = getRepositoriesForSource(db, src.id);
+    for (const repo of linkedRepos) {
+      const repoXr = repoXref.get(repo.id);
+      if (repoXr) lines.push(`1 REPO ${repoXr}`);
+    }
   });
 
   // ── Persons ────────────────────────────────────────────────────────────────
@@ -185,12 +222,34 @@ export function exportGedcom(db: Database): string {
     // External identifiers
     const identifiers = getPersonIdentifiers(db, p.id);
     for (const ident of identifiers) {
-      if (ident.identifier_type === 'refn') lines.push(`1 REFN ${ident.identifier_value}`);
-      if (ident.identifier_type === 'rin') lines.push(`1 RIN ${ident.identifier_value}`);
-      if (ident.identifier_type === 'familysearch') lines.push(`1 _FSI ${ident.identifier_value}`);
-      if (ident.identifier_type === 'ancestry') lines.push(`1 _ANID ${ident.identifier_value}`);
-      if (ident.identifier_type === 'riksarkivet') lines.push(`1 _RAID ${ident.identifier_value}`);
-      if (ident.identifier_type === 'personnummer') lines.push(`1 _PNUMMER ${ident.identifier_value}`);
+      switch (ident.identifier_type) {
+        case 'refn':
+          lines.push(`1 REFN ${ident.identifier_value}`);
+          break;
+        case 'rin':
+          lines.push(`1 RIN ${ident.identifier_value}`);
+          break;
+        case 'familysearch':
+          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`2 TYPE FamilySearch`);
+          break;
+        case 'ancestry':
+          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`2 TYPE Ancestry`);
+          break;
+        case 'riksarkivet':
+          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`2 TYPE Riksarkivet`);
+          break;
+        case 'personnummer':
+          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`2 TYPE Personnummer`);
+          break;
+        default: // 'other'
+          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`2 TYPE Other`);
+          break;
+      }
     }
 
     // ASSO blocks for sibling / godparent / other relationships

@@ -114,7 +114,7 @@ Full standards-conformant import of GEDCOM 5.5.1, 5.5.5, and 7.0 with data-loss 
 - [x] Step 2: Version detection + 5.5.5 acceptance (parse identically to 5.5.1)
 - [x] Step 3: 7.0 normalization layer (SNOTE, EXID, TRAN, PHRASE, CONC, uppercase TYPE)
 - [x] Step 4: Data loss validation report (replace `skipped` array with rich `ValidationReport`)
-- [ ] Step 5: Round-trip export improvements (place coords, identifiers, repos, citation transcription)
+- [x] Step 5: Round-trip export improvements (place coords, identifiers, repos, citation transcription)
 - [ ] Step 6: Move standard-compliant profile logic to core (ADDR, MAP parsing)
 
 ### Shared CircleChartSvg component [refactor]

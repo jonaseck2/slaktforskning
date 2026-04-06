@@ -26,7 +26,7 @@
           <td>{{ g.memberCount }}</td>
           <td class="notes-cell">{{ g.notes }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="deleteGroup(g.id)">{{ $t('common.delete') }}</button>
+            <button class="btn-sm btn-delete" @click.stop="deleteGroup(g.id)">✕</button>
           </td>
         </tr>
       </tbody>

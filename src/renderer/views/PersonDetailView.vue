@@ -84,9 +84,7 @@
                 v-if="name.sort_order > 0"
                 class="btn-sm btn-delete"
                 @click.stop="removeName(name.id)"
-              >
-                {{ $t('common.delete') }}
-              </button>
+              >✕</button>
             </td>
           </tr>
         </tbody>
@@ -114,7 +112,7 @@
           >{{ $t('researchTasks.statuses.' + task.status) }}</span>
           <span class="task-text">{{ task.task }}</span>
           <span v-if="task.result" class="task-result">— {{ task.result }}</span>
-          <button class="btn-sm btn-delete" @click="deletePersonTask(task.id)">{{ $t('common.delete') }}</button>
+          <button class="btn-sm btn-delete" @click="deletePersonTask(task.id)">✕</button>
         </div>
       </div>
     </section>
@@ -180,9 +178,7 @@
             <td>{{ rel.subtypeLabel || '—' }}</td>
             <td>{{ rel.otherPersonName || '—' }}</td>
             <td class="actions-cell">
-              <button class="btn-sm btn-delete" @click.stop="deleteRelationship(rel.id)">
-                {{ $t('common.delete') }}
-              </button>
+              <button class="btn-sm btn-delete" @click.stop="deleteRelationship(rel.id)">✕</button>
             </td>
           </tr>
         </tbody>
@@ -246,7 +242,7 @@
             <td><span class="type-badge">{{ $t('identifiers.types.' + ident.identifier_type) }}</span></td>
             <td>{{ ident.identifier_value }}</td>
             <td class="actions-cell">
-              <button class="btn-sm btn-delete" @click="removeIdentifier(ident.id)">{{ $t('common.delete') }}</button>
+              <button class="btn-sm btn-delete" @click="removeIdentifier(ident.id)">✕</button>
             </td>
           </tr>
         </tbody>
@@ -301,7 +297,7 @@
             <td>{{ m.format || '—' }}</td>
             <td class="actions-cell">
               <button v-if="m.file_ref" class="btn-sm" @click="openMediaFile(m.id)">{{ $t('media.open') }}</button>
-              <button class="btn-sm btn-delete" @click="unlinkMedia(m.link_id)">{{ $t('common.delete') }}</button>
+              <button class="btn-sm btn-delete" @click="unlinkMedia(m.link_id)">✕</button>
             </td>
           </tr>
         </tbody>

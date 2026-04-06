@@ -57,7 +57,7 @@
             </td>
             <td class="task-text">{{ task.task }}</td>
             <td class="actions-cell">
-              <button class="btn-sm btn-delete" @click.stop="deleteTask(task.id)">{{ $t('common.delete') }}</button>
+              <button class="btn-sm btn-delete" @click.stop="deleteTask(task.id)">✕</button>
             </td>
           </tr>
           <!-- Expanded inline edit row -->

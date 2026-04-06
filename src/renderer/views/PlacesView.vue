@@ -31,8 +31,7 @@
         >
           <td>{{ place.name }}</td>
           <td class="actions-cell">
-            <button class="btn-sm btn-delete" @click.stop="deletePlace(place.id)">
-              {{ $t('common.delete') }}
+            <button class="btn-sm btn-delete" @click.stop="deletePlace(place.id)">✕
             </button>
           </td>
         </tr>

@@ -83,7 +83,7 @@
           <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
           <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removeRelationship(rel.id)">{{ $t('common.delete') }}</button>
+            <button class="btn-sm btn-delete" @click.stop="removeRelationship(rel.id)">✕</button>
           </td>
         </tr>
       </tbody>

@@ -83,7 +83,13 @@
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f0f4ff; }
 
-/* ── 5. Filter chips ───────────────────────────────────── */
+/* ── 5. Actions cell (right-aligned table column for delete/action buttons) */
+.actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── 7. Filter chips ───────────────────────────────────── */
 .filter-chips {
   display: flex;
   gap: 8px;
@@ -106,7 +112,7 @@
   border-color: #2c3e50;
 }
 
-/* ── 6. Buttons ────────────────────────────────────────── */
+/* ── 8. Buttons ────────────────────────────────────────── */
 .btn-add {
   background: #2c3e50;
   color: white;
@@ -145,7 +151,7 @@
 }
 .btn-cancel:hover { background: #d0d0d0; }
 
-/* ── 7. Modal ──────────────────────────────────────────── */
+/* ── 9. Modal ──────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -210,7 +216,7 @@
   color: white;
 }
 
-/* ── 8. Person links ───────────────────────────────────── */
+/* ── 10. Person links ──────────────────────────────────── */
 .person-link {
   color: #2563eb;
   cursor: pointer;
@@ -218,7 +224,7 @@
 }
 .person-link:hover { text-decoration: underline; }
 
-/* ── 9. Tabs (Tree + Reports) ──────────────────────────── */
+/* ── 11. Tabs (Tree + Reports) ─────────────────────────── */
 .tab-bar {
   display: flex;
   gap: 0;
@@ -243,7 +249,7 @@
   border-bottom-color: #2c3e50;
 }
 
-/* ── 10. Dark mode (screen only) ───────────────────────── */
+/* ── 12. Dark mode (screen only) ──────────────────────── */
 @media screen {
   html.dark body { background: #111827; color: #e2e8f0; }
   html.dark .content { background: #111827; }

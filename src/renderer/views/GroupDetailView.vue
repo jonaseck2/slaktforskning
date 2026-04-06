@@ -48,7 +48,7 @@
           </td>
           <td>{{ m.sex || '–' }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click.stop="removeMember(m.person_id)">{{ $t('common.delete') }}</button>
+            <button class="btn-sm btn-delete" @click.stop="removeMember(m.person_id)">✕</button>
           </td>
         </tr>
       </tbody>

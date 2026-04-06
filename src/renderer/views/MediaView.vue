@@ -33,7 +33,7 @@
               class="btn-sm"
               @click="openFile(item.id)"
             >{{ $t('media.open') }}</button>
-            <button class="btn-sm btn-delete" @click="deleteItem(item.id)">{{ $t('media.delete') }}</button>
+            <button class="btn-sm btn-delete" @click="deleteItem(item.id)">✕</button>
           </td>
         </tr>
       </tbody>
