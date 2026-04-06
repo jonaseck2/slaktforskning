@@ -616,6 +616,7 @@ export function computeHourglassLayout(
   }
   indexDescendants(descendantRoot);
 
+  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
   const collapseButtons: CollapseButton[] = [];
 
   for (const box of boxes) {
@@ -623,44 +624,63 @@ export function computeHourglassLayout(
     if (k !== undefined) {
       // Ancestor or focal box
       if (k === 1) {
-        // Focal: ↓ for children, → for spouses
+        // Focal: ↓ for children, → or ← for spouses
         if (descendantRoot.children.length > 0) {
           collapseButtons.push({
             personId: box.person.id, direction: 'down',
             cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
             isExpanded: !collapsed.has(`${box.person.id}:down`),
+            isLoadMore: false,
           });
         }
         if (spouses.length > 0) {
-          // When focal is female the spouse panel is to the LEFT — use :left key.
           const spouseDir = focalIsFemale ? 'left' : 'right';
           const spouseBtnCX = focalIsFemale ? box.x - 10 : box.x + BOX_W + 10;
           collapseButtons.push({
             personId: box.person.id, direction: spouseDir,
             cx: spouseBtnCX, cy: box.y + BOX_H / 2,
             isExpanded: !collapsed.has(`${box.person.id}:right`) && !collapsed.has(`${box.person.id}:left`),
+            isLoadMore: false,
           });
         }
       } else {
-        // Ancestor: ↑ if parents exist in original tree
+        // Ancestor: ↑ if parents exist in original tree, or load-more if hasMoreAncestors
         const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
         if (hasParents) {
           collapseButtons.push({
             personId: box.person.id, direction: 'up',
             cx: box.x + BOX_W / 2, cy: box.y - 10,
             isExpanded: !collapsed.has(`${box.person.id}:up`),
+            isLoadMore: false,
+          });
+        } else if (ancestorHasMore.has(k)) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'up',
+            cx: box.x + BOX_W / 2, cy: box.y - 10,
+            isExpanded: false,
+            isLoadMore: true,
           });
         }
       }
     } else {
-      // Descendant box (spouses are not in descNodeMap, so they're skipped)
+      // Descendant box
       const descNode = descNodeMap.get(box.person.id);
-      if (descNode && descNode.children.length > 0) {
-        collapseButtons.push({
-          personId: box.person.id, direction: 'down',
-          cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
-          isExpanded: !collapsed.has(`${box.person.id}:down`),
-        });
+      if (descNode) {
+        if (descNode.children.length > 0) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: !collapsed.has(`${box.person.id}:down`),
+            isLoadMore: false,
+          });
+        } else if (descNode.hasMoreChildren) {
+          collapseButtons.push({
+            personId: box.person.id, direction: 'down',
+            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            isExpanded: false,
+            isLoadMore: true,
+          });
+        }
       }
     }
   }

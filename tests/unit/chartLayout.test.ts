@@ -362,6 +362,83 @@ describe('collapse — per-node descendant collapse', () => {
   });
 });
 
+describe('load-more buttons', () => {
+  it('hourglass ancestor leaf with hasMoreAncestors gets a load-more up button', () => {
+    const f = p('f');
+    const par = p('par');
+    const tree: HourglassTree = {
+      ancestors: {
+        nodes: new Map([[1, f], [2, par]]),
+        generations: 3,
+        hasMoreAncestors: new Set([2]),
+      },
+      descendantRoot: { person: f, children: [] },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('up');
+    expect(btn!.isExpanded).toBe(false);
+  });
+
+  it('hourglass ancestor with loaded parents gets collapse button, not load-more', () => {
+    const f = p('f');
+    const par = p('par');
+    const gp = p('gp');
+    const tree: HourglassTree = {
+      ancestors: {
+        nodes: new Map([[1, f], [2, par], [4, gp]]),
+        generations: 3,
+        hasMoreAncestors: new Set([2]),
+      },
+      descendantRoot: { person: f, children: [] },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const loadMoreBtn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
+    expect(loadMoreBtn).toBeUndefined();
+    const collapseBtn = collapseButtons.find(b => b.personId === 'par' && !b.isLoadMore);
+    expect(collapseBtn).toBeDefined();
+  });
+
+  it('hourglass descendant leaf with hasMoreChildren gets a load-more down button', () => {
+    const f = p('f');
+    const c = p('c');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
+      descendantRoot: {
+        person: f,
+        children: [{ person: c, children: [], hasMoreChildren: true }],
+      },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    const btn = collapseButtons.find(b => b.personId === 'c' && b.isLoadMore);
+    expect(btn).toBeDefined();
+    expect(btn!.direction).toBe('down');
+  });
+
+  it('hourglass descendant leaf without hasMoreChildren gets no button', () => {
+    const f = p('f');
+    const c = p('c');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
+      descendantRoot: {
+        person: f,
+        children: [{ person: c, children: [], hasMoreChildren: false }],
+      },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { collapseButtons } = computeHourglassLayout(tree);
+    expect(collapseButtons.find(b => b.personId === 'c')).toBeUndefined();
+  });
+});
+
 describe('computeTimelineLayout', () => {
   it('returns one bar per entry', () => {
     const entries = [
