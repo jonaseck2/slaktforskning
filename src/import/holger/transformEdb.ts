@@ -150,13 +150,13 @@ export function transformHolgerEdb(
   `);
   const stmtInsertName = db.prepare(`
     INSERT INTO person_names (id, person_id, given_name, surname, name_type,
-      patronymic_base, sort_order, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      patronymic_base, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
   const stmtInsertEvent = db.prepare(`
     INSERT INTO events (id, event_type, date_type, date_value, date_original,
       place_address, cause, description, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    VALUES (?, ?, ?, ?, COALESCE(?, ''), ?, ?, COALESCE(?, ''), datetime('now'), datetime('now'))
   `);
   const stmtInsertParticipant = db.prepare(`
     INSERT OR IGNORE INTO event_participants (id, event_id, person_id, role)
@@ -192,7 +192,7 @@ export function transformHolgerEdb(
     const notesParts: string[] = [];
     if (anm1) notesParts.push(anm1.trim());
     if (anm2) notesParts.push(anm2.trim());
-    const notes = notesParts.join('\n') || null;
+    const notes = notesParts.join('\n') || '';
 
     // Insert person
     const personId = uuidv4();
@@ -210,7 +210,7 @@ export function transformHolgerEdb(
       'birth',
       patronym ?? null,  // stored as patronymic_base
       0,                 // sort_order 0 = primary
-    ]);
+    ]); // no created_at column in person_names schema
 
     // --- Events ---
 

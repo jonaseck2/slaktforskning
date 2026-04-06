@@ -1,17 +1,17 @@
 import { ref, onUnmounted } from 'vue';
 
 const MIN_WIDTH = 200;
-const MAX_WIDTH = 520;
+const MAX_WIDTH_RATIO = 0.75;
 const DEFAULT_WIDTH = 300;
 const STORAGE_KEY = 'viz-panel-width';
 
-export function clampWidth(w: number): number {
-  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w));
+export function clampWidth(w: number, maxWidth: number): number {
+  return Math.min(maxWidth, Math.max(MIN_WIDTH, w));
 }
 
 export function usePanelResize() {
   const stored = parseInt(localStorage.getItem(STORAGE_KEY) ?? '', 10);
-  const panelWidth = ref(clampWidth(isNaN(stored) ? DEFAULT_WIDTH : stored));
+  const panelWidth = ref(isNaN(stored) ? DEFAULT_WIDTH : Math.max(MIN_WIDTH, stored));
 
   let rafId: number | null = null;
   let cleanup: (() => void) | null = null;
@@ -22,8 +22,9 @@ export function usePanelResize() {
     function onMove(ev: MouseEvent) {
       if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        const right = containerEl.getBoundingClientRect().right;
-        panelWidth.value = clampWidth(right - ev.clientX);
+        const rect = containerEl.getBoundingClientRect();
+        const maxWidth = rect.width * MAX_WIDTH_RATIO;
+        panelWidth.value = clampWidth(rect.right - ev.clientX, maxWidth);
       });
     }
 

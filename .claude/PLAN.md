@@ -92,6 +92,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.26.2: E2E flaky tests — AbortError retry, missing mutating() wrappers, btn-add selector, viz back/detail buttons | [archive](plans/archive/2026-04-06-e2e-fix-flaky-tests.md) |
 | Fix | v0.26.3: Full name rendering — `formatFullName()` in nameUtils, replaces truncated `primaryName()` in all 4 reports | [archive](plans/archive/2026-04-06-full-name-rendering.md) |
 | v0.26.4–v0.30.1 | Tree-first editing: PersonPanel full redesign (header, Person/Namn/Händelser/Relationer/Källor/Grupper sections) + ⊕ hover buttons on PedigreeChart + HourglassChart | [plan](plans/archive/2026-04-06-tree-first-editing.md) |
+| v0.35.0 | Holger ElevateDB direct import: pure Python binary reader (EDBExtractor.py), TypeScript transform, Docker NDJSON pipeline, IPC/MCP/UI | [archive](plans/archive/2026-04-06-holger-dbisam-import.md) |
 
 ---
 
@@ -115,14 +116,6 @@ Full standards-conformant import of GEDCOM 5.5.1, 5.5.5, and 7.0 with data-loss 
 - [x] Step 4: Data loss validation report (replace `skipped` array with rich `ValidationReport`)
 - [ ] Step 5: Round-trip export improvements (place coords, identifiers, repos, citation transcription)
 - [ ] Step 6: Move standard-compliant profile logic to core (ADDR, MAP parsing)
-
-### Holger ElevateDB direct import [feature]
-See `.claude/plans/2026-04-06-holger-dbisam-import.md` for the full plan.
-Pure Python binary reverse-engineering of ElevateDB `.EDBTbl` files in Docker — same pattern as Genney Derby extractor. No ElevateSoft tools required.
-- [ ] Task 1: Reverse-engineer record layout (spike — highest risk)
-- [ ] Task 2: Build `EDBExtractor.py` (Docker-ready, stdlib only)
-- [ ] Task 3: TypeScript transform layer
-- [ ] Task 4: Wire into `index.ts`, IPC, MCP, UI
 
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
