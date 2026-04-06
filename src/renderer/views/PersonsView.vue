@@ -47,7 +47,7 @@
             <td>{{ person.death_date ?? '' }}</td>
             <td>{{ person.death_place ?? '' }}</td>
             <td>
-              <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">{{ $t('common.delete') }}</button>
+              <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">✕</button>
             </td>
           </tr>
         </tbody>

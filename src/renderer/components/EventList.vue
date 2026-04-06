@@ -25,7 +25,7 @@
           <td>{{ formatDate(event) }}</td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
           <td v-if="!props.readonly" class="actions-cell">
-            <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">{{ $t('common.delete') }}</button>
+            <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">✕</button>
           </td>
         </tr>
       </tbody>
@@ -158,9 +158,6 @@ defineExpose({ reload: load, openAddForm });
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 12px;
-  white-space: nowrap;
-}
-.actions-cell {
   white-space: nowrap;
 }
 tr.non-interactive { cursor: default; }

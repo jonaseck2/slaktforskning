@@ -76,7 +76,7 @@
             <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
             <td>
               <button class="btn-sm btn-edit" @click="editingCitation = cit">{{ $t('common.edit') }}</button>
-              <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">{{ $t('common.delete') }}</button>
+              <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">✕</button>
             </td>
           </tr>
         </tbody>

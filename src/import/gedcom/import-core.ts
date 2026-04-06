@@ -393,7 +393,13 @@ function doImportGedcom(
       title: getChild(node, 'TITL')?.value ?? '',
       author: getChild(node, 'AUTH')?.value ?? '',
       publication_info: getChild(node, 'PUBL')?.value ?? '',
-      repository: getChild(node, 'REPO')?.value ?? '',
+      repository: (() => {
+        const repoText = getChild(node, '_REPO_TEXT')?.value;
+        if (repoText) return repoText;
+        // Legacy: plain text in REPO (not an xref pointer)
+        const repoVal = getChild(node, 'REPO')?.value ?? '';
+        return repoVal.startsWith('@') ? '' : repoVal;
+      })(),
       url: getChild(node, '_URL')?.value ?? '',
       source_type: getChild(node, '_STYPE')?.value ?? '',
     });
@@ -476,19 +482,35 @@ function doImportGedcom(
     }
 
     // External identifiers: standard GEDCOM
+    // REFN with a TYPE sub-tag maps to typed identifiers; plain REFN maps to 'refn'
     for (const refn of getChildren(node, 'REFN')) {
-      if (refn.value) addPersonIdentifier(db, person.id, { identifier_type: 'refn', identifier_value: refn.value });
+      if (!refn.value) continue;
+      const refnType = getChild(refn, 'TYPE')?.value?.trim() ?? '';
+      const ltype = refnType.toLowerCase();
+      if (ltype === 'familysearch') {
+        addPersonIdentifier(db, person.id, { identifier_type: 'familysearch', identifier_value: refn.value });
+      } else if (ltype === 'ancestry') {
+        addPersonIdentifier(db, person.id, { identifier_type: 'ancestry', identifier_value: refn.value });
+      } else if (ltype === 'riksarkivet') {
+        addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: refn.value });
+      } else if (ltype === 'personnummer') {
+        addPersonIdentifier(db, person.id, { identifier_type: 'personnummer', identifier_value: refn.value });
+      } else if (ltype === 'other') {
+        addPersonIdentifier(db, person.id, { identifier_type: 'other', identifier_value: refn.value });
+      } else {
+        // Plain REFN or unknown TYPE → store as 'refn'
+        addPersonIdentifier(db, person.id, { identifier_type: 'refn', identifier_value: refn.value });
+      }
     }
     const rin = getChild(node, 'RIN');
     if (rin?.value) addPersonIdentifier(db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
-
     // Genney 4.1: _UID → person_identifiers
     if (isGenney) {
       const uid = getChild(node, '_UID');
       if (uid?.value) addPersonIdentifier(db, person.id, { identifier_type: 'other', identifier_value: `Genney UID: ${uid.value}` });
     }
 
-    // Extended identifiers
+    // Extended identifiers (legacy custom tags — kept for backward compat reading old exports)
     const fsi = getChild(node, '_FSI');
     if (fsi?.value) addPersonIdentifier(db, person.id, { identifier_type: 'familysearch', identifier_value: fsi.value });
     const anid = getChild(node, '_ANID');

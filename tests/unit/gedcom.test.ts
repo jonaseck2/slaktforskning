@@ -11,6 +11,7 @@ import { getEventsForPerson } from '../../src/api/events';
 import { createSource, listSources, createCitation, getCitationsForPerson, getCitationsForRelationship, getCitationsForPlace, getCitationsForEvent } from '../../src/api/sources';
 import { createPlace, listPlaces } from '../../src/api/places';
 import { createMedia, addMediaLink, getMediaForEntity } from '../../src/api/media';
+import { createRepository, linkSourceRepository } from '../../src/api/repositories';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });
@@ -545,7 +546,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
     expect(names2[0].name_qualifier).toBe('patronymic');
   });
 
-  it('familysearch identifier survives roundtrip via _FSI', () => {
+  it('familysearch identifier survives roundtrip via REFN+TYPE', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Erik' });
     addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'L-ABC-123' });
@@ -555,7 +556,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
     expect(idents2.some(i => i.identifier_type === 'familysearch' && i.identifier_value === 'L-ABC-123')).toBe(true);
   });
 
-  it('ancestry identifier survives roundtrip via _ANID', () => {
+  it('ancestry identifier survives roundtrip via REFN+TYPE', () => {
     const p = createPerson(db, { sex: 'F' });
     addPersonName(db, p.id, { given_name: 'Maria' });
     addPersonIdentifier(db, p.id, { identifier_type: 'ancestry', identifier_value: 'A123456789' });
@@ -565,7 +566,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
     expect(idents2.some(i => i.identifier_type === 'ancestry' && i.identifier_value === 'A123456789')).toBe(true);
   });
 
-  it('personnummer identifier survives roundtrip via _PNUMMER', () => {
+  it('personnummer identifier survives roundtrip via REFN+TYPE', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'personnummer', identifier_value: '196501011234' });
@@ -1033,5 +1034,115 @@ describe('GEDCOM media import', () => {
     const media2 = getMediaForEntity(db2, 'person', persons2[0].id);
     expect(media2).toHaveLength(1);
     expect(media2[0].file_ref).toBe('/test.jpg');
+  });
+});
+
+// ──────────────────────────────────────────────
+// Round-trip export improvements
+// ──────────────────────────────────────────────
+describe('exportGedcom — round-trip improvements', () => {
+  it('exports familysearch identifier as REFN with TYPE FamilySearch', () => {
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Erik' });
+    addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'L-ABC-123' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('1 REFN L-ABC-123');
+    expect(ged).toContain('2 TYPE FamilySearch');
+  });
+
+  it('exports ancestry identifier as REFN with TYPE Ancestry', () => {
+    const p = createPerson(db, { sex: 'F' });
+    addPersonName(db, p.id, { given_name: 'Maria' });
+    addPersonIdentifier(db, p.id, { identifier_type: 'ancestry', identifier_value: 'A123456789' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('1 REFN A123456789');
+    expect(ged).toContain('2 TYPE Ancestry');
+  });
+
+  it('exports riksarkivet identifier as REFN with TYPE Riksarkivet', () => {
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    addPersonIdentifier(db, p.id, { identifier_type: 'riksarkivet', identifier_value: 'RA-987' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('1 REFN RA-987');
+    expect(ged).toContain('2 TYPE Riksarkivet');
+  });
+
+  it('exports personnummer identifier as REFN with TYPE Personnummer', () => {
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    addPersonIdentifier(db, p.id, { identifier_type: 'personnummer', identifier_value: '196501011234' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('1 REFN 196501011234');
+    expect(ged).toContain('2 TYPE Personnummer');
+  });
+
+  it('exports plain refn identifier without TYPE sub-tag', () => {
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    addPersonIdentifier(db, p.id, { identifier_type: 'refn', identifier_value: 'CUSTOM-001' });
+    const ged = exportGedcom(db);
+    // REFN should appear without a TYPE FamilySearch/etc immediately after
+    expect(ged).toContain('1 REFN CUSTOM-001');
+    expect(ged).not.toContain('2 TYPE FamilySearch');
+  });
+
+  it('exports place coordinates as MAP/LATI/LONG on event PLAC', () => {
+    const place = createPlace(db, { name: 'Stockholm', latitude: 59.334591, longitude: 18.063240 });
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('2 PLAC Stockholm');
+    expect(ged).toContain('3 MAP');
+    expect(ged).toContain('4 LATI N59.33459');
+    expect(ged).toContain('4 LONG E18.06324');
+  });
+
+  it('exports place with negative coords using S/W prefixes', () => {
+    const place = createPlace(db, { name: 'Cape Town', latitude: -33.9249, longitude: 18.4241 });
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('4 LATI S33.92490');
+    expect(ged).toContain('4 LONG E18.42410');
+  });
+
+  it('exports citation transcription as DATA.TEXT', () => {
+    const src = createSource(db, { title: 'Parish record' });
+    const p = createPerson(db, { sex: 'M' });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    const ev = createEvent(db, { event_type: 'birth' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    createCitation(db, { source_id: src.id, event_id: ev.id, transcription: 'Born on the farm.' });
+    const ged = exportGedcom(db);
+    expect(ged).toContain('3 DATA');
+    expect(ged).toContain('4 TEXT Born on the farm.');
+  });
+
+  it('exports repository as REPO record and links from SOUR', () => {
+    const repo = createRepository(db, { name: 'National Archives', address: '114 88 Stockholm', city: 'Stockholm', country: 'Sweden' });
+    const src = createSource(db, { title: 'Church records' });
+    linkSourceRepository(db, src.id, repo.id);
+    const ged = exportGedcom(db);
+    // REPO record at level 0
+    expect(ged).toMatch(/0 @R\d+@ REPO/);
+    expect(ged).toContain('1 NAME National Archives');
+    expect(ged).toContain('2 CITY Stockholm');
+    // SOUR links to REPO
+    expect(ged).toMatch(/1 REPO @R\d+@/);
+  });
+
+  it('repository REPO record appears before SOUR records', () => {
+    const repo = createRepository(db, { name: 'City Library' });
+    const src = createSource(db, { title: 'Registry book' });
+    linkSourceRepository(db, src.id, repo.id);
+    const ged = exportGedcom(db);
+    const repoPos = ged.indexOf('REPO');
+    const sourPos = ged.indexOf('0 @S');
+    expect(repoPos).toBeLessThan(sourPos);
   });
 });

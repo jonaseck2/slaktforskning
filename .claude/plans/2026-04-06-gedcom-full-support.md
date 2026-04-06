@@ -365,7 +365,7 @@ assertSameEvents(db1, db2);
 - [x] **Step 2** — 5.5.5 support + version detection in report
 - [x] **Step 3** — 7.0 normalization layer + 7.0 import support
 - [x] **Step 4** — Data loss validation report (replaces skipped tags)
-- [ ] **Step 5** — Round-trip export improvements (place coordinates, identifiers, repos)
+- [x] **Step 5** — Round-trip export improvements (place coordinates, identifiers, repos)
 - [ ] **Step 6** — Move standard-compliant code out of profiles
 - [ ] **Step 7** — UI: update import report modal with data loss section
 - [ ] **Step 8** — Tests: fixtures + round-trip tests
