@@ -144,6 +144,9 @@ const api = {
     forEntity: (entityType: string, entityId: string) => ipcRenderer.invoke('media:forEntity', entityType, entityId),
     addLink: (data: unknown) => ipcRenderer.invoke('media:addLink', data),
     removeLink: (linkId: string) => ipcRenderer.invoke('media:removeLink', linkId),
+    attach: (data?: unknown) => ipcRenderer.invoke('media:attach', data),
+    openFile: (id: string) => ipcRenderer.invoke('media:openFile', id),
+    getFilePath: (id: string) => ipcRenderer.invoke('media:getFilePath', id),
   },
   print: {
     print: () => ipcRenderer.invoke('print:print'),

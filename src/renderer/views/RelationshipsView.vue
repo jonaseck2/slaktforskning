@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('relationships.title') }}</h2>
-      <button @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
+      <button class="btn-add" @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
     </div>
     <p v-if="total > 0" class="count-label">
       {{ $t('persons.showingOf', { shown: relationships.length, total }) }}
@@ -13,9 +13,9 @@
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>{{ $t('common.type') }}</th>
           <th>{{ $t('relationships.person1') }}</th>
           <th>{{ $t('relationships.person2') }}</th>
+          <th>{{ $t('common.type') }}</th>
           <th>{{ $t('relationshipDetail.subtype') }}</th>
           <th>{{ $t('common.actions') }}</th>
         </tr>
@@ -27,27 +27,49 @@
           class="clickable-row"
           @click="goToDetail(rel.id)"
         >
-          <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
           <td>
-            <PersonName
-              v-if="rel.person1_given_name || rel.person1_surname"
-              :given-name="rel.person1_given_name"
-              :surname="rel.person1_surname"
-              :preferred-name="rel.person1_preferred_name"
-              :nickname="rel.person1_nickname"
-            /><span v-else>—</span>
+            <router-link v-if="rel.person1_id" :to="'/persons/' + rel.person1_id" class="person-link" @click.stop>
+              <PersonName
+                v-if="rel.person1_given_name || rel.person1_surname"
+                :given-name="rel.person1_given_name"
+                :surname="rel.person1_surname"
+                :preferred-name="rel.person1_preferred_name"
+                :nickname="rel.person1_nickname"
+              />
+            </router-link>
+            <span v-else-if="rel.person1_given_name || rel.person1_surname">
+              <PersonName
+                :given-name="rel.person1_given_name"
+                :surname="rel.person1_surname"
+                :preferred-name="rel.person1_preferred_name"
+                :nickname="rel.person1_nickname"
+              />
+            </span>
+            <span v-else>—</span>
             <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
           </td>
           <td>
-            <PersonName
-              v-if="rel.person2_given_name || rel.person2_surname"
-              :given-name="rel.person2_given_name"
-              :surname="rel.person2_surname"
-              :preferred-name="rel.person2_preferred_name"
-              :nickname="rel.person2_nickname"
-            /><span v-else>—</span>
+            <router-link v-if="rel.person2_id" :to="'/persons/' + rel.person2_id" class="person-link" @click.stop>
+              <PersonName
+                v-if="rel.person2_given_name || rel.person2_surname"
+                :given-name="rel.person2_given_name"
+                :surname="rel.person2_surname"
+                :preferred-name="rel.person2_preferred_name"
+                :nickname="rel.person2_nickname"
+              />
+            </router-link>
+            <span v-else-if="rel.person2_given_name || rel.person2_surname">
+              <PersonName
+                :given-name="rel.person2_given_name"
+                :surname="rel.person2_surname"
+                :preferred-name="rel.person2_preferred_name"
+                :nickname="rel.person2_nickname"
+              />
+            </span>
+            <span v-else>—</span>
             <span v-if="roleLabel2(rel.type)" class="role-label">{{ roleLabel2(rel.type) }}</span>
           </td>
+          <td><span class="type-badge">{{ $t('relTypes.' + rel.type) }}</span></td>
           <td>{{ rel.subtype ? getSubtypeLabel(rel.type, rel.subtype) : '—' }}</td>
           <td>
             <button class="btn-sm btn-delete" @click.stop="removeRelationship(rel.id)">{{ $t('common.delete') }}</button>
@@ -311,6 +333,9 @@ onActivated(async () => {
 .data-table th {
   background: #eee;
   font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
 }
 .count-label {
   font-size: 13px;
@@ -348,14 +373,38 @@ button {
 button:hover {
   opacity: 0.9;
 }
+.person-link {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: none;
+}
+.person-link:hover {
+  text-decoration: underline;
+}
 .btn-sm {
-  padding: 4px 8px;
+  padding: 3px 8px;
   font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 .btn-delete {
-  background: #fee;
-  color: #c0392b;
+  background: #fee2e2;
+  color: #b91c1c;
 }
+.btn-delete:hover {
+  background: #fecaca;
+}
+.btn-add {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-add:hover { opacity: 0.9; }
 /* Modal */
 .modal-overlay {
   position: fixed;

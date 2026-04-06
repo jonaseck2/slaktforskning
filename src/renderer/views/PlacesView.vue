@@ -1,9 +1,10 @@
 <template>
-  <div class="places-view">
-    <div class="list-header">
+  <div>
+    <div class="header">
       <h2>{{ $t('places.title') }}</h2>
       <button class="btn-add" @click="showAddForm = true">{{ $t('places.addTitle') }}</button>
     </div>
+    <p v-if="places.length > 0" class="count-label">{{ places.length }} platser</p>
     <div v-if="places.length === 0" class="empty">{{ $t('places.none') }}</div>
     <table v-else class="data-table">
       <thead>
@@ -120,30 +121,48 @@ onActivated(async () => {
 </script>
 
 <style scoped>
-.places-view { max-width: 700px; }
-.list-header {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 }
-.list-header h2 { margin: 0; }
+.count-label {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
+}
 .btn-add {
   background: #2c3e50;
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
 }
+.btn-add:hover { opacity: 0.9; }
 .empty { color: #999; padding: 40px; text-align: center; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table th, .data-table td { padding: 8px 12px; border-bottom: 1px solid #ddd; text-align: left; }
-.data-table th { background: #eee; font-weight: 600; }
+.data-table th {
+  background: #eee;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+}
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f0f4ff; }
-.btn-sm { padding: 2px 8px; font-size: 12px; border: none; border-radius: 3px; cursor: pointer; }
-.btn-delete { background: #fee; color: #c0392b; }
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-delete { background: #fee2e2; color: #b91c1c; }
+.btn-delete:hover { background: #fecaca; }
 .actions-cell { display: flex; gap: 4px; }
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.4);

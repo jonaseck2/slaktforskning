@@ -2,7 +2,7 @@
   <div class="research-tasks">
     <div class="view-header">
       <h2>{{ $t('researchTasks.title') }}</h2>
-      <button class="btn-primary" @click="showAddModal = true">{{ $t('researchTasks.addTask') }}</button>
+      <button class="btn-add" @click="showAddModal = true">{{ $t('researchTasks.addTask') }}</button>
     </div>
 
     <!-- Status filter chips -->
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Task list -->
-    <div v-if="filteredTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
+    <div v-if="filteredTasks.length === 0" class="empty">{{ $t('researchTasks.noTasks') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -101,7 +101,7 @@
                 </div>
                 <div class="expanded-actions">
                   <button class="btn-cancel" @click="expandedId = null">{{ $t('common.cancel') }}</button>
-                  <button class="btn-primary" @click="saveEdit(task.id)">{{ $t('common.save') }}</button>
+                  <button class="btn-add" @click="saveEdit(task.id)">{{ $t('common.save') }}</button>
                 </div>
               </div>
             </td>
@@ -314,14 +314,13 @@ onMounted(load);
 .data-table th {
   background: #eee;
   font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
 }
 
 .clickable-row { cursor: pointer; }
-.clickable-row:hover td { background: #f0f4ff; }
-
-.research-tasks {
-  max-width: 900px;
-}
+.clickable-row:hover { background: #f0f4ff; }
 
 .view-header {
   display: flex;
@@ -330,38 +329,31 @@ onMounted(load);
   margin-bottom: 16px;
 }
 
-.view-header h2 {
-  font-size: 22px;
-  font-weight: 600;
-}
-
 .filter-chips {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
 .chip {
   padding: 4px 12px;
-  border-radius: 16px;
-  border: 1px solid #d0d5dd;
-  background: white;
+  border-radius: 12px;
+  border: 1px solid #c8d0db;
+  background: #f0f4f8;
+  color: #4a5568;
   cursor: pointer;
   font-size: 13px;
-  color: #555;
-  transition: background 0.15s, color 0.15s;
 }
 
 .chip:hover {
-  background: #f0f4ff;
-  border-color: #667eea;
+  background: #e2e8f0;
 }
 
 .chip.active {
-  background: #667eea;
-  border-color: #667eea;
+  background: #2c3e50;
   color: white;
+  border-color: #2c3e50;
 }
 
 
@@ -494,18 +486,17 @@ onMounted(load);
   justify-content: flex-end;
 }
 
-.btn-primary {
-  background: #667eea;
+.btn-add {
+  background: #2c3e50;
   color: white;
   border: none;
-  padding: 7px 16px;
+  padding: 8px 16px;
   border-radius: 6px;
-  cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
+  cursor: pointer;
 }
 
-.btn-primary:hover { background: #5a6fd8; }
+.btn-add:hover { opacity: 0.9; }
 
 .btn-cancel {
   background: white;
@@ -519,10 +510,9 @@ onMounted(load);
 
 .btn-cancel:hover { background: #f3f4f6; }
 
-.empty-hint {
-  color: #9ca3af;
-  font-size: 14px;
-  padding: 24px 0;
+.empty {
+  color: #999;
+  padding: 40px;
   text-align: center;
 }
 

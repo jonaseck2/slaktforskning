@@ -1,4 +1,4 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getDatabase, getCurrentDatabasePath, switchDatabase } from './database';
@@ -273,6 +273,68 @@ export function registerIpcHandlers(): void {
   wrapHandler('media:forEntity', (entityType, entityId) => media.getMediaForEntity(getDatabase(), entityType as Parameters<typeof media.getMediaForEntity>[1], entityId as string));
   wrapHandler('media:addLink', (data) => media.addMediaLink(getDatabase(), data as Parameters<typeof media.addMediaLink>[1]));
   wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDatabase(), linkId as string));
+
+  wrapHandler('media:attach', async (data) => {
+    const opts = data as { entityType?: string; entityId?: string } | undefined;
+    const result = await dialog.showOpenDialog({
+      title: 'Välj mediafil',
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+
+    const srcPath = result.filePaths[0];
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const mediaDir = path.join(dbDir, 'media');
+    fs.mkdirSync(mediaDir, { recursive: true });
+
+    const filename = path.basename(srcPath);
+    let destPath = path.join(mediaDir, filename);
+    // Avoid overwriting: append suffix if file already exists
+    if (fs.existsSync(destPath)) {
+      const ext = path.extname(filename);
+      const base = path.basename(filename, ext);
+      const suffix = Date.now();
+      destPath = path.join(mediaDir, `${base}_${suffix}${ext}`);
+    }
+    fs.copyFileSync(srcPath, destPath);
+
+    const fileRef = path.join('media', path.basename(destPath));
+    const ext = path.extname(destPath).slice(1).toLowerCase();
+    const db = getDatabase();
+    const item = media.createMedia(db, {
+      file_ref: fileRef,
+      title: path.basename(destPath, path.extname(destPath)),
+      format: ext || null,
+    });
+
+    if (opts?.entityType && opts?.entityId) {
+      media.addMediaLink(db, {
+        media_id: item.id,
+        entity_type: opts.entityType as Parameters<typeof media.addMediaLink>[1]['entity_type'],
+        entity_id: opts.entityId,
+      });
+    }
+
+    return { canceled: false, media: item };
+  });
+
+  wrapHandler('media:openFile', async (id) => {
+    const item = media.getMedia(getDatabase(), id as string);
+    if (!item || !item.file_ref) return { success: false, error: 'Media not found or no file_ref' };
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const absPath = path.resolve(dbDir, item.file_ref);
+    if (!fs.existsSync(absPath)) return { success: false, error: 'File not found: ' + absPath };
+    await shell.openPath(absPath);
+    return { success: true };
+  });
+
+  wrapHandler('media:getFilePath', (id) => {
+    const item = media.getMedia(getDatabase(), id as string);
+    if (!item || !item.file_ref) return null;
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const absPath = path.resolve(dbDir, item.file_ref);
+    return fs.existsSync(absPath) ? absPath : null;
+  });
 
   // Checks
   wrapHandler('checks:runAll', () => {

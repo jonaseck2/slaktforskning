@@ -372,6 +372,56 @@ Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
 | `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
 
+### UI Design System
+
+All list views use the same CSS design tokens. Copy these into each view's `<style scoped>` block — do not create a global stylesheet.
+
+**Table:**
+```css
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 8px 12px; border-bottom: 1px solid #ddd; text-align: left; }
+.data-table th { background: #eee; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #666; }
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background: #f0f4ff; }
+```
+
+**Header:**
+```css
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.count-label { font-size: 13px; color: #666; margin: 0 0 8px; }
+.running-hint { font-size: 13px; color: #999; }
+```
+
+**Filter chips:**
+```css
+.filter-chips { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.chip { padding: 4px 12px; border-radius: 12px; border: 1px solid #c8d0db; background: #f0f4f8; color: #4a5568; cursor: pointer; font-size: 13px; }
+.chip:hover { background: #e2e8f0; }
+.chip.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+```
+
+**Buttons:**
+```css
+/* Primary add button (in header) */
+.btn-add { background: #2c3e50; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+.btn-add:hover { opacity: 0.9; }
+/* Small row action buttons */
+.btn-sm { padding: 3px 8px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; }
+.btn-delete { background: #fee2e2; color: #b91c1c; }
+.btn-delete:hover { background: #fecaca; }
+```
+
+**Person name links (blue inline links in tables):**
+```css
+.person-link { color: #2563eb; cursor: pointer; text-decoration: none; }
+.person-link:hover { text-decoration: underline; }
+```
+Use `<router-link :to="'/persons/' + personId" class="person-link" @click.stop>` in table cells.
+
+**Reference view:** `QualityView.vue` is the canonical implementation.
+
+---
+
 ### Constants (`src/renderer/constants/eventTypes.ts`)
 
 ```typescript

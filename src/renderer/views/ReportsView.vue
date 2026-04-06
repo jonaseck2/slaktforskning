@@ -2,12 +2,7 @@
   <div class="reports-view">
     <div class="view-header">
       <h2>{{ $t('reports.title') }}</h2>
-      <div class="zoom-controls">
-        <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-        <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-        <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-        <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-      </div>
+      <span v-if="reportLoading" class="running-hint">Laddar rapport…</span>
     </div>
 
     <div class="tab-bar">
@@ -43,6 +38,12 @@
           <AncestorChartReport :root-person-id="ancestorRootId" :generations="ancestorGenerations" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
       </div>
     </div>
 
@@ -70,6 +71,12 @@
           <FamilyGroupSheet :relationship-id="familyRelationshipId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
       </div>
     </div>
 
@@ -89,6 +96,12 @@
           <IndividualSummary :person-id="individualPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
       </div>
     </div>
 
@@ -108,13 +121,19 @@
           <AncestorBookReport :person-id="ancestorBookPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AncestorChartReport from '../components/reports/AncestorChartReport.vue';
 import { useFocusStore } from '../stores/focus';
@@ -133,6 +152,7 @@ const { t } = useI18n();
 const focusStore = useFocusStore();
 
 const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook'>('ancestor');
+const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
@@ -177,6 +197,16 @@ watch(previewContainer, (el) => {
 
 // Reset user delta when switching tabs so new tab auto-fits
 watch(activeTab, () => { userZoomDelta.value = 0; });
+
+// Show loading hint when report inputs change
+function triggerLoading() {
+  reportLoading.value = true;
+  nextTick(() => setTimeout(() => { reportLoading.value = false; }, 800));
+}
+watch(activeTab, triggerLoading);
+watch(ancestorRootId, triggerLoading);
+watch(individualPersonId, triggerLoading);
+watch(ancestorBookPersonId, triggerLoading);
 
 onUnmounted(() => { if (ro) ro.disconnect(); });
 
@@ -233,12 +263,24 @@ async function exportPdf() {
   margin-bottom: 16px;
 }
 .view-header h2 { margin: 0; }
+.running-hint {
+  font-size: 13px;
+  color: #999;
+}
 
-/* Zoom controls */
-.zoom-controls {
+/* Zoom controls (floating bottom-right of preview area) */
+.zoom-floating {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
   gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px 8px;
+  z-index: 10;
 }
 .zoom-btn {
   background: #f0f4f8;
@@ -300,6 +342,7 @@ async function exportPdf() {
 
 /* Preview area: grey background with scrollable paper preview */
 .preview-area {
+  position: relative;
   background: #d0d0d0;
   padding: 24px;
   border-radius: 4px;
@@ -321,7 +364,7 @@ async function exportPdf() {
 .empty-hint { color: #999; font-size: 13px; padding: 40px; text-align: center; }
 
 @media print {
-  .view-header, .tab-bar, .tab-header { display: none !important; }
+  .view-header, .tab-bar, .tab-header, .zoom-floating { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }

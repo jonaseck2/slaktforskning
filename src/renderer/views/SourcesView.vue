@@ -2,8 +2,9 @@
   <div>
     <div class="header">
       <h2>{{ $t('sources.title') }}</h2>
-      <button @click="showAddForm = true">{{ $t('sources.addSource') }}</button>
+      <button class="btn-add" @click="showAddForm = true">{{ $t('sources.addSource') }}</button>
     </div>
+    <p class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
     <div v-if="sourceList.length === 0" class="empty">
       {{ $t('sources.emptyState') }}
     </div>
@@ -185,6 +186,11 @@ onActivated(async () => {
   align-items: center;
   margin-bottom: 16px;
 }
+.count-label {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
+}
 .empty {
   color: #999;
   padding: 40px;
@@ -203,6 +209,9 @@ onActivated(async () => {
 .data-table th {
   background: #eee;
   font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
 }
 .clickable-row {
   cursor: pointer;
@@ -217,24 +226,31 @@ onActivated(async () => {
   border-radius: 10px;
   font-size: 12px;
 }
-button {
+.btn-add {
   background: #2c3e50;
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
 }
-button:hover {
+.btn-add:hover {
   opacity: 0.9;
 }
 .btn-sm {
-  padding: 4px 8px;
+  padding: 3px 8px;
   font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 .btn-delete {
-  background: #fee;
-  color: #c0392b;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.btn-delete:hover {
+  background: #fecaca;
 }
 /* Modal */
 .modal-overlay {

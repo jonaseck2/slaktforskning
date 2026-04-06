@@ -43,6 +43,22 @@ describe('media', () => {
     expect(item.is_printable).toBeTruthy();
   });
 
+  it('creates a media item with is_missing flag', () => {
+    const item = createMedia(db, {
+      title: 'Missing file reference',
+      file_ref: 'media/missing.jpg',
+      is_missing: true,
+    });
+    expect(item.is_missing).toBe(1);
+    const fetched = getMedia(db, item.id);
+    expect(fetched?.is_missing).toBe(1);
+  });
+
+  it('defaults is_missing to 0', () => {
+    const item = createMedia(db, { title: 'Normal item' });
+    expect(item.is_missing).toBe(0);
+  });
+
   it('lists media ordered by title', () => {
     createMedia(db, { title: 'Zumba class photo' });
     createMedia(db, { title: 'Anna baptism' });

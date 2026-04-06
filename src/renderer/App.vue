@@ -43,6 +43,10 @@
         <span class="nav-icon">🏷️</span>
         <span class="nav-label">{{ $t('nav.groups') }}</span>
       </router-link>
+      <router-link to="/media" class="nav-item">
+        <span class="nav-icon">🖼️</span>
+        <span class="nav-label">{{ $t('media.nav') }}</span>
+      </router-link>
       <router-link to="/research-tasks" class="nav-item">
         <span class="nav-icon">🔬</span>
         <span class="nav-label">{{ $t('researchTasks.nav') }}</span>

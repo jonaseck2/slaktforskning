@@ -8,15 +8,17 @@ export function createMedia(db: Database, data: {
   format?: string | null;
   notes?: string;
   is_printable?: boolean;
+  is_missing?: boolean;
 }): Media {
   const id = crypto.randomUUID();
   runSql(db, `
-    INSERT INTO media (id, file_ref, title, format, notes, is_printable)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO media (id, file_ref, title, format, notes, is_printable, is_missing)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [
     id, data.file_ref ?? null, data.title ?? '',
     data.format ?? null, data.notes ?? '',
     data.is_printable ? 1 : 0,
+    data.is_missing ? 1 : 0,
   ]);
   return queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [id])!;
 }

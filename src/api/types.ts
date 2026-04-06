@@ -170,6 +170,7 @@ export interface Media {
   format: string | null;
   notes: string;
   is_printable: boolean;
+  is_missing: number;
   created_at: string;
 }
 
