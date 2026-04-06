@@ -542,6 +542,7 @@ export default {
     holgerPickMedia: 'Select media folder (optional)…',
     holgerImport: 'Import',
     holgerRunning: 'Importing…',
+    holgerSuccess: 'Import complete: {persons} persons, {events} events.',
     holgerError: 'Import failed: {error}',
     gedcomImportTitle: 'Import GEDCOM',
     gedcomImportDesc: 'Imports a GEDCOM 5.5.1 file from any genealogy application.',
