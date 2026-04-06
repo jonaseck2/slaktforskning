@@ -23,96 +23,7 @@
 
     <!-- Task list -->
     <div v-if="filteredTasks.length === 0" class="empty">{{ $t('researchTasks.noTasks') }}</div>
-    <table v-else class="data-table">
-      <thead>
-        <tr>
-          <th>{{ $t('researchTasks.priority') }}</th>
-          <th>{{ $t('researchTasks.status') }}</th>
-          <th>{{ $t('persons.title') }}</th>
-          <th>{{ $t('researchTasks.task') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="task in filteredTasks" :key="task.id">
-          <tr class="clickable-row" @click="toggleExpand(task.id)">
-            <td>
-              <span :class="['priority-badge', 'priority-' + task.priority]">{{ task.priority }}</span>
-            </td>
-            <td>
-              <span
-                :class="['status-chip', 'status-' + task.status]"
-                @click.stop="cycleStatus(task)"
-                :title="$t('researchTasks.status')"
-              >{{ $t('researchTasks.statuses.' + task.status) }}</span>
-            </td>
-            <td>
-              <router-link
-                v-if="task.person_id && (task.person_given_name || task.person_surname)"
-                :to="'/persons/' + task.person_id"
-                class="person-link"
-                @click.stop
-              ><PersonName :given-name="task.person_given_name ?? null" :surname="task.person_surname ?? null" :preferred-name="task.person_preferred_name ?? null" :nickname="task.person_nickname ?? null" /></router-link>
-              <span v-else>—</span>
-            </td>
-            <td class="task-text">{{ task.task }}</td>
-            <td class="actions-cell">
-              <button class="btn-sm btn-delete" @click.stop="deleteTask(task.id)">✕</button>
-            </td>
-          </tr>
-          <!-- Expanded inline edit row -->
-          <tr v-if="expandedId === task.id" class="expanded-row">
-            <td colspan="5">
-              <div class="expanded-content">
-                <label>
-                  {{ $t('researchTasks.task') }} *
-                  <input v-model="editForm.task" type="text" required />
-                </label>
-                <label>
-                  {{ $t('persons.title') }}
-                  <div class="person-edit-row">
-                    <PersonPicker v-model="editForm.person_id" :placeholder="$t('researchTasks.selectPersonOptional')" />
-                    <router-link v-if="editForm.person_id" :to="'/persons/' + editForm.person_id" class="person-link person-link-btn" @click.stop>{{ $t('common.view') }} →</router-link>
-                  </div>
-                </label>
-                <label>
-                  {{ $t('researchTasks.notes') }}
-                  <textarea v-model="editForm.notes" rows="2" />
-                </label>
-                <label>
-                  {{ $t('researchTasks.result') }}
-                  <textarea v-model="editForm.result" rows="2" />
-                </label>
-                <div class="expanded-row-inline">
-                  <label>
-                    {{ $t('researchTasks.status') }}
-                    <select v-model="editForm.status">
-                      <option value="open">{{ $t('researchTasks.statuses.open') }}</option>
-                      <option value="in_progress">{{ $t('researchTasks.statuses.in_progress') }}</option>
-                      <option value="done">{{ $t('researchTasks.statuses.done') }}</option>
-                      <option value="stopped">{{ $t('researchTasks.statuses.stopped') }}</option>
-                    </select>
-                  </label>
-                  <label>
-                    {{ $t('researchTasks.priority') }}
-                    <select v-model="editForm.priority">
-                      <option :value="0">0</option>
-                      <option :value="1">1</option>
-                      <option :value="2">2</option>
-                      <option :value="3">3</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="expanded-actions">
-                  <button class="btn-cancel" @click="expandedId = null">{{ $t('common.cancel') }}</button>
-                  <button class="btn-add" @click="saveEdit(task.id)">{{ $t('common.save') }}</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+    <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->
     <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
@@ -163,7 +74,7 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
-import PersonName from '../components/PersonName.vue';
+import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -192,10 +103,7 @@ const activeFilter = ref('all');
 const openCount = computed(() =>
   tasks.value.filter(t => t.status === 'open' || t.status === 'in_progress').length
 );
-const expandedId = ref<string | null>(null);
 const showAddModal = ref(false);
-
-const STATUS_CYCLE: Array<'open' | 'in_progress' | 'done' | 'stopped'> = ['open', 'in_progress', 'done', 'stopped'];
 
 const filters = computed(() => [
   { value: 'all',         label: `${t('researchTasks.filterAll')} (${tasks.value.length})` },
@@ -218,15 +126,6 @@ const addForm = reactive({
   notes: '',
 });
 
-const editForm = reactive({
-  task: '',
-  notes: '',
-  result: '',
-  status: 'open' as 'open' | 'in_progress' | 'done' | 'stopped',
-  priority: 1,
-  person_id: null as string | null,
-});
-
 async function load() {
   const raw = (await window.api.researchTasks.list()) as ResearchTask[];
   // Enrich with person names using getNames (persons.get returns no name fields)
@@ -243,48 +142,6 @@ async function load() {
     return task;
   }));
   tasks.value = enriched;
-}
-
-function toggleExpand(id: string) {
-  if (expandedId.value === id) {
-    expandedId.value = null;
-    return;
-  }
-  const task = tasks.value.find(t => t.id === id);
-  if (!task) return;
-  editForm.task = task.task;
-  editForm.notes = task.notes ?? '';
-  editForm.result = task.result ?? '';
-  editForm.status = task.status;
-  editForm.priority = task.priority;
-  editForm.person_id = task.person_id ?? null;
-  expandedId.value = id;
-}
-
-async function cycleStatus(task: ResearchTask) {
-  const idx = STATUS_CYCLE.indexOf(task.status);
-  const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
-  await window.api.researchTasks.update(task.id, { status: next });
-  task.status = next;
-}
-
-async function saveEdit(id: string) {
-  await window.api.researchTasks.update(id, {
-    task: editForm.task,
-    notes: editForm.notes,
-    result: editForm.result,
-    status: editForm.status,
-    priority: editForm.priority,
-    person_id: editForm.person_id || undefined,
-  });
-  expandedId.value = null;
-  await load();
-}
-
-async function deleteTask(id: string) {
-  if (!confirm('Ta bort denna uppgift?')) return;
-  await window.api.researchTasks.delete(id);
-  await load();
 }
 
 async function createTask() {
@@ -308,74 +165,3 @@ async function createTask() {
 onMounted(load);
 </script>
 
-<style scoped>
-/* Unique to ResearchTasksView */
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
-.priority-badge {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 24px;
-  font-size: 12px;
-  font-weight: 700;
-  color: white;
-}
-.priority-0 { background: #9ca3af; }
-.priority-1 { background: #60a5fa; }
-.priority-2 { background: #f59e0b; }
-.priority-3 { background: #ef4444; }
-
-.status-chip {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  user-select: none;
-  transition: opacity 0.15s;
-}
-.status-chip:hover { opacity: 0.8; }
-.status-open { background: #dbeafe; color: #1d4ed8; }
-.status-in_progress { background: #fef3c7; color: #92400e; }
-.status-done { background: #d1fae5; color: #065f46; }
-.status-stopped { background: #f3f4f6; color: #6b7280; }
-
-.task-text {
-  max-width: 380px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.person-edit-row { display: flex; align-items: center; gap: 8px; }
-.person-edit-row > :first-child { flex: 1; }
-.person-link-btn { white-space: nowrap; font-size: 13px; }
-.expanded-row td { background: #f8fafc; padding: 0; }
-.expanded-content {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.expanded-content label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #374151;
-}
-.expanded-content input,
-.expanded-content textarea,
-.expanded-content select {
-  padding: 6px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-}
-.expanded-row-inline { display: flex; gap: 16px; }
-.expanded-row-inline label { flex: 1; }
-.expanded-actions { display: flex; gap: 8px; justify-content: flex-end; }
-</style>

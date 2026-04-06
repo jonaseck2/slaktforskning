@@ -9,9 +9,9 @@
       <thead>
         <tr>
           <th>{{ $t('common.type') }}</th>
-          <th>{{ $t('events.date') }}</th>
+          <th class="th-date">{{ $t('events.date') }}</th>
           <th>{{ $t('events.description') }}</th>
-          <th v-if="!props.readonly">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="th-actions">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -22,7 +22,7 @@
           @click="!props.readonly && editEvent(event)"
         >
           <td><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
-          <td>{{ formatDate(event) }}</td>
+          <td class="td-date">{{ formatDate(event) }}</td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
           <td v-if="!props.readonly" class="actions-cell">
             <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">✕</button>
@@ -159,6 +159,13 @@ defineExpose({ reload: load, openAddForm });
   border-radius: 10px;
   font-size: 12px;
   white-space: nowrap;
+}
+.th-date,
+.td-date {
+  white-space: nowrap;
+}
+.actions-cell {
+  vertical-align: middle;
 }
 tr.non-interactive { cursor: default; }
 tr.non-interactive:hover td { background: transparent; }

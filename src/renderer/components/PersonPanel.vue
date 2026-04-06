@@ -67,37 +67,16 @@
         </div>
       </div>
 
-      <!-- Namn section -->
+      <!-- Namen section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('names')">
           <span class="panel-chevron">{{ sections.names ? '▾' : '▸' }}</span>
-          Namn
-          <span class="panel-section-header-action" @click.stop="openNameForm(null)">+ Namn</span>
+          {{ $t('personDetail.names') }}
+          <span class="panel-section-header-action" @click.stop="openNameForm(null)">+ {{ $t('personDetail.addName') }}</span>
         </button>
         <div v-if="sections.names" class="panel-section-body">
           <div v-if="names.length === 0" class="panel-empty-section">—</div>
-          <div
-            v-for="name in names"
-            :key="name.id"
-            class="panel-name-row panel-name-row-clickable"
-            @click="openNameForm(name)"
-          >
-            <div class="panel-name-row-main">
-              <PersonName
-                :given-name="name.given_name"
-                :surname="name.surname"
-                :preferred-name="name.preferred_name ?? null"
-                :nickname="name.nickname ?? null"
-              />
-              <span class="panel-name-type">{{ $t('nameTypes.' + name.name_type) }}</span>
-            </div>
-            <span v-if="name.sort_order === 0" class="panel-name-star">★</span>
-            <button
-              v-else
-              class="btn-sm btn-delete"
-              @click.stop="deleteName(name.id!)"
-            >✕</button>
-          </div>
+          <PersonNamesTable v-else :names="names" @edit="openNameForm" @delete="deleteName" />
         </div>
       </div>
 
@@ -130,14 +109,7 @@
             />
           </div>
           <div v-if="groups.length === 0" class="panel-empty-section">—</div>
-          <div
-            v-for="group in groups"
-            :key="group.id"
-            class="panel-group-row"
-          >
-            <router-link :to="'/groups/' + group.id" class="panel-group-link">{{ group.name }}</router-link>
-            <button class="btn-sm btn-delete" @click="removeFromGroup(group.id)">✕</button>
-          </div>
+          <GroupsTable v-else :groups="groups" @remove="removeFromGroup" />
         </div>
       </div>
 
@@ -146,53 +118,63 @@
         <button class="panel-section-header" @click="toggleSection('research')">
           <span class="panel-chevron">{{ sections.research ? '▾' : '▸' }}</span>
           {{ $t('researchTasks.nav') }}
-          <span class="panel-section-header-action" @click.stop="openTaskForm(null)">+ {{ $t('researchTasks.nav') }}</span>
+          <span class="panel-section-header-action" @click.stop="openTaskForm()">+ {{ $t('researchTasks.nav') }}</span>
         </button>
         <div v-if="sections.research" class="panel-section-body">
           <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
-          <div
-            v-for="task in researchTasks"
-            :key="task.id"
-            class="panel-task-row panel-task-row-clickable"
-            @click="openTaskForm(task)"
-          >
-            <span :class="['panel-task-status', 'task-' + task.status]">{{ $t('researchTasks.statuses.' + task.status) }}</span>
-            <span class="panel-task-text">{{ task.task }}</span>
-            <button class="btn-sm btn-delete" @click.stop="deleteTask(task.id)">✕</button>
-          </div>
+          <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
+        </div>
+      </div>
+
+      <!-- Identifiers section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('identifiers')">
+          <span class="panel-chevron">{{ sections.identifiers ? '▾' : '▸' }}</span>
+          {{ $t('identifiers.title') }}
+          <span class="panel-section-header-action" @click.stop="identifiersSectionRef?.openAddForm()">+ {{ $t('identifiers.add') }}</span>
+        </button>
+        <div v-if="sections.identifiers" class="panel-section-body">
+          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
+        </div>
+      </div>
+
+      <!-- Media section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('media')">
+          <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
+          {{ $t('media.title') }}
+          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()">{{ $t('media.attach') }}</span>
+        </button>
+        <div v-if="sections.media" class="panel-section-body">
+          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
+        </div>
+      </div>
+
+      <!-- Quality section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('quality')">
+          <span class="panel-chevron">{{ sections.quality ? '▾' : '▸' }}</span>
+          {{ $t('quality.nav') }}
+        </button>
+        <div v-if="sections.quality" class="panel-section-body">
+          <PersonChecksSection ref="checksSectionRef" :person-id="personId!" />
         </div>
       </div>
     </template>
 
     <!-- Name form modal -->
-    <div v-if="showNameForm" class="modal-overlay" @click.self="cancelNameForm">
-      <div class="modal">
-        <h3>{{ editingName ? $t('names.edit') : $t('names.add') }}</h3>
-        <form @submit.prevent="saveName">
-          <label>{{ $t('persons.givenName') }}<input v-model="nameFormData.given_name" type="text" autofocus /></label>
-          <label>{{ $t('persons.surname') }}<input v-model="nameFormData.surname" type="text" /></label>
-          <label>{{ $t('names.nameType') }}
-            <select v-model="nameFormData.name_type">
-              <option v-for="nt in NAME_TYPE_VALUES" :key="nt" :value="nt">{{ $t('nameTypes.' + nt) }}</option>
-            </select>
-          </label>
-          <label>{{ $t('names.preferredName') }}<input v-model="nameFormData.preferred_name" type="text" /></label>
-          <label>{{ $t('names.nickname') }}<input v-model="nameFormData.nickname" type="text" /></label>
-          <label>{{ $t('names.prefix') }}<input v-model="nameFormData.name_prefix" type="text" /></label>
-          <label>{{ $t('names.suffix') }}<input v-model="nameFormData.name_suffix" type="text" /></label>
-          <label>{{ $t('names.patronymicBase') }}<input v-model="nameFormData.patronymic_base" type="text" /></label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="cancelNameForm">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <PersonNameFormModal
+      v-if="showNameForm && personId"
+      :person-id="personId"
+      :name="editingName"
+      @close="cancelNameForm"
+      @saved="reloadNames(personId!)"
+    />
 
-    <!-- Research task form modal -->
+    <!-- Add research task modal -->
     <div v-if="showTaskForm" class="modal-overlay" @click.self="showTaskForm = false">
       <div class="modal">
-        <h3>{{ editingTask ? $t('common.edit') + ' ' + $t('researchTasks.nav') : '+ ' + $t('researchTasks.nav') }}</h3>
+        <h3>+ {{ $t('researchTasks.nav') }}</h3>
         <form @submit.prevent="saveTask">
           <label>{{ $t('researchTasks.task') }} *
             <textarea v-model="taskFormData.task" rows="3" required autofocus />
@@ -225,13 +207,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, reactive } from 'vue';
+import { ref, watch, computed, reactive, onMounted } from 'vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
+import PersonNamesTable from './PersonNamesTable.vue';
+import PersonNameFormModal from './PersonNameFormModal.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
 import GroupPicker from './GroupPicker.vue';
-import { NAME_TYPE_VALUES } from '../constants/eventTypes';
+import GroupsTable from './GroupsTable.vue';
+import ResearchTasksTable from './ResearchTasksTable.vue';
+import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
+import PersonMediaSection from './PersonMediaSection.vue';
+import PersonChecksSection from './PersonChecksSection.vue';
 
 const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
@@ -254,28 +242,28 @@ interface PersonData {
   birthLine: string | null;
   deathLine: string | null;
 }
-interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; name_prefix?: string | null; name_suffix?: string | null; name_qualifier?: string | null; patronymic_base?: string | null; }
+interface NameData { id: string; given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number; name_type: string; name_prefix?: string | null; name_suffix?: string | null; name_qualifier?: string | null; patronymic_base?: string | null; }
 interface GroupData { id: string; name: string; notes: string | null; }
-interface TaskData { id: string; task: string; status: string; notes: string | null; result: string | null; priority: number; }
-
 const person = ref<PersonData | null>(null);
 const primaryName = ref<NameData | null>(null);
 const names = ref<NameData[]>([]);
 const groups = ref<GroupData[]>([]);
-const researchTasks = ref<TaskData[]>([]);
+const researchTasks = ref<import('./ResearchTasksTable.vue').ResearchTaskRow[]>([]);
 
 // Add relative modal state
 const showAddRelative = ref(false);
 const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
 // EventList ref for triggering add form
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
+const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
+const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
+const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
 
 // Group picker state
 const showGroupPicker = ref(false);
 
-// Research task form state
+// Research task form state (add only — edit is handled inline by ResearchTasksTable)
 const showTaskForm = ref(false);
-const editingTask = ref<TaskData | null>(null);
 const taskFormData = reactive({ task: '', status: 'open' as string, notes: '' });
 
 function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
@@ -302,6 +290,9 @@ const sections = reactive({
   events: loadSection('events', true),
   groups: loadSection('groups', false),
   research: loadSection('research', false),
+  identifiers: loadSection('identifiers', false),
+  media: loadSection('media', false),
+  quality: loadSection('quality', false),
 });
 
 function toggleSection(key: keyof typeof sections) {
@@ -334,60 +325,15 @@ async function updateNotes(value: string) {
 
 const showNameForm = ref(false);
 const editingName = ref<NameData | null>(null);
-const nameFormData = reactive({ given_name: '', surname: '', name_type: 'birth' as string, name_prefix: '', name_suffix: '', name_qualifier: '', patronymic_base: '', preferred_name: '', nickname: '' });
 
 function openNameForm(name: NameData | null) {
   editingName.value = name;
-  if (name) {
-    nameFormData.given_name = name.given_name ?? '';
-    nameFormData.surname = name.surname ?? '';
-    nameFormData.name_type = name.name_type ?? 'birth';
-    nameFormData.name_prefix = name.name_prefix ?? '';
-    nameFormData.name_suffix = name.name_suffix ?? '';
-    nameFormData.name_qualifier = name.name_qualifier ?? '';
-    nameFormData.patronymic_base = name.patronymic_base ?? '';
-    nameFormData.preferred_name = name.preferred_name ?? '';
-    nameFormData.nickname = name.nickname ?? '';
-  } else {
-    nameFormData.given_name = '';
-    nameFormData.surname = '';
-    nameFormData.name_type = 'birth';
-    nameFormData.name_prefix = '';
-    nameFormData.name_suffix = '';
-    nameFormData.name_qualifier = '';
-    nameFormData.patronymic_base = '';
-    nameFormData.preferred_name = '';
-    nameFormData.nickname = '';
-  }
   showNameForm.value = true;
 }
 
 function cancelNameForm() {
   showNameForm.value = false;
   editingName.value = null;
-}
-
-async function saveName() {
-  if (!props.personId) return;
-  const payload = {
-    given_name: nameFormData.given_name || null,
-    surname: nameFormData.surname || null,
-    name_type: nameFormData.name_type,
-    name_prefix: nameFormData.name_prefix || null,
-    name_suffix: nameFormData.name_suffix || null,
-    name_qualifier: nameFormData.name_qualifier || null,
-    patronymic_base: nameFormData.patronymic_base || null,
-    preferred_name: nameFormData.preferred_name || null,
-    nickname: nameFormData.nickname || null,
-  };
-  if (editingName.value?.id) {
-    await window.api.persons.updateName(editingName.value.id, payload);
-  } else {
-    await window.api.persons.addName(props.personId, payload);
-  }
-  showNameForm.value = false;
-  editingName.value = null;
-  await reloadNames(props.personId);
 }
 
 async function deleteName(nameId: string) {
@@ -405,43 +351,27 @@ async function reloadNames(id: string) {
 
 // ── Research tasks ────────────────────────────────────────────────────────────
 
-function openTaskForm(task: TaskData | null) {
-  editingTask.value = task;
-  taskFormData.task = task?.task ?? '';
-  taskFormData.status = task?.status ?? 'open';
-  taskFormData.notes = task?.notes ?? '';
+function openTaskForm() {
+  taskFormData.task = '';
+  taskFormData.status = 'open';
+  taskFormData.notes = '';
   showTaskForm.value = true;
 }
 
 async function saveTask() {
   if (!props.personId) return;
-  if (editingTask.value) {
-    await window.api.researchTasks.update(editingTask.value.id, {
-      task: taskFormData.task,
-      status: taskFormData.status,
-      notes: taskFormData.notes || null,
-    });
-  } else {
-    await window.api.researchTasks.create({
-      task: taskFormData.task,
-      status: taskFormData.status,
-      notes: taskFormData.notes || null,
-      person_id: props.personId,
-    });
-  }
+  await window.api.researchTasks.create({
+    task: taskFormData.task,
+    status: taskFormData.status,
+    notes: taskFormData.notes || null,
+    person_id: props.personId,
+  });
   showTaskForm.value = false;
-  editingTask.value = null;
-  await loadResearchTasks(props.personId);
-}
-
-async function deleteTask(id: string) {
-  if (!props.personId) return;
-  await window.api.researchTasks.delete(id);
   await loadResearchTasks(props.personId);
 }
 
 async function loadResearchTasks(id: string) {
-  const raw = (await window.api.researchTasks.forPerson(id)) as TaskData[];
+  const raw = (await window.api.researchTasks.forPerson(id)) as import('./ResearchTasksTable.vue').ResearchTaskRow[];
   researchTasks.value = raw;
 }
 
@@ -544,6 +474,14 @@ watch(() => props.personId, async (id) => {
   researchTasks.value = [];
   if (id) await loadPerson(id);
 }, { immediate: true });
+
+onMounted(() => {
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
+  });
+});
 </script>
 
 <style scoped>
@@ -688,35 +626,7 @@ watch(() => props.personId, async (id) => {
   border-color: #2980b9;
 }
 
-/* Name rows */
-.panel-name-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 14px;
-  gap: 6px;
-}
-.panel-name-row-clickable {
-  cursor: pointer;
-}
-.panel-name-row-clickable:hover {
-  background: #f5f7fa;
-}
-.panel-name-row-main {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-.panel-name-type {
-  font-size: 11px;
-  color: #aaa;
-}
-.panel-name-star {
-  font-size: 12px;
-  color: #f0a500;
-  flex-shrink: 0;
-}
+
 .btn-cancel {
   background: #f0f0f0;
   color: #555;
@@ -746,47 +656,5 @@ watch(() => props.personId, async (id) => {
   padding: 6px 14px;
   border-bottom: 1px solid #f0f0f0;
 }
-.panel-group-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 14px;
-}
-.panel-group-link {
-  font-size: 12px;
-  color: #2563eb;
-  text-decoration: none;
-}
-.panel-group-link:hover { text-decoration: underline; }
 
-/* Research tasks */
-.panel-task-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 14px;
-}
-.panel-task-row-clickable { cursor: pointer; }
-.panel-task-row-clickable:hover { background: #f5f7fa; }
-.panel-task-status {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 8px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.task-open { background: #f1f5f9; color: #64748b; }
-.task-in_progress { background: #dbeafe; color: #1d4ed8; }
-.task-done { background: #dcfce7; color: #15803d; }
-.task-stopped { background: #fee2e2; color: #b91c1c; }
-.panel-task-text {
-  font-size: 12px;
-  color: #333;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 </style>

@@ -358,8 +358,36 @@ Used by PersonsView, RelationshipsView, SourcesView:
 Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 - Load entity on mount via `useRoute().params.id`
 - Auto-save on blur/change for editable fields
-- Embedded EventList component for events
+- Embedded section components for related data (see Person Section Component pattern below)
 - "Back" link to list view
+
+### Person Section Component Pattern
+
+**Every per-person data section is a reusable component**, shared between `PersonDetailView` (full editing page) and `PersonPanel` (collapsible side panel in VisualizationView). **Never inline a section in just one view** — extract it as a component from the start.
+
+Two flavours:
+
+**Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`):
+- Takes `personId: string` prop
+- Loads its own data with `watch(() => props.personId, load, { immediate: true })` — **never `onMounted`** — so it reacts when the panel switches person without being destroyed/recreated
+- Uses `defineExpose({ action })` when the parent's header button must trigger something inside (e.g. open add form, file picker)
+
+**Prop-driven** (`PersonNamesTable`, `ResearchTasksTable`, `GroupsTable`):
+- Parent fetches data and passes it as a prop; component emits `updated` / `remove` / `edit` / `delete` back up
+- Reusable across list views (e.g. `ResearchTasksTable` is used in `ResearchTasksView`, `PersonDetailView`, and `PersonPanel`)
+
+Parent structure is always the same — the component renders only the table/content:
+```vue
+<section class="detail-section">           <!-- PersonDetailView -->
+  <div class="section-header">
+    <h4>{{ $t('things.title') }}</h4>
+    <button class="btn-add" @click="ref?.openAddForm()">+ Add</button>
+  </div>
+  <PersonThingsSection ref="ref" :person-id="person.id" />
+</section>
+```
+
+See the `add-feature` skill for the full component template and PersonPanel wiring.
 
 ### Shared Components
 
@@ -368,9 +396,18 @@ Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
 | `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Compound date input. Shows `date_value_end` only when type is "between". Preserves original source text. |
 | `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
-| `EventList` | `personId?: string`, `relationshipId?: string` | — | Event table with edit/delete. Embeds EventForm. Exposes `reload()` method via `defineExpose`. |
+| `EventList` | `personId?: string`, `relationshipId?: string`, `hideHeader?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. Reloads on `personId` change. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
 | `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
+| `PersonNamesTable` | `names: NameRow[]` | `edit(name)`, `delete(nameId)` | Names table with ★ primary indicator. Prop-driven. |
+| `PersonNameFormModal` | `personId: string`, `name: NameRow\|null` | `close`, `saved` | Add/edit name modal (`name=null` → add mode). |
+| `ResearchTasksTable` | `tasks: ResearchTaskRow[]`, `showPerson?: boolean` | `updated` | Inline-expand-to-edit task rows, status chip cycling, priority badge. Prop-driven. |
+| `GroupsTable` | `groups: GroupRow[]`, `showMembers?: boolean` | `remove(id)` | Groups table with clickable rows (→ `/groups/:id`) and remove button. Prop-driven. |
+| `PersonIdentifiersSection` | `personId: string` | — | Self-loading identifiers table + add modal. Exposes `openAddForm()`. |
+| `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink. Exposes `attach()`. |
+| `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
+
+**Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
 ### UI Design System
 

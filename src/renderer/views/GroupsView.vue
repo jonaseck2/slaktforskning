@@ -6,31 +6,7 @@
     </div>
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
     <div v-if="groups.length === 0" class="empty">{{ $t('groups.emptyState') }}</div>
-    <table v-else class="data-table">
-      <thead>
-        <tr>
-          <th>{{ $t('groups.name') }}</th>
-          <th>{{ $t('groups.members') }}</th>
-          <th>{{ $t('groups.notes') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="g in groups"
-          :key="g.id"
-          class="clickable-row"
-          @click="router.push('/groups/' + g.id)"
-        >
-          <td>{{ g.name }}</td>
-          <td>{{ g.memberCount }}</td>
-          <td class="notes-cell">{{ g.notes }}</td>
-          <td class="actions-cell">
-            <button class="btn-sm btn-delete" @click.stop="deleteGroup(g.id)">✕</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
     <!-- Add Group Modal -->
     <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
@@ -57,9 +33,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useDataVersionStore } from '../stores/dataVersion';
+import GroupsTable from '../components/GroupsTable.vue';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
@@ -75,7 +51,6 @@ interface GroupRow {
 }
 
 const { t } = useI18n();
-const router = useRouter();
 const groups = ref<GroupRow[]>([]);
 const showAddForm = ref(false);
 const form = reactive({ name: '', notes: '' });
@@ -125,15 +100,3 @@ onActivated(async () => {
 });
 </script>
 
-<style scoped>
-/* Unique to GroupsView */
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
-.notes-cell {
-  color: #777;
-  font-size: 13px;
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-</style>

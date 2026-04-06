@@ -267,7 +267,7 @@ onActivated(load);
   position: relative;
   overflow: hidden;
   min-width: 200px;
-  max-width: 520px;
+  max-width: 1040px;
 }
 .panel-close-btn {
   position: absolute;
