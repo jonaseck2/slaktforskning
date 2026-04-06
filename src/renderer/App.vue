@@ -389,11 +389,12 @@ body {
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────────────────
-   Uses html.dark class applied by toggleDarkMode().
+   Scoped to @media screen so exports/prints always use light colors.
    `html.dark` prefix adds specificity 0,2,N which beats Vue's scoped
    attribute selector specificity 0,1,N+1, so no !important needed for
    most rules. Use it sparingly where the specificity race is tight.
    ─────────────────────────────────────────────────────────────────────── */
+@media screen {
 html.dark body { background: #111827; color: #e2e8f0; }
 html.dark .content { background: #111827; }
 
@@ -475,4 +476,5 @@ html.dark .locale-switcher option { background: #1f2937; color: #e2e8f0; }
 /* Scrollbars */
 html.dark ::-webkit-scrollbar { background: #1f2937; }
 html.dark ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+} /* end @media screen */
 </style>
