@@ -121,7 +121,7 @@ h2 {
 }
 
 .db-section h3 {
-  font-size: 14px;
+  font-size: var(--font-base);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #666;
@@ -130,7 +130,7 @@ h2 {
 
 .db-path {
   font-family: monospace;
-  font-size: 13px;
+  font-size: var(--font-sm);
   background: #f0f0f0;
   padding: 8px 12px;
   border-radius: 4px;
@@ -139,7 +139,7 @@ h2 {
 
 .db-no-recent {
   color: #999;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 .db-recent-table {
@@ -170,7 +170,7 @@ h2 {
 
 .db-recent-path {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: #666;
   padding: 8px 0;
   word-break: break-all;
@@ -187,7 +187,7 @@ h2 {
   background: white;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-family: inherit;
 }
 
@@ -199,7 +199,7 @@ h2 {
   padding: 8px 12px;
   background: #e8f5e9;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
   color: #2e7d32;
 }
 </style>

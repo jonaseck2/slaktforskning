@@ -146,8 +146,15 @@
         <button class="panel-section-header" @click="toggleSection('relationships')">
           <span class="panel-chevron">{{ sections.relationships ? '▾' : '▸' }}</span>
           {{ $t('panel.relationships') }}
+          <span class="panel-section-header-action" @click.stop="showRelationPicker = !showRelationPicker">+ Relation</span>
         </button>
         <div v-if="sections.relationships" class="panel-section-body">
+          <!-- Inline relation picker -->
+          <div v-if="showRelationPicker" class="panel-relation-picker">
+            <button class="btn-dark" @click="openAddRelative('parent'); showRelationPicker = false">+ Förälder</button>
+            <button class="btn-dark" @click="openAddRelative('spouse'); showRelationPicker = false">+ Partner</button>
+            <button class="btn-dark" @click="openAddRelative('child'); showRelationPicker = false">+ Barn</button>
+          </div>
           <div v-if="relationships.length === 0" class="panel-empty-section">—</div>
           <div
             v-for="rel in relationships"
@@ -163,6 +170,62 @@
           </div>
         </div>
       </div>
+
+      <!-- Källor section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('sources')">
+          <span class="panel-chevron">{{ sections.sources ? '▾' : '▸' }}</span>
+          Källor
+          <span class="panel-section-header-action" @click.stop="showCitationForm = true">+ Källa</span>
+        </button>
+        <div v-if="sections.sources" class="panel-section-body">
+          <div v-if="citations.length === 0" class="panel-empty-section">—</div>
+          <div
+            v-for="cit in citations"
+            :key="cit.id"
+            class="panel-citation-row"
+          >
+            <div class="panel-citation-main">
+              <div class="panel-citation-source">{{ citationSources[cit.source_id]?.title ?? 'Okänd källa' }}</div>
+              <div v-if="cit.page || cit.notes" class="panel-citation-detail">
+                {{ cit.page ? cit.page : (cit.notes ?? '').slice(0, 40) }}
+              </div>
+            </div>
+            <span class="panel-citation-confidence" :class="'conf-' + cit.confidence">
+              {{ confidenceDots(cit.confidence) }}
+            </span>
+            <button class="btn-sm btn-delete" @click="deleteCitation(cit.id)">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grupper section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('groups')">
+          <span class="panel-chevron">{{ sections.groups ? '▾' : '▸' }}</span>
+          Grupper
+          <span class="panel-section-header-action" @click.stop="showGroupPicker = !showGroupPicker">+ Grupp</span>
+        </button>
+        <div v-if="sections.groups" class="panel-section-body">
+          <div v-if="showGroupPicker && personId" class="panel-group-picker-wrap">
+            <GroupPicker
+              :person-id="personId"
+              :exclude-ids="groups.map(g => g.id)"
+              @added="onGroupAdded"
+              @cancel="showGroupPicker = false"
+            />
+          </div>
+          <div v-if="groups.length === 0" class="panel-empty-section">—</div>
+          <div
+            v-for="group in groups"
+            :key="group.id"
+            class="panel-group-row"
+          >
+            <router-link :to="'/groups/' + group.id" class="panel-group-link">{{ group.name }}</router-link>
+            <button class="btn-sm btn-delete" @click="removeFromGroup(group.id)">✕</button>
+          </div>
+        </div>
+      </div>
     </template>
 
     <!-- Add relative modal -->
@@ -173,6 +236,14 @@
       @close="showAddRelative = false"
       @saved="onRelativeSaved"
     />
+
+    <!-- Citation form modal -->
+    <CitationForm
+      v-if="showCitationForm && personId"
+      :person-id="personId"
+      @close="showCitationForm = false"
+      @saved="onCitationSaved"
+    />
   </div>
 </template>
 
@@ -182,6 +253,8 @@ import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
 import PersonName from './PersonName.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
+import CitationForm from './CitationForm.vue';
+import GroupPicker from './GroupPicker.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -208,15 +281,27 @@ interface PersonData {
 }
 interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; }
 interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; }
+interface CitationData { id: string; source_id: string; page: string | null; notes: string | null; confidence: number; }
+interface GroupData { id: string; name: string; notes: string | null; }
 
 const person = ref<PersonData | null>(null);
 const primaryName = ref<NameData | null>(null);
 const names = ref<NameData[]>([]);
 const relationships = ref<RelRow[]>([]);
+const citations = ref<CitationData[]>([]);
+const citationSources = ref<Record<string, { title: string }>>({});
+const groups = ref<GroupData[]>([]);
 
 // Add relative modal state
 const showAddRelative = ref(false);
 const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
+const showRelationPicker = ref(false);
+
+// Citation form state
+const showCitationForm = ref(false);
+
+// Group picker state
+const showGroupPicker = ref(false);
 
 function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
   addRelativeMode.value = mode;
@@ -225,7 +310,10 @@ function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
 
 async function onRelativeSaved() {
   showAddRelative.value = false;
-  if (props.personId) await loadPerson(props.personId);
+  if (props.personId) {
+    await loadPerson(props.personId);
+    await loadRelationships(props.personId);
+  }
   emit('relative-added');
 }
 
@@ -239,6 +327,8 @@ const sections = reactive({
   names: loadSection('names', false),
   events: loadSection('events', true),
   relationships: loadSection('relationships', false),
+  sources: loadSection('sources', false),
+  groups: loadSection('groups', false),
 });
 
 function toggleSection(key: keyof typeof sections) {
@@ -412,6 +502,54 @@ async function loadPerson(id: string) {
   };
 
   await loadRelationships(id);
+  await loadCitations(id);
+  await loadGroups(id);
+}
+
+async function loadCitations(id: string) {
+  const raw = (await window.api.citations.forPerson(id)) as CitationData[];
+  citations.value = raw;
+
+  const uniqueSourceIds = [...new Set(raw.map(c => c.source_id))];
+  const sourceEntries = await Promise.all(
+    uniqueSourceIds.map(async (sid) => {
+      const src = (await window.api.sources.get(sid)) as { title: string } | null;
+      return [sid, src ?? { title: 'Okänd källa' }] as [string, { title: string }];
+    })
+  );
+  citationSources.value = Object.fromEntries(sourceEntries);
+}
+
+async function deleteCitation(id: string) {
+  await window.api.citations.delete(id);
+  if (props.personId) await loadCitations(props.personId);
+}
+
+async function loadGroups(id: string) {
+  const raw = (await window.api.groups.forPerson(id)) as GroupData[];
+  groups.value = raw;
+}
+
+async function removeFromGroup(groupId: string) {
+  if (!props.personId) return;
+  await window.api.groups.removeMember(groupId, props.personId);
+  await loadGroups(props.personId);
+}
+
+async function onGroupAdded() {
+  showGroupPicker.value = false;
+  if (props.personId) await loadGroups(props.personId);
+}
+
+async function onCitationSaved() {
+  showCitationForm.value = false;
+  if (props.personId) await loadCitations(props.personId);
+}
+
+function confidenceDots(level: number): string {
+  const filled = '●';
+  const empty = '○';
+  return filled.repeat(Math.min(level, 3)) + empty.repeat(Math.max(0, 3 - level));
 }
 
 async function loadRelationships(id: string) {
@@ -442,6 +580,9 @@ watch(() => props.personId, async (id) => {
   person.value = null;
   relationships.value = [];
   names.value = [];
+  citations.value = [];
+  citationSources.value = {};
+  groups.value = [];
   if (id) await loadPerson(id);
 }, { immediate: true });
 </script>
@@ -681,4 +822,65 @@ watch(() => props.personId, async (id) => {
   text-align: left;
 }
 .panel-rel-person:hover { text-decoration: underline; }
+
+/* Relation picker */
+.panel-relation-picker {
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Citations */
+.panel-citation-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+}
+.panel-citation-main {
+  flex: 1;
+  min-width: 0;
+}
+.panel-citation-source {
+  font-size: 12px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.panel-citation-detail {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.panel-citation-confidence {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.conf-0 { color: #aaa; }
+.conf-1 { color: #ca8a04; }
+.conf-2 { color: #ea580c; }
+.conf-3 { color: #16a34a; }
+
+/* Groups */
+.panel-group-picker-wrap {
+  padding: 6px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.panel-group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px;
+}
+.panel-group-link {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+.panel-group-link:hover { text-decoration: underline; }
 </style>

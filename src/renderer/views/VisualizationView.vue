@@ -23,7 +23,6 @@
         :class="['tab-btn', { active: activeTab === 'timeline' }]"
         data-testid="tab-timeline" @click="setTab('timeline')"
       >{{ $t('visualization.tab.timeline') }}</button>
-      <button class="btn-detail" @click="router.push('/persons/' + personId)">{{ $t('visualization.viewDetail') }}</button>
     </div>
 
     <!-- Empty state -->
@@ -211,17 +210,6 @@ onActivated(load);
   margin-right: 4px;
 }
 .btn-back:hover { opacity: 0.7; }
-.btn-detail {
-  margin-left: auto;
-  background: none;
-  border: 1px solid #c8d0db;
-  color: #2c3e50;
-  cursor: pointer;
-  padding: 4px 10px;
-  font-size: var(--font-sm);
-  border-radius: 4px;
-}
-.btn-detail:hover { background: #f0f4f8; }
 
 /* Body: chart + panel */
 .viz-body {

@@ -28,8 +28,8 @@
           </label>
         </div>
         <div class="print-actions">
-          <button class="btn-print" :disabled="!ancestorRootId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-pdf" :disabled="!ancestorRootId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!ancestorRootId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!ancestorRootId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -281,16 +281,16 @@ async function exportPdf() {
   padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-base);
   line-height: 1;
 }
 .zoom-btn:hover:not(:disabled) { background: #e2e8f0; }
 .zoom-btn:disabled { opacity: 0.4; cursor: default; }
-.zoom-fit-btn { font-size: 12px; padding: 4px 10px; }
+.zoom-fit-btn { font-size: var(--font-xs); padding: 4px 10px; }
 .zoom-label {
   min-width: 44px;
   text-align: center;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #555;
 }
 
@@ -306,18 +306,13 @@ async function exportPdf() {
 .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 .controls label {
   display: flex; flex-direction: column; gap: 4px;
-  font-size: 13px; font-weight: 600; color: #555; min-width: 200px;
+  font-size: var(--font-sm); font-weight: 600; color: #555; min-width: 200px;
 }
 .controls select {
-  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit;
+  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: var(--font-base); font-family: inherit;
 }
 .print-actions { display: flex; gap: 8px; align-items: center; }
-.btn-print, .btn-pdf {
-  padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
-}
-.btn-print { background: #2c3e50; color: white; }
-.btn-pdf { background: #e74c3c; color: white; }
-.btn-print:disabled, .btn-pdf:disabled { opacity: 0.5; cursor: default; }
+.btn-report-action:disabled { opacity: 0.5; cursor: default; }
 
 /* Preview area: grey background with scrollable paper preview */
 .preview-area {
