@@ -68,7 +68,9 @@
       "Edit(/.claude/skills/commit/**)",
       "Bash(mv .claude/plans/2026-04-05-persons-list-pagination.md .claude/plans/archive/)",
       "Bash(rm .claude/plans/2026-04-03-printable-output.md .claude/plans/2026-04-03-sanity-checks.md .claude/plans/2026-04-04-event-cause.md .claude/plans/2026-04-04-evidence-model.md .claude/plans/2026-04-05-groups-ui.md)",
-      "Edit(/.claude/skills/add-feature/**)"
+      "Edit(/.claude/skills/add-feature/**)",
+      "Bash(sqlite3 *)",
+      "Bash(strings /tmp/genney_extract/contents/seg0/*.dat)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",

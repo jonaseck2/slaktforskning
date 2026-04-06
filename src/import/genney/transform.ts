@@ -499,7 +499,11 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     const childId = cf.PERSON ? personMap.get(cf.PERSON) : undefined;
     if (!childId) continue;
 
-    if (cf.FATHER) {
+    // Only import parent links where the link type is explicitly set.
+    // Rows with null FATHERLINK/MOTHERLINK appear in some Genney databases as
+    // chronologically impossible artifacts (parent born decades after child)
+    // that Genney's own GEDCOM exporter silently drops.
+    if (cf.FATHER && cf.FATHERLINK) {
       const fatherId = personMap.get(cf.FATHER);
       if (fatherId) {
         stmts.insertRelationship.run([
@@ -510,7 +514,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
       }
     }
 
-    if (cf.MOTHER) {
+    if (cf.MOTHER && cf.MOTHERLINK) {
       const motherId = personMap.get(cf.MOTHER);
       if (motherId) {
         stmts.insertRelationship.run([
