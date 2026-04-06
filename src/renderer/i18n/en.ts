@@ -28,6 +28,7 @@ export default {
     unknown: '(unknown)',
     back: 'Back',
     view: 'View',
+    all: 'All',
   },
   persons: {
     title: 'Persons',
