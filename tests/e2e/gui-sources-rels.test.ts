@@ -39,7 +39,7 @@ test.describe('Sources CRUD', () => {
 
   test('create a source via modal', async () => {
     await app.navigate('/sources');
-    await app.click('button');
+    await app.click('.btn-add');
     await app.settle();
 
     await app.fillInput('.modal input[type="text"]', 'Swedish Church Records');
@@ -106,7 +106,7 @@ test.describe('Relationships CRUD', () => {
     await app.createPerson({ given_name: 'Maria', surname: 'Nilsson', sex: 'F' });
 
     await app.navigate('/relationships');
-    await app.click('button');
+    await app.click('.btn-add');
     await app.settle();
 
     await app.click('.modal button[type="submit"]');

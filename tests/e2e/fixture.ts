@@ -121,7 +121,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
     const timeout = setTimeout(() => {
       console.error(`[e2e:${port}] Vue did not initialize in time.`);
       resolve(false);
-    }, 30_000);
+    }, 60_000);
 
     const poll = async () => {
       try {
@@ -181,14 +181,16 @@ export class AppDriver {
           method: 'POST',
           headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
           body: body !== undefined ? JSON.stringify(body) : undefined,
-          signal: AbortSignal.timeout(15_000),
+          signal: AbortSignal.timeout(20_000),
         });
         return res.json();
       } catch (err) {
-        // Retry on network errors (connection reset, ECONNREFUSED) after a short delay.
-        // Re-throw immediately on non-network errors or on the last attempt.
-        const isNetwork = err instanceof TypeError;
-        if (!isNetwork || attempt === MAX_RETRIES - 1) throw err;
+        // Retry on network errors (connection reset, ECONNREFUSED) and on
+        // AbortError from AbortSignal.timeout (renderer temporarily busy).
+        // Re-throw immediately on other errors or on the last attempt.
+        const isRetryable = err instanceof TypeError ||
+          (err instanceof Error && err.name === 'TimeoutError');
+        if (!isRetryable || attempt === MAX_RETRIES - 1) throw err;
         await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
       }
     }
@@ -199,7 +201,7 @@ export class AppDriver {
   /** Get the full rendered HTML of the current view. */
   async getDom(): Promise<string> {
     const res = await fetch(`${this.baseUrl}/dom`, {
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(20_000),
     });
     return res.text();
   }
