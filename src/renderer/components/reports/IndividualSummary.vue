@@ -127,7 +127,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { formatFullName } from '../../../utils/nameUtils';
+import { formatFullName } from '../../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
