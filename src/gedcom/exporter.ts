@@ -10,6 +10,7 @@ import {
   getCitationsForPlace,
 } from '../api/sources';
 import { getPlace, listPlaces } from '../api/places';
+import { getMediaForEntity } from '../api/media';
 import type { Place, Citation } from '../api/types';
 import { formatGedcomDate } from './date';
 
@@ -58,6 +59,18 @@ function emitCitationBlock(lines: string[], cit: Citation, srcXr: string, baseLe
   if (cit.transcription) lines.push(`${baseLevel + 1} DATA`, `${baseLevel + 2} TEXT ${cit.transcription}`);
   if (cit.notes) lines.push(`${baseLevel + 1} NOTE ${cit.notes}`);
   if (cit.date_accessed) lines.push(`${baseLevel + 1} _ACCESSED ${cit.date_accessed}`);
+}
+
+/** Emit inline OBJE blocks for all media linked to an entity. baseLevel = 1 for INDI/FAM, 2 for events. */
+function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | 'relationship' | 'event', entityId: string, baseLevel: number): void {
+  const mediaItems = getMediaForEntity(db, entityType, entityId);
+  for (const m of mediaItems) {
+    lines.push(`${baseLevel} OBJE`);
+    if (m.format) lines.push(`${baseLevel + 1} FORM ${m.format}`);
+    if (m.file_ref) lines.push(`${baseLevel + 1} FILE ${m.file_ref}`);
+    if (m.title) lines.push(`${baseLevel + 1} TITL ${m.title}`);
+    if (m.notes) lines.push(`${baseLevel + 1} NOTE ${m.notes}`);
+  }
 }
 
 export function exportGedcom(db: Database): string {
@@ -154,6 +167,7 @@ export function exportGedcom(db: Database): string {
         const srcXr = sourceXref.get(cit.source_id);
         if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
       }
+      emitMediaBlocks(lines, db, 'event', ev.id, 2);
       // Collect ASSO blocks for non-primary participants in this event
       for (const part of participants) {
         if (part.person_id === p.id) continue;
@@ -200,6 +214,9 @@ export function exportGedcom(db: Database): string {
       const srcXr = sourceXref.get(cit.source_id);
       if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
     }
+
+    // Person-level media
+    emitMediaBlocks(lines, db, 'person', p.id, 1);
   });
 
   // ── Families ───────────────────────────────────────────────────────────────
@@ -268,6 +285,7 @@ export function exportGedcom(db: Database): string {
         const srcXr = sourceXref.get(cit.source_id);
         if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
       }
+      emitMediaBlocks(lines, db, 'event', ev.id, 2);
     }
 
     // Relationship-level citations
@@ -276,6 +294,9 @@ export function exportGedcom(db: Database): string {
       const srcXr = sourceXref.get(cit.source_id);
       if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
     }
+
+    // Relationship-level media
+    emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
   });
 
   // ── Place-level citations via custom top-level _PLAC records ───────────────

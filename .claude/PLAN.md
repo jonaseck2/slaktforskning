@@ -82,9 +82,10 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.23.4: All charts: `* ISO` birth + `† ISO` death on separate lines; BOX_H 44→54; fix circle curved-mode gen 5-6 gone; fix circle scroll overflow | — |
 | Fix | v0.23.5: Circle gen 6 color lightening reduction; Reports auto-use focal person (remove PersonPicker) | — |
 | Fix | v0.23.7: AncestorBook export circle: gen 6 blank — fetchPedigreeTree needs generations=7 not 6 | — |
-| v0.24.0 | Media Attachments Phase 1–3: is_missing schema, file copy strategy, media:attach/openFile/getFilePath IPC, MediaView, PersonDetailView media section, i18n, unit tests | [plan](plans/2026-04-04-media.md) |
+| v0.24.0 | Media Attachments Phase 1–3: is_missing schema, file copy strategy, media:attach/openFile/getFilePath IPC, MediaView, PersonDetailView media section, i18n, unit tests | [archive](plans/archive/2026-04-04-media.md) |
 | v0.24.2 | UX design system — all list views match QualityView (GroupsView + PersonsView/RelationshipsView/PlacesView/SourcesView/ResearchTasksView/ReportsView) | [archive](plans/archive/2026-04-05-ux-design-system.md) |
 | Fix | v0.24.1: Quality checks CPU saturation on large trees — 4-way event_participants self-join → 2-query+JS; V8 CPU profiling infrastructure; performance-profiling skill | [archive](plans/archive/2026-04-06-checks-performance.md) |
+| v0.25.0 | GEDCOM media import/export: inline+top-level OBJE on INDI/FAM/events, export OBJE blocks; media section typo fix | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
 
 ---
 
@@ -116,21 +117,6 @@ Use the `interview-synthesis` skill if user research data is available.
 - [ ] Assertions UI — view/edit what each citation claims, mark accepted, see conflicts
 - [ ] Research audit view — all unsourced entities ranked by evidence gap
 - [ ] Merge/deduplicate persons
-
-### Media Attachments [feature]
-See `.claude/plans/2026-04-04-media.md` for the full plan.
-- [ ] Decide file storage strategy (copy vs reference)
-- [ ] File handling + Genney archive extraction
-- [ ] MediaView at `/media`
-- [ ] Inline sections in PersonDetailView, SourceDetailView, EventList
-
-### GEDCOM Media Import/Export [feature]
-*Depends on: Media Attachments feature above*
-See `.claude/plans/2026-04-05-gedcom-media-import.md` for the full plan.
-- [ ] Schema: `is_missing` column on `media` table
-- [ ] Importer: parse inline + top-level OBJE records; link to person/family/event
-- [ ] Exporter: emit OBJE blocks for person/family/event media
-- [ ] Tests: inline OBJE, top-level reference, export roundtrip
 
 ### Evidence Model & Source UX [feature]
 See `.claude/plans/2026-04-04-evidence-model.md` for the full plan.
