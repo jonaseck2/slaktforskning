@@ -16,6 +16,7 @@ import { runAllChecks, runChecksForPerson } from '../api/checks';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 import { importFromGenney } from '../import/genney/index';
+import { importFromHolger } from '../import/holger/index';
 
 export function createMcpServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -568,6 +569,39 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return { content: [{ type: 'text', text: JSON.stringify({ error: message, progress: messages }, null, 2) }] };
+    }
+  });
+
+  server.registerTool('import_holger', {
+    description:
+      'Import a Holger/OurKind GEDCOM export (.ged or .zip) into the database. ' +
+      'Handles Holger-specific ENGA TYPE semantics (couple subtypes: Sambo→cohabitation, Partner→cohabitation, ' +
+      'Parter→cohabitation, Särbo→cohabitation, Relation→other, Förlovade→unknown) and ADOP TYPE ' +
+      '(Fosterbarn→foster, Adoptivbarn→adopted). ' +
+      'Optionally remaps Windows-style OBJE FILE paths to a local media directory. ' +
+      'To generate the GEDCOM from Holger: Arkiv → Exportera GEDCOM → Generellt format, ANSI encoding.',
+    inputSchema: {
+      source_path: z.string().describe('Path to a .ged file, a .zip containing a .ged, or a folder containing a .ged'),
+      media_dir: z.string().optional().describe('Optional: path to local OurKind/Media directory for remapping Windows image paths'),
+    },
+  }, async (args) => {
+    try {
+      const result = await importFromHolger(db, {
+        sourcePath: args.source_path,
+        mediaDir: args.media_dir,
+      });
+      const r = result.report;
+      const eventTotal = Object.values(r.events).reduce((a, b) => a + b, 0);
+      return {
+        content: [{
+          type: 'text',
+          text: `Holger import complete: ${r.persons} persons, ${r.families} families, ${eventTotal} events, ${r.sources} sources, ${r.places} places, ${r.citations} citations.`,
+        }],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: 'text', text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
+      };
     }
   });
 
