@@ -568,53 +568,71 @@ function checkCircularAncestry(db: Database): CheckResult[] {
   `);
   if (links.length === 0) return [];
 
-  // Build child→parents and parent→children maps; collect all nodes
+  // Build child→parents map; collect all nodes
   const parentMap = new Map<string, string[]>();
-  const childrenMap = new Map<string, string[]>();
   const allNodes = new Set<string>();
   for (const { child_id, parent_id } of links) {
     if (!parentMap.has(child_id)) parentMap.set(child_id, []);
     parentMap.get(child_id)!.push(parent_id);
-    if (!childrenMap.has(parent_id)) childrenMap.set(parent_id, []);
-    childrenMap.get(parent_id)!.push(child_id);
     allNodes.add(child_id);
     allNodes.add(parent_id);
   }
 
-  // Kahn's topological sort — O(V+E).
-  // In-degree = number of parents for each node.
-  // Nodes that cannot be processed (in-degree never reaches 0) are in cycles.
-  const inDegree = new Map<string, number>();
-  for (const node of allNodes) {
-    inDegree.set(node, parentMap.get(node)?.length ?? 0);
-  }
+  // Iterative DFS with WHITE/GRAY/BLACK coloring.
+  // GRAY = currently on the DFS path. A back edge to a GRAY node means a cycle.
+  // Only nodes that form back edges are marked — descendants of cycles are NOT flagged.
+  // (Kahn's topo sort also marks descendants of cycles as unprocessed, causing false positives.)
+  const UNVISITED = 0, ON_PATH = 1, DONE = 2;
+  const state = new Map<string, number>();
+  for (const node of allNodes) state.set(node, UNVISITED);
 
-  const queue: string[] = [];
-  for (const [node, deg] of inDegree) {
-    if (deg === 0) queue.push(node);
-  }
+  const cycleNodes = new Set<string>();
 
-  const processed = new Set<string>();
-  while (queue.length > 0) {
-    const node = queue.shift()!;
-    processed.add(node);
-    for (const child of (childrenMap.get(node) ?? [])) {
-      const newDeg = inDegree.get(child)! - 1;
-      inDegree.set(child, newDeg);
-      if (newDeg === 0) queue.push(child);
+  for (const start of allNodes) {
+    if (state.get(start) !== UNVISITED) continue;
+
+    const path: string[] = [];
+    const pathIdx = new Map<string, number>(); // node → index in path, for O(1) cycle range lookup
+    const stack: Array<{ node: string; parentsIdx: number }> = [{ node: start, parentsIdx: 0 }];
+    state.set(start, ON_PATH);
+    path.push(start);
+    pathIdx.set(start, 0);
+
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1];
+      const parents = parentMap.get(frame.node) ?? [];
+
+      if (frame.parentsIdx < parents.length) {
+        const parent = parents[frame.parentsIdx++];
+        const parentState = state.get(parent) ?? UNVISITED;
+
+        if (parentState === ON_PATH) {
+          // Back edge → cycle. Mark all nodes from cycle entry point to current node.
+          const ci = pathIdx.get(parent)!;
+          for (let i = ci; i < path.length; i++) cycleNodes.add(path[i]);
+        } else if (parentState === UNVISITED) {
+          state.set(parent, ON_PATH);
+          path.push(parent);
+          pathIdx.set(parent, path.length - 1);
+          stack.push({ node: parent, parentsIdx: 0 });
+        }
+        // DONE → already fully processed, no cycle through here
+      } else {
+        state.set(frame.node, DONE);
+        pathIdx.delete(frame.node);
+        path.pop();
+        stack.pop();
+      }
     }
   }
 
-  // Any node not processed is part of a cycle
-  return Array.from(allNodes)
-    .filter(id => !processed.has(id))
-    .map(id => ({
-      code: 'CIRCULAR_ANCESTRY',
-      severity: 'error' as CheckSeverity,
-      message: `Person förekommer som sin egen förfader (cyklisk härstamning)`,
-      messageParams: {},
-      personIds: [id],
-    }));
+  return Array.from(cycleNodes).map(id => ({
+    code: 'CIRCULAR_ANCESTRY',
+    severity: 'error' as CheckSeverity,
+    message: `Person förekommer som sin egen förfader (cyklisk härstamning)`,
+    messageParams: {},
+    personIds: [id],
+  }));
 }
 
 function checkDuplicateRelationship(db: Database): CheckResult[] {
