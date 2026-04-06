@@ -87,6 +87,8 @@ const api = {
     holgerSelectFile: () => ipcRenderer.invoke('import:holgerSelectFile'),
     holgerSelectMedia: () => ipcRenderer.invoke('import:holgerSelectMedia'),
     holgerRun: (opts: unknown) => ipcRenderer.invoke('import:holgerRun', opts),
+    holgerEdbSelectDir: () => ipcRenderer.invoke('import:holgerEdbSelectDir'),
+    holgerEdbRun: (opts: unknown) => ipcRenderer.invoke('import:holgerEdbRun', opts),
     onHolgerProgress: (cb: (msg: string) => void) =>
       ipcRenderer.on('import:holgerProgress', (_e, data: { message: string }) => cb(data.message)),
   },

@@ -29,6 +29,18 @@
         <p v-if="holgerProgress" class="section-progress">{{ holgerProgress }}</p>
       </div>
 
+      <!-- Holger / OurKind ElevateDB direct import -->
+      <div class="section">
+        <h3>{{ $t('importExport.holgerEdbTitle') }}</h3>
+        <p class="section-desc">{{ $t('importExport.holgerEdbDesc') }}</p>
+        <div class="section-buttons">
+          <button @click="holgerEdbPickDir" :disabled="busy">{{ $t('importExport.holgerEdbPickDir') }}</button>
+          <button @click="handleImportFromHolgerEdb" :disabled="busy || !holgerEdbPath">{{ $t('importExport.holgerEdbImport') }}</button>
+        </div>
+        <p v-if="holgerEdbPath" class="section-instructions">{{ holgerEdbPath }}</p>
+        <p v-if="holgerEdbProgress" class="section-progress">{{ holgerEdbProgress }}</p>
+      </div>
+
       <!-- Import GEDCOM -->
       <div class="section">
         <h3>{{ $t('importExport.gedcomImportTitle') }}</h3>
@@ -76,6 +88,28 @@
             <li v-for="s in importReport.skipped" :key="s.tag">{{ s.tag }}: {{ s.count }}</li>
           </ul>
         </div>
+        <div v-if="importReport.rawCounts" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportRawCounts') }}</p>
+          <ul class="report-counts">
+            <li>{{ $t('importExport.importReportRawIndividuals', { raw: importReport.rawCounts.individuals, imported: importReport.persons }) }}</li>
+            <li>{{ $t('importExport.importReportRawFamilies', { raw: importReport.rawCounts.families, imported: importReport.families }) }}</li>
+            <li>{{ $t('importExport.importReportRawSources', { raw: importReport.rawCounts.sources, imported: importReport.sources }) }}</li>
+            <li v-if="importReport.rawCounts.repositories > 0">{{ $t('importExport.importReportRawRepositories', { n: importReport.rawCounts.repositories }) }}</li>
+            <li v-if="importReport.rawCounts.notes > 0">{{ $t('importExport.importReportRawNotes', { n: importReport.rawCounts.notes }) }}</li>
+          </ul>
+        </div>
+        <div v-if="importReport.unmappedData && importReport.unmappedData.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportNotImported') }}</p>
+          <ul>
+            <li v-for="item in importReport.unmappedData" :key="item.category">{{ item.category }}: {{ item.count }}</li>
+          </ul>
+        </div>
+        <div v-if="importReport.modelLimitations && importReport.modelLimitations.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportModelLimitations') }}</p>
+          <ul>
+            <li v-for="(lim, i) in importReport.modelLimitations" :key="i">{{ lim }}</li>
+          </ul>
+        </div>
         <div class="modal-actions">
           <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
         </div>
@@ -100,6 +134,8 @@ const genneyProgress = ref('');
 const holgerSourcePath = ref('');
 const holgerMediaDir = ref('');
 const holgerProgress = ref('');
+const holgerEdbPath = ref('');
+const holgerEdbProgress = ref('');
 const showImportReport = ref(false);
 const importReport = ref<{
   version?: string;
@@ -107,6 +143,13 @@ const importReport = ref<{
   sources: number; places: number; citations: number;
   skipped: { tag: string; count: number }[];
   warnings: string[];
+  rawCounts?: {
+    individuals: number; families: number; sources: number;
+    repositories: number; notes: number; objects: number; submitters: number;
+  };
+  tagStats?: { tag: string; occurrences: number }[];
+  unmappedData?: { category: string; count: number; example?: string }[];
+  modelLimitations?: string[];
 } | null>(null);
 
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
@@ -224,6 +267,39 @@ async function handleImportFromHolger() {
   } finally {
     busy.value = false;
     holgerProgress.value = '';
+  }
+}
+
+async function holgerEdbPickDir() {
+  const r = await window.api.import.holgerEdbSelectDir() as { canceled: boolean; path?: string };
+  if (!r.canceled && r.path) holgerEdbPath.value = r.path;
+}
+
+async function handleImportFromHolgerEdb() {
+  if (!holgerEdbPath.value) return;
+  busy.value = true;
+  holgerEdbProgress.value = t('importExport.holgerEdbRunning');
+  window.api.import.onHolgerProgress((msg: string) => { holgerEdbProgress.value = msg; });
+  try {
+    const result = await window.api.import.holgerEdbRun({
+      edbPath: holgerEdbPath.value,
+    }) as {
+      success: boolean;
+      summary?: { persons: number; events: number };
+      error?: string;
+    };
+    if (result.success && result.summary) {
+      const s = result.summary;
+      setStatus(t('importExport.holgerEdbSuccess', { persons: s.persons, events: s.events }));
+      window.dispatchEvent(new CustomEvent('data-imported'));
+    } else {
+      setStatus(t('importExport.holgerEdbError', { error: result.error ?? 'Unknown error' }), 'error');
+    }
+  } catch (err) {
+    setStatus(t('importExport.holgerEdbError', { error: err instanceof Error ? err.message : String(err) }), 'error');
+  } finally {
+    busy.value = false;
+    holgerEdbProgress.value = '';
   }
 }
 

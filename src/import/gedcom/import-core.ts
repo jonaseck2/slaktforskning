@@ -48,8 +48,36 @@ export interface ImportReport {
   sources: number;
   places: number;
   citations: number;
-  skipped: { tag: string; count: number }[];  // unrecognised level-1 INDI/FAM tags
+  skipped: { tag: string; count: number }[];  // unrecognised level-1 INDI/FAM tags (alias for tagStats)
   warnings: string[];                          // e.g. "12 OBJE records skipped"
+}
+
+export interface UnmappedItem {
+  category: string;   // e.g. "REPO records", "LDS ordinances", "SUBM records"
+  count: number;
+  example?: string;   // first occurrence for debugging
+}
+
+export interface ValidationReport extends ImportReport {
+  // Raw file counts (before import — derived from the node tree)
+  rawCounts: {
+    individuals: number;
+    families: number;
+    sources: number;
+    repositories: number;   // REPO level-0 records
+    notes: number;          // level-0 NOTE/SNOTE records
+    objects: number;        // OBJE level-0 records
+    submitters: number;     // SUBM records (always dropped)
+  };
+  // Tags seen in the file that we didn't handle (replaces 'skipped')
+  tagStats: {
+    tag: string;
+    occurrences: number;
+  }[];
+  // Structured list of data categories that couldn't be stored
+  unmappedData: UnmappedItem[];
+  // Known model limitations hit during this import
+  modelLimitations: string[];
 }
 
 const PERSON_EVENT_TAGS: Record<string, string> = {
@@ -310,7 +338,7 @@ function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
-): { skipped: { tag: string; count: number }[]; warnings: string[] } {
+): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number } {
   const isGenney = options?.profile === 'genney';
   const isHolger = options?.profile === 'holger';
   const resolvePlaceFn = isGenney ? genneyResolvePlaceFn : findOrCreatePlace;
@@ -322,6 +350,9 @@ function doImportGedcom(
 
   // Report accumulators
   const skippedTags = new Map<string, number>();
+  let ldsCount = 0;   // BAPL/SLGC/CONL/ENDL/SLGS sub-nodes on INDI records
+  let tranCount = 0;  // TRAN nodes (GEDCOM 7.0 multi-language translations)
+  let noCount = 0;    // NO negative assertion records (GEDCOM 7.0)
 
   // ── Phase 0: NOTE records ─────────────────────────────────────────────────
   const noteMap = new Map<string, string>();
@@ -521,6 +552,20 @@ function doImportGedcom(
       if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'person', entity_id: person.id });
     }
 
+    // Count LDS ordinance tags on INDI records (not imported — not relevant for Swedish genealogy)
+    const LDS_TAGS = new Set(['BAPL', 'SLGC', 'CONL', 'ENDL', 'SLGS']);
+    for (const child of node.children) {
+      if (LDS_TAGS.has(child.tag)) ldsCount++;
+    }
+
+    // Count TRAN nodes (GEDCOM 7.0 multi-language translations)
+    for (const child of node.children) {
+      if (child.tag === 'TRAN') tranCount++;
+      for (const grandchild of child.children) {
+        if (grandchild.tag === 'TRAN') tranCount++;
+      }
+    }
+
     // Count unrecognised top-level INDI tags
     for (const child of node.children) {
       if (!KNOWN_INDI_TAGS.has(child.tag)) {
@@ -702,12 +747,17 @@ function doImportGedcom(
     }
   }
 
+  // Count NO records (GEDCOM 7.0 negative assertions — not imported)
+  for (const node of tree) {
+    if (node.tag === 'NO') noCount++;
+  }
+
   // Build and return partial report
   const skipped = Array.from(skippedTags.entries())
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
   const warnings: string[] = [];
-  return { skipped, warnings };
+  return { skipped, warnings, ldsCount, tranCount, noCount };
 }
 
 /**
@@ -784,9 +834,32 @@ function queryAll<T>(db: Database, sql: string): T[] {
  * of WAL flushes (measured at ~1.6 GB for a 70k-line file). One commit at the
  * end reduces disk writes by ~3 orders of magnitude.
  * On error the transaction is rolled back so no partial data is written.
- * Returns an ImportReport with counts of what was imported.
+ * Returns a ValidationReport with counts of what was imported and what was skipped.
  */
-export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): ImportReport {
+export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): ValidationReport {
+  // Compute rawCounts from original (pre-normalization) tree
+  const rawCounts = {
+    individuals: 0,
+    families: 0,
+    sources: 0,
+    repositories: 0,
+    notes: 0,
+    objects: 0,
+    submitters: 0,
+  };
+  for (const node of tree) {
+    switch (node.tag) {
+      case 'INDI': rawCounts.individuals++; break;
+      case 'FAM':  rawCounts.families++; break;
+      case 'SOUR': rawCounts.sources++; break;
+      case 'REPO': rawCounts.repositories++; break;
+      case 'NOTE':
+      case 'SNOTE': rawCounts.notes++; break;
+      case 'OBJE': rawCounts.objects++; break;
+      case 'SUBM': rawCounts.submitters++; break;
+    }
+  }
+
   // Snapshot row counts before import (each statement finalized immediately)
   const personsBefore   = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons').n;
   const familiesBefore  = queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'").n;
@@ -801,7 +874,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   runSql(db, 'BEGIN');
-  let partial: { skipped: { tag: string; count: number }[]; warnings: string[] };
+  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number };
   try {
     partial = doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
@@ -827,6 +900,32 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     if (delta > 0) events[r.event_type] = delta;
   }
 
+  // Build unmappedData
+  const unmappedData: UnmappedItem[] = [];
+  if (rawCounts.repositories > 0) {
+    unmappedData.push({ category: 'REPO records (no importer yet)', count: rawCounts.repositories });
+  }
+  if (rawCounts.submitters > 0) {
+    unmappedData.push({ category: 'SUBM records (no app concept)', count: rawCounts.submitters });
+  }
+  if (partial.ldsCount > 0) {
+    unmappedData.push({ category: 'LDS ordinances (not relevant for Swedish genealogy)', count: partial.ldsCount });
+  }
+
+  // Build modelLimitations
+  const modelLimitations: string[] = [
+    'ASSO associations beyond event participants are dropped',
+  ];
+  if (version === '7.0' && partial.tranCount > 0) {
+    modelLimitations.push('TRAN multi-language name translations stored as aka names only');
+  }
+  if (version === '7.0' && partial.noCount > 0) {
+    modelLimitations.push('NO negative assertions not imported (no app model)');
+  }
+
+  // tagStats mirrors skipped (same data, different field name)
+  const tagStats = partial.skipped.map(s => ({ tag: s.tag, occurrences: s.count }));
+
   return {
     version,
     persons:   personsAfter   - personsBefore,
@@ -837,5 +936,9 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     citations: citationsAfter - citationsBefore,
     skipped:   partial.skipped,
     warnings:  partial.warnings,
+    rawCounts,
+    tagStats,
+    unmappedData,
+    modelLimitations,
   };
 }

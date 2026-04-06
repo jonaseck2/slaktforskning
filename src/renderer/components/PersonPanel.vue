@@ -226,13 +226,12 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, reactive } from 'vue';
-import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
 import GroupPicker from './GroupPicker.vue';
-import { NAME_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
+import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
@@ -240,11 +239,8 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const { t } = useI18n();
-
 const props = defineProps<{ personId: string | null }>();
 const emit = defineEmits<{
-  select: [id: string];
   'relative-added': [];
 }>();
 
@@ -259,31 +255,23 @@ interface PersonData {
   deathLine: string | null;
 }
 interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; name_prefix?: string | null; name_suffix?: string | null; name_qualifier?: string | null; patronymic_base?: string | null; }
-interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; notes?: string | null; }
 interface GroupData { id: string; name: string; notes: string | null; }
 interface TaskData { id: string; task: string; status: string; notes: string | null; result: string | null; priority: number; }
 
 const person = ref<PersonData | null>(null);
 const primaryName = ref<NameData | null>(null);
 const names = ref<NameData[]>([]);
-const relationships = ref<RelRow[]>([]);
 const groups = ref<GroupData[]>([]);
 const researchTasks = ref<TaskData[]>([]);
 
 // Add relative modal state
 const showAddRelative = ref(false);
 const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
-const showRelationPicker = ref(false);
-
 // EventList ref for triggering add form
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 
 // Group picker state
 const showGroupPicker = ref(false);
-
-// Relationship edit state
-const editingRel = ref<RelRow | null>(null);
-const relEditForm = reactive({ subtype: '', notes: '' });
 
 // Research task form state
 const showTaskForm = ref(false);
@@ -299,7 +287,6 @@ async function onRelativeSaved() {
   showAddRelative.value = false;
   if (props.personId) {
     await loadPerson(props.personId);
-    await loadRelationships(props.personId);
   }
   emit('relative-added');
 }
@@ -416,24 +403,6 @@ async function reloadNames(id: string) {
   primaryName.value = sorted[0] ?? null;
 }
 
-// ── Relationship edit ─────────────────────────────────────────────────────────
-
-function openRelEdit(rel: RelRow) {
-  editingRel.value = rel;
-  relEditForm.subtype = rel.subtype ?? '';
-  relEditForm.notes = rel.notes ?? '';
-}
-
-async function saveRelEdit() {
-  if (!editingRel.value || !props.personId) return;
-  await window.api.relationships.update(editingRel.value.id, {
-    subtype: relEditForm.subtype || null,
-    notes: relEditForm.notes || null,
-  });
-  editingRel.value = null;
-  await loadRelationships(props.personId);
-}
-
 // ── Research tasks ────────────────────────────────────────────────────────────
 
 function openTaskForm(task: TaskData | null) {
@@ -480,20 +449,6 @@ async function loadResearchTasks(id: string) {
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
 const sexColor = computed(() => SEX_COLORS[person.value?.sex ?? 'U'] ?? '#ccc');
-
-const REL_TYPE_LABELS: Record<string, string> = {
-  couple: 'Partner', parent_child: 'Förälder/barn', sibling: 'Syskon',
-  godparent: 'Fadder', other: 'Annan',
-};
-function relLabel(rel: RelRow): string {
-  if (rel.subtype) {
-    const ns = rel.type === 'couple' ? 'coupleSubtypes' : 'parentChildSubtypes';
-    const key = `${ns}.${rel.subtype}`;
-    const label = t(key);
-    return label !== key ? label : rel.subtype;
-  }
-  return REL_TYPE_LABELS[rel.type] ?? rel.type;
-}
 
 // ── Date formatting ───────────────────────────────────────────────────────────
 
@@ -562,7 +517,6 @@ async function loadPerson(id: string) {
     deathLine,
   };
 
-  await loadRelationships(id);
   await loadGroups(id);
   await loadResearchTasks(id);
 }
@@ -583,33 +537,8 @@ async function onGroupAdded() {
   if (props.personId) await loadGroups(props.personId);
 }
 
-async function loadRelationships(id: string) {
-  const rels = (await window.api.relationships.getForPerson(id)) as Array<{
-    id: string; type: string; subtype: string | null; notes: string | null;
-    person1_id: string | null; person2_id: string | null;
-  }>;
-
-  const rows: RelRow[] = await Promise.all(rels.map(async rel => {
-    const otherId = rel.person1_id === id ? rel.person2_id : rel.person1_id;
-    let otherName = t('common.unknown');
-    if (otherId) {
-      const otherNames = (await window.api.persons.getNames(otherId)) as NameData[];
-      const first = [...otherNames].sort((a, b) => a.sort_order - b.sort_order)[0];
-      if (first) {
-        const gn = first.preferred_name ?? first.given_name ?? '';
-        const sn = first.surname ?? '';
-        otherName = [gn, sn].filter(Boolean).join(' ');
-      }
-    }
-    return { id: rel.id, type: rel.type, subtype: rel.subtype, notes: rel.notes, otherId, otherName };
-  }));
-
-  relationships.value = rows;
-}
-
 watch(() => props.personId, async (id) => {
   person.value = null;
-  relationships.value = [];
   names.value = [];
   groups.value = [];
   researchTasks.value = [];
@@ -811,44 +740,6 @@ watch(() => props.personId, async (id) => {
   color: #b91c1c;
 }
 .btn-delete:hover { background: #fecaca; }
-
-/* Relationships */
-.panel-rel-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 4px 14px;
-}
-.panel-rel-type-btn {
-  background: #f1f5f9;
-  border: none;
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 11px;
-  color: #475569;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.panel-rel-type-btn:hover { background: #e2e8f0; color: #1e293b; }
-.panel-rel-person {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 12px;
-  color: #2980b9;
-  cursor: pointer;
-  text-align: left;
-}
-.panel-rel-person:hover { text-decoration: underline; }
-
-/* Relation picker */
-.panel-relation-picker {
-  display: flex;
-  gap: 6px;
-  padding: 6px 14px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid #f0f0f0;
-}
 
 /* Groups */
 .panel-group-picker-wrap {
