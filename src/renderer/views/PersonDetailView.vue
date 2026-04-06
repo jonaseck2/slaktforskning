@@ -1009,43 +1009,6 @@ onMounted(async () => {
   font-size: 14px;
   font-family: inherit;
 }
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 4px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-}
-.empty-hint {
-  color: #999;
-  font-size: 13px;
-  padding: 12px 0;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.data-table th,
-.data-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-.data-table th {
-  background: #f8f8f8;
-  font-weight: 600;
-  font-size: 12px;
-  color: #666;
-}
-.clickable-row {
-  cursor: pointer;
-}
-.clickable-row:hover {
-  background: #f0f4ff;
-}
 .type-badge {
   background: #f0fdf4;
   color: #166534;
@@ -1053,20 +1016,9 @@ onMounted(async () => {
   border-radius: 10px;
   font-size: 12px;
 }
-.btn-sm {
-  padding: 2px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
 .btn-edit {
   background: #eff6ff;
   color: #1d4ed8;
-}
-.btn-delete {
-  background: #fee;
-  color: #c0392b;
 }
 .actions-cell {
   display: flex;
@@ -1080,72 +1032,6 @@ textarea {
   font-family: inherit;
   font-size: 14px;
   resize: vertical;
-}
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 400px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-.modal h3 {
-  margin: 0 0 16px;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-form > label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-}
-form input[type='text'],
-form select {
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-.modal-actions button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-}
-.modal-actions button[type='submit'] {
-  background: #2c3e50;
-  color: white;
-}
-.btn-cancel {
-  background: #e0e0e0;
-  color: #333;
 }
 .rel-actions {
   display: flex;
