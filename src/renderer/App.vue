@@ -280,7 +280,7 @@ body {
 }
 
 .sidebar-title {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
@@ -295,7 +295,7 @@ body {
   border: none;
   background: rgba(255, 255, 255, 0.12);
   color: white;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
@@ -324,7 +324,7 @@ body {
   text-transform: uppercase;
 }
 .focus-name {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   white-space: nowrap;
@@ -361,8 +361,8 @@ body {
   color: white;
 }
 
-.nav-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
-.nav-label { font-size: 13px; flex: 1; }
+.nav-icon { font-size: var(--font-base); line-height: 1; flex-shrink: 0; }
+.nav-label { font-size: var(--font-sm); flex: 1; }
 
 .sidebar-spacer {
   flex: 1;
@@ -372,7 +372,7 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding-top: 10px !important;
   margin-top: 4px;
-  font-size: 12px;
+  font-size: var(--font-xs) !important;
   color: rgba(255, 255, 255, 0.45) !important;
   flex-direction: row;
   gap: 6px;
@@ -427,7 +427,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--font-sm);
   text-align: left;
 }
 .settings-toggle:hover {
@@ -462,7 +462,7 @@ body {
   padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: inherit;
   text-align: center;
 }

@@ -239,11 +239,11 @@ h2 {
 
 .section h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-md);
 }
 
 .section-desc {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #666;
   margin: 0;
 }
@@ -279,7 +279,8 @@ button {
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--font-sm);
+  font-family: inherit;
 }
 
 button:hover:not(:disabled) {
@@ -293,7 +294,7 @@ button:disabled {
 
 .status {
   margin-top: 20px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 8px 12px;
   border-radius: 4px;
   max-width: 560px;
@@ -344,7 +345,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 .report-section {
@@ -354,7 +355,7 @@ button:disabled {
 
 .report-section-label {
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #555;
 }
@@ -362,7 +363,7 @@ button:disabled {
 .report-section ul {
   margin: 0;
   padding-left: 16px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #444;
 }
 
@@ -370,7 +371,7 @@ button:disabled {
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #666;
   display: flex;
   flex-wrap: wrap;

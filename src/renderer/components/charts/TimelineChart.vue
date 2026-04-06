@@ -175,7 +175,7 @@ onMounted(load);
   border: none;
   padding: 2px 7px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-base);
   border-radius: 3px;
   color: #555;
   line-height: 1.4;
@@ -183,7 +183,7 @@ onMounted(load);
 .zoom-btn:hover { background: #f0f0f0; }
 .zoom-level {
   padding: 0 4px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: #666;
   min-width: 38px;
   text-align: center;

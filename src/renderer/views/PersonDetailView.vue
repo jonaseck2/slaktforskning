@@ -906,7 +906,7 @@ onMounted(async () => {
   color: #2c3e50;
   cursor: pointer;
   padding: 4px 0;
-  font-size: 14px;
+  font-size: var(--font-base);
   margin-bottom: 8px;
 }
 .btn-back:hover {
@@ -970,7 +970,7 @@ onMounted(async () => {
   font-size: 12px;
 }
 .evidence-summary {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #6b7280;
   margin-top: 4px;
 }
@@ -987,7 +987,7 @@ onMounted(async () => {
 }
 .section-header h4 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-md);
 }
 .field-grid {
   display: grid;
@@ -998,7 +998,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #555;
 }
@@ -1006,7 +1006,7 @@ onMounted(async () => {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-family: inherit;
 }
 .type-badge {
@@ -1030,7 +1030,7 @@ textarea {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--font-base);
   resize: vertical;
 }
 .rel-actions {
@@ -1088,7 +1088,7 @@ textarea {
   padding: 6px 8px;
   border-radius: 6px;
   background: #f9fafb;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .task-text { flex: 1; }
 .task-result { color: #6b7280; font-style: italic; font-size: 12px; }
