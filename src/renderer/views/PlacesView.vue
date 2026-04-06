@@ -5,24 +5,31 @@
       <button class="btn-add" @click="showAddForm = true">{{ $t('places.addTitle') }}</button>
     </div>
     <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
+    <div v-if="places.length > 0" class="filter-chips">
+      <button
+        v-for="f in typeFilters"
+        :key="f.value"
+        :class="['chip', { active: activeTypeFilter === f.value }]"
+        @click="activeTypeFilter = f.value"
+      >{{ f.label }}</button>
+    </div>
     <div v-if="places.length === 0" class="empty">{{ $t('places.none') }}</div>
+    <div v-else-if="filteredPlaces.length === 0" class="empty">{{ $t('places.noMatchingFilter') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>
           <th>{{ $t('places.name') }}</th>
-          <th>{{ $t('places.type') }}</th>
           <th>{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="place in places"
+          v-for="place in filteredPlaces"
           :key="place.id"
           class="clickable-row"
           @click="$router.push('/places/' + place.id)"
         >
           <td>{{ place.name }}</td>
-          <td>{{ place.place_type ? $t('placeTypes.' + place.place_type) : '—' }}</td>
           <td class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="deletePlace(place.id)">
               {{ $t('common.delete') }}
@@ -61,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onActivated, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
@@ -75,9 +82,35 @@ declare const window: Window & {
 
 interface PlaceRow { id: string; name: string; place_type: string | null; }
 
-useI18n();
+const { t } = useI18n();
 const router = useRouter();
 const places = ref<PlaceRow[]>([]);
+const activeTypeFilter = ref<string>('all');
+
+const typeCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const place of places.value) {
+    const key = place.place_type ?? 'other';
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+});
+
+const typeFilters = computed(() => [
+  { value: 'all', label: `${t('common.all')} (${places.value.length})` },
+  ...PLACE_TYPE_VALUES
+    .filter(type => (typeCounts.value[type] ?? 0) > 0)
+    .map(type => ({
+      value: type,
+      label: `${t('placeTypes.' + type)} (${typeCounts.value[type] ?? 0})`,
+    })),
+]);
+
+const filteredPlaces = computed(() =>
+  activeTypeFilter.value === 'all'
+    ? places.value
+    : places.value.filter(p => (p.place_type ?? 'other') === activeTypeFilter.value)
+);
 const showAddForm = ref(false);
 
 function handleKeydown(e: KeyboardEvent) {

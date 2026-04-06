@@ -316,6 +316,7 @@ export default {
     title: 'Orter',
     addTitle: 'Lägg till ort',
     none: 'Inga orter',
+    noMatchingFilter: 'Inga platser matchar detta filter.',
     name: 'Namn',
     type: 'Typ',
     parentPlace: 'Överordnad ort',

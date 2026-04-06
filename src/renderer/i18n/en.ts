@@ -316,6 +316,7 @@ export default {
     title: 'Places',
     addTitle: 'Add place',
     none: 'No places',
+    noMatchingFilter: 'No places match this filter.',
     name: 'Name',
     type: 'Type',
     parentPlace: 'Parent place',
