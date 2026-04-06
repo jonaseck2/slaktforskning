@@ -4,7 +4,7 @@
       <h2>{{ $t('places.title') }}</h2>
       <button class="btn-add" @click="showAddForm = true">{{ $t('places.addTitle') }}</button>
     </div>
-    <p v-if="places.length > 0" class="count-label">{{ places.length }} platser</p>
+    <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
     <div v-if="places.length === 0" class="empty">{{ $t('places.none') }}</div>
     <table v-else class="data-table">
       <thead>
