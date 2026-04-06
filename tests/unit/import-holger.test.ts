@@ -90,3 +90,39 @@ describe('holger profile — MARR+ENGA', () => {
     expect(row.n).toBe(1);
   });
 });
+
+const HOLGER_FOSTER_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME AlfredFoster /Svensson/
+1 SEX M
+0 @I2@ INDI
+1 NAME BertaFoster /Nilsson/
+1 SEX F
+0 @I3@ INDI
+1 NAME KidFoster /Svensson/
+1 SEX M
+1 ADOP
+2 TYPE Fosterbarn
+2 FAMC @F1@
+3 ADOP BOTH
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+1 CHIL @I3@
+0 TRLR
+`.trim();
+
+describe('holger profile — ADOP parent-child subtype', () => {
+  it('maps ADOP TYPE Fosterbarn → foster on parent_child relationships', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_FOSTER_GED), { profile: 'holger' });
+    const rows = db.all('SELECT subtype FROM relationships WHERE type=?', ['parent_child']) as { subtype: string }[];
+    expect(rows.length).toBe(2); // one per parent
+    expect(rows.every(r => r.subtype === 'foster')).toBe(true);
+  });
+});
