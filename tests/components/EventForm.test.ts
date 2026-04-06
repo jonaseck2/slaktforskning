@@ -23,9 +23,10 @@ describe('EventForm optional source section', () => {
         update: vi.fn().mockResolvedValue({}),
       },
       eventParticipants: { add: vi.fn().mockResolvedValue({}) },
-      citations: { create: vi.fn().mockResolvedValue({ id: 'new-cit' }) },
+      citations: { create: vi.fn().mockResolvedValue({ id: 'new-cit' }), forEvent: vi.fn().mockResolvedValue([]) },
       sources: {
         list: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Church Records' }]),
+        get: vi.fn().mockResolvedValue({ title: 'Church Records' }),
       },
     };
   });
@@ -56,9 +57,10 @@ describe('EventForm optional source section', () => {
     (window as unknown as { api: unknown }).api = {
       events: { create: mockEventsCreate },
       eventParticipants: { add: vi.fn().mockResolvedValue({}) },
-      citations: { create: mockCitationsCreate },
+      citations: { create: mockCitationsCreate, forEvent: vi.fn().mockResolvedValue([]) },
       sources: {
         list: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Church Records' }]),
+        get: vi.fn().mockResolvedValue({ title: 'Church Records' }),
       },
     };
 
