@@ -89,6 +89,15 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
+### UX Design System [polish]
+See `.claude/plans/2026-04-05-ux-design-system.md` for the full plan.
+- [ ] PersonsView — blue person links, canonical table styles
+- [ ] RelationshipsView — persons first, blue name links
+- [ ] PlacesView — full-width, canonical styles
+- [ ] SourcesView — canonical styles
+- [ ] ResearchTasksView — button, chips, full-width
+- [ ] ReportsView — zoom bottom-right, loading hint
+
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
 - [ ] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
