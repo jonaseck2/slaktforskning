@@ -42,6 +42,7 @@ export interface CollapseButton {
   cx: number;
   cy: number;
   isExpanded: boolean;
+  isLoadMore?: boolean; // true → click fetches new data; false/absent → toggles visibility
 }
 
 export interface ChartLayout {
@@ -56,16 +57,19 @@ export interface ChartLayout {
  * Ahnentafel-indexed ancestor tree.
  * Key 1 = focal, 2 = father, 3 = mother, 4 = pat.grandfather, …
  * `generations` includes focal (e.g. 5 = focal + 4 ancestor levels).
+ * `hasMoreAncestors`: ahnentafel keys where parents exist in DB but are not loaded.
  */
 export interface PedigreeTree {
   nodes: Map<number, PersonNode>;
   generations: number;
+  hasMoreAncestors?: Set<number>;
 }
 
 /** Recursive descendant tree node. */
 export interface DescendantNode {
   person: PersonNode;
   children: DescendantNode[];
+  hasMoreChildren?: boolean; // children exist in DB but not loaded (meaningful at max depth)
 }
 
 /**
@@ -79,6 +83,15 @@ export interface HourglassTree {
   descendantRoot: DescendantNode;
   descendantGenerations: number;
   spouses: PersonNode[];
+}
+
+/**
+ * Returns the actual maximum depth of a descendant tree (0 = focal only).
+ * Used after loadChildrenForNode to update HourglassTree.descendantGenerations.
+ */
+export function maxDescendantDepth(node: DescendantNode, depth = 0): number {
+  if (node.children.length === 0) return depth;
+  return Math.max(...node.children.map(c => maxDescendantDepth(c, depth + 1)));
 }
 
 export interface BarLayout {
