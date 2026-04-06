@@ -345,10 +345,6 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to RelationshipsView */
-.filter-chips { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-.chip { padding: 4px 12px; border-radius: 12px; border: 1px solid #c8d0db; background: #f0f4f8; color: #4a5568; cursor: pointer; font-size: 13px; }
-.chip:hover { background: #e2e8f0; }
-.chip.active { background: #2c3e50; color: white; border-color: #2c3e50; }
 .type-badge {
   background: #fef3c7;
   color: #92400e;
