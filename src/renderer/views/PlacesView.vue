@@ -154,5 +154,4 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to PlacesView */
-.actions-cell { white-space: nowrap; }
 </style>
