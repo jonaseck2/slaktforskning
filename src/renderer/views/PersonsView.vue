@@ -3,7 +3,7 @@
     <div class="header">
       <h2>{{ $t('persons.title') }}</h2>
       <div class="header-actions">
-        <button @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
+        <button class="btn-add" @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
       </div>
     </div>
 
@@ -36,7 +36,9 @@
             @click="goToDetail(person)"
           >
             <td>
-              <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
+              <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
+                <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
+              </router-link>
             </td>
             <td>{{ person.surname }}</td>
             <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
@@ -252,7 +254,7 @@ onActivated(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 .header-actions {
   display: flex;
@@ -282,12 +284,23 @@ onActivated(async () => {
 .data-table th {
   background: #eee;
   font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
 }
 .clickable-row {
   cursor: pointer;
 }
 .clickable-row:hover {
   background: #f0f4ff;
+}
+.person-link {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: none;
+}
+.person-link:hover {
+  text-decoration: underline;
 }
 .sex-badge {
   display: inline-block;
@@ -310,8 +323,25 @@ button {
 }
 button:hover { opacity: 0.9; }
 button:disabled { opacity: 0.5; cursor: default; }
-.btn-sm { padding: 4px 8px; font-size: 12px; }
-.btn-delete { background: #fee; color: #c0392b; }
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-delete { background: #fee2e2; color: #b91c1c; }
+.btn-delete:hover { background: #fecaca; }
+.btn-add {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-add:hover { opacity: 0.9; }
 .modal-overlay {
   position: fixed;
   inset: 0;

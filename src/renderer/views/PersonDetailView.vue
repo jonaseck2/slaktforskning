@@ -280,6 +280,34 @@
       </div>
     </section>
 
+    <!-- Media Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('media.title') }}</h4>
+        <button class="btn-add" @click="attachMediaToPersonn">{{ $t('media.attach') }}</button>
+      </div>
+      <div v-if="personMedia.length === 0" class="empty-hint">{{ $t('media.noMedia') }}</div>
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>{{ $t('media.title_label') }}</th>
+            <th>{{ $t('media.format') }}</th>
+            <th>{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="m in personMedia" :key="m.link_id">
+            <td>{{ m.title || '—' }}</td>
+            <td>{{ m.format || '—' }}</td>
+            <td class="actions-cell">
+              <button v-if="m.file_ref" class="btn-sm" @click="openMediaFile(m.id)">{{ $t('media.open') }}</button>
+              <button class="btn-sm btn-delete" @click="unlinkMedia(m.link_id)">{{ $t('common.delete') }}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
     <AddRelatedPersonModal
       v-if="showAddRelated"
       :person-id="person.id"
@@ -539,6 +567,16 @@ const showAddTaskModal = ref(false);
 interface PersonGroup { id: string; name: string; }
 const personGroups = ref<PersonGroup[]>([]);
 const showGroupPicker = ref(false);
+
+interface PersonMediaItem {
+  id: string;
+  title: string;
+  file_ref: string | null;
+  format: string | null;
+  link_id: string;
+  link_type: number | null;
+}
+const personMedia = ref<PersonMediaItem[]>([]);
 const taskForm = reactive({ task: '', priority: 1, notes: '' });
 const STATUS_CYCLE: Array<'open' | 'in_progress' | 'done' | 'stopped'> = ['open', 'in_progress', 'done', 'stopped'];
 
@@ -554,6 +592,27 @@ async function loadPersonGroups() {
 async function removeFromGroup(groupId: string) {
   await window.api.groups.removeMember(groupId, personId);
   await loadPersonGroups();
+}
+
+async function loadPersonMedia() {
+  if (!window.api?.media) return;
+  personMedia.value = (await window.api.media.forEntity('person', personId)) as PersonMediaItem[];
+}
+
+async function attachMediaToPersonn() {
+  const result = await window.api.media.attach({ entityType: 'person', entityId: personId }) as { canceled: boolean };
+  if (!result.canceled) {
+    await loadPersonMedia();
+  }
+}
+
+async function openMediaFile(id: string) {
+  await window.api.media.openFile(id);
+}
+
+async function unlinkMedia(linkId: string) {
+  await window.api.media.removeLink(linkId);
+  await loadPersonMedia();
 }
 
 async function cycleTaskStatus(task: ResearchTask) {
@@ -663,6 +722,7 @@ async function load() {
     await loadIdentifiers();
     await loadPersonTasks();
     await loadPersonGroups();
+    await loadPersonMedia();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
   }

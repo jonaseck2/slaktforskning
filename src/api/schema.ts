@@ -195,6 +195,7 @@ export function initializeSchema(db: Database): void {
       format TEXT,
       notes TEXT NOT NULL DEFAULT '',
       is_printable INTEGER NOT NULL DEFAULT 0,
+      is_missing INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -293,6 +294,12 @@ export function initializeSchema(db: Database): void {
   }
   if (!sourcesCols.includes('abstract')) {
     db.exec('ALTER TABLE sources ADD COLUMN abstract TEXT');
+  }
+
+  // v0.8.0 media: is_missing flag for files that couldn't be found/extracted
+  const mediaCols = (db.prepare('PRAGMA table_info(media)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!mediaCols.includes('is_missing')) {
+    db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
   }
 
   // Indexes that depend on migrated columns — run after migrations
