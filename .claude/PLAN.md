@@ -110,7 +110,7 @@ See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 See `.claude/plans/2026-04-06-gedcom-full-support.md` for the full plan.
 Full standards-conformant import of GEDCOM 5.5.1, 5.5.5, and 7.0 with data-loss validation.
 - [x] Step 1: Refactor `src/gedcom/importer.ts` → `src/import/gedcom/` (pure refactor, no behavior change)
-- [ ] Step 2: Version detection + 5.5.5 acceptance (parse identically to 5.5.1)
+- [x] Step 2: Version detection + 5.5.5 acceptance (parse identically to 5.5.1)
 - [ ] Step 3: 7.0 normalization layer (SNOTE, EXID, TRAN, PHRASE, CONC, uppercase TYPE)
 - [ ] Step 4: Data loss validation report (replace `skipped` array with rich `ValidationReport`)
 - [ ] Step 5: Round-trip export improvements (place coords, identifiers, repos, citation transcription)

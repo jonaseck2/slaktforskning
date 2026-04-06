@@ -146,6 +146,7 @@ export default {
   },
   events: {
     title: 'Händelser',
+    event: 'Händelse',
     addEvent: '+ Lägg till händelse',
     noEvents: 'Inga händelser registrerade.',
     date: 'Datum',
@@ -166,6 +167,7 @@ export default {
     causePlaceholder: 't.ex. hjärtinfarkt',
   },
   citations: {
+    title: 'Hänvisningar',
     addTitle: 'Lägg till hänvisning',
     editTitle: 'Redigera hänvisning',
     source: 'Källa',
@@ -566,6 +568,7 @@ export default {
     importReportCitations: '{n} citeringar',
     importReportSkipped: 'Ej importerat:',
     importReportWarnings: 'Varningar:',
+    importReportVersionUnknown: 'GEDCOM (okänd version)',
     importReportClose: 'Stäng',
   },
   media: {

@@ -79,9 +79,8 @@
           <div
             v-for="name in names"
             :key="name.id"
-            class="panel-name-row"
-            :class="{ 'panel-name-row-clickable': name.sort_order !== 0 }"
-            @click="name.sort_order !== 0 && openNameForm(name)"
+            class="panel-name-row panel-name-row-clickable"
+            @click="openNameForm(name)"
           >
             <div class="panel-name-row-main">
               <PersonName
@@ -99,7 +98,6 @@
               @click.stop="deleteName(name.id!)"
             >✕</button>
           </div>
-
         </div>
       </div>
 
@@ -108,10 +106,10 @@
         <button class="panel-section-header" @click="toggleSection('events')">
           <span class="panel-chevron">{{ sections.events ? '▾' : '▸' }}</span>
           {{ $t('panel.events') }}
-          <span class="panel-section-header-action" @click.stop="eventListRef?.openAddForm()">+ {{ $t('events.addEvent') }}</span>
+          <span class="panel-section-header-action" @click.stop="eventListRef?.openAddForm()">+ {{ $t('events.event') }}</span>
         </button>
         <div v-if="sections.events" class="panel-section-body">
-          <EventList ref="eventListRef" :person-id="personId" />
+          <EventList ref="eventListRef" :person-id="personId" hide-header />
         </div>
       </div>
 
@@ -135,40 +133,12 @@
             :key="rel.id"
             class="panel-rel-row"
           >
-            <span class="panel-rel-type">{{ relLabel(rel) }}</span>
+            <button class="panel-rel-type-btn" @click="openRelEdit(rel)">{{ relLabel(rel) }}</button>
             <button
               v-if="rel.otherId"
               class="panel-rel-person"
               @click="$emit('select', rel.otherId)"
             >{{ rel.otherName }}</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Källor section -->
-      <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('sources')">
-          <span class="panel-chevron">{{ sections.sources ? '▾' : '▸' }}</span>
-          Källor
-          <span class="panel-section-header-action" @click.stop="showCitationForm = true">+ Källa</span>
-        </button>
-        <div v-if="sections.sources" class="panel-section-body">
-          <div v-if="citations.length === 0" class="panel-empty-section">—</div>
-          <div
-            v-for="cit in citations"
-            :key="cit.id"
-            class="panel-citation-row"
-          >
-            <div class="panel-citation-main">
-              <div class="panel-citation-source">{{ citationSources[cit.source_id]?.title ?? 'Okänd källa' }}</div>
-              <div v-if="cit.page || cit.notes" class="panel-citation-detail">
-                {{ cit.page ? cit.page : (cit.notes ?? '').slice(0, 40) }}
-              </div>
-            </div>
-            <span class="panel-citation-confidence" :class="'conf-' + cit.confidence">
-              {{ confidenceDots(cit.confidence) }}
-            </span>
-            <button class="btn-sm btn-delete" @click="deleteCitation(cit.id)">✕</button>
           </div>
         </div>
       </div>
@@ -200,6 +170,28 @@
           </div>
         </div>
       </div>
+
+      <!-- Forskning section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('research')">
+          <span class="panel-chevron">{{ sections.research ? '▾' : '▸' }}</span>
+          {{ $t('researchTasks.nav') }}
+          <span class="panel-section-header-action" @click.stop="openTaskForm(null)">+ {{ $t('researchTasks.nav') }}</span>
+        </button>
+        <div v-if="sections.research" class="panel-section-body">
+          <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
+          <div
+            v-for="task in researchTasks"
+            :key="task.id"
+            class="panel-task-row panel-task-row-clickable"
+            @click="openTaskForm(task)"
+          >
+            <span :class="['panel-task-status', 'task-' + task.status]">{{ $t('researchTasks.statuses.' + task.status) }}</span>
+            <span class="panel-task-text">{{ task.task }}</span>
+            <button class="btn-sm btn-delete" @click.stop="deleteTask(task.id)">✕</button>
+          </div>
+        </div>
+      </div>
     </template>
 
     <!-- Name form modal -->
@@ -227,6 +219,57 @@
       </div>
     </div>
 
+    <!-- Relationship edit modal -->
+    <div v-if="editingRel" class="modal-overlay" @click.self="editingRel = null">
+      <div class="modal">
+        <h3>{{ $t('common.edit') }} {{ relLabel(editingRel) }}</h3>
+        <form @submit.prevent="saveRelEdit">
+          <label>{{ $t('common.type') }}
+            <select v-model="relEditForm.subtype">
+              <option value="">—</option>
+              <template v-if="editingRel.type === 'couple'">
+                <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
+              </template>
+              <template v-else-if="editingRel.type === 'parent_child'">
+                <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('parentChildSubtypes.' + st) }}</option>
+              </template>
+            </select>
+          </label>
+          <label>{{ $t('common.notes') }}
+            <textarea v-model="relEditForm.notes" rows="2" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="editingRel = null">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Research task form modal -->
+    <div v-if="showTaskForm" class="modal-overlay" @click.self="showTaskForm = false">
+      <div class="modal">
+        <h3>{{ editingTask ? $t('common.edit') + ' ' + $t('researchTasks.nav') : '+ ' + $t('researchTasks.nav') }}</h3>
+        <form @submit.prevent="saveTask">
+          <label>{{ $t('researchTasks.task') }} *
+            <textarea v-model="taskFormData.task" rows="3" required autofocus />
+          </label>
+          <label>{{ $t('researchTasks.status') }}
+            <select v-model="taskFormData.status">
+              <option v-for="s in TASK_STATUS_VALUES" :key="s" :value="s">{{ $t('researchTasks.statuses.' + s) }}</option>
+            </select>
+          </label>
+          <label>{{ $t('researchTasks.notes') }}
+            <textarea v-model="taskFormData.notes" rows="2" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="showTaskForm = false">{{ $t('common.cancel') }}</button>
+            <button type="submit">{{ $t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Add relative modal -->
     <AddRelatedPersonModal
       v-if="showAddRelative && personId"
@@ -234,14 +277,6 @@
       :mode="addRelativeMode"
       @close="showAddRelative = false"
       @saved="onRelativeSaved"
-    />
-
-    <!-- Citation form modal -->
-    <CitationForm
-      v-if="showCitationForm && personId"
-      :person-id="personId"
-      @close="showCitationForm = false"
-      @saved="onCitationSaved"
     />
   </div>
 </template>
@@ -253,9 +288,10 @@ import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
-import CitationForm from './CitationForm.vue';
 import GroupPicker from './GroupPicker.vue';
-import { NAME_TYPE_VALUES } from '../constants/eventTypes';
+import { NAME_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
+
+const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -280,31 +316,36 @@ interface PersonData {
   deathLine: string | null;
 }
 interface NameData { id?: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number; name_type?: string; name_prefix?: string | null; name_suffix?: string | null; name_qualifier?: string | null; patronymic_base?: string | null; }
-interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; }
-interface CitationData { id: string; source_id: string; page: string | null; notes: string | null; confidence: number; }
+interface RelRow { id: string; type: string; subtype: string | null; otherId: string | null; otherName: string; notes?: string | null; }
 interface GroupData { id: string; name: string; notes: string | null; }
+interface TaskData { id: string; task: string; status: string; notes: string | null; result: string | null; priority: number; }
 
 const person = ref<PersonData | null>(null);
 const primaryName = ref<NameData | null>(null);
 const names = ref<NameData[]>([]);
 const relationships = ref<RelRow[]>([]);
-const citations = ref<CitationData[]>([]);
-const citationSources = ref<Record<string, { title: string }>>({});
 const groups = ref<GroupData[]>([]);
+const researchTasks = ref<TaskData[]>([]);
 
 // Add relative modal state
 const showAddRelative = ref(false);
 const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
 const showRelationPicker = ref(false);
 
-// Citation form state
-const showCitationForm = ref(false);
-
 // EventList ref for triggering add form
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 
 // Group picker state
 const showGroupPicker = ref(false);
+
+// Relationship edit state
+const editingRel = ref<RelRow | null>(null);
+const relEditForm = reactive({ subtype: '', notes: '' });
+
+// Research task form state
+const showTaskForm = ref(false);
+const editingTask = ref<TaskData | null>(null);
+const taskFormData = reactive({ task: '', status: 'open' as string, notes: '' });
 
 function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
   addRelativeMode.value = mode;
@@ -330,8 +371,8 @@ const sections = reactive({
   names: loadSection('names', false),
   events: loadSection('events', true),
   relationships: loadSection('relationships', false),
-  sources: loadSection('sources', false),
   groups: loadSection('groups', false),
+  research: loadSection('research', false),
 });
 
 function toggleSection(key: keyof typeof sections) {
@@ -433,6 +474,66 @@ async function reloadNames(id: string) {
   primaryName.value = sorted[0] ?? null;
 }
 
+// ── Relationship edit ─────────────────────────────────────────────────────────
+
+function openRelEdit(rel: RelRow) {
+  editingRel.value = rel;
+  relEditForm.subtype = rel.subtype ?? '';
+  relEditForm.notes = rel.notes ?? '';
+}
+
+async function saveRelEdit() {
+  if (!editingRel.value || !props.personId) return;
+  await window.api.relationships.update(editingRel.value.id, {
+    subtype: relEditForm.subtype || null,
+    notes: relEditForm.notes || null,
+  });
+  editingRel.value = null;
+  await loadRelationships(props.personId);
+}
+
+// ── Research tasks ────────────────────────────────────────────────────────────
+
+function openTaskForm(task: TaskData | null) {
+  editingTask.value = task;
+  taskFormData.task = task?.task ?? '';
+  taskFormData.status = task?.status ?? 'open';
+  taskFormData.notes = task?.notes ?? '';
+  showTaskForm.value = true;
+}
+
+async function saveTask() {
+  if (!props.personId) return;
+  if (editingTask.value) {
+    await window.api.researchTasks.update(editingTask.value.id, {
+      task: taskFormData.task,
+      status: taskFormData.status,
+      notes: taskFormData.notes || null,
+    });
+  } else {
+    await window.api.researchTasks.create({
+      task: taskFormData.task,
+      status: taskFormData.status,
+      notes: taskFormData.notes || null,
+      person_id: props.personId,
+    });
+  }
+  showTaskForm.value = false;
+  editingTask.value = null;
+  await loadResearchTasks(props.personId);
+}
+
+async function deleteTask(id: string) {
+  if (!props.personId) return;
+  await window.api.researchTasks.delete(id);
+  await loadResearchTasks(props.personId);
+}
+
+async function loadResearchTasks(id: string) {
+  const raw = (await window.api.researchTasks.forPerson(id)) as TaskData[];
+  researchTasks.value = raw;
+}
+
 // ── Derived ──────────────────────────────────────────────────────────────────
 
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
@@ -520,27 +621,8 @@ async function loadPerson(id: string) {
   };
 
   await loadRelationships(id);
-  await loadCitations(id);
   await loadGroups(id);
-}
-
-async function loadCitations(id: string) {
-  const raw = (await window.api.citations.forPerson(id)) as CitationData[];
-  citations.value = raw;
-
-  const uniqueSourceIds = [...new Set(raw.map(c => c.source_id))];
-  const sourceEntries = await Promise.all(
-    uniqueSourceIds.map(async (sid) => {
-      const src = (await window.api.sources.get(sid)) as { title: string } | null;
-      return [sid, src ?? { title: 'Okänd källa' }] as [string, { title: string }];
-    })
-  );
-  citationSources.value = Object.fromEntries(sourceEntries);
-}
-
-async function deleteCitation(id: string) {
-  await window.api.citations.delete(id);
-  if (props.personId) await loadCitations(props.personId);
+  await loadResearchTasks(id);
 }
 
 async function loadGroups(id: string) {
@@ -559,20 +641,9 @@ async function onGroupAdded() {
   if (props.personId) await loadGroups(props.personId);
 }
 
-async function onCitationSaved() {
-  showCitationForm.value = false;
-  if (props.personId) await loadCitations(props.personId);
-}
-
-function confidenceDots(level: number): string {
-  const filled = '●';
-  const empty = '○';
-  return filled.repeat(Math.min(level, 3)) + empty.repeat(Math.max(0, 3 - level));
-}
-
 async function loadRelationships(id: string) {
   const rels = (await window.api.relationships.getForPerson(id)) as Array<{
-    id: string; type: string; subtype: string | null;
+    id: string; type: string; subtype: string | null; notes: string | null;
     person1_id: string | null; person2_id: string | null;
   }>;
 
@@ -588,7 +659,7 @@ async function loadRelationships(id: string) {
         otherName = [gn, sn].filter(Boolean).join(' ');
       }
     }
-    return { id: rel.id, type: rel.type, subtype: rel.subtype, otherId, otherName };
+    return { id: rel.id, type: rel.type, subtype: rel.subtype, notes: rel.notes, otherId, otherName };
   }));
 
   relationships.value = rows;
@@ -598,9 +669,8 @@ watch(() => props.personId, async (id) => {
   person.value = null;
   relationships.value = [];
   names.value = [];
-  citations.value = [];
-  citationSources.value = {};
   groups.value = [];
+  researchTasks.value = [];
   if (id) await loadPerson(id);
 }, { immediate: true });
 </script>
@@ -704,6 +774,8 @@ watch(() => props.personId, async (id) => {
   padding: 2px 8px;
   font-size: 11px;
   font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
 }
 .panel-section-header-action:hover { opacity: 0.85; }
 .panel-section-body { padding: 4px 0 8px; }
@@ -805,7 +877,17 @@ watch(() => props.personId, async (id) => {
   gap: 6px;
   padding: 4px 14px;
 }
-.panel-rel-type { font-size: 11px; color: #aaa; white-space: nowrap; }
+.panel-rel-type-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  color: #888;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: underline dotted;
+}
+.panel-rel-type-btn:hover { color: #333; }
 .panel-rel-person {
   background: none;
   border: none;
@@ -826,40 +908,6 @@ watch(() => props.personId, async (id) => {
   border-bottom: 1px solid #f0f0f0;
 }
 
-/* Citations */
-.panel-citation-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 14px;
-}
-.panel-citation-main {
-  flex: 1;
-  min-width: 0;
-}
-.panel-citation-source {
-  font-size: 12px;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.panel-citation-detail {
-  font-size: 11px;
-  color: #888;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.panel-citation-confidence {
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.conf-0 { color: #aaa; }
-.conf-1 { color: #ca8a04; }
-.conf-2 { color: #ea580c; }
-.conf-3 { color: #16a34a; }
-
 /* Groups */
 .panel-group-picker-wrap {
   padding: 6px 14px;
@@ -877,4 +925,35 @@ watch(() => props.personId, async (id) => {
   text-decoration: none;
 }
 .panel-group-link:hover { text-decoration: underline; }
+
+/* Research tasks */
+.panel-task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+}
+.panel-task-row-clickable { cursor: pointer; }
+.panel-task-row-clickable:hover { background: #f5f7fa; }
+.panel-task-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.task-open { background: #f1f5f9; color: #64748b; }
+.task-in_progress { background: #dbeafe; color: #1d4ed8; }
+.task-done { background: #dcfce7; color: #15803d; }
+.task-stopped { background: #fee2e2; color: #b91c1c; }
+.panel-task-text {
+  font-size: 12px;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

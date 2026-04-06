@@ -2,3 +2,5 @@
 // Same signature as src/gedcom/importer.ts — drop-in replacement.
 export { importGedcom } from './import-core';
 export type { ImportOptions, ImportReport } from './import-core';
+export { detectGedcomVersion } from './detect';
+export type { GedcomVersion } from './detect';
