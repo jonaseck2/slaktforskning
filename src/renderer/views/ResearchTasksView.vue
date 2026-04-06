@@ -351,8 +351,6 @@ onMounted(load);
 .person-edit-row { display: flex; align-items: center; gap: 8px; }
 .person-edit-row > :first-child { flex: 1; }
 .person-link-btn { white-space: nowrap; font-size: 13px; }
-.actions-cell { text-align: right; white-space: nowrap; }
-
 .expanded-row td { background: #f8fafc; padding: 0; }
 .expanded-content {
   padding: 16px;

@@ -1019,6 +1019,7 @@ onMounted(async () => {
 .actions-cell {
   display: flex;
   gap: 4px;
+  justify-content: flex-end;
 }
 textarea {
   width: 100%;
