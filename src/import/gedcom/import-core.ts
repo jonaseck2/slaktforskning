@@ -106,6 +106,7 @@ function getChildren(node: GedcomNode, tag: string): GedcomNode[] {
  * Update a place record with data from PLAC sub-tags (MAP/ADDR/custom tags).
  * Only writes fields that are actually present in the sub-tags; missing sub-tags
  * preserve the existing values via updatePlace's merge logic.
+ * Address fields are guarded to prevent overwriting existing place data.
  */
 function updatePlaceFromNode(db: Database, placeId: string, placNode: GedcomNode): void {
   const mapNode = getChild(placNode, 'MAP');
@@ -139,13 +140,16 @@ function updatePlaceFromNode(db: Database, placeId: string, placNode: GedcomNode
   if (lat == null && lon == null && !street && !postal_code && !city && !country &&
       !place_type && !notes && !date_from && !date_to) return;
 
+  // Get the current place to avoid overwriting existing address fields
+  const place = getPlace(db, placeId);
+
   updatePlace(db, placeId, {
     ...(lat != null && { latitude: lat }),
     ...(lon != null && { longitude: lon }),
-    ...(street && { street }),
-    ...(postal_code && { postal_code }),
-    ...(city && { city }),
-    ...(country && { country }),
+    ...(street && !place?.street && { street }),
+    ...(postal_code && !place?.postal_code && { postal_code }),
+    ...(city && !place?.city && { city }),
+    ...(country && !place?.country && { country }),
     ...(place_type && { place_type: place_type as Place['place_type'] }),
     ...(notes && { notes }),
     ...(date_from && { date_from }),
