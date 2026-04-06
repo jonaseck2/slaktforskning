@@ -291,6 +291,21 @@ interface RawCitation { id: string; source_id: string; }
 interface RawSource { id: string; title: string; author: string | null; publication_info: string | null; }
 interface RawPlace { id: string; name: string; }
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
+interface RawMedia {
+  id: string;
+  title: string | null;
+  file_ref: string | null;
+  format: string | null;
+  notes: string | null;
+  link_id: string;
+  link_type: string | null;
+}
+interface EnrichedMedia {
+  id: string;
+  title: string | null;
+  notes: string | null;
+  filePath: string;  // absolute path — only items with a resolved path are kept
+}
 
 // ── Domain types ───────────────────────────────────────────────────────────────
 interface EnrichedEvent extends RawEvent {
@@ -313,6 +328,7 @@ interface AncestorEntry {
   children: PersonRef[];
   sources: RawSource[];
   notes: string | null;
+  media: EnrichedMedia[];
 }
 interface GenGroup {
   number: number;
@@ -512,11 +528,12 @@ async function fetchAncestorFullData(
 ): Promise<AncestorEntry> {
   const pid = person.id;
 
-  const [names, events, rels, personFull] = await Promise.all([
+  const [names, events, rels, personFull, rawMedia] = await Promise.all([
     window.api.persons.getNames(pid) as Promise<RawName[]>,
     window.api.events.forPerson(pid) as Promise<RawEvent[]>,
     window.api.relationships.getForPerson(pid) as Promise<RawRelationship[]>,
     window.api.persons.get(pid) as Promise<RawPerson | null>,
+    window.api.media.forEntity('person', pid) as Promise<RawMedia[]>,
   ]);
 
   // Sort events chronologically
@@ -589,6 +606,17 @@ async function fetchAncestorFullData(
     )
   ).filter((s): s is RawSource => s !== null);
 
+  // Fetch person-linked media and resolve file paths
+  const enrichedMedia: EnrichedMedia[] = (
+    await Promise.all(
+      rawMedia.map(async m => {
+        const filePath = (await window.api.media.getFilePath(m.id)) as string | null;
+        if (!filePath) return null;
+        return { id: m.id, title: m.title, notes: m.notes, filePath };
+      }),
+    )
+  ).filter((m): m is EnrichedMedia => m !== null);
+
   return {
     ahnNum,
     person,
@@ -599,6 +627,7 @@ async function fetchAncestorFullData(
     children,
     sources,
     notes: personFull?.notes ?? null,
+    media: enrichedMedia,
   };
 }
 
