@@ -12,6 +12,14 @@ export default {
     importExport: 'Import / Export',
     groups: 'Groups',
     focusPerson: 'Focus person',
+    settings: 'Settings',
+  },
+  settings: {
+    appearance: 'Appearance',
+    light: 'Light',
+    dark: 'Dark',
+    textSize: 'Text Size',
+    language: 'Language',
   },
   common: {
     cancel: 'Cancel',

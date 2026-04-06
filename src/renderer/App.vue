@@ -65,13 +65,31 @@
       <div class="sidebar-spacer"></div>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
-      <button class="dark-mode-toggle" @click="toggleDarkMode" :title="darkMode ? 'Light mode' : 'Dark mode'">
-        {{ darkMode ? '☀️' : '🌙' }}
-      </button>
-      <select class="locale-switcher" :value="locale" @change="switchLocale($event)">
-        <option value="sv">Svenska</option>
-        <option value="en">English</option>
-      </select>
+      <div class="settings-section">
+        <button class="settings-toggle" @click="isSettingsOpen = !isSettingsOpen">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">{{ $t('nav.settings') }}</span>
+          <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
+        </button>
+        <div v-if="isSettingsOpen" class="settings-panel">
+          <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
+          <div class="settings-row">
+            <button :class="['settings-option', { active: !darkMode }]" @click="setDarkMode(false)">☀ {{ $t('settings.light') }}</button>
+            <button :class="['settings-option', { active: darkMode }]" @click="setDarkMode(true)">🌙 {{ $t('settings.dark') }}</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
+          <div class="settings-row">
+            <button :class="['settings-option', { active: textSize === 'small' }]" @click="setTextSize('small')">S</button>
+            <button :class="['settings-option', { active: textSize === 'medium' }]" @click="setTextSize('medium')">M</button>
+            <button :class="['settings-option', { active: textSize === 'large' }]" @click="setTextSize('large')">L</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.language') }}</div>
+          <div class="settings-row">
+            <button :class="['settings-option', { active: locale === 'sv' }]" @click="setLocale('sv')">Svenska</button>
+            <button :class="['settings-option', { active: locale === 'en' }]" @click="setLocale('en')">English</button>
+          </div>
+        </div>
+      </div>
     </nav>
     <main class="content">
       <router-view v-slot="{ Component, route }">
@@ -110,14 +128,15 @@ const currentDbName = ref('');
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
 const darkMode = ref(localStorage.getItem('darkMode') === 'true');
+const isSettingsOpen = ref(false);
 
 function applyDarkMode() {
   document.documentElement.classList.toggle('dark', darkMode.value);
 }
 
-function toggleDarkMode() {
-  darkMode.value = !darkMode.value;
-  localStorage.setItem('darkMode', String(darkMode.value));
+function setDarkMode(on: boolean) {
+  darkMode.value = on;
+  localStorage.setItem('darkMode', String(on));
   applyDarkMode();
 }
 
@@ -130,6 +149,17 @@ function applyTextSize() {
   document.documentElement.classList.remove('text-medium', 'text-large');
   if (textSize.value === 'medium') document.documentElement.classList.add('text-medium');
   if (textSize.value === 'large') document.documentElement.classList.add('text-large');
+}
+
+function setTextSize(size: 'small' | 'medium' | 'large') {
+  textSize.value = size;
+  localStorage.setItem('textSize', size);
+  applyTextSize();
+}
+
+function setLocale(val: SupportedLocale) {
+  locale.value = val;
+  saveLocale(val);
 }
 
 function handleGlobalKey(e: KeyboardEvent) {
@@ -212,11 +242,6 @@ function submitSearch() {
   searchQuery.value = '';
 }
 
-function switchLocale(e: Event) {
-  const val = (e.target as HTMLSelectElement).value as SupportedLocale;
-  locale.value = val;
-  saveLocale(val);
-}
 </script>
 
 <style>
@@ -383,6 +408,73 @@ body {
   .sidebar { display: none !important; }
   .app { display: block; height: auto; }
   .content { padding: 0; height: auto; overflow: visible; }
+}
+
+.settings-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+.settings-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+.settings-arrow { margin-left: auto; font-size: 10px; }
+.settings-panel {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 2px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.settings-group-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.settings-group-label:first-child { margin-top: 0; }
+.settings-row { display: flex; gap: 4px; }
+.settings-option {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  text-align: center;
+}
+.settings-option:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+}
+.settings-option.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
 }
 
 </style>
