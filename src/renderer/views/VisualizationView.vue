@@ -2,6 +2,7 @@
   <div class="visualization-view">
     <!-- Tab bar -->
     <div v-if="focalPerson" class="viz-tabs" role="tablist">
+      <button class="btn-back" @click="router.back()">←</button>
       <div class="viz-focal-label" data-testid="visualization-focal-name">
         <PersonName
           :given-name="focalGivenName"
@@ -9,6 +10,7 @@
           :preferred-name="focalPreferredName"
         />
       </div>
+      <button class="btn-detail" @click="router.push('/persons/' + personId)">{{ $t('visualization.viewDetail') }}</button>
       <button
         role="tab" :aria-selected="activeTab === 'pedigree'"
         :class="['tab', { active: activeTab === 'pedigree' }]"
@@ -234,6 +236,27 @@ onActivated(load);
   text-overflow: ellipsis;
   max-width: 200px;
 }
+.btn-back {
+  background: none;
+  border: none;
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 16px;
+  margin-right: 4px;
+}
+.btn-back:hover { opacity: 0.7; }
+.btn-detail {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #c8d0db;
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.btn-detail:hover { background: #f0f4f8; }
 .tab {
   background: none;
   border: none;

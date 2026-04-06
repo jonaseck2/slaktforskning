@@ -39,7 +39,7 @@ test.describe('Persons CRUD', () => {
 
   test('create a person via the Add Person modal', async () => {
     await app.navigate('/');
-    await app.click('button');
+    await app.click('.btn-add');
     await app.settle();
 
     await app.executeJs(`
