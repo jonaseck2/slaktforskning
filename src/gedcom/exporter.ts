@@ -82,10 +82,13 @@ export function exportGedcom(db: Database): string {
   // ── Repositories ───────────────────────────────────────────────────────────
   const sources = listSources(db);
   // Collect all repositories used by any source, deduplicated by repo id
+  // Cache per-source repository lookups to avoid duplicate queries
+  const sourceReposCache = new Map<string, Repository[]>();
   const repoXref = new Map<string, string>();
   const allRepos = new Map<string, Repository>();
   sources.forEach(src => {
     const repos = getRepositoriesForSource(db, src.id);
+    sourceReposCache.set(src.id, repos);
     for (const repo of repos) {
       if (!allRepos.has(repo.id)) {
         allRepos.set(repo.id, repo);
@@ -122,8 +125,8 @@ export function exportGedcom(db: Database): string {
     if (src.repository) lines.push(`1 _REPO_TEXT ${src.repository}`);
     if (src.url) lines.push(`1 _URL ${src.url}`);
     if (src.source_type) lines.push(`1 _STYPE ${src.source_type}`);
-    // Link to structured REPO records
-    const linkedRepos = getRepositoriesForSource(db, src.id);
+    // Link to structured REPO records (use cached lookup)
+    const linkedRepos = sourceReposCache.get(src.id) ?? [];
     for (const repo of linkedRepos) {
       const repoXr = repoXref.get(repo.id);
       if (repoXr) lines.push(`1 REPO ${repoXr}`);

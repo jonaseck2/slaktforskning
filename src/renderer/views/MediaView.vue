@@ -117,9 +117,9 @@ onMounted(load);
   vertical-align: middle;
 }
 .actions-cell {
-  white-space: nowrap;
   display: flex;
   gap: 6px;
   align-items: center;
+  justify-content: flex-end;
 }
 </style>
