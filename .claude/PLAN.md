@@ -91,22 +91,11 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.26.1: Pedigree ▶ button and hourglass ▲ button clipped at SVG scroll boundary | [archive](plans/archive/2026-04-06-chart-button-clip-fix.md) |
 | Fix | v0.26.2: E2E flaky tests — AbortError retry, missing mutating() wrappers, btn-add selector, viz back/detail buttons | [archive](plans/archive/2026-04-06-e2e-fix-flaky-tests.md) |
 | Fix | v0.26.3: Full name rendering — `formatFullName()` in nameUtils, replaces truncated `primaryName()` in all 4 reports | [archive](plans/archive/2026-04-06-full-name-rendering.md) |
+| v0.26.4–v0.30.1 | Tree-first editing: PersonPanel full redesign (header, Person/Namn/Händelser/Relationer/Källor/Grupper sections) + ⊕ hover buttons on PedigreeChart + HourglassChart | [plan](plans/archive/2026-04-06-tree-first-editing.md) |
 
 ---
 
 ## Roadmap
-
-### Tree-First Editing [feature]
-See `.claude/plans/2026-04-06-tree-first-editing.md` for the full plan.
-- [ ] PersonPanel header: white bg, full * † dates, + Förälder/Partner/Barn buttons
-- [ ] Person section: Kön, Status, Anteckningar (editable, auto-save)
-- [ ] Namn section: list names, add/edit/delete inline
-- [ ] Händelser: remove readonly (full CRUD already in EventList)
-- [ ] Relationer: + Relation button with inline mode picker
-- [ ] Källor: new section — citations list per person, add/delete
-- [ ] Grupper: new section — group membership, add/remove
-- [ ] ⊕ hover button on PedigreeChart nodes (+ Förälder/Partner/Barn popover)
-- [ ] ⊕ hover button on HourglassChart nodes
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
