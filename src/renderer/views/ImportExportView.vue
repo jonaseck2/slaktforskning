@@ -27,11 +27,10 @@
         </div>
         <p v-if="holgerSourcePath" class="section-instructions">{{ holgerSourcePath }}<span v-if="holgerMediaDir"> + {{ holgerMediaDir }}</span></p>
         <p v-if="holgerProgress" class="section-progress">{{ holgerProgress }}</p>
-      </div>
 
-      <!-- Holger / OurKind ElevateDB direct import -->
-      <div class="section">
-        <h3>{{ $t('importExport.holgerEdbTitle') }}</h3>
+        <hr class="section-divider" />
+
+        <p class="subsection-label">{{ $t('importExport.holgerEdbTitle') }}</p>
         <p class="section-desc">{{ $t('importExport.holgerEdbDesc') }}</p>
         <div class="section-buttons">
           <button @click="holgerEdbPickDir" :disabled="busy">{{ $t('importExport.holgerEdbPickDir') }}</button>
@@ -409,6 +408,19 @@ h2 {
   color: #555;
   font-style: italic;
   margin: 0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 4px 0;
+}
+
+.subsection-label {
+  margin: 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #444;
 }
 
 button {
