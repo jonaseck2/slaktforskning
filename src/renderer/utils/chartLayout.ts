@@ -162,7 +162,7 @@ export function computePedigreeLayout(
 
   const prunedNodes = new Map(originalNodes);
   for (const [k, person] of originalNodes) {
-    if (collapsed.has(`${person.id}:up`)) {
+    if (collapsed.has(`${person.id}:right`)) {
       removeSubtree(prunedNodes, k * 2);
       removeSubtree(prunedNodes, k * 2 + 1);
     }
@@ -252,7 +252,9 @@ export function computePedigreeLayout(
     }
   }
 
-  // Generate collapse buttons: ↑ button on right side of each box with parents in original tree
+  // Generate collapse/load-more buttons on right side of each box.
+  // Ancestors expand rightward in pedigree, so direction is 'right' (▶).
+  const hasMore = tree.hasMoreAncestors ?? new Set<number>();
   const collapseButtons: CollapseButton[] = [];
   for (const box of boxes) {
     const k = personToAhnen.get(box.person.id);
@@ -261,10 +263,20 @@ export function computePedigreeLayout(
     if (hasParents) {
       collapseButtons.push({
         personId: box.person.id,
-        direction: 'up',
+        direction: 'right',
         cx: box.x + BOX_W + 10,
         cy: box.y + BOX_H / 2,
-        isExpanded: !collapsed.has(`${box.person.id}:up`),
+        isExpanded: !collapsed.has(`${box.person.id}:right`),
+        isLoadMore: false,
+      });
+    } else if (hasMore.has(k)) {
+      collapseButtons.push({
+        personId: box.person.id,
+        direction: 'right',
+        cx: box.x + BOX_W + 10,
+        cy: box.y + BOX_H / 2,
+        isExpanded: false,
+        isLoadMore: true,
       });
     }
   }
