@@ -626,101 +626,103 @@ function checkDuplicateRelationship(db: Database): CheckResult[] {
 }
 
 function checkMarriageAge(db: Database): CheckResult[] {
-  // Single query: join marriages directly with each participant's birth event
-  const rows = queryAll<{ event_id: string; marriage_year: number; person_id: string; birth_year: number }>(db, `
-    SELECT e.id AS event_id,
-           CAST(SUBSTR(e.date_value, 1, 4) AS INTEGER) AS marriage_year,
-           ep.person_id,
-           CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year
-    FROM events e
-    JOIN event_participants ep ON ep.event_id = e.id
-    JOIN event_participants epb ON epb.person_id = ep.person_id
-    JOIN events b ON b.id = epb.event_id AND b.event_type = 'birth'
-      AND b.date_type IN ('exact','calculated','about') AND b.date_value IS NOT NULL
-    WHERE e.event_type = 'marriage'
-      AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-  `);
+  const marriages = loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
+  const births = loadPersonEvents(db, 'birth', ['exact', 'calculated', 'about']);
 
   const results: CheckResult[] = [];
-  for (const r of rows) {
-    const age = r.marriage_year - r.birth_year;
-    if (age < 12) {
-      results.push({
-        code: 'MARRIED_BEFORE_12',
-        severity: 'error',
-        message: `Person gifte sig vid ${age} år (${r.marriage_year}), under 12 år`,
-        messageParams: { age, year: r.marriage_year },
-        personIds: [r.person_id],
-        eventIds: [r.event_id],
-      });
-    } else if (age < 16) {
-      results.push({
-        code: 'MARRIED_BEFORE_16',
-        severity: 'warning',
-        message: `Person gifte sig vid ${age} år (${r.marriage_year}), under 16 år`,
-        messageParams: { age, year: r.marriage_year },
-        personIds: [r.person_id],
-        eventIds: [r.event_id],
-      });
+  for (const [personId, personMarriages] of marriages) {
+    const personBirths = births.get(personId);
+    if (!personBirths) continue;
+    for (const m of personMarriages) {
+      const marriageYear = parseInt(m.date_value.substring(0, 4), 10);
+      if (isNaN(marriageYear)) continue;
+      for (const b of personBirths) {
+        const birthYear = parseInt(b.date_value.substring(0, 4), 10);
+        if (isNaN(birthYear)) continue;
+        const age = marriageYear - birthYear;
+        if (age < 12) {
+          results.push({
+            code: 'MARRIED_BEFORE_12',
+            severity: 'error',
+            message: `Person gifte sig vid ${age} år (${marriageYear}), under 12 år`,
+            messageParams: { age, year: marriageYear },
+            personIds: [personId],
+            eventIds: [m.event_id],
+          });
+        } else if (age < 16) {
+          results.push({
+            code: 'MARRIED_BEFORE_16',
+            severity: 'warning',
+            message: `Person gifte sig vid ${age} år (${marriageYear}), under 16 år`,
+            messageParams: { age, year: marriageYear },
+            personIds: [personId],
+            eventIds: [m.event_id],
+          });
+        }
+      }
     }
   }
   return results;
 }
 
 function checkMarriageAfterDeath(db: Database): CheckResult[] {
-  const rows = queryAll<{ marriage_id: string; marriage_date: string; person_id: string; death_id: string; death_date: string }>(db, `
-    SELECT e.id AS marriage_id, e.date_value AS marriage_date,
-           ep.person_id,
-           d.id AS death_id, d.date_value AS death_date
-    FROM events e
-    JOIN event_participants ep ON ep.event_id = e.id
-    JOIN event_participants epd ON epd.person_id = ep.person_id
-    JOIN events d ON d.id = epd.event_id AND d.event_type = 'death'
-      AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
-    WHERE e.event_type = 'marriage'
-      AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-      AND (SUBSTR(e.date_value, 1, 4) > SUBSTR(d.date_value, 1, 4)
-           OR (SUBSTR(e.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
-               AND LENGTH(e.date_value) >= 10 AND LENGTH(d.date_value) >= 10
-               AND e.date_value > d.date_value))
-  `);
+  const marriages = loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
+  const deaths = loadPersonEvents(db, 'death', ['exact', 'calculated']);
 
-  return rows.map(r => ({
-    code: 'MARRIAGE_AFTER_DEATH',
-    severity: 'error' as CheckSeverity,
-    message: `Giftermål (${r.marriage_date}) sker efter personens dödsdatum (${r.death_date})`,
-    messageParams: { marriageDate: r.marriage_date, deathDate: r.death_date },
-    personIds: [r.person_id],
-    eventIds: [r.marriage_id, r.death_id],
-  }));
+  const results: CheckResult[] = [];
+  for (const [personId, personMarriages] of marriages) {
+    const personDeaths = deaths.get(personId);
+    if (!personDeaths) continue;
+    for (const m of personMarriages) {
+      for (const d of personDeaths) {
+        const mYear = m.date_value.substring(0, 4);
+        const dYear = d.date_value.substring(0, 4);
+        const after = mYear > dYear ||
+          (mYear === dYear && m.date_value.length >= 10 && d.date_value.length >= 10 && m.date_value > d.date_value);
+        if (after) {
+          results.push({
+            code: 'MARRIAGE_AFTER_DEATH',
+            severity: 'error',
+            message: `Giftermål (${m.date_value}) sker efter personens dödsdatum (${d.date_value})`,
+            messageParams: { marriageDate: m.date_value, deathDate: d.date_value },
+            personIds: [personId],
+            eventIds: [m.event_id, d.event_id],
+          });
+        }
+      }
+    }
+  }
+  return results;
 }
 
 function checkMarriageBeforeBirth(db: Database): CheckResult[] {
-  const rows = queryAll<{ marriage_id: string; marriage_date: string; person_id: string; birth_id: string; birth_date: string }>(db, `
-    SELECT e.id AS marriage_id, e.date_value AS marriage_date,
-           ep.person_id,
-           b.id AS birth_id, b.date_value AS birth_date
-    FROM events e
-    JOIN event_participants ep ON ep.event_id = e.id
-    JOIN event_participants epb ON epb.person_id = ep.person_id
-    JOIN events b ON b.id = epb.event_id AND b.event_type = 'birth'
-      AND b.date_type IN ('exact','calculated') AND b.date_value IS NOT NULL
-    WHERE e.event_type = 'marriage'
-      AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-      AND (SUBSTR(e.date_value, 1, 4) < SUBSTR(b.date_value, 1, 4)
-           OR (SUBSTR(e.date_value, 1, 4) = SUBSTR(b.date_value, 1, 4)
-               AND LENGTH(e.date_value) >= 10 AND LENGTH(b.date_value) >= 10
-               AND e.date_value < b.date_value))
-  `);
+  const marriages = loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
+  const births = loadPersonEvents(db, 'birth', ['exact', 'calculated']);
 
-  return rows.map(r => ({
-    code: 'MARRIAGE_BEFORE_BIRTH',
-    severity: 'error' as CheckSeverity,
-    message: `Giftermål (${r.marriage_date}) sker före personens födelsedag (${r.birth_date})`,
-    messageParams: { marriageDate: r.marriage_date, birthDate: r.birth_date },
-    personIds: [r.person_id],
-    eventIds: [r.marriage_id, r.birth_id],
-  }));
+  const results: CheckResult[] = [];
+  for (const [personId, personMarriages] of marriages) {
+    const personBirths = births.get(personId);
+    if (!personBirths) continue;
+    for (const m of personMarriages) {
+      for (const b of personBirths) {
+        const mYear = m.date_value.substring(0, 4);
+        const bYear = b.date_value.substring(0, 4);
+        const before = mYear < bYear ||
+          (mYear === bYear && m.date_value.length >= 10 && b.date_value.length >= 10 && m.date_value < b.date_value);
+        if (before) {
+          results.push({
+            code: 'MARRIAGE_BEFORE_BIRTH',
+            severity: 'error',
+            message: `Giftermål (${m.date_value}) sker före personens födelsedag (${b.date_value})`,
+            messageParams: { marriageDate: m.date_value, birthDate: b.date_value },
+            personIds: [personId],
+            eventIds: [m.event_id, b.event_id],
+          });
+        }
+      }
+    }
+  }
+  return results;
 }
 
 function checkCoupleWithSelf(db: Database): CheckResult[] {

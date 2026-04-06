@@ -574,6 +574,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `/gedcom` | GEDCOM import/export | GEDCOM 5.5.1/7.0 parsing, validation |
 | `/interview-synthesis` | Processing user research | Extract insights from interviews |
 | `/web-research` | Competitive analysis | Research genealogy platforms |
+| `/performance-profiling` | CPU saturation / slow operations | Profile, analyze, and fix performance bottlenecks |
 
 ### Required Global Skills (`~/.claude/skills/`)
 
