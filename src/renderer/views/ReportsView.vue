@@ -260,11 +260,6 @@ async function exportPdf() {
   margin-bottom: 16px;
 }
 .view-header h2 { margin: 0; }
-.running-hint {
-  font-size: 13px;
-  color: #999;
-}
-
 /* Zoom controls (floating bottom-right of preview area) */
 .zoom-floating {
   position: absolute;
@@ -345,8 +340,6 @@ async function exportPdf() {
   transform-origin: top center;
   flex-shrink: 0;
 }
-.empty-hint { color: #999; font-size: 13px; padding: 40px; text-align: center; }
-
 @media print {
   .view-header, .tab-bar, .tab-header, .zoom-floating { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
