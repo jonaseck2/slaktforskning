@@ -121,6 +121,16 @@ function toggleDarkMode() {
   applyDarkMode();
 }
 
+const textSize = ref<'small' | 'medium' | 'large'>(
+  (localStorage.getItem('textSize') as 'small' | 'medium' | 'large') ?? 'small'
+);
+
+function applyTextSize() {
+  document.documentElement.classList.remove('text-medium', 'text-large');
+  if (textSize.value === 'medium') document.documentElement.classList.add('text-medium');
+  if (textSize.value === 'large') document.documentElement.classList.add('text-large');
+}
+
 function handleGlobalKey(e: KeyboardEvent) {
   if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
     e.preventDefault();
@@ -164,6 +174,7 @@ async function loadQualityBadge() {
 
 onMounted(() => {
   applyDarkMode();
+  applyTextSize();
   window.addEventListener('keydown', handleGlobalKey);
   loadDbName();
   loadQualityBadge();
@@ -346,35 +357,6 @@ body {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-.locale-switcher {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
-  border: none;
-  padding: 6px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-}
-.locale-switcher option {
-  color: #333;
-  background: white;
-}
-
-.dark-mode-toggle {
-  background: rgba(255, 255, 255, 0.12);
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-size: 14px;
-  padding: 5px 8px;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-}
-.dark-mode-toggle:hover { background: rgba(255, 255, 255, 0.2); }
-
 .error-badge {
   display: inline-flex;
   align-items: center;
@@ -402,93 +384,4 @@ body {
   .content { padding: 0; height: auto; overflow: visible; }
 }
 
-/* ── Dark mode ─────────────────────────────────────────────────────────────
-   Scoped to @media screen so exports/prints always use light colors.
-   `html.dark` prefix adds specificity 0,2,N which beats Vue's scoped
-   attribute selector specificity 0,1,N+1, so no !important needed for
-   most rules. Use it sparingly where the specificity race is tight.
-   ─────────────────────────────────────────────────────────────────────── */
-@media screen {
-html.dark body { background: #111827; color: #e2e8f0; }
-html.dark .content { background: #111827; }
-
-/* Tables */
-html.dark .data-table th { background: #1f2937; color: #9ca3af; border-bottom-color: #374151; }
-html.dark .data-table td { border-bottom-color: #374151; color: #e2e8f0; }
-html.dark .clickable-row:hover { background: #1e293b; }
-
-/* Inputs, selects, textareas */
-html.dark input[type='text'],
-html.dark input[type='number'],
-html.dark input[type='email'],
-html.dark textarea,
-html.dark select {
-  background: #1f2937;
-  color: #e2e8f0;
-  border-color: #374151;
-}
-html.dark input::placeholder,
-html.dark textarea::placeholder { color: #6b7280; }
-
-/* Modals */
-html.dark .modal { background: #1f2937; color: #e2e8f0; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
-html.dark .modal-overlay { background: rgba(0,0,0,0.65); }
-html.dark .modal h3, html.dark .modal h4 { color: #f3f4f6; }
-
-/* Buttons */
-html.dark .btn-add { background: #374151; color: #e2e8f0; }
-html.dark .btn-add:hover { background: #4b5563; }
-html.dark .btn-cancel { background: #374151; color: #d1d5db; }
-html.dark .btn-delete { background: #450a0a; color: #fca5a5; }
-html.dark .btn-delete:hover { background: #7f1d1d; }
-html.dark .btn-sm { background: #374151; color: #d1d5db; }
-html.dark .btn-view-tree { background: #374151; color: #93c5fd; border-color: #374151; }
-html.dark .btn-back { background: #374151; color: #d1d5db; border-color: #374151; }
-
-/* Chips and filter pills */
-html.dark .chip { background: #1f2937; border-color: #374151; color: #9ca3af; }
-html.dark .chip:hover { background: #374151; }
-html.dark .chip.active { background: #2c3e50; color: white; border-color: #2c3e50; }
-
-/* Badges */
-html.dark .type-badge { background: #1e293b; color: #94a3b8; border-color: #334155; }
-html.dark .status-chip { opacity: 0.85; }
-
-/* Text and labels */
-html.dark .count-label { color: #6b7280; }
-html.dark .running-hint { color: #6b7280; }
-html.dark .empty { color: #4b5563; }
-html.dark .empty-hint { color: #4b5563; }
-html.dark label { color: #9ca3af; }
-html.dark h2, html.dark h3, html.dark h4 { color: #f3f4f6; }
-html.dark .section-header h4 { color: #f3f4f6; }
-
-/* Detail views */
-html.dark .detail-section { border-color: #1f2937; }
-html.dark .field-grid input,
-html.dark .field-grid select,
-html.dark .field-grid textarea { background: #1f2937; color: #e2e8f0; border-color: #374151; }
-
-/* Person links */
-html.dark .person-link { color: #60a5fa; }
-
-/* Issues banner */
-html.dark .issues-banner { background: #1e2a3a; border-color: #374151; color: #fbbf24; }
-html.dark .banner-error { background: #2d1a1a; border-color: #7f1d1d; }
-
-/* Group chips */
-html.dark .group-chip { background: #1f2937; border-color: #374151; color: #93c5fd; }
-html.dark .chip-remove { color: #9ca3af; }
-
-/* Citation badge */
-html.dark .citation-badge-sourced { background: #14532d; color: #86efac; }
-html.dark .citation-badge-unsourced { background: #78350f; color: #fcd34d; }
-
-/* Locale switcher in sidebar (already dark, but fix option dropdown) */
-html.dark .locale-switcher option { background: #1f2937; color: #e2e8f0; }
-
-/* Scrollbars */
-html.dark ::-webkit-scrollbar { background: #1f2937; }
-html.dark ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-} /* end @media screen */
 </style>
