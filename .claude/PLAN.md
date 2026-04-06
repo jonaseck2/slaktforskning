@@ -137,6 +137,7 @@ Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
 ### Polish [feature]
 - [x] Keyboard navigation — Escape key closes all modals
 - [x] Data backup and restore
+- [ ] Add-person icon refinement — replace the current "Add" button in list views with a dashed-circle "+" icon (consistent with the chart expand style)
 - [x] Dark mode — global html.dark CSS overrides, toggle button in sidebar, localStorage persistence
 - [x] Cmd/Ctrl+F — focus sidebar search input
 - [ ] Undo/redo
