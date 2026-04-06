@@ -17,6 +17,50 @@ export interface CheckResult {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Load all events of a given type for all persons in two simple JOINs.
+ * Returns a Map<person_id, [{event_id, date_value}]>.
+ *
+ * Using a single SQL query that joins event_participants × events twice (once
+ * for births, once for deaths, etc.) produces a large intermediate Cartesian
+ * product in WASM SQLite that can take 100+ seconds on 20k-person databases.
+ * Two separate queries + a JS join is dramatically faster.
+ */
+function loadPersonEvents(
+  db: Database,
+  eventType: string,
+  dateTypes: string[] = ['exact', 'calculated'],
+): Map<string, Array<{ event_id: string; date_value: string }>> {
+  const placeholders = dateTypes.map(() => '?').join(', ');
+  const rows = queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
+    SELECT ep.person_id, e.id AS event_id, e.date_value
+    FROM event_participants ep
+    JOIN events e ON e.id = ep.event_id
+    WHERE e.event_type = ? AND e.date_type IN (${placeholders}) AND e.date_value IS NOT NULL
+  `, [eventType, ...dateTypes]);
+  const map = new Map<string, Array<{ event_id: string; date_value: string }>>();
+  for (const r of rows) {
+    if (!map.has(r.person_id)) map.set(r.person_id, []);
+    map.get(r.person_id)!.push({ event_id: r.event_id, date_value: r.date_value });
+  }
+  return map;
+}
+
+/**
+ * Returns a Set of person_ids that have at least one event of the given type.
+ * Used by NOT-EXISTS-style checks to avoid correlated subqueries that run
+ * O(n) SQL lookups per row.
+ */
+function personIdsWithEvent(db: Database, eventType: string): Set<string> {
+  const rows = queryAll<{ person_id: string }>(db, `
+    SELECT DISTINCT ep.person_id
+    FROM event_participants ep
+    JOIN events e ON e.id = ep.event_id
+    WHERE e.event_type = ?
+  `, [eventType]);
+  return new Set(rows.map(r => r.person_id));
+}
+
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -34,31 +78,26 @@ const TODAY = new Date().toISOString().substring(0, 10);
 // ---------------------------------------------------------------------------
 
 function checkBirthAfterDeath(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; birth_id: string; birth_date: string; death_id: string; death_date: string }>(db, `
-    SELECT p.id AS person_id,
-           b.id AS birth_id, b.date_value AS birth_date,
-           d.id AS death_id, d.date_value AS death_date
-    FROM persons p
-    JOIN event_participants epb ON epb.person_id = p.id
-    JOIN events b ON b.id = epb.event_id AND b.event_type = 'birth'
-      AND b.date_type IN ('exact','calculated') AND b.date_value IS NOT NULL
-    JOIN event_participants epd ON epd.person_id = p.id
-    JOIN events d ON d.id = epd.event_id AND d.event_type = 'death'
-      AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
-    WHERE SUBSTR(b.date_value, 1, 4) > SUBSTR(d.date_value, 1, 4)
-       OR (SUBSTR(b.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
-           AND LENGTH(b.date_value) >= 10 AND LENGTH(d.date_value) >= 10
-           AND b.date_value > d.date_value)
-  `);
-
-  return rows.map(r => ({
-    code: 'BIRTH_AFTER_DEATH',
-    severity: 'error' as CheckSeverity,
-    message: `Födelsedag (${r.birth_date}) är efter dödsdatum (${r.death_date})`,
-    messageParams: { birthDate: r.birth_date, deathDate: r.death_date },
-    personIds: [r.person_id],
-    eventIds: [r.birth_id, r.death_id],
-  }));
+  const births = loadPersonEvents(db, 'birth');
+  const deaths = loadPersonEvents(db, 'death');
+  const results: CheckResult[] = [];
+  for (const [personId, deathList] of deaths) {
+    for (const d of deathList) {
+      for (const b of births.get(personId) ?? []) {
+        if (b.date_value > d.date_value) {
+          results.push({
+            code: 'BIRTH_AFTER_DEATH',
+            severity: 'error',
+            message: `Födelsedag (${b.date_value}) är efter dödsdatum (${d.date_value})`,
+            messageParams: { birthDate: b.date_value, deathDate: d.date_value },
+            personIds: [personId],
+            eventIds: [b.event_id, d.event_id],
+          });
+        }
+      }
+    }
+  }
+  return results;
 }
 
 function checkEventAfterDeath(db: Database): CheckResult[] {
@@ -101,48 +140,43 @@ function checkEventAfterDeath(db: Database): CheckResult[] {
 }
 
 function checkBurialBeforeDeath(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; burial_id: string; burial_date: string; death_id: string; death_date: string }>(db, `
-    SELECT p.id AS person_id,
-           b.id AS burial_id, b.date_value AS burial_date,
-           d.id AS death_id, d.date_value AS death_date
-    FROM persons p
-    JOIN event_participants epb ON epb.person_id = p.id
-    JOIN events b ON b.id = epb.event_id AND b.event_type = 'burial'
-      AND b.date_type IN ('exact','calculated') AND b.date_value IS NOT NULL
-    JOIN event_participants epd ON epd.person_id = p.id
-    JOIN events d ON d.id = epd.event_id AND d.event_type = 'death'
-      AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
-    WHERE SUBSTR(b.date_value, 1, 4) < SUBSTR(d.date_value, 1, 4)
-       OR (SUBSTR(b.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
-           AND LENGTH(b.date_value) >= 10 AND LENGTH(d.date_value) >= 10
-           AND b.date_value < d.date_value)
-  `);
-
-  return rows.map(r => ({
-    code: 'BURIAL_BEFORE_DEATH',
-    severity: 'error' as CheckSeverity,
-    message: `Begravning (${r.burial_date}) sker före dödsdatum (${r.death_date})`,
-    messageParams: { burialDate: r.burial_date, deathDate: r.death_date },
-    personIds: [r.person_id],
-    eventIds: [r.burial_id, r.death_id],
-  }));
+  const burials = loadPersonEvents(db, 'burial');
+  const deaths = loadPersonEvents(db, 'death');
+  const results: CheckResult[] = [];
+  for (const [personId, burialList] of burials) {
+    for (const b of burialList) {
+      for (const d of deaths.get(personId) ?? []) {
+        if (b.date_value < d.date_value) {
+          results.push({
+            code: 'BURIAL_BEFORE_DEATH',
+            severity: 'error',
+            message: `Begravning (${b.date_value}) sker före dödsdatum (${d.date_value})`,
+            messageParams: { burialDate: b.date_value, deathDate: d.date_value },
+            personIds: [personId],
+            eventIds: [b.event_id, d.event_id],
+          });
+        }
+      }
+    }
+  }
+  return results;
 }
 
 function checkLifespan(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; birth_year: number; death_year: number; birth_id: string; death_id: string }>(db, `
-    SELECT p.id AS person_id,
-           CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year,
-           CAST(SUBSTR(d.date_value, 1, 4) AS INTEGER) AS death_year,
-           b.id AS birth_id, d.id AS death_id
-    FROM persons p
-    JOIN event_participants epb ON epb.person_id = p.id
-    JOIN events b ON b.id = epb.event_id AND b.event_type = 'birth'
-      AND b.date_type IN ('exact','calculated') AND b.date_value IS NOT NULL
-    JOIN event_participants epd ON epd.person_id = p.id
-    JOIN events d ON d.id = epd.event_id AND d.event_type = 'death'
-      AND d.date_type IN ('exact','calculated') AND d.date_value IS NOT NULL
-    WHERE (CAST(SUBSTR(d.date_value, 1, 4) AS INTEGER) - CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER)) > 105
-  `);
+  const births = loadPersonEvents(db, 'birth');
+  const deaths = loadPersonEvents(db, 'death');
+  const rows: { person_id: string; birth_year: number; death_year: number; birth_id: string; death_id: string }[] = [];
+  for (const [personId, deathList] of deaths) {
+    for (const d of deathList) {
+      for (const b of births.get(personId) ?? []) {
+        const birthYear = parseInt(b.date_value.substring(0, 4), 10);
+        const deathYear = parseInt(d.date_value.substring(0, 4), 10);
+        if (deathYear - birthYear > 105) {
+          rows.push({ person_id: personId, birth_year: birthYear, death_year: deathYear, birth_id: b.event_id, death_id: d.event_id });
+        }
+      }
+    }
+  }
 
   const results: CheckResult[] = [];
   for (const r of rows) {
@@ -242,46 +276,36 @@ function checkBaptismLate(db: Database): CheckResult[] {
 }
 
 function checkDeathWithoutBirth(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; death_id: string }>(db, `
-    SELECT p.id AS person_id, e.id AS death_id
-    FROM persons p
-    JOIN event_participants ep ON ep.person_id = p.id
+  const hasBirth = personIdsWithEvent(db, 'birth');
+  const deathRows = queryAll<{ person_id: string; event_id: string }>(db, `
+    SELECT ep.person_id, e.id AS event_id
+    FROM event_participants ep
     JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
-    WHERE NOT EXISTS (
-      SELECT 1 FROM event_participants ep2
-      JOIN events e2 ON e2.id = ep2.event_id AND e2.event_type = 'birth'
-      WHERE ep2.person_id = p.id
-    )
   `);
-
-  return rows.map(r => ({
-    code: 'DEATH_WITHOUT_BIRTH',
-    severity: 'notice' as CheckSeverity,
-    message: `Person har dödshändelse men saknar födelsehändelse`,
-    messageParams: {},
-    personIds: [r.person_id],
-    eventIds: [r.death_id],
-  }));
+  return deathRows
+    .filter(r => !hasBirth.has(r.person_id))
+    .map(r => ({
+      code: 'DEATH_WITHOUT_BIRTH',
+      severity: 'notice' as CheckSeverity,
+      message: `Person har dödshändelse men saknar födelsehändelse`,
+      messageParams: {},
+      personIds: [r.person_id],
+      eventIds: [r.event_id],
+    }));
 }
 
 function checkNoBirthEvent(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string }>(db, `
-    SELECT p.id AS person_id
-    FROM persons p
-    WHERE NOT EXISTS (
-      SELECT 1 FROM event_participants ep
-      JOIN events e ON e.id = ep.event_id AND e.event_type = 'birth'
-      WHERE ep.person_id = p.id
-    )
-  `);
-
-  return rows.map(r => ({
-    code: 'NO_BIRTH_EVENT',
-    severity: 'notice' as CheckSeverity,
-    message: `Person saknar födelsehändelse`,
-    messageParams: {},
-    personIds: [r.person_id],
-  }));
+  const hasBirth = personIdsWithEvent(db, 'birth');
+  const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+  return allPersonIds
+    .filter(r => !hasBirth.has(r.id))
+    .map(r => ({
+      code: 'NO_BIRTH_EVENT',
+      severity: 'notice' as CheckSeverity,
+      message: `Person saknar födelsehändelse`,
+      messageParams: {},
+      personIds: [r.id],
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -410,46 +434,42 @@ function checkParenthoodAge(db: Database): CheckResult[] {
 // ---------------------------------------------------------------------------
 
 function checkSiblingAgeLarge(db: Database): CheckResult[] {
-  // Group children by parent and check birth year gaps
-  const results: CheckResult[] = [];
-
-  // Group children by parent
-  const parents = queryAll<{ parent_id: string }>(db, `
-    SELECT DISTINCT person1_id AS parent_id FROM relationships
-    WHERE type = 'parent_child' AND person1_id IS NOT NULL
+  // Single query: all parent-child pairs with child birth years
+  const rows = queryAll<{ parent_id: string; person_id: string; birth_year: number; rel_id: string }>(db, `
+    SELECT r.person1_id AS parent_id, r.person2_id AS person_id,
+           CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year,
+           r.id AS rel_id
+    FROM relationships r
+    JOIN event_participants ep ON ep.person_id = r.person2_id
+    JOIN events b ON b.id = ep.event_id AND b.event_type = 'birth'
+      AND b.date_type IN ('exact','calculated','about') AND b.date_value IS NOT NULL
+    WHERE r.type = 'parent_child' AND r.person1_id IS NOT NULL AND r.person2_id IS NOT NULL
   `);
 
-  for (const { parent_id } of parents) {
-    const children = queryAll<{ person_id: string; birth_year: number; rel_id: string }>(db, `
-      SELECT r.person2_id AS person_id,
-             CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year,
-             r.id AS rel_id
-      FROM relationships r
-      JOIN event_participants ep ON ep.person_id = r.person2_id
-      JOIN events b ON b.id = ep.event_id AND b.event_type = 'birth'
-        AND b.date_type IN ('exact','calculated','about') AND b.date_value IS NOT NULL
-      WHERE r.type = 'parent_child' AND r.person1_id = ? AND r.person2_id IS NOT NULL
-    `, [parent_id]);
+  // Group by parent in JavaScript
+  const byParent = new Map<string, Array<{ person_id: string; birth_year: number; rel_id: string }>>();
+  for (const r of rows) {
+    if (!byParent.has(r.parent_id)) byParent.set(r.parent_id, []);
+    byParent.get(r.parent_id)!.push({ person_id: r.person_id, birth_year: r.birth_year, rel_id: r.rel_id });
+  }
 
+  const results: CheckResult[] = [];
+  for (const [parent_id, children] of byParent) {
     if (children.length < 2) continue;
-
     const years = children.map(c => c.birth_year);
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
-
     if (maxYear - minYear > 50) {
-      const personIds = [parent_id, ...children.map(c => c.person_id)];
       results.push({
         code: 'SIBLING_AGE_GAP_LARGE',
         severity: 'notice',
         message: `Syskon har ett födelseårsintervall på ${maxYear - minYear} år (${minYear}–${maxYear})`,
         messageParams: { span: maxYear - minYear, minYear, maxYear },
-        personIds,
+        personIds: [parent_id, ...children.map(c => c.person_id)],
         relationshipIds: children.map(c => c.rel_id),
       });
     }
   }
-
   return results;
 }
 
@@ -494,22 +514,22 @@ function checkMultipleBiologicalParents(db: Database): CheckResult[] {
 }
 
 function checkNoParents(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string }>(db, `
-    SELECT p.id AS person_id
-    FROM persons p
-    WHERE NOT EXISTS (
-      SELECT 1 FROM relationships r
-      WHERE r.type = 'parent_child' AND r.person2_id = p.id
-    )
-  `);
-
-  return rows.map(r => ({
-    code: 'NO_PARENTS',
-    severity: 'notice' as CheckSeverity,
-    message: `Person har inga registrerade föräldrar`,
-    messageParams: {},
-    personIds: [r.person_id],
-  }));
+  const hasParents = new Set(
+    queryAll<{ person2_id: string }>(db, `
+      SELECT DISTINCT person2_id FROM relationships
+      WHERE type = 'parent_child' AND person2_id IS NOT NULL
+    `).map(r => r.person2_id)
+  );
+  const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+  return allPersonIds
+    .filter(r => !hasParents.has(r.id))
+    .map(r => ({
+      code: 'NO_PARENTS',
+      severity: 'notice' as CheckSeverity,
+      message: `Person har inga registrerade föräldrar`,
+      messageParams: {},
+      personIds: [r.id],
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -517,7 +537,7 @@ function checkNoParents(db: Database): CheckResult[] {
 // ---------------------------------------------------------------------------
 
 function checkCircularAncestry(db: Database): CheckResult[] {
-  // Load all parent_child links into memory for DFS
+  // Load all parent_child links once
   const links = queryAll<{ child_id: string; parent_id: string }>(db, `
     SELECT person2_id AS child_id, person1_id AS parent_id
     FROM relationships
@@ -525,133 +545,125 @@ function checkCircularAncestry(db: Database): CheckResult[] {
       AND person1_id IS NOT NULL
       AND person2_id IS NOT NULL
   `);
+  if (links.length === 0) return [];
 
-  // Build child→parents map
+  // Build child→parents and parent→children maps; collect all nodes
   const parentMap = new Map<string, string[]>();
+  const childrenMap = new Map<string, string[]>();
+  const allNodes = new Set<string>();
   for (const { child_id, parent_id } of links) {
     if (!parentMap.has(child_id)) parentMap.set(child_id, []);
     parentMap.get(child_id)!.push(parent_id);
+    if (!childrenMap.has(parent_id)) childrenMap.set(parent_id, []);
+    childrenMap.get(parent_id)!.push(child_id);
+    allNodes.add(child_id);
+    allNodes.add(parent_id);
   }
 
-  const persons = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
-  const results: CheckResult[] = [];
-  const cyclePersons = new Set<string>();
+  // Kahn's topological sort — O(V+E).
+  // In-degree = number of parents for each node.
+  // Nodes that cannot be processed (in-degree never reaches 0) are in cycles.
+  const inDegree = new Map<string, number>();
+  for (const node of allNodes) {
+    inDegree.set(node, parentMap.get(node)?.length ?? 0);
+  }
 
-  for (const { id } of persons) {
-    // Iterative DFS upward from this person
-    const visited = new Set<string>();
-    const stack = [id];
-    let foundCycle = false;
+  const queue: string[] = [];
+  for (const [node, deg] of inDegree) {
+    if (deg === 0) queue.push(node);
+  }
 
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-      if (visited.has(current)) {
-        if (current === id) {
-          foundCycle = true;
-          break;
-        }
-        continue;
-      }
-      visited.add(current);
-      const parents = parentMap.get(current) ?? [];
-      for (const p of parents) {
-        if (p === id) {
-          foundCycle = true;
-          break;
-        }
-        stack.push(p);
-      }
-      if (foundCycle) break;
-    }
-
-    if (foundCycle && !cyclePersons.has(id)) {
-      cyclePersons.add(id);
-      results.push({
-        code: 'CIRCULAR_ANCESTRY',
-        severity: 'error',
-        message: `Person förekommer som sin egen förfader (cyklisk härstamning)`,
-        messageParams: {},
-        personIds: [id],
-      });
+  const processed = new Set<string>();
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    processed.add(node);
+    for (const child of (childrenMap.get(node) ?? [])) {
+      const newDeg = inDegree.get(child)! - 1;
+      inDegree.set(child, newDeg);
+      if (newDeg === 0) queue.push(child);
     }
   }
 
-  return results;
+  // Any node not processed is part of a cycle
+  return Array.from(allNodes)
+    .filter(id => !processed.has(id))
+    .map(id => ({
+      code: 'CIRCULAR_ANCESTRY',
+      severity: 'error' as CheckSeverity,
+      message: `Person förekommer som sin egen förfader (cyklisk härstamning)`,
+      messageParams: {},
+      personIds: [id],
+    }));
 }
 
 function checkDuplicateRelationship(db: Database): CheckResult[] {
-  const rows = queryAll<{ rel1_id: string; rel2_id: string; type: string; person1_id: string; person2_id: string }>(db, `
-    SELECT r1.id AS rel1_id, r2.id AS rel2_id,
-           r1.type, r1.person1_id, r1.person2_id
-    FROM relationships r1
-    JOIN relationships r2 ON r1.id < r2.id
-      AND r1.type = r2.type
-      AND (
-        (r1.person1_id = r2.person1_id AND r1.person2_id = r2.person2_id)
-        OR (r1.person1_id = r2.person2_id AND r1.person2_id = r2.person1_id)
-      )
-    WHERE r1.person1_id IS NOT NULL AND r1.person2_id IS NOT NULL
+  // Load all relationships once, deduplicate in JS to avoid O(n²) self-join
+  const rows = queryAll<{ rel_id: string; type: string; person1_id: string; person2_id: string }>(db, `
+    SELECT id AS rel_id, type, person1_id, person2_id
+    FROM relationships
+    WHERE person1_id IS NOT NULL AND person2_id IS NOT NULL
   `);
 
-  return rows.map(r => ({
-    code: 'DUPLICATE_RELATIONSHIP',
-    severity: 'warning' as CheckSeverity,
-    message: `Duplicerat förhållande av typ '${r.type}' mellan samma två personer`,
-    messageParams: { type: r.type },
-    personIds: [r.person1_id, r.person2_id],
-    relationshipIds: [r.rel1_id, r.rel2_id],
-  }));
+  const seen = new Map<string, { rel_id: string; person1_id: string; person2_id: string }>();
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const key = r.type + ':' + [r.person1_id, r.person2_id].sort().join(':');
+    const first = seen.get(key);
+    if (first) {
+      results.push({
+        code: 'DUPLICATE_RELATIONSHIP',
+        severity: 'warning' as CheckSeverity,
+        message: `Duplicerat förhållande av typ '${r.type}' mellan samma två personer`,
+        messageParams: { type: r.type },
+        personIds: [r.person1_id, r.person2_id],
+        relationshipIds: [first.rel_id, r.rel_id],
+      });
+    } else {
+      seen.set(key, r);
+    }
+  }
+  return results;
 }
 
 function checkMarriageAge(db: Database): CheckResult[] {
-  // Find marriage events and get each participant's birth year
-  const marriages = queryAll<{ event_id: string; marriage_year: number; person_id: string }>(db, `
+  // Single query: join marriages directly with each participant's birth event
+  const rows = queryAll<{ event_id: string; marriage_year: number; person_id: string; birth_year: number }>(db, `
     SELECT e.id AS event_id,
            CAST(SUBSTR(e.date_value, 1, 4) AS INTEGER) AS marriage_year,
-           ep.person_id
+           ep.person_id,
+           CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
+    JOIN event_participants epb ON epb.person_id = ep.person_id
+    JOIN events b ON b.id = epb.event_id AND b.event_type = 'birth'
+      AND b.date_type IN ('exact','calculated','about') AND b.date_value IS NOT NULL
     WHERE e.event_type = 'marriage'
       AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
   `);
 
   const results: CheckResult[] = [];
-
-  for (const m of marriages) {
-    const birthRow = queryOne<{ birth_year: number }>(db, `
-      SELECT CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year
-      FROM event_participants ep
-      JOIN events b ON b.id = ep.event_id AND b.event_type = 'birth'
-        AND b.date_type IN ('exact','calculated','about') AND b.date_value IS NOT NULL
-      WHERE ep.person_id = ?
-      LIMIT 1
-    `, [m.person_id]);
-
-    if (!birthRow) continue;
-
-    const age = m.marriage_year - birthRow.birth_year;
-
+  for (const r of rows) {
+    const age = r.marriage_year - r.birth_year;
     if (age < 12) {
       results.push({
         code: 'MARRIED_BEFORE_12',
         severity: 'error',
-        message: `Person gifte sig vid ${age} år (${m.marriage_year}), under 12 år`,
-        messageParams: { age, year: m.marriage_year },
-        personIds: [m.person_id],
-        eventIds: [m.event_id],
+        message: `Person gifte sig vid ${age} år (${r.marriage_year}), under 12 år`,
+        messageParams: { age, year: r.marriage_year },
+        personIds: [r.person_id],
+        eventIds: [r.event_id],
       });
     } else if (age < 16) {
       results.push({
         code: 'MARRIED_BEFORE_16',
         severity: 'warning',
-        message: `Person gifte sig vid ${age} år (${m.marriage_year}), under 16 år`,
-        messageParams: { age, year: m.marriage_year },
-        personIds: [m.person_id],
-        eventIds: [m.event_id],
+        message: `Person gifte sig vid ${age} år (${r.marriage_year}), under 16 år`,
+        messageParams: { age, year: r.marriage_year },
+        personIds: [r.person_id],
+        eventIds: [r.event_id],
       });
     }
   }
-
   return results;
 }
 
@@ -790,21 +802,19 @@ function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
 // ---------------------------------------------------------------------------
 
 function checkNoName(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string }>(db, `
-    SELECT p.id AS person_id
-    FROM persons p
-    WHERE NOT EXISTS (
-      SELECT 1 FROM person_names pn WHERE pn.person_id = p.id
-    )
-  `);
-
-  return rows.map(r => ({
-    code: 'NO_NAME',
-    severity: 'notice' as CheckSeverity,
-    message: `Person saknar namnuppgifter`,
-    messageParams: {},
-    personIds: [r.person_id],
-  }));
+  const hasName = new Set(
+    queryAll<{ person_id: string }>(db, `SELECT DISTINCT person_id FROM person_names`).map(r => r.person_id)
+  );
+  const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+  return allPersonIds
+    .filter(r => !hasName.has(r.id))
+    .map(r => ({
+      code: 'NO_NAME',
+      severity: 'notice' as CheckSeverity,
+      message: `Person saknar namnuppgifter`,
+      messageParams: {},
+      personIds: [r.id],
+    }));
 }
 
 function checkLivingWithDeathEvent(db: Database): CheckResult[] {
@@ -827,24 +837,17 @@ function checkLivingWithDeathEvent(db: Database): CheckResult[] {
 }
 
 function checkNotLivingWithoutDeathEvent(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string }>(db, `
-    SELECT p.id AS person_id
-    FROM persons p
-    WHERE p.living = 0
-      AND NOT EXISTS (
-        SELECT 1 FROM event_participants ep
-        JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
-        WHERE ep.person_id = p.id
-      )
-  `);
-
-  return rows.map(r => ({
-    code: 'NOT_LIVING_WITHOUT_DEATH',
-    severity: 'notice' as CheckSeverity,
-    message: `Person är markerad som ej levande men saknar dödshändelse`,
-    messageParams: {},
-    personIds: [r.person_id],
-  }));
+  const hasDeath = personIdsWithEvent(db, 'death');
+  const notLiving = queryAll<{ id: string }>(db, `SELECT id FROM persons WHERE living = 0`);
+  return notLiving
+    .filter(r => !hasDeath.has(r.id))
+    .map(r => ({
+      code: 'NOT_LIVING_WITHOUT_DEATH',
+      severity: 'notice' as CheckSeverity,
+      message: `Person är markerad som ej levande men saknar dödshändelse`,
+      messageParams: {},
+      personIds: [r.id],
+    }));
 }
 
 function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): CheckResult[] {
@@ -876,44 +879,54 @@ function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): Ch
 
 function runAllCheckFunctions(db: Database): CheckResult[] {
   const results: CheckResult[] = [];
+  console.log('[checks] runAllCheckFunctions starting');
+  const t0 = Date.now();
+  function run(name: string, fn: () => CheckResult[]): void {
+    const start = Date.now();
+    const res = fn();
+    const ms = Date.now() - start;
+    console.log(`[checks] ${name}: ${ms}ms → ${res.length} result(s)`);
+    results.push(...res);
+  }
 
   // A. Chronological — Person
-  results.push(...checkBirthAfterDeath(db));
-  results.push(...checkEventAfterDeath(db));
-  results.push(...checkBurialBeforeDeath(db));
-  results.push(...checkLifespan(db));
-  results.push(...checkFutureDates(db));
-  results.push(...checkBaptismLate(db));
-  results.push(...checkDeathWithoutBirth(db));
-  results.push(...checkNoBirthEvent(db));
+  run('checkBirthAfterDeath',       () => checkBirthAfterDeath(db));
+  run('checkEventAfterDeath',       () => checkEventAfterDeath(db));
+  run('checkBurialBeforeDeath',     () => checkBurialBeforeDeath(db));
+  run('checkLifespan',              () => checkLifespan(db));
+  run('checkFutureDates',           () => checkFutureDates(db));
+  run('checkBaptismLate',           () => checkBaptismLate(db));
+  run('checkDeathWithoutBirth',     () => checkDeathWithoutBirth(db));
+  run('checkNoBirthEvent',          () => checkNoBirthEvent(db));
 
   // B. Parenthood Age
-  results.push(...checkParenthoodAge(db));
+  run('checkParenthoodAge',         () => checkParenthoodAge(db));
 
   // C. Sibling & Family Structure
-  results.push(...checkSiblingAgeLarge(db));
-  results.push(...checkDuplicateParentChild(db));
-  results.push(...checkMultipleBiologicalParents(db));
-  results.push(...checkNoParents(db));
+  run('checkSiblingAgeLarge',       () => checkSiblingAgeLarge(db));
+  run('checkDuplicateParentChild',  () => checkDuplicateParentChild(db));
+  run('checkMultipleBiologicalParents', () => checkMultipleBiologicalParents(db));
+  run('checkNoParents',             () => checkNoParents(db));
 
   // D. Relationship Integrity
-  results.push(...checkCircularAncestry(db));
-  results.push(...checkDuplicateRelationship(db));
-  results.push(...checkMarriageAge(db));
-  results.push(...checkMarriageAfterDeath(db));
-  results.push(...checkMarriageBeforeBirth(db));
-  results.push(...checkCoupleWithSelf(db));
+  run('checkCircularAncestry',      () => checkCircularAncestry(db));
+  run('checkDuplicateRelationship', () => checkDuplicateRelationship(db));
+  run('checkMarriageAge',           () => checkMarriageAge(db));
+  run('checkMarriageAfterDeath',    () => checkMarriageAfterDeath(db));
+  run('checkMarriageBeforeBirth',   () => checkMarriageBeforeBirth(db));
+  run('checkCoupleWithSelf',        () => checkCoupleWithSelf(db));
 
   // E. Geographic
-  results.push(...checkSimultaneousDistantLocations(db));
+  run('checkSimultaneousDistantLocations', () => checkSimultaneousDistantLocations(db));
 
   // F. Data Completeness
-  results.push(...checkNoName(db));
-  results.push(...checkLivingWithDeathEvent(db));
-  results.push(...checkNotLivingWithoutDeathEvent(db));
-  results.push(...checkUnsourcedLifeEvent(db, 'birth'));
-  results.push(...checkUnsourcedLifeEvent(db, 'death'));
+  run('checkNoName',                () => checkNoName(db));
+  run('checkLivingWithDeathEvent',  () => checkLivingWithDeathEvent(db));
+  run('checkNotLivingWithoutDeathEvent', () => checkNotLivingWithoutDeathEvent(db));
+  run('checkUnsourcedLifeEvent(birth)', () => checkUnsourcedLifeEvent(db, 'birth'));
+  run('checkUnsourcedLifeEvent(death)', () => checkUnsourcedLifeEvent(db, 'death'));
 
+  console.log(`[checks] total: ${Date.now() - t0}ms`);
   return results;
 }
 
