@@ -126,3 +126,34 @@ describe('holger profile — ADOP parent-child subtype', () => {
     expect(rows.every(r => r.subtype === 'foster')).toBe(true);
   });
 });
+
+const HOLGER_MEDIA_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 OBJE
+2 FORM JPG
+2 TITL
+2 FILE C:\\OurKind\\Media\\P12\\&SvenssonKalle(f1945).jpg
+2 NOTE Portrait of Kalle.
+0 TRLR
+`.trim();
+
+describe('holger profile — media path remapping', () => {
+  it('remaps Windows OBJE FILE path to local mediaDir', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_MEDIA_GED), { profile: 'holger', mediaDir: '/local/Media' });
+    const row = db.get('SELECT file_ref FROM media LIMIT 1') as { file_ref: string } | undefined;
+    expect(row?.file_ref).toBe('/local/Media/P12/&SvenssonKalle(f1945).jpg');
+  });
+
+  it('keeps path as-is when no mediaDir provided', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_MEDIA_GED), { profile: 'holger' });
+    const row = db.get('SELECT file_ref FROM media LIMIT 1') as { file_ref: string } | undefined;
+    expect(row?.file_ref).toContain('SvenssonKalle');
+  });
+});
