@@ -301,62 +301,7 @@ onMounted(load);
 </script>
 
 <style scoped>
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th,
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
-}
-
-.clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #f0f4ff; }
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.filter-chips {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  padding: 4px 12px;
-  border-radius: 12px;
-  border: 1px solid #c8d0db;
-  background: #f0f4f8;
-  color: #4a5568;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.chip:hover {
-  background: #e2e8f0;
-}
-
-.chip.active {
-  background: #2c3e50;
-  color: white;
-  border-color: #2c3e50;
-}
-
-
+/* Unique to ResearchTasksView */
 .priority-badge {
   display: inline-block;
   width: 24px;
@@ -368,7 +313,6 @@ onMounted(load);
   font-weight: 700;
   color: white;
 }
-
 .priority-0 { background: #9ca3af; }
 .priority-1 { background: #60a5fa; }
 .priority-2 { background: #f59e0b; }
@@ -384,9 +328,7 @@ onMounted(load);
   user-select: none;
   transition: opacity 0.15s;
 }
-
 .status-chip:hover { opacity: 0.8; }
-
 .status-open { background: #dbeafe; color: #1d4ed8; }
 .status-in_progress { background: #fef3c7; color: #92400e; }
 .status-done { background: #d1fae5; color: #065f46; }
@@ -398,62 +340,18 @@ onMounted(load);
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.person-edit-row { display: flex; align-items: center; gap: 8px; }
+.person-edit-row > :first-child { flex: 1; }
+.person-link-btn { white-space: nowrap; font-size: 13px; }
+.actions-cell { text-align: right; white-space: nowrap; }
 
-.person-link {
-  color: #2563eb;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.person-link:hover { text-decoration: underline; }
-
-.person-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.person-edit-row > :first-child {
-  flex: 1;
-}
-
-.person-link-btn {
-  white-space: nowrap;
-  font-size: 13px;
-}
-
-.actions-cell {
-  text-align: right;
-  white-space: nowrap;
-}
-
-.btn-sm {
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  border: none;
-}
-
-.btn-delete {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.btn-delete:hover { background: #fecaca; }
-
-.expanded-row td {
-  background: #f8fafc;
-  padding: 0;
-}
-
+.expanded-row td { background: #f8fafc; padding: 0; }
 .expanded-content {
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .expanded-content label {
   display: flex;
   flex-direction: column;
@@ -461,7 +359,6 @@ onMounted(load);
   font-size: 13px;
   color: #374151;
 }
-
 .expanded-content input,
 .expanded-content textarea,
 .expanded-content select {
@@ -471,109 +368,7 @@ onMounted(load);
   font-size: 14px;
   font-family: inherit;
 }
-
-.expanded-row-inline {
-  display: flex;
-  gap: 16px;
-}
-
-.expanded-row-inline label {
-  flex: 1;
-}
-
-.expanded-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.btn-add:hover { opacity: 0.9; }
-
-.btn-cancel {
-  background: white;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  padding: 7px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-cancel:hover { background: #f3f4f6; }
-
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal {
-  background: white;
-  border-radius: 10px;
-  padding: 24px;
-  width: 460px;
-  max-width: 95vw;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.modal h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.modal form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.modal label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #374151;
-}
-
-.modal input,
-.modal textarea,
-.modal select {
-  padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 4px;
-}
+.expanded-row-inline { display: flex; gap: 16px; }
+.expanded-row-inline label { flex: 1; }
+.expanded-actions { display: flex; gap: 8px; justify-content: flex-end; }
 </style>

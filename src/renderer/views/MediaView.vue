@@ -1,6 +1,6 @@
 <template>
   <div class="media-view">
-    <div class="view-header">
+    <div class="header">
       <h2>{{ $t('media.title') }}</h2>
       <button class="btn-add" @click="attachFile">{{ $t('media.attach') }}</button>
     </div>
@@ -89,32 +89,8 @@ onMounted(load);
 </script>
 
 <style scoped>
-.media-view {
-  max-width: 900px;
-}
-
-.view-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.view-header h2 {
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.empty-state {
-  color: #666;
-  font-style: italic;
-  padding: 24px 0;
-}
-
-.loading {
-  color: #666;
-  padding: 24px 0;
-}
+/* Unique to MediaView */
+.media-view { max-width: 900px; }
 
 .file-ref-cell {
   font-family: monospace;
@@ -124,11 +100,7 @@ onMounted(load);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.missing-file td {
-  opacity: 0.6;
-}
-
+.missing-file td { opacity: 0.6; }
 .missing-badge {
   display: inline-block;
   background: #e53e3e;
@@ -140,71 +112,10 @@ onMounted(load);
   margin-left: 6px;
   vertical-align: middle;
 }
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table th,
-.data-table td {
-  text-align: left;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 14px;
-}
-
-.data-table th {
-  font-weight: 600;
-  color: #555;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: #f9fafb;
-}
-
 .actions-cell {
   white-space: nowrap;
   display: flex;
   gap: 6px;
   align-items: center;
-}
-
-.btn-add {
-  padding: 7px 14px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-family: inherit;
-}
-
-.btn-add:hover {
-  background: #2563eb;
-}
-
-.btn-sm {
-  padding: 3px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  font-size: 12px;
-  font-family: inherit;
-}
-
-.btn-sm:hover {
-  background: #f3f4f6;
-}
-
-.btn-delete {
-  border-color: #fca5a5;
-  color: #dc2626;
-}
-
-.btn-delete:hover {
-  background: #fef2f2;
 }
 </style>

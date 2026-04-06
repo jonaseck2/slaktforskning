@@ -210,78 +210,7 @@ onActivated(() => {
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.running-hint {
-  font-size: 13px;
-  color: #999;
-}
-.count-label {
-  font-size: 13px;
-  color: #666;
-  margin: 0 0 8px;
-}
-.filter-chips {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.chip {
-  padding: 4px 12px;
-  border-radius: 12px;
-  border: 1px solid #c8d0db;
-  background: #f0f4f8;
-  color: #4a5568;
-  cursor: pointer;
-  font-size: 13px;
-}
-.chip:hover {
-  background: #e2e8f0;
-}
-.chip.active {
-  background: #2c3e50;
-  color: white;
-  border-color: #2c3e50;
-}
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th,
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
-}
-.clickable-row {
-  cursor: pointer;
-}
-.clickable-row:hover {
-  background: #f0f4ff;
-}
-.row-ignored {
-  opacity: 0.5;
-}
-.row-ignored:hover {
-  opacity: 0.7;
-}
+/* Unique to QualityView */
 .severity-badge {
   font-size: 11px;
   font-weight: 700;
@@ -290,43 +219,15 @@ onActivated(() => {
   text-transform: uppercase;
   white-space: nowrap;
 }
-.badge-error { background: #feb2b2; color: #742a2a; }
+.badge-error   { background: #feb2b2; color: #742a2a; }
 .badge-warning { background: #fef3c7; color: #78350f; }
-.badge-notice { background: #bfdbfe; color: #1e3a8a; }
-.message-cell {
-  font-size: 13px;
-}
-.persons-cell {
-  font-size: 13px;
-  white-space: nowrap;
-}
-.person-link {
-  color: #3182ce;
-  cursor: pointer;
-  text-decoration: none;
-}
-.person-link:hover {
-  text-decoration: underline;
-}
-button {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-button:hover { opacity: 0.9; }
-.btn-sm {
-  padding: 3px 10px;
-  font-size: 12px;
-}
-.btn-ignore {
-  background: #e2e8f0;
-  color: #4a5568;
-}
-.btn-unignore {
-  background: #c6f6d5;
-  color: #276749;
-}
+.badge-notice  { background: #bfdbfe; color: #1e3a8a; }
+
+.row-ignored { opacity: 0.5; }
+.row-ignored:hover { opacity: 0.7; }
+.message-cell { font-size: 13px; }
+.persons-cell { font-size: 13px; white-space: nowrap; }
+
+.btn-ignore  { background: #e2e8f0; color: #4a5568; }
+.btn-unignore { background: #c6f6d5; color: #276749; }
 </style>
