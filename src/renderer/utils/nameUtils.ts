@@ -76,6 +76,7 @@ export function parseAsteriskNotation(raw: string): { given_name: string; prefer
 /**
  * Plain-string display name for non-component contexts (reports, dropdowns, audit strings).
  * Uses preferred_name if set, otherwise the first token of given_name, then appends surname.
+ * @deprecated Use formatFullName() instead — this function only shows one given name token.
  */
 export function formatPersonName(name: {
   given_name?: string | null;
@@ -84,6 +85,40 @@ export function formatPersonName(name: {
 }): string {
   const first = name.preferred_name ?? name.given_name?.split(' ')[0] ?? '';
   return [first, name.surname].filter(Boolean).join(' ');
+}
+
+/**
+ * Canonical plain-string full name for reports, headings, and any non-component context.
+ * Shows ALL given names (not just the first token), nickname in quotes after the preferred
+ * name token, optional prefix before given names, and optional suffix after surname.
+ *
+ * Format: [prefix] [all given names + "nickname"] [surname] [suffix]
+ *
+ * Example: given_name="Lena Maja", preferred_name="Lena", nickname="Lenny", surname="Holm"
+ *   → 'Lena "Lenny" Maja Holm'
+ *
+ * This is the ONLY approved function for rendering a full person name as a string.
+ * Do NOT use formatPersonName(), primaryName(), displayName(), or inline string logic.
+ */
+export function formatFullName(name: {
+  name_prefix?: string | null;
+  given_name?: string | null;
+  preferred_name?: string | null;
+  nickname?: string | null;
+  surname?: string | null;
+  name_suffix?: string | null;
+}): string {
+  const parts: string[] = [];
+  if (name.name_prefix) parts.push(name.name_prefix);
+  const inner = fullNameParts(
+    name.given_name ?? null,
+    name.surname ?? null,
+    name.preferred_name ?? null,
+    name.nickname ?? null,
+  ).map(p => p.text).join('');
+  if (inner) parts.push(inner);
+  if (name.name_suffix) parts.push(name.name_suffix);
+  return parts.join(' ');
 }
 
 /** Truncates a parts array to at most maxLen visible characters, appending '…' if cut. */

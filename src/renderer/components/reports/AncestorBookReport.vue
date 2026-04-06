@@ -251,6 +251,7 @@ import {
 } from '../../utils/circleLayout';
 import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
 import type { PersonNode } from '../../utils/chartLayout';
+import { formatFullName } from '../../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -264,6 +265,9 @@ interface RawName {
   name_type: string;
   sort_order: number;
   preferred_name: string | null;
+  nickname?: string | null;
+  name_prefix?: string | null;
+  name_suffix?: string | null;
 }
 interface RawEvent {
   id: string;
@@ -331,8 +335,7 @@ const nonFocalSegments = computed(() => segments.value.filter(s => !s.isFocal));
 
 // ── Display helpers ────────────────────────────────────────────────────────────
 function displayName(p: PersonNode): string {
-  const first = p.preferredName ?? p.givenName ?? '';
-  return [first, p.surname].filter(Boolean).join(' ') || '(okänd)';
+  return formatFullName({ given_name: p.givenName, surname: p.surname, preferred_name: p.preferredName, nickname: p.nickname }) || '(okänd)';
 }
 
 function lifespanStr(p: PersonNode): string {
@@ -496,8 +499,7 @@ async function resolvePersonName(id: string): Promise<string> {
     if (!names.length) return '(okänd)';
     const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
     const n = sorted[0];
-    const first = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
-    return [first, n.surname].filter(Boolean).join(' ') || '(okänd)';
+    return formatFullName(n) || '(okänd)';
   } catch {
     return '(okänd)';
   }

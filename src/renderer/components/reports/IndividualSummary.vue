@@ -5,7 +5,7 @@
     <template v-else-if="data">
       <!-- Header -->
       <div class="report-header">
-        <h1 class="report-title">{{ data.preferredName || data.primaryName || '(okänd)' }}</h1>
+        <h1 class="report-title">{{ data.primaryName || '(okänd)' }}</h1>
         <div class="report-subtitle">
           <span v-if="data.birthYear || data.deathYear" class="years">
             {{ data.birthYear ?? '?' }}–{{ data.deathYear ?? '' }}
@@ -127,6 +127,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { formatFullName } from '../../../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -140,6 +141,9 @@ interface RawName {
   name_type: string;
   sort_order: number;
   preferred_name: string | null;
+  nickname?: string | null;
+  name_prefix?: string | null;
+  name_suffix?: string | null;
 }
 interface RawEvent {
   id: string;
@@ -173,7 +177,6 @@ interface PersonRef { id: string; name: string; subtype?: string | null; }
 
 interface SummaryData {
   primaryName: string;
-  preferredName: string | null;
   birthYear: number | null;
   deathYear: number | null;
   notes: string | null;
@@ -216,9 +219,7 @@ function extractYear(ev: RawEvent | undefined): number | null {
 function primaryName(names: RawName[]): string {
   if (!names.length) return '';
   const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  const n = sorted[0];
-  const first = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
-  return [first, n.surname].filter(Boolean).join(' ');
+  return formatFullName(sorted[0]);
 }
 
 function nameTypeLabel(t: string): string {
@@ -350,17 +351,14 @@ async function load() {
       )
     ).filter((s): s is RawSource => s !== null);
 
-    // Compute preferred name and birth/death years
+    // Compute display name and birth/death years
     const sortedNames = [...names].sort((a, b) => a.sort_order - b.sort_order);
-    const primaryN = sortedNames[0] ?? null;
-    const preferredName = primaryN?.preferred_name ?? null;
 
     const birthEv = events.find(e => e.event_type === 'birth');
     const deathEv = events.find(e => e.event_type === 'death');
 
     data.value = {
       primaryName: primaryName(names),
-      preferredName,
       birthYear: extractYear(birthEv),
       deathYear: extractYear(deathEv),
       notes: person.notes ?? null,

@@ -73,13 +73,14 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { formatFullName } from '../../../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
-interface RawName { given_name: string | null; surname: string | null; preferred_name?: string | null; name_type: string; sort_order: number; }
+interface RawName { given_name: string | null; surname: string | null; preferred_name?: string | null; nickname?: string | null; name_prefix?: string | null; name_suffix?: string | null; name_type: string; sort_order: number; }
 interface RawEvent {
   id: string;
   event_type: string;
@@ -141,9 +142,7 @@ const data = ref<SheetData | null>(null);
 function primaryName(names: RawName[]): string {
   if (!names.length) return '';
   const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  const n = sorted[0];
-  const first = n.preferred_name ?? n.given_name?.split(' ')[0] ?? '';
-  return [first, n.surname].filter(Boolean).join(' ');
+  return formatFullName(sorted[0]);
 }
 
 function formatDate(ev: RawEvent): string {

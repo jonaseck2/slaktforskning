@@ -21,12 +21,14 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { fetchPedigreeTree } from '../../utils/chartData';
+import { formatFullName } from '../../utils/nameUtils';
 
 interface PersonNode {
   id: string;
   givenName: string | null;
   surname: string | null;
   preferredName: string | null;
+  nickname: string | null;
   birthYear: number | null;
   deathYear: number | null;
 }
@@ -45,8 +47,7 @@ const focalName = computed(() => {
   if (!tree.value) return '';
   const focal = tree.value.nodes.get(1);
   if (!focal) return '';
-  const first = focal.preferredName ?? focal.givenName?.split(' ')[0] ?? '';
-  return [first, focal.surname].filter(Boolean).join(' ');
+  return formatFullName({ given_name: focal.givenName, surname: focal.surname, preferred_name: focal.preferredName, nickname: focal.nickname });
 });
 
 interface EntryRow { ahnNum: number; name: string; years: string; }
@@ -61,8 +62,7 @@ const generationRows = computed<GenRow[]>(() => {
     for (let n = start; n < start * 2; n++) {
       const p = tree.value.nodes.get(n);
       if (!p) continue;
-      const first = p.preferredName ?? p.givenName?.split(' ')[0] ?? '';
-      const name = [first, p.surname].filter(Boolean).join(' ');
+      const name = formatFullName({ given_name: p.givenName, surname: p.surname, preferred_name: p.preferredName, nickname: p.nickname });
       const birthStr = p.birthYear != null ? String(p.birthYear) : '?';
       const deathStr = p.deathYear != null ? String(p.deathYear) : '';
       const years = deathStr ? `${birthStr}–${deathStr}` : birthStr !== '?' ? `f. ${birthStr}` : '';
