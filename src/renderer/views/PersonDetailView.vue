@@ -284,7 +284,7 @@
     <section class="detail-section">
       <div class="section-header">
         <h4>{{ $t('media.title') }}</h4>
-        <button class="btn-add" @click="attachMediaToPersonn">{{ $t('media.attach') }}</button>
+        <button class="btn-add" @click="attachMediaToPerson">{{ $t('media.attach') }}</button>
       </div>
       <div v-if="personMedia.length === 0" class="empty-hint">{{ $t('media.noMedia') }}</div>
       <table v-else class="data-table">
@@ -599,7 +599,7 @@ async function loadPersonMedia() {
   personMedia.value = (await window.api.media.forEntity('person', personId)) as PersonMediaItem[];
 }
 
-async function attachMediaToPersonn() {
+async function attachMediaToPerson() {
   const result = await window.api.media.attach({ entityType: 'person', entityId: personId }) as { canceled: boolean };
   if (!result.canceled) {
     await loadPersonMedia();

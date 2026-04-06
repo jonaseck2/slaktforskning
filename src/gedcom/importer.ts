@@ -6,6 +6,7 @@ import { createPerson, addPersonName, addPersonIdentifier } from '../api/persons
 import { createRelationship, updateRelationship, addEventParticipant, getRelationshipsOfPerson } from '../api/relationships';
 import { createEvent } from '../api/events';
 import { createSource, createCitation } from '../api/sources';
+import { createMedia, addMediaLink } from '../api/media';
 import { getPlace, findOrCreatePlace, updatePlace } from '../api/places';
 import { findOrCreateSwedishPlace } from './swedishPlace';
 import { extractPatronymic } from './swedishNames';
@@ -132,6 +133,35 @@ function resolveNote(node: GedcomNode, noteMap: Map<string, string>): string {
   return val;
 }
 
+/**
+ * Import a single OBJE node (inline or top-level reference) and return the media UUID.
+ * Returns null if the node cannot be resolved.
+ */
+function importObjeNode(
+  db: Database,
+  objeNode: GedcomNode,
+  objeMap: Map<string, string>,
+): string | null {
+  // Reference to a previously imported top-level OBJE record: `1 OBJE @M1@`
+  if (objeNode.value?.startsWith('@')) {
+    return objeMap.get(objeNode.value) ?? null;
+  }
+  // Inline embedded OBJE
+  const file = getChild(objeNode, 'FILE')?.value ?? '';
+  const form = getChild(objeNode, 'FORM')?.value ?? null;
+  const titl = getChild(objeNode, 'TITL')?.value ?? null;
+  const note = getChild(objeNode, 'NOTE')?.value ?? '';
+  const media = createMedia(db, {
+    file_ref: file || null,
+    title: titl ?? file ?? undefined,
+    format: form,
+    notes: note || undefined,
+    is_printable: false,
+    is_missing: true,
+  });
+  return media.id;
+}
+
 function importEventNode(
   db: Database,
   evNode: GedcomNode,
@@ -142,6 +172,7 @@ function importEventNode(
   placeIdMap: Map<string, string>,
   eventIdMap: Map<string, string>,
   noteMap: Map<string, string>,
+  objeMap: Map<string, string>,
 ) {
   const dateNode = getChild(evNode, 'DATE');
   const placNode = getChild(evNode, 'PLAC');
@@ -192,6 +223,12 @@ function importEventNode(
         date_accessed: date_accessed || undefined,
       });
     }
+  }
+
+  // Event media
+  for (const objeNode of getChildren(evNode, 'OBJE')) {
+    const mediaId = importObjeNode(db, objeNode, objeMap);
+    if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id });
   }
 
   return event;
@@ -246,13 +283,33 @@ function doImportGedcom(
 
   // Report accumulators
   const skippedTags = new Map<string, number>();
-  let objeCount = 0;
 
   // ── Phase 0: NOTE records ─────────────────────────────────────────────────
   const noteMap = new Map<string, string>();
   for (const node of tree) {
     if (node.tag !== 'NOTE' || !node.xref) continue;
     noteMap.set(node.xref, node.value ?? '');
+  }
+
+  // ── Phase 0.5: OBJE top-level records ────────────────────────────────────
+  // Build objeMap (GEDCOM xref → app media UUID) before processing INDI/FAM records,
+  // so that inline `1 OBJE @Mx@` references resolve correctly.
+  const objeMap = new Map<string, string>(); // xref → app media UUID
+  for (const node of tree) {
+    if (node.tag !== 'OBJE' || !node.xref) continue;
+    const file = getChild(node, 'FILE')?.value ?? '';
+    const form = getChild(node, 'FORM')?.value ?? null;
+    const titl = getChild(node, 'TITL')?.value ?? null;
+    const note = getChild(node, 'NOTE')?.value ?? '';
+    const media = createMedia(db, {
+      file_ref: file || null,
+      title: titl ?? file ?? undefined,
+      format: form,
+      notes: note || undefined,
+      is_printable: false,
+      is_missing: true,
+    });
+    objeMap.set(node.xref, media.id);
   }
 
   // ── Phase 1: SOUR records ──────────────────────────────────────────────────
@@ -364,7 +421,7 @@ function doImportGedcom(
     // Person events
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn, placeIdMap, eventIdMap, noteMap);
+        const event = importEventNode(db, evNode, appType, sourceMap, {}, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap);
         addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
       }
     }
@@ -409,9 +466,14 @@ function doImportGedcom(
       assoData.push({ personId: person.id, assoNode });
     }
 
+    // Person-level media
+    for (const objeNode of getChildren(node, 'OBJE')) {
+      const mediaId = importObjeNode(db, objeNode, objeMap);
+      if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'person', entity_id: person.id });
+    }
+
     // Count unrecognised top-level INDI tags
     for (const child of node.children) {
-      if (child.tag === 'OBJE') { objeCount++; continue; }
       if (!KNOWN_INDI_TAGS.has(child.tag)) {
         skippedTags.set(child.tag, (skippedTags.get(child.tag) ?? 0) + 1);
       }
@@ -449,7 +511,7 @@ function doImportGedcom(
     // Family events
     for (const [gedTag, appType] of Object.entries(FAMILY_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap);
+        importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap);
       }
     }
 
@@ -483,9 +545,14 @@ function doImportGedcom(
       }
     }
 
+    // Family-level media
+    for (const objeNode of getChildren(node, 'OBJE')) {
+      const mediaId = importObjeNode(db, objeNode, objeMap);
+      if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id });
+    }
+
     // Count unrecognised top-level FAM tags
     for (const child of node.children) {
-      if (child.tag === 'OBJE') { objeCount++; continue; }
       if (!KNOWN_FAM_TAGS.has(child.tag)) {
         skippedTags.set(child.tag, (skippedTags.get(child.tag) ?? 0) + 1);
       }
@@ -572,7 +639,6 @@ function doImportGedcom(
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
   const warnings: string[] = [];
-  if (objeCount > 0) warnings.push(`${objeCount} OBJE record(s) skipped (media import not yet supported)`);
   return { skipped, warnings };
 }
 

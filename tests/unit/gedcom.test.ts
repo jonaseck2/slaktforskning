@@ -10,6 +10,7 @@ import { createEvent } from '../../src/api/events';
 import { getEventsForPerson } from '../../src/api/events';
 import { createSource, listSources, createCitation, getCitationsForPerson, getCitationsForRelationship, getCitationsForPlace, getCitationsForEvent } from '../../src/api/sources';
 import { createPlace, listPlaces } from '../../src/api/places';
+import { createMedia, addMediaLink, getMediaForEntity } from '../../src/api/media';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });
@@ -935,7 +936,7 @@ describe('GEDCOM import completeness', () => {
     expect(ged).toContain('1 ENGA');
   });
 
-  it('ImportReport contains correct counts and OBJE warning', () => {
+  it('ImportReport contains correct counts', () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -963,6 +964,74 @@ describe('GEDCOM import completeness', () => {
     expect(report.events['birth']).toBe(1);
     expect(report.events['death']).toBe(1);
     expect(report.events['marriage']).toBe(1);
-    expect(report.warnings.some(w => w.includes('OBJE'))).toBe(true);
+  });
+});
+
+// ──────────────────────────────────────────────
+// GEDCOM media import/export
+// ──────────────────────────────────────────────
+describe('GEDCOM media import', () => {
+  it('imports inline OBJE on INDI and links to person', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Bengt /Persson/
+1 OBJE
+2 FORM JPG
+2 FILE C:\\Photos\\bengt.jpg
+2 TITL Portrait
+2 NOTE Studio photo 1950
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    expect(persons).toHaveLength(1);
+    const media = getMediaForEntity(db, 'person', persons[0].id);
+    expect(media).toHaveLength(1);
+    expect(media[0].file_ref).toBe('C:\\Photos\\bengt.jpg');
+    expect(media[0].format).toBe('JPG');
+    expect(media[0].title).toBe('Portrait');
+    expect(media[0].is_missing).toBe(1);
+  });
+
+  it('imports top-level OBJE referenced from INDI', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @M1@ OBJE
+1 FILE /photos/portrait.png
+1 FORM PNG
+1 TITL Family photo
+0 @I1@ INDI
+1 NAME Anna /Svensson/
+1 OBJE @M1@
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const media = getMediaForEntity(db, 'person', persons[0].id);
+    expect(media).toHaveLength(1);
+    expect(media[0].file_ref).toBe('/photos/portrait.png');
+    expect(media[0].is_missing).toBe(1);
+  });
+
+  it('exports person media as inline OBJE and re-imports correctly', () => {
+    const person = createPerson(db, { sex: 'M' });
+    addPersonName(db, person.id, { given_name: 'Test', surname: 'Person' });
+    const media = createMedia(db, { title: 'Photo', file_ref: '/test.jpg', format: 'JPG', is_missing: false });
+    addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
+
+    const ged = exportGedcom(db);
+    expect(ged).toContain('1 OBJE');
+    expect(ged).toContain('2 FILE /test.jpg');
+    expect(ged).toContain('2 FORM JPG');
+
+    // Re-import into a fresh DB and verify media is linked
+    const db2 = createTestDb();
+    importGedcom(db2, parseGedcom(ged));
+    const persons2 = listPersons(db2);
+    expect(persons2).toHaveLength(1);
+    const media2 = getMediaForEntity(db2, 'person', persons2[0].id);
+    expect(media2).toHaveLength(1);
+    expect(media2[0].file_ref).toBe('/test.jpg');
   });
 });
