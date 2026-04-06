@@ -12,6 +12,14 @@ export default {
     importExport: 'Import / Export',
     groups: 'Groups',
     focusPerson: 'Focus person',
+    settings: 'Settings',
+  },
+  settings: {
+    appearance: 'Appearance',
+    light: 'Light',
+    dark: 'Dark',
+    textSize: 'Text Size',
+    language: 'Language',
   },
   common: {
     cancel: 'Cancel',
@@ -28,6 +36,7 @@ export default {
     unknown: '(unknown)',
     back: 'Back',
     view: 'View',
+    all: 'All',
   },
   persons: {
     title: 'Persons',
@@ -87,6 +96,8 @@ export default {
     person2: 'Person 2',
     searchPerson: 'Search for a person\u2026',
     confirmDelete: 'Delete this relationship? This cannot be undone.',
+    showingOf: 'Showing {shown} of {total} relationships',
+    noMatchingFilter: 'No relationships match this filter.',
   },
   relationshipDetail: {
     title: 'Relationship',
@@ -313,6 +324,7 @@ export default {
     title: 'Places',
     addTitle: 'Add place',
     none: 'No places',
+    noMatchingFilter: 'No places match this filter.',
     name: 'Name',
     type: 'Type',
     parentPlace: 'Parent place',
@@ -496,6 +508,7 @@ export default {
     filterAll: 'All',
     noTasks: 'No research tasks',
     selectPersonOptional: 'Select person (optional)',
+    summary: '{count} research tasks · {open} active',
   },
   groups: {
     title: 'Groups',
@@ -557,5 +570,6 @@ export default {
     linkedEntities: 'Linked to',
     addMedia: 'Add media',
     title_label: 'Title',
+    missingCount: '{count} missing',
   },
 };

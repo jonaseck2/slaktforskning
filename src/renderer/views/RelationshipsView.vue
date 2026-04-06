@@ -5,10 +5,21 @@
       <button class="btn-add" @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
     </div>
     <p v-if="total > 0" class="count-label">
-      {{ $t('persons.showingOf', { shown: relationships.length, total }) }}
+      {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>
+    <div v-if="relationships.length > 0" class="filter-chips">
+      <button
+        v-for="f in typeFilters"
+        :key="f.value"
+        :class="['chip', { active: activeTypeFilter === f.value }]"
+        @click="activeTypeFilter = f.value"
+      >{{ f.label }}</button>
+    </div>
     <div v-if="relationships.length === 0 && !loading" class="empty">
       {{ $t('relationships.emptyState') }}
+    </div>
+    <div v-else-if="filteredRelationships.length === 0 && !loading" class="empty">
+      {{ $t('relationships.noMatchingFilter') }}
     </div>
     <table v-else class="data-table">
       <thead>
@@ -22,7 +33,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="rel in relationships"
+          v-for="rel in filteredRelationships"
           :key="rel.id"
           class="clickable-row"
           @click="goToDetail(rel.id)"
@@ -131,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
@@ -172,6 +183,32 @@ const offset = ref(0);
 const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
+
+const activeTypeFilter = ref<string>('all');
+
+const typeCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const rel of relationships.value) {
+    counts[rel.type] = (counts[rel.type] ?? 0) + 1;
+  }
+  return counts;
+});
+
+const typeFilters = computed(() => [
+  { value: 'all', label: `${t('common.all')} (${relationships.value.length})` },
+  ...RELATIONSHIP_TYPE_VALUES
+    .filter(type => (typeCounts.value[type] ?? 0) > 0)
+    .map(type => ({
+      value: type,
+      label: `${t('relTypes.' + type)} (${typeCounts.value[type] ?? 0})`,
+    })),
+]);
+
+const filteredRelationships = computed(() =>
+  activeTypeFilter.value === 'all'
+    ? relationships.value
+    : relationships.value.filter(r => r.type === activeTypeFilter.value)
+);
 
 let observer: IntersectionObserver | null = null;
 
@@ -231,6 +268,7 @@ function getSubtypeLabel(type: string, subtype: string): string {
 async function load() {
   if (!window.api) return;
   loading.value = true;
+  activeTypeFilter.value = 'all';
   try {
     const result = await window.api.relationships.listPage(PAGE_SIZE, 0) as { relationships: RelRow[]; total: number };
     relationships.value = result.relationships;
@@ -309,46 +347,7 @@ onActivated(async () => {
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.empty {
-  color: #999;
-  padding: 40px;
-  text-align: center;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th,
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th {
-  background: #eee;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
-}
-.count-label {
-  font-size: 13px;
-  color: #666;
-  margin: 0 0 8px;
-}
-.scroll-sentinel { height: 1px; }
-.clickable-row {
-  cursor: pointer;
-}
-.clickable-row:hover {
-  background: #f0f4ff;
-}
+/* Unique to RelationshipsView */
 .type-badge {
   background: #fef3c7;
   color: #92400e;
@@ -361,110 +360,5 @@ onActivated(async () => {
   font-size: 11px;
   color: #888;
   margin-top: 1px;
-}
-button {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-button:hover {
-  opacity: 0.9;
-}
-.person-link {
-  color: #2563eb;
-  cursor: pointer;
-  text-decoration: none;
-}
-.person-link:hover {
-  text-decoration: underline;
-}
-.btn-sm {
-  padding: 3px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-delete {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-.btn-delete:hover {
-  background: #fecaca;
-}
-.btn-add {
-  background: #2c3e50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.btn-add:hover { opacity: 0.9; }
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 450px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-.modal h3 {
-  margin: 0 0 16px;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-form > label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-}
-form select,
-form textarea {
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-.modal-actions button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-}
-.modal-actions button[type='submit'] {
-  background: #2c3e50;
-  color: white;
-}
-.btn-cancel {
-  background: #e0e0e0;
-  color: #333;
 }
 </style>

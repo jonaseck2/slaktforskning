@@ -38,12 +38,6 @@ describe('VisualizationView', () => {
     };
   });
 
-  it('displays the focal person name after loading', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
-    await flushPromises();
-    expect(wrapper.text()).toContain('Magnus Eriksson');
-  });
-
   it('renders the hourglass chart tab by default', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
@@ -53,7 +47,7 @@ describe('VisualizationView', () => {
   it('switches to hourglass tab when clicked', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
-    const tabs = wrapper.findAll('.tab');
+    const tabs = wrapper.findAll('.tab-btn');
     const hourglassTab = tabs.find(t => t.attributes('data-testid') === 'tab-hourglass');
     expect(hourglassTab).toBeDefined();
     await hourglassTab!.trigger('click');
@@ -68,9 +62,4 @@ describe('VisualizationView', () => {
     expect(wrapper.find('.stub-timeline').exists()).toBe(true);
   });
 
-  it('focal person name has data-testid attribute', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
-    await flushPromises();
-    expect(wrapper.find('[data-testid="visualization-focal-name"]').exists()).toBe(true);
-  });
 });

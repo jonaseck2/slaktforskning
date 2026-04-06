@@ -18,7 +18,6 @@
     <div v-if="activeTab === 'ancestor'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <span v-if="focusStore.personName" class="focal-person-display">{{ focusStore.personName }}</span>
           <label>
             {{ $t('reports.generations') }}
             <select v-model="ancestorGenerations">
@@ -84,7 +83,6 @@
     <div v-if="activeTab === 'individual'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <span v-if="focusStore.personName" class="focal-person-display">{{ focusStore.personName }}</span>
         </div>
         <div class="print-actions">
           <button class="btn-print" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
@@ -109,7 +107,6 @@
     <div v-if="activeTab === 'ancestorBook'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <span v-if="focusStore.personName" class="focal-person-display">{{ focusStore.personName }}</span>
         </div>
         <div class="print-actions">
           <button class="btn-print" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
@@ -263,11 +260,6 @@ async function exportPdf() {
   margin-bottom: 16px;
 }
 .view-header h2 { margin: 0; }
-.running-hint {
-  font-size: 13px;
-  color: #999;
-}
-
 /* Zoom controls (floating bottom-right of preview area) */
 .zoom-floating {
   position: absolute;
@@ -302,13 +294,6 @@ async function exportPdf() {
   color: #555;
 }
 
-.tab-bar { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #e0e0e0; }
-.tab-btn {
-  padding: 8px 20px; border: none; background: none; cursor: pointer;
-  font-size: 14px; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px;
-}
-.tab-btn.active { color: #2c3e50; font-weight: 600; border-bottom-color: #2c3e50; }
-
 .tab-content { display: flex; flex-direction: column; gap: 12px; }
 
 .tab-header {
@@ -317,12 +302,6 @@ async function exportPdf() {
   align-items: flex-end;
   gap: 16px;
   flex-wrap: wrap;
-}
-.focal-person-display {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2c3e50;
-  align-self: center;
 }
 .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 .controls label {
@@ -361,8 +340,6 @@ async function exportPdf() {
   transform-origin: top center;
   flex-shrink: 0;
 }
-.empty-hint { color: #999; font-size: 13px; padding: 40px; text-align: center; }
-
 @media print {
   .view-header, .tab-bar, .tab-header, .zoom-floating { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }

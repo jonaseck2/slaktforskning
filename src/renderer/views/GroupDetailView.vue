@@ -155,7 +155,7 @@ onMounted(load);
   border: none;
   color: #3498db;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 0;
   margin-bottom: 16px;
   display: block;
@@ -181,7 +181,7 @@ onMounted(load);
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 8px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-family: inherit;
   resize: vertical;
   margin-bottom: 24px;
@@ -193,8 +193,8 @@ onMounted(load);
   align-items: center;
   margin-bottom: 12px;
 }
-.members-header h4 { margin: 0; font-size: 15px; }
-.count { font-weight: 400; color: #888; font-size: 13px; }
+.members-header h4 { margin: 0; font-size: var(--font-md); }
+.count { font-weight: 400; color: #888; font-size: var(--font-sm); }
 .add-member-row {
   display: flex;
   gap: 8px;
@@ -202,22 +202,9 @@ onMounted(load);
   margin-bottom: 12px;
 }
 .add-member-row > :first-child { flex: 1; }
-.empty-hint { color: #aaa; font-size: 13px; margin: 8px 0; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-.data-table th { background: #eee; font-weight: 600; }
-.clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #f0f4ff; }
-.person-link { color: #3498db; }
 button { background: #2c3e50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
 button:hover { opacity: 0.9; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-add { background: none; color: #3498db; font-size: 13px; padding: 4px 8px; border: 1px solid #3498db; border-radius: 4px; }
-.btn-sm { padding: 5px 10px; font-size: 13px; }
-.btn-delete { background: #fee; color: #c0392b; }
+.btn-add { background: none; color: #3498db; font-size: var(--font-sm); padding: 4px 8px; border: 1px solid #3498db; border-radius: 4px; }
 .btn-cancel-inline { background: #e0e0e0; color: #333; }
 </style>
