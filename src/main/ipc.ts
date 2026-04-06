@@ -448,6 +448,22 @@ export function registerIpcHandlers(): void {
     return fs.existsSync(absPath) ? absPath : null;
   });
 
+  wrapHandler('media:readAsDataUrl', (id) => {
+    const item = media.getMedia(getDatabase(), id as string);
+    if (!item || !item.file_ref) return null;
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const absPath = path.resolve(dbDir, item.file_ref);
+    if (!fs.existsSync(absPath)) return null;
+    const ext = path.extname(absPath).toLowerCase().slice(1);
+    const mimeMap: Record<string, string> = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
+    };
+    const mime = mimeMap[ext] ?? 'image/jpeg';
+    const data = fs.readFileSync(absPath).toString('base64');
+    return `data:${mime};base64,${data}`;
+  });
+
   // Checks
   wrapHandler('checks:runAll', () => {
     if (importInProgress) {

@@ -24,6 +24,7 @@
           <td>
             {{ item.title || '—' }}
             <span v-if="item.is_missing" class="missing-badge">{{ $t('media.isMissing') }}</span>
+            <div v-if="item.notes" class="item-notes">{{ item.notes }}</div>
           </td>
           <td>{{ item.format || '—' }}</td>
           <td class="file-ref-cell">{{ item.file_ref || '—' }}</td>
@@ -105,6 +106,12 @@ onMounted(load);
   white-space: nowrap;
 }
 .missing-file td { opacity: 0.6; }
+.item-notes {
+  font-size: var(--font-xs);
+  color: #777;
+  margin-top: 2px;
+  white-space: pre-line;
+}
 .missing-badge {
   display: inline-block;
   background: #e53e3e;

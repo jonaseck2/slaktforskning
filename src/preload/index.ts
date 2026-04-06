@@ -154,6 +154,7 @@ const api = {
     attach: mutating((data?: unknown) => ipcRenderer.invoke('media:attach', data)),
     openFile: (id: string) => ipcRenderer.invoke('media:openFile', id),
     getFilePath: (id: string) => ipcRenderer.invoke('media:getFilePath', id),
+    readAsDataUrl: (id: string) => ipcRenderer.invoke('media:readAsDataUrl', id),
   },
   print: {
     print: () => ipcRenderer.invoke('print:print'),
