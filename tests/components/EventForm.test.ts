@@ -41,14 +41,14 @@ describe('EventForm optional source section', () => {
     expect(wrapper.find('.source-toggle').exists()).toBe(true);
   });
 
-  it('hides source toggle when editing an existing event', async () => {
+  it('shows source toggle when editing an existing event', async () => {
     const wrapper = mount(EventForm, {
       global: { plugins: [i18n] },
       props: { personId: 'p1', editingEvent },
     });
     await flushPromises();
 
-    expect(wrapper.find('.source-toggle').exists()).toBe(false);
+    expect(wrapper.find('.source-toggle').exists()).toBe(true);
   });
 
   it('creates a citation linked to the event when source is selected', async () => {

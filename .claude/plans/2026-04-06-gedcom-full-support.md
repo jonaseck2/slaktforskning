@@ -361,8 +361,8 @@ assertSameEvents(db1, db2);
 
 ## Roadmap / Milestones
 
-- [ ] **Step 1** — Refactor: move to `src/import/gedcom/` (pure refactor, no behavior change)
-- [ ] **Step 2** — 5.5.5 support + version detection in report
+- [x] **Step 1** — Refactor: move to `src/import/gedcom/` (pure refactor, no behavior change)
+- [x] **Step 2** — 5.5.5 support + version detection in report
 - [ ] **Step 3** — 7.0 normalization layer + 7.0 import support
 - [ ] **Step 4** — Data loss validation report (replaces skipped tags)
 - [ ] **Step 5** — Round-trip export improvements (place coordinates, identifiers, repos)

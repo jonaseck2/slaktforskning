@@ -50,6 +50,7 @@
     <div v-if="showImportReport && importReport" class="modal-overlay" @click.self="showImportReport = false">
       <div class="modal">
         <h3>{{ $t('importExport.importReportTitle') }}</h3>
+        <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
         <ul class="report-counts">
           <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
           <li>{{ $t('importExport.importReportFamilies', { n: importReport.families }) }}</li>
@@ -101,6 +102,7 @@ const holgerMediaDir = ref('');
 const holgerProgress = ref('');
 const showImportReport = ref(false);
 const importReport = ref<{
+  version?: string;
   persons: number; families: number; events: Record<string, number>;
   sources: number; places: number; citations: number;
   skipped: { tag: string; count: number }[];
@@ -202,6 +204,7 @@ async function handleImportFromHolger() {
     }) as {
       success: boolean;
       report?: {
+        version?: string;
         persons: number; families: number; events: Record<string, number>;
         sources: number; places: number; citations: number;
         skipped: { tag: string; count: number }[];
@@ -233,6 +236,7 @@ async function handleImportGedcom() {
       canceled?: boolean;
       filePath?: string;
       report?: {
+        version?: string;
         persons: number;
         families: number;
         events: Record<string, number>;

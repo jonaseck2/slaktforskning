@@ -146,6 +146,7 @@ export default {
   },
   events: {
     title: 'Events',
+    event: 'Event',
     addEvent: '+ Add Event',
     noEvents: 'No events recorded.',
     date: 'Date',
@@ -166,6 +167,7 @@ export default {
     causePlaceholder: 'e.g. heart attack',
   },
   citations: {
+    title: 'Citations',
     addTitle: 'Add Citation',
     editTitle: 'Edit citation',
     source: 'Source',
@@ -566,6 +568,7 @@ export default {
     importReportCitations: '{n} citations',
     importReportSkipped: 'Not imported:',
     importReportWarnings: 'Warnings:',
+    importReportVersionUnknown: 'GEDCOM (unknown version)',
     importReportClose: 'Close',
   },
   media: {

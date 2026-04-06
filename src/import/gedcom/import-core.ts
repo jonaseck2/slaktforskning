@@ -17,6 +17,8 @@
 
 import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
+import { detectGedcomVersion } from './detect';
+import type { GedcomVersion } from './detect';
 import type { Place, Relationship, RelationshipType, EventParticipantRole } from '../../api/types';
 import { parseGedcomDate } from '../../gedcom/date';
 import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
@@ -38,6 +40,7 @@ export interface ImportOptions {
 }
 
 export interface ImportReport {
+  version: GedcomVersion;
   persons: number;
   families: number;
   events: Record<string, number>;   // event_type → count
@@ -821,6 +824,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   }
 
   return {
+    version:   detectGedcomVersion(tree),
     persons:   personsAfter   - personsBefore,
     families:  familiesAfter  - familiesBefore,
     events,
