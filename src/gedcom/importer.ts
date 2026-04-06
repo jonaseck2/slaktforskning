@@ -237,7 +237,7 @@ function importEventNode(
 export interface ImportOptions {
   /** Import profile. 'genney' enables Genney 4.1-specific extensions:
    *  Swedish hierarchical places, patronymic detection, _UID/_YHAPLOGROUP/_MHAPLOGROUP tags. */
-  profile?: 'genney';
+  profile?: 'genney' | 'holger';
 }
 
 export interface ImportReport {
@@ -274,7 +274,15 @@ function doImportGedcom(
   options?: ImportOptions,
 ): { skipped: { tag: string; count: number }[]; warnings: string[] } {
   const isGenney = options?.profile === 'genney';
+  const isHolger = options?.profile === 'holger';
   const resolvePlaceFn = isGenney ? findOrCreateSwedishPlace : findOrCreatePlace;
+
+  function holgerEngaSubtype(engaNode: GedcomNode): string {
+    const type = getChild(engaNode, 'TYPE')?.value?.trim() ?? '';
+    if (['Sambo', 'Partner', 'Parter', 'Särbo'].includes(type)) return 'cohabitation';
+    if (type === 'Relation') return 'other';
+    return 'unknown';
+  }
 
   // Maps that survive across phases for post-processing
   const placeIdMap = new Map<string, string>();  // old place UUID → current DB place UUID
@@ -493,7 +501,17 @@ function doImportGedcom(
     // fall back to inferring 'marriage' from a MARR event in the FAM record.
     const extSubtype = getChild(node, '_SUBTYPE')?.value;
     const hasMarr = getChildren(node, 'MARR').length > 0;
-    const coupleSubtype = extSubtype ?? (hasMarr ? 'marriage' : 'unknown');
+    let coupleSubtype: string;
+    if (extSubtype) {
+      coupleSubtype = extSubtype;
+    } else if (hasMarr) {
+      coupleSubtype = 'marriage';
+    } else if (isHolger) {
+      const engaNodes = getChildren(node, 'ENGA');
+      coupleSubtype = engaNodes.length > 0 ? holgerEngaSubtype(engaNodes[0]) : 'unknown';
+    } else {
+      coupleSubtype = 'unknown';
+    }
 
     const couple = createRelationship(db, {
       type: 'couple',
@@ -510,6 +528,8 @@ function doImportGedcom(
 
     // Family events
     for (const [gedTag, appType] of Object.entries(FAMILY_EVENT_TAGS)) {
+      // Holger: ENGA in a FAM record is a relationship-type marker, not an event
+      if (isHolger && gedTag === 'ENGA' && !hasMarr) continue;
       for (const evNode of getChildren(node, gedTag)) {
         importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap);
       }
