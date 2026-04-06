@@ -1,6 +1,6 @@
 <template>
   <div class="research-tasks">
-    <div class="view-header">
+    <div class="header">
       <h2>{{ $t('researchTasks.title') }}</h2>
       <button class="btn-add" @click="showAddModal = true">{{ $t('researchTasks.addTask') }}</button>
     </div>
@@ -322,10 +322,10 @@ onMounted(load);
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f0f4ff; }
 
-.view-header {
+.header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
 }
 
@@ -400,7 +400,8 @@ onMounted(load);
 }
 
 .person-link {
-  color: #3b82f6;
+  color: #2563eb;
+  cursor: pointer;
   text-decoration: none;
 }
 

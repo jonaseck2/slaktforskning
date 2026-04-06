@@ -1,6 +1,6 @@
 # Plan: UX Design System — Align All List Views to Data Quality
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make PersonsView, RelationshipsView, PlacesView, SourcesView, ResearchTasksView, and ReportsView all share the same visual design language as QualityView (the reference).
 
@@ -124,12 +124,12 @@ Key CSS to replicate in every view:
 
 The given-name column currently shows `<PersonName>` with no link wrapper. The row is clickable, but names should also be visually blue links (matching QualityView's `.person-link` style).
 
-- [ ] In the `given_name` `<td>`, wrap `<PersonName>` in `<a class="person-link" @click.stop="goToDetail(person)">...</a>`.
-- [ ] Ensure the view container is `<div>` (no inner max-width). Check `<style scoped>` for any width constraints and remove them.
-- [ ] Align `<style scoped>` CSS: replace `.data-table`, `.data-table th`, `.data-table td`, `.clickable-row`, `.btn-sm`, `.btn-delete`, `.header`, `.count-label` with the canonical versions above.
-- [ ] Rename `btn-add` or `Add Person` button style to use `.btn-add` class and canonical CSS.
-- [ ] Run `npm test` — all 462 tests pass.
-- [ ] Commit: `fix(ux): PersonsView — blue person links, canonical table styles`
+- [x] In the `given_name` `<td>`, wrap `<PersonName>` in `<a class="person-link" @click.stop="goToDetail(person)">...</a>`.
+- [x] Ensure the view container is `<div>` (no inner max-width). Check `<style scoped>` for any width constraints and remove them.
+- [x] Align `<style scoped>` CSS: replace `.data-table`, `.data-table th`, `.data-table td`, `.clickable-row`, `.btn-sm`, `.btn-delete`, `.header`, `.count-label` with the canonical versions above.
+- [x] Rename `btn-add` or `Add Person` button style to use `.btn-add` class and canonical CSS.
+- [x] Run `npm test` — all 462 tests pass.
+- [x] Commit: `fix(ux): PersonsView — blue person links, canonical table styles`
 
 ---
 
@@ -141,12 +141,12 @@ The given-name column currently shows `<PersonName>` with no link wrapper. The r
 Current column order: Type | Person1 | Person2 | Subtype | Actions.
 Target order: Person1 | Person2 | Type | Subtype | Actions. Person names should be blue router-links.
 
-- [ ] Reorder `<th>` columns: move Type after Person2.
-- [ ] Reorder `<td>` columns to match.
-- [ ] Wrap each person's `<PersonName>` in `<a class="person-link" @click.stop="$router.push('/persons/' + rel.person1_id)">...</a>` (person1) and same for person2. Only render the link if the person ID is not null.
-- [ ] Align `<style scoped>` CSS to canonical versions. The `Add Relationship` button should use `.btn-add`.
-- [ ] Run `npm test`.
-- [ ] Commit: `fix(ux): RelationshipsView — persons first, blue name links, canonical styles`
+- [x] Reorder `<th>` columns: move Type after Person2.
+- [x] Reorder `<td>` columns to match.
+- [x] Wrap each person's `<PersonName>` in `<a class="person-link" @click.stop="$router.push('/persons/' + rel.person1_id)">...</a>` (person1) and same for person2. Only render the link if the person ID is not null.
+- [x] Align `<style scoped>` CSS to canonical versions. The `Add Relationship` button should use `.btn-add`.
+- [x] Run `npm test`.
+- [x] Commit: `fix(ux): RelationshipsView — persons first, blue name links, canonical styles`
 
 ---
 
@@ -155,13 +155,13 @@ Target order: Person1 | Person2 | Type | Subtype | Actions. Person names should 
 **Files:**
 - Modify: `src/renderer/views/PlacesView.vue`
 
-- [ ] Check `<style scoped>` for `.places-view` or `.list-header` or `.data-table` — remove any `max-width`, ensure `width: 100%` on table.
-- [ ] Replace `.list-header` with `.header` and canonical header CSS.
-- [ ] Replace `.btn-add` with canonical `.btn-add` CSS.
-- [ ] Add `.count-label` paragraph showing total place count (using `places.length`).
-- [ ] Align all table and button styles to canonical versions.
-- [ ] Run `npm test`.
-- [ ] Commit: `fix(ux): PlacesView — full-width, canonical styles`
+- [x] Check `<style scoped>` for `.places-view` or `.list-header` or `.data-table` — remove any `max-width`, ensure `width: 100%` on table.
+- [x] Replace `.list-header` with `.header` and canonical header CSS.
+- [x] Replace `.btn-add` with canonical `.btn-add` CSS.
+- [x] Add `.count-label` paragraph showing total place count (using `places.length`).
+- [x] Align all table and button styles to canonical versions.
+- [x] Run `npm test`.
+- [x] Commit: `fix(ux): PlacesView — full-width, canonical styles`
 
 ---
 
@@ -170,12 +170,12 @@ Target order: Person1 | Person2 | Type | Subtype | Actions. Person names should 
 **Files:**
 - Modify: `src/renderer/views/SourcesView.vue`
 
-- [ ] Check `<style scoped>` for any deviations from canonical `.data-table`, `.header`, button styles.
-- [ ] Update `Add Source` button to use `.btn-add` canonical style.
-- [ ] Add `.count-label` paragraph showing total source count.
-- [ ] Align all styles to canonical versions.
-- [ ] Run `npm test`.
-- [ ] Commit: `fix(ux): SourcesView — canonical table styles`
+- [x] Check `<style scoped>` for any deviations from canonical `.data-table`, `.header`, button styles.
+- [x] Update `Add Source` button to use `.btn-add` canonical style.
+- [x] Add `.count-label` paragraph showing total source count.
+- [x] Align all styles to canonical versions.
+- [x] Run `npm test`.
+- [x] Commit: `fix(ux): SourcesView — canonical table styles`
 
 ---
 
@@ -184,12 +184,12 @@ Target order: Person1 | Person2 | Type | Subtype | Actions. Person names should 
 **Files:**
 - Modify: `src/renderer/views/ResearchTasksView.vue`
 
-- [ ] Change `Add Task` button from `btn-primary` class to `.btn-add` canonical style (dark background, matching other add buttons).
-- [ ] Verify `.chip` and `.chip.active` CSS exactly matches canonical versions. If `ResearchTasksView` has its own `.chip` definition, replace it with the canonical one.
-- [ ] Check container for any `max-width` — remove if present.
-- [ ] Check `<style scoped>` for `.view-header` — replace with canonical `.header` if styles differ.
-- [ ] Run `npm test`.
-- [ ] Commit: `fix(ux): ResearchTasksView — add button, chips, full-width`
+- [x] Change `Add Task` button from `btn-primary` class to `.btn-add` canonical style (dark background, matching other add buttons).
+- [x] Verify `.chip` and `.chip.active` CSS exactly matches canonical versions. If `ResearchTasksView` has its own `.chip` definition, replace it with the canonical one.
+- [x] Check container for any `max-width` — remove if present.
+- [x] Check `<style scoped>` for `.view-header` — replace with canonical `.header` if styles differ.
+- [x] Run `npm test`.
+- [x] Commit: `fix(ux): ResearchTasksView — add button, chips, full-width`
 
 ---
 
@@ -203,7 +203,7 @@ The Reports view renders `<AncestorBookReport>` and other report components insi
 2. **Zoom controls bottom-right**: Move zoom controls from the top header to a floating bottom-right position (matching tree views which have `.zoom-controls` at bottom).
 3. **Loading notification**: When the report is loading/rendering, show a status hint like "Laddar rapport…" in the top-right of the header (matching QualityView's `.running-hint`).
 
-- [ ] Add a `loading` ref that is `true` while any report is fetching. Pass it into each report component via a `@loading` emit or use a `v-if/v-else` approach.
+- [x] Add a `loading` ref that is `true` while any report is fetching. Pass it into each report component via a `@loading` emit or use a `v-if/v-else` approach.
 
   Simpler approach: Add a `reportLoading` ref, set it true when `activeTab` changes or `ancestorRootId`/`individualPersonId`/`ancestorBookPersonId` changes, set it false once the report component emits `ready` (or after a short timeout). Show `<span v-if="reportLoading" class="running-hint">Laddar rapport…</span>` in the header.
 
@@ -213,11 +213,11 @@ The Reports view renders `<AncestorBookReport>` and other report components insi
 
   For now: simpler approach — watch active person ID + tab, set `reportLoading = true`, clear it after `nextTick` + rAF (the report renders synchronously in the same tick once data arrives, so a simple debounce suffices).
 
-- [ ] Move zoom controls: remove from `.view-header` row, add as a fixed/absolute positioned `.zoom-controls` div at the bottom-right of the `.preview-area` container (like tree views have theirs at bottom of chart area).
-- [ ] Align header font size to match other views (h2 at default size, not oversized).
-- [ ] Add `.running-hint` CSS to match QualityView.
-- [ ] Run `npm test`.
-- [ ] Commit: `fix(ux): ReportsView — zoom bottom-right, loading hint, font alignment`
+- [x] Move zoom controls: remove from `.view-header` row, add as a fixed/absolute positioned `.zoom-controls` div at the bottom-right of the `.preview-area` container (like tree views have theirs at bottom of chart area).
+- [x] Align header font size to match other views (h2 at default size, not oversized).
+- [x] Add `.running-hint` CSS to match QualityView.
+- [x] Run `npm test`.
+- [x] Commit: `fix(ux): ReportsView — zoom bottom-right, loading hint, font alignment`
 
 ---
 
@@ -229,7 +229,7 @@ The Reports view renders `<AncestorBookReport>` and other report components insi
 
 The canonical CSS design tokens (table, header, chip, button, person-link) should be documented so future agents don't invent their own variants.
 
-- [ ] Add a "## UI Design System" section to `CLAUDE.md` (under Vue Component Patterns) documenting:
+- [x] Add a "## UI Design System" section to `CLAUDE.md` (under Vue Component Patterns) documenting:
   - The canonical `.data-table` CSS
   - The `.chip` / `.chip.active` filter chip pattern
   - The `.person-link` pattern for blue inline person name links
@@ -237,5 +237,5 @@ The canonical CSS design tokens (table, header, chip, button, person-link) shoul
   - The `.header` layout pattern
   - The `.running-hint` pattern for async status
   - Note: "Copy these styles into each view's `<style scoped>` block. Do not create a global stylesheet."
-- [ ] Run `npm test`.
-- [ ] Commit: `docs: add UI design system conventions to CLAUDE.md`
+- [x] Run `npm test`.
+- [x] Commit: `docs: add UI design system conventions to CLAUDE.md`

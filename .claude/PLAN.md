@@ -83,7 +83,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.23.5: Circle gen 6 color lightening reduction; Reports auto-use focal person (remove PersonPicker) | — |
 | Fix | v0.23.7: AncestorBook export circle: gen 6 blank — fetchPedigreeTree needs generations=7 not 6 | — |
 | v0.24.0 | Media Attachments Phase 1–3: is_missing schema, file copy strategy, media:attach/openFile/getFilePath IPC, MediaView, PersonDetailView media section, i18n, unit tests | [plan](plans/2026-04-04-media.md) |
-| Fix | v0.24.1: UX design system — all list views match QualityView (GroupsView + PersonsView/RelationshipsView/PlacesView/SourcesView/ResearchTasksView/ReportsView) | [archive](plans/archive/2026-04-05-ux-design-system.md) |
+| v0.24.2 | UX design system — all list views match QualityView (GroupsView + PersonsView/RelationshipsView/PlacesView/SourcesView/ResearchTasksView/ReportsView) | [archive](plans/archive/2026-04-05-ux-design-system.md) |
 | Fix | v0.24.1: Quality checks CPU saturation on large trees — 4-way event_participants self-join → 2-query+JS; V8 CPU profiling infrastructure; performance-profiling skill | [archive](plans/archive/2026-04-06-checks-performance.md) |
 
 ---
@@ -91,15 +91,6 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
-
-### UX Design System [polish]
-See `.claude/plans/2026-04-05-ux-design-system.md` for the full plan.
-- [ ] PersonsView — blue person links, canonical table styles
-- [ ] RelationshipsView — persons first, blue name links
-- [ ] PlacesView — full-width, canonical styles
-- [ ] SourcesView — canonical styles
-- [ ] ResearchTasksView — button, chips, full-width
-- [ ] ReportsView — zoom bottom-right, loading hint
 
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
