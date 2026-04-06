@@ -279,9 +279,10 @@ function doImportGedcom(
 
   function holgerEngaSubtype(engaNode: GedcomNode): string {
     const type = getChild(engaNode, 'TYPE')?.value?.trim() ?? '';
+    // 'Parter' (Swedish: "parties in a relationship") is a distinct Holger type, not a typo of 'Partner'
     if (['Sambo', 'Partner', 'Parter', 'Särbo'].includes(type)) return 'cohabitation';
     if (type === 'Relation') return 'other';
-    return 'unknown';
+    return 'unknown'; // includes 'Förlovade' (engaged) — no specific subtype for that
   }
 
   // Maps that survive across phases for post-processing
@@ -508,6 +509,7 @@ function doImportGedcom(
       coupleSubtype = 'marriage';
     } else if (isHolger) {
       const engaNodes = getChildren(node, 'ENGA');
+      // Holger emits at most one ENGA per FAM; take the first if multiple exist
       coupleSubtype = engaNodes.length > 0 ? holgerEngaSubtype(engaNodes[0]) : 'unknown';
     } else {
       coupleSubtype = 'unknown';
@@ -528,7 +530,9 @@ function doImportGedcom(
 
     // Family events
     for (const [gedTag, appType] of Object.entries(FAMILY_EVENT_TAGS)) {
-      // Holger: ENGA in a FAM record is a relationship-type marker, not an event
+      // Holger: ENGA on a FAM without MARR is a relationship-type tag (see holgerEngaSubtype),
+      // not a real engagement event. If both MARR and ENGA are present, the ENGA is a genuine
+      // engagement event (pre-marriage) and IS imported normally.
       if (isHolger && gedTag === 'ENGA' && !hasMarr) continue;
       for (const evNode of getChildren(node, gedTag)) {
         importEventNode(db, evNode, appType, sourceMap, { relationship_id: couple.id }, resolvePlaceFn, placeIdMap, eventIdMap, noteMap, objeMap);
