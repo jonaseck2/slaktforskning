@@ -100,11 +100,11 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
 ### Holger/OurKind import [feature]
-See `.claude/plans/2026-04-06-holger-import.md` for the full plan.
-- [ ] Add `'holger'` GEDCOM profile: ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype
-- [ ] Media path remapping (Windows → local mediaDir)
-- [ ] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
-- [ ] `import_holger` MCP tool + IPC handlers + ImportExportView section
+See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
+- [x] Add `'holger'` GEDCOM profile: ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype
+- [x] Media path remapping (Windows → local mediaDir)
+- [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
+- [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
 
 ### Shared CircleChartSvg component [refactor]
 See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.

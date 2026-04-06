@@ -57,6 +57,7 @@ npx tsx src/mcp/server.ts
 - **Relationships:** `create_relationship`, `list_relationships`, `search_relationships`, `get_relationship`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`
 - **Events:** `add_event`, `get_events_for_person`, `get_events_for_relationship`, `add_event_participant`, `get_event_participants`
 - **Sources:** `add_source`, `add_citation`, `list_sources`, `search_sources`
+- **Import:** `import_gedcom`, `import_genney`, `import_holger`, `export_gedcom`
 
 ### Custom Database Path
 
