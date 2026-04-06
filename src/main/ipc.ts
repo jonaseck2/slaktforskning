@@ -13,6 +13,7 @@ import * as places from '../api/places';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../gedcom/importer';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
+import { importFromHolger } from '../import/holger/index';
 import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
@@ -234,6 +235,47 @@ export function registerIpcHandlers(): void {
       return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
     }
     return { imported: true, summary: result.summary };
+  });
+
+  // Holger / OurKind GEDCOM import
+  wrapHandler('import:holgerSelectFile', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select Holger GEDCOM export',
+      properties: ['openFile'],
+      filters: [
+        { name: 'GEDCOM / Zip', extensions: ['ged', 'zip'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
+  wrapHandler('import:holgerSelectMedia', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select OurKind Media folder (optional)',
+      properties: ['openDirectory'],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
+  wrapHandler('import:holgerRun', async (opts) => {
+    const options = opts as { sourcePath: string; mediaDir?: string } | undefined;
+    if (!options?.sourcePath) return { success: false, error: 'sourcePath is required' };
+    const win = BrowserWindow.getFocusedWindow();
+    try {
+      const result = await importFromHolger(getDatabase(), {
+        sourcePath: options.sourcePath,
+        mediaDir: options.mediaDir,
+        onProgress: (msg) => {
+          if (win) win.webContents.send('import:holgerProgress', { message: msg });
+        },
+      });
+      return { success: true, report: result.report };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
   });
 
   // Database switching
