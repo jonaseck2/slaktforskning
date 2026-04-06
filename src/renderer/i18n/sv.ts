@@ -542,6 +542,7 @@ export default {
     holgerPickMedia: 'Välj mediamapp (valfritt)…',
     holgerImport: 'Importera',
     holgerRunning: 'Importerar…',
+    holgerSuccess: 'Import klar: {persons} personer, {events} händelser.',
     holgerError: 'Import misslyckades: {error}',
     gedcomImportTitle: 'Importera GEDCOM',
     gedcomImportDesc: 'Importerar en GEDCOM 5.5.1-fil från valfritt program.',
