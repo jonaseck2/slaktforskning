@@ -20,8 +20,7 @@
       </tbody>
     </table>
 
-    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-      <div class="modal">
+    <BaseModal v-if="showAddForm" @close="showAddForm = false">
         <h3>{{ $t('identifiers.addTitle') }}</h3>
         <form @submit.prevent="add">
           <label>
@@ -45,17 +44,13 @@
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+import BaseModal from './BaseModal.vue';
 
 export interface IdentifierRow {
   id: string;

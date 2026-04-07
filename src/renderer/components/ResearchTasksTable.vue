@@ -94,10 +94,6 @@ import { ref, reactive } from 'vue';
 import PersonName from './PersonName.vue';
 import PersonPicker from './PersonPicker.vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 export interface ResearchTaskRow {
   id: string;
   task: string;

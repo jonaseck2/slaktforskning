@@ -1,6 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal">
+  <BaseModal @close="$emit('close')">
       <h3>{{ title }}</h3>
       <form @submit.prevent="save">
         <!-- Toggle -->
@@ -58,19 +57,16 @@
           </button>
         </div>
       </form>
-    </div>
-  </div>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import BaseModal from './BaseModal.vue';
 import { COUPLE_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+import { useToast } from '../composables/useToast';
 
 const props = defineProps<{
   personId: string;
@@ -83,12 +79,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close');
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+const toast = useToast();
 
 const title = computed(() => {
   if (props.mode === 'parent') return t('personDetail.addParentTitle');
@@ -147,51 +138,12 @@ async function save() {
     emit('close');
   } catch (err) {
     console.error('[AddRelatedPersonModal] save failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 400px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-.modal h3 {
-  margin: 0 0 16px;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-}
-input[type='text'],
-select {
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-}
 .checkbox-label {
   flex-direction: row;
   align-items: center;
@@ -203,27 +155,6 @@ select {
   width: 16px;
   height: 16px;
   cursor: pointer;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-.modal-actions button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-}
-.modal-actions button[type='submit'] {
-  background: #2c3e50;
-  color: white;
-}
-.btn-cancel {
-  background: #e0e0e0;
-  color: #333;
 }
 .entry-mode-toggle {
   display: flex;
@@ -241,5 +172,5 @@ select {
   font-size: 13px;
   color: #334155;
 }
-.toggle-btn.active { background: #2c3e50; color: white; }
+.toggle-btn.active { background: var(--color-primary); color: white; }
 </style>

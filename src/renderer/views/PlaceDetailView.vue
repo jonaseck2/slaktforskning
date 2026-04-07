@@ -79,10 +79,6 @@ import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
 useI18n();
@@ -129,7 +125,7 @@ onMounted(load);
 .place-detail { max-width: 700px; }
 .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
 .detail-header h2 { margin: 0; }
-.btn-back { background: none; border: none; color: #2c3e50; cursor: pointer; padding: 4px 0; font-size: 14px; }
+.btn-back { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 4px 0; font-size: 14px; }
 .btn-back:hover { text-decoration: underline; }
 .type-badge { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
 .detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
@@ -145,7 +141,7 @@ input[type='text'], input[type='number'], select, textarea {
 textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .child-list li { display: flex; align-items: center; gap: 8px; }
-.child-list a { color: #2c3e50; text-decoration: none; font-size: 14px; }
+.child-list a { color: var(--color-primary); text-decoration: none; font-size: 14px; }
 .child-list a:hover { text-decoration: underline; }
 .empty { color: #999; padding: 40px; text-align: center; }
 </style>

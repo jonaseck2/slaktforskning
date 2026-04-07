@@ -148,7 +148,7 @@
 
         <!-- Names -->
         <div class="ab-subsection">
-          <h3 class="ab-subsection-heading">Namn</h3>
+          <h3 class="ab-subsection-heading">{{ $t('personDetail.names') }}</h3>
           <table class="ab-table">
             <thead>
               <tr><th>Förnamn</th><th>Efternamn</th><th>Typ</th></tr>
@@ -200,7 +200,7 @@
             </span>
           </div>
           <div v-if="entry.spouses.length > 0" class="ab-rel-row">
-            <strong>{{ entry.spouses.length === 1 ? 'Partner' : 'Partners' }}:</strong>
+            <strong>{{ $t('personPanel.partners') }}:</strong>
             <span v-for="(s, i) in entry.spouses" :key="s.id">
               {{ s.name }}<span v-if="s.subtype" class="muted"> ({{ subtypeLabel(s.subtype) }})</span><span
                 v-if="i < entry.spouses.length - 1"
@@ -208,7 +208,7 @@
             </span>
           </div>
           <div v-if="entry.children.length > 0" class="ab-rel-row">
-            <strong>Barn:</strong>
+            <strong>{{ $t('personPanel.children') }}:</strong>
             <span v-for="(c, i) in entry.children" :key="c.id">
               <a v-if="c.inTree" :href="`#person-${c.id}`">{{ c.name }}</a>
               <span v-else>{{ c.name }}</span>
@@ -254,6 +254,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   computeCircleLayout,
   CIRCLE_CX,
@@ -265,9 +266,7 @@ import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
 import type { PersonNode } from '../../utils/chartLayout';
 import { formatFullName } from '../../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+const { t } = useI18n();
 
 // ── Raw API types ──────────────────────────────────────────────────────────────
 interface RawName {

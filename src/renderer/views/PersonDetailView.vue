@@ -184,6 +184,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useToast } from '../composables/useToast';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
@@ -197,10 +199,6 @@ import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
 
 interface PersonData {
   id: string;
@@ -226,6 +224,8 @@ interface NameRow {
 const route = useRoute();
 const personId = route.params.id as string;
 const focusStore = useFocusStore();
+const { t } = useI18n();
+const toast = useToast();
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
@@ -327,6 +327,7 @@ async function load() {
     await loadPersonGroups();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   }
 }
 
@@ -342,6 +343,7 @@ async function removeName(id: string) {
     await load();
   } catch (err) {
     console.error('[PersonDetailView] removeName failed:', err);
+    toast.error(t('errors.deleteFailed'));
   }
 }
 
@@ -365,6 +367,7 @@ async function saveNotes() {
     person.value.notes = notesText.value;
   } catch (err) {
     console.error('[PersonDetailView] saveNotes failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 
@@ -388,7 +391,7 @@ onMounted(async () => {
 .btn-back {
   background: none;
   border: none;
-  color: #2c3e50;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px 0;
   font-size: var(--font-base);

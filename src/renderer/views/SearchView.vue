@@ -107,10 +107,6 @@ import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PersonResult {
   id: string;
   given_name: string;
@@ -220,10 +216,10 @@ onMounted(() => {
 }
 .search-input:focus {
   outline: none;
-  border-color: #2c3e50;
+  border-color: var(--color-primary);
 }
 button {
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 8px 16px;

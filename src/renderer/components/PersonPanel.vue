@@ -23,9 +23,9 @@
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
           <div class="panel-add-relative-btns">
-            <button class="btn-dark" @click="openAddRelative('parent')">+ Förälder</button>
-            <button class="btn-dark" @click="openAddRelative('spouse')">+ Partner</button>
-            <button class="btn-dark" @click="openAddRelative('child')">+ Barn</button>
+            <button class="btn-dark" @click="openAddRelative('parent')">{{ $t('personDetail.addParent') }}</button>
+            <button class="btn-dark" @click="openAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
+            <button class="btn-dark" @click="openAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
           </div>
         </div>
       </div>
@@ -35,12 +35,12 @@
         <button class="panel-section-header" @click="toggleSection('person')">
           <span class="panel-chevron">{{ sections.person ? '▾' : '▸' }}</span>
           Person
-          <router-link :to="'/persons/' + personId" class="panel-section-header-action" @click.stop>Redigera</router-link>
+          <router-link :to="'/persons/' + personId" class="panel-section-header-action" @click.stop>{{ $t('common.edit') }}</router-link>
         </button>
         <div v-if="sections.person" class="panel-section-body">
           <div class="compact-form">
             <div class="compact-field">
-              <label class="compact-label">Kön</label>
+              <label class="compact-label">{{ $t('persons.sex') }}</label>
               <select class="compact-control" :value="person.sex" @change="updateSex(($event.target as HTMLSelectElement).value as 'M' | 'F' | 'U')">
                 <option value="M">{{ $t('sex.M') }}</option>
                 <option value="F">{{ $t('sex.F') }}</option>
@@ -48,7 +48,7 @@
               </select>
             </div>
             <div class="compact-field">
-              <label class="compact-label">Status</label>
+              <label class="compact-label">{{ $t('personPanel.status') }}</label>
               <select class="compact-control" :value="person.living ? 'true' : 'false'" @change="updateLiving(($event.target as HTMLSelectElement).value === 'true')">
                 <option value="true">{{ $t('personDetail.statusLiving') }}</option>
                 <option value="false">{{ $t('personDetail.statusDeceased') }}</option>
@@ -234,10 +234,6 @@ import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 
 const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
 
 const props = defineProps<{ personId: string | null }>();
 const emit = defineEmits<{
@@ -559,7 +555,7 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .btn-dark {
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 4px;
@@ -592,7 +588,7 @@ onMounted(() => {
 .panel-chevron { font-size: 10px; color: #999; }
 .panel-section-header-action {
   margin-left: auto;
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border-radius: 4px;
   padding: 2px 8px;
@@ -641,7 +637,6 @@ onMounted(() => {
   border-color: #2980b9;
 }
 
-
 .btn-cancel {
   background: #f0f0f0;
   color: #555;
@@ -661,8 +656,8 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .btn-delete {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 .btn-delete:hover { background: #fecaca; }
 

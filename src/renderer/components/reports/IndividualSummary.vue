@@ -17,7 +17,7 @@
 
       <!-- All names -->
       <section class="names-section">
-        <h2 class="section-heading">Namn</h2>
+        <h2 class="section-heading">{{ $t('personDetail.names') }}</h2>
         <table class="names-table">
           <thead>
             <tr>
@@ -78,7 +78,7 @@
         </div>
 
         <div v-if="data.spouses.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">{{ data.spouses.length === 1 ? 'Partner' : 'Partners' }}</h3>
+          <h3 class="rel-group-heading">{{ $t('personPanel.partners') }}</h3>
           <ul class="rel-list">
             <li v-for="s in data.spouses" :key="s.id" class="rel-entry">
               {{ s.name || '(okänd)' }}
@@ -88,7 +88,7 @@
         </div>
 
         <div v-if="data.children.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">Barn</h3>
+          <h3 class="rel-group-heading">{{ $t('personPanel.children') }}</h3>
           <ul class="rel-list">
             <li v-for="c in data.children" :key="c.id" class="rel-entry">
               {{ c.name || '(okänd)' }}
@@ -127,11 +127,10 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { formatFullName } from '../../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+useI18n();
 
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName {

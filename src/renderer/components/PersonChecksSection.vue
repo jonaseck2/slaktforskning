@@ -37,10 +37,6 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 export interface CheckResult {
   code: string;
   severity: 'error' | 'warning' | 'notice';

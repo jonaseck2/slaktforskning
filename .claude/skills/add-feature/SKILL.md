@@ -161,12 +161,7 @@ things: {
 await window.api.things.create({ name: 'test' });
 ```
 
-The preload TypeScript declaration used in Vue components:
-```typescript
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-```
+After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api` — components do not declare their own `window` type.
 
 See `.claude/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
 
@@ -204,28 +199,29 @@ Rules:
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+// No local window declaration needed — window.api is typed globally via src/renderer/api.d.ts
 </script>
 ```
 
 ### Modal dialog (for create/edit forms)
 
+Use `<BaseModal>` — it owns the overlay, click-to-close, and Escape key. Never repeat the raw `div.modal-overlay > div.modal` shell.
+
 ```vue
-<div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
-  <div class="modal">
-    <h3>Add Thing</h3>
-    <form @submit.prevent="handleSubmit">
-      <!-- fields -->
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" @click="showForm = false">{{ $t('common.cancel') }}</button>
-        <button type="submit">{{ $t('common.save') }}</button>
-      </div>
-    </form>
-  </div>
-</div>
+<BaseModal v-if="showForm" @close="showForm = false">
+  <h3>{{ $t('thing.add') }}</h3>
+  <form @submit.prevent="handleSubmit">
+    <!-- fields -->
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" @click="showForm = false">{{ $t('common.cancel') }}</button>
+      <button type="submit">{{ $t('common.save') }}</button>
+    </div>
+  </form>
+</BaseModal>
+```
+
+```typescript
+import BaseModal from '../components/BaseModal.vue';
 ```
 
 ### List view pattern (PersonsView, RelationshipsView, SourcesView)
@@ -274,18 +270,24 @@ Use this when the section owns its own data (no benefit to the parent holding th
 ```vue
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+import { useToast } from '../composables/useToast';
+import { useI18n } from 'vue-i18n';
+// No local window declaration needed — window.api is typed globally via src/renderer/api.d.ts
 
 export interface ThingRow { id: string; /* ... */ }
 
 const props = defineProps<{ personId: string }>();
+const { t } = useI18n();
+const toast = useToast();
 const items = ref<ThingRow[]>([]);
 
 async function load() {
-  items.value = (await window.api.things.forPerson(props.personId)) as ThingRow[];
+  try {
+    items.value = await window.api.things.forPerson(props.personId);
+  } catch (err) {
+    console.error('[PersonThingsSection] load failed:', err);
+    toast.error(t('errors.loadFailed'));
+  }
 }
 
 // Expose any action the parent header button needs to trigger

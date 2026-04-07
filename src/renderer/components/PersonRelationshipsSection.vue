@@ -38,10 +38,6 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { formatFullName } from '../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PersonRelRow {
   id: string;
   type: string;

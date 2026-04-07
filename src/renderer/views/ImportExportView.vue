@@ -121,10 +121,6 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const { t } = useI18n();
 const busy = ref(false);
 const statusMessage = ref('');
@@ -391,7 +387,7 @@ h2 {
   font-size: var(--font-sm);
   color: #444;
   background: #f8f8f8;
-  border-left: 3px solid #2c3e50;
+  border-left: 3px solid var(--color-primary);
   padding: 8px 12px;
   border-radius: 0 4px 4px 0;
   margin: 0;
@@ -425,7 +421,7 @@ h2 {
 
 button {
   align-self: flex-start;
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -458,7 +454,7 @@ button:disabled {
 }
 
 .status.error {
-  background: #fee2e2;
+  background: var(--color-danger-bg);
   color: #991b1b;
 }
 

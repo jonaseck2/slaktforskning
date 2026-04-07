@@ -83,11 +83,6 @@ import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
 import { useDataVersionStore } from '../stores/dataVersion';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-  onDataChanged?: (cb: () => void) => void;
-};
-
 const { t } = useI18n();
 const router = useRouter();
 const qualityStore = useQualityStore();
