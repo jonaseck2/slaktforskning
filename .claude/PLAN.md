@@ -101,6 +101,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | refactor | BaseModal component: slot-based modal shell with Escape + overlay-click handling, migrated all 15 modal components | [archive](plans/archive/2026-04-07-base-modal-refactor.md) |
 | v0.37.6 | Component extraction: PersonNotesSection, AddResearchTaskModal, 4 ImportExportSection components; ImportExportView 605→46 lines | [archive](plans/archive/2026-04-07-component-extraction.md) |
 | Fix | v0.37.7: PersonsView startup CPU saturation — 4 correlated subqueries per person → two-pass query (sort+paginate first, then IN fetch for page only) | [archive](plans/archive/2026-04-07-personsview-startup-cpu.md) |
+| v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [plan](plans/2026-04-06-gedcom-70-export.md) |
 
 ---
 
@@ -123,14 +124,14 @@ See `.claude/plans/2026-04-06-holger-import.md` for the full plan.
 - [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
 - [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
 
-### GEDCOM 7.0 Export [feature]
+### GEDCOM 7.0 Export [feature] ✅ v0.38.0
 See `.claude/plans/2026-04-06-gedcom-70-export.md` for the full plan.
-- [ ] `isStandardGedcomDate` helper in `src/gedcom/date.ts`
-- [ ] `exportGedcom(db, version)` — header, EXID identifiers
-- [ ] DATE PHRASE for unparseable dates in 7.0
-- [ ] PEDI uppercase + `alias` NAME.TYPE → `AKA`
-- [ ] IPC + preload accept `{ version? }` option
-- [ ] ImportExportView: format selector (5.5.1 / 7.0)
+- [x] `isStandardGedcomDate` helper in `src/gedcom/date.ts`
+- [x] `exportGedcom(db, version)` — header, EXID identifiers
+- [x] DATE PHRASE for unparseable dates in 7.0
+- [x] PEDI uppercase + `alias` NAME.TYPE → `AKA`
+- [x] IPC + preload accept `{ version? }` option
+- [x] GedcomExportSection: format selector (5.5.1 / 7.0)
 
 ### Shared CircleChartSvg component [refactor] ✅ v0.37.8
 See `.claude/plans/archive/2026-04-05-circle-chart-svg-shared.md` for the full plan.
