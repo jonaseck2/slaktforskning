@@ -4,6 +4,8 @@
 <template>
   <svg
     :viewBox="`0 0 ${CIRCLE_SVG_SIZE} ${CIRCLE_SVG_SIZE}`"
+    :width="width"
+    :height="height"
     data-testid="circle-svg"
   >
     <!-- Curved text paths in defs (only for gen 1-4 when curvedText is on) -->
@@ -313,6 +315,8 @@ interface Props {
   fontFamily?: string;
   linkBase?: string | null;
   strokeWidth?: number;
+  width?: number | string;
+  height?: number | string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -416,6 +420,7 @@ function dateFontSize(gen: number): number {
 // Gen 6 arc width ~35.8px so we use 7px gaps; all others use 10px.
 function lineDy(seg: CircleSegment): { given: string; surname: string; birth: string; death: string } {
   const hasDates = !!(birthLabel(seg) || deathLabel(seg));
+  const hasGiven = !!givenLabel(seg);
   const gap = seg.generation >= 6 ? 7 : 10;
   const h = gap * 1.5;  // half-span for 4 lines
   const q = gap * 0.5;  // quarter-span
