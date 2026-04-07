@@ -56,3 +56,7 @@ export const PLACE_TYPE_VALUES = [
   'country', 'province', 'county', 'härad', 'parish',
   'farm', 'village', 'city', 'other',
 ] as const;
+
+export const RESEARCH_TASK_STATUS_VALUES = [
+  'open', 'in_progress', 'done', 'stopped',
+] as const;
