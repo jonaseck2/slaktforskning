@@ -582,6 +582,7 @@ export default {
     gedcomImportDesc: 'Importerar en GEDCOM 5.5.1-fil från valfritt program.',
     gedcomExportTitle: 'Exportera GEDCOM',
     gedcomExportDesc: 'Exporterar hela trädet som en GEDCOM 5.5.1-fil.',
+    gedcomExportDesc70: 'GEDCOM 7.0 är den nuvarande standarden (2021). Välj detta om du importerar till en modern app som stöder 7.0.',
     importSuccess: 'Importerat: {file}',
     importError: 'Import misslyckades.',
     exportSuccess: 'Exporterat: {file}',

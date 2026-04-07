@@ -582,6 +582,7 @@ export default {
     gedcomImportDesc: 'Imports a GEDCOM 5.5.1 file from any genealogy application.',
     gedcomExportTitle: 'Export GEDCOM',
     gedcomExportDesc: 'Exports the entire tree as a GEDCOM 5.5.1 file.',
+    gedcomExportDesc70: 'GEDCOM 7.0 is the current standard (2021). Choose this if you are importing into a modern app that supports 7.0.',
     importSuccess: 'Imported: {file}',
     importError: 'Import failed.',
     exportSuccess: 'Exported: {file}',
