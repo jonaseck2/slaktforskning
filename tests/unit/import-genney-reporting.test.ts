@@ -30,6 +30,8 @@ describe('Genney import reporting', () => {
     const summary = transformGenney(db, tables);
     expect(Array.isArray(summary.warnings)).toBe(true);
     expect(Array.isArray(summary.skipped)).toBe(true);
+    expect(summary.warnings).toHaveLength(0);
+    expect(summary.skipped).toHaveLength(0);
   });
 
   it('orphaned events (no OWNER_EVENT entry) appear in skipped', () => {
@@ -92,15 +94,15 @@ describe('Genney import reporting', () => {
     expect(entry!.count).toBe(2);
   });
 
-  it('source NOTE field drops appear in skipped', () => {
+  it('source NOTE field drops appear in warnings', () => {
     const tables = emptyTables();
     tables.SOURCE = [
       { RID: 'S1', TITLE: 'Source with note', NOTE: 'Important note content' },
       { RID: 'S2', TITLE: 'Source without note', NOTE: null },
     ];
     const summary = transformGenney(db, tables);
-    const entry = summary.skipped.find(s => /note/i.test(s.category) || /source/i.test(s.category));
-    expect(entry).toBeDefined();
-    expect(entry!.count).toBe(1);
+    const warning = summary.warnings.find(w => /note/i.test(w) || /source/i.test(w));
+    expect(warning).toBeDefined();
+    expect(warning).toMatch(/1 source/);
   });
 });

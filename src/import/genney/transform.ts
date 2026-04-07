@@ -763,9 +763,9 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   }
   if (orphanedCitations > 0) {
     summary.skipped.push({
-      category: 'Citations with no owner (no OWNER_CITATION entry)',
+      category: 'Citations with no linked source (CITATION_SOURCE missing or source not found)',
       count: orphanedCitations,
-      reason: 'Citation not linked to any source — orphaned in source data',
+      reason: 'Citation could not be imported because the source it references was not found',
     });
   }
   if (unknownEventTypes.size > 0) {
@@ -788,11 +788,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     });
   }
   if (sourceNoteCount > 0) {
-    summary.skipped.push({
-      category: 'Source notes (SOURCE.NOTE field)',
-      count: sourceNoteCount,
-      reason: 'No mapping to app source model — field not imported',
-    });
+    summary.warnings.push(`${sourceNoteCount} source(s) have a NOTE field — not mapped to any app field, content not imported`);
   }
 
   return summary;
