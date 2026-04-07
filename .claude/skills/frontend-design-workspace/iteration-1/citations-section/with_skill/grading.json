@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Uses watch(() => props.personId, load, { immediate: true }) to load data, NOT onMounted",
+      "passed": true,
+      "evidence": "Line 94: watch(() => props.personId, load, { immediate: true }); no onMounted present"
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": true,
+      "evidence": "No 'declare const window' anywhere. Uses window.api.citations.forPerson directly (api.d.ts provides the type)."
+    },
+    {
+      "text": "Imports and calls useToast; catch block calls toast.error(t('errors.loadFailed')) or equivalent",
+      "passed": true,
+      "evidence": "Line 35: import { useToast }; line 47: const toast = useToast(); line 79: toast.error(t('errors.loadFailed')); line 89: toast.error(t('errors.deleteFailed'))"
+    },
+    {
+      "text": "All user-visible strings use $t() not hardcoded Swedish or English text",
+      "passed": true,
+      "evidence": "Lines 3, 8, 9, 20, 22, 25, 84: all strings via $t(). No hardcoded English labels."
+    },
+    {
+      "text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values like #2c3e50 or #333",
+      "passed": true,
+      "evidence": "Line 98: var(--color-text-muted) and var(--font-sm). No hex values in scoped styles."
+    }
+  ],
+  "summary": { "passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0 }
+}

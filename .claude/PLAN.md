@@ -114,8 +114,15 @@ Six independent plans — each can be executed separately in any order.
 | BaseModal component | [plan](plans/2026-04-07-base-modal-refactor.md) | Extract modal shell from 15 components |
 | Component extraction | [plan](plans/2026-04-07-component-extraction.md) | Break PersonPanel (675 lines) + ImportExportView (538 lines) into sub-components |
 
+### Import/Export Data Integrity [fix]
+See `.claude/plans/2026-04-07-import-export-data-integrity.md` for the full plan.
+- [ ] GEDCOM import: surface LDS ordinances, TRAN translations, NO negative assertions in report
+- [ ] GEDCOM import: report dropped ASSO associations with unrecognised RELA types
+- [ ] GEDCOM export: add ExportReport (Research Tasks, Groups, Assertions, place_address excluded)
+- [ ] Genney import: warnings for orphaned events/citations, unknown event types, skipped parent links, unreferenced places, SOURCE.NOTE
+
 ### Holger/OurKind import [feature]
-See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
+See `.claude/plans/2026-04-06-holger-import.md` for the full plan.
 - [x] Add `'holger'` GEDCOM profile: ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype
 - [x] Media path remapping (Windows → local mediaDir)
 - [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
