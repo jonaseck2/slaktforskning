@@ -101,7 +101,8 @@
       "Bash(python -m scripts.aggregate_benchmark frontend-design-workspace/iteration-2 --skill-name frontend-design)",
       "Bash(python /Users/jonasahnstedt/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/scripts/aggregate_benchmark.py frontend-design-workspace/iteration-2 --skill-name frontend-design)",
       "Bash(nohup python:*)",
-      "Bash(open /tmp/frontend-design-eval-review-iter2.html)"
+      "Bash(open /tmp/frontend-design-eval-review-iter2.html)",
+      "Bash(open /tmp/frontend-design-eval-review-iter3.html)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
