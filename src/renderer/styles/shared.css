@@ -573,3 +573,29 @@
   html.dark .tab-btn:hover { color: #e2e8f0; }
   html.dark .tab-btn.active { color: #e2e8f0; border-bottom-color: #93c5fd; }
 }
+
+/* Reset dark mode overrides for print/PDF — dark backgrounds and light text
+   look wrong on paper. printBackground: false means backgrounds won't render
+   but text colors still apply, so headings would be near-white on white paper. */
+@media print {
+  html.dark body,
+  html.dark h1,
+  html.dark h2,
+  html.dark h3,
+  html.dark h4,
+  html.dark h5,
+  html.dark h6,
+  html.dark .modal h3,
+  html.dark .modal h4,
+  html.dark .section-header h4,
+  html.dark label,
+  html.dark .count-label,
+  html.dark .data-table th,
+  html.dark .data-table td,
+  html.dark .person-link { color: initial; }
+
+  html.dark body,
+  html.dark .content,
+  html.dark .modal,
+  html.dark .data-table th { background: initial; }
+}

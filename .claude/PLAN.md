@@ -107,6 +107,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.38.3 | Import/export test coverage: Genney archive extraction (.gcc/.backup), Genney GEDCOM profile ImportReport, Holger ImportReport+media, GEDCOM 5.5.1 full ImportReport, export place_address exclusion | [archive](plans/archive/2026-04-07-import-export-test-coverage.md) |
 | v0.38.4 | Genney media folder support: remapGenneyMediaPath, three-box import UI (.backup auto-copy, .gcc/.ged folder picker), mediaDir/destMediaDir wiring | [archive](plans/archive/2026-04-08-genney-media-folder.md) |
 
+| Investigation | macOS 26 Tahoe: packaged app crashes (EXC_BREAKPOINT in ElectronMain); npm start works | [plan](plans/2026-04-08-macos26-electron-crash.md) |
+
 ---
 
 ## Roadmap
