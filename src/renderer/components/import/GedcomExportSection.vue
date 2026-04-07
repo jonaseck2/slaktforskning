@@ -2,7 +2,14 @@
   <div class="section">
     <h3>{{ $t('importExport.gedcomExportTitle') }}</h3>
     <p class="section-desc">{{ $t('importExport.gedcomExportDesc') }}</p>
-    <button @click="handleExportGedcom" :disabled="busy">{{ $t('gedcom.export') }}</button>
+    <div class="export-controls">
+      <select v-model="exportVersion" :disabled="busy" class="version-select">
+        <option value="5.5.1">GEDCOM 5.5.1</option>
+        <option value="7.0">GEDCOM 7.0</option>
+      </select>
+      <button @click="handleExportGedcom" :disabled="busy">{{ $t('gedcom.export') }}</button>
+    </div>
+    <p v-if="exportVersion === '7.0'" class="section-desc section-desc--info">{{ $t('importExport.gedcomExportDesc70') }}</p>
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
@@ -42,6 +49,7 @@ declare const window: Window & {
 const { t } = useI18n();
 const toast = useToast();
 const busy = ref(false);
+const exportVersion = ref<'5.5.1' | '7.0'>('5.5.1');
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const showExportReport = ref(false);
@@ -63,7 +71,7 @@ async function handleExportGedcom() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.export()) as {
+    const result = (await window.api.gedcom.export({ version: exportVersion.value })) as {
       exported?: boolean;
       canceled?: boolean;
       filePath?: string;
@@ -93,6 +101,33 @@ async function handleExportGedcom() {
 </script>
 
 <style scoped>
+.export-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.version-select {
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.version-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.section-desc--info {
+  color: #1a73e8;
+  font-size: var(--font-sm);
+}
+
 button {
   align-self: flex-start;
   background: var(--color-primary);
