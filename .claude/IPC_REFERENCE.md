@@ -102,6 +102,9 @@ window.api.db.createNew()                          // → { path, name } | { can
 window.api.db.openExisting()                       // → { path, name } | { canceled: true }  (Open dialog)
 window.api.db.switchTo(path)                       // → { path: string, name: string }
 window.api.db.onSwitched(cb)                       // → void  (ipcRenderer.on listener)
+
+window.api.gedcom.import(opts?)                    // → import result
+window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exported, filePath, report } | { canceled: true }
 ```
 
 ## IPC Channel → API Function Mapping
@@ -193,3 +196,5 @@ window.api.db.onSwitched(cb)                       // → void  (ipcRenderer.on 
 | `db:createNew` | `dialog.showSaveDialog` → `switchDatabase(path)` → broadcast `db:switched` |
 | `db:openExisting` | `dialog.showOpenDialog` → `switchDatabase(path)` → broadcast `db:switched` |
 | `db:switchTo` | `switchDatabase(path)` → broadcast `db:switched` |
+| `gedcom:import` | `importGedcom(db, opts)` |
+| `gedcom:export` | `exportGedcom(db, version)` → Save dialog → `{ exported, filePath, report }` |
