@@ -10,17 +10,6 @@
     <p v-if="holgerSourcePath" class="section-instructions">{{ holgerSourcePath }}<span v-if="holgerMediaDir"> + {{ holgerMediaDir }}</span></p>
     <p v-if="holgerProgress" class="section-progress">{{ holgerProgress }}</p>
 
-    <hr class="section-divider" />
-
-    <p class="subsection-label">{{ $t('importExport.holgerEdbTitle') }}</p>
-    <p class="section-desc">{{ $t('importExport.holgerEdbDesc') }}</p>
-    <div class="section-buttons">
-      <button @click="holgerEdbPickDir" :disabled="busy">{{ $t('importExport.holgerEdbPickDir') }}</button>
-      <button @click="handleImportFromHolgerEdb" :disabled="busy || !holgerEdbPath">{{ $t('importExport.holgerEdbImport') }}</button>
-    </div>
-    <p v-if="holgerEdbPath" class="section-instructions">{{ holgerEdbPath }}</p>
-    <p v-if="holgerEdbProgress" class="section-progress">{{ holgerEdbProgress }}</p>
-
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false">
@@ -76,8 +65,6 @@ const statusType = ref<'success' | 'error'>('success');
 const holgerSourcePath = ref('');
 const holgerMediaDir = ref('');
 const holgerProgress = ref('');
-const holgerEdbPath = ref('');
-const holgerEdbProgress = ref('');
 const showImportReport = ref(false);
 const importReport = ref<{
   version?: string;
@@ -139,39 +126,6 @@ async function handleImportFromHolger() {
   }
 }
 
-async function holgerEdbPickDir() {
-  const r = await window.api.import.holgerEdbSelectDir() as { canceled: boolean; path?: string };
-  if (!r.canceled && r.path) holgerEdbPath.value = r.path;
-}
-
-async function handleImportFromHolgerEdb() {
-  if (!holgerEdbPath.value) return;
-  busy.value = true;
-  holgerEdbProgress.value = t('importExport.holgerEdbRunning');
-  window.api.import.onHolgerProgress((msg: string) => { holgerEdbProgress.value = msg; });
-  try {
-    const result = await window.api.import.holgerEdbRun({
-      edbPath: holgerEdbPath.value,
-    }) as {
-      success: boolean;
-      summary?: { persons: number; events: number };
-      error?: string;
-    };
-    if (result.success && result.summary) {
-      const s = result.summary;
-      setStatus(t('importExport.holgerEdbSuccess', { persons: s.persons, events: s.events }));
-      window.dispatchEvent(new CustomEvent('data-imported'));
-    } else {
-      setStatus(t('importExport.holgerEdbError', { error: result.error ?? 'Unknown error' }), 'error');
-    }
-  } catch (err) {
-    setStatus(t('importExport.holgerEdbError', { error: err instanceof Error ? err.message : String(err) }), 'error');
-    toast.error(t('errors.saveFailed'));
-  } finally {
-    busy.value = false;
-    holgerEdbProgress.value = '';
-  }
-}
 </script>
 
 <style scoped>
@@ -183,19 +137,6 @@ async function handleImportFromHolgerEdb() {
   padding: 8px 12px;
   border-radius: 0 4px 4px 0;
   margin: 0;
-}
-
-.section-divider {
-  border: none;
-  border-top: 1px solid #e5e5e5;
-  margin: 4px 0;
-}
-
-.subsection-label {
-  margin: 0;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: #444;
 }
 
 button {

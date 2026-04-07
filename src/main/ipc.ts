@@ -13,7 +13,7 @@ import * as places from '../api/places';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
-import { importFromHolger, importFromHolgerEdb } from '../import/holger/index';
+import { importFromHolger } from '../import/holger/index';
 import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
@@ -273,33 +273,6 @@ export function registerIpcHandlers(): void {
         },
       });
       return { success: true, report: result.report };
-    } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
-    }
-  });
-
-  // Holger / OurKind ElevateDB direct import
-  wrapHandler('import:holgerEdbSelectDir', async () => {
-    const result = await dialog.showOpenDialog({
-      title: 'Select OurKind EDB database directory (contains EDBDatabase.EDBCat)',
-      properties: ['openDirectory'],
-    });
-    if (result.canceled || !result.filePaths.length) return { canceled: true };
-    return { canceled: false, path: result.filePaths[0] };
-  });
-
-  wrapHandler('import:holgerEdbRun', async (opts) => {
-    const options = opts as { edbPath: string } | undefined;
-    if (!options?.edbPath) return { success: false, error: 'edbPath is required' };
-    const win = BrowserWindow.getFocusedWindow();
-    try {
-      const result = await importFromHolgerEdb(getDatabase(), {
-        edbPath: options.edbPath,
-        onProgress: (msg) => {
-          if (win) win.webContents.send('import:holgerProgress', { message: msg });
-        },
-      });
-      return { success: true, summary: result.summary };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };
     }

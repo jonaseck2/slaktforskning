@@ -16,7 +16,7 @@ import { runAllChecks, runChecksForPerson } from '../api/checks';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney } from '../import/genney/index';
-import { importFromHolger, importFromHolgerEdb } from '../import/holger/index';
+import { importFromHolger } from '../import/holger/index';
 
 export function createMcpServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -596,35 +596,6 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
         content: [{
           type: 'text',
           text: `Holger import complete: ${r.persons} persons, ${r.families} families, ${eventTotal} events, ${r.sources} sources, ${r.places} places, ${r.citations} citations.`,
-        }],
-      };
-    } catch (err) {
-      return {
-        content: [{ type: 'text', text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
-      };
-    }
-  });
-
-  server.registerTool('import_holger_edb', {
-    description:
-      'Import directly from an OurKind/Holger ElevateDB binary database directory ' +
-      '(the folder that contains Perstab.EDBTbl, EDBDatabase.EDBCat, etc.). ' +
-      'More complete than the GEDCOM path: captures all person data including ' +
-      'inline notes (anm1/anm2), occupation, and home parish. ' +
-      'Requires Docker (pulls python:3.12-slim on first run, ~50 MB). ' +
-      'Vigtab (couple events) and Anmtab blob notes are extracted but not yet imported.',
-    inputSchema: {
-      edb_path: z.string().describe('Path to the OurKind EDB database directory (e.g. /path/to/ourkind_V8)'),
-    },
-  }, async (args) => {
-    try {
-      const result = await importFromHolgerEdb(db, { edbPath: args.edb_path });
-      const s = result.summary;
-      return {
-        content: [{
-          type: 'text',
-          text: `Holger EDB import complete: ${s.persons} persons, ${s.events} events` +
-                (s.skipped > 0 ? `, ${s.skipped} skipped` : '') + '.',
         }],
       };
     } catch (err) {
