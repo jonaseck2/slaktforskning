@@ -43,6 +43,8 @@ export interface CollapseButton {
   cy: number;
   isExpanded: boolean;
   isLoadMore?: boolean; // true → click fetches new data; false/absent → toggles visibility
+  /** For focal 'down' buttons: which co-parent group this button controls (undefined = non-focal). */
+  coParentId?: string | null;
 }
 
 export interface ChartLayout {
@@ -70,6 +72,8 @@ export interface DescendantNode {
   person: PersonNode;
   children: DescendantNode[];
   hasMoreChildren?: boolean; // children exist in DB but not loaded (meaningful at max depth)
+  /** Set on focal's direct children only: which of focal's spouses is the other parent (null = none). */
+  coParentId?: string | null;
 }
 
 /**
@@ -326,11 +330,16 @@ export function computeHourglassLayout(
   const ancestorNodes = prunedAncestorNodes;
   const focalIsFemale = focalPerson?.sex === 'F';
 
-  const effectiveDescRoot = collapsed.has(`${focalId}:down`)
-    ? { person: descendantRoot.person, children: [] as DescendantNode[] }
-    : descendantRoot;
   // Spouses may be collapsed via :right key (original) or :left key (female focal).
   const effectiveSpouses = (collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`)) ? [] : spouses;
+
+  // Group focal's direct children by co-parent ID (set by chartData during fetch).
+  const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
+  for (const child of descendantRoot.children) {
+    const key = child.coParentId ?? null;
+    const arr = focalChildGroupMap.get(key);
+    if (arr) arr.push(child); else focalChildGroupMap.set(key, [child]);
+  }
 
   // When the focal person is female, place spouses to the LEFT so the convention
   // "male left, female right" holds regardless of who is currently focal.
@@ -431,21 +440,73 @@ export function computeHourglassLayout(
   const ancestorRowY = (g: number) => ancestorTopPad + (A - g) * (BOX_H + GEN_GAP);
   const descRowY     = (d: number) => focalRowY + d * (BOX_H + GEN_GAP);
 
-  // Compute descendant extents relative to the couple-junction.
-  const [compactLeftFromCJ, compactRightFromCJ] =
-    M > 0 ? subtreeExtents(effectiveDescRoot, 0) : [BOX_W / 2, BOX_W / 2];
+  // Distance from focalCX to the couple-junction for spouse at index i.
+  const junctionOffsetOf = (i: number): number =>
+    (BOX_W + H_GAP + i * (BOX_W + V_GAP)) / 2;
 
-  // Spouse offset: couple-junction sits midway between focal and first spouse.
-  const spouseOffset = effectiveSpouses.length > 0 ? (BOX_W + H_GAP) / 2 : 0;
+  // Spouse offset: distance from focalCX to junction for first spouse (used for marriage line).
+  const spouseOffset = effectiveSpouses.length > 0 ? junctionOffsetOf(0) : 0;
 
-  // Convert to distances from focalCX.
-  // When spouseOnLeft the couple-junction is LEFT of focal, so:
-  //   descLeft  = spouseOffset + compactLeftFromCJ  (same — junction is left-of-focal)
-  //   descRight = compactRightFromCJ - spouseOffset (junction is left, so right shrinks)
-  const descLeftFromFocal  = spouseOffset + compactLeftFromCJ;
-  const descRightFromFocal = spouseOnLeft
-    ? Math.max(BOX_W / 2, compactRightFromCJ - spouseOffset)
-    : spouseOffset + compactRightFromCJ;
+  // Compute extents of a flat list of focal children (treated as depth-1 subtrees) from their center.
+  function computeGroupExtents(groupChildren: DescendantNode[]): [number, number] {
+    if (groupChildren.length === 0) return [BOX_W / 2, BOX_W / 2];
+    const n = groupChildren.length;
+    const childExts = groupChildren.map(c => subtreeExtents(c, 1));
+    const offsets: number[] = [0];
+    for (let i = 1; i < n; i++) {
+      offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
+    }
+    const totalSpan = n > 1 ? offsets[n - 1] : 0;
+    return [
+      Math.max(BOX_W / 2, totalSpan / 2 + childExts[0][0]),
+      Math.max(BOX_W / 2, totalSpan / 2 + childExts[n - 1][1]),
+    ];
+  }
+
+  // Build relative group infos: anchor offset from focalCX (positive=right, negative=left),
+  // sorted left-to-right. Only non-empty, non-collapsed groups affect layout.
+  interface RelGroupInfo {
+    coParentId: string | null;
+    children: DescendantNode[];
+    anchorOffset: number; // relative to focalCX (positive=right, negative=left)
+    gLeft: number;
+    gRight: number;
+  }
+  const relGroupInfos: RelGroupInfo[] = [...focalChildGroupMap.entries()]
+    .filter(([coParentId, ch]) =>
+      ch.length > 0 && !collapsed.has(`${focalId}:down:${coParentId ?? 'solo'}`),
+    )
+    .map(([coParentId, children]) => {
+      const spouseIdx = effectiveSpouses.findIndex(s => s.id === coParentId);
+      const anchorOffset = spouseIdx >= 0
+        ? (spouseOnLeft ? -junctionOffsetOf(spouseIdx) : junctionOffsetOf(spouseIdx))
+        : 0;
+      const [gLeft, gRight] = computeGroupExtents(children);
+      return { coParentId, children, anchorOffset, gLeft, gRight };
+    })
+    .sort((a, b) => a.anchorOffset - b.anchorOffset);
+
+  // Pack groups left-to-right: each prefers its anchor offset, but shifts right to avoid overlap.
+  const relativeCenterOffsets: number[] = [];
+  for (let i = 0; i < relGroupInfos.length; i++) {
+    const g = relGroupInfos[i];
+    let co = g.anchorOffset;
+    if (i > 0) {
+      const prev = relGroupInfos[i - 1];
+      co = Math.max(co, relativeCenterOffsets[i - 1] + prev.gRight + V_GAP + g.gLeft);
+    }
+    relativeCenterOffsets.push(co);
+  }
+
+  // Compute total descendant extents from focalCX using packed positions.
+  let descLeftFromFocal = BOX_W / 2;
+  let descRightFromFocal = BOX_W / 2;
+  for (let i = 0; i < relGroupInfos.length; i++) {
+    const { gLeft, gRight } = relGroupInfos[i];
+    const co = relativeCenterOffsets[i];
+    descLeftFromFocal  = Math.max(descLeftFromFocal,  Math.max(0, gLeft  - co));
+    descRightFromFocal = Math.max(descRightFromFocal, Math.max(0, co + gRight));
+  }
 
   // Extra space needed on the spouse side (left or right depending on orientation).
   const spouseBoxesExtent = effectiveSpouses.length > 0
@@ -520,63 +581,91 @@ export function computeHourglassLayout(
     ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
     : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  // Couple-junction: midway between focal and first spouse.
-  const coupleJunctionX = spouseOnLeft
-    ? focalCX - spouseOffset
-    : focalCX + spouseOffset;
+  // CX of the couple-junction for spouse at index i (midpoint between focal and that spouse).
+  const coupleJunctionCXOf = (i: number) => spouseOnLeft
+    ? focalCX - junctionOffsetOf(i)
+    : focalCX + junctionOffsetOf(i);
 
-  // placeDescendants: spaces children using actual subtree extents so that
-  // adjacent sibling subtrees never overlap (always exactly V_GAP apart).
-  function placeDescendants(node: DescendantNode, depth: number, nodeCX: number, depth0StartY?: number): void {
-    // Focal box is already placed by the ancestor loop; skip depth === 0
-    if (depth > 0) {
-      boxes.push({
-        person:  node.person,
-        isFocal: false,
-        x: nodeCX - BOX_W / 2,
-        y: descRowY(depth),
-        w: BOX_W,
-        h: BOX_H,
-      });
-    }
+  // placeDescendants: recursively place descendant boxes and connector lines (depth >= 1 only).
+  function placeDescendants(node: DescendantNode, depth: number, nodeCX: number): void {
+    boxes.push({
+      person:  node.person,
+      isFocal: false,
+      x: nodeCX - BOX_W / 2,
+      y: descRowY(depth),
+      w: BOX_W,
+      h: BOX_H,
+    });
 
-    if (depth < M && node.children.length > 0) {
-      const childrenCollapsed = depth > 0 && collapsed.has(`${node.person.id}:down`);
-      if (!childrenCollapsed) {
-        const rowY  = depth === 0 ? focalRowY : descRowY(depth);
-        const forkY = rowY + BOX_H + GEN_GAP / 2;
-        const lineStartY = depth === 0 && depth0StartY !== undefined ? depth0StartY : rowY + BOX_H;
+    if (depth < M && node.children.length > 0 && !collapsed.has(`${node.person.id}:down`)) {
+      const rowY  = descRowY(depth);
+      const forkY = rowY + BOX_H + GEN_GAP / 2;
 
-        lines.push({ x1: nodeCX, y1: lineStartY, x2: nodeCX, y2: forkY });
+      lines.push({ x1: nodeCX, y1: rowY + BOX_H, x2: nodeCX, y2: forkY });
 
-        const n = node.children.length;
-        const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
+      const n = node.children.length;
+      const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
+      const offsets: number[] = [0];
+      for (let i = 1; i < n; i++) {
+        offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
+      }
+      const totalSpan = offsets[n - 1];
+      const leftmostCX = nodeCX - totalSpan / 2;
+      const childCXs = offsets.map(o => leftmostCX + o);
 
-        // Compute child CX positions: pack subtrees with V_GAP between edges
-        const offsets: number[] = [0];
-        for (let i = 1; i < n; i++) {
-          offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
-        }
-        const totalSpan = offsets[n - 1];
-        const leftmostCX = nodeCX - totalSpan / 2;
-        const childCXs = offsets.map(o => leftmostCX + o);
-
-        if (n > 1) {
-          lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
-        }
-        for (let ci = 0; ci < n; ci++) {
-          lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
-          placeDescendants(node.children[ci], depth + 1, childCXs[ci]);
-        }
+      if (n > 1) {
+        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
+      }
+      for (let ci = 0; ci < n; ci++) {
+        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
+        placeDescendants(node.children[ci], depth + 1, childCXs[ci]);
       }
     }
   }
 
-  const descStartX = coupleJunctionX;
-  // When there's a spouse, the marriage line is at BOX_H/2; start the children
-  // connector there so it visually meets the marriage line without a gap.
-  const coupleLineY = effectiveSpouses.length > 0 ? focalRowY + BOX_H / 2 : undefined;
-  placeDescendants(effectiveDescRoot, 0, descStartX, coupleLineY); // descStartX = coupleJunctionX
+  // Place focal child groups using pre-computed packed center offsets (relGroupInfos).
+  // When a group is shifted away from its preferred anchor, an L-shaped connector is drawn.
+  {
+    const forkY = focalRowY + BOX_H + GEN_GAP / 2;
+    const bendY = focalRowY + BOX_H + GEN_GAP / 4; // bend point for L-connectors
+
+    for (let gi = 0; gi < relGroupInfos.length; gi++) {
+      const g = relGroupInfos[gi];
+      const { coParentId, children } = g;
+      const spouseIdx  = effectiveSpouses.findIndex(s => s.id === coParentId);
+      const anchorCX   = focalCX + g.anchorOffset;
+      const lineStartY = spouseIdx >= 0 ? focalRowY + BOX_H / 2 : focalRowY + BOX_H;
+      const centerCX   = focalCX + relativeCenterOffsets[gi];
+
+      // Connector from anchor down to group's actual center (straight or L-shaped).
+      if (Math.abs(anchorCX - centerCX) > 1) {
+        lines.push({ x1: anchorCX, y1: lineStartY, x2: anchorCX, y2: bendY });
+        lines.push({ x1: anchorCX, y1: bendY,      x2: centerCX, y2: bendY });
+        lines.push({ x1: centerCX, y1: bendY,      x2: centerCX, y2: forkY });
+      } else {
+        lines.push({ x1: centerCX, y1: lineStartY, x2: centerCX, y2: forkY });
+      }
+
+      // Place children centred at centerCX.
+      const n = children.length;
+      const childExts = children.map(c => subtreeExtents(c, 1));
+      const offsets: number[] = [0];
+      for (let i = 1; i < n; i++) {
+        offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
+      }
+      const totalSpan  = n > 1 ? offsets[n - 1] : 0;
+      const leftmostCX = centerCX - totalSpan / 2;
+      const childCXs   = offsets.map(o => leftmostCX + o);
+
+      if (n > 1) {
+        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
+      }
+      for (let ci = 0; ci < n; ci++) {
+        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(1) });
+        placeDescendants(children[ci], 1, childCXs[ci]);
+      }
+    }
+  }
 
   if (effectiveSpouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
@@ -602,7 +691,7 @@ export function computeHourglassLayout(
 
   // ── SVG height ───────────────────────────────────────────────────────────
 
-  const deepestDescRow = M > 0 && effectiveDescRoot.children.length > 0
+  const deepestDescRow = M > 0 && descendantRoot.children.length > 0
     ? descRowY(M)
     : focalRowY;
   // Add 20px below deepest box: 10px to button centre + ~8px button radius + 2px margin.
@@ -626,20 +715,27 @@ export function computeHourglassLayout(
     if (k !== undefined) {
       // Ancestor or focal box
       if (k === 1) {
-        // Focal: ↓ for children, → or ← for spouses
-        if (descendantRoot.children.length > 0) {
+        // Focal: one ↓ button per child group, positioned at the group's anchor CX.
+        for (const [coParentId, groupChildren] of focalChildGroupMap) {
+          if (groupChildren.length === 0) continue;
+          const spouseIdx = effectiveSpouses.findIndex(s => s.id === coParentId);
+          const btnCX = spouseIdx >= 0 ? coupleJunctionCXOf(spouseIdx) : focalCX;
+          const groupKey = `${focalId}:down:${coParentId ?? 'solo'}`;
           collapseButtons.push({
-            personId: box.person.id, direction: 'down',
-            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
-            isExpanded: !collapsed.has(`${box.person.id}:down`),
+            personId: focalId, direction: 'down',
+            cx: btnCX, cy: box.y + BOX_H + 10,
+            isExpanded: !collapsed.has(groupKey),
             isLoadMore: false,
+            coParentId,
           });
-        } else if (descendantRoot.hasMoreChildren) {
+        }
+        if (focalChildGroupMap.size === 0 && descendantRoot.hasMoreChildren) {
           collapseButtons.push({
-            personId: box.person.id, direction: 'down',
-            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+            personId: focalId, direction: 'down',
+            cx: focalCX, cy: box.y + BOX_H + 10,
             isExpanded: false,
             isLoadMore: true,
+            coParentId: null,
           });
         }
         if (spouses.length > 0) {
