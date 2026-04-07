@@ -469,7 +469,7 @@ Replace the entire contents of `src/renderer/components/import/GenneyImportSecti
       <p class="box-desc">{{ $t('importExport.genneyGedDesc') }}</p>
       <div class="section-buttons">
         <button @click="pickGedMedia" :disabled="busy">{{ $t('importExport.genneyPickMedia') }}</button>
-        <button @click="importGed" :disabled="busy">{{ $t('importExport.genneyDerbySelectArchive') && $t('gedcom.genneyPickFile') && $t('importExport.genneyImport') }}</button>
+        <button @click="importGed" :disabled="busy">{{ $t('importExport.genneyImport') }}</button>
       </div>
       <p v-if="gedMediaDir" class="section-instructions">{{ gedMediaDir }}</p>
     </div>
@@ -727,14 +727,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 ```
 
-> **Note on Box 3 import button:** The `.ged` import button currently uses `$t('importExport.genneyImport')` but actually needs to open a file dialog. Fix this typo in the template:
-
-```html
-<!-- Box 3 import button — replace the broken chained $t expression: -->
-<button @click="importGed" :disabled="busy">{{ $t('importExport.genneyImport') }}</button>
-```
-
-The `importGed()` handler calls `window.api.gedcom.import()` which opens the file dialog internally.
+> **Note:** The `importGed()` handler calls `window.api.gedcom.import()` which opens a system file-picker dialog internally, then runs the import. The button label "Import" is correct.
 
 - [ ] **Step 4: Run tests**
 

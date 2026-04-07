@@ -83,6 +83,20 @@ describe('things', () => {
 
 Negative cases (null returns, false returns) are easy to skip and frequently missed. Always include them.
 
+### Import/transform tests — assert DB outcomes, not just fixtures
+
+When testing import transforms (GEDCOM, Genney, etc.), **always query the DB and assert actual row counts/values** after running the import — don't only compare the transform output against a fixture.
+
+```typescript
+const report = importGedcom(db, gedcomString);
+// Assert DB state, not just the report object:
+expect(listPersons(db)).toHaveLength(3);
+expect(listPlaces(db)).toHaveLength(2);
+expect(getEventsForPerson(db, id)).toHaveLength(1);
+```
+
+Why: if both the transform code and the test fixture share the same wrong assumption (e.g. a misnamed column), a fixture-only comparison will silently pass while the bug exists. DB-level assertions catch this. This pattern discovered the `EVENT_PLACE` and `REMARK` column bugs in the Genney importer — the fixtures mirrored the bug.
+
 ## E2E Tests
 
 E2E tests live in `tests/e2e/` and use Playwright (not browser Playwright — process spawning).
