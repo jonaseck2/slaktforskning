@@ -92,6 +92,18 @@
         </div>
       </div>
 
+      <!-- Identifiers section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('identifiers')">
+          <span class="panel-chevron">{{ sections.identifiers ? '▾' : '▸' }}</span>
+          {{ $t('identifiers.title') }}
+          <span class="panel-section-header-action" @click.stop="identifiersSectionRef?.openAddForm()">+ {{ $t('identifiers.add') }}</span>
+        </button>
+        <div v-if="sections.identifiers" class="panel-section-body">
+          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
+        </div>
+      </div>
+
       <!-- Relationer section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('relationships')">
@@ -124,6 +136,18 @@
         </div>
       </div>
 
+      <!-- Media section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('media')">
+          <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
+          {{ $t('media.title') }}
+          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()">{{ $t('media.attachShort') }}</span>
+        </button>
+        <div v-if="sections.media" class="panel-section-body">
+          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
+        </div>
+      </div>
+
       <!-- Forskning section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('research')">
@@ -134,30 +158,6 @@
         <div v-if="sections.research" class="panel-section-body">
           <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
           <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
-        </div>
-      </div>
-
-      <!-- Identifiers section -->
-      <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('identifiers')">
-          <span class="panel-chevron">{{ sections.identifiers ? '▾' : '▸' }}</span>
-          {{ $t('identifiers.title') }}
-          <span class="panel-section-header-action" @click.stop="identifiersSectionRef?.openAddForm()">+ {{ $t('identifiers.add') }}</span>
-        </button>
-        <div v-if="sections.identifiers" class="panel-section-body">
-          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
-        </div>
-      </div>
-
-      <!-- Media section -->
-      <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('media')">
-          <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
-          {{ $t('media.title') }}
-          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()">{{ $t('media.attachShort') }}</span>
-        </button>
-        <div v-if="sections.media" class="panel-section-body">
-          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
         </div>
       </div>
 
