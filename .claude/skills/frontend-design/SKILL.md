@@ -394,6 +394,53 @@ The backend `listPage` query must JOIN related tables to return all display data
 
 ---
 
+## Import / Export tab layout
+
+The Import / Export view uses a shared card system — **not** the `.section` class.
+
+### Structure
+
+Each tab renders one or more option cards stacked vertically, all within a max-width container:
+
+```html
+<div class="io-groups">          <!-- wrapper: flex column, gap 16px, max-width 560px -->
+  <div class="io-group">         <!-- card: white box, border, 16px padding, 6px gap -->
+    <div class="io-group-header">
+      <h3>Import GEDCOM 5.5.1 or 7.0</h3>
+      <span class="io-badge io-badge--stable">Standard</span>   <!-- optional -->
+    </div>
+    <p class="section-desc">Imports a GEDCOM file from any genealogy application.</p>
+    <button @click="handleImport" :disabled="busy">Import GEDCOM</button>
+  </div>
+</div>
+```
+
+All classes are defined in `src/renderer/styles/shared.css` — **never redefine them in scoped blocks**.
+
+### Badge variants
+
+| Class | Color | Use for |
+|---|---|---|
+| `io-badge--stable` | Green | Broadly compatible format |
+| `io-badge--modern` | Blue | Newer/modern format |
+| `io-badge--docker` | Blue | Requires Docker Desktop |
+
+### Text conventions
+
+**Tab names:** Short and plain — "Genney", "Standard GEDCOM", not "Import from Genney".
+
+**Box headings:** Always prefixed with "Import" or "Export". Version info goes in the heading, not the description. Example: `Import GEDCOM 5.5.1 or 7.0`, `Export GEDCOM 7.0`.
+
+**Descriptions:** Third-person present tense ("Imports…", "Exports…"), one sentence, no file-path arrows (`File → Export → Save`). Keep it plain prose.
+
+**Button labels:** No ellipsis. Use "Import X" or "Export X" — not "Select X file".
+
+### Scoped styles
+
+Each section component's `<style scoped>` block should contain **only** `:deep(.modal)` overrides. Everything else is handled by the shared classes.
+
+---
+
 ## UX reviewer
 
 After implementing a new view, invoke the `ux-reviewer` agent (`.claude/agents/ux-reviewer.md`) with a specific task prompt to validate it against the established patterns. Fix any `ISSUES_FOUND` before committing.

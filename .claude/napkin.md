@@ -79,6 +79,14 @@
 
 (MCP tool registration pattern moved to `mcp-dev` skill. Skill update checklist moved to `add-feature` skill step 11.)
 
+## UI Conventions
+
+1. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
+   Do instead: wrap import/export option cards in `<div class="io-groups"><div class="io-group">`. The `.section` class is for other parts of the app. Button styles, headings, and badges are all covered by shared.css — scoped block needs only `:deep(.modal)`.
+
+2. **[2026-04-08] Import/export text follows strict conventions**
+   Do instead: tab names are short ("Genney", not "Import from Genney"). Box headings prefix "Import"/"Export" and put version info in the heading, not description ("Import GEDCOM 5.5.1 or 7.0"). Descriptions are one sentence, third-person present ("Imports…"/"Exports…"), no arrows, no ellipsis on buttons.
+
 ## User Directives
 
 1. **[2026-03-15] Commit all files — never selectively skip**
