@@ -1,5 +1,6 @@
 <template>
-  <div class="section">
+  <div class="io-groups">
+  <div class="io-group">
     <h3>{{ $t('importExport.gedcomImportTitle') }}</h3>
     <p class="section-desc">{{ $t('importExport.gedcomImportDesc') }}</p>
     <button @click="handleImportGedcom" :disabled="busy">{{ $t('gedcom.import') }}</button>
@@ -62,6 +63,7 @@
         <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
       </div>
     </BaseModal>
+  </div>
   </div>
 </template>
 
@@ -143,27 +145,6 @@ async function handleImportGedcom() {
 </script>
 
 <style scoped>
-button {
-  align-self: flex-start;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: inherit;
-}
-
-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 :deep(.modal) {
   max-height: 80vh;
   overflow-y: auto;

@@ -1,5 +1,6 @@
 <template>
-  <div class="section">
+  <div class="io-groups">
+  <div class="io-group">
     <h3>{{ $t('importExport.holgerTitle') }}</h3>
     <p class="section-desc">{{ $t('importExport.holgerDesc') }}</p>
     <div class="section-buttons">
@@ -44,6 +45,7 @@
         <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
       </div>
     </BaseModal>
+  </div>
   </div>
 </template>
 
@@ -143,27 +145,6 @@ async function handleImportFromHolger() {
   padding: 8px 12px;
   border-radius: 0 4px 4px 0;
   margin: 0;
-}
-
-button {
-  align-self: flex-start;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: inherit;
-}
-
-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 :deep(.modal) {
