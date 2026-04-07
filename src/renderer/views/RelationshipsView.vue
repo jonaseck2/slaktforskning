@@ -29,8 +29,7 @@
     <div ref="sentinel" class="scroll-sentinel"></div>
 
     <!-- Add Relationship Modal -->
-    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-      <div class="modal">
+    <BaseModal v-if="showAddForm" @close="showAddForm = false">
         <h3>{{ $t('relationships.addRelationship') }}</h3>
         <form @submit.prevent="addRelationship">
           <label>
@@ -74,25 +73,27 @@
             <button type="submit">{{ $t('relationships.addRelationship') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import BaseModal from '../components/BaseModal.vue';
 import PersonPicker from '../components/PersonPicker.vue';
 import RelationshipsTable from '../components/RelationshipsTable.vue';
 import type { RelRow } from '../components/RelationshipsTable.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useDataVersionStore } from '../stores/dataVersion';
+import { useToast } from '../composables/useToast';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
 const PAGE_SIZE = 100;
 
 const { t } = useI18n();
+const toast = useToast();
 const relationships = ref<RelRow[]>([]);
 const total = ref(0);
 const offset = ref(0);
@@ -142,12 +143,7 @@ watch(sentinel, (el) => {
   observer.observe(el);
 });
 
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') showAddForm.value = false;
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
   if (observer) observer.disconnect();
 });
 
@@ -170,6 +166,7 @@ async function load() {
     offset.value = PAGE_SIZE;
   } catch (err) {
     console.error('[RelationshipsView] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   } finally {
     loading.value = false;
   }
@@ -185,6 +182,7 @@ async function loadMore() {
     offset.value += PAGE_SIZE;
   } catch (err) {
     console.error('[RelationshipsView] loadMore failed:', err);
+    toast.error(t('errors.loadFailed'));
   } finally {
     loading.value = false;
   }
@@ -209,6 +207,7 @@ async function addRelationship() {
     await load();
   } catch (err) {
     console.error('[RelationshipsView] addRelationship failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 
@@ -220,6 +219,7 @@ async function removeRelationship(id: string) {
     await load();
   } catch (err) {
     console.error('[RelationshipsView] removeRelationship failed:', err);
+    toast.error(t('errors.deleteFailed'));
   }
 }
 

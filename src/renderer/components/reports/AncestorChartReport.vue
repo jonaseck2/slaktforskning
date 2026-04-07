@@ -20,8 +20,10 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { fetchPedigreeTree } from '../../utils/chartData';
 import { formatFullName } from '../../utils/nameUtils';
+import { useToast } from '../../composables/useToast';
 
 interface PersonNode {
   id: string;
@@ -40,6 +42,8 @@ interface PedigreeTree {
 
 const props = defineProps<{ rootPersonId: string; generations: number }>();
 
+const { t } = useI18n();
+const toast = useToast();
 const loading = ref(false);
 const tree = ref<PedigreeTree | null>(null);
 
@@ -93,6 +97,7 @@ async function load() {
     tree.value = (await fetchPedigreeTree(props.rootPersonId, props.generations)) as PedigreeTree;
   } catch (err) {
     console.error('[AncestorChartReport] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   } finally {
     loading.value = false;
   }

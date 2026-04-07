@@ -239,12 +239,37 @@ import BaseModal from '../components/BaseModal.vue';
 - Sections for related entities (events, names, citations) with embedded components
 
 ### Shared components to reuse
+- `BaseModal` — modal shell with overlay click-to-close and Escape key. **Always use this** — never write `div.modal-overlay > div.modal` directly. Import from `'../components/BaseModal.vue'`.
 - `PersonPicker` — searchable autocomplete for selecting a person; has `width: 100%` so it fills any container
 - `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
 - `DateInput` — compound date input with genealogy date types
 - `EventForm` / `EventList` — event CRUD, embeds in detail views; event rows are clickable (no Edit button)
 - `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`); wire `:place-id` for place views
 - `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`
+
+### Error handling in async operations
+
+Every `await window.api.*` call that mutates data must have a try/catch that shows a toast. Never silently swallow errors:
+
+```typescript
+import { useToast } from '../composables/useToast';
+import { useI18n } from 'vue-i18n';
+
+const toast = useToast();
+const { t } = useI18n();
+
+async function save() {
+  try {
+    await window.api.things.create(form);
+    emit('saved');
+  } catch (err) {
+    console.error('[PersonThingsSection] save failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+```
+
+Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `errors.loadFailed` for reads. These keys exist in both `en.ts` and `sv.ts`.
 
 ### Person Section Component pattern
 
@@ -344,7 +369,14 @@ Add `things: loadSection('things', false)` to the `sections` reactive object.
 - **Always use `formatFullName()` for plain-text name rendering** — Any code that renders a person name as a string (report headings, ahnentafel lists, relationship lists, dropdown labels, log strings) MUST import and call `formatFullName()` from `src/renderer/utils/nameUtils.ts`. Never use inline logic like `preferred_name ?? given_name?.split(' ')[0]` or a local `primaryName()` function. This ensures all given names, the nickname in quotes, and any prefix/suffix are always shown. For Vue template rendering (PersonName component contexts), use `<PersonName>` instead.
 
 ### i18n
-Add strings to both `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English fallback). Use `$t('key')` in templates.
+
+Every user-visible string — including button labels, table headers, placeholders, section headings, and empty-state messages — goes through `$t('key')`. No hardcoded Swedish or English in templates or script. This applies even to single-word labels like "Spara" or "Save".
+
+Add all new keys to **both** `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English) in the same changeset.
+
+### Component size
+
+If a component grows beyond ~300 lines, extract sections following the Person Section Component pattern before adding more code. Large components are a sign that multiple independently reusable sections have been inlined. Extract each section into its own self-loading component — see the pattern above.
 
 ## MCP Verification Loop (Step 9 — for UI features)
 

@@ -1,3 +1,8 @@
+---
+name: frontend-design
+description: Frontend design patterns for Släktforskning — Vue 3 components, layout, colors, modals, i18n, error handling. Use when building any new view, component, or UI change in the renderer.
+---
+
 # Frontend Design Skill — Släktforskning
 
 Use this skill when building any new view, component, or UI change in the renderer. It documents the established patterns that all views must follow for consistency.
@@ -18,18 +23,28 @@ Every view is a `<div>` (no wrapper classes needed — content area provides pad
 
 ## Colors and typography
 
-| Token | Value | Usage |
+**Never use hardcoded hex values in any CSS.** Use CSS custom properties from `src/renderer/styles/shared.css`. Adding a new color requires a variable in `shared.css` first, then a `html.dark` override.
+
+| CSS variable | Light value | Usage |
 |---|---|---|
-| Sidebar bg | `#2c3e50` | Sidebar only |
-| Content bg | `#f5f5f5` | Page background |
-| Card/table bg | `white` | Tables, modals, sections |
-| Primary text | `#333` | Body copy |
-| Muted text | `#666` | Labels, secondary |
-| Subtle text | `#999` | Placeholders, hints |
-| Danger | `#e53e3e` | Delete buttons, error badges |
-| Success | `#059669` | Create actions in pickers |
-| Link | `#3182ce` | `router-link` inside content |
-| Section border | `#e8e8e8` | Between sections, table borders |
+| `--color-primary` | `#2c3e50` | Primary button bg, active chip, tab active, sidebar |
+| `--color-bg` | `#ffffff` | Card/table/modal backgrounds |
+| `--color-bg-subtle` | `#f8f9fa` | Hover backgrounds |
+| `--color-bg-muted` | `#f0f4f8` | Chip backgrounds |
+| `--color-bg-table-head` | `#eeeeee` | Table `<th>` backgrounds |
+| `--color-border` | `#dddddd` | Table borders, section dividers, tab bar |
+| `--color-border-input` | `#cccccc` | Form input borders |
+| `--color-text` | `#333333` | Body copy |
+| `--color-text-muted` | `#555555` | Form labels |
+| `--color-text-subtle` | `#666666` | Table headers, secondary labels |
+| `--color-text-faint` | `#999999` | Placeholders, hints, empty state |
+| `--color-danger-bg` | `#fee2e2` | Delete button background |
+| `--color-danger-text` | `#b91c1c` | Delete button text |
+| `--color-danger-hover` | `#fecaca` | Delete button hover |
+| `--color-link` | `#2563eb` | `router-link` inside content, person links |
+| `--color-row-hover` | `#f0f4ff` | Clickable row hover |
+
+The content area background (`#f5f5f5`) and sidebar (`--color-primary`) are set directly on layout elements in App.vue.
 
 | Element | Font size |
 |---|---|
@@ -90,9 +105,9 @@ All related-data sections inside a detail view use:
 
 CSS (copy from SourceDetailView or PersonDetailView):
 ```css
-.detail-section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.detail-section { background: var(--color-bg); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.section-header h4 { font-size: 15px; color: #333; margin: 0; }
+.section-header h4 { font-size: var(--font-md); color: var(--color-text); margin: 0; }
 ```
 
 ---
@@ -123,9 +138,9 @@ The entity's own editable fields (the DB columns) go into a 2-column grid **befo
 
 ```css
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field-label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #666; }
-.field-input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; }
-.field-input:focus { border-color: #4299e1; outline: none; }
+.field-label { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-xs); color: var(--color-text-subtle); }
+.field-input { padding: 6px 8px; border: 1px solid var(--color-border-input); border-radius: 4px; font-size: var(--font-base); font-family: inherit; }
+.field-input:focus { border-color: var(--color-link); outline: none; }
 ```
 
 **Auto-save rules:**
@@ -179,7 +194,7 @@ Standard list view structure:
 ```
 
 ```css
-.count-label { font-size: 13px; color: #666; margin: 0 0 8px; }
+.count-label { font-size: var(--font-sm); color: var(--color-text-subtle); margin: 0 0 8px; }
 .scroll-sentinel { height: 1px; }
 ```
 
@@ -193,32 +208,33 @@ Rules:
 
 ## Modal dialogs
 
-All create/edit forms open in a modal, never on a new page:
+All create/edit forms open in a modal, never on a new page. **Always use `<BaseModal>`** — it owns the overlay, click-to-close, and Escape key. Never write the `div.modal-overlay > div.modal` shell directly.
 
 ```html
-<div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-  <div class="modal">
-    <h3>{{ $t('entity.add') }}</h3>
-    <form @submit.prevent="handleSubmit">
-      <label>
-        {{ $t('field.name') }} *
-        <input v-model="form.name" type="text" required autofocus />
-      </label>
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" @click="showAddForm = false">
-          {{ $t('common.cancel') }}
-        </button>
-        <button type="submit">{{ $t('common.save') }}</button>
-      </div>
-    </form>
-  </div>
-</div>
+<BaseModal v-if="showAddForm" @close="showAddForm = false">
+  <h3>{{ $t('entity.add') }}</h3>
+  <form @submit.prevent="handleSubmit">
+    <label>
+      {{ $t('field.name') }} *
+      <input v-model="form.name" type="text" required autofocus />
+    </label>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" @click="showAddForm = false">
+        {{ $t('common.cancel') }}
+      </button>
+      <button type="submit">{{ $t('common.save') }}</button>
+    </div>
+  </form>
+</BaseModal>
+```
+
+```typescript
+import BaseModal from '../components/BaseModal.vue';
 ```
 
 Rules:
 - `autofocus` on first field
-- Escape key closes modal — wire via `@keydown.escape` or global keydown handler
-- Click on overlay closes modal via `@click.self`
+- Escape and overlay-click are handled by `BaseModal` — no local keyboard handler needed
 - Required fields marked with ` *` in label text
 
 ---
@@ -227,9 +243,9 @@ Rules:
 
 | Class | Usage | Color |
 |---|---|---|
-| (default `<button>`) | Primary action | Blue (`#3182ce`) |
+| (default `<button>`) | Primary action | `var(--color-primary)` |
 | `btn-cancel` | Cancel in modals | Gray/transparent |
-| `btn-delete` | Destructive action | Red (`#e53e3e`) |
+| `btn-delete` | Destructive action | `var(--color-danger-bg)` / `var(--color-danger-text)` |
 | `btn-sm` | Small inline button (table rows) | Smaller padding |
 | `btn-add` | Add in section headers | Muted, small |
 
@@ -244,18 +260,7 @@ Rules:
 
 ## Keyboard handling
 
-Every view with a modal registers a global keydown listener:
-
-```typescript
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    showAddForm.value = false;
-    // close any other open modals/pickers
-  }
-}
-onMounted(() => document.addEventListener('keydown', handleKeydown));
-onUnmounted(() => document.removeEventListener('keydown', handleKeydown));
-```
+`BaseModal` handles Escape-to-close and overlay click-to-close — views with modals no longer need a global keydown listener. Only add a view-level keydown listener for non-modal keyboard shortcuts (e.g. focus jump, custom hotkeys).
 
 ---
 
@@ -293,13 +298,33 @@ Add keys to **both** `src/renderer/i18n/sv.ts` (primary) and `src/renderer/i18n/
 
 ## window.api typing
 
-Every component that calls IPC uses the same type declaration — do not invent narrower types unless the function signature is well-known:
+`window.api` is typed globally via `src/renderer/api.d.ts` — an ambient declaration that augments the `Window` interface with all IPC methods and their exact types. **Never add a local `declare const window` block in a component.** Just use `window.api.*` directly.
+
+When adding new IPC channels, update `api.d.ts` to add the typed method signatures under the correct namespace.
+
+## Error handling
+
+Every `await window.api.*` call that mutates or reads data must have a try/catch that shows a toast. Never silently swallow errors with `console.error` alone.
 
 ```typescript
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+import { useToast } from '../composables/useToast';
+import { useI18n } from 'vue-i18n';
+
+const toast = useToast();
+const { t } = useI18n();
+
+async function save() {
+  try {
+    await window.api.things.create(form);
+    emit('saved');
+  } catch (err) {
+    console.error('[ComponentName] save failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
 ```
+
+Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `errors.loadFailed` for read failures. These keys exist in both `en.ts` and `sv.ts`.
 
 ---
 

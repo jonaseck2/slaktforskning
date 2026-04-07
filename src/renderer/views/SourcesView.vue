@@ -35,8 +35,7 @@
     </table>
 
     <!-- Add Source Modal -->
-    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-      <div class="modal">
+    <BaseModal v-if="showAddForm" @close="showAddForm = false">
         <h3>{{ $t('sources.addSource') }}</h3>
         <form @submit.prevent="addSource">
           <label>
@@ -73,17 +72,18 @@
             <button type="submit">{{ $t('sources.addSource') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import BaseModal from '../components/BaseModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useDataVersionStore } from '../stores/dataVersion';
+import { useToast } from '../composables/useToast';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
@@ -95,15 +95,11 @@ interface SourceRow {
 }
 
 const { t } = useI18n();
+const toast = useToast();
 const router = useRouter();
 const sourceList = ref<SourceRow[]>([]);
 const showAddForm = ref(false);
 
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') showAddForm.value = false;
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 const form = reactive({
   title: '',
@@ -120,6 +116,7 @@ async function load() {
     sourceList.value = (await window.api.sources.list()) as SourceRow[];
   } catch (err) {
     console.error('[SourcesView] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   }
 }
 
@@ -144,6 +141,7 @@ async function addSource() {
     await load();
   } catch (err) {
     console.error('[SourcesView] addSource failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 
@@ -155,6 +153,7 @@ async function removeSource(id: string) {
     await load();
   } catch (err) {
     console.error('[SourcesView] removeSource failed:', err);
+    toast.error(t('errors.deleteFailed'));
   }
 }
 

@@ -26,8 +26,7 @@
     <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->
-    <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
-      <div class="modal">
+    <BaseModal v-if="showAddModal" @close="showAddModal = false">
         <h3>{{ $t('researchTasks.addTask') }}</h3>
         <form @submit.prevent="createTask">
           <label>
@@ -65,14 +64,14 @@
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
+import BaseModal from '../components/BaseModal.vue';
 import PersonPicker from '../components/PersonPicker.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 

@@ -183,8 +183,7 @@
     />
 
     <!-- Add research task modal -->
-    <div v-if="showTaskForm" class="modal-overlay" @click.self="showTaskForm = false">
-      <div class="modal">
+    <BaseModal v-if="showTaskForm" @close="showTaskForm = false">
         <h3>+ {{ $t('researchTasks.nav') }}</h3>
         <form @submit.prevent="saveTask">
           <label>{{ $t('researchTasks.task') }} *
@@ -203,8 +202,7 @@
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
 
     <!-- Add relative modal -->
     <AddRelatedPersonModal
@@ -219,6 +217,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, reactive, onMounted } from 'vue';
+import BaseModal from './BaseModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';

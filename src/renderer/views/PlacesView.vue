@@ -39,8 +39,7 @@
     </table>
 
     <!-- Add modal -->
-    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-      <div class="modal">
+    <BaseModal v-if="showAddForm" @close="showAddForm = false">
         <h3>{{ $t('places.addTitle') }}</h3>
         <form @submit.prevent="addPlace">
           <label>
@@ -61,15 +60,15 @@
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import BaseModal from '../components/BaseModal.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { useDataVersionStore } from '../stores/dataVersion';
 const dataVersionStore = useDataVersionStore();
@@ -107,12 +106,6 @@ const filteredPlaces = computed(() =>
     : places.value.filter(p => (p.place_type ?? 'other') === activeTypeFilter.value)
 );
 const showAddForm = ref(false);
-
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') showAddForm.value = false;
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 const newPlace = reactive({ name: '', place_type: '' });
 

@@ -75,8 +75,10 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatFullName } from '../../utils/nameUtils';
+import { useToast } from '../../composables/useToast';
 
 const { t } = useI18n();
+const toast = useToast();
 
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName { given_name: string | null; surname: string | null; preferred_name?: string | null; nickname?: string | null; name_prefix?: string | null; name_suffix?: string | null; name_type: string; sort_order: number; }
@@ -279,6 +281,7 @@ async function load() {
     };
   } catch (err) {
     console.error('[FamilyGroupSheet] load failed:', err);
+    toast.error(t('errors.loadFailed'));
     error.value = 'Kunde inte ladda familjeblad.';
   } finally {
     loading.value = false;

@@ -82,8 +82,10 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
 import { useDataVersionStore } from '../stores/dataVersion';
+import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
+const toast = useToast();
 const router = useRouter();
 const qualityStore = useQualityStore();
 const dataVersionStore = useDataVersionStore();
@@ -180,6 +182,7 @@ async function runChecks() {
     qualityStore.setResults(raw);
   } catch (err) {
     console.error('[QualityView] runChecks failed:', err);
+    toast.error(t('errors.loadFailed'));
     qualityStore.running = false;
   }
 }
