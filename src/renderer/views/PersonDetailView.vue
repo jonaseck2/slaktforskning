@@ -64,7 +64,55 @@
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
-    <!-- Research Tasks Section -->
+    <!-- Identifiers Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('identifiers.title') }}</h4>
+        <button class="btn-add" @click="identifiersSectionRef?.openAddForm()">{{ $t('identifiers.add') }}</button>
+      </div>
+      <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="person.id" />
+    </section>
+
+    <!-- Relationships Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('personDetail.relationships') }}</h4>
+        <div class="rel-actions">
+          <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true">{{ $t('personDetail.addParent') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</button>
+        </div>
+      </div>
+      <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
+    </section>
+
+    <!-- Groups Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('groups.title') }}</h4>
+        <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true">+ {{ $t('groups.addMember') }}</button>
+      </div>
+      <div v-if="showGroupPicker" class="group-picker-row">
+        <GroupPicker
+          :person-id="personId"
+          :exclude-ids="personGroups.map(g => g.id)"
+          @added="showGroupPicker = false; loadPersonGroups()"
+          @cancel="showGroupPicker = false"
+        />
+      </div>
+      <div v-if="personGroups.length === 0 && !showGroupPicker" class="empty-hint">{{ $t('groups.noGroups') }}</div>
+      <GroupsTable v-else-if="personGroups.length > 0" :groups="personGroups" @remove="removeFromGroup" />
+    </section>
+
+    <!-- Media Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('media.title') }}</h4>
+        <button class="btn-add" @click="mediaSectionRef?.attach()">{{ $t('media.attach') }}</button>
+      </div>
+      <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" />
+    </section>
+
     <!-- Research Tasks Section -->
     <section class="detail-section">
       <div class="section-header">
@@ -104,55 +152,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Relationships Section -->
-    <section class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('personDetail.relationships') }}</h4>
-        <div class="rel-actions">
-          <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true">{{ $t('personDetail.addParent') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</button>
-        </div>
-      </div>
-      <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
-    </section>
-
-    <!-- Groups Section -->
-    <section class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('groups.title') }}</h4>
-        <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true">+ {{ $t('groups.addMember') }}</button>
-      </div>
-      <div v-if="showGroupPicker" class="group-picker-row">
-        <GroupPicker
-          :person-id="personId"
-          :exclude-ids="personGroups.map(g => g.id)"
-          @added="showGroupPicker = false; loadPersonGroups()"
-          @cancel="showGroupPicker = false"
-        />
-      </div>
-      <div v-if="personGroups.length === 0 && !showGroupPicker" class="empty-hint">{{ $t('groups.noGroups') }}</div>
-      <GroupsTable v-else-if="personGroups.length > 0" :groups="personGroups" @remove="removeFromGroup" />
-    </section>
-
-    <!-- Identifiers Section -->
-    <section class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('identifiers.title') }}</h4>
-        <button class="btn-add" @click="identifiersSectionRef?.openAddForm()">{{ $t('identifiers.add') }}</button>
-      </div>
-      <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="person.id" />
-    </section>
-
-    <!-- Media Section -->
-    <section class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('media.title') }}</h4>
-        <button class="btn-add" @click="mediaSectionRef?.attach()">{{ $t('media.attach') }}</button>
-      </div>
-      <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" />
-    </section>
 
     <!-- Quality Section -->
     <section class="detail-section">
