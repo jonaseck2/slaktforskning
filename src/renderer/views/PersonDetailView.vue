@@ -119,32 +119,12 @@
     </section>
 
     <!-- Add Research Task Modal -->
-    <BaseModal v-if="showAddTaskModal" @close="showAddTaskModal = false">
-        <h3>{{ $t('researchTasks.addTask') }}</h3>
-        <form @submit.prevent="createPersonTask">
-          <label>
-            {{ $t('researchTasks.task') }} *
-            <input v-model="taskForm.task" type="text" required autofocus />
-          </label>
-          <label>
-            {{ $t('researchTasks.priority') }}
-            <select v-model="taskForm.priority">
-              <option :value="0">0</option>
-              <option :value="1">1</option>
-              <option :value="2">2</option>
-              <option :value="3">3</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('researchTasks.notes') }}
-            <textarea v-model="taskForm.notes" rows="2" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddTaskModal = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-    </BaseModal>
+    <AddResearchTaskModal
+      v-if="showAddTaskModal"
+      :person-id="personId"
+      @close="showAddTaskModal = false"
+      @saved="loadPersonTasks"
+    />
 
     <!-- Quality Section -->
     <section class="detail-section">
@@ -175,11 +155,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
-import BaseModal from '../components/BaseModal.vue';
+import AddResearchTaskModal from '../components/AddResearchTaskModal.vue';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
@@ -247,8 +227,6 @@ const showAddTaskModal = ref(false);
 const personGroups = ref<import('../components/GroupsTable.vue').GroupRow[]>([]);
 const showGroupPicker = ref(false);
 
-const taskForm = reactive({ task: '', priority: 1, notes: '' });
-
 async function loadPersonTasks() {
   if (!window.api?.researchTasks) return;
   personTasks.value = (await window.api.researchTasks.forPerson(personId)) as import('../components/ResearchTasksTable.vue').ResearchTaskRow[];
@@ -261,22 +239,6 @@ async function loadPersonGroups() {
 async function removeFromGroup(groupId: string) {
   await window.api.groups.removeMember(groupId, personId);
   await loadPersonGroups();
-}
-
-async function createPersonTask() {
-  if (!taskForm.task.trim()) return;
-  await window.api.researchTasks.create({
-    task: taskForm.task,
-    notes: taskForm.notes || undefined,
-    person_id: personId,
-    priority: taskForm.priority,
-    status: 'open',
-  });
-  taskForm.task = '';
-  taskForm.notes = '';
-  taskForm.priority = 1;
-  showAddTaskModal.value = false;
-  await loadPersonTasks();
 }
 
 async function load() {

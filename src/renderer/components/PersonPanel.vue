@@ -56,7 +56,7 @@
             </div>
             <div class="compact-field">
               <label class="compact-label">{{ $t('panel.notes') }}</label>
-              <PersonNotesSection :person-id="personId!" class="compact-control" />
+              <PersonNotesSection :person-id="personId!" :rows="2" class="compact-control" />
             </div>
           </div>
         </div>
@@ -178,26 +178,12 @@
     />
 
     <!-- Add research task modal -->
-    <BaseModal v-if="showTaskForm" @close="showTaskForm = false">
-        <h3>+ {{ $t('researchTasks.nav') }}</h3>
-        <form @submit.prevent="saveTask">
-          <label>{{ $t('researchTasks.task') }} *
-            <textarea v-model="taskFormData.task" rows="3" required autofocus />
-          </label>
-          <label>{{ $t('researchTasks.status') }}
-            <select v-model="taskFormData.status">
-              <option v-for="s in TASK_STATUS_VALUES" :key="s" :value="s">{{ $t('researchTasks.statuses.' + s) }}</option>
-            </select>
-          </label>
-          <label>{{ $t('researchTasks.notes') }}
-            <textarea v-model="taskFormData.notes" rows="2" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showTaskForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-    </BaseModal>
+    <AddResearchTaskModal
+      v-if="showTaskForm && personId"
+      :person-id="personId"
+      @close="showTaskForm = false"
+      @saved="onTaskSaved"
+    />
 
     <!-- Add relative modal -->
     <AddRelatedPersonModal
@@ -211,8 +197,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, reactive, onMounted } from 'vue';
-import BaseModal from './BaseModal.vue';
+import { ref, watch, computed, onMounted } from 'vue';
+import AddResearchTaskModal from './AddResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
@@ -227,8 +213,6 @@ import PersonMediaSection from './PersonMediaSection.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
-
-const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
 const props = defineProps<{ personId: string | null }>();
 const emit = defineEmits<{
@@ -267,7 +251,6 @@ const showGroupPicker = ref(false);
 
 // Research task form state (add only — edit is handled inline by ResearchTasksTable)
 const showTaskForm = ref(false);
-const taskFormData = reactive({ task: '', status: 'open' as string, notes: '' });
 
 function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
   addRelativeMode.value = mode;
@@ -350,22 +333,11 @@ async function reloadNames(id: string) {
 // ── Research tasks ────────────────────────────────────────────────────────────
 
 function openTaskForm() {
-  taskFormData.task = '';
-  taskFormData.status = 'open';
-  taskFormData.notes = '';
   showTaskForm.value = true;
 }
 
-async function saveTask() {
-  if (!props.personId) return;
-  await window.api.researchTasks.create({
-    task: taskFormData.task,
-    status: taskFormData.status,
-    notes: taskFormData.notes || null,
-    person_id: props.personId,
-  });
-  showTaskForm.value = false;
-  await loadResearchTasks(props.personId);
+async function onTaskSaved() {
+  if (props.personId) await loadResearchTasks(props.personId);
 }
 
 async function loadResearchTasks(id: string) {
