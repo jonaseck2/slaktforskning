@@ -324,7 +324,7 @@ export function remapGenneyMediaPath(ref: string, mediaDir: string): string {
 
 // ── Main transform ─────────────────────────────────────────────────────────
 
-export function transformGenney(db: Database, tables: GenneyTables): ImportSummary {
+export function transformGenney(db: Database, tables: GenneyTables, opts: { mediaDir?: string } = {}): ImportSummary {
   const summary: ImportSummary = {
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: 0, citations: 0,
@@ -721,8 +721,10 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   for (const m of tables.MEDIA) {
     if (!m.RID) continue;
     const id = crypto.randomUUID();
+    let fileRef = m.FILEREF ?? null;
+    if (fileRef && opts.mediaDir) fileRef = remapGenneyMediaPath(fileRef, opts.mediaDir);
     stmts.insertMedia.run([
-      id, m.FILEREF ?? null, m.TITLE ?? '', m.FORMAT ?? null,
+      id, fileRef, m.TITLE ?? '', m.FORMAT ?? null,
       m.NOTE ?? '', m.ISPRINTABLE === 1 ? 1 : 0,
     ]);
     mediaMap.set(m.RID, id);

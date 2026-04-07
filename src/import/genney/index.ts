@@ -74,6 +74,19 @@ export interface GenneyImportOptions {
   schema?: string;
   /** Progress callback (message string) */
   onProgress?: (msg: string) => void;
+  /**
+   * Local directory for remapping Windows-style FILEREF paths (Genney .gcc exports).
+   * e.g. 'C:\\Users\\linda\\Documents\\Genney\\media\\photo.jpg' → '{mediaDir}/photo.jpg'
+   * For .backup archives the media/ folder is auto-detected from the extracted archive.
+   * User-provided value takes precedence over auto-detected.
+   */
+  mediaDir?: string;
+  /**
+   * Permanent destination for extracted media/ folder from .backup archives.
+   * If set and a media/ dir is found in the extracted tempDir, it is copied here
+   * before the temp dir is cleaned up. The copied path is then used as mediaDir.
+   */
+  destMediaDir?: string;
 }
 
 export interface GenneyImportResult {
@@ -121,12 +134,27 @@ export async function importFromGenney(
     const tables = await parseNdJsonInWorker(ndjson);
 
     onProgress('Transforming and importing data…');
+
+    // Auto-detect media/ dir bundled in .backup archives (tempDir is set for archives)
+    const extractedMediaDir = tempDir && fs.existsSync(path.join(tempDir, 'media'))
+      ? path.join(tempDir, 'media')
+      : undefined;
+
+    let effectiveMediaDir: string | undefined = options.mediaDir ?? extractedMediaDir;
+
+    // Copy extracted media to a permanent location so file_refs survive tempDir cleanup
+    if (extractedMediaDir && options.destMediaDir) {
+      onProgress('Copying media files…');
+      fs.cpSync(extractedMediaDir, options.destMediaDir, { recursive: true });
+      effectiveMediaDir = options.destMediaDir;
+    }
+
     // Single transaction: without this each API call is its own autocommit,
     // causing thousands of individual WAL flushes (hundreds of MB of writes).
     db.exec('BEGIN IMMEDIATE');
     let summary: ImportSummary;
     try {
-      summary = transformGenney(db, tables);
+      summary = transformGenney(db, tables, { mediaDir: effectiveMediaDir });
       db.exec('COMMIT');
     } catch (transformErr) {
       try { db.exec('ROLLBACK'); } catch { /* ignore */ }
