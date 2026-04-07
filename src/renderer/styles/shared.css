@@ -340,7 +340,79 @@
   color: #991b1b;
 }
 
-/* ── 13. Import report modal ────────────────────────────── */
+/* ── 13. Import/export option cards ────────────────────── */
+.io-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.io-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.io-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.io-group-header h3,
+.io-group > h3 {
+  margin: 0;
+  font-size: var(--font-md);
+}
+
+.io-badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.io-badge--stable {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.io-badge--modern,
+.io-badge--docker {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.io-group button {
+  align-self: flex-start;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  margin-top: 4px;
+}
+
+.io-group button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.io-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── 14. Import report modal ────────────────────────────── */
 .report-version {
   font-size: var(--font-sm);
   color: #555;

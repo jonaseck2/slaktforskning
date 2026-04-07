@@ -1,24 +1,24 @@
 <template>
-  <div class="import-groups">
-    <div class="import-group">
-      <div class="group-header">
-        <h3>{{ $t('importExport.genneyArchiveTitle') }}</h3>
-        <span class="badge badge--docker">Docker</span>
+  <div class="io-groups">
+    <div class="io-group">
+      <div class="io-group-header">
+        <h3>{{ $t('importExport.genneyGccTitle') }}</h3>
+        <span class="io-badge io-badge--docker">Docker</span>
       </div>
-      <p class="section-desc">{{ $t('importExport.genneyArchiveDesc') }}</p>
-      <button @click="handleGenneyDerby('archive')" :disabled="busy">{{ $t('importExport.genneyArchiveButton') }}</button>
+      <p class="section-desc">{{ $t('importExport.genneyGccDesc') }}</p>
+      <button @click="handleGenneyDerby('archive')" :disabled="busy">{{ $t('importExport.genneyGccButton') }}</button>
     </div>
 
-    <div class="import-group">
-      <div class="group-header">
-        <h3>{{ $t('importExport.genneyFolderTitle') }}</h3>
-        <span class="badge badge--docker">Docker</span>
+    <div class="io-group">
+      <div class="io-group-header">
+        <h3>{{ $t('importExport.genneyBackupTitle') }}</h3>
+        <span class="io-badge io-badge--docker">Docker</span>
       </div>
-      <p class="section-desc">{{ $t('importExport.genneyFolderDesc') }}</p>
-      <button @click="handleGenneyDerby('folder')" :disabled="busy">{{ $t('importExport.genneyFolderButton') }}</button>
+      <p class="section-desc">{{ $t('importExport.genneyBackupDesc') }}</p>
+      <button @click="handleGenneyDerby('archive')" :disabled="busy">{{ $t('importExport.genneyBackupButton') }}</button>
     </div>
 
-    <div class="import-group">
+    <div class="io-group">
       <h3>{{ $t('importExport.genneyGedcomTitle') }}</h3>
       <p class="section-desc">{{ $t('importExport.genneyGedcomDesc') }}</p>
       <button @click="handleImportFromGenney" :disabled="busy">{{ $t('importExport.genneyGedcomButton') }}</button>
@@ -162,104 +162,11 @@ async function handleImportFromGenney() {
 </script>
 
 <style scoped>
-.import-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 560px;
-}
-
-.import-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-.group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.group-header h3,
-.import-group > h3 {
-  margin: 0;
-}
-
-.badge {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.badge--docker {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-
-button {
-  align-self: flex-start;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: inherit;
-  margin-top: 4px;
-}
-
-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 :deep(.modal) {
   max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.report-counts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-base);
-}
-
-.report-section {
-  border-top: 1px solid #eee;
-  padding-top: 8px;
-}
-
-.report-section-label {
-  margin: 0 0 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: #555;
-}
-
-.report-section ul {
-  margin: 0;
-  padding-left: 16px;
-  font-size: var(--font-sm);
-  color: #444;
 }
 </style>

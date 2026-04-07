@@ -10,8 +10,10 @@
       >{{ tab.label }}</button>
     </div>
 
-    <GedcomImportSection v-if="activeTab === 'gedcom-import'" />
-    <GedcomExportSection v-if="activeTab === 'gedcom-export'" />
+    <template v-if="activeTab === 'gedcom'">
+      <GedcomImportSection />
+      <GedcomExportSection />
+    </template>
     <GenneyImportSection v-if="activeTab === 'genney'" />
     <HolgerImportSection v-if="activeTab === 'holger'" />
   </div>
@@ -27,11 +29,10 @@ import HolgerImportSection from '../components/import/HolgerImportSection.vue';
 
 const { t } = useI18n();
 
-const activeTab = ref('gedcom-import');
+const activeTab = ref('gedcom');
 
 const tabs = computed(() => [
-  { id: 'gedcom-import', label: t('importExport.gedcomImportTitle') },
-  { id: 'gedcom-export', label: t('importExport.gedcomExportTitle') },
+  { id: 'gedcom', label: t('importExport.gedcomTitle') },
   { id: 'genney', label: t('importExport.genneyTitle') },
   { id: 'holger', label: t('importExport.holgerTitle') },
 ]);
