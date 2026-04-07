@@ -94,6 +94,7 @@ import EventList from '../components/EventList.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
+import { useToast } from '../composables/useToast';
 
 interface RelData {
   id: string;
@@ -105,6 +106,7 @@ interface RelData {
 }
 
 const { t } = useI18n();
+const toast = useToast();
 const route = useRoute();
 const relId = route.params.id as string;
 const focusStore = useFocusStore();
@@ -142,6 +144,7 @@ async function load() {
     notesText.value = relationship.value.notes || '';
   } catch (err) {
     console.error('[RelationshipDetailView] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   }
 }
 
@@ -151,6 +154,7 @@ async function updateRel(data: Record<string, unknown>) {
     await window.api.relationships.update(relId, data);
   } catch (err) {
     console.error('[RelationshipDetailView] updateRel failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 

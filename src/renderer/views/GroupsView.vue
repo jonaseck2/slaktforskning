@@ -9,8 +9,7 @@
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
     <!-- Add Group Modal -->
-    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-      <div class="modal">
+    <BaseModal v-if="showAddForm" @close="showAddForm = false">
         <h3>{{ $t('groups.addGroup') }}</h3>
         <form @submit.prevent="addGroup">
           <label>
@@ -26,14 +25,14 @@
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted } from 'vue';
+import { ref, reactive, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
+import BaseModal from '../components/BaseModal.vue';
 import { useDataVersionStore } from '../stores/dataVersion';
 import GroupsTable from '../components/GroupsTable.vue';
 const dataVersionStore = useDataVersionStore();
@@ -50,12 +49,6 @@ const { t } = useI18n();
 const groups = ref<GroupRow[]>([]);
 const showAddForm = ref(false);
 const form = reactive({ name: '', notes: '' });
-
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') showAddForm.value = false;
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 async function load() {
   if (!window.api) return;

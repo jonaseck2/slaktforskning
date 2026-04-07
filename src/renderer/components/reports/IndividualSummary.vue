@@ -129,8 +129,10 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatFullName } from '../../utils/nameUtils';
+import { useToast } from '../../composables/useToast';
 
-useI18n();
+const { t } = useI18n();
+const toast = useToast();
 
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName {
@@ -370,6 +372,7 @@ async function load() {
     };
   } catch (err) {
     console.error('[IndividualSummary] load failed:', err);
+    toast.error(t('errors.loadFailed'));
     error.value = 'Kunde inte ladda personöversikt.';
   } finally {
     loading.value = false;

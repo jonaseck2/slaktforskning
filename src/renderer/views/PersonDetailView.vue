@@ -124,8 +124,7 @@
     </section>
 
     <!-- Add Research Task Modal -->
-    <div v-if="showAddTaskModal" class="modal-overlay" @click.self="showAddTaskModal = false">
-      <div class="modal">
+    <BaseModal v-if="showAddTaskModal" @close="showAddTaskModal = false">
         <h3>{{ $t('researchTasks.addTask') }}</h3>
         <form @submit.prevent="createPersonTask">
           <label>
@@ -150,8 +149,7 @@
             <button type="submit">{{ $t('common.save') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
 
     <!-- Quality Section -->
     <section class="detail-section">
@@ -182,10 +180,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
+import BaseModal from '../components/BaseModal.vue';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
@@ -284,15 +283,6 @@ async function createPersonTask() {
   showAddTaskModal.value = false;
   await loadPersonTasks();
 }
-
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    showNameForm.value = false;
-    showEditNameForm.value = false;
-  }
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 async function load() {
   if (!window.api) return;

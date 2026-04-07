@@ -265,8 +265,10 @@ import {
 import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
 import type { PersonNode } from '../../utils/chartLayout';
 import { formatFullName } from '../../utils/nameUtils';
+import { useToast } from '../../composables/useToast';
 
 const { t } = useI18n();
+const toast = useToast();
 
 // ── Raw API types ──────────────────────────────────────────────────────────────
 interface RawName {
@@ -684,6 +686,7 @@ async function load() {
     });
   } catch (err) {
     console.error('[AncestorBookReport] load failed:', err);
+    toast.error(t('errors.loadFailed'));
     error.value = 'Kunde inte ladda stamtavlan.';
   } finally {
     loading.value = false;

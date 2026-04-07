@@ -57,8 +57,7 @@
     </template>
 
     <!-- Add Person Modal -->
-    <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
-      <div class="modal">
+    <BaseModal v-if="showAddForm" @close="showAddForm = false">
         <h3>{{ $t('persons.addPerson') }}</h3>
         <form @submit.prevent="addPerson">
           <label>
@@ -92,8 +91,7 @@
             <button type="submit">{{ $t('persons.addPerson') }}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -101,6 +99,7 @@
 import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import BaseModal from '../components/BaseModal.vue';
 import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
@@ -151,12 +150,7 @@ watch(sentinel, (el) => {
   observer.observe(el);
 });
 
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') showAddForm.value = false;
-}
-onMounted(() => window.addEventListener('keydown', handleKeydown));
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
   if (observer) observer.disconnect();
 });
 
@@ -216,6 +210,7 @@ async function addPerson() {
     await load();
   } catch (err) {
     console.error('[PersonsView] addPerson failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 
@@ -227,6 +222,7 @@ async function removePerson(id: string) {
     await load();
   } catch (err) {
     console.error('[PersonsView] removePerson failed:', err);
+    toast.error(t('errors.deleteFailed'));
   }
 }
 

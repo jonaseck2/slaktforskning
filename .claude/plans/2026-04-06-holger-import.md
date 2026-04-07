@@ -92,10 +92,10 @@ Analysed from `OurKind - Komplett - Gedcom i Holgerformat - 20260406.ged` (22 22
 
 | Tag | Count | Level | Location | Action |
 |-----|-------|-------|----------|--------|
-| `_HDP` | 22 233 | 1 | INDI | Holger internal metadata (sort key, display IDs, ISO dates, created/updated timestamps). All data is redundant with standard GEDCOM tags. **Silently suppress** — add to `KNOWN_INDI_TAGS` in `import-core.ts`. |
-| `_H8P` | 22 233 | 1 | INDI | Holger 8 internal flags (4 comma-separated numbers). No genealogical value. **Silently suppress** — add to `KNOWN_INDI_TAGS`. |
-| `REMA` | 6 573 | 1 | INDI | Holger's per-person "remark" field — free-text notes identical in purpose to `NOTE`. **Import as person notes**: append `REMA` value to `persons.notes`, with `\n\n` separator if notes are non-empty. |
-| `MISC` | 11 | 1 | INDI | Holger's "miscellaneous" note, same semantics as `REMA`. **Import as person notes**: same append logic. |
+| `_HDP` | 22 233 | 1 | INDI | Holger internal metadata (sort key, display IDs, ISO dates, created/updated timestamps). All data is redundant with standard GEDCOM tags. **Discarded — reported transparently**: keep out of `KNOWN_INDI_TAGS` so the tag appears in `skipped`. Also add an `unmappedData` entry for the holger profile with a descriptive category string so the user sees *why* it was dropped, not just a bare tag name. |
+| `_H8P` | 22 233 | 1 | INDI | Holger 8 internal flags (4 comma-separated numbers). No genealogical value. Same reporting approach as `_HDP`. |
+| `REMA` | 6 573 | 1 | INDI | Holger's per-person "remark" field — free-text notes identical in purpose to `NOTE`. **Import as person notes**: append `REMA` value to `persons.notes`, with `\n\n` separator if notes are non-empty. Add to `KNOWN_INDI_TAGS` (data is handled, not skipped). Add a `warnings` entry: `"6573 REMA remarks imported as person notes"` so the user sees the count. |
+| `MISC` | 11 | 1 | INDI | Holger's "miscellaneous" note, same semantics as `REMA`. **Import as person notes**: same append logic. Add to `KNOWN_INDI_TAGS`. Count included in the same `warnings` entry as `REMA`. |
 
 #### 5. SUBM record — tree subject / default focus person
 
@@ -591,13 +591,13 @@ cd /Users/jonasahnstedt/git/slaktforskning && git add src/gedcom/importer.ts tes
 
 ---
 
-## Task 3.5: Holger custom tags — REMA/MISC → notes, suppress _HDP/_H8P
+## Task 3.5: Holger custom tags — REMA/MISC → notes, _HDP/_H8P reported with explanation
 
 **Files:**
 - Modify: `src/import/gedcom/import-core.ts`
 - Test: `tests/unit/import-holger.test.ts`
 
-`REMA` (6 573 occurrences) and `MISC` (11) are Holger's note fields on INDI records. `_HDP` and `_H8P` are internal metadata with no genealogical value; they should not appear in the "unrecognised tags" report.
+`REMA` (6 573) and `MISC` (11) are Holger's note fields — import as person notes, add to `KNOWN_INDI_TAGS` (handled, not skipped). `_HDP` and `_H8P` are internal Holger metadata with no genealogical value — they must **not** be silently suppressed; they stay out of `KNOWN_INDI_TAGS` so they appear in `skipped`, and the holger profile additionally adds an `unmappedData` entry with a human-readable explanation of what was discarded and why.
 
 - [ ] **Step 1: Write failing tests**
 
@@ -665,12 +665,26 @@ describe('holger profile — REMA/MISC → notes, _HDP/_H8P suppression', () => 
     expect(row?.notes).toContain('Totalt 15 barn');
   });
 
-  it('does not list _HDP or _H8P in skipped tags for holger profile', () => {
+  it('lists _HDP and _H8P in skipped tags (not silently ignored)', () => {
     const db = createTestDb();
     const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
     const tags = report.skipped.map(s => s.tag);
-    expect(tags).not.toContain('_HDP');
-    expect(tags).not.toContain('_H8P');
+    expect(tags).toContain('_HDP');
+    expect(tags).toContain('_H8P');
+  });
+
+  it('adds unmappedData entry for _HDP/_H8P with descriptive category', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const entry = report.unmappedData?.find(u => u.category.includes('_HDP'));
+    expect(entry).toBeTruthy();
+    expect(entry?.category).toMatch(/internal metadata/i);
+  });
+
+  it('adds a warnings entry summarising REMA/MISC as imported notes', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    expect(report.warnings.some(w => w.includes('REMA') && w.includes('note'))).toBe(true);
   });
 });
 ```
@@ -683,10 +697,10 @@ cd /Users/jonasahnstedt/git/slaktforskning && npx vitest run tests/unit/import-h
 
 - [ ] **Step 3: Implement in `src/import/gedcom/import-core.ts`**
 
-In `KNOWN_INDI_TAGS`, add the two Holger metadata tags so they are never counted as unrecognised (regardless of profile — they only appear in Holger exports but suppressing them globally is harmless):
+**`REMA` and `MISC`** — add to `KNOWN_INDI_TAGS` (data is handled, should not appear in `skipped`):
 
 ```typescript
-'_HDP', '_H8P',
+'REMA', 'MISC',
 ```
 
 In the INDI processing loop (Phase 2, around the `updatePerson` call), add a holger-specific block that collects `REMA` and `MISC` values and appends them to the person's notes. Locate where the person's notes are set (they come from the `NOTE` tag processing). After all NOTE lines are assembled into `noteText`, add:
@@ -708,7 +722,29 @@ if (isHolger) {
 }
 ```
 
-Also add `'REMA'` and `'MISC'` to `KNOWN_INDI_TAGS` so they are not double-counted in skipped tags after we handle them.
+Track the total REMA+MISC count across all INDIs (add a counter `holgerRemarkCount` in `doImportGedcom`). After Phase 2, if `isHolger && holgerRemarkCount > 0`, push to `warnings`:
+
+```typescript
+warnings.push(`${holgerRemarkCount} Holger REMA/MISC remarks imported as person notes`);
+```
+
+**`_HDP` and `_H8P`** — do **not** add to `KNOWN_INDI_TAGS`. They will naturally appear in `skipped`. After Phase 2, if `isHolger`, add an `unmappedData` entry (using the existing mechanism around line 967):
+
+```typescript
+// In the post-processing that builds unmappedData:
+if (isHolger) {
+  const hdpCount = skippedTags.get('_HDP') ?? 0;
+  const h8pCount = skippedTags.get('_H8P') ?? 0;
+  if (hdpCount + h8pCount > 0) {
+    unmappedData.push({
+      category: '_HDP / _H8P — Holger internal metadata (sort keys, display IDs, timestamps). All data is present in standard GEDCOM tags; nothing was lost.',
+      count: hdpCount + h8pCount,
+    });
+  }
+}
+```
+
+This ensures the discarded data is both counted in `skipped` (raw tag list) and explained in `unmappedData` (human-readable description).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -1327,8 +1363,8 @@ cd /Users/jonasahnstedt/git/slaktforskning && git add CLAUDE.md README.md packag
 | ENGA TYPE → couple subtype | Task 1 |
 | ADOP TYPE → parent_child subtype | Task 2 |
 | Media path remapping | Task 3 |
-| `REMA` / `MISC` → person notes | Task 3.5 |
-| `_HDP` / `_H8P` → suppress from unrecognised tags | Task 3.5 |
+| `REMA` / `MISC` → person notes + reported in warnings | Task 3.5 |
+| `_HDP` / `_H8P` → in `skipped` + explained in `unmappedData` (never silently discarded) | Task 3.5 |
 | `SUBM` → `defaultPersonId` / navigate to tree subject | Task 3.6 |
 | Accept `.ged` or `.zip` (only) | Task 4 |
 | IPC + preload | Task 5 |

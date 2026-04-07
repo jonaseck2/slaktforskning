@@ -58,8 +58,7 @@
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Import report modal -->
-    <div v-if="showImportReport && importReport" class="modal-overlay" @click.self="showImportReport = false">
-      <div class="modal">
+    <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false">
         <h3>{{ $t('importExport.importReportTitle') }}</h3>
         <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
         <ul class="report-counts">
@@ -112,16 +111,18 @@
         <div class="modal-actions">
           <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
         </div>
-      </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import BaseModal from '../components/BaseModal.vue';
 import { useI18n } from 'vue-i18n';
+import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
+const toast = useToast();
 const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
@@ -215,6 +216,7 @@ async function handleImportFromGenney() {
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');
     console.error('[ImportExport] Genney import failed:', err);
+    toast.error(t('errors.saveFailed'));
   } finally {
     busy.value = false;
   }
@@ -330,6 +332,7 @@ async function handleImportGedcom() {
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');
     console.error('[ImportExport] GEDCOM import failed:', err);
+    toast.error(t('errors.saveFailed'));
   } finally {
     busy.value = false;
   }
@@ -344,6 +347,7 @@ async function handleExportGedcom() {
   } catch (err) {
     setStatus(t('importExport.exportError'), 'error');
     console.error('[ImportExport] GEDCOM export failed:', err);
+    toast.error(t('errors.saveFailed'));
   } finally {
     busy.value = false;
   }
@@ -458,32 +462,12 @@ button:disabled {
   color: #991b1b;
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  min-width: 320px;
-  max-width: 480px;
+:deep(.modal) {
   max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.modal h3 {
-  margin: 0;
-  font-size: var(--font-lg);
 }
 
 .report-counts {

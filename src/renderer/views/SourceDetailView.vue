@@ -106,6 +106,7 @@ import { useI18n } from 'vue-i18n';
 import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
+import { useToast } from '../composables/useToast';
 
 interface SourceData {
   id: string;
@@ -134,6 +135,7 @@ interface CitationRow {
 }
 
 const { t } = useI18n();
+const toast = useToast();
 const route = useRoute();
 const router = useRouter();
 const sourceId = route.params.id as string;
@@ -217,6 +219,7 @@ async function load() {
     }));
   } catch (err) {
     console.error('[SourceDetailView] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   }
 }
 
@@ -229,6 +232,7 @@ async function saveField(field: string) {
     (source.value as Record<string, unknown>)[field] = val;
   } catch (err) {
     console.error(`[SourceDetailView] saveField(${field}) failed:`, err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 
@@ -240,6 +244,7 @@ async function removeCitation(id: string) {
     await load();
   } catch (err) {
     console.error('[SourceDetailView] removeCitation failed:', err);
+    toast.error(t('errors.deleteFailed'));
   }
 }
 
