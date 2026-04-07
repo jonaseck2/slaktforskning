@@ -112,12 +112,7 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 |------|------|--------|
 | Component extraction | [plan](plans/2026-04-07-component-extraction.md) | Break PersonPanel (669 lines) + ImportExportView (518 lines) into sub-components |
 
-### Import/Export Data Integrity [fix]
-See `.claude/plans/2026-04-07-import-export-data-integrity.md` for the full plan.
-- [ ] GEDCOM import: surface LDS ordinances, TRAN translations, NO negative assertions in report
-- [ ] GEDCOM import: report dropped ASSO associations with unrecognised RELA types
-- [ ] GEDCOM export: add ExportReport (Research Tasks, Groups, Assertions, place_address excluded)
-- [ ] Genney import: warnings for orphaned events/citations, unknown event types, skipped parent links, unreferenced places, SOURCE.NOTE
+| v0.37.3 | Import/Export data integrity: GEDCOM surface LDS/TRAN/NO/ASSO, ExportReport with excluded entities, Genney warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
 
 ### Holger/OurKind import [feature]
 See `.claude/plans/2026-04-06-holger-import.md` for the full plan.

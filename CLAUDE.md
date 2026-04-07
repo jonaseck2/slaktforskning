@@ -537,6 +537,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **GEDCOM/import tools:** `import_gedcom` (`.ged` files only — for Genney GEDCOM exports use `profile: "genney"`), `import_genney` (`.backup`/`.gcc` archives or Derby directories), `import_holger` (`.ged` or `.zip` file or folder containing `.ged` — for Holger/OurKind GEDCOM exports; accepts `media_dir` for remapping Windows OBJE FILE paths to a local directory), `export_gedcom`
 
+**Import/export data integrity:** All import tools (`import_gedcom`, `import_genney`, `import_holger`) return a report object with `warnings: string[]` (human-readable messages for remapped/converted data) and `unmappedData` or `skipped` arrays documenting what data was lost and why (e.g., LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `export_gedcom` now returns `{ ged: string; report: ExportReport }` instead of a plain string. `ExportReport` includes `excluded: { category, count, reason }[]` for entities that cannot be represented in GEDCOM 5.5.1: Research Tasks, Groups, Assertions, and event place_address fields. The export report is displayed to the user after export, ensuring transparency about data loss during round-trip operations.
+
 **UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
 
 ---
