@@ -15,6 +15,9 @@
         <li>{{ $t('importExport.importReportSources', { n: importReport.sources }) }}</li>
         <li>{{ $t('importExport.importReportPlaces', { n: importReport.places }) }}</li>
         <li>{{ $t('importExport.importReportCitations', { n: importReport.citations }) }}</li>
+        <li v-if="importReport.repositories > 0">{{ $t('importExport.importReportRepositories', { n: importReport.repositories }) }}</li>
+        <li v-if="importReport.groups > 0">{{ $t('importExport.importReportGroups', { n: importReport.groups }) }}</li>
+        <li v-if="importReport.researchTasks > 0">{{ $t('importExport.importReportResearchTasks', { n: importReport.researchTasks }) }}</li>
       </ul>
       <div v-if="Object.keys(importReport.events).length > 0" class="report-section">
         <ul class="report-event-list">
@@ -82,6 +85,7 @@ const importReport = ref<{
   version?: string;
   persons: number; families: number; events: Record<string, number>;
   sources: number; places: number; citations: number;
+  repositories: number; groups: number; researchTasks: number;
   skipped: { tag: string; count: number }[];
   warnings: string[];
   rawCounts?: {

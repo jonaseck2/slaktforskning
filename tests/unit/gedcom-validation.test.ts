@@ -63,22 +63,20 @@ describe('ValidationReport', () => {
   });
 
   describe('unmappedData', () => {
-    it('includes REPO entries when REPO records exist', () => {
+    it('does not include REPO entries in unmappedData (REPO records are now imported)', () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = importGedcom(db, tree);
 
       const repoEntry = report.unmappedData.find(u => u.category.includes('REPO'));
-      expect(repoEntry).toBeDefined();
-      expect(repoEntry?.count).toBe(1);
+      expect(repoEntry).toBeUndefined();
     });
 
-    it('includes SUBM entries when SUBM records exist', () => {
+    it('does not include SUBM entries in unmappedData (SUBM is now matched to a person)', () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = importGedcom(db, tree);
 
       const submEntry = report.unmappedData.find(u => u.category.includes('SUBM'));
-      expect(submEntry).toBeDefined();
-      expect(submEntry?.count).toBe(1);
+      expect(submEntry).toBeUndefined();
     });
 
     it('does not include REPO entry when no REPO records', () => {

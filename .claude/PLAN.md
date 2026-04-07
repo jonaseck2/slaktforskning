@@ -103,6 +103,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | v0.37.7: PersonsView startup CPU saturation — 4 correlated subqueries per person → two-pass query (sort+paginate first, then IN fetch for page only) | [archive](plans/archive/2026-04-07-personsview-startup-cpu.md) |
 | v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [plan](plans/2026-04-06-gedcom-70-export.md) |
 | v0.38.1 | Holger import completion: remove EDB path, REMA/MISC → notes, _HDP/_H8P in unmappedData, defaultPersonId → navigate to tree subject | [archive](plans/archive/2026-04-06-holger-import.md) |
+| v0.38.2 | GEDCOM import gap closure: REPO → repositories, _GRP → groups, _TODO → research tasks, SUBM → default_person_id, db_settings API; import report UI updated | [archive](plans/archive/2026-04-07-gedcom-import-gap-closure.md) |
 
 ---
 

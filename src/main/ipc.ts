@@ -19,6 +19,7 @@ import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
+import { getDbSetting } from '../api/db_settings';
 
 let importInProgress = false;
 
@@ -290,6 +291,8 @@ export function registerIpcHandlers(): void {
       .filter(p => fs.existsSync(p))
       .map(p => ({ path: p, name: path.basename(p) }));
   });
+
+  wrapHandler('db:getSetting', (key) => getDbSetting(getDatabase(), key as string));
 
   ipcMain.handle('db:createNew', async () => {
     const result = await dialog.showSaveDialog({

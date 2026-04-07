@@ -209,6 +209,11 @@ export function initializeSchema(db: Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_media_links_media_id ON media_links(media_id);
     CREATE INDEX IF NOT EXISTS idx_media_links_entity ON media_links(entity_type, entity_id);
+
+    CREATE TABLE IF NOT EXISTS db_settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)
