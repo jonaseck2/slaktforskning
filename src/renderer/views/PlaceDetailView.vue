@@ -1,7 +1,7 @@
 <template>
   <div v-if="place" class="place-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/places')">← {{ $t('common.back') }}</button>
+      <button class="btn-back" @click="$router.back()">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
     </div>

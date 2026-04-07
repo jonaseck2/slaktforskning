@@ -171,9 +171,9 @@ async function reloadChart() {
 async function load() {
   const id = personId.value;
   if (!id) {
+    if (focusStore.personId) { router.replace('/visualisering/' + focusStore.personId); return; }
     const last = localStorage.getItem('viz-focal-person');
     if (last) { router.replace('/visualisering/' + last); return; }
-    if (focusStore.personId) { router.replace('/visualisering/' + focusStore.personId); return; }
     const persons = (await window.api.persons.list()) as PersonWithName[];
     noPersonsExist.value = persons.length === 0;
     noFocalPerson.value = persons.length > 0;

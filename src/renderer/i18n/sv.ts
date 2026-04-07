@@ -403,6 +403,12 @@ export default {
     genneyInstructions: 'Exportera din Genney 4.1-databas som GEDCOM: Arkiv → Exportera GEDCOM (.ged) → Spara',
     genneyModalTitle: 'Importera från Genney 4.1',
     genneyPickFile: 'Välj .ged-fil\u2026',
+    badgeStable: 'Standard',
+    badgeModern: 'Modern',
+    export551Desc: 'Exporterar hela trädet som en GEDCOM 5.5.1-fil. Kompatibelt med nästan alla släktforskningsprogram.',
+    export551Button: 'Exportera GEDCOM 5.5.1\u2026',
+    export70Desc: 'GEDCOM 7.0 är den nuvarande standarden (2021). Välj detta om du importerar till en modern app som stöder 7.0.',
+    export70Button: 'Exportera GEDCOM 7.0\u2026',
   },
   database: {
     nav: 'Databas',

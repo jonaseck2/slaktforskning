@@ -7,6 +7,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
 import { transformGenney, GenneyTables } from '../../src/import/genney/transform';
+import { parseGedcom } from '../../src/gedcom/parser';
+import { importGedcom } from '../../src/import/gedcom';
 import type { Database } from 'node-sqlite3-wasm';
 
 function emptyTables(): GenneyTables {
@@ -104,5 +106,55 @@ describe('Genney import reporting', () => {
     const warning = summary.warnings.find(w => /note/i.test(w) || /source/i.test(w));
     expect(warning).toBeDefined();
     expect(warning).toMatch(/1 source/);
+  });
+});
+
+// ── Genney GEDCOM profile — ImportReport field coverage ──────────────────────
+
+const GENNEY_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Lars /Eriksson/
+1 SEX M
+1 BIRT
+2 DATE 12 JUN 1950
+2 PLAC Göteborg, Västra Götaland, Sverige
+0 @I2@ INDI
+1 NAME Maria /Larsson/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 14 AUG 1975
+0 @S1@ SOUR
+1 TITL Husförhörslängd 1800-1810
+0 TRLR
+`.trim();
+
+describe('Genney GEDCOM profile — ImportReport field coverage', () => {
+  it('returns ImportReport with correct counts via importGedcom profile=genney', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(GENNEY_GED), { profile: 'genney' });
+    expect(report.persons).toBe(2);
+    expect(report.families).toBe(1);
+    expect(report.sources).toBe(1);
+    expect(Array.isArray(report.warnings)).toBe(true);
+    expect(Array.isArray(report.skipped)).toBe(true);
+    expect(Array.isArray(report.unmappedData)).toBe(true);
+  });
+
+  it('creates hierarchical place chain via Genney profile', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(GENNEY_GED), { profile: 'genney' });
+    const stmt = db.prepare('SELECT name FROM places');
+    const places = stmt.all([]) as { name: string }[];
+    (stmt as unknown as { finalize(): void }).finalize();
+    const names = places.map(p => p.name);
+    expect(names).toContain('Göteborg');
+    expect(names).toContain('Västra Götaland');
+    expect(names).toContain('Sverige');
   });
 });
