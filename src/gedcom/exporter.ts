@@ -13,7 +13,7 @@ import { getPlace, listPlaces } from '../api/places';
 import { getMediaForEntity } from '../api/media';
 import { getRepositoriesForSource } from '../api/repositories';
 import type { Place, Citation, Repository } from '../api/types';
-import { formatGedcomDate } from './date';
+import { formatGedcomDate, isStandardGedcomDate } from './date';
 
 export interface ExportReport {
   persons: number;
@@ -86,10 +86,29 @@ function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | '
   }
 }
 
-export function exportGedcom(db: Database): { ged: string; report: ExportReport } {
+function emitDate(
+  lines: string[], date_type: string, date_value: string | null,
+  date_value_end: string | null, date_original: string, level: number,
+  version: '5.5.1' | '7.0',
+): void {
+  const dateStr = formatGedcomDate(date_type, date_value, date_value_end, date_original);
+  if (!dateStr) return;
+  if (version === '7.0' && date_original && !isStandardGedcomDate(date_original)) {
+    lines.push(`${level} DATE`);
+    lines.push(`${level + 1} PHRASE ${date_original}`);
+  } else {
+    lines.push(`${level} DATE ${dateStr}`);
+  }
+}
+
+export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): { ged: string; report: ExportReport } {
   const lines: string[] = [];
 
-  lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
+  if (version === '7.0') {
+    lines.push('0 HEAD', '1 GEDC', '2 VERS 7.0');
+  } else {
+    lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
+  }
 
   // ── Repositories ───────────────────────────────────────────────────────────
   const sources = listSources(db);
@@ -173,7 +192,9 @@ export function exportGedcom(db: Database): { ged: string; report: ExportReport 
       if (n.name_prefix) lines.push(`2 NPFX ${n.name_prefix}`);
       if (n.name_suffix) lines.push(`2 NSFX ${n.name_suffix}`);
       if (n.name_type && n.name_type !== 'birth') {
-        lines.push(`2 TYPE ${n.name_type.toUpperCase()}`);
+        let nameType = n.name_type.toUpperCase();
+        if (version === '7.0' && nameType === 'ALIAS') nameType = 'AKA';
+        lines.push(`2 TYPE ${nameType}`);
       }
       // Extended name fields — nickname as NICK (standard GEDCOM)
       if (n.nickname) lines.push(`2 NICK ${n.nickname}`);
@@ -200,9 +221,8 @@ export function exportGedcom(db: Database): { ged: string; report: ExportReport 
       if (!isPrimary) continue;
 
       const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';
-      const dateStr = formatGedcomDate(ev.date_type, ev.date_value, ev.date_value_end, ev.date_original);
       lines.push(`1 ${tag}`);
-      if (dateStr) lines.push(`2 DATE ${dateStr}`);
+      emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       // Write _EVID so importer can match ASSO blocks back to this event across databases
       lines.push(`2 _EVID ${ev.id}`);
       if (ev.place_id) {
@@ -237,6 +257,7 @@ export function exportGedcom(db: Database): { ged: string; report: ExportReport 
     // External identifiers
     const identifiers = getPersonIdentifiers(db, p.id);
     for (const ident of identifiers) {
+      const refTag = version === '7.0' ? 'EXID' : 'REFN';
       switch (ident.identifier_type) {
         case 'refn':
           lines.push(`1 REFN ${ident.identifier_value}`);
@@ -245,23 +266,23 @@ export function exportGedcom(db: Database): { ged: string; report: ExportReport 
           lines.push(`1 RIN ${ident.identifier_value}`);
           break;
         case 'familysearch':
-          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`1 ${refTag} ${ident.identifier_value}`);
           lines.push(`2 TYPE FamilySearch`);
           break;
         case 'ancestry':
-          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`1 ${refTag} ${ident.identifier_value}`);
           lines.push(`2 TYPE Ancestry`);
           break;
         case 'riksarkivet':
-          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`1 ${refTag} ${ident.identifier_value}`);
           lines.push(`2 TYPE Riksarkivet`);
           break;
         case 'personnummer':
-          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`1 ${refTag} ${ident.identifier_value}`);
           lines.push(`2 TYPE Personnummer`);
           break;
         default: // 'other'
-          lines.push(`1 REFN ${ident.identifier_value}`);
+          lines.push(`1 ${refTag} ${ident.identifier_value}`);
           lines.push(`2 TYPE Other`);
           break;
       }
@@ -327,7 +348,8 @@ export function exportGedcom(db: Database): { ged: string; report: ExportReport 
         );
         if (pcRel?.subtype) {
           // Map 'biological' → 'birth' (standard GEDCOM PEDI value)
-          const pedi = pcRel.subtype === 'biological' ? 'birth' : pcRel.subtype;
+          let pedi = pcRel.subtype === 'biological' ? 'birth' : pcRel.subtype;
+          if (version === '7.0') pedi = pedi.toUpperCase();
           lines.push(`2 PEDI ${pedi}`);
         }
       }
@@ -341,9 +363,8 @@ export function exportGedcom(db: Database): { ged: string; report: ExportReport 
     const famEvents = getEventsForRelationship(db, rel.id);
     for (const ev of famEvents) {
       const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';
-      const dateStr = formatGedcomDate(ev.date_type, ev.date_value, ev.date_value_end, ev.date_original);
       lines.push(`1 ${tag}`);
-      if (dateStr) lines.push(`2 DATE ${dateStr}`);
+      emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       lines.push(`2 _EVID ${ev.id}`);
       if (ev.place_id) {
         const place = getPlace(db, ev.place_id);
