@@ -335,3 +335,71 @@ describe('GEDCOM import - EVEN TYPE preservation', () => {
     expect(n).toBe(1);
   });
 });
+
+// ── GEDCOM 5.5.1 import — full ImportReport field coverage ───────────────────
+
+const FULL_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Lars /Eriksson/
+1 SEX M
+1 BIRT
+2 DATE 12 JUN 1850
+2 PLAC Stockholm, Sverige
+1 DEAT
+2 DATE 5 MAR 1921
+0 @I2@ INDI
+1 NAME Anna /Magnusson/
+1 SEX F
+0 @I3@ INDI
+1 NAME Petter /Eriksson/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 14 AUG 1875
+2 PLAC Uppsala, Sverige
+1 CHIL @I3@
+0 @S1@ SOUR
+1 TITL Husförhörslängd 1850-1860
+1 AUTH Riksarkivet
+0 @S2@ SOUR
+1 TITL Dödboken 1921
+0 TRLR
+`.trim();
+
+describe('GEDCOM 5.5.1 import — full ImportReport field coverage', () => {
+  it('reports correct counts for all ImportReport fields', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(FULL_GED));
+    expect(report.persons).toBe(3);
+    expect(report.families).toBe(1);
+    expect(report.sources).toBe(2);
+    expect(report.places).toBeGreaterThanOrEqual(2);
+    expect(Array.isArray(report.warnings)).toBe(true);
+    expect(Array.isArray(report.skipped)).toBe(true);
+    expect(Array.isArray(report.unmappedData)).toBe(true);
+    // No unexpected data loss for a clean standard GEDCOM
+    expect(report.unmappedData).toHaveLength(0);
+  });
+
+  it('report.events contains birth, death, marriage counts', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(FULL_GED));
+    expect(typeof report.events).toBe('object');
+    expect(report.events['birth']).toBeGreaterThanOrEqual(1);
+    expect(report.events['death']).toBeGreaterThanOrEqual(1);
+    expect(report.events['marriage']).toBeGreaterThanOrEqual(1);
+  });
+
+  it('report.version reflects the GEDCOM version header', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(FULL_GED));
+    expect(report.version).toBeDefined();
+    // GedcomVersion has a spec field
+    expect(report.version.spec).toBe('5.5.1');
+  });
+});

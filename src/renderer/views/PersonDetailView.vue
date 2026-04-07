@@ -1,7 +1,7 @@
 <template>
   <div v-if="person" class="person-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/')">{{ $t('personDetail.back') }}</button>
+      <button class="btn-back" @click="$router.back()">{{ $t('personDetail.back') }}</button>
       <div class="header-info">
         <h2>{{ primaryName }}</h2>
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>

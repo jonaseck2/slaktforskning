@@ -1,7 +1,7 @@
 <template>
   <div v-if="source" class="source-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/sources')">{{ $t('sourceDetail.back') }}</button>
+      <button class="btn-back" @click="$router.back()">{{ $t('sourceDetail.back') }}</button>
       <h2>{{ source.title }}</h2>
     </div>
 

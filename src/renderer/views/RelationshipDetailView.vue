@@ -1,7 +1,7 @@
 <template>
   <div v-if="relationship" class="relationship-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.push('/relationships')">{{ $t('relationshipDetail.back') }}</button>
+      <button class="btn-back" @click="$router.back()">{{ $t('relationshipDetail.back') }}</button>
       <div class="header-row">
         <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
       </div>

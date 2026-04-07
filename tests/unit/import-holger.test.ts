@@ -266,3 +266,34 @@ describe('holger profile — defaultPersonId from first INDI', () => {
     expect(row?.id).toBe(report.defaultPersonId);
   });
 });
+
+describe('holger profile — ImportReport structure', () => {
+  it('returns ImportReport with correct persons and families counts', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_MARR_AND_ENGA_GED), { profile: 'holger' });
+    expect(report.persons).toBe(2);
+    expect(report.families).toBe(1);
+    expect(Array.isArray(report.warnings)).toBe(true);
+    expect(Array.isArray(report.skipped)).toBe(true);
+  });
+
+  it('media is imported with correct file_ref when mediaDir is provided', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_MEDIA_GED), { profile: 'holger', mediaDir: '/local/Media' });
+    const stmt = db.prepare('SELECT file_ref FROM media LIMIT 1');
+    const row = stmt.get([]) as { file_ref: string } | undefined;
+    (stmt as unknown as { finalize(): void }).finalize();
+    expect(row?.file_ref).toContain('/local/Media');
+    expect(row?.file_ref).toContain('SvenssonKalle');
+  });
+
+  it('media is imported even without mediaDir (path kept as-is)', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_MEDIA_GED), { profile: 'holger' });
+    expect(report.persons).toBe(1);
+    const stmt = db.prepare('SELECT file_ref FROM media LIMIT 1');
+    const row = stmt.get([]) as { file_ref: string } | undefined;
+    (stmt as unknown as { finalize(): void }).finalize();
+    expect(row).toBeDefined();
+  });
+});

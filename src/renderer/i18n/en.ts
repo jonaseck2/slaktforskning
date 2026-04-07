@@ -403,6 +403,12 @@ export default {
     genneyInstructions: 'Export your Genney 4.1 database as GEDCOM: File \u2192 Export GEDCOM (.ged) \u2192 Save',
     genneyModalTitle: 'Import from Genney 4.1',
     genneyPickFile: 'Choose .ged file\u2026',
+    badgeStable: 'Standard',
+    badgeModern: 'Modern',
+    export551Desc: 'Exports the entire tree as a GEDCOM 5.5.1 file. Compatible with virtually all genealogy applications.',
+    export551Button: 'Export GEDCOM 5.5.1\u2026',
+    export70Desc: 'GEDCOM 7.0 is the current standard (2021). Choose this if you are importing into a modern app that supports 7.0.',
+    export70Button: 'Export GEDCOM 7.0\u2026',
   },
   database: {
     nav: 'Database',

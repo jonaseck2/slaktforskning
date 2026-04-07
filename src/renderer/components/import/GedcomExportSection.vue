@@ -1,15 +1,24 @@
 <template>
   <div class="section">
     <h3>{{ $t('importExport.gedcomExportTitle') }}</h3>
-    <p class="section-desc">{{ $t('importExport.gedcomExportDesc') }}</p>
-    <div class="export-controls">
-      <select v-model="exportVersion" :disabled="busy" class="version-select">
-        <option value="5.5.1">GEDCOM 5.5.1</option>
-        <option value="7.0">GEDCOM 7.0</option>
-      </select>
-      <button @click="handleExportGedcom" :disabled="busy">{{ $t('gedcom.export') }}</button>
+    <div class="export-cards">
+      <div class="export-card">
+        <div class="card-header">
+          <span class="card-title">GEDCOM 5.5.1</span>
+          <span class="card-badge card-badge--stable">{{ $t('gedcom.badgeStable') }}</span>
+        </div>
+        <p class="card-desc">{{ $t('gedcom.export551Desc') }}</p>
+        <button @click="handleExportGedcom('5.5.1')" :disabled="busy">{{ $t('gedcom.export551Button') }}</button>
+      </div>
+      <div class="export-card">
+        <div class="card-header">
+          <span class="card-title">GEDCOM 7.0</span>
+          <span class="card-badge card-badge--modern">{{ $t('gedcom.badgeModern') }}</span>
+        </div>
+        <p class="card-desc">{{ $t('gedcom.export70Desc') }}</p>
+        <button @click="handleExportGedcom('7.0')" :disabled="busy">{{ $t('gedcom.export70Button') }}</button>
+      </div>
     </div>
-    <p v-if="exportVersion === '7.0'" class="section-desc section-desc--info">{{ $t('importExport.gedcomExportDesc70') }}</p>
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
@@ -49,7 +58,6 @@ declare const window: Window & {
 const { t } = useI18n();
 const toast = useToast();
 const busy = ref(false);
-const exportVersion = ref<'5.5.1' | '7.0'>('5.5.1');
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const showExportReport = ref(false);
@@ -67,11 +75,11 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   setTimeout(() => { statusMessage.value = ''; }, 4000);
 }
 
-async function handleExportGedcom() {
+async function handleExportGedcom(version: '5.5.1' | '7.0') {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.export({ version: exportVersion.value })) as {
+    const result = (await window.api.gedcom.export({ version })) as {
       exported?: boolean;
       canceled?: boolean;
       filePath?: string;
@@ -101,31 +109,62 @@ async function handleExportGedcom() {
 </script>
 
 <style scoped>
-.export-controls {
+.export-cards {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.version-select {
-  padding: 7px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: var(--font-sm);
-  font-family: inherit;
+.export-card {
   background: white;
-  cursor: pointer;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.version-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.section-desc--info {
-  color: #1a73e8;
+.card-title {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: #222;
+}
+
+.card-badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.card-badge--stable {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.card-badge--modern {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.card-desc {
   font-size: var(--font-sm);
+  color: #555;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
 }
 
 button {
@@ -138,6 +177,7 @@ button {
   cursor: pointer;
   font-size: var(--font-sm);
   font-family: inherit;
+  margin-top: 4px;
 }
 
 button:hover:not(:disabled) {

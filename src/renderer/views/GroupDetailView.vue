@@ -1,6 +1,6 @@
 <template>
   <div v-if="group" class="group-detail">
-    <button class="btn-back" @click="$router.push('/groups')">← {{ $t('groups.title') }}</button>
+    <button class="btn-back" @click="$router.back()">← {{ $t('groups.title') }}</button>
 
     <input
       class="group-name-input"
