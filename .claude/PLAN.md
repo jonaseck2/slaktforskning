@@ -101,7 +101,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | refactor | BaseModal component: slot-based modal shell with Escape + overlay-click handling, migrated all 15 modal components | [archive](plans/archive/2026-04-07-base-modal-refactor.md) |
 | v0.37.6 | Component extraction: PersonNotesSection, AddResearchTaskModal, 4 ImportExportSection components; ImportExportView 605→46 lines | [archive](plans/archive/2026-04-07-component-extraction.md) |
 | Fix | v0.37.7: PersonsView startup CPU saturation — 4 correlated subqueries per person → two-pass query (sort+paginate first, then IN fetch for page only) | [archive](plans/archive/2026-04-07-personsview-startup-cpu.md) |
-| v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [plan](plans/2026-04-06-gedcom-70-export.md) |
+| v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [archive](plans/archive/2026-04-06-gedcom-70-export.md) |
 | v0.38.1 | Holger import completion: remove EDB path, REMA/MISC → notes, _HDP/_H8P in unmappedData, defaultPersonId → navigate to tree subject | [archive](plans/archive/2026-04-06-holger-import.md) |
 | v0.38.2 | GEDCOM import gap closure: REPO → repositories, _GRP → groups, _TODO → research tasks, SUBM → default_person_id, db_settings API; import report UI updated | [archive](plans/archive/2026-04-07-gedcom-import-gap-closure.md) |
 | v0.38.3 | Import/export test coverage: Genney archive extraction (.gcc/.backup), Genney GEDCOM profile ImportReport, Holger ImportReport+media, GEDCOM 5.5.1 full ImportReport, export place_address exclusion | [archive](plans/archive/2026-04-07-import-export-test-coverage.md) |
@@ -127,7 +127,7 @@ See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 - [x] `defaultPersonId` in ImportReport — navigate to tree subject after import
 
 ### GEDCOM 7.0 Export [feature] ✅ v0.38.0
-See `.claude/plans/2026-04-06-gedcom-70-export.md` for the full plan.
+See `.claude/plans/archive/2026-04-06-gedcom-70-export.md` for the full plan.
 - [x] `isStandardGedcomDate` helper in `src/gedcom/date.ts`
 - [x] `exportGedcom(db, version)` — header, EXID identifiers
 - [x] DATE PHRASE for unparseable dates in 7.0

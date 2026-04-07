@@ -12,6 +12,7 @@ import * as sources from '../api/sources';
 import * as places from '../api/places';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../import/gedcom';
+import { unzipSync } from 'fflate';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
 import { importFromHolger } from '../import/holger/index';
 import * as groups from '../api/groups';
@@ -168,20 +169,33 @@ export function registerIpcHandlers(): void {
     const options = opts as ImportOptions | undefined;
     const result = await dialog.showOpenDialog({
       title: 'Import GEDCOM File',
-      filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom'] }],
+      filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     importInProgress = true;
+    let tmpDir: string | null = null;
     try {
       return await captureProfile('gedcom-import', () => {
-        const text = readGedcomFile(result.filePaths[0]);
+        let gedPath = result.filePaths[0];
+        if (path.extname(gedPath).toLowerCase() === '.zip') {
+          tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-import-'));
+          const entries = unzipSync(new Uint8Array(fs.readFileSync(gedPath)));
+          const gedEntries = Object.entries(entries)
+            .filter(([name]) => name.toLowerCase().endsWith('.ged'))
+            .sort(([, a], [, b]) => b.length - a.length);
+          if (gedEntries.length === 0) throw new Error('No .ged file found inside zip archive.');
+          gedPath = path.join(tmpDir, path.basename(gedEntries[0][0]));
+          fs.writeFileSync(gedPath, Buffer.from(gedEntries[0][1]));
+        }
+        const text = readGedcomFile(gedPath);
         const tree = parseGedcom(text);
         const report = importGedcom(getDatabase(), tree, options);
-        return { imported: true, filePath: result.filePaths[0], report };
+        return { imported: true, filePath: gedPath, report };
       });
     } finally {
       importInProgress = false;
+      if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
 
