@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Uses <BaseModal> component, not a raw div with class modal-overlay",
+      "passed": true,
+      "evidence": "Line 2: <BaseModal @close=\"$emit('close')\"> — baseline found BaseModal by reading PersonNameFormModal.vue"
+    },
+    {
+      "text": "Imports and calls useToast for error handling in the save catch block",
+      "passed": false,
+      "evidence": "No try/catch, no useToast import. Line 38-41: plain await window.api.persons.update(...) with no error handling — errors silently swallowed"
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": true,
+      "evidence": "Not present"
+    },
+    {
+      "text": "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
+      "passed": true,
+      "evidence": "All strings via $t(): addNoteTitle, notes, notesPlaceholder, cancel, save"
+    },
+    {
+      "text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values",
+      "passed": true,
+      "evidence": "No scoped styles at all"
+    }
+  ],
+  "summary": { "passed": 4, "failed": 1, "total": 5, "pass_rate": 0.8 }
+}

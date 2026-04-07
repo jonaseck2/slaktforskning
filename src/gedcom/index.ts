@@ -6,5 +6,6 @@ export type { ParsedDate } from './date';
 export { importGedcom } from '../import/gedcom';
 export type { ImportOptions, ImportReport } from '../import/gedcom';
 export { exportGedcom } from './exporter';
+export type { ExportReport } from './exporter';
 export { findOrCreateSwedishPlace } from './swedishPlace';
 export { extractPatronymic } from './swedishNames';

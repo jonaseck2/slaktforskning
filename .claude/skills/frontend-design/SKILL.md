@@ -43,6 +43,8 @@ Every view is a `<div>` (no wrapper classes needed — content area provides pad
 | `--color-danger-hover` | `#fecaca` | Delete button hover |
 | `--color-link` | `#2563eb` | `router-link` inside content, person links |
 | `--color-row-hover` | `#f0f4ff` | Clickable row hover |
+| `--color-success-bg` | `#dcfce7` | Success/living status badge background |
+| `--color-success-text` | `#15803d` | Success/living status badge text |
 
 The content area background (`#f5f5f5`) and sidebar (`--color-primary`) are set directly on layout elements in App.vue.
 

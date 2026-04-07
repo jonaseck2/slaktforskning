@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "citations-section",
+  "prompt": "Create a new PersonCitationsSection.vue component. It should self-load all citations for a person (using window.api.citations.forPerson), display them in a table with source title and page columns, and be reusable in both PersonDetailView and PersonPanel. Follow the established Person Section Component pattern.",
+  "assertions": [
+    "All async API calls are wrapped in try/catch blocks where the catch logs to console.error AND calls toast.error() to notify the user",
+    "Has NO local 'declare const window' type declaration",
+    "Imports and calls useToast; catch block calls toast.error(t('errors.loadFailed')) or equivalent",
+    "All user-visible strings use $t() not hardcoded Swedish or English text",
+    "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values like #2c3e50 or #333"
+  ]
+}

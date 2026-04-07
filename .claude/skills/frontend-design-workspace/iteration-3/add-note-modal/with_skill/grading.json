@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "The save handler has a try/catch block where the catch logs to console.error AND calls toast.error() to notify the user",
+      "passed": true,
+      "evidence": "Lines 56-59: console.error('[AddNoteModal] save failed:', err); toast.error(t('errors.saveFailed'))"
+    },
+    {
+      "text": "Imports and calls useToast for error handling in the save catch block",
+      "passed": true,
+      "evidence": "Line 30: import { useToast }; line 44: const toast = useToast(); line 58: toast.error(t('errors.saveFailed'))"
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": true,
+      "evidence": "Not present — uses window.api directly via global api.d.ts"
+    },
+    {
+      "text": "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
+      "passed": true,
+      "evidence": "All 5 strings via $t(): addNoteTitle, notes, notesPlaceholder, cancel, save"
+    },
+    {
+      "text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values",
+      "passed": true,
+      "evidence": "No scoped styles at all"
+    }
+  ],
+  "summary": { "passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0 }
+}

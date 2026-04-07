@@ -92,7 +92,16 @@
       "Bash(find /Users/jonasahnstedt/git/slaktforskning/src/renderer -name \"*.vue\" -exec grep -l \"modal-overlay\" {} \\\\;)",
       "Bash(find /Users/jonasahnstedt/git/slaktforskning/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.vue\" \\\\\\) -exec wc -l {} +)",
       "Bash(python /Users/jonasahnstedt/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/eval-viewer/generate_review.py /Users/jonasahnstedt/git/slaktforskning/.claude/skills/frontend-design-workspace/iteration-1 --skill-name frontend-design --benchmark /Users/jonasahnstedt/git/slaktforskning/.claude/skills/frontend-design-workspace/iteration-1/benchmark.json --static /tmp/frontend-design-eval-review.html)",
-      "Bash(open /tmp/frontend-design-eval-review.html)"
+      "Bash(open /tmp/frontend-design-eval-review.html)",
+      "Bash(mv .claude/plans/2026-04-07-css-color-variables.md .claude/plans/archive/)",
+      "Bash(mv .claude/plans/2026-04-07-error-notifications.md .claude/plans/archive/)",
+      "Bash(mv .claude/plans/2026-04-07-i18n-coverage.md .claude/plans/archive/)",
+      "Bash(mv .claude/plans/2026-04-07-typescript-api-types.md .claude/plans/archive/)",
+      "Bash(mv .claude/plans/2026-04-07-base-modal-refactor.md .claude/plans/archive/)",
+      "Bash(python -m scripts.aggregate_benchmark frontend-design-workspace/iteration-2 --skill-name frontend-design)",
+      "Bash(python /Users/jonasahnstedt/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/scripts/aggregate_benchmark.py frontend-design-workspace/iteration-2 --skill-name frontend-design)",
+      "Bash(nohup python:*)",
+      "Bash(open /tmp/frontend-design-eval-review-iter2.html)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
