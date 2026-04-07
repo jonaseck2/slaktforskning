@@ -10,7 +10,6 @@
         :curved-text="curvedText"
         :width="svgDisplaySize"
         :height="svgDisplaySize"
-        data-testid="circle-svg"
         @navigate="$emit('navigate', $event)"
       />
     </div>
