@@ -90,6 +90,24 @@ import { useToast } from '../composables/useToast';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
+interface RelRow {
+  id: string;
+  type: string;
+  person1_id: string | null;
+  person2_id: string | null;
+  subtype: string | null;
+  notes: string;
+  person1_given_name: string;
+  person1_surname: string;
+  person1_preferred_name: string | null;
+  person1_nickname: string | null;
+  person2_given_name: string;
+  person2_surname: string;
+  person2_preferred_name: string | null;
+  person2_nickname: string | null;
+}
+
+
 const PAGE_SIZE = 100;
 
 const { t } = useI18n();
