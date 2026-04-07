@@ -40,12 +40,7 @@
       </div>
       <label class="notes-label">
         {{ $t('common.notes') }}
-        <textarea
-          v-model="notesText"
-          rows="3"
-          :placeholder="$t('personDetail.notesPlaceholder')"
-          @blur="saveNotes"
-        />
+        <PersonNotesSection :person-id="person.id" />
       </label>
     </section>
 
@@ -196,6 +191,7 @@ import PersonChecksSection from '../components/PersonChecksSection.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
+import PersonNotesSection from '../components/PersonNotesSection.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
 
@@ -229,7 +225,6 @@ const toast = useToast();
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
 const primaryName = ref('');
-const notesText = ref('');
 const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingName = ref<NameRow | null>(null);
@@ -290,7 +285,6 @@ async function load() {
     person.value = (await window.api.persons.get(personId)) as PersonData | null;
     if (!person.value) return;
     localStorage.setItem('viz-focal-person', personId);
-    notesText.value = person.value.notes || '';
     editSex.value = person.value.sex;
     editLiving.value = person.value.living;
 
@@ -347,18 +341,6 @@ async function updateLiving(living: number) {
   if (!window.api || !person.value) return;
   await window.api.persons.update(personId, { living });
   person.value.living = living;
-}
-
-async function saveNotes() {
-  if (!window.api || !person.value) return;
-  if (notesText.value === (person.value.notes || '')) return;
-  try {
-    await window.api.persons.update(personId, { notes: notesText.value });
-    person.value.notes = notesText.value;
-  } catch (err) {
-    console.error('[PersonDetailView] saveNotes failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
 }
 
 onMounted(async () => {
