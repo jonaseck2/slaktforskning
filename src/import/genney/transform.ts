@@ -239,6 +239,7 @@ export interface ImportSummary {
   researchTasks: number;
   media: number;
   warnings: string[];
+  skipped: { category: string; count: number; reason: string }[];
 }
 
 // ── Mapping helpers ────────────────────────────────────────────────────────
@@ -315,8 +316,15 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: 0, citations: 0,
     groups: 0, repositories: 0, researchTasks: 0, media: 0,
-    warnings: [],
+    warnings: [], skipped: [],
   };
+
+  // ── Data-loss counters (populated throughout, reported at end) ───────────
+  let orphanedEvents = 0;
+  let orphanedCitations = 0;
+  const unknownEventTypes = new Set<string>();
+  let skippedParentLinks = 0;
+  let sourceNoteCount = 0;
 
   // Pre-compile all INSERT statements once.
   // Each db.prepare() crosses the JS→WASM boundary and compiles SQL.
@@ -469,6 +477,9 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   // ── 3. Import sources ────────────────────────────────────────────────────
   const sourceMap = new Map<string, string>(); // Genney S-ID → UUID
 
+  // Count sources with non-empty NOTE (NOTE field is not mapped to any app field)
+  sourceNoteCount = tables.SOURCE.filter(s => s.NOTE?.trim()).length;
+
   for (const src of tables.SOURCE) {
     const title = (src.TITLE || src.ABBREVIATION || '').trim();
     const id = crypto.randomUUID();
@@ -518,6 +529,8 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
         ]);
         summary.parentChildRelationships++;
       }
+    } else if (cf.FATHER && !cf.FATHERLINK) {
+      skippedParentLinks++;
     }
 
     if (cf.MOTHER && cf.MOTHERLINK) {
@@ -529,6 +542,8 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
         ]);
         summary.parentChildRelationships++;
       }
+    } else if (cf.MOTHER && !cf.MOTHERLINK) {
+      skippedParentLinks++;
     }
   }
 
@@ -545,6 +560,10 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
   const eventMap = new Map<string, string>(); // Genney E-ID → UUID
 
   for (const ev of tables.EVENT) {
+    // Track unknown event types (those not in GENNEY_EVENT_TYPE map, excluding null/empty)
+    if (ev.TYPE && !GENNEY_EVENT_TYPE[ev.TYPE.toUpperCase()]) {
+      unknownEventTypes.add(ev.TYPE);
+    }
     const event_type = mapEventType(ev.TYPE);
     const dateStr = ev.DATE ?? '';
     const parsedDate = dateStr ? parseGedcomDate(dateStr) : null;
@@ -557,6 +576,7 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
 
     // Use OWNER_EVENT as canonical source; fall back to EVENT.OWNER if missing
     const owners = ownerEventMap.get(ev.RID) ?? (ev.OWNER ? [ev.OWNER] : []);
+    if (owners.length === 0) orphanedEvents++;
     const familyOwner = owners.find(o => o.startsWith('F'));
     const rel_id = familyOwner ? familyMap.get(familyOwner) ?? null : null;
 
@@ -597,9 +617,9 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
 
   for (const cit of tables.CITATION) {
     const sourceRid = citSourceMap.get(cit.RID);
-    if (!sourceRid) continue;
+    if (!sourceRid) { orphanedCitations++; continue; }
     const source_id = sourceMap.get(sourceRid);
-    if (!source_id) continue;
+    if (!source_id) { orphanedCitations++; continue; }
 
     const owners = citOwnerMap.get(cit.RID) ?? [];
     if (owners.length === 0) {
@@ -729,6 +749,50 @@ export function transformGenney(db: Database, tables: GenneyTables): ImportSumma
       todo.TASK ?? '', todo.NOTE ?? '', todo.RESULT ?? '',
     ]);
     summary.researchTasks++;
+  }
+
+  // ── Populate warnings and skipped ────────────────────────────────────────
+  const unrefPlaceCount = splacesById.size - importedSplaces.size;
+
+  if (orphanedEvents > 0) {
+    summary.skipped.push({
+      category: 'Events with no owner (no OWNER_EVENT entry)',
+      count: orphanedEvents,
+      reason: 'Event not linked to any person or family — orphaned in source data',
+    });
+  }
+  if (orphanedCitations > 0) {
+    summary.skipped.push({
+      category: 'Citations with no owner (no OWNER_CITATION entry)',
+      count: orphanedCitations,
+      reason: 'Citation not linked to any source — orphaned in source data',
+    });
+  }
+  if (unknownEventTypes.size > 0) {
+    summary.warnings.push(
+      `${[...unknownEventTypes].join(', ')} event type(s) not recognised — mapped to 'other'`
+    );
+  }
+  if (skippedParentLinks > 0) {
+    summary.skipped.push({
+      category: 'Parent-child relationships with missing link type',
+      count: skippedParentLinks,
+      reason: 'FATHERLINK or MOTHERLINK is null — relationship not importable',
+    });
+  }
+  if (unrefPlaceCount > 0) {
+    summary.skipped.push({
+      category: 'Unreferenced places (no events in those locations)',
+      count: unrefPlaceCount,
+      reason: 'Place hierarchy entries with no associated events — not imported',
+    });
+  }
+  if (sourceNoteCount > 0) {
+    summary.skipped.push({
+      category: 'Source notes (SOURCE.NOTE field)',
+      count: sourceNoteCount,
+      reason: 'No mapping to app source model — field not imported',
+    });
   }
 
   return summary;
