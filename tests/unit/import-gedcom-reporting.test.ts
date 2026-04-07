@@ -61,7 +61,7 @@ describe('GEDCOM import — ASSO reporting', () => {
     const report = importGedcom(db, parseGedcom(ASSO_GED));
     const entry = report.unmappedData.find(u => u.category.includes('ASSO'));
     expect(entry).toBeTruthy();
-    expect(entry!.count).toBeGreaterThan(0);
+    expect(entry!.count).toBe(1);
   });
 });
 
