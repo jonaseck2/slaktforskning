@@ -80,6 +80,7 @@ import { useToast } from '../../composables/useToast';
 const { t } = useI18n();
 const toast = useToast();
 
+
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName { given_name: string | null; surname: string | null; preferred_name?: string | null; nickname?: string | null; name_prefix?: string | null; name_suffix?: string | null; name_type: string; sort_order: number; }
 interface RawEvent {
