@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "skill_name": "frontend-design",
+    "skill_path": "/Users/jonasahnstedt/git/slaktforskning/.claude/skills/frontend-design",
+    "executor_model": "claude-sonnet-4-6",
+    "timestamp": "2026-04-07T00:00:00Z",
+    "evals_run": ["add-note-modal", "citations-section", "status-badge"],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "add-note-modal",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 37.0,
+        "tokens": 63920,
+        "tool_calls": 11,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "The save handler has a try/catch block where the catch logs to console.error AND calls toast.error() to notify the user", "passed": true, "evidence": "Lines 56-59: console.error + toast.error(t('errors.saveFailed')) in catch"},
+        {"text": "Imports and calls useToast for error handling in the save catch block", "passed": true, "evidence": "useToast imported; toast.error in catch"},
+        {"text": "Has NO local 'declare const window' type declaration", "passed": true, "evidence": "Not present"},
+        {"text": "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text", "passed": true, "evidence": "All 5 strings via $t()"},
+        {"text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values", "passed": true, "evidence": "No scoped styles at all"}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "add-note-modal",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 26.2,
+        "tokens": 38354,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "The save handler has a try/catch block where the catch logs to console.error AND calls toast.error() to notify the user", "passed": false, "evidence": "No try/catch — plain await, errors silently swallowed"},
+        {"text": "Imports and calls useToast for error handling in the save catch block", "passed": false, "evidence": "No useToast import"},
+        {"text": "Has NO local 'declare const window' type declaration", "passed": false, "evidence": "Lines 26-28: declare const window: Window & { api: Record<...> } — forbidden pattern re-appeared"},
+        {"text": "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text", "passed": true, "evidence": "All strings via $t()"},
+        {"text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values", "passed": true, "evidence": "No scoped styles at all"}
+      ],
+      "notes": ["declare const window re-appeared — baseline is inconsistent about which component patterns it reads"]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "citations-section",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 49.2,
+        "tokens": 59724,
+        "tool_calls": 11,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "All async API calls are wrapped in try/catch blocks where the catch logs to console.error AND calls toast.error() to notify the user", "passed": true, "evidence": "All 4 async functions have try/catch with console.error + toast.error"},
+        {"text": "Has NO local 'declare const window' type declaration", "passed": true, "evidence": "Not present"},
+        {"text": "Imports and calls useToast; catch block calls toast.error(t('errors.loadFailed')) or equivalent", "passed": true, "evidence": "toast.error(t('errors.loadFailed')) and toast.error(t('errors.deleteFailed'))"},
+        {"text": "All user-visible strings use $t() not hardcoded Swedish or English text", "passed": true, "evidence": "All strings via $t()"},
+        {"text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values like #2c3e50 or #333", "passed": true, "evidence": "var(--color-bg-muted), var(--color-text-muted), var(--font-xs), var(--color-text-faint). No hex."}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "citations-section",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 28.2,
+        "tokens": 34081,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "All async API calls are wrapped in try/catch blocks where the catch logs to console.error AND calls toast.error() to notify the user", "passed": false, "evidence": "No try/catch in load() — errors silently swallowed throughout"},
+        {"text": "Has NO local 'declare const window' type declaration", "passed": true, "evidence": "Not present"},
+        {"text": "Imports and calls useToast; catch block calls toast.error(t('errors.loadFailed')) or equivalent", "passed": false, "evidence": "No useToast import, no catch blocks"},
+        {"text": "All user-visible strings use $t() not hardcoded Swedish or English text", "passed": true, "evidence": "All strings via $t() including dynamic confidenceLevels.*"},
+        {"text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values like #2c3e50 or #333", "passed": false, "evidence": "Lines 63-67: confidence badge colors all hardcoded hex (#f0fdf4/#166534, #eff6ff/#1e40af, #fefce8/#854d0e, #fef2f2/#991b1b)"}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "status-badge",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 62.1,
+        "tokens": 58264,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Badge background and text colors use var(--color-*) CSS variables, not hardcoded hex values", "passed": true, "evidence": ".status-living { background: var(--color-success-bg); color: var(--color-success-text) } and .status-deceased { background: var(--color-bg-muted); color: var(--color-text-subtle) }"},
+        {"text": "Badge label strings use $t() not hardcoded text", "passed": true, "evidence": "$t('persons.living') and $t('personDetail.deceased')"},
+        {"text": "Has NO local 'declare const window' type declaration", "passed": true, "evidence": "Not present"},
+        {"text": "Does NOT redefine shared classes in scoped styles", "passed": true, "evidence": "Only new view-specific classes added"}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "status-badge",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 52.1,
+        "tokens": 42472,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Badge background and text colors use var(--color-*) CSS variables, not hardcoded hex values", "passed": false, "evidence": "Lines 282-288: .status-living { background: #dcfce7; color: #15803d } hardcoded — agent cited (incorrect) specificity concerns as reason to avoid vars"},
+        {"text": "Badge label strings use $t() not hardcoded text", "passed": true, "evidence": "$t('personDetail.statusLiving') and $t('personDetail.statusDeceased')"},
+        {"text": "Has NO local 'declare const window' type declaration", "passed": true, "evidence": "Not present"},
+        {"text": "Does NOT redefine shared classes in scoped styles", "passed": true, "evidence": "Only new view-specific classes added"}
+      ],
+      "notes": ["Baseline incorrectly reasoned that CSS variables don't work in scoped styles — the skill explicitly corrects this misconception"]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0},
+      "time_seconds": {"mean": 49.4, "stddev": 10.2, "min": 37.0, "max": 62.1},
+      "tokens": {"mean": 60636, "stddev": 2397, "min": 58264, "max": 63920}
+    },
+    "without_skill": {
+      "pass_rate": {"mean": 0.517, "stddev": 0.162, "min": 0.4, "max": 0.75},
+      "time_seconds": {"mean": 35.5, "stddev": 11.8, "min": 26.2, "max": 52.1},
+      "tokens": {"mean": 38302, "stddev": 3426, "min": 34081, "max": 42472}
+    },
+    "delta": {
+      "pass_rate": "+0.48",
+      "time_seconds": "+13.9",
+      "tokens": "+22334"
+    }
+  },
+  "notes": [
+    "All 3 with_skill evals pass 100% — skill is consistent across all assertion types.",
+    "eval-1 new assertion (console.error + toast.error in catch) correctly discriminates: baseline has zero error handling AND re-introduced declare const window in this run.",
+    "eval-2 without_skill unchanged at 0.4: consistently no error handling, consistently hardcoded hex for confidence badges.",
+    "eval-3 without_skill unchanged at 0.75: baseline correctly found --color-success-bg from shared.css but used hardcoded hex anyway, incorrectly citing scoped-style specificity concerns. The skill explicitly teaches CSS variables work in scoped styles.",
+    "Overall delta recovered to +0.48 (from +0.28 in iter-2) after replacing the non-discriminating BaseModal assertion. The eval suite is now well-calibrated.",
+    "declare const window is high-variance in the baseline: it appeared in iter-3 eval-1 but not eval-2. Baseline behavior depends on which components it happens to read first."
+  ]
+}
