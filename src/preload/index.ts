@@ -97,6 +97,7 @@ const api = {
     openExisting: () => ipcRenderer.invoke('db:openExisting'),
     switchTo: (dbPath: string) => ipcRenderer.invoke('db:switchTo', dbPath),
     onSwitched: (cb: () => void) => ipcRenderer.on('db:switched', cb),
+    getSetting: (key: string) => ipcRenderer.invoke('db:getSetting', key),
   },
   places: {
     create: mutating((data: unknown) => ipcRenderer.invoke('places:create', data)),

@@ -185,6 +185,16 @@ async function autoSetFocusPerson() {
   } catch { /* ignore */ }
 }
 
+async function loadDefaultPerson() {
+  if (!window.api?.db?.getSetting) return;
+  try {
+    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
+    if (defaultId && router.currentRoute.value.path === '/') {
+      router.push('/persons/' + defaultId);
+    }
+  } catch { /* ignore */ }
+}
+
 async function loadResearchBadge() {
   if (!window.api?.researchTasks) return;
   try {
@@ -209,6 +219,7 @@ onMounted(() => {
   loadQualityBadge();
   loadResearchBadge();
   autoSetFocusPerson();
+  loadDefaultPerson();
   window.api.db.onSwitched(() => {
     window.location.reload();
   });
