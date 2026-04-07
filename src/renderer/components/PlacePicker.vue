@@ -37,10 +37,6 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; parent_name?: string | null; }
 
 const props = defineProps<{
@@ -60,7 +56,7 @@ let debounceTimer: ReturnType<typeof setTimeout>;
 
 watch(() => props.modelValue, async (id) => {
   if (!id) { query.value = ''; return; }
-  const path = (await window.api.places.getPath(id)) as string;
+  const path = await window.api.places.getPath(id);
   if (path) query.value = path;
 }, { immediate: true });
 
@@ -73,7 +69,7 @@ function onInput() {
 }
 
 async function select(place: PlaceRow) {
-  const path = (await window.api.places.getPath(place.id)) as string;
+  const path = await window.api.places.getPath(place.id);
   query.value = path || place.name;
   showDropdown.value = false;
   emit('update:modelValue', place.id);

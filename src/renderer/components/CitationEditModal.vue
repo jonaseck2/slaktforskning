@@ -40,10 +40,6 @@
 import { reactive, onMounted, onUnmounted } from 'vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const props = defineProps<{
   citation: {
     id: string;

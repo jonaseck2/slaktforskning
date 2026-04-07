@@ -129,10 +129,6 @@
 import { ref, watch } from 'vue';
 import { formatFullName } from '../../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName {
   id?: string;

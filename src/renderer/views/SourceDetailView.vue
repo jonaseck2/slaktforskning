@@ -107,10 +107,6 @@ import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface SourceData {
   id: string;
   title: string;

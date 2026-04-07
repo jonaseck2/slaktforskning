@@ -165,10 +165,6 @@ import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
 import PersonName from '../components/PersonName.vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const { t } = useI18n();
 
 interface ResearchTask {

@@ -122,10 +122,6 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const { t } = useI18n();
 const busy = ref(false);
 const statusMessage = ref('');

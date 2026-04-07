@@ -75,10 +75,6 @@
 import { ref, watch } from 'vue';
 import { formatFullName } from '../../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName { given_name: string | null; surname: string | null; preferred_name?: string | null; nickname?: string | null; name_prefix?: string | null; name_suffix?: string | null; name_type: string; sort_order: number; }
 interface RawEvent {

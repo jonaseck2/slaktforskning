@@ -64,10 +64,6 @@ import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface Group { id: string; name: string; notes: string; }
 interface MemberRow {
   person_id: string;

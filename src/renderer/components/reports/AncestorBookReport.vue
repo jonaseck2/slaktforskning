@@ -253,10 +253,6 @@ import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
 import type { PersonNode } from '../../utils/chartLayout';
 import { formatFullName } from '../../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 // ── Raw API types ──────────────────────────────────────────────────────────────
 interface RawName {
   id?: string;

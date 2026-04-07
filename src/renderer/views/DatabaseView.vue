@@ -45,10 +45,6 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const { t } = useI18n();
 
 interface DbEntry { path: string; name: string }
@@ -59,36 +55,36 @@ const statusMsg = ref('');
 const backupStatus = ref('');
 
 async function load() {
-  current.value = await window.api.db.getCurrent() as DbEntry;
-  const all = await window.api.db.getRecent() as DbEntry[];
+  current.value = await window.api.db.getCurrent();
+  const all = await window.api.db.getRecent();
   // Exclude the currently active path from the recent list
   recent.value = all.filter(e => e.path !== current.value?.path);
 }
 
 async function openPath(p: string) {
-  const result = await window.api.db.switchTo(p) as { path: string; name: string };
+  const result = await window.api.db.switchTo(p);
   statusMsg.value = t('database.switchedTo', { name: result.name });
   setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function createNew() {
-  const result = await window.api.db.createNew() as { path?: string; name?: string; canceled?: boolean };
-  if (!result.canceled) {
+  const result = await window.api.db.createNew();
+  if (!('canceled' in result)) {
     statusMsg.value = t('database.switchedTo', { name: result.name });
     setTimeout(() => { statusMsg.value = ''; }, 3000);
   }
 }
 
 async function openExisting() {
-  const result = await window.api.db.openExisting() as { path?: string; name?: string; canceled?: boolean };
-  if (!result.canceled) {
+  const result = await window.api.db.openExisting();
+  if (!('canceled' in result)) {
     statusMsg.value = t('database.switchedTo', { name: result.name });
     setTimeout(() => { statusMsg.value = ''; }, 3000);
   }
 }
 
 async function backup() {
-  const result = await (window.api.backup as Record<string, () => Promise<{ success: boolean; path?: string; error?: string }>>).backup();
+  const result = await window.api.backup.backup();
   if (result.success && result.path) {
     backupStatus.value = t('database.backupSaved', { path: result.path });
     setTimeout(() => { backupStatus.value = ''; }, 5000);
@@ -97,7 +93,7 @@ async function backup() {
 
 async function restore() {
   if (!confirm(t('database.confirmRestore'))) return;
-  const result = await (window.api.backup as Record<string, () => Promise<{ success: boolean; path?: string; error?: string }>>).restore();
+  const result = await window.api.backup.restore();
   if (result.success) {
     backupStatus.value = t('database.restoreSuccess');
     setTimeout(() => { backupStatus.value = ''; }, 5000);
