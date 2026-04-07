@@ -40,12 +40,7 @@
       </div>
       <label class="notes-label">
         {{ $t('common.notes') }}
-        <textarea
-          v-model="notesText"
-          rows="3"
-          :placeholder="$t('personDetail.notesPlaceholder')"
-          @blur="saveNotes"
-        />
+        <PersonNotesSection :person-id="person.id" />
       </label>
     </section>
 
@@ -124,32 +119,12 @@
     </section>
 
     <!-- Add Research Task Modal -->
-    <BaseModal v-if="showAddTaskModal" @close="showAddTaskModal = false">
-        <h3>{{ $t('researchTasks.addTask') }}</h3>
-        <form @submit.prevent="createPersonTask">
-          <label>
-            {{ $t('researchTasks.task') }} *
-            <input v-model="taskForm.task" type="text" required autofocus />
-          </label>
-          <label>
-            {{ $t('researchTasks.priority') }}
-            <select v-model="taskForm.priority">
-              <option :value="0">0</option>
-              <option :value="1">1</option>
-              <option :value="2">2</option>
-              <option :value="3">3</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('researchTasks.notes') }}
-            <textarea v-model="taskForm.notes" rows="2" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddTaskModal = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-    </BaseModal>
+    <AddResearchTaskModal
+      v-if="showAddTaskModal"
+      :person-id="personId"
+      @close="showAddTaskModal = false"
+      @saved="loadPersonTasks"
+    />
 
     <!-- Quality Section -->
     <section class="detail-section">
@@ -180,11 +155,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
-import BaseModal from '../components/BaseModal.vue';
+import AddResearchTaskModal from '../components/AddResearchTaskModal.vue';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
@@ -196,6 +171,7 @@ import PersonChecksSection from '../components/PersonChecksSection.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
+import PersonNotesSection from '../components/PersonNotesSection.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
 
@@ -229,7 +205,6 @@ const toast = useToast();
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
 const primaryName = ref('');
-const notesText = ref('');
 const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingName = ref<NameRow | null>(null);
@@ -252,8 +227,6 @@ const showAddTaskModal = ref(false);
 const personGroups = ref<import('../components/GroupsTable.vue').GroupRow[]>([]);
 const showGroupPicker = ref(false);
 
-const taskForm = reactive({ task: '', priority: 1, notes: '' });
-
 async function loadPersonTasks() {
   if (!window.api?.researchTasks) return;
   personTasks.value = (await window.api.researchTasks.forPerson(personId)) as import('../components/ResearchTasksTable.vue').ResearchTaskRow[];
@@ -268,29 +241,12 @@ async function removeFromGroup(groupId: string) {
   await loadPersonGroups();
 }
 
-async function createPersonTask() {
-  if (!taskForm.task.trim()) return;
-  await window.api.researchTasks.create({
-    task: taskForm.task,
-    notes: taskForm.notes || undefined,
-    person_id: personId,
-    priority: taskForm.priority,
-    status: 'open',
-  });
-  taskForm.task = '';
-  taskForm.notes = '';
-  taskForm.priority = 1;
-  showAddTaskModal.value = false;
-  await loadPersonTasks();
-}
-
 async function load() {
   if (!window.api) return;
   try {
     person.value = (await window.api.persons.get(personId)) as PersonData | null;
     if (!person.value) return;
     localStorage.setItem('viz-focal-person', personId);
-    notesText.value = person.value.notes || '';
     editSex.value = person.value.sex;
     editLiving.value = person.value.living;
 
@@ -347,18 +303,6 @@ async function updateLiving(living: number) {
   if (!window.api || !person.value) return;
   await window.api.persons.update(personId, { living });
   person.value.living = living;
-}
-
-async function saveNotes() {
-  if (!window.api || !person.value) return;
-  if (notesText.value === (person.value.notes || '')) return;
-  try {
-    await window.api.persons.update(personId, { notes: notesText.value });
-    person.value.notes = notesText.value;
-  } catch (err) {
-    console.error('[PersonDetailView] saveNotes failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
 }
 
 onMounted(async () => {
