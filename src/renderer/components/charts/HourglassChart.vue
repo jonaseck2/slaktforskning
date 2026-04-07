@@ -183,8 +183,10 @@ const ancestorPersonToAhnen = computed(() => {
   return m;
 });
 
-function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
-  const key = `${personId}:${dir}`;
+function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParentId?: string | null) {
+  const key = coParentId !== undefined
+    ? `${personId}:${dir}:${coParentId ?? 'solo'}`
+    : `${personId}:${dir}`;
   const next = new Set(collapsed.value);
   if (next.has(key)) next.delete(key);
   else next.add(key);
@@ -193,7 +195,7 @@ function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
 
 async function handleCollapseButton(btn: CollapseButton) {
   if (!btn.isLoadMore) {
-    toggle(btn.personId, btn.direction);
+    toggle(btn.personId, btn.direction, btn.coParentId);
     return;
   }
   if (loadingMore.value || !tree.value) return;

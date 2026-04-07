@@ -279,9 +279,9 @@ describe('collapse — computeHourglassLayout', () => {
     expect(collapseButtons.some(b => b.personId === 'par' && b.direction === 'up')).toBe(true);
   });
 
-  it('collapsing focal:down hides all children', () => {
+  it('collapsing focal:down:solo hides solo children', () => {
     const tree = hourglass(p('f'), [null, null], [null, null, null, null], [p('c1'), p('c2')]);
-    const { boxes } = computeHourglassLayout(tree, new Set(['f:down']));
+    const { boxes } = computeHourglassLayout(tree, new Set(['f:down:solo']));
     expect(boxes.find(b => b.person.id === 'c1')).toBeUndefined();
     expect(boxes.find(b => b.person.id === 'c2')).toBeUndefined();
   });
@@ -304,7 +304,7 @@ describe('collapse — computeHourglassLayout', () => {
 
   it('collapsed focal still renders focal box', () => {
     const tree = hourglass(p('f'), [null, null], [null, null, null, null], [p('c1')]);
-    const { boxes } = computeHourglassLayout(tree, new Set(['f:down']));
+    const { boxes } = computeHourglassLayout(tree, new Set(['f:down:solo']));
     expect(boxes.some(b => b.isFocal)).toBe(true);
   });
 });
