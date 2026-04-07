@@ -79,7 +79,7 @@ This app uses a GEDCOM-X-inspired model. Here is how GEDCOM 5.5.1 maps to it:
 | LDS ordinances (`BAPL`, `SLGC`, `CONL`, `ENDL`, `SLGS`) | Not relevant for Swedish genealogy |
 | `ANCI`/`DESI` | Researcher flags — no equivalent |
 | `AFN`/`RFN` | Rarely used in Swedish trees |
-| `_` prefixed custom tags | Silently dropped |
+| `_` prefixed custom tags | Reported in `skipped` (never silently dropped — see data integrity rule) |
 
 ## GEDCOM-X vs GEDCOM 5.5.1 gaps (what the app model doesn't cover)
 
@@ -255,6 +255,39 @@ A minimal line-by-line parser:
 - `read-gedcom` — browser and Node.js compatible, parses to a queryable tree
 - `gedcom-stream` — streaming parser, good for large files (100MB+)
 
+## Data integrity rule
+
+**Data must never be silently lost during import or export.** This is fundamental to user trust.
+
+Every piece of data that is dropped, skipped, remapped, or excluded must be reported to the user with:
+1. **What** was dropped (tag name or entity type)
+2. **How many** records/occurrences
+3. **Why** (no app concept, redundant with standard tag, model limitation, etc.)
+
+Use the `ImportReport` fields for import, and a pre-export warning for export:
+- `skipped: { tag, count }[]` — unrecognised INDI/FAM tags (tag name + count, always shown)
+- `unmappedData: { category, count }[]` — known-unsupported record types with human-readable explanation
+- `warnings: string[]` — data that was transformed/remapped rather than dropped straight (e.g. "6573 REMA remarks imported as person notes")
+
+**On export:** if any DB entities cannot be represented in GEDCOM (e.g. Research Tasks, Groups), the export function must return a summary of what was excluded and why, so the UI can show it to the user.
+
+**Never use `unmappedData`/`warnings` for import and then omit the equivalent for export.** Both directions must be transparent.
+
+### What counts as "reported"
+
+| Situation | Required |
+|-----------|----------|
+| Tag appears in file but has no DB mapping | `skipped` entry with tag + count |
+| Known record type with no app concept (REPO, SUBM) | `unmappedData` entry with description |
+| Data remapped/converted (e.g. TRAN → aka name) | `warnings` entry explaining conversion |
+| DB entity type that cannot be exported to GEDCOM | Export summary entry with count + reason |
+| Data actively handled but user may not expect it | `warnings` entry (e.g. REMA imported as notes) |
+
+### What is NOT required
+
+- Field-level losses where the standard itself has no concept (e.g. no GEDCOM 5.5.1 tag for `persons.living`) — document in SKILL.md "What is dropped" table instead
+- Entirely empty tables (no records to export)
+
 ## Export checklist
 
 - [ ] `0 HEAD` with `1 GEDC` + `2 VERS 5.5.1` + `1 CHAR UTF-8`
@@ -263,6 +296,7 @@ A minimal line-by-line parser:
 - [ ] Standard date format (preserve `date_original` if set)
 - [ ] `HUSB`/`WIFE` in FAM → `FAMS` back-references on INDI (optional but standard)
 - [ ] `CHIL` in FAM → `FAMC` back-references on INDI (optional but standard)
+- [ ] Return export summary listing any DB tables/fields that were excluded from the output
 
 ## Import checklist
 
@@ -275,12 +309,13 @@ A minimal line-by-line parser:
 - [ ] Concatenate CONT lines with `\n`
 - [ ] Process in order: SOUR → INDI → FAM (to resolve forward references)
 - [ ] Each FAM.CHIL creates two parent_child relationships (one per parent, if both present)
+- [ ] All skipped/remapped data reported per data integrity rule above
 
 ## Common pitfalls
 
 - **Name format:** Some apps export `Given /Surname/ Suffix`; others omit the slashes. Handle gracefully.
 - **Unknown parents:** A FAM may have only WIFE or only HUSB, or neither. Still create the couple relationship.
-- **Non-standard tags:** Apps use `_MILI`, `_FSID`, etc. Don't crash — drop silently.
+- **Non-standard tags:** Apps use `_MILI`, `_FSID`, etc. Don't crash — report in `skipped`, never drop silently.
 - **Encoding:** Older files may use ANSEL. Detect from `HEAD.CHAR` tag.
 - **Large files:** Some GEDCOM files are 100MB+. Stream-parse; don't load into memory.
 - **CONT at level 2+:** CONT applies to the immediately preceding sibling at the same depth, not just level-1 values.
