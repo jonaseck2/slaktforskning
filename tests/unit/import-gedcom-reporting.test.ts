@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { createTestDb } from './helpers';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
@@ -60,5 +60,6 @@ describe('GEDCOM import — data integrity reporting', () => {
     const report = importGedcom(db, parseGedcom(NO_GED));
     const entry = report.unmappedData.find(u => u.category.includes('NO') || u.category.includes('negat'));
     expect(entry).toBeTruthy();
+    expect(entry!.count).toBeGreaterThan(0);
   });
 });
