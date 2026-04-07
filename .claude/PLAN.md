@@ -104,6 +104,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [plan](plans/2026-04-06-gedcom-70-export.md) |
 | v0.38.1 | Holger import completion: remove EDB path, REMA/MISC → notes, _HDP/_H8P in unmappedData, defaultPersonId → navigate to tree subject | [archive](plans/archive/2026-04-06-holger-import.md) |
 | v0.38.2 | GEDCOM import gap closure: REPO → repositories, _GRP → groups, _TODO → research tasks, SUBM → default_person_id, db_settings API; import report UI updated | [archive](plans/archive/2026-04-07-gedcom-import-gap-closure.md) |
+| v0.38.3 | Import/export test coverage: Genney archive extraction (.gcc/.backup), Genney GEDCOM profile ImportReport, Holger ImportReport+media, GEDCOM 5.5.1 full ImportReport, export place_address exclusion | [archive](plans/archive/2026-04-07-import-export-test-coverage.md) |
 
 ---
 
@@ -112,10 +113,6 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
 ### Code Quality Improvements [refactor]
-
-| Plan | File | Impact |
-|------|------|--------|
-| Import/export test coverage | [plan](plans/2026-04-07-import-export-test-coverage.md) | Unit tests for all 6 format paths: Genney .gcc/.backup/.ged, Holger .ged+media, GEDCOM 5.5.1 import+export |
 
 | v0.37.3 | Import/Export data integrity: GEDCOM surface LDS/TRAN/NO/ASSO, ExportReport with excluded entities, Genney warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
 

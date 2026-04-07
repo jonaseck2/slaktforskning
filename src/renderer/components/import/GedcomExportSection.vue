@@ -1,24 +1,23 @@
 <template>
-  <div class="section">
-    <h3>{{ $t('importExport.gedcomExportTitle') }}</h3>
-    <div class="export-cards">
-      <div class="export-card">
-        <div class="card-header">
-          <span class="card-title">GEDCOM 5.5.1</span>
-          <span class="card-badge card-badge--stable">{{ $t('gedcom.badgeStable') }}</span>
-        </div>
-        <p class="card-desc">{{ $t('gedcom.export551Desc') }}</p>
-        <button @click="handleExportGedcom('5.5.1')" :disabled="busy">{{ $t('gedcom.export551Button') }}</button>
+  <div class="export-groups">
+    <div class="export-group">
+      <div class="group-header">
+        <h3>GEDCOM 5.5.1</h3>
+        <span class="card-badge card-badge--stable">{{ $t('gedcom.badgeStable') }}</span>
       </div>
-      <div class="export-card">
-        <div class="card-header">
-          <span class="card-title">GEDCOM 7.0</span>
-          <span class="card-badge card-badge--modern">{{ $t('gedcom.badgeModern') }}</span>
-        </div>
-        <p class="card-desc">{{ $t('gedcom.export70Desc') }}</p>
-        <button @click="handleExportGedcom('7.0')" :disabled="busy">{{ $t('gedcom.export70Button') }}</button>
-      </div>
+      <p class="section-desc">{{ $t('gedcom.export551Desc') }}</p>
+      <button @click="handleExportGedcom('5.5.1')" :disabled="busy">{{ $t('gedcom.export551Button') }}</button>
     </div>
+
+    <div class="export-group">
+      <div class="group-header">
+        <h3>GEDCOM 7.0</h3>
+        <span class="card-badge card-badge--modern">{{ $t('gedcom.badgeModern') }}</span>
+      </div>
+      <p class="section-desc">{{ $t('gedcom.export70Desc') }}</p>
+      <button @click="handleExportGedcom('7.0')" :disabled="busy">{{ $t('gedcom.export70Button') }}</button>
+    </div>
+
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
@@ -109,35 +108,31 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
 </script>
 
 <style scoped>
-.export-cards {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.export-card {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  flex: 1;
-  min-width: 220px;
+.export-groups {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  gap: 16px;
+  max-width: 560px;
 }
 
-.card-header {
+.export-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.group-header {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.card-title {
-  font-size: var(--font-md);
-  font-weight: 600;
-  color: #222;
+.group-header h3 {
+  margin: 0;
 }
 
 .card-badge {
@@ -159,14 +154,6 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
   color: #1565c0;
 }
 
-.card-desc {
-  font-size: var(--font-sm);
-  color: #555;
-  margin: 0;
-  line-height: 1.5;
-  flex: 1;
-}
-
 button {
   align-self: flex-start;
   background: var(--color-primary);
@@ -177,7 +164,6 @@ button {
   cursor: pointer;
   font-size: var(--font-sm);
   font-family: inherit;
-  margin-top: 4px;
 }
 
 button:hover:not(:disabled) {
