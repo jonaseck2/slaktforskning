@@ -151,7 +151,7 @@ onMounted(load);
 .timeline-row.focal { cursor: default; }
 .timeline-row:not(.focal):hover rect { opacity: 0.85; }
 .row-label { fill: #444; font-size: 12px; font-family: inherit; }
-.focal-label { font-weight: 700; fill: #2c3e50; }
+.focal-label { font-weight: 700; fill: var(--color-primary); }
 .tick-label { fill: #aaa; font-size: 11px; font-family: inherit; }
 .today-label { fill: #ef4444; font-size: 11px; font-family: inherit; }
 .no-date-label { fill: #ccc; font-size: 14px; font-family: inherit; }

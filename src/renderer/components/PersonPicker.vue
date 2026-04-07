@@ -30,10 +30,6 @@
 import { ref, watch } from 'vue';
 import PersonName from './PersonName.vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PersonResult {
   id: string;
   given_name: string;

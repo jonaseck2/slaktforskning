@@ -13,6 +13,7 @@ export default {
     groups: 'Grupper',
     focusPerson: 'Fokusperson',
     settings: 'Inställningar',
+    navigate: 'NAVIGERA',
   },
   settings: {
     appearance: 'Utseende',
@@ -367,6 +368,14 @@ export default {
     viewDetail: 'Visa detaljer',
     today: 'Idag',
   },
+  personPanel: {
+    status: 'Status',
+    partners: 'Partners',
+    children: 'Barn',
+    spouse: 'Make/Maka',
+    partner1: 'Partner 1',
+    partner2: 'Partner 2',
+  },
   panel: {
     noPersonSelected: 'Klicka på en person i trädet',
     showInTree: 'Visa i träd',
@@ -606,5 +615,10 @@ export default {
     addMedia: 'Lägg till media',
     title_label: 'Titel',
     missingCount: '{count} saknas',
+  },
+  errors: {
+    saveFailed: 'Det gick inte att spara. Försök igen.',
+    deleteFailed: 'Det gick inte att ta bort. Försök igen.',
+    loadFailed: 'Det gick inte att ladda data. Försök igen.',
   },
 };

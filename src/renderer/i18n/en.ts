@@ -13,6 +13,7 @@ export default {
     groups: 'Groups',
     focusPerson: 'Focus person',
     settings: 'Settings',
+    navigate: 'Navigate',
   },
   settings: {
     appearance: 'Appearance',
@@ -367,6 +368,14 @@ export default {
     viewDetail: 'View details',
     today: 'Today',
   },
+  personPanel: {
+    status: 'Status',
+    partners: 'Partners',
+    children: 'Children',
+    spouse: 'Spouse',
+    partner1: 'Partner 1',
+    partner2: 'Partner 2',
+  },
   panel: {
     noPersonSelected: 'Click a person in the tree',
     showInTree: 'Show in tree',
@@ -606,5 +615,10 @@ export default {
     addMedia: 'Add media',
     title_label: 'Title',
     missingCount: '{count} missing',
+  },
+  errors: {
+    saveFailed: 'Could not save. Please try again.',
+    deleteFailed: 'Could not delete. Please try again.',
+    loadFailed: 'Could not load data. Please try again.',
   },
 };

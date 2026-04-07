@@ -90,10 +90,6 @@ import { useDataVersionStore } from '../stores/dataVersion';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const PAGE_SIZE = 100;
 
 const { t } = useI18n();

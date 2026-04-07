@@ -46,10 +46,7 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+import { useToast } from '../composables/useToast';
 
 interface EventRow {
   id: string;
@@ -71,6 +68,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const toast = useToast();
 const events = ref<EventRow[]>([]);
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
@@ -85,6 +83,7 @@ async function load() {
     }
   } catch (err) {
     console.error('[EventList] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   }
 }
 
@@ -118,6 +117,7 @@ async function removeEvent(id: string) {
     await load();
   } catch (err) {
     console.error('[EventList] removeEvent failed:', err);
+    toast.error(t('errors.deleteFailed'));
   }
 }
 

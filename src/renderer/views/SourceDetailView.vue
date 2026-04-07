@@ -107,10 +107,6 @@ import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface SourceData {
   id: string;
   title: string;
@@ -268,7 +264,7 @@ onMounted(load);
 .btn-back {
   background: none;
   border: none;
-  color: #2c3e50;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px 0;
   font-size: 14px;
@@ -329,7 +325,7 @@ onMounted(load);
   font-size: 12px;
   white-space: nowrap;
 }
-.confidence-0 { background: #fee2e2; color: #991b1b; }
+.confidence-0 { background: var(--color-danger-bg); color: #991b1b; }
 .confidence-1 { background: #fef3c7; color: #92400e; }
 .confidence-2 { background: #e0f2fe; color: #075985; }
 .confidence-3 { background: #dcfce7; color: #166534; }

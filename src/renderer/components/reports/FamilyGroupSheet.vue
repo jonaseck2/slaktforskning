@@ -42,7 +42,7 @@
 
       <!-- Children -->
       <section class="children-section">
-        <h2 class="section-heading">Barn</h2>
+        <h2 class="section-heading">{{ $t('personPanel.children') }}</h2>
         <div v-if="data.children.length === 0" class="empty-section">Inga barn registrerade.</div>
         <ol v-else class="children-list">
           <li v-for="child in data.children" :key="child.id" class="child-entry">
@@ -73,11 +73,10 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { formatFullName } from '../../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+const { t } = useI18n();
 
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawName { given_name: string | null; surname: string | null; preferred_name?: string | null; nickname?: string | null; name_prefix?: string | null; name_suffix?: string | null; name_type: string; sort_order: number; }
@@ -215,10 +214,10 @@ async function load() {
     // Build person data for both sides
     const [person1Data, person2Data] = await Promise.all([
       rel.person1_id
-        ? buildPersonData(rel.person1_id, rel.subtype === 'marriage' ? 'Make/Maka' : 'Partner 1')
+        ? buildPersonData(rel.person1_id, rel.subtype === 'marriage' ? t('personPanel.spouse') : t('personPanel.partner1'))
         : Promise.resolve(null),
       rel.person2_id
-        ? buildPersonData(rel.person2_id, rel.subtype === 'marriage' ? 'Make/Maka' : 'Partner 2')
+        ? buildPersonData(rel.person2_id, rel.subtype === 'marriage' ? t('personPanel.spouse') : t('personPanel.partner2'))
         : Promise.resolve(null),
     ]);
 

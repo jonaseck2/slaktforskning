@@ -5,11 +5,43 @@
 
 /* ── 1. CSS custom properties ──────────────────────────── */
 :root {
+  /* -- Typography -- */
   --font-xs:   11px;
   --font-sm:   13px;
   --font-base: 14px;
   --font-md:   15px;
   --font-lg:   16px;
+
+  /* -- Color palette -- */
+  /* Primary/brand */
+  --color-primary:        #2c3e50;
+  --color-primary-hover:  #3d5166;
+
+  /* Backgrounds */
+  --color-bg:             #ffffff;
+  --color-bg-subtle:      #f8f9fa;
+  --color-bg-muted:       #f0f4f8;
+  --color-bg-table-head:  #eeeeee;
+
+  /* Borders */
+  --color-border:         #dddddd;
+  --color-border-input:   #cccccc;
+  --color-border-chip:    #c8d0db;
+
+  /* Text */
+  --color-text:           #333333;
+  --color-text-muted:     #555555;
+  --color-text-subtle:    #666666;
+  --color-text-faint:     #999999;
+
+  /* Semantic */
+  --color-danger-bg:      #fee2e2;
+  --color-danger-text:    #b91c1c;
+  --color-danger-hover:   #fecaca;
+  --color-link:           #2563eb;
+
+  /* Row hover */
+  --color-row-hover:      #f0f4ff;
 }
 
 /* ── 2. Text size tiers (screen only — never affects print/export) */
@@ -39,20 +71,20 @@
 }
 .count-label {
   font-size: var(--font-sm);
-  color: #666;
+  color: var(--color-text-subtle);
   margin: 0 0 8px;
 }
 .running-hint {
   font-size: var(--font-sm);
-  color: #999;
+  color: var(--color-text-faint);
 }
 .empty {
-  color: #999;
+  color: var(--color-text-faint);
   padding: 40px;
   text-align: center;
 }
 .empty-hint {
-  color: #999;
+  color: var(--color-text-faint);
   padding: 40px;
   text-align: center;
   font-style: italic;
@@ -67,21 +99,21 @@
 .data-table th,
 .data-table td {
   padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
 }
 .data-table th {
-  background: #eee;
+  background: var(--color-bg-table-head);
   font-weight: 600;
   font-size: var(--font-xs);
   text-transform: uppercase;
-  color: #666;
+  color: var(--color-text-subtle);
 }
 .data-table td {
   font-size: var(--font-base);
 }
 .clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #f0f4ff; }
+.clickable-row:hover { background: var(--color-row-hover); }
 
 /* ── 5. Actions cell (right-aligned table column for delete/action buttons) */
 .actions-cell {
@@ -102,22 +134,22 @@
 .chip {
   padding: 4px 12px;
   border-radius: 12px;
-  border: 1px solid #c8d0db;
-  background: #f0f4f8;
-  color: #4a5568;
+  border: 1px solid var(--color-border-chip);
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: var(--font-sm);
 }
 .chip:hover { background: #e2e8f0; }
 .chip.active {
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
-  border-color: #2c3e50;
+  border-color: var(--color-primary);
 }
 
 /* ── 8. Buttons ────────────────────────────────────────── */
 .btn-add {
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -137,14 +169,14 @@
   font-family: inherit;
 }
 .btn-delete {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
-.btn-delete:hover { background: #fecaca; }
+.btn-delete:hover { background: var(--color-danger-hover); }
 
 .btn-cancel {
   background: #e0e0e0;
-  color: #333;
+  color: var(--color-text);
   border: none;
   padding: 7px 16px;
   border-radius: 6px;
@@ -187,7 +219,7 @@
   gap: 4px;
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #555;
+  color: var(--color-text-muted);
 }
 .modal form input[type='text'],
 .modal form input[type='url'],
@@ -195,7 +227,7 @@
 .modal form select,
 .modal form textarea {
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-input);
   border-radius: 4px;
   font-size: var(--font-base);
   font-family: inherit;
@@ -215,13 +247,13 @@
   font-family: inherit;
 }
 .modal-actions button[type='submit'] {
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
 }
 
 /* ── 10. Person links ──────────────────────────────────── */
 .person-link {
-  color: #2563eb;
+  color: var(--color-link);
   cursor: pointer;
   text-decoration: none;
 }
@@ -232,7 +264,7 @@
   display: flex;
   gap: 0;
   margin-bottom: 16px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--color-border);
 }
 .tab-btn {
   padding: 8px 16px;
@@ -240,20 +272,45 @@
   background: transparent;
   cursor: pointer;
   font-size: var(--font-sm);
-  color: #666;
+  color: var(--color-text-subtle);
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   font-family: inherit;
 }
-.tab-btn:hover { color: #2c3e50; }
+.tab-btn:hover { color: var(--color-primary); }
 .tab-btn.active {
-  color: #2c3e50;
+  color: var(--color-primary);
   font-weight: 600;
-  border-bottom-color: #2c3e50;
+  border-bottom-color: var(--color-primary);
 }
 
 /* ── 12. Dark mode (screen only) ──────────────────────── */
 @media screen {
+  html.dark {
+    /* Override palette for dark mode */
+    --color-primary:        #374151;
+    --color-primary-hover:  #4b5563;
+    --color-bg:             #111827;
+    --color-bg-subtle:      #1f2937;
+    --color-bg-muted:       #1f2937;
+    --color-bg-table-head:  #1f2937;
+    --color-border:         #374151;
+    --color-border-input:   #374151;
+    --color-border-chip:    #374151;
+    --color-text:           #e2e8f0;
+    --color-text-muted:     #9ca3af;
+    --color-text-subtle:    #9ca3af;
+    --color-text-faint:     #6b7280;
+    --color-danger-bg:      #450a0a;
+    --color-danger-text:    #fca5a5;
+    --color-danger-hover:   #7f1d1d;
+    --color-link:           #60a5fa;
+    --color-row-hover:      #1e293b;
+  }
+
+  /* The existing element-specific dark rules stay below.
+     Over time they can be removed as variables cover them,
+     but keep them for now to avoid visual regressions. */
   html.dark body { background: #111827; color: #e2e8f0; }
   html.dark .content { background: #111827; }
 

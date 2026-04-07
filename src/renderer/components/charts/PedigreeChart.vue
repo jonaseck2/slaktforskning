@@ -124,9 +124,9 @@
       @click.stop
       @mousedown.stop
     >
-      <button @click="startAddRelative('parent')">+ Förälder</button>
-      <button @click="startAddRelative('spouse')">+ Partner</button>
-      <button @click="startAddRelative('child')">+ Barn</button>
+      <button @click="startAddRelative('parent')">{{ $t('personDetail.addParent') }}</button>
+      <button @click="startAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
+      <button @click="startAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
     </div>
 
     <!-- Add related person modal -->
@@ -345,7 +345,7 @@ onUnmounted(() => {
   transform: translateX(-50%);
 }
 .add-popover button {
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 4px;

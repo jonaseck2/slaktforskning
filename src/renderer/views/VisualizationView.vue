@@ -101,10 +101,6 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface Person { id: string; sex: 'M' | 'F' | 'U'; living: boolean; }
 interface PersonWithName extends Person { given_name: string; surname: string; }
 
@@ -214,7 +210,7 @@ onActivated(load);
 .btn-back {
   background: none;
   border: none;
-  color: #2c3e50;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px 8px;
   font-size: var(--font-lg);
@@ -302,7 +298,7 @@ onActivated(load);
 }
 .btn-show-in-tree {
   width: 100%;
-  background: #2c3e50;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 6px 12px;

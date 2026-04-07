@@ -1,6 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal">
+  <BaseModal @close="$emit('close')">
       <h3>{{ $t('citations.addTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
@@ -45,18 +44,15 @@
           <button type="submit">{{ $t('citations.addTitle') }}</button>
         </div>
       </form>
-    </div>
-  </div>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, onUnmounted } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import BaseModal from './BaseModal.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
+import { useToast } from '../composables/useToast';
 
 interface SourceRow {
   id: string;
@@ -76,7 +72,8 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-useI18n();
+const { t } = useI18n();
+const toast = useToast();
 const sources = ref<SourceRow[]>([]);
 
 const form = reactive({
@@ -88,15 +85,10 @@ const form = reactive({
   date_accessed: new Date().toISOString().slice(0, 10),
 });
 
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close');
-}
 onMounted(async () => {
-  window.addEventListener('keydown', handleKeydown);
   if (!window.api) return;
   sources.value = (await window.api.sources.list()) as SourceRow[];
 });
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 async function save() {
   if (!window.api || !form.source_id) return;
@@ -119,6 +111,7 @@ async function save() {
     emit('close');
   } catch (err) {
     console.error('[CitationForm] save failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 </script>

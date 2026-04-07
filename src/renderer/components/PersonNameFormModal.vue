@@ -1,6 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal">
+  <BaseModal @close="$emit('close')">
       <h3>{{ name ? $t('personDetail.editNameTitle') : $t('personDetail.addNameTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
@@ -53,19 +52,15 @@
           <button type="submit">{{ name ? $t('common.save') : $t('personDetail.addNameTitle') }}</button>
         </div>
       </form>
-    </div>
-  </div>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
+import BaseModal from './BaseModal.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 import { parseAsteriskNotation } from '../utils/nameUtils';
 import type { NameRow } from './PersonNamesTable.vue';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
 
 const props = defineProps<{
   personId: string;

@@ -105,12 +105,9 @@ import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
+import { useToast } from '../composables/useToast';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
 
 interface PersonListItem {
   id: string;
@@ -126,6 +123,7 @@ interface PersonListItem {
 const PAGE_SIZE = 100;
 
 const { t } = useI18n();
+const toast = useToast();
 const router = useRouter();
 const focusStore = useFocusStore();
 
@@ -179,6 +177,7 @@ async function load() {
     offset.value = PAGE_SIZE;
   } catch (err) {
     console.error('[PersonsView] load failed:', err);
+    toast.error(t('errors.loadFailed'));
   } finally {
     loading.value = false;
   }
@@ -194,6 +193,7 @@ async function loadMore() {
     offset.value += PAGE_SIZE;
   } catch (err) {
     console.error('[PersonsView] loadMore failed:', err);
+    toast.error(t('errors.loadFailed'));
   } finally {
     loading.value = false;
   }

@@ -1,6 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal">
+  <BaseModal @close="$emit('close')">
       <h3>{{ editingEvent ? $t('events.editEvent') : $t('events.addEventTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
@@ -71,23 +70,20 @@
           <button type="submit">{{ editingEvent ? $t('common.save') : $t('events.addEventTitle') }}</button>
         </div>
       </form>
-    </div>
-  </div>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, onUnmounted } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import BaseModal from './BaseModal.vue';
 import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 import type { EventTypeValue } from '../constants/eventTypes';
+import { useToast } from '../composables/useToast';
 
 const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
 
 interface EventData {
   id: string;
@@ -124,7 +120,8 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-useI18n();
+const { t } = useI18n();
+const toast = useToast();
 
 const eventTypeValues = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
 
@@ -144,19 +141,13 @@ const sources = ref<SourceRow[]>([]);
 const sourceForm = reactive({ source_id: '', page: '' });
 const existingCitations = ref<CitationRow[]>([]);
 
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close');
-}
-
 onMounted(async () => {
-  window.addEventListener('keydown', handleKeydown);
   if (!window.api) return;
   sources.value = (await window.api.sources.list()) as SourceRow[];
   if (props.editingEvent) {
     await loadCitations();
   }
 });
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 async function loadCitations() {
   if (!props.editingEvent || !window.api) return;
@@ -173,8 +164,13 @@ async function loadCitations() {
 
 async function deleteCitation(id: string) {
   if (!window.api) return;
-  await window.api.citations.delete(id);
-  await loadCitations();
+  try {
+    await window.api.citations.delete(id);
+    await loadCitations();
+  } catch (err) {
+    console.error('[EventForm] deleteCitation failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 async function save() {
@@ -224,6 +220,7 @@ async function save() {
     emit('close');
   } catch (err) {
     console.error('[EventForm] save failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 </script>

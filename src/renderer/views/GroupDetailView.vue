@@ -64,10 +64,6 @@ import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface Group { id: string; name: string; notes: string; }
 interface MemberRow {
   person_id: string;
@@ -202,7 +198,7 @@ onMounted(load);
   margin-bottom: 12px;
 }
 .add-member-row > :first-child { flex: 1; }
-button { background: #2c3e50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+button { background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
 button:hover { opacity: 0.9; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-add { background: none; color: #3498db; font-size: var(--font-sm); padding: 4px 8px; border: 1px solid #3498db; border-radius: 4px; }

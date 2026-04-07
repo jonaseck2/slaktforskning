@@ -26,10 +26,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 export interface MediaItem {
   id: string;
   title: string;
@@ -50,7 +46,7 @@ async function load() {
 }
 
 async function attach() {
-  const result = await window.api.media.attach({ entityType: 'person', entityId: props.personId }) as { canceled: boolean };
+  const result = await window.api.media.attach({ entityType: 'person', entityId: props.personId });
   if (!result.canceled) await load();
 }
 
