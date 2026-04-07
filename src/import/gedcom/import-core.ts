@@ -374,7 +374,7 @@ function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
-): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number } {
+): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number } {
   const isGenney = options?.profile === 'genney';
   const isHolger = options?.profile === 'holger';
   const resolvePlaceFn = isGenney ? genneyResolvePlaceFn : findOrCreatePlace;
@@ -737,6 +737,7 @@ function doImportGedcom(
 
   // ── Phase 4: Post-process ASSO blocks ─────────────────────────────────────
   // Two cases: event-participant ASSO (has _EVID) and relationship ASSO (no _EVID).
+  let assoDrop = 0;
   for (const { personId, assoNode } of assoData) {
     const otherPersonXref = assoNode.value;
     const otherPersonId = personMap.get(otherPersonXref);
@@ -767,6 +768,8 @@ function doImportGedcom(
         if (existingRels.length === 0) {
           createRelationship(db, { type: relType, person1_id: personId, person2_id: otherPersonId });
         }
+      } else {
+        assoDrop++;
       }
     }
   }
@@ -815,7 +818,7 @@ function doImportGedcom(
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
   const warnings: string[] = [];
-  return { skipped, warnings, ldsCount, tranCount, noCount };
+  return { skipped, warnings, ldsCount, tranCount, noCount, assoDrop };
 }
 
 /**
@@ -932,7 +935,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   runSql(db, 'BEGIN');
-  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number };
+  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number };
   try {
     partial = doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
@@ -977,11 +980,15 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   if (partial.noCount > 0) {
     unmappedData.push({ category: `NO negative assertions (GEDCOM 7.0) — no app concept for explicit non-events, not imported`, count: partial.noCount });
   }
+  if (partial.assoDrop > 0) {
+    unmappedData.push({
+      category: `ASSO associations with unrecognised RELA types (e.g. Neighbour, Witness) — no general association concept in app, not imported`,
+      count: partial.assoDrop,
+    });
+  }
 
   // Build modelLimitations
-  const modelLimitations: string[] = [
-    'ASSO associations beyond event participants are dropped',
-  ];
+  const modelLimitations: string[] = [];
 
   // tagStats mirrors skipped (same data, different field name)
   const tagStats = partial.skipped.map(s => ({ tag: s.tag, occurrences: s.count }));
