@@ -105,41 +105,6 @@ async function handleImportFromGenney() {
 </script>
 
 <style scoped>
-.section {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 560px;
-}
-
-.section h3 {
-  margin: 0;
-  font-size: var(--font-md);
-}
-
-.section-desc {
-  font-size: var(--font-sm);
-  color: #666;
-  margin: 0;
-}
-
-.section-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.section-progress {
-  font-size: var(--font-sm);
-  color: #555;
-  font-style: italic;
-  margin: 0;
-}
-
 button {
   align-self: flex-start;
   background: var(--color-primary);
@@ -159,21 +124,5 @@ button:hover:not(:disabled) {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.status {
-  font-size: var(--font-sm);
-  padding: 8px 12px;
-  border-radius: 4px;
-}
-
-.status.success {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status.error {
-  background: var(--color-danger-bg);
-  color: #991b1b;
 }
 </style>

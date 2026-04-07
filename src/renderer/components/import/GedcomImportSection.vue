@@ -139,28 +139,6 @@ async function handleImportGedcom() {
 </script>
 
 <style scoped>
-.section {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 560px;
-}
-
-.section h3 {
-  margin: 0;
-  font-size: var(--font-md);
-}
-
-.section-desc {
-  font-size: var(--font-sm);
-  color: #666;
-  margin: 0;
-}
-
 button {
   align-self: flex-start;
   background: var(--color-primary);
@@ -182,73 +160,11 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.status {
-  font-size: var(--font-sm);
-  padding: 8px 12px;
-  border-radius: 4px;
-}
-
-.status.success {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status.error {
-  background: var(--color-danger-bg);
-  color: #991b1b;
-}
-
 :deep(.modal) {
   max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.report-counts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-base);
-}
-
-.report-section {
-  border-top: 1px solid #eee;
-  padding-top: 8px;
-}
-
-.report-section-label {
-  margin: 0 0 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: #555;
-}
-
-.report-section ul {
-  margin: 0;
-  padding-left: 16px;
-  font-size: var(--font-sm);
-  color: #444;
-}
-
-.report-event-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: var(--font-sm);
-  color: #666;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 8px;
 }
 </style>
