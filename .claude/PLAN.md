@@ -99,6 +99,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | refactor | i18n coverage: personPanel.* keys, nav.navigate, replaced all hardcoded Swedish strings in PersonPanel, charts, reports, App | [archive](plans/archive/2026-04-07-i18n-coverage.md) |
 | refactor | CSS color variables: 18 palette vars in :root, replaced 70+ hardcoded hex values in shared.css and scoped styles | [archive](plans/archive/2026-04-07-css-color-variables.md) |
 | refactor | BaseModal component: slot-based modal shell with Escape + overlay-click handling, migrated all 15 modal components | [archive](plans/archive/2026-04-07-base-modal-refactor.md) |
+| v0.37.6 | Component extraction: PersonNotesSection, AddResearchTaskModal, 4 ImportExportSection components; ImportExportView 605→46 lines | [archive](plans/archive/2026-04-07-component-extraction.md) |
 
 ---
 
@@ -110,7 +111,7 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 
 | Plan | File | Impact |
 |------|------|--------|
-| Component extraction | [plan](plans/2026-04-07-component-extraction.md) | Break PersonPanel (669 lines) + ImportExportView (518 lines) into sub-components |
+| Import/export test coverage | [plan](plans/2026-04-07-import-export-test-coverage.md) | Unit tests for all 6 format paths: Genney .gcc/.backup/.ged, Holger .ged+media, GEDCOM 5.5.1 import+export |
 
 | v0.37.3 | Import/Export data integrity: GEDCOM surface LDS/TRAN/NO/ASSO, ExportReport with excluded entities, Genney warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
 

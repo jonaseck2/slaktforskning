@@ -1,6 +1,6 @@
 # Large Component Extraction Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Break `PersonPanel.vue` (675 lines) and `ImportExportView.vue` (538 lines) into focused sub-components that are individually understandable, testable, and reusable — following the established "Person Section Component" pattern already used for `PersonIdentifiersSection`, `PersonMediaSection`, and `PersonChecksSection`.
 
@@ -15,7 +15,7 @@
 **Files:**
 - Read: `src/renderer/components/PersonPanel.vue`
 
-- [ ] **Step 1: Read the full file**
+- [x] **Step 1: Read the full file**
 
 Run: `cat -n src/renderer/components/PersonPanel.vue`
 
@@ -31,7 +31,7 @@ Map out each distinct section (look for collapsible divs with section headings).
 
 For each section: note its line range, what data it loads, what it emits, and whether it already uses a sub-component.
 
-- [ ] **Step 2: Identify what is NOT yet extracted**
+- [x] **Step 2: Identify what is NOT yet extracted**
 
 Focus the plan on sections that are still inlined in PersonPanel's template. If a section is already a sub-component (e.g. `<EventList :person-id="personId" />`), skip it.
 
@@ -44,7 +44,7 @@ Focus the plan on sections that are still inlined in PersonPanel's template. If 
 - Modify: `src/renderer/components/PersonPanel.vue`
 - Modify: `src/renderer/views/PersonDetailView.vue`
 
-- [ ] **Step 1: Check if notes are inlined in PersonPanel**
+- [x] **Step 1: Check if notes are inlined in PersonPanel**
 
 Run:
 ```bash
@@ -103,7 +103,7 @@ async function save() {
 </style>
 ```
 
-- [ ] **Step 2: Replace inlined notes in PersonPanel.vue**
+- [x] **Step 2: Replace inlined notes in PersonPanel.vue**
 
 Replace the inlined notes textarea with:
 ```vue
@@ -115,7 +115,7 @@ Import at the top of `<script setup>`:
 import PersonNotesSection from './PersonNotesSection.vue';
 ```
 
-- [ ] **Step 3: Use in PersonDetailView.vue too**
+- [x] **Step 3: Use in PersonDetailView.vue too**
 
 Find the notes section in `src/renderer/views/PersonDetailView.vue` and replace it with `<PersonNotesSection :person-id="person.id" />`.
 
@@ -128,7 +128,7 @@ Find the notes section in `src/renderer/views/PersonDetailView.vue` and replace 
 
 After Task 1's mapping, for each section still inlined:
 
-- [ ] **Step 1: For each inlined section, create a self-loading component**
+- [x] **Step 1: For each inlined section, create a self-loading component**
 
 Follow the established pattern from `PersonIdentifiersSection.vue`:
 
@@ -164,11 +164,11 @@ Key rules:
 - Call `load()` after every mutation
 - `defineExpose` only if parent needs to trigger an action (e.g. open add form)
 
-- [ ] **Step 2: Update PersonPanel.vue to use the new component**
+- [x] **Step 2: Update PersonPanel.vue to use the new component**
 
 Replace the inlined template block with `<NewSectionComponent :person-id="personId" />`.
 
-- [ ] **Step 3: Update PersonDetailView.vue to use the same component**
+- [x] **Step 3: Update PersonDetailView.vue to use the same component**
 
 Every section component must be used in both `PersonPanel` and `PersonDetailView`.
 
@@ -184,7 +184,7 @@ Every section component must be used in both `PersonPanel` and `PersonDetailView
 - Create: `src/renderer/components/import/GedcomExportSection.vue`
 - Modify: `src/renderer/views/ImportExportView.vue`
 
-- [ ] **Step 1: Read ImportExportView.vue fully**
+- [x] **Step 1: Read ImportExportView.vue fully**
 
 Run: `cat -n src/renderer/views/ImportExportView.vue`
 
@@ -196,7 +196,7 @@ Map the four sections:
 
 Note the props/data each section uses and what events it emits.
 
-- [ ] **Step 2: Extract GedcomImportSection.vue**
+- [x] **Step 2: Extract GedcomImportSection.vue**
 
 Move the GEDCOM import UI (file picker button, options, import button, progress/result display) into:
 
@@ -234,19 +234,19 @@ async function runImport() {
 </script>
 ```
 
-- [ ] **Step 3: Extract GenneyImportSection.vue**
+- [x] **Step 3: Extract GenneyImportSection.vue**
 
 Move the Genney import UI (Docker check, Derby/Archive path selection, discover/run buttons, progress log). This section is stateful — it has a multi-step flow. Keep all the step state inside the component.
 
-- [ ] **Step 4: Extract HolgerImportSection.vue**
+- [x] **Step 4: Extract HolgerImportSection.vue**
 
 Move the Holger import UI (file picker, media dir, run button, progress log).
 
-- [ ] **Step 5: Extract GedcomExportSection.vue**
+- [x] **Step 5: Extract GedcomExportSection.vue**
 
 Move the GEDCOM export UI (format selector if present, export button, result path display).
 
-- [ ] **Step 6: Simplify ImportExportView.vue to a tab container**
+- [x] **Step 6: Simplify ImportExportView.vue to a tab container**
 
 After extraction, ImportExportView becomes a tab bar that renders the appropriate section:
 
@@ -294,12 +294,12 @@ const tabs = [
 
 ### Task 5: Run tests and commit
 
-- [ ] **Step 1: Run unit tests**
+- [x] **Step 1: Run unit tests**
 
 Run: `npm test`
 Expected: All tests pass.
 
-- [ ] **Step 2: Verify PersonPanel functionality**
+- [x] **Step 2: Verify PersonPanel functionality**
 
 Run: `npm start`
 - Open a person in the visualization panel
@@ -307,18 +307,18 @@ Run: `npm start`
 - Add an event, verify the list updates
 - Switch to a different person in the panel — verify all sections reload (the `watch` pattern)
 
-- [ ] **Step 3: Verify ImportExportView functionality**
+- [x] **Step 3: Verify ImportExportView functionality**
 
 - Navigate to Import/Export
 - Switch between tabs — each should load cleanly
 - Run a GEDCOM import end-to-end
 
-- [ ] **Step 4: Verify PersonDetailView**
+- [x] **Step 4: Verify PersonDetailView**
 
 - Open a person detail page
 - All sections should still work (they use the same sub-components as PersonPanel)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
