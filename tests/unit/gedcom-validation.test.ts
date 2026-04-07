@@ -100,21 +100,18 @@ describe('ValidationReport', () => {
   });
 
   describe('modelLimitations', () => {
-    it('always includes the ASSO limitation', () => {
+    it('does not include ASSO in modelLimitations when no ASSO nodes are present', () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = importGedcom(db, tree);
 
-      expect(report.modelLimitations).toContain(
-        'ASSO associations beyond event participants are dropped'
-      );
+      expect(report.modelLimitations.some(l => l.includes('ASSO'))).toBe(false);
     });
 
-    it('includes ASSO limitation even for minimal GEDCOM', () => {
+    it('does not include ASSO in modelLimitations for minimal GEDCOM', () => {
       const tree = parseGedcom(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 TRLR`);
       const report = importGedcom(db, tree);
 
-      expect(report.modelLimitations.length).toBeGreaterThanOrEqual(1);
-      expect(report.modelLimitations[0]).toContain('ASSO');
+      expect(report.modelLimitations.some(l => l.includes('ASSO'))).toBe(false);
     });
   });
 

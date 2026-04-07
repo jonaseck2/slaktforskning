@@ -40,6 +40,31 @@ const NO_GED = `
 0 TRLR
 `.trim();
 
+const ASSO_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Lars /Eriksson/
+1 SEX M
+1 ASSO @I2@
+2 RELA Neighbour
+0 @I2@ INDI
+1 NAME Karin /Svensson/
+1 SEX F
+0 TRLR
+`.trim();
+
+describe('GEDCOM import — ASSO reporting', () => {
+  it('reports dropped ASSO associations in unmappedData', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(ASSO_GED));
+    const entry = report.unmappedData.find(u => u.category.includes('ASSO'));
+    expect(entry).toBeTruthy();
+    expect(entry!.count).toBeGreaterThan(0);
+  });
+});
+
 describe('GEDCOM import — data integrity reporting', () => {
   it('reports LDS ordinances in unmappedData with descriptive category', () => {
     const db = createTestDb();
