@@ -115,32 +115,7 @@
           <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</button>
         </div>
       </div>
-      <div v-if="rels.length === 0" class="empty-hint">{{ $t('personDetail.noRelationships') }}</div>
-      <table v-else class="data-table">
-        <thead>
-          <tr>
-            <th>{{ $t('common.type') }}</th>
-            <th>{{ $t('relationshipDetail.subtype') }}</th>
-            <th>{{ $t('common.name') }}</th>
-            <th>{{ $t('common.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="rel in rels"
-            :key="rel.id"
-            class="clickable-row"
-            @click="$router.push(`/relationships/${rel.id}`)"
-          >
-            <td><span class="type-badge">{{ rel.typeLabel }}</span></td>
-            <td>{{ rel.subtypeLabel || '—' }}</td>
-            <td>{{ rel.otherPersonName || '—' }}</td>
-            <td class="actions-cell">
-              <button class="btn-sm btn-delete" @click.stop="deleteRelationship(rel.id)">✕</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
     </section>
 
     <!-- Groups Section -->
@@ -192,7 +167,7 @@
       :person-id="person.id"
       :mode="addRelatedMode"
       @close="showAddRelated = false"
-      @saved="showAddRelated = false; load()"
+      @saved="showAddRelated = false; relSectionRef?.reload()"
     />
 
     <!-- Add Name Modal -->
@@ -210,9 +185,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useI18n } from 'vue-i18n';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
+import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
 import PersonNamesTable from '../components/PersonNamesTable.vue';
 import PersonNameFormModal from '../components/PersonNameFormModal.vue';
 import PersonIdentifiersSection from '../components/PersonIdentifiersSection.vue';
@@ -249,26 +224,12 @@ interface NameRow {
   nickname: string | null;
 }
 
-interface RelRow {
-  id: string;
-  type: string;
-  person1_id: string | null;
-  person2_id: string | null;
-  subtype: string | null;
-  otherPersonName: string;
-  subtypeLabel: string;
-  typeLabel: string;
-}
-
-
-const { t } = useI18n();
 const route = useRoute();
 const personId = route.params.id as string;
 const focusStore = useFocusStore();
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
-const rels = ref<RelRow[]>([]);
 const primaryName = ref('');
 const notesText = ref('');
 const showNameForm = ref(false);
@@ -284,6 +245,7 @@ const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
+const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // Research tasks
 const personTasks = ref<import('../components/ResearchTasksTable.vue').ResearchTaskRow[]>([]);
@@ -333,13 +295,6 @@ function handleKeydown(e: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', handleKeydown));
 onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
-function getSubtypeLabel(type: string, subtype: string | null): string {
-  if (!subtype) return '';
-  if (type === 'couple') return t('coupleSubtypes.' + subtype);
-  if (type === 'parent_child') return t('parentChildSubtypes.' + subtype);
-  return subtype;
-}
-
 async function load() {
   if (!window.api) return;
   try {
@@ -357,35 +312,6 @@ async function load() {
         .map(p => p.text).join('');
     }
     focusStore.set(personId, primaryName.value);
-
-    const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{
-      id: string;
-      type: string;
-      person1_id: string | null;
-      person2_id: string | null;
-      subtype: string | null;
-    }>;
-
-    const enriched: RelRow[] = [];
-    for (const r of rawRels) {
-      const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
-      let otherPersonName = '';
-      if (otherId) {
-        const pNames = (await window.api.persons.getNames(otherId)) as NameRow[];
-        if (pNames.length > 0) otherPersonName = `${pNames[0].given_name} ${pNames[0].surname}`.trim();
-      }
-      let typeLabel = t('relTypes.' + r.type);
-      if (r.type === 'parent_child') {
-        typeLabel = r.person1_id === personId ? t('relTypes.child') : t('relTypes.parent');
-      }
-      enriched.push({
-        ...r,
-        otherPersonName: otherPersonName || t('common.unknown'),
-        subtypeLabel: getSubtypeLabel(r.type, r.subtype),
-        typeLabel,
-      });
-    }
-    rels.value = enriched;
 
     // Evidence summary
     const evs = (await window.api.events.forPerson(personId)) as Array<{ id: string }>;
@@ -441,12 +367,6 @@ async function saveNotes() {
   } catch (err) {
     console.error('[PersonDetailView] saveNotes failed:', err);
   }
-}
-
-async function deleteRelationship(id: string) {
-  if (!window.api) return;
-  await window.api.relationships.delete(id);
-  await load();
 }
 
 onMounted(async () => {
@@ -583,20 +503,6 @@ onMounted(async () => {
   font-weight: 600;
   color: #555;
   margin-top: 12px;
-}
-.type-badge {
-  background: #f0fdf4;
-  color: #166534;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-}
-.btn-edit {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-.actions-cell {
-  vertical-align: middle;
 }
 textarea {
   width: 100%;

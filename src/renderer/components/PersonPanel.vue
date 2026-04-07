@@ -92,12 +92,23 @@
         </div>
       </div>
 
+      <!-- Relationer section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('relationships')">
+          <span class="panel-chevron">{{ sections.relationships ? '▾' : '▸' }}</span>
+          {{ $t('personDetail.relationships') }}
+        </button>
+        <div v-if="sections.relationships" class="panel-section-body">
+          <PersonRelationshipsSection ref="relSectionRef" :person-id="personId!" />
+        </div>
+      </div>
+
       <!-- Grupper section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('groups')">
           <span class="panel-chevron">{{ sections.groups ? '▾' : '▸' }}</span>
-          Grupper
-          <span class="panel-section-header-action" @click.stop="showGroupPicker = !showGroupPicker">+ Grupp</span>
+          {{ $t('groups.title') }}
+          <span class="panel-section-header-action" @click.stop="showGroupPicker = !showGroupPicker">{{ $t('groups.addGroupShort') }}</span>
         </button>
         <div v-if="sections.groups" class="panel-section-body">
           <div v-if="showGroupPicker && personId" class="panel-group-picker-wrap">
@@ -143,7 +154,7 @@
         <button class="panel-section-header" @click="toggleSection('media')">
           <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
           {{ $t('media.title') }}
-          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()">{{ $t('media.attach') }}</span>
+          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()">{{ $t('media.attachShort') }}</span>
         </button>
         <div v-if="sections.media" class="panel-section-body">
           <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
@@ -220,6 +231,7 @@ import ResearchTasksTable from './ResearchTasksTable.vue';
 import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
+import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 
 const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
@@ -258,6 +270,7 @@ const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void })
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
+const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // Group picker state
 const showGroupPicker = ref(false);
@@ -273,6 +286,7 @@ function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
 
 async function onRelativeSaved() {
   showAddRelative.value = false;
+  relSectionRef.value?.reload();
   if (props.personId) {
     await loadPerson(props.personId);
   }
@@ -288,6 +302,7 @@ const sections = reactive({
   person: loadSection('person', false),
   names: loadSection('names', false),
   events: loadSection('events', true),
+  relationships: loadSection('relationships', true),
   groups: loadSection('groups', false),
   research: loadSection('research', false),
   identifiers: loadSection('identifiers', false),
