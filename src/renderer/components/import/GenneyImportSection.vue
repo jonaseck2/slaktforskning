@@ -1,13 +1,29 @@
 <template>
-  <div class="section">
-    <h3>{{ $t('importExport.genneyTitle') }}</h3>
-    <p class="section-desc">{{ $t('importExport.genneyDesc') }}</p>
-    <div class="section-buttons">
-      <button @click="handleGenneyDerby('archive')" :disabled="busy">
-        {{ $t('importExport.genneyDerbySelectArchive') }}
-      </button>
-      <button @click="handleImportFromGenney" :disabled="busy">{{ $t('gedcom.genneyPickFile') }}</button>
+  <div class="import-groups">
+    <div class="import-group">
+      <div class="group-header">
+        <h3>{{ $t('importExport.genneyArchiveTitle') }}</h3>
+        <span class="badge badge--docker">Docker</span>
+      </div>
+      <p class="section-desc">{{ $t('importExport.genneyArchiveDesc') }}</p>
+      <button @click="handleGenneyDerby('archive')" :disabled="busy">{{ $t('importExport.genneyArchiveButton') }}</button>
     </div>
+
+    <div class="import-group">
+      <div class="group-header">
+        <h3>{{ $t('importExport.genneyFolderTitle') }}</h3>
+        <span class="badge badge--docker">Docker</span>
+      </div>
+      <p class="section-desc">{{ $t('importExport.genneyFolderDesc') }}</p>
+      <button @click="handleGenneyDerby('folder')" :disabled="busy">{{ $t('importExport.genneyFolderButton') }}</button>
+    </div>
+
+    <div class="import-group">
+      <h3>{{ $t('importExport.genneyGedcomTitle') }}</h3>
+      <p class="section-desc">{{ $t('importExport.genneyGedcomDesc') }}</p>
+      <button @click="handleImportFromGenney" :disabled="busy">{{ $t('importExport.genneyGedcomButton') }}</button>
+    </div>
+
     <p v-if="genneyProgress" class="section-progress">{{ genneyProgress }}</p>
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
@@ -146,6 +162,48 @@ async function handleImportFromGenney() {
 </script>
 
 <style scoped>
+.import-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.import-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-header h3,
+.import-group > h3 {
+  margin: 0;
+}
+
+.badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge--docker {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
 button {
   align-self: flex-start;
   background: var(--color-primary);
@@ -156,6 +214,7 @@ button {
   cursor: pointer;
   font-size: var(--font-sm);
   font-family: inherit;
+  margin-top: 4px;
 }
 
 button:hover:not(:disabled) {
