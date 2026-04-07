@@ -116,6 +116,19 @@
       "/Users/jonasahnstedt/git/slaktforskning/.claude"
     ]
   },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // \"\"' | { read -r path; if [[ \"$path\" == *\"docs/superpowers\"* ]]; then echo '{\"continue\":false,\"stopReason\":\"Write blocked: docs/superpowers/ is not used in this project. Use .claude/plans/ for plans and .claude/plans/brainstorm/ for brainstorm outputs.\"}'; fi; }"
+          }
+        ]
+      }
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "slaktforskning"
