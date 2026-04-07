@@ -52,6 +52,8 @@ export interface ImportReport {
   citations: number;
   skipped: { tag: string; count: number }[];  // unrecognised level-1 INDI/FAM tags (alias for tagStats)
   warnings: string[];                          // e.g. "12 OBJE records skipped"
+  /** DB id of the tree subject (first INDI), if detectable. Currently set for profile='holger'. */
+  defaultPersonId?: string;
 }
 
 export interface UnmappedItem {
@@ -361,6 +363,8 @@ const KNOWN_INDI_TAGS = new Set([
   'BIRT', 'DEAT', 'CHR', 'BURI', 'BAPM', 'CONF', 'OCCU', 'RESI', 'EDUC',
   'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
   'TITL', 'OBJE',
+  // Holger custom tags imported as notes:
+  'REMA', 'MISC',
 ]);
 
 const KNOWN_FAM_TAGS = new Set([
@@ -374,7 +378,7 @@ function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
-): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number } {
+): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; firstPersonId: string | null } {
   const isGenney = options?.profile === 'genney';
   const isHolger = options?.profile === 'holger';
   const resolvePlaceFn = isGenney ? genneyResolvePlaceFn : findOrCreatePlace;
@@ -386,9 +390,11 @@ function doImportGedcom(
 
   // Report accumulators
   const skippedTags = new Map<string, number>();
-  let ldsCount = 0;   // BAPL/SLGC/CONL/ENDL/SLGS sub-nodes on INDI records
-  let tranCount = 0;  // TRAN nodes (GEDCOM 7.0 multi-language translations)
-  let noCount = 0;    // NO negative assertion records (GEDCOM 7.0)
+  let ldsCount = 0;           // BAPL/SLGC/CONL/ENDL/SLGS sub-nodes on INDI records
+  let tranCount = 0;          // TRAN nodes (GEDCOM 7.0 multi-language translations)
+  let noCount = 0;            // NO negative assertion records (GEDCOM 7.0)
+  let holgerRemarkCount = 0;  // Holger REMA/MISC tags imported as person notes
+  let firstPersonId: string | null = null;  // DB id of first INDI (for defaultPersonId)
 
   // ── Phase 0: NOTE records ─────────────────────────────────────────────────
   const noteMap = new Map<string, string>();
@@ -461,12 +467,29 @@ function doImportGedcom(
       if (mHaplo) notes = notes ? `${notes}\nmtDNA: ${mHaplo}` : `mtDNA: ${mHaplo}`;
     }
 
+    // Holger: append REMA and MISC as additional notes
+    if (isHolger) {
+      const extras: string[] = [];
+      for (const child of node.children) {
+        if (child.tag === 'REMA' || child.tag === 'MISC') {
+          const val = child.value?.trim();
+          if (val) extras.push(val);
+        }
+      }
+      if (extras.length > 0) {
+        holgerRemarkCount += extras.length;
+        const extra = extras.join('\n');
+        notes = notes ? `${notes}\n\n${extra}` : extra;
+      }
+    }
+
     const person = createPerson(db, {
       sex,
       living: living || undefined,
       notes: notes || undefined,
     });
     personMap.set(node.xref, person.id);
+    if (isHolger && firstPersonId === null) firstPersonId = person.id;
 
     if (isHolger) {
       const subtypeMap = parseHolgerAdoptionSubtypes(node);
@@ -818,7 +841,7 @@ function doImportGedcom(
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
   const warnings: string[] = [];
-  return { skipped, warnings, ldsCount, tranCount, noCount, assoDrop };
+  return { skipped, warnings, ldsCount, tranCount, noCount, assoDrop, holgerRemarkCount, firstPersonId };
 }
 
 /**
@@ -935,7 +958,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   runSql(db, 'BEGIN');
-  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number };
+  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; firstPersonId: string | null };
   try {
     partial = doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
@@ -986,6 +1009,19 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
       count: partial.assoDrop,
     });
   }
+  if (partial.holgerRemarkCount > 0) {
+    partial.warnings.push(`${partial.holgerRemarkCount} Holger REMA/MISC remarks imported as person notes`);
+  }
+  if (options?.profile === 'holger') {
+    const hdpCount = partial.skipped.find(s => s.tag === '_HDP')?.count ?? 0;
+    const h8pCount = partial.skipped.find(s => s.tag === '_H8P')?.count ?? 0;
+    if (hdpCount + h8pCount > 0) {
+      unmappedData.push({
+        category: '_HDP / _H8P — Holger internal metadata (sort keys, display IDs, timestamps). All data is present in standard GEDCOM tags; nothing was lost.',
+        count: hdpCount + h8pCount,
+      });
+    }
+  }
 
   // Build modelLimitations
   const modelLimitations: string[] = [];
@@ -1007,5 +1043,6 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     tagStats,
     unmappedData,
     modelLimitations,
+    ...(partial.firstPersonId != null ? { defaultPersonId: partial.firstPersonId } : {}),
   };
 }
