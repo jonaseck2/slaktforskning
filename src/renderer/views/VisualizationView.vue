@@ -41,9 +41,10 @@
       <div class="viz-chart-area">
         <PedigreeChart
           v-if="activeTab === 'pedigree'"
+          :key="'pedigree-' + chartKey"
           :person-id="personId"
           @navigate="navigateTo"
-          @reload="load"
+          @reload="reloadChart"
         />
         <CircleChart
           v-if="activeTab === 'circle'"
@@ -52,9 +53,10 @@
         />
         <HourglassChart
           v-if="activeTab === 'hourglass'"
+          :key="'hourglass-' + chartKey"
           :person-id="personId"
           @navigate="navigateTo"
-          @reload="load"
+          @reload="reloadChart"
         />
         <TimelineChart
           v-if="activeTab === 'timeline'"
@@ -78,7 +80,7 @@
           </div>
           <PersonPanel
             :person-id="selectedPersonId ?? personId ?? null"
-            @relative-added="load"
+            @relative-added="reloadChart"
           />
         </div>
       </template>
@@ -115,6 +117,7 @@ const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
 const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
+const chartKey = ref(0);
 
 // Selected node in the chart (may differ from chart focal person)
 const selectedPersonId = ref<string | null>(null);
@@ -162,6 +165,11 @@ function navigateTo(id: string) {
 function showInTree(id: string) {
   // Explicitly change the chart focal person (re-centers the chart)
   router.push('/visualisering/' + id);
+}
+
+async function reloadChart() {
+  chartKey.value++;
+  await load();
 }
 
 async function load() {

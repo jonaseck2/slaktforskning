@@ -69,14 +69,15 @@
             @click.stop="openAddPopover(box)"
           >
             <circle
-              :cx="box.x + box.w / 2" :cy="box.y + box.h"
+              :cx="box.x + box.w - 9" :cy="box.y + box.h - 9"
               r="8"
               fill="white"
               stroke="#2c3e50"
               stroke-width="1.5"
+              stroke-dasharray="3 2.5"
             />
             <text
-              :x="box.x + box.w / 2" :y="box.y + box.h"
+              :x="box.x + box.w - 9" :y="box.y + box.h - 9"
               font-size="13"
               text-anchor="middle"
               dominant-baseline="central"
@@ -121,6 +122,7 @@
       class="add-popover"
       :style="{ left: addPopover.x + 'px', top: addPopover.y + 'px' }"
       @click.stop
+      @mousedown.stop
     >
       <button @click="startAddRelative('parent')">+ Förälder</button>
       <button @click="startAddRelative('spouse')">+ Partner</button>
@@ -229,8 +231,8 @@ function getPopoverPosition(box: BoxLayout): { x: number; y: number } {
   const svgEl = scrollRef.value?.querySelector('svg');
   if (!svgEl) return { x: 0, y: 0 };
   const rect = svgEl.getBoundingClientRect();
-  const x = rect.left + (box.x + box.w / 2) * zoom.value;
-  const y = rect.top + (box.y + box.h) * zoom.value;
+  const x = rect.left + (box.x + box.w - 9) * zoom.value;
+  const y = rect.top + (box.y + box.h - 9) * zoom.value;
   return { x, y };
 }
 
