@@ -106,7 +106,9 @@
       "Bash(mkdir -p /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive)",
       "Bash(mv /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-07-import-export-data-integrity.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-07-import-export-data-integrity.md)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.worktrees/circle-chart-svg/.claude/plans/2026-04-05-circle-chart-svg-shared.md /Users/jonasahnstedt/git/slaktforskning/.worktrees/circle-chart-svg/.claude/plans/archive/2026-04-05-circle-chart-svg-shared.md)",
-      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.worktrees/circle-chart-svg/.claude/plans/2026-04-05-circle-chart-svg-shared.md)"
+      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.worktrees/circle-chart-svg/.claude/plans/2026-04-05-circle-chart-svg-shared.md)",
+      "Bash(out/make/zip/darwin/arm64/Släktforskning.app/Contents/MacOS/Släktforskning)",
+      "Bash(out/make/zip/darwin/arm64/Släktforskning.app/Contents/MacOS/Släktforskning --enable-logging --log-level=0)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
@@ -116,6 +118,10 @@
       "/Users/jonasahnstedt/git/slaktforskning/.claude"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "slaktforskning"
+  ],
   "hooks": {
     "PreToolUse": [
       {
@@ -128,9 +134,5 @@
         ]
       }
     ]
-  },
-  "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "slaktforskning"
-  ]
+  }
 }
