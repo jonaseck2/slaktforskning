@@ -100,6 +100,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | refactor | CSS color variables: 18 palette vars in :root, replaced 70+ hardcoded hex values in shared.css and scoped styles | [archive](plans/archive/2026-04-07-css-color-variables.md) |
 | refactor | BaseModal component: slot-based modal shell with Escape + overlay-click handling, migrated all 15 modal components | [archive](plans/archive/2026-04-07-base-modal-refactor.md) |
 | v0.37.6 | Component extraction: PersonNotesSection, AddResearchTaskModal, 4 ImportExportSection components; ImportExportView 605→46 lines | [archive](plans/archive/2026-04-07-component-extraction.md) |
+| Fix | v0.37.7: PersonsView startup CPU saturation — 4 correlated subqueries per person → two-pass query (sort+paginate first, then IN fetch for page only) | [archive](plans/archive/2026-04-07-personsview-startup-cpu.md) |
 
 ---
 
