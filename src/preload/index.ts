@@ -74,6 +74,7 @@ const api = {
     update: mutating((id: string, updates: Record<string, unknown>) => ipcRenderer.invoke('citations:update', id, updates)),
   },
   gedcom: {
+    selectFile: () => ipcRenderer.invoke('gedcom:selectFile'),
     import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
     export: (opts?: { version?: string }) => ipcRenderer.invoke('gedcom:export', opts),
   },

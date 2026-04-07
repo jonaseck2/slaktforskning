@@ -1,25 +1,17 @@
 <template>
-  <div class="section">
-    <h3>{{ $t('importExport.genneyTitle') }}</h3>
+  <div class="io-groups">
 
-    <!-- Box 1: .backup -->
-    <div class="import-box">
-      <h4>{{ $t('importExport.genneyBackupTitle') }}</h4>
-      <p class="box-desc">{{ $t('importExport.genneyBackupDesc') }}</p>
-      <div class="section-buttons">
-        <button @click="pickBackup" :disabled="busy">{{ $t('importExport.genneyBackupPickFile') }}</button>
-        <button @click="importBackup" :disabled="busy || !backupPath">{{ $t('importExport.genneyImport') }}</button>
-      </div>
-      <p v-if="backupPath" class="section-instructions">
-        {{ backupPath }}
-        <span class="media-badge">{{ $t('importExport.genneyBackupMediaAuto') }}</span>
-      </p>
+    <!-- Box 1: .backup — single step, imports immediately after file pick -->
+    <div class="io-group">
+      <h3>{{ $t('importExport.genneyBackupTitle') }}</h3>
+      <p class="section-desc">{{ $t('importExport.genneyBackupDesc') }}</p>
+      <button @click="pickAndImportBackup" :disabled="busy">{{ $t('importExport.genneyBackupPickFile') }}</button>
     </div>
 
-    <!-- Box 2: .gcc -->
-    <div class="import-box">
-      <h4>{{ $t('importExport.genneyGccTitle') }}</h4>
-      <p class="box-desc">{{ $t('importExport.genneyGccDesc') }}</p>
+    <!-- Box 2: .gcc — two steps: pick archive + optional media folder, then import -->
+    <div class="io-group">
+      <h3>{{ $t('importExport.genneyGccTitle') }}</h3>
+      <p class="section-desc">{{ $t('importExport.genneyGccDesc') }}</p>
       <div class="section-buttons">
         <button @click="pickGcc" :disabled="busy">{{ $t('importExport.genneyGccPickFile') }}</button>
         <button @click="pickGccMedia" :disabled="busy">{{ $t('importExport.genneyPickMedia') }}</button>
@@ -30,15 +22,18 @@
       </p>
     </div>
 
-    <!-- Box 3: .ged -->
-    <div class="import-box">
-      <h4>{{ $t('importExport.genneyGedTitle') }}</h4>
-      <p class="box-desc">{{ $t('importExport.genneyGedDesc') }}</p>
+    <!-- Box 3: .ged — three steps: pick file + optional media folder, then import -->
+    <div class="io-group">
+      <h3>{{ $t('importExport.genneyGedTitle') }}</h3>
+      <p class="section-desc">{{ $t('importExport.genneyGedDesc') }}</p>
       <div class="section-buttons">
+        <button @click="pickGedFile" :disabled="busy">{{ $t('importExport.genneyGedPickFile') }}</button>
         <button @click="pickGedMedia" :disabled="busy">{{ $t('importExport.genneyPickMedia') }}</button>
-        <button @click="importGed" :disabled="busy">{{ $t('importExport.genneyImport') }}</button>
+        <button @click="importGed" :disabled="busy || !gedPath">{{ $t('importExport.genneyImport') }}</button>
       </div>
-      <p v-if="gedMediaDir" class="section-instructions">{{ gedMediaDir }}</p>
+      <p v-if="gedPath || gedMediaDir" class="section-instructions">
+        {{ gedPath }}<span v-if="gedMediaDir"> + {{ gedMediaDir }}</span>
+      </p>
     </div>
 
     <!-- Shared progress + status -->
@@ -99,9 +94,9 @@ const showGenneyReport = ref(false);
 const genneyReport = ref<ImportSummary | null>(null);
 
 // Per-box state
-const backupPath = ref('');
 const gccPath = ref('');
 const gccMediaDir = ref('');
+const gedPath = ref('');
 const gedMediaDir = ref('');
 
 // Register progress listener once — shared by all Derby import flows
@@ -122,11 +117,6 @@ async function checkDocker(): Promise<boolean> {
   return true;
 }
 
-async function pickBackup() {
-  const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
-  if (!r.canceled && r.path) backupPath.value = r.path;
-}
-
 async function pickGcc() {
   const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
   if (!r.canceled && r.path) gccPath.value = r.path;
@@ -135,6 +125,11 @@ async function pickGcc() {
 async function pickGccMedia() {
   const r = await window.api.import.genneySelectMedia() as { canceled: boolean; path?: string };
   if (!r.canceled && r.path) gccMediaDir.value = r.path;
+}
+
+async function pickGedFile() {
+  const r = await window.api.gedcom.selectFile() as { canceled: boolean; path?: string };
+  if (!r.canceled && r.path) gedPath.value = r.path;
 }
 
 async function pickGedMedia() {
@@ -169,10 +164,12 @@ async function runDerbyImport(sourcePath: string, mediaDir?: string) {
   }
 }
 
-async function importBackup() {
-  if (!backupPath.value || busy.value) return;
+async function pickAndImportBackup() {
+  if (busy.value) return;
+  const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
+  if (r.canceled || !r.path) return;
   if (!await checkDocker()) return;
-  await runDerbyImport(backupPath.value);
+  await runDerbyImport(r.path);
 }
 
 async function importGcc() {
@@ -182,11 +179,12 @@ async function importGcc() {
 }
 
 async function importGed() {
-  if (busy.value) return;
+  if (!gedPath.value || busy.value) return;
   busy.value = true;
   try {
     const result = await window.api.gedcom.import({
       profile: 'genney',
+      filePath: gedPath.value,
       mediaDir: gedMediaDir.value || undefined,
     }) as { imported?: boolean; canceled?: boolean; filePath?: string };
     if (result.imported) {
@@ -204,61 +202,6 @@ async function importGed() {
 </script>
 
 <style scoped>
-.import-box {
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.import-box h4 {
-  margin: 0;
-  font-size: var(--font-base);
-  font-weight: 600;
-}
-
-.box-desc {
-  margin: 0;
-  font-size: var(--font-sm);
-  color: #555;
-}
-
-.media-badge {
-  margin-left: 8px;
-  font-size: var(--font-xs);
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 4px;
-  padding: 2px 6px;
-}
-
-.section-instructions {
-  font-size: var(--font-sm);
-  color: #444;
-  background: #f8f8f8;
-  border-left: 3px solid var(--color-primary);
-  padding: 8px 12px;
-  border-radius: 0 4px 4px 0;
-  margin: 0;
-}
-
-button {
-  align-self: flex-start;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: inherit;
-}
-
-button:hover:not(:disabled) { opacity: 0.9; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
 :deep(.modal) {
   max-height: 80vh;
   overflow-y: auto;

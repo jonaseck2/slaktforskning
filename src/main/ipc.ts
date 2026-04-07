@@ -165,19 +165,35 @@ export function registerIpcHandlers(): void {
   wrapHandler('places:getPath', (id) => places.getPlacePath(getDatabase(), id as string));
 
   // GEDCOM
-  wrapHandler('gedcom:import', async (opts) => {
-    const options = opts as ImportOptions | undefined;
+  wrapHandler('gedcom:selectFile', async () => {
     const result = await dialog.showOpenDialog({
-      title: 'Import GEDCOM File',
+      title: 'Select GEDCOM File',
       filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
+  wrapHandler('gedcom:import', async (opts) => {
+    const options = opts as (ImportOptions & { filePath?: string }) | undefined;
+    let selectedPath: string;
+    if (options?.filePath) {
+      selectedPath = options.filePath;
+    } else {
+      const result = await dialog.showOpenDialog({
+        title: 'Import GEDCOM File',
+        filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
+        properties: ['openFile'],
+      });
+      if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+      selectedPath = result.filePaths[0];
+    }
     importInProgress = true;
     let tmpDir: string | null = null;
     try {
       return await captureProfile('gedcom-import', () => {
-        let gedPath = result.filePaths[0];
+        let gedPath = selectedPath;
         if (path.extname(gedPath).toLowerCase() === '.zip') {
           tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-import-'));
           const entries = unzipSync(new Uint8Array(fs.readFileSync(gedPath)));

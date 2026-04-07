@@ -253,9 +253,8 @@ Rules:
 
 **Button label conventions:**
 
+- **Never use `…` (ellipsis) on any button label.** This applies everywhere: file pickers, dialogs, menus, import/export — no exceptions.
 - Use `+ Word` format for buttons that create or add something (e.g., `+ Händelse`, `+ Namn`, `+ Partner`). The `+` is the signal — no other marker needed.
-- For file/folder inputs, use `+ Fil` or `+ Mapp` — never `…` or `Browse` to indicate a dialog opens.
-- Do **not** use `…` (ellipsis) after button labels to indicate a dialog will open.
 - Do **not** use different button colors to communicate different purposes. Color encodes only: blue = primary, red = destructive, gray = cancel. Purpose is communicated through label text and `+` prefix alone.
 
 ---
@@ -433,7 +432,7 @@ All classes are defined in `src/renderer/styles/shared.css` — **never redefine
 
 **Descriptions:** Third-person present tense ("Imports…", "Exports…"), one sentence, no file-path arrows (`File → Export → Save`). Keep it plain prose.
 
-**Button labels:** No ellipsis. Use "Import X" or "Export X" — not "Select X file".
+**Button labels:** Never use ellipsis (see Buttons section). Use "Import X" or "Export X" for single-step flows. For multi-step flows where you pick a file first, "Select X file" is acceptable — but still no ellipsis.
 
 ### Scoped styles
 
