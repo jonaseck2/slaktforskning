@@ -489,14 +489,16 @@ export function registerIpcHandlers(): void {
   });
   wrapHandler('checks:forPerson', (personId) => checks.runChecksForPerson(getDatabase(), personId as string));
 
-  wrapHandler('gedcom:export', async () => {
+  wrapHandler('gedcom:export', async (opts?: unknown) => {
+    const version = (opts as { version?: string } | undefined)?.version === '7.0' ? '7.0' : '5.5.1';
+    const defaultPath = version === '7.0' ? 'family-tree-70.ged' : 'family-tree.ged';
     const result = await dialog.showSaveDialog({
       title: 'Export GEDCOM File',
-      defaultPath: 'family-tree.ged',
+      defaultPath,
       filters: [{ name: 'GEDCOM Files', extensions: ['ged'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    const { ged, report } = exportGedcom(getDatabase());
+    const { ged, report } = exportGedcom(getDatabase(), version);
     fs.writeFileSync(result.filePath, ged, 'utf-8');
     return { exported: true, filePath: result.filePath, report };
   });
