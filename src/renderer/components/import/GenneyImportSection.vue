@@ -104,6 +104,9 @@ const gccPath = ref('');
 const gccMediaDir = ref('');
 const gedMediaDir = ref('');
 
+// Register progress listener once — shared by all Derby import flows
+window.api.import.onProgress((msg: string) => { genneyProgress.value = msg; });
+
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   statusMessage.value = msg;
   statusType.value = type;
@@ -142,7 +145,6 @@ async function pickGedMedia() {
 async function runDerbyImport(sourcePath: string, mediaDir?: string) {
   busy.value = true;
   genneyProgress.value = t('importExport.genneyDerbyRunning');
-  window.api.import.onProgress((msg: string) => { genneyProgress.value = msg; });
   try {
     const result = await window.api.import.genneyRun({ sourcePath, mediaDir }) as {
       imported?: boolean;
@@ -156,6 +158,8 @@ async function runDerbyImport(sourcePath: string, mediaDir?: string) {
       genneyReport.value = result.summary;
       showGenneyReport.value = true;
       window.dispatchEvent(new CustomEvent('data-imported'));
+    } else if (result.gedcomFallback) {
+      setStatus(t('importExport.genneyDerbyFallback'), 'error');
     }
   } catch (err) {
     setStatus(t('importExport.genneyDerbyError', { error: err instanceof Error ? err.message : String(err) }), 'error');
