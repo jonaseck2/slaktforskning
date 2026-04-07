@@ -87,7 +87,10 @@
       "Bash(xxd /Users/jonasahnstedt/git/slaktforskning/export-import/wetransfer_testmaterial_2026-04-05_1624/HolgerData/data/ourkind_V8/Vigtab.EDBTbl)",
       "Bash(python3 src/import/holger/EDBExtractor.py *)",
       "Bash(cp /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-06-holger-dbisam-import.md /Users/jonasahnstedt/git/slaktforskning/.claude/plans/archive/2026-04-06-holger-dbisam-import.md)",
-      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-06-holger-dbisam-import.md)"
+      "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-06-holger-dbisam-import.md)",
+      "Bash(find /Users/jonasahnstedt/git/slaktforskning/src/renderer/views -name \"*.vue\" -exec wc -l {} +)",
+      "Bash(find /Users/jonasahnstedt/git/slaktforskning/src/renderer -name \"*.vue\" -exec grep -l \"modal-overlay\" {} \\\\;)",
+      "Bash(find /Users/jonasahnstedt/git/slaktforskning/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.vue\" \\\\\\) -exec wc -l {} +)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
