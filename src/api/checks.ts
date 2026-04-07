@@ -141,20 +141,11 @@ function checkEventAfterDeath(db: Database): CheckResult[] {
                AND e.date_value > d.date_value))
   `);
 
-  const eventTypeLabels: Record<string, string> = {
-    birth: 'Födselhändelse', christening: 'Dop', baptism: 'Dop', confirmation: 'Konfirmation',
-    ordination: 'Ordination', census: 'Folkräkning', immigration: 'Invandring',
-    emigration: 'Utvandring', naturalization: 'Medborgarskap', occupation: 'Yrke',
-    residence: 'Boende', education: 'Utbildning', graduation: 'Examen',
-    military: 'Militärtjänst', retirement: 'Pension', marriage: 'Giftermål',
-    divorce: 'Skilsmässa', mention: 'Omnämning', other: 'Övrigt',
-  };
-
   return rows.map(r => ({
     code: 'EVENT_AFTER_DEATH',
     severity: 'error' as CheckSeverity,
-    message: `${eventTypeLabels[r.event_type] ?? r.event_type} (${r.event_date}) sker efter dödsdatum (${r.death_date})`,
-    messageParams: { eventType: eventTypeLabels[r.event_type] ?? r.event_type, eventDate: r.event_date, deathDate: r.death_date },
+    message: `${r.event_type} (${r.event_date}) occurs after death date (${r.death_date})`,
+    messageParams: { eventType: r.event_type, eventDate: r.event_date, deathDate: r.death_date },
     personIds: [r.person_id],
     eventIds: [r.event_id, r.death_id],
   }));
