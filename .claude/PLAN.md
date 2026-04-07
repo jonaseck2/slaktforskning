@@ -102,6 +102,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.37.6 | Component extraction: PersonNotesSection, AddResearchTaskModal, 4 ImportExportSection components; ImportExportView 605→46 lines | [archive](plans/archive/2026-04-07-component-extraction.md) |
 | Fix | v0.37.7: PersonsView startup CPU saturation — 4 correlated subqueries per person → two-pass query (sort+paginate first, then IN fetch for page only) | [archive](plans/archive/2026-04-07-personsview-startup-cpu.md) |
 | v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [plan](plans/2026-04-06-gedcom-70-export.md) |
+| v0.38.1 | Holger import completion: remove EDB path, REMA/MISC → notes, _HDP/_H8P in unmappedData, defaultPersonId → navigate to tree subject | [archive](plans/archive/2026-04-06-holger-import.md) |
 
 ---
 
@@ -117,12 +118,15 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 
 | v0.37.3 | Import/Export data integrity: GEDCOM surface LDS/TRAN/NO/ASSO, ExportReport with excluded entities, Genney warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
 
-### Holger/OurKind import [feature]
-See `.claude/plans/2026-04-06-holger-import.md` for the full plan.
+### Holger/OurKind import [feature] ✅ v0.38.1
+See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 - [x] Add `'holger'` GEDCOM profile: ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype
 - [x] Media path remapping (Windows → local mediaDir)
 - [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
 - [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
+- [x] Remove DBISAM/EDB import path — GEDCOM export covers all useful data
+- [x] REMA/MISC → person notes; `_HDP`/`_H8P` documented in unmappedData
+- [x] `defaultPersonId` in ImportReport — navigate to tree subject after import
 
 ### GEDCOM 7.0 Export [feature] ✅ v0.38.0
 See `.claude/plans/2026-04-06-gedcom-70-export.md` for the full plan.
