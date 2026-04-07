@@ -52,6 +52,7 @@ import { ref } from 'vue';
 import BaseModal from '../BaseModal.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
+import { useRouter } from 'vue-router';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -59,6 +60,7 @@ declare const window: Window & {
 
 const { t } = useI18n();
 const toast = useToast();
+const router = useRouter();
 const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
@@ -107,6 +109,7 @@ async function handleImportFromHolger() {
         sources: number; places: number; citations: number;
         skipped: { tag: string; count: number }[];
         warnings: string[];
+        defaultPersonId?: string;
       };
       error?: string;
     };
@@ -114,6 +117,9 @@ async function handleImportFromHolger() {
       importReport.value = result.report;
       showImportReport.value = true;
       window.dispatchEvent(new CustomEvent('data-imported'));
+      if (result.report.defaultPersonId) {
+        router.push(`/persons/${result.report.defaultPersonId}`);
+      }
     } else {
       setStatus(t('importExport.holgerError', { error: result.error ?? 'Unknown error' }), 'error');
     }

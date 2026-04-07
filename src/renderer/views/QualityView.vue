@@ -34,8 +34,8 @@
       <table v-else class="data-table quality-table">
         <colgroup>
           <col style="width: 90px">
+          <col style="width: 55%">
           <col>
-          <col style="width: 20%">
           <col style="width: 80px">
         </colgroup>
         <thead>
@@ -232,7 +232,7 @@ onActivated(() => {
 .row-ignored { opacity: 0.5; }
 .row-ignored:hover { opacity: 0.7; }
 .message-cell { font-size: 13px; }
-.persons-cell { font-size: 13px; white-space: nowrap; width: 20%; }
+.persons-cell { font-size: 13px; }
 
 .btn-ignore  { background: #e2e8f0; color: #4a5568; }
 .btn-unignore { background: #c6f6d5; color: #276749; }

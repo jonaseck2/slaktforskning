@@ -157,3 +157,112 @@ describe('holger profile — media path remapping', () => {
     expect(row?.file_ref).toContain('SvenssonKalle');
   });
 });
+
+const HOLGER_REMA_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 REMA Född i Karolinska sjukhuset.
+1 _HDP 6,0,n,n,,PKalleSven1945M,2010-11-03,2026-04-05,0,0,0,P,,1945-03-13,,,
+1 _H8P 0,0,0,0
+0 TRLR
+`.trim();
+
+const HOLGER_REMA_EXISTING_NOTE_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 NOTE Befintlig anteckning.
+2 CONT Fortsättning.
+1 REMA Extra notering.
+0 TRLR
+`.trim();
+
+const HOLGER_MISC_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 MISC Totalt 15 barn, alla med Johan
+0 TRLR
+`.trim();
+
+describe('holger profile — REMA/MISC → notes, _HDP/_H8P suppression', () => {
+  it('imports REMA as person notes', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const row = db.get('SELECT notes FROM persons LIMIT 1') as { notes: string } | undefined;
+    expect(row?.notes).toContain('Född i Karolinska sjukhuset.');
+  });
+
+  it('appends REMA to existing notes with double newline separator', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_REMA_EXISTING_NOTE_GED), { profile: 'holger' });
+    const row = db.get('SELECT notes FROM persons LIMIT 1') as { notes: string } | undefined;
+    expect(row?.notes).toContain('Befintlig anteckning.');
+    expect(row?.notes).toContain('Extra notering.');
+    expect(row?.notes).toMatch(/\n\n/);
+  });
+
+  it('imports MISC as person notes', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_MISC_GED), { profile: 'holger' });
+    const row = db.get('SELECT notes FROM persons LIMIT 1') as { notes: string } | undefined;
+    expect(row?.notes).toContain('Totalt 15 barn');
+  });
+
+  it('lists _HDP and _H8P in skipped tags (not silently ignored)', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const tags = report.skipped.map(s => s.tag);
+    expect(tags).toContain('_HDP');
+    expect(tags).toContain('_H8P');
+  });
+
+  it('adds unmappedData entry for _HDP/_H8P with descriptive category', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const entry = report.unmappedData?.find(u => u.category.includes('_HDP'));
+    expect(entry).toBeTruthy();
+    expect(entry?.category).toMatch(/internal metadata/i);
+  });
+
+  it('adds a warnings entry summarising REMA/MISC as imported notes', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    expect(report.warnings.some(w => w.includes('REMA') && w.includes('note'))).toBe(true);
+  });
+});
+
+const HOLGER_SUBM_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @S1@ SUBM
+1 NAME Bengt Sareld
+0 @I1@ INDI
+1 NAME Bengt Gunnar/Sareld/
+1 SEX M
+0 @I2@ INDI
+1 NAME Anna /Sareld/
+1 SEX F
+0 TRLR
+`.trim();
+
+describe('holger profile — defaultPersonId from first INDI', () => {
+  it('sets defaultPersonId to the DB id of the first INDI', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_SUBM_GED), { profile: 'holger' });
+    expect(report.defaultPersonId).toBeTruthy();
+    const row = db.get('SELECT id FROM persons WHERE id=?', [report.defaultPersonId]) as { id: string } | undefined;
+    expect(row?.id).toBe(report.defaultPersonId);
+  });
+});
