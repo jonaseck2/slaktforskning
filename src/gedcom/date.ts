@@ -66,3 +66,8 @@ export function formatGedcomDate(date_type: string, date_value: string | null, d
   }
   return date_value;
 }
+
+export function isStandardGedcomDate(s: string): boolean {
+  if (!s || !s.trim()) return false;
+  return parseGedcomDate(s).date_type !== 'unknown';
+}
