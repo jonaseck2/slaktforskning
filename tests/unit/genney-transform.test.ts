@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
-import { transformGenney, type GenneyTables } from '../../src/import/genney/transform';
+import { transformGenney, remapGenneyMediaPath, type GenneyTables } from '../../src/import/genney/transform';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });
@@ -83,5 +83,56 @@ describe('transformGenney — person citations', () => {
     expect(citations[0].event_id).toBeTruthy();
 
     void summary;
+  });
+});
+
+describe('remapGenneyMediaPath', () => {
+  it('remaps Windows path after media\\ segment', () => {
+    expect(remapGenneyMediaPath(
+      'C:\\Users\\linda\\Documents\\Genney\\media\\JA Nord.jpg',
+      '/tmp/extracted/media'
+    )).toBe('/tmp/extracted/media/JA Nord.jpg');
+  });
+
+  it('remaps Windows path with subdirectory', () => {
+    expect(remapGenneyMediaPath(
+      'C:\\Users\\linda\\Genney\\media\\Christina\\photo.jpg',
+      '/tmp/extracted/media'
+    )).toBe('/tmp/extracted/media/Christina/photo.jpg');
+  });
+
+  it('passes through http URLs unchanged', () => {
+    expect(remapGenneyMediaPath(
+      'http://www.example.com/photo.jpg',
+      '/tmp/media'
+    )).toBe('http://www.example.com/photo.jpg');
+  });
+
+  it('passes through https URLs unchanged', () => {
+    expect(remapGenneyMediaPath(
+      'https://example.com/page',
+      '/tmp/media'
+    )).toBe('https://example.com/page');
+  });
+
+  it('returns ref unchanged when no media segment found', () => {
+    expect(remapGenneyMediaPath(
+      'C:\\Users\\linda\\Documents\\photo.jpg',
+      '/tmp/media'
+    )).toBe('C:\\Users\\linda\\Documents\\photo.jpg');
+  });
+
+  it('handles capital Media', () => {
+    expect(remapGenneyMediaPath(
+      'C:\\OurKind\\Media\\photo.jpg',
+      '/tmp/media'
+    )).toBe('/tmp/media/photo.jpg');
+  });
+
+  it('strips trailing slash from mediaDir', () => {
+    expect(remapGenneyMediaPath(
+      'C:\\Genney\\media\\photo.jpg',
+      '/tmp/media/'
+    )).toBe('/tmp/media/photo.jpg');
   });
 });
