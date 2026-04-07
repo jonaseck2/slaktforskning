@@ -7,7 +7,7 @@
       "expected_output": "A Vue component or inline addition that uses <BaseModal> (not raw div.modal-overlay), uses useToast for the catch block, uses $t() for all button labels and placeholder text, uses var(--color-*) CSS variables for any scoped styles, and does NOT have a local 'declare const window' block.",
       "files": [],
       "assertions": [
-        "Uses <BaseModal> component, not a raw div with class modal-overlay",
+        "The save handler has a try/catch block where the catch logs to console.error AND calls toast.error() to notify the user",
         "Imports and calls useToast for error handling in the save catch block",
         "Has NO local 'declare const window' type declaration",
         "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
@@ -20,7 +20,7 @@
       "expected_output": "A self-loading Vue component using watch(() => props.personId, load, { immediate: true }) instead of onMounted, with useToast for error handling, no local declare const window, $t() for all visible strings, and CSS variables for any scoped styles.",
       "files": [],
       "assertions": [
-        "Uses watch(() => props.personId, load, { immediate: true }) to load data, NOT onMounted",
+        "All async API calls are wrapped in try/catch blocks where the catch logs to console.error AND calls toast.error() to notify the user",
         "Has NO local 'declare const window' type declaration",
         "Imports and calls useToast; catch block calls toast.error(t('errors.loadFailed')) or equivalent",
         "All user-visible strings use $t() not hardcoded Swedish or English text",

@@ -15,6 +15,18 @@ import { getRepositoriesForSource } from '../api/repositories';
 import type { Place, Citation, Repository } from '../api/types';
 import { formatGedcomDate } from './date';
 
+export interface ExportReport {
+  persons: number;
+  families: number;
+  events: number;
+  sources: number;
+  excluded: {
+    category: string;
+    count: number;
+    reason: string;
+  }[];
+}
+
 const EVENT_TYPE_TO_TAG: Record<string, string> = {
   birth: 'BIRT', death: 'DEAT', christening: 'CHR', burial: 'BURI',
   baptism: 'BAPM', confirmation: 'CONF', occupation: 'OCCU',
@@ -74,7 +86,7 @@ function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | '
   }
 }
 
-export function exportGedcom(db: Database): string {
+export function exportGedcom(db: Database): { ged: string; report: ExportReport } {
   const lines: string[] = [];
 
   lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
@@ -380,5 +392,47 @@ export function exportGedcom(db: Database): string {
   }
 
   lines.push('0 TRLR');
-  return lines.join('\n') + '\n';
+
+  // ── Build ExportReport ─────────────────────────────────────────────────────
+  const researchTaskCount = ((db.get('SELECT COUNT(*) as n FROM research_tasks') as { n: number } | undefined)?.n ?? 0);
+  const groupCount = ((db.get('SELECT COUNT(*) as n FROM groups') as { n: number } | undefined)?.n ?? 0);
+  const assertionCount = ((db.get('SELECT COUNT(*) as n FROM assertions') as { n: number } | undefined)?.n ?? 0);
+  const placeAddressCount = ((db.get(
+    "SELECT COUNT(*) as n FROM events WHERE place_address IS NOT NULL AND place_address != ''"
+  ) as { n: number } | undefined)?.n ?? 0);
+
+  const excluded: ExportReport['excluded'] = [];
+  if (researchTaskCount > 0) excluded.push({
+    category: 'Research Tasks',
+    count: researchTaskCount,
+    reason: 'No equivalent concept in GEDCOM 5.5.1',
+  });
+  if (groupCount > 0) excluded.push({
+    category: 'Groups and group membership',
+    count: groupCount,
+    reason: 'No equivalent concept in GEDCOM 5.5.1',
+  });
+  if (assertionCount > 0) excluded.push({
+    category: 'Assertions',
+    count: assertionCount,
+    reason: 'No equivalent concept in GEDCOM 5.5.1',
+  });
+  if (placeAddressCount > 0) excluded.push({
+    category: 'Event free-text addresses (place_address field)',
+    count: placeAddressCount,
+    reason: 'GEDCOM ADDR is on event records; no mapping implemented yet',
+  });
+
+  // Count total events exported (across all persons and couples)
+  const totalEventCount = ((db.get('SELECT COUNT(*) as n FROM events') as { n: number } | undefined)?.n ?? 0);
+
+  const report: ExportReport = {
+    persons: persons.length,
+    families: couples.length,
+    events: totalEventCount,
+    sources: sources.length,
+    excluded,
+  };
+
+  return { ged: lines.join('\n') + '\n', report };
 }

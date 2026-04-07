@@ -94,6 +94,11 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.26.4–v0.30.1 | Tree-first editing: PersonPanel full redesign (header, Person/Namn/Händelser/Relationer/Källor/Grupper sections) + ⊕ hover buttons on PedigreeChart + HourglassChart | [plan](plans/archive/2026-04-06-tree-first-editing.md) |
 | v0.32.0–v0.35.2 | GEDCOM full standard support: refactor to src/import/gedcom/, 7.0 normalization (SNOTE/EXID/TRAN/PHRASE), ValidationReport with data-loss detail, round-trip export (identifiers, coords, repos, transcription), ADDR/MAP in standard core | [archive](plans/archive/2026-04-06-gedcom-full-support.md) |
 | v0.35.0 | Holger ElevateDB direct import: pure Python binary reader (EDBExtractor.py), TypeScript transform, Docker NDJSON pipeline, IPC/MCP/UI | [archive](plans/archive/2026-04-06-holger-dbisam-import.md) |
+| refactor | TypeScript window.api typing: api.d.ts ambient declaration, removed unsafe Record<> from 37 components | [archive](plans/archive/2026-04-07-typescript-api-types.md) |
+| refactor | User-facing error toasts: useToast composable + ToastNotification, wired to all form components | [archive](plans/archive/2026-04-07-error-notifications.md) |
+| refactor | i18n coverage: personPanel.* keys, nav.navigate, replaced all hardcoded Swedish strings in PersonPanel, charts, reports, App | [archive](plans/archive/2026-04-07-i18n-coverage.md) |
+| refactor | CSS color variables: 18 palette vars in :root, replaced 70+ hardcoded hex values in shared.css and scoped styles | [archive](plans/archive/2026-04-07-css-color-variables.md) |
+| refactor | BaseModal component: slot-based modal shell with Escape + overlay-click handling, migrated all 15 modal components | [archive](plans/archive/2026-04-07-base-modal-refactor.md) |
 
 ---
 
@@ -103,16 +108,9 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 
 ### Code Quality Improvements [refactor]
 
-Six independent plans — each can be executed separately in any order.
-
 | Plan | File | Impact |
 |------|------|--------|
-| TypeScript window.api typing | [plan](plans/2026-04-07-typescript-api-types.md) | Remove unsafe Record<> casts from 37 components |
-| User-facing error notifications | [plan](plans/2026-04-07-error-notifications.md) | Toast system; no more silent failures |
-| i18n coverage | [plan](plans/2026-04-07-i18n-coverage.md) | Fix 23 hardcoded strings; English mode works everywhere |
-| CSS color variables | [plan](plans/2026-04-07-css-color-variables.md) | 18 palette variables; replace 70+ hardcoded hex values |
-| BaseModal component | [plan](plans/2026-04-07-base-modal-refactor.md) | Extract modal shell from 15 components |
-| Component extraction | [plan](plans/2026-04-07-component-extraction.md) | Break PersonPanel (675 lines) + ImportExportView (538 lines) into sub-components |
+| Component extraction | [plan](plans/2026-04-07-component-extraction.md) | Break PersonPanel (669 lines) + ImportExportView (518 lines) into sub-components |
 
 ### Import/Export Data Integrity [fix]
 See `.claude/plans/2026-04-07-import-export-data-integrity.md` for the full plan.

@@ -40,6 +40,10 @@
   --color-danger-hover:   #fecaca;
   --color-link:           #2563eb;
 
+  /* Success / status */
+  --color-success-bg:     #dcfce7;
+  --color-success-text:   #15803d;
+
   /* Row hover */
   --color-row-hover:      #f0f4ff;
 }
@@ -305,6 +309,8 @@
     --color-danger-text:    #fca5a5;
     --color-danger-hover:   #7f1d1d;
     --color-link:           #60a5fa;
+    --color-success-bg:     #14532d;
+    --color-success-text:   #86efac;
     --color-row-hover:      #1e293b;
   }
 

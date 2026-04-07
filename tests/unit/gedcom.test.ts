@@ -401,7 +401,7 @@ describe('importGedcom (Genney profile)', () => {
 // ──────────────────────────────────────────────
 describe('exportGedcom', () => {
   it('produces valid GEDCOM with HEAD and TRLR', () => {
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged.startsWith('0 HEAD')).toBe(true);
     expect(ged.trimEnd().endsWith('0 TRLR')).toBe(true);
   });
@@ -409,7 +409,7 @@ describe('exportGedcom', () => {
   it('exports a person as INDI record', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars', surname: 'Eriksson' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('INDI');
     expect(ged).toContain('Lars /Eriksson/');
     expect(ged).toContain('SEX M');
@@ -419,7 +419,7 @@ describe('exportGedcom', () => {
     const p1 = createPerson(db, { sex: 'M' });
     const p2 = createPerson(db, { sex: 'F' });
     createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id, subtype: 'marriage' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('FAM');
     expect(ged).toContain('HUSB');
     expect(ged).toContain('WIFE');
@@ -435,7 +435,7 @@ describe('exportGedcom', () => {
     ].join('\n');
 
     importGedcom(db, parseGedcom(original));
-    const exported = exportGedcom(db);
+    const { ged: exported } = exportGedcom(db);
 
     // Re-import into a second DB
     const db2 = createTestDb();
@@ -454,7 +454,7 @@ describe('exportGedcom', () => {
 /** Export db → parse → import into a fresh db2. Returns db2. */
 function roundtrip(sourceDb: ReturnType<typeof createTestDb>): ReturnType<typeof createTestDb> {
   const db2 = createTestDb();
-  importGedcom(db2, parseGedcom(exportGedcom(sourceDb)));
+  importGedcom(db2, parseGedcom(exportGedcom(sourceDb).ged));
   return db2;
 }
 
@@ -462,7 +462,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   it('_LIVING Y is emitted only for living persons', () => {
     const p = createPerson(db, { sex: 'M', living: false });
     addPersonName(db, p.id, { given_name: 'Lars' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).not.toContain('_LIVING');
   });
 
@@ -472,7 +472,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
     const p = createPerson(db, { sex: 'F' });
     addPersonName(db, p.id, { given_name: 'Anna' });
     // Verify _LIVING Y appears for the default-living person
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('_LIVING Y');
     // Re-import: person should still be living
     const db2 = roundtrip(db);
@@ -538,7 +538,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   it('name_qualifier survives roundtrip via _NQUAL', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars', name_qualifier: 'patronymic' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('_NQUAL patronymic');
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
@@ -718,7 +718,7 @@ describe('Extended GEDCOM roundtrip — places', () => {
     addPersonName(db, p.id, { given_name: 'Erik' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_original: '1850' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     // Reimport into a fresh DB twice: _PLAC_ID should prevent duplicate places
     const db2 = createTestDb();
     importGedcom(db2, parseGedcom(ged));
@@ -832,7 +832,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
     createCitation(db, { source_id: src.id, place_id: place.id, page: 'p. 7' });
 
     const db2 = createTestDb();
-    importGedcom(db2, parseGedcom(exportGedcom(db)));
+    importGedcom(db2, parseGedcom(exportGedcom(db).ged));
 
     const got2 = listPlaces(db2).find(pl => pl.name === 'Göteborg');
     expect(got2).toBeTruthy();
@@ -933,7 +933,7 @@ describe('GEDCOM import completeness', () => {
     addPersonName(db, p.id, { given_name: 'Maria', surname: 'Nilsson' });
     const ev = createEvent(db, { event_type: 'engagement', date_original: 'ABT 2020' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('1 ENGA');
   });
 
@@ -1021,7 +1021,7 @@ describe('GEDCOM media import', () => {
     const media = createMedia(db, { title: 'Photo', file_ref: '/test.jpg', format: 'JPG', is_missing: false });
     addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
 
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('1 OBJE');
     expect(ged).toContain('2 FILE /test.jpg');
     expect(ged).toContain('2 FORM JPG');
@@ -1045,7 +1045,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Erik' });
     addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'L-ABC-123' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('1 REFN L-ABC-123');
     expect(ged).toContain('2 TYPE FamilySearch');
   });
@@ -1054,7 +1054,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const p = createPerson(db, { sex: 'F' });
     addPersonName(db, p.id, { given_name: 'Maria' });
     addPersonIdentifier(db, p.id, { identifier_type: 'ancestry', identifier_value: 'A123456789' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('1 REFN A123456789');
     expect(ged).toContain('2 TYPE Ancestry');
   });
@@ -1063,7 +1063,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'riksarkivet', identifier_value: 'RA-987' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('1 REFN RA-987');
     expect(ged).toContain('2 TYPE Riksarkivet');
   });
@@ -1072,7 +1072,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'personnummer', identifier_value: '196501011234' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('1 REFN 196501011234');
     expect(ged).toContain('2 TYPE Personnummer');
   });
@@ -1081,7 +1081,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'refn', identifier_value: 'CUSTOM-001' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     // REFN should appear without a TYPE FamilySearch/etc immediately after
     expect(ged).toContain('1 REFN CUSTOM-001');
     expect(ged).not.toContain('2 TYPE FamilySearch');
@@ -1093,7 +1093,7 @@ describe('exportGedcom — round-trip improvements', () => {
     addPersonName(db, p.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('2 PLAC Stockholm');
     expect(ged).toContain('3 MAP');
     expect(ged).toContain('4 LATI N59.33459');
@@ -1106,7 +1106,7 @@ describe('exportGedcom — round-trip improvements', () => {
     addPersonName(db, p.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('4 LATI S33.92490');
     expect(ged).toContain('4 LONG E18.42410');
   });
@@ -1118,7 +1118,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const ev = createEvent(db, { event_type: 'birth' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
     createCitation(db, { source_id: src.id, event_id: ev.id, transcription: 'Born on the farm.' });
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     expect(ged).toContain('3 DATA');
     expect(ged).toContain('4 TEXT Born on the farm.');
   });
@@ -1127,7 +1127,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const repo = createRepository(db, { name: 'National Archives', address: '114 88 Stockholm', city: 'Stockholm', country: 'Sweden' });
     const src = createSource(db, { title: 'Church records' });
     linkSourceRepository(db, src.id, repo.id);
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     // REPO record at level 0
     expect(ged).toMatch(/0 @R\d+@ REPO/);
     expect(ged).toContain('1 NAME National Archives');
@@ -1140,7 +1140,7 @@ describe('exportGedcom — round-trip improvements', () => {
     const repo = createRepository(db, { name: 'City Library' });
     const src = createSource(db, { title: 'Registry book' });
     linkSourceRepository(db, src.id, repo.id);
-    const ged = exportGedcom(db);
+    const { ged } = exportGedcom(db);
     const repoPos = ged.indexOf('REPO');
     const sourPos = ged.indexOf('0 @S');
     expect(repoPos).toBeLessThan(sourPos);

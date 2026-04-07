@@ -57,6 +57,28 @@
 
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
+    <!-- Export report modal -->
+    <BaseModal v-if="showExportReport && exportReport" @close="showExportReport = false">
+      <h3>{{ $t('importExport.exportReportTitle') }}</h3>
+      <ul class="report-counts">
+        <li>{{ $t('importExport.exportReportPersons', { n: exportReport.persons }) }}</li>
+        <li>{{ $t('importExport.exportReportFamilies', { n: exportReport.families }) }}</li>
+        <li>{{ $t('importExport.exportReportEvents', { n: exportReport.events }) }}</li>
+        <li>{{ $t('importExport.exportReportSources', { n: exportReport.sources }) }}</li>
+      </ul>
+      <div v-if="exportReport.excluded.length > 0" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.exportReportExcluded') }}</p>
+        <ul>
+          <li v-for="item in exportReport.excluded" :key="item.category">
+            <strong>{{ item.category }}</strong> ({{ item.count }}): {{ item.reason }}
+          </li>
+        </ul>
+      </div>
+      <div class="modal-actions">
+        <button @click="showExportReport = false">{{ $t('importExport.importReportClose') }}</button>
+      </div>
+    </BaseModal>
+
     <!-- Import report modal -->
     <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false">
         <h3>{{ $t('importExport.importReportTitle') }}</h3>
@@ -133,6 +155,14 @@ const holgerProgress = ref('');
 const holgerEdbPath = ref('');
 const holgerEdbProgress = ref('');
 const showImportReport = ref(false);
+const showExportReport = ref(false);
+const exportReport = ref<{
+  persons: number;
+  families: number;
+  events: number;
+  sources: number;
+  excluded: { category: string; count: number; reason: string }[];
+} | null>(null);
 const importReport = ref<{
   version?: string;
   persons: number; families: number; events: Record<string, number>;
@@ -342,8 +372,26 @@ async function handleExportGedcom() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.export()) as { exported?: boolean; canceled?: boolean; filePath?: string };
-    if (result.exported) setStatus(t('importExport.exportSuccess', { file: result.filePath ?? '' }));
+    const result = (await window.api.gedcom.export()) as {
+      exported?: boolean;
+      canceled?: boolean;
+      filePath?: string;
+      report?: {
+        persons: number;
+        families: number;
+        events: number;
+        sources: number;
+        excluded: { category: string; count: number; reason: string }[];
+      };
+    };
+    if (result.exported) {
+      if (result.report && result.report.excluded.length > 0) {
+        exportReport.value = result.report;
+        showExportReport.value = true;
+      } else {
+        setStatus(t('importExport.exportSuccess', { file: result.filePath ?? '' }));
+      }
+    }
   } catch (err) {
     setStatus(t('importExport.exportError'), 'error');
     console.error('[ImportExport] GEDCOM export failed:', err);

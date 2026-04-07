@@ -496,9 +496,9 @@ export function registerIpcHandlers(): void {
       filters: [{ name: 'GEDCOM Files', extensions: ['ged'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    const gedText = exportGedcom(getDatabase());
-    fs.writeFileSync(result.filePath, gedText, 'utf-8');
-    return { exported: true, filePath: result.filePath };
+    const { ged, report } = exportGedcom(getDatabase());
+    fs.writeFileSync(result.filePath, ged, 'utf-8');
+    return { exported: true, filePath: result.filePath, report };
   });
 
   // Backup / Restore

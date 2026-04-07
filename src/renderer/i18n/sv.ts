@@ -597,6 +597,12 @@ export default {
     importReportRawNotes: 'Anteckningar: {n} (upplösta inline)',
     importReportNotImported: 'Ej importerat:',
     importReportModelLimitations: 'Modellbegränsningar:',
+    exportReportTitle: 'Export klar',
+    exportReportPersons: '{n} personer',
+    exportReportFamilies: '{n} familjer',
+    exportReportEvents: '{n} händelser',
+    exportReportSources: '{n} källor',
+    exportReportExcluded: 'Ej inkluderat i GEDCOM (inget motsvarande begrepp):',
   },
   media: {
     title: 'Media',

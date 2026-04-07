@@ -640,13 +640,13 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
       file_path: z.string().optional().describe('Absolute path to write the .ged file. If omitted, returns GEDCOM content as text.'),
     },
   }, async (args) => {
-    const gedText = exportGedcom(db);
+    const { ged, report } = exportGedcom(db);
     if (args.file_path) {
       const fs = await import('fs');
-      fs.writeFileSync(args.file_path, gedText, 'utf-8');
-      return { content: [{ type: 'text', text: JSON.stringify({ exported: true, file_path: args.file_path }) }] };
+      fs.writeFileSync(args.file_path, ged, 'utf-8');
+      return { content: [{ type: 'text', text: JSON.stringify({ exported: true, file_path: args.file_path, report }) }] };
     }
-    return { content: [{ type: 'text', text: gedText }] };
+    return { content: [{ type: 'text', text: ged }] };
   });
 
   // Group tools

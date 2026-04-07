@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "Badge background and text colors use var(--color-*) CSS variables, not hardcoded hex values",
+      "passed": false,
+      "evidence": "Lines 282-285: .status-living uses var(--color-success-bg)/var(--color-success-text) ✓ but .status-deceased uses #e5e7eb/#6b7280 hardcoded hex. Agent found the new success variables in shared.css but missed that --color-bg-muted/--color-text-subtle cover gray."
+    },
+    {
+      "text": "Badge label strings ('Living', 'Deceased' or Swedish equivalents) use $t() not hardcoded text",
+      "passed": true,
+      "evidence": "Line 47: $t('personDetail.statusLiving') and $t('personDetail.statusDeceased')"
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": true,
+      "evidence": "Not present"
+    },
+    {
+      "text": "Does NOT redefine shared classes like .btn-add, .data-table, or .clickable-row in scoped styles",
+      "passed": true,
+      "evidence": "Scoped styles define only view-specific classes: .header-actions, .sex-badge, .sex-M/F/U, .radio-group, .radio-label, .actions-cell, .date-cell, .status-badge, .status-living, .status-deceased"
+    }
+  ],
+  "summary": { "passed": 3, "failed": 1, "total": 4, "pass_rate": 0.75 }
+}

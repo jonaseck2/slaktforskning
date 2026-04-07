@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "add-note-modal",
+  "prompt": "Add an 'Add Note' button to PersonDetailView. Clicking it opens a small modal form with a single textarea where the user can type a note. On submit it calls window.api.persons.update(id, { notes }) and closes the modal. The button should be in the existing notes section of PersonDetailView.",
+  "assertions": [
+    "The save handler has a try/catch block where the catch logs to console.error AND calls toast.error() to notify the user",
+    "Imports and calls useToast for error handling in the save catch block",
+    "Has NO local 'declare const window' type declaration",
+    "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
+    "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values"
+  ]
+}
