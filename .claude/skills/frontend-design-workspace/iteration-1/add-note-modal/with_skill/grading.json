@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Uses <BaseModal> component, not a raw div with class modal-overlay",
+      "passed": true,
+      "evidence": "Line 3: <BaseModal @close=\"$emit('close')\"> — no div.modal-overlay anywhere in file"
+    },
+    {
+      "text": "Imports and calls useToast for error handling in the save catch block",
+      "passed": true,
+      "evidence": "Line 28: import { useToast }; line 42: const toast = useToast(); line 53: toast.error(t('errors.saveFailed'))"
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": true,
+      "evidence": "No 'declare const window' anywhere in the file"
+    },
+    {
+      "text": "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
+      "passed": true,
+      "evidence": "Line 4: $t('personDetail.addNote'); line 7: $t('common.notes'); line 11: $t('personDetail.notesPlaceholder'); line 16: $t('common.cancel'); line 19: $t('common.save')"
+    },
+    {
+      "text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values",
+      "passed": true,
+      "evidence": "No <style scoped> block — no scoped styles needed, component relies entirely on shared.css classes"
+    }
+  ],
+  "summary": { "passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0 }
+}

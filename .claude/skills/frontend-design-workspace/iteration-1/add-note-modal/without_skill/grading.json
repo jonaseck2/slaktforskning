@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Uses <BaseModal> component, not a raw div with class modal-overlay",
+      "passed": false,
+      "evidence": "Line 2-3: <div class=\"modal-overlay\" @click.self=\"$emit('close')\"><div class=\"modal\"> — raw div shell, no BaseModal"
+    },
+    {
+      "text": "Imports and calls useToast for error handling in the save catch block",
+      "passed": false,
+      "evidence": "No useToast import, no try/catch in submit(). Line 44 calls window.api directly with no error handling at all."
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": false,
+      "evidence": "Lines 37-39: declare const window: Window & { api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> }"
+    },
+    {
+      "text": "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
+      "passed": true,
+      "evidence": "Line 4: $t('personDetail.editNotes'); line 7: $t('common.notes'); line 11: $t('personDetail.notesPlaceholder'); line 16: $t('common.cancel'); line 17: $t('common.save')"
+    },
+    {
+      "text": "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values",
+      "passed": true,
+      "evidence": "No <style scoped> block"
+    }
+  ],
+  "summary": { "passed": 2, "failed": 3, "total": 5, "pass_rate": 0.4 }
+}

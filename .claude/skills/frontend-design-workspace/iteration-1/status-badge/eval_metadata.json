@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "eval_name": "status-badge",
+  "prompt": "Add a living/deceased status badge to the person rows in PersonsView. Living persons should show a green 'Living' badge and deceased persons a gray 'Deceased' badge. Style the badges inline in the component's scoped styles.",
+  "assertions": [
+    "Badge background and text colors use var(--color-*) CSS variables, not hardcoded hex values",
+    "Badge label strings ('Living', 'Deceased' or Swedish equivalents) use $t() not hardcoded text",
+    "Has NO local 'declare const window' type declaration",
+    "Does NOT redefine shared classes like .btn-add, .data-table, or .clickable-row in scoped styles"
+  ]
+}

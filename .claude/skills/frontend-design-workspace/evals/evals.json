@@ -1,0 +1,43 @@
+{
+  "skill_name": "frontend-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add an 'Add Note' button to PersonDetailView. Clicking it opens a small modal form with a single textarea where the user can type a note. On submit it calls window.api.persons.update(id, { notes }) and closes the modal. The button should be in the existing notes section of PersonDetailView.",
+      "expected_output": "A Vue component or inline addition that uses <BaseModal> (not raw div.modal-overlay), uses useToast for the catch block, uses $t() for all button labels and placeholder text, uses var(--color-*) CSS variables for any scoped styles, and does NOT have a local 'declare const window' block.",
+      "files": [],
+      "assertions": [
+        "Uses <BaseModal> component, not a raw div with class modal-overlay",
+        "Imports and calls useToast for error handling in the save catch block",
+        "Has NO local 'declare const window' type declaration",
+        "All user-visible strings (button labels, placeholder, heading) use $t() not hardcoded text",
+        "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a new PersonCitationsSection.vue component. It should self-load all citations for a person (using window.api.citations.forPerson), display them in a table with source title and page columns, and be reusable in both PersonDetailView and PersonPanel. Follow the established Person Section Component pattern.",
+      "expected_output": "A self-loading Vue component using watch(() => props.personId, load, { immediate: true }) instead of onMounted, with useToast for error handling, no local declare const window, $t() for all visible strings, and CSS variables for any scoped styles.",
+      "files": [],
+      "assertions": [
+        "Uses watch(() => props.personId, load, { immediate: true }) to load data, NOT onMounted",
+        "Has NO local 'declare const window' type declaration",
+        "Imports and calls useToast; catch block calls toast.error(t('errors.loadFailed')) or equivalent",
+        "All user-visible strings use $t() not hardcoded Swedish or English text",
+        "Any scoped CSS uses var(--color-*) or var(--font-*) variables, not hardcoded hex values like #2c3e50 or #333"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Add a living/deceased status badge to the person rows in PersonsView. Living persons should show a green 'Living' badge and deceased persons a gray 'Deceased' badge. Style the badges inline in the component's scoped styles.",
+      "expected_output": "Badge styling that uses CSS variables (var(--color-*)) instead of hardcoded hex colors, and badge label text that uses $t() not hardcoded strings.",
+      "files": [],
+      "assertions": [
+        "Badge background and text colors use var(--color-*) CSS variables, not hardcoded hex values",
+        "Badge label strings ('Living', 'Deceased' or Swedish equivalents) use $t() not hardcoded text",
+        "Has NO local 'declare const window' type declaration",
+        "Does NOT redefine shared classes like .btn-add, .data-table, or .clickable-row in scoped styles"
+      ]
+    }
+  ]
+}

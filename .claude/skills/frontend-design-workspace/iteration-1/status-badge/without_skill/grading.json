@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "Badge background and text colors use var(--color-*) CSS variables, not hardcoded hex values",
+      "passed": false,
+      "evidence": "Lines 91-97: .status-living { background: #dcfce7; color: #166534 }, .status-deceased { background: #f3f4f6; color: #6b7280 } — all four color values hardcoded hex, including the gray that DOES have a matching variable."
+    },
+    {
+      "text": "Badge label strings ('Living', 'Deceased' or Swedish equivalents) use $t() not hardcoded text",
+      "passed": true,
+      "evidence": "Lines 51-52: $t('personDetail.statusLiving') and $t('personDetail.statusDeceased')"
+    },
+    {
+      "text": "Has NO local 'declare const window' type declaration",
+      "passed": true,
+      "evidence": "No 'declare const window' in the file"
+    },
+    {
+      "text": "Does NOT redefine shared classes like .btn-add, .data-table, or .clickable-row in scoped styles",
+      "passed": true,
+      "evidence": "Scoped styles only define .status-badge, .status-living, .status-deceased"
+    }
+  ],
+  "summary": { "passed": 3, "failed": 1, "total": 4, "pass_rate": 0.75 }
+}
