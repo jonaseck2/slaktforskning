@@ -1,22 +1,23 @@
 # Holger/OurKind Import Implementation Plan
 
-> **Status: COMPLETE** (2026-04-06) — All 8 tasks implemented and reviewed. Documentation updated, version bumped to 0.31.0.
-
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add an `import_holger` path that accepts a Holger/OurKind GEDCOM export (`.ged` or `.zip`) and maps its non-standard ENGA/ADOP semantics cleanly onto our data model.
+**Goal:** Add an `import_holger` path that accepts a Holger/OurKind GEDCOM export (`.ged` or `.zip`) and maps its non-standard ENGA/ADOP semantics cleanly onto our data model. Remove the DBISAM/EDB import path entirely (it was never released; the GEDCOM export contains all useful data). Also handle the four Holger custom GEDCOM tags that currently produce "Unrecognised" warnings.
 
 **Architecture:** New `src/import/holger/index.ts` orchestrator normalises file input (`.ged`, `.zip`, or a HolgerData folder/zip) and calls the existing GEDCOM importer with profile `'holger'`. The profile is wired into `src/gedcom/importer.ts` to handle Holger's couple-type encoding (ENGA TYPE) and parent-child subtype encoding (ADOP TYPE). Media file paths are remapped from Windows-style absolute paths to a user-supplied local directory.
 
 **Tech Stack:** TypeScript, existing `src/gedcom/importer.ts` + `encoding.ts`, fflate (already a dependency), Vitest, Vue 3
 
+**Parallelism:** Can run in parallel with GEDCOM 7.0 Export (`2026-04-06-gedcom-70-export.md`) — no file overlap.
+Must complete before Gap Closure (`2026-04-07-gedcom-import-gap-closure.md`) — both modify `src/import/gedcom/import-core.ts`.
+
 ---
 
 ## Background & Analysis
 
-### Database format (DBISAM 4 — NOT parsed)
+### Database format (DBISAM 4 — REMOVED)
 
-The HolgerData backup contains ElevateSoft DBISAM 4 binary files (`.EDBTbl`, `.EDBIdx`, `.EDBBlb`). There is no Node.js/TypeScript library for this format; PyDBISAM (Python, PyPI) targets the older TurboPower DBISAM `.dat` format and does not read `.EDBTbl` files. **We do not parse the binary tables.** The GEDCOM export contains all genealogically useful data (see below).
+An earlier plan explored an ElevateDB/Docker import path (`transformEdb.ts`, `EDBExtractor.py`) that would parse the binary `.EDBTbl` tables via a Python container. **This path is being removed entirely.** The GEDCOM export contains all genealogically useful data (see table below) and the Docker/binary approach adds significant complexity for no extra genealogical value. All code, IPC handlers, MCP tool args, and UI sections referencing EDB/DBISAM are deleted in Task 0.
 
 ### What the GEDCOM export contains vs the backup
 
@@ -88,7 +89,31 @@ Type mapping:
 
 OBJE FILE contains `C:\OurKind\Media\P12\&filename.jpg`. When `mediaDir` option is given, remap to `{mediaDir}/P12/&filename.jpg`.
 
-#### 4. Encoding, dates, same-sex couples
+#### 4. Custom Holger tags (previously generating "Unrecognised" warnings)
+
+Analysed from `OurKind - Komplett - Gedcom i Holgerformat - 20260406.ged` (22 221 INDI, 7 934 FAM):
+
+| Tag | Count | Level | Location | Action |
+|-----|-------|-------|----------|--------|
+| `_HDP` | 22 233 | 1 | INDI | Holger internal metadata (sort key, display IDs, ISO dates, created/updated timestamps). All data is redundant with standard GEDCOM tags. **Discarded — reported transparently**: keep out of `KNOWN_INDI_TAGS` so the tag appears in `skipped`. Also add an `unmappedData` entry for the holger profile with a descriptive category string so the user sees *why* it was dropped, not just a bare tag name. |
+| `_H8P` | 22 233 | 1 | INDI | Holger 8 internal flags (4 comma-separated numbers). No genealogical value. Same reporting approach as `_HDP`. |
+| `REMA` | 6 573 | 1 | INDI | Holger's per-person "remark" field — free-text notes identical in purpose to `NOTE`. **Import as person notes**: append `REMA` value to `persons.notes`, with `\n\n` separator if notes are non-empty. Add to `KNOWN_INDI_TAGS` (data is handled, not skipped). Add a `warnings` entry: `"6573 REMA remarks imported as person notes"` so the user sees the count. |
+| `MISC` | 11 | 1 | INDI | Holger's "miscellaneous" note, same semantics as `REMA`. **Import as person notes**: same append logic. Add to `KNOWN_INDI_TAGS`. Count included in the same `warnings` entry as `REMA`. |
+
+#### 5. SUBM record — tree subject / default focus person
+
+```
+0 @S1@ SUBM
+1 NAME Bengt Sareld
+```
+
+In standard GEDCOM, `SUBM` is the file submitter (creator). In Holger, it is the tree *subject* — the person the tree is about. The first INDI record (`@I1@`) is always the tree subject in Holger exports (Bengt Sareld = `@I1@`).
+
+**Action**: after import completes, look up the `personMap` entry for the first INDI xref encountered. Return that person's DB id as `defaultPersonId?: string` in `ImportReport`. The UI uses this to navigate to that person after import.
+
+No SUBM name-matching is needed — Holger always puts the subject first.
+
+#### 6. Encoding, dates, same-sex couples
 
 - **Encoding**: already handled — `readGedcomFile` in `encoding.ts` reads ANSI as latin1 (correct for Windows-1252 Swedish).
 - **FROM...TO dates**: already handled — `parseGedcomDate` in `date.ts` maps `FROM x TO y` → `between`.
@@ -100,15 +125,78 @@ OBJE FILE contains `C:\OurKind\Media\P12\&filename.jpg`. When `mediaDir` option 
 
 | File | Change |
 |------|--------|
-| `src/import/holger/index.ts` | **Create** — input normaliser: accepts `.ged`, `.zip` (GEDCOM zip), or HolgerData folder/zip |
-| `src/gedcom/importer.ts` | **Modify** — add `'holger'` profile: ENGA TYPE → couple subtype, ADOP TYPE map, media path remapping |
-| `src/mcp/createServer.ts` | **Modify** — register `import_holger` tool |
-| `src/main/ipc.ts` | **Modify** — add `import:holgerSelectFile` and `import:holgerRun` handlers |
-| `src/preload/index.ts` | **Modify** — expose `window.api.import.holgerSelectFile` and `holgerRun` |
-| `src/renderer/views/ImportExportView.vue` | **Modify** — add Holger section alongside Genney |
-| `tests/unit/import-holger.test.ts` | **Create** — unit tests for profile behaviour |
+| `src/import/holger/transformEdb.ts` | **Delete** — EDB transform (DBISAM removal) |
+| `src/import/holger/EDBExtractor.py` | **Delete** — Docker Python extractor (DBISAM removal) |
+| `src/import/holger/index.ts` | **Modify** — strip EDB path; accepts only `.ged` and `.zip`; add `defaultPersonId` to result |
+| `src/import/gedcom/import-core.ts` | **Modify** — add `'holger'` profile: ENGA TYPE → couple subtype, ADOP TYPE map, media path remapping, REMA/MISC → notes, `_HDP`/`_H8P` suppression, `defaultPersonId` in report |
+| `src/import/gedcom/index.ts` | **Modify** — add `defaultPersonId?` to `ImportReport` |
+| `src/mcp/createServer.ts` | **Modify** — register `import_holger` tool (remove EDB tool args) |
+| `src/main/ipc.ts` | **Modify** — keep `import:holgerSelectFile`, `import:holgerRun`; remove `import:holgerSelectEdbDir`, `import:holgerEdbRun` |
+| `src/preload/index.ts` | **Modify** — keep holger GEDCOM handlers; remove EDB handlers |
+| `src/renderer/views/ImportExportView.vue` | **Modify** — keep Holger GEDCOM section; remove EDB subsection; navigate to `defaultPersonId` after import |
+| `tests/unit/import-holger.test.ts` | **Create** — unit tests for profile behaviour (ENGA, ADOP, media, REMA/MISC, defaultPersonId) |
 | `CLAUDE.md` | **Modify** — add `import_holger` to MCP tool list |
 | `README.md` | **Modify** — mention Holger import |
+
+---
+
+## Task 0: Remove DBISAM / EDB import path
+
+**Goal**: Delete the Docker/Python ElevateDB pipeline and all code that depended on it.
+
+**Files to delete:**
+- `src/import/holger/transformEdb.ts`
+- `src/import/holger/EDBExtractor.py`
+
+**Files to modify:**
+- `src/import/holger/index.ts` — remove `HolgerEdbImportOptions`, `HolgerEdbImportResult`, `hasEdbCatalog`, `importHolgerEdb`; remove `Worker`/`spawn` imports; remove folder-scanning branch from `importFromHolger` (keep only `.ged` and `.zip`); update docstring
+- `src/main/ipc.ts` — remove `import:holgerSelectEdbDir` and `import:holgerEdbRun` handlers (around lines 280–305)
+- `src/preload/index.ts` — remove `holgerEdbPickDir`, `holgerEdbRun`, `onHolgerEdbProgress` entries
+- `src/renderer/views/ImportExportView.vue` — remove the EDB subsection (the `<p class="subsection-label">…holgerEdbTitle…</p>` block and associated template/script); remove `holgerEdbPath`, `holgerEdbProgress` refs and `holgerEdbPickDir`, `handleImportFromHolgerEdb` functions
+- Remove any EDB i18n keys from locale files
+
+- [ ] **Step 1: Delete EDB source files**
+
+```bash
+rm /Users/jonasahnstedt/git/slaktforskning/src/import/holger/transformEdb.ts
+rm /Users/jonasahnstedt/git/slaktforskning/src/import/holger/EDBExtractor.py
+```
+
+- [ ] **Step 2: Strip EDB code from `src/import/holger/index.ts`**
+
+Remove all exports and code related to EDB: `HolgerEdbImportOptions`, `HolgerEdbImportResult`, `hasEdbCatalog`, `importHolgerEdb`, and the Worker/spawn imports. Remove the `stat.isDirectory()` branch from `importFromHolger` (Holger GEDCOM import now accepts only `.ged` and `.zip`). Update the file-level docstring.
+
+- [ ] **Step 3: Remove EDB IPC handlers from `src/main/ipc.ts`**
+
+Remove the `import:holgerSelectEdbDir` and `import:holgerEdbRun` handlers.
+
+- [ ] **Step 4: Remove EDB entries from `src/preload/index.ts`**
+
+Remove `holgerEdbPickDir`, `holgerEdbRun`, `onHolgerEdbProgress`.
+
+- [ ] **Step 5: Remove EDB UI from `src/renderer/views/ImportExportView.vue`**
+
+Remove the EDB subsection from the template, the `holgerEdbPath`/`holgerEdbProgress` refs, and the `holgerEdbPickDir`/`handleImportFromHolgerEdb` functions. Remove EDB-related i18n keys from all locale files.
+
+- [ ] **Step 6: Verify TypeScript compilation**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npx tsc --noEmit 2>&1 | head -20
+```
+
+- [ ] **Step 7: Run full unit tests**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npm test 2>&1 | tail -10
+```
+
+Expected: all tests pass.
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && git add -A && git commit -m "refactor(holger): remove DBISAM/EDB import path — GEDCOM export has all useful data"
+```
 
 ---
 
@@ -506,15 +594,288 @@ cd /Users/jonasahnstedt/git/slaktforskning && git add src/gedcom/importer.ts tes
 
 ---
 
+## Task 3.5: Holger custom tags — REMA/MISC → notes, _HDP/_H8P reported with explanation
+
+**Files:**
+- Modify: `src/import/gedcom/import-core.ts`
+- Test: `tests/unit/import-holger.test.ts`
+
+`REMA` (6 573) and `MISC` (11) are Holger's note fields — import as person notes, add to `KNOWN_INDI_TAGS` (handled, not skipped). `_HDP` and `_H8P` are internal Holger metadata with no genealogical value — they must **not** be silently suppressed; they stay out of `KNOWN_INDI_TAGS` so they appear in `skipped`, and the holger profile additionally adds an `unmappedData` entry with a human-readable explanation of what was discarded and why.
+
+- [ ] **Step 1: Write failing tests**
+
+Append to `tests/unit/import-holger.test.ts`:
+
+```typescript
+const HOLGER_REMA_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 REMA Född i Karolinska sjukhuset.
+1 _HDP 6,0,n,n,,PKalleSven1945M,2010-11-03,2026-04-05,0,0,0,P,,1945-03-13,,,
+1 _H8P 0,0,0,0
+0 TRLR
+`.trim();
+
+const HOLGER_REMA_EXISTING_NOTE_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 NOTE Befintlig anteckning.
+2 CONT Fortsättning.
+1 REMA Extra notering.
+0 TRLR
+`.trim();
+
+const HOLGER_MISC_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @I1@ INDI
+1 NAME Kalle /Svensson/
+1 SEX M
+1 MISC Totalt 15 barn, alla med Johan
+0 TRLR
+`.trim();
+
+describe('holger profile — REMA/MISC → notes, _HDP/_H8P suppression', () => {
+  it('imports REMA as person notes', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const row = db.get('SELECT notes FROM persons LIMIT 1') as { notes: string } | undefined;
+    expect(row?.notes).toContain('Född i Karolinska sjukhuset.');
+  });
+
+  it('appends REMA to existing notes with double newline separator', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_REMA_EXISTING_NOTE_GED), { profile: 'holger' });
+    const row = db.get('SELECT notes FROM persons LIMIT 1') as { notes: string } | undefined;
+    expect(row?.notes).toContain('Befintlig anteckning.');
+    expect(row?.notes).toContain('Extra notering.');
+    expect(row?.notes).toMatch(/\n\n/);
+  });
+
+  it('imports MISC as person notes', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(HOLGER_MISC_GED), { profile: 'holger' });
+    const row = db.get('SELECT notes FROM persons LIMIT 1') as { notes: string } | undefined;
+    expect(row?.notes).toContain('Totalt 15 barn');
+  });
+
+  it('lists _HDP and _H8P in skipped tags (not silently ignored)', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const tags = report.skipped.map(s => s.tag);
+    expect(tags).toContain('_HDP');
+    expect(tags).toContain('_H8P');
+  });
+
+  it('adds unmappedData entry for _HDP/_H8P with descriptive category', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    const entry = report.unmappedData?.find(u => u.category.includes('_HDP'));
+    expect(entry).toBeTruthy();
+    expect(entry?.category).toMatch(/internal metadata/i);
+  });
+
+  it('adds a warnings entry summarising REMA/MISC as imported notes', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_REMA_GED), { profile: 'holger' });
+    expect(report.warnings.some(w => w.includes('REMA') && w.includes('note'))).toBe(true);
+  });
+});
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npx vitest run tests/unit/import-holger.test.ts 2>&1 | tail -20
+```
+
+- [ ] **Step 3: Implement in `src/import/gedcom/import-core.ts`**
+
+**`REMA` and `MISC`** — add to `KNOWN_INDI_TAGS` (data is handled, should not appear in `skipped`):
+
+```typescript
+'REMA', 'MISC',
+```
+
+In the INDI processing loop (Phase 2, around the `updatePerson` call), add a holger-specific block that collects `REMA` and `MISC` values and appends them to the person's notes. Locate where the person's notes are set (they come from the `NOTE` tag processing). After all NOTE lines are assembled into `noteText`, add:
+
+```typescript
+// Holger: append REMA and MISC as additional notes
+if (isHolger) {
+  const extras: string[] = [];
+  for (const child of node.children) {
+    if (child.tag === 'REMA' || child.tag === 'MISC') {
+      const val = child.value?.trim();
+      if (val) extras.push(val);
+    }
+  }
+  if (extras.length > 0) {
+    const extra = extras.join('\n');
+    noteText = noteText ? `${noteText}\n\n${extra}` : extra;
+  }
+}
+```
+
+Track the total REMA+MISC count across all INDIs (add a counter `holgerRemarkCount` in `doImportGedcom`). After Phase 2, if `isHolger && holgerRemarkCount > 0`, push to `warnings`:
+
+```typescript
+warnings.push(`${holgerRemarkCount} Holger REMA/MISC remarks imported as person notes`);
+```
+
+**`_HDP` and `_H8P`** — do **not** add to `KNOWN_INDI_TAGS`. They will naturally appear in `skipped`. After Phase 2, if `isHolger`, add an `unmappedData` entry (using the existing mechanism around line 967):
+
+```typescript
+// In the post-processing that builds unmappedData:
+if (isHolger) {
+  const hdpCount = skippedTags.get('_HDP') ?? 0;
+  const h8pCount = skippedTags.get('_H8P') ?? 0;
+  if (hdpCount + h8pCount > 0) {
+    unmappedData.push({
+      category: '_HDP / _H8P — Holger internal metadata (sort keys, display IDs, timestamps). All data is present in standard GEDCOM tags; nothing was lost.',
+      count: hdpCount + h8pCount,
+    });
+  }
+}
+```
+
+This ensures the discarded data is both counted in `skipped` (raw tag list) and explained in `unmappedData` (human-readable description).
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npx vitest run tests/unit/import-holger.test.ts 2>&1 | tail -10
+```
+
+- [ ] **Step 5: Run full unit tests**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npm test 2>&1 | tail -10
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && git add src/import/gedcom/import-core.ts tests/unit/import-holger.test.ts && git commit -m "feat(holger): import REMA/MISC as person notes; suppress _HDP/_H8P from unrecognised tags"
+```
+
+---
+
+## Task 3.6: SUBM → default focus person
+
+**Files:**
+- Modify: `src/import/gedcom/import-core.ts` (return `defaultPersonId` in report)
+- Modify: `src/import/gedcom/index.ts` (add `defaultPersonId?` to `ImportReport`)
+- Modify: `src/renderer/views/ImportExportView.vue` (navigate to person after import)
+- Test: `tests/unit/import-holger.test.ts`
+
+In Holger exports, the first INDI xref is always the tree subject (the person the tree is about). The `SUBM` record's `NAME` confirms this identity. We use the first INDI encountered in the tree as the default focus person — no name-matching needed.
+
+- [ ] **Step 1: Add `defaultPersonId?` to `ImportReport` in `src/import/gedcom/index.ts`**
+
+```typescript
+export interface ImportReport {
+  // … existing fields …
+  /** DB id of the tree subject (first INDI), if detectable. Currently set for profile='holger'. */
+  defaultPersonId?: string;
+}
+```
+
+- [ ] **Step 2: Write failing test**
+
+Append to `tests/unit/import-holger.test.ts`:
+
+```typescript
+const HOLGER_SUBM_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5
+0 @S1@ SUBM
+1 NAME Bengt Sareld
+0 @I1@ INDI
+1 NAME Bengt Gunnar/Sareld/
+1 SEX M
+0 @I2@ INDI
+1 NAME Anna /Sareld/
+1 SEX F
+0 TRLR
+`.trim();
+
+describe('holger profile — defaultPersonId from first INDI', () => {
+  it('sets defaultPersonId to the DB id of the first INDI', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(HOLGER_SUBM_GED), { profile: 'holger' });
+    expect(report.defaultPersonId).toBeTruthy();
+    const row = db.get('SELECT id FROM persons WHERE id=?', [report.defaultPersonId]) as { id: string } | undefined;
+    expect(row?.id).toBe(report.defaultPersonId);
+  });
+});
+```
+
+- [ ] **Step 3: Implement in `src/import/gedcom/import-core.ts`**
+
+At the top of `doImportGedcom`, declare:
+
+```typescript
+let firstPersonId: string | null = null;
+```
+
+In Phase 2 (INDI loop), after `createPerson` returns and is inserted into `personMap`, add:
+
+```typescript
+if (isHolger && firstPersonId === null) firstPersonId = person.id;
+```
+
+At the end of `doImportGedcom`, return `firstPersonId` alongside the existing return values. Thread it through `importGedcom` → `ImportReport.defaultPersonId`.
+
+- [ ] **Step 4: Wire into ImportExportView**
+
+After a successful Holger import, if `result.report.defaultPersonId` is set, navigate to `/persons/${result.report.defaultPersonId}`:
+
+```typescript
+if (result.success && result.report?.defaultPersonId) {
+  router.push(`/persons/${result.report.defaultPersonId}`);
+}
+```
+
+- [ ] **Step 5: Run tests**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npx vitest run tests/unit/import-holger.test.ts 2>&1 | tail -10
+```
+
+- [ ] **Step 6: Run full tests**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && npm test 2>&1 | tail -10
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+cd /Users/jonasahnstedt/git/slaktforskning && git add src/import/gedcom/import-core.ts src/import/gedcom/index.ts src/renderer/views/ImportExportView.vue tests/unit/import-holger.test.ts && git commit -m "feat(holger): set defaultPersonId to first INDI; navigate to tree subject after import"
+```
+
+---
+
 ## Task 4: Holger input orchestrator
 
 **Files:**
-- Create: `src/import/holger/index.ts`
+- Modify: `src/import/holger/index.ts` (EDB code was removed in Task 0; this task ensures the remaining GEDCOM path is correct)
 
-The orchestrator accepts:
+The orchestrator accepts only:
 - A `.ged` file → use directly
 - A `.zip` containing one or more `.ged` files → unzip to temp dir, use the largest `.ged`
-- A HolgerData folder (contains `data/*/EDBDatabase.EDBCat`) → scan for any `.ged` files; if none found, return a descriptive error explaining that the user should export GEDCOM from Holger ("Arkiv → Exportera GEDCOM → Generellt format, ANSI encoding")
+
+The folder-scanning branch was removed in Task 0 along with the EDB path.
 
 - [ ] **Step 1: Create `src/import/holger/index.ts`**
 
@@ -999,16 +1360,18 @@ cd /Users/jonasahnstedt/git/slaktforskning && git add CLAUDE.md README.md packag
 
 | Requirement | Task |
 |-------------|------|
-| Analyse DBISAM format | Background section (not-parsed; explained why) |
+| Remove DBISAM/EDB import path from code + GUI | Task 0 |
+| Analyse DBISAM format (why GEDCOM suffices) | Background section |
 | What data is missing in GEDCOM vs backup | Background table |
-| Does GEDCOM warrant own importer profile? | Yes — Tasks 1–3 implement the profile |
 | ENGA TYPE → couple subtype | Task 1 |
 | ADOP TYPE → parent_child subtype | Task 2 |
 | Media path remapping | Task 3 |
-| Accept .ged or .zip file | Task 4 (`importFromHolger`) |
-| Accept HolgerData folder | Task 4 (`pickGedFromFolder`) |
-| MCP tool | Task 6 |
+| `REMA` / `MISC` → person notes + reported in warnings | Task 3.5 |
+| `_HDP` / `_H8P` → in `skipped` + explained in `unmappedData` (never silently discarded) | Task 3.5 |
+| `SUBM` → `defaultPersonId` / navigate to tree subject | Task 3.6 |
+| Accept `.ged` or `.zip` (only) | Task 4 |
 | IPC + preload | Task 5 |
-| UI section | Task 7 |
-| Tests for profile behaviour | Tasks 1–3 (unit tests) |
+| MCP tool | Task 6 |
+| UI section (GEDCOM only, no EDB) | Task 7 |
+| Tests for profile behaviour | Tasks 1–3, 3.5, 3.6 |
 | Docs updated | Task 8 |

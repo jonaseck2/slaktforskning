@@ -34,16 +34,16 @@
       <table v-else class="data-table quality-table">
         <colgroup>
           <col style="width: 90px">
-          <col style="width: 55%">
+          <col style="width: 28%">
           <col>
           <col style="width: 80px">
         </colgroup>
         <thead>
           <tr>
             <th>{{ $t('quality.colSeverity') }}</th>
-            <th>{{ $t('quality.colIssue') }}</th>
             <th>{{ $t('quality.colPersons') }}</th>
-            <th>{{ $t('common.actions') }}</th>
+            <th>{{ $t('quality.colIssue') }}</th>
+            <th class="actions-th">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +58,6 @@
                 {{ $t('quality.severity.' + r.severity) }}
               </span>
             </td>
-            <td class="message-cell">{{ checkMessage(r) }}</td>
             <td class="persons-cell">
               <template v-for="(name, i) in r.personNames" :key="r.personIds[i]">
                 <a
@@ -67,7 +66,8 @@
                 >{{ name || $t('common.unknown') }}</a><span v-if="i < r.personNames.length - 1"> · </span>
               </template>
             </td>
-            <td>
+            <td class="message-cell">{{ checkMessage(r) }}</td>
+            <td class="actions-td">
               <button
                 :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
                 @click.stop="toggleIgnore(r)"
@@ -233,6 +233,7 @@ onActivated(() => {
 .row-ignored:hover { opacity: 0.7; }
 .message-cell { font-size: 13px; }
 .persons-cell { font-size: 13px; }
+.actions-th, .actions-td { text-align: right; }
 
 .btn-ignore  { background: #e2e8f0; color: #4a5568; }
 .btn-unignore { background: #c6f6d5; color: #276749; }
