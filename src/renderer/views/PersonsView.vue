@@ -42,9 +42,9 @@
             </td>
             <td>{{ person.surname }}</td>
             <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
-            <td>{{ person.birth_date ?? '' }}</td>
+            <td class="date-cell">{{ person.birth_date ?? '' }}</td>
             <td>{{ person.birth_place ?? '' }}</td>
-            <td>{{ person.death_date ?? '' }}</td>
+            <td class="date-cell">{{ person.death_date ?? '' }}</td>
             <td>{{ person.death_place ?? '' }}</td>
             <td class="actions-cell">
               <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">✕</button>
@@ -265,4 +265,5 @@ onActivated(async () => {
 .radio-group { display: flex; gap: 16px; margin-top: 4px; }
 .radio-label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-weight: normal; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.date-cell { white-space: nowrap; }
 </style>
