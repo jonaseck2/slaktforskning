@@ -145,6 +145,7 @@ export async function importFromGenney(
     // Copy extracted media to a permanent location so file_refs survive tempDir cleanup
     if (extractedMediaDir && options.destMediaDir) {
       onProgress('Copying media files…');
+      fs.mkdirSync(options.destMediaDir, { recursive: true });
       fs.cpSync(extractedMediaDir, options.destMediaDir, { recursive: true });
       effectiveMediaDir = options.destMediaDir;
     }
