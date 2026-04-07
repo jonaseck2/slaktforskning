@@ -172,6 +172,7 @@
 import { ref } from 'vue';
 import BaseModal from '../components/BaseModal.vue';
 import { useI18n } from 'vue-i18n';
+import type { ImportSummary } from '../../import/genney/transform';
 import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
@@ -188,13 +189,7 @@ const holgerEdbProgress = ref('');
 const showImportReport = ref(false);
 const showExportReport = ref(false);
 const showGenneyReport = ref(false);
-const genneyReport = ref<{
-  persons: number; coupleRelationships: number; parentChildRelationships: number;
-  events: number; places: number; sources: number; citations: number;
-  groups: number; repositories: number; researchTasks: number; media: number;
-  warnings: string[];
-  skipped: { category: string; count: number; reason: string }[];
-} | null>(null);
+const genneyReport = ref<ImportSummary | null>(null);
 const exportReport = ref<{
   persons: number;
   families: number;
