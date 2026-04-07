@@ -1,18 +1,18 @@
 <template>
-  <div class="export-groups">
-    <div class="export-group">
-      <div class="group-header">
-        <h3>GEDCOM 5.5.1</h3>
-        <span class="card-badge card-badge--stable">{{ $t('gedcom.badgeStable') }}</span>
+  <div class="io-groups">
+    <div class="io-group">
+      <div class="io-group-header">
+        <h3>Export GEDCOM 5.5.1</h3>
+        <span class="io-badge io-badge--stable">{{ $t('gedcom.badgeStable') }}</span>
       </div>
       <p class="section-desc">{{ $t('gedcom.export551Desc') }}</p>
       <button @click="handleExportGedcom('5.5.1')" :disabled="busy">{{ $t('gedcom.export551Button') }}</button>
     </div>
 
-    <div class="export-group">
-      <div class="group-header">
-        <h3>GEDCOM 7.0</h3>
-        <span class="card-badge card-badge--modern">{{ $t('gedcom.badgeModern') }}</span>
+    <div class="io-group">
+      <div class="io-group-header">
+        <h3>Export GEDCOM 7.0</h3>
+        <span class="io-badge io-badge--modern">{{ $t('gedcom.badgeModern') }}</span>
       </div>
       <p class="section-desc">{{ $t('gedcom.export70Desc') }}</p>
       <button @click="handleExportGedcom('7.0')" :disabled="busy">{{ $t('gedcom.export70Button') }}</button>
@@ -108,107 +108,11 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
 </script>
 
 <style scoped>
-.export-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 560px;
-}
-
-.export-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-.group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.group-header h3 {
-  margin: 0;
-}
-
-.card-badge {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.card-badge--stable {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.card-badge--modern {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-
-button {
-  align-self: flex-start;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: inherit;
-}
-
-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 :deep(.modal) {
   max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.report-counts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-base);
-}
-
-.report-section {
-  border-top: 1px solid #eee;
-  padding-top: 8px;
-}
-
-.report-section-label {
-  margin: 0 0 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: #555;
-}
-
-.report-section ul {
-  margin: 0;
-  padding-left: 16px;
-  font-size: var(--font-sm);
-  color: #444;
 }
 </style>
