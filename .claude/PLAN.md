@@ -132,11 +132,11 @@ See `.claude/plans/2026-04-06-gedcom-70-export.md` for the full plan.
 - [ ] IPC + preload accept `{ version? }` option
 - [ ] ImportExportView: format selector (5.5.1 / 7.0)
 
-### Shared CircleChartSvg component [refactor]
-See `.claude/plans/2026-04-05-circle-chart-svg-shared.md` for the full plan.
-- [ ] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
-- [ ] Use in `CircleChart.vue` (interactive)
-- [ ] Use in `AncestorBookReport.vue` (print/export)
+### Shared CircleChartSvg component [refactor] ✅ v0.37.8
+See `.claude/plans/archive/2026-04-05-circle-chart-svg-shared.md` for the full plan.
+- [x] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
+- [x] Use in `CircleChart.vue` (interactive)
+- [x] Use in `AncestorBookReport.vue` (print/export)
 
 ### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
