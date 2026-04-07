@@ -68,10 +68,6 @@ import { useI18n } from 'vue-i18n';
 import { COUPLE_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const props = defineProps<{
   personId: string;
   mode: 'parent' | 'spouse' | 'child';

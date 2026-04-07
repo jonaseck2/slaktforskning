@@ -54,10 +54,6 @@ import { reactive, ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface SourceRow {
   id: string;
   title: string;

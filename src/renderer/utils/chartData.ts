@@ -3,10 +3,6 @@
 
 import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode } from './chartLayout';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 type RawPerson  = { id: string; sex: string; living: boolean };
 type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number };
 type RawEvent   = { event_type: string; date_value: string | null };

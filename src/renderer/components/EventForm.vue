@@ -85,10 +85,6 @@ import type { EventTypeValue } from '../constants/eventTypes';
 
 const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface EventData {
   id: string;
   event_type: string;

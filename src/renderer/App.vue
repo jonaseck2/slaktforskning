@@ -113,10 +113,6 @@ import type { SupportedLocale } from './i18n';
 import { useFocusStore } from './stores/focus';
 import { useDataVersionStore } from './stores/dataVersion';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => unknown>>;
-};
-
 const router = useRouter();
 const { locale } = useI18n();
 const focusStore = useFocusStore();
@@ -171,14 +167,14 @@ function handleGlobalKey(e: KeyboardEvent) {
 }
 
 async function loadDbName() {
-  const info = await (window.api.db.getCurrent() as Promise<{ path: string; name: string }>);
+  const info = await window.api.db.getCurrent();
   currentDbName.value = info.name;
 }
 
 async function autoSetFocusPerson() {
   if (focusStore.personId) return;
   try {
-    const persons = (await (window.api.persons as Record<string, (...args: unknown[]) => Promise<unknown>>).list()) as Array<{ id: string; given_name: string | null; surname: string | null }>;
+    const persons = await window.api.persons.list();
     if (persons.length > 0) {
       const p = persons[0];
       const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
@@ -190,7 +186,7 @@ async function autoSetFocusPerson() {
 async function loadResearchBadge() {
   if (!window.api?.researchTasks) return;
   try {
-    const tasks = (await (window.api.researchTasks as Record<string, (...args: unknown[]) => Promise<unknown>>).list()) as Array<{ status: string }>;
+    const tasks = await window.api.researchTasks.list();
     openTaskCount.value = tasks.filter(t => t.status === 'open' || t.status === 'in_progress').length;
   } catch { /* ignore */ }
 }
@@ -198,7 +194,7 @@ async function loadResearchBadge() {
 async function loadQualityBadge() {
   if (!window.api?.checks) return;
   try {
-    const results = (await (window.api.checks as Record<string, (...args: unknown[]) => Promise<unknown>>).runAll()) as Array<{ severity: string }>;
+    const results = await window.api.checks.runAll();
     qualityErrorCount.value = results.filter(r => r.severity === 'error' || r.severity === 'warning').length;
   } catch { /* ignore */ }
 }
@@ -211,7 +207,7 @@ onMounted(() => {
   loadQualityBadge();
   loadResearchBadge();
   autoSetFocusPerson();
-  (window.api.db as unknown as { onSwitched: (cb: () => void) => void }).onSwitched(() => {
+  window.api.db.onSwitched(() => {
     window.location.reload();
   });
   window.addEventListener('data-imported', () => {
@@ -221,7 +217,7 @@ onMounted(() => {
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
   let researchDebounce: ReturnType<typeof setTimeout> | null = null;
-  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
+  window.api.onDataChanged(() => {
     dataVersionStore.increment();
     if (!focusStore.personId) autoSetFocusPerson();
     if (qualityDebounce) clearTimeout(qualityDebounce);

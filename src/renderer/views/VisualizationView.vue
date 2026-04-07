@@ -99,10 +99,6 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface Person { id: string; sex: 'M' | 'F' | 'U'; living: boolean; }
 interface PersonWithName extends Person { given_name: string; surname: string; }
 

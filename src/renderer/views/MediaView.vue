@@ -45,10 +45,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const { t } = useI18n();
 
 interface MediaItem {
@@ -73,7 +69,7 @@ async function load() {
 }
 
 async function attachFile() {
-  const result = await window.api.media.attach() as { canceled: boolean; media?: MediaItem };
+  const result = await window.api.media.attach();
   if (!result.canceled) {
     await load();
   }

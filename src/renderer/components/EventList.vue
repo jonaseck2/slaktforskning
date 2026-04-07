@@ -47,10 +47,6 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface EventRow {
   id: string;
   event_type: string;

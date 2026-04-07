@@ -79,10 +79,6 @@ import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
 useI18n();

@@ -443,10 +443,6 @@ import { fullNameParts } from '../utils/nameUtils';
 import { parseAsteriskNotation } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface PersonData {
   id: string;
   sex: string;

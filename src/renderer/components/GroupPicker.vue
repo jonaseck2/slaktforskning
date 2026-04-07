@@ -34,10 +34,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 interface GroupOption { id: string; name: string; memberCount: number; }
 
 const props = defineProps<{

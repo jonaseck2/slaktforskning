@@ -235,10 +235,6 @@ import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 
 const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
 const props = defineProps<{ personId: string | null }>();
 const emit = defineEmits<{
   'relative-added': [];
