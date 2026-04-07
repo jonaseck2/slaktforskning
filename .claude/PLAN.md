@@ -101,6 +101,19 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
+### Code Quality Improvements [refactor]
+
+Six independent plans — each can be executed separately in any order.
+
+| Plan | File | Impact |
+|------|------|--------|
+| TypeScript window.api typing | [plan](plans/2026-04-07-typescript-api-types.md) | Remove unsafe Record<> casts from 37 components |
+| User-facing error notifications | [plan](plans/2026-04-07-error-notifications.md) | Toast system; no more silent failures |
+| i18n coverage | [plan](plans/2026-04-07-i18n-coverage.md) | Fix 23 hardcoded strings; English mode works everywhere |
+| CSS color variables | [plan](plans/2026-04-07-css-color-variables.md) | 18 palette variables; replace 70+ hardcoded hex values |
+| BaseModal component | [plan](plans/2026-04-07-base-modal-refactor.md) | Extract modal shell from 15 components |
+| Component extraction | [plan](plans/2026-04-07-component-extraction.md) | Break PersonPanel (675 lines) + ImportExportView (538 lines) into sub-components |
+
 ### Holger/OurKind import [feature]
 See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
 - [x] Add `'holger'` GEDCOM profile: ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype
