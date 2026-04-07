@@ -169,7 +169,13 @@ function resultKey(r: QualityResult): string {
 
 function checkMessage(r: QualityResult): string {
   const key = 'quality.checks.' + r.code;
-  const translated = t(key, r.messageParams ?? {});
+  const params = { ...r.messageParams };
+  if (params.eventType) {
+    const etKey = 'eventTypes.' + params.eventType;
+    const etTranslated = t(etKey);
+    params.eventType = etTranslated !== etKey ? etTranslated : params.eventType as string;
+  }
+  const translated = t(key, params);
   return translated !== key ? translated : r.message;
 }
 
