@@ -385,11 +385,10 @@ async function handleExportGedcom() {
       };
     };
     if (result.exported) {
+      setStatus(t('importExport.exportSuccess', { file: result.filePath ?? '' }));
       if (result.report && result.report.excluded.length > 0) {
         exportReport.value = result.report;
         showExportReport.value = true;
-      } else {
-        setStatus(t('importExport.exportSuccess', { file: result.filePath ?? '' }));
       }
     }
   } catch (err) {
