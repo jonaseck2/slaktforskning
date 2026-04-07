@@ -309,6 +309,19 @@ function parseAsterisk(raw: string): { given: string; preferred: string | null }
   return { given: given || raw.trim(), preferred };
 }
 
+/**
+ * Remap a Genney FILEREF Windows path to a local mediaDir.
+ * URLs (http/https) are passed through unchanged.
+ * Paths without a 'media[/\]' segment are returned as-is (cannot remap).
+ */
+export function remapGenneyMediaPath(ref: string, mediaDir: string): string {
+  if (ref.startsWith('http://') || ref.startsWith('https://')) return ref;
+  const idx = ref.search(/[Mm]edia[/\\]/);
+  if (idx === -1) return ref;
+  const afterMedia = ref.slice(idx + 6).replace(/\\/g, '/');
+  return `${mediaDir.replace(/\/$/, '')}/${afterMedia}`;
+}
+
 // ── Main transform ─────────────────────────────────────────────────────────
 
 export function transformGenney(db: Database, tables: GenneyTables): ImportSummary {
