@@ -624,6 +624,11 @@ function doImportGedcom(
       }
     }
 
+    // Count NO nodes (GEDCOM 7.0 negative assertions — not imported)
+    for (const child of node.children) {
+      if (child.tag === 'NO') noCount++;
+    }
+
     // Count unrecognised top-level INDI tags
     for (const child of node.children) {
       if (!KNOWN_INDI_TAGS.has(child.tag)) {
@@ -805,11 +810,6 @@ function doImportGedcom(
     }
   }
 
-  // Count NO records (GEDCOM 7.0 negative assertions — not imported)
-  for (const node of tree) {
-    if (node.tag === 'NO') noCount++;
-  }
-
   // Build and return partial report
   const skipped = Array.from(skippedTags.entries())
     .map(([tag, count]) => ({ tag, count }))
@@ -967,19 +967,19 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     unmappedData.push({ category: 'SUBM records (no app concept)', count: rawCounts.submitters });
   }
   if (partial.ldsCount > 0) {
-    unmappedData.push({ category: 'LDS ordinances (not relevant for Swedish genealogy)', count: partial.ldsCount });
+    unmappedData.push({ category: `LDS ordinances (BAPL, SLGC, CONL, ENDL, SLGS) — not relevant outside LDS context, not imported`, count: partial.ldsCount });
+  }
+  if (partial.tranCount > 0) {
+    partial.warnings.push(`${partial.tranCount} TRAN translation node(s) converted to 'aka' name entries — translation language/script metadata not preserved`);
+  }
+  if (partial.noCount > 0) {
+    unmappedData.push({ category: `NO negative assertions (GEDCOM 7.0) — no app concept for explicit non-events, not imported`, count: partial.noCount });
   }
 
   // Build modelLimitations
   const modelLimitations: string[] = [
     'ASSO associations beyond event participants are dropped',
   ];
-  if (version === '7.0' && partial.tranCount > 0) {
-    modelLimitations.push('TRAN multi-language name translations stored as aka names only');
-  }
-  if (version === '7.0' && partial.noCount > 0) {
-    modelLimitations.push('NO negative assertions not imported (no app model)');
-  }
 
   // tagStats mirrors skipped (same data, different field name)
   const tagStats = partial.skipped.map(s => ({ tag: s.tag, occurrences: s.count }));
