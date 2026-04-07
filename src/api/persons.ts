@@ -235,7 +235,58 @@ const PERSON_LIST_BASE_QUERY = `
 const PERSON_LIST_QUERY = `${PERSON_LIST_BASE_QUERY} ORDER BY pn.surname, pn.given_name`;
 
 export function listPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
-  return queryAll<PersonListItem>(db, `${PERSON_LIST_QUERY} LIMIT ? OFFSET ?`, [limit, offset]);
+  // Pass 1: sort + paginate with only name data — no birth/death subqueries.
+  // Correlated subqueries on all N persons before LIMIT caused O(4N) lookups on large DBs.
+  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
+    SELECT p.id, p.sex,
+           COALESCE(pn.given_name, '') AS given_name,
+           COALESCE(pn.surname, '')    AS surname
+    FROM persons p
+    LEFT JOIN person_names pn
+      ON pn.person_id = p.id
+      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+    ORDER BY pn.surname, pn.given_name
+    LIMIT ? OFFSET ?
+  `, [limit, offset]);
+
+  if (page.length === 0) return [];
+
+  // Pass 2: fetch birth + death events for this page's persons only.
+  const ids = page.map(r => r.id);
+  const placeholders = ids.map(() => '?').join(',');
+  const eventRows = queryAll<{
+    person_id: string;
+    event_type: string;
+    date_original: string | null;
+    place_name: string | null;
+  }>(db, `
+    SELECT ep.person_id, e.event_type, e.date_original, pl.name AS place_name
+    FROM event_participants ep
+    JOIN events e ON e.id = ep.event_id AND e.event_type IN ('birth', 'death')
+    LEFT JOIN places pl ON pl.id = e.place_id
+    WHERE ep.person_id IN (${placeholders})
+  `, ids);
+
+  type EventData = { birth_date: string | null; birth_place: string | null; death_date: string | null; death_place: string | null };
+  const eventMap = new Map<string, EventData>();
+  for (const row of eventRows) {
+    if (!eventMap.has(row.person_id)) {
+      eventMap.set(row.person_id, { birth_date: null, birth_place: null, death_date: null, death_place: null });
+    }
+    const entry = eventMap.get(row.person_id)!;
+    if (row.event_type === 'birth') {
+      if (entry.birth_date === null) entry.birth_date = row.date_original;
+      if (entry.birth_place === null) entry.birth_place = row.place_name;
+    } else {
+      if (entry.death_date === null) entry.death_date = row.date_original;
+      if (entry.death_place === null) entry.death_place = row.place_name;
+    }
+  }
+
+  return page.map(p => {
+    const events = eventMap.get(p.id) ?? { birth_date: null, birth_place: null, death_date: null, death_place: null };
+    return { id: p.id, sex: p.sex as Person['sex'], given_name: p.given_name, surname: p.surname, ...events };
+  });
 }
 
 export function countPersons(db: Database): number {
