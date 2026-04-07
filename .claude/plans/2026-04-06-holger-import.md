@@ -8,6 +8,9 @@
 
 **Tech Stack:** TypeScript, existing `src/gedcom/importer.ts` + `encoding.ts`, fflate (already a dependency), Vitest, Vue 3
 
+**Parallelism:** Can run in parallel with GEDCOM 7.0 Export (`2026-04-06-gedcom-70-export.md`) — no file overlap.
+Must complete before Gap Closure (`2026-04-07-gedcom-import-gap-closure.md`) — both modify `src/import/gedcom/import-core.ts`.
+
 ---
 
 ## Background & Analysis

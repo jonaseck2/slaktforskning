@@ -6,6 +6,16 @@
 
 **Context:** The data integrity *implementation* is complete (see archived plan `2026-04-07-import-export-data-integrity.md`). What is missing are tests that exercise each format-specific code path end-to-end at the unit level.
 
+**Parallelism:**
+- Tasks 1, 2, 5: independent — can run after Wave 1 (GEDCOM 7.0 Export + Holger Import complete)
+- Task 3 (holger ImportReport): requires Holger Import complete
+- Task 4 (GEDCOM 5.5.1 ImportReport): requires Gap Closure complete — both append to `tests/unit/import-gedcom-reporting.test.ts`
+
+Recommended execution:
+- Wave 1 (parallel): GEDCOM 7.0 Export + Holger Import
+- Wave 2 (parallel after Wave 1): Gap Closure + Tasks 1, 2, 3, 5
+- Wave 3 (after Wave 2): Task 4
+
 ---
 
 ## Verification: Archived Plan Was Fully Implemented
