@@ -56,12 +56,7 @@
             </div>
             <div class="compact-field">
               <label class="compact-label">{{ $t('panel.notes') }}</label>
-              <textarea
-                class="compact-control"
-                rows="2"
-                :value="person.notes ?? ''"
-                @blur="updateNotes(($event.target as HTMLTextAreaElement).value)"
-              />
+              <PersonNotesSection :person-id="personId!" class="compact-control" />
             </div>
           </div>
         </div>
@@ -231,6 +226,7 @@ import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
+import PersonNotesSection from './PersonNotesSection.vue';
 
 const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
 
@@ -245,7 +241,6 @@ interface PersonData {
   id: string;
   sex: 'M' | 'F' | 'U';
   living: boolean;
-  notes: string | null;
   birthLine: string | null;
   deathLine: string | null;
 }
@@ -322,13 +317,6 @@ async function updateLiving(value: boolean) {
   if (!props.personId || !person.value) return;
   await window.api.persons.update(props.personId, { living: value });
   person.value.living = value;
-}
-
-async function updateNotes(value: string) {
-  if (!props.personId || !person.value) return;
-  const notes = value.trim() || null;
-  await window.api.persons.update(props.personId, { notes });
-  person.value.notes = notes;
 }
 
 // ── Name form ─────────────────────────────────────────────────────────────────
@@ -419,7 +407,7 @@ async function buildDateLine(event: { date_original: string | null; date_value: 
 // ── Data loading ─────────────────────────────────────────────────────────────
 
 async function loadPerson(id: string) {
-  const raw = (await window.api.persons.get(id)) as { id: string; sex: string; living: boolean; notes: string | null } | null;
+  const raw = (await window.api.persons.get(id)) as { id: string; sex: string; living: boolean } | null;
   if (props.personId !== id) return;
   if (!raw) { person.value = null; return; }
 
@@ -452,7 +440,6 @@ async function loadPerson(id: string) {
     id: raw.id,
     sex: raw.sex as 'M' | 'F' | 'U',
     living: raw.living,
-    notes: raw.notes,
     birthLine,
     deathLine,
   };
