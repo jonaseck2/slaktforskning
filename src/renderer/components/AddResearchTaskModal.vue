@@ -9,7 +9,7 @@
       <label>
         {{ $t('researchTasks.status') }}
         <select v-model="form.status">
-          <option v-for="s in TASK_STATUS_VALUES" :key="s" :value="s">{{ $t('researchTasks.statuses.' + s) }}</option>
+          <option v-for="s in RESEARCH_TASK_STATUS_VALUES" :key="s" :value="s">{{ $t('researchTasks.statuses.' + s) }}</option>
         </select>
       </label>
       <label>
@@ -38,8 +38,7 @@ import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
 import BaseModal from './BaseModal.vue';
-
-const TASK_STATUS_VALUES = ['open', 'in_progress', 'done', 'stopped'] as const;
+import { RESEARCH_TASK_STATUS_VALUES } from '../constants/eventTypes';
 
 const props = defineProps<{
   personId: string;
@@ -61,6 +60,7 @@ const form = reactive({
 });
 
 async function save() {
+  if (!form.task.trim()) return;
   try {
     await window.api.researchTasks.create({
       task: form.task,
