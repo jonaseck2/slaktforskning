@@ -10,6 +10,37 @@
     </div>
     <p v-if="genneyProgress" class="section-progress">{{ genneyProgress }}</p>
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
+
+    <!-- Genney import report modal -->
+    <BaseModal v-if="showGenneyReport && genneyReport" @close="showGenneyReport = false">
+      <h3>{{ $t('importExport.genneyReportTitle') }}</h3>
+      <ul class="report-counts">
+        <li>{{ $t('importExport.genneyReportPersons', { n: genneyReport.persons }) }}</li>
+        <li>{{ $t('importExport.genneyReportCoupleRels', { n: genneyReport.coupleRelationships }) }}</li>
+        <li>{{ $t('importExport.genneyReportParentChildRels', { n: genneyReport.parentChildRelationships }) }}</li>
+        <li>{{ $t('importExport.genneyReportEvents', { n: genneyReport.events }) }}</li>
+        <li>{{ $t('importExport.genneyReportPlaces', { n: genneyReport.places }) }}</li>
+        <li>{{ $t('importExport.genneyReportSources', { n: genneyReport.sources }) }}</li>
+        <li>{{ $t('importExport.genneyReportCitations', { n: genneyReport.citations }) }}</li>
+      </ul>
+      <div v-if="genneyReport.warnings.length > 0" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.importReportWarnings') }}</p>
+        <ul>
+          <li v-for="(w, i) in genneyReport.warnings" :key="i">{{ w }}</li>
+        </ul>
+      </div>
+      <div v-if="genneyReport.skipped.length > 0" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.importReportSkipped') }}</p>
+        <ul>
+          <li v-for="s in genneyReport.skipped" :key="s.category">
+            <strong>{{ s.category }}</strong> ({{ s.count }}): {{ s.reason }}
+          </li>
+        </ul>
+      </div>
+      <div class="modal-actions">
+        <button @click="showGenneyReport = false">{{ $t('importExport.importReportClose') }}</button>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -17,6 +48,8 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
+import BaseModal from '../BaseModal.vue';
+import type { ImportSummary } from '../../../import/genney/transform';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -28,6 +61,8 @@ const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const genneyProgress = ref('');
+const showGenneyReport = ref(false);
+const genneyReport = ref<ImportSummary | null>(null);
 
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   statusMessage.value = msg;
@@ -59,7 +94,13 @@ async function handleGenneyDerby(mode: 'folder' | 'archive') {
       imported?: boolean;
       gedcomFallback?: boolean;
       gedcomPath?: string;
-      summary?: { persons: number; events: number; citations: number };
+      summary?: {
+        persons: number; coupleRelationships: number; parentChildRelationships: number;
+        events: number; places: number; sources: number; citations: number;
+        groups: number; repositories: number; researchTasks: number; media: number;
+        warnings: string[];
+        skipped: { category: string; count: number; reason: string }[];
+      };
       error?: string;
     };
 
@@ -71,8 +112,8 @@ async function handleGenneyDerby(mode: 'folder' | 'archive') {
         window.dispatchEvent(new CustomEvent('data-imported'));
       }
     } else if (result.imported && result.summary) {
-      const s = result.summary;
-      setStatus(t('importExport.genneyDerbySuccess', { persons: s.persons, events: s.events, citations: s.citations }));
+      genneyReport.value = result.summary;
+      showGenneyReport.value = true;
       window.dispatchEvent(new CustomEvent('data-imported'));
     } else if (result.error) {
       setStatus(t('importExport.genneyDerbyError', { error: result.error }), 'error');
@@ -124,5 +165,42 @@ button:hover:not(:disabled) {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+:deep(.modal) {
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-base);
+}
+
+.report-section {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+
+.report-section-label {
+  margin: 0 0 4px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #555;
+}
+
+.report-section ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: var(--font-sm);
+  color: #444;
 }
 </style>
