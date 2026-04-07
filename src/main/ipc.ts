@@ -223,6 +223,15 @@ export function registerIpcHandlers(): void {
     return { canceled: false, path: result.filePaths[0] };
   });
 
+  wrapHandler('import:genneySelectMedia', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select Genney media folder (optional)',
+      properties: ['openDirectory'],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
   wrapHandler('import:genneyDiscover', async (opts) => {
     const options = opts as { sourcePath: string; schema?: string } | undefined;
     if (!options?.sourcePath) return { error: 'sourcePath is required' };
@@ -237,11 +246,18 @@ export function registerIpcHandlers(): void {
   });
 
   wrapHandler('import:genneyRun', async (opts) => {
-    const options = opts as { sourcePath: string; schema?: string } | undefined;
+    const options = opts as { sourcePath: string; schema?: string; mediaDir?: string } | undefined;
     if (!options?.sourcePath) return { error: 'sourcePath is required' };
     const win = BrowserWindow.getFocusedWindow();
+    // .backup archives bundle a media/ dir — copy it alongside the DB so file_refs survive
+    const isBackup = options.sourcePath.toLowerCase().endsWith('.backup');
+    const destMediaDir = isBackup
+      ? path.join(path.dirname(getCurrentDatabasePath()), 'genney-media')
+      : undefined;
     const result = await importFromGenney(getDatabase(), options.sourcePath, {
       schema: options.schema,
+      mediaDir: options.mediaDir,
+      destMediaDir,
       onProgress: (msg) => {
         if (win) win.webContents.send('import:genneyProgress', { message: msg });
       },
