@@ -522,6 +522,7 @@ export default {
   groups: {
     title: 'Groups',
     addGroup: 'Add group',
+    addGroupShort: '+ Group',
     emptyState: 'No groups yet.',
     name: 'Name',
     notes: 'Notes',
@@ -592,7 +593,8 @@ export default {
     title: 'Media',
     nav: 'Media',
     open: 'Open',
-    attach: 'Add Media',
+    attach: 'Add media',
+    attachShort: '+ Media',
     attachTo: 'Attach to',
     delete: 'Delete',
     noMedia: 'No media attached.',

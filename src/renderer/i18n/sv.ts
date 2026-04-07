@@ -64,7 +64,7 @@ export default {
   personDetail: {
     deceased: 'Avliden',
     names: 'Namn',
-    addName: '+ Namn',
+    addName: 'Namn',
     noNames: 'Inga namn registrerade.',
     relationships: 'Relationer',
     noRelationships: 'Inga relationer registrerade.',
@@ -522,6 +522,7 @@ export default {
   groups: {
     title: 'Grupper',
     addGroup: 'Lägg till grupp',
+    addGroupShort: '+ Grupp',
     emptyState: 'Inga grupper ännu.',
     name: 'Namn',
     notes: 'Anteckningar',
@@ -592,7 +593,8 @@ export default {
     title: 'Media',
     nav: 'Media',
     open: 'Öppna',
-    attach: 'Add media',
+    attach: 'Lägg till media',
+    attachShort: '+ Media',
     attachTo: 'Bifoga till',
     delete: 'Ta bort',
     noMedia: 'Ingen media bifogad.',
