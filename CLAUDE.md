@@ -139,7 +139,7 @@ GroupMember      { id, group_id, person_id }
 Repository       { id, name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes, created_at }
 ResearchTask     { id, person_id?, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
 Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
-MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, created_at }
+MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, sort_order: number, created_at }
 ```
 
 ## Database Schema
@@ -162,7 +162,7 @@ MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'p
 | `source_repositories` | source_id, repository_id (UNIQUE) | both → CASCADE |
 | `research_tasks` | person_id, priority, status, task, notes, result | person → CASCADE |
 | `media` | file_ref, title, format, notes, is_printable | — |
-| `media_links` | media_id, entity_type, entity_id, link_type | media → CASCADE |
+| `media_links` | media_id, entity_type, entity_id, link_type, sort_order | media → CASCADE |
 
 ---
 
@@ -275,9 +275,10 @@ createMedia(db, { title, file_ref?, format?, notes?, is_printable? }) → Media
 getMedia(db, id) → Media | null
 listMedia(db) → Media[]
 deleteMedia(db, id) → boolean
-addMediaLink(db, { media_id, entity_type, entity_id, link_type? }) → MediaLink
-getMediaForEntity(db, entityType, entityId) → (Media & { link_id, link_type })[]
+addMediaLink(db, { media_id, entity_type, entity_id, link_type?, sort_order? }) → MediaLink
+getMediaForEntity(db, entityType, entityId) → (Media & { link_id, link_type, sort_order })[]
 removeMediaLink(db, linkId) → boolean
+reorderMediaLinks(db, linkIds: string[]) → void
 ```
 
 ### duplicates.ts
@@ -408,7 +409,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `ResearchTasksTable` | `tasks: ResearchTaskRow[]`, `showPerson?: boolean` | `updated` | Inline-expand-to-edit task rows, status chip cycling, priority badge. Prop-driven. |
 | `GroupsTable` | `groups: GroupRow[]`, `showMembers?: boolean` | `remove(id)` | Groups table with clickable rows (→ `/groups/:id`) and remove button. Prop-driven. |
 | `PersonIdentifiersSection` | `personId: string` | — | Self-loading identifiers table + add modal. Exposes `openAddForm()`. |
-| `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink. Exposes `attach()`. |
+| `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink/reorder (up/down). First item shows "Profile" badge. Emits `profileChanged` when media order changes. Exposes `attach()` and `reload()`. |
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
@@ -535,7 +536,7 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Research task tools:** `create_research_task`, `get_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task`
 
-**Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`
+**Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`, `reorder_media_links`
 
 **Duplicate/merge tools:** `find_duplicates`, `merge_persons`
 
