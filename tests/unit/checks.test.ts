@@ -6,6 +6,8 @@ import { createPerson, updatePerson } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { addPersonName } from '../../src/api/persons';
+import { createSource, createCitation } from '../../src/api/sources';
+import { createMedia, addMediaLink } from '../../src/api/media';
 
 // Helper: create a person with a birth event on the given date (YYYY-MM-DD)
 function personWithBirth(db: ReturnType<typeof createTestDb>, birthDate: string, opts?: Parameters<typeof createPerson>[1]) {
@@ -337,5 +339,133 @@ describe('False positives: clean family', () => {
            (r.personIds.includes(parent1.id) || r.personIds.includes(parent2.id) || r.personIds.includes(child.id))
     );
     expect(errorsAndWarnings).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Category G — Data Validation
+// ---------------------------------------------------------------------------
+
+describe('INVALID_DATE', () => {
+  it('fires for month > 12', () => {
+    const p = createPerson(db, {});
+    const e = createEvent(db, { event_type: 'death', date_type: 'exact', date_value: '1727-14-10' });
+    addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'INVALID_DATE' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].messageParams?.reason).toContain('månad');
+  });
+
+  it('fires for day > 31', () => {
+    const p = createPerson(db, {});
+    const e = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1953-03-90' });
+    addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'INVALID_DATE' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].messageParams?.reason).toContain('dag');
+  });
+
+  it('fires for day 31 in a 30-day month', () => {
+    const p = createPerson(db, {});
+    const e = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1990-04-31' });
+    addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'INVALID_DATE' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('does not fire for valid dates', () => {
+    const { person } = personWithBirth(db, '1990-02-28');
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'INVALID_DATE' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(0);
+  });
+
+  it('does not fire for year-only dates', () => {
+    const p = createPerson(db, {});
+    const e = createEvent(db, { event_type: 'birth', date_type: 'about', date_value: '1800' });
+    addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'INVALID_DATE' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(0);
+  });
+});
+
+describe('UNRELATED_PERSON', () => {
+  it('fires for a person with no relationships', () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Tord', surname: 'Hulinder' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'UNRELATED_PERSON' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('does not fire for a person in a relationship', () => {
+    const p1 = createPerson(db, {});
+    const p2 = createPerson(db, {});
+    createRelationship(db, { type: 'parent_child', person1_id: p1.id, person2_id: p2.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'UNRELATED_PERSON' && (r.personIds.includes(p1.id) || r.personIds.includes(p2.id)));
+    expect(hit).toHaveLength(0);
+  });
+});
+
+describe('MEDIA_FILE_MISSING', () => {
+  it('fires for a media record pointing to a non-existent file', () => {
+    const p = createPerson(db, {});
+    const m = createMedia(db, { title: 'Photo', file_ref: '/nonexistent/path/photo.jpg' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MEDIA_FILE_MISSING');
+    expect(hit).toHaveLength(1);
+    expect(hit[0].personIds).toContain(p.id);
+  });
+
+  it('does not fire for media without file_ref', () => {
+    const m = createMedia(db, { title: 'Photo without ref' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MEDIA_FILE_MISSING');
+    expect(hit).toHaveLength(0);
+  });
+});
+
+describe('ORPHANED_SOURCE', () => {
+  it('fires for a source with no citations', () => {
+    const s = createSource(db, { title: 'Kyrkobok' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'ORPHANED_SOURCE');
+    expect(hit).toHaveLength(1);
+    expect(hit[0].messageParams?.title).toBe('Kyrkobok');
+  });
+
+  it('does not fire for a source with citations', () => {
+    const s = createSource(db, { title: 'Kyrkobok' });
+    createCitation(db, { source_id: s.id, page: '42' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'ORPHANED_SOURCE');
+    expect(hit).toHaveLength(0);
+  });
+});
+
+describe('TEXT_CONTROL_CHARS', () => {
+  it('fires for control characters in person names', () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Anna\x01', surname: 'Svensson' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('does not fire for normal text with newlines', () => {
+    const p = createPerson(db, { notes: 'Line 1\nLine 2\tTabbed' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Svensson' });
+    // Add a relationship so UNRELATED_PERSON doesn't fire
+    const p2 = createPerson(db, {});
+    createRelationship(db, { type: 'parent_child', person1_id: p.id, person2_id: p2.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(0);
   });
 });

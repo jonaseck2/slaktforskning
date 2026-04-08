@@ -297,15 +297,16 @@ function mapConfidence(certainty: number | null | undefined): number {
   return certainty;
 }
 
-/** Extract preferred_name from asterisk notation inline (mirrors nameUtils.ts). */
+/** Extract preferred_name from * or ! marker notation inline (mirrors nameUtils.ts). */
 function parseAsterisk(raw: string): { given: string; preferred: string | null } {
-  const idx = raw.indexOf('*');
-  if (idx === -1) return { given: raw.trim(), preferred: null };
-  const beforeStar = raw.slice(0, idx).trimEnd();
-  const afterStar = raw.slice(idx + 1).trimStart();
-  const tokens = beforeStar.split(/\s+/).filter(Boolean);
+  const match = raw.match(/[*!]/);
+  if (!match) return { given: raw.trim(), preferred: null };
+  const idx = match.index!;
+  const beforeMarker = raw.slice(0, idx).trimEnd();
+  const afterMarker = raw.slice(idx + 1).trimStart();
+  const tokens = beforeMarker.split(/\s+/).filter(Boolean);
   const preferred = tokens[tokens.length - 1] ?? null;
-  const given = (beforeStar + (afterStar ? ' ' + afterStar : '')).replace(/\s+/g, ' ').trim();
+  const given = (beforeMarker + (afterMarker ? ' ' + afterMarker : '')).replace(/\s+/g, ' ').trim();
   return { given: given || raw.trim(), preferred };
 }
 
