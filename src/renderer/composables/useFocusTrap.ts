@@ -1,18 +1,20 @@
-import { onMounted, onUnmounted, ref, type Ref } from "vue";
+import { onMounted, onUnmounted, type Ref } from 'vue';
 
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
 export function useFocusTrap(containerRef: Ref<HTMLElement | null>) {
-  const previouslyFocused = ref<HTMLElement | null>(null);
+  let previouslyFocused: HTMLElement | null = null;
 
   function getFocusableElements(): HTMLElement[] {
     if (!containerRef.value) return [];
-    return Array.from(containerRef.value.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    return Array.from(
+      containerRef.value.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    ).filter((el) => !el.closest('[inert]') && el.offsetParent !== null);
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key !== "Tab") return;
+    if (e.key !== 'Tab') return;
     const focusable = getFocusableElements();
     if (focusable.length === 0) return;
 
@@ -29,24 +31,22 @@ export function useFocusTrap(containerRef: Ref<HTMLElement | null>) {
   }
 
   function activate() {
-    previouslyFocused.value = document.activeElement as HTMLElement;
+    previouslyFocused = document.activeElement as HTMLElement;
     const focusable = getFocusableElements();
-    const autofocusEl = containerRef.value?.querySelector<HTMLElement>("[autofocus]");
+    const autofocusEl = containerRef.value?.querySelector<HTMLElement>('[autofocus]');
     if (autofocusEl) {
       autofocusEl.focus();
     } else if (focusable.length > 0) {
       focusable[0].focus();
     }
-    containerRef.value?.addEventListener("keydown", handleKeydown);
+    containerRef.value?.addEventListener('keydown', handleKeydown);
   }
 
   function deactivate() {
-    containerRef.value?.removeEventListener("keydown", handleKeydown);
-    previouslyFocused.value?.focus();
+    containerRef.value?.removeEventListener('keydown', handleKeydown);
+    previouslyFocused?.focus();
   }
 
   onMounted(activate);
   onUnmounted(deactivate);
-
-  return { activate, deactivate };
 }
