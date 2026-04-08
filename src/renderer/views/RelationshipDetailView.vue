@@ -1,16 +1,16 @@
 <template>
   <div v-if="relationship" class="relationship-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()">{{ $t('relationshipDetail.back') }}</button>
+      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('relationshipDetail.back') }}</button>
       <div class="header-row">
         <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
       </div>
     </div>
 
     <!-- Type & Subtype -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-rel-type">
       <div class="section-header">
-        <h4>{{ $t('common.type') }}</h4>
+        <h4 id="section-rel-type">{{ $t('common.type') }}</h4>
       </div>
       <div class="type-fields">
         <label>
@@ -50,9 +50,9 @@
     </section>
 
     <!-- Persons Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-rel-persons">
       <div class="section-header">
-        <h4>{{ $t('relationshipDetail.persons') }}</h4>
+        <h4 id="section-rel-persons">{{ $t('relationshipDetail.persons') }}</h4>
       </div>
       <div class="persons-grid">
         <label>
@@ -77,7 +77,7 @@
     </section>
 
     <!-- Events Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-label="Events">
       <EventList :relationship-id="relationship.id" />
     </section>
 

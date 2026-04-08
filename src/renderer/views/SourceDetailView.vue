@@ -1,14 +1,14 @@
 <template>
   <div v-if="source" class="source-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()">{{ $t('sourceDetail.back') }}</button>
+      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('sourceDetail.back') }}</button>
       <h2>{{ source.title }}</h2>
     </div>
 
     <!-- Source Fields -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-source-details">
       <div class="section-header">
-        <h4>{{ $t('sourceDetail.title') }}</h4>
+        <h4 id="section-source-details">{{ $t('sourceDetail.title') }}</h4>
       </div>
       <div class="field-grid">
         <label>
@@ -44,9 +44,9 @@
     </section>
 
     <!-- Citations Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-source-citations">
       <div class="section-header">
-        <h4>{{ $t('sourceDetail.citations') }}</h4>
+        <h4 id="section-source-citations">{{ $t('sourceDetail.citations') }}</h4>
         <button class="btn-add" @click="showCitationForm = true">{{ $t('sourceDetail.addCitation') }}</button>
       </div>
       <div v-if="citations.length === 0" class="empty-hint">{{ $t('sourceDetail.noCitations') }}</div>

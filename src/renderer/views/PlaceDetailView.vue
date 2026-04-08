@@ -1,14 +1,14 @@
 <template>
   <div v-if="place" class="place-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()">← {{ $t('common.back') }}</button>
+      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
     </div>
 
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-place-details">
       <div class="section-header">
-        <h4>{{ $t('places.detailsTitle') }}</h4>
+        <h4 id="section-place-details">{{ $t('places.detailsTitle') }}</h4>
       </div>
       <div class="field-grid">
         <label>{{ $t('places.name') }}
@@ -34,9 +34,9 @@
       </div>
     </section>
 
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-place-address">
       <div class="section-header">
-        <h4>{{ $t('places.address') }}</h4>
+        <h4 id="section-place-address">{{ $t('places.address') }}</h4>
       </div>
       <div class="field-grid">
         <label>{{ $t('places.street') }}
@@ -54,13 +54,13 @@
       </div>
     </section>
 
-    <section class="detail-section">
-      <h4>{{ $t('common.notes') }}</h4>
+    <section class="detail-section" aria-labelledby="section-place-notes">
+      <h4 id="section-place-notes">{{ $t('common.notes') }}</h4>
       <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
     </section>
 
-    <section v-if="children.length" class="detail-section">
-      <h4>{{ $t('places.childPlaces') }}</h4>
+    <section v-if="children.length" class="detail-section" aria-labelledby="section-place-children">
+      <h4 id="section-place-children">{{ $t('places.childPlaces') }}</h4>
       <ul class="child-list">
         <li v-for="child in children" :key="child.id">
           <a href="#" @click.prevent="$router.push('/places/' + child.id)">{{ child.name }}</a>

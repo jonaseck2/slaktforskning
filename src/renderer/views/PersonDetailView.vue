@@ -1,7 +1,7 @@
 <template>
   <div v-if="person" class="person-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()">{{ $t('personDetail.back') }}</button>
+      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('personDetail.back') }}</button>
       <div class="header-row">
         <img
           v-if="profilePicUrl"
@@ -21,9 +21,9 @@
     </div>
 
     <!-- Person Details -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-details">
       <div class="section-header">
-        <h4>{{ $t('personDetail.detailsTitle') }}</h4>
+        <h4 id="section-person-details">{{ $t('personDetail.detailsTitle') }}</h4>
       </div>
       <div class="field-grid">
         <label>
@@ -53,9 +53,9 @@
     </section>
 
     <!-- Names Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-names">
       <div class="section-header">
-        <h4>{{ $t('personDetail.names') }}</h4>
+        <h4 id="section-person-names">{{ $t('personDetail.names') }}</h4>
         <button class="btn-add" @click="showNameForm = true">{{ $t('personDetail.addName') }}</button>
       </div>
       <div v-if="names.length === 0" class="empty-hint">{{ $t('personDetail.noNames') }}</div>
@@ -63,23 +63,23 @@
     </section>
 
     <!-- Events Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-label="Events">
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
     <!-- Identifiers Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-identifiers">
       <div class="section-header">
-        <h4>{{ $t('identifiers.title') }}</h4>
+        <h4 id="section-person-identifiers">{{ $t('identifiers.title') }}</h4>
         <button class="btn-add" @click="identifiersSectionRef?.openAddForm()">{{ $t('identifiers.add') }}</button>
       </div>
       <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="person.id" />
     </section>
 
     <!-- Relationships Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-relationships">
       <div class="section-header">
-        <h4>{{ $t('personDetail.relationships') }}</h4>
+        <h4 id="section-person-relationships">{{ $t('personDetail.relationships') }}</h4>
         <div class="rel-actions">
           <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true">{{ $t('personDetail.addParent') }}</button>
           <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</button>
@@ -90,9 +90,9 @@
     </section>
 
     <!-- Groups Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-groups">
       <div class="section-header">
-        <h4>{{ $t('groups.title') }}</h4>
+        <h4 id="section-person-groups">{{ $t('groups.title') }}</h4>
         <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true">+ {{ $t('groups.addMember') }}</button>
       </div>
       <div v-if="showGroupPicker" class="group-picker-row">
@@ -108,18 +108,18 @@
     </section>
 
     <!-- Media Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-media">
       <div class="section-header">
-        <h4>{{ $t('media.title') }}</h4>
+        <h4 id="section-person-media">{{ $t('media.title') }}</h4>
         <button class="btn-add" @click="mediaSectionRef?.attach()">{{ $t('media.attach') }}</button>
       </div>
       <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
     </section>
 
     <!-- Research Tasks Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-tasks">
       <div class="section-header">
-        <h4>{{ $t('researchTasks.title') }}</h4>
+        <h4 id="section-person-tasks">{{ $t('researchTasks.title') }}</h4>
         <button class="btn-add" @click="showAddTaskModal = true">+ {{ $t('researchTasks.addTask') }}</button>
       </div>
       <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
@@ -135,9 +135,9 @@
     />
 
     <!-- Quality Section -->
-    <section class="detail-section">
+    <section class="detail-section" aria-labelledby="section-person-quality">
       <div class="section-header">
-        <h4>{{ $t('quality.nav') }}</h4>
+        <h4 id="section-person-quality">{{ $t('quality.nav') }}</h4>
       </div>
       <PersonChecksSection ref="checksSectionRef" :person-id="person.id" />
     </section>
