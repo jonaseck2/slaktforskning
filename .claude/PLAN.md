@@ -158,26 +158,33 @@ Output: a ranked list of UX improvements with before/after click counts, ready t
 
 Use the `interview-synthesis` skill if user research data is available.
 
-### Research Tools [feature]
-- [ ] Assertions UI — view/edit what each citation claims, mark accepted, see conflicts
-- [ ] Research audit view — all unsourced entities ranked by evidence gap
-- [ ] Merge/deduplicate persons
+### Evidence Analysis (GPS) [feature]
+See `.claude/plans/2026-04-08-evidence-analysis.md` for research and full plan.
+*Activates the existing `assertions` table — the schema already exists with zero API/UI.*
+*No integrated desktop genealogy app does evidence analysis natively — this is differentiating.*
 
-### Evidence Model & Source UX [feature]
-See `.claude/plans/2026-04-04-evidence-model.md` for the full plan.
-- [ ] CitationBadge on every event row in EventList
+**Phase 1: Assertion CRUD + Conflict Detection**
+- [ ] `src/api/assertions.ts` — create, get, update, delete, getForSubject, getForAttribute, getConflicts
+- [ ] IPC + preload + MCP tools for assertions
+- [ ] Add `evidence_type` column (direct/indirect/negative, optional)
+- [ ] Conflict detection: same subject+attribute with different values
+- [ ] Surface conflicts in QualityView
+
+**Phase 2: Assertion UI — View & Resolve Conflicts**
+- [ ] Per-event evidence summary: expand row to see competing assertions side by side
+- [ ] Accept/reject toggle + notes per assertion
+- [ ] Per-person evidence overview section (PersonDetailView + PersonPanel)
+- [ ] Assertion entry points: from CitationBadge, EventList row, SourceDetailView
+
+**Phase 3: Research Audit & Proof Summaries**
+- [ ] Research audit view — unsourced entities + unresolved conflicts ranked by gap
 - [ ] "Unsourced" filter on PersonsView
-- [ ] Quick-cite from EventList row
-- [ ] Conflict detection for same event type + different date values
+- [ ] Proof summary: auto-populated template from accepted assertions + editable narrative
 
-### Assertion GEDCOM Export [feature]
-*Depends on: Research Tools + Extended GEDCOM Roundtrip (v0.6.4)*
-
-Custom `0 @Ax@ _ASSN` top-level records for lossless assertion roundtrip.
-- [ ] `_ASSN` record format: `_SUBJECT_TYPE`, `_SUBJECT_ID`, `_ATTRIBUTE`, `_VALUE`, `_CONFIDENCE`, `_ACCEPTED`, `SOUR`, `NOTE`
-- [ ] Exporter: emit one `_ASSN` record per `assertions` row
-- [ ] Importer: read `_ASSN` records in a post-pass, recreate assertions
-- [ ] Unit tests: assertion roundtrip for person/event/relationship/place subjects
+**Phase 4: Merge/Deduplicate Persons**
+- [ ] Detect potential duplicates (name + date similarity)
+- [ ] Side-by-side comparison view
+- [ ] Merge: combine assertions, citations, events, names with conflict resolution
 
 ### Polish [feature]
 - [x] Keyboard navigation — Escape key closes all modals
