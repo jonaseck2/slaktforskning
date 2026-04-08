@@ -140,6 +140,17 @@ const api = {
     update: mutating((id: string, data: unknown) => ipcRenderer.invoke('researchTasks:update', id, data)),
     delete: mutating((id: string) => ipcRenderer.invoke('researchTasks:delete', id)),
   },
+  assertions: {
+    create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('assertions:create', data)),
+    get: (id: string) => ipcRenderer.invoke('assertions:get', id),
+    forSubject: (subjectType: string, subjectId: string) => ipcRenderer.invoke('assertions:forSubject', subjectType, subjectId),
+    forAttribute: (subjectType: string, subjectId: string, attribute: string) => ipcRenderer.invoke('assertions:forAttribute', subjectType, subjectId, attribute),
+    forCitation: (citationId: string) => ipcRenderer.invoke('assertions:forCitation', citationId),
+    update: mutating((id: string, updates: Record<string, unknown>) => ipcRenderer.invoke('assertions:update', id, updates)),
+    delete: mutating((id: string) => ipcRenderer.invoke('assertions:delete', id)),
+    conflicts: () => ipcRenderer.invoke('assertions:conflicts'),
+    conflictsForPerson: (personId: string) => ipcRenderer.invoke('assertions:conflictsForPerson', personId),
+  },
   checks: {
     runAll: () => ipcRenderer.invoke('checks:runAll'),
     forPerson: (personId: string) => ipcRenderer.invoke('checks:forPerson', personId),

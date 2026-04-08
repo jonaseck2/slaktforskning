@@ -13,6 +13,7 @@ import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
+import * as assertions from '../api/assertions';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney } from '../import/genney/index';
@@ -923,6 +924,105 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   }, async ({ link_id }) => {
     const ok = media.removeMediaLink(db, link_id);
     return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
+  });
+
+  // Assertion tools
+  server.registerTool('create_assertion', {
+    description: 'Create an assertion — a claim that a citation makes about an entity attribute',
+    inputSchema: {
+      citation_id: z.string().describe('Citation ID that supports this claim'),
+      subject_type: z.enum(['person', 'relationship', 'event', 'place']).describe('Type of entity being asserted about'),
+      subject_id: z.string().describe('ID of the entity'),
+      attribute: z.string().describe('Attribute being claimed (e.g. birth_date, name, sex, place)'),
+      value: z.string().optional().describe('The asserted value'),
+      value_original: z.string().optional().describe('Verbatim text from source'),
+      confidence: z.number().optional().describe('0=unreliable, 1=questionable, 2=secondary, 3=primary'),
+      is_accepted: z.boolean().optional().describe('Whether researcher accepts this claim'),
+      evidence_type: z.enum(['direct', 'indirect', 'negative']).nullable().optional().describe('GPS evidence classification'),
+      notes: z.string().optional().describe('Researcher notes about this claim'),
+    },
+  }, async (args) => {
+    const result = assertions.createAssertion(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  });
+
+  server.registerTool('get_assertion', {
+    description: 'Get an assertion by ID',
+    inputSchema: { id: z.string().describe('Assertion ID') },
+  }, async ({ id }) => {
+    const result = assertions.getAssertion(db, id);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Not found' }] };
+  });
+
+  server.registerTool('get_assertions_for_subject', {
+    description: 'Get all assertions about a specific entity',
+    inputSchema: {
+      subject_type: z.enum(['person', 'relationship', 'event', 'place']).describe('Entity type'),
+      subject_id: z.string().describe('Entity ID'),
+    },
+  }, async ({ subject_type, subject_id }) => {
+    const list = assertions.getAssertionsForSubject(db, subject_type, subject_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_assertions_for_attribute', {
+    description: 'Get competing assertions for a specific attribute of an entity',
+    inputSchema: {
+      subject_type: z.enum(['person', 'relationship', 'event', 'place']).describe('Entity type'),
+      subject_id: z.string().describe('Entity ID'),
+      attribute: z.string().describe('Attribute name'),
+    },
+  }, async ({ subject_type, subject_id, attribute }) => {
+    const list = assertions.getAssertionsForAttribute(db, subject_type, subject_id, attribute);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_assertions_for_citation', {
+    description: 'Get all assertions (claims) made by a specific citation',
+    inputSchema: { citation_id: z.string().describe('Citation ID') },
+  }, async ({ citation_id }) => {
+    const list = assertions.getAssertionsForCitation(db, citation_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_assertion', {
+    description: 'Update an assertion',
+    inputSchema: {
+      id: z.string().describe('Assertion ID'),
+      value: z.string().optional(),
+      value_original: z.string().optional(),
+      confidence: z.number().optional(),
+      is_accepted: z.boolean().optional(),
+      evidence_type: z.enum(['direct', 'indirect', 'negative']).nullable().optional(),
+      notes: z.string().optional(),
+      attribute: z.string().optional(),
+    },
+  }, async ({ id, ...data }) => {
+    const result = assertions.updateAssertion(db, id, data);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Not found' }] };
+  });
+
+  server.registerTool('delete_assertion', {
+    description: 'Delete an assertion',
+    inputSchema: { id: z.string().describe('Assertion ID') },
+  }, async ({ id }) => {
+    const ok = assertions.deleteAssertion(db, id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+  });
+
+  server.registerTool('get_conflicts', {
+    description: 'Get all unresolved evidence conflicts — groups of assertions with same subject+attribute but different values',
+  }, async () => {
+    const list = assertions.getConflicts(db);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_conflicts_for_person', {
+    description: 'Get evidence conflicts for a specific person (on their attributes and their events)',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const list = assertions.getConflictsForPerson(db, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
   // Checks tools

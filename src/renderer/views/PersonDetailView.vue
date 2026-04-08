@@ -126,6 +126,14 @@
       @saved="loadPersonTasks"
     />
 
+    <!-- Evidence Analysis Section -->
+    <section class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('assertions.title') }}</h4>
+      </div>
+      <PersonEvidenceSection ref="evidenceSectionRef" :person-id="person.id" />
+    </section>
+
     <!-- Quality Section -->
     <section class="detail-section">
       <div class="section-header">
@@ -167,6 +175,7 @@ import PersonNamesTable from '../components/PersonNamesTable.vue';
 import PersonNameFormModal from '../components/PersonNameFormModal.vue';
 import PersonIdentifiersSection from '../components/PersonIdentifiersSection.vue';
 import PersonMediaSection from '../components/PersonMediaSection.vue';
+import PersonEvidenceSection from '../components/PersonEvidenceSection.vue';
 import PersonChecksSection from '../components/PersonChecksSection.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
@@ -218,6 +227,7 @@ const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
+const evidenceSectionRef = ref<InstanceType<typeof PersonEvidenceSection> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // Research tasks

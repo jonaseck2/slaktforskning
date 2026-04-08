@@ -108,6 +108,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.38.4 | Genney media folder support: remapGenneyMediaPath, three-box import UI (.backup auto-copy, .gcc/.ged folder picker), mediaDir/destMediaDir wiring | [archive](plans/archive/2026-04-08-genney-media-folder.md) |
 
 | Investigation | macOS 26 Tahoe: packaged app crashes (EXC_BREAKPOINT in ElectronMain); npm start works | [plan](plans/2026-04-08-macos26-electron-crash.md) |
+| v0.39.0 | Evidence Analysis (GPS) Phase 1+2: assertion CRUD+IPC+MCP (10 tools), conflict detection in QualityView, PersonEvidenceSection, AssertionFormModal, SourceDetailView assertions column | [plan](plans/2026-04-08-evidence-analysis.md) |
 
 ---
 
@@ -163,18 +164,18 @@ See `.claude/plans/2026-04-08-evidence-analysis.md` for research and full plan.
 *Activates the existing `assertions` table — the schema already exists with zero API/UI.*
 *No integrated desktop genealogy app does evidence analysis natively — this is differentiating.*
 
-**Phase 1: Assertion CRUD + Conflict Detection**
-- [ ] `src/api/assertions.ts` — create, get, update, delete, getForSubject, getForAttribute, getConflicts
-- [ ] IPC + preload + MCP tools for assertions
-- [ ] Add `evidence_type` column (direct/indirect/negative, optional)
-- [ ] Conflict detection: same subject+attribute with different values
-- [ ] Surface conflicts in QualityView
+**Phase 1: Assertion CRUD + Conflict Detection** ✅ v0.39.0
+- [x] `src/api/assertions.ts` — create, get, update, delete, getForSubject, getForAttribute, getConflicts
+- [x] IPC + preload + MCP tools for assertions (10 tools)
+- [x] Add `evidence_type` column (direct/indirect/negative, optional)
+- [x] Conflict detection: same subject+attribute with different values
+- [x] Surface conflicts in QualityView (UNRESOLVED_EVIDENCE_CONFLICT check)
 
-**Phase 2: Assertion UI — View & Resolve Conflicts**
-- [ ] Per-event evidence summary: expand row to see competing assertions side by side
-- [ ] Accept/reject toggle + notes per assertion
-- [ ] Per-person evidence overview section (PersonDetailView + PersonPanel)
-- [ ] Assertion entry points: from CitationBadge, EventList row, SourceDetailView
+**Phase 2: Assertion UI — View & Resolve Conflicts** ✅ v0.39.0
+- [x] SourceDetailView: assertions count column, expandable inline table, add assertion button
+- [x] Accept/reject toggle + inline notes per assertion
+- [x] PersonEvidenceSection: per-person evidence overview (PersonDetailView + PersonPanel)
+- [x] AssertionFormModal: create/edit assertions from SourceDetailView
 
 **Phase 3: Research Audit & Proof Summaries**
 - [ ] Research audit view — unsourced entities + unresolved conflicts ranked by gap

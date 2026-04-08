@@ -57,28 +57,70 @@
             <th>{{ $t('sourceDetail.page') }}</th>
             <th>{{ $t('sourceDetail.confidence') }}</th>
             <th>{{ $t('sourceDetail.transcription') }}</th>
+            <th>{{ $t('assertions.title') }}</th>
             <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="cit in citations" :key="cit.id">
-            <td>
-              <a v-if="cit.entityRoute" class="entity-link" @click.prevent="router.push(cit.entityRoute)" href="#">{{ cit.entityLabel }}</a>
-              <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
-              <span v-else class="muted">—</span>
-            </td>
-            <td>{{ cit.page || '—' }}</td>
-            <td>
-              <span :class="'confidence-badge confidence-' + cit.confidence">
-                {{ $t('confidenceLevels.' + cit.confidence) }}
-              </span>
-            </td>
-            <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
-            <td>
-              <button class="btn-sm btn-edit" @click="editingCitation = cit">{{ $t('common.edit') }}</button>
-              <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">✕</button>
-            </td>
-          </tr>
+          <template v-for="cit in citations" :key="cit.id">
+            <tr>
+              <td>
+                <a v-if="cit.entityRoute" class="entity-link" @click.prevent="router.push(cit.entityRoute)" href="#">{{ cit.entityLabel }}</a>
+                <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
+                <span v-else class="muted">—</span>
+              </td>
+              <td>{{ cit.page || '—' }}</td>
+              <td>
+                <span :class="'confidence-badge confidence-' + cit.confidence">
+                  {{ $t('confidenceLevels.' + cit.confidence) }}
+                </span>
+              </td>
+              <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
+              <td>
+                <button
+                  v-if="(assertionCounts[cit.id] ?? 0) > 0"
+                  class="btn-sm btn-assertions"
+                  @click="toggleAssertionExpand(cit.id)"
+                >{{ assertionCounts[cit.id] }}</button>
+                <button
+                  class="btn-sm btn-add-assertion"
+                  @click="openAssertionForm(cit)"
+                >+</button>
+              </td>
+              <td>
+                <button class="btn-sm btn-edit" @click="editingCitation = cit">{{ $t('common.edit') }}</button>
+                <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">✕</button>
+              </td>
+            </tr>
+            <tr v-if="expandedCitationId === cit.id" class="assertion-expand-row">
+              <td :colspan="6">
+                <table class="data-table assertion-inline-table">
+                  <thead>
+                    <tr>
+                      <th>{{ $t('assertions.attribute') }}</th>
+                      <th>{{ $t('assertions.value') }}</th>
+                      <th>{{ $t('assertions.valueOriginal') }}</th>
+                      <th>{{ $t('assertions.isAccepted') }}</th>
+                      <th>{{ $t('common.actions') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="a in expandedAssertions" :key="a.id">
+                      <td>{{ $t('assertions.attributes.' + a.attribute, a.attribute) }}</td>
+                      <td>{{ a.value }}</td>
+                      <td class="td-original">{{ a.value_original }}</td>
+                      <td>
+                        <input type="checkbox" :checked="a.is_accepted" @change="toggleAssertionAccepted(a)" />
+                      </td>
+                      <td>
+                        <button class="btn-sm btn-delete" @click="removeAssertion(a.id)">✕</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </section>
@@ -95,6 +137,14 @@
       @close="editingCitation = null"
       @saved="editingCitation = null; load()"
     />
+    <AssertionFormModal
+      v-if="assertionFormCitation"
+      :citation-id="assertionFormCitation.id"
+      :subject-type="assertionFormSubjectType"
+      :subject-id="assertionFormSubjectId"
+      @close="assertionFormCitation = null"
+      @saved="assertionFormCitation = null; load()"
+    />
   </div>
   <div v-else class="empty">{{ $t('common.loading') }}</div>
 </template>
@@ -105,6 +155,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
+import AssertionFormModal from '../components/AssertionFormModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 
@@ -144,6 +195,12 @@ const source = ref<SourceData | null>(null);
 const citations = ref<CitationRow[]>([]);
 const showCitationForm = ref(false);
 const editingCitation = ref<CitationRow | null>(null);
+const assertionCounts = ref<Record<string, number>>({});
+const expandedCitationId = ref<string | null>(null);
+const expandedAssertions = ref<Array<{ id: string; attribute: string; value: string; value_original: string; confidence: number; is_accepted: boolean; evidence_type: string | null; notes: string }>>([]);
+const assertionFormCitation = ref<CitationRow | null>(null);
+const assertionFormSubjectType = ref('event');
+const assertionFormSubjectId = ref('');
 
 const editFields = reactive({
   title: '',
@@ -217,6 +274,7 @@ async function load() {
         cit.entityRoute = resolved.route;
       }
     }));
+    await loadAssertionCounts();
   } catch (err) {
     console.error('[SourceDetailView] load failed:', err);
     toast.error(t('errors.loadFailed'));
@@ -251,6 +309,80 @@ async function removeCitation(id: string) {
 function onCitationSaved() {
   showCitationForm.value = false;
   load();
+}
+
+async function loadAssertionCounts() {
+  if (!window.api) return;
+  const counts: Record<string, number> = {};
+  await Promise.all(citations.value.map(async (cit) => {
+    try {
+      const list = (await window.api.assertions.forCitation(cit.id)) as unknown[];
+      counts[cit.id] = list.length;
+    } catch { counts[cit.id] = 0; }
+  }));
+  assertionCounts.value = counts;
+}
+
+async function toggleAssertionExpand(citId: string) {
+  if (expandedCitationId.value === citId) {
+    expandedCitationId.value = null;
+    expandedAssertions.value = [];
+    return;
+  }
+  try {
+    expandedAssertions.value = (await window.api.assertions.forCitation(citId)) as typeof expandedAssertions.value;
+    expandedCitationId.value = citId;
+  } catch (err) {
+    console.error('[SourceDetailView] loadAssertions failed:', err);
+  }
+}
+
+function openAssertionForm(cit: CitationRow) {
+  assertionFormCitation.value = cit;
+  // Determine subject from citation target
+  if (cit.event_id) {
+    assertionFormSubjectType.value = 'event';
+    assertionFormSubjectId.value = cit.event_id;
+  } else if (cit.person_id) {
+    assertionFormSubjectType.value = 'person';
+    assertionFormSubjectId.value = cit.person_id;
+  } else if (cit.relationship_id) {
+    assertionFormSubjectType.value = 'relationship';
+    assertionFormSubjectId.value = cit.relationship_id;
+  } else if (cit.place_id) {
+    assertionFormSubjectType.value = 'place';
+    assertionFormSubjectId.value = cit.place_id;
+  } else {
+    // No target — default to event
+    assertionFormSubjectType.value = 'event';
+    assertionFormSubjectId.value = '';
+  }
+}
+
+async function toggleAssertionAccepted(a: { id: string; is_accepted: boolean }) {
+  try {
+    await window.api.assertions.update(a.id, { is_accepted: !a.is_accepted });
+    if (expandedCitationId.value) {
+      expandedAssertions.value = (await window.api.assertions.forCitation(expandedCitationId.value)) as typeof expandedAssertions.value;
+    }
+  } catch (err) {
+    console.error('[SourceDetailView] toggleAssertionAccepted failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
+async function removeAssertion(id: string) {
+  if (!confirm(t('common.confirmDelete'))) return;
+  try {
+    await window.api.assertions.delete(id);
+    await load();
+    if (expandedCitationId.value) {
+      expandedAssertions.value = (await window.api.assertions.forCitation(expandedCitationId.value)) as typeof expandedAssertions.value;
+    }
+  } catch (err) {
+    console.error('[SourceDetailView] removeAssertion failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 onMounted(load);
@@ -338,5 +470,26 @@ onMounted(load);
   background: #e8f4fd;
   color: #1565c0;
   margin-right: 4px;
+}
+.btn-assertions {
+  background: #fef3c7;
+  color: #92400e;
+  margin-right: 4px;
+}
+.btn-add-assertion {
+  background: #f3f4f6;
+  color: #374151;
+}
+.assertion-expand-row td {
+  padding: 0 !important;
+  background: #f9fafb;
+}
+.assertion-inline-table {
+  font-size: var(--font-xs);
+  margin: 0;
+}
+.td-original {
+  color: var(--color-text-subtle);
+  font-style: italic;
 }
 </style>

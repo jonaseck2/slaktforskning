@@ -156,6 +156,17 @@
         </div>
       </div>
 
+      <!-- Evidence Analysis section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('evidence')">
+          <span class="panel-chevron">{{ sections.evidence ? '▾' : '▸' }}</span>
+          {{ $t('assertions.title') }}
+        </button>
+        <div v-if="sections.evidence" class="panel-section-body">
+          <PersonEvidenceSection ref="evidenceSectionRef" :person-id="personId!" />
+        </div>
+      </div>
+
       <!-- Quality section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('quality')">
@@ -211,6 +222,7 @@ import ResearchTasksTable from './ResearchTasksTable.vue';
 import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
+import PersonEvidenceSection from './PersonEvidenceSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
 
@@ -244,6 +256,7 @@ const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void })
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
+const evidenceSectionRef = ref<InstanceType<typeof PersonEvidenceSection> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // Group picker state
@@ -280,6 +293,7 @@ const sections = reactive({
   research: loadSection('research', false),
   identifiers: loadSection('identifiers', false),
   media: loadSection('media', false),
+  evidence: loadSection('evidence', false),
   quality: loadSection('quality', false),
 });
 

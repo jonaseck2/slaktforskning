@@ -141,6 +141,8 @@ Repository       { id, name, address?, city?, postal_code?, state?, country?, ph
 ResearchTask     { id, person_id?, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
 Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
 MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, created_at }
+Assertion        { id, citation_id, subject_type: 'person'|'relationship'|'event'|'place', subject_id, attribute, value, value_original, confidence: 0-3, is_accepted: boolean, evidence_type: 'direct'|'indirect'|'negative'|null, notes, created_at }
+ConflictGroup    { subject_type, subject_id, attribute, assertions: Assertion[] }
 ```
 
 ## Database Schema
@@ -282,6 +284,19 @@ getMediaForEntity(db, entityType, entityId) → (Media & { link_id, link_type })
 removeMediaLink(db, linkId) → boolean
 ```
 
+### assertions.ts
+```
+createAssertion(db, { citation_id, subject_type, subject_id, attribute, value?, value_original?, confidence?, is_accepted?, evidence_type?, notes? }) → Assertion
+getAssertion(db, id) → Assertion | null
+getAssertionsForSubject(db, subjectType, subjectId) → Assertion[]
+getAssertionsForAttribute(db, subjectType, subjectId, attribute) → Assertion[]
+getAssertionsForCitation(db, citationId) → Assertion[]
+updateAssertion(db, id, { value?, value_original?, confidence?, is_accepted?, evidence_type?, notes?, attribute? }) → Assertion | null
+deleteAssertion(db, id) → boolean
+getConflicts(db) → ConflictGroup[]
+getConflictsForPerson(db, personId) → ConflictGroup[]
+```
+
 ---
 
 ## IPC Bridge
@@ -367,7 +382,7 @@ Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 
 Two flavours:
 
-**Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`):
+**Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `PersonEvidenceSection`, `EventList`):
 - Takes `personId: string` prop
 - Loads its own data with `watch(() => props.personId, load, { immediate: true })` — **never `onMounted`** — so it reacts when the panel switches person without being destroyed/recreated
 - Uses `defineExpose({ action })` when the parent's header button must trigger something inside (e.g. open add form, file picker)
@@ -406,6 +421,8 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonIdentifiersSection` | `personId: string` | — | Self-loading identifiers table + add modal. Exposes `openAddForm()`. |
 | `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink. Exposes `attach()`. |
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
+| `PersonEvidenceSection` | `personId: string` | — | Self-loading evidence analysis: conflict groups (expandable) + non-conflicting assertions table. Accept/reject toggle, inline notes. Exposes `reload()`. |
+| `AssertionFormModal` | `citationId: string`, `subjectType: string`, `subjectId: string`, `assertion?: object` | `close`, `saved` | Create/edit assertion. Attribute dropdown filtered by subject type, confidence, evidence type, accept checkbox. |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
@@ -532,6 +549,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 **Research task tools:** `create_research_task`, `get_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task`
 
 **Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`
+
+**Assertion tools:** `create_assertion`, `get_assertion`, `get_assertions_for_subject`, `get_assertions_for_attribute`, `get_assertions_for_citation`, `update_assertion`, `delete_assertion`, `get_conflicts`, `get_conflicts_for_person`
 
 **Database tools:** `get_current_database`, `switch_database`
 

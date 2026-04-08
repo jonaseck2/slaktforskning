@@ -20,6 +20,7 @@ import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
+import * as assertions from '../api/assertions';
 import { getDbSetting } from '../api/db_settings';
 
 let importInProgress = false;
@@ -485,6 +486,17 @@ export function registerIpcHandlers(): void {
     const data = fs.readFileSync(absPath).toString('base64');
     return `data:${mime};base64,${data}`;
   });
+
+  // Assertions
+  wrapHandler('assertions:create', (data) => assertions.createAssertion(getDatabase(), data as Parameters<typeof assertions.createAssertion>[1]));
+  wrapHandler('assertions:get', (id) => assertions.getAssertion(getDatabase(), id as string));
+  wrapHandler('assertions:forSubject', (subjectType, subjectId) => assertions.getAssertionsForSubject(getDatabase(), subjectType as string, subjectId as string));
+  wrapHandler('assertions:forAttribute', (subjectType, subjectId, attribute) => assertions.getAssertionsForAttribute(getDatabase(), subjectType as string, subjectId as string, attribute as string));
+  wrapHandler('assertions:forCitation', (citationId) => assertions.getAssertionsForCitation(getDatabase(), citationId as string));
+  wrapHandler('assertions:update', (id, updates) => assertions.updateAssertion(getDatabase(), id as string, updates as Parameters<typeof assertions.updateAssertion>[2]));
+  wrapHandler('assertions:delete', (id) => assertions.deleteAssertion(getDatabase(), id as string));
+  wrapHandler('assertions:conflicts', () => assertions.getConflicts(getDatabase()));
+  wrapHandler('assertions:conflictsForPerson', (personId) => assertions.getConflictsForPerson(getDatabase(), personId as string));
 
   // Checks
   wrapHandler('checks:runAll', () => {

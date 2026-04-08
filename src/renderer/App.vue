@@ -269,10 +269,11 @@ body {
 .app {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 185px;
+  width: 220px;
   background: var(--color-primary);
   color: white;
   padding: 12px 8px;
@@ -280,12 +281,14 @@ body {
   flex-direction: column;
   gap: 2px;
   flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .sidebar-header {
   padding: 4px 8px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -296,6 +299,7 @@ body {
 
 .sidebar-search {
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 .sidebar-search-input {
   width: 100%;
@@ -324,6 +328,7 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   border-left: 3px solid rgba(100, 180, 255, 0.7);
+  flex-shrink: 0;
 }
 .focus-label {
   font-size: var(--font-xs);
@@ -348,6 +353,7 @@ body {
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.35);
   padding: 2px 10px 6px;
+  flex-shrink: 0;
 }
 
 .sidebar a,
@@ -360,6 +366,7 @@ body {
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .sidebar a:hover,
@@ -371,7 +378,7 @@ body {
 }
 
 .nav-icon { font-size: var(--font-base); line-height: 1; flex-shrink: 0; }
-.nav-label { font-size: var(--font-sm); flex: 1; }
+.nav-label { font-size: var(--font-sm); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .sidebar-spacer {
   flex: 1;
@@ -385,6 +392,7 @@ body {
   color: rgba(255, 255, 255, 0.45) !important;
   flex-direction: row;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .nav-bottom:hover,
@@ -410,8 +418,10 @@ body {
 
 .content {
   flex: 1;
+  min-height: 0;
   padding: 24px;
   overflow-y: auto;
+  will-change: scroll-position;
 }
 
 @media print {
@@ -424,6 +434,7 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   margin-top: 4px;
   padding-top: 4px;
+  flex-shrink: 0;
 }
 .settings-toggle {
   display: flex;

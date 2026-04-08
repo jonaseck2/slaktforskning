@@ -185,16 +185,27 @@ export interface MediaLink {
   created_at: string;
 }
 
+export type AssertionSubjectType = 'person' | 'relationship' | 'event' | 'place';
+export type EvidenceType = 'direct' | 'indirect' | 'negative';
+
 export interface Assertion {
   id: string;
   citation_id: string;
-  subject_type: 'person' | 'relationship' | 'event' | 'place';
+  subject_type: AssertionSubjectType;
   subject_id: string;
   attribute: string;
   value: string;
   value_original: string;
   confidence: number;
   is_accepted: boolean;
+  evidence_type: EvidenceType | null;
   notes: string;
   created_at: string;
+}
+
+export interface ConflictGroup {
+  subject_type: AssertionSubjectType;
+  subject_id: string;
+  attribute: string;
+  assertions: Assertion[];
 }

@@ -132,10 +132,12 @@ export function initializeSchema(db: Database): void {
       value_original TEXT NOT NULL DEFAULT '',
       confidence INTEGER NOT NULL DEFAULT 0,
       is_accepted INTEGER NOT NULL DEFAULT 0,
+      evidence_type TEXT,
       notes TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_assertions_citation_id ON assertions(citation_id);
+    CREATE INDEX IF NOT EXISTS idx_assertions_subject ON assertions(subject_type, subject_id);
 
     CREATE TABLE IF NOT EXISTS groups (
       id TEXT PRIMARY KEY,
@@ -305,6 +307,12 @@ export function initializeSchema(db: Database): void {
   const mediaCols = (db.prepare('PRAGMA table_info(media)').all([]) as Array<{ name: string }>).map(c => c.name);
   if (!mediaCols.includes('is_missing')) {
     db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // v0.39.0 assertions: evidence_type column
+  const assertionCols = (db.prepare('PRAGMA table_info(assertions)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!assertionCols.includes('evidence_type')) {
+    db.exec('ALTER TABLE assertions ADD COLUMN evidence_type TEXT');
   }
 
   // Indexes that depend on migrated columns — run after migrations
