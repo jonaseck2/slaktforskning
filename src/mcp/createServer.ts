@@ -926,6 +926,16 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
     return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
   });
 
+  server.registerTool('reorder_media_links', {
+    description: 'Reorder media links by providing the link IDs in the desired order. The first ID gets sort_order 0, second gets 1, etc.',
+    inputSchema: {
+      link_ids: z.array(z.string()).describe('Media link IDs in desired display order'),
+    },
+  }, async ({ link_ids }) => {
+    media.reorderMediaLinks(db, link_ids);
+    return { content: [{ type: 'text', text: `Reordered ${link_ids.length} media links` }] };
+  });
+
   // Duplicate detection & merge tools
   server.registerTool('find_duplicates', {
     description: 'Find potential duplicate persons by comparing names and birth dates. Returns candidates with similarity scores.',
