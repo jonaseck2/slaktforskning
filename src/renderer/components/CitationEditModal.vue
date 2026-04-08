@@ -1,6 +1,6 @@
 <template>
-  <BaseModal @close="$emit('close')">
-      <h3>{{ $t('citations.editTitle') }}</h3>
+  <BaseModal @close="$emit('close')" title-id="modal-title-citation-edit">
+      <h3 id="modal-title-citation-edit">{{ $t('citations.editTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
           {{ $t('citations.pageLocation') }}

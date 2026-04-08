@@ -21,8 +21,8 @@
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
-    <BaseModal v-if="showExportReport && exportReport" @close="showExportReport = false">
-      <h3>{{ $t('importExport.exportReportTitle') }}</h3>
+    <BaseModal v-if="showExportReport && exportReport" @close="showExportReport = false" title-id="modal-title-gedcom-export-report">
+      <h3 id="modal-title-gedcom-export-report">{{ $t('importExport.exportReportTitle') }}</h3>
       <ul class="report-counts">
         <li>{{ $t('importExport.exportReportPersons', { n: exportReport.persons }) }}</li>
         <li>{{ $t('importExport.exportReportFamilies', { n: exportReport.families }) }}</li>

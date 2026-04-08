@@ -1,6 +1,6 @@
 <template>
-  <BaseModal @close="$emit('close')">
-      <h3>{{ name ? $t('personDetail.editNameTitle') : $t('personDetail.addNameTitle') }}</h3>
+  <BaseModal @close="$emit('close')" title-id="modal-title-name">
+      <h3 id="modal-title-name">{{ name ? $t('personDetail.editNameTitle') : $t('personDetail.addNameTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
           {{ $t('persons.givenName') }}

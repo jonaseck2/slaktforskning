@@ -39,8 +39,8 @@
     </table>
 
     <!-- Add modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false">
-        <h3>{{ $t('places.addTitle') }}</h3>
+    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-place">
+        <h3 id="modal-title-add-place">{{ $t('places.addTitle') }}</h3>
         <form @submit.prevent="addPlace">
           <label>
             {{ $t('places.name') }}

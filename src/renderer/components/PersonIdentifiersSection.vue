@@ -20,8 +20,8 @@
       </tbody>
     </table>
 
-    <BaseModal v-if="showAddForm" @close="showAddForm = false">
-        <h3>{{ $t('identifiers.addTitle') }}</h3>
+    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-identifier">
+        <h3 id="modal-title-identifier">{{ $t('identifiers.addTitle') }}</h3>
         <form @submit.prevent="add">
           <label>
             {{ $t('identifiers.type') }}

@@ -29,8 +29,8 @@
     <div ref="sentinel" class="scroll-sentinel"></div>
 
     <!-- Add Relationship Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false">
-        <h3>{{ $t('relationships.addRelationship') }}</h3>
+    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-relationship">
+        <h3 id="modal-title-add-relationship">{{ $t('relationships.addRelationship') }}</h3>
         <form @submit.prevent="addRelationship">
           <label>
             {{ $t('common.type') }}

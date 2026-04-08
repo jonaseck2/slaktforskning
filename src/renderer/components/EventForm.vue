@@ -1,6 +1,6 @@
 <template>
-  <BaseModal @close="$emit('close')">
-      <h3>{{ editingEvent ? $t('events.editEvent') : $t('events.addEventTitle') }}</h3>
+  <BaseModal @close="$emit('close')" title-id="modal-title-event">
+      <h3 id="modal-title-event">{{ editingEvent ? $t('events.editEvent') : $t('events.addEventTitle') }}</h3>
       <form @submit.prevent="save">
         <label>
           {{ $t('events.eventType') }}

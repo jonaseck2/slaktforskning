@@ -481,6 +481,28 @@
   gap: 4px 16px;
 }
 
+/* ── Focus visible — accessibility ─────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10000;
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: white;
+  text-decoration: none;
+  font-size: var(--font-sm);
+  border-radius: 0 0 4px 4px;
+}
+.skip-link:focus {
+  left: 8px;
+}
+
 /* ── 14. Dark mode (screen only) ──────────────────────── */
 @media screen {
   html.dark {
