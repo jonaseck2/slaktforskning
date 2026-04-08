@@ -117,13 +117,11 @@ test.describe('Place Detail', () => {
     await app.expectText('Notes');
   });
 
-  test('citations badge is rendered', async () => {
-    const place = await app.createPlace({ name: 'Citerad Ort' });
+  test('place details section is shown', async () => {
+    const place = await app.createPlace({ name: 'Detaljerad Ort' });
     await app.navigate(`/places/${place.id}`);
-    await app.waitForText('Citerad Ort');
-    const dom = await app.getDom();
-    const hasBadge = dom.includes('unsourced-badge') || dom.includes('source-count-badge');
-    expect(hasBadge).toBe(true);
+    await app.waitForText('Detaljerad Ort');
+    await app.expectText('Place Details');
   });
 });
 

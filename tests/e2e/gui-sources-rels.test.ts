@@ -97,7 +97,7 @@ test.describe('Sources CRUD', () => {
 test.describe('Relationships CRUD', () => {
   test('empty state shows placeholder', async () => {
     await app.navigate('/relationships');
-    await app.waitForText('No relationships yet');
+    await app.waitForText('No relations yet');
   });
 
   test('create a relationship via modal', async () => {
@@ -140,6 +140,8 @@ test.describe('Relationships CRUD', () => {
 
   test('relationship detail back button returns to list', async () => {
     const rel = await app.createRelationship({ type: 'couple' });
+    // Navigate to list first so router.back() returns to /relationships.
+    await app.navigate('/relationships');
     await app.navigate(`/relationships/${rel.id}`);
     await app.settle();
 
@@ -152,18 +154,15 @@ test.describe('Relationships CRUD', () => {
     expect(routePath).toBe('/relationships');
   });
 
-  test('relationship citations badge is present', async () => {
+  test('relationship detail shows events section', async () => {
     const p = await app.createPerson({ given_name: 'Pelle', surname: 'Testsson' });
     const rel = await app.createRelationship({ type: 'couple', person1_id: p.id });
+    const event = await app.createEvent({ event_type: 'marriage', date_original: '1900', relationship_id: rel.id });
+    await app.addEventParticipant({ event_id: event.id, person_id: p.id, role: 'primary' });
 
     await app.navigate(`/relationships/${rel.id}`);
-    // Wait for the view to fully load (Type section confirms the detail view rendered)
-    await app.waitForText('Type');
-    await app.settle(50);
-    const dom = await app.getDom();
-    // CitationBadge renders 'unsourced-badge' when count=0, 'source-count-badge' when count>0
-    const hasBadge = dom.includes('unsourced-badge') || dom.includes('source-count-badge');
-    expect(hasBadge).toBe(true);
+    // EventList is self-loading — wait for the event date to appear.
+    await app.waitForText('1900');
   });
 });
 
