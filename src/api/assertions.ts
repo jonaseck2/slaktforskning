@@ -35,6 +35,13 @@ export function getAssertion(db: Database, id: string): Assertion | null {
   return row ? { ...row, is_accepted: !!row.is_accepted } : null;
 }
 
+export function listAssertions(db: Database): Assertion[] {
+  const rows = queryAll<Assertion & { is_accepted: number }>(db, `
+    SELECT * FROM assertions ORDER BY subject_type, subject_id, attribute, created_at
+  `);
+  return rows.map(r => ({ ...r, is_accepted: !!r.is_accepted }));
+}
+
 export function getAssertionsForSubject(db: Database, subjectType: string, subjectId: string): Assertion[] {
   const rows = queryAll<Assertion & { is_accepted: number }>(db, `
     SELECT * FROM assertions WHERE subject_type = ? AND subject_id = ? ORDER BY attribute, created_at

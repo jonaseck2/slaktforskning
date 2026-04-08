@@ -501,6 +501,7 @@ export function registerIpcHandlers(): void {
 
   // Assertions
   wrapHandler('assertions:create', (data) => assertions.createAssertion(getDatabase(), data as Parameters<typeof assertions.createAssertion>[1]));
+  wrapHandler('assertions:list', () => assertions.listAssertions(getDatabase()));
   wrapHandler('assertions:get', (id) => assertions.getAssertion(getDatabase(), id as string));
   wrapHandler('assertions:forSubject', (subjectType, subjectId) => assertions.getAssertionsForSubject(getDatabase(), subjectType as string, subjectId as string));
   wrapHandler('assertions:forAttribute', (subjectType, subjectId, attribute) => assertions.getAssertionsForAttribute(getDatabase(), subjectType as string, subjectId as string, attribute as string));

@@ -40,6 +40,10 @@
         <span class="nav-icon">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
+      <router-link to="/evidence" class="nav-item">
+        <span class="nav-icon">⚖️</span>
+        <span class="nav-label">{{ $t('assertions.nav') }}</span>
+      </router-link>
       <router-link to="/groups" class="nav-item">
         <span class="nav-icon">🏷️</span>
         <span class="nav-label">{{ $t('nav.groups') }}</span>
