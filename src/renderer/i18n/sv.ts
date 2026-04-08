@@ -679,6 +679,10 @@ export default {
     addMedia: 'Lägg till media',
     title_label: 'Titel',
     missingCount: '{count} saknas',
+    profile: 'Profil',
+    profileAlt: 'Profilbild',
+    moveUp: 'Flytta upp',
+    moveDown: 'Flytta ner',
   },
   errors: {
     saveFailed: 'Det gick inte att spara. Försök igen.',

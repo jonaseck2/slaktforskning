@@ -679,6 +679,10 @@ export default {
     addMedia: 'Add media',
     title_label: 'Title',
     missingCount: '{count} missing',
+    profile: 'Profile',
+    profileAlt: 'Profile picture',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
   },
   errors: {
     saveFailed: 'Could not save. Please try again.',
