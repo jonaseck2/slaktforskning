@@ -2,10 +2,21 @@
   <div v-if="person" class="person-detail">
     <div class="detail-header">
       <button class="btn-back" @click="$router.back()">{{ $t('personDetail.back') }}</button>
-      <div class="header-info">
-        <h2>{{ primaryName }}</h2>
-        <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
-        <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
+      <div class="header-row">
+        <img
+          v-if="profilePicUrl"
+          :src="profilePicUrl"
+          class="profile-thumbnail"
+          :alt="$t('media.profileAlt')"
+        />
+        <div v-else class="profile-placeholder" :class="'sex-' + person.sex">
+          {{ person.sex === 'F' ? '♀' : person.sex === 'M' ? '♂' : '?' }}
+        </div>
+        <div class="header-info">
+          <h2>{{ primaryName }}</h2>
+          <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
+          <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
+        </div>
       </div>
     </div>
 
@@ -102,7 +113,7 @@
         <h4>{{ $t('media.title') }}</h4>
         <button class="btn-add" @click="mediaSectionRef?.attach()">{{ $t('media.attach') }}</button>
       </div>
-      <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" />
+      <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
     </section>
 
     <!-- Research Tasks Section -->
@@ -202,6 +213,7 @@ const toast = useToast();
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
 const primaryName = ref('');
+const profilePicUrl = ref<string | null>(null);
 const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingName = ref<NameRow | null>(null);
@@ -255,9 +267,20 @@ async function load() {
 
     await loadPersonTasks();
     await loadPersonGroups();
+    await loadProfilePic();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
     toast.error(t('errors.loadFailed'));
+  }
+}
+
+async function loadProfilePic() {
+  if (!person.value) { profilePicUrl.value = null; return; }
+  const mediaItems = await window.api.media.forEntity('person', person.value.id) as Array<{ id: string }>;
+  if (mediaItems.length > 0) {
+    profilePicUrl.value = await window.api.media.readAsDataUrl(mediaItems[0].id) as string | null;
+  } else {
+    profilePicUrl.value = null;
   }
 }
 
@@ -318,6 +341,35 @@ onMounted(async () => {
 .btn-back:hover {
   text-decoration: underline;
 }
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.profile-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+.profile-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #bbb;
+  flex-shrink: 0;
+}
+.profile-placeholder.sex-M { color: #6fa8dc; }
+.profile-placeholder.sex-F { color: #e06666; }
 .header-info {
   display: flex;
   align-items: center;
