@@ -11,7 +11,16 @@
     </thead>
     <tbody>
       <template v-for="task in tasks" :key="task.id">
-        <tr class="clickable-row" @click="toggleExpand(task)">
+        <tr
+          class="clickable-row"
+          tabindex="0"
+          role="button"
+          :aria-expanded="expandedId === task.id"
+          :aria-label="$t('a11y.expandRow', { item: task.task })"
+          @click="toggleExpand(task)"
+          @keydown.enter="toggleExpand(task)"
+          @keydown.space.prevent="toggleExpand(task)"
+        >
           <td><span :class="['priority-badge', 'priority-' + task.priority]">{{ task.priority }}</span></td>
           <td>
             <span

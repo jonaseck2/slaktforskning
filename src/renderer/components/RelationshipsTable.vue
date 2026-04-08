@@ -14,7 +14,12 @@
         v-for="rel in relationships"
         :key="rel.id"
         class="clickable-row"
+        tabindex="0"
+        role="button"
+        :aria-label="$t('a11y.editItem', { item: $t('relTypes.' + rel.type) })"
         @click="router.push('/relationships/' + rel.id)"
+        @keydown.enter="router.push('/relationships/' + rel.id)"
+        @keydown.space.prevent="router.push('/relationships/' + rel.id)"
       >
         <td>
           <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>

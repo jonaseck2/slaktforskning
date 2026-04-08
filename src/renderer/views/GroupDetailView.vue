@@ -40,7 +40,17 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="m in members" :key="m.person_id" class="clickable-row" @click="goToPerson(m)">
+        <tr
+          v-for="m in members"
+          :key="m.person_id"
+          class="clickable-row"
+          tabindex="0"
+          role="button"
+          :aria-label="$t('a11y.editItem', { item: ((m.given_name || '') + ' ' + (m.surname || '')).trim() })"
+          @click="goToPerson(m)"
+          @keydown.enter="goToPerson(m)"
+          @keydown.space.prevent="goToPerson(m)"
+        >
           <td>
             <span class="person-link">
               <PersonName :given-name="m.given_name" :surname="m.surname" :preferred-name="m.preferred_name" :nickname="m.nickname" />

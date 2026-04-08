@@ -1,13 +1,14 @@
 <template>
   <div class="date-input">
     <div class="date-row">
-      <select :value="dateType" @change="updateDateType($event)">
+      <select :value="dateType" :aria-label="$t('a11y.dateTypeLabel')" @change="updateDateType($event)">
         <option v-for="dt in DATE_TYPE_VALUES" :key="dt" :value="dt">{{ $t('dateTypes.' + dt) }}</option>
       </select>
       <input
         v-if="dateType !== 'unknown'"
         type="date"
         :value="dateValue"
+        :aria-label="$t('a11y.dateStartLabel')"
         @input="updateDateValue($event)"
       />
       <template v-if="dateType === 'between'">
@@ -15,6 +16,7 @@
         <input
           type="date"
           :value="dateValueEnd"
+          :aria-label="$t('a11y.dateEndLabel')"
           @input="updateDateValueEnd($event)"
         />
       </template>
@@ -24,6 +26,7 @@
         type="text"
         :value="dateOriginal"
         :placeholder="$t('dateInput.originalPlaceholder')"
+        :aria-label="$t('a11y.dateOriginalLabel')"
         @input="updateDateOriginal($event)"
       />
     </div>

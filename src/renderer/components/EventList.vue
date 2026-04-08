@@ -19,7 +19,12 @@
           v-for="event in events"
           :key="event.id"
           :class="['clickable-row', { 'non-interactive': props.readonly }]"
+          :tabindex="props.readonly ? undefined : 0"
+          :role="props.readonly ? undefined : 'button'"
+          :aria-label="props.readonly ? undefined : $t('a11y.editItem', { item: $t('eventTypes.' + event.event_type) })"
           @click="!props.readonly && editEvent(event)"
+          @keydown.enter="!props.readonly && editEvent(event)"
+          @keydown.space.prevent="!props.readonly && editEvent(event)"
         >
           <td><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
           <td class="td-date">{{ formatDate(event) }}</td>

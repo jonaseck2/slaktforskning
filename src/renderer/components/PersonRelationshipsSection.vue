@@ -14,7 +14,12 @@
         v-for="rel in rels"
         :key="rel.id"
         class="clickable-row"
+        tabindex="0"
+        role="button"
+        :aria-label="$t('a11y.editItem', { item: rel.otherName })"
         @click="router.push('/relationships/' + rel.id)"
+        @keydown.enter="router.push('/relationships/' + rel.id)"
+        @keydown.space.prevent="router.push('/relationships/' + rel.id)"
       >
         <td><span class="type-badge">{{ rel.typeLabel }}</span></td>
         <td>

@@ -71,7 +71,12 @@
             v-for="person in persons"
             :key="person.id"
             class="clickable-row"
+            tabindex="0"
+            role="button"
+            :aria-label="$t('a11y.editItem', { item: ((person.given_name || '') + ' ' + (person.surname || '')).trim() })"
             @click="goToDetail(person)"
+            @keydown.enter="goToDetail(person)"
+            @keydown.space.prevent="goToDetail(person)"
           >
             <td>
               <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>

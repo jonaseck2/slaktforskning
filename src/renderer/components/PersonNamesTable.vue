@@ -9,7 +9,17 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="name in names" :key="name.id" class="clickable-row" @click="$emit('edit', name)">
+      <tr
+        v-for="name in names"
+        :key="name.id"
+        class="clickable-row"
+        tabindex="0"
+        role="button"
+        :aria-label="$t('a11y.editItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
+        @click="$emit('edit', name)"
+        @keydown.enter="$emit('edit', name)"
+        @keydown.space.prevent="$emit('edit', name)"
+      >
         <td>
           <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
           <PersonName :given-name="name.given_name" :preferred-name="name.preferred_name ?? null" :nickname="name.nickname ?? null" />
@@ -23,6 +33,7 @@
           <button
             v-else
             class="btn-sm btn-delete"
+            :aria-label="$t('a11y.deleteItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
             @click.stop="$emit('delete', name.id)"
           >✕</button>
         </td>

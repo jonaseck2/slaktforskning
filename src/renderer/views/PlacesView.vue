@@ -27,7 +27,12 @@
           v-for="place in filteredPlaces"
           :key="place.id"
           class="clickable-row"
+          tabindex="0"
+          role="button"
+          :aria-label="$t('a11y.editItem', { item: place.name })"
           @click="$router.push('/places/' + place.id)"
+          @keydown.enter="$router.push('/places/' + place.id)"
+          @keydown.space.prevent="$router.push('/places/' + place.id)"
         >
           <td>{{ place.name }}</td>
           <td class="actions-cell">

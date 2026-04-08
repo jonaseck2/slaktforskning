@@ -51,7 +51,12 @@
             v-for="(r, i) in filteredResults"
             :key="resultKey(r) + ':' + i"
             :class="['clickable-row', { 'row-ignored': isIgnored(r) }]"
+            tabindex="0"
+            role="button"
+            :aria-label="$t('a11y.editItem', { item: r.personNames?.[0] || $t('common.unknown') })"
             @click="navigateTo(r)"
+            @keydown.enter="navigateTo(r)"
+            @keydown.space.prevent="navigateTo(r)"
           >
             <td>
               <span :class="['severity-badge', 'badge-' + r.severity]">
