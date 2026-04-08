@@ -354,9 +354,13 @@ function importEventNode(
   }
 
   // Event media
+  let eventMediaOrder = 0;
   for (const objeNode of getChildren(evNode, 'OBJE')) {
     const mediaId = importObjeNode(db, objeNode, objeMap, importOptions);
-    if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id });
+    if (mediaId) {
+      addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id, sort_order: eventMediaOrder });
+      eventMediaOrder++;
+    }
   }
 
   return event;
@@ -690,9 +694,13 @@ function doImportGedcom(
     }
 
     // Person-level media
+    let personMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
       const mediaId = importObjeNode(db, objeNode, objeMap, options);
-      if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'person', entity_id: person.id });
+      if (mediaId) {
+        addMediaLink(db, { media_id: mediaId, entity_type: 'person', entity_id: person.id, sort_order: personMediaOrder });
+        personMediaOrder++;
+      }
     }
 
     // Count LDS ordinance tags on INDI records (not imported — not relevant for Swedish genealogy)
@@ -807,9 +815,13 @@ function doImportGedcom(
     }
 
     // Family-level media
+    let relMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
       const mediaId = importObjeNode(db, objeNode, objeMap, options);
-      if (mediaId) addMediaLink(db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id });
+      if (mediaId) {
+        addMediaLink(db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id, sort_order: relMediaOrder });
+        relMediaOrder++;
+      }
     }
 
     // Count unrecognised top-level FAM tags
