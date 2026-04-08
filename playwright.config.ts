@@ -45,5 +45,12 @@ export default defineConfig({
       timeout: 120000,
       retries: 1,
     },
+    {
+      // ARIA accessibility verification
+      name: 'gui-a11y',
+      testMatch: 'gui-a11y.test.ts',
+      timeout: 120000,
+      retries: 1,
+    },
   ],
 });
