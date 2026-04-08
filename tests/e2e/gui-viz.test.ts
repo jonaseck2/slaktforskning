@@ -33,11 +33,14 @@ test.setTimeout(30_000);
 
 test.describe('Visualization empty state', () => {
   test('shows empty state when no persons exist', async () => {
+    // Clear the last-used focal person so the view doesn't redirect to a stored person ID.
+    await app.executeJs(`localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
     await app.waitForText('Add a person to start visualizing');
   });
 
   test('empty state has data-testid attribute for reliable selection', async () => {
+    await app.executeJs(`localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
     const dom = await app.getDom();
     expect(dom).toContain('viz-empty');
@@ -93,11 +96,11 @@ test.describe('Visualization with persons', () => {
     await app.waitForText('Maja');
   });
 
-  test('focal person name has data-testid', async () => {
+  test('focal person name is shown in panel', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
     const dom = await app.getDom();
-    expect(dom).toContain('visualization-focal-name');
+    expect(dom).toContain('panel-name');
   });
 
   test('pedigree chart is active by default and renders SVG', async () => {
@@ -167,7 +170,8 @@ test.describe('Visualization with persons', () => {
     await app.waitForText('Maja');
     await app.settle(50);
 
-    await app.click('.btn-detail');
+    // The PersonPanel has a router-link with class panel-section-header-action in the Person section header.
+    await app.click('a.panel-section-header-action');
     await app.settle(80);
 
     const routePath = await app.executeJs<string>(

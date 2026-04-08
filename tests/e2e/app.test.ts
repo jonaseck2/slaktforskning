@@ -17,11 +17,16 @@ test('app builds and launches via electron-forge', async () => {
     let output = '';
     let launched = false;
 
-    const proc = spawn('npx', ['electron-forge', 'start'], {
-      cwd: projectRoot,
-      env: { ...process.env, SLAKTFORSKNING_DB: dbPath },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    const isWindows = process.platform === 'win32';
+    const proc = spawn(
+      isWindows ? 'cmd' : 'npx',
+      isWindows ? ['/c', 'npx electron-forge start'] : ['electron-forge', 'start'],
+      {
+        cwd: projectRoot,
+        env: { ...process.env, SLAKTFORSKNING_DB: dbPath },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }
+    );
 
     const timeout = setTimeout(() => {
       proc.kill();
@@ -62,11 +67,16 @@ test('MCP server starts and responds', async () => {
   const result = await new Promise<{ success: boolean; output: string }>((resolve) => {
     let output = '';
 
-    const proc = spawn('npx', ['tsx', 'src/mcp/server.ts'], {
-      cwd: projectRoot,
-      env: { ...process.env, SLAKTFORSKNING_DB: dbPath },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    const isWin = process.platform === 'win32';
+    const proc = spawn(
+      isWin ? 'cmd' : 'npx',
+      isWin ? ['/c', 'npx tsx src/mcp/server.ts'] : ['tsx', 'src/mcp/server.ts'],
+      {
+        cwd: projectRoot,
+        env: { ...process.env, SLAKTFORSKNING_DB: dbPath },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }
+    );
 
     // Send MCP initialize request
     const initMsg = JSON.stringify({

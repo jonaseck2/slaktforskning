@@ -18,31 +18,58 @@ export const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 
 /** Kill any process currently listening on the given port (stale run cleanup). */
 export function killPort(port: number): void {
-  try {
-    // -i:PORT must be a single argument for lsof to parse it as a port filter
-    const pids = execFileSync('lsof', ['-t', '-i:' + String(port)], {
-      encoding: 'utf-8',
-    }).trim();
-    if (pids) {
-      const pidList = pids.split('\n').filter(Boolean);
-      execFileSync('kill', ['-9', ...pidList]);
+  if (process.platform === 'win32') {
+    try {
+      // netstat -ano lists TCP connections with PIDs; find LISTENING on the target port
+      const out = execFileSync(
+        'cmd', ['/c', `netstat -ano -p TCP 2>nul`],
+        { encoding: 'utf-8' }
+      );
+      const pids = new Set<string>();
+      for (const line of out.split('\n')) {
+        if (!line.includes('LISTENING')) continue;
+        const cols = line.trim().split(/\s+/);
+        const addr = cols[1] ?? '';
+        const pid  = cols[cols.length - 1] ?? '';
+        if (addr.endsWith(':' + String(port)) && /^\d+$/.test(pid) && pid !== '0') {
+          pids.add(pid);
+        }
+      }
+      for (const pid of pids) {
+        try { execFileSync('taskkill', ['/F', '/PID', pid], { stdio: 'ignore' }); } catch { /* ok */ }
+      }
+    } catch { /* Nothing on port — fine */ }
+  } else {
+    try {
+      // -i:PORT must be a single argument for lsof to parse it as a port filter
+      const pids = execFileSync('lsof', ['-t', '-i:' + String(port)], {
+        encoding: 'utf-8',
+      }).trim();
+      if (pids) {
+        const pidList = pids.split('\n').filter(Boolean);
+        execFileSync('kill', ['-9', ...pidList]);
+      }
+    } catch {
+      // Nothing on port — fine
     }
-  } catch {
-    // Nothing on port — fine
   }
 }
 
 /**
  * Kill the entire process group rooted at proc.pid.
- * Using detached:true + process.kill(-pid) ensures all children
- * (electron-forge → Vite → Electron) receive the signal, not just npx.
+ * - POSIX: detached:true creates a process group; process.kill(-pid) signals it.
+ * - Windows: taskkill /F /T /PID kills the whole process tree.
  */
 export async function killProcessGroup(proc: ChildProcess): Promise<void> {
   if (!proc.pid) return;
   const pid = proc.pid;
-  try { process.kill(-pid, 'SIGTERM'); } catch { /* already dead */ }
-  await new Promise<void>((r) => setTimeout(r, 500));
-  try { process.kill(-pid, 'SIGKILL'); } catch { /* already dead */ }
+  if (process.platform === 'win32') {
+    try { execFileSync('taskkill', ['/F', '/T', '/PID', String(pid)], { stdio: 'ignore' }); } catch { /* already dead */ }
+  } else {
+    try { process.kill(-pid, 'SIGTERM'); } catch { /* already dead */ }
+    await new Promise<void>((r) => setTimeout(r, 500));
+    try { process.kill(-pid, 'SIGKILL'); } catch { /* already dead */ }
+  }
 }
 
 export interface AppInstance {
@@ -63,7 +90,14 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
     `slaktforskning-e2e${tag ? '-' + tag : ''}-${Date.now()}.db`
   );
 
-  const proc = spawn('npx', ['electron-forge', 'start'], {
+  const isWindows = process.platform === 'win32';
+  // On Windows, npx is npx.cmd and cannot be spawned directly — use cmd /c.
+  // On POSIX, use detached to form a process group so killProcessGroup(-pid) kills all children.
+  const spawnCmd  = isWindows ? 'cmd'  : 'npx';
+  const spawnArgs = isWindows
+    ? ['/c', 'npx electron-forge start']
+    : ['electron-forge', 'start'];
+  const proc = spawn(spawnCmd, spawnArgs, {
     cwd: PROJECT_ROOT,
     env: {
       ...process.env,
@@ -71,8 +105,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       SLAKTFORSKNING_UI_PORT: String(port),
     },
     stdio: ['pipe', 'pipe', 'pipe'],
-    // detached creates a new process group so killProcessGroup can kill the full tree
-    detached: true,
+    detached: !isWindows,
   });
 
   let output = '';
@@ -325,20 +358,20 @@ export class AppDriver {
   }
 
   /**
-   * Set the UI locale using the sidebar dropdown.
-   * More robust than directly accessing window.__vue_i18n.global.locale.value
-   * because it exercises real Vue reactivity via the switchLocale handler.
+   * Set the UI locale directly via the vue-i18n global.
+   * The app exposes window.__vue_i18n (set in main.ts).
+   * This is cross-platform and works regardless of sidebar state.
    */
   async setLocale(locale: 'en' | 'sv'): Promise<void> {
     await this.executeJs(`
       (() => {
-        const sel = document.querySelector('select.locale-switcher');
-        if (!sel) return;
-        sel.value = ${JSON.stringify(locale)};
-        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        const i18n = window.__vue_i18n;
+        if (i18n && i18n.global) {
+          i18n.global.locale.value = ${JSON.stringify(locale)};
+        }
       })()
     `);
-    await this.settle(100);
+    await this.settle(200);
   }
 
   // -- Data helpers: seed via window.api in the renderer -------------------

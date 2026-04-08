@@ -342,7 +342,7 @@ function runDocker(
 
   return new Promise((resolve, reject) => {
     // Use async spawn so the Electron main process event loop stays alive
-    const child = spawn('docker', dockerArgs);
+    const child = spawn(getDockerExecutable(), dockerArgs);
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
 
@@ -496,10 +496,34 @@ function emptyImportSummary(): ImportSummary {
   };
 }
 
+/**
+ * Resolve the docker executable path.
+ * On Windows, Docker Desktop adds itself to the user PATH but Electron's spawned
+ * processes may only see the system PATH. Fall back to known installation paths.
+ */
+function getDockerExecutable(): string {
+  // Quick check: is 'docker' already resolvable via PATH?
+  const probe = spawnSync('docker', ['--version'], { encoding: 'utf-8' });
+  if (probe.status === 0) return 'docker';
+
+  if (process.platform === 'win32') {
+    const candidates = [
+      path.join(process.env['ProgramFiles'] ?? 'C:\\Program Files', 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
+      path.join(process.env['LOCALAPPDATA'] ?? '', 'Programs', 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
+      path.join(process.env['ProgramW6432'] ?? 'C:\\Program Files', 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
+    ];
+    for (const candidate of candidates) {
+      try { if (fs.existsSync(candidate)) return candidate; } catch { /* skip */ }
+    }
+  }
+  return 'docker'; // fall back — will produce a clear error on use
+}
+
 /** Check if Docker is available on this machine. */
 export function isDockerAvailable(): boolean {
   try {
-    const result = spawnSync('docker', ['--version'], { encoding: 'utf-8' });
+    const exe = getDockerExecutable();
+    const result = spawnSync(exe, ['--version'], { encoding: 'utf-8' });
     return result.status === 0;
   } catch {
     return false;
