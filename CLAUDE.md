@@ -615,6 +615,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `/interview-synthesis` | Processing user research | Extract insights from interviews |
 | `/web-research` | Competitive analysis | Research genealogy platforms |
 | `/performance-profiling` | CPU saturation / slow operations | Profile, analyze, and fix performance bottlenecks |
+| `/a11y` | Adding/modifying interactive UI | ARIA patterns, keyboard nav, focus management, TTS |
 
 ### Required Global Skills (`~/.claude/skills/`)
 
