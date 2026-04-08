@@ -1,13 +1,16 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock vue lifecycle hooks since we're testing outside a component context
+// Capture lifecycle hook callbacks so tests can trigger them manually
+let mountedCb: (() => void) | null = null;
+let unmountedCb: (() => void) | null = null;
+
 vi.mock('vue', async (importOriginal) => {
   const vue = await importOriginal<typeof import('vue')>();
   return {
     ...vue,
-    onMounted: vi.fn(),
-    onUnmounted: vi.fn(),
+    onMounted: vi.fn((cb: () => void) => { mountedCb = cb; }),
+    onUnmounted: vi.fn((cb: () => void) => { unmountedCb = cb; }),
   };
 });
 
@@ -30,45 +33,46 @@ function makeContainer(...children: HTMLElement[]): HTMLDivElement {
 describe('useFocusTrap', () => {
   beforeEach(() => {
     document.body.replaceChildren();
+    mountedCb = null;
+    unmountedCb = null;
   });
 
-  it('exports activate and deactivate functions', () => {
+  it('returns nothing useful (no activate/deactivate exports)', () => {
     const containerRef = ref<HTMLElement | null>(null);
-    const { activate, deactivate } = useFocusTrap(containerRef);
-    expect(typeof activate).toBe('function');
-    expect(typeof deactivate).toBe('function');
+    const result = useFocusTrap(containerRef);
+    expect(result).toBeUndefined();
   });
 
-  it('focuses first focusable element on activate', () => {
+  it('focuses first focusable element on mount', () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const container = makeContainer(btn1, btn2);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
 
     expect(document.activeElement).toBe(btn1);
   });
 
-  it('focuses [autofocus] element on activate when present', () => {
+  it('focuses [autofocus] element on mount when present', () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     btn2.setAttribute('autofocus', '');
     const container = makeContainer(btn1, btn2);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
 
     expect(document.activeElement).toBe(btn2);
   });
 
   it('does nothing if container is null', () => {
     const containerRef = ref<HTMLElement | null>(null);
-    const { activate, deactivate } = useFocusTrap(containerRef);
-    expect(() => activate()).not.toThrow();
-    expect(() => deactivate()).not.toThrow();
+    useFocusTrap(containerRef);
+    expect(() => mountedCb!()).not.toThrow();
+    expect(() => unmountedCb!()).not.toThrow();
   });
 
   it('does not focus disabled buttons', () => {
@@ -77,8 +81,8 @@ describe('useFocusTrap', () => {
     const container = makeContainer(disabled, enabled);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
 
     expect(document.activeElement).toBe(enabled);
   });
@@ -90,8 +94,8 @@ describe('useFocusTrap', () => {
     const container = makeContainer(btn1, btn2, btn3);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
     btn1.focus();
 
     const event = new KeyboardEvent('keydown', {
@@ -113,8 +117,8 @@ describe('useFocusTrap', () => {
     const container = makeContainer(btn1, btn2, btn3);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
     btn3.focus();
 
     const event = new KeyboardEvent('keydown', {
@@ -136,8 +140,8 @@ describe('useFocusTrap', () => {
     const container = makeContainer(btn1, btn2, btn3);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
     btn2.focus();
 
     const event = new KeyboardEvent('keydown', {
@@ -151,7 +155,37 @@ describe('useFocusTrap', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it('restores focus to previously focused element on deactivate', () => {
+  it('single focusable element: Tab wraps back to itself', () => {
+    const btn = makeButton();
+    const container = makeContainer(btn);
+    const containerRef = ref<HTMLElement | null>(container);
+
+    useFocusTrap(containerRef);
+    mountedCb!();
+    btn.focus();
+
+    const tabEvent = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: false,
+      bubbles: true,
+      cancelable: true,
+    });
+    container.dispatchEvent(tabEvent);
+    expect(document.activeElement).toBe(btn);
+    expect(tabEvent.defaultPrevented).toBe(true);
+
+    const shiftTabEvent = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    container.dispatchEvent(shiftTabEvent);
+    expect(document.activeElement).toBe(btn);
+    expect(shiftTabEvent.defaultPrevented).toBe(true);
+  });
+
+  it('restores focus to previously focused element on unmount', () => {
     const outsideBtn = makeButton();
     document.body.appendChild(outsideBtn);
     outsideBtn.focus();
@@ -160,23 +194,23 @@ describe('useFocusTrap', () => {
     const container = makeContainer(btn1);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate, deactivate } = useFocusTrap(containerRef);
-    activate();
+    useFocusTrap(containerRef);
+    mountedCb!();
     expect(document.activeElement).toBe(btn1);
 
-    deactivate();
+    unmountedCb!();
     expect(document.activeElement).toBe(outsideBtn);
   });
 
-  it('removes keydown listener on deactivate', () => {
+  it('removes keydown listener on unmount', () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const container = makeContainer(btn1, btn2);
     const containerRef = ref<HTMLElement | null>(container);
 
-    const { activate, deactivate } = useFocusTrap(containerRef);
-    activate();
-    deactivate();
+    useFocusTrap(containerRef);
+    mountedCb!();
+    unmountedCb!();
 
     btn2.focus();
     const event = new KeyboardEvent('keydown', {
