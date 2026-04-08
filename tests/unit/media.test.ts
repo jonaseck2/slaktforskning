@@ -10,6 +10,7 @@ import {
   addMediaLink,
   getMediaForEntity,
   removeMediaLink,
+  reorderMediaLinks,
 } from '../../src/api/media';
 
 let db: any;
@@ -151,6 +152,52 @@ describe('media links', () => {
 
     deleteMedia(db, item.id);
     expect(getMediaForEntity(db, 'person', person.id)).toHaveLength(0);
+  });
+
+  it('getMediaForEntity returns items ordered by sort_order', () => {
+    const person = createPerson(db, { given_name: 'Test', surname: 'Order' });
+    const m1 = createMedia(db, { title: 'Photo C' });
+    const m2 = createMedia(db, { title: 'Photo A' });
+    const m3 = createMedia(db, { title: 'Photo B' });
+
+    addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id, sort_order: 2 });
+    addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id, sort_order: 0 });
+    addMediaLink(db, { media_id: m3.id, entity_type: 'person', entity_id: person.id, sort_order: 1 });
+
+    const results = getMediaForEntity(db, 'person', person.id);
+    expect(results.map(r => r.title)).toEqual(['Photo A', 'Photo B', 'Photo C']);
+  });
+
+  it('addMediaLink auto-assigns sort_order as next in sequence', () => {
+    const person = createPerson(db, { given_name: 'Auto', surname: 'Order' });
+    const m1 = createMedia(db, { title: 'First' });
+    const m2 = createMedia(db, { title: 'Second' });
+    const m3 = createMedia(db, { title: 'Third' });
+
+    const l1 = addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
+    const l2 = addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id });
+    const l3 = addMediaLink(db, { media_id: m3.id, entity_type: 'person', entity_id: person.id });
+
+    expect(l1.sort_order).toBe(0);
+    expect(l2.sort_order).toBe(1);
+    expect(l3.sort_order).toBe(2);
+  });
+
+  it('reorderMediaLinks updates sort_order for all links of an entity', () => {
+    const person = createPerson(db, { given_name: 'Reorder', surname: 'Test' });
+    const m1 = createMedia(db, { title: 'First' });
+    const m2 = createMedia(db, { title: 'Second' });
+    const m3 = createMedia(db, { title: 'Third' });
+
+    const l1 = addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
+    const l2 = addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id });
+    const l3 = addMediaLink(db, { media_id: m3.id, entity_type: 'person', entity_id: person.id });
+
+    // Reverse the order: Third, Second, First
+    reorderMediaLinks(db, [l3.id, l2.id, l1.id]);
+
+    const results = getMediaForEntity(db, 'person', person.id);
+    expect(results.map(r => r.title)).toEqual(['Third', 'Second', 'First']);
   });
 
   it('stores and retrieves link_type', () => {

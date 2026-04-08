@@ -40,23 +40,39 @@ export function addMediaLink(db: Database, data: {
   entity_type: MediaLinkEntityType;
   entity_id: string;
   link_type?: number | null;
+  sort_order?: number;
 }): MediaLink {
   const id = crypto.randomUUID();
+  let sortOrder = data.sort_order;
+  if (sortOrder === undefined) {
+    const max = queryOne<{ m: number | null }>(db,
+      'SELECT MAX(sort_order) AS m FROM media_links WHERE entity_type = ? AND entity_id = ?',
+      [data.entity_type, data.entity_id]);
+    sortOrder = (max?.m ?? -1) + 1;
+  }
   runSql(db, `
-    INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type)
-    VALUES (?, ?, ?, ?, ?)
-  `, [id, data.media_id, data.entity_type, data.entity_id, data.link_type ?? null]);
+    INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `, [id, data.media_id, data.entity_type, data.entity_id, data.link_type ?? null, sortOrder]);
   return queryOne<MediaLink>(db, 'SELECT * FROM media_links WHERE id = ?', [id])!;
 }
 
-export function getMediaForEntity(db: Database, entityType: MediaLinkEntityType, entityId: string): (Media & { link_id: string; link_type: number | null })[] {
-  return queryAll<Media & { link_id: string; link_type: number | null }>(db, `
-    SELECT m.*, ml.id AS link_id, ml.link_type
+export function getMediaForEntity(db: Database, entityType: MediaLinkEntityType, entityId: string): (Media & { link_id: string; link_type: number | null; sort_order: number })[] {
+  return queryAll<Media & { link_id: string; link_type: number | null; sort_order: number }>(db, `
+    SELECT m.*, ml.id AS link_id, ml.link_type, ml.sort_order
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id
     WHERE ml.entity_type = ? AND ml.entity_id = ?
-    ORDER BY m.title
+    ORDER BY ml.sort_order, ml.created_at
   `, [entityType, entityId]);
+}
+
+export function reorderMediaLinks(db: Database, linkIds: string[]): void {
+  const stmt = db.prepare('UPDATE media_links SET sort_order = ? WHERE id = ?');
+  for (let i = 0; i < linkIds.length; i++) {
+    stmt.run([i, linkIds[i]]);
+  }
+  stmt.finalize();
 }
 
 export function removeMediaLink(db: Database, linkId: string): boolean {
