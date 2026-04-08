@@ -46,7 +46,7 @@ In `src/api/schema.ts`, in the `media_links` CREATE TABLE block (lines 187-194),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
 ```
 
-- [ ] **Step 2: Add migration for existing databases**
+- [x] **Step 2: Add migration for existing databases**
 
 After the `is_missing` migration block (line 293), add:
 
@@ -58,7 +58,7 @@ After the `is_missing` migration block (line 293), add:
   }
 ```
 
-- [ ] **Step 3: Add `sort_order` to MediaLink type**
+- [x] **Step 3: Add `sort_order` to MediaLink type**
 
 In `src/api/types.ts`, add `sort_order: number;` to the `MediaLink` interface (after `link_type`):
 
@@ -74,12 +74,12 @@ export interface MediaLink {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify migration doesn't break existing tests**
+- [x] **Step 4: Run tests to verify migration doesn't break existing tests**
 
 Run: `npm test`
 Expected: All existing tests pass (the migration is additive, defaults to 0).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 feat: add sort_order column to media_links
@@ -93,7 +93,7 @@ feat: add sort_order column to media_links
 - Modify: `src/api/media.ts`
 - Modify: `tests/unit/media.test.ts`
 
-- [ ] **Step 1: Write failing tests for sort_order behavior**
+- [x] **Step 1: Write failing tests for sort_order behavior**
 
 Add to `tests/unit/media.test.ts`, inside the `'media links'` describe block:
 
@@ -145,12 +145,12 @@ Add to `tests/unit/media.test.ts`, inside the `'media links'` describe block:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test -- tests/unit/media.test.ts`
 Expected: FAIL — `sort_order` param not accepted by `addMediaLink`, `reorderMediaLinks` not defined.
 
-- [ ] **Step 3: Update `addMediaLink` to accept and auto-assign sort_order**
+- [x] **Step 3: Update `addMediaLink` to accept and auto-assign sort_order**
 
 In `src/api/media.ts`, update `addMediaLink`:
 
@@ -178,7 +178,7 @@ export function addMediaLink(db: Database, data: {
 }
 ```
 
-- [ ] **Step 4: Update `getMediaForEntity` to order by sort_order**
+- [x] **Step 4: Update `getMediaForEntity` to order by sort_order**
 
 Change the ORDER BY in `getMediaForEntity`:
 
@@ -194,7 +194,7 @@ export function getMediaForEntity(db: Database, entityType: MediaLinkEntityType,
 }
 ```
 
-- [ ] **Step 5: Add `reorderMediaLinks` function**
+- [x] **Step 5: Add `reorderMediaLinks` function**
 
 Add to `src/api/media.ts`:
 
@@ -208,7 +208,7 @@ export function reorderMediaLinks(db: Database, linkIds: string[]): void {
 }
 ```
 
-- [ ] **Step 6: Update imports in test file**
+- [x] **Step 6: Update imports in test file**
 
 Add `reorderMediaLinks` to the import statement in `tests/unit/media.test.ts`:
 
@@ -225,12 +225,12 @@ import {
 } from '../../src/api/media';
 ```
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run: `npm test -- tests/unit/media.test.ts`
 Expected: All tests pass, including new sort_order tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```
 feat: media ordering — sort_order in addMediaLink, getMediaForEntity, reorderMediaLinks
@@ -245,7 +245,7 @@ feat: media ordering — sort_order in addMediaLink, getMediaForEntity, reorderM
 - Modify: `src/preload/index.ts:152-164`
 - Modify: `src/mcp/createServer.ts:897+`
 
-- [ ] **Step 1: Add IPC handler for media:reorder**
+- [x] **Step 1: Add IPC handler for media:reorder**
 
 In `src/main/ipc.ts`, after the `media:removeLink` handler (line 417), add:
 
@@ -255,7 +255,7 @@ In `src/main/ipc.ts`, after the `media:removeLink` handler (line 417), add:
 
 Also add `reorderMediaLinks` to the import from `../../api/media` at the top of the file (find the existing media import).
 
-- [ ] **Step 2: Add preload binding**
+- [x] **Step 2: Add preload binding**
 
 In `src/preload/index.ts`, inside the `media` object (around line 159), add after `removeLink`:
 
@@ -263,7 +263,7 @@ In `src/preload/index.ts`, inside the `media` object (around line 159), add afte
     reorder: mutating((linkIds: string[]) => ipcRenderer.invoke('media:reorder', linkIds)),
 ```
 
-- [ ] **Step 3: Add MCP tool**
+- [x] **Step 3: Add MCP tool**
 
 In `src/mcp/createServer.ts`, after the `remove_media_link` tool registration, add:
 
@@ -279,12 +279,12 @@ In `src/mcp/createServer.ts`, after the `remove_media_link` tool registration, a
   });
 ```
 
-- [ ] **Step 4: Run tests to verify nothing broke**
+- [x] **Step 4: Run tests to verify nothing broke**
 
 Run: `npm test`
 Expected: All tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 feat: media reorder — IPC handler, preload binding, MCP tool
@@ -297,7 +297,7 @@ feat: media reorder — IPC handler, preload binding, MCP tool
 **Files:**
 - Modify: `src/import/gedcom/import-core.ts:686-690,804-807,356-359`
 
-- [ ] **Step 1: Add sort_order counter when importing person media**
+- [x] **Step 1: Add sort_order counter when importing person media**
 
 In `src/import/gedcom/import-core.ts`, around line 686-690, change the person media import loop to track order:
 
@@ -313,7 +313,7 @@ In `src/import/gedcom/import-core.ts`, around line 686-690, change the person me
     }
 ```
 
-- [ ] **Step 2: Add sort_order counter for relationship media**
+- [x] **Step 2: Add sort_order counter for relationship media**
 
 Around line 804-807, change the relationship media import loop:
 
@@ -329,7 +329,7 @@ Around line 804-807, change the relationship media import loop:
     }
 ```
 
-- [ ] **Step 3: Add sort_order counter for event media**
+- [x] **Step 3: Add sort_order counter for event media**
 
 Around line 356-359, change the event media import loop:
 
@@ -345,12 +345,12 @@ Around line 356-359, change the event media import loop:
   }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npm test`
 Expected: All tests pass (import tests use sort_order param now).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 feat: preserve GEDCOM OBJE ordering during import
@@ -365,7 +365,7 @@ feat: preserve GEDCOM OBJE ordering during import
 - Modify: `src/renderer/i18n/en.ts`
 - Modify: `src/renderer/i18n/sv.ts`
 
-- [ ] **Step 1: Add i18n keys**
+- [x] **Step 1: Add i18n keys**
 
 In `src/renderer/i18n/en.ts`, in the `media` section, add:
 
@@ -383,7 +383,7 @@ In `src/renderer/i18n/sv.ts`, in the `media` section, add:
     moveDown: 'Flytta ner',
 ```
 
-- [ ] **Step 2: Update PersonMediaSection template**
+- [x] **Step 2: Update PersonMediaSection template**
 
 Replace the entire `<template>` in `src/renderer/components/PersonMediaSection.vue`:
 
@@ -420,7 +420,7 @@ Replace the entire `<template>` in `src/renderer/components/PersonMediaSection.v
 </template>
 ```
 
-- [ ] **Step 3: Update script to add move functions**
+- [x] **Step 3: Update script to add move functions**
 
 Replace the `<script setup>` block:
 
@@ -491,7 +491,7 @@ watch(() => props.personId, load, { immediate: true });
 </script>
 ```
 
-- [ ] **Step 4: Update styles**
+- [x] **Step 4: Update styles**
 
 Replace the `<style scoped>` block:
 
@@ -523,12 +523,12 @@ Replace the `<style scoped>` block:
 </style>
 ```
 
-- [ ] **Step 5: Run `npm test` and verify no regressions**
+- [x] **Step 5: Run `npm test` and verify no regressions**
 
 Run: `npm test`
 Expected: All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 feat: media reorder UI with up/down buttons and profile badge
@@ -543,7 +543,7 @@ feat: media reorder UI with up/down buttons and profile badge
 - Modify: `src/renderer/i18n/en.ts`
 - Modify: `src/renderer/i18n/sv.ts`
 
-- [ ] **Step 1: Add i18n key for profile picture alt text**
+- [x] **Step 1: Add i18n key for profile picture alt text**
 
 In both `en.ts` and `sv.ts`, in the `media` section, add:
 
@@ -554,7 +554,7 @@ In both `en.ts` and `sv.ts`, in the `media` section, add:
     profileAlt: 'Profilbild',
 ```
 
-- [ ] **Step 2: Update PersonDetailView template header**
+- [x] **Step 2: Update PersonDetailView template header**
 
 Replace the `detail-header` div (lines 3-10 of the template) in `src/renderer/views/PersonDetailView.vue`:
 
@@ -580,7 +580,7 @@ Replace the `detail-header` div (lines 3-10 of the template) in `src/renderer/vi
     </div>
 ```
 
-- [ ] **Step 3: Add profilePicUrl ref and loading logic**
+- [x] **Step 3: Add profilePicUrl ref and loading logic**
 
 In the `<script setup>` section, add a ref and a function to load the profile picture. Find the existing `person` ref and add nearby:
 
@@ -600,7 +600,7 @@ async function loadProfilePic() {
 
 Call `loadProfilePic()` after loading the person data (in the existing `loadPerson` or equivalent function, after the person is fetched).
 
-- [ ] **Step 4: Wire profileChanged event from PersonMediaSection**
+- [x] **Step 4: Wire profileChanged event from PersonMediaSection**
 
 Find the `<PersonMediaSection>` usage in the template and add the event handler:
 
@@ -608,7 +608,7 @@ Find the `<PersonMediaSection>` usage in the template and add the event handler:
   <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
 ```
 
-- [ ] **Step 5: Add CSS for profile thumbnail**
+- [x] **Step 5: Add CSS for profile thumbnail**
 
 In the `<style scoped>` section, add:
 
@@ -644,12 +644,12 @@ In the `<style scoped>` section, add:
 .profile-placeholder.sex-F { color: #e06666; }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npm test`
 Expected: All tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```
 feat: profile picture thumbnail in person detail header
@@ -662,7 +662,7 @@ feat: profile picture thumbnail in person detail header
 **Files:**
 - Modify: `src/renderer/components/reports/AncestorBookReport.vue:711-718`
 
-- [ ] **Step 1: Update CSS for .ab-photo-img**
+- [x] **Step 1: Update CSS for .ab-photo-img**
 
 In `src/renderer/components/reports/AncestorBookReport.vue`, replace the `.ab-photo-img` style (lines 711-718):
 
@@ -681,12 +681,12 @@ In `src/renderer/components/reports/AncestorBookReport.vue`, replace the `.ab-ph
 
 This removes the fixed width/height that forced `object-fit: cover` to crop, and instead constrains the image within a max box while preserving its natural aspect ratio.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `npm test`
 Expected: All tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 fix: preserve image aspect ratio in ancestor book report
@@ -700,7 +700,7 @@ fix: preserve image aspect ratio in ancestor book report
 - Modify: `CLAUDE.md`
 - Modify: `.claude/PLAN.md`
 
-- [ ] **Step 1: Update CLAUDE.md**
+- [x] **Step 1: Update CLAUDE.md**
 
 In the `MediaLink` interface in the Domain Types section, add `sort_order: number` field.
 
@@ -717,11 +717,11 @@ In the `window.api` / preload section reference, note the new `reorder` method.
 
 In the PersonMediaSection shared component table, update description to mention reordering and profile badge.
 
-- [ ] **Step 2: Update .claude/PLAN.md**
+- [x] **Step 2: Update .claude/PLAN.md**
 
 Add a completed milestone for media ordering + profile picture.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 docs: update CLAUDE.md and PLAN.md for media ordering feature
