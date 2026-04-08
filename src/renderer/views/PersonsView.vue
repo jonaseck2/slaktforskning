@@ -10,13 +10,46 @@
     <div class="filter-chips">
       <button :class="['chip', { active: filter === 'all' }]" @click="setFilter('all')">{{ $t('persons.filterAll') }}</button>
       <button :class="['chip', { active: filter === 'unsourced' }]" @click="setFilter('unsourced')">{{ $t('persons.filterUnsourced') }}</button>
+      <button :class="['chip', { active: filter === 'duplicates' }]" @click="setFilter('duplicates')">{{ $t('duplicates.filterDuplicates') }}</button>
     </div>
 
-    <div v-if="persons.length === 0 && !loading" class="empty">
+    <!-- Duplicates view -->
+    <template v-if="filter === 'duplicates'">
+      <div v-if="duplicatesLoading" class="empty">{{ $t('common.loading') }}</div>
+      <div v-else-if="duplicates.length === 0" class="empty">{{ $t('duplicates.noDuplicates') }}</div>
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>{{ $t('duplicates.keepPerson') }}</th>
+            <th>{{ $t('duplicates.mergePerson') }}</th>
+            <th>{{ $t('duplicates.score') }}</th>
+            <th class="actions-cell">{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in duplicates" :key="d.person1_id + ':' + d.person2_id">
+            <td>
+              <router-link :to="'/persons/' + d.person1_id" class="person-link" @click.stop>{{ d.person1_name }}</router-link>
+              <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
+            </td>
+            <td>
+              <router-link :to="'/persons/' + d.person2_id" class="person-link" @click.stop>{{ d.person2_name }}</router-link>
+              <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
+            </td>
+            <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
+            <td class="actions-cell">
+              <button class="btn-sm btn-merge-action" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+
+    <div v-else-if="persons.length === 0 && !loading" class="empty">
       {{ filter === 'unsourced' ? $t('persons.allSourced') : $t('persons.emptyState') }}
     </div>
 
-    <template v-else>
+    <template v-else-if="filter !== 'duplicates'">
       <p class="count-label">
         {{ $t('persons.showingOf', { shown: persons.length, total }) }}
       </p>
@@ -97,6 +130,19 @@
           </div>
         </form>
     </BaseModal>
+
+    <MergePersonsModal
+      v-if="mergeCandidate"
+      :target="{ id: mergeCandidate.person1_id }"
+      :source="{ id: mergeCandidate.person2_id }"
+      :target-name="mergeCandidate.person1_name"
+      :source-name="mergeCandidate.person2_name"
+      :target-birth="mergeCandidate.person1_birth"
+      :source-birth="mergeCandidate.person2_birth"
+      :reasons="mergeCandidate.reasons"
+      @close="mergeCandidate = null"
+      @merged="onMerged"
+    />
   </div>
 </template>
 
@@ -106,6 +152,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import PersonName from '../components/PersonName.vue';
+import MergePersonsModal from '../components/MergePersonsModal.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -137,7 +184,21 @@ const offset = ref(0);
 const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
-const filter = ref<'all' | 'unsourced'>('all');
+const filter = ref<'all' | 'unsourced' | 'duplicates'>('all');
+
+interface DuplicateCandidate {
+  person1_id: string;
+  person2_id: string;
+  person1_name: string;
+  person2_name: string;
+  person1_birth: string | null;
+  person2_birth: string | null;
+  score: number;
+  reasons: string[];
+}
+const duplicates = ref<DuplicateCandidate[]>([]);
+const duplicatesLoading = ref(false);
+const mergeCandidate = ref<DuplicateCandidate | null>(null);
 
 let observer: IntersectionObserver | null = null;
 
@@ -201,10 +262,42 @@ async function loadMore() {
   }
 }
 
-function setFilter(f: 'all' | 'unsourced') {
+function setFilter(f: 'all' | 'unsourced' | 'duplicates') {
   if (filter.value === f) return;
   filter.value = f;
-  load();
+  if (f === 'duplicates') {
+    loadDuplicates();
+  } else {
+    load();
+  }
+}
+
+async function loadDuplicates() {
+  if (!window.api) return;
+  duplicatesLoading.value = true;
+  try {
+    duplicates.value = (await window.api.duplicates.find(100)) as DuplicateCandidate[];
+  } catch (err) {
+    console.error('[PersonsView] loadDuplicates failed:', err);
+    toast.error(t('errors.loadFailed'));
+  } finally {
+    duplicatesLoading.value = false;
+  }
+}
+
+function scoreLevel(score: number): string {
+  if (score >= 80) return 'high';
+  if (score >= 60) return 'medium';
+  return 'low';
+}
+
+function openMerge(d: DuplicateCandidate) {
+  mergeCandidate.value = d;
+}
+
+async function onMerged() {
+  mergeCandidate.value = null;
+  await loadDuplicates();
 }
 
 async function addPerson() {
@@ -280,4 +373,19 @@ onActivated(async () => {
 .radio-label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-weight: normal; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .date-cell { white-space: nowrap; }
+.birth-hint { color: var(--color-text-subtle); font-size: var(--font-xs); }
+.score-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+.score-high { background: #fee2e2; color: #991b1b; }
+.score-medium { background: #fef3c7; color: #92400e; }
+.score-low { background: #e0f2fe; color: #075985; }
+.btn-merge-action {
+  background: var(--color-warning-bg, #fef3c7);
+  color: var(--color-warning-badge, #92400e);
+}
 </style>

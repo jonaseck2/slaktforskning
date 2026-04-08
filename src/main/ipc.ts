@@ -21,6 +21,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
 import * as assertions from '../api/assertions';
+import * as duplicates from '../api/duplicates';
 import { getDbSetting } from '../api/db_settings';
 
 let importInProgress = false;
@@ -493,6 +494,10 @@ export function registerIpcHandlers(): void {
     const data = fs.readFileSync(absPath).toString('base64');
     return `data:${mime};base64,${data}`;
   });
+
+  // Duplicates & Merge
+  wrapHandler('duplicates:find', (limit) => duplicates.findDuplicates(getDatabase(), limit as number | undefined));
+  wrapHandler('duplicates:merge', (targetId, sourceId) => duplicates.mergePersons(getDatabase(), targetId as string, sourceId as string));
 
   // Assertions
   wrapHandler('assertions:create', (data) => assertions.createAssertion(getDatabase(), data as Parameters<typeof assertions.createAssertion>[1]));

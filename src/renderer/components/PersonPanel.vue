@@ -10,13 +10,16 @@
       <div class="panel-header">
         <div class="panel-sex-bar" :style="{ background: sexColor }"></div>
         <div class="panel-header-content">
-          <div class="panel-name">
-            <PersonName
-              :given-name="primaryName?.given_name ?? null"
-              :surname="primaryName?.surname ?? null"
-              :preferred-name="primaryName?.preferred_name ?? null"
-              :nickname="primaryName?.nickname ?? null"
-            />
+          <div class="panel-name-row">
+            <div class="panel-name">
+              <PersonName
+                :given-name="primaryName?.given_name ?? null"
+                :surname="primaryName?.surname ?? null"
+                :preferred-name="primaryName?.preferred_name ?? null"
+                :nickname="primaryName?.nickname ?? null"
+              />
+            </div>
+            <button v-if="showTreeBtn" class="btn-tree-inline" @click="emit('show-in-tree')">Focus</button>
           </div>
           <div class="panel-lifelines">
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
@@ -226,9 +229,10 @@ import PersonEvidenceSection from './PersonEvidenceSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
 
-const props = defineProps<{ personId: string | null }>();
+const props = defineProps<{ personId: string | null; showTreeBtn?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
+  'show-in-tree': [];
 }>();
 
 // ── Local state ──────────────────────────────────────────────────────────────
@@ -504,15 +508,34 @@ onMounted(() => {
   flex: 1;
   min-width: 0;
 }
+.panel-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
 .panel-name {
   font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
+.btn-tree-inline {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-tree-inline:hover { opacity: 0.85; }
 .panel-lifelines {
   margin-bottom: 6px;
 }

@@ -110,6 +110,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Investigation | macOS 26 Tahoe: packaged app crashes (EXC_BREAKPOINT in ElectronMain); npm start works | [plan](plans/2026-04-08-macos26-electron-crash.md) |
 | v0.39.0 | Evidence Analysis (GPS) Phase 1+2: assertion CRUD+IPC+MCP (10 tools), conflict detection in QualityView, PersonEvidenceSection, AssertionFormModal, SourceDetailView assertions column | [plan](plans/2026-04-08-evidence-analysis.md) |
 | v0.39.1 | Evidence Analysis Phase 3: unsourced filter on PersonsView, proof summary generation (API+MCP+UI), 5 new tests | [plan](plans/2026-04-08-evidence-analysis.md) |
+| v0.39.2 | Evidence Analysis Phase 4: duplicate detection (name+date+sex scoring), MergePersonsModal, mergePersons API (10 tables), 2 MCP tools, 11 new tests | [plan](plans/2026-04-08-evidence-analysis.md) |
 
 ---
 
@@ -184,15 +185,14 @@ See `.claude/plans/2026-04-08-evidence-analysis.md` for research and full plan.
 - [x] MCP tool: generate_proof_summary
 - [x] Research audit: QualityView already surfaces UNRESOLVED_EVIDENCE_CONFLICT + UNSOURCED_BIRTH/DEATH checks
 
-**Phase 4: Merge/Deduplicate Persons**
-- [ ] Detect potential duplicates (name + date similarity)
-- [ ] Side-by-side comparison view
-- [ ] Merge: combine assertions, citations, events, names with conflict resolution
+**Phase 4: Merge/Deduplicate Persons** ✅ v0.39.2
+- [x] Detect potential duplicates (name + date similarity + sex scoring)
+- [x] Side-by-side comparison view (MergePersonsModal with target/source cards)
+- [x] Merge: reassign names, identifiers, events, relationships, citations, assertions, groups, tasks; handle UNIQUE conflicts; delete self-relationships; merge notes+sex
 
 ### Polish [feature]
 - [x] Keyboard navigation — Escape key closes all modals
 - [x] Data backup and restore
-- [ ] Add-person icon refinement — replace the current "Add" button in list views with a dashed-circle "+" icon (consistent with the chart expand style)
 - [x] Dark mode — global html.dark CSS overrides, toggle button in sidebar, localStorage persistence
 - [x] Cmd/Ctrl+F — focus sidebar search input
 - [ ] Undo/redo

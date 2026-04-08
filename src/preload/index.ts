@@ -141,6 +141,10 @@ const api = {
     update: mutating((id: string, data: unknown) => ipcRenderer.invoke('researchTasks:update', id, data)),
     delete: mutating((id: string) => ipcRenderer.invoke('researchTasks:delete', id)),
   },
+  duplicates: {
+    find: (limit?: number) => ipcRenderer.invoke('duplicates:find', limit),
+    merge: mutating((targetId: string, sourceId: string) => ipcRenderer.invoke('duplicates:merge', targetId, sourceId)),
+  },
   assertions: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('assertions:create', data)),
     get: (id: string) => ipcRenderer.invoke('assertions:get', id),

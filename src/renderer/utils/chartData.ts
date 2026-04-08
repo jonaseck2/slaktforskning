@@ -250,6 +250,22 @@ export async function fetchHourglassTree(focalId: string): Promise<HourglassTree
 
   const spouses = await Promise.all(spouseIds.map(fetchPersonNode));
 
+  // Find siblings: other children of the focal's parents.
+  const parentIds = rawRels
+    .filter(r => r.type === 'parent_child' && r.person2_id === focalId)
+    .map(r => r.person1_id)
+    .filter((id): id is string => id !== null);
+
+  const siblingIdSet = new Set<string>();
+  await Promise.all(parentIds.map(async (parentId) => {
+    const parentRels = (await window.api.relationships.getForPerson(parentId)) as RawRel[];
+    parentRels
+      .filter(r => r.type === 'parent_child' && r.person1_id === parentId && r.person2_id !== focalId)
+      .forEach(r => { if (r.person2_id) siblingIdSet.add(r.person2_id); });
+  }));
+
+  const siblings = await Promise.all([...siblingIdSet].map(fetchPersonNode));
+
   // Annotate focal's direct children with their co-parent ID.
   // A child's co-parent is the focal's spouse who is also a parent of that child.
   let annotatedRoot = descendantRoot;
@@ -268,7 +284,7 @@ export async function fetchHourglassTree(focalId: string): Promise<HourglassTree
     annotatedRoot = { ...descendantRoot, children: annotatedChildren };
   }
 
-  return { ancestors, descendantRoot: annotatedRoot, descendantGenerations: 3, spouses };
+  return { ancestors, descendantRoot: annotatedRoot, descendantGenerations: 3, spouses, siblings };
 }
 
 export async function fetchTimelineEntries(focalId: string): Promise<TimelineEntry[]> {

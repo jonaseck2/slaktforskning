@@ -14,6 +14,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
 import * as assertions from '../api/assertions';
+import * as duplicates from '../api/duplicates';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney } from '../import/genney/index';
@@ -924,6 +925,28 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   }, async ({ link_id }) => {
     const ok = media.removeMediaLink(db, link_id);
     return { content: [{ type: 'text', text: ok ? 'Removed' : 'Not found' }] };
+  });
+
+  // Duplicate detection & merge tools
+  server.registerTool('find_duplicates', {
+    description: 'Find potential duplicate persons by comparing names and birth dates. Returns candidates with similarity scores.',
+    inputSchema: {
+      limit: z.number().optional().describe('Maximum number of candidates to return (default: 100)'),
+    },
+  }, async ({ limit }) => {
+    const list = duplicates.findDuplicates(db, limit ?? 100);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('merge_persons', {
+    description: 'Merge source person into target person. All data from source (names, events, relationships, citations, assertions, groups, tasks) is reassigned to target, then source is deleted.',
+    inputSchema: {
+      target_id: z.string().describe('Person ID to keep (target)'),
+      source_id: z.string().describe('Person ID to merge and delete (source)'),
+    },
+  }, async ({ target_id, source_id }) => {
+    const result = duplicates.mergePersons(db, target_id, source_id);
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
   // Assertion tools
