@@ -67,12 +67,12 @@
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
       <div class="settings-section">
-        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="isSettingsOpen = !isSettingsOpen">
+        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="toggleSettings()">
           <span class="nav-icon" aria-hidden="true">⚙️</span>
           <span class="nav-label">{{ $t('nav.settings') }}</span>
           <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
         </button>
-        <div v-if="isSettingsOpen" class="settings-panel">
+        <div v-if="isSettingsOpen" ref="settingsPanelRef" class="settings-panel">
           <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
             <button :class="['settings-option', { active: !darkMode }]" role="radio" :aria-checked="String(!darkMode)" @click="setDarkMode(false)">☀ {{ $t('settings.light') }}</button>
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, provide } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
@@ -145,6 +145,14 @@ const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
 const darkMode = ref(localStorage.getItem('darkMode') === 'true');
 const isSettingsOpen = ref(false);
+const settingsPanelRef = ref<HTMLElement | null>(null);
+
+function toggleSettings() {
+  isSettingsOpen.value = !isSettingsOpen.value;
+  if (isSettingsOpen.value) {
+    nextTick(() => settingsPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' }));
+  }
+}
 
 function applyDarkMode() {
   document.documentElement.classList.toggle('dark', darkMode.value);

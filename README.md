@@ -94,6 +94,16 @@ npx playwright test
 
 `npm start` (the Electron GUI) does not work in a headless container.
 
+## Accessibility
+
+The app targets WCAG 2.1 AA compliance:
+
+- **Keyboard navigation** — All interactive elements are reachable via Tab, Enter, Space, and arrow keys
+- **Screen reader support** — ARIA roles, labels, and live regions throughout (dialog, combobox, tree, radiogroup)
+- **Focus management** — Focus trapping in modals, focus-visible outlines, skip-to-content link
+- **Text-to-speech** — Built-in read-aloud feature (Settings > Read aloud) that narrates person, relationship, and source details on navigation
+- **Chart accessibility** — Pedigree chart has ARIA tree roles with keyboard navigation, plus a list view alternative
+
 ## Building
 
 ```bash
