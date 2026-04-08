@@ -1,14 +1,18 @@
 <!-- src/renderer/components/ToastNotification.vue -->
 <template>
   <Teleport to="body">
-    <div class="toast-container">
+    <div class="toast-container" aria-live="assertive" aria-atomic="true">
       <TransitionGroup name="toast">
         <div
           v-for="toast in toasts"
           :key="toast.id"
           class="toast"
           :class="'toast--' + toast.type"
+          role="alert"
           @click="dismiss(toast.id)"
+          @keydown.enter="dismiss(toast.id)"
+          @keydown.space.prevent="dismiss(toast.id)"
+          tabindex="0"
         >
           {{ toast.message }}
         </div>
