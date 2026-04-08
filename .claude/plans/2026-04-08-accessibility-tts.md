@@ -800,7 +800,7 @@ git add -A && git commit -m "feat(a11y): add heading hierarchy and icon labels t
 - Modify: `src/renderer/components/charts/PedigreeChart.vue`
 - Create: `src/renderer/components/charts/PedigreeListView.vue`
 
-- [ ] **Step 1: Add ARIA tree roles to PedigreeChart SVG**
+- [x] **Step 1: Add ARIA tree roles to PedigreeChart SVG**
 
 Add to the `<svg>` element:
 ```html
@@ -818,7 +818,7 @@ tabindex="0"
 @focus="focusedBoxId = box.person.id"
 ```
 
-- [ ] **Step 2: Add keyboard navigation and focus state**
+- [x] **Step 2: Add keyboard navigation and focus state**
 
 Add to the script section:
 
@@ -863,7 +863,7 @@ function onBoxKeydown(e: KeyboardEvent, box: BoxLayout) {
 }
 ```
 
-- [ ] **Step 3: Add visible focus ring style**
+- [x] **Step 3: Add visible focus ring style**
 
 Add to PedigreeChart scoped styles:
 
@@ -877,7 +877,7 @@ Add to PedigreeChart scoped styles:
 }
 ```
 
-- [ ] **Step 4: Add aria-labels to zoom controls**
+- [x] **Step 4: Add aria-labels to zoom controls**
 
 Find:
 ```html
@@ -894,7 +894,7 @@ Replace:
       <button class="zoom-btn" :aria-label="('a11y.resetZoom')" @click="resetZoom">↺</button>
 ```
 
-- [ ] **Step 5: Create PedigreeListView component**
+- [x] **Step 5: Create PedigreeListView component**
 
 ```vue
 <!-- src/renderer/components/charts/PedigreeListView.vue -->
@@ -985,16 +985,16 @@ ul {
 </style>
 ```
 
-- [ ] **Step 6: Add list/chart toggle to VisualizationView**
+- [x] **Step 6: Add list/chart toggle to VisualizationView**
 
 In VisualizationView.vue, add a toggle button near the chart area for switching between chart and list view. When list view is active, render PedigreeListView instead of PedigreeChart.
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A && git commit -m "feat(a11y): add ARIA tree roles, keyboard nav, focus ring, and list view to pedigree chart"
