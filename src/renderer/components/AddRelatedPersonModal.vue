@@ -166,11 +166,11 @@ async function save() {
 .toggle-btn {
   flex: 1;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--color-bg-subtle);
   border: none;
   cursor: pointer;
-  font-size: 13px;
-  color: #334155;
+  font-size: var(--font-sm);
+  color: var(--color-text);
 }
 .toggle-btn.active { background: var(--color-primary); color: white; }
 </style>

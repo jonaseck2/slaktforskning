@@ -125,12 +125,12 @@ function onBlur() {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 .picker-clear {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: var(--font-xl);
   cursor: pointer;
   color: #999;
   padding: 0 6px;
@@ -144,8 +144,8 @@ function onBlur() {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-input);
   border-top: none;
   border-radius: 0 0 4px 4px;
   list-style: none;
@@ -164,13 +164,13 @@ function onBlur() {
   align-items: center;
 }
 .picker-option:hover {
-  background: #eef2ff;
+  background: var(--color-row-hover);
 }
 .picker-name {
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 .picker-sex {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: #888;
   margin-left: 8px;
 }

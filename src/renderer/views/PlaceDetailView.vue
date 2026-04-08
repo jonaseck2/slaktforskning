@@ -125,23 +125,23 @@ onMounted(load);
 .place-detail { max-width: 700px; }
 .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
 .detail-header h2 { margin: 0; }
-.btn-back { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 4px 0; font-size: 14px; }
+.btn-back { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 4px 0; font-size: var(--font-base); }
 .btn-back:hover { text-decoration: underline; }
-.type-badge { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.type-badge { background: var(--color-bg-muted); color: var(--color-text-subtle); padding: 2px 8px; border-radius: 10px; font-size: var(--font-xs); }
 .detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
-.detail-section h4 { margin: 0 0 8px; font-size: 15px; }
+.detail-section h4 { margin: 0 0 8px; font-size: var(--font-md); }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.section-header h4 { margin: 0; font-size: 15px; }
+.section-header h4 { margin: 0; font-size: var(--font-md); }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .full-width { grid-column: 1 / -1; }
-label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #555; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-sm); font-weight: 600; color: #555; }
 input[type='text'], input[type='number'], select, textarea {
-  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit;
+  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: var(--font-base); font-family: inherit;
 }
 textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .child-list li { display: flex; align-items: center; gap: 8px; }
-.child-list a { color: var(--color-primary); text-decoration: none; font-size: 14px; }
+.child-list a { color: var(--color-primary); text-decoration: none; font-size: var(--font-base); }
 .child-list a:hover { text-decoration: underline; }
 .empty { color: #999; padding: 40px; text-align: center; }
 </style>

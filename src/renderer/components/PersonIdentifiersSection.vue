@@ -92,11 +92,11 @@ watch(() => props.personId, load, { immediate: true });
 <style scoped>
 .th-shrink, .td-type { width: 1%; white-space: nowrap; }
 .type-badge {
-  background: #f0fdf4;
-  color: #166534;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 </style>

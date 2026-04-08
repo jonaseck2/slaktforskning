@@ -326,7 +326,7 @@ body {
   border-left: 3px solid rgba(100, 180, 255, 0.7);
 }
 .focus-label {
-  font-size: 9px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.35);
@@ -343,7 +343,7 @@ body {
 .focus-name:hover { color: white; text-decoration: underline; }
 
 .nav-section-label {
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.35);
@@ -399,11 +399,12 @@ body {
   background: #e53e3e;
   color: white;
   border-radius: 8px;
-  padding: 0 5px;
-  font-size: 10px;
+  padding: 1px 5px;
+  font-size: var(--font-xs);
   font-weight: 700;
-  min-width: 16px;
-  height: 16px;
+  min-width: 1.4em;
+  height: 1.4em;
+  line-height: 1.4em;
   flex-shrink: 0;
 }
 
@@ -443,7 +444,7 @@ body {
   background: rgba(255, 255, 255, 0.12);
   color: white;
 }
-.settings-arrow { margin-left: auto; font-size: 10px; }
+.settings-arrow { margin-left: auto; font-size: var(--font-xs); }
 .settings-panel {
   background: rgba(255, 255, 255, 0.06);
   border-radius: 6px;
@@ -454,7 +455,7 @@ body {
   gap: 6px;
 }
 .settings-group-label {
-  font-size: 9px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.35);

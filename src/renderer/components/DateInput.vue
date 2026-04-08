@@ -79,25 +79,25 @@ function updateDateOriginal(e: Event) {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
   min-width: 120px;
 }
 .date-row input[type='date'] {
   padding: 5px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 .date-sep {
   color: #666;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .date-original-row input {
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #555;
 }
 </style>

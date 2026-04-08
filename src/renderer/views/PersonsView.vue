@@ -256,12 +256,12 @@ onActivated(async () => {
   display: inline-block;
   padding: 1px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
 }
-.sex-M { background: #dbeafe; color: #1e40af; }
-.sex-F { background: #fce7f3; color: #9d174d; }
-.sex-U { background: #f3f4f6; color: #6b7280; }
+.sex-M { background: var(--color-sex-m-bg); color: var(--color-sex-m-text); }
+.sex-F { background: var(--color-sex-f-bg); color: var(--color-sex-f-text); }
+.sex-U { background: var(--color-sex-u-bg); color: var(--color-sex-u-text); }
 .radio-group { display: flex; gap: 16px; margin-top: 4px; }
 .radio-label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-weight: normal; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }

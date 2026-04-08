@@ -151,7 +151,7 @@ onMounted(load);
   color: #555;
   line-height: 1.4;
 }
-.zoom-btn:hover { background: #f0f0f0; }
+.zoom-btn:hover { background: var(--color-bg-muted); }
 .zoom-btn.active { background: #e0eaf5; color: #2060a0; }
 .zoom-level {
   padding: 0 4px;

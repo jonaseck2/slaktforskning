@@ -157,7 +157,7 @@ onMounted(load);
   display: block;
 }
 .group-name-input {
-  font-size: 22px;
+  font-size: var(--font-2xl);
   font-weight: 700;
   border: none;
   border-bottom: 2px solid transparent;

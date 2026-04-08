@@ -61,8 +61,8 @@
           </label>
         </div>
         <div class="print-actions">
-          <button class="btn-print" :disabled="!familyRelationshipId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-pdf" :disabled="!familyRelationshipId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!familyRelationshipId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!familyRelationshipId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -85,8 +85,8 @@
         <div class="controls">
         </div>
         <div class="print-actions">
-          <button class="btn-print" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-pdf" :disabled="!individualPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!individualPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -109,8 +109,8 @@
         <div class="controls">
         </div>
         <div class="print-actions">
-          <button class="btn-print" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-pdf" :disabled="!ancestorBookPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!ancestorBookPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">

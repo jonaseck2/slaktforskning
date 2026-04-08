@@ -345,51 +345,51 @@ onMounted(async () => {
 .sex-badge {
   padding: 2px 10px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
 }
 .sex-M {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--color-sex-m-bg);
+  color: var(--color-sex-m-text);
 }
 .sex-F {
-  background: #fce7f3;
-  color: #be185d;
+  background: var(--color-sex-f-bg);
+  color: var(--color-sex-f-text);
 }
 .sex-U {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--color-sex-u-bg);
+  color: var(--color-sex-u-text);
 }
 .sex-select {
   padding: 2px 20px 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-input);
   cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M0 2l4 4 4-4z' fill='%23666'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 6px center;
 }
-.sex-select.sex-M { background-color: #dbeafe; color: #1d4ed8; }
-.sex-select.sex-F { background-color: #fce7f3; color: #be185d; }
-.sex-select.sex-U { background-color: #f3f4f6; color: #6b7280; }
+.sex-select.sex-M { background-color: var(--color-sex-m-bg); color: var(--color-sex-m-text); }
+.sex-select.sex-F { background-color: var(--color-sex-f-bg); color: var(--color-sex-f-text); }
+.sex-select.sex-U { background-color: var(--color-sex-u-bg); color: var(--color-sex-u-text); }
 .deceased-badge {
   background: #fef3c7;
   color: #92400e;
   padding: 2px 10px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .btn-view-tree {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .evidence-summary {
   font-size: var(--font-sm);
@@ -454,16 +454,16 @@ textarea {
   gap: 6px;
 }
 .btn-rel-add {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #cbd5e1;
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .btn-rel-add:hover {
-  background: #e2e8f0;
+  background: var(--color-bg-muted);
 }
 .group-picker-row {
   margin-bottom: 8px;

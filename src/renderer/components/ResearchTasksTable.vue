@@ -179,7 +179,7 @@ async function handleDelete(id: string) {
   border-radius: 50%;
   text-align: center;
   line-height: 24px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: white;
 }
@@ -191,7 +191,7 @@ async function handleDelete(id: string) {
   display: inline-block;
   padding: 2px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
   user-select: none;
@@ -211,8 +211,8 @@ async function handleDelete(id: string) {
 }
 .person-edit-row { display: flex; align-items: center; gap: 8px; }
 .person-edit-row > :first-child { flex: 1; }
-.person-link-btn { white-space: nowrap; font-size: 13px; }
-.expanded-row td { background: #f8fafc; padding: 0; }
+.person-link-btn { white-space: nowrap; font-size: var(--font-sm); }
+.expanded-row td { background: var(--color-bg-subtle); padding: 0; }
 .expanded-content {
   padding: 16px;
   display: flex;
@@ -223,7 +223,7 @@ async function handleDelete(id: string) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #374151;
 }
 .expanded-content input,
@@ -232,7 +232,7 @@ async function handleDelete(id: string) {
   padding: 6px 10px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-family: inherit;
 }
 .expanded-row-inline { display: flex; gap: 16px; }

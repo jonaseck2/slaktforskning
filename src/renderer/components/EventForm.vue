@@ -248,7 +248,7 @@ async function save() {
   margin-bottom: 4px;
 }
 .citations-label {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   text-transform: uppercase;
   color: #888;
@@ -256,7 +256,7 @@ async function save() {
   margin-bottom: 6px;
 }
 .citations-empty {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: #aaa;
   margin-bottom: 4px;
 }
@@ -264,7 +264,7 @@ async function save() {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   margin-bottom: 4px;
 }
 .citation-source {

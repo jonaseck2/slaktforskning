@@ -376,7 +376,7 @@ onUnmounted(() => {
   color: #555;
   line-height: 1.4;
 }
-.zoom-btn:hover { background: #f0f0f0; }
+.zoom-btn:hover { background: var(--color-bg-muted); }
 .zoom-level {
   padding: 0 4px;
   font-size: var(--font-xs);

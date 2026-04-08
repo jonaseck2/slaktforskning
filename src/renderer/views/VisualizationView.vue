@@ -239,17 +239,17 @@ onActivated(load);
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-right: none;
   border-radius: 4px 0 0 4px;
   padding: 6px 5px;
   cursor: pointer;
-  color: #999;
-  font-size: 11px;
+  color: var(--color-text-faint);
+  font-size: var(--font-xs);
   z-index: 10;
 }
-.panel-open-btn:hover { color: #555; background: #f5f5f5; }
+.panel-open-btn:hover { color: var(--color-text-muted); background: var(--color-bg-subtle); }
 
 /* Drag handle */
 .panel-drag-handle {
@@ -278,18 +278,18 @@ onActivated(load);
   top: 8px;
   left: -1px;
   z-index: 10;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-right: none;
   border-radius: 4px 0 0 4px;
   padding: 4px 5px;
   cursor: pointer;
-  color: #bbb;
-  font-size: 10px;
+  color: var(--color-text-faint);
+  font-size: var(--font-xs);
   line-height: 1;
   transform: translateX(-100%);
 }
-.panel-close-btn:hover { color: #555; }
+.panel-close-btn:hover { color: var(--color-text-muted); }
 
 /* Show in tree button */
 .panel-show-in-tree {
@@ -303,7 +303,7 @@ onActivated(load);
   border: none;
   padding: 6px 12px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   cursor: pointer;
   text-align: center;
 }
@@ -313,6 +313,6 @@ onActivated(load);
   color: #999;
   padding: 60px;
   text-align: center;
-  font-size: 15px;
+  font-size: var(--font-md);
 }
 </style>

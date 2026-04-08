@@ -182,6 +182,6 @@ onActivated(async () => {
   color: #5b21b6;
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 </style>

@@ -192,7 +192,7 @@ onMounted(load);
   color: var(--color-primary);
   cursor: pointer;
   padding: 4px 0;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 .btn-back:hover {
   text-decoration: underline;
@@ -219,7 +219,7 @@ onMounted(load);
 }
 .section-header h4 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-md);
 }
 .persons-grid {
   display: grid;
@@ -231,7 +231,7 @@ onMounted(load);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #555;
 }
@@ -245,7 +245,7 @@ onMounted(load);
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-family: inherit;
 }
 .empty {

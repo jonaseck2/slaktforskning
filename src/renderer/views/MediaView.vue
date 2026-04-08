@@ -94,7 +94,7 @@ onMounted(load);
 
 .file-ref-cell {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--font-xs);
   max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,7 +111,7 @@ onMounted(load);
   display: inline-block;
   background: #e53e3e;
   color: white;
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   border-radius: 4px;
   padding: 1px 5px;
