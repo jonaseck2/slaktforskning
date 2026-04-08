@@ -25,6 +25,7 @@
     >
       <!-- Link wrapper for print mode -->
       <a v-if="linkBase && seg.person" :href="`${linkBase}${seg.person.id}`">
+        <title>{{ tooltipLabel(seg) }}</title>
         <path
           :d="seg.pathD"
           :fill="seg.fill"
@@ -264,6 +265,7 @@
     >
       <!-- Link wrapper for print/export mode -->
       <a v-if="linkBase && focalSegment.person" :href="`${linkBase}${focalSegment.person.id}`">
+        <title>{{ tooltipLabel(focalSegment) }}</title>
         <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" />
         <text
           v-for="(line, i) in focalNameLines" :key="i"
