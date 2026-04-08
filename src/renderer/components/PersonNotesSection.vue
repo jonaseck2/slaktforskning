@@ -30,10 +30,10 @@ async function load(id: string) {
 }
 
 async function save(value: string) {
-  const trimmed = value.trim() || null;
+  const trimmed = value.trim();
   try {
     await window.api.persons.update(props.personId, { notes: trimmed });
-    notes.value = trimmed ?? '';
+    notes.value = trimmed;
   } catch (err) {
     console.error('[PersonNotesSection] save failed:', err);
     toast.error(t('errors.saveFailed'));

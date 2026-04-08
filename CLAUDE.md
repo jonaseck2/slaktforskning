@@ -74,6 +74,11 @@ src/
 │   │   ├── EventForm.vue         # Event create/edit modal
 │   │   ├── EventList.vue         # Event table with add/edit/delete
 │   │   └── CitationForm.vue      # Citation create modal
+│   ├── composables/
+│   │   ├── useFocusTrap.ts       # Focus trap for modals (used by BaseModal)
+│   │   └── useTTS.ts             # Text-to-speech via Web Speech API
+│   ├── utils/
+│   │   └── narration.ts          # Natural-language narration builders for TTS
 │   └── constants/
 │       └── eventTypes.ts         # GEDCOM event types, date types, confidence levels, etc.
 └── mcp/
@@ -411,6 +416,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonIdentifiersSection` | `personId: string` | — | Self-loading identifiers table + add modal. Exposes `openAddForm()`. |
 | `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink/reorder (up/down). First item shows "Profile" badge. Emits `profileChanged` when media order changes. Exposes `attach()` and `reload()`. |
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
+| `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
@@ -460,6 +466,11 @@ PARENT_CHILD_SUBTYPE_VALUES    // biological, adopted, foster, step, unknown
 EVENT_PARTICIPANT_ROLE_VALUES  // primary, spouse, parent, child, witness, godparent, officiant, other
 NAME_TYPE_VALUES               // birth, married, alias, aka
 ```
+
+### Accessibility / i18n
+
+- `a11y` i18n namespace — skip link label, ARIA labels for charts and controls, TTS button strings
+- TTS enabled/disabled via localStorage key `slaktforskning-tts` (set from Settings > Read aloud toggle)
 
 ---
 
