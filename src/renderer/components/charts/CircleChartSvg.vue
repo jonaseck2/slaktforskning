@@ -22,6 +22,9 @@
       :key="seg.ahnNum"
       :class="['circle-seg', { clickable: !seg.isEmpty && !linkBase }]"
       @click="!seg.isEmpty && !linkBase && seg.person && emit('navigate', seg.person.id)"
+      @mouseenter="(e: MouseEvent) => !linkBase && seg.person && emit('personenter', seg.person, e)"
+      @mousemove="(e: MouseEvent) => !linkBase && seg.person && emit('personmove', e)"
+      @mouseleave="!linkBase && seg.person && emit('personleave')"
     >
       <!-- Link wrapper for print mode -->
       <a v-if="linkBase && seg.person" :href="`${linkBase}${seg.person.id}`">
@@ -262,6 +265,9 @@
       v-if="focalSegment"
       :class="['circle-seg', { clickable: focalSegment.person && !linkBase }]"
       @click="focalSegment.person && !linkBase && emit('navigate', focalSegment.person!.id)"
+      @mouseenter="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personenter', focalSegment!.person, e)"
+      @mousemove="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personmove', e)"
+      @mouseleave="!linkBase && focalSegment!.person && emit('personleave')"
     >
       <!-- Link wrapper for print/export mode -->
       <a v-if="linkBase && focalSegment.person" :href="`${linkBase}${focalSegment.person.id}`">
@@ -341,7 +347,12 @@ const props = withDefaults(defineProps<Props>(), {
   strokeWidth: 1.5,
 });
 
-const emit = defineEmits<{ navigate: [id: string] }>();
+const emit = defineEmits<{
+  navigate: [id: string];
+  personenter: [person: NonNullable<CircleSegment['person']>, event: MouseEvent];
+  personmove: [event: MouseEvent];
+  personleave: [];
+}>();
 
 const nonFocalSegments = computed(() => props.segments.filter(s => !s.isFocal));
 

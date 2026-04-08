@@ -11,9 +11,13 @@
         :width="svgDisplaySize"
         :height="svgDisplaySize"
         @navigate="$emit('navigate', $event)"
+        @personenter="(p, e) => tooltipRef?.show(p, e.clientX, e.clientY)"
+        @personmove="(e) => tooltipRef?.move(e.clientX, e.clientY)"
+        @personleave="tooltipRef?.hide()"
       />
     </div>
 
+    <ChartTooltip ref="tooltipRef" />
     <div class="zoom-controls">
       <span class="zoom-label">Generationer:</span>
       <button class="zoom-btn" @click="decrGens" :disabled="selectedGens <= 1">−</button>
@@ -43,6 +47,9 @@ import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { PedigreeTree } from '../../utils/chartLayout';
 import CircleChartSvg from './CircleChartSvg.vue';
+import ChartTooltip from './ChartTooltip.vue';
+
+const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
 useI18n();
 

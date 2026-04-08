@@ -169,7 +169,7 @@ import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
-import { narratePerson } from '../utils/narration';
+import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import AddResearchTaskModal from '../components/AddResearchTaskModal.vue';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
@@ -302,7 +302,7 @@ async function autoNarrate() {
     deathPlace = death?.place_name ?? undefined;
   } catch { /* ignore */ }
 
-  const text = narratePerson({ name, birthDate, birthPlace, deathDate, deathPlace });
+  const text = narratePerson({ name, birthDate, birthPlace, deathDate, deathPlace }, narrationLabelsFromI18n(t));
   speak(text, locale.value);
 }
 

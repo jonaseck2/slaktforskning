@@ -98,9 +98,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, inject, watch, onMounted, onActivated } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import type { Ref } from 'vue';
+import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import PedigreeListView from '../components/charts/PedigreeListView.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
@@ -113,10 +115,12 @@ import { useFocusStore } from '../stores/focus';
 interface Person { id: string; sex: 'M' | 'F' | 'U'; living: boolean; }
 interface PersonWithName extends Person { given_name: string; surname: string; }
 
-useI18n();
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const focusStore = useFocusStore();
+const ttsEnabled = inject<Ref<boolean>>('ttsEnabled');
+const tts = inject<{ speak: (text: string, locale?: string) => void }>('tts');
 
 const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
@@ -158,9 +162,28 @@ function selectNode(id: string) {
   if (!panelOpen.value) openPanel();
 }
 
-function navigateTo(id: string) {
-  // Single-click on chart node: set focus without re-centering
+async function navigateTo(id: string) {
   selectNode(id);
+  if (!ttsEnabled?.value || !tts) return;
+  try {
+    const person = await window.api.persons.get(id) as { id: string; sex: string } | null;
+    if (!person) return;
+    const names = await window.api.persons.getNames(id) as Array<{ given_name?: string; surname?: string }>;
+    const n = names[0];
+    const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+    if (!name) return;
+
+    let birthDate: string | undefined;
+    let deathDate: string | undefined;
+    try {
+      const events = await window.api.events.forPerson(id) as Array<{ event_type: string; date_value: string | null }>;
+      birthDate = events.find(e => e.event_type === 'birth')?.date_value ?? undefined;
+      deathDate = events.find(e => e.event_type === 'death')?.date_value ?? undefined;
+    } catch { /* ignore */ }
+
+    const text = narratePerson({ name, birthDate, deathDate }, narrationLabelsFromI18n(t));
+    tts.speak(text, locale.value);
+  } catch { /* ignore */ }
 }
 
 function showInTree(id: string) {

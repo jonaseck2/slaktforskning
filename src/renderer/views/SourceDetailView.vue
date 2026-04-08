@@ -111,7 +111,7 @@ import CitationEditModal from '../components/CitationEditModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
-import { narrateSource } from '../utils/narration';
+import { narrateSource, narrationLabelsFromI18n } from '../utils/narration';
 
 interface SourceData {
   id: string;
@@ -206,7 +206,7 @@ function autoNarrate() {
     title: source.value.title || t('common.unknown'),
     author: source.value.author || undefined,
     citationCount: citations.value.length,
-  });
+  }, narrationLabelsFromI18n(t));
   speak(text, locale.value);
 }
 
