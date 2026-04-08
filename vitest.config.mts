@@ -27,6 +27,7 @@ export default defineConfig({
           name: 'components',
           include: ['tests/components/**/*.test.ts'],
           environment: 'happy-dom',
+          setupFiles: ['./tests/components/vitestSetup.ts'],
         },
       },
     ],
