@@ -18,10 +18,13 @@ import {
   getDisplayGivenName,
   listPersonsPage,
   countPersons,
+  listUnsourcedPersonsPage,
+  countUnsourcedPersons,
   searchPersonsWithDetails,
 } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
+import { createSource, createCitation } from '../../src/api/sources';
 
 let db: Database.Database;
 
@@ -336,5 +339,32 @@ describe('listPersonsPage / countPersons / searchPersonsWithDetails', () => {
     expect(results).toHaveLength(1);
     expect(results[0].given_name).toBe('Karl');
     expect(results[0].birth_date).toBe('5 MAJ 1850');
+  });
+});
+
+describe('listUnsourcedPersonsPage / countUnsourcedPersons', () => {
+  it('returns persons without any citations', () => {
+    const p1 = createPerson(db, { given_name: 'Unsourced', surname: 'Person' });
+    const p2 = createPerson(db, { given_name: 'Sourced', surname: 'Person' });
+
+    // Give p2 an event with a citation
+    const event = createEvent(db, { event_type: 'birth', date_type: 'exact' });
+    addEventParticipant(db, { event_id: event.id, person_id: p2.id, role: 'primary' });
+    const source = createSource(db, { title: 'Test Source' });
+    createCitation(db, { source_id: source.id, event_id: event.id });
+
+    const unsourced = listUnsourcedPersonsPage(db, 100, 0);
+    expect(unsourced).toHaveLength(1);
+    expect(unsourced[0].id).toBe(p1.id);
+    expect(countUnsourcedPersons(db)).toBe(1);
+  });
+
+  it('returns empty when all persons are sourced', () => {
+    const p = createPerson(db, { given_name: 'A', surname: 'B' });
+    const source = createSource(db, { title: 'S' });
+    createCitation(db, { source_id: source.id, person_id: p.id });
+
+    expect(listUnsourcedPersonsPage(db, 100, 0)).toHaveLength(0);
+    expect(countUnsourcedPersons(db)).toBe(0);
   });
 });

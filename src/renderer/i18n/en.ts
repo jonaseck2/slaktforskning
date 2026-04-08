@@ -61,6 +61,9 @@ export default {
     deathPlace: 'Death place',
     showingOf: 'Showing {shown} of {total} persons',
     loadMore: 'Load more',
+    filterAll: 'All',
+    filterUnsourced: 'Unsourced',
+    allSourced: 'All persons have at least one source citation.',
   },
   personDetail: {
     deceased: 'Deceased',
@@ -518,6 +521,10 @@ export default {
     accepted: 'Accepted',
     rejected: 'Rejected',
     source: 'Source',
+    generateProof: 'Generate Proof Summary',
+    proofTitle: 'Proof Summary — Accepted Evidence',
+    noAccepted: 'No assertions have been marked as accepted yet.',
+    unresolvedNote: '{count} unresolved conflict(s) remain — resolve before finalizing conclusions.',
     attributes: {
       date_value: 'Date',
       date_original: 'Original date',

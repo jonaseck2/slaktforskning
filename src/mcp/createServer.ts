@@ -1025,6 +1025,14 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
+  server.registerTool('generate_proof_summary', {
+    description: 'Generate a proof summary for a person — lists all accepted assertions with source info and unresolved conflicts',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const summary = assertions.generateProofSummary(db, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(summary, null, 2) }] };
+  });
+
   // Checks tools
   server.registerTool('run_checks', {
     description: 'Run all data quality checks across the entire database and return a list of issues found',

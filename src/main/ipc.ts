@@ -104,6 +104,13 @@ export function registerIpcHandlers(): void {
   wrapHandler('persons:searchWithDetails', (query) =>
     persons.searchPersonsWithDetails(getDatabase(), query as string)
   );
+  wrapHandler('persons:listUnsourcedPage', (limit, offset) => {
+    const db = getDatabase();
+    return {
+      persons: persons.listUnsourcedPersonsPage(db, limit as number, offset as number),
+      total: persons.countUnsourcedPersons(db),
+    };
+  });
 
   // Relationships
   wrapHandler('relationships:create', (data) => relationships.createRelationship(getDatabase(), data as Parameters<typeof relationships.createRelationship>[1]));
@@ -497,6 +504,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('assertions:delete', (id) => assertions.deleteAssertion(getDatabase(), id as string));
   wrapHandler('assertions:conflicts', () => assertions.getConflicts(getDatabase()));
   wrapHandler('assertions:conflictsForPerson', (personId) => assertions.getConflictsForPerson(getDatabase(), personId as string));
+  wrapHandler('assertions:proofSummary', (personId) => assertions.generateProofSummary(getDatabase(), personId as string));
 
   // Checks
   wrapHandler('checks:runAll', () => {
