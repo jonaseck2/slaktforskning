@@ -6,28 +6,43 @@
         type="text"
         :value="searchQuery"
         :placeholder="placeholder"
+        role="combobox"
+        :aria-expanded="open && results.length > 0"
+        aria-autocomplete="list"
+        :aria-controls="pickerId + '-listbox'"
+        :aria-activedescendant="highlightIndex >= 0 ? pickerId + '-option-' + results[highlightIndex]?.id : undefined"
         @input="onInput"
         @focus="open = true"
         @blur="onBlur"
+        @keydown="onKeydown"
       />
-      <button v-if="modelValue" type="button" class="picker-clear" @click="clear">&times;</button>
+      <button v-if="modelValue" type="button" class="picker-clear" :aria-label="$t('a11y.clearSearch')" @click="clear">&times;</button>
     </div>
-    <ul v-if="open && results.length > 0" class="picker-dropdown">
+    <ul v-if="open && results.length > 0" :id="pickerId + '-listbox'" role="listbox" class="picker-dropdown">
       <li
-        v-for="person in results"
+        v-for="(person, idx) in results"
         :key="person.id"
+        :id="pickerId + '-option-' + person.id"
+        role="option"
+        :aria-selected="idx === highlightIndex"
         class="picker-option"
+        :class="{ highlighted: idx === highlightIndex }"
         @mousedown.prevent="select(person)"
       >
         <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" :nickname="person.nickname" /></span>
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
     </ul>
+    <div v-if="open && results.length > 0" class="sr-only" aria-live="polite">
+      {{ $t('a11y.searchResults', { count: results.length }, results.length) }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+
+const pickerId = 'person-picker-' + Math.random().toString(36).slice(2, 8);
 import PersonName from './PersonName.vue';
 
 interface PersonResult {
@@ -53,6 +68,10 @@ const searchQuery = ref('');
 const results = ref<PersonResult[]>([]);
 const open = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
+const highlightIndex = ref(-1);
+
+// Reset highlight when results change
+watch(results, () => { highlightIndex.value = -1; });
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -100,6 +119,22 @@ function clear() {
   searchQuery.value = '';
   emit('update:modelValue', null);
   results.value = [];
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (!open.value || results.value.length === 0) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    highlightIndex.value = Math.min(highlightIndex.value + 1, results.value.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    highlightIndex.value = Math.max(highlightIndex.value - 1, 0);
+  } else if (e.key === 'Enter' && highlightIndex.value >= 0) {
+    e.preventDefault();
+    select(results.value[highlightIndex.value]);
+  } else if (e.key === 'Escape') {
+    open.value = false;
+  }
 }
 
 function onBlur() {
@@ -173,5 +208,19 @@ function onBlur() {
   font-size: var(--font-xs);
   color: #888;
   margin-left: 8px;
+}
+.picker-option.highlighted {
+  background: var(--color-row-hover);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
