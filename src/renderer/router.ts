@@ -23,6 +23,7 @@ export const router = createRouter({
     { path: '/visualisering/:personId', component: () => import('./views/VisualizationView.vue') },
     { path: '/import-export', component: () => import('./views/ImportExportView.vue') },
     { path: '/database', component: () => import('./views/DatabaseView.vue') },
+    { path: '/evidence', component: () => import('./views/EvidenceView.vue') },
     { path: '/quality', component: () => import('./views/QualityView.vue') },
     { path: '/reports', component: () => import('./views/ReportsView.vue') },
     { path: '/research-tasks', component: () => import('./views/ResearchTasksView.vue') },

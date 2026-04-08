@@ -147,6 +147,7 @@ const api = {
   },
   assertions: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('assertions:create', data)),
+    list: () => ipcRenderer.invoke('assertions:list'),
     get: (id: string) => ipcRenderer.invoke('assertions:get', id),
     forSubject: (subjectType: string, subjectId: string) => ipcRenderer.invoke('assertions:forSubject', subjectType, subjectId),
     forAttribute: (subjectType: string, subjectId: string, attribute: string) => ipcRenderer.invoke('assertions:forAttribute', subjectType, subjectId, attribute),

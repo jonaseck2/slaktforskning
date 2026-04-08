@@ -18,13 +18,13 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 ## Implementation Status
 
-| Version | Feature / Fix | Archive |
-|---------|---------------|---------|
-| v0.1.0 | Foundation: SQLite + API layer + Electron shell + MCP (14 tools) + tests | — |
+| Version | Feature | Archive |
+|---------|---------|---------|
+| v0.1.0 | Foundation: SQLite + API + Electron + MCP (14 tools) + tests | — |
 | v0.2.x | Data entry UI, global search, MCP UI tools, Swedish i18n | — |
-| v0.3.x | Relationships + evidence, GEDCOM-X name parts, person identifiers, PersonDetailView UX | — |
-| v0.4.x | Places layer: API/IPC/MCP/UI; inline-edit polish | — |
-| v0.5.x | Visualization (pedigree/hourglass/timeline), citation badges, place addresses, preferred name (tilltalsnamn), search across all name records, PersonName component | — |
+| v0.3.x | Relationships, GEDCOM-X names, person identifiers, detail UX | — |
+| v0.4.x | Places: API/IPC/MCP/UI, inline-edit polish | — |
+| v0.5.x | Visualization, citation badges, place addresses, tilltalsnamn | — |
 | v0.6.0 | GEDCOM 5.5.1 import/export | [archive](plans/archive/2026-04-03-gedcom.md) |
 | v0.6.2 | Genney import profile (Swedish places + patronymics) | [archive](plans/archive/2026-04-03-genney-import.md) |
 | v0.6.3 | Database switcher | [archive](plans/archive/2026-04-03-database-switcher.md) |
@@ -34,166 +34,63 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.6.7 | Per-node descendant collapse | [archive](plans/archive/2026-04-03-descendant-collapse.md) |
 | v0.6.8 | Tilltalsnamn + smeknamn separation | [archive](plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md) |
 | v0.6.9 | Genney Derby import (Docker + DerbyExtractor.java) | [archive](plans/archive/2026-04-04-genney-derby-import.md) |
-| v0.7.0 | Genney full-fidelity import: groups, repos, tasks, media, places fix, OWNER_EVENT, cause, source abstract | — |
-| Fix | Stale IPC DB ref after switchDatabase | [archive](plans/archive/2026-04-03-ipc-stale-db.md) |
-| Fix | GEDCOM import timeout + asterisk preferred name | [archive](plans/archive/2026-04-03-gedcom-import-performance.md) |
-| Fix | GEDCOM import CPU saturation (statement cache) | [archive](plans/archive/2026-04-03-gedcom-import-cpu.md) |
-| Fix | GEDCOM couple subtype always 'unknown' | [archive](plans/archive/2026-04-03-gedcom-couple-subtype.md) |
-| Fix | Nickname position + asterisk notation in UI | [archive](plans/archive/2026-04-04-nickname-display-and-asterisk-ui.md) |
-| Fix | Genney import CPU saturation (per-row db.prepare) | [archive](plans/archive/2026-04-04-genney-cpu-saturation.md) |
-| Fix | Genney .backup extraction: use fflate (pure JS) instead of unzip subprocess | [archive](plans/archive/2026-04-04-genney-windows-paths.md) |
-| Fix | Genney EVENT_PLACE column names wrong (RID/SPLACEID→EVENT/PLACE); REMARK.TEXT→NOTE | [archive](plans/archive/2026-04-04-genney-column-bugs.md) |
-| v0.7.1 | Docs/tests/skills sync: 4 test files for v0.7.0 entities, skill updates, coverage to 88% | — |
-| v0.8.0 | MCP tools for groups, repositories, research tasks, media (30 tools); MCP verification loop in skills | [archive](plans/archive/2026-04-04-mcp-agent-workflow.md) |
-| Fix | import_gedcom silently swallowed .backup files; add import_genney MCP tool | [archive](plans/archive/2026-04-04-import-genney-mcp-tool.md) |
-| v0.9.3 | Fix Genney import crash: TODO.STATUS integer TypeError | [archive](plans/archive/2026-04-04-fix-genney-todo-status.md) |
-| v0.9.4 | Fix hourglass chart descendant overlap + auto-center focal | [archive](plans/archive/2026-04-04-hourglass-layout-overlap-fix.md) |
-| v0.10.0 | Visualisation as primary view: person panel, drag resize, icon sidebar | [archive](plans/archive/2026-04-04-viz-primary-view.md) |
-| v0.10.1 | Fix Genney SEX encoding (0=M, 1=F) and LIVING flag (1=deceased) | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
-| v0.10.2 | Fix hourglass female-focal spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
-| v0.11.0 | EVENT.cause UI: Orsak field in EventForm/EventList + GEDCOM 2 CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
-| v0.12.0 | Tree Sanity Checks: 26 checks, QualityView, PersonDetailView banner, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
-| v0.13.0 | Printable Output: Ancestor Chart, Family Group Sheet, Individual Summary reports | [archive](plans/archive/2026-04-04-printable-output.md) |
-| v0.14.0 | Polish: Escape key closes all modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
-| Investigation | GEDCOM Citation Roundtrip: keep current INDI.SOUR/FAM.SOUR behavior (no code changes) | [archive](plans/archive/2026-04-05-gedcom-citation-roundtrip.md) |
-| v0.15.0 | Evidence Model Simplification: mention event, citation editing, removed entity-level cite buttons, Genney MENTION import | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
-| Fix | QualityView: auto-run checks on mount, removed manual run button | — |
-| Fix | Relationship EventList: wire CitationBadge on event rows | — |
-| v0.16.0 | Research Tasks UI: ResearchTasksView, PersonDetailView section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
-| Fix | Reactive quality badge: use contextBridge onDataChanged pattern (postMessage doesn't cross contextIsolation) | [archive](plans/archive/2026-04-05-fix-reactive-quality-badge.md) |
-| Fix | ResearchTasksView: table styling, empty person column (persons.get has no names), person editing in expanded row, reactive badge | [archive](plans/archive/2026-04-05-research-tasks-view-fixes.md) |
-| Fix | Consistent name rendering: nickname + preferred_name propagated to all views, charts, reports | [archive](plans/archive/2026-04-05-consistent-name-rendering.md) |
-| v0.17.0 | Groups UI: GroupsView, GroupDetailView, GroupPicker, PersonDetailView section, sidebar nav icons | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
-| v0.18.0 | Navigation focus persistence: Pinia store, sidebar indicator, cross-view selected person, viz single-click | [archive](plans/archive/2026-04-05-nav-focus-persistence.md) |
-| v0.19.0 | Circle chart: full-circle 360° ancestor view, 6 generations, branch-based colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
-| v0.20.0 | Ancestor Book Export: static SVG circle chart, ahnentafel list, person summaries, internal PDF links | [archive](plans/archive/2026-04-05-ancestor-book.md) |
-| Fix | Circle chart zoom: flex-shrink bug, center-anchored +/- buttons, curved text line spacing | [archive](plans/archive/2026-04-05-circle-chart-zoom-fixes.md) |
-| v0.20.7 | GEDCOM import completeness: engagement/adoption types, CAUS, TITL, NOTE xrefs, ImportReport UI | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
-| Fix | v0.20.9: WASM OOM after large GEDCOM import — finalize statements, PRAGMA shrink_memory | [archive](plans/archive/2026-04-05-fix-wasm-oom-after-large-gedcom-import.md) |
-| Fix | v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers, all api/ refactored | — |
-| v0.21.0 | Persons list: single JOIN query (birth/death date/place), load-more pagination (100/page), remove Living column | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
-| v0.22.0 | View caching: keep-alive + dataVersion store, onActivated reload guard in 5 list views | [archive](plans/archive/2026-04-05-view-caching.md) |
-| v0.22.3 | PersonsView infinite scroll + RelationshipsView N+1 IPC fix (paginated JOIN query) | — |
-| Fix | v0.22.4: PersonsView UI lockup — correlated subqueries + idx_events_event_type + idx_person_names_person_sort | [archive](plans/archive/2026-04-05-fix-personsview-lockup.md) |
-| v0.23.0 | QualityView: standard table layout, caching (Pinia store), background refresh, ignore/unignore per check, person names column | — |
-| Fix | v0.23.1: Remove 500-ancestor limit from Ancestor Book export | — |
-| Fix | v0.23.2: ReportsView full-width + auto-fit zoom with +/−/Fit controls | — |
-| Fix | v0.23.3: Circle chart gen 5-6 radial text — deeper rings, full name+dates visible | — |
-| Fix | v0.23.4: All charts: `* ISO` birth + `† ISO` death on separate lines; BOX_H 44→54; fix circle curved-mode gen 5-6 gone; fix circle scroll overflow | — |
-| Fix | v0.23.5: Circle gen 6 color lightening reduction; Reports auto-use focal person (remove PersonPicker) | — |
-| Fix | v0.23.7: AncestorBook export circle: gen 6 blank — fetchPedigreeTree needs generations=7 not 6 | — |
-| v0.24.0 | Media Attachments Phase 1–3: is_missing schema, file copy strategy, media:attach/openFile/getFilePath IPC, MediaView, PersonDetailView media section, i18n, unit tests | [archive](plans/archive/2026-04-04-media.md) |
-| v0.24.2 | UX design system — all list views match QualityView (GroupsView + PersonsView/RelationshipsView/PlacesView/SourcesView/ResearchTasksView/ReportsView) | [archive](plans/archive/2026-04-05-ux-design-system.md) |
-| Fix | v0.24.1: Quality checks CPU saturation on large trees — 4-way event_participants self-join → 2-query+JS; V8 CPU profiling infrastructure; performance-profiling skill | [archive](plans/archive/2026-04-06-checks-performance.md) |
-| v0.25.0 | GEDCOM media import/export: inline+top-level OBJE on INDI/FAM/events, export OBJE blocks; media section typo fix | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
-| Fix | v0.25.2: Genney import — SPLACE address fields (STREET, POSTALCODE, CITY, COUNTRY) now stored in place address columns | [archive](plans/archive/2026-04-06-genney-address-fields.md) |
-| v0.26.0 | Infinite chart expansion: lazy load-more per branch, pedigree arrow ▶ fix | [plan](plans/archive/2026-04-06-infinite-chart-expansion.md) |
-| Fix | v0.26.1: Pedigree ▶ button and hourglass ▲ button clipped at SVG scroll boundary | [archive](plans/archive/2026-04-06-chart-button-clip-fix.md) |
-| Fix | v0.26.2: E2E flaky tests — AbortError retry, missing mutating() wrappers, btn-add selector, viz back/detail buttons | [archive](plans/archive/2026-04-06-e2e-fix-flaky-tests.md) |
-| Fix | v0.26.3: Full name rendering — `formatFullName()` in nameUtils, replaces truncated `primaryName()` in all 4 reports | [archive](plans/archive/2026-04-06-full-name-rendering.md) |
-| v0.26.4–v0.30.1 | Tree-first editing: PersonPanel full redesign (header, Person/Namn/Händelser/Relationer/Källor/Grupper sections) + ⊕ hover buttons on PedigreeChart + HourglassChart | [plan](plans/archive/2026-04-06-tree-first-editing.md) |
-| v0.32.0–v0.35.2 | GEDCOM full standard support: refactor to src/import/gedcom/, 7.0 normalization (SNOTE/EXID/TRAN/PHRASE), ValidationReport with data-loss detail, round-trip export (identifiers, coords, repos, transcription), ADDR/MAP in standard core | [archive](plans/archive/2026-04-06-gedcom-full-support.md) |
-| v0.35.0 | Holger ElevateDB direct import: pure Python binary reader (EDBExtractor.py), TypeScript transform, Docker NDJSON pipeline, IPC/MCP/UI | [archive](plans/archive/2026-04-06-holger-dbisam-import.md) |
-| refactor | TypeScript window.api typing: api.d.ts ambient declaration, removed unsafe Record<> from 37 components | [archive](plans/archive/2026-04-07-typescript-api-types.md) |
-| refactor | User-facing error toasts: useToast composable + ToastNotification, wired to all form components | [archive](plans/archive/2026-04-07-error-notifications.md) |
-| refactor | i18n coverage: personPanel.* keys, nav.navigate, replaced all hardcoded Swedish strings in PersonPanel, charts, reports, App | [archive](plans/archive/2026-04-07-i18n-coverage.md) |
-| refactor | CSS color variables: 18 palette vars in :root, replaced 70+ hardcoded hex values in shared.css and scoped styles | [archive](plans/archive/2026-04-07-css-color-variables.md) |
-| refactor | BaseModal component: slot-based modal shell with Escape + overlay-click handling, migrated all 15 modal components | [archive](plans/archive/2026-04-07-base-modal-refactor.md) |
-| v0.37.6 | Component extraction: PersonNotesSection, AddResearchTaskModal, 4 ImportExportSection components; ImportExportView 605→46 lines | [archive](plans/archive/2026-04-07-component-extraction.md) |
-| Fix | v0.37.7: PersonsView startup CPU saturation — 4 correlated subqueries per person → two-pass query (sort+paginate first, then IN fetch for page only) | [archive](plans/archive/2026-04-07-personsview-startup-cpu.md) |
-| v0.38.0 | GEDCOM 7.0 export: version param in exportGedcom, EXID, DATE PHRASE, PEDI uppercase, AKA, format selector UI | [archive](plans/archive/2026-04-06-gedcom-70-export.md) |
-| v0.38.1 | Holger import completion: remove EDB path, REMA/MISC → notes, _HDP/_H8P in unmappedData, defaultPersonId → navigate to tree subject | [archive](plans/archive/2026-04-06-holger-import.md) |
-| v0.38.2 | GEDCOM import gap closure: REPO → repositories, _GRP → groups, _TODO → research tasks, SUBM → default_person_id, db_settings API; import report UI updated | [archive](plans/archive/2026-04-07-gedcom-import-gap-closure.md) |
-| v0.38.3 | Import/export test coverage: Genney archive extraction (.gcc/.backup), Genney GEDCOM profile ImportReport, Holger ImportReport+media, GEDCOM 5.5.1 full ImportReport, export place_address exclusion | [archive](plans/archive/2026-04-07-import-export-test-coverage.md) |
-| v0.38.4 | Genney media folder support: remapGenneyMediaPath, three-box import UI (.backup auto-copy, .gcc/.ged folder picker), mediaDir/destMediaDir wiring | [archive](plans/archive/2026-04-08-genney-media-folder.md) |
-
-| Investigation | macOS 26 Tahoe: packaged app crashes (EXC_BREAKPOINT in ElectronMain); npm start works | [plan](plans/2026-04-08-macos26-electron-crash.md) |
-| v0.39.0 | Evidence Analysis (GPS) Phase 1+2: assertion CRUD+IPC+MCP (10 tools), conflict detection in QualityView, PersonEvidenceSection, AssertionFormModal, SourceDetailView assertions column | [plan](plans/2026-04-08-evidence-analysis.md) |
-| v0.39.1 | Evidence Analysis Phase 3: unsourced filter on PersonsView, proof summary generation (API+MCP+UI), 5 new tests | [plan](plans/2026-04-08-evidence-analysis.md) |
-| v0.39.2 | Evidence Analysis Phase 4: duplicate detection (name+date+sex scoring), MergePersonsModal, mergePersons API (10 tables), 2 MCP tools, 11 new tests | [plan](plans/2026-04-08-evidence-analysis.md) |
-
+| v0.7.0 | Genney full-fidelity: groups, repos, tasks, media, cause | — |
+| v0.7.1 | Docs/tests/skills sync, coverage to 88% | — |
+| v0.8.0 | MCP tools: groups, repos, tasks, media (30 tools) | [archive](plans/archive/2026-04-04-mcp-agent-workflow.md) |
+| v0.9.3 | Genney import crash fix: TODO.STATUS TypeError | [archive](plans/archive/2026-04-04-fix-genney-todo-status.md) |
+| v0.9.4 | Hourglass descendant overlap + auto-center focal | [archive](plans/archive/2026-04-04-hourglass-layout-overlap-fix.md) |
+| v0.10.0 | Viz as primary view: person panel, drag resize, icon sidebar | [archive](plans/archive/2026-04-04-viz-primary-view.md) |
+| v0.10.1 | Genney SEX/LIVING encoding fix | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
+| v0.10.2 | Hourglass spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
+| v0.11.0 | EVENT.cause UI + GEDCOM CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
+| v0.12.0 | Tree Sanity Checks: 26 checks, QualityView, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
+| v0.13.0 | Printable Output: Ancestor Chart, Family Group Sheet, Summary | [archive](plans/archive/2026-04-04-printable-output.md) |
+| v0.14.0 | Polish: Escape closes modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
+| v0.15.0 | Evidence Model: mention event, citation editing, Genney MENTION | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
+| v0.16.0 | Research Tasks UI: list view, person section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
+| v0.17.0 | Groups UI: list/detail views, GroupPicker, person section | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
+| v0.18.0 | Navigation focus persistence: Pinia store, sidebar indicator | [archive](plans/archive/2026-04-05-nav-focus-persistence.md) |
+| v0.19.0 | Circle chart: 360° ancestor view, 6 gens, branch colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
+| v0.20.0 | Ancestor Book: SVG circle, ahnentafel list, person summaries | [archive](plans/archive/2026-04-05-ancestor-book.md) |
+| v0.20.7 | GEDCOM import: engagement/adoption types, CAUS, TITL, NOTE | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
+| v0.21.0 | Persons list: JOIN query, load-more pagination (100/page) | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
+| v0.22.0 | View caching: keep-alive + dataVersion reload guard | [archive](plans/archive/2026-04-05-view-caching.md) |
+| v0.22.3 | PersonsView infinite scroll + RelationshipsView N+1 fix | — |
+| v0.23.0 | QualityView: table layout, caching, ignore/unignore, names | — |
+| v0.24.0 | Media Attachments: schema, file copy, IPC, MediaView, i18n | [archive](plans/archive/2026-04-04-media.md) |
+| v0.24.2 | UX design system: all list views match QualityView pattern | [archive](plans/archive/2026-04-05-ux-design-system.md) |
+| v0.25.0 | GEDCOM media import/export: OBJE on INDI/FAM/events | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
+| v0.26.0 | Infinite chart expansion: lazy load-more per branch | [archive](plans/archive/2026-04-06-infinite-chart-expansion.md) |
+| v0.26.4–v0.30.1 | Tree-first editing: PersonPanel redesign + ⊕ hover buttons | [archive](plans/archive/2026-04-06-tree-first-editing.md) |
+| v0.32.0–v0.35.2 | GEDCOM full standard: 7.0 normalization, ValidationReport | [archive](plans/archive/2026-04-06-gedcom-full-support.md) |
+| v0.35.0 | Holger ElevateDB direct import (Python + Docker pipeline) | [archive](plans/archive/2026-04-06-holger-dbisam-import.md) |
+| v0.37.3 | Import/export data integrity: ExportReport, warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
+| v0.37.6 | Component extraction: 6 new components, ImportExportView slim | [archive](plans/archive/2026-04-07-component-extraction.md) |
+| v0.37.8 | Shared CircleChartSvg component | [archive](plans/archive/2026-04-05-circle-chart-svg-shared.md) |
+| v0.38.0 | GEDCOM 7.0 export: EXID, DATE PHRASE, format selector UI | [archive](plans/archive/2026-04-06-gedcom-70-export.md) |
+| v0.38.1 | Holger import: REMA/MISC→notes, defaultPersonId nav | [archive](plans/archive/2026-04-06-holger-import.md) |
+| v0.38.2 | GEDCOM gap closure: REPO, _GRP, _TODO, SUBM, db_settings | [archive](plans/archive/2026-04-07-gedcom-import-gap-closure.md) |
+| v0.38.3 | Import/export test coverage (Genney/Holger/GEDCOM) | [archive](plans/archive/2026-04-07-import-export-test-coverage.md) |
+| v0.38.4 | Genney media folder support + three-box import UI | [archive](plans/archive/2026-04-08-genney-media-folder.md) |
+| v0.39.0 | Evidence Analysis phases 1+2: assertions, conflicts, UI | [archive](plans/archive/2026-04-08-evidence-analysis.md) |
+| v0.39.1 | Evidence Analysis phase 3: unsourced filter, proof summaries | [archive](plans/archive/2026-04-08-evidence-analysis.md) |
+| v0.39.2 | Evidence Analysis phase 4: duplicate detection, merge persons | [archive](plans/archive/2026-04-08-evidence-analysis.md) |
 ---
 
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
-### Code Quality Improvements [refactor]
+Fixes, investigations, and refactors archived in [plans/archive/PLAN.md](plans/archive/PLAN.md).
 
-| v0.37.3 | Import/Export data integrity: GEDCOM surface LDS/TRAN/NO/ASSO, ExportReport with excluded entities, Genney warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
+#### macOS 26 Tahoe: packaged app crash (EXC_BREAKPOINT) [investigation]
+See [plan](plans/2026-04-08-macos26-electron-crash.md). `npm start` works; only packaged app affected.
 
-### Holger/OurKind import [feature] ✅ v0.38.1
-See `.claude/plans/archive/2026-04-06-holger-import.md` for the full plan.
-- [x] Add `'holger'` GEDCOM profile: ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype
-- [x] Media path remapping (Windows → local mediaDir)
-- [x] `src/import/holger/index.ts` orchestrator (.ged, .zip, folder)
-- [x] `import_holger` MCP tool + IPC handlers + ImportExportView section
-- [x] Remove DBISAM/EDB import path — GEDCOM export covers all useful data
-- [x] REMA/MISC → person notes; `_HDP`/`_H8P` documented in unmappedData
-- [x] `defaultPersonId` in ImportReport — navigate to tree subject after import
-
-### GEDCOM 7.0 Export [feature] ✅ v0.38.0
-See `.claude/plans/archive/2026-04-06-gedcom-70-export.md` for the full plan.
-- [x] `isStandardGedcomDate` helper in `src/gedcom/date.ts`
-- [x] `exportGedcom(db, version)` — header, EXID identifiers
-- [x] DATE PHRASE for unparseable dates in 7.0
-- [x] PEDI uppercase + `alias` NAME.TYPE → `AKA`
-- [x] IPC + preload accept `{ version? }` option
-- [x] GedcomExportSection: format selector (5.5.1 / 7.0)
-
-### Shared CircleChartSvg component [refactor] ✅ v0.37.8
-See `.claude/plans/archive/2026-04-05-circle-chart-svg-shared.md` for the full plan.
-- [x] Extract shared `CircleChartSvg.vue` from `CircleChart.vue`
-- [x] Use in `CircleChart.vue` (interactive)
-- [x] Use in `AncestorBookReport.vue` (print/export)
-
-### Workflow Analysis [research]
+#### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
 
-Define primary user objectives (add person, record event with source, link family, etc.), map each to current click counts and navigation steps, identify highest-friction paths, and produce a prioritized improvement backlog.
+Define primary user objectives, map to current click counts, identify highest-friction paths, produce prioritized improvement backlog. Use `interview-synthesis` skill if user research data is available.
 
-Inputs needed before starting:
-- [ ] User session recording or observation (which tasks are done most often?)
-- [ ] Heuristic walkthrough of the 5 most common workflows against the current UI
-- [ ] Comparison: click count before vs. proposed UI changes
-
-Output: a ranked list of UX improvements with before/after click counts, ready to be planned as individual features.
-
-Use the `interview-synthesis` skill if user research data is available.
-
-### Evidence Analysis (GPS) [feature]
-See `.claude/plans/2026-04-08-evidence-analysis.md` for research and full plan.
-*Activates the existing `assertions` table — the schema already exists with zero API/UI.*
-*No integrated desktop genealogy app does evidence analysis natively — this is differentiating.*
-
-**Phase 1: Assertion CRUD + Conflict Detection** ✅ v0.39.0
-- [x] `src/api/assertions.ts` — create, get, update, delete, getForSubject, getForAttribute, getConflicts
-- [x] IPC + preload + MCP tools for assertions (10 tools)
-- [x] Add `evidence_type` column (direct/indirect/negative, optional)
-- [x] Conflict detection: same subject+attribute with different values
-- [x] Surface conflicts in QualityView (UNRESOLVED_EVIDENCE_CONFLICT check)
-
-**Phase 2: Assertion UI — View & Resolve Conflicts** ✅ v0.39.0
-- [x] SourceDetailView: assertions count column, expandable inline table, add assertion button
-- [x] Accept/reject toggle + inline notes per assertion
-- [x] PersonEvidenceSection: per-person evidence overview (PersonDetailView + PersonPanel)
-- [x] AssertionFormModal: create/edit assertions from SourceDetailView
-
-**Phase 3: Research Audit & Proof Summaries** ✅ v0.39.1
-- [x] "Unsourced" filter on PersonsView (filter chip + listUnsourcedPersonsPage API)
-- [x] Proof summary: generateProofSummary API + PersonEvidenceSection "Generate" button
-- [x] MCP tool: generate_proof_summary
-- [x] Research audit: QualityView already surfaces UNRESOLVED_EVIDENCE_CONFLICT + UNSOURCED_BIRTH/DEATH checks
-
-**Phase 4: Merge/Deduplicate Persons** ✅ v0.39.2
-- [x] Detect potential duplicates (name + date similarity + sex scoring)
-- [x] Side-by-side comparison view (MergePersonsModal with target/source cards)
-- [x] Merge: reassign names, identifiers, events, relationships, citations, assertions, groups, tasks; handle UNIQUE conflicts; delete self-relationships; merge notes+sex
-
-### Polish [feature]
-- [x] Keyboard navigation — Escape key closes all modals
-- [x] Data backup and restore
-- [x] Dark mode — global html.dark CSS overrides, toggle button in sidebar, localStorage persistence
-- [x] Cmd/Ctrl+F — focus sidebar search input
+#### Polish [feature]
 - [ ] Undo/redo
 

@@ -152,3 +152,84 @@ See `.claude/plans/archive/2026-04-04-nickname-display-and-asterisk-ui.md`.
 
 ### Fix — Genney import CPU saturation (per-row db.prepare)
 See `.claude/plans/archive/2026-04-04-genney-cpu-saturation.md`.
+
+### Fix — Genney .backup extraction: fflate instead of unzip subprocess
+See `.claude/plans/archive/2026-04-04-genney-windows-paths.md`.
+
+### Fix — Genney EVENT_PLACE column names wrong; REMARK.TEXT→NOTE
+See `.claude/plans/archive/2026-04-04-genney-column-bugs.md`.
+
+### Fix — import_gedcom silently swallowed .backup files; add import_genney MCP tool
+See `.claude/plans/archive/2026-04-04-import-genney-mcp-tool.md`.
+
+### Fix — QualityView: auto-run checks on mount, removed manual run button
+
+### Fix — Relationship EventList: wire CitationBadge on event rows
+
+### Fix — Reactive quality badge: contextBridge onDataChanged pattern
+See `.claude/plans/archive/2026-04-05-fix-reactive-quality-badge.md`.
+
+### Fix — ResearchTasksView: table styling, person column, reactive badge
+See `.claude/plans/archive/2026-04-05-research-tasks-view-fixes.md`.
+
+### Fix — Consistent name rendering: nickname + preferred_name in all views
+See `.claude/plans/archive/2026-04-05-consistent-name-rendering.md`.
+
+### Fix — Circle chart zoom: flex-shrink, center buttons, curved text
+See `.claude/plans/archive/2026-04-05-circle-chart-zoom-fixes.md`.
+
+### Fix — v0.20.9: WASM OOM after large GEDCOM import
+See `.claude/plans/archive/2026-04-05-fix-wasm-oom-after-large-gedcom-import.md`.
+
+### Fix — v0.20.10: Systematic WASM heap leak fix — queryOne/queryAll/runSql helpers
+
+### Fix — v0.22.4: PersonsView UI lockup — correlated subqueries + indexes
+See `.claude/plans/archive/2026-04-05-fix-personsview-lockup.md`.
+
+### Fix — v0.23.1: Remove 500-ancestor limit from Ancestor Book export
+
+### Fix — v0.23.2: ReportsView full-width + auto-fit zoom controls
+
+### Fix — v0.23.3: Circle chart gen 5-6 radial text visibility
+
+### Fix — v0.23.4: Chart birth/death date formatting; BOX_H 44→54; circle fixes
+
+### Fix — v0.23.5: Circle gen 6 colors; Reports auto-use focal person
+
+### Fix — v0.23.7: AncestorBook gen 6 blank — fetchPedigreeTree generations fix
+
+### Fix — v0.24.1: Quality checks CPU saturation on large trees
+See `.claude/plans/archive/2026-04-06-checks-performance.md`.
+
+### Fix — v0.25.2: Genney SPLACE address fields stored in place columns
+See `.claude/plans/archive/2026-04-06-genney-address-fields.md`.
+
+### Fix — v0.26.1: Pedigree/hourglass buttons clipped at SVG boundary
+See `.claude/plans/archive/2026-04-06-chart-button-clip-fix.md`.
+
+### Fix — v0.26.2: E2E flaky tests — AbortError retry, mutating() wrappers
+See `.claude/plans/archive/2026-04-06-e2e-fix-flaky-tests.md`.
+
+### Fix — v0.26.3: formatFullName() in nameUtils for all reports
+See `.claude/plans/archive/2026-04-06-full-name-rendering.md`.
+
+### Fix — v0.37.7: PersonsView startup CPU — two-pass query optimization
+See `.claude/plans/archive/2026-04-07-personsview-startup-cpu.md`.
+
+### Investigation — GEDCOM Citation Roundtrip: keep current behavior (no changes)
+See `.claude/plans/archive/2026-04-05-gedcom-citation-roundtrip.md`.
+
+### Refactor — TypeScript window.api typing: api.d.ts, removed unsafe Record<>
+See `.claude/plans/archive/2026-04-07-typescript-api-types.md`.
+
+### Refactor — User-facing error toasts: useToast + ToastNotification
+See `.claude/plans/archive/2026-04-07-error-notifications.md`.
+
+### Refactor — i18n coverage: personPanel.*, nav.navigate, hardcoded strings
+See `.claude/plans/archive/2026-04-07-i18n-coverage.md`.
+
+### Refactor — CSS color variables: 18 palette vars, replaced 70+ hex values
+See `.claude/plans/archive/2026-04-07-css-color-variables.md`.
+
+### Refactor — BaseModal component: slot-based shell, migrated 15 modals
+See `.claude/plans/archive/2026-04-07-base-modal-refactor.md`.
