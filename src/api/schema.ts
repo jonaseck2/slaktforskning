@@ -190,6 +190,7 @@ export function initializeSchema(db: Database): void {
       entity_type TEXT NOT NULL CHECK(entity_type IN ('person', 'event', 'relationship', 'place', 'source')),
       entity_id TEXT NOT NULL,
       link_type INTEGER,
+      sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_media_links_media_id ON media_links(media_id);
@@ -290,6 +291,12 @@ export function initializeSchema(db: Database): void {
   const mediaCols = (db.prepare('PRAGMA table_info(media)').all([]) as Array<{ name: string }>).map(c => c.name);
   if (!mediaCols.includes('is_missing')) {
     db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // v0.9.0 media_links: sort_order for user-controlled ordering
+  const mediaLinkCols = (db.prepare('PRAGMA table_info(media_links)').all([]) as Array<{ name: string }>).map(c => c.name);
+  if (!mediaLinkCols.includes('sort_order')) {
+    db.exec('ALTER TABLE media_links ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
   }
 
   // Indexes that depend on migrated columns — run after migrations

@@ -182,6 +182,7 @@ export interface MediaLink {
   entity_type: MediaLinkEntityType;
   entity_id: string;
   link_type: number | null;
+  sort_order: number;
   created_at: string;
 }
 
