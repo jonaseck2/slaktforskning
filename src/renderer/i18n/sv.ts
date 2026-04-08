@@ -720,4 +720,15 @@ export default {
     dateOriginalLabel: 'Ursprunglig datumtext',
     primaryName: 'Primärt namn',
   },
+  narration: {
+    born: 'Född',
+    died: 'Död',
+    in: 'i',
+    marriedTo: 'Gift med',
+    children: 'barn',
+    between: 'mellan',
+    and: 'och',
+    author: 'Författare',
+    citationsLinked: 'källhänvisningar länkade',
+  },
 };

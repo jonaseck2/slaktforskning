@@ -27,8 +27,9 @@
           :aria-label="boxAriaLabel(box)"
           tabindex="0"
           @click="$emit('navigate', box.person.id)"
-          @mouseenter="hoveredPersonId = box.person.id"
-          @mouseleave="hoveredPersonId = null"
+          @mouseenter="(e: MouseEvent) => { hoveredPersonId = box.person.id; tooltipRef?.show(box.person, e.clientX, e.clientY); }"
+          @mousemove="(e: MouseEvent) => tooltipRef?.move(e.clientX, e.clientY)"
+          @mouseleave="hoveredPersonId = null; tooltipRef?.hide()"
           @keydown="onBoxKeydown($event, box)"
           @focus="focusedBoxId = box.person.id"
           @blur="focusedBoxId = null"
@@ -137,6 +138,8 @@
       <button @click="startAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
     </div>
 
+    <ChartTooltip ref="tooltipRef" />
+
     <!-- Add related person modal -->
     <AddRelatedPersonModal
       v-if="showAddRelative && addRelativePersonId"
@@ -157,8 +160,10 @@ import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, PedigreeTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
+import ChartTooltip from './ChartTooltip.vue';
 
 const { t } = useI18n();
+const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
 const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();

@@ -720,4 +720,15 @@ export default {
     dateOriginalLabel: 'Original date text',
     primaryName: 'Primary name',
   },
+  narration: {
+    born: 'Born',
+    died: 'Died',
+    in: 'in',
+    marriedTo: 'Married to',
+    children: 'children',
+    between: 'between',
+    and: 'and',
+    author: 'Author',
+    citationsLinked: 'citations linked',
+  },
 };

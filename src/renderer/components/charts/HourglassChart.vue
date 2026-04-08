@@ -22,8 +22,9 @@
           :data-testid="'person-box-' + box.person.id"
           :class="['person-box', 'clickable']"
           @click="$emit('navigate', box.person.id)"
-          @mouseenter="hoveredPersonId = box.person.id"
-          @mouseleave="hoveredPersonId = null"
+          @mouseenter="(e: MouseEvent) => { hoveredPersonId = box.person.id; tooltipRef?.show(box.person, e.clientX, e.clientY); }"
+          @mousemove="(e: MouseEvent) => tooltipRef?.move(e.clientX, e.clientY)"
+          @mouseleave="hoveredPersonId = null; tooltipRef?.hide()"
         >
           <rect
             :x="box.x" :y="box.y" :width="box.w" :height="box.h"
@@ -116,6 +117,8 @@
       <button class="zoom-btn" @click="resetZoom" title="Reset zoom">↺</button>
     </div>
 
+    <ChartTooltip ref="tooltipRef" />
+
     <!-- Add popover -->
     <div
       v-if="addPopover"
@@ -149,8 +152,10 @@ import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, HourglassTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
+import ChartTooltip from './ChartTooltip.vue';
 
 useI18n();
+const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
 const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();

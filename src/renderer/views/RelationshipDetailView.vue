@@ -97,7 +97,7 @@ import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
-import { narrateRelationship } from '../utils/narration';
+import { narrateRelationship, narrationLabelsFromI18n } from '../utils/narration';
 
 interface RelData {
   id: string;
@@ -161,7 +161,7 @@ async function autoNarrate() {
     type: relationship.value.type,
     person1Name,
     person2Name,
-  });
+  }, narrationLabelsFromI18n(t));
   speak(text, locale.value);
 }
 
