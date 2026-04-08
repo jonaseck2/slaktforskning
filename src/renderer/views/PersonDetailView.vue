@@ -7,9 +7,6 @@
         <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
         <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
       </div>
-      <div v-if="evidenceTotal > 0" class="evidence-summary">
-        {{ $t('personDetail.evidenceSummary', { sourced: evidenceSourced, total: evidenceTotal }) }}
-      </div>
     </div>
 
     <!-- Person Details -->
@@ -126,14 +123,6 @@
       @saved="loadPersonTasks"
     />
 
-    <!-- Evidence Analysis Section -->
-    <section class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('assertions.title') }}</h4>
-      </div>
-      <PersonEvidenceSection ref="evidenceSectionRef" :person-id="person.id" />
-    </section>
-
     <!-- Quality Section -->
     <section class="detail-section">
       <div class="section-header">
@@ -175,7 +164,6 @@ import PersonNamesTable from '../components/PersonNamesTable.vue';
 import PersonNameFormModal from '../components/PersonNameFormModal.vue';
 import PersonIdentifiersSection from '../components/PersonIdentifiersSection.vue';
 import PersonMediaSection from '../components/PersonMediaSection.vue';
-import PersonEvidenceSection from '../components/PersonEvidenceSection.vue';
 import PersonChecksSection from '../components/PersonChecksSection.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
@@ -221,13 +209,10 @@ const showAddRelated = ref(false);
 const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
 const editSex = ref('U');
 const editLiving = ref(1);
-const evidenceSourced = ref(0);
-const evidenceTotal = ref(0);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
-const evidenceSectionRef = ref<InstanceType<typeof PersonEvidenceSection> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // Research tasks
@@ -267,17 +252,6 @@ async function load() {
         .map(p => p.text).join('');
     }
     focusStore.set(personId, primaryName.value);
-
-    // Evidence summary
-    const evs = (await window.api.events.forPerson(personId)) as Array<{ id: string }>;
-    evidenceTotal.value = evs.length;
-    const counts = await Promise.all(
-      evs.map(async (ev) => {
-        const cits = (await window.api.citations.forEvent(ev.id)) as unknown[];
-        return cits.length > 0 ? 1 : 0;
-      }),
-    );
-    evidenceSourced.value = counts.reduce((a, b) => a + b, 0);
 
     await loadPersonTasks();
     await loadPersonGroups();
@@ -400,11 +374,6 @@ onMounted(async () => {
   border-radius: 4px;
   cursor: pointer;
   font-size: var(--font-xs);
-}
-.evidence-summary {
-  font-size: var(--font-sm);
-  color: #6b7280;
-  margin-top: 4px;
 }
 .detail-section {
   margin-bottom: 24px;

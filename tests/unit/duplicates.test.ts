@@ -6,7 +6,6 @@ import { createPerson, addPersonName, getPersonNames, getPerson } from '../../sr
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant, getEventParticipants, createRelationship, getRelationshipsOfPerson } from '../../src/api/relationships';
 import { createSource, createCitation, getCitationsForPerson } from '../../src/api/sources';
-import { createAssertion, getAssertionsForSubject } from '../../src/api/assertions';
 import { createGroup, addGroupMember, getGroupsForPerson } from '../../src/api/groups';
 import { createResearchTask, getResearchTasksForPerson } from '../../src/api/research_tasks';
 
@@ -120,17 +119,13 @@ describe('mergePersons', () => {
     expect(rels.some(r => r.person1_id === target.id && r.person2_id === target.id)).toBe(false);
   });
 
-  it('reassigns citations, assertions, groups, and research tasks', () => {
+  it('reassigns citations, groups, and research tasks', () => {
     const target = createPerson(db, { given_name: 'Erik', surname: 'A' });
     const source = createPerson(db, { given_name: 'Erik', surname: 'A' });
 
     // Citation on source
     const src = createSource(db, { title: 'Test' });
     createCitation(db, { source_id: src.id, person_id: source.id });
-
-    // Assertion on source
-    const cit = createCitation(db, { source_id: src.id });
-    createAssertion(db, { citation_id: cit.id, subject_type: 'person', subject_id: source.id, attribute: 'name', value: 'Erik' });
 
     // Group membership
     const group = createGroup(db, { name: 'Test Group' });
@@ -142,13 +137,11 @@ describe('mergePersons', () => {
     const result = mergePersons(db, target.id, source.id);
 
     expect(result.moved.citations).toBe(1);
-    expect(result.moved.assertions).toBe(1);
     expect(result.moved.group_members).toBe(1);
     expect(result.moved.research_tasks).toBe(1);
 
     // Verify reassignment
     expect(getCitationsForPerson(db, target.id)).toHaveLength(1);
-    expect(getAssertionsForSubject(db, 'person', target.id)).toHaveLength(1);
     expect(getGroupsForPerson(db, target.id)).toHaveLength(1);
     expect(getResearchTasksForPerson(db, target.id)).toHaveLength(1);
   });
