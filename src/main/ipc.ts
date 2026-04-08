@@ -415,6 +415,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('media:forEntity', (entityType, entityId) => media.getMediaForEntity(getDatabase(), entityType as Parameters<typeof media.getMediaForEntity>[1], entityId as string));
   wrapHandler('media:addLink', (data) => media.addMediaLink(getDatabase(), data as Parameters<typeof media.addMediaLink>[1]));
   wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDatabase(), linkId as string));
+  wrapHandler('media:reorder', (linkIds) => media.reorderMediaLinks(getDatabase(), linkIds as string[]));
 
   wrapHandler('media:attach', async (data) => {
     const opts = data as { entityType?: string; entityId?: string } | undefined;
