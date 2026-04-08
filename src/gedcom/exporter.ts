@@ -417,7 +417,6 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
   // ── Build ExportReport ─────────────────────────────────────────────────────
   const researchTaskCount = ((db.get('SELECT COUNT(*) as n FROM research_tasks') as { n: number } | undefined)?.n ?? 0);
   const groupCount = ((db.get('SELECT COUNT(*) as n FROM groups') as { n: number } | undefined)?.n ?? 0);
-  const assertionCount = ((db.get('SELECT COUNT(*) as n FROM assertions') as { n: number } | undefined)?.n ?? 0);
   const placeAddressCount = ((db.get(
     "SELECT COUNT(*) as n FROM events WHERE place_address IS NOT NULL AND place_address != ''"
   ) as { n: number } | undefined)?.n ?? 0);
@@ -431,11 +430,6 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
   if (groupCount > 0) excluded.push({
     category: 'Groups and group membership',
     count: groupCount,
-    reason: 'No equivalent concept in GEDCOM 5.5.1',
-  });
-  if (assertionCount > 0) excluded.push({
-    category: 'Assertions',
-    count: assertionCount,
     reason: 'No equivalent concept in GEDCOM 5.5.1',
   });
   if (placeAddressCount > 0) excluded.push({

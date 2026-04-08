@@ -225,14 +225,7 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   }
   moved.citations = citCount.length;
 
-  // 6. Assertions — reassign subject_id where subject_type='person'
-  const assertionCount = queryAll<{ id: string }>(db, "SELECT id FROM assertions WHERE subject_type = 'person' AND subject_id = ?", [sourceId]);
-  for (const a of assertionCount) {
-    runSql(db, 'UPDATE assertions SET subject_id = ? WHERE id = ?', [targetId, a.id]);
-  }
-  moved.assertions = assertionCount.length;
-
-  // 7. Group members — reassign, skip if target already in group
+  // 6. Group members (was 7) — reassign, skip if target already in group
   const sourceGroups = queryAll<{ id: string; group_id: string }>(db, 'SELECT id, group_id FROM group_members WHERE person_id = ?', [sourceId]);
   let gmMoved = 0;
   for (const gm of sourceGroups) {

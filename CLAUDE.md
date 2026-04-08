@@ -134,20 +134,17 @@ GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date
 Place            { id, name, normalized_name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes, street?, postal_code?, city?, country? }
 Source           { id, title, author, publication_info, repository, url, source_type, call_number?, abstract?, created_at, updated_at }
 Citation         { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, created_at }
-Assertion        { id, citation_id, subject_type, subject_id, attribute, value, value_original, confidence, is_accepted, notes, created_at } // schema only, UI deferred
 Group            { id, name, notes, created_at }
 GroupMember      { id, group_id, person_id }
 Repository       { id, name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes, created_at }
 ResearchTask     { id, person_id?, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
 Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
 MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, created_at }
-Assertion        { id, citation_id, subject_type: 'person'|'relationship'|'event'|'place', subject_id, attribute, value, value_original, confidence: 0-3, is_accepted: boolean, evidence_type: 'direct'|'indirect'|'negative'|null, notes, created_at }
-ConflictGroup    { subject_type, subject_id, attribute, assertions: Assertion[] }
 ```
 
 ## Database Schema
 
-16 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
+15 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
@@ -159,7 +156,6 @@ ConflictGroup    { subject_type, subject_id, attribute, assertions: Assertion[] 
 | `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes, street, postal_code, city, country | parent → SET NULL |
 | `sources` | title, author, publication_info, repository, url, source_type, call_number, abstract | — |
 | `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id | source → CASCADE, event/person/relationship → SET NULL |
-| `assertions` | citation_id, subject_type, subject_id, attribute, value, confidence, is_accepted | citation → CASCADE |
 | `groups` | name, notes | — |
 | `group_members` | group_id, person_id (UNIQUE) | group → CASCADE, person → CASCADE |
 | `repositories` | name, address, city, postal_code, state, country, phone, email, web, call_number, notes | — |
@@ -284,20 +280,6 @@ getMediaForEntity(db, entityType, entityId) → (Media & { link_id, link_type })
 removeMediaLink(db, linkId) → boolean
 ```
 
-### assertions.ts
-```
-createAssertion(db, { citation_id, subject_type, subject_id, attribute, value?, value_original?, confidence?, is_accepted?, evidence_type?, notes? }) → Assertion
-getAssertion(db, id) → Assertion | null
-getAssertionsForSubject(db, subjectType, subjectId) → Assertion[]
-getAssertionsForAttribute(db, subjectType, subjectId, attribute) → Assertion[]
-getAssertionsForCitation(db, citationId) → Assertion[]
-updateAssertion(db, id, { value?, value_original?, confidence?, is_accepted?, evidence_type?, notes?, attribute? }) → Assertion | null
-deleteAssertion(db, id) → boolean
-getConflicts(db) → ConflictGroup[]
-getConflictsForPerson(db, personId) → ConflictGroup[]
-generateProofSummary(db, personId) → ProofSummary
-```
-
 ### duplicates.ts
 ```
 findDuplicates(db, limit?) → DuplicateCandidate[]
@@ -389,7 +371,7 @@ Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
 
 Two flavours:
 
-**Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `PersonEvidenceSection`, `EventList`):
+**Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`):
 - Takes `personId: string` prop
 - Loads its own data with `watch(() => props.personId, load, { immediate: true })` — **never `onMounted`** — so it reacts when the panel switches person without being destroyed/recreated
 - Uses `defineExpose({ action })` when the parent's header button must trigger something inside (e.g. open add form, file picker)
@@ -428,8 +410,6 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonIdentifiersSection` | `personId: string` | — | Self-loading identifiers table + add modal. Exposes `openAddForm()`. |
 | `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink. Exposes `attach()`. |
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
-| `PersonEvidenceSection` | `personId: string` | — | Self-loading evidence analysis: conflict groups (expandable) + non-conflicting assertions table. Accept/reject toggle, inline notes. Exposes `reload()`. |
-| `AssertionFormModal` | `citationId: string`, `subjectType: string`, `subjectId: string`, `assertion?: object` | `close`, `saved` | Create/edit assertion. Attribute dropdown filtered by subject type, confidence, evidence type, accept checkbox. |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
@@ -557,8 +537,6 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`
 
-**Assertion tools:** `create_assertion`, `get_assertion`, `get_assertions_for_subject`, `get_assertions_for_attribute`, `get_assertions_for_citation`, `update_assertion`, `delete_assertion`, `get_conflicts`, `get_conflicts_for_person`, `generate_proof_summary`
-
 **Duplicate/merge tools:** `find_duplicates`, `merge_persons`
 
 **Database tools:** `get_current_database`, `switch_database`
@@ -567,7 +545,7 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **GEDCOM/import tools:** `import_gedcom` (`.ged` files only — for Genney GEDCOM exports use `profile: "genney"`), `import_genney` (`.backup`/`.gcc` archives or Derby directories), `import_holger` (`.ged` or `.zip` file or folder containing `.ged` — for Holger/OurKind GEDCOM exports; handles ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype, REMA/MISC → person notes; accepts `media_dir` for remapping Windows OBJE FILE paths to a local directory; returns `defaultPersonId` set to the first INDI's DB id), `export_gedcom` (accepts optional `version: '5.5.1' | '7.0'`, default `'5.5.1'`)
 
-**Import/export data integrity:** All import tools (`import_gedcom`, `import_genney`, `import_holger`) return a report object with `warnings: string[]` (human-readable messages for remapped/converted data) and `unmappedData` or `skipped` arrays documenting what data was lost and why (e.g., LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `ImportReport` includes `repositories`, `groups`, and `researchTasks` counts for REPO, _GRP, and _TODO records imported. REPO records are linked to sources via `source_repositories`. Genney `_GRP` records become groups with memberships; `_TODO` records become research tasks linked to persons via `_TARG`. SUBM records are matched by name to persons and the match stored as `default_person_id` in `db_settings`. `export_gedcom` now returns `{ ged: string; report: ExportReport }` instead of a plain string. `ExportReport` includes `excluded: { category, count, reason }[]` for entities that cannot be represented in GEDCOM 5.5.1: Research Tasks, Groups, Assertions, and event place_address fields. The export report is displayed to the user after export, ensuring transparency about data loss during round-trip operations.
+**Import/export data integrity:** All import tools (`import_gedcom`, `import_genney`, `import_holger`) return a report object with `warnings: string[]` (human-readable messages for remapped/converted data) and `unmappedData` or `skipped` arrays documenting what data was lost and why (e.g., LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `ImportReport` includes `repositories`, `groups`, and `researchTasks` counts for REPO, _GRP, and _TODO records imported. REPO records are linked to sources via `source_repositories`. Genney `_GRP` records become groups with memberships; `_TODO` records become research tasks linked to persons via `_TARG`. SUBM records are matched by name to persons and the match stored as `default_person_id` in `db_settings`. `export_gedcom` now returns `{ ged: string; report: ExportReport }` instead of a plain string. `ExportReport` includes `excluded: { category, count, reason }[]` for entities that cannot be represented in GEDCOM 5.5.1: Research Tasks, Groups, and event place_address fields. The export report is displayed to the user after export, ensuring transparency about data loss during round-trip operations.
 
 **UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
 

@@ -1,6 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryOne, queryAll } from './db';
-import { getConflicts } from './assertions';
 
 export type CheckSeverity = 'error' | 'warning' | 'notice';
 
@@ -907,40 +906,6 @@ function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): Ch
 }
 
 // ---------------------------------------------------------------------------
-// G. Evidence Conflicts
-// ---------------------------------------------------------------------------
-
-function checkUnresolvedConflicts(db: Database): CheckResult[] {
-  const conflicts = getConflicts(db);
-  const results: CheckResult[] = [];
-
-  for (const group of conflicts) {
-    // Find person IDs associated with this conflict
-    const personIds: string[] = [];
-    if (group.subject_type === 'person') {
-      personIds.push(group.subject_id);
-    } else if (group.subject_type === 'event') {
-      const participants = queryAll<{ person_id: string }>(db, `
-        SELECT person_id FROM event_participants WHERE event_id = ?
-      `, [group.subject_id]);
-      personIds.push(...participants.map(p => p.person_id));
-    }
-
-    if (personIds.length > 0) {
-      const values = group.assertions.map(a => a.value).filter(v => v).join(' vs ');
-      results.push({
-        code: 'UNRESOLVED_EVIDENCE_CONFLICT',
-        severity: 'warning',
-        message: `Olöst beviskonflikt: ${group.attribute} (${values})`,
-        messageParams: { attribute: group.attribute, values },
-        personIds,
-      });
-    }
-  }
-
-  return results;
-}
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -993,9 +958,6 @@ function runAllCheckFunctions(db: Database): CheckResult[] {
   run('checkNotLivingWithoutDeathEvent', () => checkNotLivingWithoutDeathEvent(db));
   run('checkUnsourcedLifeEvent(birth)', () => checkUnsourcedLifeEvent(db, 'birth'));
   run('checkUnsourcedLifeEvent(death)', () => checkUnsourcedLifeEvent(db, 'death'));
-
-  // G. Evidence Conflicts
-  run('checkUnresolvedConflicts',       () => checkUnresolvedConflicts(db));
 
   console.log(`[checks] total: ${Date.now() - t0}ms`);
   return results;
