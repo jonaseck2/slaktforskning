@@ -17,13 +17,13 @@ useI18n();
   color: #166534;
   padding: 2px 7px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 .unsourced-badge {
   background: #fef9c3;
   color: #854d0e;
   padding: 2px 7px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 </style>

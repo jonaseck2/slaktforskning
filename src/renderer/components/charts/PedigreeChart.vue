@@ -320,7 +320,7 @@ onUnmounted(() => {
   color: #555;
   line-height: 1.4;
 }
-.zoom-btn:hover { background: #f0f0f0; }
+.zoom-btn:hover { background: var(--color-bg-muted); }
 .zoom-level {
   padding: 0 4px;
   font-size: var(--font-xs);
@@ -334,8 +334,8 @@ onUnmounted(() => {
 
 .add-popover {
   position: fixed;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   padding: 6px;

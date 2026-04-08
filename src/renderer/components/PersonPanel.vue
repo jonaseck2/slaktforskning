@@ -459,8 +459,8 @@ onMounted(() => {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  background: white;
-  font-size: 13px;
+  background: var(--color-bg);
+  font-size: var(--font-sm);
 }
 
 .panel-empty {
@@ -468,8 +468,8 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #aaa;
-  font-size: 13px;
+  color: var(--color-text-faint);
+  font-size: var(--font-sm);
   padding: 24px;
   text-align: center;
 }
@@ -477,8 +477,8 @@ onMounted(() => {
 /* Header */
 .panel-header {
   display: flex;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .panel-sex-bar {
@@ -491,9 +491,9 @@ onMounted(() => {
   min-width: 0;
 }
 .panel-name {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #1a2a3a;
+  color: var(--color-text);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -503,8 +503,8 @@ onMounted(() => {
   margin-bottom: 6px;
 }
 .panel-lifeline {
-  font-size: 12px;
-  color: #555;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
   line-height: 1.5;
 }
 .panel-add-relative-btns {
@@ -518,46 +518,46 @@ onMounted(() => {
   border: none;
   border-radius: 4px;
   padding: 3px 10px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   cursor: pointer;
 }
 .btn-dark:hover { opacity: 0.9; }
 
 /* Sections */
 .panel-section {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .panel-section-header {
   width: 100%;
   text-align: left;
-  background: #fafafa;
+  background: var(--color-bg-subtle);
   border: none;
   padding: 8px 14px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.panel-section-header:hover { background: #f0f0f0; }
-.panel-chevron { font-size: 10px; color: #999; }
+.panel-section-header:hover { background: var(--color-bg-muted); }
+.panel-chevron { font-size: var(--font-xs); color: var(--color-text-faint); }
 .panel-section-header-action {
   margin-left: auto;
   background: var(--color-primary);
   color: white;
   border-radius: 4px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   text-decoration: none;
   display: inline-block;
 }
 .panel-section-header-action:hover { opacity: 0.85; }
 .panel-section-body { padding: 4px 0 8px; }
-.panel-empty-section { padding: 4px 14px; color: #bbb; font-size: 12px; }
+.panel-empty-section { padding: 4px 14px; color: var(--color-text-faint); font-size: var(--font-xs); }
 
 /* Compact form */
 .compact-form {
@@ -572,19 +572,19 @@ onMounted(() => {
   gap: 2px;
 }
 .compact-label {
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-text-subtle);
   letter-spacing: 0.4px;
 }
 .compact-control {
-  font-size: 12px;
+  font-size: var(--font-xs);
   padding: 4px 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-input);
   border-radius: 4px;
-  background: white;
-  color: #222;
+  background: var(--color-bg);
+  color: var(--color-text);
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
@@ -596,18 +596,18 @@ onMounted(() => {
 }
 
 .btn-cancel {
-  background: #f0f0f0;
-  color: #555;
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
   border: none;
   border-radius: 4px;
   padding: 3px 10px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   cursor: pointer;
 }
-.btn-cancel:hover { background: #e0e0e0; }
+.btn-cancel:hover { background: var(--color-border); }
 .btn-sm {
   padding: 3px 8px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -617,12 +617,12 @@ onMounted(() => {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
 }
-.btn-delete:hover { background: #fecaca; }
+.btn-delete:hover { background: var(--color-danger-hover); }
 
 /* Groups */
 .panel-group-picker-wrap {
   padding: 6px 14px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 </style>

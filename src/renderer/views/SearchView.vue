@@ -211,7 +211,7 @@ onMounted(() => {
   padding: 8px 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-family: inherit;
 }
 .search-input:focus {
@@ -225,7 +225,7 @@ button {
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 button:hover {
   opacity: 0.9;
@@ -234,7 +234,7 @@ button:hover {
   margin-bottom: 32px;
 }
 .result-section h3 {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -249,7 +249,7 @@ button:hover {
   color: #555;
   padding: 1px 7px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 500;
 }
 </style>

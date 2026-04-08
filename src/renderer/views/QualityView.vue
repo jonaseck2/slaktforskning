@@ -33,7 +33,7 @@
 
       <table v-else class="data-table quality-table">
         <colgroup>
-          <col style="width: 90px">
+          <col style="width: 120px">
           <col style="width: 28%">
           <col>
           <col style="width: 80px">
@@ -222,7 +222,7 @@ onActivated(() => {
 <style scoped>
 /* Unique to QualityView */
 .severity-badge {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 8px;
@@ -237,8 +237,8 @@ onActivated(() => {
 
 .row-ignored { opacity: 0.5; }
 .row-ignored:hover { opacity: 0.7; }
-.message-cell { font-size: 13px; }
-.persons-cell { font-size: 13px; }
+.message-cell { font-size: var(--font-sm); }
+.persons-cell { font-size: var(--font-sm); }
 .actions-th, .actions-td { text-align: right; }
 
 .btn-ignore  { background: #e2e8f0; color: #4a5568; }

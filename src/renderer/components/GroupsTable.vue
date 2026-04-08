@@ -52,7 +52,7 @@ const router = useRouter();
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 .notes-cell {
   color: #777;
-  font-size: 13px;
+  font-size: var(--font-sm);
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;

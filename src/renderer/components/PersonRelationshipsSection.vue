@@ -120,11 +120,11 @@ watch(() => props.personId, load, { immediate: true });
 
 <style scoped>
 .type-badge {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 </style>

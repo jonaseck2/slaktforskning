@@ -37,7 +37,7 @@ const { toasts, dismiss } = useToast();
 .toast {
   padding: 10px 16px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   max-width: 360px;
   cursor: pointer;
   pointer-events: all;

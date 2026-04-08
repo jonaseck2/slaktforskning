@@ -67,15 +67,15 @@ defineEmits<{
   vertical-align: middle;
 }
 .type-badge {
-  background: #f0fdf4;
-  color: #166534;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 
 .primary-star {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: #f0a500;
 }
 .name-prefix,
@@ -84,11 +84,11 @@ defineEmits<{
   font-style: italic;
 }
 .name-qual-badge {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
   padding: 1px 5px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   margin-left: 4px;
 }
 </style>

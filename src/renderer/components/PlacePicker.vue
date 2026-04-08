@@ -88,14 +88,14 @@ function onBlur() {
 
 <style scoped>
 .place-picker { position: relative; width: 100%; box-sizing: border-box; }
-.place-picker input { font-size: 14px; width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+.place-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
 .dropdown {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-input);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   z-index: 100;
@@ -107,7 +107,7 @@ function onBlur() {
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 .place-main {
   display: flex;
@@ -115,13 +115,13 @@ function onBlur() {
   align-items: center;
 }
 .place-subtitle {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: #999;
   margin-top: 2px;
 }
-.dropdown-item:hover { background: #f0f4ff; }
+.dropdown-item:hover { background: var(--color-row-hover); }
 .place-type {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: #999;
 }
 .create-new { color: #1d4ed8; font-style: italic; }

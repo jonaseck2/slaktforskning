@@ -116,7 +116,7 @@ onMounted(async () => {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-base);
   box-sizing: border-box;
   font-family: inherit;
 }
@@ -125,8 +125,8 @@ onMounted(async () => {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-input);
   border-top: none;
   border-radius: 0 0 4px 4px;
   list-style: none;
@@ -143,10 +143,10 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
-.picker-option:hover { background: #eef2ff; }
+.picker-option:hover { background: var(--color-row-hover); }
 .picker-create { color: #059669; }
-.picker-create:hover { background: #f0fdf4; }
-.picker-count { font-size: 12px; color: #aaa; }
+.picker-create:hover { background: var(--color-row-hover); }
+.picker-count { font-size: var(--font-xs); color: #aaa; }
 </style>

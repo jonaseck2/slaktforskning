@@ -121,15 +121,15 @@ function subtypeLabel(type: string, subtype: string): string {
 
 <style scoped>
 .type-badge {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .role-label {
   display: inline;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: #888;
   margin-right: 5px;
 }

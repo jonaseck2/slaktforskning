@@ -11,6 +11,18 @@
   --font-base: 14px;
   --font-md:   15px;
   --font-lg:   16px;
+  --font-xl:   18px;
+  --font-2xl:  22px;
+
+  /* -- Semantic badge colors (use vars in scoped CSS so dark mode overrides work) -- */
+  --color-sex-m-bg:       #dbeafe;
+  --color-sex-m-text:     #1d4ed8;
+  --color-sex-f-bg:       #fce7f3;
+  --color-sex-f-text:     #be185d;
+  --color-sex-u-bg:       #f3f4f6;
+  --color-sex-u-text:     #6b7280;
+  --color-event-badge-bg:   #eef2ff;
+  --color-event-badge-text: #3b5bdb;
 
   /* -- Color palette -- */
   /* Primary/brand */
@@ -56,6 +68,8 @@
     --font-base: 18px;
     --font-md:   19px;
     --font-lg:   20px;
+    --font-xl:   22px;
+    --font-2xl:  26px;
   }
   html.text-large {
     --font-xs:   15px;
@@ -63,6 +77,8 @@
     --font-base: 22px;
     --font-md:   23px;
     --font-lg:   24px;
+    --font-xl:   26px;
+    --font-2xl:  30px;
   }
 }
 
@@ -483,6 +499,14 @@
     --color-success-bg:     #14532d;
     --color-success-text:   #86efac;
     --color-row-hover:      #1e293b;
+    --color-sex-m-bg:       #1e3a8a;
+    --color-sex-m-text:     #93c5fd;
+    --color-sex-f-bg:       #831843;
+    --color-sex-f-text:     #fbcfe8;
+    --color-sex-u-bg:       #374151;
+    --color-sex-u-text:     #9ca3af;
+    --color-event-badge-bg:   #1e3a8a;
+    --color-event-badge-text: #93c5fd;
   }
 
   /* The existing element-specific dark rules stay below.
@@ -572,6 +596,43 @@
   html.dark .tab-btn { color: #9ca3af; }
   html.dark .tab-btn:hover { color: #e2e8f0; }
   html.dark .tab-btn.active { color: #e2e8f0; border-bottom-color: #93c5fd; }
+
+  /* Severity badges */
+  html.dark .badge-error   { background: #450a0a; color: #fca5a5; }
+  html.dark .badge-warning { background: #78350f; color: #fde68a; }
+  html.dark .badge-notice  { background: #1e3a8a; color: #bfdbfe; }
+
+  /* Ignore/unignore buttons */
+  html.dark .btn-ignore   { background: #374151; color: #9ca3af; }
+  html.dark .btn-unignore { background: #14532d; color: #86efac; }
+
+  /* Sex badges */
+  html.dark .sex-M { background: #1e3a8a; color: #93c5fd; }
+  html.dark .sex-F { background: #831843; color: #fbcfe8; }
+  html.dark .sex-U { background: #374151; color: #9ca3af; }
+
+  /* Status chips */
+  html.dark .status-in_progress { background: #78350f; color: #fde68a; }
+  html.dark .status-stopped     { background: #374151; color: #9ca3af; }
+
+  /* Deceased/warning badge */
+  html.dark .deceased-badge { background: #78350f; color: #fde68a; }
+
+  /* Picker dropdowns */
+  html.dark .picker-dropdown,
+  html.dark .place-dropdown { background: var(--color-bg-subtle); border-color: var(--color-border); }
+  html.dark .picker-option:hover,
+  html.dark .dropdown-item:hover { background: var(--color-row-hover); }
+  html.dark .picker-name { color: var(--color-text); }
+  html.dark .picker-sex  { color: var(--color-text-subtle); }
+  html.dark .picker-clear { color: var(--color-text-faint); }
+  html.dark .picker-clear:hover { color: var(--color-text); }
+
+  /* Name type badges */
+  html.dark .name-type-badge { background: var(--color-bg-muted); color: var(--color-text-subtle); }
+
+  /* Confidence badges */
+  html.dark .confidence-1 { background: #78350f; color: #fde68a; }
 }
 
 /* Reset dark mode overrides for print/PDF — dark backgrounds and light text

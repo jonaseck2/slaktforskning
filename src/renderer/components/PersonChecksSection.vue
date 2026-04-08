@@ -94,7 +94,7 @@ watch(() => props.personId, load, { immediate: true });
 .th-shrink, .td-shrink { width: 1%; white-space: nowrap; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 .severity-badge {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 8px;

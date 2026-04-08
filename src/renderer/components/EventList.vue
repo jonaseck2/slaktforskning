@@ -150,14 +150,14 @@ defineExpose({ reload: load, openAddForm });
 }
 .section-header h4 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-md);
 }
 .event-badge {
-  background: #eef2ff;
-  color: #3b5bdb;
+  background: var(--color-event-badge-bg);
+  color: var(--color-event-badge-text);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   white-space: nowrap;
 }
 .th-date,
@@ -170,8 +170,8 @@ defineExpose({ reload: load, openAddForm });
 tr.non-interactive { cursor: default; }
 tr.non-interactive:hover td { background: transparent; }
 .event-cause {
-  color: #666;
+  color: var(--color-text-subtle);
   font-style: italic;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 </style>

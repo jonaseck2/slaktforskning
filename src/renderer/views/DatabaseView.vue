@@ -120,21 +120,21 @@ h2 {
   font-size: var(--font-base);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 10px;
 }
 
 .db-path {
   font-family: monospace;
   font-size: var(--font-sm);
-  background: #f0f0f0;
+  background: var(--color-bg-muted);
   padding: 8px 12px;
   border-radius: 4px;
   word-break: break-all;
 }
 
 .db-no-recent {
-  color: #999;
+  color: var(--color-text-faint);
   font-size: var(--font-base);
 }
 
@@ -145,11 +145,11 @@ h2 {
 
 .db-recent-row {
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .db-recent-row:hover {
-  background: #f5f5f5;
+  background: var(--color-bg-subtle);
 }
 
 .db-recent-row.active {
@@ -167,7 +167,7 @@ h2 {
 .db-recent-path {
   font-family: monospace;
   font-size: var(--font-xs);
-  color: #666;
+  color: var(--color-text-muted);
   padding: 8px 0;
   word-break: break-all;
 }
@@ -179,23 +179,24 @@ h2 {
 
 .db-actions button {
   padding: 8px 16px;
-  border: 1px solid #ccc;
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
   border-radius: 4px;
   cursor: pointer;
   font-size: var(--font-base);
   font-family: inherit;
+  color: var(--color-text);
 }
 
 .db-actions button:hover {
-  background: #f0f0f0;
+  background: var(--color-bg-muted);
 }
 
 .db-status {
   padding: 8px 12px;
-  background: #e8f5e9;
+  background: var(--color-bg-subtle);
   border-radius: 4px;
   font-size: var(--font-base);
-  color: #2e7d32;
+  color: var(--color-text);
 }
 </style>
