@@ -710,9 +710,11 @@ function handleAnchorClick(e: MouseEvent) {
 }
 .ab-photo-img {
   display: block;
-  width: 160px;
-  height: 120px;
-  object-fit: cover;
+  max-width: 160px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   border: 1px solid #ddd;
   border-radius: 2px;
 }
