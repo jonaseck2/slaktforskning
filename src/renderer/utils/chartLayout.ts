@@ -87,6 +87,7 @@ export interface HourglassTree {
   descendantRoot: DescendantNode;
   descendantGenerations: number;
   spouses: PersonNode[];
+  siblings?: PersonNode[];
 }
 
 /**
@@ -299,7 +300,7 @@ export function computeHourglassLayout(
   tree: HourglassTree,
   collapsed: Set<string> = new Set(),
 ): ChartLayout {
-  const { ancestors, descendantRoot, descendantGenerations: M, spouses = [] } = tree;
+  const { ancestors, descendantRoot, descendantGenerations: M, spouses = [], siblings = [] } = tree;
   const { generations } = ancestors;
   const originalAncestorNodes = ancestors.nodes;
   const focalPerson = originalAncestorNodes.get(1);
@@ -333,6 +334,11 @@ export function computeHourglassLayout(
   // Spouses may be collapsed via :right key (original) or :left key (female focal).
   const effectiveSpouses = (collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`)) ? [] : spouses;
 
+  // Siblings on left use 'left' direction key, on right use 'right' direction key — with '__siblings__' co-parent marker.
+  const siblingDir: 'left' | 'right' = focalIsFemale ? 'right' : 'left';
+  const siblingCollapseKey = `${focalId}:${siblingDir}:__siblings__`;
+  const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : siblings;
+
   // Group focal's direct children by co-parent ID (set by chartData during fetch).
   const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
   for (const child of descendantRoot.children) {
@@ -344,6 +350,10 @@ export function computeHourglassLayout(
   // When the focal person is female, place spouses to the LEFT so the convention
   // "male left, female right" holds regardless of who is currently focal.
   const spouseOnLeft = focalIsFemale && effectiveSpouses.length > 0;
+
+  // Siblings go on the opposite side from where spouses would go:
+  // Male focal: spouses right → siblings left. Female focal: spouses left → siblings right.
+  const siblingsOnLeft = !focalIsFemale;
 
   const A = generations - 1; // ancestor levels above focal
 
@@ -513,14 +523,22 @@ export function computeHourglassLayout(
     ? BOX_W + H_GAP + (effectiveSpouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
     : 0;
 
+  // Extra space needed for siblings (on opposite side from spouses).
+  const siblingBoxesExtent = effectiveSiblings.length > 0
+    ? BOX_W + H_GAP + (effectiveSiblings.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
+    : 0;
+
   // Place focal far enough from the left edge that nothing clips.
-  // When spouseOnLeft we also need room for the spouse boxes on the left.
-  const focalCX = PAD + (spouseOnLeft
-    ? Math.max(ancLeftFromFocal, descLeftFromFocal, spouseBoxesExtent)
-    : Math.max(ancLeftFromFocal, descLeftFromFocal));
-  const rightNeeded = spouseOnLeft
-    ? Math.max(ancRightFromFocal, descRightFromFocal)
-    : Math.max(ancRightFromFocal, descRightFromFocal, spouseBoxesExtent);
+  // Left side can contain: ancestor extent, descendant extent, spouses (if female), siblings (if male/default).
+  const leftExtents = [ancLeftFromFocal, descLeftFromFocal];
+  if (spouseOnLeft) leftExtents.push(spouseBoxesExtent);
+  if (siblingsOnLeft) leftExtents.push(siblingBoxesExtent);
+  const focalCX = PAD + Math.max(...leftExtents);
+
+  const rightExtents = [ancRightFromFocal, descRightFromFocal];
+  if (!spouseOnLeft && effectiveSpouses.length > 0) rightExtents.push(spouseBoxesExtent);
+  if (!siblingsOnLeft) rightExtents.push(siblingBoxesExtent);
+  const rightNeeded = Math.max(...rightExtents);
   const svgWidth = focalCX + rightNeeded + PAD;
 
   // Absolute CX of ancestor k
@@ -689,6 +707,49 @@ export function computeHourglassLayout(
     }
   }
 
+  // ── Sibling placement ─────────────────────────────────────────────────────
+  // Siblings go on the opposite side from spouses, at the same row as focal.
+  // Connected to parents above via the parent fork.
+
+  // CX of the i-th sibling.
+  const siblingCXOf = (i: number) => siblingsOnLeft
+    ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
+    : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
+
+  if (effectiveSiblings.length > 0) {
+    for (let i = 0; i < effectiveSiblings.length; i++) {
+      boxes.push({
+        person:  effectiveSiblings[i],
+        isFocal: false,
+        x: siblingCXOf(i) - BOX_W / 2,
+        y: focalRowY,
+        w: BOX_W,
+        h: BOX_H,
+      });
+    }
+
+    // Connect siblings + focal to parents via a shared fork.
+    // The fork goes from the parent row bottom → forkY (midpoint) → fans to all children at focal row.
+    if (A >= 1) {
+      const parentForkY = focalRowY - GEN_GAP / 2;
+      const allChildCXs = [focalCX];
+      for (let i = 0; i < effectiveSiblings.length; i++) {
+        allChildCXs.push(siblingCXOf(i));
+      }
+      const minCX = Math.min(...allChildCXs);
+      const maxCX = Math.max(...allChildCXs);
+
+      // Horizontal line spanning all children at fork level
+      lines.push({ x1: minCX, y1: parentForkY, x2: maxCX, y2: parentForkY });
+
+      // Vertical drops from fork to each sibling box top
+      for (let i = 0; i < effectiveSiblings.length; i++) {
+        const scx = siblingCXOf(i);
+        lines.push({ x1: scx, y1: parentForkY, x2: scx, y2: focalRowY });
+      }
+    }
+  }
+
   // ── SVG height ───────────────────────────────────────────────────────────
 
   const deepestDescRow = M > 0 && descendantRoot.children.length > 0
@@ -746,6 +807,20 @@ export function computeHourglassLayout(
             cx: spouseBtnCX, cy: box.y + BOX_H / 2,
             isExpanded: !collapsed.has(`${box.person.id}:right`) && !collapsed.has(`${box.person.id}:left`),
             isLoadMore: false,
+          });
+        }
+        if (siblings.length > 0) {
+          const sibBtnCX = siblingsOnLeft ? box.x - 10 : box.x + BOX_W + 10;
+          // If spouse button already occupies this side, offset sibling button vertically.
+          const sibBtnCY = (spouses.length > 0 && siblingsOnLeft === focalIsFemale)
+            ? box.y + BOX_H / 2 + 18  // below the spouse button
+            : box.y + BOX_H / 2;
+          collapseButtons.push({
+            personId: box.person.id, direction: siblingDir,
+            cx: sibBtnCX, cy: sibBtnCY,
+            isExpanded: !collapsed.has(siblingCollapseKey),
+            isLoadMore: false,
+            coParentId: '__siblings__',
           });
         }
       } else {

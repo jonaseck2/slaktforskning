@@ -41,12 +41,14 @@ function hourglass(
   grandparents: [PersonNode | null, PersonNode | null, PersonNode | null, PersonNode | null] = [null, null, null, null],
   children: PersonNode[] = [],
   spouses: PersonNode[] = [],
+  siblings: PersonNode[] = [],
 ): HourglassTree {
   return {
     ancestors: pedigree3(focal, parents, grandparents),
     descendantRoot: { person: focal, children: children.map(c => ({ person: c, children: [] })) },
     descendantGenerations: 3,
     spouses,
+    siblings,
   };
 }
 
@@ -498,5 +500,417 @@ describe('computeTimelineLayout', () => {
   it('marks person with no birth year as hasNoDate', () => {
     const entries = [{ person: p('x'), isFocal: false }];
     expect(computeTimelineLayout(entries, 2024).bars[0].hasNoDate).toBe(true);
+  });
+});
+
+// ─── Overlap detection ───────────────────────────────────────────────────────
+
+/** Returns true if two axis-aligned rectangles overlap (share interior pixels). */
+function boxesOverlap(
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+/** Assert no pair of boxes in the layout overlaps. */
+function assertNoOverlaps(boxes: { person: PersonNode; x: number; y: number; w: number; h: number }[]): void {
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      if (boxesOverlap(boxes[i], boxes[j])) {
+        throw new Error(
+          `Overlap: ${boxes[i].person.id} (${boxes[i].x},${boxes[i].y}) and ${boxes[j].person.id} (${boxes[j].x},${boxes[j].y})`,
+        );
+      }
+    }
+  }
+}
+
+/** Assert all boxes are within the SVG bounds. */
+function assertWithinBounds(
+  boxes: { x: number; y: number; w: number; h: number }[],
+  svgWidth: number,
+  svgHeight: number,
+): void {
+  for (const b of boxes) {
+    if (b.x < 0 || b.y < 0 || b.x + b.w > svgWidth || b.y + b.h > svgHeight) {
+      throw new Error(`Box at (${b.x},${b.y}) size ${b.w}x${b.h} outside SVG ${svgWidth}x${svgHeight}`);
+    }
+  }
+}
+
+describe('pedigree overlap detection', () => {
+  it('no overlaps: full 3-generation tree', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), p('gp2'), p('gp3')]);
+    const { boxes, svgWidth, svgHeight } = computePedigreeLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: full 5-generation tree (31 boxes)', () => {
+    const nodes = new Map<number, PersonNode>();
+    for (let k = 1; k < 32; k++) nodes.set(k, p(`n${k}`));
+    const { boxes, svgWidth, svgHeight } = computePedigreeLayout({ nodes, generations: 5 });
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: asymmetric tree — deep paternal, no maternal', () => {
+    const nodes = new Map<number, PersonNode>();
+    nodes.set(1, p('f'));
+    nodes.set(2, p('father'));
+    nodes.set(4, p('pgf'));
+    nodes.set(8, p('pggf'));
+    const { boxes, svgWidth, svgHeight } = computePedigreeLayout({ nodes, generations: 5 });
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: asymmetric — one parent has full grandparents, other has none', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), null, null]);
+    const { boxes, svgWidth, svgHeight } = computePedigreeLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: single parent only', () => {
+    const tree = pedigree3(p('f'), [p('p0'), null]);
+    const { boxes, svgWidth, svgHeight } = computePedigreeLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps after collapsing one branch', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), p('gp2'), p('gp3')]);
+    const { boxes, svgWidth, svgHeight } = computePedigreeLayout(tree, new Set(['p0:right']));
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+});
+
+describe('hourglass overlap detection', () => {
+  it('no overlaps: focal only', () => {
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(hourglass(p('f')));
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: focal + 2 parents + 4 grandparents', () => {
+    const tree = hourglass(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), p('gp2'), p('gp3')]);
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: focal + 1 spouse + 3 children', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }), [null, null], [null, null, null, null],
+      [p('c1'), p('c2'), p('c3')], [p('s1')],
+    );
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: focal + 3 spouses', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }), [null, null], [null, null, null, null],
+      [], [p('s1'), p('s2'), p('s3')],
+    );
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: female focal with spouses on left + parents above', () => {
+    const tree = hourglass(
+      p('f', { sex: 'F' }), [p('p0'), p('p1')], [null, null, null, null],
+      [], [p('s1'), p('s2')],
+    );
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: many children (6) from one spouse', () => {
+    const children = Array.from({ length: 6 }, (_, i) => p(`c${i}`));
+    const spouse = p('s1');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, p('f')]]), generations: 1 },
+      descendantRoot: {
+        person: p('f'),
+        children: children.map(c => ({ person: c, children: [], coParentId: 's1' })),
+      },
+      descendantGenerations: 3,
+      spouses: [spouse],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: children from 2 different spouses', () => {
+    const focal = p('f', { sex: 'M' });
+    const s1 = p('s1', { sex: 'F' });
+    const s2 = p('s2', { sex: 'F' });
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
+      descendantRoot: {
+        person: focal,
+        children: [
+          { person: p('c1'), children: [], coParentId: 's1' },
+          { person: p('c2'), children: [], coParentId: 's1' },
+          { person: p('c3'), children: [], coParentId: 's2' },
+          { person: p('c4'), children: [], coParentId: 's2' },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [s1, s2],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: children from 2 spouses + solo children', () => {
+    const focal = p('f', { sex: 'M' });
+    const s1 = p('s1', { sex: 'F' });
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
+      descendantRoot: {
+        person: focal,
+        children: [
+          { person: p('c1'), children: [], coParentId: 's1' },
+          { person: p('c2'), children: [], coParentId: null },
+          { person: p('c3'), children: [], coParentId: null },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [s1],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: deep descendant subtree under one child, none under other', () => {
+    const focal = p('f');
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
+      descendantRoot: {
+        person: focal,
+        children: [
+          {
+            person: p('c1'),
+            children: [
+              { person: p('gc1'), children: [{ person: p('ggc1'), children: [] }] },
+              { person: p('gc2'), children: [{ person: p('ggc2'), children: [] }] },
+              { person: p('gc3'), children: [] },
+            ],
+          },
+          { person: p('c2'), children: [] },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: female focal with left spouses + wide descendant tree', () => {
+    const focal = p('f', { sex: 'F' });
+    const s1 = p('s1', { sex: 'M' });
+    const s2 = p('s2', { sex: 'M' });
+    const tree: HourglassTree = {
+      ancestors: { nodes: new Map([[1, focal], [2, p('father')], [3, p('mother')]]), generations: 2 },
+      descendantRoot: {
+        person: focal,
+        children: [
+          { person: p('c1'), children: [], coParentId: 's1' },
+          { person: p('c2'), children: [], coParentId: 's1' },
+          { person: p('c3'), children: [], coParentId: 's1' },
+          { person: p('c4'), children: [], coParentId: 's2' },
+          { person: p('c5'), children: [], coParentId: 's2' },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [s1, s2],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: full tree — parents, grandparents, 2 spouses, children from each, grandchildren', () => {
+    const focal = p('f', { sex: 'M' });
+    const s1 = p('s1', { sex: 'F' });
+    const s2 = p('s2', { sex: 'F' });
+    const tree: HourglassTree = {
+      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
+      descendantRoot: {
+        person: focal,
+        children: [
+          {
+            person: p('c1'), coParentId: 's1',
+            children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }],
+          },
+          { person: p('c2'), children: [], coParentId: 's1' },
+          {
+            person: p('c3'), coParentId: 's2',
+            children: [{ person: p('gc3'), children: [] }],
+          },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [s1, s2],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: spouse boxes do not overlap with ancestor boxes (wide ancestor section)', () => {
+    const focal = p('f', { sex: 'M' });
+    const tree: HourglassTree = {
+      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
+      descendantRoot: { person: focal, children: [] },
+      descendantGenerations: 3,
+      spouses: [p('s1'), p('s2'), p('s3'), p('s4')],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: female focal — left spouses do not overlap ancestor section', () => {
+    const focal = p('f', { sex: 'F' });
+    const tree: HourglassTree = {
+      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
+      descendantRoot: { person: focal, children: [] },
+      descendantGenerations: 3,
+      spouses: [p('s1'), p('s2'), p('s3'), p('s4')],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+});
+
+describe('hourglass sibling support', () => {
+  it('places sibling boxes at the same row as focal', () => {
+    const { boxes } = computeHourglassLayout(
+      hourglass(p('f', { sex: 'M' }), [p('p0'), p('p1')], [null, null, null, null], [], [], [p('sib1'), p('sib2')]),
+    );
+    const focal = boxes.find(b => b.isFocal)!;
+    const sib1 = boxes.find(b => b.person.id === 'sib1')!;
+    const sib2 = boxes.find(b => b.person.id === 'sib2')!;
+    expect(sib1.y).toBe(focal.y);
+    expect(sib2.y).toBe(focal.y);
+  });
+
+  it('male focal: siblings go LEFT of focal', () => {
+    const { boxes } = computeHourglassLayout(
+      hourglass(p('f', { sex: 'M' }), [null, null], [null, null, null, null], [], [], [p('sib1')]),
+    );
+    const focal = boxes.find(b => b.isFocal)!;
+    const sib1 = boxes.find(b => b.person.id === 'sib1')!;
+    expect(sib1.x + sib1.w).toBeLessThan(focal.x);
+  });
+
+  it('female focal: siblings go RIGHT of focal', () => {
+    const { boxes } = computeHourglassLayout(
+      hourglass(p('f', { sex: 'F' }), [null, null], [null, null, null, null], [], [], [p('sib1')]),
+    );
+    const focal = boxes.find(b => b.isFocal)!;
+    const sib1 = boxes.find(b => b.person.id === 'sib1')!;
+    expect(sib1.x).toBeGreaterThan(focal.x + BOX_W);
+  });
+
+  it('no overlaps: male focal with siblings + spouses', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }), [p('p0'), p('p1')], [null, null, null, null],
+      [], [p('s1')], [p('sib1'), p('sib2')],
+    );
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: female focal with siblings + spouses', () => {
+    const tree = hourglass(
+      p('f', { sex: 'F' }), [p('p0'), p('p1')], [null, null, null, null],
+      [], [p('s1'), p('s2')], [p('sib1'), p('sib2'), p('sib3')],
+    );
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: siblings + children + spouses + grandparents', () => {
+    const focal = p('f', { sex: 'M' });
+    const tree: HourglassTree = {
+      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
+      descendantRoot: {
+        person: focal,
+        children: [
+          { person: p('c1'), children: [{ person: p('gc1'), children: [] }], coParentId: 's1' },
+          { person: p('c2'), children: [], coParentId: 's1' },
+        ],
+      },
+      descendantGenerations: 3,
+      spouses: [p('s1', { sex: 'F' })],
+      siblings: [p('sib1'), p('sib2'), p('sib3')],
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('no overlaps: 5 siblings + 4 grandparents (wide ancestor section)', () => {
+    const focal = p('f', { sex: 'M' });
+    const sibs = Array.from({ length: 5 }, (_, i) => p(`sib${i}`));
+    const tree: HourglassTree = {
+      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
+      descendantRoot: { person: focal, children: [] },
+      descendantGenerations: 3,
+      spouses: [],
+      siblings: sibs,
+    };
+    const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+    assertWithinBounds(boxes, svgWidth, svgHeight);
+  });
+
+  it('generates a sibling collapse button when siblings exist', () => {
+    const { collapseButtons } = computeHourglassLayout(
+      hourglass(p('f', { sex: 'M' }), [null, null], [null, null, null, null], [], [], [p('sib1')]),
+    );
+    const sibBtn = collapseButtons.find(b => b.coParentId === '__siblings__');
+    expect(sibBtn).toBeDefined();
+    expect(sibBtn!.isExpanded).toBe(true);
+  });
+
+  it('collapsing siblings hides sibling boxes', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }), [null, null], [null, null, null, null], [], [], [p('sib1'), p('sib2')],
+    );
+    const { boxes } = computeHourglassLayout(tree, new Set(['f:left:__siblings__']));
+    expect(boxes.find(b => b.person.id === 'sib1')).toBeUndefined();
+    expect(boxes.find(b => b.person.id === 'sib2')).toBeUndefined();
+    // Focal still present
+    expect(boxes.find(b => b.isFocal)).toBeDefined();
+  });
+
+  it('generates connector lines from parents to siblings', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }), [p('p0'), p('p1')], [null, null, null, null], [], [], [p('sib1')],
+    );
+    const withSibs = computeHourglassLayout(tree);
+    const withoutSibs = computeHourglassLayout(
+      hourglass(p('f', { sex: 'M' }), [p('p0'), p('p1')]),
+    );
+    expect(withSibs.lines.length).toBeGreaterThan(withoutSibs.lines.length);
   });
 });

@@ -295,6 +295,13 @@ updateAssertion(db, id, { value?, value_original?, confidence?, is_accepted?, ev
 deleteAssertion(db, id) → boolean
 getConflicts(db) → ConflictGroup[]
 getConflictsForPerson(db, personId) → ConflictGroup[]
+generateProofSummary(db, personId) → ProofSummary
+```
+
+### duplicates.ts
+```
+findDuplicates(db, limit?) → DuplicateCandidate[]
+mergePersons(db, targetId, sourceId) → { moved: Record<string, number> }
 ```
 
 ---
@@ -550,7 +557,9 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`
 
-**Assertion tools:** `create_assertion`, `get_assertion`, `get_assertions_for_subject`, `get_assertions_for_attribute`, `get_assertions_for_citation`, `update_assertion`, `delete_assertion`, `get_conflicts`, `get_conflicts_for_person`
+**Assertion tools:** `create_assertion`, `get_assertion`, `get_assertions_for_subject`, `get_assertions_for_attribute`, `get_assertions_for_citation`, `update_assertion`, `delete_assertion`, `get_conflicts`, `get_conflicts_for_person`, `generate_proof_summary`
+
+**Duplicate/merge tools:** `find_duplicates`, `merge_persons`
 
 **Database tools:** `get_current_database`, `switch_database`
 

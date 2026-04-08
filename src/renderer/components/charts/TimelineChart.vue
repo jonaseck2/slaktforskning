@@ -44,7 +44,7 @@
             :key="bar.person.id"
             :data-testid="'timeline-row-' + bar.person.id"
             :class="['timeline-row', { focal: bar.isFocal }]"
-            @click="!bar.isFocal && $emit('navigate', bar.person.id)"
+            @click="$emit('navigate', bar.person.id)"
           >
             <text
               :x="LEFT - 8" :y="bar.y + bar.h / 2 + (ROW_H - bar.h) / 2"

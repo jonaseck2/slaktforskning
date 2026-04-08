@@ -20,8 +20,8 @@
           v-for="box in layout.boxes"
           :key="box.person.id"
           :data-testid="'person-box-' + box.person.id"
-          :class="['person-box', { clickable: !box.isFocal }]"
-          @click="!box.isFocal && $emit('navigate', box.person.id)"
+          :class="['person-box', 'clickable']"
+          @click="$emit('navigate', box.person.id)"
           @mouseenter="hoveredPersonId = box.person.id"
           @mouseleave="hoveredPersonId = null"
         >

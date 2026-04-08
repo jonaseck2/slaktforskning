@@ -20,8 +20,8 @@
           v-for="box in layout.boxes"
           :key="box.person.id"
           :data-testid="'person-box-' + box.person.id"
-          :class="['person-box', { clickable: !box.isFocal }]"
-          @click="!box.isFocal && $emit('navigate', box.person.id)"
+          :class="['person-box', 'clickable']"
+          @click="$emit('navigate', box.person.id)"
           @mouseenter="hoveredPersonId = box.person.id"
           @mouseleave="hoveredPersonId = null"
         >
@@ -88,7 +88,7 @@
         </g>
         <g
           v-for="btn in layout.collapseButtons"
-          :key="`${btn.personId}:${btn.direction}`"
+          :key="`${btn.personId}:${btn.direction}:${btn.coParentId ?? ''}`"
           class="collapse-btn"
           @click.stop="handleCollapseButton(btn)"
         >

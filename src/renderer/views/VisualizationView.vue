@@ -75,12 +75,11 @@
         ></div>
         <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
           <button class="panel-close-btn" @click="closePanel" title="Dölj panel">◀</button>
-          <div v-if="selectedPersonId && selectedPersonId !== personId" class="panel-show-in-tree">
-            <button class="btn-show-in-tree" @click="showInTree(selectedPersonId!)">{{ $t('panel.showInTree') }} →</button>
-          </div>
           <PersonPanel
             :person-id="selectedPersonId ?? personId ?? null"
+            :show-tree-btn="true"
             @relative-added="reloadChart"
+            @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
           />
         </div>
       </template>
@@ -99,7 +98,6 @@ import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
-import { fullNameParts } from '../utils/nameUtils';
 
 interface Person { id: string; sex: 'M' | 'F' | 'U'; living: boolean; }
 interface PersonWithName extends Person { given_name: string; surname: string; }
@@ -141,16 +139,9 @@ function setTab(tab: TabName) {
   localStorage.setItem('viz-tab', tab);
 }
 
-async function selectNode(id: string) {
+function selectNode(id: string) {
   selectedPersonId.value = id;
   if (!panelOpen.value) openPanel();
-  // Set app-wide focus without re-centering the chart
-  try {
-    const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string; preferred_name: string | null; nickname: string | null; sort_order: number }>;
-    const primary = names.sort((a, b) => a.sort_order - b.sort_order)[0];
-    const name = fullNameParts(primary?.given_name ?? null, primary?.surname ?? null, primary?.preferred_name ?? null, primary?.nickname ?? null).map(p => p.text).join('');
-    focusStore.set(id, name);
-  } catch { /* ignore */ }
 }
 
 function navigateTo(id: string) {
@@ -291,23 +282,6 @@ onActivated(load);
 }
 .panel-close-btn:hover { color: var(--color-text-muted); }
 
-/* Show in tree button */
-.panel-show-in-tree {
-  padding: 8px 12px 0;
-  flex-shrink: 0;
-}
-.btn-show-in-tree {
-  width: 100%;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: var(--font-xs);
-  cursor: pointer;
-  text-align: center;
-}
-.btn-show-in-tree:hover { opacity: 0.9; }
 
 .empty-state {
   color: #999;
