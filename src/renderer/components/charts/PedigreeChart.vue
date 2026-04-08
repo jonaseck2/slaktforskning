@@ -9,6 +9,8 @@
         :height="layout.svgHeight * zoom"
         :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
         data-testid="pedigree-svg"
+        role="tree"
+        :aria-label="$t('a11y.pedigreeChart')"
       >
         <line
           v-for="(ln, i) in layout.lines"
@@ -20,10 +22,16 @@
           v-for="box in layout.boxes"
           :key="box.person.id"
           :data-testid="'person-box-' + box.person.id"
-          :class="['person-box', 'clickable']"
+          :class="['person-box', 'clickable', { focused: focusedBoxId === box.person.id }]"
+          role="treeitem"
+          :aria-label="boxAriaLabel(box)"
+          tabindex="0"
           @click="$emit('navigate', box.person.id)"
           @mouseenter="hoveredPersonId = box.person.id"
           @mouseleave="hoveredPersonId = null"
+          @keydown="onBoxKeydown($event, box)"
+          @focus="focusedBoxId = box.person.id"
+          @blur="focusedBoxId = null"
         >
           <rect
             :x="box.x" :y="box.y" :width="box.w" :height="box.h"
@@ -110,10 +118,10 @@
       </svg>
     </div>
     <div class="zoom-controls">
-      <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
-      <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
-      <button class="zoom-btn" @click="zoomOut">−</button>
-      <button class="zoom-btn" @click="resetZoom" title="Reset zoom">↺</button>
+      <button class="zoom-btn" :aria-label="$t('a11y.zoomIn')" @click="zoomIn">+</button>
+      <span class="zoom-level" aria-live="polite">{{ Math.round(zoom * 100) }}%</span>
+      <button class="zoom-btn" :aria-label="$t('a11y.zoomOut')" @click="zoomOut">−</button>
+      <button class="zoom-btn" :aria-label="$t('a11y.resetZoom')" @click="resetZoom">↺</button>
     </div>
 
     <!-- Add popover -->
@@ -143,14 +151,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computePedigreeLayout } from '../../utils/chartLayout';
+import { computePedigreeLayout, BOX_W, H_GAP } from '../../utils/chartLayout';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, PedigreeTree } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 
-useI18n();
+const { t } = useI18n();
 
 const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
@@ -162,6 +170,57 @@ const collapsed = ref(new Set<string>());
 
 // Hover state for ⊕ button
 const hoveredPersonId = ref<string | null>(null);
+
+// Focus state for keyboard navigation
+const focusedBoxId = ref<string | null>(null);
+
+function boxAriaLabel(box: BoxLayout): string {
+  const name = ((box.person.givenName ?? '') + ' ' + (box.person.surname ?? '')).trim();
+  const birth = box.person.birthDate ? '* ' + box.person.birthDate : '';
+  const death = box.person.deathDate ? '† ' + box.person.deathDate : '';
+  return [name || t('common.unknown'), birth, death].filter(Boolean).join(', ');
+}
+
+const PAD = 10;
+function generationOf(box: BoxLayout): number {
+  return Math.round((box.x - PAD) / (BOX_W + H_GAP));
+}
+
+function onBoxKeydown(e: KeyboardEvent, box: BoxLayout) {
+  const boxes = layout.value.boxes;
+  const idx = boxes.findIndex((b) => b.person.id === box.person.id);
+  const gen = generationOf(box);
+  let targetIdx = -1;
+
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    emit('navigate', box.person.id);
+    return;
+  }
+  if (e.key === 'ArrowRight') {
+    // Next person in higher generation (further ancestor)
+    targetIdx = boxes.findIndex((b, i) => i > idx && generationOf(b) === gen + 1);
+  } else if (e.key === 'ArrowLeft') {
+    // Previous person in lower generation (closer to focal)
+    targetIdx = boxes.findIndex((b) => generationOf(b) === gen - 1);
+  } else if (e.key === 'ArrowDown') {
+    // Next sibling in same generation
+    targetIdx = boxes.findIndex((b, i) => i > idx && generationOf(b) === gen);
+  } else if (e.key === 'ArrowUp') {
+    // Previous sibling in same generation
+    for (let i = idx - 1; i >= 0; i--) {
+      if (generationOf(boxes[i]) === gen) { targetIdx = i; break; }
+    }
+  }
+
+  if (targetIdx >= 0) {
+    e.preventDefault();
+    const targetEl = scrollRef.value?.querySelector(
+      `[data-testid="person-box-${boxes[targetIdx].person.id}"]`
+    ) as HTMLElement | null;
+    targetEl?.focus();
+  }
+}
 
 // Add popover state
 const addPopover = ref<{ personId: string; x: number; y: number } | null>(null);
@@ -294,6 +353,12 @@ onUnmounted(() => {
 .chart-loading { color: #999; padding: 40px; text-align: center; }
 .person-box.clickable { cursor: pointer; }
 .person-box.clickable:hover rect:first-child { opacity: 0.9; }
+.person-box:focus { outline: none; }
+.person-box.focused > rect:first-child,
+.person-box:focus-visible > rect:first-child {
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+}
 .collapse-btn { cursor: pointer; }
 .collapse-btn:hover circle { opacity: 0.7; }
 

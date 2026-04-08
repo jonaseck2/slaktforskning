@@ -23,6 +23,12 @@
         :class="['tab-btn', { active: activeTab === 'timeline' }]"
         data-testid="tab-timeline" @click="setTab('timeline')"
       >{{ $t('visualization.tab.timeline') }}</button>
+      <button
+        v-if="activeTab === 'pedigree'"
+        class="btn-sm tab-toggle-btn"
+        :aria-label="pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView')"
+        @click="pedigreeListMode = !pedigreeListMode"
+      >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</button>
     </div>
 
     <!-- Empty state -->
@@ -39,8 +45,12 @@
     <div v-else-if="focalPerson" class="viz-body" ref="vizBodyRef" data-testid="viz-area">
       <!-- Chart area -->
       <div class="viz-chart-area">
+        <PedigreeListView
+          v-if="activeTab === 'pedigree' && pedigreeListMode"
+          :person-id="personId"
+        />
         <PedigreeChart
-          v-if="activeTab === 'pedigree'"
+          v-else-if="activeTab === 'pedigree'"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
           @navigate="navigateTo"
@@ -92,6 +102,7 @@ import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
+import PedigreeListView from '../components/charts/PedigreeListView.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
@@ -118,6 +129,9 @@ const selectedPersonId = ref<string | null>(null);
 
 type TabName = 'pedigree' | 'circle' | 'hourglass' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
+
+// Pedigree list/chart toggle
+const pedigreeListMode = ref(false);
 
 // Panel open/closed
 const panelOpen = ref(localStorage.getItem('viz-panel-open') !== 'false');
@@ -208,6 +222,12 @@ onActivated(load);
   margin-right: 4px;
 }
 .btn-back:hover { opacity: 0.7; }
+
+/* List/chart toggle button in pedigree tab */
+.tab-toggle-btn {
+  margin-left: auto;
+  margin-right: 4px;
+}
 
 /* Body: chart + panel */
 .viz-body {
