@@ -557,17 +557,24 @@ function doImportGedcom(
       const explicitPatr = getChild(nameNode, '_PATR')?.value ?? null;
       const patronymic_base = explicitPatr ?? (isGenney ? getPatronymicBase(surname) : null);
 
-      // Genney marks the preferred name (tilltalsnamn) with * directly after the token.
-      // e.g. "Eva Linda* Marie" → preferred_name = "Linda", given_name = "Eva Linda Marie"
+      // Preferred name (tilltalsnamn) marked with * (Genney) or ! (Holger/OurKind)
+      // directly after the token. e.g. "Eva Linda* Marie" → preferred_name = "Linda"
       const nickname = getChild(nameNode, 'NICK')?.value ?? null;
       let preferred_name: string | null = null;
-      if (given && given.includes('*')) {
-        const starIdx = given.indexOf('*');
-        const beforeStar = given.slice(0, starIdx).trimEnd();
-        const afterStar = given.slice(starIdx + 1).trimStart();
-        const tokens = beforeStar.split(/\s+/);
+      const markerMatch = given ? given.match(/[*!]/) : null;
+      if (given && markerMatch) {
+        const markerIdx = markerMatch.index!;
+        const beforeMarker = given.slice(0, markerIdx).trimEnd();
+        const afterMarker = given.slice(markerIdx + 1).trimStart();
+        const tokens = beforeMarker.split(/\s+/);
         preferred_name = tokens[tokens.length - 1] ?? null;
-        given = (beforeStar + (afterStar ? ' ' + afterStar : '')).replace(/\s+/g, ' ').trim() || null;
+        given = (beforeMarker + (afterMarker ? ' ' + afterMarker : '')).replace(/\s+/g, ' ').trim() || null;
+      }
+
+      // Holger/OurKind FORE tag: the tilltalsnamn (preferred name / kallad)
+      if (isHolger && !preferred_name) {
+        const fore = getChild(nameNode, 'FORE')?.value ?? null;
+        if (fore) preferred_name = fore;
       }
 
       addPersonName(db, person.id, {

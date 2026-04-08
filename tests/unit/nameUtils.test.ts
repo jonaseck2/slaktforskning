@@ -86,4 +86,16 @@ describe('parseAsteriskNotation', () => {
     expect(result.given_name).toBe('Anna Maria');
     expect(result.preferred_name).toBe('Anna');
   });
+
+  it('extracts preferred name from exclamation mark notation', () => {
+    const result = parseAsteriskNotation('Elisabeth! Cathrina');
+    expect(result.given_name).toBe('Elisabeth Cathrina');
+    expect(result.preferred_name).toBe('Elisabeth');
+  });
+
+  it('extracts middle-name exclamation mark', () => {
+    const result = parseAsteriskNotation('Eva Linda! Marie');
+    expect(result.given_name).toBe('Eva Linda Marie');
+    expect(result.preferred_name).toBe('Linda');
+  });
 });

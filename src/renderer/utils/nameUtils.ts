@@ -58,18 +58,23 @@ export function fullNameParts(
 }
 
 /**
- * Parses asterisk notation from a raw given-name string.
+ * Parses preferred-name marker notation from a raw given-name string.
+ * Supports both * (asterisk, used by Genney) and ! (exclamation mark, used by Holger/OurKind)
+ * as markers placed directly after the preferred name token.
+ *
  * "Elisabeth* Cathrina" → { given_name: "Elisabeth Cathrina", preferred_name: "Elisabeth" }
+ * "Elisabeth! Cathrina" → { given_name: "Elisabeth Cathrina", preferred_name: "Elisabeth" }
  * "Elisabeth Cathrina"  → { given_name: "Elisabeth Cathrina", preferred_name: null }
  */
 export function parseAsteriskNotation(raw: string): { given_name: string; preferred_name: string | null } {
-  const idx = raw.indexOf('*');
-  if (idx === -1) return { given_name: raw.trim(), preferred_name: null };
-  const beforeStar = raw.slice(0, idx).trimEnd();
-  const afterStar = raw.slice(idx + 1).trimStart();
-  const tokens = beforeStar.split(/\s+/).filter(Boolean);
+  const match = raw.match(/[*!]/);
+  if (!match) return { given_name: raw.trim(), preferred_name: null };
+  const idx = match.index!;
+  const beforeMarker = raw.slice(0, idx).trimEnd();
+  const afterMarker = raw.slice(idx + 1).trimStart();
+  const tokens = beforeMarker.split(/\s+/).filter(Boolean);
   const preferred_name = tokens[tokens.length - 1] ?? null;
-  const given_name = (beforeStar + (afterStar ? ' ' + afterStar : '')).replace(/\s+/g, ' ').trim();
+  const given_name = (beforeMarker + (afterMarker ? ' ' + afterMarker : '')).replace(/\s+/g, ' ').trim();
   return { given_name: given_name || raw.trim(), preferred_name };
 }
 

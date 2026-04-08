@@ -1,4 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
+import { existsSync } from 'fs';
 import { queryOne, queryAll } from './db';
 
 export type CheckSeverity = 'error' | 'warning' | 'notice';
@@ -906,6 +907,240 @@ function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): Ch
 }
 
 // ---------------------------------------------------------------------------
+// G. Data Validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Days per month (non-leap). February is capped at 29 to allow leap-year
+ * dates without requiring full leap-year calculation — the goal is to catch
+ * clearly impossible dates like month 14 or day 90.
+ */
+const DAYS_IN_MONTH = [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function isInvalidDate(d: string): string | null {
+  // Expect YYYY, YYYY-MM, or YYYY-MM-DD
+  const parts = d.split('-');
+  // Handle negative years (leading -)
+  const negative = d.startsWith('-');
+  if (negative) {
+    parts.shift(); // remove empty string before the first -
+    if (parts.length > 0) parts[0] = '-' + parts[0];
+  }
+  const year = parseInt(parts[0], 10);
+  if (isNaN(year) || year < 0) return `ogiltigt år (${parts[0]})`;
+  if (parts.length === 1) return null;
+  const month = parseInt(parts[1], 10);
+  if (isNaN(month) || month < 1 || month > 12) return `ogiltig månad (${month})`;
+  if (parts.length === 2) return null;
+  const day = parseInt(parts[2], 10);
+  if (isNaN(day) || day < 1 || day > DAYS_IN_MONTH[month]) return `ogiltig dag (${day}) för månad ${month}`;
+  return null;
+}
+
+function checkInvalidDates(db: Database): CheckResult[] {
+  const results: CheckResult[] = [];
+
+  // Check events.date_value and events.date_value_end
+  const eventRows = queryAll<{ id: string; date_value: string | null; date_value_end: string | null }>(db, `
+    SELECT id, date_value, date_value_end FROM events
+    WHERE date_value IS NOT NULL OR date_value_end IS NOT NULL
+  `);
+
+  // Build event→person map for personIds
+  const eventPersonMap = new Map<string, string[]>();
+  const epRows = queryAll<{ event_id: string; person_id: string }>(db, `
+    SELECT event_id, person_id FROM event_participants
+  `);
+  for (const ep of epRows) {
+    if (!eventPersonMap.has(ep.event_id)) eventPersonMap.set(ep.event_id, []);
+    eventPersonMap.get(ep.event_id)!.push(ep.person_id);
+  }
+
+  for (const row of eventRows) {
+    const personIds = eventPersonMap.get(row.id) ?? [];
+    if (row.date_value) {
+      const reason = isInvalidDate(row.date_value);
+      if (reason) {
+        results.push({
+          code: 'INVALID_DATE',
+          severity: 'error',
+          message: `Ogiltigt datum: ${row.date_value} — ${reason}`,
+          messageParams: { date: row.date_value, reason },
+          personIds,
+          eventIds: [row.id],
+        });
+      }
+    }
+    if (row.date_value_end) {
+      const reason = isInvalidDate(row.date_value_end);
+      if (reason) {
+        results.push({
+          code: 'INVALID_DATE',
+          severity: 'error',
+          message: `Ogiltigt slutdatum: ${row.date_value_end} — ${reason}`,
+          messageParams: { date: row.date_value_end, reason },
+          personIds,
+          eventIds: [row.id],
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+function checkUnrelatedPerson(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string }>(db, `
+    SELECT p.id
+    FROM persons p
+    WHERE NOT EXISTS (
+      SELECT 1 FROM relationships r WHERE r.person1_id = p.id OR r.person2_id = p.id
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id AND e.relationship_id IS NOT NULL
+      WHERE ep.person_id = p.id
+    )
+  `);
+
+  return rows.map(r => ({
+    code: 'UNRELATED_PERSON',
+    severity: 'notice' as CheckSeverity,
+    message: 'Person har inga registrerade relationer',
+    messageParams: {},
+    personIds: [r.id],
+  }));
+}
+
+function checkMediaFileMissing(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; file_ref: string }>(db, `
+    SELECT id, file_ref FROM media WHERE file_ref IS NOT NULL AND file_ref != ''
+  `);
+
+  const results: CheckResult[] = [];
+  for (const row of rows) {
+    if (!existsSync(row.file_ref)) {
+      // Find linked persons
+      const links = queryAll<{ entity_type: string; entity_id: string }>(db, `
+        SELECT entity_type, entity_id FROM media_links WHERE media_id = ?
+      `, [row.id]);
+      const personIds = links.filter(l => l.entity_type === 'person').map(l => l.entity_id);
+
+      results.push({
+        code: 'MEDIA_FILE_MISSING',
+        severity: 'warning',
+        message: `Mediafil saknas: ${row.file_ref}`,
+        messageParams: { filePath: row.file_ref },
+        personIds,
+      });
+    }
+  }
+
+  return results;
+}
+
+function checkOrphanedSource(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; title: string }>(db, `
+    SELECT s.id, s.title
+    FROM sources s
+    WHERE NOT EXISTS (
+      SELECT 1 FROM citations c WHERE c.source_id = s.id
+    )
+  `);
+
+  return rows.map(r => ({
+    code: 'ORPHANED_SOURCE',
+    severity: 'notice' as CheckSeverity,
+    message: `Källa "${r.title || '(utan titel)'}" har inga källhänvisningar`,
+    messageParams: { title: r.title || '' },
+    personIds: [],
+  }));
+}
+
+function checkTextControlChars(db: Database): CheckResult[] {
+  const results: CheckResult[] = [];
+  // Regex: control chars U+0000–U+001F except tab (09), newline (0A), CR (0D)
+  const controlCharRe = /[\x00-\x08\x0B\x0C\x0E-\x1F]/;
+
+  // Person names
+  const nameRows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+    SELECT person_id, given_name, surname FROM person_names
+  `);
+  for (const r of nameRows) {
+    const fields = [r.given_name, r.surname].filter(Boolean);
+    for (const field of fields) {
+      if (controlCharRe.test(field!)) {
+        results.push({
+          code: 'TEXT_CONTROL_CHARS',
+          severity: 'warning',
+          message: `Namn innehåller kontrolltecken`,
+          messageParams: {},
+          personIds: [r.person_id],
+        });
+        break; // one result per person name row
+      }
+    }
+  }
+
+  // Person notes
+  const noteRows = queryAll<{ id: string; notes: string }>(db, `
+    SELECT id, notes FROM persons WHERE notes IS NOT NULL AND notes != ''
+  `);
+  for (const r of noteRows) {
+    if (controlCharRe.test(r.notes)) {
+      results.push({
+        code: 'TEXT_CONTROL_CHARS',
+        severity: 'warning',
+        message: `Personanteckning innehåller kontrolltecken`,
+        messageParams: {},
+        personIds: [r.id],
+      });
+    }
+  }
+
+  // Event descriptions
+  const eventRows = queryAll<{ id: string; description: string }>(db, `
+    SELECT id, description FROM events WHERE description IS NOT NULL AND description != ''
+  `);
+  const epMap = new Map<string, string[]>();
+  const allEps = queryAll<{ event_id: string; person_id: string }>(db, `SELECT event_id, person_id FROM event_participants`);
+  for (const ep of allEps) {
+    if (!epMap.has(ep.event_id)) epMap.set(ep.event_id, []);
+    epMap.get(ep.event_id)!.push(ep.person_id);
+  }
+  for (const r of eventRows) {
+    if (controlCharRe.test(r.description)) {
+      results.push({
+        code: 'TEXT_CONTROL_CHARS',
+        severity: 'warning',
+        message: `Händelsebeskrivning innehåller kontrolltecken`,
+        messageParams: {},
+        personIds: epMap.get(r.id) ?? [],
+        eventIds: [r.id],
+      });
+    }
+  }
+
+  // Source titles
+  const sourceRows = queryAll<{ id: string; title: string }>(db, `
+    SELECT id, title FROM sources WHERE title IS NOT NULL AND title != ''
+  `);
+  for (const r of sourceRows) {
+    if (controlCharRe.test(r.title)) {
+      results.push({
+        code: 'TEXT_CONTROL_CHARS',
+        severity: 'warning',
+        message: `Källtitel "${r.title}" innehåller kontrolltecken`,
+        messageParams: { title: r.title },
+        personIds: [],
+      });
+    }
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -958,6 +1193,13 @@ function runAllCheckFunctions(db: Database): CheckResult[] {
   run('checkNotLivingWithoutDeathEvent', () => checkNotLivingWithoutDeathEvent(db));
   run('checkUnsourcedLifeEvent(birth)', () => checkUnsourcedLifeEvent(db, 'birth'));
   run('checkUnsourcedLifeEvent(death)', () => checkUnsourcedLifeEvent(db, 'death'));
+
+  // G. Data Validation
+  run('checkInvalidDates',          () => checkInvalidDates(db));
+  run('checkUnrelatedPerson',       () => checkUnrelatedPerson(db));
+  run('checkMediaFileMissing',      () => checkMediaFileMissing(db));
+  run('checkOrphanedSource',        () => checkOrphanedSource(db));
+  run('checkTextControlChars',      () => checkTextControlChars(db));
 
   console.log(`[checks] total: ${Date.now() - t0}ms`);
   return results;

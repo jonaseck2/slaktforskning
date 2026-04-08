@@ -257,49 +257,62 @@
     </g>
 
     <!-- Focal person circle (rendered on top of segments) -->
-    <circle
+    <g
       v-if="focalSegment"
-      :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50"
-      :fill="focalSegment.fill"
-    />
-    <!-- Focal name: up to 3 lines -->
-    <text
-      v-for="(line, i) in focalNameLines"
-      :key="i"
-      :x="CIRCLE_CX"
-      :y="focalLineY(i, focalNameLines.length)"
-      text-anchor="middle"
-      dominant-baseline="central"
-      :font-size="focalNameLines.length > 2 ? 9 : 10"
-      font-weight="600"
-      :font-family="fontFamily"
-      fill="white"
-      style="pointer-events: none; user-select: none;"
-    >{{ line }}</text>
-    <!-- Focal birth -->
-    <text
-      v-if="focalSegment?.person?.birthDate"
-      :x="CIRCLE_CX"
-      :y="focalLineY(focalNameLines.length, focalNameLines.length)"
-      text-anchor="middle"
-      dominant-baseline="central"
-      font-size="8"
-      :font-family="fontFamily"
-      fill="rgba(255,255,255,0.65)"
-      style="pointer-events: none; user-select: none;"
-    >* {{ focalSegment.person.birthDate }}</text>
-    <!-- Focal death -->
-    <text
-      v-if="focalSegment?.person?.deathDate"
-      :x="CIRCLE_CX"
-      :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
-      text-anchor="middle"
-      dominant-baseline="central"
-      font-size="8"
-      :font-family="fontFamily"
-      fill="rgba(255,255,255,0.65)"
-      style="pointer-events: none; user-select: none;"
-    >† {{ focalSegment.person.deathDate }}</text>
+      :class="['circle-seg', { clickable: focalSegment.person && !linkBase }]"
+      @click="focalSegment.person && !linkBase && emit('navigate', focalSegment.person!.id)"
+    >
+      <!-- Link wrapper for print/export mode -->
+      <a v-if="linkBase && focalSegment.person" :href="`${linkBase}${focalSegment.person.id}`">
+        <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" />
+        <text
+          v-for="(line, i) in focalNameLines" :key="i"
+          :x="CIRCLE_CX" :y="focalLineY(i, focalNameLines.length)"
+          text-anchor="middle" dominant-baseline="central"
+          :font-size="focalNameLines.length > 2 ? 9 : 10"
+          font-weight="600" :font-family="fontFamily" fill="white"
+        >{{ line }}</text>
+        <text
+          v-if="focalSegment.person.birthDate"
+          :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length, focalNameLines.length)"
+          text-anchor="middle" dominant-baseline="central"
+          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+        >* {{ focalSegment.person.birthDate }}</text>
+        <text
+          v-if="focalSegment.person.deathDate"
+          :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
+          text-anchor="middle" dominant-baseline="central"
+          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+        >† {{ focalSegment.person.deathDate }}</text>
+      </a>
+      <!-- Interactive mode (no link wrapper) -->
+      <template v-else>
+        <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" />
+        <title v-if="focalSegment.person && !linkBase">{{ tooltipLabel(focalSegment) }}</title>
+        <text
+          v-for="(line, i) in focalNameLines" :key="i"
+          :x="CIRCLE_CX" :y="focalLineY(i, focalNameLines.length)"
+          text-anchor="middle" dominant-baseline="central"
+          :font-size="focalNameLines.length > 2 ? 9 : 10"
+          font-weight="600" :font-family="fontFamily" fill="white"
+          style="pointer-events: none; user-select: none;"
+        >{{ line }}</text>
+        <text
+          v-if="focalSegment?.person?.birthDate"
+          :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length, focalNameLines.length)"
+          text-anchor="middle" dominant-baseline="central"
+          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+          style="pointer-events: none; user-select: none;"
+        >* {{ focalSegment.person.birthDate }}</text>
+        <text
+          v-if="focalSegment?.person?.deathDate"
+          :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
+          text-anchor="middle" dominant-baseline="central"
+          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+          style="pointer-events: none; user-select: none;"
+        >† {{ focalSegment.person.deathDate }}</text>
+      </template>
+    </g>
   </svg>
 </template>
 

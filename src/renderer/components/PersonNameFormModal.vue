@@ -5,6 +5,7 @@
         <label>
           {{ $t('persons.givenName') }}
           <input v-model="form.given_name" type="text" required autofocus />
+          <small class="field-hint">{{ $t('persons.givenNameHint') }}</small>
         </label>
         <label>
           {{ $t('persons.surname') }}
