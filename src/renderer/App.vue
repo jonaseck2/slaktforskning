@@ -1,6 +1,7 @@
 <template>
   <div class="app">
-    <nav class="sidebar">
+    <a href="#main-content" class="skip-link">{{ $t('a11y.skipToMain') }}</a>
+    <nav class="sidebar" aria-label="Main navigation">
       <div class="sidebar-header">
         <span class="sidebar-title">{{ $t('app.title') }}</span>
       </div>
@@ -19,79 +20,79 @@
           {{ focusStore.personName }}
         </router-link>
       </div>
-      <div class="nav-section-label">{{ $t('nav.navigate') }}</div>
+      <h2 class="nav-section-label">{{ $t('nav.navigate') }}</h2>
       <router-link to="/visualisering" class="nav-item">
-        <span class="nav-icon">🌳</span>
+        <span class="nav-icon" aria-hidden="true">🌳</span>
         <span class="nav-label">{{ $t('nav.tree') }}</span>
       </router-link>
       <router-link to="/" class="nav-item">
-        <span class="nav-icon">👥</span>
+        <span class="nav-icon" aria-hidden="true">👥</span>
         <span class="nav-label">{{ $t('nav.persons') }}</span>
       </router-link>
       <router-link to="/relationships" class="nav-item">
-        <span class="nav-icon">🔗</span>
+        <span class="nav-icon" aria-hidden="true">🔗</span>
         <span class="nav-label">{{ $t('nav.relationships') }}</span>
       </router-link>
       <router-link to="/places" class="nav-item">
-        <span class="nav-icon">📍</span>
+        <span class="nav-icon" aria-hidden="true">📍</span>
         <span class="nav-label">{{ $t('places.title') }}</span>
       </router-link>
       <router-link to="/sources" class="nav-item">
-        <span class="nav-icon">📚</span>
+        <span class="nav-icon" aria-hidden="true">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
       <router-link to="/groups" class="nav-item">
-        <span class="nav-icon">🏷️</span>
+        <span class="nav-icon" aria-hidden="true">🏷️</span>
         <span class="nav-label">{{ $t('nav.groups') }}</span>
       </router-link>
       <router-link to="/media" class="nav-item">
-        <span class="nav-icon">🖼️</span>
+        <span class="nav-icon" aria-hidden="true">🖼️</span>
         <span class="nav-label">{{ $t('media.nav') }}</span>
       </router-link>
-      <router-link to="/research-tasks" class="nav-item">
-        <span class="nav-icon">🔬</span>
+      <router-link to="/research-tasks" class="nav-item" :aria-label="openTaskCount > 0 ? $t('researchTasks.nav') + ', ' + openTaskCount + ' ' + $t('a11y.openTasks', { count: openTaskCount }) : undefined">
+        <span class="nav-icon" aria-hidden="true">🔬</span>
         <span class="nav-label">{{ $t('researchTasks.nav') }}</span>
         <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
       </router-link>
-      <router-link to="/quality" class="nav-item">
-        <span class="nav-icon">⚠️</span>
+      <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('quality.nav') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : undefined">
+        <span class="nav-icon" aria-hidden="true">⚠️</span>
         <span class="nav-label">{{ $t('quality.nav') }}</span>
         <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
       <router-link to="/reports" class="nav-item">
-        <span class="nav-icon">🖨️</span>
+        <span class="nav-icon" aria-hidden="true">🖨️</span>
         <span class="nav-label">{{ $t('reports.nav') }}</span>
       </router-link>
       <div class="sidebar-spacer"></div>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
       <div class="settings-section">
-        <button class="settings-toggle" @click="isSettingsOpen = !isSettingsOpen">
-          <span class="nav-icon">⚙️</span>
+        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="isSettingsOpen = !isSettingsOpen">
+          <span class="nav-icon" aria-hidden="true">⚙️</span>
           <span class="nav-label">{{ $t('nav.settings') }}</span>
           <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
         </button>
         <div v-if="isSettingsOpen" class="settings-panel">
           <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
-          <div class="settings-row">
-            <button :class="['settings-option', { active: !darkMode }]" @click="setDarkMode(false)">☀ {{ $t('settings.light') }}</button>
-            <button :class="['settings-option', { active: darkMode }]" @click="setDarkMode(true)">🌙 {{ $t('settings.dark') }}</button>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
+            <button :class="['settings-option', { active: !darkMode }]" role="radio" :aria-checked="String(!darkMode)" @click="setDarkMode(false)">☀ {{ $t('settings.light') }}</button>
+            <button :class="['settings-option', { active: darkMode }]" role="radio" :aria-checked="String(darkMode)" @click="setDarkMode(true)">🌙 {{ $t('settings.dark') }}</button>
           </div>
           <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
-          <div class="settings-row">
-            <button :class="['settings-option', { active: textSize === 'small' }]" @click="setTextSize('small')">S</button>
-            <button :class="['settings-option', { active: textSize === 'medium' }]" @click="setTextSize('medium')">M</button>
-            <button :class="['settings-option', { active: textSize === 'large' }]" @click="setTextSize('large')">L</button>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
+            <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
+            <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
+            <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
           </div>
           <div class="settings-group-label">{{ $t('settings.language') }}</div>
-          <div class="settings-row">
-            <button :class="['settings-option', { active: locale === 'sv' }]" @click="setLocale('sv')">Svenska</button>
-            <button :class="['settings-option', { active: locale === 'en' }]" @click="setLocale('en')">English</button>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
+            <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Svenska</button>
+            <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">English</button>
           </div>
         </div>
       </div>
     </nav>
-    <main class="content">
+    <main id="main-content" class="content">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="CACHED_VIEWS">
           <component
