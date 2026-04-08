@@ -5,16 +5,30 @@
       type="text"
       v-model="query"
       :placeholder="$t('groups.searchOrCreate')"
+      role="combobox"
+      :aria-expanded="open && (filtered.length > 0 || !!query.trim())"
+      aria-autocomplete="list"
+      :aria-controls="pickerId + '-listbox'"
+      :aria-activedescendant="highlightIndex >= 0 ? pickerId + '-option-' + highlightIndex : undefined"
       @input="onInput"
       @focus="open = true"
       @blur="onBlur"
-      @keydown.escape="$emit('cancel')"
+      @keydown="onKeydown"
     />
-    <ul v-if="open && (filtered.length > 0 || query.trim())" class="picker-dropdown">
+    <ul
+      v-if="open && (filtered.length > 0 || query.trim())"
+      :id="pickerId + '-listbox'"
+      role="listbox"
+      class="picker-dropdown"
+    >
       <li
-        v-for="g in filtered"
+        v-for="(g, idx) in filtered"
         :key="g.id"
+        :id="pickerId + '-option-' + idx"
+        role="option"
+        :aria-selected="idx === highlightIndex"
         class="picker-option"
+        :class="{ highlighted: idx === highlightIndex }"
         @mousedown.prevent="select(g)"
       >
         {{ g.name }}
@@ -22,17 +36,26 @@
       </li>
       <li
         v-if="query.trim() && !exactMatch"
+        :id="pickerId + '-option-' + filtered.length"
+        role="option"
+        :aria-selected="filtered.length === highlightIndex"
         class="picker-option picker-create"
+        :class="{ highlighted: filtered.length === highlightIndex }"
         @mousedown.prevent="createAndAdd"
       >
         ＋ {{ $t('groups.createNew') }} "{{ query.trim() }}"
       </li>
     </ul>
+    <div v-if="open && filtered.length > 0" class="sr-only" aria-live="polite">
+      {{ $t('a11y.searchResults', { count: filtered.length }, filtered.length) }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
+
+const pickerId = 'group-picker-' + Math.random().toString(36).slice(2, 8);
 
 interface GroupOption { id: string; name: string; memberCount: number; }
 
@@ -50,6 +73,7 @@ const query = ref('');
 const open = ref(false);
 const allGroups = ref<GroupOption[]>([]);
 const inputEl = ref<HTMLInputElement | null>(null);
+const highlightIndex = ref(-1);
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -63,6 +87,9 @@ const filtered = computed(() => {
 const exactMatch = computed(() =>
   allGroups.value.some(g => g.name.toLowerCase() === query.value.trim().toLowerCase())
 );
+
+// Reset highlight when filtered list changes
+watch(filtered, () => { highlightIndex.value = -1; });
 
 async function loadGroups() {
   if (!window.api) return;
@@ -83,6 +110,39 @@ function onInput() {
 
 function onBlur() {
   setTimeout(() => { open.value = false; }, 200);
+}
+
+function hasCreateNew(): boolean {
+  return !!query.value.trim() && !exactMatch.value;
+}
+
+function totalOptions(): number {
+  return filtered.value.length + (hasCreateNew() ? 1 : 0);
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    open.value = false;
+    emit('cancel');
+    return;
+  }
+  if (!open.value) return;
+  const total = totalOptions();
+  if (total === 0) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    highlightIndex.value = Math.min(highlightIndex.value + 1, total - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    highlightIndex.value = Math.max(highlightIndex.value - 1, 0);
+  } else if (e.key === 'Enter' && highlightIndex.value >= 0) {
+    e.preventDefault();
+    if (highlightIndex.value < filtered.value.length) {
+      select(filtered.value[highlightIndex.value]);
+    } else {
+      createAndAdd();
+    }
+  }
 }
 
 async function select(g: GroupOption) {
@@ -146,7 +206,19 @@ onMounted(async () => {
   font-size: var(--font-base);
 }
 .picker-option:hover { background: var(--color-row-hover); }
+.picker-option.highlighted { background: var(--color-row-hover); }
 .picker-create { color: #059669; }
 .picker-create:hover { background: var(--color-row-hover); }
 .picker-count { font-size: var(--font-xs); color: #aaa; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 </style>
