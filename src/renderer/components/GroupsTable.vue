@@ -13,7 +13,12 @@
         v-for="g in groups"
         :key="g.id"
         class="clickable-row"
+        tabindex="0"
+        role="button"
+        :aria-label="$t('a11y.editItem', { item: g.name })"
         @click="router.push('/groups/' + g.id)"
+        @keydown.enter="router.push('/groups/' + g.id)"
+        @keydown.space.prevent="router.push('/groups/' + g.id)"
       >
         <td class="td-name">{{ g.name }}</td>
         <td v-if="showMembers">{{ g.memberCount }}</td>

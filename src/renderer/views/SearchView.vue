@@ -34,7 +34,12 @@
               v-for="p in persons"
               :key="p.id"
               class="clickable-row"
+              tabindex="0"
+              role="button"
+              :aria-label="$t('a11y.editItem', { item: ((p.given_name || '') + ' ' + (p.surname || '')).trim() })"
               @click="goToPerson(p)"
+              @keydown.enter="goToPerson(p)"
+              @keydown.space.prevent="goToPerson(p)"
             >
               <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" /></td>
               <td>{{ p.sex }}</td>
@@ -60,7 +65,12 @@
               v-for="r in relationships"
               :key="r.id"
               class="clickable-row"
+              tabindex="0"
+              role="button"
+              :aria-label="$t('a11y.editItem', { item: $t('relTypes.' + r.type) })"
               @click="router.push(`/relationships/${r.id}`)"
+              @keydown.enter="router.push(`/relationships/${r.id}`)"
+              @keydown.space.prevent="router.push(`/relationships/${r.id}`)"
             >
               <td>{{ $t('relTypes.' + r.type) }}</td>
               <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" :nickname="r.person1_nickname ?? null" /></td>
@@ -86,7 +96,12 @@
               v-for="s in sources"
               :key="s.id"
               class="clickable-row"
+              tabindex="0"
+              role="button"
+              :aria-label="$t('a11y.editItem', { item: s.title || '—' })"
               @click="router.push(`/sources/${s.id}`)"
+              @keydown.enter="router.push(`/sources/${s.id}`)"
+              @keydown.space.prevent="router.push(`/sources/${s.id}`)"
             >
               <td>{{ s.title || '—' }}</td>
               <td>{{ s.author || '—' }}</td>

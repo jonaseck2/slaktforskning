@@ -22,7 +22,12 @@
           v-for="source in sourceList"
           :key="source.id"
           class="clickable-row"
+          tabindex="0"
+          role="button"
+          :aria-label="$t('a11y.editItem', { item: source.title || '—' })"
           @click="goToDetail(source.id)"
+          @keydown.enter="goToDetail(source.id)"
+          @keydown.space.prevent="goToDetail(source.id)"
         >
           <td>{{ source.title }}</td>
           <td>{{ source.author || '—' }}</td>
