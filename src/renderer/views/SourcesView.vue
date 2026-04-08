@@ -35,8 +35,8 @@
     </table>
 
     <!-- Add Source Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false">
-        <h3>{{ $t('sources.addSource') }}</h3>
+    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-source">
+        <h3 id="modal-title-add-source">{{ $t('sources.addSource') }}</h3>
         <form @submit.prevent="addSource">
           <label>
             {{ $t('sources.sourceTitle') }}

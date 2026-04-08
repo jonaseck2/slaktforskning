@@ -1,16 +1,27 @@
 <!-- src/renderer/components/BaseModal.vue -->
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal">
+  <div class="modal-overlay" role="presentation" @click.self="$emit('close')">
+    <div
+      ref="modalRef"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+    >
       <slot />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useFocusTrap } from '../composables/useFocusTrap';
 
+defineProps<{ titleId?: string }>();
 const emit = defineEmits<{ close: [] }>();
+
+const modalRef = ref<HTMLElement | null>(null);
+useFocusTrap(modalRef);
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') emit('close');

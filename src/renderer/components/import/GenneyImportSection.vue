@@ -41,8 +41,8 @@
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Import report modal (shared across all three flows) -->
-    <BaseModal v-if="showGenneyReport && genneyReport" @close="showGenneyReport = false">
-      <h3>{{ $t('importExport.genneyReportTitle') }}</h3>
+    <BaseModal v-if="showGenneyReport && genneyReport" @close="showGenneyReport = false" title-id="modal-title-genney-report">
+      <h3 id="modal-title-genney-report">{{ $t('importExport.genneyReportTitle') }}</h3>
       <ul class="report-counts">
         <li>{{ $t('importExport.genneyReportPersons', { n: genneyReport.persons }) }}</li>
         <li>{{ $t('importExport.genneyReportCoupleRels', { n: genneyReport.coupleRelationships }) }}</li>

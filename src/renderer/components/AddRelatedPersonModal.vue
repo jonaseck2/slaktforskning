@@ -1,6 +1,6 @@
 <template>
-  <BaseModal @close="$emit('close')">
-      <h3>{{ title }}</h3>
+  <BaseModal @close="$emit('close')" title-id="modal-title-add-related">
+      <h3 id="modal-title-add-related">{{ title }}</h3>
       <form @submit.prevent="save">
         <!-- Toggle -->
         <div class="entry-mode-toggle">

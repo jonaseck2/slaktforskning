@@ -1,6 +1,6 @@
 <template>
-  <BaseModal @close="$emit('close')">
-    <template #title>{{ $t('duplicates.mergeTitle') }}</template>
+  <BaseModal @close="$emit('close')" title-id="modal-title-merge">
+    <h3 id="modal-title-merge">{{ $t('duplicates.mergeTitle') }}</h3>
     <div class="merge-layout">
       <div class="merge-side">
         <h5>{{ $t('duplicates.keepPerson') }}</h5>

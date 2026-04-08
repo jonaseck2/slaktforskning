@@ -9,8 +9,8 @@
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
     <!-- Add Group Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false">
-        <h3>{{ $t('groups.addGroup') }}</h3>
+    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-group">
+        <h3 id="modal-title-add-group">{{ $t('groups.addGroup') }}</h3>
         <form @submit.prevent="addGroup">
           <label>
             {{ $t('groups.name') }} *

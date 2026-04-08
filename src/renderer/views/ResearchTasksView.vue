@@ -26,8 +26,8 @@
     <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->
-    <BaseModal v-if="showAddModal" @close="showAddModal = false">
-        <h3>{{ $t('researchTasks.addTask') }}</h3>
+    <BaseModal v-if="showAddModal" @close="showAddModal = false" title-id="modal-title-add-research-task">
+        <h3 id="modal-title-add-research-task">{{ $t('researchTasks.addTask') }}</h3>
         <form @submit.prevent="createTask">
           <label>
             {{ $t('researchTasks.task') }} *

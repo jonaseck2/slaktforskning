@@ -13,8 +13,8 @@
 
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
-    <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false">
-      <h3>{{ $t('importExport.importReportTitle') }}</h3>
+    <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false" title-id="modal-title-holger-report">
+      <h3 id="modal-title-holger-report">{{ $t('importExport.importReportTitle') }}</h3>
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>

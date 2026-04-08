@@ -95,8 +95,8 @@
     </template>
 
     <!-- Add Person Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false">
-        <h3>{{ $t('persons.addPerson') }}</h3>
+    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-person">
+        <h3 id="modal-title-add-person">{{ $t('persons.addPerson') }}</h3>
         <form @submit.prevent="addPerson">
           <label>
             {{ $t('persons.givenName') }}
