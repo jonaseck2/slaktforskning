@@ -293,6 +293,76 @@ export function countPersons(db: Database): number {
   return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons')?.n ?? 0;
 }
 
+// Unsourced = no citations on any event the person participates in, AND no direct person citations
+const UNSOURCED_FILTER = `
+  NOT EXISTS (
+    SELECT 1 FROM event_participants ep2
+    JOIN events e2 ON e2.id = ep2.event_id
+    JOIN citations c ON c.event_id = e2.id
+    WHERE ep2.person_id = p.id
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM citations c2 WHERE c2.person_id = p.id
+  )
+`;
+
+export function listUnsourcedPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
+  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
+    SELECT p.id, p.sex,
+           COALESCE(pn.given_name, '') AS given_name,
+           COALESCE(pn.surname, '')    AS surname
+    FROM persons p
+    LEFT JOIN person_names pn
+      ON pn.person_id = p.id
+      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+    WHERE ${UNSOURCED_FILTER}
+    ORDER BY pn.surname, pn.given_name
+    LIMIT ? OFFSET ?
+  `, [limit, offset]);
+
+  if (page.length === 0) return [];
+
+  const ids = page.map(r => r.id);
+  const placeholders = ids.map(() => '?').join(',');
+  const eventRows = queryAll<{
+    person_id: string;
+    event_type: string;
+    date_original: string | null;
+    place_name: string | null;
+  }>(db, `
+    SELECT ep.person_id, e.event_type, e.date_original, pl.name AS place_name
+    FROM event_participants ep
+    JOIN events e ON e.id = ep.event_id AND e.event_type IN ('birth', 'death')
+    LEFT JOIN places pl ON pl.id = e.place_id
+    WHERE ep.person_id IN (${placeholders})
+  `, ids);
+
+  type EventData = { birth_date: string | null; birth_place: string | null; death_date: string | null; death_place: string | null };
+  const eventMap = new Map<string, EventData>();
+  for (const row of eventRows) {
+    if (!eventMap.has(row.person_id)) {
+      eventMap.set(row.person_id, { birth_date: null, birth_place: null, death_date: null, death_place: null });
+    }
+    const entry = eventMap.get(row.person_id)!;
+    if (row.event_type === 'birth') {
+      if (entry.birth_date === null) entry.birth_date = row.date_original;
+      if (entry.birth_place === null) entry.birth_place = row.place_name;
+    } else {
+      if (entry.death_date === null) entry.death_date = row.date_original;
+      if (entry.death_place === null) entry.death_place = row.place_name;
+    }
+  }
+
+  return page.map(p => {
+    const events = eventMap.get(p.id) ?? { birth_date: null, birth_place: null, death_date: null, death_place: null };
+    return { id: p.id, sex: p.sex as Person['sex'], given_name: p.given_name, surname: p.surname, ...events };
+  });
+}
+
+export function countUnsourcedPersons(db: Database): number {
+  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM persons p WHERE ${UNSOURCED_FILTER}`)?.n ?? 0;
+}
+
 export function searchPersonsWithDetails(db: Database, query: string): PersonListItem[] {
   const like = `%${query}%`;
   return queryAll<PersonListItem>(db, `

@@ -11,6 +11,7 @@ import {
   deleteAssertion,
   getConflicts,
   getConflictsForPerson,
+  generateProofSummary,
 } from '../../src/api/assertions';
 import { createSource, createCitation } from '../../src/api/sources';
 import { createEvent } from '../../src/api/events';
@@ -254,5 +255,73 @@ describe('conflict detection', () => {
     createAssertion(db, { citation_id: c2.id, subject_type: 'person', subject_id: person2.id, attribute: 'name', value: 'B' });
 
     expect(getConflictsForPerson(db, person1.id)).toHaveLength(0);
+  });
+});
+
+describe('proof summary', () => {
+  it('generates a proof summary from accepted assertions', () => {
+    const source = createSource(db, { title: 'Birth Register 1838', source_type: 'vital_record' });
+    const citation = createCitation(db, { source_id: source.id, page: 'p. 42' });
+    const person = createPerson(db, { sex: 'M' });
+
+    createAssertion(db, {
+      citation_id: citation.id,
+      subject_type: 'person',
+      subject_id: person.id,
+      attribute: 'birth_date',
+      value: '1838-03-15',
+      value_original: '15 Mars 1838',
+      is_accepted: true,
+      confidence: 3,
+      notes: 'Primary source, original document',
+    });
+
+    // Not accepted — should not appear in summary
+    createAssertion(db, {
+      citation_id: citation.id,
+      subject_type: 'person',
+      subject_id: person.id,
+      attribute: 'name',
+      value: 'Erik',
+      is_accepted: false,
+    });
+
+    const summary = generateProofSummary(db, person.id);
+    expect(summary.person_id).toBe(person.id);
+    expect(summary.items).toHaveLength(1);
+    expect(summary.items[0].attribute).toBe('birth_date');
+    expect(summary.items[0].accepted_value).toBe('1838-03-15');
+    expect(summary.items[0].source_title).toBe('Birth Register 1838');
+    expect(summary.items[0].citation_page).toBe('p. 42');
+    expect(summary.items[0].confidence).toBe(3);
+    expect(summary.items[0].notes).toBe('Primary source, original document');
+  });
+
+  it('includes event assertions for person events', () => {
+    const source = createSource(db, { title: 'Census 1880' });
+    const citation = createCitation(db, { source_id: source.id });
+    const person = createPerson(db, {});
+    const event = createEvent(db, { event_type: 'census', date_type: 'exact' });
+    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+
+    createAssertion(db, {
+      citation_id: citation.id,
+      subject_type: 'event',
+      subject_id: event.id,
+      attribute: 'date_value',
+      value: '1880-06-01',
+      is_accepted: true,
+    });
+
+    const summary = generateProofSummary(db, person.id);
+    expect(summary.items).toHaveLength(1);
+    expect(summary.items[0].attribute).toBe('date_value');
+  });
+
+  it('returns empty items when no accepted assertions exist', () => {
+    const person = createPerson(db, {});
+    const summary = generateProofSummary(db, person.id);
+    expect(summary.items).toHaveLength(0);
+    expect(summary.conflicts).toHaveLength(0);
   });
 });

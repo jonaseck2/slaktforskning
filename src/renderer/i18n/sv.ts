@@ -61,6 +61,9 @@ export default {
     deathPlace: 'Dödsort',
     showingOf: 'Visar {shown} av {total} personer',
     loadMore: 'Ladda fler',
+    filterAll: 'Alla',
+    filterUnsourced: 'Utan källa',
+    allSourced: 'Alla personer har minst en källhänvisning.',
   },
   personDetail: {
     deceased: 'Avliden',
@@ -518,6 +521,10 @@ export default {
     accepted: 'Godkänt',
     rejected: 'Avvisat',
     source: 'Källa',
+    generateProof: 'Generera bevissammanfattning',
+    proofTitle: 'Bevissammanfattning — Godkända påståenden',
+    noAccepted: 'Inga påståenden har markerats som godkända ännu.',
+    unresolvedNote: '{count} olöst(a) konflikt(er) kvarstår — lös innan slutsatser fastställs.',
     attributes: {
       date_value: 'Datum',
       date_original: 'Originaldatum',

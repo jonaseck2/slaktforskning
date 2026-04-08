@@ -94,6 +94,69 @@ export function getConflicts(db: Database): ConflictGroup[] {
   });
 }
 
+export interface ProofSummaryItem {
+  attribute: string;
+  accepted_value: string;
+  value_original: string;
+  source_title: string;
+  citation_page: string;
+  confidence: number;
+  evidence_type: string | null;
+  notes: string;
+}
+
+export interface ProofSummary {
+  person_id: string;
+  items: ProofSummaryItem[];
+  conflicts: ConflictGroup[];
+}
+
+export function generateProofSummary(db: Database, personId: string): ProofSummary {
+  // Get all accepted assertions about this person and their events
+  const personAssertions = queryAll<Assertion & { is_accepted: number }>(db, `
+    SELECT a.* FROM assertions a
+    WHERE a.subject_type = 'person' AND a.subject_id = ? AND a.is_accepted = 1
+    ORDER BY a.attribute, a.created_at
+  `, [personId]).map(r => ({ ...r, is_accepted: !!r.is_accepted }));
+
+  // Get event assertions for events this person participates in
+  const eventAssertions = queryAll<Assertion & { is_accepted: number }>(db, `
+    SELECT a.* FROM assertions a
+    JOIN event_participants ep ON ep.event_id = a.subject_id AND a.subject_type = 'event'
+    WHERE ep.person_id = ? AND a.is_accepted = 1
+    ORDER BY a.attribute, a.created_at
+  `, [personId]).map(r => ({ ...r, is_accepted: !!r.is_accepted }));
+
+  const allAccepted = [...personAssertions, ...eventAssertions];
+
+  // Resolve source info for each assertion
+  const items: ProofSummaryItem[] = [];
+  for (const a of allAccepted) {
+    const citRow = queryOne<{ source_id: string; page: string }>(db, `
+      SELECT source_id, page FROM citations WHERE id = ?
+    `, [a.citation_id]);
+    let sourceTitle = '';
+    if (citRow) {
+      const src = queryOne<{ title: string }>(db, `SELECT title FROM sources WHERE id = ?`, [citRow.source_id]);
+      sourceTitle = src?.title ?? '';
+    }
+    items.push({
+      attribute: a.attribute,
+      accepted_value: a.value,
+      value_original: a.value_original,
+      source_title: sourceTitle,
+      citation_page: citRow?.page ?? '',
+      confidence: a.confidence,
+      evidence_type: a.evidence_type,
+      notes: a.notes,
+    });
+  }
+
+  const conflicts = getConflictsForPerson(db, personId);
+
+  return { person_id: personId, items, conflicts };
+}
+
 export function getConflictsForPerson(db: Database, personId: string): ConflictGroup[] {
   // Conflicts on person-level assertions
   const personConflicts = getConflicts(db).filter(

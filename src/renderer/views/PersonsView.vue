@@ -7,8 +7,13 @@
       </div>
     </div>
 
+    <div class="filter-chips">
+      <button :class="['chip', { active: filter === 'all' }]" @click="setFilter('all')">{{ $t('persons.filterAll') }}</button>
+      <button :class="['chip', { active: filter === 'unsourced' }]" @click="setFilter('unsourced')">{{ $t('persons.filterUnsourced') }}</button>
+    </div>
+
     <div v-if="persons.length === 0 && !loading" class="empty">
-      {{ $t('persons.emptyState') }}
+      {{ filter === 'unsourced' ? $t('persons.allSourced') : $t('persons.emptyState') }}
     </div>
 
     <template v-else>
@@ -132,6 +137,7 @@ const offset = ref(0);
 const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
+const filter = ref<'all' | 'unsourced'>('all');
 
 let observer: IntersectionObserver | null = null;
 
@@ -165,7 +171,8 @@ async function load() {
   if (!window.api) return;
   loading.value = true;
   try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
+    const fn = filter.value === 'unsourced' ? window.api.persons.listUnsourcedPage : window.api.persons.listPage;
+    const result = await fn(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
     persons.value = result.persons;
     total.value = result.total;
     offset.value = PAGE_SIZE;
@@ -181,7 +188,8 @@ async function loadMore() {
   if (!window.api || loading.value) return;
   loading.value = true;
   try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
+    const fn = filter.value === 'unsourced' ? window.api.persons.listUnsourcedPage : window.api.persons.listPage;
+    const result = await fn(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
     persons.value = [...persons.value, ...result.persons];
     total.value = result.total;
     offset.value += PAGE_SIZE;
@@ -191,6 +199,12 @@ async function loadMore() {
   } finally {
     loading.value = false;
   }
+}
+
+function setFilter(f: 'all' | 'unsourced') {
+  if (filter.value === f) return;
+  filter.value = f;
+  load();
 }
 
 async function addPerson() {

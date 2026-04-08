@@ -30,6 +30,7 @@ const api = {
     deleteIdentifier: mutating((id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id)),
     listPage: (limit: number, offset: number) => ipcRenderer.invoke('persons:listPage', limit, offset),
     searchWithDetails: (query: string) => ipcRenderer.invoke('persons:searchWithDetails', query),
+    listUnsourcedPage: (limit: number, offset: number) => ipcRenderer.invoke('persons:listUnsourcedPage', limit, offset),
   },
   relationships: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data)),
@@ -150,6 +151,7 @@ const api = {
     delete: mutating((id: string) => ipcRenderer.invoke('assertions:delete', id)),
     conflicts: () => ipcRenderer.invoke('assertions:conflicts'),
     conflictsForPerson: (personId: string) => ipcRenderer.invoke('assertions:conflictsForPerson', personId),
+    proofSummary: (personId: string) => ipcRenderer.invoke('assertions:proofSummary', personId),
   },
   checks: {
     runAll: () => ipcRenderer.invoke('checks:runAll'),

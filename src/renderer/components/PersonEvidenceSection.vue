@@ -75,6 +75,42 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Proof Summary -->
+    <div v-if="allAssertions.length > 0 || conflicts.length > 0" class="proof-section">
+      <button class="btn-sm btn-proof" @click="generateSummary">
+        {{ $t('assertions.generateProof') }}
+      </button>
+      <div v-if="proofSummary" class="proof-content">
+        <h5>{{ $t('assertions.proofTitle') }}</h5>
+        <div v-if="proofSummary.items.length === 0" class="empty-hint">
+          {{ $t('assertions.noAccepted') }}
+        </div>
+        <table v-else class="data-table proof-table">
+          <thead>
+            <tr>
+              <th>{{ $t('assertions.attribute') }}</th>
+              <th>{{ $t('assertions.value') }}</th>
+              <th>{{ $t('assertions.source') }}</th>
+              <th>{{ $t('assertions.confidence') }}</th>
+              <th>{{ $t('assertions.notes') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, i) in proofSummary.items" :key="i">
+              <td>{{ $t('assertions.attributes.' + item.attribute, item.attribute) }}</td>
+              <td>{{ item.accepted_value }}</td>
+              <td class="td-source">{{ item.source_title }}<span v-if="item.citation_page">, {{ item.citation_page }}</span></td>
+              <td>{{ $t('confidenceLevels.' + item.confidence) }}</td>
+              <td class="td-notes">{{ item.notes }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="proofSummary.conflicts.length > 0" class="proof-conflicts">
+          <p class="proof-warning">{{ $t('assertions.unresolvedNote', { count: proofSummary.conflicts.length }) }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -181,7 +217,31 @@ async function removeAssertion(id: string) {
   }
 }
 
-watch(() => props.personId, load, { immediate: true });
+interface ProofSummaryData {
+  items: Array<{
+    attribute: string;
+    accepted_value: string;
+    source_title: string;
+    citation_page: string;
+    confidence: number;
+    notes: string;
+  }>;
+  conflicts: ConflictGroup[];
+}
+
+const proofSummary = ref<ProofSummaryData | null>(null);
+
+async function generateSummary() {
+  if (!window.api) return;
+  try {
+    proofSummary.value = (await window.api.assertions.proofSummary(props.personId)) as ProofSummaryData;
+  } catch (err) {
+    console.error('[PersonEvidenceSection] generateSummary failed:', err);
+    toast.error(t('errors.loadFailed'));
+  }
+}
+
+watch(() => props.personId, () => { proofSummary.value = null; load(); }, { immediate: true });
 
 defineExpose({ reload: load });
 </script>
@@ -253,5 +313,41 @@ defineExpose({ reload: load });
   border-color: var(--color-border);
   background: var(--color-bg);
   outline: none;
+}
+.proof-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+.btn-proof {
+  background: var(--color-primary, #2c3e50);
+  color: white;
+  padding: 4px 12px;
+}
+.proof-content {
+  margin-top: 10px;
+}
+.proof-content h5 {
+  margin: 0 0 8px;
+  font-size: var(--font-sm);
+}
+.proof-table {
+  font-size: var(--font-xs);
+}
+.td-source {
+  color: var(--color-text-subtle);
+  font-style: italic;
+}
+.td-notes {
+  font-size: var(--font-xs);
+  max-width: 200px;
+}
+.proof-warning {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: var(--color-warning-bg, #fef3c7);
+  border-radius: 4px;
+  font-size: var(--font-xs);
+  color: var(--color-warning-badge, #92400e);
 }
 </style>
