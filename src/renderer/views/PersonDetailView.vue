@@ -163,10 +163,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { onBeforeRouteLeave } from 'vue-router';
 import { useToast } from '../composables/useToast';
+import { useTTS } from '../composables/useTTS';
+import { narratePerson } from '../utils/narration';
 import AddResearchTaskModal from '../components/AddResearchTaskModal.vue';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
@@ -207,8 +210,10 @@ interface NameRow {
 const route = useRoute();
 const personId = route.params.id as string;
 const focusStore = useFocusStore();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
+const ttsEnabled = inject<Ref<boolean>>('ttsEnabled', ref(false));
+const { speak, stop } = useTTS();
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
@@ -268,10 +273,37 @@ async function load() {
     await loadPersonTasks();
     await loadPersonGroups();
     await loadProfilePic();
+    await autoNarrate();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
     toast.error(t('errors.loadFailed'));
   }
+}
+
+async function autoNarrate() {
+  if (!ttsEnabled.value) return;
+  const primaryName_ = names.value[0];
+  const name = primaryName_
+    ? ((primaryName_.given_name || '') + ' ' + (primaryName_.surname || '')).trim() || 'Unknown'
+    : 'Unknown';
+
+  let birthDate: string | undefined;
+  let birthPlace: string | undefined;
+  let deathDate: string | undefined;
+  let deathPlace: string | undefined;
+
+  try {
+    const events = await window.api.events.forPerson(personId) as Array<{ event_type: string; date_value: string | null; place_name?: string | null }>;
+    const birth = events.find(e => e.event_type === 'birth');
+    const death = events.find(e => e.event_type === 'death');
+    birthDate = birth?.date_value ?? undefined;
+    birthPlace = birth?.place_name ?? undefined;
+    deathDate = death?.date_value ?? undefined;
+    deathPlace = death?.place_name ?? undefined;
+  } catch { /* ignore */ }
+
+  const text = narratePerson({ name, birthDate, birthPlace, deathDate, deathPlace });
+  speak(text, locale.value);
 }
 
 async function loadProfilePic() {
@@ -320,6 +352,8 @@ onMounted(async () => {
     debounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
   });
 });
+
+onBeforeRouteLeave(() => { stop(); });
 </script>
 
 <style scoped>

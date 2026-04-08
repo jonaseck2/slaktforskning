@@ -239,7 +239,7 @@ Open any modal. Tab through it — focus should cycle within the modal. Press Es
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A && git commit -m "feat(a11y): add ARIA dialog roles and focus trap to BaseModal"
@@ -375,12 +375,12 @@ Add the same keys in Swedish:
   },
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "feat(a11y): add accessibility i18n keys for en and sv"
@@ -781,7 +781,7 @@ Add `aria-label` to back button and `aria-labelledby` to sections.
 
 Add `aria-label` to back button and `aria-labelledby` to sections.
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npm test`
 Expected: All tests pass
@@ -1331,7 +1331,7 @@ git add -A && git commit -m "feat(tts): add narration text generation utilities"
 - Modify: `src/renderer/views/RelationshipDetailView.vue`
 - Modify: `src/renderer/views/SourceDetailView.vue`
 
-- [ ] **Step 1: Add TTS button to PersonDetailView header**
+- [x] **Step 1: Add TTS button to PersonDetailView header**
 
 Import the composable and narration utility at the top of the script:
 
@@ -1373,15 +1373,15 @@ Add the button in the template header area, next to the "View in tree" button:
 </button>
 ```
 
-- [ ] **Step 2: Add TTS button to RelationshipDetailView**
+- [x] **Step 2: Add TTS button to RelationshipDetailView**
 
 Same pattern: import useTTS and narrateRelationship, add readAloud function and button.
 
-- [ ] **Step 3: Add TTS button to SourceDetailView**
+- [x] **Step 3: Add TTS button to SourceDetailView**
 
 Same pattern: import useTTS and narrateSource, add readAloud function and button.
 
-- [ ] **Step 4: Manually verify TTS works**
+- [x] **Step 4: Manually verify TTS works**
 
 Run: `npm start`
 Navigate to a person detail view. Click the speaker button. Verify speech output matches the person's data. Click again to stop.
@@ -1404,7 +1404,7 @@ git add -A && git commit -m "feat(tts): add read aloud button to person, relatio
 **Files:**
 - Modify: `src/renderer/App.vue`
 
-- [ ] **Step 1: Add TTS enable/disable setting**
+- [x] **Step 1: Add TTS enable/disable setting**
 
 Add a `ttsEnabled` ref with localStorage persistence in App.vue (following the existing darkMode/textSize pattern):
 
@@ -1433,7 +1433,7 @@ Add a toggle in the settings panel:
 </div>
 ```
 
-- [ ] **Step 2: Update detail views to respect ttsEnabled**
+- [x] **Step 2: Update detail views to respect ttsEnabled**
 
 In PersonDetailView (and other detail views), inject the setting:
 

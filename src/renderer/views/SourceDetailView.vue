@@ -102,13 +102,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, inject, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { onBeforeRouteLeave } from 'vue-router';
 import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
+import { useTTS } from '../composables/useTTS';
+import { narrateSource } from '../utils/narration';
 
 interface SourceData {
   id: string;
@@ -136,11 +139,13 @@ interface CitationRow {
   entityRoute?: string;
 }
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
 const sourceId = route.params.id as string;
+const ttsEnabled = inject<Ref<boolean>>('ttsEnabled', ref(false));
+const { speak, stop } = useTTS();
 
 const source = ref<SourceData | null>(null);
 const citations = ref<CitationRow[]>([]);
@@ -195,6 +200,16 @@ function truncate(text: string, max: number): string {
   return text.length > max ? text.slice(0, max) + '...' : text;
 }
 
+function autoNarrate() {
+  if (!ttsEnabled.value || !source.value) return;
+  const text = narrateSource({
+    title: source.value.title || t('common.unknown'),
+    author: source.value.author || undefined,
+    citationCount: citations.value.length,
+  });
+  speak(text, locale.value);
+}
+
 async function load() {
   if (!window.api) return;
   try {
@@ -218,6 +233,7 @@ async function load() {
         cit.entityRoute = resolved.route;
       }
     }));
+    autoNarrate();
   } catch (err) {
     console.error('[SourceDetailView] load failed:', err);
     toast.error(t('errors.loadFailed'));
@@ -255,6 +271,8 @@ function onCitationSaved() {
 }
 
 onMounted(load);
+
+onBeforeRouteLeave(() => { stop(); });
 </script>
 
 <style scoped>

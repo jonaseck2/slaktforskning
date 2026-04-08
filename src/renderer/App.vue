@@ -89,6 +89,11 @@
             <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Svenska</button>
             <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">English</button>
           </div>
+          <div class="settings-group-label">{{ $t('a11y.readAloud') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('a11y.readAloud')">
+            <button :class="['settings-option', { active: ttsEnabled }]" role="radio" :aria-checked="String(ttsEnabled)" @click="setTtsEnabled(true)">{{ $t('common.yes') }}</button>
+            <button :class="['settings-option', { active: !ttsEnabled }]" role="radio" :aria-checked="String(!ttsEnabled)" @click="setTtsEnabled(false)">{{ $t('common.no') }}</button>
+          </div>
         </div>
       </div>
     </nav>
@@ -107,19 +112,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { useFocusStore } from './stores/focus';
 import { useDataVersionStore } from './stores/dataVersion';
+import { useTTS } from './composables/useTTS';
 import ToastNotification from './components/ToastNotification.vue';
 
 const router = useRouter();
 const { locale } = useI18n();
 const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
+const ttsEnabled = ref(localStorage.getItem('slaktforskning-tts') !== 'false');
+const tts = useTTS();
+
+function setTtsEnabled(val: boolean) {
+  ttsEnabled.value = val;
+  localStorage.setItem('slaktforskning-tts', String(val));
+  if (!val) tts.stop();
+}
+
+provide('ttsEnabled', ttsEnabled);
+provide('tts', tts);
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);

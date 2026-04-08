@@ -86,15 +86,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, inject, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { onBeforeRouteLeave } from 'vue-router';
 import PersonPicker from '../components/PersonPicker.vue';
 import EventList from '../components/EventList.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useToast } from '../composables/useToast';
+import { useTTS } from '../composables/useTTS';
+import { narrateRelationship } from '../utils/narration';
 
 interface RelData {
   id: string;
@@ -105,11 +108,13 @@ interface RelData {
   notes: string;
 }
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 const route = useRoute();
 const relId = route.params.id as string;
 const focusStore = useFocusStore();
+const ttsEnabled = inject<Ref<boolean>>('ttsEnabled', ref(false));
+const { speak, stop } = useTTS();
 
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
@@ -136,12 +141,37 @@ function selectPerson(person: { id: string; given_name: string; surname: string;
   focusStore.set(person.id, name);
 }
 
+async function resolvePersonName(personId: string | null): Promise<string> {
+  if (!personId) return t('common.unknown');
+  try {
+    const names = await window.api.persons.getNames(personId) as Array<{ given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number }>;
+    if (names.length === 0) return t('common.unknown');
+    const n = names[0];
+    return fullNameParts(n.given_name ?? null, n.surname ?? null, n.preferred_name ?? null, n.nickname ?? null).map(p => p.text).join('').trim() || t('common.unknown');
+  } catch { return t('common.unknown'); }
+}
+
+async function autoNarrate() {
+  if (!ttsEnabled.value || !relationship.value) return;
+  const [person1Name, person2Name] = await Promise.all([
+    resolvePersonName(relationship.value.person1_id),
+    resolvePersonName(relationship.value.person2_id),
+  ]);
+  const text = narrateRelationship({
+    type: relationship.value.type,
+    person1Name,
+    person2Name,
+  });
+  speak(text, locale.value);
+}
+
 async function load() {
   if (!window.api) return;
   try {
     relationship.value = (await window.api.relationships.get(relId)) as RelData | null;
     if (!relationship.value) return;
     notesText.value = relationship.value.notes || '';
+    await autoNarrate();
   } catch (err) {
     console.error('[RelationshipDetailView] load failed:', err);
     toast.error(t('errors.loadFailed'));
@@ -177,6 +207,8 @@ async function saveNotes() {
 }
 
 onMounted(load);
+
+onBeforeRouteLeave(() => { stop(); });
 </script>
 
 <style scoped>
