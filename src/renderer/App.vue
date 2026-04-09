@@ -75,8 +75,9 @@
         <div v-if="isSettingsOpen" ref="settingsPanelRef" class="settings-panel">
           <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
-            <button :class="['settings-option', { active: !darkMode }]" role="radio" :aria-checked="String(!darkMode)" @click="setDarkMode(false)">☀ {{ $t('settings.light') }}</button>
-            <button :class="['settings-option', { active: darkMode }]" role="radio" :aria-checked="String(darkMode)" @click="setDarkMode(true)">🌙 {{ $t('settings.dark') }}</button>
+            <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀ {{ $t('settings.light') }}</button>
+            <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙 {{ $t('settings.dark') }}</button>
+            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">{{ $t('settings.highContrast') }}</button>
           </div>
           <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
@@ -91,8 +92,9 @@
           </div>
           <div class="settings-group-label">{{ $t('a11y.readAloud') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('a11y.readAloud')">
-            <button :class="['settings-option', { active: ttsEnabled }]" role="radio" :aria-checked="String(ttsEnabled)" @click="setTtsEnabled(true)">{{ $t('common.yes') }}</button>
-            <button :class="['settings-option', { active: !ttsEnabled }]" role="radio" :aria-checked="String(!ttsEnabled)" @click="setTtsEnabled(false)">{{ $t('common.no') }}</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" @click="screenReader.setMode('off')">{{ $t('settings.off') }}</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" @click="screenReader.setMode('narrate')">{{ $t('settings.narrate') }}</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" @click="screenReader.setMode('screenReader')">{{ $t('settings.screenReaderMode') }}</button>
           </div>
         </div>
       </div>
@@ -112,38 +114,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted, provide } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, nextTick, onMounted, onUnmounted, provide, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { useFocusStore } from './stores/focus';
 import { useDataVersionStore } from './stores/dataVersion';
 import { useTTS } from './composables/useTTS';
+import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { locale } = useI18n();
 const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
-const ttsEnabled = ref(localStorage.getItem('slaktforskning-tts') !== 'false');
 const tts = useTTS();
+const screenReader = useScreenReaderMode();
 
-function setTtsEnabled(val: boolean) {
-  ttsEnabled.value = val;
-  localStorage.setItem('slaktforskning-tts', String(val));
-  if (!val) tts.stop();
+type Appearance = 'light' | 'dark' | 'contrast';
+const appearance = ref<Appearance>(
+  (localStorage.getItem('slaktforskning-appearance') as Appearance) ||
+  (localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light')
+);
+
+function setAppearance(value: Appearance) {
+  appearance.value = value;
+  localStorage.setItem('slaktforskning-appearance', value);
+  document.documentElement.classList.remove('dark', 'high-contrast');
+  if (value === 'dark') document.documentElement.classList.add('dark');
+  if (value === 'contrast') document.documentElement.classList.add('high-contrast');
 }
 
-provide('ttsEnabled', ttsEnabled);
+provide('ttsEnabled', screenReader.isTtsEnabled);
 provide('tts', tts);
+provide('screenReader', screenReader);
+
+watch(() => route.path, () => {
+  if (screenReader.isScreenReader.value) {
+    const routeMap: Record<string, string> = {
+      '/': 'persons',
+      '/relationships': 'relationships',
+      '/sources': 'sources',
+      '/places': 'places',
+      '/research-tasks': 'tasks',
+      '/visualisering': 'visualization',
+      '/quality': 'quality',
+      '/database': 'database',
+      '/search': 'search',
+    };
+    const name = routeMap[route.path] ?? route.path;
+    screenReader.announceRoute(name);
+  }
+});
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
 const currentDbName = ref('');
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
-const darkMode = ref(localStorage.getItem('darkMode') === 'true');
 const isSettingsOpen = ref(false);
 const settingsPanelRef = ref<HTMLElement | null>(null);
 
@@ -152,16 +182,6 @@ function toggleSettings() {
   if (isSettingsOpen.value) {
     nextTick(() => settingsPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' }));
   }
-}
-
-function applyDarkMode() {
-  document.documentElement.classList.toggle('dark', darkMode.value);
-}
-
-function setDarkMode(on: boolean) {
-  darkMode.value = on;
-  localStorage.setItem('darkMode', String(on));
-  applyDarkMode();
 }
 
 const RAW_TEXT_SIZE = localStorage.getItem('textSize');
@@ -238,8 +258,9 @@ async function loadQualityBadge() {
 }
 
 onMounted(() => {
-  applyDarkMode();
+  setAppearance(appearance.value);
   applyTextSize();
+  screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
   loadDbName();
   loadQualityBadge();

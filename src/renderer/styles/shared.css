@@ -663,6 +663,113 @@
   html.dark .confidence-1 { background: #78350f; color: #fde68a; }
 }
 
+/* === High Contrast Theme === */
+@media screen {
+  html.high-contrast {
+    --color-primary:        #005fcc;
+    --color-primary-hover:  #004499;
+    --color-bg:             #000000;
+    --color-bg-subtle:      #111111;
+    --color-bg-muted:       #111111;
+    --color-bg-table-head:  #1a1a1a;
+    --color-border:         #ffffff;
+    --color-border-input:   #ffffff;
+    --color-border-chip:    #cccccc;
+    --color-text:           #ffffff;
+    --color-text-muted:     #e0e0e0;
+    --color-text-subtle:    #cccccc;
+    --color-text-faint:     #aaaaaa;
+    --color-danger-bg:      #5c0000;
+    --color-danger-text:    #ff6666;
+    --color-danger-hover:   #7a0000;
+    --color-link:           #66aaff;
+    --color-success-bg:     #003300;
+    --color-success-text:   #00ff00;
+    --color-row-hover:      #333333;
+    --color-sex-m-bg:       #001a4d;
+    --color-sex-m-text:     #99ccff;
+    --color-sex-f-bg:       #4d001a;
+    --color-sex-f-text:     #ffaacc;
+    --color-sex-u-bg:       #333333;
+    --color-sex-u-text:     #cccccc;
+    --color-event-badge-bg:   #001a4d;
+    --color-event-badge-text: #99ccff;
+  }
+
+  html.high-contrast :focus-visible {
+    outline: 3px solid #ffff00 !important;
+    outline-offset: 3px !important;
+  }
+
+  html.high-contrast a {
+    text-decoration: underline !important;
+  }
+
+  html.high-contrast body { background: #000000; color: #ffffff; }
+  html.high-contrast .content { background: #000000; }
+
+  html.high-contrast .data-table th { background: #1a1a1a; color: #cccccc; border-bottom-color: #ffffff; }
+  html.high-contrast .data-table td { border-bottom-color: #ffffff; color: #ffffff; }
+  html.high-contrast .clickable-row:hover { background: #333333; }
+
+  html.high-contrast input[type='text'],
+  html.high-contrast input[type='url'],
+  html.high-contrast input[type='number'],
+  html.high-contrast input[type='email'],
+  html.high-contrast textarea,
+  html.high-contrast select { background: #1a1a1a; color: #ffffff; border-color: #ffffff; }
+  html.high-contrast input::placeholder,
+  html.high-contrast textarea::placeholder { color: #aaaaaa; }
+
+  html.high-contrast .modal { background: #111111; color: #ffffff; box-shadow: 0 8px 32px rgba(0,0,0,0.9); }
+  html.high-contrast .modal-overlay { background: rgba(0,0,0,0.9); }
+  html.high-contrast .modal h3, html.high-contrast .modal h4 { color: #ffffff; }
+
+  html.high-contrast .btn-add { background: #005fcc; color: #ffffff; }
+  html.high-contrast .btn-add:hover { background: #004499; }
+  html.high-contrast .btn-cancel { background: #333333; color: #ffffff; }
+  html.high-contrast .btn-sm { background: #333333; color: #ffffff; }
+  html.high-contrast .btn-delete { background: #5c0000; color: #ff6666; }
+  html.high-contrast .btn-delete:hover { background: #7a0000; }
+
+  html.high-contrast .chip { background: #111111; border-color: #ffffff; color: #cccccc; }
+  html.high-contrast .chip:hover { background: #333333; }
+  html.high-contrast .chip.active { background: #005fcc; color: #ffffff; border-color: #ffffff; }
+
+  html.high-contrast .tab-bar { border-bottom-color: #ffffff; }
+  html.high-contrast .tab-btn { color: #cccccc; }
+  html.high-contrast .tab-btn:hover { color: #ffffff; }
+  html.high-contrast .tab-btn.active { color: #ffffff; border-bottom-color: #ffff00; }
+
+  html.high-contrast label { color: #e0e0e0; }
+  html.high-contrast h2, html.high-contrast h3, html.high-contrast h4 { color: #ffffff; }
+  html.high-contrast .section-header h4 { color: #ffffff; }
+  html.high-contrast .count-label { color: #aaaaaa; }
+  html.high-contrast .running-hint { color: #aaaaaa; }
+  html.high-contrast .empty { color: #aaaaaa; }
+  html.high-contrast .empty-hint { color: #aaaaaa; }
+
+  html.high-contrast .detail-section { border-color: #333333; }
+  html.high-contrast .person-link { color: #66aaff; }
+
+  html.high-contrast .picker-dropdown,
+  html.high-contrast .place-dropdown { background: #111111; border-color: #ffffff; }
+  html.high-contrast .picker-option:hover,
+  html.high-contrast .dropdown-item:hover { background: #333333; }
+  html.high-contrast .picker-name { color: #ffffff; }
+  html.high-contrast .picker-sex  { color: #cccccc; }
+  html.high-contrast .picker-clear { color: #aaaaaa; }
+  html.high-contrast .picker-clear:hover { color: #ffffff; }
+
+  html.high-contrast ::-webkit-scrollbar { background: #111111; }
+  html.high-contrast ::-webkit-scrollbar-thumb { background: #555555; border-radius: 4px; }
+}
+
+/* === Screen Reader Mode === */
+html.screen-reader h1:focus {
+  outline: none;
+}
+
 /* Reset dark mode overrides for print/PDF — dark backgrounds and light text
    look wrong on paper. printBackground: false means backgrounds won't render
    but text colors still apply, so headings would be near-white on white paper. */
