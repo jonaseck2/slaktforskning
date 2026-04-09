@@ -12,7 +12,7 @@ The model is inspired by **GEDCOM-X** conceptually (Relationship instead of Fami
 
 ```
 EVIDENCE LAYER
-  sources → citations → [assertions — schema present, UI deferred]
+  sources → citations
 
 CONCLUSION LAYER
   persons, relationships, events, places
@@ -257,25 +257,6 @@ Research workflow tags for persons.
 | link_type | INTEGER | Optional — e.g. primary photo |
 | created_at | TEXT | datetime |
 
-### assertions *(schema present, UI deferred)*
-The GPS layer between a citation and a conclusion. Records what a specific citation actually claims, separately from what the researcher has concluded. When assertions conflict across citations, the researcher decides which to accept.
-
-Schema is created at startup (idempotent DDL) but no UI or API functions expose it yet. This future-proofs the schema without blocking current development.
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | TEXT PK | UUID v4 |
-| citation_id | TEXT FK | → citations, CASCADE DELETE |
-| subject_type | TEXT | 'person' \| 'relationship' \| 'event' \| 'place' |
-| subject_id | TEXT | FK to the relevant table |
-| attribute | TEXT | 'birth_date' \| 'name' \| 'residence' \| 'relationship_type' \| 'sex' \| etc. |
-| value | TEXT | The asserted value |
-| value_original | TEXT | Verbatim from source |
-| confidence | INTEGER | 0–3 |
-| is_accepted | INTEGER | 1 = researcher accepts this as basis for conclusion |
-| notes | TEXT | Researcher's analysis |
-| created_at | TEXT | datetime |
-
 ---
 
 ## Unsourced Indicators
@@ -301,10 +282,10 @@ persons ──── person_names (many)
 relationships ──── [person1, person2] ──► persons
               └─── event_participants (via relationship_id on events)
 
-sources ──── citations ──────────────────┬──► events
-                         │               ├──► persons
-                         │               ├──► relationships
-                         └──► assertions └──► places
+sources ──── citations ──┬──► events
+                         ├──► persons
+                         ├──► relationships
+                         └──► places
 ```
 
 ---

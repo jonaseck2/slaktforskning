@@ -8,7 +8,7 @@ A cross-platform desktop genealogy application. Store, organize, and research yo
 - **Multi-window** — Open multiple windows to work on different parts of your tree simultaneously
 - **Cross-platform** — Runs on macOS, Windows, and Linux
 - **Agent-friendly** — Built-in MCP server lets AI agents read and write genealogy data
-- **Research-grade data model** — Supports the Genealogical Proof Standard with proper source → citation → assertion separation
+- **Research-grade data model** — Proper source → citation → assertion separation
 - **GEDCOM-aligned events** — Birth, death, marriage, divorce, christening, burial, census, immigration, emigration, naturalization, occupation, residence, education, military, and more
 - **Flexible dates** — Exact, approximate, before, after, between, and unknown date types with original source text preserved
 - **Source citations** — Link sources to events or persons with confidence levels (0–3) and verbatim transcriptions
