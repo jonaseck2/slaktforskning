@@ -11,7 +11,7 @@
           <th>{{ $t('common.type') }}</th>
           <th class="th-date">{{ $t('events.date') }}</th>
           <th>{{ $t('events.description') }}</th>
-          <th v-if="!props.readonly" class="th-actions">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="th-actions th-shrink">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>

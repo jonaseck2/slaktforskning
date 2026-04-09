@@ -372,7 +372,7 @@ onMounted(async () => {
   if (screenReader.isScreenReader.value) {
     cleanupHotkeys = screenReader.registerHotkeys([
       { key: '1', action: () => jumpToSection('section-names'), description: t('personDetail.names') },
-      { key: '2', action: () => jumpToSection('section-events'), description: t('personDetail.events') },
+      { key: '2', action: () => jumpToSection('section-events'), description: t('events.title') },
       { key: '3', action: () => jumpToSection('section-relationships'), description: t('personDetail.relationships') },
       { key: '4', action: () => jumpToSection('section-media'), description: t('media.title') },
       { key: '5', action: () => jumpToSection('section-identifiers'), description: t('identifiers.title') },

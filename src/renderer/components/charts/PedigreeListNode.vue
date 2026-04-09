@@ -4,7 +4,7 @@
       {{ ((person.givenName || '') + ' ' + (person.surname || '')).trim() || $t('common.unknown') }}
     </router-link>
     <span v-if="person?.birthDate || person?.deathDate" class="dates">
-      ({{ person.birthDate || '?' }}–{{ person.deathDate || '' }})
+      ( {{ person.birthDate || '?' }} – {{ person.deathDate || '' }} )
     </span>
     <span v-if="!person" class="unknown">{{ $t('common.unknown') }}</span>
     <ul v-if="father || mother">

@@ -16,11 +16,11 @@ This skill helps design robust data schemas for genealogy applications.
 **Source-first, evidence-based genealogy.** Every claim should be traceable to a source. The model separates evidence (what sources say) from conclusions (what the researcher believes):
 
 ```
-EVIDENCE LAYER:   sources → citations → assertions
+EVIDENCE LAYER:   sources → citations
 CONCLUSION LAYER: persons, relationships, events, places
 ```
 
-This three-layer model (Source → Citation → Assertion) follows the Genealogical Proof Standard and is what separates research-grade genealogy from simple tree builders.
+This model (Source → Citation → Event/Person) separates provenance from conclusions and is what separates research-grade genealogy from simple tree builders.
 
 ---
 
@@ -86,9 +86,6 @@ Links a source (at a specific location) to any conclusion-layer entity. One cita
 - Transcription (verbatim text)
 - FK to event, person, relationship, and/or place (all nullable, SET NULL on delete)
 
-### Assertion *(schema present, UI deferred)*
-A specific claim derived from a citation — separates "what the source says" from "what we conclude." When assertions conflict across citations, the researcher decides which to accept.
-
 ---
 
 ## Tricky edge cases
@@ -96,7 +93,7 @@ A specific claim derived from a citation — separates "what the source says" fr
 - **Unknown parents:** Relationship can have person1 or person2 null (parent unknown)
 - **Same-sex couples:** person1/person2 have no gender assumption
 - **Plural marriages:** A person can be in multiple couple relationships
-- **Conflicting information:** Multiple assertions for the same fact is valid — evidence conflict is a research finding
+- **Conflicting information:** Multiple citations for the same fact is valid — evidence conflict is a research finding
 - **Patronymics:** Swedish pre-1963 surnames derived from father's given name (Erik → son: Eriksson, daughter: Eriksdotter). Model with `patronymic_base` + `name_qualifier`
 - **Noble particles:** "von", "af", "de la" → `name_prefix`
 - **Living persons:** `living` flag suppresses details in public-facing views
