@@ -12,6 +12,11 @@
     <tbody>
       <template v-for="task in tasks" :key="task.id">
         <tr
+          v-narrate="() => narrateTaskRow({
+            priority: task.priority,
+            status: task.status,
+            task: task.task,
+          }, t)"
           class="clickable-row"
           tabindex="0"
           role="button"
@@ -20,6 +25,8 @@
           @click="toggleExpand(task)"
           @keydown.enter="toggleExpand(task)"
           @keydown.space.prevent="toggleExpand(task)"
+          @keydown.down.prevent="focusNextRow($event)"
+          @keydown.up.prevent="focusPrevRow($event)"
         >
           <td><span :class="['priority-badge', 'priority-' + task.priority]">{{ task.priority }}</span></td>
           <td>
@@ -100,8 +107,10 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
 import PersonPicker from './PersonPicker.vue';
+import { narrateTaskRow } from '../utils/screenReaderNarration';
 
 export interface ResearchTaskRow {
   id: string;
@@ -125,6 +134,20 @@ withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{ updated: [] }>();
+
+const { t } = useI18n();
+
+function focusNextRow(e: KeyboardEvent): void {
+  // Skip expanded rows — find next sibling that is a main clickable row
+  let el = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  while (el && !el.matches('tr[tabindex]')) el = el.nextElementSibling as HTMLElement | null;
+  if (el) el.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  let el = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  while (el && !el.matches('tr[tabindex]')) el = el.previousElementSibling as HTMLElement | null;
+  if (el) el.focus();
+}
 
 const STATUS_CYCLE: Array<'open' | 'in_progress' | 'done' | 'stopped'> = ['open', 'in_progress', 'done', 'stopped'];
 

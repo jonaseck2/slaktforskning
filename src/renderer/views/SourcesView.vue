@@ -5,7 +5,7 @@
       <button class="btn-add" @click="showAddForm = true">{{ $t('sources.addSource') }}</button>
     </div>
     <p class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
-    <div v-if="sourceList.length === 0" class="empty">
+    <div v-if="sourceList.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('sources.title') })">
       {{ $t('sources.emptyState') }}
     </div>
     <table v-else class="data-table">
@@ -21,6 +21,11 @@
         <tr
           v-for="source in sourceList"
           :key="source.id"
+          v-narrate="() => narrateSourceRow({
+            title: source.title || '',
+            source_type: source.source_type || '',
+            citation_count: 0,
+          }, t)"
           class="clickable-row"
           tabindex="0"
           role="button"
@@ -28,6 +33,8 @@
           @click="goToDetail(source.id)"
           @keydown.enter="goToDetail(source.id)"
           @keydown.space.prevent="goToDetail(source.id)"
+          @keydown.down.prevent="focusNextRow($event)"
+          @keydown.up.prevent="focusPrevRow($event)"
         >
           <td>{{ source.title }}</td>
           <td>{{ source.author || '—' }}</td>
@@ -87,6 +94,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
+import { narrateSourceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 const dataVersionStore = useDataVersionStore();
@@ -160,6 +168,15 @@ async function removeSource(id: string) {
     console.error('[SourcesView] removeSource failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
+}
+
+function focusNextRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
 }
 
 function goToDetail(id: string) {
