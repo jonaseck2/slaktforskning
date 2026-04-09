@@ -13,8 +13,8 @@
         @click="activeTypeFilter = f.value"
       >{{ f.label }}</button>
     </div>
-    <div v-if="places.length === 0" class="empty">{{ $t('places.none') }}</div>
-    <div v-else-if="filteredPlaces.length === 0" class="empty">{{ $t('places.noMatchingFilter') }}</div>
+    <div v-if="places.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('places.title') })">{{ $t('places.none') }}</div>
+    <div v-else-if="filteredPlaces.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('places.title') })">{{ $t('places.noMatchingFilter') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -26,6 +26,11 @@
         <tr
           v-for="place in filteredPlaces"
           :key="place.id"
+          v-narrate="() => narratePlaceRow({
+            name: place.name || '',
+            place_type: place.place_type || '',
+            path: '',
+          }, t)"
           class="clickable-row"
           tabindex="0"
           role="button"
@@ -33,6 +38,8 @@
           @click="$router.push('/places/' + place.id)"
           @keydown.enter="$router.push('/places/' + place.id)"
           @keydown.space.prevent="$router.push('/places/' + place.id)"
+          @keydown.down.prevent="focusNextRow($event)"
+          @keydown.up.prevent="focusPrevRow($event)"
         >
           <td>{{ place.name }}</td>
           <td class="actions-cell">
@@ -75,6 +82,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
+import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
@@ -113,6 +121,15 @@ const filteredPlaces = computed(() =>
 const showAddForm = ref(false);
 
 const newPlace = reactive({ name: '', place_type: '' });
+
+function focusNextRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
 
 async function load() {
   places.value = (await window.api.places.list()) as PlaceRow[];

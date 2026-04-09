@@ -33,6 +33,13 @@
             <tr
               v-for="p in persons"
               :key="p.id"
+              v-narrate="() => narratePersonRow({
+                given_name: p.given_name || '',
+                surname: p.surname || '',
+                sex: p.sex || 'U',
+                event_count: 0,
+                relationship_count: 0,
+              }, t)"
               class="clickable-row"
               tabindex="0"
               role="button"
@@ -40,6 +47,8 @@
               @click="goToPerson(p)"
               @keydown.enter="goToPerson(p)"
               @keydown.space.prevent="goToPerson(p)"
+              @keydown.down.prevent="focusNextRow($event)"
+              @keydown.up.prevent="focusPrevRow($event)"
             >
               <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" /></td>
               <td>{{ p.sex }}</td>
@@ -64,6 +73,14 @@
             <tr
               v-for="r in relationships"
               :key="r.id"
+              v-narrate="() => narrateRelationshipRow({
+                type: r.type,
+                person1_given_name: r.person1_given_name || '',
+                person1_surname: r.person1_surname || '',
+                person2_given_name: r.person2_given_name || '',
+                person2_surname: r.person2_surname || '',
+                event_summary: '',
+              }, t)"
               class="clickable-row"
               tabindex="0"
               role="button"
@@ -71,6 +88,8 @@
               @click="router.push(`/relationships/${r.id}`)"
               @keydown.enter="router.push(`/relationships/${r.id}`)"
               @keydown.space.prevent="router.push(`/relationships/${r.id}`)"
+              @keydown.down.prevent="focusNextRow($event)"
+              @keydown.up.prevent="focusPrevRow($event)"
             >
               <td>{{ $t('relTypes.' + r.type) }}</td>
               <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" :nickname="r.person1_nickname ?? null" /></td>
@@ -95,6 +114,11 @@
             <tr
               v-for="s in sources"
               :key="s.id"
+              v-narrate="() => narrateSourceRow({
+                title: s.title || '',
+                source_type: s.source_type || '',
+                citation_count: 0,
+              }, t)"
               class="clickable-row"
               tabindex="0"
               role="button"
@@ -102,6 +126,8 @@
               @click="router.push(`/sources/${s.id}`)"
               @keydown.enter="router.push(`/sources/${s.id}`)"
               @keydown.space.prevent="router.push(`/sources/${s.id}`)"
+              @keydown.down.prevent="focusNextRow($event)"
+              @keydown.up.prevent="focusPrevRow($event)"
             >
               <td>{{ s.title || '—' }}</td>
               <td>{{ s.author || '—' }}</td>
@@ -121,6 +147,7 @@ import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
+import { narratePersonRow, narrateRelationshipRow, narrateSourceRow } from '../utils/screenReaderNarration';
 
 interface PersonResult {
   id: string;
@@ -152,7 +179,7 @@ interface SourceResult {
   source_type: string;
 }
 
-useI18n();
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const focusStore = useFocusStore();
@@ -165,6 +192,15 @@ const relationships = ref<RelationshipResult[]>([]);
 const sources = ref<SourceResult[]>([]);
 
 const totalResults = computed(() => persons.value.length + relationships.value.length + sources.value.length);
+
+function focusNextRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
 
 function goToPerson(p: PersonResult) {
   const name = fullNameParts(p.given_name ?? null, p.surname ?? null, p.preferred_name ?? null, p.nickname ?? null).map(pt => pt.text).join('');

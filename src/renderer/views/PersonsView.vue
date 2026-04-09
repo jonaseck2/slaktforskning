@@ -45,7 +45,7 @@
       </table>
     </template>
 
-    <div v-else-if="persons.length === 0 && !loading" class="empty">
+    <div v-else-if="persons.length === 0 && !loading" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('persons.title') })">
       {{ filter === 'unsourced' ? $t('persons.allSourced') : $t('persons.emptyState') }}
     </div>
 
@@ -70,6 +70,13 @@
           <tr
             v-for="person in persons"
             :key="person.id"
+            v-narrate="() => narratePersonRow({
+              given_name: person.given_name || '',
+              surname: person.surname || '',
+              sex: person.sex || 'U',
+              event_count: 0,
+              relationship_count: 0,
+            }, t)"
             class="clickable-row"
             tabindex="0"
             role="button"
@@ -77,6 +84,8 @@
             @click="goToDetail(person)"
             @keydown.enter="goToDetail(person)"
             @keydown.space.prevent="goToDetail(person)"
+            @keydown.down.prevent="focusNextRow($event)"
+            @keydown.up.prevent="focusPrevRow($event)"
           >
             <td>
               <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
@@ -156,6 +165,7 @@ import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
+import { narratePersonRow } from '../utils/screenReaderNarration';
 import PersonName from '../components/PersonName.vue';
 import MergePersonsModal from '../components/MergePersonsModal.vue';
 import { useFocusStore } from '../stores/focus';
@@ -336,6 +346,15 @@ async function removePerson(id: string) {
     console.error('[PersonsView] removePerson failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
+}
+
+function focusNextRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
 }
 
 function goToDetail(person: PersonListItem) {

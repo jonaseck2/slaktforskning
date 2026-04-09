@@ -27,7 +27,7 @@
         >{{ f.label }}</button>
       </div>
 
-      <div v-if="filteredResults.length === 0" class="empty">
+      <div v-if="filteredResults.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('quality.title') })">
         {{ $t('quality.noResults') }}
       </div>
 
@@ -50,6 +50,10 @@
           <tr
             v-for="(r, i) in filteredResults"
             :key="resultKey(r) + ':' + i"
+            v-narrate="() => narrateQualityRow({
+              severity: r.severity,
+              message: checkMessage(r),
+            }, t)"
             :class="['clickable-row', { 'row-ignored': isIgnored(r) }]"
             tabindex="0"
             role="button"
@@ -57,6 +61,8 @@
             @click="navigateTo(r)"
             @keydown.enter="navigateTo(r)"
             @keydown.space.prevent="navigateTo(r)"
+            @keydown.down.prevent="focusNextRow($event)"
+            @keydown.up.prevent="focusPrevRow($event)"
           >
             <td>
               <span :class="['severity-badge', 'badge-' + r.severity]">
@@ -92,6 +98,7 @@ import { ref, computed, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
+import { narrateQualityRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 
@@ -182,6 +189,15 @@ function checkMessage(r: QualityResult): string {
   }
   const translated = t(key, params);
   return translated !== key ? translated : r.message;
+}
+
+function focusNextRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
 }
 
 function navigateTo(r: QualityResult) {

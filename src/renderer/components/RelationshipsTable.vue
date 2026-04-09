@@ -13,6 +13,14 @@
       <tr
         v-for="rel in relationships"
         :key="rel.id"
+        v-narrate="() => narrateRelationshipRow({
+          type: rel.type,
+          person1_given_name: rel.person1_given_name || '',
+          person1_surname: rel.person1_surname || '',
+          person2_given_name: rel.person2_given_name || '',
+          person2_surname: rel.person2_surname || '',
+          event_summary: '',
+        }, t)"
         class="clickable-row"
         tabindex="0"
         role="button"
@@ -20,6 +28,8 @@
         @click="router.push('/relationships/' + rel.id)"
         @keydown.enter="router.push('/relationships/' + rel.id)"
         @keydown.space.prevent="router.push('/relationships/' + rel.id)"
+        @keydown.down.prevent="focusNextRow($event)"
+        @keydown.up.prevent="focusPrevRow($event)"
       >
         <td>
           <span v-if="roleLabel1(rel.type)" class="role-label">{{ roleLabel1(rel.type) }}</span>
@@ -77,6 +87,7 @@
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
+import { narrateRelationshipRow } from '../utils/screenReaderNarration';
 
 export interface RelRow {
   id: string;
@@ -100,6 +111,15 @@ defineEmits<{ delete: [id: string] }>();
 
 const { t } = useI18n();
 const router = useRouter();
+
+function focusNextRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
+function focusPrevRow(e: KeyboardEvent): void {
+  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
+  if (row?.matches('tr[tabindex]')) row.focus();
+}
 
 function roleLabel1(type: string): string {
   if (type === 'parent_child') return t('relTypes.parent');
