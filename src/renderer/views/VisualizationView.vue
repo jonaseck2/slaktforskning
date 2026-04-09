@@ -53,6 +53,7 @@
           v-else-if="activeTab === 'pedigree'"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
+          :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           @navigate="navigateTo"
           @reload="reloadChart"
         />
@@ -98,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, inject, watch, onMounted, onActivated, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import type { Ref } from 'vue';
@@ -111,6 +112,10 @@ import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
+import { useScreenReaderMode } from '../composables/useScreenReaderMode';
+import { useChartNavigation } from '../composables/useChartNavigation';
+import { fetchPedigreeTree, fetchHourglassTree } from '../utils/chartData';
+import type { Hotkey } from '../composables/useHotkeyRegistry';
 
 interface Person { id: string; sex: 'M' | 'F' | 'U'; living: boolean; }
 interface PersonWithName extends Person { given_name: string; surname: string; }
@@ -214,6 +219,80 @@ async function load() {
   // Show focal person in panel unless user has already selected a different node
   if (!selectedPersonId.value) selectedPersonId.value = id;
 }
+
+// --- Screen reader chart navigation ---
+const screenReader = useScreenReaderMode();
+
+const chartNavFocusedPerson = ref<string | null>(null);
+
+const chartNav = useChartNavigation({
+  speak: (text: string) => screenReader.speak(text),
+  t: t as (key: string, params?: Record<string, string | number>) => string,
+  onNavigate: (pid: string) => navigateTo(pid),
+  onFocusChanged: (pid: string) => {
+    selectNode(pid);
+    chartNavFocusedPerson.value = pid;
+  },
+});
+
+// Register arrow-key hotkeys when in screen reader mode
+let unregisterChartHotkeys: (() => void) | null = null;
+
+function registerChartHotkeys() {
+  if (unregisterChartHotkeys) return; // already registered
+  const hotkeys: Hotkey[] = [
+    { key: 'ArrowUp', action: () => chartNav.moveUp(), description: t('screenReader.chartFather', { name: '', summary: '' }).split(':')[0] },
+    { key: 'ArrowDown', action: () => chartNav.moveDown(), description: t('screenReader.chartChild', { name: '', summary: '' }).split(':')[0] },
+    { key: 'ArrowLeft', action: () => chartNav.moveLeft(), description: t('screenReader.chartMother', { name: '', summary: '' }).split(':')[0] },
+    { key: 'ArrowRight', action: () => chartNav.moveRight(), description: t('screenReader.chartSpouse', { name: '', summary: '' }).split(':')[0] },
+    {
+      key: 'Enter',
+      action: () => {
+        const pid = chartNav.currentPersonId();
+        if (pid) navigateTo(pid);
+      },
+      description: t('screenReader.chartOpening', { name: '' }),
+    },
+  ];
+  unregisterChartHotkeys = screenReader.registerHotkeys(hotkeys);
+}
+
+function unregisterChartNav() {
+  if (unregisterChartHotkeys) {
+    unregisterChartHotkeys();
+    unregisterChartHotkeys = null;
+  }
+}
+
+// Initialize chart navigation when tree data would be available
+async function initChartNav() {
+  if (!screenReader.isScreenReader.value || !personId.value) return;
+  try {
+    if (activeTab.value === 'pedigree') {
+      const tree = await fetchPedigreeTree(personId.value);
+      chartNav.initPedigree(tree);
+      registerChartHotkeys();
+    } else if (activeTab.value === 'hourglass') {
+      const tree = await fetchHourglassTree(personId.value);
+      chartNav.initHourglass(tree);
+      registerChartHotkeys();
+    }
+  } catch {
+    // ignore — chart may not have loaded yet
+  }
+}
+
+// Re-init navigation when tab or person changes in screen reader mode
+watch([() => activeTab.value, () => personId.value, () => screenReader.isScreenReader.value], () => {
+  unregisterChartNav();
+  if (screenReader.isScreenReader.value && (activeTab.value === 'pedigree' || activeTab.value === 'hourglass')) {
+    initChartNav();
+  }
+});
+
+onUnmounted(() => {
+  unregisterChartNav();
+});
 
 // When App.vue auto-sets the focus store after this view is already mounted, navigate to that person
 watch(() => focusStore.personId, (newId) => {
