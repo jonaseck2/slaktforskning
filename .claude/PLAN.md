@@ -96,6 +96,9 @@ See [plan](plans/2026-04-08-macos26-electron-crash.md). `npm start` works; only 
 
 Define primary user objectives, map to current click counts, identify highest-friction paths, produce prioritized improvement backlog. Use `interview-synthesis` skill if user research data is available.
 
+#### Screen Reader Mode (WCAG 2.1 AAA + TTS) [feature]
+Standalone screen reader for visually impaired genealogists. See [plan](plans/2026-04-09-screen-reader-mode.md), [design spec](plans/2026-04-09-screen-reader-mode-design.md).
+
 #### Polish [feature]
 - [ ] Undo/redo
 
