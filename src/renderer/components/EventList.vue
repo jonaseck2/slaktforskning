@@ -2,7 +2,7 @@
   <div class="event-list">
     <div v-if="!props.hideHeader" class="section-header">
       <h4>{{ $t('events.title') }}</h4>
-      <button v-if="!props.readonly" type="button" class="btn-add" @click="showForm = true">{{ $t('events.addEvent') }}</button>
+      <button v-if="!props.readonly" type="button" class="btn-add" @click="showForm = true"><span aria-hidden="true">+ </span>{{ $t('events.addEvent') }}</button>
     </div>
     <div v-if="events.length === 0" class="empty-hint">{{ $t('events.noEvents') }}</div>
     <table v-else class="data-table">

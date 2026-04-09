@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock speechSynthesis before importing
 const mockCancel = vi.fn();
@@ -33,7 +33,14 @@ Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', {
 });
 
 describe('useTTS', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it('should be importable', async () => {
     const mod = await import('../../src/renderer/composables/useTTS');
@@ -51,6 +58,7 @@ describe('useTTS', () => {
     const { speak } = useTTS();
     speak('Hello world', 'en');
     expect(mockCancel).toHaveBeenCalled();
+    vi.advanceTimersByTime(60);
     expect(mockSpeak).toHaveBeenCalled();
   });
 
@@ -65,6 +73,7 @@ describe('useTTS', () => {
     const { useTTS } = await import('../../src/renderer/composables/useTTS');
     const { speak } = useTTS();
     speak('Hej', 'sv');
+    vi.advanceTimersByTime(60);
     const utterance = mockSpeak.mock.calls[0][0];
     expect(utterance.voice?.lang || utterance.lang).toContain('sv');
   });

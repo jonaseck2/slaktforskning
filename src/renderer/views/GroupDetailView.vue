@@ -22,7 +22,7 @@
     <!-- Members -->
     <div class="members-header">
       <h4>{{ $t('groups.members') }} <span class="count">({{ members.length }})</span></h4>
-      <button v-if="!showAddMember" class="btn-add" @click="showAddMember = true">+ {{ $t('groups.addMember') }}</button>
+      <button v-if="!showAddMember" class="btn-add" @click="showAddMember = true"><span aria-hidden="true">+ </span>{{ $t('groups.addMember') }}</button>
     </div>
 
     <!-- Add member picker -->

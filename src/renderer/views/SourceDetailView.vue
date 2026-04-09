@@ -49,7 +49,7 @@
     <section class="detail-section" aria-labelledby="section-source-citations">
       <div class="section-header" tabindex="0" :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length">
         <h4 id="section-source-citations">{{ $t('sourceDetail.citations') }}</h4>
-        <button class="btn-add" @click="showCitationForm = true">{{ $t('sourceDetail.addCitation') }}</button>
+        <button class="btn-add" @click="showCitationForm = true"><span aria-hidden="true">+ </span>{{ $t('sourceDetail.addCitation') }}</button>
       </div>
       <div v-if="citations.length === 0" class="empty-hint">{{ $t('sourceDetail.noCitations') }}</div>
       <table v-else class="data-table">

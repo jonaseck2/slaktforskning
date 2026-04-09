@@ -77,7 +77,7 @@
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
             <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀ {{ $t('settings.light') }}</button>
             <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙 {{ $t('settings.dark') }}</button>
-            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">{{ $t('settings.highContrast') }}</button>
+            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁 {{ $t('settings.contrast') }}</button>
           </div>
           <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
@@ -127,7 +127,7 @@ import ToastNotification from './components/ToastNotification.vue';
 
 const router = useRouter();
 const route = useRoute();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
@@ -139,12 +139,17 @@ const appearance = ref<Appearance>(
   (localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light')
 );
 
+const APPEARANCE_I18N = { light: 'settings.lightMode', dark: 'settings.darkMode', contrast: 'settings.contrastMode' } as const;
+
 function setAppearance(value: Appearance) {
   appearance.value = value;
   localStorage.setItem('slaktforskning-appearance', value);
   document.documentElement.classList.remove('dark', 'high-contrast');
   if (value === 'dark') document.documentElement.classList.add('dark');
   if (value === 'contrast') document.documentElement.classList.add('high-contrast');
+  if (screenReader.isTtsEnabled.value) {
+    tts.speak(t(APPEARANCE_I18N[value]), locale.value);
+  }
 }
 
 provide('ttsEnabled', screenReader.isTtsEnabled);
@@ -195,10 +200,15 @@ function applyTextSize() {
   if (textSize.value === 'large') document.documentElement.classList.add('text-large');
 }
 
+const TEXT_SIZE_I18N = { small: 'settings.textSizeSmall', medium: 'settings.textSizeMedium', large: 'settings.textSizeLarge' } as const;
+
 function setTextSize(size: 'small' | 'medium' | 'large') {
   textSize.value = size;
   localStorage.setItem('textSize', size);
   applyTextSize();
+  if (screenReader.isTtsEnabled.value) {
+    tts.speak(t(TEXT_SIZE_I18N[size]), locale.value);
+  }
 }
 
 function setLocale(val: SupportedLocale) {

@@ -84,9 +84,9 @@
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
         <h4 id="section-person-relationships">{{ $t('personDetail.relationships') }}</h4>
         <div class="rel-actions">
-          <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true">{{ $t('personDetail.addParent') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addParent') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addSpouse') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addChild') }}</button>
         </div>
       </div>
       <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
@@ -96,7 +96,7 @@
     <section class="detail-section" aria-labelledby="section-person-groups">
       <div class="section-header">
         <h4 id="section-person-groups">{{ $t('groups.title') }}</h4>
-        <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true">+ {{ $t('groups.addMember') }}</button>
+        <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true"><span aria-hidden="true">+ </span>{{ $t('groups.addMember') }}</button>
       </div>
       <div v-if="showGroupPicker" class="group-picker-row">
         <GroupPicker
@@ -123,7 +123,7 @@
     <section class="detail-section" aria-labelledby="section-person-tasks">
       <div class="section-header">
         <h4 id="section-person-tasks">{{ $t('researchTasks.title') }}</h4>
-        <button class="btn-add" @click="showAddTaskModal = true">+ {{ $t('researchTasks.addTask') }}</button>
+        <button class="btn-add" @click="showAddTaskModal = true"><span aria-hidden="true">+ </span>{{ $t('researchTasks.addTask') }}</button>
       </div>
       <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
       <ResearchTasksTable v-else :tasks="personTasks" @updated="loadPersonTasks" />
@@ -372,7 +372,7 @@ onMounted(async () => {
   if (screenReader.isScreenReader.value) {
     cleanupHotkeys = screenReader.registerHotkeys([
       { key: '1', action: () => jumpToSection('section-names'), description: t('personDetail.names') },
-      { key: '2', action: () => jumpToSection('section-events'), description: t('nav.events') },
+      { key: '2', action: () => jumpToSection('section-events'), description: t('personDetail.events') },
       { key: '3', action: () => jumpToSection('section-relationships'), description: t('personDetail.relationships') },
       { key: '4', action: () => jumpToSection('section-media'), description: t('media.title') },
       { key: '5', action: () => jumpToSection('section-identifiers'), description: t('identifiers.title') },
