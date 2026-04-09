@@ -29,6 +29,7 @@
         :aria-selected="idx === highlightIndex"
         class="dropdown-item"
         :class="{ highlighted: idx === highlightIndex }"
+        v-narrate="place.name"
         @mousedown.prevent="select(place)"
       >
         <div class="place-main">
@@ -56,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const pickerId = 'place-picker-' + Math.random().toString(36).slice(2, 8);
@@ -72,7 +73,8 @@ const emit = defineEmits<{
   'select': [place: PlaceRow];
 }>();
 
-useI18n();
+const { t } = useI18n();
+const screenReader = inject('screenReader', null) as any;
 const query = ref('');
 const results = ref<PlaceRow[]>([]);
 const showDropdown = ref(false);
@@ -133,6 +135,9 @@ async function select(place: PlaceRow) {
   showDropdown.value = false;
   emit('update:modelValue', place.id);
   emit('select', place);
+  if (screenReader?.isScreenReader?.value) {
+    screenReader.speak(t('screenReader.selected', { name: place.name }));
+  }
 }
 
 async function createNew() {

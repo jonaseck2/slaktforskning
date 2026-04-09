@@ -27,6 +27,7 @@
         :aria-selected="idx === highlightIndex"
         class="picker-option"
         :class="{ highlighted: idx === highlightIndex }"
+        v-narrate="[person.given_name, person.surname].filter(Boolean).join(' ')"
         @mousedown.prevent="select(person)"
       >
         <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" :nickname="person.nickname" /></span>
@@ -40,10 +41,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, inject } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const pickerId = 'person-picker-' + Math.random().toString(36).slice(2, 8);
 import PersonName from './PersonName.vue';
+
+const { t } = useI18n();
+const screenReader = inject('screenReader', null) as any;
 
 interface PersonResult {
   id: string;
@@ -109,10 +114,14 @@ function onInput(e: Event) {
 }
 
 function select(person: PersonResult) {
-  searchQuery.value = `${person.given_name ?? ''} ${person.surname ?? ''}`.trim();
+  const name = `${person.given_name ?? ''} ${person.surname ?? ''}`.trim();
+  searchQuery.value = name;
   emit('update:modelValue', person.id);
   emit('select', person);
   open.value = false;
+  if (screenReader?.isScreenReader?.value) {
+    screenReader.speak(t('screenReader.selected', { name }));
+  }
 }
 
 function clear() {

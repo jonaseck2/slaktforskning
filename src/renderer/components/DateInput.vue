@@ -1,7 +1,12 @@
 <template>
   <div class="date-input">
     <div class="date-row">
-      <select :value="dateType" :aria-label="$t('a11y.dateTypeLabel')" @change="updateDateType($event)">
+      <select
+        :value="dateType"
+        :aria-label="$t('a11y.dateTypeLabel')"
+        v-narrate="() => narrateFieldFocus($t('a11y.dateTypeLabel'), 'dropdown', $t('dateTypes.' + dateType), t)"
+        @change="updateDateType($event)"
+      >
         <option v-for="dt in DATE_TYPE_VALUES" :key="dt" :value="dt">{{ $t('dateTypes.' + dt) }}</option>
       </select>
       <input
@@ -9,6 +14,7 @@
         type="date"
         :value="dateValue"
         :aria-label="$t('a11y.dateStartLabel')"
+        v-narrate="() => narrateFieldFocus($t('a11y.dateStartLabel'), 'text', dateValue, t)"
         @input="updateDateValue($event)"
       />
       <template v-if="dateType === 'between'">
@@ -17,6 +23,7 @@
           type="date"
           :value="dateValueEnd"
           :aria-label="$t('a11y.dateEndLabel')"
+          v-narrate="() => narrateFieldFocus($t('a11y.dateEndLabel'), 'text', dateValueEnd, t)"
           @input="updateDateValueEnd($event)"
         />
       </template>
@@ -27,6 +34,7 @@
         :value="dateOriginal"
         :placeholder="$t('dateInput.originalPlaceholder')"
         :aria-label="$t('a11y.dateOriginalLabel')"
+        v-narrate="() => narrateFieldFocus($t('a11y.dateOriginalLabel'), 'text', dateOriginal, t)"
         @input="updateDateOriginal($event)"
       />
     </div>
@@ -36,6 +44,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { DATE_TYPE_VALUES } from '../constants/eventTypes';
+import { narrateFieldFocus } from '../utils/screenReaderNarration';
 
 const props = defineProps<{
   dateType: string;
@@ -51,7 +60,7 @@ const emit = defineEmits<{
   'update:dateOriginal': [value: string];
 }>();
 
-useI18n();
+const { t } = useI18n();
 
 function updateDateType(e: Event) {
   emit('update:dateType', (e.target as HTMLSelectElement).value);
