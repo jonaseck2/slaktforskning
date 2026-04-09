@@ -4,6 +4,8 @@
       <h2>{{ $t('groups.title') }}</h2>
       <button class="btn-add" @click="showAddForm = true">{{ $t('groups.addGroup') }}</button>
     </div>
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('groups.title') }}</h1>
+
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
     <div v-if="groups.length === 0" class="empty">{{ $t('groups.emptyState') }}</div>
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />

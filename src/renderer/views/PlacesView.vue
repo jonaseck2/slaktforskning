@@ -4,6 +4,8 @@
       <h2>{{ $t('places.title') }}</h2>
       <button class="btn-add" @click="showAddForm = true">{{ $t('places.addTitle') }}</button>
     </div>
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('places.title') }}</h1>
+
     <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
     <div v-if="places.length > 0" class="filter-chips">
       <button

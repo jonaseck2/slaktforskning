@@ -1,5 +1,6 @@
 <template>
   <div class="database-view">
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('database.title') }}</h1>
     <h2>{{ $t('database.title') }}</h2>
 
     <section class="db-section">

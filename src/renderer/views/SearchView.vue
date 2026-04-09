@@ -1,5 +1,7 @@
 <template>
   <div>
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('search.title') }}</h1>
+
     <div class="search-header">
       <h2>{{ $t('search.title') }}</h2>
       <form class="search-form" @submit.prevent="runSearch">

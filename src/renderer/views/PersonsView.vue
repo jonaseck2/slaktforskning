@@ -7,6 +7,8 @@
       </div>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('persons.title') }}</h1>
+
     <div class="filter-chips">
       <button :class="['chip', { active: filter === 'all' }]" @click="setFilter('all')">{{ $t('persons.filterAll') }}</button>
       <button :class="['chip', { active: filter === 'unsourced' }]" @click="setFilter('unsourced')">{{ $t('persons.filterUnsourced') }}</button>

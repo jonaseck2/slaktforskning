@@ -5,6 +5,8 @@
       <button class="btn-add" @click="attachFile">{{ $t('media.attach') }}</button>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('media.title') }}</h1>
+
     <p v-if="!loading && items.length > 0" class="count-label">
       {{ items.length }} {{ $t('media.title').toLowerCase() }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
     </p>

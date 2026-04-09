@@ -763,6 +763,20 @@
 
   html.high-contrast ::-webkit-scrollbar { background: #111111; }
   html.high-contrast ::-webkit-scrollbar-thumb { background: #555555; border-radius: 4px; }
+
+  /* Color-independent text labels — shown only in high contrast */
+  html.high-contrast .sex-indicator-label,
+  html.high-contrast .status-text-label,
+  html.high-contrast .confidence-text-label {
+    display: inline !important;
+  }
+}
+
+/* === Color-independent text labels (hidden by default, shown in high contrast) === */
+.sex-indicator-label,
+.status-text-label,
+.confidence-text-label {
+  display: none;
 }
 
 /* === Screen Reader Mode === */

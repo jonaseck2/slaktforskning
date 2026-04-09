@@ -8,7 +8,9 @@
     <template v-else-if="person">
       <!-- Header -->
       <div class="panel-header">
-        <div class="panel-sex-bar" :style="{ background: sexColor }"></div>
+        <div class="panel-sex-bar" :style="{ background: sexColor }">
+          <span class="sex-indicator-label">{{ person.sex }}</span>
+        </div>
         <div class="panel-header-content">
           <div class="panel-name-row">
             <div class="panel-name">
