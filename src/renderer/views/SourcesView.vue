@@ -4,6 +4,8 @@
       <h2>{{ $t('sources.title') }}</h2>
       <button class="btn-add" @click="showAddForm = true">{{ $t('sources.addSource') }}</button>
     </div>
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('sources.title') }}</h1>
+
     <p class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
     <div v-if="sourceList.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('sources.title') })">
       {{ $t('sources.emptyState') }}

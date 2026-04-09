@@ -75,6 +75,7 @@
                 <span :class="'confidence-badge confidence-' + cit.confidence">
                   {{ $t('confidenceLevels.' + cit.confidence) }}
                 </span>
+                <span class="confidence-text-label">&nbsp;({{ cit.confidence }})</span>
               </td>
               <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
               <td>

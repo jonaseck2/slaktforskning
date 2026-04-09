@@ -31,6 +31,8 @@
       >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</button>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('nav.visualization') }}</h1>
+
     <!-- Empty state -->
     <div v-if="noPersonsExist" class="empty-state" data-testid="viz-empty">
       {{ $t('visualization.empty') }}

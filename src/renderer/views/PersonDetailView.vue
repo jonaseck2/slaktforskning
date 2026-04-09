@@ -15,6 +15,7 @@
         <div class="header-info">
           <h2>{{ primaryName }}</h2>
           <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
+          <span v-if="person.living" class="status-text-label">{{ $t('persons.living') }}</span>
           <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
         </div>
       </div>
