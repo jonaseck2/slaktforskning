@@ -7,9 +7,11 @@
       </div>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h1>
+
     <!-- Type & Subtype -->
     <section class="detail-section" aria-labelledby="section-rel-type">
-      <div class="section-header">
+      <div class="section-header" tabindex="0" :data-narrate="$t('common.type') + ': ' + $t('relTypes.' + relationship.type)">
         <h4 id="section-rel-type">{{ $t('common.type') }}</h4>
       </div>
       <div class="type-fields">
@@ -51,7 +53,7 @@
 
     <!-- Persons Section -->
     <section class="detail-section" aria-labelledby="section-rel-persons">
-      <div class="section-header">
+      <div class="section-header" tabindex="0" :data-narrate="$t('relationshipDetail.persons')">
         <h4 id="section-rel-persons">{{ $t('relationshipDetail.persons') }}</h4>
       </div>
       <div class="persons-grid">

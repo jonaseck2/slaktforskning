@@ -6,8 +6,10 @@
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ place.name }}</h1>
+
     <section class="detail-section" aria-labelledby="section-place-details">
-      <div class="section-header">
+      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.navPlaceDetail', { name: place.name })">
         <h4 id="section-place-details">{{ $t('places.detailsTitle') }}</h4>
       </div>
       <div class="field-grid">
@@ -35,7 +37,7 @@
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-address">
-      <div class="section-header">
+      <div class="section-header" tabindex="0" :data-narrate="$t('places.address')">
         <h4 id="section-place-address">{{ $t('places.address') }}</h4>
       </div>
       <div class="field-grid">
@@ -55,7 +57,7 @@
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-notes">
-      <h4 id="section-place-notes">{{ $t('common.notes') }}</h4>
+      <h4 id="section-place-notes" tabindex="0" :data-narrate="editNotes ? t('screenReader.sectionNotes', { content: editNotes }) : t('screenReader.sectionNotesEmpty')">{{ $t('common.notes') }}</h4>
       <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
     </section>
 
@@ -81,7 +83,7 @@ import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
-useI18n();
+const { t } = useI18n();
 const route = useRoute();
 const placeId = route.params.id as string;
 const place = ref<PlaceRow | null>(null);
