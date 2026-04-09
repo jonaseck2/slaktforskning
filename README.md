@@ -12,6 +12,8 @@ A cross-platform desktop genealogy application. Store, organize, and research yo
 - **GEDCOM-aligned events** — Birth, death, marriage, divorce, christening, burial, census, immigration, emigration, naturalization, occupation, residence, education, military, and more
 - **Flexible dates** — Exact, approximate, before, after, between, and unknown date types with original source text preserved
 - **Source citations** — Link sources to events or persons with confidence levels (0–3) and verbatim transcriptions
+- **Screen Reader Mode** — Standalone TTS navigation for visually impaired users with single-key hotkeys and arrow-key family tree traversal
+- **High Contrast theme** — WCAG 2.1 AAA compliant high contrast appearance option
 
 ## Quick Start
 
@@ -96,12 +98,14 @@ npx playwright test
 
 ## Accessibility
 
-The app targets WCAG 2.1 AA compliance:
+The app targets WCAG 2.1 AAA compliance:
 
 - **Keyboard navigation** — All interactive elements are reachable via Tab, Enter, Space, and arrow keys
 - **Screen reader support** — ARIA roles, labels, and live regions throughout (dialog, combobox, tree, radiogroup)
 - **Focus management** — Focus trapping in modals, focus-visible outlines, skip-to-content link
 - **Text-to-speech** — Built-in read-aloud feature (Settings > Read aloud) that narrates person, relationship, and source details on navigation
+- **Screen Reader Mode** — Standalone mode that narrates every focused element, with single-key hotkeys (`P/R/S/L/T/V/Q/D` to navigate views, `N` to add, `E` to edit, arrow keys for charts) and a `?` command listing
+- **High Contrast theme** — WCAG 2.1 AAA high contrast appearance for low-vision users
 - **Chart accessibility** — Pedigree chart has ARIA tree roles with keyboard navigation, plus a list view alternative
 
 ## Building
