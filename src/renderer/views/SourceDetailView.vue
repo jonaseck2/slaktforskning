@@ -5,9 +5,11 @@
       <h2>{{ source.title }}</h2>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ source.title }}</h1>
+
     <!-- Source Fields -->
     <section class="detail-section" aria-labelledby="section-source-details">
-      <div class="section-header">
+      <div class="section-header" tabindex="0" :data-narrate="$t('screenReader.navSourceDetail', { title: source.title || $t('common.unknown') })">
         <h4 id="section-source-details">{{ $t('sourceDetail.title') }}</h4>
       </div>
       <div class="field-grid">
@@ -45,7 +47,7 @@
 
     <!-- Citations Section -->
     <section class="detail-section" aria-labelledby="section-source-citations">
-      <div class="section-header">
+      <div class="section-header" tabindex="0" :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length">
         <h4 id="section-source-citations">{{ $t('sourceDetail.citations') }}</h4>
         <button class="btn-add" @click="showCitationForm = true">{{ $t('sourceDetail.addCitation') }}</button>
       </div>

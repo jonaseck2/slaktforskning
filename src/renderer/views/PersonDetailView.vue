@@ -20,6 +20,8 @@
       </div>
     </div>
 
+    <h1 class="sr-page-title" tabindex="-1">{{ primaryName }}</h1>
+
     <!-- Person Details -->
     <section class="detail-section" aria-labelledby="section-person-details">
       <div class="section-header">
@@ -53,8 +55,8 @@
     </section>
 
     <!-- Names Section -->
-    <section class="detail-section" aria-labelledby="section-person-names">
-      <div class="section-header">
+    <section id="section-names" class="detail-section" aria-labelledby="section-person-names">
+      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })">
         <h4 id="section-person-names">{{ $t('personDetail.names') }}</h4>
         <button class="btn-add" @click="showNameForm = true">{{ $t('personDetail.addName') }}</button>
       </div>
@@ -63,13 +65,13 @@
     </section>
 
     <!-- Events Section -->
-    <section class="detail-section" aria-label="Events">
+    <section id="section-events" class="detail-section" aria-label="Events">
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
     <!-- Identifiers Section -->
-    <section class="detail-section" aria-labelledby="section-person-identifiers">
-      <div class="section-header">
+    <section id="section-identifiers" class="detail-section" aria-labelledby="section-person-identifiers">
+      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })">
         <h4 id="section-person-identifiers">{{ $t('identifiers.title') }}</h4>
         <button class="btn-add" @click="identifiersSectionRef?.openAddForm()">{{ $t('identifiers.add') }}</button>
       </div>
@@ -77,8 +79,8 @@
     </section>
 
     <!-- Relationships Section -->
-    <section class="detail-section" aria-labelledby="section-person-relationships">
-      <div class="section-header">
+    <section id="section-relationships" class="detail-section" aria-labelledby="section-person-relationships">
+      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
         <h4 id="section-person-relationships">{{ $t('personDetail.relationships') }}</h4>
         <div class="rel-actions">
           <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true">{{ $t('personDetail.addParent') }}</button>
@@ -108,8 +110,8 @@
     </section>
 
     <!-- Media Section -->
-    <section class="detail-section" aria-labelledby="section-person-media">
-      <div class="section-header">
+    <section id="section-media" class="detail-section" aria-labelledby="section-person-media">
+      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionMedia', { count: 0, summary: '' })">
         <h4 id="section-person-media">{{ $t('media.title') }}</h4>
         <button class="btn-add" @click="mediaSectionRef?.attach()">{{ $t('media.attach') }}</button>
       </div>
@@ -135,8 +137,8 @@
     />
 
     <!-- Quality Section -->
-    <section class="detail-section" aria-labelledby="section-person-quality">
-      <div class="section-header">
+    <section id="section-checks" class="detail-section" aria-labelledby="section-person-quality">
+      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionChecks', { count: 0, summary: '' })">
         <h4 id="section-person-quality">{{ $t('quality.nav') }}</h4>
       </div>
       <PersonChecksSection ref="checksSectionRef" :person-id="person.id" />
@@ -163,10 +165,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject, type Ref } from 'vue';
+import { ref, onMounted, onUnmounted, inject, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
+import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
 import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
@@ -211,6 +214,7 @@ const route = useRoute();
 const personId = route.params.id as string;
 const focusStore = useFocusStore();
 const { t, locale } = useI18n();
+const screenReader = useScreenReaderMode();
 const toast = useToast();
 const ttsEnabled = inject<Ref<boolean>>('ttsEnabled', ref(false));
 const { speak, stop } = useTTS();
@@ -344,6 +348,18 @@ async function updateLiving(living: number) {
   person.value.living = living;
 }
 
+function jumpToSection(sectionId: string): void {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' });
+    const firstFocusable = el.querySelector('[tabindex="0"], button, a, input, tr[tabindex]') as HTMLElement | null;
+    if (firstFocusable) firstFocusable.focus();
+    else el.focus();
+  }
+}
+
+let cleanupHotkeys: (() => void) | undefined;
+
 onMounted(async () => {
   await load();
   let debounce: ReturnType<typeof setTimeout> | null = null;
@@ -351,6 +367,21 @@ onMounted(async () => {
     if (debounce) clearTimeout(debounce);
     debounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
   });
+
+  if (screenReader.isScreenReader.value) {
+    cleanupHotkeys = screenReader.registerHotkeys([
+      { key: '1', action: () => jumpToSection('section-names'), description: t('personDetail.names') },
+      { key: '2', action: () => jumpToSection('section-events'), description: t('nav.events') },
+      { key: '3', action: () => jumpToSection('section-relationships'), description: t('personDetail.relationships') },
+      { key: '4', action: () => jumpToSection('section-media'), description: t('media.title') },
+      { key: '5', action: () => jumpToSection('section-identifiers'), description: t('identifiers.title') },
+      { key: '6', action: () => jumpToSection('section-checks'), description: t('quality.nav') },
+    ]);
+  }
+});
+
+onUnmounted(() => {
+  cleanupHotkeys?.();
 });
 
 onBeforeRouteLeave(() => { stop(); });
