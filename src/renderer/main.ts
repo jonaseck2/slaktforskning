@@ -4,11 +4,13 @@ import { router } from './router';
 import { i18n } from './i18n';
 import './styles/shared.css';
 import App from './App.vue';
+import { vNarrate } from './directives/narrate';
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(i18n);
+app.directive('narrate', vNarrate);
 app.mount('#app');
 
 // Expose router and i18n for MCP ui_navigate tool and E2E locale switching
