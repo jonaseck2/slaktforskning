@@ -21,6 +21,10 @@ export default {
     dark: 'Dark',
     textSize: 'Text Size',
     language: 'Language',
+    highContrast: 'High Contrast',
+    off: 'Off',
+    narrate: 'Narrate',
+    screenReaderMode: 'Screen Reader',
   },
   common: {
     cancel: 'Cancel',
@@ -730,5 +734,120 @@ export default {
     and: 'and',
     author: 'Author',
     citationsLinked: 'citations linked',
+  },
+  screenReader: {
+    // Mode
+    welcome: 'Screen reader mode active. Press question mark for available commands.',
+    modeOff: 'Screen reader mode deactivated.',
+
+    // Hotkey help
+    hotkeysAvailable: 'Available commands: {list}',
+    hotkeyPersons: 'P persons',
+    hotkeyRelationships: 'R relationships',
+    hotkeySources: 'S sources',
+    hotkeyPlaces: 'L places',
+    hotkeyTasks: 'T research tasks',
+    hotkeyVisualization: 'V visualization',
+    hotkeyQuality: 'Q quality checks',
+    hotkeyDatabase: 'D database',
+    hotkeySearch: 'slash or F search',
+    hotkeyNew: 'N new item',
+    hotkeyEdit: 'E edit',
+    hotkeyDelete: 'Delete remove',
+    hotkeyHome: 'H home',
+    hotkeyHelp: 'question mark help',
+    hotkeyStopSpeech: 'Control period stop speech',
+
+    // Navigation
+    navPersonsList: 'Persons list, {count} persons',
+    navRelationshipsList: 'Relationships, {count} relationships',
+    navSourcesList: 'Sources, {count} sources',
+    navPlacesList: 'Places, {count} places',
+    navTasksList: 'Research tasks, {count} tasks',
+    navVisualization: 'Visualization view',
+    navQuality: 'Quality checks',
+    navDatabase: 'Database settings',
+    navSearch: 'Search, type to find persons',
+    navHome: 'Home, {name}',
+    navPersonDetail: 'Person detail: {name}, {sex}, {summary}. {sectionCount} sections available. Press 1 through {sectionCount} to jump to a section, or Tab to move through.',
+    navRelationshipDetail: 'Relationship detail: {summary}',
+    navSourceDetail: 'Source detail: {title}',
+    navPlaceDetail: 'Place detail: {name}',
+
+    // Row narration
+    rowPerson: '{name}, {sex}, {summary}',
+    rowRelationship: '{type}: {person1} and {person2}, {summary}',
+    rowSource: '{sourceType}: {title}, {citationCount} citations',
+    rowPlace: '{name}, {placeType}, {path}',
+    rowTask: '{priority} priority, {status}: {task}',
+    rowEvent: '{eventType}, {date}, {place}',
+    rowMedia: '{title}, {format}',
+    rowQuality: '{severity}: {message}',
+
+    // Chart
+    chartFather: 'Father: {name}, {summary}',
+    chartMother: 'Mother: {name}, {summary}',
+    chartChild: 'Child: {name}, {summary}',
+    chartSpouse: 'Spouse: {name}, {summary}',
+    chartSibling: 'Sibling: {name}, {summary}',
+    chartAncestor: '{relationship}: {name}, {summary}. Generation {generation}. {childCount} children.',
+    chartFocusPerson: 'Focus person: {name}, {summary}. Generation 1. {parentsHint}, {childrenHint}.',
+    chartOpening: 'Opening {name}',
+    chartNoFather: 'No father recorded',
+    chartNoMother: 'No mother recorded',
+    chartNoChildren: 'No children recorded',
+    chartNoSpouse: 'No spouse recorded',
+    chartNoAncestors: 'No further ancestors loaded',
+    chartCollapsed: 'Collapsed ancestors of {name}',
+    chartExpanded: 'Expanded, {count} generations',
+    chartParentsAbove: 'Parents available above',
+    chartNoParents: 'No parents recorded',
+    chartChildrenBelow: '{count} children below',
+    chartNoChildrenBelow: 'No children below',
+
+    // Sections (detail views)
+    sectionNames: 'Names section, {count} names. {summary}',
+    sectionEvents: 'Events section, {count} events. {summary}',
+    sectionRelationships: 'Relationships section, {count} relationships. {summary}',
+    sectionMedia: 'Media section, {count} items. {summary}',
+    sectionIdentifiers: 'Identifiers section, {count} identifiers. {summary}',
+    sectionChecks: 'Quality checks section, {count} issues. {summary}',
+    sectionGroups: 'Groups section, {count} groups.',
+    sectionTasks: 'Research tasks section, {count} tasks.',
+    sectionNotes: 'Notes: {content}',
+    sectionNotesEmpty: 'Notes: empty.',
+
+    // Forms
+    formOpen: '{title}. Form with {count} fields. Tab to move between fields.',
+    fieldText: '{label}, text field, {value}',
+    fieldTextEmpty: '{label}, text field, empty',
+    fieldDropdown: '{label}, dropdown, {value}',
+    fieldSearch: '{label}, search field. Type to search, {value}',
+    fieldSearchEmpty: '{label}, search field. Type to search.',
+    searchMatches: '{count} matches',
+    searchNoMatches: 'No matches',
+    selected: 'Selected {name}',
+
+    // Actions
+    actionSaved: 'Saved',
+    actionDeleted: 'Deleted {name}',
+    actionModalClosed: 'Modal closed',
+    actionEditing: 'Editing {name}',
+    actionNew: 'New {type}',
+    actionError: 'Error: {message}',
+
+    // Delete confirmation
+    confirmDelete: 'Confirm delete. Delete {name}? This cannot be undone. Enter to confirm, Escape to cancel.',
+
+    // Table
+    tableEmpty: 'No {type} found. Press N to add.',
+    tableResults: '{count} results',
+    tableNoResults: 'No results found',
+
+    // Buttons
+    btnSave: 'Save, button',
+    btnCancel: 'Cancel, button',
+    btnAdd: 'Add, button',
+    btnDelete: 'Delete, button',
   },
 };
