@@ -12,6 +12,9 @@ process.on('uncaughtException', (err) => {
   throw err;
 });
 
+// Workaround for macOS 26 Tahoe cppgc crash (electron/electron#49522)
+app.commandLine.appendSwitch('js-flags', '--no-incremental-marking');
+
 if (started) {
   app.quit();
 }

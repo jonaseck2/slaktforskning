@@ -72,7 +72,7 @@
         <button class="panel-section-header" @click="toggleSection('names')">
           <span class="panel-chevron">{{ sections.names ? '▾' : '▸' }}</span>
           {{ $t('personDetail.names') }}
-          <span class="panel-section-header-action" @click.stop="openNameForm(null)">+ {{ $t('personDetail.addName') }}</span>
+          <span class="panel-section-header-action" @click.stop="openNameForm(null)"><span aria-hidden="true">+ </span>{{ $t('personDetail.addName') }}</span>
         </button>
         <div v-if="sections.names" class="panel-section-body">
           <div v-if="names.length === 0" class="panel-empty-section">—</div>
@@ -85,7 +85,7 @@
         <button class="panel-section-header" @click="toggleSection('events')">
           <span class="panel-chevron">{{ sections.events ? '▾' : '▸' }}</span>
           {{ $t('panel.events') }}
-          <span class="panel-section-header-action" @click.stop="eventListRef?.openAddForm()">+ {{ $t('events.event') }}</span>
+          <span class="panel-section-header-action" @click.stop="eventListRef?.openAddForm()"><span aria-hidden="true">+ </span>{{ $t('events.event') }}</span>
         </button>
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :person-id="personId" hide-header />
@@ -97,7 +97,7 @@
         <button class="panel-section-header" @click="toggleSection('identifiers')">
           <span class="panel-chevron">{{ sections.identifiers ? '▾' : '▸' }}</span>
           {{ $t('identifiers.title') }}
-          <span class="panel-section-header-action" @click.stop="identifiersSectionRef?.openAddForm()">+ {{ $t('identifiers.add') }}</span>
+          <span class="panel-section-header-action" @click.stop="identifiersSectionRef?.openAddForm()"><span aria-hidden="true">+ </span>{{ $t('identifiers.add') }}</span>
         </button>
         <div v-if="sections.identifiers" class="panel-section-body">
           <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
@@ -120,7 +120,7 @@
         <button class="panel-section-header" @click="toggleSection('groups')">
           <span class="panel-chevron">{{ sections.groups ? '▾' : '▸' }}</span>
           {{ $t('groups.title') }}
-          <span class="panel-section-header-action" @click.stop="showGroupPicker = !showGroupPicker">{{ $t('groups.addGroupShort') }}</span>
+          <span class="panel-section-header-action" @click.stop="showGroupPicker = !showGroupPicker"><span aria-hidden="true">+ </span>{{ $t('groups.addGroupShort') }}</span>
         </button>
         <div v-if="sections.groups" class="panel-section-body">
           <div v-if="showGroupPicker && personId" class="panel-group-picker-wrap">
@@ -141,7 +141,7 @@
         <button class="panel-section-header" @click="toggleSection('media')">
           <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
           {{ $t('media.title') }}
-          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()">{{ $t('media.attachShort') }}</span>
+          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()"><span aria-hidden="true">+ </span>{{ $t('media.attachShort') }}</span>
         </button>
         <div v-if="sections.media" class="panel-section-body">
           <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
@@ -153,7 +153,7 @@
         <button class="panel-section-header" @click="toggleSection('research')">
           <span class="panel-chevron">{{ sections.research ? '▾' : '▸' }}</span>
           {{ $t('researchTasks.nav') }}
-          <span class="panel-section-header-action" @click.stop="openTaskForm()">+ {{ $t('researchTasks.nav') }}</span>
+          <span class="panel-section-header-action" @click.stop="openTaskForm()"><span aria-hidden="true">+ </span>{{ $t('researchTasks.nav') }}</span>
         </button>
         <div v-if="sections.research" class="panel-section-body">
           <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
