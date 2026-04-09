@@ -165,7 +165,7 @@ import ChartTooltip from './ChartTooltip.vue';
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined }>();
+const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
@@ -323,6 +323,11 @@ async function load() {
     loading.value = false;
   }
 }
+
+// Sync focused box with parent-controlled focusedPerson prop (screen reader nav)
+watch(() => props.focusedPerson, (pid) => {
+  if (pid) focusedBoxId.value = pid;
+});
 
 watch(() => props.personId, load);
 onMounted(() => {
