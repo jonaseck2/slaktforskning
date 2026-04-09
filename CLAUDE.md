@@ -74,11 +74,17 @@ src/
 │   │   ├── EventForm.vue         # Event create/edit modal
 │   │   ├── EventList.vue         # Event table with add/edit/delete
 │   │   └── CitationForm.vue      # Citation create modal
+│   ├── directives/
+│   │   └── narrate.ts              # v-narrate directive (WeakMap + resolveNarration)
 │   ├── composables/
-│   │   ├── useFocusTrap.ts       # Focus trap for modals (used by BaseModal)
-│   │   └── useTTS.ts             # Text-to-speech via Web Speech API
+│   │   ├── useFocusTrap.ts         # Focus trap for modals (used by BaseModal)
+│   │   ├── useTTS.ts               # Text-to-speech via Web Speech API
+│   │   ├── useScreenReaderMode.ts  # Screen reader mode: focus narration, hotkeys, live regions
+│   │   ├── useChartNavigation.ts   # Arrow-key family tree navigation for charts
+│   │   └── useHotkeyRegistry.ts    # Hotkey registration (global + view-scoped)
 │   ├── utils/
-│   │   └── narration.ts          # Natural-language narration builders for TTS
+│   │   ├── narration.ts            # Natural-language narration builders for TTS
+│   │   └── screenReaderNarration.ts # Narration builders for screen reader mode
 │   └── constants/
 │       └── eventTypes.ts         # GEDCOM event types, date types, confidence levels, etc.
 └── mcp/
@@ -408,6 +414,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
 | `EventList` | `personId?: string`, `relationshipId?: string`, `hideHeader?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. Reloads on `personId` change. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
+| `ConfirmModal` | `visible`, `title`, `message` | `confirm`, `cancel` | Accessible delete confirmation modal |
 | `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
 | `PersonNamesTable` | `names: NameRow[]` | `edit(name)`, `delete(nameId)` | Names table with ★ primary indicator. Prop-driven. |
 | `PersonNameFormModal` | `personId: string`, `name: NameRow\|null` | `close`, `saved` | Add/edit name modal (`name=null` → add mode). |
@@ -471,6 +478,35 @@ NAME_TYPE_VALUES               // birth, married, alias, aka
 
 - `a11y` i18n namespace — skip link label, ARIA labels for charts and controls, TTS button strings
 - TTS enabled/disabled via localStorage key `slaktforskning-tts` (set from Settings > Read aloud toggle)
+
+### Screen Reader Mode
+
+A standalone screen reader mode (third Read Aloud option alongside Off and Narrate) that narrates every focused element, provides single-key hotkey navigation, and supports arrow-key family tree traversal.
+
+**Architecture:**
+- `v-narrate` Vue directive stores narration text on elements via WeakMap
+- `useScreenReaderMode` composable manages mode state, focus-driven narration, hotkeys, and live-region observation
+- `useChartNavigation` composable handles arrow-key tree traversal
+- `HotkeyRegistry` class manages global + view-scoped keyboard shortcuts
+- Narration builders in `src/renderer/utils/screenReaderNarration.ts`
+
+**Global hotkeys (screen reader mode only):**
+| Key | Action |
+|-----|--------|
+| `?` | List available commands |
+| `P/R/S/L/T/V/Q/D` | Navigate to Persons/Relationships/Sources/Places/Tasks/Visualization/Quality/Database |
+| `F` or `/` | Focus search |
+| `H` | Go home |
+| `N` | Add new item |
+| `E` | Edit focused item |
+| `Delete` | Delete focused item |
+| `1-6` | Jump to section (detail views) |
+| `Arrow keys` | Navigate family tree (charts) |
+| `Ctrl+.` | Stop speech |
+
+**Settings:** Three-way Appearance (Light/Dark/High Contrast) and three-way Read Aloud (Off/Narrate/Screen Reader), both independent.
+
+**i18n:** `screenReader.*` namespace (~80 keys) in both sv.ts and en.ts.
 
 ---
 
