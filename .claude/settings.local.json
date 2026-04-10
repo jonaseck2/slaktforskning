@@ -116,7 +116,8 @@
       "Bash(rm /Users/jonasahnstedt/git/slaktforskning/.claude/plans/2026-04-08-genney-media-folder.md)",
       "Bash(xattr -cr out/make/zip/darwin/arm64/Släktforskning.app)",
       "Bash(cp .claude/plans/2026-04-08-evidence-analysis.md .claude/plans/archive/2026-04-08-evidence-analysis.md)",
-      "Bash(cp .claude/plans/2026-04-08-evidence-analysis-impl.md .claude/plans/archive/2026-04-08-evidence-analysis-impl.md)"
+      "Bash(cp .claude/plans/2026-04-08-evidence-analysis-impl.md .claude/plans/archive/2026-04-08-evidence-analysis-impl.md)",
+      "Bash(sysctl -n hw.ncpu)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude/plans",
