@@ -378,6 +378,35 @@ Add all new keys to **both** `src/renderer/i18n/sv.ts` (Swedish, primary) and `s
 
 If a component grows beyond ~300 lines, extract sections following the Person Section Component pattern before adding more code. Large components are a sign that multiple independently reusable sections have been inlined. Extract each section into its own self-loading component — see the pattern above.
 
+### Minimizing data entry actions
+
+Every new UI feature should be evaluated against the number of user actions (clicks, selections, text entries) needed to accomplish a task. A usability analysis of this app (see `.claude/plans/2026-04-10-usability-test-plan.md`) found that creating a fully-sourced 10-person family tree required ~792 actions. Six optimizations reduced this by ~50%.
+
+**Principles — apply to any new feature:**
+
+1. **Combine related entity creation** — When creating entity A always requires creating entity B, offer B's fields inline in A's form. Example: `AddRelatedPersonModal` creates person + relationship + birth event + citation in one modal instead of 4 separate workflows. Use `<details>` for optional sections to keep the form clean.
+
+2. **Pre-fill from context** — When a user's intent is clear from context, pre-fill fields:
+   - Sex: auto-infer from role (father→M, mother→F, spouse→opposite)
+   - Surname: pre-fill child's surname from parent
+   - Source: remember last-used source across forms (Pinia store `sourceSession`)
+
+3. **Reduce navigation clicks** — Offer actions where the user already is:
+   - "Add Father/Mother/Child/Spouse" buttons on person detail and panel
+   - Ghost placeholder boxes in the pedigree chart for missing parents
+   - "Cite" button per event row instead of requiring full event edit
+   - "Save & Add Another" to batch-enter multiple items without closing the modal
+
+4. **Composables for multi-entity creation** — Use `useBirthEventCreation` pattern: a composable that wraps multiple IPC calls (create event + add participant + create citation) into a single function. This keeps the logic DRY across modals.
+
+**Key components for data entry optimization:**
+- `AddRelatedPersonModal` — combined person + relationship + birth event creation with inference
+- `useBirthEventCreation` composable — shared birth event + participant + citation creation
+- `sourceSession` Pinia store — last-used source memory for citation pre-fill
+- `EventList` cite button — quick citation without full event edit
+- `EventForm` "Save & Add Another" — batch event entry
+- Ghost placeholder boxes in `PedigreeChart` — click-to-add missing parents
+
 ## MCP Verification Loop (Step 9 — for UI features)
 
 After `npm test` passes, if the feature includes a new or modified Vue view, verify it in the running app using the MCP server's UI tools:

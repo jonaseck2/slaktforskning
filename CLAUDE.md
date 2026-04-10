@@ -49,7 +49,12 @@ src/
 │   ├── groups.ts                 # Group + GroupMember CRUD
 │   ├── repositories.ts           # Repository CRUD + source links
 │   ├── research_tasks.ts         # ResearchTask CRUD
-│   └── media.ts                  # Media + MediaLink CRUD
+│   ├── media.ts                  # Media + MediaLink CRUD
+│   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
+│   └── link-rules/               # Default link rule sets
+│       ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
+│       ├── en.ts                  # English rules (FamilySearch, FindAGrave, Ancestry)
+│       └── universal.ts           # Universal rules (plain URLs)
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
@@ -128,6 +133,7 @@ tests/
 | `/places` | `PlacesView` | Place list with "Add Place" modal |
 | `/places/:id` | `PlaceDetailView` | Place detail: name, type, parent, lat/lon, child places |
 | `/database` | `DatabaseView` | Active database path, recent databases list, New/Open buttons |
+| `/link-rules` | `LinkRulesView` | Link rule management: locale toggles, rule table, custom rules, test field |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
@@ -424,6 +430,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink/reorder (up/down). First item shows "Profile" badge. Emits `profileChanged` when media order changes. Exposes `attach()` and `reload()`. |
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 | `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
+| `LinkedText` | `text: string` | — | Auto-links structured references in text. Scans with regex rules (ArkivDigital AID, Riksarkivet NAD, FamilySearch ARK, etc.), renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
