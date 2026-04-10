@@ -103,3 +103,118 @@ describe('linkify', () => {
     });
   });
 });
+
+describe('Swedish default rules', () => {
+  it('matches ArkivDigital AID with page suffix', () => {
+    const result = linkify('(AID: v170308.b530.s44, NAD: SE/VALA/00333)', svRules);
+    const aidSeg = result.find((s) => s.ruleName === 'ArkivDigital (AID)');
+    expect(aidSeg).toBeDefined();
+    expect(aidSeg!.url).toBe('https://app.arkivdigital.se/volume/v170308?image=530');
+  });
+
+  it('matches ArkivDigital AID without page suffix', () => {
+    const result = linkify('AID: v36086.b20', svRules);
+    const aidSeg = result.find((s) => s.url);
+    expect(aidSeg!.url).toBe('https://app.arkivdigital.se/volume/v36086?image=20');
+  });
+
+  it('matches Riksarkivet NAD code', () => {
+    const result = linkify('NAD: SE/VALA/00333', svRules);
+    const nadSeg = result.find((s) => s.ruleName === 'Riksarkivet (NAD)');
+    expect(nadSeg).toBeDefined();
+    expect(nadSeg!.url).toContain('SE/VALA/00333');
+  });
+
+  it('matches Sveriges Befolkning abbreviation', () => {
+    const result = linkify('SvBf1980', svRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+  });
+});
+
+describe('English default rules', () => {
+  it('matches FamilySearch ARK', () => {
+    const result = linkify('see ark:/61903/1:1:XHLN-69H for details', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://www.familysearch.org/ark:/61903/1:1:XHLN-69H');
+  });
+
+  it('matches FindAGrave memorial', () => {
+    const result = linkify('Find A Grave memorial 12345678', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://www.findagrave.com/memorial/12345678');
+  });
+
+  it('matches Ancestry record URL', () => {
+    const result = linkify('ancestry.com/discoveryui-content/view/12345:6789', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://www.ancestry.com/discoveryui-content/view/12345:6789');
+  });
+});
+
+describe('Universal rules', () => {
+  it('matches plain HTTPS URL', () => {
+    const result = linkify('visit https://example.com/page today', universalRules);
+    const seg = result.find((s) => s.url);
+    expect(seg!.url).toBe('https://example.com/page');
+  });
+
+  it('matches plain HTTP URL', () => {
+    const result = linkify('see http://old.site.com/doc', universalRules);
+    const seg = result.find((s) => s.url);
+    expect(seg!.url).toBe('http://old.site.com/doc');
+  });
+});
+
+describe('resolveRules', () => {
+  const defaults: LinkRule[] = [
+    { id: 'sv-1', name: 'SV Rule', pattern: 'sv', urlTemplate: 'https://sv.com', locale: 'sv', enabled: true, priority: 10 },
+    { id: 'en-1', name: 'EN Rule', pattern: 'en', urlTemplate: 'https://en.com', locale: 'en', enabled: true, priority: 10 },
+    { id: 'uni-1', name: 'Universal', pattern: 'uni', urlTemplate: 'https://uni.com', locale: '*', enabled: true, priority: 100 },
+  ];
+
+  it('includes only rules from enabled locales plus universal', () => {
+    const result = resolveRules(defaults, { enabledLocales: ['sv'], overrides: {} });
+    const ids = result.map((r) => r.id);
+    expect(ids).toContain('sv-1');
+    expect(ids).toContain('uni-1');
+    expect(ids).not.toContain('en-1');
+  });
+
+  it('applies enabled override to disable a default rule', () => {
+    const result = resolveRules(defaults, {
+      enabledLocales: ['sv'],
+      overrides: { 'sv-1': { enabled: false } },
+    });
+    const svRule = result.find((r) => r.id === 'sv-1');
+    expect(svRule!.enabled).toBe(false);
+  });
+
+  it('adds custom rules from overrides', () => {
+    const result = resolveRules(defaults, {
+      enabledLocales: ['sv'],
+      overrides: {
+        'custom-1': {
+          name: 'Custom',
+          pattern: 'cust',
+          urlTemplate: 'https://cust.com/$1',
+          enabled: true,
+          priority: 25,
+        },
+      },
+    });
+    const custom = result.find((r) => r.id === 'custom-1');
+    expect(custom).toBeDefined();
+    expect(custom!.name).toBe('Custom');
+  });
+
+  it('sorts output by priority', () => {
+    const result = resolveRules(defaults, { enabledLocales: ['sv', 'en'], overrides: {} });
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i].priority).toBeGreaterThanOrEqual(result[i - 1].priority);
+    }
+  });
+});
