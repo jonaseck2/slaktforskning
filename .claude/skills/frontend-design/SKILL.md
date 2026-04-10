@@ -239,6 +239,81 @@ Rules:
 - Escape and overlay-click are handled by `BaseModal` — no local keyboard handler needed
 - Required fields marked with ` *` in label text
 
+### Optional form sections with `<details>`
+
+When a modal has optional fields (birth info, source citation), wrap them in a collapsible `<details>` element instead of making them always visible:
+
+```html
+<details class="birth-section" open>
+  <summary>{{ $t('events.birth') }}</summary>
+  <label>{{ $t('addRelated.birthDate') }}
+    <input v-model="birthForm.date_value" type="date" />
+  </label>
+  <label>{{ $t('addRelated.birthPlace') }}
+    <PlacePicker v-model="birthForm.place_id" />
+  </label>
+</details>
+```
+
+```css
+.birth-section {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 4px 0;
+}
+.birth-section summary {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted, #64748b);
+}
+```
+
+Use `open` when the section is likely needed (e.g. birth fields on "Add Person"). Omit `open` when secondary (e.g. birth fields on "Add Father" where the focus is the relationship).
+
+### Batch entry with "Save & Add Another"
+
+When users commonly enter multiple items in sequence (events, citations), add a secondary submit button that saves and resets the form without closing the modal:
+
+```html
+<div class="modal-actions">
+  <span v-if="addedCount > 0" class="added-badge">
+    {{ $t('events.eventsAdded', addedCount) }}
+  </span>
+  <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
+  <button v-if="!editing" type="button" class="btn-secondary" @click="saveAndAnother">
+    {{ $t('events.saveAndAnother') }}
+  </button>
+  <button type="submit">{{ $t('common.save') }}</button>
+</div>
+```
+
+Extract core save logic into `doSave(): Promise<boolean>`, then `save()` calls `doSave()` + emit close, and `saveAndAnother()` calls `doSave()` + reset form + increment counter.
+
+### Session memory for repeated selections
+
+Use a Pinia store to remember the last-used value for dropdowns that users select repeatedly (sources, places, event types). Pattern:
+
+```typescript
+// stores/sourceSession.ts
+export const useSourceSession = defineStore('sourceSession', () => {
+  const lastSourceId = ref<string | null>(null);
+  function setLastUsed(sourceId: string) { lastSourceId.value = sourceId; }
+  return { lastSourceId, setLastUsed };
+});
+
+// In any form with a source dropdown:
+const sourceSession = useSourceSession();
+onMounted(() => {
+  if (sourceSession.lastSourceId) form.source_id = sourceSession.lastSourceId;
+});
+// After save:
+sourceSession.setLastUsed(form.source_id);
+```
+
+Session-only (no persistence needed) — resets when app restarts. Pre-fill is a default, never forced.
+
 ---
 
 ## Buttons

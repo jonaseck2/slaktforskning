@@ -32,6 +32,14 @@
 1. **[2026-04-03] Every plan must include a "Skills to Update" section**
    Do instead: before finalizing any plan file, add a "## Skills to Update" section listing which skills need changes and what to change in each. Use the add-feature checklist as a reference.
 
+## Data Entry UX
+
+1. **[2026-04-10] Count actions before designing data entry UI**
+   Do instead: before implementing any form/modal that creates data, count the total user actions (clicks, selections, text entries) for the full workflow. Compare against the minimal possible. The usability test plan (`.claude/plans/archive/2026-04-10-usability-test-plan.md`) shows the methodology. Key patterns that reduce actions: combined entity creation (one modal creates person + relationship + birth event), field pre-fill from context (sex, surname), session memory for repeated selections (source dropdown), and "Save & Add Another" for batch entry.
+
+2. **[2026-04-10] Use `<details>` for optional form sections, not always-visible fields**
+   Do instead: wrap optional fields (birth info, source citation) in `<details class="birth-section">`. Use `open` attribute when the section is likely needed (e.g. Add Person modal), omit it when the section is secondary (e.g. AddRelatedPersonModal where the focus is on the relationship).
+
 ## UI Conventions
 
 1. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
