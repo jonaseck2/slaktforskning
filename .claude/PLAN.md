@@ -86,6 +86,14 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.51.0 | Source Linker: configurable auto-linking for genealogy references | [archive](plans/archive/2026-04-10-source-linker-implementation.md) |
 ---
 
+## Research
+
+| Date | Topic | Location |
+|------|-------|----------|
+| 2026-04-11 | Competitor gap analysis | [plans/2026-04-11-competitor-gap-analysis.md](plans/2026-04-11-competitor-gap-analysis.md) |
+
+---
+
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.

@@ -231,6 +231,35 @@ const surname = match?.[2]?.trim() || null;
 1 REPO @R1@
 ```
 
+### Swedish church archive reference patterns
+
+Swedish GEDCOM files (especially from Genney/ArkivDigital) use a structured source title format:
+
+```
+Parish (CountyCode) Series:Volume (YearRange)
+```
+
+Examples: `Skepperstad (F) C:8 (1921-1952)`, `Hultsjö (F) AIIa:4 (1914-1951)`
+
+**Archive series codes:**
+| Code | Record Type |
+|------|------------|
+| AI | Husförhörslängder (household examination) |
+| AII | Församlingsböcker (parish books, post-1894) |
+| AIIa | Parish records variant |
+| B/BI | In/ut-flyttningslängder (migration records) |
+| C | Födelse/dopböcker (birth/christening) |
+| E | Lysning/vigselböcker (marriage) |
+| F | Död/begravningsböcker (death/burial) |
+
+**Linkable identifiers in citation notes:**
+- `AID: v170308.b530.s44` → ArkivDigital deep link: `https://app.arkivdigital.se/volume/v170308?image=530`
+- `NAD: SE/VALA/00333` → Riksarkivet archive reference
+
+**REPO records** map to link targets: `ArkivDigital` → `app.arkivdigital.se`, `Riksarkivet` → `sok.riksarkivet.se`, `Sveriges släktforskarförbund` → `genealogi.se` (Dödboken, Sveriges Befolkning).
+
+The source linker (`src/api/source-linker.ts`) auto-detects these patterns and renders inline links. See `src/api/link-rules/sv.ts` for the regex rules.
+
 ## GEDCOM 7.0 key differences
 
 - UTF-8 mandatory (no ANSEL/ASCII)
