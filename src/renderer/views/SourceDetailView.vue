@@ -2,7 +2,7 @@
   <div v-if="source" class="source-detail">
     <div class="detail-header">
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('sourceDetail.back') }}</button>
-      <h2>{{ source.title }}</h2>
+      <h2><LinkedText :text="source.title" /></h2>
     </div>
 
     <!-- Source Fields -->
@@ -68,7 +68,7 @@
                 <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
                 <span v-else class="muted">—</span>
               </td>
-              <td>{{ cit.page || '—' }}</td>
+              <td><LinkedText v-if="cit.page" :text="cit.page" /><span v-else>—</span></td>
               <td>
                 <span :class="'confidence-badge confidence-' + cit.confidence">
                   {{ $t('confidenceLevels.' + cit.confidence) }}
@@ -109,6 +109,7 @@ import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
+import LinkedText from '../components/LinkedText.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';

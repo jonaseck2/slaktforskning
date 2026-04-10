@@ -185,6 +185,9 @@ export default {
     addSourceOptional: 'Add Source (optional)',
     cause: 'Cause',
     causePlaceholder: 'e.g. heart attack',
+    updateEvent: 'Update Event',
+    saveAndAnother: 'Save & Add Another',
+    eventsAdded: '{count} event added | {count} events added',
   },
   citations: {
     title: 'Citations',
