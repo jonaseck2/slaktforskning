@@ -165,8 +165,12 @@ watch(() => route.path, () => {
       '/places': 'places',
       '/research-tasks': 'tasks',
       '/visualisering': 'visualization',
+      '/groups': 'groups',
+      '/media': 'media',
+      '/reports': 'reports',
       '/quality': 'quality',
       '/database': 'database',
+      '/import-export': 'importExport',
       '/search': 'search',
     };
     const name = routeMap[route.path] ?? route.path;

@@ -235,10 +235,18 @@ export function narratePageEntry(
       return t('screenReader.navTasksList');
     case 'visualization':
       return t('screenReader.navVisualization');
+    case 'groups':
+      return t('screenReader.navGroupsList');
+    case 'media':
+      return t('screenReader.navMediaList');
+    case 'reports':
+      return t('screenReader.navReportsList');
     case 'quality':
       return t('screenReader.navQuality');
     case 'database':
       return t('screenReader.navDatabase');
+    case 'importExport':
+      return t('screenReader.navImportExport');
     case 'search':
       return t('screenReader.navSearch');
     default:
