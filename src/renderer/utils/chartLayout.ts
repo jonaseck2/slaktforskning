@@ -47,12 +47,22 @@ export interface CollapseButton {
   coParentId?: string | null;
 }
 
+export interface PlaceholderBox {
+  type: 'placeholder';
+  role: 'father' | 'mother';
+  childPersonId: string;
+  key: number;
+  x: number;
+  y: number;
+}
+
 export interface ChartLayout {
   boxes: BoxLayout[];
   lines: Line[];
   svgWidth: number;
   svgHeight: number;
   collapseButtons: CollapseButton[];
+  placeholders: PlaceholderBox[];
 }
 
 /**
