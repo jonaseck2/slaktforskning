@@ -133,7 +133,8 @@
       @click.stop
       @mousedown.stop
     >
-      <button @click="startAddRelative('parent')">{{ $t('personDetail.addParent') }}</button>
+      <button @click="startAddRelative('father')">{{ $t('personDetail.addFather') }}</button>
+      <button @click="startAddRelative('mother')">{{ $t('personDetail.addMother') }}</button>
       <button @click="startAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
       <button @click="startAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
     </div>
@@ -144,6 +145,8 @@
     <AddRelatedPersonModal
       v-if="showAddRelative && addRelativePersonId"
       :person-id="addRelativePersonId"
+      :person-sex="addRelativePersonSex"
+      :person-surname="addRelativePersonSurname"
       :mode="addRelativeMode"
       @saved="onRelativeSaved"
       @close="showAddRelative = false"
@@ -231,7 +234,9 @@ function onBoxKeydown(e: KeyboardEvent, box: BoxLayout) {
 const addPopover = ref<{ personId: string; x: number; y: number } | null>(null);
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
-const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
+const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
+const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
+const addRelativePersonSurname = ref<string | undefined>(undefined);
 
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], svgWidth: 995, svgHeight: 1024, collapseButtons: [] };
@@ -296,10 +301,15 @@ function openAddPopover(box: BoxLayout) {
   addPopover.value = { personId: box.person.id, x: pos.x, y: pos.y };
 }
 
-function startAddRelative(mode: 'parent' | 'spouse' | 'child') {
+function startAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
   if (!addPopover.value) return;
-  addRelativePersonId.value = addPopover.value.personId;
+  const personId = addPopover.value.personId;
+  addRelativePersonId.value = personId;
   addRelativeMode.value = mode;
+  // Find person data from tree for sex/surname props
+  const personData = tree.value?.nodes ? [...tree.value.nodes.values()].find(p => p.id === personId) : undefined;
+  addRelativePersonSex.value = (personData?.sex as 'M' | 'F' | 'U') ?? undefined;
+  addRelativePersonSurname.value = personData?.surname ?? undefined;
   addPopover.value = null;
   showAddRelative.value = true;
 }
