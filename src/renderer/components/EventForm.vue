@@ -66,15 +66,26 @@
         </template>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-          <button type="submit">{{ editingEvent ? $t('common.save') : $t('events.addEventTitle') }}</button>
+          <span v-if="addedCount > 0" class="added-badge">
+            {{ $t('events.eventsAdded', addedCount) }}
+          </span>
+          <button type="button" class="btn-cancel" @click="$emit('close')">
+            {{ $t('common.cancel') }}
+          </button>
+          <button v-if="!editing" type="button" class="btn-secondary"
+            @click="saveAndAnother">
+            {{ $t('events.saveAndAnother') }}
+          </button>
+          <button type="submit">
+            {{ editing ? $t('events.updateEvent') : $t('events.addEvent') }}
+          </button>
         </div>
       </form>
   </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 import DateInput from './DateInput.vue';
@@ -124,6 +135,9 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const toast = useToast();
 const sourceSession = useSourceSession();
+
+const editing = computed(() => !!props.editingEvent);
+const addedCount = ref(0);
 
 const eventTypeValues = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
 
@@ -178,8 +192,8 @@ async function deleteCitation(id: string) {
   }
 }
 
-async function save() {
-  if (!window.api) return;
+async function doSave(): Promise<boolean> {
+  if (!window.api) return false;
   try {
     const data: Record<string, unknown> = {
       event_type: form.event_type,
@@ -222,11 +236,36 @@ async function save() {
       sourceSession.setLastUsed(sourceForm.source_id, sourceForm.page);
     }
 
-    emit('saved');
-    emit('close');
+    return true;
   } catch (err) {
     console.error('[EventForm] save failed:', err);
     toast.error(t('errors.saveFailed'));
+    return false;
+  }
+}
+
+async function save() {
+  if (await doSave()) {
+    emit('saved');
+    emit('close');
+  }
+}
+
+async function saveAndAnother() {
+  if (await doSave()) {
+    emit('saved');
+    // Reset form for next entry but keep modal open
+    form.event_type = '';
+    form.date_type = 'exact';
+    form.date_value = '';
+    form.date_value_end = '';
+    form.date_original = '';
+    form.place_id = null;
+    form.description = '';
+    form.cause = '';
+    addSource.value = false;
+    existingCitations.value = [];
+    addedCount.value++;
   }
 }
 </script>
@@ -285,5 +324,21 @@ async function save() {
 .citation-page {
   color: #666;
   flex-shrink: 0;
+}
+.added-badge {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted, #64748b);
+  margin-right: auto;
+}
+.btn-secondary {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  background: var(--color-bg-subtle, #f8fafc);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: var(--font-sm);
+}
+.btn-secondary:hover {
+  background: var(--color-bg-hover, #f1f5f9);
 }
 </style>

@@ -185,6 +185,9 @@ export default {
     addSourceOptional: 'Lägg till källa (valfritt)',
     cause: 'Orsak',
     causePlaceholder: 't.ex. hjärtinfarkt',
+    updateEvent: 'Uppdatera händelse',
+    saveAndAnother: 'Spara & lägg till fler',
+    eventsAdded: '{count} händelse tillagd | {count} händelser tillagda',
   },
   citations: {
     title: 'Hänvisningar',
