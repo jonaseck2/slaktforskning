@@ -1,0 +1,150 @@
+# Track A: Presentation & Sharing
+
+Source: [competitor gap analysis](2026-04-11-competitor-gap-analysis.md)
+
+Research tool that produces something worth sharing. Each milestone is independently shippable.
+
+---
+
+## A1: Narrative Reports [feature]
+
+Person biography, place history, and family narrative reports as PDF with clickable source links.
+
+### Steps
+
+- [ ] Create `src/api/reports/person_biography.ts` — assemble person data (names, events with places, relationships with partner/child names, citations) into a structured report object
+- [ ] Create `src/api/reports/place_history.ts` — all events at a place chronologically, with participants and dates
+- [ ] Create `src/api/reports/family_narrative.ts` — couple + children with key life events, marriage, sources
+- [ ] Create `src/api/reports/types.ts` — ReportData, ReportOptions, ReportSection types
+- [ ] Create HTML report templates with print-optimized CSS (reuse existing printable output patterns from ancestor chart/family group sheet)
+- [ ] Add prose generation utilities — event-to-sentence converters, date formatters for narrative text
+- [ ] IPC channel `reports:generatePersonBiography`, `reports:generatePlaceHistory`, `reports:generateFamilyNarrative`
+- [ ] Preload: expose `window.api.reports.*`
+- [ ] PDF generation via Electron's `webContents.printToPDF()` with clickable links preserved
+- [ ] Vue: ReportPreviewModal — shows HTML preview with "Save as PDF" button
+- [ ] Add "Generate Report" buttons to PersonDetailView, PlaceDetailView
+- [ ] i18n: Swedish + English prose patterns for narrative text
+- [ ] MCP tool `generate_report` — returns report HTML or structured data for agent-driven generation
+- [ ] Unit tests for report data assembly functions
+- [ ] Test PDF link generation
+
+### Dependencies
+None — uses existing API functions.
+
+### Key decisions
+- Reports are HTML-first, converted to PDF — this gives us clickable links and consistent rendering
+- Prose patterns are i18n-driven, not hardcoded English
+- MCP tool returns structured data (not PDF) so agents can further process it
+
+---
+
+## A2: Export Content Options [feature]
+
+Configuration UI for what goes into exports. Shared infrastructure across PDF reports and GEDCOM exports.
+
+### Steps
+
+- [ ] Create `src/api/export_options.ts` — ExportOptions type: `{ excludeLiving: boolean, includeMedia: boolean, includeNotes: boolean, includeSources: boolean, branchFilter?: { personId: string, direction: 'ancestors' | 'descendants' | 'both', generations?: number } }`
+- [ ] Create `filterPersons(db, persons, options)` — applies living exclusion
+- [ ] Create `filterByBranch(db, personId, direction, generations)` — returns set of person IDs in scope
+- [ ] Integrate into GEDCOM export (`src/api/gedcom/export.ts`) — filter entities before writing
+- [ ] Integrate into report generation (A1) — pass options through
+- [ ] Vue: ExportOptionsPanel.vue — reusable component with checkboxes and branch picker (uses PersonPicker)
+- [ ] Embed ExportOptionsPanel in GEDCOM export dialog
+- [ ] Embed ExportOptionsPanel in report generation UI
+- [ ] Store last-used options in db_settings via `setDbSetting(db, 'export_options', JSON.stringify(...))`
+- [ ] IPC channels for getting/setting export options
+- [ ] Unit tests for filtering logic — especially living person exclusion edge cases
+- [ ] Test branch filtering with complex family trees (multiple marriages, adoptions)
+
+### Dependencies
+None, but A1 benefits from this.
+
+### Key decisions
+- Living person exclusion is critical for privacy when sharing
+- Branch filter enables "export just my maternal line" use cases
+- Options are persisted per-database so users don't reconfigure each time
+
+---
+
+## A3: Wall Charts [feature]
+
+Large-format pedigree and descendant charts for printing. SVG-based, supports tiled multi-page PDF.
+
+### Steps
+
+- [ ] Create `src/api/reports/wall_chart.ts` — generates SVG chart data for arbitrary paper sizes
+- [ ] Extend existing pedigree chart renderer for print: no hover effects, high contrast, configurable fonts
+- [ ] Extend existing descendant chart (hourglass minus ancestors) for print
+- [ ] Support paper sizes: A4, A3, A2, A1, A0, custom dimensions
+- [ ] Tiled PDF: split large SVG into page-sized tiles with crop marks and overlap for assembly
+- [ ] IPC channel `reports:generateWallChart` with options (chart type, paper size, generations, focal person)
+- [ ] Vue: WallChartDialog.vue — configure chart type, paper size, generations, preview thumbnail
+- [ ] Add "Print Wall Chart" button to VisualizationView
+- [ ] Print-optimized CSS: serif fonts for names, thin lines, subtle colors
+- [ ] Handle large trees: auto-calculate required paper size, warn if > A0
+- [ ] i18n for chart labels
+- [ ] Unit tests for SVG generation and tile splitting
+
+### Dependencies
+Uses existing chart infrastructure from VisualizationView.
+
+### Key decisions
+- SVG-based for crisp printing at any size
+- Tiled PDF allows printing on home printers and assembling physically
+- Print styling is distinct from screen styling (serif fonts, no interactivity)
+
+---
+
+## A4: Static HTML Site Export [feature]
+
+Generate a browsable family tree website from the database. Self-contained, hostable anywhere.
+
+### Steps
+
+- [ ] Create `src/api/html_site/generator.ts` — orchestrates site generation
+- [ ] Create `src/api/html_site/templates.ts` — HTML templates for person pages, index, place pages, source pages
+- [ ] Person pages: names, events, relationships, media thumbnails, citations
+- [ ] Index page: alphabetical person list with search
+- [ ] Place pages: place hierarchy, events at place
+- [ ] Source pages: source details, linked citations
+- [ ] Client-side search: generate JSON index, lightweight JS search
+- [ ] Copy referenced media files into `site/media/` directory
+- [ ] Apply export content options (A2) for privacy filtering
+- [ ] Responsive CSS (mobile-friendly viewing)
+- [ ] IPC channel `export:htmlSite` with output directory picker
+- [ ] Vue: button in ImportExportView + progress indicator
+- [ ] i18n: site generated in user's current language
+- [ ] Tests for HTML generation and search index
+
+### Dependencies
+A2 (export content options) for privacy filtering. Can be built without A2 but less useful.
+
+### Key decisions
+- Fully static — no server required, opens from file:// or any host
+- Search is client-side JSON, no server needed
+- Media copied (not linked) so site is self-contained
+
+---
+
+## A5: CSV Export [feature]
+
+Tabular export of persons, events, sources, places for spreadsheet analysis.
+
+### Steps
+
+- [ ] Create `src/api/csv_export.ts` — functions per entity type: exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv
+- [ ] Support configurable delimiter (comma, semicolon, tab) and encoding (UTF-8, UTF-8 BOM for Excel)
+- [ ] Apply export content options (A2) for filtering
+- [ ] IPC channel `export:csv` with entity type and options
+- [ ] Vue: CSV export section in ImportExportView with entity type selector and delimiter option
+- [ ] i18n for column headers
+- [ ] Unit tests for CSV generation (quoting, escaping, encoding)
+
+### Dependencies
+A2 (export content options) optional.
+
+### Key decisions
+- UTF-8 BOM option for Excel compatibility (Excel needs BOM to detect UTF-8)
+- One file per entity type, not one mega-file
+- Column headers are i18n'd but data is raw (dates in original format)
