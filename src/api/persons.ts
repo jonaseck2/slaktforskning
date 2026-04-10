@@ -3,6 +3,20 @@ import { v4 as uuid } from 'uuid';
 import type { Person, PersonName, PersonIdentifier } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
+/**
+ * Parse preferred-name markers from a given_name string.
+ * A trailing `*` or `!` on any token marks it as the preferred name (tilltalsnamn).
+ * E.g. "Johan Erik*" → { given_name: "Johan Erik", preferred_name: "Erik" }
+ */
+export function parsePreferredName(givenName: string | undefined | null): { given_name: string | null; preferred_name: string | null } {
+  if (!givenName) return { given_name: givenName ?? null, preferred_name: null };
+  const match = givenName.match(/(\S+)[*!]/);
+  if (!match) return { given_name: givenName, preferred_name: null };
+  const preferred = match[1];
+  const cleaned = givenName.replace(/([*!])/g, '').replace(/\s+/g, ' ').trim();
+  return { given_name: cleaned || null, preferred_name: preferred };
+}
+
 export function createPerson(
   db: Database,
   data: { sex?: Person['sex']; living?: boolean; notes?: string; given_name?: string; surname?: string }
@@ -15,9 +29,10 @@ export function createPerson(
 
   if (data.given_name || data.surname) {
     const nameId = uuid();
+    const parsed = parsePreferredName(data.given_name);
     runSql(db,
-      `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order) VALUES (?, ?, ?, ?, 'birth', 0)`,
-      [nameId, id, data.given_name ?? '', data.surname ?? '']
+      `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order, preferred_name) VALUES (?, ?, ?, ?, 'birth', 0, ?)`,
+      [nameId, id, parsed.given_name ?? '', data.surname ?? '', parsed.preferred_name]
     );
   }
 
@@ -110,6 +125,9 @@ export function addPersonName(
     `SELECT COALESCE(MAX(sort_order), -1) as max_order FROM person_names WHERE person_id = ?`,
     [personId]
   )!;
+  const parsed = parsePreferredName(data.given_name);
+  // Explicit preferred_name in data takes precedence over marker-parsed value
+  const preferredName = data.preferred_name !== undefined ? data.preferred_name : parsed.preferred_name;
   runSql(db, `
     INSERT INTO person_names
       (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order,
@@ -117,13 +135,13 @@ export function addPersonName(
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id, personId,
-    data.given_name ?? null, data.surname ?? null,
+    parsed.given_name ?? null, data.surname ?? null,
     data.name_type ?? 'birth',
     data.date_from ?? null, data.date_to ?? null,
     data.sort_order ?? (maxOrder.max_order + 1),
     data.name_prefix ?? null, data.name_suffix ?? null,
     data.patronymic_base ?? null, data.name_qualifier ?? null,
-    data.preferred_name ?? null, data.nickname ?? null,
+    preferredName ?? null, data.nickname ?? null,
   ]);
   return queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id])!;
 }
@@ -139,7 +157,14 @@ export function updatePersonName(
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
-  if (data.given_name !== undefined) { fields.push('given_name = ?'); values.push(data.given_name); }
+  if (data.given_name !== undefined) {
+    const parsed = parsePreferredName(data.given_name);
+    fields.push('given_name = ?'); values.push(parsed.given_name);
+    // Auto-set preferred_name from marker unless explicitly provided
+    if (parsed.preferred_name && data.preferred_name === undefined) {
+      fields.push('preferred_name = ?'); values.push(parsed.preferred_name);
+    }
+  }
   if (data.surname !== undefined) { fields.push('surname = ?'); values.push(data.surname); }
   if (data.name_type !== undefined) { fields.push('name_type = ?'); values.push(data.name_type); }
   if (data.name_prefix !== undefined) { fields.push('name_prefix = ?'); values.push(data.name_prefix); }

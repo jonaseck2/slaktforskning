@@ -16,6 +16,7 @@ import {
   getPersonIdentifiers,
   deletePersonIdentifier,
   getDisplayGivenName,
+  parsePreferredName,
   listPersonsPage,
   countPersons,
   listUnsourcedPersonsPage,
@@ -366,5 +367,70 @@ describe('listUnsourcedPersonsPage / countUnsourcedPersons', () => {
 
     expect(listUnsourcedPersonsPage(db, 100, 0)).toHaveLength(0);
     expect(countUnsourcedPersons(db)).toBe(0);
+  });
+});
+
+describe('parsePreferredName', () => {
+  it('extracts preferred name with * marker', () => {
+    expect(parsePreferredName('Johan Erik*')).toEqual({ given_name: 'Johan Erik', preferred_name: 'Erik' });
+  });
+
+  it('extracts preferred name with ! marker', () => {
+    expect(parsePreferredName('Johan Erik!')).toEqual({ given_name: 'Johan Erik', preferred_name: 'Erik' });
+  });
+
+  it('handles marker on first name', () => {
+    expect(parsePreferredName('Erik* Johan')).toEqual({ given_name: 'Erik Johan', preferred_name: 'Erik' });
+  });
+
+  it('handles marker on middle name', () => {
+    expect(parsePreferredName('Anna Lisa* Maria')).toEqual({ given_name: 'Anna Lisa Maria', preferred_name: 'Lisa' });
+  });
+
+  it('returns null preferred_name when no marker', () => {
+    expect(parsePreferredName('Johan Erik')).toEqual({ given_name: 'Johan Erik', preferred_name: null });
+  });
+
+  it('handles null input', () => {
+    expect(parsePreferredName(null)).toEqual({ given_name: null, preferred_name: null });
+  });
+
+  it('handles undefined input', () => {
+    expect(parsePreferredName(undefined)).toEqual({ given_name: null, preferred_name: null });
+  });
+
+  it('handles single name with marker', () => {
+    expect(parsePreferredName('Erik*')).toEqual({ given_name: 'Erik', preferred_name: 'Erik' });
+  });
+});
+
+describe('preferred name marker integration', () => {
+  it('createPerson parses * marker into preferred_name', () => {
+    const person = createPerson(db, { given_name: 'Johan Erik*', surname: 'Svensson' });
+    const names = getPersonNames(db, person.id);
+    expect(names[0].given_name).toBe('Johan Erik');
+    expect(names[0].preferred_name).toBe('Erik');
+  });
+
+  it('addPersonName parses * marker into preferred_name', () => {
+    const person = createPerson(db, { given_name: 'A', surname: 'B' });
+    const name = addPersonName(db, person.id, { given_name: 'Anna Lisa*', surname: 'Karlsson' });
+    expect(name.given_name).toBe('Anna Lisa');
+    expect(name.preferred_name).toBe('Lisa');
+  });
+
+  it('addPersonName respects explicit preferred_name over marker', () => {
+    const person = createPerson(db, { given_name: 'A', surname: 'B' });
+    const name = addPersonName(db, person.id, { given_name: 'Anna Lisa*', surname: 'K', preferred_name: 'Anna' });
+    expect(name.given_name).toBe('Anna Lisa');
+    expect(name.preferred_name).toBe('Anna');
+  });
+
+  it('updatePersonName parses * marker into preferred_name', () => {
+    const person = createPerson(db, { given_name: 'Johan', surname: 'S' });
+    const names = getPersonNames(db, person.id);
+    const updated = updatePersonName(db, names[0].id, { given_name: 'Johan Erik*' });
+    expect(updated!.given_name).toBe('Johan Erik');
+    expect(updated!.preferred_name).toBe('Erik');
   });
 });
