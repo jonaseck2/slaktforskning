@@ -105,6 +105,70 @@ Fixes, investigations, and refactors archived in [plans/archive/PLAN.md](plans/a
 
 Define primary user objectives, map to current click counts, identify highest-friction paths, produce prioritized improvement backlog. Use `interview-synthesis` skill if user research data is available.
 
-#### Polish [feature]
-- [ ] Undo/redo
+---
+
+### Track A: Presentation & Sharing [plan](plans/2026-04-11-track-a-presentation-sharing.md)
+
+#### A1: Narrative Reports [feature]
+Person biography, place history, and family narrative reports as PDF with clickable source links.
+
+#### A2: Export Content Options [feature]
+Configuration UI for what goes into exports: living person exclusion, media, notes, sources, branch filtering. Shared across PDF and GEDCOM exports.
+
+#### A3: Wall Charts [feature]
+Large-format pedigree and descendant charts. SVG-based, tiled multi-page PDF for home printers.
+
+#### A4: Static HTML Site Export [feature]
+Generate a self-contained browsable family tree website. Person pages, index, search, media.
+
+#### A5: CSV Export [feature]
+Tabular export of persons, events, sources, places for spreadsheet analysis.
+
+---
+
+### Track B: Media Experience [plan](plans/2026-04-11-track-b-media-experience.md)
+
+#### B1: Media Viewer Redesign [feature]
+Entity-oriented gallery with lightbox, thumbnails, multi-entity linking, keyboard navigation.
+
+#### B2: Media-Bundled Portable Archive [feature]
+Export GEDCOM + all media files as a single .zip. Import detects and unpacks archives.
+
+#### B3: Media Timeline [feature]
+Chronological media display across a person's life or a place's history.
+
+#### B4: Face/Region Tagging — Manual [feature]
+Rectangle crop in photos, link to person, use as profile picture. Local-only.
+
+#### B5: Face/Region Tagging — MCP for AI [feature]
+MCP tools for agents to suggest face bounding boxes and person assignments.
+
+---
+
+### Track C: Core Polish [plan](plans/2026-04-11-track-c-core-polish.md)
+
+#### C1: Undo/Redo [feature]
+Command-pattern undo/redo for all data mutations. Keyboard shortcuts, menu items, grouped operations.
+
+#### C2: Person Timeline View [feature]
+Chronological event view for a person. Gap detection, date type handling, edit-on-click.
+
+#### C3: Place Map Visualization [feature]
+OpenStreetMap via Leaflet. Global place map, person life path, place detail map.
+
+#### C4: GEDCOM Hardening [feature]
+Edge case testing against RootsMagic, Gramps, Legacy, FTM exports. Import preview, progress indicator.
+
+---
+
+### Track D: MCP & Agent Story [plan](plans/2026-04-11-track-d-mcp-agent-story.md)
+
+#### D1: MCP Report Generation Tools [feature]
+Higher-level tools returning denormalized data for narrative generation: person summary, family unit, ancestor tree, place history, research gaps, source usage, timeline.
+
+#### D2: MCP Media Tools for AI [feature]
+Tools for agents to process photos: base64 retrieval, metadata, untagged media discovery, face region suggestions.
+
+#### D3: Claude Desktop/Cowork Integration [research]
+Validate MCP with Claude Desktop, create workflow documentation, identify improvements from real usage.
 
