@@ -46,6 +46,22 @@ Släktforskning targets macOS, Windows, and Linux from a single codebase. The nu
 
 **In tests and dev scripts (`tests/`, `scripts/`, `forge.config.ts`):** spawning processes is fine — test environments control what tools are available.
 
+## Architectural Decision: Enrich Presentation vs. Store Derived Data
+
+When a feature derives information from existing data (auto-linking text, computed labels, resolved references), prefer computing at render time over adding new tables or columns.
+
+**Enrich presentation (prefer this):**
+- Compute in a pure function, render in the component
+- No schema change, no sync obligations, works retroactively on all existing data
+- Example: `linkify()` scans source text for ArkivDigital AID codes and renders inline `<a>` tags
+
+**Store derived data (only when needed):**
+- When computation is expensive (seconds, not milliseconds)
+- When the derivation requires external data not available at render time
+- When the result needs to be searchable/queryable
+
+The data model should store facts, not interpretations. One source of truth.
+
 ## API Layer (Steps 1-4)
 
 ### Database migrations — adding columns to existing tables

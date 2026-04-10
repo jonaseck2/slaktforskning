@@ -40,6 +40,14 @@
 2. **[2026-04-10] Use `<details>` for optional form sections, not always-visible fields**
    Do instead: wrap optional fields (birth info, source citation) in `<details class="birth-section">`. Use `open` attribute when the section is likely needed (e.g. Add Person modal), omit it when the section is secondary (e.g. AddRelatedPersonModal where the focus is on the relationship).
 
+## Research & Design
+
+1. **[2026-04-10] Mine the user's own data files for real-world patterns**
+   Do instead: before designing a feature that processes text or data, grep the user's GEDCOM files in `export-import/` for actual examples. Real source references, citation formats, and naming patterns are more reliable than guessing or only using web research. This is how the source linker's AID/NAD regex rules were designed — directly from `Linda_Ahnstedt_utf8_260403.ged`.
+
+2. **[2026-04-10] Prefer presentation enrichment over stored derived data**
+   Do instead: when a feature derives info from existing data (auto-linking, computed labels), compute at render time in a pure function. Don't add columns/tables for derived data that needs sync. The data model stores facts, the UI enriches presentation. See `src/api/source-linker.ts` as the reference implementation.
+
 ## UI Conventions
 
 1. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
