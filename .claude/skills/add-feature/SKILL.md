@@ -20,7 +20,7 @@ Follow this order. Each step builds on the previous.
 7. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
 8. **Vue UI** — build component or extend view in `src/renderer/`
 9. **Verify** — `npm test && npx playwright test`; for UI features, also use the MCP verification loop (see below)
-10. **Docs** — update `README.md`, `CLAUDE.md`, `.claude/PLAN.md`, `.claude/DATA_MODEL.md`, `.claude/IPC_REFERENCE.md`, `.claude/MCP.md`
+10. **Docs** — update `README.md`, `CLAUDE.md`, `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/IPC_REFERENCE.md`, `docs/MCP.md`
 11. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
     - New entity type or schema column → `data-modeling` skill
     - New MCP tools → `mcp-dev` skill
@@ -179,7 +179,7 @@ await window.api.things.create({ name: 'test' });
 
 After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api` — components do not declare their own `window` type.
 
-See `.claude/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
+See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
 
 ## MCP Layer (Step 7)
 
@@ -396,7 +396,7 @@ If a component grows beyond ~300 lines, extract sections following the Person Se
 
 ### Minimizing data entry actions
 
-Every new UI feature should be evaluated against the number of user actions (clicks, selections, text entries) needed to accomplish a task. A usability analysis of this app (see `.claude/plans/2026-04-10-usability-test-plan.md`) found that creating a fully-sourced 10-person family tree required ~792 actions. Six optimizations reduced this by ~50%.
+Every new UI feature should be evaluated against the number of user actions (clicks, selections, text entries) needed to accomplish a task. A usability analysis of this app (see `docs/plans/2026-04-10-usability-test-plan.md`) found that creating a fully-sourced 10-person family tree required ~792 actions. Six optimizations reduced this by ~50%.
 
 **Principles — apply to any new feature:**
 
@@ -438,11 +438,11 @@ After `npm test` passes, if the feature includes a new or modified Vue view, ver
 
 The MCP server shares the same SQLite database as the running app — data seeded via MCP is immediately visible in the app. This loop is faster than writing a Playwright test for every feature, and it tests the full IPC → Vue rendering stack that unit tests don't cover.
 
-See `.claude/plans/2026-04-04-mcp-agent-workflow.md` for the full MCP workflow design.
+See `docs/plans/2026-04-04-mcp-agent-workflow.md` for the full MCP workflow design.
 
 ## Before implementing a non-trivial feature
 
-Use `superpowers:writing-plans` to write a plan first. Existing plans in `.claude/plans/` (and `.claude/plans/archive/`) are good templates — they show the expected task structure, file map format, and TDD step granularity for this codebase.
+Use `superpowers:writing-plans` to write a plan first. Existing plans in `docs/plans/` (and `docs/plans/archive/`) are good templates — they show the expected task structure, file map format, and TDD step granularity for this codebase.
 
 ## Speeding up with subagents
 

@@ -19,7 +19,7 @@ Update these sections if the feature changed them:
 
 Do not reformulate or rewrite sections that didn't change. Edit minimally.
 
-### 2. `.claude/IPC_REFERENCE.md` — complete window.api surface
+### 2. `docs/IPC_REFERENCE.md` — complete window.api surface
 
 Add new `window.api.*` methods in the correct namespace. Format:
 ```
@@ -30,14 +30,14 @@ window.api.things.update(id, data)       // → Thing | null
 window.api.things.delete(id)             // → boolean
 ```
 
-### 3. `.claude/PLAN.md` — roadmap
+### 3. `docs/PLAN.md` — roadmap
 
 If this feature completes or partially completes a milestone:
-- Mark completed tasks with `[x]` checkboxes in the plan file (in `.claude/plans/`)
+- Mark completed tasks with `[x]` checkboxes in the plan file (in `docs/plans/`)
 - Update the milestone entry in `PLAN.md` (mark in-progress or done)
 
 If the milestone is **fully complete**:
-- Move the plan file from `.claude/plans/` to `.claude/plans/archive/`
+- Move the plan file from `docs/plans/` to `docs/plans/archive/`
 - Add a one-line "Done (vX.Y.Z — ...)" summary to the **Implementation Status** section in `PLAN.md`, with a pointer to the archived plan file
 - Remove the milestone's heading and checkbox list from the **Roadmap** section entirely — the Implementation Status entry is the permanent record; the Roadmap should only contain future work
 

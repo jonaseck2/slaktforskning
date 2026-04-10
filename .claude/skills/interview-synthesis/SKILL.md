@@ -81,4 +81,4 @@ Släktforskning is a local-first, privacy-preserving desktop genealogy app with 
 - **Collaboration patterns** — how do researchers share findings without cloud platforms?
 - **Desktop workflow preferences** — multi-window usage, keyboard shortcuts, bulk operations
 
-These align with Släktforskning's core differentiators. See `.claude/PLAN.md` for the current roadmap to connect insights to planned features.
+These align with Släktforskning's core differentiators. See `docs/PLAN.md` for the current roadmap to connect insights to planned features.
