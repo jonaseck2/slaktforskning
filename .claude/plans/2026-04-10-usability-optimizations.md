@@ -424,7 +424,7 @@ git commit -m "feat: enhance AddRelatedPersonModal with birth fields, surname pr
 **Files:**
 - Modify: `src/renderer/views/PersonsView.vue`
 
-- [ ] **Step 1: Add birth fields to PersonsView Add Person modal**
+- [x] **Step 1: Add birth fields to PersonsView Add Person modal**
 
 Import the composable and PlacePicker at the top of the script:
 
