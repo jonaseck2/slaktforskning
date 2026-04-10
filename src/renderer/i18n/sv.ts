@@ -177,6 +177,8 @@ export default {
     placePlaceholder: 't.ex. Stockholm, Sverige',
     descriptionPlaceholder: 'Valfria detaljer\u2026',
     confirmDelete: 'Ta bort denna händelse?',
+    cite: 'Citera',
+    addCitation: 'Lägg till citering',
     citeSources: 'Citera',
     unsourced: 'Okänd källa',
     sources: 'källa | källor',

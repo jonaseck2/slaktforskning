@@ -177,6 +177,8 @@ export default {
     placePlaceholder: 'e.g. Stockholm, Sweden',
     descriptionPlaceholder: 'Optional details\u2026',
     confirmDelete: 'Delete this event?',
+    cite: 'Cite',
+    addCitation: 'Add citation',
     citeSources: 'Cite',
     unsourced: 'Unsourced',
     sources: 'source | sources',

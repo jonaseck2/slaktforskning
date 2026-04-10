@@ -4,6 +4,7 @@ import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship } from '../../src/api/relationships';
 import { addEventParticipant } from '../../src/api/relationships';
+import { createSource, createCitation } from '../../src/api/sources';
 import {
   createEvent,
   getEvent,
@@ -96,6 +97,42 @@ describe('events', () => {
     const event = createEvent(db, { event_type: 'birth' });
     expect(deleteEvent(db, event.id)).toBe(true);
     expect(getEvent(db, event.id)).toBeNull();
+  });
+
+  it('includes citation_count in getEventsForPerson', () => {
+    const person = createPerson(db, { given_name: 'Cite', surname: 'Test' });
+    const event = createEvent(db, { event_type: 'birth', date_value: '1900-01-01' });
+    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+
+    let events = getEventsForPerson(db, person.id);
+    expect(events).toHaveLength(1);
+    expect(events[0].citation_count).toBe(0);
+
+    const source = createSource(db, { title: 'Test Source' });
+    createCitation(db, { source_id: source.id, event_id: event.id });
+
+    events = getEventsForPerson(db, person.id);
+    expect(events[0].citation_count).toBe(1);
+
+    createCitation(db, { source_id: source.id, event_id: event.id, page: 'p.2' });
+
+    events = getEventsForPerson(db, person.id);
+    expect(events[0].citation_count).toBe(2);
+  });
+
+  it('includes citation_count in getEventsForRelationship', () => {
+    const rel = createRelationship(db, { type: 'couple' });
+    const event = createEvent(db, { event_type: 'marriage', relationship_id: rel.id });
+
+    let events = getEventsForRelationship(db, rel.id);
+    expect(events).toHaveLength(1);
+    expect(events[0].citation_count).toBe(0);
+
+    const source = createSource(db, { title: 'Test Source' });
+    createCitation(db, { source_id: source.id, event_id: event.id });
+
+    events = getEventsForRelationship(db, rel.id);
+    expect(events[0].citation_count).toBe(1);
   });
 
   it('creates a mention event', () => {
