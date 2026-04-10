@@ -64,6 +64,10 @@
         <span class="nav-label">{{ $t('reports.nav') }}</span>
       </router-link>
       <div class="sidebar-spacer"></div>
+      <router-link to="/link-rules" class="nav-item" :aria-label="$t('nav.linkRules')">
+        <span class="nav-icon" aria-hidden="true">🔗</span>
+        <span class="nav-label">{{ $t('nav.linkRules') }}</span>
+      </router-link>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
       <div class="settings-section">
