@@ -220,25 +220,28 @@ export function narrateChartBoundary(
 
 export function narratePageEntry(
   routeName: string,
-  t: T
+  countOrT?: number | T,
+  maybeT?: T
 ): string {
+  const count = typeof countOrT === 'number' ? countOrT : 0;
+  const t = (typeof countOrT === 'function' ? countOrT : maybeT) as T;
   switch (routeName) {
     case 'persons':
-      return t('screenReader.navPersonsList');
+      return t('screenReader.navPersonsList', { count });
     case 'relationships':
-      return t('screenReader.navRelationshipsList');
+      return t('screenReader.navRelationshipsList', { count });
     case 'sources':
-      return t('screenReader.navSourcesList');
+      return t('screenReader.navSourcesList', { count });
     case 'places':
-      return t('screenReader.navPlacesList');
+      return t('screenReader.navPlacesList', { count });
     case 'tasks':
-      return t('screenReader.navTasksList');
+      return t('screenReader.navTasksList', { count });
     case 'visualization':
       return t('screenReader.navVisualization');
     case 'groups':
-      return t('screenReader.navGroupsList');
+      return t('screenReader.navGroupsList', { count });
     case 'media':
-      return t('screenReader.navMediaList');
+      return t('screenReader.navMediaList', { count });
     case 'reports':
       return t('screenReader.navReportsList');
     case 'quality':
@@ -250,7 +253,7 @@ export function narratePageEntry(
     case 'search':
       return t('screenReader.navSearch');
     default:
-      return t('screenReader.navPersonsList');
+      return t('screenReader.navPersonsList', { count });
   }
 }
 
