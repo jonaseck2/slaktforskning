@@ -139,6 +139,32 @@
             {{ $t('common.notes') }}
             <textarea v-model="form.notes" rows="2" />
           </label>
+          <details class="birth-section" open>
+            <summary>{{ $t('eventTypes.birth') }}</summary>
+            <label>{{ $t('addRelated.birthDate') }}
+              <input v-model="birthForm.date_value" type="date" />
+            </label>
+            <label>{{ $t('addRelated.originalDate') }}
+              <input v-model="birthForm.date_original" type="text" :placeholder="$t('addRelated.originalDate')" />
+            </label>
+            <label>{{ $t('addRelated.birthPlace') }}
+              <PlacePicker v-model="birthForm.place_id" />
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="addBirthSource" />{{ $t('addRelated.addSource') }}
+            </label>
+            <template v-if="addBirthSource">
+              <label>{{ $t('addRelated.addSource') }}
+                <select v-model="birthSourceForm.source_id">
+                  <option value="">{{ $t('addRelated.sourcePlaceholder') }}</option>
+                  <option v-for="s in birthSources" :key="s.id" :value="s.id">{{ s.title }}</option>
+                </select>
+              </label>
+              <label>{{ $t('addRelated.page') }}
+                <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
+              </label>
+            </template>
+          </details>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('persons.addPerson') }}</button>
@@ -169,11 +195,14 @@ import BaseModal from '../components/BaseModal.vue';
 import { narratePersonRow } from '../utils/screenReaderNarration';
 import PersonName from '../components/PersonName.vue';
 import MergePersonsModal from '../components/MergePersonsModal.vue';
+import PlacePicker from '../components/PlacePicker.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
+import { useBirthEventCreation } from '../composables/useBirthEventCreation';
 const dataVersionStore = useDataVersionStore();
+const { createBirthEvent } = useBirthEventCreation();
 let loadedVersion = -1;
 
 interface PersonListItem {
@@ -243,6 +272,16 @@ const form = reactive({
   sex: 'U',
   notes: '',
 });
+
+// Birth form state
+const birthForm = reactive({
+  date_value: '',
+  date_original: '',
+  place_id: null as string | null,
+});
+const addBirthSource = ref(false);
+const birthSourceForm = reactive({ source_id: '', page: '' });
+const birthSources = ref<{ id: string; title: string }[]>([]);
 
 async function load() {
   if (!window.api) return;
@@ -319,17 +358,31 @@ async function onMerged() {
 async function addPerson() {
   if (!window.api) return;
   try {
-    await window.api.persons.create({
+    const person = await window.api.persons.create({
       given_name: form.given_name,
       surname: form.surname,
       sex: form.sex,
       notes: form.notes,
+    });
+    const newPerson = person as { id: string };
+    await createBirthEvent(newPerson.id, {
+      date_value: birthForm.date_value || undefined,
+      date_original: birthForm.date_original || undefined,
+      place_id: birthForm.place_id,
+      source_id: addBirthSource.value ? birthSourceForm.source_id || undefined : undefined,
+      page: addBirthSource.value ? birthSourceForm.page : undefined,
     });
     showAddForm.value = false;
     form.given_name = '';
     form.surname = '';
     form.sex = 'U';
     form.notes = '';
+    birthForm.date_value = '';
+    birthForm.date_original = '';
+    birthForm.place_id = null;
+    addBirthSource.value = false;
+    birthSourceForm.source_id = '';
+    birthSourceForm.page = '';
     await load();
   } catch (err) {
     console.error('[PersonsView] addPerson failed:', err);
@@ -367,6 +420,9 @@ function goToDetail(person: PersonListItem) {
 onMounted(async () => {
   await load();
   loadedVersion = dataVersionStore.version;
+  if (window.api?.sources) {
+    birthSources.value = (await window.api.sources.list()) as { id: string; title: string }[];
+  }
 });
 
 onActivated(async () => {
@@ -412,5 +468,29 @@ onActivated(async () => {
 .btn-merge-action {
   background: var(--color-warning-bg, #fef3c7);
   color: var(--color-warning-badge, #92400e);
+}
+.birth-section {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 4px 0;
+}
+.birth-section summary {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted, #64748b);
+}
+.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.checkbox-label input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 </style>
