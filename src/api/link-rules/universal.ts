@@ -6,6 +6,7 @@ export const universalRules: LinkRule[] = [
     name: 'URL',
     pattern: 'https?://[^\\s<>"\\)\\]]+',
     urlTemplate: '$0',
+    example: 'https://example.com/page',
     locale: '*',
     enabled: true,
     priority: 100,

@@ -6,6 +6,7 @@ export interface LinkRule {
   locale: string;
   enabled: boolean;
   priority: number;
+  example?: string;
 }
 
 export interface LinkedSegment {

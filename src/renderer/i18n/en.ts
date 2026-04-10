@@ -885,5 +885,9 @@ export default {
     noRules: 'No rules active',
     testField: 'Test',
     testPlaceholder: 'Paste text here to test which rules match...',
+    example: 'Example',
+    examplePlaceholder: 'Sample text that should match this rule',
+    exampleMatches: 'Example matches pattern',
+    exampleNoMatch: 'Example does not match pattern',
   },
 };
