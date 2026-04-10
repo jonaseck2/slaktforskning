@@ -215,8 +215,8 @@ function registerHotkeys(hotkeys: Hotkey[]): () => void {
   return registry.registerView(hotkeys);
 }
 
-function announceRoute(routeName: string, count?: number): void {
-  const text = narratePageEntry(routeName, count, t);
+function announceRoute(routeName: string): void {
+  const text = narratePageEntry(routeName, t);
   speak(text);
   // After the DOM has settled, focus the first <h1> inside <main>
   requestAnimationFrame(() => {

@@ -21,8 +21,6 @@
       </div>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ primaryName }}</h1>
-
     <!-- Person Details -->
     <section class="detail-section" aria-labelledby="section-person-details">
       <div class="section-header">

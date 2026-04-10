@@ -7,7 +7,9 @@
       </div>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('persons.title') }}</h1>
+    <p v-if="total > 0 && filter !== 'duplicates'" class="count-label">
+      {{ $t('persons.showingOf', { shown: persons.length, total }) }}
+    </p>
 
     <div class="filter-chips">
       <button :class="['chip', { active: filter === 'all' }]" @click="setFilter('all')">{{ $t('persons.filterAll') }}</button>
@@ -52,9 +54,6 @@
     </div>
 
     <template v-else-if="filter !== 'duplicates'">
-      <p class="count-label">
-        {{ $t('persons.showingOf', { shown: persons.length, total }) }}
-      </p>
       <table class="data-table">
         <thead>
           <tr>

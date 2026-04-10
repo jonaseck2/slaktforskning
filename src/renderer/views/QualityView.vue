@@ -5,8 +5,6 @@
       <span v-if="qualityStore.running" class="running-hint">{{ $t('quality.running') }}</span>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('quality.title') }}</h1>
-
     <div v-if="!qualityStore.hasRun && qualityStore.running" class="empty">
       {{ $t('quality.running') }}
     </div>

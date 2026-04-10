@@ -5,8 +5,6 @@
       <h2>{{ source.title }}</h2>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ source.title }}</h1>
-
     <!-- Source Fields -->
     <section class="detail-section" aria-labelledby="section-source-details">
       <div class="section-header" tabindex="0" :data-narrate="$t('screenReader.navSourceDetail', { title: source.title || $t('common.unknown') })">

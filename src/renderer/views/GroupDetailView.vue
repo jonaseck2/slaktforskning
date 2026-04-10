@@ -2,8 +2,6 @@
   <div v-if="group" class="group-detail">
     <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">← {{ $t('groups.title') }}</button>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ group.name || $t('groups.title') }}</h1>
-
     <input
       class="group-name-input"
       v-model="editName"

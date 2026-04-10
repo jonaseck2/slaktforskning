@@ -1,12 +1,38 @@
 import { ref } from 'vue';
 
+// ---------------------------------------------------------------------------
+// Shared voice cache (module-level) — all useTTS() instances share the same
+// loaded voices so late-created instances don't miss the voiceschanged event.
+// ---------------------------------------------------------------------------
+const _supported = typeof speechSynthesis !== 'undefined';
+let _voicesLoaded = false;
+let _cachedVoices: SpeechSynthesisVoice[] = [];
+
+function _loadVoices(): SpeechSynthesisVoice[] {
+  if (!_supported) return [];
+  _cachedVoices = speechSynthesis.getVoices();
+  if (_cachedVoices.length > 0) _voicesLoaded = true;
+  return _cachedVoices;
+}
+
+if (_supported) {
+  _loadVoices();
+  speechSynthesis.addEventListener('voiceschanged', _loadVoices);
+}
+
+function findVoice(locale: string): SpeechSynthesisVoice | null {
+  const voices = _voicesLoaded ? _cachedVoices : _loadVoices();
+  return (
+    voices.find((v) => v.lang === locale) ??
+    voices.find((v) => v.lang.startsWith(locale.split('-')[0])) ??
+    voices.find((v) => v.default) ??
+    null
+  );
+}
+
 export function useTTS() {
   const isSpeaking = ref(false);
-  const isSupported = ref(typeof speechSynthesis !== 'undefined');
-
-  // Voices load asynchronously — cache them once ready
-  let voicesLoaded = false;
-  let cachedVoices: SpeechSynthesisVoice[] = [];
+  const isSupported = ref(_supported);
 
   // Chromium keepalive: Chrome kills speechSynthesis after ~15 s of
   // continuous speech.  Periodically calling pause()/resume() resets the
@@ -34,28 +60,6 @@ export function useTTS() {
   // screen reader mode) so we don't hammer cancel()/speak() cycles which
   // corrupt Chromium's speech engine.
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-  function loadVoices(): SpeechSynthesisVoice[] {
-    if (!isSupported.value) return [];
-    cachedVoices = speechSynthesis.getVoices();
-    if (cachedVoices.length > 0) voicesLoaded = true;
-    return cachedVoices;
-  }
-
-  if (isSupported.value) {
-    loadVoices();
-    speechSynthesis.addEventListener('voiceschanged', loadVoices);
-  }
-
-  function findVoice(locale: string): SpeechSynthesisVoice | null {
-    const voices = voicesLoaded ? cachedVoices : loadVoices();
-    return (
-      voices.find((v) => v.lang === locale) ??
-      voices.find((v) => v.lang.startsWith(locale.split('-')[0])) ??
-      voices.find((v) => v.default) ??
-      null
-    );
-  }
 
   function speak(text: string, locale = 'sv') {
     if (!isSupported.value || !text) return;
@@ -104,7 +108,7 @@ export function useTTS() {
       }
 
       // If voices aren't loaded yet, wait for them
-      if (!voicesLoaded && speechSynthesis.getVoices().length === 0) {
+      if (!_voicesLoaded && speechSynthesis.getVoices().length === 0) {
         speechSynthesis.addEventListener('voiceschanged', () => doSpeak(), { once: true });
       } else {
         doSpeak();

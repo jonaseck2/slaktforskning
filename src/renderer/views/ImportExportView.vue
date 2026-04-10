@@ -10,8 +10,6 @@
       >{{ tab.label }}</button>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('nav.importExport') }}</h1>
-
     <template v-if="activeTab === 'gedcom'">
       <GedcomImportSection />
       <GedcomExportSection />

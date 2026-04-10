@@ -5,7 +5,6 @@ export default {
   },
   nav: {
     visualization: 'Visualisation',
-    tree: 'Tree',
     persons: 'Persons',
     relationships: 'Relationships',
     sources: 'Sources',
@@ -766,11 +765,11 @@ export default {
     hotkeyStopSpeech: 'Control period stop speech',
 
     // Navigation
-    navPersonsList: 'Persons list, {count} persons',
-    navRelationshipsList: 'Relationships, {count} relationships',
-    navSourcesList: 'Sources, {count} sources',
-    navPlacesList: 'Places, {count} places',
-    navTasksList: 'Research tasks, {count} tasks',
+    navPersonsList: 'Persons list',
+    navRelationshipsList: 'Relationships',
+    navSourcesList: 'Sources',
+    navPlacesList: 'Places',
+    navTasksList: 'Research tasks',
     navVisualization: 'Visualization view',
     navQuality: 'Quality checks',
     navDatabase: 'Database settings',

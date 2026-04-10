@@ -784,12 +784,6 @@ html.screen-reader h1:focus {
   outline: none;
 }
 
-/* === Page title heading (detail views) === */
-.sr-page-title {
-  font-size: var(--font-lg);
-  font-weight: 600;
-  margin: 0 0 16px;
-}
 
 /* Reset dark mode overrides for print/PDF — dark backgrounds and light text
    look wrong on paper. printBackground: false means backgrounds won't render

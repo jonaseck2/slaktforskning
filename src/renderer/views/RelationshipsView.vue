@@ -4,8 +4,6 @@
       <h2>{{ $t('relationships.title') }}</h2>
       <button class="btn-add" @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
     </div>
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('relationships.title') }}</h1>
-
     <p v-if="total > 0" class="count-label">
       {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>

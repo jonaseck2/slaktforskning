@@ -220,21 +220,19 @@ export function narrateChartBoundary(
 
 export function narratePageEntry(
   routeName: string,
-  count: number | undefined,
   t: T
 ): string {
-  const c = count ?? 0;
   switch (routeName) {
     case 'persons':
-      return t('screenReader.navPersonsList', { count: c });
+      return t('screenReader.navPersonsList');
     case 'relationships':
-      return t('screenReader.navRelationshipsList', { count: c });
+      return t('screenReader.navRelationshipsList');
     case 'sources':
-      return t('screenReader.navSourcesList', { count: c });
+      return t('screenReader.navSourcesList');
     case 'places':
-      return t('screenReader.navPlacesList', { count: c });
+      return t('screenReader.navPlacesList');
     case 'tasks':
-      return t('screenReader.navTasksList', { count: c });
+      return t('screenReader.navTasksList');
     case 'visualization':
       return t('screenReader.navVisualization');
     case 'quality':
@@ -244,7 +242,7 @@ export function narratePageEntry(
     case 'search':
       return t('screenReader.navSearch');
     default:
-      return t('screenReader.navPersonsList', { count: c });
+      return t('screenReader.navPersonsList');
   }
 }
 
