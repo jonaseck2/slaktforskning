@@ -18,7 +18,7 @@ export function useBirthEventCreation() {
     data: BirthEventData
   ): Promise<string | null> {
     if (!window.api) return null;
-    const hasData = data.date_value || data.place_id;
+    const hasData = data.date_value || data.date_original || data.place_id;
     if (!hasData) return null;
 
     const event = (await window.api.events.create({
