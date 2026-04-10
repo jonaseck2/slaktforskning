@@ -59,11 +59,23 @@ test('settings toggle has aria-expanded', async () => {
 });
 
 test('settings rows have role=radiogroup', async () => {
-  await app.click('.settings-toggle');
-  await app.settle();
+  // Open settings panel if not already open (previous test may have left it open)
+  await app.executeJs(`
+    if (document.querySelector('.settings-toggle')?.getAttribute('aria-expanded') !== 'true')
+      document.querySelector('.settings-toggle')?.click()
+  `);
 
+  // Poll until the settings panel has rendered its radiogroup rows
   const radiogroups = await app.executeJs<number>(`
-    document.querySelectorAll('.settings-row[role="radiogroup"]').length
+    new Promise(resolve => {
+      let tries = 0;
+      const check = () => {
+        const n = document.querySelectorAll('.settings-row[role="radiogroup"]').length;
+        if (n >= 3 || ++tries > 20) resolve(n);
+        else setTimeout(check, 50);
+      };
+      check();
+    })
   `);
   expect(radiogroups).toBeGreaterThanOrEqual(3); // appearance, text size, language
 });
@@ -189,17 +201,27 @@ test('date input fields have aria-labels', async () => {
 });
 
 test('TTS read aloud setting exists', async () => {
-  await app.click('.settings-toggle');
-  await app.settle();
+  // Open settings panel if not already open
+  await app.executeJs(`
+    if (document.querySelector('.settings-toggle')?.getAttribute('aria-expanded') !== 'true')
+      document.querySelector('.settings-toggle')?.click()
+  `);
 
+  // Poll until the settings panel has rendered its radiogroup rows
   const hasReadAloud = await app.executeJs<boolean>(`
-    (() => {
-      const groups = document.querySelectorAll('.settings-row[role="radiogroup"]');
-      return Array.from(groups).some(g => {
-        const label = g.getAttribute('aria-label');
-        return label && (label.includes('Read') || label.includes('Läs'));
-      });
-    })()
+    new Promise(resolve => {
+      let tries = 0;
+      const check = () => {
+        const groups = document.querySelectorAll('.settings-row[role="radiogroup"]');
+        const found = Array.from(groups).some(g => {
+          const label = g.getAttribute('aria-label');
+          return label && (label.includes('Read') || label.includes('Läs'));
+        });
+        if (found || ++tries > 20) resolve(found);
+        else setTimeout(check, 50);
+      };
+      check();
+    })
   `);
   expect(hasReadAloud).toBe(true);
 });
