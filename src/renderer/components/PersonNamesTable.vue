@@ -5,7 +5,7 @@
         <th>{{ $t('persons.givenName') }}</th>
         <th>{{ $t('persons.surname') }}</th>
         <th class="th-shrink">{{ $t('common.type') }}</th>
-        <th class="th-actions th-shrink">{{ $t('common.actions') }}</th>
+        <th class="actions-cell">{{ $t('common.actions') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -72,11 +72,7 @@ defineEmits<{
   width: 1%;
   white-space: nowrap;
 }
-.actions-cell {
-  width: 1%;
-  white-space: nowrap;
-  vertical-align: middle;
-}
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 .type-badge {
   background: var(--color-bg-subtle);
   color: var(--color-text-muted);
@@ -86,8 +82,11 @@ defineEmits<{
 }
 
 .primary-star {
+  display: inline-block;
   font-size: var(--font-xs);
   color: #f0a500;
+  padding: 3px 6px;
+  text-align: center;
 }
 .name-prefix,
 .name-suffix {

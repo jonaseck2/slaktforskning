@@ -33,7 +33,7 @@
             <li v-for="entry in gen.entries" :key="entry.ahnNum" class="ab-gen-entry">
               <span class="ab-ahn-num">{{ entry.ahnNum }}.</span>
               <a :href="`#person-${entry.person.id}`">{{ displayName(entry.person) }}</a>
-              <span v-if="lifespanStr(entry.person)" class="ab-years"> {{ lifespanStr(entry.person) }}</span>
+              <span v-if="lifespanStr(entry.person)" class="ab-years" :aria-label="lifespanLabel(entry.person)" aria-hidden="false"> {{ lifespanStr(entry.person) }}</span>
             </li>
           </ol>
         </div>
@@ -48,7 +48,7 @@
       >
         <h2 class="ab-person-heading">
           {{ entry.ahnNum }}. {{ displayName(entry.person) }}
-          <span v-if="lifespanStr(entry.person)" class="ab-years"> {{ lifespanStr(entry.person) }}</span>
+          <span v-if="lifespanStr(entry.person)" class="ab-years" :aria-label="lifespanLabel(entry.person)" aria-hidden="false"> {{ lifespanStr(entry.person) }}</span>
         </h2>
 
         <!-- Names -->
@@ -275,7 +275,15 @@ function lifespanStr(p: PersonNode): string {
   const parts: string[] = [];
   if (p.birthDate) parts.push(`* ${p.birthDate}`);
   if (p.deathDate) parts.push(`\u2020 ${p.deathDate}`);
-  return `(${parts.join('  ')})`;
+  return `( ${parts.join('  ')} )`;
+}
+
+function lifespanLabel(p: PersonNode): string {
+  if (!p.birthDate && !p.deathDate) return '';
+  const parts: string[] = [];
+  if (p.birthDate) parts.push(`${t('narration.born')} ${p.birthDate}`);
+  if (p.deathDate) parts.push(`${t('narration.died')} ${p.deathDate}`);
+  return parts.join(', ');
 }
 
 function formatDate(ev: RawEvent): string {

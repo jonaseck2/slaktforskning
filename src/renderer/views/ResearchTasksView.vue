@@ -5,8 +5,6 @@
       <button class="btn-add" @click="showAddModal = true">{{ $t('researchTasks.addTask') }}</button>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('researchTasks.title') }}</h1>
-
     <p v-if="tasks.length > 0" class="count-label">
       {{ $t('researchTasks.summary', { count: tasks.length, open: openCount }) }}
     </p>

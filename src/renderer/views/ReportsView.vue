@@ -5,8 +5,6 @@
       <span v-if="reportLoading" class="running-hint">Laddar rapport…</span>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('reports.title') }}</h1>
-
     <div class="tab-bar">
       <button
         v-for="tab in tabs"

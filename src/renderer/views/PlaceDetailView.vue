@@ -6,8 +6,6 @@
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ place.name }}</h1>
-
     <section class="detail-section" aria-labelledby="section-place-details">
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.navPlaceDetail', { name: place.name })">
         <h4 id="section-place-details">{{ $t('places.detailsTitle') }}</h4>

@@ -7,8 +7,6 @@
       </div>
     </div>
 
-    <h1 class="sr-page-title" tabindex="-1">{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h1>
-
     <!-- Type & Subtype -->
     <section class="detail-section" aria-labelledby="section-rel-type">
       <div class="section-header" tabindex="0" :data-narrate="$t('common.type') + ': ' + $t('relTypes.' + relationship.type)">

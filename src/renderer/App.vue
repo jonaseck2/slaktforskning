@@ -21,45 +21,45 @@
         </router-link>
       </div>
       <h2 class="nav-section-label">{{ $t('nav.navigate') }}</h2>
-      <router-link to="/visualisering" class="nav-item">
+      <router-link to="/visualisering" class="nav-item" :aria-label="$t('nav.visualization')">
         <span class="nav-icon" aria-hidden="true">🌳</span>
-        <span class="nav-label">{{ $t('nav.tree') }}</span>
+        <span class="nav-label">{{ $t('nav.visualization') }}</span>
       </router-link>
-      <router-link to="/" class="nav-item">
+      <router-link to="/" class="nav-item" :aria-label="$t('nav.persons')">
         <span class="nav-icon" aria-hidden="true">👥</span>
         <span class="nav-label">{{ $t('nav.persons') }}</span>
       </router-link>
-      <router-link to="/relationships" class="nav-item">
+      <router-link to="/relationships" class="nav-item" :aria-label="$t('nav.relationships')">
         <span class="nav-icon" aria-hidden="true">🔗</span>
         <span class="nav-label">{{ $t('nav.relationships') }}</span>
       </router-link>
-      <router-link to="/places" class="nav-item">
+      <router-link to="/places" class="nav-item" :aria-label="$t('places.title')">
         <span class="nav-icon" aria-hidden="true">📍</span>
         <span class="nav-label">{{ $t('places.title') }}</span>
       </router-link>
-      <router-link to="/sources" class="nav-item">
+      <router-link to="/sources" class="nav-item" :aria-label="$t('nav.sources')">
         <span class="nav-icon" aria-hidden="true">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
-      <router-link to="/groups" class="nav-item">
+      <router-link to="/groups" class="nav-item" :aria-label="$t('nav.groups')">
         <span class="nav-icon" aria-hidden="true">🏷️</span>
         <span class="nav-label">{{ $t('nav.groups') }}</span>
       </router-link>
-      <router-link to="/media" class="nav-item">
+      <router-link to="/media" class="nav-item" :aria-label="$t('media.nav')">
         <span class="nav-icon" aria-hidden="true">🖼️</span>
         <span class="nav-label">{{ $t('media.nav') }}</span>
       </router-link>
-      <router-link to="/research-tasks" class="nav-item" :aria-label="openTaskCount > 0 ? $t('researchTasks.nav') + ', ' + openTaskCount + ' ' + $t('a11y.openTasks', { count: openTaskCount }) : undefined">
+      <router-link to="/research-tasks" class="nav-item" :aria-label="openTaskCount > 0 ? $t('researchTasks.nav') + ', ' + openTaskCount + ' ' + $t('a11y.openTasks', { count: openTaskCount }) : $t('researchTasks.nav')">
         <span class="nav-icon" aria-hidden="true">🔬</span>
         <span class="nav-label">{{ $t('researchTasks.nav') }}</span>
         <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
       </router-link>
-      <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('quality.nav') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : undefined">
+      <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('quality.nav') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : $t('quality.nav')">
         <span class="nav-icon" aria-hidden="true">⚠️</span>
         <span class="nav-label">{{ $t('quality.nav') }}</span>
         <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
-      <router-link to="/reports" class="nav-item">
+      <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
         <span class="nav-icon" aria-hidden="true">🖨️</span>
         <span class="nav-label">{{ $t('reports.nav') }}</span>
       </router-link>

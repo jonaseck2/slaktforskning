@@ -11,7 +11,7 @@
           <th>{{ $t('common.type') }}</th>
           <th class="th-date">{{ $t('events.date') }}</th>
           <th>{{ $t('events.description') }}</th>
-          <th v-if="!props.readonly" class="th-actions th-shrink">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -169,9 +169,7 @@ defineExpose({ reload: load, openAddForm });
 .td-date {
   white-space: nowrap;
 }
-.actions-cell {
-  vertical-align: middle;
-}
+.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 tr.non-interactive { cursor: default; }
 tr.non-interactive:hover td { background: transparent; }
 .event-cause {
