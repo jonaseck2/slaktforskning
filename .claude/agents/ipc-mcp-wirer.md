@@ -61,7 +61,7 @@ window.api.sources.*          — create, get, list, update, delete, search
 window.api.citations.*        — create, get, forSource, forEvent, delete
 ```
 
-Full reference: `.claude/IPC_REFERENCE.md`
+Full reference: `docs/IPC_REFERENCE.md`
 
 ## MCP layer
 

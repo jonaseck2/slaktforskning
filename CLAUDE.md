@@ -106,11 +106,15 @@ tests/
 └── e2e/                          # Playwright — process spawning tests
     └── app.test.ts               # App launch smoke test + MCP server connectivity
 
-.claude/
+docs/
 ├── PLAN.md                       # Vision, implementation status, roadmap
 ├── DATA_MODEL.md                 # Schema design, GEDCOM compatibility
 ├── MCP.md                        # MCP server tools and UI bridge reference
+├── IPC_REFERENCE.md              # Complete window.api surface + IPC channel mapping
 ├── napkin.md                     # Per-repo runbook (auto-curated)
+└── plans/                        # Implementation plans (active + archive/)
+
+.claude/
 └── skills/                       # Claude skills (commit, test, electron-dev, etc.)
 
 .devcontainer/
@@ -316,7 +320,7 @@ mergePersons(db, targetId, sourceId) → { moved: Record<string, number> }
 
 ### window.api Surface + IPC Channel Mapping
 
-See `.claude/IPC_REFERENCE.md` for the complete `window.api` surface and IPC channel → API function mapping table.
+See `docs/IPC_REFERENCE.md` for the complete `window.api` surface and IPC channel → API function mapping table.
 ---
 
 ## Vue Component Patterns
@@ -647,11 +651,11 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 |------|----------|---------|
 | `README.md` | Humans | Quick start, features, project structure |
 | `CLAUDE.md` | Agents | This file. Complete architecture reference |
-| `.claude/PLAN.md` | Both | Vision, implementation status, roadmap |
-| `.claude/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility (also bundled in `/data-modeling` skill) |
-| `.claude/MCP.md` | Both | MCP server tools (also bundled in `/mcp-dev` skill) |
-| `.claude/IPC_REFERENCE.md` | Agents | Complete `window.api` surface + IPC channel mapping |
-| `.claude/napkin.md` | Agents | Per-repo runbook with recurring gotchas |
+| `docs/PLAN.md` | Both | Vision, implementation status, roadmap |
+| `docs/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility (also bundled in `/data-modeling` skill) |
+| `docs/MCP.md` | Both | MCP server tools (also bundled in `/mcp-dev` skill) |
+| `docs/IPC_REFERENCE.md` | Agents | Complete `window.api` surface + IPC channel mapping |
+| `docs/napkin.md` | Agents | Per-repo runbook with recurring gotchas |
 
 ## Skills
 
@@ -695,8 +699,8 @@ After `writing-plans` finishes, **always invoke `superpowers:subagent-driven-dev
 - **SQLite WAL mode** with foreign keys enforced
 - **No global DB singletons** in api/ — always pass `db` as parameter
 - **Modal dialogs** for create/edit forms — reserve page navigation for detail views
-- **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `.claude/PLAN.md`
+- **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `docs/PLAN.md`
 - **Always commit ALL files** — Use `git add -A`. Never selectively skip files.
-- **Write plans to files using Python, not the Write tool** — Persist implementation plans to `.claude/plans/` immediately (e.g. `.claude/plans/YYYY-MM-DD-description.md`). Context can be lost. The Write/Edit tools trigger a security hook when plan content contains patterns like exec() — always write plan files via `python3 -c "open(path,'w').write(content)"` through the Bash tool instead. (e.g. `.claude/plans/YYYY-MM-DD-description.md`). Context can be lost. When asked to "continue according to plan", look there for the most recent plan file.
-- **Keep plan files and roadmap in sync** — When adding a plan file in `.claude/plans/`, add a matching milestone to `.claude/PLAN.md` roadmap with a pointer to the plan file. When completing a milestone, mark it done in both the plan file (checkboxes) and `.claude/PLAN.md`. The roadmap is the index; the plan files are the detail.
-- **Archive completed plans** — When a milestone is fully complete, move its plan file from `.claude/plans/` to `.claude/plans/archive/`. Update the `.claude/PLAN.md` pointer to the archived path. This prevents completed plans from being loaded into context unnecessarily. `.claude/PLAN.md` Done entries are brief summaries only — full implementation details live in the archived plan files.
+- **Persist implementation plans** — Write plans to `docs/plans/` immediately (e.g. `docs/plans/YYYY-MM-DD-description.md`). Context can be lost. When asked to "continue according to plan", look there for the most recent plan file.
+- **Keep plan files and roadmap in sync** — When adding a plan file in `docs/plans/`, add a matching milestone to `docs/PLAN.md` roadmap with a pointer to the plan file. When completing a milestone, mark it done in both the plan file (checkboxes) and `docs/PLAN.md`. The roadmap is the index; the plan files are the detail.
+- **Archive completed plans** — When a milestone is fully complete, move its plan file from `docs/plans/` to `docs/plans/archive/`. Update the `docs/PLAN.md` pointer to the archived path. This prevents completed plans from being loaded into context unnecessarily. `docs/PLAN.md` Done entries are brief summaries only — full implementation details live in the archived plan files.

@@ -59,25 +59,25 @@ The bumped version becomes the canonical version for that milestone — use it i
 
 ## Plan + Roadmap sync
 
-If the commit completes a milestone (or part of one) that has a plan file in `.claude/plans/`:
+If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
-- Update `.claude/PLAN.md` accordingly
+- Update `docs/PLAN.md` accordingly
 - Include these doc updates in the same commit
 
 If the commit **fully completes** a milestone:
-- Move the plan file from `.claude/plans/` to `.claude/plans/archive/`
-- Add a row to the **Implementation Status** table in `.claude/PLAN.md`:
+- Move the plan file from `docs/plans/` to `docs/plans/archive/`
+- Add a row to the **Implementation Status** table in `docs/PLAN.md`:
   `| vX.Y.Z | Short description | [archive](plans/archive/filename.md) |`
 - **Remove the milestone's heading and checkbox list from the Roadmap section** — the Implementation Status row is the permanent record; the Roadmap must only contain future work
 - Include all of the above in the same commit
 
 If the commit introduces a new plan file:
-- Check that `.claude/PLAN.md` has a matching milestone entry pointing to the plan file
+- Check that `docs/PLAN.md` has a matching milestone entry pointing to the plan file
 - If missing, add it before committing
 
 ## Documenting fixes without a prior plan
 
-Significant bugfixes and unplanned improvements should also be archived, even when no plan file was written beforehand. Write the archive file directly into `.claude/plans/archive/` (skip the `plans/` staging step):
+Significant bugfixes and unplanned improvements should also be archived, even when no plan file was written beforehand. Write the archive file directly into `docs/plans/archive/` (skip the `plans/` staging step):
 
 **When to archive a fix:**
 - Root cause was non-obvious or took investigation to find
@@ -102,4 +102,4 @@ What was changed and why.
 - `path/to/file.ts` — what changed
 ```
 
-Add a `| Fix | Short description | [archive](...) |` row to `.claude/PLAN.md` **Implementation Status**. No Roadmap entry is needed for fixes.
+Add a `| Fix | Short description | [archive](...) |` row to `docs/PLAN.md` **Implementation Status**. No Roadmap entry is needed for fixes.

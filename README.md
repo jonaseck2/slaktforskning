@@ -162,9 +162,9 @@ tests/
 
 - **[README.md](README.md)** — This file. Quick start and overview for humans.
 - **[CLAUDE.md](CLAUDE.md)** — Agent instructions. Architecture, commands, conventions.
-- **[.claude/PLAN.md](.claude/PLAN.md)** — Vision, implementation status, roadmap.
-- **[.claude/DATA_MODEL.md](.claude/DATA_MODEL.md)** — Schema design, GEDCOM compatibility.
-- **[.claude/MCP.md](.claude/MCP.md)** — MCP server tools and UI bridge reference.
+- **[docs/PLAN.md](docs/PLAN.md)** — Vision, implementation status, roadmap.
+- **[docs/DATA_MODEL.md](docs/DATA_MODEL.md)** — Schema design, GEDCOM compatibility.
+- **[docs/MCP.md](docs/MCP.md)** — MCP server tools and UI bridge reference.
 
 ## License
 

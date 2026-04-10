@@ -63,7 +63,7 @@ Släktforskning differentiates on being **local-first** (no cloud, no subscripti
 - **Citation workflows** — this is a known pain point. How do competitors handle source attachment and evidence evaluation?
 - **Desktop vs. web vs. mobile** — Släktforskning is desktop-first. What do desktop competitors (RootsMagic, Gramps, MacFamilyTree) do well that web-first platforms don't?
 
-See `.claude/PLAN.md` for the current roadmap — focus research on features relevant to upcoming work.
+See `docs/PLAN.md` for the current roadmap — focus research on features relevant to upcoming work.
 
 ## Tips
 
