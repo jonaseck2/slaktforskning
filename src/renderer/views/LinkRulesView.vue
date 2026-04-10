@@ -39,8 +39,8 @@
         <thead>
           <tr>
             <th>{{ $t('linkRules.name') }}</th>
+            <th>{{ $t('linkRules.example') }}</th>
             <th>{{ $t('linkRules.pattern') }}</th>
-            <th>{{ $t('linkRules.urlTemplate') }}</th>
             <th>{{ $t('linkRules.priority') }}</th>
             <th>{{ $t('linkRules.enabled') }}</th>
             <th></th>
@@ -49,8 +49,8 @@
         <tbody>
           <tr v-for="rule in resolvedRules" :key="rule.id">
             <td>{{ rule.name }}</td>
+            <td><span v-if="rule.example" class="example-cell">{{ rule.example }}</span><span v-else class="muted">—</span></td>
             <td><span class="pattern-cell">{{ truncate(rule.pattern, 40) }}</span></td>
-            <td><span class="pattern-cell">{{ truncate(rule.urlTemplate, 40) }}</span></td>
             <td>{{ rule.priority }}</td>
             <td>
               <input
@@ -110,6 +110,16 @@
             <input v-model="newRule.urlTemplate" type="text" required />
           </label>
           <label>
+            {{ $t('linkRules.example') }}
+            <input v-model="newRule.example" type="text" :placeholder="$t('linkRules.examplePlaceholder')" />
+          </label>
+          <div v-if="newRule.example && newRule.pattern" class="example-test">
+            <span v-if="exampleMatchResult === 'valid'" class="match-ok">&#x2713; {{ $t('linkRules.exampleMatches') }}</span>
+            <span v-else-if="exampleMatchResult === 'no-match'" class="match-fail">&#x2717; {{ $t('linkRules.exampleNoMatch') }}</span>
+            <span v-else-if="exampleMatchResult === 'bad-regex'" class="match-fail">&#x2717; {{ patternError }}</span>
+            <div v-if="exampleMatchUrl" class="match-url">→ {{ exampleMatchUrl }}</div>
+          </div>
+          <label>
             {{ $t('linkRules.priority') }}
             <input v-model.number="newRule.priority" type="number" min="0" max="999" />
           </label>
@@ -124,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
 import { svRules } from '../../api/link-rules/sv';
 import { enRules } from '../../api/link-rules/en';
@@ -145,8 +155,33 @@ const testText = ref('');
 const testSegments = computed(() => linkify(testText.value, resolvedRules.value));
 
 const showAddModal = ref(false);
-const newRule = ref({ name: '', pattern: '', urlTemplate: '', priority: 50 });
+const newRule = ref({ name: '', pattern: '', urlTemplate: '', example: '', priority: 50 });
 const patternError = ref('');
+
+const exampleMatchResult = computed<'valid' | 'no-match' | 'bad-regex' | null>(() => {
+  if (!newRule.value.example || !newRule.value.pattern) return null;
+  try {
+    const regex = new RegExp(newRule.value.pattern);
+    return regex.test(newRule.value.example) ? 'valid' : 'no-match';
+  } catch {
+    return 'bad-regex';
+  }
+});
+
+const exampleMatchUrl = computed<string | null>(() => {
+  if (exampleMatchResult.value !== 'valid' || !newRule.value.urlTemplate) return null;
+  const segments = linkify(newRule.value.example, [{
+    id: 'preview',
+    name: 'Preview',
+    pattern: newRule.value.pattern,
+    urlTemplate: newRule.value.urlTemplate,
+    locale: '*',
+    enabled: true,
+    priority: 0,
+  }]);
+  const linked = segments.find((s) => s.url);
+  return linked?.url ?? null;
+});
 
 function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + '\u2026' : str;
@@ -197,7 +232,7 @@ function deleteRule(id: string) {
 
 function closeAddModal() {
   showAddModal.value = false;
-  newRule.value = { name: '', pattern: '', urlTemplate: '', priority: 50 };
+  newRule.value = { name: '', pattern: '', urlTemplate: '', example: '', priority: 50 };
   patternError.value = '';
 }
 
@@ -210,16 +245,20 @@ function submitAddRule() {
     return;
   }
   const id = 'custom-' + Date.now();
+  const ruleData: Partial<LinkRule> & { enabled: boolean } = {
+    name: newRule.value.name,
+    pattern: newRule.value.pattern,
+    urlTemplate: newRule.value.urlTemplate,
+    priority: newRule.value.priority,
+    locale: '*',
+    enabled: true,
+  };
+  if (newRule.value.example) {
+    ruleData.example = newRule.value.example;
+  }
   const overrides = {
     ...config.value.overrides,
-    [id]: {
-      name: newRule.value.name,
-      pattern: newRule.value.pattern,
-      urlTemplate: newRule.value.urlTemplate,
-      priority: newRule.value.priority,
-      locale: '*',
-      enabled: true,
-    },
+    [id]: ruleData,
   };
   config.value = { ...config.value, overrides };
   saveConfig();
@@ -284,6 +323,32 @@ onMounted(loadConfig);
   border-radius: 3px;
   font-size: var(--font-xs);
   vertical-align: middle;
+}
+
+.example-cell {
+  font-size: var(--font-xs);
+  color: #888;
+}
+
+.example-test {
+  padding: 6px 0;
+  font-size: var(--font-sm);
+}
+
+.match-ok {
+  color: #22c55e;
+}
+
+.match-fail {
+  color: #e53e3e;
+}
+
+.match-url {
+  font-family: monospace;
+  font-size: var(--font-xs);
+  color: #888;
+  margin-top: 2px;
+  word-break: break-all;
 }
 
 .input-error {

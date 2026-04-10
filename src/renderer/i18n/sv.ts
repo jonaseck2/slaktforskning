@@ -864,5 +864,9 @@ export default {
     noRules: 'Inga regler aktiva',
     testField: 'Testa',
     testPlaceholder: 'Klistra in text för att testa vilka regler som matchar...',
+    example: 'Exempel',
+    examplePlaceholder: 'Exempeltext som ska matcha regeln',
+    exampleMatches: 'Exemplet matchar mönstret',
+    exampleNoMatch: 'Exemplet matchar inte mönstret',
   },
 };
