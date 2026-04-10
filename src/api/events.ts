@@ -40,17 +40,25 @@ export function getEvent(db: Database, id: string): GenealogyEvent | null {
   return queryOne<GenealogyEvent>(db, `SELECT * FROM events WHERE id = ?`, [id]) ?? null;
 }
 
-export function getEventsForPerson(db: Database, personId: string): GenealogyEvent[] {
-  return queryAll<GenealogyEvent>(db, `
-    SELECT e.* FROM events e
+export function getEventsForPerson(db: Database, personId: string): (GenealogyEvent & { citation_count: number })[] {
+  return queryAll<GenealogyEvent & { citation_count: number }>(db, `
+    SELECT e.*, COALESCE(cc.cnt, 0) AS citation_count
+    FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
+    LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations GROUP BY event_id) cc ON cc.event_id = e.id
     WHERE ep.person_id = ?
     ORDER BY e.date_value
   `, [personId]);
 }
 
-export function getEventsForRelationship(db: Database, relationshipId: string): GenealogyEvent[] {
-  return queryAll<GenealogyEvent>(db, `SELECT * FROM events WHERE relationship_id = ? ORDER BY date_value`, [relationshipId]);
+export function getEventsForRelationship(db: Database, relationshipId: string): (GenealogyEvent & { citation_count: number })[] {
+  return queryAll<GenealogyEvent & { citation_count: number }>(db, `
+    SELECT e.*, COALESCE(cc.cnt, 0) AS citation_count
+    FROM events e
+    LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations GROUP BY event_id) cc ON cc.event_id = e.id
+    WHERE e.relationship_id = ?
+    ORDER BY e.date_value
+  `, [relationshipId]);
 }
 
 export function updateEvent(
