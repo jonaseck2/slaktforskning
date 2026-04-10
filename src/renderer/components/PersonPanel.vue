@@ -28,7 +28,8 @@
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
           <div class="panel-add-relative-btns">
-            <button class="btn-dark" @click="openAddRelative('parent')">{{ $t('personDetail.addParent') }}</button>
+            <button class="btn-dark" @click="openAddRelative('father')">{{ $t('personDetail.addFather') }}</button>
+            <button class="btn-dark" @click="openAddRelative('mother')">{{ $t('personDetail.addMother') }}</button>
             <button class="btn-dark" @click="openAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
             <button class="btn-dark" @click="openAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
           </div>
@@ -194,6 +195,8 @@
     <AddRelatedPersonModal
       v-if="showAddRelative && personId"
       :person-id="personId"
+      :person-sex="person?.sex"
+      :person-surname="primaryName?.surname ?? undefined"
       :mode="addRelativeMode"
       @close="showAddRelative = false"
       @saved="onRelativeSaved"
@@ -244,7 +247,7 @@ const researchTasks = ref<import('./ResearchTasksTable.vue').ResearchTaskRow[]>(
 
 // Add relative modal state
 const showAddRelative = ref(false);
-const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
+const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 // EventList ref for triggering add form
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
@@ -258,7 +261,7 @@ const showGroupPicker = ref(false);
 // Research task form state (add only — edit is handled inline by ResearchTasksTable)
 const showTaskForm = ref(false);
 
-function openAddRelative(mode: 'parent' | 'spouse' | 'child') {
+function openAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
   addRelativeMode.value = mode;
   showAddRelative.value = true;
 }

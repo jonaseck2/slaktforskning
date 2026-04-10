@@ -41,6 +41,34 @@
           <label class="checkbox-label">
             <input type="checkbox" v-model="form.living" />{{ $t('persons.living') }}
           </label>
+
+          <!-- Birth fields -->
+          <details class="birth-section">
+            <summary>{{ $t('eventTypes.birth') }}</summary>
+            <label>{{ $t('addRelated.birthDate') }}
+              <input v-model="birthForm.date_value" type="date" />
+            </label>
+            <label>{{ $t('addRelated.originalDate') }}
+              <input v-model="birthForm.date_original" type="text" :placeholder="$t('addRelated.originalDate')" />
+            </label>
+            <label>{{ $t('addRelated.birthPlace') }}
+              <PlacePicker v-model="birthForm.place_id" />
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="addBirthSource" />{{ $t('addRelated.addSource') }}
+            </label>
+            <template v-if="addBirthSource">
+              <label>{{ $t('addRelated.addSource') }}
+                <select v-model="birthSourceForm.source_id">
+                  <option value="">{{ $t('addRelated.sourcePlaceholder') }}</option>
+                  <option v-for="s in sources" :key="s.id" :value="s.id">{{ s.title }}</option>
+                </select>
+              </label>
+              <label>{{ $t('addRelated.page') }}
+                <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
+              </label>
+            </template>
+          </details>
         </template>
 
         <!-- Subtype — both modes, spouse only -->
@@ -61,16 +89,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 import { COUPLE_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
+import PlacePicker from './PlacePicker.vue';
 import { useToast } from '../composables/useToast';
+import { useBirthEventCreation } from '../composables/useBirthEventCreation';
 
 const props = defineProps<{
   personId: string;
-  mode: 'parent' | 'spouse' | 'child';
+  personSex?: 'M' | 'F' | 'U';
+  personSurname?: string;
+  mode: 'father' | 'mother' | 'spouse' | 'child';
 }>();
 
 const emit = defineEmits<{
@@ -80,9 +112,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
+const { createBirthEvent } = useBirthEventCreation();
 
 const title = computed(() => {
-  if (props.mode === 'parent') return t('personDetail.addParentTitle');
+  if (props.mode === 'father') return t('personDetail.addFatherTitle');
+  if (props.mode === 'mother') return t('personDetail.addMotherTitle');
   if (props.mode === 'spouse') return t('personDetail.addSpouseTitle');
   return t('personDetail.addChildTitle');
 });
@@ -90,12 +124,46 @@ const title = computed(() => {
 const entryMode = ref<'new' | 'existing'>('new');
 const existingPersonId = ref<string | null>(null);
 
+// Compute default sex based on mode
+function defaultSex(): 'M' | 'F' | 'U' {
+  if (props.mode === 'father') return 'M';
+  if (props.mode === 'mother') return 'F';
+  if (props.mode === 'spouse') {
+    if (props.personSex === 'M') return 'F';
+    if (props.personSex === 'F') return 'M';
+    return 'U';
+  }
+  return 'U';
+}
+
+// Compute default surname based on mode
+function defaultSurname(): string {
+  if (props.mode === 'child' && props.personSurname) return props.personSurname;
+  return '';
+}
+
 const form = reactive({
   given_name: '',
-  surname: '',
-  sex: 'U' as 'M' | 'F' | 'U',
+  surname: defaultSurname(),
+  sex: defaultSex(),
   living: true,
   subtype: 'unknown',
+});
+
+// Birth form state
+const birthForm = reactive({
+  date_value: '',
+  date_original: '',
+  place_id: null as string | null,
+});
+const addBirthSource = ref(false);
+const birthSourceForm = reactive({ source_id: '', page: '' });
+const sources = ref<{ id: string; title: string }[]>([]);
+
+onMounted(async () => {
+  if (window.api?.sources) {
+    sources.value = (await window.api.sources.list()) as { id: string; title: string }[];
+  }
 });
 
 async function save() {
@@ -113,10 +181,19 @@ async function save() {
         living: form.living,
       })) as { id: string };
       targetPersonId = newPerson.id;
+
+      // Create birth event if any birth data was provided
+      await createBirthEvent(targetPersonId, {
+        date_value: birthForm.date_value || undefined,
+        date_original: birthForm.date_original || undefined,
+        place_id: birthForm.place_id,
+        source_id: addBirthSource.value ? birthSourceForm.source_id || undefined : undefined,
+        page: addBirthSource.value ? birthSourceForm.page : undefined,
+      });
     }
 
     const relData: Record<string, unknown> = {};
-    if (props.mode === 'parent') {
+    if (props.mode === 'father' || props.mode === 'mother') {
       relData.type = 'parent_child';
       relData.person1_id = targetPersonId;   // parent
       relData.person2_id = props.personId;   // child (current person)
@@ -173,4 +250,20 @@ async function save() {
   color: var(--color-text);
 }
 .toggle-btn.active { background: var(--color-primary); color: white; }
+.birth-section {
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 4px;
+}
+.birth-section summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+}
+.birth-section > label,
+.birth-section > .checkbox-label {
+  margin-top: 8px;
+}
 </style>

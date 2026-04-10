@@ -82,7 +82,8 @@
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
         <h4 id="section-person-relationships">{{ $t('personDetail.relationships') }}</h4>
         <div class="rel-actions">
-          <button class="btn-add" @click="addRelatedMode = 'parent'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addParent') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'father'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addFather') }}</button>
+          <button class="btn-add" @click="addRelatedMode = 'mother'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addMother') }}</button>
           <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addSpouse') }}</button>
           <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addChild') }}</button>
         </div>
@@ -146,6 +147,8 @@
     <AddRelatedPersonModal
       v-if="showAddRelated"
       :person-id="person.id"
+      :person-sex="person.sex as 'M' | 'F' | 'U'"
+      :person-surname="primaryNameData?.surname ?? undefined"
       :mode="addRelatedMode"
       @close="showAddRelated = false"
       @saved="showAddRelated = false; relSectionRef?.reload()"
@@ -164,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, inject, type Ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
@@ -226,7 +229,8 @@ const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingName = ref<NameRow | null>(null);
 const showAddRelated = ref(false);
-const addRelatedMode = ref<'parent' | 'spouse' | 'child'>('parent');
+const addRelatedMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
+const primaryNameData = computed(() => names.value.length > 0 ? names.value[0] : null);
 const editSex = ref('U');
 const editLiving = ref(1);
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
