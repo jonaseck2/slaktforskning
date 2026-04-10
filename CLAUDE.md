@@ -431,6 +431,17 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 | `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
 | `LinkedText` | `text: string` | — | Auto-links structured references in text. Scans with regex rules (ArkivDigital AID, Riksarkivet NAD, FamilySearch ARK, etc.), renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
+| `AddRelatedPersonModal` | `personId: string`, `mode: 'father'\|'mother'\|'spouse'\|'child'`, `personSex?`, `personSurname?` | `close`, `saved` | Combined person + relationship + birth event creation. Auto-infers sex (father→M, mother→F, spouse→opposite). Pre-fills surname for child mode. Optional birth date/place/source fields in collapsible `<details>`. Uses `useBirthEventCreation` composable. |
+
+**Composables:**
+| Composable | Purpose |
+|-----------|---------|
+| `useBirthEventCreation` | Creates birth event + event_participant + optional citation in one call. Used by AddRelatedPersonModal and PersonsView. |
+
+**Pinia Stores:**
+| Store | Purpose |
+|-------|---------|
+| `sourceSession` | Remembers last-used source ID and page for citation pre-fill across forms. Session-only (resets on app restart). |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
