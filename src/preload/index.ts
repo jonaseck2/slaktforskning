@@ -101,6 +101,10 @@ const api = {
     switchTo: (dbPath: string) => ipcRenderer.invoke('db:switchTo', dbPath),
     onSwitched: (cb: () => void) => ipcRenderer.on('db:switched', cb),
     getSetting: (key: string) => ipcRenderer.invoke('db:getSetting', key),
+    setSetting: (key: string, value: string) => ipcRenderer.invoke('db:setSetting', key, value),
+  },
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),
   },
   places: {
     create: mutating((data: unknown) => ipcRenderer.invoke('places:create', data)),

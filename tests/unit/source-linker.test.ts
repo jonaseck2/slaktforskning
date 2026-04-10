@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { linkify, type LinkRule, type LinkedSegment } from '../../src/api/source-linker';
+import { linkify, resolveRules, type LinkRule, type LinkedSegment } from '../../src/api/source-linker';
+import { svRules } from '../../src/api/link-rules/sv';
+import { enRules } from '../../src/api/link-rules/en';
+import { universalRules } from '../../src/api/link-rules/universal';
 
 const testRule: LinkRule = {
   id: 'test-aid',

@@ -175,7 +175,7 @@ const addRelativePersonId = ref<string | null>(null);
 const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
 
 const layout = computed(() => {
-  if (!tree.value) return { boxes: [], lines: [], svgWidth: 1400, svgHeight: 688, collapseButtons: [] };
+  if (!tree.value) return { boxes: [], lines: [], svgWidth: 1400, svgHeight: 688, collapseButtons: [], placeholders: [], placeholderLines: [] };
   return computeHourglassLayout(tree.value, collapsed.value);
 });
 

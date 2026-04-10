@@ -20,7 +20,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
 import * as duplicates from '../api/duplicates';
-import { getDbSetting } from '../api/db_settings';
+import { getDbSetting, setDbSetting } from '../api/db_settings';
 
 let importInProgress = false;
 
@@ -312,6 +312,18 @@ export function registerIpcHandlers(): void {
   });
 
   wrapHandler('db:getSetting', (key) => getDbSetting(getDatabase(), key as string));
+
+  wrapHandler('db:setSetting', (key, value) =>
+    setDbSetting(getDatabase(), key as string, value as string)
+  );
+
+  wrapHandler('shell:open-external', (url) => {
+    const urlStr = url as string;
+    if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://')) {
+      throw new Error('Only http and https URLs are allowed');
+    }
+    return shell.openExternal(urlStr);
+  });
 
   ipcMain.handle('db:createNew', async () => {
     const result = await dialog.showSaveDialog({
