@@ -124,7 +124,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
     const poll = async () => {
       try {
         const res = await fetch(`${baseUrl}/dom`, {
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(2000),
         });
         if (res.ok) {
           clearTimeout(timeout);
@@ -134,11 +134,11 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       } catch {
         // not ready yet
       }
-      setTimeout(poll, 1000);
+      setTimeout(poll, 250);
     };
 
-    // Give Vite a head start before polling
-    setTimeout(poll, 5000);
+    // Give Vite a head start before polling (6 instances compile simultaneously)
+    setTimeout(poll, 3000);
 
     proc.on('error', () => { clearTimeout(timeout); resolve(false); });
     proc.on('exit', () => { clearTimeout(timeout); resolve(false); });
@@ -173,7 +173,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       } catch {
         // not ready yet
       }
-      setTimeout(poll, 500);
+      setTimeout(poll, 100);
     };
 
     poll();
