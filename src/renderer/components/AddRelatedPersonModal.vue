@@ -97,6 +97,7 @@ import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { useToast } from '../composables/useToast';
 import { useBirthEventCreation } from '../composables/useBirthEventCreation';
+import { useSourceSession } from '../stores/sourceSession';
 
 const props = defineProps<{
   personId: string;
@@ -113,6 +114,7 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const toast = useToast();
 const { createBirthEvent } = useBirthEventCreation();
+const sourceSession = useSourceSession();
 
 const title = computed(() => {
   if (props.mode === 'father') return t('personDetail.addFatherTitle');
@@ -163,6 +165,9 @@ const sources = ref<{ id: string; title: string }[]>([]);
 onMounted(async () => {
   if (window.api?.sources) {
     sources.value = (await window.api.sources.list()) as { id: string; title: string }[];
+    if (sourceSession.lastSourceId) {
+      birthSourceForm.source_id = sourceSession.lastSourceId;
+    }
   }
 });
 
@@ -183,13 +188,17 @@ async function save() {
       targetPersonId = newPerson.id;
 
       // Create birth event if any birth data was provided
+      const usedSourceId = addBirthSource.value ? birthSourceForm.source_id || undefined : undefined;
       await createBirthEvent(targetPersonId, {
         date_value: birthForm.date_value || undefined,
         date_original: birthForm.date_original || undefined,
         place_id: birthForm.place_id,
-        source_id: addBirthSource.value ? birthSourceForm.source_id || undefined : undefined,
+        source_id: usedSourceId,
         page: addBirthSource.value ? birthSourceForm.page : undefined,
       });
+      if (usedSourceId) {
+        sourceSession.setLastUsed(usedSourceId, birthSourceForm.page);
+      }
     }
 
     const relData: Record<string, unknown> = {};

@@ -82,6 +82,7 @@ import PlacePicker from './PlacePicker.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 import type { EventTypeValue } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
+import { useSourceSession } from '../stores/sourceSession';
 
 const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
 
@@ -122,6 +123,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
+const sourceSession = useSourceSession();
 
 const eventTypeValues = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
 
@@ -144,6 +146,9 @@ const existingCitations = ref<CitationRow[]>([]);
 onMounted(async () => {
   if (!window.api) return;
   sources.value = (await window.api.sources.list()) as SourceRow[];
+  if (sourceSession.lastSourceId) {
+    sourceForm.source_id = sourceSession.lastSourceId;
+  }
   if (props.editingEvent) {
     await loadCitations();
   }
@@ -214,6 +219,7 @@ async function save() {
       };
       if (props.personId) citData.person_id = props.personId;
       await window.api.citations.create(citData);
+      sourceSession.setLastUsed(sourceForm.source_id, sourceForm.page);
     }
 
     emit('saved');
