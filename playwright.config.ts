@@ -4,9 +4,9 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 30000,
   retries: 0,
-  // Limit parallelism: 4+ simultaneous Electron+Vite instances compete for ports and CPU.
-  // 2 workers keeps startup reliable while still running gui-* suites in parallel.
-  workers: 2,
+  // Each Electron+Vite instance uses ~2-3 cores at peak.
+  // 4 workers on a 12-core machine runs all 6 projects with good parallelism.
+  workers: 4,
   use: {
     trace: 'on-first-retry',
   },
