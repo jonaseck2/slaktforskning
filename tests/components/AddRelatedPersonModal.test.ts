@@ -7,16 +7,25 @@ describe('AddRelatedPersonModal', () => {
   const mockPersonsCreate = vi.fn();
   const mockRelationshipsCreate = vi.fn();
   const mockSourcesList = vi.fn();
+  const mockEventsCreate = vi.fn();
+  const mockEventParticipantsAdd = vi.fn();
+  const mockCitationsCreate = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockPersonsCreate.mockResolvedValue({ id: 'new-person-id' });
     mockRelationshipsCreate.mockResolvedValue({ id: 'rel-id' });
     mockSourcesList.mockResolvedValue([]);
+    mockEventsCreate.mockResolvedValue({ id: 'new-event-id' });
+    mockEventParticipantsAdd.mockResolvedValue({ id: 'ep-id' });
+    mockCitationsCreate.mockResolvedValue({ id: 'cit-id' });
     (window as unknown as { api: unknown }).api = {
       persons: { create: mockPersonsCreate },
       relationships: { create: mockRelationshipsCreate },
       sources: { list: mockSourcesList },
+      events: { create: mockEventsCreate },
+      eventParticipants: { add: mockEventParticipantsAdd },
+      citations: { create: mockCitationsCreate },
     };
   });
 
@@ -153,5 +162,52 @@ describe('AddRelatedPersonModal', () => {
     const wrapper = mountModal('child', { personSurname: 'Andersson' });
     const surnameInput = wrapper.findAll('input[type="text"]')[1]; // second text input is surname
     expect(surnameInput.element.value).toBe('Andersson');
+  });
+
+  it('creates birth event when birth date is provided', async () => {
+    const wrapper = mountModal('father');
+    await wrapper.find('input[type="text"]').setValue('Gustaf');
+    // Find birth date input inside details
+    const dateInput = wrapper.find('input[type="date"]');
+    await dateInput.setValue('1912-02-24');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(mockEventsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_type: 'birth',
+        date_value: '1912-02-24',
+      }),
+    );
+    expect(mockEventParticipantsAdd).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_id: 'new-event-id',
+        person_id: 'new-person-id',
+        role: 'primary',
+      }),
+    );
+  });
+
+  it('skips birth event when no birth fields filled', async () => {
+    const wrapper = mountModal('father');
+    await wrapper.find('input[type="text"]').setValue('Gustaf');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(mockEventsCreate).not.toHaveBeenCalled();
+    expect(mockEventParticipantsAdd).not.toHaveBeenCalled();
+  });
+
+  it('does not create citation when source checkbox is unchecked', async () => {
+    const wrapper = mountModal('father');
+    await wrapper.find('input[type="text"]').setValue('Gustaf');
+    const dateInput = wrapper.find('input[type="date"]');
+    await dateInput.setValue('1912-02-24');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    // Birth event created but no citation
+    expect(mockEventsCreate).toHaveBeenCalled();
+    expect(mockCitationsCreate).not.toHaveBeenCalled();
   });
 });
