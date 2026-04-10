@@ -53,6 +53,7 @@ import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
+import { useSourceSession } from '../stores/sourceSession';
 
 interface SourceRow {
   id: string;
@@ -74,6 +75,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
+const sourceSession = useSourceSession();
 const sources = ref<SourceRow[]>([]);
 
 const form = reactive({
@@ -88,6 +90,9 @@ const form = reactive({
 onMounted(async () => {
   if (!window.api) return;
   sources.value = (await window.api.sources.list()) as SourceRow[];
+  if (!props.sourceId && sourceSession.lastSourceId) {
+    form.source_id = sourceSession.lastSourceId;
+  }
 });
 
 async function save() {
@@ -107,6 +112,9 @@ async function save() {
     if (props.placeId) data.place_id = props.placeId;
 
     await window.api.citations.create(data);
+    if (form.source_id) {
+      sourceSession.setLastUsed(form.source_id, form.page);
+    }
     emit('saved');
     emit('close');
   } catch (err) {

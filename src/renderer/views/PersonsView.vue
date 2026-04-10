@@ -201,8 +201,10 @@ import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { useBirthEventCreation } from '../composables/useBirthEventCreation';
+import { useSourceSession } from '../stores/sourceSession';
 const dataVersionStore = useDataVersionStore();
 const { createBirthEvent } = useBirthEventCreation();
+const sourceSession = useSourceSession();
 let loadedVersion = -1;
 
 interface PersonListItem {
@@ -365,13 +367,17 @@ async function addPerson() {
       notes: form.notes,
     });
     const newPerson = person as { id: string };
+    const usedSourceId = addBirthSource.value ? birthSourceForm.source_id || undefined : undefined;
     await createBirthEvent(newPerson.id, {
       date_value: birthForm.date_value || undefined,
       date_original: birthForm.date_original || undefined,
       place_id: birthForm.place_id,
-      source_id: addBirthSource.value ? birthSourceForm.source_id || undefined : undefined,
+      source_id: usedSourceId,
       page: addBirthSource.value ? birthSourceForm.page : undefined,
     });
+    if (usedSourceId) {
+      sourceSession.setLastUsed(usedSourceId, birthSourceForm.page);
+    }
     showAddForm.value = false;
     form.given_name = '';
     form.surname = '';
@@ -422,6 +428,9 @@ onMounted(async () => {
   loadedVersion = dataVersionStore.version;
   if (window.api?.sources) {
     birthSources.value = (await window.api.sources.list()) as { id: string; title: string }[];
+    if (sourceSession.lastSourceId) {
+      birthSourceForm.source_id = sourceSession.lastSourceId;
+    }
   }
 });
 
