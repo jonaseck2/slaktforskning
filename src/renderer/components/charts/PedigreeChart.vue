@@ -116,6 +116,38 @@
             style="pointer-events: none; user-select: none;"
           >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
         </g>
+        <line
+          v-for="(ln, i) in layout.placeholderLines"
+          :key="'pl' + i"
+          :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+          stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3"
+          vector-effect="non-scaling-stroke"
+        />
+        <g
+          v-for="ph in layout.placeholders"
+          :key="'ph-' + ph.key"
+          class="ghost-box"
+          tabindex="0"
+          role="button"
+          :aria-label="ph.role === 'father' ? $t('personDetail.addFather') : $t('personDetail.addMother')"
+          @click="startAddFromPlaceholder(ph)"
+          @keydown.enter="startAddFromPlaceholder(ph)"
+          @keydown.space.prevent="startAddFromPlaceholder(ph)"
+        >
+          <rect
+            :x="ph.x" :y="ph.y" :width="BOX_W" :height="BOX_H"
+            rx="6" ry="6"
+            fill="none" stroke="#94a3b8" stroke-dasharray="4 3" stroke-width="1.5"
+          />
+          <text
+            :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 - 6"
+            text-anchor="middle" fill="#94a3b8" font-size="18"
+          >+</text>
+          <text
+            :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 + 12"
+            text-anchor="middle" fill="#94a3b8" font-size="11"
+          >{{ ph.role === 'father' ? $t('personDetail.addFather') : $t('personDetail.addMother') }}</text>
+        </g>
       </svg>
     </div>
     <div class="zoom-controls">
@@ -157,10 +189,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computePedigreeLayout, BOX_W, H_GAP } from '../../utils/chartLayout';
+import { computePedigreeLayout, BOX_W, BOX_H, H_GAP } from '../../utils/chartLayout';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { BoxLayout, CollapseButton, PedigreeTree } from '../../utils/chartLayout';
+import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chartLayout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
@@ -239,7 +271,7 @@ const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
 const layout = computed(() => {
-  if (!tree.value) return { boxes: [], lines: [], svgWidth: 995, svgHeight: 1024, collapseButtons: [] };
+  if (!tree.value) return { boxes: [], lines: [], svgWidth: 995, svgHeight: 1024, collapseButtons: [], placeholders: [], placeholderLines: [] };
   return computePedigreeLayout(tree.value, collapsed.value);
 });
 
@@ -311,6 +343,15 @@ function startAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
   addRelativePersonSex.value = (personData?.sex as 'M' | 'F' | 'U') ?? undefined;
   addRelativePersonSurname.value = personData?.surname ?? undefined;
   addPopover.value = null;
+  showAddRelative.value = true;
+}
+
+function startAddFromPlaceholder(ph: PlaceholderBox) {
+  const childBox = layout.value.boxes.find((b: BoxLayout) => b.person.id === ph.childPersonId);
+  addRelativePersonId.value = ph.childPersonId;
+  addRelativeMode.value = ph.role;
+  addRelativePersonSex.value = childBox?.person.sex ?? 'U';
+  addRelativePersonSurname.value = childBox?.person.surname ?? undefined;
   showAddRelative.value = true;
 }
 
@@ -416,6 +457,11 @@ onUnmounted(() => {
 
 .add-btn { cursor: pointer; }
 .add-btn:hover circle { opacity: 0.8; }
+
+.ghost-box { cursor: pointer; }
+.ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }
+.ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
+.ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
 
 .add-popover {
   position: fixed;

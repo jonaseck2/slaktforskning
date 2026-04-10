@@ -63,6 +63,7 @@ export interface ChartLayout {
   svgHeight: number;
   collapseButtons: CollapseButton[];
   placeholders: PlaceholderBox[];
+  placeholderLines: Line[];
 }
 
 /**
@@ -296,7 +297,68 @@ export function computePedigreeLayout(
     }
   }
 
-  return { boxes, lines, svgWidth, svgHeight, collapseButtons };
+  // Generate placeholder ghost boxes for missing parents of leaf nodes.
+  // Only shown for leaf nodes that are NOT at the maximum generation depth,
+  // and that don't already have a load-more button (hasMoreAncestors).
+  const placeholders: PlaceholderBox[] = [];
+  const placeholderLines: Line[] = [];
+  for (const [k] of nodes) {
+    const g = Math.floor(Math.log2(k));
+    if (g >= G - 1) continue; // at max depth, don't show placeholders
+    const fatherK = k * 2;
+    const motherK = k * 2 + 1;
+    const hasFather = nodes.has(fatherK);
+    const hasMother = nodes.has(motherK);
+    // Only add placeholders for leaf nodes missing at least one parent
+    // and that don't have a hasMoreAncestors flag (those get load-more buttons instead)
+    if (hasFather && hasMother) continue;
+    if (hasMore.has(k)) continue;
+
+    const cy = centerYOf(k);
+    const parentGenX = genXOf(g + 1);
+    const halfStep = (BOX_H + V_GAP) / 2;
+
+    if (!hasFather) {
+      const phY = cy - halfStep - BOX_H / 2;
+      placeholders.push({
+        type: 'placeholder',
+        role: 'father',
+        childPersonId: nodes.get(k)!.id,
+        key: fatherK,
+        x: parentGenX,
+        y: phY,
+      });
+      // Dashed connector line from child to placeholder
+      const forkX = genXOf(g) + BOX_W + H_GAP / 2;
+      const phCy = phY + BOX_H / 2;
+      placeholderLines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
+      placeholderLines.push({ x1: forkX, y1: phCy, x2: forkX, y2: cy });
+      placeholderLines.push({ x1: forkX, y1: phCy, x2: parentGenX, y2: phCy });
+    }
+
+    if (!hasMother) {
+      const phY = cy + halfStep - BOX_H / 2;
+      placeholders.push({
+        type: 'placeholder',
+        role: 'mother',
+        childPersonId: nodes.get(k)!.id,
+        key: motherK,
+        x: parentGenX,
+        y: phY,
+      });
+      const forkX = genXOf(g) + BOX_W + H_GAP / 2;
+      const phCy = phY + BOX_H / 2;
+      placeholderLines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
+      placeholderLines.push({ x1: forkX, y1: cy, x2: forkX, y2: phCy });
+      placeholderLines.push({ x1: forkX, y1: phCy, x2: parentGenX, y2: phCy });
+    }
+  }
+
+  // Deduplicate connector lines that overlap with existing solid lines
+  const lineSet = new Set(lines.map(l => `${l.x1},${l.y1},${l.x2},${l.y2}`));
+  const uniquePlaceholderLines = placeholderLines.filter(l => !lineSet.has(`${l.x1},${l.y1},${l.x2},${l.y2}`));
+
+  return { boxes, lines, svgWidth, svgHeight, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
 }
 
 // ─── Hourglass ────────────────────────────────────────────────────────────────
@@ -875,7 +937,7 @@ export function computeHourglassLayout(
     }
   }
 
-  return { boxes, lines, svgWidth, svgHeight, collapseButtons };
+  return { boxes, lines, svgWidth, svgHeight, collapseButtons, placeholders: [], placeholderLines: [] };
 }
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────
