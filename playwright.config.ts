@@ -4,9 +4,8 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 30000,
   retries: 0,
-  // Each Electron+Vite instance uses ~2-3 cores at peak.
-  // 4 workers on a 12-core machine runs all 6 projects with good parallelism.
-  workers: 4,
+  // 6 workers = all projects run simultaneously on a 12-core machine.
+  workers: 6,
   use: {
     trace: 'on-first-retry',
   },
