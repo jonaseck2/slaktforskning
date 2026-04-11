@@ -114,3 +114,24 @@ export function findOrCreatePlace(db: Database, name: string): Place {
   if (existing) return existing;
   return createPlace(db, { name: name.trim() });
 }
+
+export function getPersonsForPlace(
+  db: Database,
+  placeId: string
+): { id: string; sex: string; given_name: string; surname: string; event_count: number }[] {
+  return queryAll(db, `
+    SELECT p.id, p.sex,
+      COALESCE(pn.given_name, '') AS given_name,
+      COALESCE(pn.surname, '') AS surname,
+      COUNT(DISTINCT e.id) AS event_count
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    JOIN persons p ON p.id = ep.person_id
+    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
+      SELECT MIN(pn2.sort_order) FROM person_names pn2 WHERE pn2.person_id = p.id
+    )
+    WHERE e.place_id = ?
+    GROUP BY p.id
+    ORDER BY pn.surname, pn.given_name
+  `, [placeId]);
+}

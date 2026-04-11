@@ -1034,7 +1034,9 @@ export default {
       ambiguous: 'Ambiguous',
     },
     source: 'Source',
+    created: 'created',
     fetched: 'fetched',
+    knowledgeGraph: 'Knowledge Graph',
   },
   undo: {
     createPerson: 'Create person',
