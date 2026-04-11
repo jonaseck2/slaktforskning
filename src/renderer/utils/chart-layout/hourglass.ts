@@ -584,17 +584,21 @@ export function computeHourglassLayout(
   const placeholderLines: Line[] = [];
 
   // Helper: find the nearest free X for a placeholder at a given Y row,
-  // avoiding overlap with existing boxes.
-  function findFreeX(preferredX: number, rowY: number, direction: 'left' | 'right'): number {
+  // avoiding overlap with existing boxes. Tries preferred direction first,
+  // falls back to opposite direction, picks whichever is closest to preferred.
+  function findFreeX(preferredX: number, rowY: number): number {
     const rowBoxes = boxes.filter(b => Math.abs(b.y - rowY) < BOX_H);
-    let x = preferredX;
-    const step = direction === 'right' ? (BOX_W + V_GAP) : -(BOX_W + V_GAP);
-    for (let attempt = 0; attempt < 20; attempt++) {
-      const overlaps = rowBoxes.some(b => x < b.x + b.w + V_GAP && x + BOX_W > b.x - V_GAP);
-      if (!overlaps) return x;
-      x += step;
+    const overlaps = (x: number) => rowBoxes.some(b => x < b.x + b.w + V_GAP && x + BOX_W > b.x - V_GAP);
+    if (!overlaps(preferredX)) return preferredX;
+    const step = BOX_W + V_GAP;
+    // Search outward in both directions, return closest
+    for (let dist = 1; dist <= 20; dist++) {
+      const right = preferredX + dist * step;
+      if (!overlaps(right)) return right;
+      const left = preferredX - dist * step;
+      if (!overlaps(left)) return left;
     }
-    return x;
+    return preferredX;
   }
 
   if (selectedPersonId) {
@@ -621,7 +625,7 @@ export function computeHourglassLayout(
 
           if (!hasFather) {
             const preferredX = boxCX - halfSpan - BOX_W / 2;
-            const phX = findFreeX(preferredX, parentRowYVal, 'left');
+            const phX = findFreeX(preferredX, parentRowYVal);
             placeholders.push({
               type: 'placeholder', role: 'father',
               childPersonId: selectedPersonId,
@@ -636,7 +640,7 @@ export function computeHourglassLayout(
 
           if (!hasMother) {
             const preferredX = boxCX + halfSpan - BOX_W / 2;
-            const phX = findFreeX(preferredX, parentRowYVal, 'right');
+            const phX = findFreeX(preferredX, parentRowYVal);
             placeholders.push({
               type: 'placeholder', role: 'mother',
               childPersonId: selectedPersonId,
