@@ -27,7 +27,8 @@
         :radius="8"
         :color="eventColor(m.eventType)"
         :fill-color="eventColor(m.eventType)"
-        :fill-opacity="0.8"
+        :fill-opacity="m.resolved ? 0.4 : 0.8"
+        :dash-array="m.resolved ? '4, 4' : undefined"
       >
         <LPopup>
           <strong>{{ $t('eventTypes.' + m.eventType) }}</strong>
@@ -46,6 +47,7 @@
 import { ref, watch, nextTick } from 'vue';
 import { LMap, LTileLayer, LCircleMarker, LPolyline, LPopup } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
 
 interface EventRow {
   id: string;
@@ -69,9 +71,13 @@ interface Marker {
   date: string | null;
   placeName: string;
   placeId: string;
+  resolved?: boolean;
+  matchQuality?: string;
 }
 
 const props = defineProps<{ personId: string }>();
+
+const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
 
 const markers = ref<Marker[]>([]);
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
@@ -109,6 +115,7 @@ function fitBounds() {
 
 async function load() {
   if (!props.personId) { markers.value = []; return; }
+  await ensureLoaded();
   const events = (await window.api.events.forPerson(props.personId)) as EventRow[];
   const eventsWithPlaces = events.filter(e => e.place_id);
 
@@ -130,6 +137,20 @@ async function load() {
         placeName: place.name,
         placeId: place.id,
       });
+    } else if (place && resolverReady.value) {
+      const resolved = resolvePlace(place.name);
+      if (resolved) {
+        result.push({
+          lat: resolved.lat,
+          lon: resolved.lon,
+          eventType: ev.event_type,
+          date: ev.date_original || ev.date_value,
+          placeName: place.name,
+          placeId: place.id,
+          resolved: true,
+          matchQuality: resolved.matchQuality,
+        });
+      }
     }
   }
 
