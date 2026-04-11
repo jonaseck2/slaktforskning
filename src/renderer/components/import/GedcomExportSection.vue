@@ -1,5 +1,7 @@
 <template>
   <div class="io-groups">
+    <ExportOptionsPanel @update:options="exportOpts = $event" />
+
     <div class="io-group">
       <div class="io-group-header">
         <h3>Export GEDCOM 5.5.1</h3>
@@ -49,6 +51,8 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseModal from '../BaseModal.vue';
+import ExportOptionsPanel from '../ExportOptionsPanel.vue';
+import type { ExportOptions } from '../ExportOptionsPanel.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -57,6 +61,7 @@ declare const window: Window & {
 const { t } = useI18n();
 const toast = useToast();
 const busy = ref(false);
+const exportOpts = ref<ExportOptions | null>(null);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const showExportReport = ref(false);
@@ -78,7 +83,7 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.export({ version })) as {
+    const result = (await window.api.gedcom.export({ version, exportOptions: exportOpts.value ?? undefined })) as {
       exported?: boolean;
       canceled?: boolean;
       filePath?: string;
