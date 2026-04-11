@@ -233,3 +233,38 @@ See `docs/plans/archive/2026-04-07-css-color-variables.md`.
 
 ### Refactor — BaseModal component: slot-based shell, migrated 15 modals
 See `docs/plans/archive/2026-04-07-base-modal-refactor.md`.
+
+---
+
+## 2026-04-11: Competitor Gap Analysis → Track Implementation
+
+### Research — Competitor Gap Analysis
+See `docs/plans/2026-04-11-competitor-gap-analysis.md`.
+
+### v0.52.0 — C2: Person Timeline View
+Chronological event timeline with gap detection, date type handling, age calculation, edit-on-click.
+Part of Track C: `docs/plans/2026-04-11-track-c-core-polish.md`.
+
+### v0.53.0 — D1: MCP Report Generation Tools
+6 higher-level MCP tools (get_person_summary, get_family_unit, get_ancestor_tree, get_place_history, get_research_gaps, get_timeline) + 17 unit tests.
+Part of Track D: `docs/plans/2026-04-11-track-d-mcp-agent-story.md`.
+
+### v0.54.0 — B1: Media Viewer Redesign
+MediaView gallery with lightbox, entity linking, thumbnails, keyboard navigation.
+Part of Track B: `docs/plans/2026-04-11-track-b-media-experience.md`.
+
+### v0.55.0 — A2: Export Content Options
+ExportOptions type, branch filtering (BFS + spouse inclusion), living exclusion, content toggles. ExportOptionsPanel.vue. GEDCOM exporter integration. 11 unit tests.
+Part of Track A: `docs/plans/2026-04-11-track-a-presentation-sharing.md`.
+
+### v0.56.0 — C3: Place Map Visualization
+Leaflet/OpenStreetMap maps: global MapView, PersonMap life path, PlaceDetailView inline map.
+Part of Track C: `docs/plans/2026-04-11-track-c-core-polish.md`.
+
+### v0.57.0 — D2: MCP Media Tools for AI
+3 MCP tools (get_media_file_base64, get_untagged_media, get_media_for_person_context) + 13 unit tests.
+Part of Track D: `docs/plans/2026-04-11-track-d-mcp-agent-story.md`.
+
+### v0.58.0 — B2: Media-Bundled Portable Archive
+GEDCOM + media .zip export/import with path rewriting. Uses fflate. 6 unit tests.
+Part of Track B: `docs/plans/2026-04-11-track-b-media-experience.md`.
