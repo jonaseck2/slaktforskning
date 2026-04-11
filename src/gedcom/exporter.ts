@@ -14,6 +14,8 @@ import { getMediaForEntity } from '../api/media';
 import { getRepositoriesForSource } from '../api/repositories';
 import type { Place, Citation, Repository } from '../api/types';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
+import type { ExportOptions } from '../api/export_options';
+import { applyExportOptions } from '../api/export_options';
 
 export interface ExportReport {
   persons: number;
@@ -101,8 +103,15 @@ function emitDate(
   }
 }
 
-export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): { ged: string; report: ExportReport } {
+export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', exportOptions?: ExportOptions): { ged: string; report: ExportReport } {
   const lines: string[] = [];
+
+  // Resolve export options into a filtered dataset descriptor
+  const filterResult = exportOptions ? applyExportOptions(db, exportOptions) : null;
+  const allowedPersonIds = filterResult?.personIds ?? null; // null = include all
+  const includeMedia = filterResult?.includeMedia ?? true;
+  const includeNotes = filterResult?.includeNotes ?? true;
+  const includeSources = filterResult?.includeSources ?? true;
 
   if (version === '7.0') {
     lines.push('0 HEAD', '1 GEDC', '2 VERS 7.0');
@@ -111,7 +120,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
   }
 
   // ── Repositories ───────────────────────────────────────────────────────────
-  const sources = listSources(db);
+  const sources = includeSources ? listSources(db) : [];
   // Collect all repositories used by any source, deduplicated by repo id
   // Cache per-source repository lookups to avoid duplicate queries
   const sourceReposCache = new Map<string, Repository[]>();
@@ -165,7 +174,10 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
   });
 
   // ── Persons ────────────────────────────────────────────────────────────────
-  const persons = listPersons(db);
+  const allPersons = listPersons(db);
+  const persons = allowedPersonIds
+    ? allPersons.filter(p => allowedPersonIds.has(p.id))
+    : allPersons;
   // Build the full xref map BEFORE emitting any INDI records so that ASSO blocks
   // that reference persons appearing later in the list resolve correctly.
   const personXref = new Map<string, string>();
@@ -206,7 +218,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
 
     lines.push(`1 SEX ${p.sex}`);
     if (p.living) lines.push(`1 _LIVING Y`);
-    if (p.notes) lines.push(`1 NOTE ${p.notes}`);
+    if (includeNotes && p.notes) lines.push(`1 NOTE ${p.notes}`);
 
     // Person events — only emit events where this person is the PRIMARY participant.
     // Non-primary participant roles are captured as ASSO blocks instead.
@@ -232,14 +244,16 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
           emitPlaceSubTags(lines, place, 3);
         }
       }
-      if (ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (includeNotes && ev.description) lines.push(`2 NOTE ${ev.description}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
-      const citations = getCitationsForEvent(db, ev.id);
-      for (const cit of citations) {
-        const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+      if (includeSources) {
+        const citations = getCitationsForEvent(db, ev.id);
+        for (const cit of citations) {
+          const srcXr = sourceXref.get(cit.source_id);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+        }
       }
-      emitMediaBlocks(lines, db, 'event', ev.id, 2);
+      if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
       // Collect ASSO blocks for non-primary participants in this event
       for (const part of participants) {
         if (part.person_id === p.id) continue;
@@ -304,19 +318,28 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
     lines.push(...assoLines);
 
     // Person-level citations (not tied to any specific event)
-    const personCitations = getCitationsForPerson(db, p.id);
-    for (const cit of personCitations) {
-      const srcXr = sourceXref.get(cit.source_id);
-      if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+    if (includeSources) {
+      const personCitations = getCitationsForPerson(db, p.id);
+      for (const cit of personCitations) {
+        const srcXr = sourceXref.get(cit.source_id);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+      }
     }
 
     // Person-level media
-    emitMediaBlocks(lines, db, 'person', p.id, 1);
+    if (includeMedia) emitMediaBlocks(lines, db, 'person', p.id, 1);
   });
 
   // ── Families ───────────────────────────────────────────────────────────────
   const relationships = listRelationships(db);
-  const couples = relationships.filter(r => r.type === 'couple');
+  const couples = relationships.filter(r => {
+    if (r.type !== 'couple') return false;
+    if (!allowedPersonIds) return true;
+    // Include couple only if at least one person is in the filtered set
+    const p1In = r.person1_id ? allowedPersonIds.has(r.person1_id) : false;
+    const p2In = r.person2_id ? allowedPersonIds.has(r.person2_id) : false;
+    return p1In || p2In;
+  });
   couples.forEach((rel, i) => {
     const xr = `@F${i + 1}@`;
     lines.push(`0 ${xr} FAM`);
@@ -357,7 +380,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
 
     // Couple metadata
     if (rel.subtype) lines.push(`1 _SUBTYPE ${rel.subtype}`);
-    if (rel.notes) lines.push(`1 _RELNOTES ${rel.notes}`);
+    if (includeNotes && rel.notes) lines.push(`1 _RELNOTES ${rel.notes}`);
 
     // Family events
     const famEvents = getEventsForRelationship(db, rel.id);
@@ -373,42 +396,48 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1'): 
           emitPlaceSubTags(lines, place, 3);
         }
       }
-      if (ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (includeNotes && ev.description) lines.push(`2 NOTE ${ev.description}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
-      const citations = getCitationsForEvent(db, ev.id);
-      for (const cit of citations) {
-        const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+      if (includeSources) {
+        const citations = getCitationsForEvent(db, ev.id);
+        for (const cit of citations) {
+          const srcXr = sourceXref.get(cit.source_id);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+        }
       }
-      emitMediaBlocks(lines, db, 'event', ev.id, 2);
+      if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
     }
 
     // Relationship-level citations
-    const relCitations = getCitationsForRelationship(db, rel.id);
-    for (const cit of relCitations) {
-      const srcXr = sourceXref.get(cit.source_id);
-      if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+    if (includeSources) {
+      const relCitations = getCitationsForRelationship(db, rel.id);
+      for (const cit of relCitations) {
+        const srcXr = sourceXref.get(cit.source_id);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+      }
     }
 
     // Relationship-level media
-    emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
+    if (includeMedia) emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
   });
 
   // ── Place-level citations via custom top-level _PLAC records ───────────────
   // Other apps skip unrecognised level-0 record types per GEDCOM 5.5.1 spec.
-  const allPlaces = listPlaces(db);
-  let placeCounter = 0;
-  for (const place of allPlaces) {
-    const placeCitations = getCitationsForPlace(db, place.id);
-    if (placeCitations.length === 0) continue;
-    placeCounter++;
-    lines.push(`0 @P${placeCounter}@ _PLAC`);
-    // NAME allows the importer to create the place by name when UUID lookup fails (cross-DB import)
-    lines.push(`1 NAME ${place.name}`);
-    lines.push(`1 _PLAC_ID ${place.id}`);
-    for (const cit of placeCitations) {
-      const srcXr = sourceXref.get(cit.source_id);
-      if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+  if (includeSources) {
+    const allPlaces = listPlaces(db);
+    let placeCounter = 0;
+    for (const place of allPlaces) {
+      const placeCitations = getCitationsForPlace(db, place.id);
+      if (placeCitations.length === 0) continue;
+      placeCounter++;
+      lines.push(`0 @P${placeCounter}@ _PLAC`);
+      // NAME allows the importer to create the place by name when UUID lookup fails (cross-DB import)
+      lines.push(`1 NAME ${place.name}`);
+      lines.push(`1 _PLAC_ID ${place.id}`);
+      for (const cit of placeCitations) {
+        const srcXr = sourceXref.get(cit.source_id);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+      }
     }
   }
 

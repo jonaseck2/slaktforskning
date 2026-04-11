@@ -7,5 +7,7 @@ export { importGedcom } from '../import/gedcom';
 export type { ImportOptions, ImportReport } from '../import/gedcom';
 export { exportGedcom } from './exporter';
 export type { ExportReport } from './exporter';
+export type { ExportOptions } from '../api/export_options';
+export { DEFAULT_EXPORT_OPTIONS, applyExportOptions, getPersonIdsInBranch, filterPersonsByOptions } from '../api/export_options';
 export { findOrCreateSwedishPlace } from './swedishPlace';
 export { extractPatronymic } from './swedishNames';
