@@ -4,7 +4,7 @@
       v-if="layout.length > 0"
       :segments="layout"
       :focal-segment="focalSegment"
-      :curved-text="true"
+      :curved-text="curvedText ?? true"
       :view-box-size="svgSize"
       width="100%"
     />
@@ -19,7 +19,7 @@ import { fetchPedigreeTree } from '../../utils/chartData';
 import type { PedigreeTree } from '../../utils/chart-layout';
 import CircleChartSvg from '../charts/CircleChartSvg.vue';
 
-const props = defineProps<{ personId: string; generations?: number }>();
+const props = defineProps<{ personId: string; generations?: number; curvedText?: boolean }>();
 
 const loading = ref(true);
 const tree = ref<PedigreeTree | null>(null);

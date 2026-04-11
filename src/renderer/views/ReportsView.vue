@@ -88,7 +88,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="ancestorBookPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AncestorBookReport :person-id="ancestorBookPersonId" :circle-generations="circleGenerations" />
+          <AncestorBookReport :person-id="ancestorBookPersonId" :circle-generations="circleGenerations" :circle-curved-text="circleCurvedText" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
       </div>
@@ -206,7 +206,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <CircleChartReport :person-id="chartPersonId" :generations="circleGenerations" />
+          <CircleChartReport :person-id="chartPersonId" :generations="circleGenerations" :curved-text="circleCurvedText" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -241,6 +241,8 @@
         <button class="zoom-extra-btn" :disabled="circleGenerations <= 1" @click="circleGenerations--">−</button>
         <span class="zoom-extra-value">{{ circleGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="circleGenerations >= 6" @click="circleGenerations++">+</button>
+        <span class="zoom-extra-sep">|</span>
+        <button class="zoom-extra-btn" :class="{ active: circleCurvedText }" @click="circleCurvedText = !circleCurvedText" :title="$t('visualization.curvedText')">⌒</button>
       </template>
     </ZoomControls>
   </div>
@@ -297,6 +299,7 @@ const biographyPersonId = computed(() => focusStore.personId);
 const placeHistoryPlaceId = ref('');
 const familyNarrativeRelId = ref('');
 const circleGenerations = ref(6);
+const circleCurvedText = ref(true);
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 
 // --- Zoom ---

@@ -397,6 +397,7 @@ export default {
       focal: 'Fokusperson',
       children: 'Barn',
     },
+    curvedText: 'Böjd text',
     empty: 'Lägg till en person för att börja visualisera.',
     noFocalPerson: 'Välj en fokusperson för att visa trädet.',
     selectPerson: 'Välj fokusperson\u2026',
