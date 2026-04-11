@@ -233,8 +233,8 @@ async function load() {
   const person = (await window.api.persons.get(id)) as Person | null;
   if (!person) { focalPerson.value = null; return; }
   focalPerson.value = person;
-  // Show focal person in panel unless user has already selected a different node
-  if (!selectedPersonId.value) selectedPersonId.value = id;
+  // Panel falls back to personId when selectedPersonId is null — no need to set it here.
+  // Placeholders only appear when the user actively clicks a person in the chart.
 }
 
 // --- Screen reader chart navigation ---
