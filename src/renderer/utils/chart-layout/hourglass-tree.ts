@@ -148,6 +148,10 @@ function findPerson(node: TreePerson, id: string, visited = new Set<string>()): 
     const found = findPerson(spouse, id, visited);
     if (found) return found;
   }
+  for (const sibling of (node.siblings ?? [])) {
+    const found = findPerson(sibling, id, visited);
+    if (found) return found;
+  }
   return null;
 }
 

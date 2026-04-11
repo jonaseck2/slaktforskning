@@ -366,13 +366,62 @@ export function computeHourglassLayout(
 
   if (siblings.length > 0) {
     for (let i = 0; i < siblings.length; i++) {
+      const sibCX = siblingCXOf(i);
+      const sib = siblings[i];
       boxes.push({
-        person: siblings[i].person,
+        person: sib.person,
         isFocal: false,
-        x: siblingCXOf(i) - BOX_W / 2,
+        x: sibCX - BOX_W / 2,
         y: focalRowY,
         w: BOX_W, h: BOX_H,
       });
+
+      // Place sibling's children (from outline injection)
+      if (sib.children.length > 0) {
+        const forkY = focalRowY + BOX_H + GEN_GAP / 2;
+        lines.push({ x1: sibCX, y1: focalRowY + BOX_H, x2: sibCX, y2: forkY });
+        for (let ci = 0; ci < sib.children.length; ci++) {
+          const childCX = sibCX + (ci - (sib.children.length - 1) / 2) * (BOX_W + V_GAP);
+          lines.push({ x1: childCX, y1: forkY, x2: childCX, y2: descRowY(1) });
+          boxes.push({
+            person: sib.children[ci].person,
+            isFocal: false,
+            x: childCX - BOX_W / 2,
+            y: descRowY(1),
+            w: BOX_W, h: BOX_H,
+          });
+        }
+        if (sib.children.length > 1) {
+          const firstCX = sibCX - ((sib.children.length - 1) / 2) * (BOX_W + V_GAP);
+          const lastCX = sibCX + ((sib.children.length - 1) / 2) * (BOX_W + V_GAP);
+          lines.push({ x1: firstCX, y1: forkY, x2: lastCX, y2: forkY });
+        }
+      }
+
+      // Place sibling's spouses (from outline injection)
+      if (sib.spouses.length > 0) {
+        const sibIsFemale = sib.person.sex === 'F';
+        for (let si = 0; si < sib.spouses.length; si++) {
+          const spCX = sibIsFemale
+            ? sibCX - BOX_W - H_GAP - si * (BOX_W + V_GAP)
+            : sibCX + BOX_W + H_GAP + si * (BOX_W + V_GAP);
+          boxes.push({
+            person: sib.spouses[si].person,
+            isFocal: false,
+            x: spCX - BOX_W / 2,
+            y: focalRowY,
+            w: BOX_W, h: BOX_H,
+          });
+          // Marriage line
+          const lineY = focalRowY + BOX_H / 2;
+          lines.push({
+            x1: sibIsFemale ? spCX + BOX_W / 2 : sibCX + BOX_W / 2,
+            y1: lineY,
+            x2: sibIsFemale ? sibCX - BOX_W / 2 : spCX - BOX_W / 2,
+            y2: lineY,
+          });
+        }
+      }
     }
     // Connect siblings to parents via shared fork
     if (A >= 1) {
