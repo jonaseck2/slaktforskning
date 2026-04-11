@@ -117,6 +117,7 @@ const api = {
     delete: mutating((id: string) => ipcRenderer.invoke('places:delete', id)),
     findOrCreate: mutating((name: string) => ipcRenderer.invoke('places:findOrCreate', name)),
     getPath: (id: string) => ipcRenderer.invoke('places:getPath', id),
+    getPersons: (placeId: string) => ipcRenderer.invoke('places:getPersons', placeId),
   },
   groups: {
     list: () => ipcRenderer.invoke('groups:list'),
