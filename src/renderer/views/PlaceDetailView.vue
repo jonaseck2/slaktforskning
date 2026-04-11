@@ -59,6 +59,38 @@
       <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
     </section>
 
+    <!-- Map Section -->
+    <section v-if="mapMarkers.length > 0" class="detail-section" aria-labelledby="section-place-map">
+      <div class="section-header">
+        <h4 id="section-place-map">{{ $t('map.placeMap') }}</h4>
+      </div>
+      <div class="place-map-container">
+        <LMap
+          ref="mapRef"
+          :zoom="10"
+          :center="mapCenter"
+          :use-global-leaflet="false"
+          @ready="fitMapBounds"
+        >
+          <LTileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+            layer-type="base"
+          />
+          <LMarker
+            v-for="m in mapMarkers"
+            :key="m.id"
+            :lat-lng="[m.lat, m.lon]"
+          >
+            <LPopup>
+              <strong>{{ m.name }}</strong>
+              <span v-if="m.type"> ({{ $t('placeTypes.' + m.type) }})</span>
+            </LPopup>
+          </LMarker>
+        </LMap>
+      </div>
+    </section>
+
     <section v-if="children.length" class="detail-section" aria-labelledby="section-place-children">
       <h4 id="section-place-children">{{ $t('places.childPlaces') }}</h4>
       <ul class="child-list">
@@ -73,11 +105,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
+import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix default marker icons for Vite bundler
+delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
+  iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
+  shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
+});
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
@@ -96,6 +139,43 @@ const editStreet = ref('');
 const editPostalCode = ref('');
 const editCity = ref('');
 const editCountry = ref('');
+const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+
+interface MapMarker { id: string; name: string; lat: number; lon: number; type: string | null; }
+
+const mapMarkers = computed<MapMarker[]>(() => {
+  const result: MapMarker[] = [];
+  if (place.value && place.value.latitude != null && place.value.longitude != null) {
+    result.push({ id: place.value.id, name: place.value.name, lat: place.value.latitude, lon: place.value.longitude, type: place.value.place_type });
+  }
+  for (const child of children.value) {
+    if (child.latitude != null && child.longitude != null) {
+      result.push({ id: child.id, name: child.name, lat: child.latitude, lon: child.longitude, type: child.place_type });
+    }
+  }
+  return result;
+});
+
+const mapCenter = computed<[number, number]>(() => {
+  if (mapMarkers.value.length > 0) {
+    return [mapMarkers.value[0].lat, mapMarkers.value[0].lon];
+  }
+  return [55, 15];
+});
+
+function fitMapBounds() {
+  nextTick(() => {
+    const map = mapRef.value?.leafletObject;
+    if (!map || mapMarkers.value.length === 0) return;
+    const bounds = mapMarkers.value.map(m => [m.lat, m.lon] as [number, number]);
+    if (bounds.length === 1) {
+      map.setView(bounds[0], 12);
+    } else {
+      map.fitBounds(bounds, { padding: [30, 30] });
+    }
+  });
+}
+
 async function load() {
   place.value = (await window.api.places.get(placeId)) as PlaceRow | null;
   if (!place.value) return;
@@ -144,4 +224,5 @@ textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list a { color: var(--color-primary); text-decoration: none; font-size: var(--font-base); }
 .child-list a:hover { text-decoration: underline; }
 .empty { color: #999; padding: 40px; text-align: center; }
+.place-map-container { height: 300px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
 </style>

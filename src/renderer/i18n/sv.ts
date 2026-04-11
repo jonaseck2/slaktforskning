@@ -14,6 +14,7 @@ export default {
     settings: 'Inställningar',
     navigate: 'NAVIGERA',
     linkRules: 'Länkregler',
+    map: 'Karta',
   },
   settings: {
     appearance: 'Utseende',
@@ -350,6 +351,14 @@ export default {
   },
   sex: { M: 'Man', F: 'Kvinna', U: 'Okänd' },
   addRelated: { newPerson: 'Ny person', existingPerson: 'Befintlig person', selectPerson: 'Välj person', searchPlaceholder: 'Sök namn\u2026', birthDate: 'Födelsedatum', birthPlace: 'Födelseort', originalDate: 'Originaldatum', addSource: 'Lägg till källa', sourcePlaceholder: 'Välj källa', page: 'Sida / plats' },
+  map: {
+    title: 'Karta',
+    personMap: 'Livskarta',
+    noCoordinates: '{count} platser saknar koordinater',
+    empty: 'Inga platser med koordinater',
+    eventAt: 'Händelse vid',
+    placeMap: 'Platskarta',
+  },
   places: {
     searchPlaceholder: 'Sök ort\u2026',
     createNew: 'Skapa ny ort: {name}',

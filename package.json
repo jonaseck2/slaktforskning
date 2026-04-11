@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
-  "productName": "Sl\u00e4ktforskning",
-  "version": "0.55.0",
+  "productName": "Släktforskning",
+  "version": "0.56.0",
   "description": "A genealogy desktop application",
   "main": ".vite/build/index.js",
   "private": true,
@@ -33,6 +33,7 @@
     "@electron/fuses": "^1.8.0",
     "@playwright/test": "^1.58.2",
     "@types/electron-squirrel-startup": "^1.0.2",
+    "@types/leaflet": "^1.9.21",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
@@ -51,8 +52,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@vue-leaflet/vue-leaflet": "^0.10.1",
     "electron-squirrel-startup": "^1.0.1",
     "fflate": "^0.8.2",
+    "leaflet": "^1.9.4",
     "node-sqlite3-wasm": "^0.8.55",
     "pinia": "^3.0.4",
     "uuid": "^13.0.0",

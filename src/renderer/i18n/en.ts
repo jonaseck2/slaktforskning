@@ -14,6 +14,7 @@ export default {
     settings: 'Settings',
     navigate: 'Navigate',
     linkRules: 'Link Rules',
+    map: 'Map',
   },
   settings: {
     appearance: 'Appearance',
@@ -350,6 +351,14 @@ export default {
   },
   sex: { M: 'Male', F: 'Female', U: 'Unknown' },
   addRelated: { newPerson: 'New person', existingPerson: 'Existing person', selectPerson: 'Select person', searchPlaceholder: 'Search name\u2026', birthDate: 'Birth date', birthPlace: 'Birth place', originalDate: 'Original date text', addSource: 'Add source', sourcePlaceholder: 'Select source', page: 'Page / location' },
+  map: {
+    title: 'Map',
+    personMap: 'Life map',
+    noCoordinates: '{count} places without coordinates',
+    empty: 'No places with coordinates',
+    eventAt: 'Event at',
+    placeMap: 'Place map',
+  },
   places: {
     searchPlaceholder: 'Search place\u2026',
     createNew: 'Create new place: {name}',
