@@ -1,8 +1,8 @@
 /**
  * Static HTML site generator.
  *
- * Reads all genealogy data from SQLite via the existing api/ functions
- * and writes a self-contained, browsable HTML site to the given directory.
+ * Reads all genealogy data from SQLite via bulk queries upfront,
+ * then generates pages from in-memory maps — no per-entity queries.
  *
  * This module uses Node.js fs/path but has zero Electron dependencies,
  * consistent with the api/ layer contract.
@@ -11,12 +11,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
-import * as persons from '../persons';
-import * as events from '../events';
-import * as sourcesApi from '../sources';
-import * as places from '../places';
-import * as relationships from '../relationships';
-import { queryAll } from '../db';
+import { queryAll, queryOne } from '../db';
 import { getSiteCSS } from './style';
 import {
   indexPage,
@@ -32,7 +27,7 @@ import {
   type PlacePageData,
   type SourcePageData,
 } from './templates';
-import type { PersonName, GenealogyEvent, Citation } from '../types';
+import type { PersonName, GenealogyEvent, Citation, Place, Source } from '../types';
 
 export interface HtmlSiteOptions {
   /** Exclude persons marked as living. Default: false */
@@ -47,6 +42,79 @@ export interface HtmlSiteResult {
   placeCount: number;
   sourceCount: number;
 }
+
+// ── Bulk loaders ────────────────────────────────────────
+
+function groupBy<T>(rows: T[], keyFn: (row: T) => string): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  for (const row of rows) {
+    const key = keyFn(row);
+    let arr = map.get(key);
+    if (!arr) { arr = []; map.set(key, arr); }
+    arr.push(row);
+  }
+  return map;
+}
+
+function loadAllNames(db: Database): Map<string, PersonName[]> {
+  const rows = queryAll<PersonName>(db, 'SELECT * FROM person_names ORDER BY sort_order');
+  return groupBy(rows, r => r.person_id);
+}
+
+function loadAllEvents(db: Database): Map<string, GenealogyEvent[]> {
+  const rows = queryAll<GenealogyEvent>(db, 'SELECT * FROM events ORDER BY date_value');
+  return groupBy(rows, r => r.id);
+}
+
+function loadAllEventParticipants(db: Database): { byEvent: Map<string, string[]>; byPerson: Map<string, string[]> } {
+  const rows = queryAll<{ event_id: string; person_id: string }>(
+    db, 'SELECT event_id, person_id FROM event_participants',
+  );
+  const byEvent = new Map<string, string[]>();
+  const byPerson = new Map<string, string[]>();
+  for (const r of rows) {
+    let ev = byEvent.get(r.event_id);
+    if (!ev) { ev = []; byEvent.set(r.event_id, ev); }
+    ev.push(r.person_id);
+
+    let pe = byPerson.get(r.person_id);
+    if (!pe) { pe = []; byPerson.set(r.person_id, pe); }
+    pe.push(r.event_id);
+  }
+  return { byEvent, byPerson };
+}
+
+function loadAllRelationships(db: Database): Map<string, Array<{ id: string; type: string; subtype: string | null; person1_id: string | null; person2_id: string | null; notes: string }>> {
+  type RelRow = { id: string; type: string; subtype: string | null; person1_id: string | null; person2_id: string | null; notes: string };
+  const rows = queryAll<RelRow>(db, 'SELECT * FROM relationships');
+  // Index by both person1 and person2
+  const map = new Map<string, RelRow[]>();
+  for (const r of rows) {
+    for (const pid of [r.person1_id, r.person2_id]) {
+      if (!pid) continue;
+      let arr = map.get(pid);
+      if (!arr) { arr = []; map.set(pid, arr); }
+      arr.push(r);
+    }
+  }
+  return map;
+}
+
+function loadAllCitations(db: Database): Citation[] {
+  return queryAll<Citation>(db, 'SELECT * FROM citations');
+}
+
+function loadAllPlaces(db: Database): Map<string, Place> {
+  const rows = queryAll<Place>(db, 'SELECT * FROM places');
+  return new Map(rows.map(p => [p.id, p]));
+}
+
+function loadAllSources(db: Database): Map<string, Source> {
+  const rows = queryAll<Source>(db, 'SELECT * FROM sources');
+  return new Map(rows.map(s => [s.id, s]));
+}
+
+// ── Generator ───────────────────────────────────────────
 
 export function generateHtmlSite(
   db: Database,
@@ -67,26 +135,56 @@ export function generateHtmlSite(
   // Write CSS
   fs.writeFileSync(path.join(outputDir, 'style.css'), getSiteCSS(), 'utf-8');
 
-  // Get all persons
-  let allPersons = persons.listPersons(db);
+  // ── Bulk load all data ──────────────────────────────
+
+  type PersonRow = { id: string; sex: string; living: boolean; notes: string; given_name?: string; surname?: string };
+  let allPersons = queryAll<PersonRow>(db, `
+    SELECT p.id, p.sex, p.living, p.notes,
+           COALESCE(pn.given_name, '') AS given_name,
+           COALESCE(pn.surname, '') AS surname
+    FROM persons p
+    LEFT JOIN person_names pn
+      ON pn.person_id = p.id
+      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+    ORDER BY pn.surname, pn.given_name
+  `);
   if (excludeLiving) {
     allPersons = allPersons.filter(p => !p.living);
   }
   const personIds = new Set(allPersons.map(p => p.id));
 
-  // Build name cache for all persons (for relationship display)
-  const nameCache = new Map<string, PersonName[]>();
-  for (const p of allPersons) {
-    nameCache.set(p.id, persons.getPersonNames(db, p.id));
+  const nameCache = loadAllNames(db);
+  const allEventsById = loadAllEvents(db);
+  const { byEvent: participantsByEvent, byPerson: eventIdsByPerson } = loadAllEventParticipants(db);
+  const relsByPerson = loadAllRelationships(db);
+  const allCitations = loadAllCitations(db);
+  const placeMap = loadAllPlaces(db);
+  const sourceMap = loadAllSources(db);
+
+  // Index citations by person_id and event_id
+  const citationsByPerson = groupBy(allCitations.filter(c => c.person_id), c => c.person_id!);
+  const citationsByEvent = groupBy(allCitations.filter(c => c.event_id), c => c.event_id!);
+  const citationsBySource = groupBy(allCitations, c => c.source_id);
+
+  // Build events-for-person lookup (person_id → GenealogyEvent[])
+  const eventsForPerson = new Map<string, GenealogyEvent[]>();
+  for (const [personId, eventIds] of eventIdsByPerson) {
+    const personEvents: GenealogyEvent[] = [];
+    for (const eid of eventIds) {
+      const ev = allEventsById.get(eid);
+      if (ev && ev.length > 0) personEvents.push(ev[0]);
+    }
+    eventsForPerson.set(personId, personEvents);
   }
 
-  // Build person summaries with birth/death dates for the index
+  // ── Person summaries for index ──────────────────────
+
   const personSummaries: PersonSummary[] = [];
   const birthDateCache = new Map<string, string>();
   const deathDateCache = new Map<string, string>();
 
   for (const p of allPersons) {
-    const personEvents = events.getEventsForPerson(db, p.id);
+    const personEvents = eventsForPerson.get(p.id) ?? [];
     const birth = personEvents.find(e => e.event_type === 'birth');
     const death = personEvents.find(e => e.event_type === 'death');
     const birthStr = birth ? extractYear(birth) : undefined;
@@ -110,24 +208,24 @@ export function generateHtmlSite(
     'utf-8',
   );
 
-  // Generate person pages
+  // ── Person pages ────────────────────────────────────
+
   let pageCount = 1; // index.html
   for (const p of allPersons) {
     const names = nameCache.get(p.id) ?? [];
-    const personEvents = events.getEventsForPerson(db, p.id);
+    const personEvents = eventsForPerson.get(p.id) ?? [];
 
     // Enrich events with place names
     const enrichedEvents = personEvents.map(e => ({
       ...e,
-      place_name: e.place_id ? getPlaceNameSafe(db, e.place_id) : undefined,
+      place_name: e.place_id ? (placeMap.get(e.place_id)?.name ?? '') : undefined,
     }));
 
     // Get relationships
-    const rels = relationships.getRelationshipsOfPerson(db, p.id);
+    const rels = relsByPerson.get(p.id) ?? [];
     const enrichedRels = rels
       .map(r => {
         const otherId = r.person1_id === p.id ? r.person2_id : r.person1_id;
-        // Skip relationships pointing to excluded persons
         if (otherId && !personIds.has(otherId)) return null;
         const otherNames = otherId ? (nameCache.get(otherId) ?? []) : [];
         return {
@@ -138,11 +236,22 @@ export function generateHtmlSite(
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
 
-    // Get citations
-    const cits = sourcesApi.getCitationsForPerson(db, p.id);
+    // Get citations for this person (direct + via events)
+    const directCits = citationsByPerson.get(p.id) ?? [];
+    const eventCitIds = new Set(directCits.map(c => c.id));
+    const viaCits: Citation[] = [];
+    for (const ev of personEvents) {
+      for (const c of (citationsByEvent.get(ev.id) ?? [])) {
+        if (!eventCitIds.has(c.id)) {
+          eventCitIds.add(c.id);
+          viaCits.push(c);
+        }
+      }
+    }
+    const cits = [...directCits, ...viaCits];
     const enrichedCitations = cits.map(c => ({
       ...c,
-      source_title: getSourceTitleSafe(db, c.source_id),
+      source_title: sourceMap.get(c.source_id)?.title ?? '',
     }));
 
     const data: PersonPageData = {
@@ -161,7 +270,8 @@ export function generateHtmlSite(
     pageCount++;
   }
 
-  // Get places that have events
+  // ── Place pages ─────────────────────────────────────
+
   const placesWithEvents = queryAll<{ id: string; name: string; place_type: string | null; event_count: number }>(
     db,
     `SELECT p.id, p.name, p.place_type, COUNT(e.id) as event_count
@@ -173,10 +283,6 @@ export function generateHtmlSite(
     [],
   );
 
-  // If excluding living, filter out places that only have events from living persons
-  // (We still show the place if at least one non-living person has an event there)
-
-  // Write places index
   fs.writeFileSync(
     path.join(outputDir, 'places.html'),
     placesIndexPage(placesWithEvents, siteTitle),
@@ -184,30 +290,40 @@ export function generateHtmlSite(
   );
   pageCount++;
 
-  // Generate place pages
+  // Build events-by-place lookup
+  const eventsByPlace = new Map<string, GenealogyEvent[]>();
+  for (const [, evts] of allEventsById) {
+    for (const e of evts) {
+      if (!e.place_id) continue;
+      let arr = eventsByPlace.get(e.place_id);
+      if (!arr) { arr = []; eventsByPlace.set(e.place_id, arr); }
+      arr.push(e);
+    }
+  }
+
   for (const placeInfo of placesWithEvents) {
-    const place = places.getPlace(db, placeInfo.id);
+    const place = placeMap.get(placeInfo.id);
     if (!place) continue;
 
-    const placePath = places.getPlacePath(db, placeInfo.id);
+    // Build place path from parent chain (leaf → root, comma-separated)
+    const pathParts: string[] = [];
+    let cur: Place | undefined = place;
+    while (cur) {
+      pathParts.push(cur.name);
+      cur = cur.parent_place_id ? placeMap.get(cur.parent_place_id) : undefined;
+    }
+    const placePath = pathParts.join(', ');
 
-    // Get events at this place with participant names
-    const placeEvents = queryAll<GenealogyEvent>(
-      db,
-      `SELECT * FROM events WHERE place_id = ? ORDER BY date_value`,
-      [placeInfo.id],
-    );
+    const placeEvents = eventsByPlace.get(placeInfo.id) ?? [];
+    // Sort by date
+    placeEvents.sort((a, b) => (a.date_value ?? '').localeCompare(b.date_value ?? ''));
 
     const enrichedPlaceEvents = placeEvents.map(e => {
-      const participants = queryAll<{ person_id: string }>(
-        db,
-        `SELECT person_id FROM event_participants WHERE event_id = ?`,
-        [e.id],
-      );
-      const participantNames = participants
-        .filter(ep => personIds.has(ep.person_id))
-        .map(ep => {
-          const n = nameCache.get(ep.person_id);
+      const pids = participantsByEvent.get(e.id) ?? [];
+      const participantNames = pids
+        .filter(pid => personIds.has(pid))
+        .map(pid => {
+          const n = nameCache.get(pid);
           return n ? personDisplayName(n) : '(unknown)';
         })
         .join(', ');
@@ -228,7 +344,8 @@ export function generateHtmlSite(
     pageCount++;
   }
 
-  // Get sources that have citations
+  // ── Source pages ─────────────────────────────────────
+
   const sourcesWithCitations = queryAll<{ id: string; title: string; author: string; citation_count: number }>(
     db,
     `SELECT s.id, s.title, s.author, COUNT(c.id) as citation_count
@@ -240,7 +357,6 @@ export function generateHtmlSite(
     [],
   );
 
-  // Write sources index
   fs.writeFileSync(
     path.join(outputDir, 'sources.html'),
     sourcesIndexPage(sourcesWithCitations, siteTitle),
@@ -248,36 +364,29 @@ export function generateHtmlSite(
   );
   pageCount++;
 
-  // Generate source pages
   for (const sourceInfo of sourcesWithCitations) {
-    const source = sourcesApi.getSource(db, sourceInfo.id);
+    const source = sourceMap.get(sourceInfo.id);
     if (!source) continue;
 
-    const cits = sourcesApi.getCitationsForSource(db, sourceInfo.id);
+    const cits = citationsBySource.get(sourceInfo.id) ?? [];
     const enrichedCitations = cits.map((c: Citation) => {
-      // Try to find person name via direct person_id or via event participant
       let personName = '';
       let personId = c.person_id;
       if (personId && nameCache.has(personId)) {
         personName = personDisplayName(nameCache.get(personId)!);
       } else if (c.event_id) {
-        const participants = queryAll<{ person_id: string }>(
-          db,
-          `SELECT person_id FROM event_participants WHERE event_id = ?`,
-          [c.event_id],
-        );
-        const first = participants.find(ep => personIds.has(ep.person_id));
+        const pids = participantsByEvent.get(c.event_id) ?? [];
+        const first = pids.find(pid => personIds.has(pid));
         if (first) {
-          personId = first.person_id;
+          personId = first;
           personName = personDisplayName(nameCache.get(personId) ?? []);
         }
       }
 
-      // Get event type if citation references an event
       let eventType: string | undefined;
       if (c.event_id) {
-        const evt = events.getEvent(db, c.event_id);
-        if (evt) eventType = evt.event_type;
+        const evts = allEventsById.get(c.event_id);
+        if (evts && evts.length > 0) eventType = evts[0].event_type;
       }
 
       return { ...c, person_name: personName, person_id: personId, event_type: eventType };
@@ -293,7 +402,8 @@ export function generateHtmlSite(
     pageCount++;
   }
 
-  // Build search index
+  // ── Search index ────────────────────────────────────
+
   const searchEntries: { text: string; url: string; type: string }[] = [];
   for (const p of personSummaries) {
     const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '(unknown)';
@@ -325,7 +435,6 @@ export function generateHtmlSite(
     'utf-8',
   );
 
-  // Write search page
   fs.writeFileSync(
     path.join(outputDir, 'search.html'),
     searchPage(siteTitle),
@@ -353,14 +462,4 @@ function extractYear(event: GenealogyEvent): string | undefined {
     return match ? match[0] : undefined;
   }
   return undefined;
-}
-
-function getPlaceNameSafe(db: Database, placeId: string): string {
-  const place = places.getPlace(db, placeId);
-  return place?.name ?? '';
-}
-
-function getSourceTitleSafe(db: Database, sourceId: string): string {
-  const source = sourcesApi.getSource(db, sourceId);
-  return source?.title ?? '';
 }
