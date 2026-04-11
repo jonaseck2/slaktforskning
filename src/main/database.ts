@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { Database } from 'node-sqlite3-wasm';
 import { initializeSchema } from '../api/schema';
 import { loadSettings, saveSettings } from './settings';
+import { undoManager } from '../api/undo';
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
@@ -41,6 +42,7 @@ export function getCurrentDatabasePath(): string {
 
 export function switchDatabase(newPath: string): void {
   closeDatabase();
+  undoManager.clear();
   db = openDatabase(newPath);
   currentDbPath = newPath;
 
