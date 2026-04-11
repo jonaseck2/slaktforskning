@@ -529,6 +529,22 @@ Use `<router-link :to="'/persons/' + personId" class="person-link" @click.stop>`
 
 ---
 
+### Chart Outline Placeholders — Separation of Concerns
+
+When a user selects a person in a chart, outline placeholders show where new relatives can be added. Three strict layers:
+
+1. **Outline injection** (trivial): For the selected person, always inject father + mother + child + spouse outlines. No conditions — even if all parents/children/spouses already exist. This is a simple function with zero branching.
+
+2. **Layout/routing** (complex): Positions ALL nodes — real and outline — identically. The algorithm sees N parents, M children, K spouses per person and lays them out. It never checks whether a node is real or outline. This means the layout must support 0+ parents (not just 2), 0+ spouses (not just for focal), and 0+ children for any person.
+
+3. **Focus person filtering** (tree scope): The focal person determines which real nodes exist. Collapse/expand filters real nodes. **Outlines are never filtered** by focus or collapse state.
+
+4. **Rendering** (visual only): Real → solid boxes. Outlines → dashed boxes with "+". Different click handlers. That's it.
+
+**Key rule:** The selected person ≠ the focal person. The focal person controls the tree scope. The selected person controls where outlines appear. These are independent concepts.
+
+---
+
 ### Constants (`src/renderer/constants/eventTypes.ts`)
 
 ```typescript
