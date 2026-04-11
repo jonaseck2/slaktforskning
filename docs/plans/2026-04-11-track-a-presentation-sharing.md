@@ -12,21 +12,21 @@ Person biography, place history, and family narrative reports as PDF with clicka
 
 ### Steps
 
-- [ ] Create `src/api/reports/person_biography.ts` — assemble person data (names, events with places, relationships with partner/child names, citations) into a structured report object
-- [ ] Create `src/api/reports/place_history.ts` — all events at a place chronologically, with participants and dates
-- [ ] Create `src/api/reports/family_narrative.ts` — couple + children with key life events, marriage, sources
-- [ ] Create `src/api/reports/types.ts` — ReportData, ReportOptions, ReportSection types
-- [ ] Create HTML report templates with print-optimized CSS (reuse existing printable output patterns from ancestor chart/family group sheet)
-- [ ] Add prose generation utilities — event-to-sentence converters, date formatters for narrative text
-- [ ] IPC channel `reports:generatePersonBiography`, `reports:generatePlaceHistory`, `reports:generateFamilyNarrative`
-- [ ] Preload: expose `window.api.reports.*`
-- [ ] PDF generation via Electron's `webContents.printToPDF()` with clickable links preserved
-- [ ] Vue: ReportPreviewModal — shows HTML preview with "Save as PDF" button
-- [ ] Add "Generate Report" buttons to PersonDetailView, PlaceDetailView
-- [ ] i18n: Swedish + English prose patterns for narrative text
-- [ ] MCP tool `generate_report` — returns report HTML or structured data for agent-driven generation
-- [ ] Unit tests for report data assembly functions
-- [ ] Test PDF link generation
+- [x] Create `src/api/reports/person_biography.ts` — assemble person data (names, events with places, relationships with partner/child names, citations) into a structured report object
+- [x] Create `src/api/reports/place_history.ts` — all events at a place chronologically, with participants and dates
+- [x] Create `src/api/reports/family_narrative.ts` — couple + children with key life events, marriage, sources
+- [x] Create `src/api/reports/types.ts` — ReportData, ReportOptions, ReportSection types
+- [x] Create HTML report templates with print-optimized CSS (reuse existing printable output patterns from ancestor chart/family group sheet)
+- [x] Add prose generation utilities — event-to-sentence converters, date formatters for narrative text
+- [x] IPC channel `reports:generatePersonBiography`, `reports:generatePlaceHistory`, `reports:generateFamilyNarrative`
+- [x] Preload: expose `window.api.reports.*`
+- [x] PDF generation via Electron's `webContents.printToPDF()` with clickable links preserved
+- [x] Vue: ReportPreviewModal — shows HTML preview with "Save as PDF" button
+- [x] Add "Generate Report" buttons to PersonDetailView, PlaceDetailView
+- [x] i18n: Swedish + English prose patterns for narrative text
+- [x] MCP tool `generate_report` — returns report HTML or structured data for agent-driven generation
+- [x] Unit tests for report data assembly functions
+- [x] Test PDF link generation
 
 ### Dependencies
 None — uses existing API functions.

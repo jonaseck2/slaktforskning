@@ -39,6 +39,7 @@ export default {
     delete: 'Ta bort',
     edit: 'Redigera',
     save: 'Spara',
+    create: 'Skapa',
     actions: 'Åtgärder',
     loading: 'Laddar\u2026',
     yes: 'Ja',
@@ -53,8 +54,8 @@ export default {
   },
   persons: {
     title: 'Personer',
-    addPerson: 'Lägg till person',
-    emptyState: 'Inga personer ännu. Klicka \u201CLägg till person\u201D för att börja.',
+    addPerson: 'Person',
+    emptyState: 'Inga personer ännu.',
     givenName: 'Förnamn (fullständigt)',
     givenNameHint: 'Markera tilltalsnamn med * eller ! efter det, t.ex. Eva Linda* Marie',
     preferredName: 'Tilltalsnamn',
