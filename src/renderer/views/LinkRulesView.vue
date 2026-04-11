@@ -47,7 +47,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="rule in resolvedRules" :key="rule.id">
+          <tr v-for="rule in resolvedRules" :key="rule.id" :class="{ 'clickable-row': !isCustomRule(rule.id) }" @click="!isCustomRule(rule.id) && viewRule(rule)">
             <td>{{ rule.name }}</td>
             <td><span v-if="rule.example" class="example-cell">{{ rule.example }}</span><span v-else class="muted">—</span></td>
             <td><span class="pattern-cell">{{ truncate(rule.pattern, 40) }}</span></td>
@@ -56,6 +56,7 @@
               <input
                 type="checkbox"
                 :checked="rule.enabled"
+                @click.stop
                 @change="toggleRule(rule.id, ($event.target as HTMLInputElement).checked)"
               />
             </td>
@@ -63,7 +64,7 @@
               <button
                 v-if="isCustomRule(rule.id)"
                 class="btn-delete btn-sm"
-                @click="deleteRule(rule.id)"
+                @click.stop="deleteRule(rule.id)"
               >{{ $t('common.delete') }}</button>
             </td>
           </tr>
@@ -130,6 +131,37 @@
         </form>
       </div>
     </div>
+    <!-- View rule modal (read-only) -->
+    <div v-if="viewingRule" class="modal-overlay" @click.self="viewingRule = null">
+      <div class="modal">
+        <h3>{{ viewingRule.name }}</h3>
+        <form @submit.prevent>
+          <label>
+            {{ $t('linkRules.name') }}
+            <input :value="viewingRule.name" type="text" readonly />
+          </label>
+          <label>
+            {{ $t('linkRules.pattern') }}
+            <input :value="viewingRule.pattern" type="text" readonly class="mono" />
+          </label>
+          <label>
+            {{ $t('linkRules.urlTemplate') }}
+            <input :value="viewingRule.urlTemplate" type="text" readonly class="mono" />
+          </label>
+          <label v-if="viewingRule.example">
+            {{ $t('linkRules.example') }}
+            <input :value="viewingRule.example" type="text" readonly />
+          </label>
+          <label>
+            {{ $t('linkRules.priority') }}
+            <input :value="viewingRule.priority" type="text" readonly />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="viewingRule = null">{{ $t('common.cancel') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -154,6 +186,7 @@ const resolvedRules = computed(() => resolveRules(allDefaults, config.value));
 const testText = ref('');
 const testSegments = computed(() => linkify(testText.value, resolvedRules.value));
 
+const viewingRule = ref<LinkRule | null>(null);
 const showAddModal = ref(false);
 const newRule = ref({ name: '', pattern: '', urlTemplate: '', example: '', priority: 50 });
 const patternError = ref('');
@@ -185,6 +218,10 @@ const exampleMatchUrl = computed<string | null>(() => {
 
 function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + '\u2026' : str;
+}
+
+function viewRule(rule: LinkRule) {
+  viewingRule.value = rule;
 }
 
 function isCustomRule(id: string): boolean {
@@ -360,5 +397,15 @@ onMounted(loadConfig);
   color: #e53e3e;
   font-size: var(--font-xs);
   margin-top: 2px;
+}
+
+.view-rule-fields input[readonly] {
+  background: #f5f5f5;
+  cursor: default;
+}
+
+.mono {
+  font-family: monospace;
+  font-size: var(--font-xs);
 }
 </style>
