@@ -494,24 +494,6 @@ onBeforeRouteLeave(() => { stop(); });
 .header-info h2 {
   margin: 0;
 }
-.sex-badge {
-  padding: 2px 10px;
-  border-radius: 10px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-}
-.sex-M {
-  background: var(--color-sex-m-bg);
-  color: var(--color-sex-m-text);
-}
-.sex-F {
-  background: var(--color-sex-f-bg);
-  color: var(--color-sex-f-text);
-}
-.sex-U {
-  background: var(--color-sex-u-bg);
-  color: var(--color-sex-u-text);
-}
 .sex-select {
   padding: 2px 20px 2px 8px;
   border-radius: 10px;

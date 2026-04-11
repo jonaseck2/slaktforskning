@@ -57,14 +57,14 @@
             <th>{{ $t('sourceDetail.page') }}</th>
             <th>{{ $t('sourceDetail.confidence') }}</th>
             <th>{{ $t('sourceDetail.transcription') }}</th>
-            <th>{{ $t('common.actions') }}</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           <template v-for="cit in citations" :key="cit.id">
-            <tr>
+            <tr class="clickable-row" @click="editingCitation = cit">
               <td>
-                <a v-if="cit.entityRoute" class="entity-link" @click.prevent="router.push(cit.entityRoute)" href="#">{{ cit.entityLabel }}</a>
+                <a v-if="cit.entityRoute" class="entity-link" @click.stop.prevent="router.push(cit.entityRoute)" href="#">{{ cit.entityLabel }}</a>
                 <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
                 <span v-else class="muted">—</span>
               </td>
@@ -77,8 +77,7 @@
               </td>
               <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
               <td>
-                <button class="btn-sm btn-edit" @click="editingCitation = cit">{{ $t('common.edit') }}</button>
-                <button class="btn-sm btn-delete" @click="removeCitation(cit.id)">✕</button>
+                <button class="btn-sm btn-delete" @click.stop="removeCitation(cit.id)">✕</button>
               </td>
             </tr>
           </template>
@@ -226,8 +225,7 @@ async function load() {
     editFields.url = source.value.url;
 
     const rawCits = (await window.api.citations.forSource(sourceId)) as CitationRow[];
-    citations.value = rawCits;
-    // Resolve entity labels in parallel
+    // Resolve entity labels in parallel before assigning to ref
     await Promise.all(rawCits.map(async (cit) => {
       const resolved = await resolveEntityLabel(cit);
       if (resolved) {
@@ -235,6 +233,7 @@ async function load() {
         cit.entityRoute = resolved.route;
       }
     }));
+    citations.value = rawCits;
     autoNarrate();
   } catch (err) {
     console.error('[SourceDetailView] load failed:', err);
@@ -355,9 +354,4 @@ onBeforeRouteLeave(() => { stop(); });
 .confidence-1 { background: #fef3c7; color: #92400e; }
 .confidence-2 { background: #e0f2fe; color: #075985; }
 .confidence-3 { background: #dcfce7; color: #166534; }
-.btn-edit {
-  background: #e8f4fd;
-  color: #1565c0;
-  margin-right: 4px;
-}
 </style>
