@@ -120,6 +120,10 @@ Version numbers are not pre-assigned. When a milestone is committed, the version
 
 Fixes, investigations, and refactors archived in [plans/archive/PLAN.md](plans/archive/PLAN.md).
 
+#### Hourglass Outline Architecture [active]
+Refactor hourglass chart layout to support outline placeholders as first-class nodes. Replace ahnentafel-based layout with a general graph model where each person has N parents, M children, K spouses. Outline injection is unconditional for the selected person; layout treats outlines identically to real nodes; focal person never filters outlines.
+- Plan: [plans/2026-04-11-hourglass-outline-architecture.md](plans/2026-04-11-hourglass-outline-architecture.md)
+
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
 

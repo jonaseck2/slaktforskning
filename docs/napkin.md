@@ -40,6 +40,14 @@
 2. **[2026-04-10] Use `<details>` for optional form sections, not always-visible fields**
    Do instead: wrap optional fields (birth info, source citation) in `<details class="birth-section">`. Use `open` attribute when the section is likely needed (e.g. Add Person modal), omit it when the section is secondary (e.g. AddRelatedPersonModal where the focus is on the relationship).
 
+## Chart Architecture
+
+1. **[2026-04-11] Outline placeholders: inject first, layout second, never filter**
+   Do instead: outline injection is a trivial unconditional step (always add father+mother+child+spouse outlines for selected person). The layout algorithm treats outlines and real nodes identically — it sees N parents, M children, K spouses and positions them uniformly. The focal person only controls which real nodes exist in the tree; outlines are never filtered by focus or collapse state. Selected person ≠ focal person — these are independent concepts.
+
+2. **[2026-04-11] Layout must support N parents, not just 2**
+   Do instead: abandon ahnentafel (binary tree) for layout. Use a general model where each person has lists of parents, children, and spouses. The data fetch can still use ahnentafel internally, but the layout algorithm works on a uniform graph.
+
 ## Research & Design
 
 1. **[2026-04-10] Mine the user's own data files for real-world patterns**
