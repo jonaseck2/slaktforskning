@@ -77,6 +77,47 @@
           </text>
         </template>
 
+        <!-- Straight tangential text (gen 1-4, curvedText off) -->
+        <template v-else-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
+          <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
+            <text
+              v-if="givenLabel(seg)"
+              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
+              text-anchor="middle" dominant-baseline="central"
+              :font-size="nameFontSize(seg.generation)"
+              :font-family="fontFamily"
+              font-weight="600" fill="white"
+              style="pointer-events: none; user-select: none;"
+            >{{ givenLabel(seg) }}</text>
+            <text
+              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
+              text-anchor="middle" dominant-baseline="central"
+              :font-size="nameFontSize(seg.generation)"
+              :font-family="fontFamily"
+              font-weight="600" fill="white"
+              style="pointer-events: none; user-select: none;"
+            >{{ surnameLabel(seg) }}</text>
+            <text
+              v-if="birthLabel(seg)"
+              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
+              text-anchor="middle" dominant-baseline="central"
+              :font-size="dateFontSize(seg.generation)"
+              :font-family="fontFamily"
+              fill="rgba(255,255,255,0.75)"
+              style="pointer-events: none; user-select: none;"
+            >{{ birthLabel(seg) }}</text>
+            <text
+              v-if="deathLabel(seg)"
+              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
+              text-anchor="middle" dominant-baseline="central"
+              :font-size="dateFontSize(seg.generation)"
+              :font-family="fontFamily"
+              fill="rgba(255,255,255,0.75)"
+              style="pointer-events: none; user-select: none;"
+            >{{ deathLabel(seg) }}</text>
+          </g>
+        </template>
+
         <!-- Radial straight text (gen 5-6) -->
         <template v-else-if="seg.generation >= 5">
           <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
