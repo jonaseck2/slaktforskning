@@ -1,16 +1,16 @@
 <template>
   <div class="ancestor-chart-report">
-    <div v-if="loading" class="loading">Laddar…</div>
-    <div v-else-if="!tree" class="empty">Välj en person.</div>
+    <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
+    <div v-else-if="!tree" class="empty">{{ $t('reports.selectPerson') }}</div>
     <template v-else>
-      <h1 class="report-title">Stamtavla för {{ focalName }}</h1>
-      <p class="report-meta">{{ props.generations }} generationer · {{ new Date().toLocaleDateString('sv-SE') }}</p>
+      <h1 class="report-title">{{ $t('reports.pedigreeTitle', { name: focalName }) }}</h1>
+      <p class="report-meta">{{ props.generations }} {{ $t('reports.generations').toLowerCase() }} · {{ new Date().toLocaleDateString() }}</p>
 
       <div v-for="gen in generationRows" :key="gen.level" class="gen-section">
         <h3 class="gen-heading">{{ generationLabel(gen.level) }}</h3>
         <div v-for="entry in gen.entries" :key="entry.ahnNum" class="person-entry">
           <span class="ahn-num">{{ entry.ahnNum }}.</span>
-          <span class="person-name">{{ entry.name || '(okänd)' }}</span>
+          <span class="person-name">{{ entry.name || $t('common.unknown') }}</span>
           <span class="person-years">{{ entry.years }}</span>
         </div>
       </div>
@@ -69,7 +69,7 @@ const generationRows = computed<GenRow[]>(() => {
       const name = formatFullName({ given_name: p.givenName, surname: p.surname, preferred_name: p.preferredName, nickname: p.nickname });
       const birthStr = p.birthYear != null ? String(p.birthYear) : '?';
       const deathStr = p.deathYear != null ? String(p.deathYear) : '';
-      const years = deathStr ? `${birthStr}–${deathStr}` : birthStr !== '?' ? `f. ${birthStr}` : '';
+      const years = deathStr ? `${birthStr}–${deathStr}` : birthStr !== '?' ? `${t('reports.bornAbbrev')} ${birthStr}` : '';
       entries.push({ ahnNum: n, name, years });
     }
     if (entries.length > 0) rows.push({ level: gen, entries });
@@ -78,15 +78,8 @@ const generationRows = computed<GenRow[]>(() => {
 });
 
 function generationLabel(gen: number): string {
-  const labels: Record<number, string> = {
-    1: 'Utgångsperson',
-    2: 'Föräldrar',
-    3: 'Mor-/farföräldrar',
-    4: 'Mor-/farmorföräldrar',
-    5: 'Ur-mor-/farföräldrar',
-    6: 'Generation 6',
-  };
-  return labels[gen] ?? `Generation ${gen}`;
+  const key = 'reports.generationLabels.' + gen;
+  return t(key, t('reports.generationLabel', { num: gen }));
 }
 
 async function load() {
