@@ -682,6 +682,17 @@ export default {
     exportReportSources: '{n} sources',
     exportReportExcluded: 'Not included in GEDCOM (no equivalent concept):',
   },
+  csv: {
+    title: 'CSV Export',
+    entityType: 'Entity type',
+    delimiter: 'Delimiter',
+    comma: 'Comma (,)',
+    semicolon: 'Semicolon (;)',
+    tab: 'Tab',
+    bom: 'UTF-8 BOM (for Excel)',
+    export: 'Export CSV',
+    success: 'CSV exported',
+  },
   media: {
     title: 'Media',
     nav: 'Media',
