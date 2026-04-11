@@ -583,6 +583,20 @@ export function computeHourglassLayout(
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
 
+  // Helper: find the nearest free X for a placeholder at a given Y row,
+  // avoiding overlap with existing boxes.
+  function findFreeX(preferredX: number, rowY: number, direction: 'left' | 'right'): number {
+    const rowBoxes = boxes.filter(b => Math.abs(b.y - rowY) < BOX_H);
+    let x = preferredX;
+    const step = direction === 'right' ? (BOX_W + V_GAP) : -(BOX_W + V_GAP);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const overlaps = rowBoxes.some(b => x < b.x + b.w + V_GAP && x + BOX_W > b.x - V_GAP);
+      if (!overlaps) return x;
+      x += step;
+    }
+    return x;
+  }
+
   if (selectedPersonId) {
     const selectedBox = boxes.find(b => b.person.id === selectedPersonId);
     const selectedK = selectedPersonId
@@ -606,7 +620,8 @@ export function computeHourglassLayout(
           const forkY = selectedBox.y - GEN_GAP / 2;
 
           if (!hasFather) {
-            const phX = boxCX - halfSpan - BOX_W / 2;
+            const preferredX = boxCX - halfSpan - BOX_W / 2;
+            const phX = findFreeX(preferredX, parentRowYVal, 'left');
             placeholders.push({
               type: 'placeholder', role: 'father',
               childPersonId: selectedPersonId,
@@ -620,7 +635,8 @@ export function computeHourglassLayout(
           }
 
           if (!hasMother) {
-            const phX = boxCX + halfSpan - BOX_W / 2;
+            const preferredX = boxCX + halfSpan - BOX_W / 2;
+            const phX = findFreeX(preferredX, parentRowYVal, 'right');
             placeholders.push({
               type: 'placeholder', role: 'mother',
               childPersonId: selectedPersonId,
@@ -635,34 +651,58 @@ export function computeHourglassLayout(
         }
       }
 
-      // Child placeholder (below) — only if person has no children in the tree
+      // Child placeholder — for focal, focal's direct parents (k=2,3), and descendant nodes
       const descNode = descNodeMap.get(selectedPersonId);
-      const isAncestorWithDescendants = selectedK !== undefined && selectedK === 1;
-      // For focal: check descendantRoot.children; for descendants: check descNode.children
-      const hasChildren = isAncestorWithDescendants
-        ? descendantRoot.children.length > 0
-        : (descNode?.children.length ?? 0) > 0;
+      const isFocal = selectedK === 1;
+      const isFocalParent = selectedK === 2 || selectedK === 3;
 
-      if (!hasChildren) {
-        // Determine depth: focal=0, descendants found in descNodeMap
-        let depth = 0;
-        if (selectedK === 1) {
-          depth = 0;
-        } else if (descNode) {
-          // Find depth by looking at box Y position
-          depth = Math.round((selectedBox.y - focalRowY) / (BOX_H + GEN_GAP));
+      if (isFocal || isFocalParent || descNode) {
+        // For focal parents, their children are the focal's siblings at the sibling row
+        const hasChildren = isFocal
+          ? descendantRoot.children.length > 0
+          : isFocalParent
+            ? true // focal parent always has children (the focal + siblings)
+            : (descNode?.children.length ?? 0) > 0;
+
+        if (!hasChildren) {
+          let depth = 0;
+          if (isFocal) {
+            depth = 0;
+          } else if (descNode) {
+            depth = Math.round((selectedBox.y - focalRowY) / (BOX_H + GEN_GAP));
+          }
+
+          const childRowY = descRowY(depth + 1);
+          const phX = boxCX - BOX_W / 2;
+          placeholders.push({
+            type: 'placeholder', role: 'child',
+            childPersonId: selectedPersonId,
+            x: phX, y: childRowY,
+          });
+          const forkY = selectedBox.y + BOX_H + GEN_GAP / 2;
+          placeholderLines.push({ x1: boxCX, y1: selectedBox.y + BOX_H, x2: boxCX, y2: forkY });
+          placeholderLines.push({ x1: boxCX, y1: forkY, x2: boxCX, y2: childRowY });
         }
 
-        const childRowY = descRowY(depth + 1);
-        const phX = boxCX - BOX_W / 2;
-        placeholders.push({
-          type: 'placeholder', role: 'child',
-          childPersonId: selectedPersonId,
-          x: phX, y: childRowY,
-        });
-        const forkY = selectedBox.y + BOX_H + GEN_GAP / 2;
-        placeholderLines.push({ x1: boxCX, y1: selectedBox.y + BOX_H, x2: boxCX, y2: forkY });
-        placeholderLines.push({ x1: boxCX, y1: forkY, x2: boxCX, y2: childRowY });
+        // For focal parents who already have children: place "add child" at end of sibling row
+        if (isFocalParent && hasChildren) {
+          const siblingRow = focalRowY; // siblings are at the focal row
+          // Find rightmost or leftmost sibling/focal box to place placeholder next to it
+          const rowBoxes = boxes.filter(b => Math.abs(b.y - siblingRow) < BOX_H);
+          if (rowBoxes.length > 0) {
+            const rightmostBox = rowBoxes.reduce((a, b) => a.x + a.w > b.x + b.w ? a : b);
+            const phX = rightmostBox.x + rightmostBox.w + V_GAP;
+            placeholders.push({
+              type: 'placeholder', role: 'child',
+              childPersonId: selectedPersonId,
+              x: phX, y: siblingRow,
+            });
+            // Connector from the parent fork down to the placeholder
+            const parentForkY = siblingRow - GEN_GAP / 2;
+            const phCX = phX + BOX_W / 2;
+            placeholderLines.push({ x1: phCX, y1: parentForkY, x2: phCX, y2: siblingRow });
+          }
+        }
       }
     }
   }
