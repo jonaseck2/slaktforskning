@@ -94,6 +94,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 | v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 | v0.61.0 | B3: Media Timeline — chronological media per person/place with lightbox | [plan](plans/2026-04-11-track-b-media-experience.md) |
+| v0.62.0 | A3: Wall Charts — large-format pedigree/descendant SVG with tiled PDF | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 ---
 
 ## Research
@@ -118,9 +119,6 @@ Define primary user objectives, map to current click counts, identify highest-fr
 ---
 
 ### Track A: Presentation & Sharing [plan](plans/2026-04-11-track-a-presentation-sharing.md)
-
-#### A3: Wall Charts [feature]
-Large-format pedigree and descendant charts. SVG-based, tiled multi-page PDF for home printers.
 
 #### A4: Static HTML Site Export [feature]
 Generate a self-contained browsable family tree website. Person pages, index, search, media.

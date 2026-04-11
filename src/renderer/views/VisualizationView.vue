@@ -1,5 +1,8 @@
 <template>
   <div class="visualization-view">
+    <div class="header">
+      <h2>{{ $t('nav.visualization') }}</h2>
+    </div>
     <!-- Tab bar -->
     <div v-if="focalPerson" class="tab-bar" role="tablist">
       <button class="btn-back" @click="router.back()">←</button>
