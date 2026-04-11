@@ -16,6 +16,7 @@
     </template>
     <GenneyImportSection v-if="activeTab === 'genney'" />
     <HolgerImportSection v-if="activeTab === 'holger'" />
+    <CsvExportSection v-if="activeTab === 'csv'" />
   </div>
 </template>
 
@@ -26,6 +27,7 @@ import GedcomImportSection from '../components/import/GedcomImportSection.vue';
 import GedcomExportSection from '../components/import/GedcomExportSection.vue';
 import GenneyImportSection from '../components/import/GenneyImportSection.vue';
 import HolgerImportSection from '../components/import/HolgerImportSection.vue';
+import CsvExportSection from '../components/import/CsvExportSection.vue';
 
 const { t } = useI18n();
 
@@ -35,6 +37,7 @@ const tabs = computed(() => [
   { id: 'gedcom', label: t('importExport.gedcomTitle') },
   { id: 'genney', label: t('importExport.genneyTitle') },
   { id: 'holger', label: t('importExport.holgerTitle') },
+  { id: 'csv', label: t('csv.title') },
 ]);
 </script>
 
