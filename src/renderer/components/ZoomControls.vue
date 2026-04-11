@@ -62,6 +62,32 @@ defineEmits<{
   padding: 0 3px;
 }
 
+/* Styles for slotted content (generation pickers, toggles) */
+:slotted(.zoom-extra-label) {
+  font-size: var(--font-xs);
+  color: #888;
+  padding: 0 4px 0 2px;
+}
+:slotted(.zoom-extra-btn) {
+  background: none;
+  border: none;
+  padding: 2px 7px;
+  cursor: pointer;
+  font-size: var(--font-base);
+  border-radius: 3px;
+  color: #555;
+  line-height: 1.4;
+}
+:slotted(.zoom-extra-btn:hover:not(:disabled)) { background: var(--color-bg-muted); }
+:slotted(.zoom-extra-btn:disabled) { opacity: 0.4; cursor: default; }
+:slotted(.zoom-extra-value) {
+  padding: 0 4px;
+  font-size: var(--font-xs);
+  color: #666;
+  min-width: 24px;
+  text-align: center;
+}
+
 @media print {
   .zoom-controls-bar { display: none !important; }
 }
