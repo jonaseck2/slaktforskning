@@ -123,7 +123,7 @@
             class="ghost-box"
             tabindex="0"
             role="button"
-            :aria-label="ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : $t('personDetail.addChild')"
+            :aria-label="ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : ph.role === 'spouse' ? $t('personDetail.addSpouse') : $t('personDetail.addChild')"
             @click="startAddFromPlaceholder(ph)"
             @keydown.enter="startAddFromPlaceholder(ph)"
             @keydown.space.prevent="startAddFromPlaceholder(ph)"
@@ -140,7 +140,7 @@
             <text
               :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 + 12"
               text-anchor="middle" fill="#94a3b8" font-size="11"
-            >{{ ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : $t('personDetail.addChild') }}</text>
+            >{{ ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : ph.role === 'spouse' ? $t('personDetail.addSpouse') : $t('personDetail.addChild') }}</text>
           </g>
         </template>
       </svg>
@@ -286,7 +286,7 @@ function openAddPopover(box: BoxLayout) {
 
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   addRelativePersonId.value = ph.childPersonId;
-  addRelativeMode.value = ph.role === 'child' ? 'child' : ph.role;
+  addRelativeMode.value = ph.role === 'spouse' ? 'spouse' : ph.role;
   addPopover.value = null;
   showAddRelative.value = true;
 }
