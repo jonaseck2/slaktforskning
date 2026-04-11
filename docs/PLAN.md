@@ -101,7 +101,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.65.0 | A4: Static HTML Site Export — browsable website, search, XSS-safe, 12 tests | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
 | v0.66.0 | C4: GEDCOM Hardening — 8 edge case fixtures, date parser, import preview, 40 tests | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
 | v0.67.0 | B5: Face/Region Tagging MCP — batch suggest, person matching, tagging status | [archive](plans/archive/2026-04-11-track-b-media-experience.md) |
-| v0.68.0 | PlacePanel: map pin side panel with 8 collapsible sections (events, persons, media, citations, child places), drag-resize, EntityMediaSection, getPersonsForPlace API | — |
+| v0.68.0 | PlacePanel: map pin side panel with 8 collapsible sections, drag-resize, EntityMediaSection, getPersonsForPlace API | [archive](plans/archive/2026-04-11-place-panel.md) |
+| v0.69.0 | User feedback: hierarchy section, event types (wedding, foster placement), couple subtypes (särbo, relation), cause field restricted to death, media folder namespacing, media path resolution fix, EventList persons column | — |
 ---
 
 ## Research

@@ -61,6 +61,7 @@
           v-else-if="activeTab === 'pedigree'"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
+          :selected-person-id="selectedPersonId"
           :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           @navigate="navigateTo"
           @reload="reloadChart"
