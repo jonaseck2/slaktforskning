@@ -183,8 +183,11 @@ watch(() => route.path, () => {
       '/database': 'database',
       '/import-export': 'importExport',
       '/search': 'search',
+      '/link-rules': 'linkRules',
     };
-    const name = routeMap[route.path] ?? route.path;
+    const name = routeMap[route.path]
+      ?? Object.entries(routeMap).find(([prefix]) => prefix !== '/' && route.path.startsWith(prefix + '/'))?.[1]
+      ?? route.path;
     screenReader.announceRoute(name);
   }
 });

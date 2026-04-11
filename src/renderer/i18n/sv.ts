@@ -913,6 +913,8 @@ export default {
     navImportExport: 'Import och export',
     navDatabase: 'Databasinställningar',
     navSearch: 'Sök, skriv för att hitta personer',
+    navMap: 'Kartvy',
+    navLinkRules: 'Länkregelvy',
     navHome: 'Hem, {name}',
     navPersonDetail: 'Persondetalj: {name}, {sex}, {summary}. {sectionCount} sektioner tillgängliga. Tryck 1 till {sectionCount} för att hoppa till en sektion, eller Tab för att gå igenom.',
     navRelationshipDetail: 'Relationsdetalj: {summary}',
