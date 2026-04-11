@@ -6,6 +6,7 @@ export type {
   Line,
   CollapseButton,
   PlaceholderBox,
+  TreePerson,
   ChartLayout,
   PedigreeTree,
   DescendantNode,
@@ -22,3 +23,4 @@ export { computePedigreeLayout } from './pedigree';
 export { computeHourglassLayout } from './hourglass';
 export { computeTimelineLayout } from './timeline';
 export { computeDescendantLayout } from './descendant';
+export { buildHourglassTree, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
