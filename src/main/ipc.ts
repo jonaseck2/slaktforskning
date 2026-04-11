@@ -14,6 +14,8 @@ import type { ImportOptions } from '../import/gedcom';
 import { unzipSync } from 'fflate';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
 import { importFromHolger } from '../import/holger/index';
+import { exportArchive } from '../api/archive_export';
+import { importArchive } from '../api/archive_import';
 import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
@@ -525,6 +527,40 @@ export function registerIpcHandlers(): void {
     const { ged, report } = exportGedcom(getDatabase(), version, exportOptions);
     fs.writeFileSync(result.filePath, ged, 'utf-8');
     return { exported: true, filePath: result.filePath, report };
+  });
+
+  // Archive export/import
+  wrapHandler('archive:export', async (opts?: unknown) => {
+    const options = opts as { gedcomVersion?: '5.5.1' | '7.0' } | undefined;
+    const version = options?.gedcomVersion ?? '5.5.1';
+    const result = await dialog.showSaveDialog({
+      title: 'Export Archive',
+      defaultPath: 'family-tree.zip',
+      filters: [{ name: 'Zip Archive', extensions: ['zip'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const report = exportArchive(getDatabase(), result.filePath, dbDir, { gedcomVersion: version });
+    return { exported: true, filePath: result.filePath, report };
+  });
+
+  wrapHandler('archive:import', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Import Archive',
+      filters: [{ name: 'Zip Archive', extensions: ['zip'] }],
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+    const archivePath = result.filePaths[0];
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const mediaDir = path.join(dbDir, 'media');
+    importInProgress = true;
+    try {
+      const report = importArchive(getDatabase(), archivePath, mediaDir);
+      return { imported: true, filePath: archivePath, report };
+    } finally {
+      importInProgress = false;
+    }
   });
 
   // Backup / Restore
