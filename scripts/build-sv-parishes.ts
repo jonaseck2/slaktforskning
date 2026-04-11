@@ -134,6 +134,11 @@ const GAZETTEERS = [
   },
 ];
 
+interface ClassMetadata {
+  created?: string;  // ISO date from P571 (inception)
+  kgmid?: string;    // Google Knowledge Graph ID from P2671 or Freebase ID from P646
+}
+
 // ── SPARQL query ─────────────────────────────────────────────────────
 
 /**
@@ -381,6 +386,48 @@ function printStats(root: GazetteerNode): void {
   console.log(`    Parishes w/ aliases: ${withAliases}`);
 }
 
+// ── Class metadata (inception date, KGMID) ─────────────────────────
+
+/**
+ * Fetch metadata about the Wikidata class itself: inception date (P571)
+ * and Google Knowledge Graph ID (P2671, falling back to Freebase ID P646).
+ */
+async function fetchClassMetadata(classId: string): Promise<ClassMetadata> {
+  const query = `
+    SELECT ?created ?kgmid ?freebaseId WHERE {
+      OPTIONAL { wd:${classId} wdt:P571 ?created . }
+      OPTIONAL { wd:${classId} wdt:P2671 ?kgmid . }
+      OPTIONAL { wd:${classId} wdt:P646 ?freebaseId . }
+    }
+    LIMIT 1
+  `;
+  const url = `${SPARQL_ENDPOINT}?format=json&query=${encodeURIComponent(query)}`;
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/sparql-results+json',
+      'User-Agent': USER_AGENT,
+    },
+  });
+  if (!response.ok) return {};
+
+  const json = await response.json() as {
+    results: { bindings: Array<Record<string, { value: string }>> };
+  };
+  const b = json.results.bindings[0];
+  if (!b) return {};
+
+  const result: ClassMetadata = {};
+  if (b.created?.value) {
+    result.created = b.created.value.slice(0, 10); // ISO date
+  }
+  if (b.kgmid?.value) {
+    result.kgmid = b.kgmid.value;
+  } else if (b.freebaseId?.value) {
+    result.kgmid = b.freebaseId.value;
+  }
+  return result;
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
 async function main() {
@@ -398,23 +445,32 @@ async function main() {
     }
 
     console.log(`${i + 1}. Fetching ${gaz.description} (${gaz.classId})...`);
-    const rows = await sparqlFetch(buildQuery(gaz.classId));
+    const [rows, metadata] = await Promise.all([
+      sparqlFetch(buildQuery(gaz.classId)),
+      fetchClassMetadata(gaz.classId),
+    ]);
     console.log(`   Got ${rows.length} rows`);
+    if (metadata.created) console.log(`   Class inception: ${metadata.created}`);
+    if (metadata.kgmid) console.log(`   Knowledge Graph ID: ${metadata.kgmid}`);
 
     console.log('   Building hierarchy...');
     const root = buildTree(rows);
+
+    const source: Record<string, string> = {
+      name: 'Wikidata',
+      url: `https://www.wikidata.org/wiki/${gaz.classId}`,
+      license: 'CC0 1.0',
+    };
+    if (metadata.created) source.created = metadata.created;
+    source.fetched = new Date().toISOString().slice(0, 10);
+    if (metadata.kgmid) source.kgmid = metadata.kgmid;
 
     const gazetteer = {
       id: gaz.id,
       name: gaz.name,
       locale: 'sv',
       description: gaz.gazDescription,
-      source: {
-        name: 'Wikidata',
-        url: 'https://www.wikidata.org',
-        license: 'CC0 1.0',
-        fetched: new Date().toISOString().slice(0, 10),
-      },
+      source,
       root,
     };
 

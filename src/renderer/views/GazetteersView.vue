@@ -24,9 +24,11 @@
           <div v-if="gaz.description" class="gazetteer-card-desc">{{ gaz.description }}</div>
           <div v-if="gaz.source" class="gazetteer-card-source">
             {{ $t('gazetteers.source') }}:
-            <a :href="gaz.source.url" target="_blank" rel="noopener">{{ gaz.source.name }}</a>
+            <a href="#" @click.prevent="openExternal(gaz.source.url)">{{ gaz.source.name }}</a>
             <span class="source-license">({{ gaz.source.license }})</span>
+            <span v-if="gaz.source.created" class="source-date">{{ $t('gazetteers.created') }} {{ gaz.source.created }}</span>
             <span class="source-date">{{ $t('gazetteers.fetched') }} {{ gaz.source.fetched }}</span>
+            <a v-if="gaz.source.kgmid" href="#" class="source-kg-link" @click.prevent="openExternal('https://www.google.com/search?kgmid=' + encodeURIComponent(gaz.source.kgmid))">{{ $t('gazetteers.knowledgeGraph') }}</a>
           </div>
         </div>
       </div>
@@ -117,6 +119,10 @@ function toggleGazetteer(id: string, checked: boolean) {
   saveConfig();
 }
 
+function openExternal(url: string) {
+  window.api.shell.openExternal(url);
+}
+
 onMounted(loadConfig);
 </script>
 
@@ -185,6 +191,10 @@ onMounted(loadConfig);
 .source-date {
   margin-left: 8px;
   color: #aaa;
+}
+
+.source-kg-link {
+  margin-left: 8px;
 }
 
 .test-input {

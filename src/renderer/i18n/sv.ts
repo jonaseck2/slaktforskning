@@ -1013,7 +1013,9 @@ export default {
       ambiguous: 'Tvetydig',
     },
     source: 'Källa',
+    created: 'skapad',
     fetched: 'hämtad',
+    knowledgeGraph: 'Knowledge Graph',
   },
   undo: {
     createPerson: 'Skapa person',

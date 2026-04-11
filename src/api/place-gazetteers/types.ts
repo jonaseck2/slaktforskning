@@ -9,9 +9,11 @@ export interface GazetteerNode {
 
 export interface GazetteerSource {
   name: string;          // e.g. "Wikidata"
-  url: string;           // e.g. "https://www.wikidata.org"
+  url: string;           // e.g. "https://www.wikidata.org/wiki/Q18333556"
   license: string;       // e.g. "CC0 1.0"
+  created?: string;      // ISO date when the source dataset was established
   fetched: string;       // ISO date of last fetch, e.g. "2026-04-11"
+  kgmid?: string;        // Google Knowledge Graph ID, e.g. "/g/11b60xsbyy"
 }
 
 export interface Gazetteer {

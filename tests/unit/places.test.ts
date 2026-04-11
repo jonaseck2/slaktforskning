@@ -2,8 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
 import {
   createPlace, getPlace, listPlaces, searchPlaces,
-  updatePlace, deletePlace, findOrCreatePlace,
+  updatePlace, deletePlace, findOrCreatePlace, getPersonsForPlace,
 } from '../../src/api/places';
+import { createPerson, addPersonName } from '../../src/api/persons';
+import { createEvent } from '../../src/api/events';
+import { addEventParticipant } from '../../src/api/relationships';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });
@@ -115,5 +118,41 @@ describe('deletePlace', () => {
     const p = createPlace(db, { name: 'Björkvik' });
     expect(deletePlace(db, p.id)).toBe(true);
     expect(getPlace(db, p.id)).toBeNull();
+  });
+});
+
+describe('getPersonsForPlace', () => {
+  it('returns persons linked to events at a place', () => {
+    const place = createPlace(db, { name: 'Stockholm' });
+    const person = createPerson(db, { sex: 'M' });
+    addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
+    const event = createEvent(db, { event_type: 'birth', place_id: place.id });
+    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+
+    const result = getPersonsForPlace(db, place.id);
+    expect(result).toHaveLength(1);
+    expect(result[0].given_name).toBe('Erik');
+    expect(result[0].surname).toBe('Svensson');
+    expect(result[0].event_count).toBe(1);
+  });
+
+  it('returns empty array for place with no events', () => {
+    const place = createPlace(db, { name: 'Nowhere' });
+    const result = getPersonsForPlace(db, place.id);
+    expect(result).toEqual([]);
+  });
+
+  it('deduplicates persons with multiple events at same place', () => {
+    const place = createPlace(db, { name: 'Uppsala' });
+    const person = createPerson(db, { sex: 'F' });
+    addPersonName(db, person.id, { given_name: 'Anna', surname: 'Nilsson' });
+    const e1 = createEvent(db, { event_type: 'birth', place_id: place.id });
+    const e2 = createEvent(db, { event_type: 'christening', place_id: place.id });
+    addEventParticipant(db, { event_id: e1.id, person_id: person.id, role: 'primary' });
+    addEventParticipant(db, { event_id: e2.id, person_id: person.id, role: 'primary' });
+
+    const result = getPersonsForPlace(db, place.id);
+    expect(result).toHaveLength(1);
+    expect(result[0].event_count).toBe(2);
   });
 });

@@ -5,9 +5,10 @@
   "description": "Church parishes (församlingar) — used for vital records (birth, baptism, marriage, burial). Swedish passports list birthplace as församling.",
   "source": {
     "name": "Wikidata",
-    "url": "https://www.wikidata.org",
+    "url": "https://www.wikidata.org/wiki/Q615980",
     "license": "CC0 1.0",
-    "fetched": "2026-04-11"
+    "fetched": "2026-04-11",
+    "kgmid": "/m/01186f2m"
   },
   "root": {
     "name": "Sverige",
