@@ -77,7 +77,7 @@ const api = {
   gedcom: {
     selectFile: () => ipcRenderer.invoke('gedcom:selectFile'),
     import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
-    export: (opts?: { version?: string }) => ipcRenderer.invoke('gedcom:export', opts),
+    export: (opts?: { version?: string; exportOptions?: unknown }) => ipcRenderer.invoke('gedcom:export', opts),
   },
   import: {
     genneyCheckDocker: () => ipcRenderer.invoke('import:genneyCheckDocker'),
