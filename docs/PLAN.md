@@ -84,22 +84,22 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | macOS 26 Tahoe crash: Electron 41.2.0 + --no-incremental-marking | [archive](plans/archive/2026-04-08-macos26-electron-crash.md) |
 | v0.49.0 | Usability Optimization Suite: quick-add relatives with birth, inline birth, quick cite, source memory, tree ghost boxes, batch events — ~50% data entry reduction | [archive](plans/archive/2026-04-10-usability-optimizations.md) |
 | v0.51.0 | Source Linker: configurable auto-linking for genealogy references | [archive](plans/archive/2026-04-10-source-linker-implementation.md) |
-| v0.52.0 | C2: Person Timeline View — chronological events with gap detection | [plan](plans/2026-04-11-track-c-core-polish.md) |
-| v0.53.0 | D1: MCP Report Generation Tools — 6 higher-level tools for AI narratives | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
+| v0.52.0 | C2: Person Timeline View — chronological events with gap detection | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
+| v0.53.0 | D1: MCP Report Generation Tools — 6 higher-level tools for AI narratives | [archive](plans/archive/2026-04-11-track-d-mcp-agent-story.md) |
 | v0.54.0 | B1: Media Viewer Redesign — gallery, lightbox, entity linking | [plan](plans/2026-04-11-track-b-media-experience.md) |
-| v0.55.0 | A2: Export Content Options — branch filtering, living exclusion, content toggles | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
-| v0.56.0 | C3: Place Map Visualization — Leaflet/OpenStreetMap, life path, place maps | [plan](plans/2026-04-11-track-c-core-polish.md) |
-| v0.57.0 | D2: MCP Media Tools for AI — base64, untagged discovery, person context | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
+| v0.55.0 | A2: Export Content Options — branch filtering, living exclusion, content toggles | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
+| v0.56.0 | C3: Place Map Visualization — Leaflet/OpenStreetMap, life path, place maps | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
+| v0.57.0 | D2: MCP Media Tools for AI — base64, untagged discovery, person context | [archive](plans/archive/2026-04-11-track-d-mcp-agent-story.md) |
 | v0.58.0 | B2: Media-Bundled Portable Archive — GEDCOM + media .zip export/import | [plan](plans/2026-04-11-track-b-media-experience.md) |
-| v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
-| v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
+| v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
+| v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
 | v0.61.0 | B3: Media Timeline — chronological media per person/place with lightbox | [plan](plans/2026-04-11-track-b-media-experience.md) |
-| v0.62.0 | A3: Wall Charts — large-format pedigree/descendant SVG with tiled PDF | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
-| v0.63.0 | C1: Undo/Redo — command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests | [plan](plans/2026-04-11-track-c-core-polish.md) |
+| v0.62.0 | A3: Wall Charts — large-format pedigree/descendant SVG with tiled PDF | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
+| v0.63.0 | C1: Undo/Redo — command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
 | v0.64.0 | B4: Face/Region Tagging — manual crop, link to person, MCP tools, 14 tests | [plan](plans/2026-04-11-track-b-media-experience.md) |
-| Docs | D3: Claude Desktop Integration — 6 workflow guides, README MCP setup section | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
-| v0.65.0 | A4: Static HTML Site Export — browsable website, search, XSS-safe, 12 tests | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
-| v0.66.0 | C4: GEDCOM Hardening — 8 edge case fixtures, date parser, import preview, 40 tests | [plan](plans/2026-04-11-track-c-core-polish.md) |
+| Docs | D3: Claude Desktop Integration — 6 workflow guides, README MCP setup section | [archive](plans/archive/2026-04-11-track-d-mcp-agent-story.md) |
+| v0.65.0 | A4: Static HTML Site Export — browsable website, search, XSS-safe, 12 tests | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
+| v0.66.0 | C4: GEDCOM Hardening — 8 edge case fixtures, date parser, import preview, 40 tests | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
 ---
 
 ## Research
@@ -123,26 +123,8 @@ Define primary user objectives, map to current click counts, identify highest-fr
 
 ---
 
-### Track A: Presentation & Sharing [plan](plans/2026-04-11-track-a-presentation-sharing.md)
-
-*All milestones complete (A1, A2, A3, A4, A5).*
-
----
-
 ### Track B: Media Experience [plan](plans/2026-04-11-track-b-media-experience.md)
 
 #### B5: Face/Region Tagging — MCP for AI [feature]
 MCP tools for agents to suggest face bounding boxes and person assignments.
-
----
-
-### Track C: Core Polish [plan](plans/2026-04-11-track-c-core-polish.md)
-
-*All milestones complete (C1, C2, C3, C4).*
-
----
-
-### Track D: MCP & Agent Story [plan](plans/2026-04-11-track-d-mcp-agent-story.md)
-
-*All milestones complete (D1, D2, D3).*
 

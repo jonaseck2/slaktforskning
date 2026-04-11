@@ -468,4 +468,229 @@ describe('TEXT_CONTROL_CHARS', () => {
     const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.personIds.includes(p.id));
     expect(hit).toHaveLength(0);
   });
+
+  it('fires for control characters in person notes', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', notes: 'Some note\x02here' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.personIds.includes(p.id));
+    expect(hit.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('fires for control characters in event descriptions', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test' });
+    const e = createEvent(db, { event_type: 'birth', description: 'Born\x03here' });
+    addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.eventIds?.includes(e.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('fires for control characters in source titles', () => {
+    createSource(db, { title: 'Bad\x04Source' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.message.includes('Källtitel'));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Additional parenthood age edge cases
+// ---------------------------------------------------------------------------
+
+describe('PARENT_VERY_YOUNG', () => {
+  it('fires when parent was 10-14 years old at child birth', () => {
+    const { person: parent } = personWithBirth(db, '1930-01-01');
+    const { person: child } = personWithBirth(db, '1942-01-01'); // 12 years gap
+    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id, subtype: 'biological' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PARENT_VERY_YOUNG' && r.personIds.includes(parent.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('PARENT_YOUNG', () => {
+  it('fires when parent was 15-17 years old at child birth', () => {
+    const { person: parent } = personWithBirth(db, '1930-01-01');
+    const { person: child } = personWithBirth(db, '1946-01-01'); // 16 years gap
+    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id, subtype: 'biological' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PARENT_YOUNG' && r.personIds.includes(parent.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('MOTHER_TOO_OLD', () => {
+  it('fires when mother was over 58 at child birth', () => {
+    const { person: mother } = personWithBirth(db, '1890-01-01', { sex: 'F' });
+    const { person: child } = personWithBirth(db, '1960-01-01'); // mother was 70
+    createRelationship(db, { type: 'parent_child', person1_id: mother.id, person2_id: child.id, subtype: 'biological' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MOTHER_TOO_OLD' && r.personIds.includes(mother.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('FATHER_TOO_OLD', () => {
+  it('fires when father was over 90 at child birth', () => {
+    const { person: father } = personWithBirth(db, '1850-01-01', { sex: 'M' });
+    const { person: child } = personWithBirth(db, '1950-01-01'); // father was 100
+    createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: child.id, subtype: 'biological' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'FATHER_TOO_OLD' && r.personIds.includes(father.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('CHILD_BORN_AFTER_PARENT_DEATH', () => {
+  it('fires when child is born more than 1 year after mother death', () => {
+    const { person: mother } = personWithBirth(db, '1890-01-01', { sex: 'F' });
+    addDeathEvent(db, mother.id, '1920-01-01');
+    const { person: child } = personWithBirth(db, '1922-01-01');
+    createRelationship(db, { type: 'parent_child', person1_id: mother.id, person2_id: child.id, subtype: 'biological' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'CHILD_BORN_AFTER_PARENT_DEATH' && r.personIds.includes(mother.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Marriage checks edge cases
+// ---------------------------------------------------------------------------
+
+describe('MARRIED_BEFORE_16', () => {
+  it('fires when married at age 12-15', () => {
+    const { person } = personWithBirth(db, '1900-01-01');
+    const marriageEvent = createEvent(db, { event_type: 'marriage', date_type: 'exact', date_value: '1913-06-01' });
+    addEventParticipant(db, { event_id: marriageEvent.id, person_id: person.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MARRIED_BEFORE_16' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('MARRIAGE_AFTER_DEATH', () => {
+  it('fires when marriage date is after death date', () => {
+    const { person } = personWithBirth(db, '1900-01-01');
+    addDeathEvent(db, person.id, '1950-06-01');
+    const marriageEvent = createEvent(db, { event_type: 'marriage', date_type: 'exact', date_value: '1960-01-01' });
+    addEventParticipant(db, { event_id: marriageEvent.id, person_id: person.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MARRIAGE_AFTER_DEATH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('MARRIAGE_BEFORE_BIRTH', () => {
+  it('fires when marriage date is before birth date', () => {
+    const { person } = personWithBirth(db, '1920-01-01');
+    const marriageEvent = createEvent(db, { event_type: 'marriage', date_type: 'exact', date_value: '1910-01-01' });
+    addEventParticipant(db, { event_id: marriageEvent.id, person_id: person.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MARRIAGE_BEFORE_BIRTH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('BAPTISM_LATE', () => {
+  it('fires when baptism is more than 10 years after birth', () => {
+    const { person } = personWithBirth(db, '1800-01-01');
+    const baptismEvent = createEvent(db, { event_type: 'baptism', date_type: 'exact', date_value: '1815-06-01' });
+    addEventParticipant(db, { event_id: baptismEvent.id, person_id: person.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'BAPTISM_LATE' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('EVENT_AFTER_DEATH', () => {
+  it('fires when a non-death event occurs after death', () => {
+    const { person } = personWithBirth(db, '1900-01-01');
+    addDeathEvent(db, person.id, '1950-01-01');
+    const census = createEvent(db, { event_type: 'census', date_type: 'exact', date_value: '1960-01-01' });
+    addEventParticipant(db, { event_id: census.id, person_id: person.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'EVENT_AFTER_DEATH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('BURIAL_BEFORE_DEATH', () => {
+  it('fires when burial date is before death date', () => {
+    const { person } = personWithBirth(db, '1900-01-01');
+    addDeathEvent(db, person.id, '1970-06-15');
+    const burial = createEvent(db, { event_type: 'burial', date_type: 'exact', date_value: '1970-06-10' });
+    addEventParticipant(db, { event_id: burial.id, person_id: person.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'BURIAL_BEFORE_DEATH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('DEATH_WITHOUT_BIRTH', () => {
+  it('fires for a person with death event but no birth event', () => {
+    const p = createPerson(db, { given_name: 'No', surname: 'Birth' });
+    addDeathEvent(db, p.id, '1950-01-01');
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DEATH_WITHOUT_BIRTH' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('NOT_LIVING_WITHOUT_DEATH', () => {
+  it('fires for a deceased person without death event', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Dead', living: false });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'NOT_LIVING_WITHOUT_DEATH' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('DUPLICATE_RELATIONSHIP', () => {
+  it('fires when two identical relationships exist between same persons', () => {
+    const p1 = createPerson(db, { given_name: 'A', surname: 'Test' });
+    const p2 = createPerson(db, { given_name: 'B', surname: 'Test' });
+    createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
+    createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DUPLICATE_RELATIONSHIP');
+    expect(hit).toHaveLength(1);
+  });
+});
+
+describe('UNSOURCED_BIRTH / UNSOURCED_DEATH', () => {
+  it('fires UNSOURCED_BIRTH for birth event without citation', () => {
+    const { person } = personWithBirth(db, '1900-01-01');
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'UNSOURCED_BIRTH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('fires UNSOURCED_DEATH for death event without citation', () => {
+    const p = createPerson(db, { given_name: 'A', surname: 'B' });
+    addDeathEvent(db, p.id, '1950-01-01');
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'UNSOURCED_DEATH' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('does not fire UNSOURCED_BIRTH when birth has citation', () => {
+    const { person, birthEvent } = personWithBirth(db, '1900-01-01');
+    const s = createSource(db, { title: 'Kyrkobok' });
+    createCitation(db, { source_id: s.id, event_id: birthEvent.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'UNSOURCED_BIRTH' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(0);
+  });
+});
+
+describe('INVALID_DATE edge cases', () => {
+  it('fires for invalid date_value_end', () => {
+    const p = createPerson(db, {});
+    const e = createEvent(db, { event_type: 'census', date_type: 'between', date_value: '1900-01-01', date_value_end: '1900-13-01' });
+    addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'INVALID_DATE' && r.eventIds?.includes(e.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].message).toContain('slutdatum');
+  });
 });

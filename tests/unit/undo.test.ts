@@ -396,4 +396,184 @@ describe('Undo wrappers', () => {
       expect(sources.getCitation(db, cit.id)!.page).toBe('p1');
     });
   });
+
+  // ---- Redo path tests ----
+
+  describe('Redo paths', () => {
+    it('redo deleteSource re-deletes the source', () => {
+      const src = sources.createSource(db, { title: 'Redo Source' });
+      undoManager.clear();
+      deleteSourceUndo(db, src.id);
+      undoManager.undo();
+      expect(sources.getSource(db, src.id)).not.toBeNull();
+
+      undoManager.redo();
+      expect(sources.getSource(db, src.id)).toBeNull();
+    });
+
+    it('redo createCitation re-creates a citation', () => {
+      const src = sources.createSource(db, { title: 'S' });
+      const cit = createCitationUndo(db, { source_id: src.id, page: 'redo-page' });
+      undoManager.undo();
+      expect(sources.getCitation(db, cit.id)).toBeNull();
+
+      undoManager.redo();
+      const allCits = sources.getCitationsForSource(db, src.id);
+      expect(allCits.length).toBe(1);
+    });
+
+    it('redo updateCitation re-applies the update', () => {
+      const src = sources.createSource(db, { title: 'S' });
+      const cit = sources.createCitation(db, { source_id: src.id, page: 'original' });
+      undoManager.clear();
+      updateCitationUndo(db, cit.id, { page: 'updated' });
+      undoManager.undo();
+      expect(sources.getCitation(db, cit.id)!.page).toBe('original');
+
+      undoManager.redo();
+      expect(sources.getCitation(db, cit.id)!.page).toBe('updated');
+    });
+
+    it('redo deleteCitation re-deletes the citation', () => {
+      const src = sources.createSource(db, { title: 'S' });
+      const cit = sources.createCitation(db, { source_id: src.id, page: 'p1' });
+      undoManager.clear();
+      deleteCitationUndo(db, cit.id);
+      undoManager.undo();
+      expect(sources.getCitation(db, cit.id)).not.toBeNull();
+
+      undoManager.redo();
+      expect(sources.getCitation(db, cit.id)).toBeNull();
+    });
+
+    it('redo createSource re-creates a source', () => {
+      const src = createSourceUndo(db, { title: 'Redo Test' });
+      undoManager.undo();
+      undoManager.redo();
+      const all = sources.listSources(db);
+      expect(all.length).toBe(1);
+    });
+
+    it('redo updateSource re-applies the update', () => {
+      const src = createSourceUndo(db, { title: 'Original' });
+      undoManager.clear();
+      updateSourceUndo(db, src.id, { title: 'Changed' });
+      undoManager.undo();
+      expect(sources.getSource(db, src.id)!.title).toBe('Original');
+
+      undoManager.redo();
+      expect(sources.getSource(db, src.id)!.title).toBe('Changed');
+    });
+  });
+
+  // ---- Null / not-found branch tests ----
+
+  describe('Null branches', () => {
+    it('updatePersonUndo returns null for nonexistent id', () => {
+      const result = updatePersonUndo(db, 'nonexistent', { sex: 'F' });
+      expect(result).toBeNull();
+      expect(undoManager.canUndo()).toBe(false);
+    });
+
+    it('deletePersonUndo returns false for nonexistent id', () => {
+      const result = deletePersonUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+      expect(undoManager.canUndo()).toBe(false);
+    });
+
+    it('updatePersonNameUndo returns null for nonexistent id', () => {
+      const result = updatePersonNameUndo(db, 'nonexistent', { given_name: 'X' });
+      expect(result).toBeNull();
+    });
+
+    it('deletePersonNameUndo returns false for nonexistent id', () => {
+      const result = deletePersonNameUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+    });
+
+    it('updateEventUndo returns null for nonexistent id', () => {
+      const result = updateEventUndo(db, 'nonexistent', { description: 'X' });
+      expect(result).toBeNull();
+    });
+
+    it('deleteEventUndo returns false for nonexistent id', () => {
+      const result = deleteEventUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+    });
+
+    it('removeEventParticipantUndo returns false for nonexistent id', () => {
+      const result = removeEventParticipantUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+    });
+
+    it('updateRelationshipUndo returns null for nonexistent id', () => {
+      const result = updateRelationshipUndo(db, 'nonexistent', { notes: 'X' });
+      expect(result).toBeNull();
+    });
+
+    it('deleteRelationshipUndo returns false for nonexistent id', () => {
+      const result = deleteRelationshipUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+    });
+
+    it('updateSourceUndo returns null for nonexistent id', () => {
+      const result = updateSourceUndo(db, 'nonexistent', { title: 'X' });
+      expect(result).toBeNull();
+    });
+
+    it('deleteSourceUndo returns false for nonexistent id', () => {
+      const result = deleteSourceUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+    });
+
+    it('updateCitationUndo returns null for nonexistent id', () => {
+      const result = updateCitationUndo(db, 'nonexistent', { page: 'X' });
+      expect(result).toBeNull();
+    });
+
+    it('deleteCitationUndo returns false for nonexistent id', () => {
+      const result = deleteCitationUndo(db, 'nonexistent');
+      expect(result).toBe(false);
+    });
+  });
+
+  // ---- Undo deletePerson restores identifiers ----
+
+  describe('deletePerson with identifiers', () => {
+    it('undo deletePerson restores person identifiers', () => {
+      const person = persons.createPerson(db, { given_name: 'Test', surname: 'Ident' });
+      persons.addPersonIdentifier(db, person.id, { identifier_type: 'familysearch', identifier_value: 'FS-123' });
+
+      undoManager.clear();
+      deletePersonUndo(db, person.id);
+      expect(persons.getPerson(db, person.id)).toBeNull();
+
+      undoManager.undo();
+      expect(persons.getPerson(db, person.id)).not.toBeNull();
+      const idents = persons.getPersonIdentifiers(db, person.id);
+      expect(idents).toHaveLength(1);
+      expect(idents[0].identifier_value).toBe('FS-123');
+    });
+  });
+
+  // ---- Undo deleteRelationship restores events ----
+
+  describe('deleteRelationship with events', () => {
+    it('undo deleteRelationship restores relationship and its events', () => {
+      const p1 = persons.createPerson(db, {});
+      const p2 = persons.createPerson(db, {});
+      const rel = relationships.createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
+      const ev = events.createEvent(db, { event_type: 'marriage', relationship_id: rel.id, date_original: '1900-01-01' });
+
+      undoManager.clear();
+      deleteRelationshipUndo(db, rel.id);
+      expect(relationships.getRelationship(db, rel.id)).toBeNull();
+      // Event still exists but relationship_id was SET NULL
+      expect(events.getEvent(db, ev.id)?.relationship_id).toBeNull();
+
+      undoManager.undo();
+      expect(relationships.getRelationship(db, rel.id)).not.toBeNull();
+      expect(relationships.getRelationship(db, rel.id)!.type).toBe('couple');
+    });
+  });
 });

@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { createTestDb } from './helpers';
 import { createMedia, addMediaLink } from '../../src/api/media';
 import { createPerson } from '../../src/api/persons';
@@ -166,5 +169,53 @@ describe('getMediaFileBase64', () => {
     const m = createMedia(db, { title: 'Missing file', file_ref: '/nonexistent/path/photo.jpg' });
     const result = getMediaFileBase64(db, m.id);
     expect(result).toBeNull();
+  });
+
+  it('reads a real file from disk and returns base64', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'media-ai-test-'));
+    const tmpFile = path.join(tmpDir, 'test-image.png');
+    // Write a minimal PNG file (1x1 pixel)
+    const pngData = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    );
+    fs.writeFileSync(tmpFile, pngData);
+
+    try {
+      const m = createMedia(db, { title: 'Real file', file_ref: tmpFile });
+      const result = getMediaFileBase64(db, m.id);
+      expect(result).not.toBeNull();
+      expect(result!.mimeType).toBe('image/png');
+      expect(result!.fileName).toBe('test-image.png');
+      expect(result!.base64.length).toBeGreaterThan(0);
+      // Verify round-trip: decode base64 back to buffer
+      const decoded = Buffer.from(result!.base64, 'base64');
+      expect(decoded.equals(pngData)).toBe(true);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('returns correct MIME type for various extensions', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'media-ai-mime-'));
+    const testCases = [
+      { name: 'photo.jpg', expectedMime: 'image/jpeg' },
+      { name: 'doc.pdf', expectedMime: 'application/pdf' },
+      { name: 'icon.svg', expectedMime: 'image/svg+xml' },
+      { name: 'unknown.xyz', expectedMime: 'application/octet-stream' },
+    ];
+
+    try {
+      for (const tc of testCases) {
+        const tmpFile = path.join(tmpDir, tc.name);
+        fs.writeFileSync(tmpFile, 'test-content');
+        const m = createMedia(db, { title: tc.name, file_ref: tmpFile });
+        const result = getMediaFileBase64(db, m.id);
+        expect(result).not.toBeNull();
+        expect(result!.mimeType).toBe(tc.expectedMime);
+      }
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });
