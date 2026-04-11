@@ -173,9 +173,7 @@
     <!-- Pedigree Chart Tab -->
     <div v-if="activeTab === 'pedigreeChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <PersonPicker v-model="chartPersonId" :placeholder="$t('reports.selectPerson')" />
-        </div>
+        <div class="controls"></div>
         <div class="print-actions">
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
@@ -192,9 +190,7 @@
     <!-- Descendant Chart Tab -->
     <div v-if="activeTab === 'descendantChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <PersonPicker v-model="chartPersonId" :placeholder="$t('reports.selectPerson')" />
-        </div>
+        <div class="controls"></div>
         <div class="print-actions">
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
@@ -211,9 +207,7 @@
     <!-- Circle Chart Tab -->
     <div v-if="activeTab === 'circleChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <PersonPicker v-model="chartPersonId" :placeholder="$t('reports.selectPerson')" />
-        </div>
+        <div class="controls"></div>
         <div class="print-actions">
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
@@ -230,9 +224,7 @@
     <!-- Timeline Tab -->
     <div v-if="activeTab === 'timeline'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <PersonPicker v-model="chartPersonId" :placeholder="$t('reports.selectPerson')" />
-        </div>
+        <div class="controls"></div>
         <div class="print-actions">
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
           <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
@@ -266,7 +258,6 @@ import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
 import DescendantChartReport from '../components/reports/DescendantChartReport.vue';
 import CircleChartReport from '../components/reports/CircleChartReport.vue';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
-import PersonPicker from '../components/PersonPicker.vue';
 import ZoomControls from '../components/ZoomControls.vue';
 
 interface RelationshipOption { id: string; label: string; }
@@ -339,7 +330,7 @@ function triggerLoading() {
   reportLoading.value = true;
   nextTick(() => setTimeout(() => { reportLoading.value = false; }, 800));
 }
-const chartPersonId = ref<string | null>(focusStore.personId ?? null);
+const chartPersonId = computed(() => focusStore.personId);
 
 watch(activeTab, triggerLoading);
 watch(ancestorRootId, triggerLoading);
