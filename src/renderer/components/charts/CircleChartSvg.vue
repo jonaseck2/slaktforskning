@@ -3,7 +3,7 @@
      Shared between CircleChart.vue (interactive) and AncestorBookReport.vue (print). -->
 <template>
   <svg
-    :viewBox="`0 0 ${CIRCLE_SVG_SIZE} ${CIRCLE_SVG_SIZE}`"
+    :viewBox="viewBox"
     :width="width"
     :height="height"
     data-testid="circle-svg"
@@ -336,6 +336,7 @@ interface Props {
   fontFamily?: string;
   linkBase?: string | null;
   strokeWidth?: number;
+  viewBoxSize?: number;
   width?: number | string;
   height?: number | string;
 }
@@ -354,6 +355,12 @@ const emit = defineEmits<{
   personleave: [];
 }>();
 
+const svgSize = computed(() => props.viewBoxSize ?? CIRCLE_SVG_SIZE);
+const viewBox = computed(() => {
+  const s = svgSize.value;
+  const offset = CIRCLE_CX - s / 2;
+  return `${offset} ${offset} ${s} ${s}`;
+});
 const nonFocalSegments = computed(() => props.segments.filter(s => !s.isFocal));
 
 // Split a string into lines of at most maxChars, up to maxLines lines.

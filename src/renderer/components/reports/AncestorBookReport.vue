@@ -17,6 +17,7 @@
           :segments="segments"
           :focal-segment="focalSeg"
           :curved-text="true"
+          :view-box-size="circleSvgSize"
           font-family="Georgia, serif"
           link-base="#person-"
           :stroke-width="0.5"
@@ -162,6 +163,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   computeCircleLayout,
+  circleSvgSizeForGenerations,
   type CircleSegment,
 } from '../../utils/circleLayout';
 import CircleChartSvg from '../charts/CircleChartSvg.vue';
@@ -264,6 +266,7 @@ const exportDate = new Date().toLocaleDateString('sv-SE');
 
 // ── SVG derived ────────────────────────────────────────────────────────────────
 const focalSeg = computed(() => segments.value.find(s => s.isFocal) ?? null);
+const circleSvgSize = computed(() => circleSvgSizeForGenerations(props.circleGenerations ?? 6));
 
 // ── Display helpers ────────────────────────────────────────────────────────────
 function displayName(p: PersonNode): string {
