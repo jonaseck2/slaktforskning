@@ -143,6 +143,14 @@ Higher-level tools that return denormalized data optimized for AI narrative gene
 | get_research_gaps | Analyze a person for missing data: no birth, no death (if not living), no parents, unsourced events, events without places |
 | get_timeline | Get a chronological timeline of a person's events merged with key family events (spouse/children births and deaths) |
 
+### Media AI
+
+| Tool | Description |
+|------|-------------|
+| get_media_file_base64 | Get a media file as base64 for vision processing. Optionally downscale large images. |
+| get_untagged_media | List media items with no person links, ordered by connection count. Use for batch photo tagging workflows. |
+| get_media_for_person_context | Find media that might contain a specific person based on event and relationship links. |
+
 ### Database
 
 | Tool | Description |
