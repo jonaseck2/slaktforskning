@@ -29,6 +29,7 @@ export const router = createRouter({
     { path: '/groups', component: () => import('./views/GroupsView.vue') },
     { path: '/groups/:id', component: () => import('./views/GroupDetailView.vue') },
     { path: '/media', component: () => import('./views/MediaView.vue') },
+    { path: '/map', component: () => import('./views/MapView.vue') },
     { path: '/link-rules', component: () => import('./views/LinkRulesView.vue') },
   ],
 });
