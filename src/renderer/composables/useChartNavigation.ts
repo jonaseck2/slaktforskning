@@ -14,7 +14,7 @@
  */
 
 import { ref, type Ref } from 'vue';
-import type { PedigreeTree, PersonNode, HourglassTree, DescendantNode } from '../utils/chartLayout';
+import type { PedigreeTree, PersonNode, HourglassTree, DescendantNode } from '../utils/chart-layout';
 import { narrateChartNode, narrateChartBoundary, type ChartNodeData } from '../utils/screenReaderNarration';
 
 type T = (key: string, params?: Record<string, string | number>) => string;

@@ -45,7 +45,7 @@ import { useI18n } from 'vue-i18n';
 import { computeCircleLayout, type CircleSegment } from '../../utils/circleLayout';
 import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { PedigreeTree } from '../../utils/chartLayout';
+import type { PedigreeTree } from '../../utils/chart-layout';
 import CircleChartSvg from './CircleChartSvg.vue';
 import ChartTooltip from './ChartTooltip.vue';
 

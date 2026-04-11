@@ -227,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, reactive, onMounted } from 'vue';
+import { ref, computed, toRef, onMounted } from 'vue';
 import AddResearchTaskModal from './AddResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -245,6 +245,12 @@ import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
 import PersonTimeline from './PersonTimeline.vue';
+import { usePersonPanelData, type NameData } from '../composables/usePersonPanelData';
+import { useSectionState } from '../composables/useSectionState';
+
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
 
 const props = defineProps<{ personId: string | null; showTreeBtn?: boolean }>();
 const emit = defineEmits<{
@@ -252,38 +258,37 @@ const emit = defineEmits<{
   'show-in-tree': [];
 }>();
 
-// ── Local state ──────────────────────────────────────────────────────────────
+// ── Data (composable) ───────────────────────────────────────────────────────
 
-interface PersonData {
-  id: string;
-  sex: 'M' | 'F' | 'U';
-  living: boolean;
-  birthLine: string | null;
-  deathLine: string | null;
-}
-interface NameData { id: string; given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number; name_type: string; name_prefix?: string | null; name_suffix?: string | null; name_qualifier?: string | null; patronymic_base?: string | null; }
-interface GroupData { id: string; name: string; notes: string | null; }
-const person = ref<PersonData | null>(null);
-const primaryName = ref<NameData | null>(null);
-const names = ref<NameData[]>([]);
-const groups = ref<GroupData[]>([]);
-const researchTasks = ref<import('./ResearchTasksTable.vue').ResearchTaskRow[]>([]);
+const personIdRef = toRef(props, 'personId');
+const {
+  person,
+  primaryName,
+  names,
+  groups,
+  researchTasks,
+  loadPerson,
+  loadNames,
+  loadGroups,
+  loadResearchTasks,
+} = usePersonPanelData(personIdRef);
 
-// Add relative modal state
-const showAddRelative = ref(false);
-const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
-// EventList ref for triggering add form
+// ── Section state (composable) ──────────────────────────────────────────────
+
+const { sections, toggleSection } = useSectionState();
+
+// ── Template refs ───────────────────────────────────────────────────────────
+
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
-// Group picker state
-const showGroupPicker = ref(false);
+// ── Add relative modal ──────────────────────────────────────────────────────
 
-// Research task form state (add only — edit is handled inline by ResearchTasksTable)
-const showTaskForm = ref(false);
+const showAddRelative = ref(false);
+const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 
 function openAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
   addRelativeMode.value = mode;
@@ -299,31 +304,7 @@ async function onRelativeSaved() {
   emit('relative-added');
 }
 
-// Section open/closed — persisted per key
-function loadSection(key: string, def: boolean): boolean {
-  const v = localStorage.getItem(`viz-panel-section-${key}`);
-  return v === null ? def : v === 'true';
-}
-const sections = reactive({
-  person: loadSection('person', false),
-  names: loadSection('names', false),
-  events: loadSection('events', true),
-  timeline: loadSection('timeline', false),
-  relationships: loadSection('relationships', true),
-  groups: loadSection('groups', false),
-  research: loadSection('research', false),
-  identifiers: loadSection('identifiers', false),
-  media: loadSection('media', false),
-  mediaTimeline: loadSection('mediaTimeline', false),
-  quality: loadSection('quality', false),
-});
-
-function toggleSection(key: keyof typeof sections) {
-  sections[key] = !sections[key];
-  localStorage.setItem(`viz-panel-section-${key}`, String(sections[key]));
-}
-
-// ── Person field updates ──────────────────────────────────────────────────────
+// ── Person field updates ────────────────────────────────────────────────────
 
 async function updateSex(value: 'M' | 'F' | 'U') {
   if (!props.personId || !person.value) return;
@@ -337,7 +318,7 @@ async function updateLiving(value: boolean) {
   person.value.living = value;
 }
 
-// ── Name form ─────────────────────────────────────────────────────────────────
+// ── Name form ───────────────────────────────────────────────────────────────
 
 const showNameForm = ref(false);
 const editingName = ref<NameData | null>(null);
@@ -355,110 +336,16 @@ function cancelNameForm() {
 async function deleteName(nameId: string) {
   if (!props.personId) return;
   await window.api.persons.deleteName(nameId);
-  await reloadNames(props.personId);
+  await loadNames(props.personId);
 }
 
 async function reloadNames(id: string) {
-  const fetched = (await window.api.persons.getNames(id)) as NameData[];
-  const sorted = [...fetched].sort((a, b) => a.sort_order - b.sort_order);
-  names.value = sorted;
-  primaryName.value = sorted[0] ?? null;
+  await loadNames(id);
 }
 
-// ── Research tasks ────────────────────────────────────────────────────────────
+// ── Group actions ───────────────────────────────────────────────────────────
 
-function openTaskForm() {
-  showTaskForm.value = true;
-}
-
-async function onTaskSaved() {
-  if (props.personId) await loadResearchTasks(props.personId);
-}
-
-async function loadResearchTasks(id: string) {
-  const raw = (await window.api.researchTasks.forPerson(id)) as import('./ResearchTasksTable.vue').ResearchTaskRow[];
-  researchTasks.value = raw;
-}
-
-// ── Derived ──────────────────────────────────────────────────────────────────
-
-const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
-const sexColor = computed(() => SEX_COLORS[person.value?.sex ?? 'U'] ?? '#ccc');
-
-// ── Date formatting ───────────────────────────────────────────────────────────
-
-async function buildDateLine(event: { date_original: string | null; date_value: string | null; place_id: string | null; place_address: string | null } | undefined): Promise<string | null> {
-  if (!event) return null;
-
-  const datePart = (event.date_original && event.date_original.trim())
-    ? event.date_original.trim()
-    : (event.date_value ?? null);
-
-  if (!datePart) return null;
-
-  let placePart: string | null = null;
-  if (event.place_id) {
-    try {
-      const place = (await window.api.places.get(event.place_id)) as { name?: string; city?: string } | null;
-      if (place) placePart = place.city ?? place.name ?? null;
-    } catch {
-      // ignore place fetch errors
-    }
-  } else if (event.place_address && event.place_address.trim()) {
-    placePart = event.place_address.trim();
-  }
-
-  return placePart ? `${datePart}, ${placePart}` : datePart;
-}
-
-// ── Data loading ─────────────────────────────────────────────────────────────
-
-async function loadPerson(id: string) {
-  const raw = (await window.api.persons.get(id)) as { id: string; sex: string; living: boolean } | null;
-  if (props.personId !== id) return;
-  if (!raw) { person.value = null; return; }
-
-  const fetched = (await window.api.persons.getNames(id)) as NameData[];
-  if (props.personId !== id) return;
-  const sorted = [...fetched].sort((a, b) => a.sort_order - b.sort_order);
-  primaryName.value = sorted[0] ?? null;
-  names.value = sorted;
-
-  // Get birth/death events with full date + place info
-  const events = (await window.api.events.forPerson(id)) as Array<{
-    event_type: string;
-    date_value: string | null;
-    date_original: string | null;
-    place_id: string | null;
-    place_address: string | null;
-  }>;
-  if (props.personId !== id) return;
-
-  const birth = events.find(e => e.event_type === 'birth');
-  const death = events.find(e => e.event_type === 'death');
-
-  const [birthLine, deathLine] = await Promise.all([
-    buildDateLine(birth),
-    buildDateLine(death),
-  ]);
-  if (props.personId !== id) return;
-
-  person.value = {
-    id: raw.id,
-    sex: raw.sex as 'M' | 'F' | 'U',
-    living: raw.living,
-    birthLine,
-    deathLine,
-  };
-
-  await loadGroups(id);
-  await loadResearchTasks(id);
-}
-
-async function loadGroups(id: string) {
-  const raw = (await window.api.groups.forPerson(id)) as GroupData[];
-  groups.value = raw;
-}
+const showGroupPicker = ref(false);
 
 async function removeFromGroup(groupId: string) {
   if (!props.personId) return;
@@ -471,13 +358,24 @@ async function onGroupAdded() {
   if (props.personId) await loadGroups(props.personId);
 }
 
-watch(() => props.personId, async (id) => {
-  person.value = null;
-  names.value = [];
-  groups.value = [];
-  researchTasks.value = [];
-  if (id) await loadPerson(id);
-}, { immediate: true });
+// ── Research tasks ──────────────────────────────────────────────────────────
+
+const showTaskForm = ref(false);
+
+function openTaskForm() {
+  showTaskForm.value = true;
+}
+
+async function onTaskSaved() {
+  if (props.personId) await loadResearchTasks(props.personId);
+}
+
+// ── Derived ─────────────────────────────────────────────────────────────────
+
+const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
+const sexColor = computed(() => SEX_COLORS[person.value?.sex ?? 'U'] ?? '#ccc');
+
+// ── Data change listener ────────────────────────────────────────────────────
 
 onMounted(() => {
   let debounce: ReturnType<typeof setTimeout> | null = null;

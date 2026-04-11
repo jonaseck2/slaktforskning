@@ -1,7 +1,7 @@
 // src/renderer/utils/chartData.ts
 // Fetches PersonNode trees from window.api for use by chart components.
 
-import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode } from './chartLayout';
+import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode } from './chart-layout';
 
 type RawPerson  = { id: string; sex: string; living: boolean };
 type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number };

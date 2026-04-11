@@ -189,10 +189,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computePedigreeLayout, BOX_W, BOX_H, H_GAP } from '../../utils/chartLayout';
+import { computePedigreeLayout, BOX_W, BOX_H, H_GAP } from '../../utils/chart-layout';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chartLayout';
+import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
