@@ -45,6 +45,10 @@ During genealogy research, use MCP tools to query and update data:
 - `get_research_tasks_for_person(id)` → check open tasks
 - `get_current_database` → confirm which DB is active before making changes
 
+### Data integrity rule: search before create
+
+**Always call `search_persons` (or the relevant search tool) before `create_person`.** Never blindly create a record that may already exist. This applies to all entity types — persons, places, sources, groups. Duplicates are expensive to clean up and confuse users.
+
 ### Session Start Checklist
 
 At the start of any session where UI work or research will happen:

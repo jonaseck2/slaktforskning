@@ -334,6 +334,14 @@ Session-only (no persistence needed) — resets when app restarts. Pre-fill is a
 
 ---
 
+## Design principles
+
+- **External links open in the system browser** — never in an embedded webview or in-app browser. Use `shell.openExternal()` for any URL that leaves the app. Keep the app lean.
+- **Enrich presentation at render time** — never store inferred/computed data in the database. Derived values (display names, life spans, formatted dates, resolved places) are computed when rendering. The model stores only source data.
+- **Use standards, not custom DSLs** — when a well-understood standard exists (regex, JSON schema, CSS custom properties), use it instead of inventing a project-specific format or simplified alternative.
+
+---
+
 ## Keyboard handling
 
 `BaseModal` handles Escape-to-close and overlay click-to-close — views with modals no longer need a global keydown listener. Only add a view-level keydown listener for non-modal keyboard shortcuts (e.g. focus jump, custom hotkeys).
