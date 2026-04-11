@@ -96,22 +96,13 @@ export function buildHourglassTree(tree: HourglassTree): TreePerson {
     spouses: [],
   }));
 
-  // Add siblings as additional children of focal's parents
-  // Siblings are children of the focal's parents but not the focal person
-  const siblingTreePersons: TreePerson[] = siblings.map(sib => ({
+  // Store siblings on the focal node directly
+  focal.siblings = siblings.map(sib => ({
     person: sib,
     parents: [],
     children: [],
     spouses: [],
   }));
-
-  // If focal has parents, add siblings as their children
-  // (The focal is already implicitly a child of these parents via the ancestor link)
-  if (focal.parents.length > 0) {
-    // Add siblings to the first parent's children list
-    // (siblings are shared children of both parents)
-    focal.parents[0].children = [focal, ...siblingTreePersons];
-  }
 
   return focal;
 }

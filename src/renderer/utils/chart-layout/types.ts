@@ -69,6 +69,8 @@ export interface TreePerson {
   hasMoreAncestors?: boolean;
   /** Whether more children exist in DB but aren't loaded. */
   hasMoreChildren?: boolean;
+  /** Siblings of this person (only set on focal). */
+  siblings?: TreePerson[];
   /** For focal's direct children: which spouse is the co-parent. */
   coParentId?: string | null;
 }
