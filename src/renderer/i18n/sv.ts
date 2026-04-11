@@ -15,6 +15,7 @@ export default {
     navigate: 'NAVIGERA',
     linkRules: 'Länkregler',
     map: 'Karta',
+    gazetteers: 'Ortsregister',
   },
   settings: {
     appearance: 'Utseende',
@@ -992,6 +993,24 @@ export default {
     examplePlaceholder: 'Exempeltext som ska matcha regeln',
     exampleMatches: 'Exemplet matchar mönstret',
     exampleNoMatch: 'Exemplet matchar inte mönstret',
+  },
+  gazetteers: {
+    title: 'Ortsregister',
+    description: 'Ortsregister ger koordinater och geografisk kontext för platser utan lagrad platsdata. Matchningar visas på kartor och platsvyer men skrivs aldrig till din databas.',
+    installed: 'Installerade ortsregister',
+    enabled: 'Aktiverat',
+    name: 'Namn',
+    locale: 'Språk',
+    testLookup: 'Testa uppslag',
+    testPlaceholder: 'Skriv ett platsnamn, t.ex. Vallsjö, Sävsjö, Jönköpings län, Sverige',
+    noMatch: 'Ingen matchning i aktiverade ortsregister',
+    matchTitle: 'Ortsregister-matchning',
+    unmatched: 'Omatchat',
+    match: {
+      exact: 'Exakt',
+      partial: 'Delvis',
+      ambiguous: 'Tvetydig',
+    },
   },
   undo: {
     createPerson: 'Skapa person',
