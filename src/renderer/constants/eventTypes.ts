@@ -6,7 +6,7 @@ export const EVENT_TYPE_VALUES = [
   'baptism', 'confirmation', 'ordination', 'census', 'immigration',
   'emigration', 'naturalization', 'occupation', 'residence', 'education',
   'graduation', 'military', 'retirement', 'will', 'probate', 'mention',
-  'engagement', 'wedding', 'adoption',
+  'engagement', 'wedding', 'adoption', 'foster_placement',
   'other',
 ] as const;
 
