@@ -36,17 +36,35 @@ export function computeHourglassLayout(
     personToAhnen.set(person.id, k);
   }
 
-  // The TreePerson graph (root) with injected outlines is the canonical model.
-  // Collapse filtering and layout positioning below still use the ahnentafel map
-  // and DescendantNode tree for backward-compatible geometry. Future iterations
-  // will migrate the layout pass to operate directly on root.
-  void root;
+  // ── Derive outline injections from TreePerson graph into old data structures ──
+  // The TreePerson graph has the correct outlines. We extract what was injected
+  // and feed it into the ahnentafel/descendant/spouse structures that the layout uses.
+  // Future: migrate layout to operate directly on TreePerson.
 
   const focalIsFemale = focalPerson?.sex === 'F';
 
   // Spouses may be collapsed via :right key (original) or :left key (female focal).
   const spouseCollapsed = collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`);
-  const effectiveSpouses = spouseCollapsed ? [] : spouses;
+  const effectiveSpouses: PersonNode[] = spouseCollapsed ? [] : [...spouses];
+
+  // Inject spouse placeholder for the selected person
+  if (selectedPersonId && !spouseCollapsed) {
+    // Find which person in the tree is selected and add spouse outline next to them
+    // For now, spouse outlines only render for the focal person (since the old layout
+    // only supports spouses for the focal). Non-focal spouse outlines require TreePerson layout.
+    if (selectedPersonId === focalId) {
+      const spousePh: PersonNode = {
+        id: PLACEHOLDER_PREFIX + 'spouse_' + selectedPersonId,
+        givenName: null, surname: null, preferredName: null, nickname: null,
+        sex: focalIsFemale ? 'M' : 'F', living: false, birthDate: null, deathDate: null,
+      };
+      if (focalIsFemale) {
+        effectiveSpouses.unshift(spousePh); // left for female
+      } else {
+        effectiveSpouses.push(spousePh); // right for male
+      }
+    }
+  }
 
   // Siblings on left use 'left' direction key, on right use 'right' direction key — with '__siblings__' co-parent marker.
   const siblingDir: 'left' | 'right' = focalIsFemale ? 'right' : 'left';
@@ -54,7 +72,6 @@ export function computeHourglassLayout(
   const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : [...siblings];
 
   // Group focal's direct children by co-parent ID (set by chartData during fetch).
-  // Use the original descendant tree for grouping (preserves coParentId)
   const descendantRoot = tree.descendantRoot;
   const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
   for (const child of descendantRoot.children) {
@@ -63,15 +80,13 @@ export function computeHourglassLayout(
     if (arr) arr.push(child); else focalChildGroupMap.set(key, [child]);
   }
 
-  // Handle focal child group collapse - filter out collapsed groups
-  // Also inject child placeholder into the descendant tree for layout
   // Deep-clone descendant tree so child placeholder injection doesn't mutate the original
   function cloneDescTree(node: DescendantNode): DescendantNode {
     return { ...node, children: node.children.map(c => cloneDescTree(c)) };
   }
   const layoutDescRoot: DescendantNode = cloneDescTree(descendantRoot);
 
-  // Inject child placeholder for the selected person
+  // Inject child placeholder for the selected person into descendant tree
   let childPlaceholderId: string | null = null;
   if (selectedPersonId) {
     childPlaceholderId = PLACEHOLDER_PREFIX + 'child_' + selectedPersonId;
@@ -92,6 +107,7 @@ export function computeHourglassLayout(
       return node.children.some(c => injectChild(c));
     }
     if (!injectChild(layoutDescRoot)) {
+      // Not in descendant tree — add as focal child so it appears below
       layoutDescRoot.children = [...layoutDescRoot.children, phChild];
     }
   }
