@@ -186,3 +186,15 @@ export interface MediaLink {
   created_at: string;
 }
 
+export interface MediaRegion {
+  id: string;
+  media_id: string;
+  person_id: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label: string | null;
+  created_at: string;
+}
+

@@ -798,6 +798,17 @@ export default {
     undated: 'Odaterade',
     empty: 'Ingen media',
   },
+  mediaRegions: {
+    tagFace: 'Markera ansikte',
+    drawHint: 'Klicka och dra för att markera',
+    assignPerson: 'Tilldela person',
+    useAsProfile: 'Använd som profilbild',
+    delete: 'Ta bort markering',
+    regions: 'Markeringar',
+    noRegions: 'Inga markeringar ännu.',
+    save: 'Spara',
+    cancel: 'Avbryt',
+  },
   errors: {
     saveFailed: 'Det gick inte att spara. Försök igen.',
     deleteFailed: 'Det gick inte att ta bort. Försök igen.',

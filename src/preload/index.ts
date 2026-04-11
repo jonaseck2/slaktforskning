@@ -182,6 +182,13 @@ const api = {
     export: (opts?: { gedcomVersion?: string }) => ipcRenderer.invoke('archive:export', opts),
     import: () => ipcRenderer.invoke('archive:import'),
   },
+  mediaRegions: {
+    create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('mediaRegions:create', data)),
+    getForMedia: (mediaId: string) => ipcRenderer.invoke('mediaRegions:getForMedia', mediaId),
+    getForPerson: (personId: string) => ipcRenderer.invoke('mediaRegions:getForPerson', personId),
+    update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('mediaRegions:update', id, data)),
+    delete: mutating((id: string) => ipcRenderer.invoke('mediaRegions:delete', id)),
+  },
   print: {
     print: () => ipcRenderer.invoke('print:print'),
     exportPdf: (path?: string) => ipcRenderer.invoke('print:exportPdf', path),

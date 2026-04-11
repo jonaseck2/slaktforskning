@@ -43,7 +43,7 @@ The database captures the full complexity of genealogical research:
 
 ## MCP Server
 
-The app includes an MCP server that lets AI agents interact with your genealogy data programmatically.
+The app includes an MCP server that lets AI agents interact with your genealogy data programmatically. With 80+ tools covering persons, relationships, events, sources, places, media, and more, you can use Claude Desktop or Claude Code to research, write narratives, audit sources, and manage your tree through natural conversation.
 
 ### Setup
 
@@ -53,13 +53,40 @@ The project includes a `.mcp.json` that Claude Code picks up automatically. For 
 npx tsx src/mcp/server.ts
 ```
 
+### AI Agent Access (Claude Desktop)
+
+Configure your `claude_desktop_config.json` to connect Claude Desktop to your genealogy data:
+
+```json
+{
+  "mcpServers": {
+    "slaktforskning": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/server.ts"],
+      "cwd": "/path/to/slaktforskning",
+      "env": { "SLAKTFORSKNING_DB": "/path/to/your/database.db" }
+    }
+  }
+}
+```
+
+See [docs/mcp-workflows/README.md](docs/mcp-workflows/README.md) for the full setup guide.
+
+### Example Workflows
+
+- [Generate a Research Report](docs/mcp-workflows/research-report.md) -- Gather person data and produce a structured summary with gaps and next steps
+- [Write a Family History Narrative](docs/mcp-workflows/family-history.md) -- Build a multi-generation story from your tree
+- [Audit Source Coverage](docs/mcp-workflows/source-audit.md) -- Find unsourced facts and prioritize research
+- [Check and Fix Data Quality](docs/mcp-workflows/data-quality.md) -- Run quality checks and resolve issues
+- [Photo Tagging with AI](docs/mcp-workflows/photo-tagging.md) -- Link photos to persons and events
+
 ### Available Tools
 
 - **Persons:** `create_person`, `list_persons`, `search_persons`, `get_person`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`
 - **Relationships:** `create_relationship`, `list_relationships`, `search_relationships`, `get_relationship`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`
 - **Events:** `add_event`, `get_events_for_person`, `get_events_for_relationship`, `add_event_participant`, `get_event_participants`
 - **Sources:** `add_source`, `add_citation`, `list_sources`, `search_sources`
-- **Import/Export:** `import_gedcom` (GEDCOM 5.5.1/7.0), `import_genney` (Genney 4.1 `.backup`/`.gcc`), `import_holger` (Holger/OurKind GEDCOM export — `.ged` or `.zip`; handles ENGA/ADOP subtypes, REMA/MISC notes, media path remapping), `export_gedcom`
+- **Import/Export:** `import_gedcom` (GEDCOM 5.5.1/7.0), `import_genney` (Genney 4.1 `.backup`/`.gcc`), `import_holger` (Holger/OurKind GEDCOM export -- `.ged` or `.zip`; handles ENGA/ADOP subtypes, REMA/MISC notes, media path remapping), `export_gedcom`
 
 ### Custom Database Path
 
