@@ -51,6 +51,7 @@ src/
 │   ├── research_tasks.ts         # ResearchTask CRUD
 │   ├── media.ts                  # Media + MediaLink CRUD
 │   ├── report_data.ts            # Denormalized report data for AI narrative generation
+│   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   └── link-rules/               # Default link rule sets
 │       ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
@@ -301,6 +302,13 @@ addMediaLink(db, { media_id, entity_type, entity_id, link_type?, sort_order? }) 
 getMediaForEntity(db, entityType, entityId) → (Media & { link_id, link_type, sort_order })[]
 removeMediaLink(db, linkId) → boolean
 reorderMediaLinks(db, linkIds: string[]) → void
+```
+
+### media_ai.ts
+```
+getMediaFileBase64(db, mediaId, maxDimension?) → MediaFileBase64Result | null
+getUntaggedMedia(db, limit?) → UntaggedMediaItem[]
+getMediaForPersonContext(db, personId) → MediaWithContext[]
 ```
 
 ### duplicates.ts
@@ -617,6 +625,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 **Research task tools:** `create_research_task`, `get_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task`
 
 **Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`, `reorder_media_links`
+
+**Media AI tools:** `get_media_file_base64`, `get_untagged_media`, `get_media_for_person_context`
 
 **Duplicate/merge tools:** `find_duplicates`, `merge_persons`
 

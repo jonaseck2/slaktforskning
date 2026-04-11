@@ -12,6 +12,7 @@ import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
+import * as mediaAi from '../api/media_ai';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
 import * as duplicates from '../api/duplicates';
 import * as reportData from '../api/report_data';
@@ -935,6 +936,46 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   }, async ({ link_ids }) => {
     media.reorderMediaLinks(db, link_ids);
     return { content: [{ type: 'text', text: `Reordered ${link_ids.length} media links` }] };
+  });
+
+  // Media AI tools
+  server.registerTool('get_media_file_base64', {
+    description: 'Get a media file as base64 for vision processing. Optionally downscale large images.',
+    inputSchema: {
+      media_id: z.string().describe('Media ID'),
+      max_dimension: z.number().optional().describe('Maximum width/height in pixels (resizing not yet implemented, reserved for future use)'),
+    },
+  }, async ({ media_id, max_dimension }) => {
+    const result = mediaAi.getMediaFileBase64(db, media_id, max_dimension);
+    if (!result) return { content: [{ type: 'text', text: 'Media not found or file missing' }] };
+    return { content: [{ type: 'text', text: JSON.stringify({
+      fileName: result.fileName,
+      mimeType: result.mimeType,
+      width: result.width,
+      height: result.height,
+      base64Length: result.base64.length,
+      base64: result.base64,
+    }, null, 2) }] };
+  });
+
+  server.registerTool('get_untagged_media', {
+    description: 'List media items with no person links, ordered by connection count. Use for batch photo tagging workflows.',
+    inputSchema: {
+      limit: z.number().optional().describe('Maximum number of results (default: 20)'),
+    },
+  }, async ({ limit }) => {
+    const list = mediaAi.getUntaggedMedia(db, limit);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_media_for_person_context', {
+    description: 'Find media that might contain a specific person based on event and relationship links.',
+    inputSchema: {
+      person_id: z.string().describe('Person ID'),
+    },
+  }, async ({ person_id }) => {
+    const list = mediaAi.getMediaForPersonContext(db, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
   // Duplicate detection & merge tools
