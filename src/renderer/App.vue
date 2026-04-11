@@ -128,6 +128,7 @@ import { useDataVersionStore } from './stores/dataVersion';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
+import { useToast } from './composables/useToast';
 
 const router = useRouter();
 const route = useRoute();
@@ -136,6 +137,7 @@ const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
+const toast = useToast();
 
 type Appearance = 'light' | 'dark' | 'contrast';
 const appearance = ref<Appearance>(
@@ -288,13 +290,26 @@ onMounted(() => {
   window.api.db.onSwitched(() => {
     window.location.reload();
   });
+  let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
+  let researchDebounce: ReturnType<typeof setTimeout> | null = null;
+  // Undo/redo: show toast and refresh data
+  window.api.undo.onPerformed((data: { type: string; label: string }) => {
+    const actionLabel = t(data.label);
+    const msg = data.type === 'undo' ? t('undo.undone', { action: actionLabel }) : t('undo.redone', { action: actionLabel });
+    toast.info(msg);
+  });
+  window.api.undo.onChanged(() => {
+    dataVersionStore.increment();
+    if (qualityDebounce) clearTimeout(qualityDebounce);
+    qualityDebounce = setTimeout(loadQualityBadge, 800);
+    if (researchDebounce) clearTimeout(researchDebounce);
+    researchDebounce = setTimeout(loadResearchBadge, 400);
+  });
   window.addEventListener('data-imported', () => {
     dataVersionStore.increment();
     loadQualityBadge();
     loadResearchBadge();
   });
-  let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
-  let researchDebounce: ReturnType<typeof setTimeout> | null = null;
   window.api.onDataChanged(() => {
     dataVersionStore.increment();
     if (!focusStore.personId) autoSetFocusPerson();
