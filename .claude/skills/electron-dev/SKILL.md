@@ -50,6 +50,54 @@ These print to the main process stdout (terminal where `npm start` runs).
 DevTools auto-open in dev mode (`src/main/index.ts` calls `win.webContents.openDevTools()`).
 Vue component errors and `console.error` from renderer show up in the DevTools console.
 
+### UI Interaction Tools
+
+Two MCP tool sets are available for interacting with the running app. **Prefer native tools, fall back to Chrome DevTools.**
+
+#### Native MCP tools (`mcp__slaktforskning__ui_*`) — preferred
+
+These run inside the Electron main process with direct access to the app's state, database, and IPC.
+
+| Tool | Use for |
+|------|---------|
+| `ui_navigate(path)` | Vue Router navigation (handles hash-based routes correctly) |
+| `ui_screenshot` | Capture full Electron window |
+| `ui_get_dom` | Get DOM as the app sees it |
+| `ui_click(selector)` | Click via CSS selector |
+| `ui_execute_js(code)` | Run JS with access to `window.api` (can call IPC directly) |
+
+**When to use:** Navigation, screenshots, reading app state, triggering IPC calls, checking data.
+
+#### Chrome DevTools MCP (`chrome-devtools-mcp`) — complementary
+
+Connects via the browser debug protocol. Use for things the native tools can't do well.
+
+| Tool | Best for |
+|------|----------|
+| `take_snapshot` | A11y tree with uid's (richer than raw DOM) |
+| `fill(uid, value)` | Fill inputs — properly triggers Vue v-model reactivity |
+| `click(uid)` | Click by a11y uid (more reliable than CSS selectors for dynamic content) |
+| `fill_form(elements)` | Fill multiple form fields at once |
+| `list_console_messages` | Read console errors without switching windows |
+| `performance_start_trace` / `stop` / `analyze_insight` | CPU profiling without code instrumentation |
+| `list_pages` / `select_page` | Switch between Electron windows |
+| `press_key(uid, key)` | Simulate keyboard input |
+
+**When to use:** Filling form inputs (native `ui_execute_js` doesn't trigger Vue reactivity reliably), a11y auditing, performance tracing, reading console errors.
+
+**Workflow: take snapshot → interact → screenshot**
+```
+1. take_snapshot          → get a11y tree with uid's
+2. fill(uid, value)       → fill an input
+3. click(uid)             → click a button
+4. ui_screenshot          → visual verification (native, captures full window)
+```
+
+**Tips:**
+- Always `take_snapshot` before `click`/`fill` to get fresh uid's
+- Use `list_pages` + `select_page` if the snapshot shows the wrong page (e.g. DevTools instead of app)
+- Mix native and Chrome DevTools tools freely — use `ui_navigate` for routing, `fill` for inputs, `ui_screenshot` for verification
+
 ### Common issues
 
 **Wrong Electron binary (macOS binary in Linux container):**

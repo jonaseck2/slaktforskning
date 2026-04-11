@@ -74,11 +74,31 @@ Run `npm start`, trigger the operation. Look for `[profile] label: Nms → /path
 
 ## Step 2: Analyze the Profile
 
-**Option A — Chrome DevTools (best flamegraph):**
+**Option A — Chrome DevTools MCP (recommended — no manual steps):**
+
+Use the `chrome-devtools-mcp` plugin tools to profile directly from the running Electron app:
+
+```
+1. performance_start_trace()              → start recording
+2. Trigger the slow operation (import, quality checks, etc.)
+3. performance_stop_trace()               → stop and save trace
+4. performance_analyze_insight()          → get analysis of the trace
+```
+
+These tools capture V8 CPU profiles, network timing, and rendering metrics. The `performance_analyze_insight` tool provides automated bottleneck identification.
+
+For renderer-side profiling, you can also use:
+```
+evaluate_script("performance.mark('start')")
+// ... trigger operation ...
+evaluate_script("performance.mark('end'); performance.measure('op', 'start', 'end').duration")
+```
+
+**Option B — Chrome DevTools UI (best flamegraph):**
 1. Open Chrome → F12 → Performance tab → click the upload icon (⬆) → load the `.cpuprofile`
 2. Look at the flamegraph: wide bars are hot. Narrow bars are fast.
 
-**Option B — Agent analysis (when the file is too large to open):**
+**Option C — Agent analysis (when the file is too large to open):**
 Hand the `.cpuprofile` path to an Explore agent with this instruction: "Parse the V8 cpuprofile JSON. Find the top 30 nodes by hitCount. For each hot node walk up the parent chain. Report total samples, top functions by hitCount with functionName/url/lineNumber, and the call chains. Identify the bottleneck."
 
 Key metrics:
