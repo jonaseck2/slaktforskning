@@ -349,4 +349,11 @@ onMounted(async () => {
   color: #666;
   font-size: var(--font-xs);
 }
+
+/* Override ZoomControls to stay within map area (not overlap panel) */
+.map-chart-area :deep(.zoom-controls-bar) {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+}
 </style>

@@ -385,6 +385,7 @@ export default {
     country: 'Country',
     noPersons: 'No persons linked to this place',
     eventCount: 'Events',
+    hierarchy: 'Hierarchy',
   },
   placePanel: {
     noPlaceSelected: 'Click a pin on the map',

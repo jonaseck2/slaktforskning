@@ -385,6 +385,7 @@ export default {
     country: 'Land',
     noPersons: 'Inga personer kopplade till denna plats',
     eventCount: 'Händelser',
+    hierarchy: 'Hierarki',
   },
   placePanel: {
     noPlaceSelected: 'Klicka på en markör på kartan',
