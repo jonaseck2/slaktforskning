@@ -95,7 +95,7 @@ import type { EventTypeValue } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';
 
-const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death', 'birth', 'emigration', 'probate', 'will', 'other'];
+const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death'];
 
 interface EventData {
   id: string;
