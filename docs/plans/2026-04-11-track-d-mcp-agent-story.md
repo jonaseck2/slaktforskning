@@ -16,28 +16,28 @@ Higher-level MCP tools that return structured data optimized for narrative gener
   - [x] `getPersonSummary(db, personId)` — person with all names, all events (with place paths), all relationships (with partner/parent/child names and key dates), all citations (with source titles), all groups, research tasks
   - [x] `getFamilyUnit(db, relationshipId)` — couple + all children with birth/death/marriage events, sources
   - [x] `getAncestorTree(db, personId, generations)` — N generations of ancestors with key events (birth, death, marriage), returns nested tree structure
-  - [ ] `getDescendantTree(db, personId, generations)` — N generations of descendants with key events
+  - [x] `getDescendantTree(db, personId, generations)` — N generations of descendants with key events
   - [x] `getPlaceHistory(db, placeId)` — all events at place chronologically with participant names and roles
   - [x] `getTimeline(db, personId)` — person's events merged with family events (spouse events, children births/deaths) in chronological order
   - [x] `getResearchGaps(db, personId)` — analyzes missing data: no birth event, no death event (if not living), no parents, unsourced events, missing places, name without dates
-  - [ ] `getSourceUsage(db, sourceId)` — persons and events citing this source, with citation details
+  - [x] `getSourceUsage(db, sourceId)` — persons and events citing this source, with citation details
 - [x] Register MCP tools in `src/mcp/createServer.ts`:
   - [x] `get_person_summary` — input: person_id
   - [x] `get_family_unit` — input: relationship_id
   - [x] `get_ancestor_tree` — input: person_id, generations (default 4)
-  - [ ] `get_descendant_tree` — input: person_id, generations (default 3)
+  - [x] `get_descendant_tree` — input: person_id, generations (default 3)
   - [x] `get_place_history` — input: place_id
   - [x] `get_timeline` — input: person_id
   - [x] `get_research_gaps` — input: person_id
-  - [ ] `get_source_usage` — input: source_id
+  - [x] `get_source_usage` — input: source_id
 - [x] All tools return well-structured JSON with denormalized names/dates (agent shouldn't need follow-up queries)
 - [x] Unit tests for each report_data function
 - [ ] MCP integration tests (tool input → output shape)
 - [ ] Create example prompt templates in `docs/mcp-workflows/`:
-  - [ ] "Generate a person biography" — uses get_person_summary + get_timeline
-  - [ ] "Write a family history chapter" — uses get_family_unit + get_ancestor_tree
-  - [ ] "Find research gaps" — uses get_research_gaps for multiple persons
-  - [ ] "Analyze source coverage" — uses get_source_usage across all sources
+  - [x] "Generate a person biography" — uses get_person_summary + get_timeline
+  - [x] "Write a family history chapter" — uses get_family_unit + get_ancestor_tree
+  - [x] "Find research gaps" — uses get_research_gaps for multiple persons
+  - [x] "Analyze source coverage" — uses get_source_usage across all sources
 - [x] Update `docs/MCP.md` with new tool documentation
 
 ### Dependencies
@@ -57,29 +57,29 @@ Tools for AI agents to process photos, suggest face tags, and extract metadata. 
 ### Steps
 
 - [x] MCP tool `get_media_file_base64`:
-  - [ ] Input: media_id, max_dimension? (optional downscale)
-  - [ ] Returns: base64-encoded file content, mime type, dimensions
-  - [ ] Downscale large images to max_dimension (e.g. 1024px) to reduce token usage
-  - [ ] Error if file not found or not readable
+  - [x] Input: media_id, max_dimension? (optional downscale)
+  - [x] Returns: base64-encoded file content, mime type, dimensions
+  - [x] Downscale large images to max_dimension (e.g. 1024px) to reduce token usage
+  - [x] Error if file not found or not readable
 - [ ] MCP tool `get_media_metadata`:
-  - [ ] Input: media_id
-  - [ ] Returns: file size, dimensions, format, EXIF data if available (date taken, camera, GPS)
-  - [ ] Use `sharp` or similar for image metadata extraction
+  - [x] Input: media_id
+  - [x] Returns: file size, dimensions, format, EXIF data if available (date taken, camera, GPS)
+  - [x] Use `sharp` or similar for image metadata extraction
 - [x] MCP tool `get_untagged_media`:
-  - [ ] Input: limit? (default 20)
-  - [ ] Returns: media items with no media_regions, ordered by entity link count (most connected first)
-  - [ ] Include linked entity summary for context
+  - [x] Input: limit? (default 20)
+  - [x] Returns: media items with no media_regions, ordered by entity link count (most connected first)
+  - [x] Include linked entity summary for context
 - [ ] MCP tool `suggest_media_regions`:
-  - [ ] Input: media_id, regions: [{ x, y, width, height, person_id?, label? }]
-  - [ ] Creates media_region records for each suggestion
-  - [ ] Returns created region IDs
+  - [x] Input: media_id, regions: [{ x, y, width, height, person_id?, label? }]
+  - [x] Creates media_region records for each suggestion
+  - [x] Returns created region IDs
 - [ ] MCP tool `get_persons_for_matching`:
-  - [ ] Input: limit? (default 50)
-  - [ ] Returns: persons who have existing region crops — person_id, name, region coordinates, media_id
-  - [ ] Agent can use these as reference faces for matching
+  - [x] Input: limit? (default 50)
+  - [x] Returns: persons who have existing region crops — person_id, name, region coordinates, media_id
+  - [x] Agent can use these as reference faces for matching
 - [x] MCP tool `get_media_for_person_context`:
-  - [ ] Input: person_id
-  - [ ] Returns: media linked to person's events, relationships, family members — places where person might appear
+  - [x] Input: person_id
+  - [x] Returns: media linked to person's events, relationships, family members — places where person might appear
 - [x] Unit tests for each tool
 - [ ] Document batch-tagging workflow:
   1. Call get_untagged_media to find photos
