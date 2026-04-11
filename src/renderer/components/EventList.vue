@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
 import CitationForm from './CitationForm.vue';
@@ -88,6 +88,7 @@ interface EventRow {
 const props = defineProps<{
   personId?: string;
   relationshipId?: string;
+  placeId?: string;
   readonly?: boolean;
   hideHeader?: boolean;
 }>();
@@ -115,6 +116,8 @@ async function load() {
       events.value = (await window.api.events.forPerson(props.personId)) as EventRow[];
     } else if (props.relationshipId) {
       events.value = (await window.api.events.forRelationship(props.relationshipId)) as EventRow[];
+    } else if (props.placeId) {
+      events.value = (await window.api.events.forPlace(props.placeId)) as EventRow[];
     }
   } catch (err) {
     console.error('[EventList] load failed:', err);
@@ -166,7 +169,11 @@ function onSaved() {
   load();
 }
 
-onMounted(load);
+watch(
+  () => props.personId ?? props.relationshipId ?? props.placeId,
+  () => load(),
+  { immediate: true }
+);
 
 function openAddForm() {
   editingEvent.value = null;
