@@ -253,7 +253,7 @@ interface GenGroup {
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
-const props = defineProps<{ personId: string }>();
+const props = defineProps<{ personId: string; circleGenerations?: number }>();
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const loading = ref(false);
@@ -480,7 +480,7 @@ async function load() {
     // the depth counter starts at 1, so generations=N yields gen 0..(N-1) in the chart.
     const [ancestorResult, pedigreeTree] = await Promise.all([
       fetchAllAncestors(props.personId),
-      fetchPedigreeTree(props.personId, 7),
+      fetchPedigreeTree(props.personId, (props.circleGenerations ?? 6) + 1),
     ]);
 
     const { ancestors } = ancestorResult;
@@ -489,7 +489,7 @@ async function load() {
     const ancestorIds = new Set<string>(Array.from(ancestors.values()).map(p => p.id));
 
     // Compute SVG segments from the 6-gen pedigree tree
-    segments.value = computeCircleLayout(pedigreeTree, 6);
+    segments.value = computeCircleLayout(pedigreeTree, props.circleGenerations ?? 6);
 
     // Fetch full details for all ancestors in parallel
     const entries = await Promise.all(

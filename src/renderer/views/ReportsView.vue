@@ -88,7 +88,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="ancestorBookPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AncestorBookReport :person-id="ancestorBookPersonId" />
+          <AncestorBookReport :person-id="ancestorBookPersonId" :circle-generations="circleGenerations" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
       </div>
@@ -236,7 +236,7 @@
         <span class="zoom-extra-value">{{ ancestorGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="ancestorGenerations >= 5" @click="ancestorGenerations++">+</button>
       </template>
-      <template v-if="activeTab === 'circleChart'">
+      <template v-if="activeTab === 'ancestorBook' || activeTab === 'circleChart'">
         <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
         <button class="zoom-extra-btn" :disabled="circleGenerations <= 1" @click="circleGenerations--">−</button>
         <span class="zoom-extra-value">{{ circleGenerations }}</span>
