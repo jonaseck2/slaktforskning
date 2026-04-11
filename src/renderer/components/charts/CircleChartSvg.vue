@@ -26,278 +26,51 @@
       @mousemove="(e: MouseEvent) => !linkBase && seg.person && emit('personmove', e)"
       @mouseleave="!linkBase && seg.person && emit('personleave')"
     >
-      <!-- Link wrapper for print mode -->
+      <!-- Segment arc: link wrapper in print mode, plain path in interactive mode -->
       <a v-if="linkBase && seg.person" :href="`${linkBase}${seg.person.id}`">
         <title>{{ tooltipLabel(seg) }}</title>
-        <path
-          :d="seg.pathD"
-          :fill="seg.fill"
-          stroke="white"
-          :stroke-width="strokeWidth"
-          stroke-linejoin="round"
-        />
-        <!-- Curved text mode (gen 1-4) -->
-        <template v-if="curvedText && seg.generation <= 4">
-          <text
-            v-if="givenLabel(seg)"
-            text-anchor="middle"
-            :font-size="nameFontSize(seg.generation)"
-            :font-family="fontFamily"
-            font-weight="600"
-            fill="white"
-          >
-            <textPath :href="`#tpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
-          </text>
-          <text
-            text-anchor="middle"
-            :font-size="nameFontSize(seg.generation)"
-            :font-family="fontFamily"
-            font-weight="600"
-            fill="white"
-          >
-            <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
-          </text>
-          <text
-            v-if="birthLabel(seg)"
-            text-anchor="middle"
-            :font-size="dateFontSize(seg.generation)"
-            :font-family="fontFamily"
-            fill="rgba(255,255,255,0.75)"
-          >
-            <textPath :href="`#tpb-${seg.ahnNum}`" startOffset="50%">{{ birthLabel(seg) }}</textPath>
-          </text>
-          <text
-            v-if="deathLabel(seg)"
-            text-anchor="middle"
-            :font-size="dateFontSize(seg.generation)"
-            :font-family="fontFamily"
-            fill="rgba(255,255,255,0.75)"
-          >
-            <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ deathLabel(seg) }}</textPath>
-          </text>
-        </template>
-
-        <!-- Straight tangential text (gen 1-4, curvedText off) -->
-        <template v-else-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
-          <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
-            <text
-              v-if="givenLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ givenLabel(seg) }}</text>
-            <text
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ surnameLabel(seg) }}</text>
-            <text
-              v-if="birthLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ birthLabel(seg) }}</text>
-            <text
-              v-if="deathLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ deathLabel(seg) }}</text>
-          </g>
-        </template>
-
-        <!-- Radial straight text (gen 5-6) -->
-        <template v-else-if="seg.generation >= 5">
-          <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
-            <text
-              v-if="givenLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ givenLabel(seg) }}</text>
-            <text
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ surnameLabel(seg) }}</text>
-            <text
-              v-if="birthLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ birthLabel(seg) }}</text>
-            <text
-              v-if="deathLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ deathLabel(seg) }}</text>
-          </g>
-        </template>
+        <path :d="seg.pathD" :fill="seg.fill" stroke="white" :stroke-width="strokeWidth" stroke-linejoin="round" />
       </a>
-
-      <!-- Interactive mode (no link wrapper) -->
       <template v-else>
-        <path
-          :d="seg.pathD"
-          :fill="seg.fill"
-          stroke="white"
-          :stroke-width="strokeWidth"
-          stroke-linejoin="round"
-        />
-        <!-- Hover tooltip via native SVG title (works in Electron WebView) -->
+        <path :d="seg.pathD" :fill="seg.fill" stroke="white" :stroke-width="strokeWidth" stroke-linejoin="round" />
         <title v-if="seg.person && !linkBase">{{ tooltipLabel(seg) }}</title>
+      </template>
 
-        <!-- Curved text mode (gen 1-4) -->
-        <template v-if="curvedText && seg.person && seg.generation <= 4">
-          <text
-            v-if="givenLabel(seg)"
-            text-anchor="middle"
-            :font-size="nameFontSize(seg.generation)"
-            :font-family="fontFamily"
-            font-weight="600"
-            fill="white"
-            style="pointer-events: none; user-select: none;"
-          >
-            <textPath :href="`#tpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
-          </text>
-          <text
-            text-anchor="middle"
-            :font-size="nameFontSize(seg.generation)"
-            :font-family="fontFamily"
-            font-weight="600"
-            fill="white"
-            style="pointer-events: none; user-select: none;"
-          >
-            <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
-          </text>
-          <text
-            v-if="birthLabel(seg)"
-            text-anchor="middle"
-            :font-size="dateFontSize(seg.generation)"
-            :font-family="fontFamily"
-            fill="rgba(255,255,255,0.75)"
-            style="pointer-events: none; user-select: none;"
-          >
-            <textPath :href="`#tpb-${seg.ahnNum}`" startOffset="50%">{{ birthLabel(seg) }}</textPath>
-          </text>
-          <text
-            v-if="deathLabel(seg)"
-            text-anchor="middle"
-            :font-size="dateFontSize(seg.generation)"
-            :font-family="fontFamily"
-            fill="rgba(255,255,255,0.75)"
-            style="pointer-events: none; user-select: none;"
-          >
-            <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ deathLabel(seg) }}</textPath>
-          </text>
-        </template>
+      <!-- Text labels (shared by both link and interactive modes) -->
+      <!-- Curved text (gen 1-4) -->
+      <template v-if="curvedText && seg.person && seg.generation >= 1 && seg.generation <= 4">
+        <text v-if="givenLabel(seg)" text-anchor="middle" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" fill="white" style="pointer-events: none; user-select: none;">
+          <textPath :href="`#tpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
+        </text>
+        <text text-anchor="middle" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" fill="white" style="pointer-events: none; user-select: none;">
+          <textPath :href="`#tp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
+        </text>
+        <text v-if="birthLabel(seg)" text-anchor="middle" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" fill="rgba(255,255,255,0.75)" style="pointer-events: none; user-select: none;">
+          <textPath :href="`#tpb-${seg.ahnNum}`" startOffset="50%">{{ birthLabel(seg) }}</textPath>
+        </text>
+        <text v-if="deathLabel(seg)" text-anchor="middle" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" fill="rgba(255,255,255,0.75)" style="pointer-events: none; user-select: none;">
+          <textPath :href="`#tpd-${seg.ahnNum}`" startOffset="50%">{{ deathLabel(seg) }}</textPath>
+        </text>
+      </template>
 
-        <!-- Straight tangential text (gen 1-4) -->
-        <template v-else-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
-          <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
-            <text
-              v-if="givenLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ givenLabel(seg) }}</text>
-            <text
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ surnameLabel(seg) }}</text>
-            <text
-              v-if="birthLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ birthLabel(seg) }}</text>
-            <text
-              v-if="deathLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ deathLabel(seg) }}</text>
-          </g>
-        </template>
+      <!-- Straight tangential text (gen 1-4, curvedText off) -->
+      <template v-else-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
+        <g :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`">
+          <text v-if="givenLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" fill="white" style="pointer-events: none; user-select: none;">{{ givenLabel(seg) }}</text>
+          <text :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" fill="white" style="pointer-events: none; user-select: none;">{{ surnameLabel(seg) }}</text>
+          <text v-if="birthLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" fill="rgba(255,255,255,0.75)" style="pointer-events: none; user-select: none;">{{ birthLabel(seg) }}</text>
+          <text v-if="deathLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" fill="rgba(255,255,255,0.75)" style="pointer-events: none; user-select: none;">{{ deathLabel(seg) }}</text>
+        </g>
+      </template>
 
-        <!-- Radial text (gen 5-6) -->
-        <template v-else-if="seg.person && seg.generation >= 5">
-          <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
-            <text
-              v-if="givenLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ givenLabel(seg) }}</text>
-            <text
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="nameFontSize(seg.generation)"
-              :font-family="fontFamily"
-              font-weight="600" fill="white"
-              style="pointer-events: none; user-select: none;"
-            >{{ surnameLabel(seg) }}</text>
-            <text
-              v-if="birthLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ birthLabel(seg) }}</text>
-            <text
-              v-if="deathLabel(seg)"
-              :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death"
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="dateFontSize(seg.generation)"
-              :font-family="fontFamily"
-              fill="rgba(255,255,255,0.75)"
-              style="pointer-events: none; user-select: none;"
-            >{{ deathLabel(seg) }}</text>
-          </g>
-        </template>
+      <!-- Radial text (gen 5-6) -->
+      <template v-else-if="seg.person && seg.generation >= 5">
+        <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
+          <text v-if="givenLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" fill="white" style="pointer-events: none; user-select: none;">{{ givenLabel(seg) }}</text>
+          <text :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" fill="white" style="pointer-events: none; user-select: none;">{{ surnameLabel(seg) }}</text>
+          <text v-if="birthLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).birth" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" fill="rgba(255,255,255,0.75)" style="pointer-events: none; user-select: none;">{{ birthLabel(seg) }}</text>
+          <text v-if="deathLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).death" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" fill="rgba(255,255,255,0.75)" style="pointer-events: none; user-select: none;">{{ deathLabel(seg) }}</text>
+        </g>
       </template>
     </g>
 
