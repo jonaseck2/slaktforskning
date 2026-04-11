@@ -44,7 +44,8 @@
             :key="bar.person.id"
             :data-testid="'timeline-row-' + bar.person.id"
             :class="['timeline-row', { focal: bar.isFocal }]"
-            @click="$emit('navigate', bar.person.id)"
+            :style="{ cursor: readonly ? 'default' : undefined }"
+            @click="!readonly && $emit('navigate', bar.person.id)"
           >
             <text
               :x="LEFT - 8" :y="bar.y + bar.h / 2 + (ROW_H - bar.h) / 2"
@@ -80,7 +81,7 @@
       </template>
       <div v-else-if="!loading" class="chart-empty">—</div>
     </div>
-    <div class="zoom-controls">
+    <div v-if="!readonly" class="zoom-controls">
       <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" @click="zoomOut">−</button>
@@ -100,7 +101,7 @@ import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
 
-const props = defineProps<{ personId: string | undefined }>();
+const props = defineProps<{ personId: string | undefined; readonly?: boolean }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
 // Mirror constants from chart-layout

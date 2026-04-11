@@ -21,7 +21,8 @@
           :key="box.person.id"
           :data-testid="'person-box-' + box.person.id"
           :class="['person-box', 'clickable']"
-          @click="$emit('navigate', box.person.id)"
+          :style="{ cursor: readonly ? 'default' : 'pointer' }"
+          @click="!readonly && $emit('navigate', box.person.id)"
           @mouseenter="(e: MouseEvent) => { hoveredPersonId = box.person.id; tooltipRef?.show(box.person, e.clientX, e.clientY); }"
           @mousemove="(e: MouseEvent) => tooltipRef?.move(e.clientX, e.clientY)"
           @mouseleave="hoveredPersonId = null; tooltipRef?.hide()"
@@ -64,7 +65,7 @@
             :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
           >† {{ box.person.deathDate }}</text>
           <g
-            v-if="hoveredPersonId === box.person.id"
+            v-if="!readonly && hoveredPersonId === box.person.id"
             class="add-btn"
             style="cursor: pointer;"
             @click.stop="openAddPopover(box)"
@@ -157,7 +158,7 @@ import ChartTooltip from './ChartTooltip.vue';
 useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined }>();
+const props = defineProps<{ personId: string | undefined; readonly?: boolean }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
