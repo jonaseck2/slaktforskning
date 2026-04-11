@@ -6,6 +6,8 @@ import {
   createMedia,
   getMedia,
   listMedia,
+  listMediaPage,
+  countMedia,
   deleteMedia,
   addMediaLink,
   getMediaForEntity,
@@ -213,5 +215,33 @@ describe('media links', () => {
 
     const results = getMediaForEntity(db, 'person', person.id);
     expect(results[0].link_type).toBe(1);
+  });
+
+  it('listMediaPage returns paginated items with link_count', () => {
+    const m1 = createMedia(db, { title: 'Alpha' });
+    const m2 = createMedia(db, { title: 'Beta' });
+    createMedia(db, { title: 'Gamma' });
+    const person = createPerson(db, { given_name: 'Test', surname: 'Person' });
+    addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
+    addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id });
+
+    const page1 = listMediaPage(db, 2, 0);
+    expect(page1).toHaveLength(2);
+    expect(page1[0].title).toBe('Alpha');
+    expect(page1[0].link_count).toBe(1);
+    expect(page1[1].title).toBe('Beta');
+    expect(page1[1].link_count).toBe(1);
+
+    const page2 = listMediaPage(db, 2, 2);
+    expect(page2).toHaveLength(1);
+    expect(page2[0].title).toBe('Gamma');
+    expect(page2[0].link_count).toBe(0);
+  });
+
+  it('countMedia returns total count', () => {
+    expect(countMedia(db)).toBe(0);
+    createMedia(db, { title: 'A' });
+    createMedia(db, { title: 'B' });
+    expect(countMedia(db)).toBe(2);
   });
 });

@@ -14,7 +14,7 @@
       <tbody>
         <tr v-for="(m, idx) in media" :key="m.link_id" class="clickable-row" @click="openLightbox(idx)">
           <td class="td-shrink thumb-cell">
-            <img v-if="thumbnails[m.id]" :src="thumbnails[m.id]" class="row-thumb" :alt="m.title || ''" />
+            <img v-if="thumbnails[m.id]" :src="thumbnails[m.id]" class="row-thumb" :alt="mediaDisplayName(m.title, m.file_ref, '')" />
             <span v-else-if="isImage(m.format)" class="row-thumb-placeholder"></span>
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
@@ -23,7 +23,7 @@
             <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')">&#9650;</button>
             <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')">&#9660;</button>
           </td>
-          <td>{{ m.title || '—' }}</td>
+          <td>{{ mediaDisplayName(m.title, m.file_ref) }}</td>
           <td class="td-shrink">{{ m.format || '—' }}</td>
           <td class="actions-cell">
             <button v-if="m.file_ref" class="btn-sm" @click.stop="openFile(m.id)">{{ $t('media.open') }}</button>
@@ -47,6 +47,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import MediaLightbox from './MediaLightbox.vue';
+import { mediaDisplayName } from '../utils/mediaUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;

@@ -126,6 +126,35 @@ export function formatFullName(name: {
   return parts.join(' ');
 }
 
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
+
+/**
+ * Fetch the primary display name for a person by ID.
+ * Returns the formatted full name, or the fallback if no names exist.
+ */
+export async function resolvePersonDisplayName(personId: string, fallback = '—'): Promise<string> {
+  try {
+    const names = (await window.api.persons.getNames(personId)) as Array<{
+      given_name: string | null;
+      surname: string | null;
+      preferred_name: string | null;
+      nickname: string | null;
+      name_prefix: string | null;
+      name_suffix: string | null;
+      sort_order: number;
+    }>;
+    if (names.length > 0) {
+      const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+      return formatFullName(primary) || fallback;
+    }
+  } catch {
+    // person may have been deleted
+  }
+  return fallback;
+}
+
 /** Truncates a parts array to at most maxLen visible characters, appending '…' if cut. */
 export function truncateNameParts(parts: NamePart[], maxLen: number): NamePart[] {
   const full = parts.map(p => p.text).join('');

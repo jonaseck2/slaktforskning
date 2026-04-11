@@ -95,7 +95,7 @@ import PersonPicker from '../components/PersonPicker.vue';
 import EventList from '../components/EventList.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useFocusStore } from '../stores/focus';
-import { fullNameParts } from '../utils/nameUtils';
+import { fullNameParts, resolvePersonDisplayName } from '../utils/nameUtils';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
 import { narrateRelationship, narrationLabelsFromI18n } from '../utils/narration';
@@ -144,12 +144,7 @@ function selectPerson(person: { id: string; given_name: string; surname: string;
 
 async function resolvePersonName(personId: string | null): Promise<string> {
   if (!personId) return t('common.unknown');
-  try {
-    const names = await window.api.persons.getNames(personId) as Array<{ given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number }>;
-    if (names.length === 0) return t('common.unknown');
-    const n = names[0];
-    return fullNameParts(n.given_name ?? null, n.surname ?? null, n.preferred_name ?? null, n.nickname ?? null).map(p => p.text).join('').trim() || t('common.unknown');
-  } catch { return t('common.unknown'); }
+  return resolvePersonDisplayName(personId, t('common.unknown'));
 }
 
 async function autoNarrate() {
