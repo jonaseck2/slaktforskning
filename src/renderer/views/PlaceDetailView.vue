@@ -4,6 +4,7 @@
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
       <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
+      <button type="button" class="btn-add" @click="$router.push('/reports?tab=placeHistory&placeId=' + place.id)">{{ $t('reports.tabPlaceHistory') }} →</button>
     </div>
 
     <section class="detail-section" aria-labelledby="section-place-details">

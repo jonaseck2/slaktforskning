@@ -4,6 +4,7 @@
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('relationshipDetail.back') }}</button>
       <div class="header-row">
         <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
+        <button v-if="relationship.type === 'couple'" type="button" class="btn-add" @click="$router.push('/reports?tab=familyNarrative&relationshipId=' + relationship.id)">{{ $t('reports.tabFamilyNarrative') }} →</button>
       </div>
     </div>
 
