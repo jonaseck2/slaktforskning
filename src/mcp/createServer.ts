@@ -14,6 +14,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
 import * as duplicates from '../api/duplicates';
+import * as reportData from '../api/report_data';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
 import type { ImportOptions } from '../import/gedcom';
 import { importFromGenney } from '../import/genney/index';
@@ -972,6 +973,58 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   }, async ({ id }) => {
     const results = runChecksForPerson(db, id);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+  });
+
+  // Report / narrative data tools
+  server.registerTool('get_person_summary', {
+    description: 'Get a comprehensive summary of a person: all names, events (with places), relationships (with partner/parent/child names), citations (with source titles), groups, and research tasks. One call = everything about a person, optimized for narrative generation.',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const result = reportData.getPersonSummary(db, person_id);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Person not found' }] };
+  });
+
+  server.registerTool('get_family_unit', {
+    description: 'Get a family unit: couple relationship + both persons with birth/death events + all children with their birth/death events. Children are found via parent_child relationships.',
+    inputSchema: { relationship_id: z.string().describe('Relationship ID (typically a couple relationship)') },
+  }, async ({ relationship_id }) => {
+    const result = reportData.getFamilyUnit(db, relationship_id);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Relationship not found' }] };
+  });
+
+  server.registerTool('get_ancestor_tree', {
+    description: 'Get a nested ancestor tree for a person up to N generations. Each node has person data, names, birth/death/marriage events, and father/mother subtrees.',
+    inputSchema: {
+      person_id: z.string().describe('Person ID'),
+      generations: z.number().optional().default(4).describe('Number of generations to include (default: 4)'),
+    },
+  }, async ({ person_id, generations }) => {
+    const result = reportData.getAncestorTree(db, person_id, generations);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Person not found' }] };
+  });
+
+  server.registerTool('get_place_history', {
+    description: 'Get all events at a place chronologically, with participant names and roles.',
+    inputSchema: { place_id: z.string().describe('Place ID') },
+  }, async ({ place_id }) => {
+    const result = reportData.getPlaceHistory(db, place_id);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Place not found' }] };
+  });
+
+  server.registerTool('get_research_gaps', {
+    description: 'Analyze a person for research gaps: missing birth event, missing death event (if not living), no parents, unsourced events, and events without places.',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const result = reportData.getResearchGaps(db, person_id);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Person not found' }] };
+  });
+
+  server.registerTool('get_timeline', {
+    description: 'Get a chronological timeline of a person\'s events merged with key family events (spouse birth/death, children births/deaths).',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const result = reportData.getTimeline(db, person_id);
+    return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Person not found' }] };
   });
 
   // Database tools

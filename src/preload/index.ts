@@ -145,6 +145,14 @@ const api = {
     update: mutating((id: string, data: unknown) => ipcRenderer.invoke('researchTasks:update', id, data)),
     delete: mutating((id: string) => ipcRenderer.invoke('researchTasks:delete', id)),
   },
+  reports: {
+    personSummary: (personId: string) => ipcRenderer.invoke('reports:personSummary', personId),
+    familyUnit: (relationshipId: string) => ipcRenderer.invoke('reports:familyUnit', relationshipId),
+    ancestorTree: (personId: string, generations?: number) => ipcRenderer.invoke('reports:ancestorTree', personId, generations),
+    placeHistory: (placeId: string) => ipcRenderer.invoke('reports:placeHistory', placeId),
+    researchGaps: (personId: string) => ipcRenderer.invoke('reports:researchGaps', personId),
+    timeline: (personId: string) => ipcRenderer.invoke('reports:timeline', personId),
+  },
   duplicates: {
     find: (limit?: number) => ipcRenderer.invoke('duplicates:find', limit),
     merge: mutating((targetId: string, sourceId: string) => ipcRenderer.invoke('duplicates:merge', targetId, sourceId)),
