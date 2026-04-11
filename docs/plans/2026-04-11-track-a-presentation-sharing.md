@@ -73,18 +73,18 @@ Large-format pedigree and descendant charts for printing. SVG-based, supports ti
 
 ### Steps
 
-- [ ] Create `src/api/reports/wall_chart.ts` — generates SVG chart data for arbitrary paper sizes
-- [ ] Extend existing pedigree chart renderer for print: no hover effects, high contrast, configurable fonts
-- [ ] Extend existing descendant chart (hourglass minus ancestors) for print
-- [ ] Support paper sizes: A4, A3, A2, A1, A0, custom dimensions
-- [ ] Tiled PDF: split large SVG into page-sized tiles with crop marks and overlap for assembly
-- [ ] IPC channel `reports:generateWallChart` with options (chart type, paper size, generations, focal person)
-- [ ] Vue: WallChartDialog.vue — configure chart type, paper size, generations, preview thumbnail
-- [ ] Add "Print Wall Chart" button to VisualizationView
-- [ ] Print-optimized CSS: serif fonts for names, thin lines, subtle colors
-- [ ] Handle large trees: auto-calculate required paper size, warn if > A0
-- [ ] i18n for chart labels
-- [ ] Unit tests for SVG generation and tile splitting
+- [x] Create `src/api/reports/wall_chart.ts` — generates SVG chart data for arbitrary paper sizes
+- [x] Extend existing pedigree chart renderer for print: no hover effects, high contrast, configurable fonts
+- [x] Extend existing descendant chart (hourglass minus ancestors) for print
+- [x] Support paper sizes: A4, A3, A2, A1, A0, custom dimensions
+- [x] Tiled PDF: split large SVG into page-sized tiles with crop marks and overlap for assembly
+- [x] IPC channel `reports:generateWallChart` with options (chart type, paper size, generations, focal person)
+- [x] Vue: WallChartDialog.vue — configure chart type, paper size, generations, preview thumbnail
+- [x] Add "Print Wall Chart" button to VisualizationView
+- [x] Print-optimized CSS: serif fonts for names, thin lines, subtle colors
+- [x] Handle large trees: auto-calculate required paper size, warn if > A0
+- [x] i18n for chart labels
+- [x] Unit tests for SVG generation and tile splitting
 
 ### Dependencies
 Uses existing chart infrastructure from VisualizationView.

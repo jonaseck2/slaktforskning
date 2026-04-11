@@ -28,10 +28,10 @@
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
           <div class="panel-add-relative-btns">
-            <button class="btn-dark" @click="openAddRelative('father')">{{ $t('personDetail.addFather') }}</button>
-            <button class="btn-dark" @click="openAddRelative('mother')">{{ $t('personDetail.addMother') }}</button>
-            <button class="btn-dark" @click="openAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
-            <button class="btn-dark" @click="openAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
+            <button class="btn-dark" @click="openAddRelative('father')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addFather') }}</button>
+            <button class="btn-dark" @click="openAddRelative('mother')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addMother') }}</button>
+            <button class="btn-dark" @click="openAddRelative('spouse')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addSpouse') }}</button>
+            <button class="btn-dark" @click="openAddRelative('child')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addChild') }}</button>
           </div>
         </div>
       </div>

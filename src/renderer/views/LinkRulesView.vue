@@ -33,7 +33,7 @@
     <div class="detail-section">
       <div class="section-header">
         <h4>{{ $t('linkRules.activeRules') }}</h4>
-        <button class="btn-add" @click="showAddModal = true">+ {{ $t('linkRules.addRule') }}</button>
+        <button class="btn-add" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('linkRules.addRule') }}</button>
       </div>
       <table v-if="resolvedRules.length > 0" class="data-table">
         <thead>

@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('places.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true">{{ $t('places.addTitle') }}</button>
+      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('places.addTitle') }}</button>
     </div>
     <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
     <div v-if="places.length > 0" class="filter-chips">

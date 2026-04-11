@@ -2,7 +2,7 @@
   <div class="research-tasks">
     <div class="header">
       <h2>{{ $t('researchTasks.title') }}</h2>
-      <button class="btn-add" @click="showAddModal = true">{{ $t('researchTasks.addTask') }}</button>
+      <button class="btn-add" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('researchTasks.addTask') }}</button>
     </div>
 
     <p v-if="tasks.length > 0" class="count-label">

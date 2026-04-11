@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('sources.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true">{{ $t('sources.addSource') }}</button>
+      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('sources.addSource') }}</button>
     </div>
     <p v-if="sourceList.length > 0" class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
     <div v-if="sourceList.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('sources.title') })">

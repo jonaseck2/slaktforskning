@@ -3,7 +3,7 @@
     <div class="header">
       <h2>{{ $t('persons.title') }}</h2>
       <div class="header-actions">
-        <button class="btn-add" @click="showAddForm = true">{{ $t('persons.addPerson') }}</button>
+        <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('persons.addPerson') }}</button>
       </div>
     </div>
 

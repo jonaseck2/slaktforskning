@@ -58,7 +58,7 @@
     <section id="section-names" class="detail-section" aria-labelledby="section-person-names">
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })">
         <h4 id="section-person-names">{{ $t('personDetail.names') }}</h4>
-        <button class="btn-add" @click="showNameForm = true">{{ $t('personDetail.addName') }}</button>
+        <button class="btn-add" @click="showNameForm = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addName') }}</button>
       </div>
       <div v-if="names.length === 0" class="empty-hint">{{ $t('personDetail.noNames') }}</div>
       <PersonNamesTable v-else :names="names" @edit="openEditName" @delete="removeName" />
@@ -89,7 +89,7 @@
     <section id="section-identifiers" class="detail-section" aria-labelledby="section-person-identifiers">
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })">
         <h4 id="section-person-identifiers">{{ $t('identifiers.title') }}</h4>
-        <button class="btn-add" @click="identifiersSectionRef?.openAddForm()">{{ $t('identifiers.add') }}</button>
+        <button class="btn-add" @click="identifiersSectionRef?.openAddForm()"><span aria-hidden="true">+ </span>{{ $t('identifiers.add') }}</button>
       </div>
       <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="person.id" />
     </section>
@@ -130,7 +130,7 @@
     <section id="section-media" class="detail-section" aria-labelledby="section-person-media">
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionMedia', { count: 0, summary: '' })">
         <h4 id="section-person-media">{{ $t('media.title') }}</h4>
-        <button class="btn-add" @click="mediaSectionRef?.attach()">{{ $t('media.attach') }}</button>
+        <button class="btn-add" @click="mediaSectionRef?.attach()"><span aria-hidden="true">+ </span>{{ $t('media.attach') }}</button>
       </div>
       <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
     </section>

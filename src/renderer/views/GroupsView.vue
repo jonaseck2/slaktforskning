@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('groups.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true">{{ $t('groups.addGroup') }}</button>
+      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('groups.addGroup') }}</button>
     </div>
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
     <div v-if="groups.length === 0" class="empty">{{ $t('groups.emptyState') }}</div>

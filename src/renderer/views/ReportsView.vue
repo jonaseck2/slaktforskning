@@ -211,6 +211,59 @@
         </div>
       </div>
     </div>
+
+    <!-- Wall Chart Tab -->
+    <div v-if="activeTab === 'wallChart'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls">
+          <label>
+            {{ $t('wallChart.chartType') }}
+            <select v-model="wallChartType">
+              <option value="pedigree">{{ $t('wallChart.pedigree') }}</option>
+              <option value="descendant">{{ $t('wallChart.descendant') }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('wallChart.paperSize') }}
+            <select v-model="wallChartPaperSize">
+              <option v-for="size in paperSizeOptions" :key="size" :value="size">{{ size }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('wallChart.generations') }}
+            <select v-model="wallChartGenerations">
+              <option v-for="n in (wallChartType === 'pedigree' ? 9 : 5)" :key="n" :value="n + 1">{{ n + 1 }}</option>
+            </select>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="wallChartTiled" :disabled="wallChartPaperSize === 'A4'">
+            {{ $t('wallChart.tiled') }}
+          </label>
+        </div>
+        <div class="print-actions">
+          <button class="btn-add btn-report-action" :disabled="!wallChartPersonId" @click="saveWallChartSvg">{{ $t('wallChart.saveSvg') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!wallChartPersonId" @click="printWallChart">{{ $t('wallChart.savePdf') }}</button>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="wallChartPersonId" class="wall-chart-preview" :style="{ zoom: effectiveZoom }">
+          <WallChartReport
+            :person-id="wallChartPersonId"
+            :chart-type="wallChartType"
+            :generations="wallChartGenerations"
+            :paper-size="wallChartPaperSize"
+            @svg-ready="onWallChartSvgReady"
+          />
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">&#x2212;</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -226,6 +279,10 @@ import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
 import PersonBiography from '../components/reports/PersonBiography.vue';
 import PlaceHistory from '../components/reports/PlaceHistory.vue';
 import FamilyNarrative from '../components/reports/FamilyNarrative.vue';
+import WallChartReport from '../components/reports/WallChartReport.vue';
+import { PAPER_SIZES } from '../../api/reports/wall_chart';
+
+type PaperSizeName = keyof typeof PAPER_SIZES;
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -234,7 +291,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'wallChart'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -244,6 +301,7 @@ const tabs = computed(() => [
   { id: 'biography', label: t('reports.tabBiography') },
   { id: 'placeHistory', label: t('reports.tabPlaceHistory') },
   { id: 'familyNarrative', label: t('reports.tabFamilyNarrative') },
+  { id: 'wallChart', label: t('wallChart.title') },
 ]);
 
 const ancestorRootId = computed(() => focusStore.personId);
@@ -340,7 +398,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=biography)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'wallChart'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
@@ -358,6 +416,34 @@ async function printCurrent() {
 
 async function exportPdf() {
   await window.api.print.exportPdf();
+}
+
+// --- Wall Chart ---
+const wallChartPersonId = computed(() => focusStore.personId);
+const wallChartType = ref<'pedigree' | 'descendant'>('pedigree');
+const wallChartPaperSize = ref<PaperSizeName>('A3');
+const wallChartGenerations = ref(5);
+const wallChartTiled = ref(false);
+const wallChartSvgData = ref<{ svg: string; width: number; height: number } | null>(null);
+const paperSizeOptions = Object.keys(PAPER_SIZES) as PaperSizeName[];
+
+function onWallChartSvgReady(svg: string, width: number, height: number) {
+  wallChartSvgData.value = { svg, width, height };
+}
+
+async function saveWallChartSvg() {
+  if (!wallChartSvgData.value) return;
+  const blob = new Blob([wallChartSvgData.value.svg], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wall-chart-${wallChartType.value}.svg`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function printWallChart() {
+  await window.api.print.print();
 }
 </script>
 

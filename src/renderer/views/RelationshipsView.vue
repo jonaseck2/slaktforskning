@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('relationships.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true">{{ $t('relationships.addRelationship') }}</button>
+      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('relationships.addRelationship') }}</button>
     </div>
     <p v-if="total > 0" class="count-label">
       {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
