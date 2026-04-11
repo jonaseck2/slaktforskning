@@ -402,6 +402,8 @@ function triggerLoading() {
   reportLoading.value = true;
   nextTick(() => setTimeout(() => { reportLoading.value = false; }, 800));
 }
+const chartPersonId = ref<string | null>(focusStore.personId ?? null);
+
 watch(activeTab, triggerLoading);
 watch(ancestorRootId, triggerLoading);
 watch(individualPersonId, triggerLoading);
@@ -470,8 +472,6 @@ async function exportPdf() {
   await window.api.print.exportPdf();
 }
 
-// --- Chart Reports ---
-const chartPersonId = ref<string | null>(focusStore.personId ?? null);
 </script>
 
 <style scoped>
