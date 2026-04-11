@@ -158,8 +158,9 @@ function onMapReady() {
   if (map) {
     map.zoomControl?.remove();
     map.on('zoomend', () => { currentZoom.value = map.getZoom(); });
+    // Invalidate after flex layout settles (panel may already be open)
+    setTimeout(() => { map.invalidateSize(); fitBounds(); }, 100);
   }
-  fitBounds();
 }
 
 function zoomIn() {

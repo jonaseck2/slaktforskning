@@ -11,7 +11,7 @@
         <div class="panel-header-content">
           <div class="panel-name-row">
             <div class="panel-name">{{ place.name }}</div>
-            <span v-if="place.place_type" class="place-type-badge">{{ place.place_type }}</span>
+            <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
           </div>
           <router-link :to="'/places/' + placeId" class="panel-view-full">{{ $t('placePanel.viewFull') }}</router-link>
         </div>
@@ -21,7 +21,7 @@
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('place')">
           <span class="panel-chevron">{{ sections.place ? '▾' : '▸' }}</span>
-          {{ $t('places.nav') }}
+          {{ $t('places.detailsTitle') }}
           <router-link :to="'/places/' + placeId" class="panel-section-header-action" @click.stop>{{ $t('common.edit') }}</router-link>
         </button>
         <div v-if="sections.place" class="panel-section-body">
@@ -43,11 +43,11 @@
                 @change="saveField('place_type', ($event.target as HTMLSelectElement).value || null)"
               >
                 <option value="">—</option>
-                <option v-for="t in PLACE_TYPE_VALUES" :key="t" :value="t">{{ t }}</option>
+                <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">{{ $t('placeTypes.' + pt) }}</option>
               </select>
             </div>
             <div class="compact-field">
-              <label class="compact-label">{{ $t('places.parent') }}</label>
+              <label class="compact-label">{{ $t('places.parentPlace') }}</label>
               <PlacePicker
                 :model-value="place.parent_place_id ?? null"
                 @update:model-value="saveField('parent_place_id', $event)"
@@ -138,7 +138,7 @@
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('children')">
           <span class="panel-chevron">{{ sections.children ? '▾' : '▸' }}</span>
-          {{ $t('places.children') }}
+          {{ $t('places.childPlaces') }}
           <span v-if="childPlaces.length > 0" class="panel-section-count">{{ childPlaces.length }}</span>
         </button>
         <div v-if="sections.children" class="panel-section-body">
@@ -157,7 +157,7 @@
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('persons')">
           <span class="panel-chevron">{{ sections.persons ? '▾' : '▸' }}</span>
-          {{ $t('persons.nav') }}
+          {{ $t('persons.title') }}
         </button>
         <div v-if="sections.persons" class="panel-section-body">
           <PlacePersonsSection :place-id="placeId!" />
@@ -179,7 +179,7 @@
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('citations')">
           <span class="panel-chevron">{{ sections.citations ? '▾' : '▸' }}</span>
-          {{ $t('sources.citations') }}
+          {{ $t('sourceDetail.citations') }}
         </button>
         <div v-if="sections.citations" class="panel-section-body">
           <PlaceCitationsSection :place-id="placeId!" />
