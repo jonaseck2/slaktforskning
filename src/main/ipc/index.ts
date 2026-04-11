@@ -22,5 +22,5 @@ export function registerIpcHandlers(): void {
   registerImportHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerDatabaseHandlers(getDb, getCurrentDatabasePath, switchDatabase, loadSettings, wrapHandler);
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
-  registerUtilityHandlers(getDb, wrapHandler);
+  registerUtilityHandlers(getDb, getCurrentDatabasePath, wrapHandler);
 }

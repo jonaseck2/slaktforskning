@@ -56,12 +56,12 @@ describe('AddRelatedPersonModal', () => {
     expect(wrapper.find('h3').text()).toBe('Add Child');
   });
 
-  it('shows subtype select only in spouse mode', () => {
+  it('shows subtype select in all modes', () => {
     const fatherWrapper = mountModal('father');
-    expect(fatherWrapper.findAll('select')).toHaveLength(1); // sex only
+    expect(fatherWrapper.findAll('select')).toHaveLength(2); // sex + parent_child subtype
 
     const spouseWrapper = mountModal('spouse');
-    expect(spouseWrapper.findAll('select')).toHaveLength(2); // sex + subtype
+    expect(spouseWrapper.findAll('select')).toHaveLength(2); // sex + couple subtype
   });
 
   it('creates parent_child with new person as parent for father mode', async () => {

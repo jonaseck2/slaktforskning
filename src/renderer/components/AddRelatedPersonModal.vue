@@ -71,10 +71,15 @@
           </details>
         </template>
 
-        <!-- Subtype — both modes, spouse only -->
+        <!-- Subtype -->
         <label v-if="mode === 'spouse'">{{ $t('personDetail.coupleSubtype') }}
           <select v-model="form.subtype">
             <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
+          </select>
+        </label>
+        <label v-else>{{ $t('relationshipDetail.subtype') }}
+          <select v-model="form.subtype">
+            <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('parentChildSubtypes.' + st) }}</option>
           </select>
         </label>
 
@@ -92,7 +97,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
-import { COUPLE_SUBTYPE_VALUES } from '../constants/eventTypes';
+import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { useToast } from '../composables/useToast';
@@ -149,7 +154,7 @@ const form = reactive({
   surname: defaultSurname(),
   sex: defaultSex(),
   living: true,
-  subtype: 'unknown',
+  subtype: props.mode === 'spouse' ? 'unknown' : 'biological',
 });
 
 // Birth form state
@@ -206,12 +211,12 @@ async function save() {
       relData.type = 'parent_child';
       relData.person1_id = targetPersonId;   // parent
       relData.person2_id = props.personId;   // child (current person)
-      relData.subtype = 'biological';
+      relData.subtype = form.subtype;
     } else if (props.mode === 'child') {
       relData.type = 'parent_child';
       relData.person1_id = props.personId;   // parent (current person)
       relData.person2_id = targetPersonId;   // child
-      relData.subtype = 'biological';
+      relData.subtype = form.subtype;
     } else {
       relData.type = 'couple';
       relData.person1_id = props.personId;
