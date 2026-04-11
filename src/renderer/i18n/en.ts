@@ -568,6 +568,12 @@ export default {
     exportPdf: 'PDF',
     zoomFit: 'Fit',
     tabAncestorBook: 'Ancestor Book',
+    tabBiography: 'Biography',
+    tabPlaceHistory: 'Place History',
+    tabFamilyNarrative: 'Family Narrative',
+    place: 'Place',
+    selectPlace: 'Select place\u2026',
+    selectPlaceFirst: 'Select a place to show preview.',
     ancestorBook: {
       pickPerson: 'Select focal person',
       noPersonSelected: 'Select a person to generate the ancestor book.',

@@ -61,6 +61,27 @@ export function getEventsForRelationship(db: Database, relationshipId: string): 
   `, [relationshipId]);
 }
 
+export function getEventsForPlace(db: Database, placeId: string): (GenealogyEvent & { participant_names: string })[] {
+  return queryAll<GenealogyEvent & { participant_names: string }>(db, `
+    SELECT e.*,
+      COALESCE(
+        GROUP_CONCAT(
+          COALESCE(pn.given_name, '') || ' ' || COALESCE(pn.surname, ''),
+          ', '
+        ),
+        ''
+      ) AS participant_names
+    FROM events e
+    LEFT JOIN event_participants ep ON ep.event_id = e.id
+    LEFT JOIN person_names pn ON pn.person_id = ep.person_id AND pn.sort_order = (
+      SELECT MIN(pn2.sort_order) FROM person_names pn2 WHERE pn2.person_id = ep.person_id
+    )
+    WHERE e.place_id = ?
+    GROUP BY e.id
+    ORDER BY e.date_value
+  `, [placeId]);
+}
+
 export function updateEvent(
   db: Database,
   id: string,
