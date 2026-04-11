@@ -31,5 +31,6 @@ export const router = createRouter({
     { path: '/media', component: () => import('./views/MediaView.vue') },
     { path: '/map', component: () => import('./views/MapView.vue') },
     { path: '/link-rules', component: () => import('./views/LinkRulesView.vue') },
+    { path: '/gazetteers', component: () => import('./views/GazetteersView.vue') },
   ],
 });
