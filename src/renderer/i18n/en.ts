@@ -244,6 +244,7 @@ export default {
     probate: 'Probate',
     mention: 'Mention',
     engagement: 'Engagement',
+    wedding: 'Wedding',
     adoption: 'Adoption',
     other: 'Other',
   },
