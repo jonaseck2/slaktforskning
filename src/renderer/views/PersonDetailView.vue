@@ -68,6 +68,14 @@
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
+    <!-- Life Map Section -->
+    <section v-if="hasGeoEvents" class="detail-section" aria-labelledby="section-person-map">
+      <div class="section-header">
+        <h4 id="section-person-map">{{ $t('map.personMap') }}</h4>
+      </div>
+      <PersonMap :person-id="person.id" />
+    </section>
+
     <!-- Identifiers Section -->
     <section id="section-identifiers" class="detail-section" aria-labelledby="section-person-identifiers">
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })">
@@ -188,6 +196,7 @@ import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
 import PersonNotesSection from '../components/PersonNotesSection.vue';
+import PersonMap from '../components/PersonMap.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
 
@@ -245,6 +254,7 @@ const showAddTaskModal = ref(false);
 
 const personGroups = ref<import('../components/GroupsTable.vue').GroupRow[]>([]);
 const showGroupPicker = ref(false);
+const hasGeoEvents = ref(false);
 
 async function loadPersonTasks() {
   if (!window.api?.researchTasks) return;
@@ -253,6 +263,23 @@ async function loadPersonTasks() {
 
 async function loadPersonGroups() {
   personGroups.value = (await window.api.groups.forPerson(personId)) as PersonGroup[];
+}
+
+async function checkGeoEvents() {
+  try {
+    const events = (await window.api.events.forPerson(personId)) as Array<{ place_id: string | null }>;
+    const eventsWithPlaces = events.filter(e => e.place_id);
+    for (const ev of eventsWithPlaces) {
+      const place = (await window.api.places.get(ev.place_id!)) as { latitude: number | null; longitude: number | null } | null;
+      if (place && place.latitude != null && place.longitude != null) {
+        hasGeoEvents.value = true;
+        return;
+      }
+    }
+    hasGeoEvents.value = false;
+  } catch {
+    hasGeoEvents.value = false;
+  }
 }
 
 async function removeFromGroup(groupId: string) {
@@ -280,6 +307,7 @@ async function load() {
     await loadPersonTasks();
     await loadPersonGroups();
     await loadProfilePic();
+    await checkGeoEvents();
     await autoNarrate();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);

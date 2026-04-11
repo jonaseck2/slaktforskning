@@ -37,6 +37,10 @@
         <span class="nav-icon" aria-hidden="true">📍</span>
         <span class="nav-label">{{ $t('places.title') }}</span>
       </router-link>
+      <router-link to="/map" class="nav-item" :aria-label="$t('nav.map')">
+        <span class="nav-icon" aria-hidden="true">🗺️</span>
+        <span class="nav-label">{{ $t('nav.map') }}</span>
+      </router-link>
       <router-link to="/sources" class="nav-item" :aria-label="$t('nav.sources')">
         <span class="nav-icon" aria-hidden="true">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
@@ -167,6 +171,7 @@ watch(() => route.path, () => {
       '/relationships': 'relationships',
       '/sources': 'sources',
       '/places': 'places',
+      '/map': 'map',
       '/research-tasks': 'tasks',
       '/visualisering': 'visualization',
       '/groups': 'groups',
