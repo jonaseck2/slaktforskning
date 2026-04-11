@@ -5,6 +5,18 @@ import type { HourglassTree, TreePerson, ChartLayout, BoxLayout, CollapseButton,
 import { BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { buildHourglassTree, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
+/** Find a TreePerson by ID in the graph (cycle-safe). */
+function findPersonInTree(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
+  if (node.person.id === id) return node;
+  if (visited.has(node.person.id)) return null;
+  visited.add(node.person.id);
+  for (const p of node.parents) { const f = findPersonInTree(p, id, visited); if (f) return f; }
+  for (const c of node.children) { const f = findPersonInTree(c, id, visited); if (f) return f; }
+  for (const s of node.spouses) { const f = findPersonInTree(s, id, visited); if (f) return f; }
+  for (const s of (node.siblings ?? [])) { const f = findPersonInTree(s, id, visited); if (f) return f; }
+  return null;
+}
+
 /** Compute max descendant depth of a DescendantNode tree (used by HourglassChart for lazy loading). */
 export function maxDescendantDepth(node: { children: { children: unknown[] }[] }): number {
   if (node.children.length === 0) return 0;
@@ -459,9 +471,93 @@ export function computeHourglassLayout(
     }
   }
 
-  // ── SVG height ──
+  // ── Place unplaced outlines for selected person ──
+  // placeAncestors only handles parents, placeDescendants only handles children.
+  // Spouse/child outlines on ancestors or spouse/parent outlines on descendants
+  // would be missed. Place them relative to the selected person's box.
+  if (selectedPersonId) {
+    const selNode = findPersonInTree(root, selectedPersonId);
+    const placedIds = new Set(boxes.map(b => b.person.id));
+    const selBox = boxes.find(b => b.person.id === selectedPersonId);
+
+    if (selNode && selBox) {
+      const selCX = selBox.x + BOX_W / 2;
+      const selIsFemale = selNode.person.sex === 'F';
+
+      // Unplaced spouse outlines — place beyond any existing boxes at the same row
+      const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
+      if (unplacedSpouses.length > 0) {
+        // Find the edge of existing boxes at this Y level to avoid overlap
+        const sameRowBoxes = boxes.filter(b => b.y === selBox.y);
+        const rightEdge = Math.max(...sameRowBoxes.map(b => b.x + b.w));
+        const leftEdge = Math.min(...sameRowBoxes.map(b => b.x));
+
+        for (let i = 0; i < unplacedSpouses.length; i++) {
+          let spX: number;
+          if (selIsFemale) {
+            spX = leftEdge - H_GAP - BOX_W - i * (BOX_W + V_GAP);
+          } else {
+            spX = rightEdge + H_GAP + i * (BOX_W + V_GAP);
+          }
+          const spCX = spX + BOX_W / 2;
+          boxes.push({
+            person: unplacedSpouses[i].person,
+            isFocal: false,
+            x: spX, y: selBox.y,
+            w: BOX_W, h: BOX_H,
+          });
+          const lineY = selBox.y + BOX_H / 2;
+          lines.push({
+            x1: selIsFemale ? spCX + BOX_W / 2 : selCX + BOX_W / 2,
+            y1: lineY,
+            x2: selIsFemale ? selCX - BOX_W / 2 : spCX - BOX_W / 2,
+            y2: lineY,
+          });
+        }
+      }
+
+      // Unplaced child outlines — place below the selected person
+      const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
+      if (unplacedChildren.length > 0) {
+        const childY = selBox.y + BOX_H + GEN_GAP;
+        const forkY = selBox.y + BOX_H + GEN_GAP / 2;
+
+        // Find existing boxes at childY to avoid overlap
+        const childRowBoxes = boxes.filter(b => b.y === childY);
+        // Place child outline to the right of any existing boxes at that row,
+        // or directly below the selected person if nothing is there
+        let childX: number;
+        if (childRowBoxes.length > 0) {
+          const rightEdge = Math.max(...childRowBoxes.map(b => b.x + b.w));
+          childX = rightEdge + V_GAP;
+        } else {
+          childX = selCX - BOX_W / 2;
+        }
+        const childCX = childX + BOX_W / 2;
+
+        // Stem from selected person down to fork
+        lines.push({ x1: selCX, y1: selBox.y + BOX_H, x2: selCX, y2: forkY });
+        for (let i = 0; i < unplacedChildren.length; i++) {
+          lines.push({ x1: childCX, y1: forkY, x2: childCX, y2: childY });
+          boxes.push({
+            person: unplacedChildren[i].person,
+            isFocal: false,
+            x: childX, y: childY,
+            w: BOX_W, h: BOX_H,
+          });
+        }
+      }
+    }
+  }
+
+  // ── SVG dimensions (recalculated after outline placement) ──
+  const maxBoxRight = Math.max(...boxes.map(b => b.x + b.w));
+  const maxBoxBottom = Math.max(...boxes.map(b => b.y + b.h));
+  const minBoxLeft = Math.min(...boxes.map(b => b.x));
+  const finalSvgWidth = Math.max(svgWidth, maxBoxRight + PAD);
   const deepestDescRow = D > 0 ? descRowY(D) : focalRowY;
-  const svgHeight = deepestDescRow + BOX_H + 20 + PAD;
+  const svgHeight = Math.max(deepestDescRow + BOX_H + 20 + PAD, maxBoxBottom + 20 + PAD);
+  const viewBoxMinX = Math.min(0, minBoxLeft - PAD);
 
   // ── 5. Collapse buttons ────────────────────────────────────────────────────
   const collapseButtons: CollapseButton[] = [];
@@ -606,5 +702,5 @@ export function computeHourglassLayout(
     }
   }
 
-  return { boxes, lines, svgWidth, svgHeight, viewBoxMinY: 0, collapseButtons, placeholders, placeholderLines };
+  return { boxes, lines, svgWidth: finalSvgWidth, svgHeight, viewBoxMinY: 0, collapseButtons, placeholders, placeholderLines };
 }

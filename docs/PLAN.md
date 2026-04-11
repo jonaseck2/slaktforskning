@@ -106,6 +106,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.70.0 | Pedigree + hourglass chart: add-person outline placeholders for selected person, SVG click fix for MCP ui_click, viewBox clipping fix | — |
 | v0.71.0 | Hourglass outline architecture: TreePerson data model, buildHourglassTree() converter, unconditional outline injection, spouse placeholder support | [plan](plans/2026-04-11-hourglass-outline-architecture.md) |
 | v0.71.1 | Remove kyrkoarkiv/domstolsarkiv/generalmönsterrullor link rules, show citation notes in source detail, i18n additions | — |
+| v0.71.2 | Fix: hourglass outlines for all person types — spouse/child outlines for ancestors and descendants via post-layout pass | — |
 ---
 
 ## Research
