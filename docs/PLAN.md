@@ -92,6 +92,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.57.0 | D2: MCP Media Tools for AI — base64, untagged discovery, person context | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
 | v0.58.0 | B2: Media-Bundled Portable Archive — GEDCOM + media .zip export/import | [plan](plans/2026-04-11-track-b-media-experience.md) |
 | v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
+| v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 ---
 
 ## Research
@@ -122,9 +123,6 @@ Large-format pedigree and descendant charts. SVG-based, tiled multi-page PDF for
 
 #### A4: Static HTML Site Export [feature]
 Generate a self-contained browsable family tree website. Person pages, index, search, media.
-
-#### A5: CSV Export [feature]
-Tabular export of persons, events, sources, places for spreadsheet analysis.
 
 ---
 

@@ -272,3 +272,7 @@ Part of Track B: `docs/plans/2026-04-11-track-b-media-experience.md`.
 ### v0.59.0 — A1: Narrative Reports
 Person biography, place history, and family narrative as prose-generating Vue components. Swedish + English locale support. Deep linking from detail views. getEventsForPlace() API + 2 tests.
 Part of Track A: `docs/plans/2026-04-11-track-a-presentation-sharing.md`.
+
+### v0.60.0 — A5: CSV Export
+Persons, events, sources, places as CSV with delimiter (comma/semicolon/tab) and UTF-8 BOM options. 13 tests.
+Part of Track A: `docs/plans/2026-04-11-track-a-presentation-sharing.md`.

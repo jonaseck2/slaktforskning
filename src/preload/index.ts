@@ -185,6 +185,10 @@ const api = {
     print: () => ipcRenderer.invoke('print:print'),
     exportPdf: (path?: string) => ipcRenderer.invoke('print:exportPdf', path),
   },
+  csv: {
+    export: (entityType: string, options?: { delimiter?: string; encoding?: string }) =>
+      ipcRenderer.invoke('csv:export', { entityType, ...options }),
+  },
   backup: {
     backup: () => ipcRenderer.invoke('backup:backup'),
     restore: () => ipcRenderer.invoke('backup:restore'),
