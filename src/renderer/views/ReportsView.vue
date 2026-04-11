@@ -126,31 +126,124 @@
         </div>
       </div>
     </div>
+
+    <!-- Person Biography Tab -->
+    <div v-if="activeTab === 'biography'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls"></div>
+        <div class="print-actions">
+          <button class="btn-add btn-report-action" :disabled="!biographyPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!biographyPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="biographyPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <PersonBiography :person-id="biographyPersonId" />
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Place History Tab -->
+    <div v-if="activeTab === 'placeHistory'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls">
+          <label>
+            {{ $t('reports.place') }}
+            <select v-model="placeHistoryPlaceId">
+              <option value="" disabled>{{ $t('reports.selectPlace') }}</option>
+              <option v-for="p in allPlaces" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="print-actions">
+          <button class="btn-add btn-report-action" :disabled="!placeHistoryPlaceId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!placeHistoryPlaceId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="placeHistoryPlaceId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <PlaceHistory :place-id="placeHistoryPlaceId" />
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Family Narrative Tab -->
+    <div v-if="activeTab === 'familyNarrative'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls">
+          <label>
+            {{ $t('reports.couple') }}
+            <select v-model="familyNarrativeRelId">
+              <option value="" disabled>{{ $t('reports.selectCouple') }}</option>
+              <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">{{ rel.label }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="print-actions">
+          <button class="btn-add btn-report-action" :disabled="!familyNarrativeRelId" @click="printCurrent">{{ $t('reports.print') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!familyNarrativeRelId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="familyNarrativeRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <FamilyNarrative :relationship-id="familyNarrativeRelId" />
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import AncestorChartReport from '../components/reports/AncestorChartReport.vue';
 import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
+import PersonBiography from '../components/reports/PersonBiography.vue';
+import PlaceHistory from '../components/reports/PlaceHistory.vue';
+import FamilyNarrative from '../components/reports/FamilyNarrative.vue';
 
 interface RelationshipOption { id: string; label: string; }
 
 const { t } = useI18n();
+const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
   { id: 'individual', label: t('reports.tabIndividual') },
   { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
+  { id: 'biography', label: t('reports.tabBiography') },
+  { id: 'placeHistory', label: t('reports.tabPlaceHistory') },
+  { id: 'familyNarrative', label: t('reports.tabFamilyNarrative') },
 ]);
 
 const ancestorRootId = computed(() => focusStore.personId);
@@ -159,6 +252,10 @@ const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
 const individualPersonId = computed(() => focusStore.personId);
 const ancestorBookPersonId = computed(() => focusStore.personId);
+const biographyPersonId = computed(() => focusStore.personId);
+const placeHistoryPlaceId = ref('');
+const familyNarrativeRelId = ref('');
+const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 
 // --- Zoom ---
 // Natural preview width in px (A4 at 96dpi ≈ 794px).
@@ -200,6 +297,9 @@ watch(activeTab, triggerLoading);
 watch(ancestorRootId, triggerLoading);
 watch(individualPersonId, triggerLoading);
 watch(ancestorBookPersonId, triggerLoading);
+watch(biographyPersonId, triggerLoading);
+watch(placeHistoryPlaceId, triggerLoading);
+watch(familyNarrativeRelId, triggerLoading);
 
 onUnmounted(() => { if (ro) ro.disconnect(); });
 
@@ -219,11 +319,16 @@ async function getPersonName(id: string | null): Promise<string> {
 
 onMounted(async () => {
   if (!window.api) return;
-  const rels = (await window.api.relationships.list()) as Array<{
-    id: string; type: string;
-    person1_id: string | null;
-    person2_id: string | null;
-  }>;
+  const [rels, places] = await Promise.all([
+    window.api.relationships.list() as Promise<Array<{
+      id: string; type: string;
+      person1_id: string | null;
+      person2_id: string | null;
+    }>>,
+    window.api.places.list() as Promise<Array<{ id: string; name: string }>>,
+  ]);
+  allPlaces.value = places.sort((a, b) => a.name.localeCompare(b.name));
+
   const couples = rels.filter(r => r.type === 'couple');
   const options: RelationshipOption[] = [];
   for (const r of couples) {
@@ -232,6 +337,19 @@ onMounted(async () => {
     options.push({ id: r.id, label: `${name1} & ${name2}` });
   }
   coupleRelationships.value = options;
+
+  // Read query params for deep linking (e.g. /reports?tab=biography)
+  const tabParam = route.query.tab as string | undefined;
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative'];
+  if (tabParam && validTabs.includes(tabParam)) {
+    activeTab.value = tabParam as typeof activeTab.value;
+  }
+  if (route.query.placeId) {
+    placeHistoryPlaceId.value = route.query.placeId as string;
+  }
+  if (route.query.relationshipId) {
+    familyNarrativeRelId.value = route.query.relationshipId as string;
+  }
 });
 
 async function printCurrent() {

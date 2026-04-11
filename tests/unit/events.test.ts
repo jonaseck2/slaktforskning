@@ -5,11 +5,13 @@ import { createPerson } from '../../src/api/persons';
 import { createRelationship } from '../../src/api/relationships';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createSource, createCitation } from '../../src/api/sources';
+import { createPlace } from '../../src/api/places';
 import {
   createEvent,
   getEvent,
   getEventsForPerson,
   getEventsForRelationship,
+  getEventsForPlace,
   updateEvent,
   deleteEvent,
 } from '../../src/api/events';
@@ -139,5 +141,24 @@ describe('events', () => {
     const ev = createEvent(db, { event_type: 'mention', date_type: 'unknown' });
     expect(ev.event_type).toBe('mention');
     expect(getEvent(db, ev.id)?.event_type).toBe('mention');
+  });
+
+  it('gets events for a place with participant names', () => {
+    const place = createPlace(db, { name: 'Stockholm' });
+    const person = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const e1 = createEvent(db, { event_type: 'birth', date_value: '1800-01-01', place_id: place.id });
+    addEventParticipant(db, { event_id: e1.id, person_id: person.id, role: 'primary' });
+
+    const events = getEventsForPlace(db, place.id);
+    expect(events).toHaveLength(1);
+    expect(events[0].event_type).toBe('birth');
+    expect(events[0].participant_names).toContain('Erik');
+    expect(events[0].participant_names).toContain('Svensson');
+  });
+
+  it('getEventsForPlace returns empty for place with no events', () => {
+    const place = createPlace(db, { name: 'Empty Town' });
+    const events = getEventsForPlace(db, place.id);
+    expect(events).toHaveLength(0);
   });
 });

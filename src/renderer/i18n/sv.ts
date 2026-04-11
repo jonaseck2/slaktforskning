@@ -567,6 +567,12 @@ export default {
     exportPdf: 'PDF',
     zoomFit: 'Anpassa',
     tabAncestorBook: 'Stamtavla',
+    tabBiography: 'Biografi',
+    tabPlaceHistory: 'Platshistorik',
+    tabFamilyNarrative: 'Familjeberättelse',
+    place: 'Plats',
+    selectPlace: 'Välj plats\u2026',
+    selectPlaceFirst: 'Välj en plats för att visa förhandsgranskning.',
     ancestorBook: {
       pickPerson: 'Välj rotperson',
       noPersonSelected: 'Välj en person för att generera stamtavlan.',
