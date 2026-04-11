@@ -1012,6 +1012,8 @@ export default {
       partial: 'Delvis',
       ambiguous: 'Tvetydig',
     },
+    source: 'Källa',
+    fetched: 'hämtad',
   },
   undo: {
     createPerson: 'Skapa person',

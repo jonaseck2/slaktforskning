@@ -161,7 +161,7 @@ export async function importFromGenney(
       // Auto-enable Swedish parishes gazetteer if no config exists yet
       const existingConfig = getDbSetting(db, 'gazetteer_config');
       if (!existingConfig) {
-        setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['sv-parishes'] }));
+        setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['sv-socknar', 'sv-forsamlingar'] }));
       }
 
       db.exec('COMMIT');

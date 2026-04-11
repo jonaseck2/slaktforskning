@@ -7,10 +7,19 @@ export interface GazetteerNode {
   children?: GazetteerNode[];
 }
 
+export interface GazetteerSource {
+  name: string;          // e.g. "Wikidata"
+  url: string;           // e.g. "https://www.wikidata.org"
+  license: string;       // e.g. "CC0 1.0"
+  fetched: string;       // ISO date of last fetch, e.g. "2026-04-11"
+}
+
 export interface Gazetteer {
   id: string;
   name: string;
   locale: string;
+  description?: string;
+  source?: GazetteerSource;
   root: GazetteerNode;
 }
 
