@@ -84,24 +84,24 @@ Chronological media display across a person's life or a place's history.
 
 ### Steps
 
-- [ ] Create `src/api/media_timeline.ts`:
-  - [ ] `getMediaTimeline(db, entityType, entityId)` — returns media items with associated dates
-  - [ ] For persons: media linked to person or their events, dated by event date
-  - [ ] For places: media linked to events at this place, dated by event date
-  - [ ] Sort by date, group undated media separately
-- [ ] IPC channel: `media:getTimeline`
-- [ ] Create MediaTimeline.vue component:
-  - [ ] Horizontal scrollable timeline with year markers
-  - [ ] Thumbnail cards positioned by date along the timeline
-  - [ ] Undated section at the end
-  - [ ] Click thumbnail to open lightbox (B1)
-  - [ ] Hover shows event type + date
-- [ ] Add as tab/section in PersonDetailView ("Media Timeline" tab)
-- [ ] Add as section in PlaceDetailView
-- [ ] Wire into PersonPanel (collapsible section)
-- [ ] i18n for timeline labels and empty states
-- [ ] Handle date ranges: "between" dates span a range on the timeline
-- [ ] Handle approximate dates: "about 1920" shown with fuzzy positioning
+- [x] Create `src/api/media_timeline.ts`:
+  - [x] `getMediaTimeline(db, entityType, entityId)` — returns media items with associated dates
+  - [x] For persons: media linked to person or their events, dated by event date
+  - [x] For places: media linked to events at this place, dated by event date
+  - [x] Sort by date, group undated media separately
+- [x] IPC channel: `media:getTimeline`
+- [x] Create MediaTimeline.vue component:
+  - [x] Horizontal scrollable timeline with year markers
+  - [x] Thumbnail cards positioned by date along the timeline
+  - [x] Undated section at the end
+  - [x] Click thumbnail to open lightbox (B1)
+  - [x] Hover shows event type + date
+- [x] Add as tab/section in PersonDetailView ("Media Timeline" tab)
+- [x] Add as section in PlaceDetailView
+- [x] Wire into PersonPanel (collapsible section)
+- [x] i18n for timeline labels and empty states
+- [x] Handle date ranges: "between" dates span a range on the timeline
+- [x] Handle approximate dates: "about 1920" shown with fuzzy positioning
 
 ### Dependencies
 B1 (lightbox component for click-to-view).

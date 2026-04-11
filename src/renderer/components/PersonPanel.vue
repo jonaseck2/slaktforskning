@@ -160,6 +160,17 @@
         </div>
       </div>
 
+      <!-- Media Timeline section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('mediaTimeline')">
+          <span class="panel-chevron">{{ sections.mediaTimeline ? '▾' : '▸' }}</span>
+          {{ $t('mediaTimeline.title') }}
+        </button>
+        <div v-if="sections.mediaTimeline" class="panel-section-body">
+          <MediaTimeline entity-type="person" :entity-id="personId!" />
+        </div>
+      </div>
+
       <!-- Forskning section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('research')">
@@ -229,6 +240,7 @@ import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
 import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
+import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
@@ -302,6 +314,7 @@ const sections = reactive({
   research: loadSection('research', false),
   identifiers: loadSection('identifiers', false),
   media: loadSection('media', false),
+  mediaTimeline: loadSection('mediaTimeline', false),
   quality: loadSection('quality', false),
 });
 

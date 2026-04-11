@@ -20,6 +20,7 @@ import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
+import { getMediaTimeline } from '../api/media_timeline';
 import * as checks from '../api/checks';
 import * as duplicates from '../api/duplicates';
 import * as reportData from '../api/report_data';
@@ -400,6 +401,10 @@ export function registerIpcHandlers(): void {
   wrapHandler('media:addLink', (data) => media.addMediaLink(getDatabase(), data as Parameters<typeof media.addMediaLink>[1]));
   wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDatabase(), linkId as string));
   wrapHandler('media:reorder', (linkIds) => media.reorderMediaLinks(getDatabase(), linkIds as string[]));
+
+  wrapHandler('media:getTimeline', (entityType, entityId) =>
+    getMediaTimeline(getDatabase(), entityType as 'person' | 'place', entityId as string)
+  );
 
   wrapHandler('media:attach', async (data) => {
     const opts = data as { entityType?: string; entityId?: string } | undefined;

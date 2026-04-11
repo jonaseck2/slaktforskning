@@ -780,6 +780,11 @@ export default {
       search: 'Search media',
     },
   },
+  mediaTimeline: {
+    title: 'Media Timeline',
+    undated: 'Undated',
+    empty: 'No media',
+  },
   errors: {
     saveFailed: 'Could not save. Please try again.',
     deleteFailed: 'Could not delete. Please try again.',
