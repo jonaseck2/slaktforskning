@@ -16,6 +16,7 @@ import { isImportInProgress } from './import';
 
 export function registerUtilityHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,
+  getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
   // Groups
@@ -67,7 +68,8 @@ export function registerUtilityHandlers(
     }
     {
       const db = getDb();
-      const raw = checks.runAllChecks(db);
+      const dbDir = path.dirname(getCurrentDatabasePath());
+      const raw = checks.runAllChecks(db, dbDir);
       // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
       // can return 20k+ results for large trees, making the name-resolution query very slow.
       const countByCode = new Map<string, number>();
@@ -82,7 +84,10 @@ export function registerUtilityHandlers(
       return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
     }
   });
-  wrapHandler('checks:forPerson', (personId) => checks.runChecksForPerson(getDb(), personId as string));
+  wrapHandler('checks:forPerson', (personId) => {
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    return checks.runChecksForPerson(getDb(), personId as string, dbDir);
+  });
 
   // HTML Site Export
   wrapHandler('export:htmlSiteSelectDir', async () => {

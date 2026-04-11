@@ -1,5 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { existsSync } from 'fs';
+import path from 'path';
 import { queryAll } from '../db';
 import type { CheckResult } from './check-utils';
 import { haversineKm } from './check-utils';
@@ -54,14 +55,15 @@ export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkMediaFileMissing(db: Database): CheckResult[] {
+export function checkMediaFileMissing(db: Database, dbDir?: string): CheckResult[] {
   const rows = queryAll<{ id: string; file_ref: string }>(db, `
     SELECT id, file_ref FROM media WHERE file_ref IS NOT NULL AND file_ref != ''
   `);
 
   const results: CheckResult[] = [];
   for (const row of rows) {
-    if (!existsSync(row.file_ref)) {
+    const absPath = dbDir ? path.resolve(dbDir, row.file_ref) : row.file_ref;
+    if (!existsSync(absPath)) {
       // Find linked persons
       const links = queryAll<{ entity_type: string; entity_id: string }>(db, `
         SELECT entity_type, entity_id FROM media_links WHERE media_id = ?

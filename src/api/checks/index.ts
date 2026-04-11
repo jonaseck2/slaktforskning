@@ -50,7 +50,7 @@ import {
 // Public API
 // ---------------------------------------------------------------------------
 
-function runAllCheckFunctions(db: Database): CheckResult[] {
+function runAllCheckFunctions(db: Database, dbDir?: string): CheckResult[] {
   const results: CheckResult[] = [];
   console.log('[checks] runAllCheckFunctions starting');
   const t0 = Date.now();
@@ -102,7 +102,7 @@ function runAllCheckFunctions(db: Database): CheckResult[] {
   // G. Data Validation
   run('checkInvalidDates',          () => checkInvalidDates(db));
   run('checkUnrelatedPerson',       () => checkUnrelatedPerson(db));
-  run('checkMediaFileMissing',      () => checkMediaFileMissing(db));
+  run('checkMediaFileMissing',      () => checkMediaFileMissing(db, dbDir));
   run('checkOrphanedSource',        () => checkOrphanedSource(db));
   run('checkTextControlChars',      () => checkTextControlChars(db));
 
@@ -110,10 +110,10 @@ function runAllCheckFunctions(db: Database): CheckResult[] {
   return results;
 }
 
-export function runAllChecks(db: Database): CheckResult[] {
-  return runAllCheckFunctions(db);
+export function runAllChecks(db: Database, dbDir?: string): CheckResult[] {
+  return runAllCheckFunctions(db, dbDir);
 }
 
-export function runChecksForPerson(db: Database, personId: string): CheckResult[] {
-  return runAllCheckFunctions(db).filter(r => r.personIds.includes(personId));
+export function runChecksForPerson(db: Database, personId: string, dbDir?: string): CheckResult[] {
+  return runAllCheckFunctions(db, dbDir).filter(r => r.personIds.includes(personId));
 }

@@ -286,7 +286,9 @@ export function registerUtilityTools(server: McpServer, ctx: UtilityToolContext)
   server.registerTool('run_checks', {
     description: 'Run all data quality checks across the entire database and return a list of issues found',
   }, async () => {
-    const results = runAllChecks(getDb());
+    const { dirname } = await import('node:path');
+    const dbDir = dirname(getDbPath());
+    const results = runAllChecks(getDb(), dbDir);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
@@ -294,7 +296,9 @@ export function registerUtilityTools(server: McpServer, ctx: UtilityToolContext)
     description: 'Run data quality checks for a specific person and return any issues found',
     inputSchema: { id: z.string().describe('Person ID') },
   }, async ({ id }) => {
-    const results = runChecksForPerson(getDb(), id);
+    const { dirname } = await import('node:path');
+    const dbDir = dirname(getDbPath());
+    const results = runChecksForPerson(getDb(), id, dbDir);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
