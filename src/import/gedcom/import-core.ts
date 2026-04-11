@@ -1017,6 +1017,113 @@ function queryAll<T>(db: Database, sql: string): T[] {
  * On error the transaction is rolled back so no partial data is written.
  * Returns a ValidationReport with counts of what was imported and what was skipped.
  */
+export interface ImportPreview {
+  personCount: number;
+  relationshipCount: number;
+  eventCount: number;
+  sourceCount: number;
+  placeCount: number;
+  repositoryCount: number;
+  warnings: string[];
+  estimatedSize: 'small' | 'medium' | 'large';
+}
+
+/**
+ * Preview what a GEDCOM import would produce without writing to DB.
+ * Parses the tree and counts entities; no database writes occur.
+ */
+export function previewGedcomImport(tree: GedcomNode[]): ImportPreview {
+  const warnings: string[] = [];
+  let personCount = 0;
+  let familyCount = 0;
+  let eventCount = 0;
+  let sourceCount = 0;
+  let repositoryCount = 0;
+  const placeNames = new Set<string>();
+
+  for (const node of tree) {
+    switch (node.tag) {
+      case 'INDI': {
+        personCount++;
+        // Count person events
+        for (const child of node.children) {
+          if (PERSON_EVENT_TAGS[child.tag]) eventCount++;
+          if (child.tag === 'TITL') eventCount++; // TITL becomes occupation event
+        }
+        break;
+      }
+      case 'FAM': {
+        familyCount++;
+        // Count family events + children (parent_child rels)
+        for (const child of node.children) {
+          if (FAMILY_EVENT_TAGS[child.tag]) eventCount++;
+        }
+        break;
+      }
+      case 'SOUR': {
+        if (node.xref) sourceCount++;
+        break;
+      }
+      case 'REPO': {
+        if (node.xref) repositoryCount++;
+        break;
+      }
+    }
+  }
+
+  // Count approximate relationships: 1 couple per FAM + parent_child for each CHIL
+  let relationshipCount = familyCount; // couple relationships
+  for (const node of tree) {
+    if (node.tag !== 'FAM') continue;
+    const husb = node.children.find(c => c.tag === 'HUSB');
+    const wife = node.children.find(c => c.tag === 'WIFE');
+    const parentCount = (husb ? 1 : 0) + (wife ? 1 : 0);
+    const childCount = node.children.filter(c => c.tag === 'CHIL').length;
+    relationshipCount += childCount * parentCount; // parent_child rels
+  }
+
+  // Estimate unique places by scanning PLAC values
+  for (const node of tree) {
+    if (node.tag === 'INDI' || node.tag === 'FAM') {
+      for (const child of node.children) {
+        const plac = child.children?.find(c => c.tag === 'PLAC');
+        if (plac?.value) placeNames.add(plac.value);
+      }
+    }
+  }
+
+  // Check for known issues
+  const version = detectGedcomVersion(tree);
+  if (version === 'unknown') warnings.push('Could not detect GEDCOM version');
+
+  // Check for unknown tags
+  const unknownTags = new Map<string, number>();
+  const KNOWN_TOP_TAGS = new Set(['HEAD', 'TRLR', 'INDI', 'FAM', 'SOUR', 'NOTE', 'SNOTE', 'OBJE', 'REPO', 'SUBM', '_GRP', '_TODO', '_PLAC']);
+  for (const node of tree) {
+    if (!KNOWN_TOP_TAGS.has(node.tag) && node.level === 0) {
+      unknownTags.set(node.tag, (unknownTags.get(node.tag) ?? 0) + 1);
+    }
+  }
+  for (const [tag, count] of unknownTags) {
+    warnings.push(`Unknown top-level tag: ${tag} (${count} occurrences)`);
+  }
+
+  const totalEntities = personCount + familyCount + sourceCount;
+  const estimatedSize: 'small' | 'medium' | 'large' =
+    totalEntities < 50 ? 'small' : totalEntities < 500 ? 'medium' : 'large';
+
+  return {
+    personCount,
+    relationshipCount,
+    eventCount,
+    sourceCount,
+    placeCount: placeNames.size,
+    repositoryCount,
+    warnings,
+    estimatedSize,
+  };
+}
+
 export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): ValidationReport {
   // Compute rawCounts from original (pre-normalization) tree
   const rawCounts = {

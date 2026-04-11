@@ -77,6 +77,7 @@ const api = {
   },
   gedcom: {
     selectFile: () => ipcRenderer.invoke('gedcom:selectFile'),
+    preview: (opts?: { filePath?: string }) => ipcRenderer.invoke('gedcom:preview', opts),
     import: (opts?: unknown) => ipcRenderer.invoke('gedcom:import', opts),
     export: (opts?: { version?: string; exportOptions?: unknown }) => ipcRenderer.invoke('gedcom:export', opts),
   },

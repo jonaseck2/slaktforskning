@@ -1,0 +1,21 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBM
+1 NAME Test
+0 @I1@ INDI
+1 NAME Karl /Johansson/
+1 SEX M
+1 NOTE Line 1 of a very long note.
+2 CONT Line 2 continues here.
+2 CONT Line 3 continues here.
+2 CONT Line 4 continues here.
+2 CONT Line 5 continues here.
+2 CONT Line 6 continues here.
+2 CONT Line 7 continues here.
+2 CONT Line 8 continues here.
+2 CONT Line 9 continues here.
+2 CONT Line 10 continues here.
+2 CONC  (appended without newline)
+0 TRLR

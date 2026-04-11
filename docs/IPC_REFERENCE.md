@@ -103,6 +103,7 @@ window.api.db.openExisting()                       // → { path, name } | { can
 window.api.db.switchTo(path)                       // → { path: string, name: string }
 window.api.db.onSwitched(cb)                       // → void  (ipcRenderer.on listener)
 
+window.api.gedcom.preview(opts?: { filePath?: string })  // → { canceled, filePath, preview: ImportPreview }
 window.api.gedcom.import(opts?)                    // → import result
 window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exported, filePath, report } | { canceled: true }
 ```
@@ -196,5 +197,6 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `db:createNew` | `dialog.showSaveDialog` → `switchDatabase(path)` → broadcast `db:switched` |
 | `db:openExisting` | `dialog.showOpenDialog` → `switchDatabase(path)` → broadcast `db:switched` |
 | `db:switchTo` | `switchDatabase(path)` → broadcast `db:switched` |
+| `gedcom:preview` | Parse GEDCOM file → `previewGedcomImport(tree)` → `{ canceled, filePath, preview }` |
 | `gedcom:import` | `importGedcom(db, opts)` |
 | `gedcom:export` | `exportGedcom(db, version)` → Save dialog → `{ exported, filePath, report }` |
