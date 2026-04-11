@@ -185,7 +185,7 @@
           {{ $t('panel.events') }}
         </button>
         <div v-if="sections.events" class="panel-section-body">
-          <EventList :place-id="placeId!" hide-header readonly />
+          <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
         </div>
       </div>
 
