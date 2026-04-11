@@ -13,7 +13,12 @@ export function computeHourglassLayout(
   collapsed: Set<string> = new Set(),
   selectedPersonId?: string | null,
 ): ChartLayout {
-  const { ancestors, descendantRoot, descendantGenerations: M, spouses = [], siblings = [] } = tree;
+  const { ancestors, descendantGenerations: M, spouses = [], siblings = [] } = tree;
+  // Deep-clone descendant tree so child placeholder injection doesn't mutate the original
+  function cloneDescTree(node: DescendantNode): DescendantNode {
+    return { ...node, children: node.children.map(c => cloneDescTree(c)) };
+  }
+  const descendantRoot: DescendantNode = cloneDescTree(tree.descendantRoot);
   const { generations } = ancestors;
   const originalAncestorNodes = ancestors.nodes;
   const focalPerson = originalAncestorNodes.get(1);
@@ -44,13 +49,79 @@ export function computeHourglassLayout(
   const ancestorNodes = prunedAncestorNodes;
   const focalIsFemale = focalPerson?.sex === 'F';
 
+  // ── Inject placeholder ancestor nodes for selected person's missing parents ──
+  // These participate in the layout algorithm as normal nodes, then get
+  // converted to PlaceholderBox entries after positioning.
+  const PLACEHOLDER_PREFIX = '__ph_';
+  const placeholderKeys = new Set<number>();
+  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
+  let effectiveGenerations = generations;
+
+  if (selectedPersonId) {
+    const selectedK = [...ancestorNodes.entries()].find(([, p]) => p.id === selectedPersonId)?.[0];
+    if (selectedK !== undefined && !ancestorHasMore.has(selectedK)) {
+      const g = Math.floor(Math.log2(selectedK));
+      // Extend generation depth if needed to make room for parent placeholders
+      if (g >= effectiveGenerations - 1) {
+        effectiveGenerations = g + 2;
+      }
+      if (!ancestorNodes.has(selectedK * 2)) {
+        const k = selectedK * 2;
+        placeholderKeys.add(k);
+        ancestorNodes.set(k, {
+          id: PLACEHOLDER_PREFIX + 'father_' + selectedPersonId,
+          givenName: null, surname: null, preferredName: null, nickname: null,
+          sex: 'M', living: false, birthDate: null, deathDate: null,
+        });
+      }
+      if (!ancestorNodes.has(selectedK * 2 + 1)) {
+        const k = selectedK * 2 + 1;
+        placeholderKeys.add(k);
+        ancestorNodes.set(k, {
+          id: PLACEHOLDER_PREFIX + 'mother_' + selectedPersonId,
+          givenName: null, surname: null, preferredName: null, nickname: null,
+          sex: 'F', living: false, birthDate: null, deathDate: null,
+        });
+      }
+    }
+  }
+
   // Spouses may be collapsed via :right key (original) or :left key (female focal).
   const effectiveSpouses = (collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`)) ? [] : spouses;
 
   // Siblings on left use 'left' direction key, on right use 'right' direction key — with '__siblings__' co-parent marker.
   const siblingDir: 'left' | 'right' = focalIsFemale ? 'right' : 'left';
   const siblingCollapseKey = `${focalId}:${siblingDir}:__siblings__`;
-  const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : siblings;
+  const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : [...siblings];
+
+  // Inject child placeholder for the selected person — always, regardless of existing children.
+  // Try descendant tree first; fall back to sibling row for focal parents/siblings.
+  let childPlaceholderId: string | null = null;
+  if (selectedPersonId) {
+    childPlaceholderId = PLACEHOLDER_PREFIX + 'child_' + selectedPersonId;
+    const phChild: DescendantNode = {
+      person: {
+        id: childPlaceholderId,
+        givenName: null, surname: null, preferredName: null, nickname: null,
+        sex: 'U', living: false, birthDate: null, deathDate: null,
+      },
+      children: [],
+    };
+
+    // Try to find the selected person in the descendant tree and append child there.
+    // If not found (ancestor, sibling, spouse), add as a focal child so it appears
+    // in the descendant row below.
+    function injectChild(node: DescendantNode): boolean {
+      if (node.person.id === selectedPersonId) {
+        node.children = [...node.children, phChild];
+        return true;
+      }
+      return node.children.some(c => injectChild(c));
+    }
+    if (!injectChild(descendantRoot)) {
+      descendantRoot.children = [...descendantRoot.children, phChild];
+    }
+  }
 
   // Group focal's direct children by co-parent ID (set by chartData during fetch).
   const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
@@ -68,7 +139,7 @@ export function computeHourglassLayout(
   // Male focal: spouses right → siblings left. Female focal: spouses left → siblings right.
   const siblingsOnLeft = !focalIsFemale;
 
-  const A = generations - 1; // ancestor levels above focal
+  const A = effectiveGenerations - 1; // ancestor levels above focal
 
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
@@ -482,7 +553,6 @@ export function computeHourglassLayout(
   }
   indexDescendants(descendantRoot);
 
-  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
   const collapseButtons: CollapseButton[] = [];
 
   for (const box of boxes) {
@@ -579,152 +649,65 @@ export function computeHourglassLayout(
     }
   }
 
-  // ── Placeholder ghost boxes for selected person ──────────────────────────
+  // ── Extract placeholder boxes from layout ─────────────────────────────────
+  // Virtual nodes injected above were laid out as real boxes by the algorithm.
+  // Now extract them into PlaceholderBox entries and separate their connector
+  // lines into dashed placeholderLines.
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
+  const placeholderPersonIds = new Set<string>();
 
-  // Helper: find the nearest free X for a placeholder at a given Y row,
-  // avoiding overlap with existing boxes. Tries preferred direction first,
-  // falls back to opposite direction, picks whichever is closest to preferred.
-  function findFreeX(preferredX: number, rowY: number): number {
-    const rowBoxes = boxes.filter(b => Math.abs(b.y - rowY) < BOX_H);
-    const overlaps = (x: number) => rowBoxes.some(b => x < b.x + b.w + V_GAP && x + BOX_W > b.x - V_GAP);
-    if (!overlaps(preferredX)) return preferredX;
-    const step = BOX_W + V_GAP;
-    // Search outward in both directions, return closest
-    for (let dist = 1; dist <= 20; dist++) {
-      const right = preferredX + dist * step;
-      if (!overlaps(right)) return right;
-      const left = preferredX - dist * step;
-      if (!overlaps(left)) return left;
+  // Collect all placeholder person IDs
+  for (const k of placeholderKeys) {
+    const person = ancestorNodes.get(k);
+    if (person) placeholderPersonIds.add(person.id);
+  }
+  if (childPlaceholderId) placeholderPersonIds.add(childPlaceholderId);
+
+  // Convert placeholder boxes and remove from regular boxes
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const box = boxes[i];
+    if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
+    const pid = box.person.id;
+    let role: 'father' | 'mother' | 'child';
+    let childPersonId: string;
+    if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
+      role = 'father';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'father_').length);
+    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'mother_')) {
+      role = 'mother';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'mother_').length);
+    } else {
+      role = 'child';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'child_').length);
     }
-    return preferredX;
+    placeholders.push({
+      type: 'placeholder', role, childPersonId,
+      x: box.x, y: box.y,
+    });
+    boxes.splice(i, 1);
   }
 
-  if (selectedPersonId) {
-    const selectedBox = boxes.find(b => b.person.id === selectedPersonId);
-    const selectedK = selectedPersonId
-      ? [...ancestorNodes.entries()].find(([, p]) => p.id === selectedPersonId)?.[0]
-      : undefined;
-
-    if (selectedBox) {
-      const boxCX = selectedBox.x + BOX_W / 2;
-
-      // Parent placeholders (above) — only for ancestor-section persons missing parents
-      if (selectedK !== undefined) {
-        const g = Math.floor(Math.log2(selectedK));
-        const hasFather = ancestorNodes.has(selectedK * 2);
-        const hasMother = ancestorNodes.has(selectedK * 2 + 1);
-        const isAtMaxGen = g >= A;
-        const hasMoreFlag = ancestorHasMore.has(selectedK);
-
-        if (!isAtMaxGen && !hasMoreFlag && !(hasFather && hasMother)) {
-          const parentRowYVal = ancestorRowY(g + 1);
-          const halfSpan = (BOX_W + V_GAP) / 2;
-          const forkY = selectedBox.y - GEN_GAP / 2;
-
-          if (!hasFather) {
-            const preferredX = boxCX - halfSpan - BOX_W / 2;
-            const phX = findFreeX(preferredX, parentRowYVal);
-            placeholders.push({
-              type: 'placeholder', role: 'father',
-              childPersonId: selectedPersonId,
-              key: selectedK * 2,
-              x: phX, y: parentRowYVal,
-            });
-            const phCX = phX + BOX_W / 2;
-            placeholderLines.push({ x1: boxCX, y1: selectedBox.y, x2: boxCX, y2: forkY });
-            placeholderLines.push({ x1: phCX, y1: forkY, x2: boxCX, y2: forkY });
-            placeholderLines.push({ x1: phCX, y1: parentRowYVal + BOX_H, x2: phCX, y2: forkY });
-          }
-
-          if (!hasMother) {
-            const preferredX = boxCX + halfSpan - BOX_W / 2;
-            const phX = findFreeX(preferredX, parentRowYVal);
-            placeholders.push({
-              type: 'placeholder', role: 'mother',
-              childPersonId: selectedPersonId,
-              key: selectedK * 2 + 1,
-              x: phX, y: parentRowYVal,
-            });
-            const phCX = phX + BOX_W / 2;
-            placeholderLines.push({ x1: boxCX, y1: selectedBox.y, x2: boxCX, y2: forkY });
-            placeholderLines.push({ x1: phCX, y1: forkY, x2: boxCX, y2: forkY });
-            placeholderLines.push({ x1: phCX, y1: parentRowYVal + BOX_H, x2: phCX, y2: forkY });
-          }
-        }
-      }
-
-      // Child placeholder — for focal, focal's direct parents (k=2,3), and descendant nodes
-      const descNode = descNodeMap.get(selectedPersonId);
-      const isFocal = selectedK === 1;
-      const isFocalParent = selectedK === 2 || selectedK === 3;
-
-      if (isFocal || isFocalParent || descNode) {
-        // For focal parents, their children are the focal's siblings at the sibling row
-        const hasChildren = isFocal
-          ? descendantRoot.children.length > 0
-          : isFocalParent
-            ? true // focal parent always has children (the focal + siblings)
-            : (descNode?.children.length ?? 0) > 0;
-
-        if (!hasChildren) {
-          let depth = 0;
-          if (isFocal) {
-            depth = 0;
-          } else if (descNode) {
-            depth = Math.round((selectedBox.y - focalRowY) / (BOX_H + GEN_GAP));
-          }
-
-          const childRowY = descRowY(depth + 1);
-          const phX = boxCX - BOX_W / 2;
-          placeholders.push({
-            type: 'placeholder', role: 'child',
-            childPersonId: selectedPersonId,
-            x: phX, y: childRowY,
-          });
-          const forkY = selectedBox.y + BOX_H + GEN_GAP / 2;
-          placeholderLines.push({ x1: boxCX, y1: selectedBox.y + BOX_H, x2: boxCX, y2: forkY });
-          placeholderLines.push({ x1: boxCX, y1: forkY, x2: boxCX, y2: childRowY });
-        }
-
-        // For focal parents who already have children: place "add child" at end of sibling row
-        if (isFocalParent && hasChildren) {
-          const siblingRow = focalRowY; // siblings are at the focal row
-          // Find rightmost or leftmost sibling/focal box to place placeholder next to it
-          const rowBoxes = boxes.filter(b => Math.abs(b.y - siblingRow) < BOX_H);
-          if (rowBoxes.length > 0) {
-            const rightmostBox = rowBoxes.reduce((a, b) => a.x + a.w > b.x + b.w ? a : b);
-            const phX = rightmostBox.x + rightmostBox.w + V_GAP;
-            placeholders.push({
-              type: 'placeholder', role: 'child',
-              childPersonId: selectedPersonId,
-              x: phX, y: siblingRow,
-            });
-            // Connector from the parent fork down to the placeholder
-            const parentForkY = siblingRow - GEN_GAP / 2;
-            const phCX = phX + BOX_W / 2;
-            placeholderLines.push({ x1: phCX, y1: parentForkY, x2: phCX, y2: siblingRow });
-          }
-        }
-      }
-    }
-  }
-
-  // Deduplicate placeholder lines that overlap with existing solid lines
-  const lineSet = new Set(lines.map(l => `${l.x1},${l.y1},${l.x2},${l.y2}`));
-  const uniquePlaceholderLines = placeholderLines.filter(l => !lineSet.has(`${l.x1},${l.y1},${l.x2},${l.y2}`));
-
-  // Expand SVG dimensions to include placeholders
-  let viewBoxMinY = 0;
-  let finalHeight = svgHeight;
-  let finalWidth = svgWidth;
+  // Convert solid connector lines touching placeholder boxes into dashed lines.
+  // A line touches a placeholder if it connects to a placeholder's center X/Y.
+  const phCenters = new Set<string>();
   for (const ph of placeholders) {
-    viewBoxMinY = Math.min(viewBoxMinY, ph.y - PAD);
-    finalHeight = Math.max(finalHeight, ph.y + BOX_H + PAD);
-    finalWidth = Math.max(finalWidth, ph.x + BOX_W + PAD);
+    const cx = ph.x + BOX_W / 2;
+    const cy = ph.y + BOX_H / 2;
+    const top = ph.y;
+    const bottom = ph.y + BOX_H;
+    // Lines connect to box center X at top or bottom
+    phCenters.add(`${cx},${top}`);
+    phCenters.add(`${cx},${bottom}`);
   }
-  if (viewBoxMinY < 0) finalHeight += -viewBoxMinY;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const ln = lines[i];
+    const touchesStart = phCenters.has(`${ln.x1},${ln.y1}`) || phCenters.has(`${ln.x2},${ln.y2}`);
+    if (touchesStart) {
+      placeholderLines.push(ln);
+      lines.splice(i, 1);
+    }
+  }
 
-  return { boxes, lines, svgWidth: finalWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
+  return { boxes, lines, svgWidth, svgHeight, viewBoxMinY: 0, collapseButtons, placeholders, placeholderLines };
 }
