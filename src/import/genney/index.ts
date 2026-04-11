@@ -23,6 +23,7 @@ import { spawn, spawnSync } from 'child_process';
 import { Worker } from 'worker_threads';
 import type { Database } from 'node-sqlite3-wasm';
 import { transformGenney, type GenneyTables, type ImportSummary } from './transform';
+import { getDbSetting, setDbSetting } from '../../api/db_settings';
 // parseNdJson is used inside PARSE_WORKER_CODE (eval worker), not imported directly
 
 // Parses NDJSON off the main thread using an eval worker (no build changes needed).
@@ -156,6 +157,13 @@ export async function importFromGenney(
     let summary: ImportSummary;
     try {
       summary = transformGenney(db, tables, { mediaDir: effectiveMediaDir });
+
+      // Auto-enable Swedish parishes gazetteer if no config exists yet
+      const existingConfig = getDbSetting(db, 'gazetteer_config');
+      if (!existingConfig) {
+        setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['sv-parishes'] }));
+      }
+
       db.exec('COMMIT');
     } catch (transformErr) {
       try { db.exec('ROLLBACK'); } catch { /* ignore */ }
