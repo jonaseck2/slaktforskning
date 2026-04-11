@@ -140,19 +140,21 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
   }
 }
 
-/** Find a TreePerson by person ID anywhere in the tree. */
-function findPerson(node: TreePerson, id: string): TreePerson | null {
+/** Find a TreePerson by person ID anywhere in the tree (handles cycles). */
+function findPerson(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
   if (node.person.id === id) return node;
+  if (visited.has(node.person.id)) return null;
+  visited.add(node.person.id);
   for (const parent of node.parents) {
-    const found = findPerson(parent, id);
+    const found = findPerson(parent, id, visited);
     if (found) return found;
   }
   for (const child of node.children) {
-    const found = findPerson(child, id);
+    const found = findPerson(child, id, visited);
     if (found) return found;
   }
   for (const spouse of node.spouses) {
-    const found = findPerson(spouse, id);
+    const found = findPerson(spouse, id, visited);
     if (found) return found;
   }
   return null;
