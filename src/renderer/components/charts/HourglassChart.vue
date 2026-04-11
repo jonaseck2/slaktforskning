@@ -88,30 +88,32 @@
             >+</text>
           </g>
         </g>
-        <g
-          v-for="btn in layout.collapseButtons"
-          :key="`${btn.personId}:${btn.direction}:${btn.coParentId ?? ''}`"
-          class="collapse-btn"
-          @click.stop="handleCollapseButton(btn)"
-        >
-          <circle
-            :cx="btn.cx" :cy="btn.cy" r="8"
-            :fill="btn.isExpanded ? 'white' : '#888'"
-            :stroke="btn.isExpanded ? '#aaa' : '#555'"
-            stroke-width="1.5"
-          />
-          <text
-            :x="btn.cx" :y="btn.cy"
-            text-anchor="middle" dominant-baseline="central"
-            font-size="9"
-            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="btn.isExpanded ? '#666' : 'white'"
-            style="pointer-events: none; user-select: none;"
-          >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
-        </g>
+        <template v-if="!readonly">
+          <g
+            v-for="btn in layout.collapseButtons"
+            :key="`${btn.personId}:${btn.direction}:${btn.coParentId ?? ''}`"
+            class="collapse-btn"
+            @click.stop="handleCollapseButton(btn)"
+          >
+            <circle
+              :cx="btn.cx" :cy="btn.cy" r="8"
+              :fill="btn.isExpanded ? 'white' : '#888'"
+              :stroke="btn.isExpanded ? '#aaa' : '#555'"
+              stroke-width="1.5"
+            />
+            <text
+              :x="btn.cx" :y="btn.cy"
+              text-anchor="middle" dominant-baseline="central"
+              font-size="9"
+              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+              :fill="btn.isExpanded ? '#666' : 'white'"
+              style="pointer-events: none; user-select: none;"
+            >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
+          </g>
+        </template>
       </svg>
     </div>
-    <div class="zoom-controls">
+    <div v-if="!readonly" class="zoom-controls">
       <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" @click="zoomOut">−</button>
@@ -122,7 +124,7 @@
 
     <!-- Add popover -->
     <div
-      v-if="addPopover"
+      v-if="!readonly && addPopover"
       class="add-popover"
       :style="{ left: addPopover.x + 'px', top: addPopover.y + 'px' }"
       @click.stop
