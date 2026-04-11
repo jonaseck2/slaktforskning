@@ -2,10 +2,10 @@
   <div class="map-view">
     <div class="header">
       <h2>{{ $t('map.title') }}</h2>
-      <span class="count-label">{{ placesWithCoords.length }} {{ $t('places.title').toLowerCase() }}</span>
+      <span class="count-label">{{ filteredPlaces.length }} {{ $t('places.title').toLowerCase() }}</span>
     </div>
 
-    <div v-if="filterText || placesWithCoords.length > 0" class="map-toolbar">
+    <div v-if="filterText || allDisplayPlaces.length > 0" class="map-toolbar">
       <input
         v-model="filterText"
         type="text"
@@ -37,11 +37,16 @@
         <LMarker
           v-for="p in filteredPlaces"
           :key="p.id"
-          :lat-lng="[p.latitude!, p.longitude!]"
+          :lat-lng="[p.displayLat, p.displayLon]"
+          :options="p.resolved ? { opacity: 0.65 } : {}"
         >
           <LPopup>
             <router-link :to="'/places/' + p.id" class="popup-link">{{ p.name }}</router-link>
             <div v-if="p.place_type" class="popup-type">{{ $t('placeTypes.' + p.place_type) }}</div>
+            <div v-if="p.resolved" class="popup-resolved">
+              <span :class="'match-' + p.resolved.matchQuality">{{ $t('gazetteers.match.' + p.resolved.matchQuality) }}</span>
+              <span class="match-path">{{ p.resolved.matchedPath.join(' > ') }}</span>
+            </div>
           </LPopup>
         </LMarker>
       </LMap>
@@ -54,6 +59,8 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
+import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
 
 // Fix default marker icons for Vite bundler
 delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
@@ -71,29 +78,48 @@ interface PlaceRow {
   longitude: number | null;
 }
 
+interface DisplayPlace extends PlaceRow {
+  displayLat: number;
+  displayLon: number;
+  resolved?: PlaceResolveResult;
+}
+
 const places = ref<PlaceRow[]>([]);
 const filterText = ref('');
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const { ready: resolverReady, ensureLoaded, resolve } = usePlaceResolver();
 
-const placesWithCoords = computed(() =>
-  places.value.filter(p => p.latitude != null && p.longitude != null)
-);
+const allDisplayPlaces = computed<DisplayPlace[]>(() => {
+  const result: DisplayPlace[] = [];
+  for (const p of places.value) {
+    if (p.latitude != null && p.longitude != null) {
+      result.push({ ...p, displayLat: p.latitude, displayLon: p.longitude });
+    } else if (resolverReady.value) {
+      const resolved = resolve(p.name);
+      if (resolved) {
+        result.push({ ...p, displayLat: resolved.lat, displayLon: resolved.lon, resolved });
+      }
+    }
+  }
+  return result;
+});
 
-const placesWithoutCoords = computed(() =>
-  places.value.filter(p => p.latitude == null || p.longitude == null).length
-);
+const placesWithoutCoords = computed(() => {
+  const displayIds = new Set(allDisplayPlaces.value.map(p => p.id));
+  return places.value.filter(p => !displayIds.has(p.id)).length;
+});
 
 const filteredPlaces = computed(() => {
   const q = filterText.value.trim().toLowerCase();
-  if (!q) return placesWithCoords.value;
-  return placesWithCoords.value.filter(p => p.name.toLowerCase().includes(q));
+  if (!q) return allDisplayPlaces.value;
+  return allDisplayPlaces.value.filter(p => p.name.toLowerCase().includes(q));
 });
 
 function fitBounds() {
   nextTick(() => {
     const map = mapRef.value?.leafletObject;
     if (!map || filteredPlaces.value.length === 0) return;
-    const bounds = filteredPlaces.value.map(p => [p.latitude!, p.longitude!] as [number, number]);
+    const bounds = filteredPlaces.value.map(p => [p.displayLat, p.displayLon] as [number, number]);
     if (bounds.length === 1) {
       map.setView(bounds[0], 10);
     } else {
@@ -108,6 +134,7 @@ watch(filteredPlaces, () => {
 
 onMounted(async () => {
   places.value = (await window.api.places.list()) as PlaceRow[];
+  await ensureLoaded();
 });
 </script>
 
@@ -155,5 +182,28 @@ onMounted(async () => {
   font-size: var(--font-xs);
   color: #666;
   margin-top: 2px;
+}
+.popup-resolved {
+  font-size: var(--font-xs);
+  margin-top: 4px;
+  border-top: 1px solid #eee;
+  padding-top: 4px;
+}
+.match-exact {
+  color: #22c55e;
+  font-weight: 600;
+}
+.match-partial {
+  color: #f59e0b;
+  font-weight: 600;
+}
+.match-ambiguous {
+  color: #ef4444;
+  font-weight: 600;
+}
+.match-path {
+  display: block;
+  color: #666;
+  font-size: var(--font-xs);
 }
 </style>
