@@ -252,6 +252,10 @@ export function narratePageEntry(
       return t('screenReader.navImportExport');
     case 'search':
       return t('screenReader.navSearch');
+    case 'map':
+      return t('screenReader.navMap');
+    case 'linkRules':
+      return t('screenReader.navLinkRules');
     default:
       return t('screenReader.navPersonsList', { count });
   }

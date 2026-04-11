@@ -918,6 +918,8 @@ export default {
     navImportExport: 'Import and export',
     navDatabase: 'Database settings',
     navSearch: 'Search, type to find persons',
+    navMap: 'Map view',
+    navLinkRules: 'Link rules view',
     navHome: 'Home, {name}',
     navPersonDetail: 'Person detail: {name}, {sex}, {summary}. {sectionCount} sections available. Press 1 through {sectionCount} to jump to a section, or Tab to move through.',
     navRelationshipDetail: 'Relationship detail: {summary}',
