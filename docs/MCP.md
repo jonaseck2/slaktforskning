@@ -130,6 +130,14 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | get_media_for_entity | Get all media linked to an entity |
 | remove_media_link | Remove a media link by its link ID |
 
+### Media AI
+
+| Tool | Description |
+|------|-------------|
+| get_media_file_base64 | Get a media file as base64 for vision processing. Optionally downscale large images. |
+| get_untagged_media | List media items with no person links, ordered by connection count. Use for batch photo tagging workflows. |
+| get_media_for_person_context | Find media that might contain a specific person based on event and relationship links. |
+
 ### Database
 
 | Tool | Description |
