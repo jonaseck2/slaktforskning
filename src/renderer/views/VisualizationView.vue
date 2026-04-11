@@ -22,6 +22,11 @@
         data-testid="tab-hourglass" @click="setTab('hourglass')"
       >{{ $t('visualization.tab.hourglass') }}</button>
       <button
+        role="tab" :aria-selected="activeTab === 'descendants'"
+        :class="['tab-btn', { active: activeTab === 'descendants' }]"
+        data-testid="tab-descendants" @click="setTab('descendants')"
+      >{{ $t('visualization.tab.descendants') }}</button>
+      <button
         role="tab" :aria-selected="activeTab === 'timeline'"
         :class="['tab-btn', { active: activeTab === 'timeline' }]"
         data-testid="tab-timeline" @click="setTab('timeline')"
@@ -72,6 +77,12 @@
           @navigate="navigateTo"
           @reload="reloadChart"
         />
+        <DescendantChart
+          v-if="activeTab === 'descendants'"
+          :person-id="personId"
+          @navigate="navigateTo"
+          @reload="reloadChart"
+        />
         <TimelineChart
           v-if="activeTab === 'timeline'"
           :person-id="personId"
@@ -111,6 +122,7 @@ import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import PedigreeListView from '../components/charts/PedigreeListView.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
+import DescendantChart from '../components/charts/DescendantChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
@@ -139,7 +151,7 @@ const chartKey = ref(0);
 // Selected node in the chart (may differ from chart focal person)
 const selectedPersonId = ref<string | null>(null);
 
-type TabName = 'pedigree' | 'circle' | 'hourglass' | 'timeline';
+type TabName = 'pedigree' | 'circle' | 'hourglass' | 'descendants' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
 
 // Pedigree list/chart toggle

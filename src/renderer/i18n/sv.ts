@@ -387,6 +387,7 @@ export default {
       pedigree: 'Stamtavla',
       circle: 'Cirkel',
       hourglass: 'Timglas',
+      descendants: 'Efterkommande',
       timeline: 'Tidslinje',
     },
     generation: {
