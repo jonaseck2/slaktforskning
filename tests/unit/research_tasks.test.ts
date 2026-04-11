@@ -112,6 +112,42 @@ describe('tasks for person', () => {
     expect(getResearchTasksForPerson(db, person.id)).toHaveLength(0);
   });
 
+  it('updates individual fields: priority', () => {
+    const task = createResearchTask(db, { task: 'Test task', priority: 1 });
+    const updated = updateResearchTask(db, task.id, { priority: 5 });
+    expect(updated?.priority).toBe(5);
+  });
+
+  it('updates individual fields: task text', () => {
+    const task = createResearchTask(db, { task: 'Original task' });
+    const updated = updateResearchTask(db, task.id, { task: 'Updated task' });
+    expect(updated?.task).toBe('Updated task');
+  });
+
+  it('updates individual fields: notes', () => {
+    const task = createResearchTask(db, { task: 'Test', notes: 'old notes' });
+    const updated = updateResearchTask(db, task.id, { notes: 'new notes' });
+    expect(updated?.notes).toBe('new notes');
+  });
+
+  it('updates person_id on a task', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Test' });
+    const task = createResearchTask(db, { task: 'General task' });
+    expect(task.person_id).toBeNull();
+
+    const updated = updateResearchTask(db, task.id, { person_id: person.id });
+    expect(updated?.person_id).toBe(person.id);
+  });
+
+  it('clears person_id with null', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Test' });
+    const task = createResearchTask(db, { task: 'Linked', person_id: person.id });
+    expect(task.person_id).toBe(person.id);
+
+    const updated = updateResearchTask(db, task.id, { person_id: null });
+    expect(updated?.person_id).toBeNull();
+  });
+
   it('cascades delete: removing person removes their tasks', () => {
     const person = createPerson(db, { given_name: 'Lars', surname: 'Svensson' });
     const task = createResearchTask(db, { task: 'Find birth', person_id: person.id });

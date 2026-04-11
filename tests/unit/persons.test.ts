@@ -22,10 +22,12 @@ import {
   listUnsourcedPersonsPage,
   countUnsourcedPersons,
   searchPersonsWithDetails,
+  getPersonDisplayNames,
 } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createSource, createCitation } from '../../src/api/sources';
+import { createPlace } from '../../src/api/places';
 
 let db: Database.Database;
 
@@ -432,5 +434,68 @@ describe('preferred name marker integration', () => {
     const updated = updatePersonName(db, names[0].id, { given_name: 'Johan Erik*' });
     expect(updated!.given_name).toBe('Johan Erik');
     expect(updated!.preferred_name).toBe('Erik');
+  });
+});
+
+describe('getPersonDisplayNames', () => {
+  it('returns empty map for empty ids', () => {
+    const map = getPersonDisplayNames(db, []);
+    expect(map.size).toBe(0);
+  });
+
+  it('returns display names for multiple persons', () => {
+    const p1 = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const p2 = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+
+    const map = getPersonDisplayNames(db, [p1.id, p2.id]);
+    expect(map.size).toBe(2);
+    expect(map.get(p1.id)).toBe('Erik Svensson');
+    expect(map.get(p2.id)).toBe('Anna Berg');
+  });
+
+  it('returns ? for person with no name', () => {
+    const p = createPerson(db, {});
+    const map = getPersonDisplayNames(db, [p.id]);
+    // Person has no names, so not in query result
+    expect(map.has(p.id)).toBe(false);
+  });
+
+  it('uses primary name (lowest sort_order)', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Ahnstedt', name_type: 'married' });
+
+    const map = getPersonDisplayNames(db, [p.id]);
+    expect(map.get(p.id)).toBe('Anna Nord');
+  });
+});
+
+describe('listPersonsPage with places', () => {
+  it('includes birth and death place names', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M' });
+    const birthPlace = createPlace(db, { name: 'Stockholm' });
+    const deathPlace = createPlace(db, { name: 'Göteborg' });
+    const birth = createEvent(db, { event_type: 'birth', date_original: '1900-01-01', place_id: birthPlace.id });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+    const death = createEvent(db, { event_type: 'death', date_original: '1980-06-15', place_id: deathPlace.id });
+    addEventParticipant(db, { event_id: death.id, person_id: p.id, role: 'primary' });
+
+    const result = listPersonsPage(db, 100, 0);
+    const row = result.find(r => r.id === p.id)!;
+    expect(row.birth_place).toBe('Stockholm');
+    expect(row.death_place).toBe('Göteborg');
+    expect(row.birth_date).toBe('1900-01-01');
+    expect(row.death_date).toBe('1980-06-15');
+  });
+
+  it('listUnsourcedPersonsPage includes birth/death place names', () => {
+    const p = createPerson(db, { given_name: 'Unsourced', surname: 'WithPlace' });
+    const place = createPlace(db, { name: 'Malmö' });
+    const birth = createEvent(db, { event_type: 'birth', date_original: '1850-03-20', place_id: place.id });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+
+    const result = listUnsourcedPersonsPage(db, 100, 0);
+    const row = result.find(r => r.id === p.id)!;
+    expect(row.birth_place).toBe('Malmö');
+    expect(row.birth_date).toBe('1850-03-20');
   });
 });

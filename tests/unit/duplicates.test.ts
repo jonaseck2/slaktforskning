@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Database } from 'node-sqlite3-wasm';
 import { createTestDb } from './helpers';
 import { findDuplicates, mergePersons } from '../../src/api/duplicates';
-import { createPerson, addPersonName, getPersonNames, getPerson } from '../../src/api/persons';
+import { createPerson, addPersonName, getPersonNames, getPerson, addPersonIdentifier, getPersonIdentifiers } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant, getEventParticipants, createRelationship, getRelationshipsOfPerson } from '../../src/api/relationships';
 import { createSource, createCitation, getCitationsForPerson } from '../../src/api/sources';
@@ -161,5 +161,124 @@ describe('mergePersons', () => {
   it('throws when merging with self', () => {
     const p = createPerson(db, { given_name: 'Erik', surname: 'A' });
     expect(() => mergePersons(db, p.id, p.id)).toThrow('Cannot merge a person with themselves');
+  });
+
+  it('throws for nonexistent target', () => {
+    const source = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    expect(() => mergePersons(db, 'nonexistent', source.id)).toThrow('Target person not found');
+  });
+
+  it('throws for nonexistent source', () => {
+    const target = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    expect(() => mergePersons(db, target.id, 'nonexistent')).toThrow('Source person not found');
+  });
+
+  it('skips duplicate group memberships', () => {
+    const target = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    const source = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    const group = createGroup(db, { name: 'Test Group' });
+    addGroupMember(db, group.id, target.id);
+    addGroupMember(db, group.id, source.id);
+
+    const result = mergePersons(db, target.id, source.id);
+    expect(result.moved.group_members).toBe(0); // both in same group
+
+    expect(getGroupsForPerson(db, target.id)).toHaveLength(1);
+  });
+
+  it('skips duplicate identifiers during merge', () => {
+    const target = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    const source = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    addPersonIdentifier(db, target.id, { identifier_type: 'familysearch', identifier_value: 'FS-123' });
+    addPersonIdentifier(db, source.id, { identifier_type: 'familysearch', identifier_value: 'FS-123' });
+
+    const result = mergePersons(db, target.id, source.id);
+    expect(result.moved.person_identifiers).toBe(0);
+
+    expect(getPersonIdentifiers(db, target.id)).toHaveLength(1);
+  });
+
+  it('does not merge notes when source has no notes', () => {
+    const target = createPerson(db, { given_name: 'Erik', surname: 'A', notes: 'Keep this' });
+    const source = createPerson(db, { given_name: 'Erik', surname: 'A' });
+
+    mergePersons(db, target.id, source.id);
+    const merged = getPerson(db, target.id)!;
+    expect(merged.notes).toBe('Keep this');
+  });
+
+  it('keeps target sex when source also has a known sex', () => {
+    const target = createPerson(db, { given_name: 'Erik', surname: 'A', sex: 'M' });
+    const source = createPerson(db, { given_name: 'Erik', surname: 'A', sex: 'F' });
+
+    mergePersons(db, target.id, source.id);
+    const merged = getPerson(db, target.id)!;
+    expect(merged.sex).toBe('M'); // target sex preserved
+  });
+});
+
+describe('findDuplicates edge cases', () => {
+  it('detects given_name_prefix matches', () => {
+    createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    createPerson(db, { given_name: 'Erik Johan', surname: 'Svensson', sex: 'M' });
+
+    const dupes = findDuplicates(db);
+    expect(dupes).toHaveLength(1);
+    expect(dupes[0].reasons).toContain('given_name_prefix');
+  });
+
+  it('boosts score for same_birth_year (different dates)', () => {
+    const p1 = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const p2 = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+
+    const e1 = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1838-03-15' });
+    addEventParticipant(db, { event_id: e1.id, person_id: p1.id, role: 'primary' });
+    const e2 = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1838-07-20' });
+    addEventParticipant(db, { event_id: e2.id, person_id: p2.id, role: 'primary' });
+
+    const dupes = findDuplicates(db);
+    expect(dupes).toHaveLength(1);
+    expect(dupes[0].reasons).toContain('same_birth_year');
+  });
+
+  it('penalizes different birth years', () => {
+    const p1 = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const p2 = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+
+    const e1 = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1838-03-15' });
+    addEventParticipant(db, { event_id: e1.id, person_id: p1.id, role: 'primary' });
+    const e2 = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1870-07-20' });
+    addEventParticipant(db, { event_id: e2.id, person_id: p2.id, role: 'primary' });
+
+    const dupes = findDuplicates(db);
+    // 30 (surname) + 40 (given) - 30 (diff birth) = 40, below 50 threshold
+    expect(dupes).toHaveLength(0);
+  });
+
+  it('penalizes completely different given names', () => {
+    createPerson(db, { given_name: 'Anna', surname: 'Svensson', sex: 'F' });
+    createPerson(db, { given_name: 'Karin', surname: 'Svensson', sex: 'F' });
+
+    const dupes = findDuplicates(db);
+    // 30 (surname) - 20 (different given) = 10, below threshold
+    expect(dupes).toHaveLength(0);
+  });
+
+  it('skips persons with empty surname', () => {
+    createPerson(db, { given_name: 'Erik' });
+    createPerson(db, { given_name: 'Erik' });
+
+    const dupes = findDuplicates(db);
+    expect(dupes).toHaveLength(0);
+  });
+
+  it('respects limit parameter', () => {
+    // Create 5 pairs of duplicates
+    for (let i = 0; i < 5; i++) {
+      createPerson(db, { given_name: 'Erik', surname: `Family${i}`, sex: 'M' });
+      createPerson(db, { given_name: 'Erik', surname: `Family${i}`, sex: 'M' });
+    }
+    const dupes = findDuplicates(db, 2);
+    expect(dupes).toHaveLength(2);
   });
 });

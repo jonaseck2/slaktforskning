@@ -287,4 +287,20 @@ Part of Track A: `docs/plans/2026-04-11-track-a-presentation-sharing.md`.
 
 ### v0.63.0 — C1: Undo/Redo
 Command-pattern undo/redo for person, name, event, participant, relationship, source, citation CRUD. Keyboard shortcuts (Cmd+Z, Cmd+Shift+Z), grouped operations, toast notifications, max depth 100, clear on DB switch. 30 tests.
-Part of Track C: `docs/plans/2026-04-11-track-c-core-polish.md`.
+Part of Track C: `docs/plans/archive/2026-04-11-track-c-core-polish.md`.
+
+### v0.64.0 — B4: Face/Region Tagging (Manual)
+media_regions table with fractional coordinates, CRUD API, 5 MCP tools, lightbox drawing mode with PersonPicker. 14 tests.
+Part of Track B: `docs/plans/2026-04-11-track-b-media-experience.md`.
+
+### Docs — D3: Claude Desktop Integration
+6 MCP workflow guides (research report, family history, source audit, data quality, photo tagging), README MCP setup section.
+Part of Track D: `docs/plans/archive/2026-04-11-track-d-mcp-agent-story.md`.
+
+### v0.65.0 — A4: Static HTML Site Export
+Self-contained browsable family tree website: person/place/source pages, client-side search, responsive CSS, XSS-safe, living person exclusion. 12 tests. **Track A complete.**
+Part of Track A: `docs/plans/archive/2026-04-11-track-a-presentation-sharing.md`.
+
+### v0.66.0 — C4: GEDCOM Hardening
+8 edge case fixtures (encoding, minimal, empty fields, deep nesting, large family, non-standard tags, malformed dates, duplicates). Hardened date parser (abt./ca/circa, ranges). Import preview dialog. 40 integration tests. **Track C complete.**
+Part of Track C: `docs/plans/archive/2026-04-11-track-c-core-polish.md`.

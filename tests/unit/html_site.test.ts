@@ -210,4 +210,187 @@ describe('generateHtmlSite', () => {
     expect(indexHtml).toContain('&lt;script&gt;');
     expect(indexHtml).toContain('Test&amp;Co');
   });
+
+  it('generates person page without notes', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'persons', `${p.id}.html`), 'utf-8');
+    expect(html).toContain('Erik Test');
+    // No "Notes" section for person without notes
+    expect(html).not.toContain('<h3>Notes</h3>');
+  });
+
+  it('generates person page with notes', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F', living: false, notes: 'Important person note' });
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'persons', `${p.id}.html`), 'utf-8');
+    expect(html).toContain('<h3>Notes</h3>');
+    expect(html).toContain('Important person note');
+  });
+
+  it('generates place page where placePath equals place name', () => {
+    // A top-level place with no parent — placePath equals name
+    const place = createPlace(db, { name: 'Stockholm' });
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_type: 'exact', date_value: '1850-01-01' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'places', `${place.id}.html`), 'utf-8');
+    expect(html).toContain('Stockholm');
+    // placePath === place.name → no duplicate subtitle
+    const subtitleCount = (html.match(/class="subtitle"/g) || []).length;
+    // Only place_type subtitle should appear (at most 1 for city type)
+    expect(subtitleCount).toBeLessThanOrEqual(1);
+  });
+
+  it('generates place page with notes', () => {
+    const place = createPlace(db, { name: 'Fröderyd', notes: 'Historic parish' });
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_type: 'exact', date_value: '1850-01-01' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'places', `${place.id}.html`), 'utf-8');
+    expect(html).toContain('<h3>Notes</h3>');
+    expect(html).toContain('Historic parish');
+  });
+
+  it('generates place page without notes', () => {
+    const place = createPlace(db, { name: 'Malmö' });
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_type: 'exact', date_value: '1850-01-01' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'places', `${place.id}.html`), 'utf-8');
+    expect(html).not.toContain('<h3>Notes</h3>');
+  });
+
+  it('generates source page with all optional fields', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const source = createSource(db, {
+      title: 'Full Source',
+      author: 'Author Name',
+      publication_info: 'Published 1900',
+      repository: 'Royal Archives',
+      source_type: 'church_record',
+      call_number: 'SE/RA/123',
+      url: 'https://example.com',
+      abstract: 'This is the abstract text',
+    });
+    createCitation(db, { source_id: source.id, person_id: p.id, page: 'p. 1' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'sources', `${source.id}.html`), 'utf-8');
+    expect(html).toContain('Author Name');
+    expect(html).toContain('Published 1900');
+    expect(html).toContain('Royal Archives');
+    expect(html).toContain('Church record');
+    expect(html).toContain('SE/RA/123');
+    expect(html).toContain('https://example.com');
+    expect(html).toContain('<h3>Abstract</h3>');
+    expect(html).toContain('This is the abstract text');
+  });
+
+  it('generates source page without abstract or optional fields', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const source = createSource(db, { title: 'Minimal Source' });
+    createCitation(db, { source_id: source.id, person_id: p.id, page: 'p. 1' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'sources', `${source.id}.html`), 'utf-8');
+    expect(html).toContain('Minimal Source');
+    expect(html).not.toContain('<h3>Abstract</h3>');
+  });
+
+  it('handles events with date_original but no year match', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const ev = createEvent(db, { event_type: 'birth', date_original: 'Unknown date' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+
+    const outDir = path.join(tmpDir, 'site');
+    const result = generateHtmlSite(db, outDir);
+
+    // Should not crash, person page should still generate
+    expect(result.personCount).toBe(1);
+    const searchData = JSON.parse(fs.readFileSync(path.join(outDir, 'search.json'), 'utf-8'));
+    const entry = searchData.find((e: { url: string }) => e.url.includes(p.id));
+    // No dates should appear since "Unknown date" has no 4-digit year
+    expect(entry.text).not.toContain('Unknown');
+  });
+
+  it('handles events with no date_original and no date_value', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const ev = createEvent(db, { event_type: 'birth' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+
+    const outDir = path.join(tmpDir, 'site');
+    const result = generateHtmlSite(db, outDir);
+    expect(result.personCount).toBe(1);
+  });
+
+  it('handles source page with citation via event_id but no person_id', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const ev = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1850-01-01' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const source = createSource(db, { title: 'Event Source' });
+    // Citation via event_id, not person_id — tests the event participant lookup branch
+    createCitation(db, { source_id: source.id, event_id: ev.id });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'sources', `${source.id}.html`), 'utf-8');
+    expect(html).toContain('Erik Test');
+    expect(html).toContain('Birth');
+  });
+
+  it('generates person page with relationship subtype', () => {
+    const p1 = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const p2 = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F', living: false });
+    createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id, subtype: 'marriage' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const html = fs.readFileSync(path.join(outDir, 'persons', `${p1.id}.html`), 'utf-8');
+    expect(html).toContain('marriage');
+  });
+
+  it('handles relationship pointing to null person', () => {
+    const p1 = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    createRelationship(db, { type: 'couple', person1_id: p1.id });
+
+    const outDir = path.join(tmpDir, 'site');
+    const result = generateHtmlSite(db, outDir);
+    expect(result.personCount).toBe(1);
+  });
+
+  it('includes person with only death date in search entry', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M', living: false });
+    const deathEv = createEvent(db, { event_type: 'death', date_original: '1920' });
+    addEventParticipant(db, { event_id: deathEv.id, person_id: p.id, role: 'primary' });
+
+    const outDir = path.join(tmpDir, 'site');
+    generateHtmlSite(db, outDir);
+
+    const searchData = JSON.parse(fs.readFileSync(path.join(outDir, 'search.json'), 'utf-8'));
+    const entry = searchData.find((e: { url: string }) => e.url.includes(p.id));
+    expect(entry.text).toContain('1920');
+  });
 });
