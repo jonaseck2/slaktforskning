@@ -8,6 +8,7 @@
     <table v-else class="data-table">
       <thead>
         <tr>
+          <th v-if="props.showPersons">{{ $t('persons.title') }}</th>
           <th>{{ $t('common.type') }}</th>
           <th class="th-date">{{ $t('events.date') }}</th>
           <th>{{ $t('events.description') }}</th>
@@ -27,6 +28,7 @@
           @keydown.enter="!props.readonly && editEvent(event)"
           @keydown.space.prevent="!props.readonly && editEvent(event)"
         >
+          <td v-if="props.showPersons" class="td-persons">{{ event.participant_names || '—' }}</td>
           <td><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
           <td class="td-date">{{ formatDate(event) }}</td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
@@ -83,6 +85,7 @@ interface EventRow {
   description: string;
   cause: string | null;
   citation_count: number;
+  participant_names?: string;
 }
 
 const props = defineProps<{
@@ -91,6 +94,7 @@ const props = defineProps<{
   placeId?: string;
   readonly?: boolean;
   hideHeader?: boolean;
+  showPersons?: boolean;
 }>();
 
 const { t } = useI18n();
@@ -200,6 +204,13 @@ defineExpose({ reload: load, openAddForm });
   padding: 2px 8px;
   border-radius: 10px;
   font-size: var(--font-xs);
+  white-space: nowrap;
+}
+.td-persons {
+  font-size: var(--font-xs);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .th-date,
