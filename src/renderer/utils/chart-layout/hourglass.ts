@@ -1,676 +1,525 @@
-// Hourglass chart layout algorithm.
-// Internally converts HourglassTree → TreePerson graph, then lays out the graph.
+// Hourglass chart layout algorithm — operates on TreePerson graph.
+// Converts HourglassTree → TreePerson, injects outlines, then lays out uniformly.
 
-import type { PersonNode, DescendantNode, HourglassTree, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
+import type { HourglassTree, TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
 import { BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { buildHourglassTree, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
-/**
- * Lay out an hourglass chart.
- * Ancestors fan out upward; descendants fan out downward.
- * Both sections are horizontally centered over the focal person.
- */
+/** Compute max descendant depth of a DescendantNode tree (used by HourglassChart for lazy loading). */
+export function maxDescendantDepth(node: { children: { children: unknown[] }[] }): number {
+  if (node.children.length === 0) return 0;
+  return 1 + Math.max(...node.children.map(c => maxDescendantDepth(c as typeof node)));
+}
+
 export function computeHourglassLayout(
   tree: HourglassTree,
   collapsed: Set<string> = new Set(),
   selectedPersonId?: string | null,
 ): ChartLayout {
-  const { ancestors, descendantGenerations: M, spouses = [], siblings = [] } = tree;
-  const { generations } = ancestors;
-  const originalAncestorNodes = ancestors.nodes;
-  const focalPerson = originalAncestorNodes.get(1);
-  const focalId = focalPerson?.id ?? '';
-  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
-
-  // ── Build TreePerson graph from HourglassTree ──────────────────────────────
+  // ── 1. Build TreePerson graph ───────────────────────────────────────────────
   const root = buildHourglassTree(tree);
+  if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
-  // Inject placeholders for the selected person
-  if (selectedPersonId) {
-    injectOutlines(root, selectedPersonId);
-  }
+  // ── 2. Collapse filtering ──────────────────────────────────────────────────
+  // Record original counts before pruning (for collapse buttons)
+  const originalParentCount = new Map<string, number>();
+  const originalChildCount = new Map<string, number>();
+  const originalSpouseCount = new Map<string, number>();
+  const hasMoreUp = new Map<string, boolean>();
+  const hasMoreDown = new Map<string, boolean>();
 
-  // ── Map personId → ahnentafel key (for button generation and pruning) ──────
-  const personToAhnen = new Map<string, number>();
-  for (const [k, person] of originalAncestorNodes) {
-    personToAhnen.set(person.id, k);
-  }
+  const originalSiblingCount = (root.siblings ?? []).length;
 
-  // ── Derive outline injections from TreePerson graph into old data structures ──
-  // The TreePerson graph has the correct outlines. We extract what was injected
-  // and feed it into the ahnentafel/descendant/spouse structures that the layout uses.
-  // Future: migrate layout to operate directly on TreePerson.
+  function recordAndPrune(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
 
-  const focalIsFemale = focalPerson?.sex === 'F';
+    originalParentCount.set(node.person.id, node.parents.length);
+    originalChildCount.set(node.person.id, node.children.length);
+    originalSpouseCount.set(node.person.id, node.spouses.length);
+    hasMoreUp.set(node.person.id, !!node.hasMoreAncestors);
+    hasMoreDown.set(node.person.id, !!node.hasMoreChildren);
 
-  // Spouses may be collapsed via :right key (original) or :left key (female focal).
-  const spouseCollapsed = collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`);
-  const effectiveSpouses: PersonNode[] = spouseCollapsed ? [] : [...spouses];
+    // Prune collapsed parents (but never prune placeholders)
+    if (collapsed.has(`${node.person.id}:up`)) {
+      node.parents = node.parents.filter(p => p.isPlaceholder);
+    }
 
-  // Inject spouse placeholder for the selected person
-  if (selectedPersonId && !spouseCollapsed) {
-    // Find which person in the tree is selected and add spouse outline next to them
-    // For now, spouse outlines only render for the focal person (since the old layout
-    // only supports spouses for the focal). Non-focal spouse outlines require TreePerson layout.
-    if (selectedPersonId === focalId) {
-      const spousePh: PersonNode = {
-        id: PLACEHOLDER_PREFIX + 'spouse_' + selectedPersonId,
-        givenName: null, surname: null, preferredName: null, nickname: null,
-        sex: focalIsFemale ? 'M' : 'F', living: false, birthDate: null, deathDate: null,
-      };
-      if (focalIsFemale) {
-        effectiveSpouses.unshift(spousePh); // left for female
-      } else {
-        effectiveSpouses.push(spousePh); // right for male
+    // Prune collapsed children
+    // Support per-coParent collapse: ${id}:down:${coParentId}
+    const downKeys = [...collapsed].filter(k => k.startsWith(`${node.person.id}:down`));
+    if (downKeys.length > 0) {
+      for (const key of downKeys) {
+        const parts = key.split(':');
+        if (parts.length === 2) {
+          // Simple :down — collapse all children
+          node.children = node.children.filter(c => c.isPlaceholder);
+        } else {
+          // :down:coParentId — collapse only children with that coParentId
+          const coParentId = parts[2] === 'solo' ? null : parts[2];
+          node.children = node.children.filter(c =>
+            c.isPlaceholder || (c.coParentId ?? null) !== coParentId
+          );
+        }
       }
     }
-  }
 
-  // Siblings on left use 'left' direction key, on right use 'right' direction key — with '__siblings__' co-parent marker.
-  const siblingDir: 'left' | 'right' = focalIsFemale ? 'right' : 'left';
-  const siblingCollapseKey = `${focalId}:${siblingDir}:__siblings__`;
-  const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : [...siblings];
-
-  // Group focal's direct children by co-parent ID (set by chartData during fetch).
-  const descendantRoot = tree.descendantRoot;
-  const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
-  for (const child of descendantRoot.children) {
-    const key = child.coParentId ?? null;
-    const arr = focalChildGroupMap.get(key);
-    if (arr) arr.push(child); else focalChildGroupMap.set(key, [child]);
-  }
-
-  // Deep-clone descendant tree so child placeholder injection doesn't mutate the original
-  function cloneDescTree(node: DescendantNode): DescendantNode {
-    return { ...node, children: node.children.map(c => cloneDescTree(c)) };
-  }
-  const layoutDescRoot: DescendantNode = cloneDescTree(descendantRoot);
-
-  // Inject child placeholder for the selected person into descendant tree
-  let childPlaceholderId: string | null = null;
-  if (selectedPersonId) {
-    childPlaceholderId = PLACEHOLDER_PREFIX + 'child_' + selectedPersonId;
-    const phChild: DescendantNode = {
-      person: {
-        id: childPlaceholderId,
-        givenName: null, surname: null, preferredName: null, nickname: null,
-        sex: 'U', living: false, birthDate: null, deathDate: null,
-      },
-      children: [],
-    };
-
-    function injectChild(node: DescendantNode): boolean {
-      if (node.person.id === selectedPersonId) {
-        node.children = [...node.children, phChild];
-        return true;
-      }
-      return node.children.some(c => injectChild(c));
+    // Prune collapsed spouses
+    if (collapsed.has(`${node.person.id}:right`) || collapsed.has(`${node.person.id}:left`)) {
+      node.spouses = node.spouses.filter(s => s.isPlaceholder);
     }
-    if (!injectChild(layoutDescRoot)) {
-      // Not in descendant tree — add as focal child so it appears below
-      layoutDescRoot.children = [...layoutDescRoot.children, phChild];
+
+    // Prune siblings (children of focal's parents marked with __siblings__)
+    const siblingKey = `${node.person.id}:${node.person.sex === 'F' ? 'right' : 'left'}:__siblings__`;
+    if (collapsed.has(siblingKey) && node.isFocal) {
+      // Siblings are children of focal's parents — we handle this at the parent level
     }
+
+    // Recurse
+    for (const p of node.parents) recordAndPrune(p, visited);
+    for (const c of node.children) recordAndPrune(c, visited);
+    for (const s of node.spouses) recordAndPrune(s, visited);
   }
 
-  // Rebuild focalChildGroupMap from the layout descendant root (with placeholders)
-  const layoutFocalChildGroupMap = new Map<string | null, DescendantNode[]>();
-  for (const child of layoutDescRoot.children) {
-    const key = child.coParentId ?? null;
-    const arr = layoutFocalChildGroupMap.get(key);
-    if (arr) arr.push(child); else layoutFocalChildGroupMap.set(key, [child]);
+  recordAndPrune(root);
+
+  // Handle sibling collapse
+  const focalId = root.person.id;
+  const focalIsFemale = root.person.sex === 'F';
+  const siblingDir = focalIsFemale ? 'right' : 'left';
+  if (collapsed.has(`${focalId}:${siblingDir}:__siblings__`)) {
+    root.siblings = (root.siblings ?? []).filter(s => s.isPlaceholder);
   }
 
-  // When the focal person is female, place spouses to the LEFT so the convention
-  // "male left, female right" holds regardless of who is currently focal.
-  const spouseOnLeft = focalIsFemale && effectiveSpouses.length > 0;
+  // ── 3. Compute geometry ────────────────────────────────────────────────────
 
-  // Siblings go on the opposite side from where spouses would go:
-  // Male focal: spouses right → siblings left. Female focal: spouses left → siblings right.
-  const siblingsOnLeft = !focalIsFemale;
-
-  // ── Ancestor geometry (using ahnentafel from original tree) ─────────────────
-  // We still use the ahnentafel structure for ancestor layout since it gives
-  // stable, predictable positioning. The TreePerson graph is used for placeholder
-  // injection (handled above via injectOutlines).
-
-  // Prune collapsed ancestor subtrees from ahnentafel map
-  function removeSubtree(nodes: Map<number, PersonNode>, k: number): void {
-    if (!nodes.has(k)) return;
-    nodes.delete(k);
-    removeSubtree(nodes, k * 2);
-    removeSubtree(nodes, k * 2 + 1);
+  // Max ancestor depth from focal
+  function maxAncestorDepth(node: TreePerson, visited = new Set<string>()): number {
+    if (visited.has(node.person.id)) return 0;
+    visited.add(node.person.id);
+    if (node.parents.length === 0) return 0;
+    return 1 + Math.max(...node.parents.map(p => maxAncestorDepth(p, visited)));
   }
 
-  const prunedAncestorNodes = new Map(originalAncestorNodes);
-  for (const [k, person] of originalAncestorNodes) {
-    if (k >= 2 && collapsed.has(`${person.id}:up`)) {
-      removeSubtree(prunedAncestorNodes, k * 2);
-      removeSubtree(prunedAncestorNodes, k * 2 + 1);
-    }
+  // Max descendant depth from focal
+  function maxDescDepth(node: TreePerson, visited = new Set<string>()): number {
+    if (visited.has(node.person.id)) return 0;
+    visited.add(node.person.id);
+    if (node.children.length === 0) return 0;
+    return 1 + Math.max(...node.children.map(c => maxDescDepth(c, visited)));
   }
 
-  const ancestorNodes = prunedAncestorNodes;
+  const A = maxAncestorDepth(root);
+  const D = maxDescDepth(root);
 
-  // Inject placeholder ancestor nodes for selected person's missing parents
-  const placeholderKeys = new Set<number>();
-  let effectiveGenerations = generations;
+  // Row Y helpers
+  const ancestorTopPad = PAD + 8;
+  const focalRowY = ancestorTopPad + A * (BOX_H + GEN_GAP);
+  const ancestorRowY = (depth: number) => focalRowY - depth * (BOX_H + GEN_GAP);
+  const descRowY = (depth: number) => focalRowY + depth * (BOX_H + GEN_GAP);
 
-  if (selectedPersonId) {
-    const selectedK = [...ancestorNodes.entries()].find(([, p]) => p.id === selectedPersonId)?.[0];
-    if (selectedK !== undefined && !ancestorHasMore.has(selectedK)) {
-      const g = Math.floor(Math.log2(selectedK));
-      if (g >= effectiveGenerations - 1) {
-        effectiveGenerations = g + 2;
-      }
-      if (!ancestorNodes.has(selectedK * 2)) {
-        const k = selectedK * 2;
-        placeholderKeys.add(k);
-        ancestorNodes.set(k, {
-          id: PLACEHOLDER_PREFIX + 'father_' + selectedPersonId,
-          givenName: null, surname: null, preferredName: null, nickname: null,
-          sex: 'M', living: false, birthDate: null, deathDate: null,
-        });
-      }
-      if (!ancestorNodes.has(selectedK * 2 + 1)) {
-        const k = selectedK * 2 + 1;
-        placeholderKeys.add(k);
-        ancestorNodes.set(k, {
-          id: PLACEHOLDER_PREFIX + 'mother_' + selectedPersonId,
-          givenName: null, surname: null, preferredName: null, nickname: null,
-          sex: 'F', living: false, birthDate: null, deathDate: null,
-        });
-      }
-    }
-  }
-
-  const A = effectiveGenerations - 1; // ancestor levels above focal
-
-  const boxes: BoxLayout[] = [];
-  const lines: Line[] = [];
-
-  // ── Ancestor geometry ────────────────────────────────────────────────────
-  //
-  // Compact horizontal layout: only visible leaf nodes get individual slots,
-  // preserving genealogical left-to-right order. Internal nodes are centred
-  // over their children.
-
-  function virtualAncestorLeafPos(k: number): number {
-    const g = Math.floor(Math.log2(k));
-    const pos = k - (1 << g);
-    return (pos + 0.5) * (1 << (A - g)) - 0.5;
-  }
-
-  const isAncestorLeaf = (k: number) => !ancestorNodes.has(k * 2) && !ancestorNodes.has(k * 2 + 1);
-  const ancestorLeaves = [...ancestorNodes.keys()]
-    .filter(isAncestorLeaf)
-    .sort((a, b) => virtualAncestorLeafPos(a) - virtualAncestorLeafPos(b));
-  const leafXIndex = new Map<number, number>();
-  ancestorLeaves.forEach((k, i) => leafXIndex.set(k, i));
-
-  const numAncestorLeaves = ancestorLeaves.length;
-  const ancestorSectionWidth = numAncestorLeaves > 0
-    ? numAncestorLeaves * (BOX_W + V_GAP) - V_GAP
-    : BOX_W;
-
-  // Relative CX of ancestor k (offset from left edge of ancestor section).
-  const relCXCache = new Map<number, number>();
-  function ancestorRelCX(k: number): number {
-    if (relCXCache.has(k)) return relCXCache.get(k)!;
-    const idx = leafXIndex.get(k);
-    let relCX: number;
-    if (idx !== undefined) {
-      relCX = idx * (BOX_W + V_GAP) + BOX_W / 2;
+  // ── Ancestor subtree width (upward) ──
+  // Leaf ancestors get BOX_W width. Internal nodes = sum of parent widths + gaps.
+  const ancWidthCache = new Map<string, number>();
+  function ancestorWidth(node: TreePerson): number {
+    if (ancWidthCache.has(node.person.id)) return ancWidthCache.get(node.person.id)!;
+    let w: number;
+    if (node.parents.length === 0) {
+      w = BOX_W;
     } else {
-      const childCXs: number[] = [];
-      if (ancestorNodes.has(k * 2)) childCXs.push(ancestorRelCX(k * 2));
-      if (ancestorNodes.has(k * 2 + 1)) childCXs.push(ancestorRelCX(k * 2 + 1));
-      relCX = childCXs.length > 0
-        ? childCXs.reduce((a, b) => a + b, 0) / childCXs.length
-        : BOX_W / 2;
+      w = node.parents.reduce((sum, p) => sum + ancestorWidth(p), 0)
+        + (node.parents.length - 1) * V_GAP;
+      w = Math.max(w, BOX_W);
     }
-    relCXCache.set(k, relCX);
-    return relCX;
+    ancWidthCache.set(node.person.id, w);
+    return w;
   }
 
-  // Focal's offset within the ancestor section, giving asymmetric extents.
-  const focalRelCX      = ancestorRelCX(1);
-  const ancLeftFromFocal  = focalRelCX;
-  const ancRightFromFocal = ancestorSectionWidth - focalRelCX;
+  // Relative CX of a node within its ancestor subtree
+  const ancRelCXCache = new Map<string, number>();
+  function ancestorRelCX(node: TreePerson): number {
+    if (ancRelCXCache.has(node.person.id)) return ancRelCXCache.get(node.person.id)!;
+    let cx: number;
+    if (node.parents.length === 0) {
+      cx = BOX_W / 2;
+    } else {
+      const parentCXs: number[] = [];
+      let x = 0;
+      for (const p of node.parents) {
+        parentCXs.push(x + ancestorRelCX(p));
+        x += ancestorWidth(p) + V_GAP;
+      }
+      cx = parentCXs.reduce((a, b) => a + b, 0) / parentCXs.length;
+    }
+    ancRelCXCache.set(node.person.id, cx);
+    return cx;
+  }
 
-  // ── Descendant geometry ──────────────────────────────────────────────────
-  //
-  // Children are placed by spacing adjacent sibling subtrees just V_GAP apart,
-  // then centering the group below the parent.
+  const focalAncWidth = ancestorWidth(root);
+  const focalAncRelCX = ancestorRelCX(root);
+  const ancLeftFromFocal = focalAncRelCX;
+  const ancRightFromFocal = focalAncWidth - focalAncRelCX;
 
-  function subtreeExtents(node: DescendantNode, depth: number): [number, number] {
+  // ── Descendant subtree extents (downward) ──
+  // Returns [leftExtent, rightExtent] from the node's center X.
+  const descExtCache = new Map<string, [number, number]>();
+  function descExtents(node: TreePerson): [number, number] {
+    if (descExtCache.has(node.person.id)) return descExtCache.get(node.person.id)!;
     const half = BOX_W / 2;
-    if (depth >= M || node.children.length === 0) return [half, half];
-    if (depth > 0 && collapsed.has(`${node.person.id}:down`)) return [half, half];
-
+    if (node.children.length === 0) {
+      descExtCache.set(node.person.id, [half, half]);
+      return [half, half];
+    }
     const n = node.children.length;
-    const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
-
+    const childExts = node.children.map(c => descExtents(c));
     const offsets: number[] = [0];
     for (let i = 1; i < n; i++) {
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
     }
     const totalSpan = offsets[n - 1];
-
-    const leftExt  = Math.max(half, totalSpan / 2 + childExts[0][0]);
+    const leftExt = Math.max(half, totalSpan / 2 + childExts[0][0]);
     const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]);
+    descExtCache.set(node.person.id, [leftExt, rightExt]);
     return [leftExt, rightExt];
   }
 
-  // Row Y helpers
-  const ancestorTopPad = PAD + 8;
-  const focalRowY  = ancestorTopPad + A * (BOX_H + GEN_GAP);
-  const ancestorRowY = (g: number) => ancestorTopPad + (A - g) * (BOX_H + GEN_GAP);
-  const descRowY     = (d: number) => focalRowY + d * (BOX_H + GEN_GAP);
+  // Focal's descendant extents — also consider children grouped by co-parent
+  const [descLeft, descRight] = descExtents(root);
 
-  // Distance from focalCX to the couple-junction for spouse at index i.
-  const junctionOffsetOf = (i: number): number =>
-    (BOX_W + H_GAP + i * (BOX_W + V_GAP)) / 2;
-
-  // Spouse offset: distance from focalCX to junction for first spouse.
-  const spouseOffset = effectiveSpouses.length > 0 ? junctionOffsetOf(0) : 0;
-  void spouseOffset;
-
-  // Compute extents of a flat list of focal children from their center.
-  function computeGroupExtents(groupChildren: DescendantNode[]): [number, number] {
-    if (groupChildren.length === 0) return [BOX_W / 2, BOX_W / 2];
-    const n = groupChildren.length;
-    const childExts = groupChildren.map(c => subtreeExtents(c, 1));
-    const offsets: number[] = [0];
-    for (let i = 1; i < n; i++) {
-      offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
-    }
-    const totalSpan = n > 1 ? offsets[n - 1] : 0;
-    return [
-      Math.max(BOX_W / 2, totalSpan / 2 + childExts[0][0]),
-      Math.max(BOX_W / 2, totalSpan / 2 + childExts[n - 1][1]),
-    ];
+  // ── Spouse extents ──
+  // Spouses go beside the person. Male → right, Female → left.
+  function spouseExtent(node: TreePerson): number {
+    if (node.spouses.length === 0) return 0;
+    return BOX_W + H_GAP + (node.spouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2;
   }
 
-  // Build relative group infos for child placement
-  interface RelGroupInfo {
-    coParentId: string | null;
-    children: DescendantNode[];
-    anchorOffset: number;
-    gLeft: number;
-    gRight: number;
-  }
-  const relGroupInfos: RelGroupInfo[] = [...layoutFocalChildGroupMap.entries()]
-    .filter(([coParentId, ch]) =>
-      ch.length > 0 && !collapsed.has(`${focalId}:down:${coParentId ?? 'solo'}`),
-    )
-    .map(([coParentId, children]) => {
-      const spouseIdx = effectiveSpouses.findIndex(s => s.id === coParentId);
-      const anchorOffset = spouseIdx >= 0
-        ? (spouseOnLeft ? -junctionOffsetOf(spouseIdx) : junctionOffsetOf(spouseIdx))
-        : 0;
-      const [gLeft, gRight] = computeGroupExtents(children);
-      return { coParentId, children, anchorOffset, gLeft, gRight };
-    })
-    .sort((a, b) => a.anchorOffset - b.anchorOffset);
+  // For focal: spouses on one side, siblings (children of parents) on the other
+  const spouseOnLeft = focalIsFemale && root.spouses.length > 0;
+  const siblingsOnLeft = !focalIsFemale;
 
-  // Pack groups left-to-right
-  const relativeCenterOffsets: number[] = [];
-  for (let i = 0; i < relGroupInfos.length; i++) {
-    const g = relGroupInfos[i];
-    let co = g.anchorOffset;
-    if (i > 0) {
-      const prev = relGroupInfos[i - 1];
-      co = Math.max(co, relativeCenterOffsets[i - 1] + prev.gRight + V_GAP + g.gLeft);
-    }
-    relativeCenterOffsets.push(co);
-  }
+  // Siblings from the focal's siblings list (after collapse filtering)
+  const siblings: TreePerson[] = root.siblings ?? [];
 
-  // Compute total descendant extents from focalCX
-  let descLeftFromFocal = BOX_W / 2;
-  let descRightFromFocal = BOX_W / 2;
-  for (let i = 0; i < relGroupInfos.length; i++) {
-    const { gLeft, gRight } = relGroupInfos[i];
-    const co = relativeCenterOffsets[i];
-    descLeftFromFocal  = Math.max(descLeftFromFocal,  Math.max(0, gLeft  - co));
-    descRightFromFocal = Math.max(descRightFromFocal, Math.max(0, co + gRight));
-  }
-
-  // Extra space needed on the spouse side
-  const spouseBoxesExtent = effectiveSpouses.length > 0
-    ? BOX_W + H_GAP + (effectiveSpouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
+  const siblingExtent = siblings.length > 0
+    ? BOX_W + H_GAP + (siblings.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
     : 0;
 
-  // Extra space needed for siblings
-  const siblingBoxesExtent = effectiveSiblings.length > 0
-    ? BOX_W + H_GAP + (effectiveSiblings.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
-    : 0;
+  const focalSpouseExtent = spouseExtent(root);
 
-  // Place focal far enough from the left edge
-  const leftExtents = [ancLeftFromFocal, descLeftFromFocal];
-  if (spouseOnLeft) leftExtents.push(spouseBoxesExtent);
-  if (siblingsOnLeft) leftExtents.push(siblingBoxesExtent);
+  // ── Focal CX ──
+  const leftExtents = [ancLeftFromFocal, descLeft];
+  if (spouseOnLeft) leftExtents.push(focalSpouseExtent);
+  if (siblingsOnLeft) leftExtents.push(siblingExtent);
+
+  const rightExtents = [ancRightFromFocal, descRight];
+  if (!spouseOnLeft && root.spouses.length > 0) rightExtents.push(focalSpouseExtent);
+  if (!siblingsOnLeft) rightExtents.push(siblingExtent);
+
   const focalCX = PAD + Math.max(...leftExtents);
-
-  const rightExtents = [ancRightFromFocal, descRightFromFocal];
-  if (!spouseOnLeft && effectiveSpouses.length > 0) rightExtents.push(spouseBoxesExtent);
-  if (!siblingsOnLeft) rightExtents.push(siblingBoxesExtent);
   const rightNeeded = Math.max(...rightExtents);
   const svgWidth = focalCX + rightNeeded + PAD;
 
-  // Absolute CX of ancestor k
-  const ancestorCX = (k: number): number => focalCX - focalRelCX + ancestorRelCX(k);
+  // ── 4. Place boxes and lines ───────────────────────────────────────────────
+  const boxes: BoxLayout[] = [];
+  const lines: Line[] = [];
 
-  // ── Place ancestor boxes ─────────────────────────────────────────────────
-
-  for (const [k, person] of ancestorNodes) {
-    const g = Math.floor(Math.log2(k));
+  // Place ancestors recursively (upward from a person)
+  function placeAncestors(node: TreePerson, nodeCX: number, depth: number): void {
+    // Place this node's box
     boxes.push({
-      person,
-      isFocal: k === 1,
-      x: ancestorCX(k) - BOX_W / 2,
-      y: ancestorRowY(g),
-      w: BOX_W,
-      h: BOX_H,
+      person: node.person,
+      isFocal: !!node.isFocal,
+      x: nodeCX - BOX_W / 2,
+      y: ancestorRowY(depth),
+      w: BOX_W, h: BOX_H,
     });
-  }
 
-  // ── Ancestor connector lines ─────────────────────────────────────────────
+    if (node.parents.length === 0) return;
 
-  for (const [k] of ancestorNodes) {
-    const g = Math.floor(Math.log2(k));
-    if (g >= A) continue;
+    const nodeY = ancestorRowY(depth);
+    const forkY = nodeY - GEN_GAP / 2;
 
-    const fatherK = k * 2;
-    const motherK = k * 2 + 1;
-    const father  = ancestorNodes.get(fatherK);
-    const mother  = ancestorNodes.get(motherK);
-    if (!father && !mother) continue;
+    // Position parents above, centered
+    const parentWidths = node.parents.map(p => ancestorWidth(p));
+    const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (node.parents.length - 1) * V_GAP;
+    let x = nodeCX - totalWidth / 2;
 
-    const kCX   = ancestorCX(k);
-    const kRowY = ancestorRowY(g);
-    const forkY = kRowY - GEN_GAP / 2;
-
-    lines.push({ x1: kCX, y1: kRowY, x2: kCX, y2: forkY });
-
-    const pCXs = ([father ? ancestorCX(fatherK) : null, mother ? ancestorCX(motherK) : null]
-      .filter((cx): cx is number => cx !== null));
-
-    if (pCXs.length > 1) {
-      lines.push({ x1: Math.min(...pCXs), y1: forkY, x2: Math.max(...pCXs), y2: forkY });
+    const parentCXs: number[] = [];
+    for (let i = 0; i < node.parents.length; i++) {
+      const pw = parentWidths[i];
+      const pcx = x + ancestorRelCX(node.parents[i]);
+      parentCXs.push(pcx);
+      placeAncestors(node.parents[i], pcx, depth + 1);
+      x += pw + V_GAP;
     }
 
-    const parentRowBottom = ancestorRowY(g + 1) + BOX_H;
-    for (const pcx of pCXs) {
+    // Connector lines: node → fork → each parent
+    lines.push({ x1: nodeCX, y1: nodeY, x2: nodeCX, y2: forkY });
+    if (parentCXs.length > 1) {
+      lines.push({ x1: Math.min(...parentCXs), y1: forkY, x2: Math.max(...parentCXs), y2: forkY });
+    }
+    const parentRowBottom = ancestorRowY(depth + 1) + BOX_H;
+    for (const pcx of parentCXs) {
       lines.push({ x1: pcx, y1: forkY, x2: pcx, y2: parentRowBottom });
     }
   }
 
-  // ── Descendant subtree layout ────────────────────────────────────────────
+  // Place descendants recursively (downward from a person)
+  function placeDescendants(node: TreePerson, nodeCX: number, depth: number): void {
+    boxes.push({
+      person: node.person,
+      isFocal: !!node.isFocal,
+      x: nodeCX - BOX_W / 2,
+      y: descRowY(depth),
+      w: BOX_W, h: BOX_H,
+    });
 
+    if (node.children.length === 0) return;
+
+    const rowY = descRowY(depth);
+    const forkY = rowY + BOX_H + GEN_GAP / 2;
+    lines.push({ x1: nodeCX, y1: rowY + BOX_H, x2: nodeCX, y2: forkY });
+
+    const n = node.children.length;
+    const childExts = node.children.map(c => descExtents(c));
+    const offsets: number[] = [0];
+    for (let i = 1; i < n; i++) {
+      offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
+    }
+    const totalSpan = offsets[n - 1];
+    const leftmostCX = nodeCX - totalSpan / 2;
+    const childCXs = offsets.map(o => leftmostCX + o);
+
+    if (n > 1) {
+      lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
+    }
+    for (let i = 0; i < n; i++) {
+      lines.push({ x1: childCXs[i], y1: forkY, x2: childCXs[i], y2: descRowY(depth + 1) });
+      placeDescendants(node.children[i], childCXs[i], depth + 1);
+    }
+  }
+
+  // ── Place focal's ancestors (skip focal box — placed separately) ──
+  // Place ancestor parents starting from focal
+  if (root.parents.length > 0) {
+    const forkY = focalRowY - GEN_GAP / 2;
+    const parentWidths = root.parents.map(p => ancestorWidth(p));
+    const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (root.parents.length - 1) * V_GAP;
+    let x = focalCX - totalWidth / 2;
+    const parentCXs: number[] = [];
+
+    for (let i = 0; i < root.parents.length; i++) {
+      const pcx = x + ancestorRelCX(root.parents[i]);
+      parentCXs.push(pcx);
+      placeAncestors(root.parents[i], pcx, 1);
+      x += parentWidths[i] + V_GAP;
+    }
+
+    lines.push({ x1: focalCX, y1: focalRowY, x2: focalCX, y2: forkY });
+    if (parentCXs.length > 1) {
+      lines.push({ x1: Math.min(...parentCXs), y1: forkY, x2: Math.max(...parentCXs), y2: forkY });
+    }
+    const parentRowBottom = ancestorRowY(1) + BOX_H;
+    for (const pcx of parentCXs) {
+      lines.push({ x1: pcx, y1: forkY, x2: pcx, y2: parentRowBottom });
+    }
+  }
+
+  // ── Place focal box ──
+  boxes.push({
+    person: root.person,
+    isFocal: true,
+    x: focalCX - BOX_W / 2,
+    y: focalRowY,
+    w: BOX_W, h: BOX_H,
+  });
+
+  // ── Place focal's spouses ──
   const spouseCXOf = (i: number) => spouseOnLeft
     ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
     : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  const coupleJunctionCXOf = (i: number) => spouseOnLeft
-    ? focalCX - junctionOffsetOf(i)
-    : focalCX + junctionOffsetOf(i);
-
-  function placeDescendants(node: DescendantNode, depth: number, nodeCX: number): void {
-    boxes.push({
-      person:  node.person,
-      isFocal: false,
-      x: nodeCX - BOX_W / 2,
-      y: descRowY(depth),
-      w: BOX_W,
-      h: BOX_H,
-    });
-
-    if (depth < M && node.children.length > 0 && !collapsed.has(`${node.person.id}:down`)) {
-      const rowY  = descRowY(depth);
-      const forkY = rowY + BOX_H + GEN_GAP / 2;
-
-      lines.push({ x1: nodeCX, y1: rowY + BOX_H, x2: nodeCX, y2: forkY });
-
-      const n = node.children.length;
-      const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
-      const offsets: number[] = [0];
-      for (let i = 1; i < n; i++) {
-        offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
-      }
-      const totalSpan = offsets[n - 1];
-      const leftmostCX = nodeCX - totalSpan / 2;
-      const childCXs = offsets.map(o => leftmostCX + o);
-
-      if (n > 1) {
-        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
-      }
-      for (let ci = 0; ci < n; ci++) {
-        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(depth + 1) });
-        placeDescendants(node.children[ci], depth + 1, childCXs[ci]);
-      }
-    }
-  }
-
-  // Place focal child groups using pre-computed packed center offsets
-  {
-    const forkY = focalRowY + BOX_H + GEN_GAP / 2;
-    const bendY = focalRowY + BOX_H + GEN_GAP / 4;
-
-    for (let gi = 0; gi < relGroupInfos.length; gi++) {
-      const g = relGroupInfos[gi];
-      const { coParentId, children } = g;
-      const spouseIdx  = effectiveSpouses.findIndex(s => s.id === coParentId);
-      const anchorCX   = focalCX + g.anchorOffset;
-      const lineStartY = spouseIdx >= 0 ? focalRowY + BOX_H / 2 : focalRowY + BOX_H;
-      const centerCX   = focalCX + relativeCenterOffsets[gi];
-
-      if (Math.abs(anchorCX - centerCX) > 1) {
-        lines.push({ x1: anchorCX, y1: lineStartY, x2: anchorCX, y2: bendY });
-        lines.push({ x1: anchorCX, y1: bendY,      x2: centerCX, y2: bendY });
-        lines.push({ x1: centerCX, y1: bendY,      x2: centerCX, y2: forkY });
-      } else {
-        lines.push({ x1: centerCX, y1: lineStartY, x2: centerCX, y2: forkY });
-      }
-
-      const n = children.length;
-      const childExts = children.map(c => subtreeExtents(c, 1));
-      const offsets: number[] = [0];
-      for (let i = 1; i < n; i++) {
-        offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
-      }
-      const totalSpan  = n > 1 ? offsets[n - 1] : 0;
-      const leftmostCX = centerCX - totalSpan / 2;
-      const childCXs   = offsets.map(o => leftmostCX + o);
-
-      if (n > 1) {
-        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
-      }
-      for (let ci = 0; ci < n; ci++) {
-        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: descRowY(1) });
-        placeDescendants(children[ci], 1, childCXs[ci]);
-      }
-    }
-  }
-
-  if (effectiveSpouses.length > 0) {
+  if (root.spouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
-    const lastSpouseCX = spouseCXOf(effectiveSpouses.length - 1);
+    const lastCX = spouseCXOf(root.spouses.length - 1);
     lines.push({
-      x1: spouseOnLeft ? lastSpouseCX - BOX_W / 2 : focalCX + BOX_W / 2,
+      x1: spouseOnLeft ? lastCX - BOX_W / 2 : focalCX + BOX_W / 2,
       y1: lineY,
-      x2: spouseOnLeft ? focalCX + BOX_W / 2 : lastSpouseCX + BOX_W / 2,
+      x2: spouseOnLeft ? focalCX + BOX_W / 2 : lastCX + BOX_W / 2,
       y2: lineY,
     });
-    for (let i = 0; i < effectiveSpouses.length; i++) {
+    for (let i = 0; i < root.spouses.length; i++) {
       boxes.push({
-        person:  effectiveSpouses[i],
+        person: root.spouses[i].person,
         isFocal: false,
         x: spouseCXOf(i) - BOX_W / 2,
         y: focalRowY,
-        w: BOX_W,
-        h: BOX_H,
+        w: BOX_W, h: BOX_H,
       });
     }
   }
 
-  // ── Sibling placement ─────────────────────────────────────────────────────
-
+  // ── Place siblings ──
   const siblingCXOf = (i: number) => siblingsOnLeft
     ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
     : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  if (effectiveSiblings.length > 0) {
-    for (let i = 0; i < effectiveSiblings.length; i++) {
+  if (siblings.length > 0) {
+    for (let i = 0; i < siblings.length; i++) {
       boxes.push({
-        person:  effectiveSiblings[i],
+        person: siblings[i].person,
         isFocal: false,
         x: siblingCXOf(i) - BOX_W / 2,
         y: focalRowY,
-        w: BOX_W,
-        h: BOX_H,
+        w: BOX_W, h: BOX_H,
       });
     }
-
+    // Connect siblings to parents via shared fork
     if (A >= 1) {
       const parentForkY = focalRowY - GEN_GAP / 2;
-      const allChildCXs = [focalCX];
-      for (let i = 0; i < effectiveSiblings.length; i++) {
-        allChildCXs.push(siblingCXOf(i));
-      }
-      const minCX = Math.min(...allChildCXs);
-      const maxCX = Math.max(...allChildCXs);
-
-      lines.push({ x1: minCX, y1: parentForkY, x2: maxCX, y2: parentForkY });
-
-      for (let i = 0; i < effectiveSiblings.length; i++) {
+      const allCXs = [focalCX, ...siblings.map((_, i) => siblingCXOf(i))];
+      lines.push({ x1: Math.min(...allCXs), y1: parentForkY, x2: Math.max(...allCXs), y2: parentForkY });
+      for (let i = 0; i < siblings.length; i++) {
         const scx = siblingCXOf(i);
         lines.push({ x1: scx, y1: parentForkY, x2: scx, y2: focalRowY });
       }
     }
   }
 
-  // ── SVG height ───────────────────────────────────────────────────────────
+  // ── Place focal's descendants ──
+  if (root.children.length > 0) {
+    const forkY = focalRowY + BOX_H + GEN_GAP / 2;
+    lines.push({ x1: focalCX, y1: focalRowY + BOX_H, x2: focalCX, y2: forkY });
 
-  const deepestDescRow = M > 0 && layoutDescRoot.children.length > 0
-    ? descRowY(M)
-    : focalRowY;
-  const svgHeight = deepestDescRow + BOX_H + 20 + PAD;
+    const n = root.children.length;
+    const childExts = root.children.map(c => descExtents(c));
+    const offsets: number[] = [0];
+    for (let i = 1; i < n; i++) {
+      offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
+    }
+    const totalSpan = offsets[n - 1];
+    const leftmostCX = focalCX - totalSpan / 2;
+    const childCXs = offsets.map(o => leftmostCX + o);
 
-  // ── Collapse buttons ─────────────────────────────────────────────────────
-
-  const descNodeMap = new Map<string, DescendantNode>();
-  function indexDescendants(node: DescendantNode): void {
-    descNodeMap.set(node.person.id, node);
-    for (const child of node.children) indexDescendants(child);
-  }
-  indexDescendants(layoutDescRoot);
-
-  const collapseButtons: CollapseButton[] = [];
-
-  for (const box of boxes) {
-    const k = personToAhnen.get(box.person.id);
-    if (k !== undefined) {
-      if (k === 1) {
-        // Focal: one down button per child group
-        for (const [coParentId, groupChildren] of focalChildGroupMap) {
-          if (groupChildren.length === 0) continue;
-          const spouseIdx = effectiveSpouses.findIndex(s => s.id === coParentId);
-          const btnCX = spouseIdx >= 0 ? coupleJunctionCXOf(spouseIdx) : focalCX;
-          const groupKey = `${focalId}:down:${coParentId ?? 'solo'}`;
-          collapseButtons.push({
-            personId: focalId, direction: 'down',
-            cx: btnCX, cy: box.y + BOX_H + 10,
-            isExpanded: !collapsed.has(groupKey),
-            isLoadMore: false,
-            coParentId,
-          });
-        }
-        if (focalChildGroupMap.size === 0 && descendantRoot.hasMoreChildren) {
-          collapseButtons.push({
-            personId: focalId, direction: 'down',
-            cx: focalCX, cy: box.y + BOX_H + 10,
-            isExpanded: false,
-            isLoadMore: true,
-            coParentId: null,
-          });
-        }
-        if (spouses.length > 0) {
-          const spouseDir = focalIsFemale ? 'left' : 'right';
-          const spouseBtnCX = focalIsFemale ? box.x - 10 : box.x + BOX_W + 10;
-          collapseButtons.push({
-            personId: box.person.id, direction: spouseDir,
-            cx: spouseBtnCX, cy: box.y + BOX_H / 2,
-            isExpanded: !collapsed.has(`${box.person.id}:right`) && !collapsed.has(`${box.person.id}:left`),
-            isLoadMore: false,
-          });
-        }
-        if (siblings.length > 0) {
-          const sibBtnCX = siblingsOnLeft ? box.x - 10 : box.x + BOX_W + 10;
-          const sibBtnCY = (spouses.length > 0 && siblingsOnLeft === focalIsFemale)
-            ? box.y + BOX_H / 2 + 18
-            : box.y + BOX_H / 2;
-          collapseButtons.push({
-            personId: box.person.id, direction: siblingDir,
-            cx: sibBtnCX, cy: sibBtnCY,
-            isExpanded: !collapsed.has(siblingCollapseKey),
-            isLoadMore: false,
-            coParentId: '__siblings__',
-          });
-        }
-      } else {
-        // Ancestor: up button if parents exist, or load-more if hasMoreAncestors
-        const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
-        if (hasParents) {
-          collapseButtons.push({
-            personId: box.person.id, direction: 'up',
-            cx: box.x + BOX_W / 2, cy: box.y - 10,
-            isExpanded: !collapsed.has(`${box.person.id}:up`),
-            isLoadMore: false,
-          });
-        } else if (ancestorHasMore.has(k)) {
-          collapseButtons.push({
-            personId: box.person.id, direction: 'up',
-            cx: box.x + BOX_W / 2, cy: box.y - 10,
-            isExpanded: false,
-            isLoadMore: true,
-          });
-        }
-      }
-    } else {
-      // Descendant box
-      const descNode = descNodeMap.get(box.person.id);
-      if (descNode) {
-        if (descNode.children.length > 0) {
-          collapseButtons.push({
-            personId: box.person.id, direction: 'down',
-            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
-            isExpanded: !collapsed.has(`${box.person.id}:down`),
-            isLoadMore: false,
-          });
-        } else if (descNode.hasMoreChildren) {
-          collapseButtons.push({
-            personId: box.person.id, direction: 'down',
-            cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
-            isExpanded: false,
-            isLoadMore: true,
-          });
-        }
-      }
+    if (n > 1) {
+      lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
+    }
+    for (let i = 0; i < n; i++) {
+      lines.push({ x1: childCXs[i], y1: forkY, x2: childCXs[i], y2: descRowY(1) });
+      placeDescendants(root.children[i], childCXs[i], 1);
     }
   }
 
-  // ── Extract placeholder boxes from layout ─────────────────────────────────
+  // ── SVG height ──
+  const deepestDescRow = D > 0 ? descRowY(D) : focalRowY;
+  const svgHeight = deepestDescRow + BOX_H + 20 + PAD;
+
+  // ── 5. Collapse buttons ────────────────────────────────────────────────────
+  const collapseButtons: CollapseButton[] = [];
+
+  // Walk all placed boxes and generate buttons
+  const allPersonIds = new Set(boxes.map(b => b.person.id));
+
+  for (const box of boxes) {
+    const pid = box.person.id;
+    if (pid.startsWith(PLACEHOLDER_PREFIX)) continue; // no buttons on placeholders
+
+    const origParents = originalParentCount.get(pid) ?? 0;
+    const origChildren = originalChildCount.get(pid) ?? 0;
+    const origSpouses = originalSpouseCount.get(pid) ?? 0;
+    const moreUp = hasMoreUp.get(pid) ?? false;
+    const moreDown = hasMoreDown.get(pid) ?? false;
+
+    // Up button (ancestors)
+    if (origParents > 0) {
+      collapseButtons.push({
+        personId: pid, direction: 'up',
+        cx: box.x + BOX_W / 2, cy: box.y - 10,
+        isExpanded: !collapsed.has(`${pid}:up`),
+        isLoadMore: false,
+      });
+    } else if (moreUp) {
+      collapseButtons.push({
+        personId: pid, direction: 'up',
+        cx: box.x + BOX_W / 2, cy: box.y - 10,
+        isExpanded: false, isLoadMore: true,
+      });
+    }
+
+    // Down button (descendants) — for focal, one per co-parent group
+    if (pid === focalId) {
+      // Group children by coParentId
+      const groups = new Map<string | null, TreePerson[]>();
+      for (const child of root.children) {
+        if (child.isPlaceholder) continue;
+        const key = child.coParentId ?? null;
+        const arr = groups.get(key);
+        if (arr) arr.push(child); else groups.set(key, [child]);
+      }
+      for (const [coParentId, children] of groups) {
+        if (children.length === 0) continue;
+        const groupKey = `${focalId}:down:${coParentId ?? 'solo'}`;
+        collapseButtons.push({
+          personId: focalId, direction: 'down',
+          cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+          isExpanded: !collapsed.has(groupKey),
+          isLoadMore: false, coParentId,
+        });
+      }
+      if (groups.size === 0 && moreDown) {
+        collapseButtons.push({
+          personId: focalId, direction: 'down',
+          cx: focalCX, cy: box.y + BOX_H + 10,
+          isExpanded: false, isLoadMore: true, coParentId: null,
+        });
+      }
+
+      // Spouse button
+      if (origSpouses > 0) {
+        const spouseDir = focalIsFemale ? 'left' : 'right';
+        const btnCX = focalIsFemale ? box.x - 10 : box.x + BOX_W + 10;
+        collapseButtons.push({
+          personId: pid, direction: spouseDir as 'left' | 'right',
+          cx: btnCX, cy: box.y + BOX_H / 2,
+          isExpanded: !collapsed.has(`${pid}:right`) && !collapsed.has(`${pid}:left`),
+          isLoadMore: false,
+        });
+      }
+
+      // Sibling button
+      if (originalSiblingCount > 0) {
+        const sibBtnCX = siblingsOnLeft ? box.x - 10 : box.x + BOX_W + 10;
+        const sibBtnCY = (origSpouses > 0 && siblingsOnLeft === focalIsFemale)
+          ? box.y + BOX_H / 2 + 18
+          : box.y + BOX_H / 2;
+        collapseButtons.push({
+          personId: pid, direction: siblingDir as 'left' | 'right',
+          cx: sibBtnCX, cy: sibBtnCY,
+          isExpanded: !collapsed.has(`${focalId}:${siblingDir}:__siblings__`),
+          isLoadMore: false, coParentId: '__siblings__',
+        });
+      }
+    } else if (origChildren > 0) {
+      // Non-focal with children
+      collapseButtons.push({
+        personId: pid, direction: 'down',
+        cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+        isExpanded: !collapsed.has(`${pid}:down`),
+        isLoadMore: false,
+      });
+    } else if (moreDown) {
+      collapseButtons.push({
+        personId: pid, direction: 'down',
+        cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+        isExpanded: false, isLoadMore: true,
+      });
+    }
+  }
+
+  // ── 6. Extract placeholders ────────────────────────────────────────────────
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
-  const placeholderPersonIds = new Set<string>();
 
-  for (const k of placeholderKeys) {
-    const person = ancestorNodes.get(k);
-    if (person) placeholderPersonIds.add(person.id);
-  }
-  if (childPlaceholderId) placeholderPersonIds.add(childPlaceholderId);
-
-  // Convert placeholder boxes and remove from regular boxes
   for (let i = boxes.length - 1; i >= 0; i--) {
     const box = boxes[i];
     if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
@@ -690,26 +539,19 @@ export function computeHourglassLayout(
       role = 'child';
       childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'child_').length);
     }
-    placeholders.push({
-      type: 'placeholder', role, childPersonId,
-      x: box.x, y: box.y,
-    });
+    placeholders.push({ type: 'placeholder', role, childPersonId, x: box.x, y: box.y });
     boxes.splice(i, 1);
   }
 
-  // Convert solid connector lines touching placeholder boxes into dashed lines.
+  // Convert lines touching placeholders to dashed
   const phCenters = new Set<string>();
   for (const ph of placeholders) {
-    const cx = ph.x + BOX_W / 2;
-    const top = ph.y;
-    const bottom = ph.y + BOX_H;
-    phCenters.add(`${cx},${top}`);
-    phCenters.add(`${cx},${bottom}`);
+    phCenters.add(`${ph.x + BOX_W / 2},${ph.y}`);
+    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H}`);
   }
   for (let i = lines.length - 1; i >= 0; i--) {
     const ln = lines[i];
-    const touchesStart = phCenters.has(`${ln.x1},${ln.y1}`) || phCenters.has(`${ln.x2},${ln.y2}`);
-    if (touchesStart) {
+    if (phCenters.has(`${ln.x1},${ln.y1}`) || phCenters.has(`${ln.x2},${ln.y2}`)) {
       placeholderLines.push(ln);
       lines.splice(i, 1);
     }
