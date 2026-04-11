@@ -154,6 +154,7 @@ export default {
     noCitations: 'No citations yet.',
     entity: 'Linked to',
     page: 'Page',
+    notes: 'Notes',
     confidence: 'Confidence',
     transcription: 'Transcription',
     confirmDeleteCitation: 'Delete this citation?',

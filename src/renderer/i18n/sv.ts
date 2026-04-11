@@ -154,6 +154,7 @@ export default {
     noCitations: 'Inga hänvisningar ännu.',
     entity: 'Kopplad till',
     page: 'Sida',
+    notes: 'Anteckningar',
     confidence: 'Tillförlitlighet',
     transcription: 'Transkription',
     confirmDeleteCitation: 'Ta bort denna hänvisning?',

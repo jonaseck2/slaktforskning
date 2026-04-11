@@ -54,7 +54,7 @@
         <thead>
           <tr>
             <th>{{ $t('sourceDetail.entity') }}</th>
-            <th>{{ $t('sourceDetail.page') }}</th>
+            <th>{{ $t('sourceDetail.notes') }}</th>
             <th>{{ $t('sourceDetail.confidence') }}</th>
             <th>{{ $t('sourceDetail.transcription') }}</th>
             <th></th>
@@ -68,7 +68,7 @@
                 <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
                 <span v-else class="muted">—</span>
               </td>
-              <td><LinkedText v-if="cit.page" :text="cit.page" /><span v-else>—</span></td>
+              <td><LinkedText v-if="cit.notes" :text="cit.notes" /><span v-else>—</span></td>
               <td>
                 <span :class="'confidence-badge confidence-' + cit.confidence">
                   {{ $t('confidenceLevels.' + cit.confidence) }}
@@ -275,7 +275,6 @@ onBeforeRouteLeave(() => { stop(); });
 
 <style scoped>
 .source-detail {
-  max-width: 700px;
 }
 .detail-header {
   margin-bottom: 24px;
