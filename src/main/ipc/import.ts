@@ -8,6 +8,7 @@ import { previewGedcomImport } from '../../import/gedcom';
 import type { ImportOptions } from '../../import/gedcom';
 import { unzipSync } from 'fflate';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../../import/genney/index';
+import { mediaFolderName } from './media';
 import { importFromHolger } from '../../import/holger/index';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
@@ -258,8 +259,9 @@ export function registerImportHandlers(
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     const archivePath = result.filePaths[0];
-    const dbDir = path.dirname(getCurrentDatabasePath());
-    const mediaDir = path.join(dbDir, 'media');
+    const dbPath = getCurrentDatabasePath();
+    const dbDir = path.dirname(dbPath);
+    const mediaDir = path.join(dbDir, mediaFolderName(dbPath));
     importInProgress = true;
     try {
       const report = importArchive(getDb(), archivePath, mediaDir);

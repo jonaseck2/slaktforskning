@@ -6,6 +6,12 @@ import * as media from '../../api/media';
 import { getMediaTimeline } from '../../api/media_timeline';
 import * as mediaRegions from '../../api/media_regions';
 
+/** Derive the media folder name from the database filename: `foo.db` → `foo-media` */
+export function mediaFolderName(dbPath: string): string {
+  const dbName = path.basename(dbPath, path.extname(dbPath));
+  return `${dbName}-media`;
+}
+
 export function registerMediaHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,
   getCurrentDatabasePath: () => string,
@@ -39,8 +45,10 @@ export function registerMediaHandlers(
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
 
     const srcPath = result.filePaths[0];
-    const dbDir = path.dirname(getCurrentDatabasePath());
-    const mediaDir = path.join(dbDir, 'media');
+    const dbPath = getCurrentDatabasePath();
+    const dbDir = path.dirname(dbPath);
+    const mediaFolder = mediaFolderName(dbPath);
+    const mediaDir = path.join(dbDir, mediaFolder);
     fs.mkdirSync(mediaDir, { recursive: true });
 
     const filename = path.basename(srcPath);
@@ -54,7 +62,7 @@ export function registerMediaHandlers(
     }
     fs.copyFileSync(srcPath, destPath);
 
-    const fileRef = path.join('media', path.basename(destPath));
+    const fileRef = path.join(mediaFolder, path.basename(destPath));
     const ext = path.extname(destPath).slice(1).toLowerCase();
     const db = getDb();
     const item = media.createMedia(db, {

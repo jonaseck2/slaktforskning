@@ -5,6 +5,7 @@ import * as path from 'path';
 import { unzipSync } from 'fflate';
 import { readGedcomFile, parseGedcom, importGedcom } from '../gedcom';
 import type { ImportOptions, ValidationReport } from '../import/gedcom';
+import { queryAll, runSql } from './db';
 
 export interface ArchiveImportReport {
   gedcomReport: ValidationReport;
@@ -90,6 +91,18 @@ export function importArchive(
         mediaImported++;
       } catch (err) {
         mediaSkipped.push(`${entryName}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    // Rewrite file_ref paths to match the target media folder name
+    const mediaFolderBase = path.basename(mediaDir);
+    if (mediaFolderBase !== 'media') {
+      const mediaPaths = queryAll<{ id: string; file_ref: string }>(db, `
+        SELECT id, file_ref FROM media WHERE file_ref IS NOT NULL AND file_ref LIKE 'media/%'
+      `);
+      for (const row of mediaPaths) {
+        const newRef = row.file_ref.replace(/^media\//, `${mediaFolderBase}/`);
+        runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [newRef, row.id]);
       }
     }
 
