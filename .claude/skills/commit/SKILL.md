@@ -37,6 +37,8 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 - **NEVER skip files** — if a file is modified or untracked, it gets committed
 - **NEVER amend** unless explicitly asked — always create a new commit
 - **NEVER skip hooks** (no `--no-verify`)
+- **Run tests BEFORE committing** — never commit first and test after. If tests fail, fix them before committing.
+- **Always merge to main** — merge completed work directly to `main` without asking which branch or option. No feature branches unless explicitly requested.
 - Do not commit files that contain secrets (.env, credentials). Warn the user if such files are staged.
 - **Review `git status` carefully** — if unexpected files appear (build artifacts, generated files not in `.gitignore`), flag them to the user before committing rather than silently including them.
 

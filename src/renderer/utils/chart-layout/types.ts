@@ -41,9 +41,11 @@ export interface CollapseButton {
 
 export interface PlaceholderBox {
   type: 'placeholder';
-  role: 'father' | 'mother';
+  role: 'father' | 'mother' | 'child';
+  /** The person this placeholder is attached to (child for parent placeholders, parent for child placeholders). */
   childPersonId: string;
-  key: number;
+  /** Ahnentafel key (ancestor placeholders only). */
+  key?: number;
   x: number;
   y: number;
 }

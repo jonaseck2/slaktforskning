@@ -7,7 +7,7 @@
         v-else
         :width="layout.svgWidth * zoom"
         :height="layout.svgHeight * zoom"
-        :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
+        :viewBox="`0 ${layout.viewBoxMinY} ${layout.svgWidth} ${layout.svgHeight}`"
         data-testid="hourglass-svg"
       >
         <line
@@ -110,6 +110,38 @@
               style="pointer-events: none; user-select: none;"
             >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
           </g>
+          <line
+            v-for="(ln, i) in layout.placeholderLines"
+            :key="'pl' + i"
+            :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+            stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3"
+            vector-effect="non-scaling-stroke"
+          />
+          <g
+            v-for="ph in layout.placeholders"
+            :key="'ph-' + (ph.key ?? ph.role + '-' + ph.childPersonId)"
+            class="ghost-box"
+            tabindex="0"
+            role="button"
+            :aria-label="ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : $t('personDetail.addChild')"
+            @click="startAddFromPlaceholder(ph)"
+            @keydown.enter="startAddFromPlaceholder(ph)"
+            @keydown.space.prevent="startAddFromPlaceholder(ph)"
+          >
+            <rect
+              :x="ph.x" :y="ph.y" :width="BOX_W" :height="BOX_H"
+              rx="6" ry="6"
+              fill="transparent" stroke="#94a3b8" stroke-dasharray="4 3" stroke-width="1.5"
+            />
+            <text
+              :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 - 6"
+              text-anchor="middle" fill="#94a3b8" font-size="18"
+            >+</text>
+            <text
+              :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 + 12"
+              text-anchor="middle" fill="#94a3b8" font-size="11"
+            >{{ ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : $t('personDetail.addChild') }}</text>
+          </g>
         </template>
       </svg>
     </div>
@@ -130,7 +162,8 @@
       @click.stop
       @mousedown.stop
     >
-      <button @click="startAddRelative('parent')">{{ $t('personDetail.addParent') }}</button>
+      <button @click="startAddRelative('father')">{{ $t('personDetail.addFather') }}</button>
+      <button @click="startAddRelative('mother')">{{ $t('personDetail.addMother') }}</button>
       <button @click="startAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
       <button @click="startAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
     </div>
@@ -149,10 +182,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeHourglassLayout, maxDescendantDepth } from '../../utils/chart-layout';
+import { computeHourglassLayout, maxDescendantDepth, BOX_W, BOX_H } from '../../utils/chart-layout';
 import { fetchHourglassTree, loadAncestorGeneration, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { BoxLayout, CollapseButton, HourglassTree } from '../../utils/chart-layout';
+import type { BoxLayout, CollapseButton, HourglassTree, PlaceholderBox } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
@@ -160,7 +193,7 @@ import ChartTooltip from './ChartTooltip.vue';
 useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined; readonly?: boolean }>();
+const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
@@ -175,11 +208,11 @@ const hoveredPersonId = ref<string | null>(null);
 const addPopover = ref<{ personId: string; x: number; y: number } | null>(null);
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
-const addRelativeMode = ref<'parent' | 'spouse' | 'child'>('parent');
+const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 
 const layout = computed(() => {
-  if (!tree.value) return { boxes: [], lines: [], svgWidth: 1400, svgHeight: 688, collapseButtons: [], placeholders: [], placeholderLines: [] };
-  return computeHourglassLayout(tree.value, collapsed.value);
+  if (!tree.value) return { boxes: [], lines: [], svgWidth: 1400, svgHeight: 688, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
+  return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId);
 });
 
 // Reverse map: personId → ahnentafel key for the ancestor section
@@ -251,7 +284,14 @@ function openAddPopover(box: BoxLayout) {
   addPopover.value = { personId: box.person.id, x: pos.x, y: pos.y };
 }
 
-function startAddRelative(mode: 'parent' | 'spouse' | 'child') {
+function startAddFromPlaceholder(ph: PlaceholderBox) {
+  addRelativePersonId.value = ph.childPersonId;
+  addRelativeMode.value = ph.role === 'child' ? 'child' : ph.role;
+  addPopover.value = null;
+  showAddRelative.value = true;
+}
+
+function startAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
   if (!addPopover.value) return;
   addRelativePersonId.value = addPopover.value.personId;
   addRelativeMode.value = mode;
@@ -336,6 +376,11 @@ onUnmounted(() => {
 
 .add-btn { cursor: pointer; }
 .add-btn:hover circle { opacity: 0.8; }
+
+.ghost-box { cursor: pointer; }
+.ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }
+.ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
+.ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
 
 .add-popover {
   position: fixed;

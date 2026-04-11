@@ -75,6 +75,7 @@
           v-if="activeTab === 'hourglass'"
           :key="'hourglass-' + chartKey"
           :person-id="personId"
+          :selected-person-id="selectedPersonId"
           @navigate="navigateTo"
           @reload="reloadChart"
         />
