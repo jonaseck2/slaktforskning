@@ -18,6 +18,14 @@ const RINGS: Array<{ rInner: number; rOuter: number }> = [
   { rInner: 336, rOuter: 394 },  // Gen 6: 58px deep (was 34)
 ];
 
+/** Returns the SVG viewBox size needed for the given number of generations. */
+export function circleSvgSizeForGenerations(generations: number): number {
+  const gen = Math.max(0, Math.min(generations, RINGS.length - 1));
+  const outerR = RINGS[gen].rOuter;
+  const padding = 12;
+  return (outerR + padding) * 2;
+}
+
 const BRANCH_BASE: readonly string[] = [
   '#6a9cc0', // 0 — paternal grandfather (slate blue)
   '#6aaa78', // 1 — paternal grandmother (sage green)

@@ -5,6 +5,7 @@
       :segments="layout"
       :focal-segment="focalSegment"
       :curved-text="true"
+      :view-box-size="svgSize"
       width="100%"
     />
     <div v-else-if="loading" class="empty-hint">{{ $t('common.loading') }}</div>
@@ -13,7 +14,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { computeCircleLayout, type CircleSegment } from '../../utils/circleLayout';
+import { computeCircleLayout, circleSvgSizeForGenerations, type CircleSegment } from '../../utils/circleLayout';
 import { fetchPedigreeTree } from '../../utils/chartData';
 import type { PedigreeTree } from '../../utils/chart-layout';
 import CircleChartSvg from '../charts/CircleChartSvg.vue';
@@ -30,6 +31,7 @@ const layout = computed<CircleSegment[]>(() =>
 );
 
 const focalSegment = computed(() => layout.value.find(s => s.isFocal) ?? null);
+const svgSize = computed(() => circleSvgSizeForGenerations(gens.value));
 
 async function load() {
   if (!props.personId) return;
