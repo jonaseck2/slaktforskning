@@ -60,6 +60,26 @@
       <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
     </section>
 
+    <!-- Gazetteer Match Section -->
+    <section v-if="gazetteerMatch" class="detail-section gazetteer-section" aria-labelledby="section-gazetteer-match">
+      <div class="section-header">
+        <h4 id="section-gazetteer-match">{{ $t('gazetteers.matchTitle') }}</h4>
+      </div>
+      <div class="gazetteer-match">
+        <div class="match-quality-row">
+          <span class="match-badge" :class="'match-' + gazetteerMatch.matchQuality">
+            {{ $t('gazetteers.match.' + gazetteerMatch.matchQuality) }}
+          </span>
+          <span class="gazetteer-name">{{ gazetteerMatch.gazetteer }}</span>
+        </div>
+        <div class="match-path">{{ gazetteerMatch.matchedPath.join(' > ') }}</div>
+        <div v-if="gazetteerMatch.unmatchedComponents.length" class="unmatched">
+          {{ $t('gazetteers.unmatched') }}: {{ gazetteerMatch.unmatchedComponents.join(', ') }}
+        </div>
+        <div class="resolved-coords">{{ gazetteerMatch.lat.toFixed(5) }}, {{ gazetteerMatch.lon.toFixed(5) }}</div>
+      </div>
+    </section>
+
     <!-- Map Section -->
     <section v-if="mapMarkers.length > 0" class="detail-section" aria-labelledby="section-place-map">
       <div class="section-header">
@@ -122,6 +142,7 @@ import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
 
 // Fix default marker icons for Vite bundler
 delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
@@ -149,6 +170,13 @@ const editPostalCode = ref('');
 const editCity = ref('');
 const editCountry = ref('');
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
+
+const gazetteerMatch = computed(() => {
+  if (!resolverReady.value || !place.value) return null;
+  if (place.value.latitude != null && place.value.longitude != null) return null;
+  return resolvePlace(place.value.name);
+});
 
 interface MapMarker { id: string; name: string; lat: number; lon: number; type: string | null; }
 
@@ -186,6 +214,7 @@ function fitMapBounds() {
 }
 
 async function load() {
+  await ensureLoaded();
   place.value = (await window.api.places.get(placeId)) as PlaceRow | null;
   if (!place.value) return;
   editName.value = place.value.name;
@@ -234,4 +263,15 @@ textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list a:hover { text-decoration: underline; }
 .empty { color: #999; padding: 40px; text-align: center; }
 .place-map-container { height: 300px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
+.gazetteer-section { background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 6px; padding: 12px; }
+.gazetteer-match { font-size: var(--font-sm); }
+.match-quality-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.match-badge { font-size: var(--font-xs); font-weight: 600; padding: 2px 6px; border-radius: 3px; }
+.match-exact { background: #dcfce7; color: #166534; }
+.match-partial { background: #fef3c7; color: #92400e; }
+.match-ambiguous { background: #fee2e2; color: #991b1b; }
+.gazetteer-name { color: #666; font-size: var(--font-xs); }
+.match-path { color: #374151; margin-bottom: 4px; }
+.unmatched { color: #9ca3af; font-size: var(--font-xs); margin-bottom: 4px; }
+.resolved-coords { color: #6b7280; font-size: var(--font-xs); font-family: monospace; }
 </style>
