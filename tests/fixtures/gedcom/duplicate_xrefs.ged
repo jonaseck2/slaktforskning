@@ -1,0 +1,16 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBM
+1 NAME Test
+0 @I1@ INDI
+1 NAME First /Person/
+1 SEX M
+0 @I1@ INDI
+1 NAME Second /Person/
+1 SEX F
+0 @I2@ INDI
+1 NAME Third /Person/
+1 SEX M
+0 TRLR

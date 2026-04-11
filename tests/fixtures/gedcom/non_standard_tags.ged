@@ -1,0 +1,18 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBM
+1 NAME Test
+0 @I1@ INDI
+1 NAME Erik /Nilsson/
+1 SEX M
+1 _MTTAG Custom value
+1 _PHOTO /path/to/photo.jpg
+1 _UID ABCD-1234-5678
+1 _CUSTOM Another extension tag
+0 @I2@ INDI
+1 NAME Lisa /Persson/
+1 SEX F
+1 _WEBTAG http://example.com
+0 TRLR

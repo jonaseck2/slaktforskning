@@ -3,9 +3,35 @@
   <div class="io-group">
     <h3>{{ $t('importExport.gedcomImportTitle') }}</h3>
     <p class="section-desc">{{ $t('importExport.gedcomImportDesc') }}</p>
-    <button @click="handleImportGedcom" :disabled="busy">{{ $t('gedcom.import') }}</button>
+    <button @click="handlePreviewGedcom" :disabled="busy">{{ $t('gedcom.import') }}</button>
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
+    <!-- Preview modal -->
+    <BaseModal v-if="showPreview && previewData" @close="cancelImport" title-id="modal-title-gedcom-preview">
+      <h3 id="modal-title-gedcom-preview">{{ $t('gedcom.previewTitle') }}</h3>
+      <p>{{ $t('gedcom.willImport') }}</p>
+      <ul class="report-counts">
+        <li>{{ $t('gedcom.previewPersons', { n: previewData.personCount }) }}</li>
+        <li>{{ $t('gedcom.previewRelationships', { n: previewData.relationshipCount }) }}</li>
+        <li>{{ $t('gedcom.previewEvents', { n: previewData.eventCount }) }}</li>
+        <li>{{ $t('gedcom.previewSources', { n: previewData.sourceCount }) }}</li>
+        <li>{{ $t('gedcom.previewPlaces', { n: previewData.placeCount }) }}</li>
+        <li v-if="previewData.repositoryCount > 0">{{ $t('gedcom.previewRepositories', { n: previewData.repositoryCount }) }}</li>
+      </ul>
+      <p v-if="previewData.estimatedSize === 'large'" class="size-warning">{{ $t('gedcom.previewLargeWarning') }}</p>
+      <div v-if="previewData.warnings.length > 0" class="report-section">
+        <p class="report-section-label">{{ $t('gedcom.previewWarnings', { n: previewData.warnings.length }) }}</p>
+        <ul>
+          <li v-for="(w, i) in previewData.warnings" :key="i">{{ w }}</li>
+        </ul>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" @click="cancelImport">{{ $t('gedcom.previewCancel') }}</button>
+        <button @click="proceedImport" :disabled="busy">{{ $t('gedcom.previewProceed') }}</button>
+      </div>
+    </BaseModal>
+
+    <!-- Import report modal -->
     <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false" title-id="modal-title-gedcom-import-report">
       <h3 id="modal-title-gedcom-import-report">{{ $t('importExport.importReportTitle') }}</h3>
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
@@ -83,6 +109,13 @@ const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const showImportReport = ref(false);
+const showPreview = ref(false);
+const previewFilePath = ref<string | null>(null);
+const previewData = ref<{
+  personCount: number; relationshipCount: number; eventCount: number;
+  sourceCount: number; placeCount: number; repositoryCount: number;
+  warnings: string[]; estimatedSize: 'small' | 'medium' | 'large';
+} | null>(null);
 const importReport = ref<{
   version?: string;
   persons: number; families: number; events: Record<string, number>;
@@ -105,11 +138,46 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   setTimeout(() => { statusMessage.value = ''; }, 4000);
 }
 
-async function handleImportGedcom() {
+async function handlePreviewGedcom() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.import()) as {
+    const result = (await window.api.gedcom.preview()) as {
+      canceled?: boolean;
+      filePath?: string;
+      preview?: {
+        personCount: number; relationshipCount: number; eventCount: number;
+        sourceCount: number; placeCount: number; repositoryCount: number;
+        warnings: string[]; estimatedSize: 'small' | 'medium' | 'large';
+      };
+    };
+    if (result.canceled) return;
+    if (result.preview) {
+      previewData.value = result.preview;
+      previewFilePath.value = result.filePath ?? null;
+      showPreview.value = true;
+    }
+  } catch (err) {
+    setStatus(t('importExport.importError'), 'error');
+    console.error('[ImportExport] GEDCOM preview failed:', err);
+    toast.error(t('errors.saveFailed'));
+  } finally {
+    busy.value = false;
+  }
+}
+
+function cancelImport() {
+  showPreview.value = false;
+  previewData.value = null;
+  previewFilePath.value = null;
+}
+
+async function proceedImport() {
+  if (!window.api || busy.value || !previewFilePath.value) return;
+  showPreview.value = false;
+  busy.value = true;
+  try {
+    const result = (await window.api.gedcom.import({ filePath: previewFilePath.value })) as {
       imported?: boolean;
       canceled?: boolean;
       filePath?: string;
@@ -140,6 +208,8 @@ async function handleImportGedcom() {
     toast.error(t('errors.saveFailed'));
   } finally {
     busy.value = false;
+    previewData.value = null;
+    previewFilePath.value = null;
   }
 }
 </script>
@@ -151,5 +221,9 @@ async function handleImportGedcom() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.size-warning {
+  color: var(--color-warning, #c57600);
+  font-weight: 500;
 }
 </style>

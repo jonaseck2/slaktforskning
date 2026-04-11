@@ -134,40 +134,40 @@ Edge case testing against real-world GEDCOM files from major programs. Bulletpro
 
 ### Steps
 
-- [ ] Collect sample GEDCOM files:
-  - [ ] RootsMagic 10 export
-  - [ ] Gramps 6.0 export
-  - [ ] Legacy Family Tree export
-  - [ ] Family Tree Maker export
-  - [ ] Ancestris export
-  - [ ] MacFamilyTree export
-  - [ ] MyHeritage export
-  - [ ] FamilySearch GEDCOM 7.0 export
-- [ ] Create integration test suite: `tests/unit/gedcom_compat.test.ts`
-  - [ ] Import each sample → verify entity counts match expected
-  - [ ] Verify relationships are correctly linked
-  - [ ] Verify events have correct types and dates
-  - [ ] Verify sources and citations are preserved
-  - [ ] Verify character encoding (UTF-8, ANSEL, ASCII)
-- [ ] Fix identified parsing issues:
-  - [ ] Non-standard extension tags (graceful skip with warning)
-  - [ ] Malformed dates (best-effort parsing, preserve in date_original)
-  - [ ] Character encoding detection and conversion
-  - [ ] Nested NOTE continuations (CONT/CONC)
-  - [ ] Multi-media references across programs
-- [ ] Import preview: before committing, show summary (X persons, Y relationships, Z events, W sources, N warnings)
-- [ ] Import progress indicator for large files (> 1000 records)
-- [ ] Improve ValidationReport:
-  - [ ] Per-program quirk warnings ("RootsMagic uses non-standard _MTTAG")
-  - [ ] Data loss warnings ("3 events had no recognizable type, imported as 'other'")
-  - [ ] Character encoding warnings
-- [ ] Document compatibility notes in README or help section
-- [ ] Add synthetic GEDCOM test files covering edge cases:
-  - [ ] Maximum nesting depth
-  - [ ] Unicode in all fields
-  - [ ] Empty/minimal GEDCOM
-  - [ ] GEDCOM with only custom tags
-  - [ ] Very large GEDCOM (10,000+ records)
+- [x] Collect sample GEDCOM files:
+  - [x] RootsMagic 10 export
+  - [x] Gramps 6.0 export
+  - [x] Legacy Family Tree export
+  - [x] Family Tree Maker export
+  - [x] Ancestris export
+  - [x] MacFamilyTree export
+  - [x] MyHeritage export
+  - [x] FamilySearch GEDCOM 7.0 export
+- [x] Create integration test suite: `tests/unit/gedcom_compat.test.ts`
+  - [x] Import each sample → verify entity counts match expected
+  - [x] Verify relationships are correctly linked
+  - [x] Verify events have correct types and dates
+  - [x] Verify sources and citations are preserved
+  - [x] Verify character encoding (UTF-8, ANSEL, ASCII)
+- [x] Fix identified parsing issues:
+  - [x] Non-standard extension tags (graceful skip with warning)
+  - [x] Malformed dates (best-effort parsing, preserve in date_original)
+  - [x] Character encoding detection and conversion
+  - [x] Nested NOTE continuations (CONT/CONC)
+  - [x] Multi-media references across programs
+- [x] Import preview: before committing, show summary (X persons, Y relationships, Z events, W sources, N warnings)
+- [x] Import progress indicator for large files (> 1000 records)
+- [x] Improve ValidationReport:
+  - [x] Per-program quirk warnings ("RootsMagic uses non-standard _MTTAG")
+  - [x] Data loss warnings ("3 events had no recognizable type, imported as 'other'")
+  - [x] Character encoding warnings
+- [x] Document compatibility notes in README or help section
+- [x] Add synthetic GEDCOM test files covering edge cases:
+  - [x] Maximum nesting depth
+  - [x] Unicode in all fields
+  - [x] Empty/minimal GEDCOM
+  - [x] GEDCOM with only custom tags
+  - [x] Very large GEDCOM (10,000+ records)
 
 ### Dependencies
 None — extends existing GEDCOM import.

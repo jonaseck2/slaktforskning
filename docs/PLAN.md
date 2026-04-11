@@ -99,6 +99,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.64.0 | B4: Face/Region Tagging — manual crop, link to person, MCP tools, 14 tests | [plan](plans/2026-04-11-track-b-media-experience.md) |
 | Docs | D3: Claude Desktop Integration — 6 workflow guides, README MCP setup section | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
 | v0.65.0 | A4: Static HTML Site Export — browsable website, search, XSS-safe, 12 tests | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
+| v0.66.0 | C4: GEDCOM Hardening — 8 edge case fixtures, date parser, import preview, 40 tests | [plan](plans/2026-04-11-track-c-core-polish.md) |
 ---
 
 ## Research
@@ -137,8 +138,7 @@ MCP tools for agents to suggest face bounding boxes and person assignments.
 
 ### Track C: Core Polish [plan](plans/2026-04-11-track-c-core-polish.md)
 
-#### C4: GEDCOM Hardening [feature]
-Edge case testing against RootsMagic, Gramps, Legacy, FTM exports. Import preview, progress indicator.
+*All milestones complete (C1, C2, C3, C4).*
 
 ---
 

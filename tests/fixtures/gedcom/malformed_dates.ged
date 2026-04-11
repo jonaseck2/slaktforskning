@@ -1,0 +1,42 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBM
+1 NAME Test
+0 @I1@ INDI
+1 NAME Johan /Berg/
+1 SEX M
+1 BIRT
+2 DATE abt. 1850
+0 @I2@ INDI
+1 NAME Maria /Holm/
+1 SEX F
+1 BIRT
+2 DATE ca 1900
+0 @I3@ INDI
+1 NAME Per /Lund/
+1 SEX M
+1 BIRT
+2 DATE 1850/1860
+0 @I4@ INDI
+1 NAME Karin /Dahl/
+1 SEX F
+1 BIRT
+2 DATE 13th century
+0 @I5@ INDI
+1 NAME Olof /Ek/
+1 SEX M
+1 BIRT
+2 DATE ?
+0 @I6@ INDI
+1 NAME Sven /Gran/
+1 SEX M
+1 BIRT
+2 DATE circa 1750
+0 @I7@ INDI
+1 NAME Nils /Asp/
+1 SEX M
+1 BIRT
+2 DATE between 1800 and 1810
+0 TRLR

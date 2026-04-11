@@ -1,0 +1,104 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBM
+1 NAME Test
+0 @I1@ INDI
+1 NAME Anders /Larsson/
+1 SEX M
+0 @I2@ INDI
+1 NAME Brita /Olsdotter/
+1 SEX F
+0 @I3@ INDI
+1 NAME Child1 /Andersson/
+1 SEX F
+0 @I4@ INDI
+1 NAME Child2 /Andersson/
+1 SEX M
+0 @I5@ INDI
+1 NAME Child3 /Andersson/
+1 SEX F
+0 @I6@ INDI
+1 NAME Child4 /Andersson/
+1 SEX M
+0 @I7@ INDI
+1 NAME Child5 /Andersson/
+1 SEX F
+0 @I8@ INDI
+1 NAME Child6 /Andersson/
+1 SEX M
+0 @I9@ INDI
+1 NAME Child7 /Andersson/
+1 SEX F
+0 @I10@ INDI
+1 NAME Child8 /Andersson/
+1 SEX M
+0 @I11@ INDI
+1 NAME Child9 /Andersson/
+1 SEX F
+0 @I12@ INDI
+1 NAME Child10 /Andersson/
+1 SEX M
+0 @I13@ INDI
+1 NAME Child11 /Andersson/
+1 SEX F
+0 @I14@ INDI
+1 NAME Child12 /Andersson/
+1 SEX M
+0 @I15@ INDI
+1 NAME Child13 /Andersson/
+1 SEX F
+0 @I16@ INDI
+1 NAME Child14 /Andersson/
+1 SEX M
+0 @I17@ INDI
+1 NAME Child15 /Andersson/
+1 SEX F
+0 @I18@ INDI
+1 NAME Child16 /Andersson/
+1 SEX M
+0 @I19@ INDI
+1 NAME Child17 /Andersson/
+1 SEX F
+0 @I20@ INDI
+1 NAME Child18 /Andersson/
+1 SEX M
+0 @I21@ INDI
+1 NAME Child19 /Andersson/
+1 SEX F
+0 @I22@ INDI
+1 NAME Child20 /Andersson/
+1 SEX M
+0 @I23@ INDI
+1 NAME Child21 /Andersson/
+1 SEX F
+0 @I24@ INDI
+1 NAME Child22 /Andersson/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 CHIL @I4@
+1 CHIL @I5@
+1 CHIL @I6@
+1 CHIL @I7@
+1 CHIL @I8@
+1 CHIL @I9@
+1 CHIL @I10@
+1 CHIL @I11@
+1 CHIL @I12@
+1 CHIL @I13@
+1 CHIL @I14@
+1 CHIL @I15@
+1 CHIL @I16@
+1 CHIL @I17@
+1 CHIL @I18@
+1 CHIL @I19@
+1 CHIL @I20@
+1 CHIL @I21@
+1 CHIL @I22@
+1 CHIL @I23@
+1 CHIL @I24@
+0 TRLR

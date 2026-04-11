@@ -1,0 +1,18 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+0 @S1@ SUBM
+1 NAME Test
+0 @I1@ INDI
+1 NAME //
+1 SEX U
+0 @I2@ INDI
+1 NAME /Only Surname/
+1 SEX M
+0 @I3@ INDI
+1 NAME Given Only //
+1 SEX F
+0 @I4@ INDI
+1 SEX U
+0 TRLR

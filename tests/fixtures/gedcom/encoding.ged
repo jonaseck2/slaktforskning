@@ -1,0 +1,18 @@
+0 HEAD
+1 SOUR TEST
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @S1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME Åke Göran /Österberg/
+1 SEX M
+1 NOTE Besökte München, drank Weißbier.
+2 CONT Visited Łódź and Kraków in Małopolska.
+2 CONT 日本語テスト Chinese: 中文测试
+0 @I2@ INDI
+1 NAME Ärla Üllä /Björk/
+1 SEX F
+1 NOTE Special chars: äöüß àéîõ ñ
+0 TRLR
