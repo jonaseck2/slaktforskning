@@ -246,6 +246,7 @@ export default {
     engagement: 'Engagement',
     wedding: 'Wedding',
     adoption: 'Adoption',
+    foster_placement: 'Foster Placement',
     other: 'Other',
   },
   dateTypes: {

@@ -242,10 +242,11 @@ export default {
     retirement: 'Pension',
     will: 'Testamente',
     probate: 'Bouppteckning',
-    mention: 'Omnämning',
+    mention: 'Omnämnande',
     engagement: 'Förlovning',
     wedding: 'Bröllop',
     adoption: 'Adoption',
+    foster_placement: 'Fosterhemsplacering',
     other: 'Övrigt',
   },
   dateTypes: {
