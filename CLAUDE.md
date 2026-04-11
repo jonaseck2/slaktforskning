@@ -54,10 +54,16 @@ src/
 │   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context, tagging status
 │   ├── media_regions.ts          # Media region (face/area tagging) CRUD
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
-│   └── link-rules/               # Default link rule sets
-│       ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
-│       ├── en.ts                  # English rules (FamilySearch, FindAGrave, Ancestry)
-│       └── universal.ts           # Universal rules (plain URLs)
+│   ├── link-rules/               # Default link rule sets
+│   │   ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
+│   │   ├── en.ts                  # English rules (FamilySearch, FindAGrave, Ancestry)
+│   │   └── universal.ts           # Universal rules (plain URLs)
+│   └── place-gazetteers/          # Render-time place resolution (coordinates from reference data)
+│       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
+│       ├── resolver.ts            # resolvePlace() — match place strings against gazetteer trees
+│       ├── index.ts               # loadGazetteers(), getAllGazetteers()
+│       └── data/
+│           └── sv-parishes.json   # Bundled Swedish parish gazetteer
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
@@ -141,6 +147,7 @@ docs/
 | `/places/:id` | `PlaceDetailView` | Place detail: name, type, parent, lat/lon, child places |
 | `/database` | `DatabaseView` | Active database path, recent databases list, New/Open buttons |
 | `/link-rules` | `LinkRulesView` | Link rule management: locale toggles, rule table, custom rules, test field |
+| `/gazetteers` | `GazetteersView` | Place gazetteer management: toggle gazetteers on/off, test place lookup |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
@@ -474,6 +481,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | Composable | Purpose |
 |-----------|---------|
 | `useBirthEventCreation` | Creates birth event + event_participant + optional citation in one call. Used by AddRelatedPersonModal and PersonsView. |
+| `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
 
 **Pinia Stores:**
 | Store | Purpose |
@@ -651,7 +659,7 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Database tools:** `get_current_database`, `switch_database`
 
-**Per-database settings:** `src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). The key `default_person_id` is set on GEDCOM import when a SUBM record's NAME matches exactly one person — App.vue reads this on startup to navigate to that person's detail view. Exposed to renderer via `window.api.db.getSetting(key: string): Promise<string | null>`.
+**Per-database settings:** `src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (set on GEDCOM import when SUBM NAME matches a person), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import). Exposed to renderer via `window.api.db.getSetting(key: string): Promise<string | null>`.
 
 **GEDCOM/import tools:** `import_gedcom` (`.ged` files only — for Genney GEDCOM exports use `profile: "genney"`), `import_genney` (`.backup`/`.gcc` archives or Derby directories), `import_holger` (`.ged` or `.zip` file or folder containing `.ged` — for Holger/OurKind GEDCOM exports; handles ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype, REMA/MISC → person notes; accepts `media_dir` for remapping Windows OBJE FILE paths to a local directory; returns `defaultPersonId` set to the first INDI's DB id), `export_gedcom` (accepts optional `version: '5.5.1' | '7.0'`, default `'5.5.1'`)
 
