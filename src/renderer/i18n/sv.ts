@@ -244,6 +244,7 @@ export default {
     probate: 'Bouppteckning',
     mention: 'Omnämning',
     engagement: 'Förlovning',
+    wedding: 'Bröllop',
     adoption: 'Adoption',
     other: 'Övrigt',
   },

@@ -6,18 +6,18 @@ export const EVENT_TYPE_VALUES = [
   'baptism', 'confirmation', 'ordination', 'census', 'immigration',
   'emigration', 'naturalization', 'occupation', 'residence', 'education',
   'graduation', 'military', 'retirement', 'will', 'probate', 'mention',
-  'engagement', 'adoption',
+  'engagement', 'wedding', 'adoption',
   'other',
 ] as const;
 
 export type EventTypeValue = (typeof EVENT_TYPE_VALUES)[number];
 
 export const PERSON_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter(
-  (t) => !['marriage', 'divorce'].includes(t),
+  (t) => !['marriage', 'divorce', 'wedding'].includes(t),
 );
 
 export const RELATIONSHIP_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter((t) =>
-  ['marriage', 'divorce', 'census', 'other'].includes(t),
+  ['marriage', 'divorce', 'wedding', 'census', 'other'].includes(t),
 );
 
 export const DATE_TYPE_VALUES = [
