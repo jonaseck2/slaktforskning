@@ -1,14 +1,14 @@
 <template>
   <div class="ancestor-book" @click.capture="handleAnchorClick">
-    <div v-if="loading" class="ab-loading">Laddar stamtavla…</div>
+    <div v-if="loading" class="ab-loading">{{ $t('common.loading') }}</div>
     <div v-else-if="error" class="ab-error">{{ error }}</div>
     <template v-else-if="allData.length > 0">
 
       <!-- 1. Title page -->
       <section class="ab-title-page">
         <h1 class="ab-title">{{ focalDisplayName }}</h1>
-        <p class="ab-subtitle">Stamtavla</p>
-        <p class="ab-meta">Exporterad {{ exportDate }}</p>
+        <p class="ab-subtitle">{{ $t('reports.pedigreeSubtitle') }}</p>
+        <p class="ab-meta">{{ $t('reports.exported') }} {{ exportDate }}</p>
       </section>
 
       <!-- 2. Circle chart (static SVG) -->
@@ -27,9 +27,9 @@
 
       <!-- 3. Ahnentafel list -->
       <section class="ab-ahnentafel">
-        <h2 class="ab-section-heading">Ahnentavla</h2>
+        <h2 class="ab-section-heading">{{ $t('reports.ahnentafel') }}</h2>
         <div v-for="gen in generationGroups" :key="gen.number" class="ab-gen-group">
-          <h3 class="ab-gen-heading">Generation {{ gen.number }}</h3>
+          <h3 class="ab-gen-heading">{{ $t('reports.generationLabel', { num: gen.number }) }}</h3>
           <ol class="ab-gen-list">
             <li v-for="entry in gen.entries" :key="entry.ahnNum" class="ab-gen-entry">
               <span class="ab-ahn-num">{{ entry.ahnNum }}.</span>
@@ -57,7 +57,7 @@
           <h3 class="ab-subsection-heading">{{ $t('personDetail.names') }}</h3>
           <table class="ab-table">
             <thead>
-              <tr><th>Förnamn</th><th>Efternamn</th><th>Typ</th></tr>
+              <tr><th>{{ $t('persons.givenName') }}</th><th>{{ $t('persons.surname') }}</th><th>{{ $t('common.type') }}</th></tr>
             </thead>
             <tbody>
               <tr v-for="n in entry.names" :key="(n.id ?? '') + n.given_name + n.surname">
@@ -71,10 +71,10 @@
 
         <!-- Events -->
         <div v-if="entry.events.length > 0" class="ab-subsection">
-          <h3 class="ab-subsection-heading">Händelser</h3>
+          <h3 class="ab-subsection-heading">{{ $t('events.title') }}</h3>
           <table class="ab-table">
             <thead>
-              <tr><th>Typ</th><th>Datum</th><th>Plats</th><th>Beskrivning</th></tr>
+              <tr><th>{{ $t('common.type') }}</th><th>{{ $t('events.date') }}</th><th>{{ $t('events.place') }}</th><th>{{ $t('events.description') }}</th></tr>
             </thead>
             <tbody>
               <tr v-for="ev in entry.events" :key="ev.id">
@@ -93,12 +93,12 @@
 
         <!-- Family -->
         <div class="ab-subsection">
-          <h3 class="ab-subsection-heading">Relationer</h3>
+          <h3 class="ab-subsection-heading">{{ $t('personDetail.relationships') }}</h3>
           <div v-if="entry.parents.length === 0 && entry.spouses.length === 0 && entry.children.length === 0" class="muted">
-            Inga relationer registrerade.
+            {{ $t('reports.noRelationships') }}
           </div>
           <div v-if="entry.parents.length > 0" class="ab-rel-row">
-            <strong>Föräldrar:</strong>
+            <strong>{{ $t('reports.parents') }}:</strong>
             <span v-for="(p, i) in entry.parents" :key="p.id">
               <a v-if="p.inTree" :href="`#person-${p.id}`">{{ p.name }}</a>
               <span v-else>{{ p.name }}</span>
@@ -125,13 +125,13 @@
 
         <!-- Notes -->
         <div v-if="entry.notes" class="ab-subsection">
-          <h3 class="ab-subsection-heading">Anteckningar</h3>
+          <h3 class="ab-subsection-heading">{{ $t('common.notes') }}</h3>
           <p class="ab-notes">{{ entry.notes }}</p>
         </div>
 
         <!-- Photos -->
         <div v-if="entry.media.length > 0" class="ab-subsection">
-          <h3 class="ab-subsection-heading">Foton</h3>
+          <h3 class="ab-subsection-heading">{{ $t('reports.photos') }}</h3>
           <div class="ab-photos">
             <div v-for="m in entry.media" :key="m.id" class="ab-photo">
               <img :src="m.dataUrl" class="ab-photo-img" :alt="m.title ?? ''" />
@@ -143,7 +143,7 @@
 
         <!-- Sources -->
         <div v-if="entry.sources.length > 0" class="ab-subsection">
-          <h3 class="ab-subsection-heading">Källor</h3>
+          <h3 class="ab-subsection-heading">{{ $t('sources.title') }}</h3>
           <ol class="ab-sources">
             <li v-for="src in entry.sources" :key="src.id">
               <span>{{ src.title }}</span>
@@ -270,7 +270,7 @@ const circleSvgSize = computed(() => circleSvgSizeForGenerations(props.circleGen
 
 // ── Display helpers ────────────────────────────────────────────────────────────
 function displayName(p: PersonNode): string {
-  return formatFullName({ given_name: p.givenName, surname: p.surname, preferred_name: p.preferredName, nickname: p.nickname }) || '(okänd)';
+  return formatFullName({ given_name: p.givenName, surname: p.surname, preferred_name: p.preferredName, nickname: p.nickname }) || t('common.unknown');
 }
 
 function lifespanStr(p: PersonNode): string {
@@ -302,34 +302,19 @@ function formatDate(ev: RawEvent): string {
   return `${prefix}${ev.date_value}`;
 }
 
-function nameTypeLabel(t: string): string {
-  const m: Record<string, string> = {
-    birth: 'Födelsenamn', married: 'Giftonamn', alias: 'Alias', aka: 'Känt som',
-  };
-  return m[t] ?? t;
+function nameTypeLabel(nt: string): string {
+  return t('nameTypes.' + nt, nt);
 }
 
-function eventTypeLabel(t: string): string {
-  const m: Record<string, string> = {
-    birth: 'Född', death: 'Död', marriage: 'Vigsel', divorce: 'Skilsmässa',
-    baptism: 'Dop', burial: 'Begravning', confirmation: 'Konfirmation',
-    emigration: 'Emigration', immigration: 'Immigration', census: 'Folkräkning',
-    occupation: 'Yrke', residence: 'Bostad', education: 'Utbildning',
-    military: 'Militärtjänst', naturalization: 'Naturalisering',
-    graduation: 'Examen', retirement: 'Pensionering',
-    will: 'Testamente', probate: 'Bouppteckning', other: 'Övrigt',
-  };
-  return m[t] ?? t;
+function eventTypeLabel(et: string): string {
+  return t('eventTypes.' + et, et);
 }
 
-function subtypeLabel(t: string): string {
-  const m: Record<string, string> = {
-    marriage: 'gift', civil_union: 'registrerat partnerskap',
-    cohabitation: 'sambo', unknown: 'okänd',
-    biological: 'biologisk', adopted: 'adopterad',
-    foster: 'fosterbarn', step: 'styvbarn',
-  };
-  return m[t] ?? t;
+function subtypeLabel(st: string): string {
+  const key = st === 'marriage' || st === 'civil_union' || st === 'cohabitation' || st === 'unknown'
+    ? 'coupleSubtypes.' + st
+    : 'parentChildSubtypes.' + st;
+  return t(key, st);
 }
 
 const focalDisplayName = computed(() => {

@@ -1,9 +1,9 @@
 <template>
   <div class="family-group-sheet">
-    <div v-if="loading" class="loading">Laddar…</div>
+    <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <template v-else-if="data">
-      <h1 class="report-title">Familjeblad</h1>
+      <h1 class="report-title">{{ $t('reports.familyGroupSheet') }}</h1>
       <p class="report-meta">{{ new Date().toLocaleDateString('sv-SE') }}</p>
 
       <!-- Spouses -->
@@ -11,18 +11,18 @@
         <tbody>
           <tr v-if="data.person1">
             <th>{{ data.person1.role }}</th>
-            <td class="person-name">{{ data.person1.name || '(okänd)' }}</td>
-            <td v-if="data.person1.birth">Född: {{ data.person1.birth }}</td>
+            <td class="person-name">{{ data.person1.name || $t('common.unknown') }}</td>
+            <td v-if="data.person1.birth">{{ $t('eventTypes.birth') }}: {{ data.person1.birth }}</td>
             <td v-else><span class="empty-cell">–</span></td>
-            <td v-if="data.person1.death">Död: {{ data.person1.death }}</td>
+            <td v-if="data.person1.death">{{ $t('eventTypes.death') }}: {{ data.person1.death }}</td>
             <td v-else><span class="empty-cell">–</span></td>
           </tr>
           <tr v-if="data.person2">
             <th>{{ data.person2.role }}</th>
-            <td class="person-name">{{ data.person2.name || '(okänd)' }}</td>
-            <td v-if="data.person2.birth">Född: {{ data.person2.birth }}</td>
+            <td class="person-name">{{ data.person2.name || $t('common.unknown') }}</td>
+            <td v-if="data.person2.birth">{{ $t('eventTypes.birth') }}: {{ data.person2.birth }}</td>
             <td v-else><span class="empty-cell">–</span></td>
-            <td v-if="data.person2.death">Död: {{ data.person2.death }}</td>
+            <td v-if="data.person2.death">{{ $t('eventTypes.death') }}: {{ data.person2.death }}</td>
             <td v-else><span class="empty-cell">–</span></td>
           </tr>
         </tbody>
@@ -30,27 +30,27 @@
 
       <!-- Marriage -->
       <div v-if="data.marriage" class="marriage-row">
-        <span class="label">Vigsel:</span>
+        <span class="label">{{ $t('reports.marriageLabel') }}</span>
         <span>{{ data.marriage }}</span>
       </div>
 
       <!-- Relationship notes -->
       <div v-if="data.notes" class="notes-row">
-        <span class="label">Anteckningar:</span>
+        <span class="label">{{ $t('reports.notesLabel') }}</span>
         <span>{{ data.notes }}</span>
       </div>
 
       <!-- Children -->
       <section class="children-section">
         <h2 class="section-heading">{{ $t('personPanel.children') }}</h2>
-        <div v-if="data.children.length === 0" class="empty-section">Inga barn registrerade.</div>
+        <div v-if="data.children.length === 0" class="empty-section">{{ $t('reports.noChildren') }}</div>
         <ol v-else class="children-list">
           <li v-for="child in data.children" :key="child.id" class="child-entry">
-            <span class="child-name">{{ child.name || '(okänd)' }}</span>
+            <span class="child-name">{{ child.name || $t('common.unknown') }}</span>
             <span v-if="child.birth || child.death" class="child-years">
-              {{ child.birth ? 'f. ' + child.birth : '' }}
+              {{ child.birth ? $t('reports.bornAbbrev') + ' ' + child.birth : '' }}
               {{ child.birth && child.death ? ' · ' : '' }}
-              {{ child.death ? 'd. ' + child.death : '' }}
+              {{ child.death ? $t('reports.diedAbbrev') + ' ' + child.death : '' }}
             </span>
           </li>
         </ol>
@@ -58,7 +58,7 @@
 
       <!-- Sources -->
       <section v-if="data.sources.length > 0" class="sources-section">
-        <h2 class="section-heading">Källor</h2>
+        <h2 class="section-heading">{{ $t('sources.title') }}</h2>
         <ol class="sources-list">
           <li v-for="src in data.sources" :key="src.id" class="source-entry">
             <span class="source-title">{{ src.title }}</span>
@@ -210,7 +210,7 @@ async function load() {
   try {
     const rel = (await window.api.relationships.get(props.relationshipId)) as RawRelationship | null;
     if (!rel) {
-      error.value = 'Relationen hittades inte.';
+      error.value = t('reports.relationshipNotFound');
       return;
     }
 
@@ -283,7 +283,7 @@ async function load() {
   } catch (err) {
     console.error('[FamilyGroupSheet] load failed:', err);
     toast.error(t('errors.loadFailed'));
-    error.value = 'Kunde inte ladda familjeblad.';
+    error.value = t('reports.loadFailed.familyGroupSheet');
   } finally {
     loading.value = false;
   }

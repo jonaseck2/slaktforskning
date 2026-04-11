@@ -1,11 +1,11 @@
 <template>
   <div class="individual-summary">
-    <div v-if="loading" class="loading">Laddar…</div>
+    <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <template v-else-if="data">
       <!-- Header -->
       <div class="report-header">
-        <h1 class="report-title">{{ data.primaryName || '(okänd)' }}</h1>
+        <h1 class="report-title">{{ data.primaryName || $t('common.unknown') }}</h1>
         <div class="report-subtitle">
           <span v-if="data.birthYear || data.deathYear" class="years">
             {{ data.birthYear ?? '?' }}–{{ data.deathYear ?? '' }}
@@ -21,9 +21,9 @@
         <table class="names-table">
           <thead>
             <tr>
-              <th>Förnamn</th>
-              <th>Efternamn</th>
-              <th>Typ</th>
+              <th>{{ $t('persons.givenName') }}</th>
+              <th>{{ $t('persons.surname') }}</th>
+              <th>{{ $t('common.type') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -38,15 +38,15 @@
 
       <!-- Events -->
       <section class="events-section">
-        <h2 class="section-heading">Händelser</h2>
-        <div v-if="data.events.length === 0" class="empty-section">Inga händelser registrerade.</div>
+        <h2 class="section-heading">{{ $t('events.title') }}</h2>
+        <div v-if="data.events.length === 0" class="empty-section">{{ $t('reports.noEvents') }}</div>
         <table v-else class="events-table">
           <thead>
             <tr>
-              <th>Typ</th>
-              <th>Datum</th>
-              <th>Plats</th>
-              <th>Beskrivning</th>
+              <th>{{ $t('common.type') }}</th>
+              <th>{{ $t('events.date') }}</th>
+              <th>{{ $t('events.place') }}</th>
+              <th>{{ $t('events.description') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -66,13 +66,13 @@
 
       <!-- Relationships -->
       <section class="relations-section">
-        <h2 class="section-heading">Relationer</h2>
+        <h2 class="section-heading">{{ $t('personDetail.relationships') }}</h2>
 
         <div v-if="data.parents.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">Föräldrar</h3>
+          <h3 class="rel-group-heading">{{ $t('reports.parents') }}</h3>
           <ul class="rel-list">
             <li v-for="p in data.parents" :key="p.id" class="rel-entry">
-              {{ p.name || '(okänd)' }}
+              {{ p.name || $t('common.unknown') }}
             </li>
           </ul>
         </div>
@@ -81,7 +81,7 @@
           <h3 class="rel-group-heading">{{ $t('personPanel.partners') }}</h3>
           <ul class="rel-list">
             <li v-for="s in data.spouses" :key="s.id" class="rel-entry">
-              {{ s.name || '(okänd)' }}
+              {{ s.name || $t('common.unknown') }}
               <span v-if="s.subtype" class="muted"> ({{ subtypeLabel(s.subtype) }})</span>
             </li>
           </ul>
@@ -91,7 +91,7 @@
           <h3 class="rel-group-heading">{{ $t('personPanel.children') }}</h3>
           <ul class="rel-list">
             <li v-for="c in data.children" :key="c.id" class="rel-entry">
-              {{ c.name || '(okänd)' }}
+              {{ c.name || $t('common.unknown') }}
             </li>
           </ul>
         </div>
@@ -100,19 +100,19 @@
           v-if="data.parents.length === 0 && data.spouses.length === 0 && data.children.length === 0"
           class="empty-section"
         >
-          Inga relationer registrerade.
+          {{ $t('reports.noRelationships') }}
         </div>
       </section>
 
       <!-- Notes -->
       <section v-if="data.notes" class="notes-section">
-        <h2 class="section-heading">Anteckningar</h2>
+        <h2 class="section-heading">{{ $t('common.notes') }}</h2>
         <p class="notes-text">{{ data.notes }}</p>
       </section>
 
       <!-- Citations / Sources -->
       <section v-if="data.sources.length > 0" class="sources-section">
-        <h2 class="section-heading">Källor</h2>
+        <h2 class="section-heading">{{ $t('sources.title') }}</h2>
         <ol class="sources-list">
           <li v-for="src in data.sources" :key="src.id" class="source-entry">
             <span class="source-title">{{ src.title }}</span>
@@ -224,34 +224,19 @@ function primaryName(names: RawName[]): string {
   return formatFullName(sorted[0]);
 }
 
-function nameTypeLabel(t: string): string {
-  const labels: Record<string, string> = {
-    birth: 'Födelsenamn', married: 'Giftonamn', alias: 'Alias', aka: 'Känt som',
-  };
-  return labels[t] ?? t;
+function nameTypeLabel(nt: string): string {
+  return t('nameTypes.' + nt, nt);
 }
 
-function eventTypeLabel(t: string): string {
-  const labels: Record<string, string> = {
-    birth: 'Född', death: 'Död', marriage: 'Vigsel', divorce: 'Skilsmässa',
-    baptism: 'Dop', burial: 'Begravning', confirmation: 'Konfirmation',
-    emigration: 'Emigration', immigration: 'Immigration', census: 'Folkräkning',
-    occupation: 'Yrke', residence: 'Bostad', education: 'Utbildning',
-    military: 'Militärtjänst', naturalization: 'Naturalisering',
-    graduation: 'Examen', retirement: 'Pensionering',
-    will: 'Testamente', probate: 'Bouppteckning', other: 'Övrigt',
-  };
-  return labels[t] ?? t;
+function eventTypeLabel(et: string): string {
+  return t('eventTypes.' + et, et);
 }
 
-function subtypeLabel(t: string): string {
-  const labels: Record<string, string> = {
-    marriage: 'gift', civil_union: 'registrerat partnerskap',
-    cohabitation: 'sambo', unknown: 'okänd',
-    biological: 'biologisk', adopted: 'adopterad',
-    foster: 'fosterbarn', step: 'styvbarn',
-  };
-  return labels[t] ?? t;
+function subtypeLabel(st: string): string {
+  const key = st === 'marriage' || st === 'civil_union' || st === 'cohabitation' || st === 'unknown'
+    ? 'coupleSubtypes.' + st
+    : 'parentChildSubtypes.' + st;
+  return t(key, st);
 }
 
 async function resolvePersonName(id: string): Promise<string> {
@@ -259,7 +244,7 @@ async function resolvePersonName(id: string): Promise<string> {
     const names = (await window.api.persons.getNames(id)) as RawName[];
     return primaryName(names);
   } catch {
-    return '(okänd)';
+    return t('common.unknown');
   }
 }
 
@@ -278,7 +263,7 @@ async function load() {
     ]);
 
     if (!person) {
-      error.value = 'Personen hittades inte.';
+      error.value = t('reports.personNotFound');
       return;
     }
 
@@ -374,7 +359,7 @@ async function load() {
   } catch (err) {
     console.error('[IndividualSummary] load failed:', err);
     toast.error(t('errors.loadFailed'));
-    error.value = 'Kunde inte ladda personöversikt.';
+    error.value = t('reports.loadFailed.individualSummary');
   } finally {
     loading.value = false;
   }
