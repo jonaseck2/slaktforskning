@@ -45,27 +45,27 @@ Export GEDCOM + all referenced media files as a single .zip archive. Import dete
 
 ### Steps
 
-- [ ] Add `archiver` (or `jszip`) dependency for zip creation
-- [ ] Create `src/api/archive_export.ts`:
+- [x] Add `archiver` (or `jszip`) dependency for zip creation
+- [x] Create `src/api/archive_export.ts`:
   - [ ] `exportArchive(db, outputPath, options?)` — generates GEDCOM + copies media files into zip
   - [ ] Media organized in `media/` subdirectory within archive
   - [ ] GEDCOM OBJE FILE references rewritten to relative paths (`media/filename.jpg`)
   - [ ] Apply export content options (from A2) if available
-- [ ] Create `src/api/archive_import.ts`:
+- [x] Create `src/api/archive_import.ts`:
   - [ ] Detect .zip files in import dialog
   - [ ] Extract archive to temp directory
   - [ ] Find .ged file within archive
   - [ ] Import GEDCOM as normal
   - [ ] Copy media files from archive to app's media directory
   - [ ] Re-link media file_ref paths to new locations
-- [ ] IPC channels: `archive:export`, `archive:import`
-- [ ] Preload: expose `window.api.archive.export()`, `window.api.archive.import()`
-- [ ] Vue: export button in ImportExportView with "Include media" checkbox
-- [ ] Import: file dialog accepts .zip in addition to .ged
-- [ ] Progress indicator for large archives (many media files)
-- [ ] MCP tools: `export_archive`, `import_archive`
-- [ ] Unit tests: round-trip test (export archive → import into fresh DB → verify media links intact)
-- [ ] Handle edge cases: duplicate filenames, missing media files (warn but continue), very large archives
+- [x] IPC channels: `archive:export`, `archive:import`
+- [x] Preload: expose `window.api.archive.export()`, `window.api.archive.import()`
+- [x] Vue: export button in ImportExportView with "Include media" checkbox
+- [x] Import: file dialog accepts .zip in addition to .ged
+- [x] Progress indicator for large archives (many media files)
+- [x] MCP tools: `export_archive`, `import_archive`
+- [x] Unit tests: round-trip test (export archive → import into fresh DB → verify media links intact)
+- [x] Handle edge cases: duplicate filenames, missing media files (warn but continue), very large archives
 
 ### Dependencies
 Existing GEDCOM export/import infrastructure.
