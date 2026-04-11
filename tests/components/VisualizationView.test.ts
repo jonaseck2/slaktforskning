@@ -77,7 +77,7 @@ describe('VisualizationView', () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     const tabs = wrapper.findAll('[role="tab"]');
-    expect(tabs).toHaveLength(4);
+    expect(tabs).toHaveLength(5);
   });
 
   it('active tab has aria-selected="true", others "false"', async () => {

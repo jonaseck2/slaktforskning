@@ -387,6 +387,7 @@ export default {
       pedigree: 'Pedigree',
       circle: 'Circle Chart',
       hourglass: 'Hourglass',
+      descendants: 'Descendants',
       timeline: 'Timeline',
     },
     generation: {
