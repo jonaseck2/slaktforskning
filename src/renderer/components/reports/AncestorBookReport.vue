@@ -16,7 +16,7 @@
         <CircleChartSvg
           :segments="segments"
           :focal-segment="focalSeg"
-          :curved-text="true"
+          :curved-text="circleCurvedText ?? true"
           :view-box-size="circleSvgSize"
           font-family="Georgia, serif"
           link-base="#person-"
@@ -255,7 +255,7 @@ interface GenGroup {
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
-const props = defineProps<{ personId: string; circleGenerations?: number }>();
+const props = defineProps<{ personId: string; circleGenerations?: number; circleCurvedText?: boolean }>();
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const loading = ref(false);

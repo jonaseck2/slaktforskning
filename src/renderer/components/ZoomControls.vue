@@ -80,6 +80,8 @@ defineEmits<{
 }
 :slotted(.zoom-extra-btn:hover:not(:disabled)) { background: var(--color-bg-muted); }
 :slotted(.zoom-extra-btn:disabled) { opacity: 0.4; cursor: default; }
+:slotted(.zoom-extra-btn.active) { background: #e0eaf5; color: #2060a0; }
+:slotted(.zoom-extra-sep) { color: #ccc; padding: 0 3px; }
 :slotted(.zoom-extra-value) {
   padding: 0 4px;
   font-size: var(--font-xs);

@@ -397,6 +397,7 @@ export default {
       focal: 'Focal Person',
       children: 'Children',
     },
+    curvedText: 'Curved text',
     empty: 'Create a person to start visualizing.',
     noFocalPerson: 'Select a focus person to view the tree.',
     selectPerson: 'Select focal person\u2026',
