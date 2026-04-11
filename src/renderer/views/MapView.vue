@@ -27,7 +27,8 @@
         :zoom="4"
         :center="[55, 15]"
         :use-global-leaflet="false"
-        @ready="fitBounds"
+        :options="{ zoomControl: false }"
+        @ready="onMapReady"
       >
         <LTileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -51,6 +52,15 @@
         </LMarker>
       </LMap>
     </div>
+
+    <ZoomControls
+      v-if="filteredPlaces.length > 0"
+      :zoom="currentZoom / maxZoom"
+      :show-fit="true"
+      @zoom-in="zoomIn"
+      @zoom-out="zoomOut"
+      @reset="fitBounds"
+    />
   </div>
 </template>
 
@@ -59,6 +69,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import ZoomControls from '../components/ZoomControls.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
 
@@ -88,6 +99,26 @@ const places = ref<PlaceRow[]>([]);
 const filterText = ref('');
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve } = usePlaceResolver();
+
+const maxZoom = 18;
+const currentZoom = ref(4);
+
+function onMapReady() {
+  const map = mapRef.value?.leafletObject;
+  if (map) {
+    map.zoomControl?.remove();
+    map.on('zoomend', () => { currentZoom.value = map.getZoom(); });
+  }
+  fitBounds();
+}
+
+function zoomIn() {
+  mapRef.value?.leafletObject?.zoomIn();
+}
+
+function zoomOut() {
+  mapRef.value?.leafletObject?.zoomOut();
+}
 
 const allDisplayPlaces = computed<DisplayPlace[]>(() => {
   const result: DisplayPlace[] = [];

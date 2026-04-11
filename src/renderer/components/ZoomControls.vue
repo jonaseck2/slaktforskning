@@ -26,8 +26,8 @@ defineEmits<{
 <style scoped>
 .zoom-controls-bar {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  bottom: 46px;
+  right: 28px;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -36,7 +36,7 @@ defineEmits<{
   border-radius: 5px;
   padding: 3px 5px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  z-index: 1000;
 }
 .zoom-btn {
   background: none;
