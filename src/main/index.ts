@@ -4,6 +4,7 @@ import started from 'electron-squirrel-startup';
 import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { startUiServer, stopUiServer } from './ui-server';
+import { undoManager } from '../api/undo';
 
 // Suppress EPIPE errors (occur when stdout pipe closes, e.g. during E2E tests).
 // Without this, a single console.log to a closed pipe kills the main process.
@@ -64,7 +65,42 @@ function buildMenu(): void {
         { role: 'quit' },
       ],
     },
-    { role: 'editMenu' },
+    {
+      label: 'Edit',
+      submenu: [
+        {
+          label: 'Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => {
+            const label = undoManager.undo();
+            if (label) {
+              BrowserWindow.getAllWindows().forEach(w => {
+                w.webContents.send('undo:changed');
+                w.webContents.send('undo:performed', { type: 'undo', label });
+              });
+            }
+          },
+        },
+        {
+          label: 'Redo',
+          accelerator: 'CmdOrCtrl+Shift+Z',
+          click: () => {
+            const label = undoManager.redo();
+            if (label) {
+              BrowserWindow.getAllWindows().forEach(w => {
+                w.webContents.send('undo:changed');
+                w.webContents.send('undo:performed', { type: 'redo', label });
+              });
+            }
+          },
+        },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
     {
       label: 'View',
       submenu: [

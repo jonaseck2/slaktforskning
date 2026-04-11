@@ -194,6 +194,16 @@ const api = {
     backup: () => ipcRenderer.invoke('backup:backup'),
     restore: () => ipcRenderer.invoke('backup:restore'),
   },
+  undo: {
+    undo: () => ipcRenderer.invoke('undo:undo'),
+    redo: () => ipcRenderer.invoke('undo:redo'),
+    getState: () => ipcRenderer.invoke('undo:state'),
+    beginGroup: (label: string) => ipcRenderer.invoke('undo:beginGroup', label),
+    endGroup: () => ipcRenderer.invoke('undo:endGroup'),
+    onChanged: (cb: () => void) => ipcRenderer.on('undo:changed', cb),
+    onPerformed: (cb: (data: { type: string; label: string }) => void) =>
+      ipcRenderer.on('undo:performed', (_e, data: { type: string; label: string }) => cb(data)),
+  },
   onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
 };
 
