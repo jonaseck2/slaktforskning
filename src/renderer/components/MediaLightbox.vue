@@ -19,7 +19,7 @@
             <img
               v-if="dataUrl"
               :src="dataUrl"
-              :alt="currentItem?.title || ''"
+              :alt="currentItem ? mediaDisplayName(currentItem.title, currentItem.file_ref, '') : ''"
               class="lightbox-image"
             />
             <div v-else class="lightbox-loading">{{ $t('common.loading') }}</div>
@@ -45,7 +45,7 @@
       <!-- Info panel -->
       <div class="lightbox-info">
         <div class="lightbox-meta">
-          <h3 class="lightbox-title">{{ currentItem?.title || '—' }}</h3>
+          <h3 class="lightbox-title">{{ currentItem ? mediaDisplayName(currentItem.title, currentItem.file_ref) : '—' }}</h3>
           <p v-if="currentItem?.format" class="lightbox-format">{{ currentItem.format }}</p>
           <p v-if="currentItem?.notes" class="lightbox-notes">{{ currentItem.notes }}</p>
           <p v-if="mediaItems.length > 1" class="lightbox-counter">
@@ -123,6 +123,8 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
+import { mediaDisplayName } from '../utils/mediaUtils';
+import { resolvePersonDisplayName } from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -166,7 +168,7 @@ const { t } = useI18n();
 const lightboxEl = ref<HTMLDivElement | null>(null);
 const dataUrl = ref<string | null>(null);
 const linkedEntities = ref<LinkedEntity[]>([]);
-const loadingLinks = ref(false);
+const loadingLinks = ref(true);
 const showLinkPicker = ref(false);
 const linkTab = ref<'person' | 'place' | 'source'>('person');
 const selectedSourceId = ref('');
@@ -249,8 +251,7 @@ async function loadLinks() {
 async function resolveEntityLabel(entityType: string, entityId: string): Promise<string> {
   try {
     if (entityType === 'person') {
-      const p = await window.api.persons.get(entityId) as { given_name?: string; surname?: string } | null;
-      if (p) return [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
+      return await resolvePersonDisplayName(entityId);
     } else if (entityType === 'source') {
       const s = await window.api.sources.get(entityId) as { title?: string } | null;
       if (s) return s.title || '—';

@@ -20,7 +20,7 @@
               v-if="thumbnails[item.media.id]"
               :src="thumbnails[item.media.id]"
               class="timeline-thumb"
-              :alt="item.media.title || $t('media.title')"
+              :alt="mediaDisplayName(item.media.title, item.media.file_ref)"
             />
             <div v-else class="timeline-thumb-placeholder">
               {{ item.media.format?.toUpperCase() || '?' }}
@@ -39,7 +39,7 @@
             :key="'u-' + item.media.id"
             class="timeline-card undated"
             role="listitem"
-            :title="item.media.title || ''"
+            :title="mediaDisplayName(item.media.title, item.media.file_ref, '')"
             @click="openLightbox(item)"
           >
             <div class="timeline-thumb-wrap">
@@ -47,7 +47,7 @@
                 v-if="thumbnails[item.media.id]"
                 :src="thumbnails[item.media.id]"
                 class="timeline-thumb"
-                :alt="item.media.title || $t('media.title')"
+                :alt="mediaDisplayName(item.media.title, item.media.file_ref)"
               />
               <div v-else class="timeline-thumb-placeholder">
                 {{ item.media.format?.toUpperCase() || '?' }}
@@ -62,7 +62,7 @@
     <div v-if="lightboxItem" class="modal-overlay" @click.self="lightboxItem = null">
       <div class="lightbox-modal">
         <div class="lightbox-header">
-          <h3>{{ lightboxItem.media.title || $t('media.title') }}</h3>
+          <h3>{{ mediaDisplayName(lightboxItem.media.title, lightboxItem.media.file_ref) }}</h3>
           <button class="btn-cancel" @click="lightboxItem = null">&times;</button>
         </div>
         <div class="lightbox-body">
@@ -70,7 +70,7 @@
             v-if="lightboxDataUrl"
             :src="lightboxDataUrl"
             class="lightbox-image"
-            :alt="lightboxItem.media.title || ''"
+            :alt="mediaDisplayName(lightboxItem.media.title, lightboxItem.media.file_ref, '')"
           />
           <div v-else class="lightbox-no-image">
             {{ lightboxItem.media.format?.toUpperCase() || '?' }}
@@ -100,6 +100,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { mediaDisplayName } from '../utils/mediaUtils';
 
 interface TimelineMedia {
   id: string;
@@ -180,7 +181,8 @@ function displayDate(item: TimelineItem): string {
 
 function tooltipText(item: TimelineItem): string {
   const parts: string[] = [];
-  if (item.media.title) parts.push(item.media.title);
+  const name = mediaDisplayName(item.media.title, item.media.file_ref, '');
+  if (name) parts.push(name);
   if (item.eventType) parts.push(item.eventType);
   if (item.date) parts.push(displayDate(item));
   if (item.placeName) parts.push(item.placeName);

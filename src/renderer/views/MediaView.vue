@@ -6,7 +6,7 @@
     </div>
 
     <p v-if="!loading && items.length > 0" class="count-label">
-      {{ items.length }} {{ $t('media.title').toLowerCase() }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
+      {{ items.length }} / {{ total }} {{ $t('media.title').toLowerCase() }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
     </p>
 
     <!-- Search filter -->
@@ -19,8 +19,8 @@
       />
     </div>
 
-    <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
-    <div v-else-if="items.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
+    <div v-if="loading && items.length === 0" class="loading">{{ $t('common.loading') }}</div>
+    <div v-else-if="!loading && items.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
     <div v-else-if="filteredItems.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
 
     <!-- Gallery grid -->
@@ -38,7 +38,7 @@
           <img
             v-if="thumbnails[item.id]"
             :src="thumbnails[item.id]"
-            :alt="item.title || ''"
+            :alt="mediaDisplayName(item.title, item.file_ref, '')"
             class="card-image"
           />
           <div v-else-if="isImageFormat(item.format)" class="card-image-loading"></div>
@@ -48,7 +48,7 @@
           <span v-if="item.is_missing" class="missing-badge">{{ $t('media.isMissing') }}</span>
         </div>
         <div class="card-info">
-          <span class="card-title">{{ item.title || '—' }}</span>
+          <span class="card-title">{{ mediaDisplayName(item.title, item.file_ref) }}</span>
           <span v-if="item.linkCount > 0" class="card-badge">{{ item.linkCount }} {{ $t('media.lightbox.linkedEntities').toLowerCase() }}</span>
         </div>
         <button
@@ -59,27 +59,31 @@
       </div>
     </div>
 
+    <div ref="sentinel" class="scroll-sentinel"></div>
+
     <MediaLightbox
       :media-items="filteredItems"
       :current-index="lightboxIndex"
       :visible="lightboxVisible"
       @close="lightboxVisible = false"
       @update:current-index="lightboxIndex = $event"
-      @link-changed="load"
+      @link-changed="reload"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MediaLightbox from '../components/MediaLightbox.vue';
+import { mediaDisplayName } from '../utils/mediaUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
 const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
+const PAGE_SIZE = 100;
 
 const { t } = useI18n();
 
@@ -96,11 +100,15 @@ interface MediaItem {
 }
 
 const items = ref<MediaItem[]>([]);
+const total = ref(0);
+const offset = ref(0);
 const loading = ref(true);
 const searchQuery = ref('');
 const thumbnails = ref<Record<string, string>>({});
 const lightboxVisible = ref(false);
 const lightboxIndex = ref(0);
+const sentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
 
 const missingCount = computed(() => items.value.filter(i => i.is_missing).length);
 
@@ -108,7 +116,7 @@ const filteredItems = computed(() => {
   if (!searchQuery.value.trim()) return items.value;
   const q = searchQuery.value.toLowerCase();
   return items.value.filter(i =>
-    (i.title || '').toLowerCase().includes(q) ||
+    mediaDisplayName(i.title, i.file_ref, '').toLowerCase().includes(q) ||
     (i.format || '').toLowerCase().includes(q)
   );
 });
@@ -117,25 +125,60 @@ function isImageFormat(format: string | null): boolean {
   return format ? IMAGE_FORMATS.has(format.toLowerCase()) : false;
 }
 
-async function load() {
-  loading.value = true;
-  const rawItems = (await window.api.media.list()) as Omit<MediaItem, 'linkCount'>[];
-
-  // Load link counts for each item
-  const withCounts: MediaItem[] = [];
-  for (const item of rawItems) {
-    const links = (await window.api.media.linksForMedia(item.id)) as unknown[];
-    withCounts.push({ ...item, linkCount: links.length });
-  }
-  items.value = withCounts;
-  loading.value = false;
-
-  // Load thumbnails for image items
-  loadThumbnails();
+function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>): MediaItem[] {
+  return raw.map(r => ({ ...r, linkCount: r.link_count }));
 }
 
-async function loadThumbnails() {
-  for (const item of items.value) {
+async function load() {
+  loading.value = true;
+  try {
+    const result = await window.api.media.listPage(PAGE_SIZE, 0) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
+    items.value = mapPageItems(result.items);
+    total.value = result.total;
+    offset.value = PAGE_SIZE;
+    loadThumbnails(items.value);
+  } catch (err) {
+    console.error('[MediaView] load failed:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadMore() {
+  if (loading.value) return;
+  loading.value = true;
+  try {
+    const result = await window.api.media.listPage(PAGE_SIZE, offset.value) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
+    const newItems = mapPageItems(result.items);
+    items.value = [...items.value, ...newItems];
+    total.value = result.total;
+    offset.value += PAGE_SIZE;
+    loadThumbnails(newItems);
+  } catch (err) {
+    console.error('[MediaView] loadMore failed:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function reload() {
+  // Full reload preserving scroll — used after link changes
+  loading.value = true;
+  try {
+    const result = await window.api.media.listPage(PAGE_SIZE, 0) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
+    items.value = mapPageItems(result.items);
+    total.value = result.total;
+    offset.value = PAGE_SIZE;
+    loadThumbnails(items.value);
+  } catch (err) {
+    console.error('[MediaView] reload failed:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadThumbnails(mediaItems: MediaItem[]) {
+  for (const item of mediaItems) {
     if (isImageFormat(item.format) && !item.is_missing && !thumbnails.value[item.id]) {
       const url = await window.api.media.readAsDataUrl(item.id) as string | null;
       if (url) {
@@ -153,7 +196,7 @@ function openLightbox(idx: number) {
 async function attachFile() {
   const result = await window.api.media.attach();
   if (!(result as { canceled: boolean }).canceled) {
-    await load();
+    await reload();
   }
 }
 
@@ -161,10 +204,26 @@ async function deleteItem(id: string) {
   if (!confirm(t('media.confirmDelete'))) return;
   await window.api.media.delete(id);
   delete thumbnails.value[id];
-  await load();
+  items.value = items.value.filter(i => i.id !== id);
+  total.value = Math.max(0, total.value - 1);
 }
 
+watch(sentinel, (el) => {
+  if (observer) { observer.disconnect(); observer = null; }
+  if (!el) return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && items.value.length < total.value && !loading.value) {
+        loadMore();
+      }
+    },
+    { rootMargin: '2000px 0px' }
+  );
+  observer.observe(el);
+});
+
 onMounted(load);
+onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <style scoped>

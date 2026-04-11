@@ -31,6 +31,24 @@ export function listMedia(db: Database): Media[] {
   return queryAll<Media>(db, 'SELECT * FROM media ORDER BY title');
 }
 
+export interface MediaListItem extends Media {
+  link_count: number;
+}
+
+export function listMediaPage(db: Database, limit: number, offset: number): MediaListItem[] {
+  return queryAll<MediaListItem>(db, `
+    SELECT m.*,
+           (SELECT COUNT(*) FROM media_links ml WHERE ml.media_id = m.id) AS link_count
+    FROM media m
+    ORDER BY m.title
+    LIMIT ? OFFSET ?
+  `, [limit, offset]);
+}
+
+export function countMedia(db: Database): number {
+  return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media')?.n ?? 0;
+}
+
 export function deleteMedia(db: Database, id: string): boolean {
   return runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id]) > 0;
 }

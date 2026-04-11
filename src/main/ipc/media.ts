@@ -13,6 +13,10 @@ export function registerMediaHandlers(
 ) {
   // Media
   wrapHandler('media:list', () => media.listMedia(getDb()));
+  wrapHandler('media:listPage', (limit, offset) => ({
+    items: media.listMediaPage(getDb(), limit as number, offset as number),
+    total: media.countMedia(getDb()),
+  }));
   wrapHandler('media:get', (id) => media.getMedia(getDb(), id as string));
   wrapHandler('media:create', (data) => media.createMedia(getDb(), data as Parameters<typeof media.createMedia>[1]));
   wrapHandler('media:delete', (id) => media.deleteMedia(getDb(), id as string));

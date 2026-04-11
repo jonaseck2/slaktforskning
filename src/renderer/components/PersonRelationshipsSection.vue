@@ -41,7 +41,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { formatFullName } from '../utils/nameUtils';
+import { formatFullName, resolvePersonDisplayName } from '../utils/nameUtils';
 
 interface PersonRelRow {
   id: string;
@@ -83,13 +83,7 @@ async function load() {
     const otherId = r.person1_id === props.personId ? r.person2_id : r.person1_id;
     let otherName = t('common.unknown');
     if (otherId) {
-      const pNames = (await window.api.persons.getNames(otherId)) as Array<{
-        given_name: string | null;
-        surname: string | null;
-        preferred_name: string | null;
-        nickname: string | null;
-      }>;
-      if (pNames.length > 0) otherName = formatFullName(pNames[0]) || t('common.unknown');
+      otherName = await resolvePersonDisplayName(otherId, t('common.unknown'));
     }
 
     let typeLabel = t('relTypes.' + r.type);

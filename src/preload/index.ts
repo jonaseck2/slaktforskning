@@ -165,6 +165,7 @@ const api = {
   },
   media: {
     list: () => ipcRenderer.invoke('media:list'),
+    listPage: (limit: number, offset: number) => ipcRenderer.invoke('media:listPage', limit, offset),
     get: (id: string) => ipcRenderer.invoke('media:get', id),
     create: mutating((data: unknown) => ipcRenderer.invoke('media:create', data)),
     delete: mutating((id: string) => ipcRenderer.invoke('media:delete', id)),
