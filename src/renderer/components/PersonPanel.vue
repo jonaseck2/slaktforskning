@@ -21,7 +21,7 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-            <button v-if="showTreeBtn" class="btn-tree-inline" @click="emit('show-in-tree')">Focus</button>
+            <button v-if="showTreeBtn" class="btn-tree-inline" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</button>
           </div>
           <div class="panel-lifelines">
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>

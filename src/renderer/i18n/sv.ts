@@ -218,6 +218,7 @@ export default {
     about: 'ca ',
     before: 'före ',
     after: 'efter ',
+    calculated: 'ber. ',
   },
   eventTypes: {
     birth: 'Födelse',
@@ -642,7 +643,6 @@ export default {
       familyNarrative: 'Kunde inte ladda familjeberättelse.',
       biography: 'Kunde inte ladda biografi.',
     },
-    selectPerson: 'Välj en person.',
   },
   researchTasks: {
     title: 'Forskningstips',

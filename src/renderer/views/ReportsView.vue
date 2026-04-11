@@ -2,7 +2,7 @@
   <div class="reports-view">
     <div class="view-header">
       <h2>{{ $t('reports.title') }}</h2>
-      <span v-if="reportLoading" class="running-hint">Laddar rapport…</span>
+      <span v-if="reportLoading" class="running-hint">{{ $t('reports.loadingReport') }}</span>
     </div>
 
     <div class="tab-bar">

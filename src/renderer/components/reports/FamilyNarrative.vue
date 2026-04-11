@@ -16,19 +16,19 @@
 
       <!-- Children narratives -->
       <section v-if="data.children.length > 0" class="children-section">
-        <h2 class="section-heading">{{ locale === 'sv' ? 'Barn' : 'Children' }}</h2>
+        <h2 class="section-heading">{{ $t('personPanel.children') }}</h2>
         <div v-for="child in data.children" :key="child.id" class="child-block">
           <h3 class="child-heading">{{ child.name || $t('common.unknown') }}</h3>
           <p class="narrative-paragraph">{{ childNarrative(child) }}</p>
         </div>
         <div v-if="data.children.length === 0" class="empty-section">
-          {{ locale === 'sv' ? 'Inga barn registrerade.' : 'No children recorded.' }}
+          {{ $t('reports.noChildren') }}
         </div>
       </section>
 
       <!-- Sources -->
       <section v-if="data.sources.length > 0" class="sources-section">
-        <h2 class="section-heading">{{ locale === 'sv' ? 'Kallor' : 'Sources' }}</h2>
+        <h2 class="section-heading">{{ $t('sources.title') }}</h2>
         <ol class="sources-list">
           <li v-for="src in data.sources" :key="src.id" class="source-entry">
             <span class="source-title">{{ src.title }}</span>
@@ -237,7 +237,7 @@ async function load() {
   try {
     const rel = (await window.api.relationships.get(props.relationshipId)) as RawRelationship | null;
     if (!rel) {
-      error.value = locale.value === 'sv' ? 'Relationen hittades inte.' : 'Relationship not found.';
+      error.value = t('reports.relationshipNotFound');
       return;
     }
 
@@ -302,7 +302,7 @@ async function load() {
   } catch (err) {
     console.error('[FamilyNarrative] load failed:', err);
     toast.error(t('errors.loadFailed'));
-    error.value = locale.value === 'sv' ? 'Kunde inte ladda familjeberattelse.' : 'Could not load family narrative.';
+    error.value = t('reports.loadFailed.familyNarrative');
   } finally {
     loading.value = false;
   }

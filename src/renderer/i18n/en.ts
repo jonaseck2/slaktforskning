@@ -218,6 +218,7 @@ export default {
     about: 'abt. ',
     before: 'bef. ',
     after: 'aft. ',
+    calculated: 'calc. ',
   },
   eventTypes: {
     birth: 'Birth',
@@ -642,7 +643,6 @@ export default {
       familyNarrative: 'Could not load family narrative.',
       biography: 'Could not load biography.',
     },
-    selectPerson: 'Select a person.',
   },
   researchTasks: {
     title: 'Research Tasks',

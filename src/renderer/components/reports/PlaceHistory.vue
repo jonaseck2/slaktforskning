@@ -11,7 +11,7 @@
       </div>
 
       <div v-if="data.events.length === 0" class="empty-section">
-        {{ locale === 'sv' ? 'Inga handelser registrerade for denna plats.' : 'No events recorded for this place.' }}
+        {{ $t('reports.noEventsForPlace') }}
       </div>
 
       <!-- Events grouped by decade -->
@@ -20,10 +20,10 @@
         <table class="events-table">
           <thead>
             <tr>
-              <th>{{ locale === 'sv' ? 'Datum' : 'Date' }}</th>
-              <th>{{ locale === 'sv' ? 'Typ' : 'Type' }}</th>
-              <th>{{ locale === 'sv' ? 'Personer' : 'Persons' }}</th>
-              <th>{{ locale === 'sv' ? 'Beskrivning' : 'Description' }}</th>
+              <th>{{ $t('events.date') }}</th>
+              <th>{{ $t('common.type') }}</th>
+              <th>{{ $t('persons.title') }}</th>
+              <th>{{ $t('events.description') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -84,11 +84,7 @@ const locale = computed(() => i18nLocale.value === 'sv' ? 'sv' : 'en');
 function formatDate(ev: { date_type: string | null; date_value: string | null; date_value_end: string | null; date_original: string | null }): string {
   if (ev.date_original) return ev.date_original;
   if (!ev.date_value) return '';
-  const isSv = locale.value === 'sv';
-  const prefixes: Record<string, string> = isSv
-    ? { about: 'ca ', before: 'fore ', after: 'efter ', calculated: 'ber. ' }
-    : { about: 'c. ', before: 'bef. ', after: 'aft. ', calculated: 'calc. ' };
-  const prefix = ev.date_type ? (prefixes[ev.date_type] ?? '') : '';
+  const prefix = ev.date_type ? t('datePrefix.' + ev.date_type, '') : '';
   if (ev.date_type === 'between' && ev.date_value_end) {
     return `${prefix}${ev.date_value}\u2013${ev.date_value_end}`;
   }
@@ -96,23 +92,7 @@ function formatDate(ev: { date_type: string | null; date_value: string | null; d
 }
 
 function eventTypeLabel(et: string): string {
-  const labels: Record<string, Record<string, string>> = {
-    sv: {
-      birth: 'Fodd', death: 'Dod', marriage: 'Vigsel', divorce: 'Skilsmassa',
-      baptism: 'Dop', burial: 'Begravning', confirmation: 'Konfirmation',
-      emigration: 'Emigration', immigration: 'Immigration', census: 'Folkrakning',
-      occupation: 'Yrke', residence: 'Bostad', education: 'Utbildning',
-      military: 'Militartjanst', other: 'Ovrigt',
-    },
-    en: {
-      birth: 'Birth', death: 'Death', marriage: 'Marriage', divorce: 'Divorce',
-      baptism: 'Baptism', burial: 'Burial', confirmation: 'Confirmation',
-      emigration: 'Emigration', immigration: 'Immigration', census: 'Census',
-      occupation: 'Occupation', residence: 'Residence', education: 'Education',
-      military: 'Military', other: 'Other',
-    },
-  };
-  return labels[locale.value]?.[et] ?? et;
+  return t('eventTypes.' + et, et);
 }
 
 function extractDecade(ev: { date_value: string | null }): number {
@@ -134,7 +114,7 @@ const decadeGroups = computed((): DecadeGroup[] => {
     map.get(decade)!.push(ev);
   }
 
-  const unknownLabel = locale.value === 'sv' ? 'Okant datum' : 'Unknown date';
+  const unknownLabel = t('reports.unknownDate');
   return [...map.entries()]
     .sort(([a], [b]) => a - b)
     .map(([decade, evs]) => ({
@@ -153,7 +133,7 @@ async function load() {
   try {
     const place = (await window.api.places.get(props.placeId)) as RawPlace | null;
     if (!place) {
-      error.value = locale.value === 'sv' ? 'Platsen hittades inte.' : 'Place not found.';
+      error.value = t('reports.placeNotFound');
       return;
     }
 
@@ -185,7 +165,7 @@ async function load() {
   } catch (err) {
     console.error('[PlaceHistory] load failed:', err);
     toast.error(t('errors.loadFailed'));
-    error.value = locale.value === 'sv' ? 'Kunde inte ladda platshistorik.' : 'Could not load place history.';
+    error.value = t('reports.loadFailed.placeHistory');
   } finally {
     loading.value = false;
   }
