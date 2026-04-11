@@ -293,6 +293,8 @@ export default {
     marriage: 'Äktenskap',
     civil_union: 'Partnerskap',
     cohabitation: 'Samboskap',
+    living_apart: 'Särbo',
+    relationship: 'Relation',
     unknown: 'Okänt',
     other: 'Annat',
   },
