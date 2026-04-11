@@ -15,6 +15,7 @@ export default {
     navigate: 'Navigate',
     linkRules: 'Link Rules',
     map: 'Map',
+    gazetteers: 'Gazetteers',
   },
   settings: {
     appearance: 'Appearance',
@@ -1013,6 +1014,24 @@ export default {
     examplePlaceholder: 'Sample text that should match this rule',
     exampleMatches: 'Example matches pattern',
     exampleNoMatch: 'Example does not match pattern',
+  },
+  gazetteers: {
+    title: 'Gazetteers',
+    description: 'Gazetteers provide coordinates and geographic context for places without stored location data. Matches are shown on maps and place detail views but never written to your database.',
+    installed: 'Installed Gazetteers',
+    enabled: 'Enabled',
+    name: 'Name',
+    locale: 'Locale',
+    testLookup: 'Test Lookup',
+    testPlaceholder: 'Type a place name, e.g. Vallsjö, Sävsjö, Jönköpings län, Sverige',
+    noMatch: 'No match found in enabled gazetteers',
+    matchTitle: 'Gazetteer Match',
+    unmatched: 'Unmatched',
+    match: {
+      exact: 'Exact',
+      partial: 'Partial',
+      ambiguous: 'Ambiguous',
+    },
   },
   undo: {
     createPerson: 'Create person',
