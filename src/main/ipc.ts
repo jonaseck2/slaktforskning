@@ -107,6 +107,7 @@ export function registerIpcHandlers(): void {
   wrapHandler('events:forRelationship', (relationshipId) => events.getEventsForRelationship(getDatabase(), relationshipId as string));
   wrapHandler('events:update', (id, data) => events.updateEvent(getDatabase(), id as string, data as Parameters<typeof events.updateEvent>[2]));
   wrapHandler('events:delete', (id) => events.deleteEvent(getDatabase(), id as string));
+  wrapHandler('events:forPlace', (placeId) => events.getEventsForPlace(getDatabase(), placeId as string));
 
   // Sources
   wrapHandler('sources:create', (data) => sources.createSource(getDatabase(), data as Parameters<typeof sources.createSource>[1]));

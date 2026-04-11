@@ -54,6 +54,7 @@ const api = {
     forRelationship: (relationshipId: string) => ipcRenderer.invoke('events:forRelationship', relationshipId),
     update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('events:update', id, data)),
     delete: mutating((id: string) => ipcRenderer.invoke('events:delete', id)),
+    forPlace: (placeId: string) => ipcRenderer.invoke('events:forPlace', placeId),
   },
   sources: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('sources:create', data)),
