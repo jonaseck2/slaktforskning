@@ -124,5 +124,19 @@ Define primary user objectives, map to current click counts, identify highest-fr
 
 ---
 
+#### Place Gazetteers [in progress]
+Render-time place resolution using bundled hierarchical gazetteers. Swedish parishes as first dataset.
+- Spec: `docs/superpowers/specs/2026-04-11-place-gazetteers-design.md`
+- Plan: `.claude/plans/2026-04-11-place-gazetteers.md`
+
+#### Place Gazetteers — Future Extensions [backlog]
+- Additional country gazetteers (Norway, Denmark, Finland, US, etc.)
+- User-importable custom gazetteers (JSON file import)
+- Historical place name support (parishes that changed names/boundaries over time with date ranges)
+- Batch match quality report (how many places resolved, at what quality)
+- "Confirm match" workflow — user accepts a gazetteer match and it writes coordinates to the place record
+
+---
+
 *All four tracks from the 2026-04-11 competitor gap analysis are complete (A1-A5, B1-B5, C1-C4, D1-D3).*
 
