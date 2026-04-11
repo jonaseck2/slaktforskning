@@ -51,7 +51,8 @@ src/
 │   ├── research_tasks.ts         # ResearchTask CRUD
 │   ├── media.ts                  # Media + MediaLink CRUD
 │   ├── report_data.ts            # Denormalized report data for AI narrative generation
-│   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context
+│   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context, tagging status
+│   ├── media_regions.ts          # Media region (face/area tagging) CRUD
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   └── link-rules/               # Default link rule sets
 │       ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
@@ -163,11 +164,12 @@ Repository       { id, name, address?, city?, postal_code?, state?, country?, ph
 ResearchTask     { id, person_id?, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
 Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
 MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, sort_order: number, created_at }
+MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number, height: number, label?, created_at }
 ```
 
 ## Database Schema
 
-15 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
+16 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
@@ -186,6 +188,7 @@ MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'p
 | `research_tasks` | person_id, priority, status, task, notes, result | person → CASCADE |
 | `media` | file_ref, title, format, notes, is_printable | — |
 | `media_links` | media_id, entity_type, entity_id, link_type, sort_order | media → CASCADE |
+| `media_regions` | media_id, person_id, x, y, width, height, label | media → CASCADE, person → SET NULL |
 
 ---
 
@@ -309,6 +312,17 @@ reorderMediaLinks(db, linkIds: string[]) → void
 getMediaFileBase64(db, mediaId, maxDimension?) → MediaFileBase64Result | null
 getUntaggedMedia(db, limit?) → UntaggedMediaItem[]
 getMediaForPersonContext(db, personId) → MediaWithContext[]
+getPersonsForMatching(db, limit?) → PersonForMatching[]
+getMediaTaggingStatus(db) → MediaTaggingStatus
+```
+
+### media_regions.ts
+```
+createMediaRegion(db, { media_id, person_id?, x, y, width, height, label? }) → MediaRegion
+getMediaRegions(db, mediaId) → MediaRegion[]
+getRegionsForPerson(db, personId) → MediaRegion[]
+updateMediaRegion(db, id, { person_id?, label?, x?, y?, width?, height? }) → MediaRegion | null
+deleteMediaRegion(db, id) → boolean
 ```
 
 ### duplicates.ts
@@ -626,7 +640,9 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
 **Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`, `reorder_media_links`
 
-**Media AI tools:** `get_media_file_base64`, `get_untagged_media`, `get_media_for_person_context`
+**Media AI tools:** `get_media_file_base64`, `get_untagged_media`, `get_media_for_person_context`, `suggest_media_regions`, `get_persons_for_matching`, `get_media_tagging_status`
+
+**Media region tools:** `create_media_region`, `get_media_regions`, `get_regions_for_person`, `update_media_region`, `delete_media_region`
 
 **Duplicate/merge tools:** `find_duplicates`, `merge_persons`
 

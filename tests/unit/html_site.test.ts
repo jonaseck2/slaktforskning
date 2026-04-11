@@ -7,7 +7,7 @@ import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createRelationship } from '../../src/api/relationships';
-import { createSource, createCitation } from '../../src/api/sources';
+import { createSource, createCitation, updateSource } from '../../src/api/sources';
 import { createPlace } from '../../src/api/places';
 import { generateHtmlSite } from '../../src/api/html_site/generator';
 
@@ -285,10 +285,10 @@ describe('generateHtmlSite', () => {
       publication_info: 'Published 1900',
       repository: 'Royal Archives',
       source_type: 'church_record',
-      call_number: 'SE/RA/123',
       url: 'https://example.com',
-      abstract: 'This is the abstract text',
     });
+    // call_number and abstract not in createSource INSERT — set via update
+    updateSource(db, source.id, { call_number: 'SE/RA/123', abstract: 'This is the abstract text' });
     createCitation(db, { source_id: source.id, person_id: p.id, page: 'p. 1' });
 
     const outDir = path.join(tmpDir, 'site');

@@ -304,3 +304,7 @@ Part of Track A: `docs/plans/archive/2026-04-11-track-a-presentation-sharing.md`
 ### v0.66.0 — C4: GEDCOM Hardening
 8 edge case fixtures (encoding, minimal, empty fields, deep nesting, large family, non-standard tags, malformed dates, duplicates). Hardened date parser (abt./ca/circa, ranges). Import preview dialog. 40 integration tests. **Track C complete.**
 Part of Track C: `docs/plans/archive/2026-04-11-track-c-core-polish.md`.
+
+### v0.67.0 — B5: Face/Region Tagging — MCP for AI
+Batch tagging tools: suggest_media_regions, get_persons_for_matching, get_media_tagging_status. 18 tests. **Track B complete. All four tracks from the competitor gap analysis are now done.**
+Part of Track B: `docs/plans/archive/2026-04-11-track-b-media-experience.md`.

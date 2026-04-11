@@ -981,15 +981,15 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
 
   // Media region tools
   server.registerTool('create_media_region', {
-    description: 'Create a tagged region on a media item (e.g. a face). Coordinates are fractions 0-1 of image dimensions.',
+    description: 'Create a face/region tag on a media item. Coordinates are fractions 0.0-1.0 of image dimensions.',
     inputSchema: {
       media_id: z.string().describe('Media ID'),
-      person_id: z.string().optional().describe('Person ID to tag in this region'),
-      x: z.number().min(0).max(1).describe('Left edge as fraction of image width (0-1)'),
-      y: z.number().min(0).max(1).describe('Top edge as fraction of image height (0-1)'),
-      width: z.number().min(0).max(1).describe('Region width as fraction of image width (0-1)'),
-      height: z.number().min(0).max(1).describe('Region height as fraction of image height (0-1)'),
-      label: z.string().optional().describe('Optional text label for the region'),
+      person_id: z.string().optional().describe('Person ID to link the region to'),
+      x: z.number().describe('X coordinate (fraction 0.0-1.0)'),
+      y: z.number().describe('Y coordinate (fraction 0.0-1.0)'),
+      width: z.number().describe('Width (fraction 0.0-1.0)'),
+      height: z.number().describe('Height (fraction 0.0-1.0)'),
+      label: z.string().optional().describe('Optional label for the region'),
     },
   }, async (args) => {
     const region = mediaRegions.createMediaRegion(db, args);
@@ -997,27 +997,35 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   });
 
   server.registerTool('get_media_regions', {
-    description: 'Get all tagged regions for a media item',
-    inputSchema: { media_id: z.string().describe('Media ID') },
+    description: 'Get all face/region tags for a media item.',
+    inputSchema: {
+      media_id: z.string().describe('Media ID'),
+    },
   }, async ({ media_id }) => {
     const list = mediaRegions.getMediaRegions(db, media_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
   server.registerTool('get_regions_for_person', {
-    description: 'Get all media regions tagged with a specific person',
-    inputSchema: { person_id: z.string().describe('Person ID') },
+    description: 'Get all face/region tags linked to a specific person.',
+    inputSchema: {
+      person_id: z.string().describe('Person ID'),
+    },
   }, async ({ person_id }) => {
     const list = mediaRegions.getRegionsForPerson(db, person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
   server.registerTool('update_media_region', {
-    description: 'Update a media region (change person or label)',
+    description: 'Update a face/region tag (person assignment, label, or coordinates).',
     inputSchema: {
       id: z.string().describe('Region ID'),
-      person_id: z.string().nullable().optional().describe('Person ID to assign (null to unassign)'),
-      label: z.string().nullable().optional().describe('Text label for the region'),
+      person_id: z.string().nullable().optional().describe('Person ID to link (null to unlink)'),
+      label: z.string().nullable().optional().describe('Label text'),
+      x: z.number().optional().describe('X coordinate (fraction 0.0-1.0)'),
+      y: z.number().optional().describe('Y coordinate (fraction 0.0-1.0)'),
+      width: z.number().optional().describe('Width (fraction 0.0-1.0)'),
+      height: z.number().optional().describe('Height (fraction 0.0-1.0)'),
     },
   }, async ({ id, ...data }) => {
     const region = mediaRegions.updateMediaRegion(db, id, data);
@@ -1025,11 +1033,49 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   });
 
   server.registerTool('delete_media_region', {
-    description: 'Delete a media region',
-    inputSchema: { id: z.string().describe('Region ID') },
+    description: 'Delete a face/region tag.',
+    inputSchema: {
+      id: z.string().describe('Region ID'),
+    },
   }, async ({ id }) => {
     const ok = mediaRegions.deleteMediaRegion(db, id);
-    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Region not found' }] };
+  });
+
+  // Media AI batch tagging tools
+  server.registerTool('suggest_media_regions', {
+    description: 'Create multiple face/region tags on a media item at once. Used by AI agents after vision processing to submit detected faces. Coordinates are fractions 0.0-1.0 of image dimensions.',
+    inputSchema: {
+      media_id: z.string().describe('Media ID'),
+      regions: z.array(z.object({
+        x: z.number().describe('X coordinate (fraction 0.0-1.0)'),
+        y: z.number().describe('Y coordinate (fraction 0.0-1.0)'),
+        width: z.number().describe('Width (fraction 0.0-1.0)'),
+        height: z.number().describe('Height (fraction 0.0-1.0)'),
+        person_id: z.string().optional().describe('Person ID if identified'),
+        label: z.string().optional().describe('Optional label'),
+      })).describe('Array of region definitions to create'),
+    },
+  }, async ({ media_id, regions }) => {
+    const created = regions.map(r => mediaRegions.createMediaRegion(db, { media_id, ...r }));
+    return { content: [{ type: 'text', text: JSON.stringify({ created: created.length, region_ids: created.map(r => r.id) }, null, 2) }] };
+  });
+
+  server.registerTool('get_persons_for_matching', {
+    description: 'Get persons who have existing face region tags, with their region coordinates and media IDs. Use for face comparison - match new faces against known ones.',
+    inputSchema: {
+      limit: z.number().optional().describe('Maximum number of persons to return (default: 50)'),
+    },
+  }, async ({ limit }) => {
+    const list = mediaAi.getPersonsForMatching(db, limit);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_media_tagging_status', {
+    description: 'Get an overview of media tagging progress: total media count, tagged count (has at least one region), untagged count, total region count.',
+  }, async () => {
+    const status = mediaAi.getMediaTaggingStatus(db);
+    return { content: [{ type: 'text', text: JSON.stringify(status, null, 2) }] };
   });
 
   // Duplicate detection & merge tools

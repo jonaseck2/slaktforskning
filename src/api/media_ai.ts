@@ -3,6 +3,7 @@ import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { Media } from './types';
 import { queryOne, queryAll } from './db';
+import type { MediaRegion } from './media_regions';
 
 export interface MediaFileBase64Result {
   base64: string;
@@ -169,4 +170,85 @@ export function getMediaForPersonContext(db: Database, personId: string): MediaW
   }
 
   return results;
+}
+
+export interface PersonForMatching {
+  person_id: string;
+  given_name: string | null;
+  surname: string | null;
+  regions: Array<{ media_id: string; x: number; y: number; width: number; height: number }>;
+}
+
+/**
+ * Get persons who have existing face region tags, with their region coordinates.
+ * Used for face comparison — match new faces against known ones.
+ */
+export function getPersonsForMatching(db: Database, limit = 50): PersonForMatching[] {
+  const rows = queryAll<{
+    person_id: string;
+    given_name: string | null;
+    surname: string | null;
+    media_id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>(db, `
+    SELECT mr.person_id, pn.given_name, pn.surname,
+           mr.media_id, mr.x, mr.y, mr.width, mr.height
+    FROM media_regions mr
+    JOIN persons p ON p.id = mr.person_id
+    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = 0
+    WHERE mr.person_id IS NOT NULL
+    ORDER BY pn.surname, pn.given_name
+  `, []);
+
+  const personMap = new Map<string, PersonForMatching>();
+  for (const row of rows) {
+    let entry = personMap.get(row.person_id);
+    if (!entry) {
+      entry = {
+        person_id: row.person_id,
+        given_name: row.given_name,
+        surname: row.surname,
+        regions: [],
+      };
+      personMap.set(row.person_id, entry);
+    }
+    entry.regions.push({
+      media_id: row.media_id,
+      x: row.x,
+      y: row.y,
+      width: row.width,
+      height: row.height,
+    });
+  }
+
+  const result = Array.from(personMap.values());
+  return result.slice(0, limit);
+}
+
+export interface MediaTaggingStatus {
+  totalMedia: number;
+  taggedMedia: number;
+  untaggedMedia: number;
+  totalRegions: number;
+}
+
+/**
+ * Get an overview of media tagging progress.
+ */
+export function getMediaTaggingStatus(db: Database): MediaTaggingStatus {
+  const totalMedia = queryOne<{ count: number }>(db, 'SELECT COUNT(*) as count FROM media', [])?.count ?? 0;
+  const taggedMedia = queryOne<{ count: number }>(db, `
+    SELECT COUNT(DISTINCT mr.media_id) as count FROM media_regions mr
+  `, [])?.count ?? 0;
+  const totalRegions = queryOne<{ count: number }>(db, 'SELECT COUNT(*) as count FROM media_regions', [])?.count ?? 0;
+
+  return {
+    totalMedia,
+    taggedMedia,
+    untaggedMedia: totalMedia - taggedMedia,
+    totalRegions,
+  };
 }
