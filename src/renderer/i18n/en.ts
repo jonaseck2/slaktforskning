@@ -682,6 +682,12 @@ export default {
     exportReportSources: '{n} sources',
     exportReportExcluded: 'Not included in GEDCOM (no equivalent concept):',
   },
+  personTimeline: {
+    title: 'Timeline',
+    gap: '{years} year gap',
+    undated: 'Undated',
+    empty: 'No events',
+  },
   media: {
     title: 'Media',
     nav: 'Media',

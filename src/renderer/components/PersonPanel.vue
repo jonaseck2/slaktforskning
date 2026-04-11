@@ -93,6 +93,17 @@
         </div>
       </div>
 
+      <!-- Timeline section -->
+      <div class="panel-section">
+        <button class="panel-section-header" @click="toggleSection('timeline')">
+          <span class="panel-chevron">{{ sections.timeline ? '▾' : '▸' }}</span>
+          {{ $t('personTimeline.title') }}
+        </button>
+        <div v-if="sections.timeline" class="panel-section-body">
+          <PersonTimeline :person-id="personId!" />
+        </div>
+      </div>
+
       <!-- Identifiers section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('identifiers')">
@@ -221,6 +232,7 @@ import PersonMediaSection from './PersonMediaSection.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
+import PersonTimeline from './PersonTimeline.vue';
 
 const props = defineProps<{ personId: string | null; showTreeBtn?: boolean }>();
 const emit = defineEmits<{
@@ -284,6 +296,7 @@ const sections = reactive({
   person: loadSection('person', false),
   names: loadSection('names', false),
   events: loadSection('events', true),
+  timeline: loadSection('timeline', false),
   relationships: loadSection('relationships', true),
   groups: loadSection('groups', false),
   research: loadSection('research', false),
