@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
-import type { Gazetteer } from '../../src/api/place-gazetteers/types';
+import { loadGazetteers, getAllGazetteers } from '../../src/api/place-gazetteers/index';
+import type { Gazetteer, GazetteerConfig } from '../../src/api/place-gazetteers/types';
 
 const svGazetteer: Gazetteer = {
   id: 'sv-parishes',
@@ -157,5 +158,28 @@ describe('resolvePlace', () => {
     const result = resolvePlace('Vallsjö, Sverige', [gazetteerWithDup]);
     expect(result).not.toBeNull();
     expect(result!.matchQuality).toBe('ambiguous');
+  });
+});
+
+describe('loadGazetteers', () => {
+  it('returns empty array when no gazetteers enabled', () => {
+    const config: GazetteerConfig = { enabledGazetteers: [] };
+    const result = loadGazetteers(config);
+    expect(result).toEqual([]);
+  });
+
+  it('returns sv-parishes when enabled', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['sv-parishes'] };
+    const result = loadGazetteers(config);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('sv-parishes');
+    expect(result[0].root.name).toBe('Sverige');
+    expect(result[0].root.children!.length).toBeGreaterThan(0);
+  });
+
+  it('getAllGazetteers returns all bundled gazetteers', () => {
+    const all = getAllGazetteers();
+    expect(all.length).toBeGreaterThanOrEqual(1);
+    expect(all.find(g => g.id === 'sv-parishes')).toBeDefined();
   });
 });

@@ -1,0 +1,162 @@
+{
+  "id": "sv-parishes",
+  "name": "Swedish Parishes (Sockenindelningen)",
+  "locale": "sv",
+  "root": {
+    "name": "Sverige",
+    "type": "country",
+    "lat": 62.0,
+    "lon": 15.0,
+    "children": [
+      {
+        "name": "Jönköpings län",
+        "type": "county",
+        "aliases": ["Jönköping"],
+        "lat": 57.78,
+        "lon": 14.16,
+        "children": [
+          {
+            "name": "Sävsjö",
+            "type": "municipality",
+            "lat": 57.40,
+            "lon": 14.66,
+            "children": [
+              {
+                "name": "Vallsjö",
+                "type": "parish",
+                "aliases": ["Wallsjö", "Vallsjö församling"],
+                "lat": 57.42,
+                "lon": 14.72
+              },
+              {
+                "name": "Sävsjö",
+                "type": "parish",
+                "aliases": ["Sävsjö församling"],
+                "lat": 57.40,
+                "lon": 14.66
+              }
+            ]
+          },
+          {
+            "name": "Nässjö",
+            "type": "municipality",
+            "lat": 57.65,
+            "lon": 14.70,
+            "children": [
+              {
+                "name": "Nässjö",
+                "type": "parish",
+                "aliases": ["Nässjö församling"],
+                "lat": 57.65,
+                "lon": 14.70
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Göteborgs och Bohus län",
+        "type": "county",
+        "aliases": ["Göteborg", "Göteborgs län"],
+        "lat": 57.71,
+        "lon": 11.97,
+        "children": [
+          {
+            "name": "Mölndal",
+            "type": "municipality",
+            "lat": 57.66,
+            "lon": 12.01,
+            "children": [
+              {
+                "name": "Fässberg",
+                "type": "parish",
+                "aliases": ["Fässbergs församling"],
+                "lat": 57.66,
+                "lon": 12.02
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Älvsborgs län",
+        "type": "county",
+        "aliases": ["Älvsborg"],
+        "lat": 57.72,
+        "lon": 12.94,
+        "children": [
+          {
+            "name": "Mark",
+            "type": "municipality",
+            "lat": 57.49,
+            "lon": 12.60,
+            "children": [
+              {
+                "name": "Örby",
+                "type": "parish",
+                "aliases": ["Örby församling"],
+                "lat": 57.52,
+                "lon": 12.58
+              },
+              {
+                "name": "Kinnahult",
+                "type": "parish",
+                "aliases": ["Kinnahults församling"],
+                "lat": 57.50,
+                "lon": 12.62
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Kronobergs län",
+        "type": "county",
+        "aliases": ["Kronoberg"],
+        "lat": 56.88,
+        "lon": 14.81,
+        "children": [
+          {
+            "name": "Växjö",
+            "type": "municipality",
+            "lat": 56.88,
+            "lon": 14.81,
+            "children": [
+              {
+                "name": "Växjö",
+                "type": "parish",
+                "aliases": ["Växjö församling"],
+                "lat": 56.88,
+                "lon": 14.81
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Stockholms län",
+        "type": "county",
+        "aliases": ["Stockholm"],
+        "lat": 59.33,
+        "lon": 18.07,
+        "children": [
+          {
+            "name": "Stockholm",
+            "type": "municipality",
+            "lat": 59.33,
+            "lon": 18.07,
+            "children": [
+              {
+                "name": "Stockholm",
+                "type": "parish",
+                "aliases": ["Stockholms församling"],
+                "lat": 59.33,
+                "lon": 18.07
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
