@@ -21,3 +21,4 @@ export { yearFromDate, maxDescendantDepth } from './utils';
 export { computePedigreeLayout } from './pedigree';
 export { computeHourglassLayout } from './hourglass';
 export { computeTimelineLayout } from './timeline';
+export { computeDescendantLayout } from './descendant';
