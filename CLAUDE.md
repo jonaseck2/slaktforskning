@@ -493,6 +493,7 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 - Buttons: `.btn-add`, `.btn-add:hover`, `.btn-sm`, `.btn-delete`, `.btn-delete:hover`, `.btn-cancel`, `.btn-cancel:hover`
 - Modal: `.modal-overlay`, `.modal`, `.modal h3`, `.modal-actions`, `form > label`, `form input/select/textarea`
 - Person links: `.person-link`, `.person-link:hover`
+- Sex badges: `.sex-badge`, `.sex-M`, `.sex-F`, `.sex-U`
 - Tabs: `.tab-bar`, `.tab-btn`, `.tab-btn.active`, `.tab-btn:hover`
 
 **CSS custom properties** (use these in any view-specific styles instead of hardcoded px values):

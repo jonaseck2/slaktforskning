@@ -34,9 +34,9 @@
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>{{ $t('common.name') }}</th>
+          <th style="width: 100%">{{ $t('common.name') }}</th>
           <th>{{ $t('persons.sex') }}</th>
-          <th>{{ $t('common.actions') }}</th>
+          <th class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -56,8 +56,8 @@
               <PersonName :given-name="m.given_name" :surname="m.surname" :preferred-name="m.preferred_name" :nickname="m.nickname" />
             </span>
           </td>
-          <td>{{ m.sex || '–' }}</td>
-          <td>
+          <td><span :class="'sex-badge sex-' + m.sex">{{ m.sex }}</span></td>
+          <td class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="removeMember(m.person_id)">✕</button>
           </td>
         </tr>
@@ -155,7 +155,7 @@ onMounted(load);
 </script>
 
 <style scoped>
-.group-detail { max-width: 800px; }
+.group-detail { }
 .btn-back {
   background: none;
   border: none;
@@ -208,9 +208,5 @@ onMounted(load);
   margin-bottom: 12px;
 }
 .add-member-row > :first-child { flex: 1; }
-button { background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
-button:hover { opacity: 0.9; }
-button:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-add { background: none; color: #3498db; font-size: var(--font-sm); padding: 4px 8px; border: 1px solid #3498db; border-radius: 4px; }
 .btn-cancel-inline { background: #e0e0e0; color: #333; }
 </style>
