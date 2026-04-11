@@ -176,6 +176,10 @@ const api = {
     getFilePath: (id: string) => ipcRenderer.invoke('media:getFilePath', id),
     readAsDataUrl: (id: string) => ipcRenderer.invoke('media:readAsDataUrl', id),
   },
+  archive: {
+    export: (opts?: { gedcomVersion?: string }) => ipcRenderer.invoke('archive:export', opts),
+    import: () => ipcRenderer.invoke('archive:import'),
+  },
   print: {
     print: () => ipcRenderer.invoke('print:print'),
     exportPdf: (path?: string) => ipcRenderer.invoke('print:exportPdf', path),
