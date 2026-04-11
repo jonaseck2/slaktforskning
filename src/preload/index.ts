@@ -176,6 +176,7 @@ const api = {
     openFile: (id: string) => ipcRenderer.invoke('media:openFile', id),
     getFilePath: (id: string) => ipcRenderer.invoke('media:getFilePath', id),
     readAsDataUrl: (id: string) => ipcRenderer.invoke('media:readAsDataUrl', id),
+    getTimeline: (entityType: string, entityId: string) => ipcRenderer.invoke('media:getTimeline', entityType, entityId),
   },
   archive: {
     export: (opts?: { gedcomVersion?: string }) => ipcRenderer.invoke('archive:export', opts),

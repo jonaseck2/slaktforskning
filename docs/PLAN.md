@@ -93,6 +93,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.58.0 | B2: Media-Bundled Portable Archive — GEDCOM + media .zip export/import | [plan](plans/2026-04-11-track-b-media-experience.md) |
 | v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 | v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
+| v0.61.0 | B3: Media Timeline — chronological media per person/place with lightbox | [plan](plans/2026-04-11-track-b-media-experience.md) |
 ---
 
 ## Research
@@ -127,9 +128,6 @@ Generate a self-contained browsable family tree website. Person pages, index, se
 ---
 
 ### Track B: Media Experience [plan](plans/2026-04-11-track-b-media-experience.md)
-
-#### B3: Media Timeline [feature]
-Chronological media display across a person's life or a place's history.
 
 #### B4: Face/Region Tagging — Manual [feature]
 Rectangle crop in photos, link to person, use as profile picture. Local-only.
