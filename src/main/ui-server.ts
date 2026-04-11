@@ -54,16 +54,28 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
 
       } else if (method === 'POST' && url === '/execute_js') {
         const body = await readBody(req) as { code: string };
-        const result = await win.webContents.executeJavaScript(body.code);
-        json(res, 200, { result });
+        try {
+          const result = await win.webContents.executeJavaScript(body.code);
+          json(res, 200, { result });
+        } catch (jsErr: unknown) {
+          const msg = jsErr instanceof Error ? jsErr.message : String(jsErr);
+          json(res, 400, { error: msg });
+        }
 
       } else if (method === 'POST' && url === '/click') {
         const body = await readBody(req) as { selector: string };
         const selector = JSON.stringify(body.selector);
-        await win.webContents.executeJavaScript(
-          `(() => { const el = document.querySelector(${selector}); if (!el) throw new Error('Element not found: ' + ${selector}); el.click(); })()`
-        );
-        json(res, 200, { ok: true });
+        // Return result object instead of throwing — Electron's executeJavaScript
+        // swallows the original error message when scripts throw.
+        // Use dispatchEvent with MouseEvent — SVG elements (like <g>) lack .click().
+        const result = await win.webContents.executeJavaScript(
+          `(() => { const el = document.querySelector(${selector}); if (!el) return { error: 'Element not found: ' + ${selector} }; el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); return { ok: true }; })()`
+        ) as { ok?: boolean; error?: string };
+        if (result.error) {
+          json(res, 400, { error: result.error });
+        } else {
+          json(res, 200, { ok: true });
+        }
 
       } else if (method === 'GET' && url === '/dom') {
         const html = await win.webContents.executeJavaScript(

@@ -464,7 +464,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
 | `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Compound date input. Shows `date_value_end` only when type is "between". Preserves original source text. |
 | `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
-| `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `hideHeader?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. Reloads on `personId` change. |
+| `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `readonly?: boolean`, `hideHeader?: boolean`, `showPersons?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. `showPersons` adds a participant names column (used in PlacePanel). Uses `watch` for reactive reloading on prop changes. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
 | `ConfirmModal` | `visible`, `title`, `message` | `confirm`, `cancel` | Accessible delete confirmation modal |
 | `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
@@ -532,14 +532,14 @@ Use `<router-link :to="'/persons/' + personId" class="person-link" @click.stop>`
 ### Constants (`src/renderer/constants/eventTypes.ts`)
 
 ```typescript
-EVENT_TYPE_VALUES              // 23 GEDCOM event types: birth, death, marriage, divorce, ..., mention, other
-PERSON_EVENT_TYPE_VALUES       // EVENT_TYPES minus marriage/divorce
-RELATIONSHIP_EVENT_TYPE_VALUES // marriage, divorce, census, other only
+EVENT_TYPE_VALUES              // 26 event types: birth, death, marriage, divorce, ..., wedding, foster_placement, other
+PERSON_EVENT_TYPE_VALUES       // EVENT_TYPES minus marriage/divorce/wedding
+RELATIONSHIP_EVENT_TYPE_VALUES // marriage, divorce, wedding, census, other
 DATE_TYPE_VALUES               // exact, about, before, after, between, calculated, unknown
 CONFIDENCE_LEVEL_VALUES        // 0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary
 SOURCE_TYPE_VALUES             // vital_record, census, church_record, newspaper, ...
 RELATIONSHIP_TYPE_VALUES       // couple, parent_child, sibling, godparent, other
-COUPLE_SUBTYPE_VALUES          // marriage, civil_union, cohabitation, unknown
+COUPLE_SUBTYPE_VALUES          // marriage, civil_union, cohabitation, living_apart, relationship, unknown, other
 PARENT_CHILD_SUBTYPE_VALUES    // biological, adopted, foster, step, unknown
 EVENT_PARTICIPANT_ROLE_VALUES  // primary, spouse, parent, child, witness, godparent, officiant, other
 NAME_TYPE_VALUES               // birth, married, alias, aka

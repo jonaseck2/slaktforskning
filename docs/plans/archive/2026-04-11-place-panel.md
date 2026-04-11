@@ -1,6 +1,6 @@
 # PlacePanel — Map Side Panel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a side panel to MapView that shows comprehensive place details when a map pin is clicked, mirroring the PersonPanel pattern from VisualizationView.
 
@@ -18,7 +18,7 @@
 - Modify: `src/api/places.ts`
 - Create: `tests/unit/places.test.ts`
 
-- [ ] **Step 1: Create test file with failing test**
+- [x] **Step 1: Create test file with failing test**
 
 Create `tests/unit/places.test.ts`:
 
@@ -74,12 +74,12 @@ describe('getPersonsForPlace', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- --run tests/unit/places.test.ts`
 Expected: FAIL — `getPersonsForPlace` is not exported from `src/api/places.ts`
 
-- [ ] **Step 3: Implement `getPersonsForPlace` in `src/api/places.ts`**
+- [x] **Step 3: Implement `getPersonsForPlace` in `src/api/places.ts`**
 
 Add to the end of `src/api/places.ts`, before the closing of the file. Also add the import for `queryAll` if not already present:
 
@@ -106,12 +106,12 @@ export function getPersonsForPlace(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- --run tests/unit/places.test.ts`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 feat: add getPersonsForPlace API function
@@ -125,7 +125,7 @@ feat: add getPersonsForPlace API function
 - Modify: `src/main/ipc/places.ts`
 - Modify: `src/preload/index.ts`
 
-- [ ] **Step 1: Add IPC handler in `src/main/ipc/places.ts`**
+- [x] **Step 1: Add IPC handler in `src/main/ipc/places.ts`**
 
 Add after the existing `wrapHandler('places:getPath', ...)` line:
 
@@ -133,7 +133,7 @@ Add after the existing `wrapHandler('places:getPath', ...)` line:
 wrapHandler('places:getPersons', (placeId) => places.getPersonsForPlace(getDb(), placeId as string));
 ```
 
-- [ ] **Step 2: Add preload binding in `src/preload/index.ts`**
+- [x] **Step 2: Add preload binding in `src/preload/index.ts`**
 
 In the `places:` object, add after the `getPath` line:
 
@@ -141,12 +141,12 @@ In the `places:` object, add after the `getPath` line:
 getPersons: (placeId: string) => ipcRenderer.invoke('places:getPersons', placeId),
 ```
 
-- [ ] **Step 3: Verify the app still compiles**
+- [x] **Step 3: Verify the app still compiles**
 
 Run: `npm test -- --run`
 Expected: All existing tests still pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 feat: add places:getPersons IPC channel
@@ -159,7 +159,7 @@ feat: add places:getPersons IPC channel
 **Files:**
 - Modify: `src/renderer/components/EventList.vue`
 
-- [ ] **Step 1: Add `placeId` prop to the props definition**
+- [x] **Step 1: Add `placeId` prop to the props definition**
 
 In EventList.vue, change the props definition from:
 
@@ -184,7 +184,7 @@ const props = defineProps<{
 }>();
 ```
 
-- [ ] **Step 2: Add place loading path in the `load()` function**
+- [x] **Step 2: Add place loading path in the `load()` function**
 
 Change the `load()` function from:
 
@@ -224,7 +224,7 @@ async function load() {
 }
 ```
 
-- [ ] **Step 3: Change from `onMounted` to `watch` for reactive reloading**
+- [x] **Step 3: Change from `onMounted` to `watch` for reactive reloading**
 
 EventList currently uses `onMounted(load)`. For the PlacePanel use case (where `placeId` changes without remounting), change it to use a watcher. Replace:
 
@@ -247,12 +247,12 @@ watch(
 
 Remove `onMounted` from the import at line 69 if it is no longer used anywhere else in the component.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 feat: add placeId prop to EventList component
@@ -265,7 +265,7 @@ feat: add placeId prop to EventList component
 **Files:**
 - Create: `src/renderer/components/PlacePersonsSection.vue`
 
-- [ ] **Step 1: Create the component**
+- [x] **Step 1: Create the component**
 
 Create `src/renderer/components/PlacePersonsSection.vue`:
 
@@ -324,7 +324,7 @@ defineExpose({ reload: load });
 </script>
 ```
 
-- [ ] **Step 2: Add i18n keys**
+- [x] **Step 2: Add i18n keys**
 
 Add to the `places` section in both `src/renderer/i18n/en.ts` and `src/renderer/i18n/sv.ts`:
 
@@ -340,12 +340,12 @@ noPersons: 'Inga personer kopplade till denna plats',
 eventCount: 'Händelser',
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 feat: add PlacePersonsSection component
@@ -358,7 +358,7 @@ feat: add PlacePersonsSection component
 **Files:**
 - Create: `src/renderer/components/PlaceCitationsSection.vue`
 
-- [ ] **Step 1: Create the component**
+- [x] **Step 1: Create the component**
 
 Create `src/renderer/components/PlaceCitationsSection.vue`:
 
@@ -440,7 +440,7 @@ defineExpose({ reload: load });
 </script>
 ```
 
-- [ ] **Step 2: Add i18n keys if missing**
+- [x] **Step 2: Add i18n keys if missing**
 
 Check `en.ts` and `sv.ts` for existing `citations.noCitations` key. If missing, add:
 
@@ -462,12 +462,12 @@ citations: {
 },
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 feat: add PlaceCitationsSection component
@@ -482,7 +482,7 @@ feat: add PlaceCitationsSection component
 
 The existing `PersonMediaSection` is hardcoded to `entity_type: 'person'`. Rather than duplicating it, create a new `EntityMediaSection` that accepts `entityType` and `entityId` props. This can be used for places and later for other entity types.
 
-- [ ] **Step 1: Create the component**
+- [x] **Step 1: Create the component**
 
 Create `src/renderer/components/EntityMediaSection.vue` by copying the pattern from `PersonMediaSection.vue` but making `entityType` and `entityId` props:
 
@@ -644,12 +644,12 @@ watch(() => `${props.entityType}:${props.entityId}`, () => load(), { immediate: 
 </style>
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 feat: add EntityMediaSection component for entity-agnostic media display
@@ -664,7 +664,7 @@ feat: add EntityMediaSection component for entity-agnostic media display
 
 The existing `useSectionState` is tightly coupled to `PersonPanelSections`. Create a place-specific section state composable.
 
-- [ ] **Step 1: Create the composable**
+- [x] **Step 1: Create the composable**
 
 Create `src/renderer/composables/usePlacePanelSections.ts`:
 
@@ -716,12 +716,12 @@ export function usePlacePanelSections() {
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 feat: add usePlacePanelSections composable
@@ -734,7 +734,7 @@ feat: add usePlacePanelSections composable
 **Files:**
 - Create: `src/renderer/components/PlacePanel.vue`
 
-- [ ] **Step 1: Create the component**
+- [x] **Step 1: Create the component**
 
 Create `src/renderer/components/PlacePanel.vue`:
 
@@ -1133,7 +1133,7 @@ watch(() => props.placeId, () => load(), { immediate: true });
 </style>
 ```
 
-- [ ] **Step 2: Add i18n keys**
+- [x] **Step 2: Add i18n keys**
 
 Add to both `en.ts` and `sv.ts`:
 
@@ -1153,12 +1153,12 @@ placePanel: {
 },
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 feat: add PlacePanel component with 8 collapsible sections
@@ -1171,7 +1171,7 @@ feat: add PlacePanel component with 8 collapsible sections
 **Files:**
 - Modify: `src/renderer/views/MapView.vue`
 
-- [ ] **Step 1: Add the side panel layout**
+- [x] **Step 1: Add the side panel layout**
 
 Replace the entire MapView template with:
 
@@ -1263,7 +1263,7 @@ Replace the entire MapView template with:
 </template>
 ```
 
-- [ ] **Step 2: Update the script section**
+- [x] **Step 2: Update the script section**
 
 Add imports and panel state logic. Replace the entire `<script setup>` block:
 
@@ -1397,7 +1397,7 @@ onMounted(async () => {
 </script>
 ```
 
-- [ ] **Step 3: Update the styles**
+- [x] **Step 3: Update the styles**
 
 Replace the entire `<style scoped>` block:
 
@@ -1532,7 +1532,7 @@ Replace the entire `<style scoped>` block:
 </style>
 ```
 
-- [ ] **Step 4: Invalidate the Leaflet map on panel resize**
+- [x] **Step 4: Invalidate the Leaflet map on panel resize**
 
 The Leaflet map needs to be invalidated when the panel opens/closes or resizes (otherwise the map tiles may not render correctly in the new size). Add this watcher to the script section, after the `panelOpen` ref:
 
@@ -1544,12 +1544,12 @@ watch(panelOpen, () => {
 });
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 feat: integrate PlacePanel into MapView with drag-resize side panel
@@ -1559,11 +1559,11 @@ feat: integrate PlacePanel into MapView with drag-resize side panel
 
 ### Task 10: Manual testing and polish
 
-- [ ] **Step 1: Launch the app**
+- [x] **Step 1: Launch the app**
 
 Run: `npm start`
 
-- [ ] **Step 2: Navigate to the Map view**
+- [x] **Step 2: Navigate to the Map view**
 
 Click "Map" in the sidebar. Verify:
 - Pins render correctly
@@ -1579,14 +1579,14 @@ Click "Map" in the sidebar. Verify:
 - The map resizes properly when the panel opens/closes
 - ZoomControls still work
 
-- [ ] **Step 3: Fix any issues found during testing**
+- [x] **Step 3: Fix any issues found during testing**
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 Run: `npm test -- --run`
 Expected: All tests pass
 
-- [ ] **Step 5: Commit any fixes**
+- [x] **Step 5: Commit any fixes**
 
 ```
 fix: polish PlacePanel integration
@@ -1600,15 +1600,15 @@ fix: polish PlacePanel integration
 - Modify: `CLAUDE.md`
 - Modify: `docs/PLAN.md`
 
-- [ ] **Step 1: Update CLAUDE.md**
+- [x] **Step 1: Update CLAUDE.md**
 
 Add `PlacePanel` to the Shared Components table. Add `PlacePersonsSection`, `PlaceCitationsSection`, `EntityMediaSection`, and `usePlacePanelSections` entries. Update MapView route description to mention the side panel.
 
-- [ ] **Step 2: Update `docs/PLAN.md`**
+- [x] **Step 2: Update `docs/PLAN.md`**
 
 Mark the PlacePanel milestone as done and add a pointer to the spec file.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```
 docs: update CLAUDE.md and PLAN.md for PlacePanel feature

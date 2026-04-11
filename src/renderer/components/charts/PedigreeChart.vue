@@ -7,7 +7,7 @@
         v-else
         :width="layout.svgWidth * zoom"
         :height="layout.svgHeight * zoom"
-        :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
+        :viewBox="`0 ${layout.viewBoxMinY} ${layout.svgWidth} ${layout.svgHeight}`"
         data-testid="pedigree-svg"
         role="tree"
         :aria-label="$t('a11y.pedigreeChart')"
@@ -140,7 +140,7 @@
           <rect
             :x="ph.x" :y="ph.y" :width="BOX_W" :height="BOX_H"
             rx="6" ry="6"
-            fill="none" stroke="#94a3b8" stroke-dasharray="4 3" stroke-width="1.5"
+            fill="transparent" stroke="#94a3b8" stroke-dasharray="4 3" stroke-width="1.5"
           />
           <text
             :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 - 6"
@@ -204,7 +204,7 @@ import ChartTooltip from './ChartTooltip.vue';
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean }>();
+const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
@@ -275,8 +275,8 @@ const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
 const layout = computed(() => {
-  if (!tree.value) return { boxes: [], lines: [], svgWidth: 995, svgHeight: 1024, collapseButtons: [], placeholders: [], placeholderLines: [] };
-  return computePedigreeLayout(tree.value, collapsed.value);
+  if (!tree.value) return { boxes: [], lines: [], svgWidth: 995, svgHeight: 1024, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
+  return computePedigreeLayout(tree.value, collapsed.value, props.selectedPersonId);
 });
 
 // Reverse map: personId → ahnentafel key — needed by handleCollapseButton to call loadAncestorGeneration

@@ -53,6 +53,8 @@ export interface ChartLayout {
   lines: Line[];
   svgWidth: number;
   svgHeight: number;
+  /** Minimum Y coordinate for the viewBox (negative when placeholders extend above boxes). */
+  viewBoxMinY: number;
   collapseButtons: CollapseButton[];
   placeholders: PlaceholderBox[];
   placeholderLines: Line[];

@@ -10,6 +10,8 @@ import { BOX_W, BOX_H, V_GAP, H_GAP, PAD, ROW_H } from './constants';
 export function computePedigreeLayout(
   tree: PedigreeTree,
   collapsed: Set<string> = new Set(),
+  /** When set, only show add-parent placeholders for this person (prevents overlap). */
+  selectedPersonId?: string | null,
 ): ChartLayout {
   const { nodes: originalNodes, generations: G } = tree;
 
@@ -148,20 +150,23 @@ export function computePedigreeLayout(
     }
   }
 
-  // Generate placeholder ghost boxes for missing parents of leaf nodes.
-  // Only shown for leaf nodes that are NOT at the maximum generation depth,
-  // and that don't already have a load-more button (hasMoreAncestors).
+  // Generate placeholder ghost boxes for the selected person's missing parents only.
+  // Limiting to one person prevents overlapping placeholders when multiple leaf nodes
+  // are adjacent in the tree.
+  const selectedK = selectedPersonId
+    ? [...nodes.entries()].find(([, p]) => p.id === selectedPersonId)?.[0]
+    : undefined;
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
   for (const [k] of nodes) {
+    if (selectedK !== undefined && k !== selectedK) continue;
+    if (selectedK === undefined) continue; // no selection → no placeholders
     const g = Math.floor(Math.log2(k));
-    if (g >= G - 1) continue; // at max depth, don't show placeholders
+    if (g >= G - 1) continue;
     const fatherK = k * 2;
     const motherK = k * 2 + 1;
     const hasFather = nodes.has(fatherK);
     const hasMother = nodes.has(motherK);
-    // Only add placeholders for leaf nodes missing at least one parent
-    // and that don't have a hasMoreAncestors flag (those get load-more buttons instead)
     if (hasFather && hasMother) continue;
     if (hasMore.has(k)) continue;
 
@@ -209,5 +214,19 @@ export function computePedigreeLayout(
   const lineSet = new Set(lines.map(l => `${l.x1},${l.y1},${l.x2},${l.y2}`));
   const uniquePlaceholderLines = placeholderLines.filter(l => !lineSet.has(`${l.x1},${l.y1},${l.x2},${l.y2}`));
 
-  return { boxes, lines, svgWidth, svgHeight, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
+  // Expand SVG dimensions to include any placeholders that extend beyond box area
+  let viewBoxMinY = 0;
+  let finalHeight = svgHeight;
+  let finalWidth = svgWidth;
+  for (const ph of placeholders) {
+    viewBoxMinY = Math.min(viewBoxMinY, ph.y - PAD);
+    finalHeight = Math.max(finalHeight, ph.y + BOX_H + PAD);
+    finalWidth = Math.max(finalWidth, ph.x + BOX_W + PAD);
+  }
+  // If viewBoxMinY is negative, increase height to cover the extra space above
+  if (viewBoxMinY < 0) {
+    finalHeight += -viewBoxMinY;
+  }
+
+  return { boxes, lines, svgWidth: finalWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
 }

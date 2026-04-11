@@ -578,5 +578,5 @@ export function computeHourglassLayout(
     }
   }
 
-  return { boxes, lines, svgWidth, svgHeight, collapseButtons, placeholders: [], placeholderLines: [] };
+  return { boxes, lines, svgWidth, svgHeight, viewBoxMinY: 0, collapseButtons, placeholders: [], placeholderLines: [] };
 }
