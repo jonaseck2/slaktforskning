@@ -170,15 +170,15 @@ MCP tools for AI agents to suggest face bounding boxes and person assignments.
 
 ### Steps
 
-- [ ] MCP tool `get_media_file_base64` — returns media file as base64 string for agent vision processing
-- [ ] MCP tool `get_media_metadata` — returns file size, dimensions, format (EXIF if available)
-- [ ] MCP tool `get_untagged_media` — list media items with zero regions, ordered by linked person count (most connected first)
-- [ ] MCP tool `suggest_media_regions` — agent provides array of `{ x, y, width, height, person_id?, confidence? }`, creates regions
-- [ ] MCP tool `get_persons_for_matching` — returns persons with existing region crops (base64) for face comparison
-- [ ] Document agent workflow: step-by-step guide for using Claude Desktop to batch-tag photos
-- [ ] Example prompt templates for face detection and person matching
-- [ ] Unit tests for each MCP tool
-- [ ] Rate considerations: document image size limits and recommend downscaling for large photos
+- [x] MCP tool `get_media_file_base64` — returns media file as base64 string for agent vision processing
+- [x] MCP tool `get_media_metadata` — returns file size, dimensions, format (EXIF if available)
+- [x] MCP tool `get_untagged_media` — list media items with zero regions, ordered by linked person count (most connected first)
+- [x] MCP tool `suggest_media_regions` — agent provides array of `{ x, y, width, height, person_id?, confidence? }`, creates regions
+- [x] MCP tool `get_persons_for_matching` — returns persons with existing region crops (base64) for face comparison
+- [x] Document agent workflow: step-by-step guide for using Claude Desktop to batch-tag photos
+- [x] Example prompt templates for face detection and person matching
+- [x] Unit tests for each MCP tool
+- [x] Rate considerations: document image size limits and recommend downscaling for large photos
 
 ### Dependencies
 B4 (media_regions table and API).

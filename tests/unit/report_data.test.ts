@@ -137,6 +137,48 @@ describe('getAncestorTree', () => {
     expect(tree!.father!.mother).toBeNull();
   });
 
+  it('assigns unknown-sex parent to father slot first', () => {
+    const child = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+    const parent = createPerson(db, { given_name: 'Unknown', surname: 'Test', sex: 'U' });
+    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
+
+    const tree = getAncestorTree(db, child.id, 2);
+    expect(tree).not.toBeNull();
+    expect(tree!.father).not.toBeNull();
+    expect(tree!.father!.person.id).toBe(parent.id);
+    expect(tree!.mother).toBeNull();
+  });
+
+  it('assigns second unknown-sex parent to mother slot', () => {
+    const child = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+    const parent1 = createPerson(db, { given_name: 'Parent1', surname: 'Test', sex: 'U' });
+    const parent2 = createPerson(db, { given_name: 'Parent2', surname: 'Test', sex: 'U' });
+    createRelationship(db, { type: 'parent_child', person1_id: parent1.id, person2_id: child.id });
+    createRelationship(db, { type: 'parent_child', person1_id: parent2.id, person2_id: child.id });
+
+    const tree = getAncestorTree(db, child.id, 2);
+    expect(tree).not.toBeNull();
+    expect(tree!.father).not.toBeNull();
+    expect(tree!.mother).not.toBeNull();
+    const parentIds = [tree!.father!.person.id, tree!.mother!.person.id].sort();
+    expect(parentIds).toEqual([parent1.id, parent2.id].sort());
+  });
+
+  it('fills mother slot when father already assigned by male parent', () => {
+    const child = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+    const father = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M' });
+    const unknownParent = createPerson(db, { given_name: 'Other', surname: 'Test', sex: 'U' });
+    createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: child.id });
+    createRelationship(db, { type: 'parent_child', person1_id: unknownParent.id, person2_id: child.id });
+
+    const tree = getAncestorTree(db, child.id, 2);
+    expect(tree).not.toBeNull();
+    expect(tree!.father).not.toBeNull();
+    expect(tree!.father!.person.id).toBe(father.id);
+    expect(tree!.mother).not.toBeNull();
+    expect(tree!.mother!.person.id).toBe(unknownParent.id);
+  });
+
   it('respects generation limit of 1', () => {
     const child = createPerson(db, { given_name: 'Anna', surname: 'Persdotter', sex: 'F' });
     const father = createPerson(db, { given_name: 'Per', surname: 'Johansson', sex: 'M' });
@@ -223,6 +265,80 @@ describe('getResearchGaps', () => {
 describe('getTimeline', () => {
   it('returns null for non-existent person', () => {
     expect(getTimeline(db, 'no-such-id')).toBeNull();
+  });
+
+  it('includes sibling relationship events with correct label', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+    const sibling = createPerson(db, { given_name: 'Lars', surname: 'Test', sex: 'M' });
+    createRelationship(db, { type: 'sibling', person1_id: person.id, person2_id: sibling.id });
+
+    const siblingBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+    addEventParticipant(db, { event_id: siblingBirth.id, person_id: sibling.id });
+
+    const timeline = getTimeline(db, person.id);
+    expect(timeline).not.toBeNull();
+    const siblingEntry = timeline!.find(e => e.relationship_label === 'sibling');
+    expect(siblingEntry).toBeDefined();
+    expect(siblingEntry!.person_given_name).toBe('Lars');
+  });
+
+  it('uses relationship type as label for non-standard types', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+    const other = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M' });
+    createRelationship(db, { type: 'godparent', person1_id: person.id, person2_id: other.id });
+
+    const otherBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+    addEventParticipant(db, { event_id: otherBirth.id, person_id: other.id });
+
+    const timeline = getTimeline(db, person.id);
+    expect(timeline).not.toBeNull();
+    const godparentEntry = timeline!.find(e => e.relationship_label === 'godparent');
+    expect(godparentEntry).toBeDefined();
+  });
+
+  it('labels parent_child correctly when person is the parent', () => {
+    const parent = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+    const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
+    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
+
+    const childBirth = createEvent(db, { event_type: 'birth', date_value: '1870-01-01', date_original: '1870' });
+    addEventParticipant(db, { event_id: childBirth.id, person_id: child.id });
+
+    const timeline = getTimeline(db, parent.id);
+    expect(timeline).not.toBeNull();
+    const childEntry = timeline!.find(e => e.relationship_label === 'child');
+    expect(childEntry).toBeDefined();
+    expect(childEntry!.person_given_name).toBe('Erik');
+  });
+
+  it('labels parent_child correctly when person is the child', () => {
+    const parent = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+    const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
+    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
+
+    const parentBirth = createEvent(db, { event_type: 'birth', date_value: '1840-01-01', date_original: '1840' });
+    addEventParticipant(db, { event_id: parentBirth.id, person_id: parent.id });
+
+    const timeline = getTimeline(db, child.id);
+    expect(timeline).not.toBeNull();
+    const parentEntry = timeline!.find(e => e.relationship_label === 'parent');
+    expect(parentEntry).toBeDefined();
+    expect(parentEntry!.person_given_name).toBe('Per');
+  });
+
+  it('sorts entries with null date_value using empty string fallback', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+    const ev1 = createEvent(db, { event_type: 'birth', date_value: '1850-01-01' });
+    addEventParticipant(db, { event_id: ev1.id, person_id: person.id });
+    const ev2 = createEvent(db, { event_type: 'census' }); // no date_value
+    addEventParticipant(db, { event_id: ev2.id, person_id: person.id });
+
+    const timeline = getTimeline(db, person.id);
+    expect(timeline).not.toBeNull();
+    expect(timeline!.length).toBe(2);
+    // Empty string sorts before '1850...', so undated comes first
+    expect(timeline![0].event.event_type).toBe('census');
+    expect(timeline![1].event.date_value).toBe('1850-01-01');
   });
 
   it('returns person events and family events merged chronologically', () => {

@@ -128,6 +128,44 @@ describe('getMediaTimeline', () => {
     });
   });
 
+  describe('sort edge cases', () => {
+    it('maintains stable order for multiple undated items', () => {
+      const person = createPerson(db, { sex: 'M' });
+      const m1 = createMedia(db, { title: 'Undated 1', format: 'jpg' });
+      const m2 = createMedia(db, { title: 'Undated 2', format: 'jpg' });
+      addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
+      addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id });
+
+      const result = getMediaTimeline(db, 'person', person.id);
+      expect(result).toHaveLength(2);
+      // Both should be undated
+      expect(result[0].date).toBeUndefined();
+      expect(result[1].date).toBeUndefined();
+    });
+
+    it('sorts undated item after dated item', () => {
+      const person = createPerson(db, { sex: 'F' });
+      // Create undated media first
+      const undated = createMedia(db, { title: 'Undated', format: 'jpg' });
+      addMediaLink(db, { media_id: undated.id, entity_type: 'person', entity_id: person.id });
+
+      // Then create dated via event
+      const event = createEvent(db, {
+        event_type: 'birth',
+        date_type: 'exact',
+        date_value: '1900-01-01',
+      });
+      addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+      const dated = createMedia(db, { title: 'Dated', format: 'jpg' });
+      addMediaLink(db, { media_id: dated.id, entity_type: 'event', entity_id: event.id });
+
+      const result = getMediaTimeline(db, 'person', person.id);
+      expect(result).toHaveLength(2);
+      expect(result[0].date).toBe('1900-01-01');
+      expect(result[1].date).toBeUndefined();
+    });
+  });
+
   describe('place timeline', () => {
     it('returns empty array when no media exists for place', () => {
       const place = createPlace(db, { name: 'Test Place' });

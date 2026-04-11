@@ -95,6 +95,37 @@ describe('media_regions CRUD', () => {
     expect(updated!.person_id).toBeNull();
   });
 
+  it('updates only person_id without changing label', () => {
+    const m = createMedia(db, { title: 'photo.jpg' });
+    const p = createPerson(db, { given_name: 'Sven' });
+    const region = createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: 'Original' });
+
+    const updated = updateMediaRegion(db, region.id, { person_id: p.id });
+    expect(updated!.person_id).toBe(p.id);
+    expect(updated!.label).toBe('Original'); // unchanged
+  });
+
+  it('updates only label without changing person_id', () => {
+    const m = createMedia(db, { title: 'photo.jpg' });
+    const p = createPerson(db, { given_name: 'Sven' });
+    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+
+    const updated = updateMediaRegion(db, region.id, { label: 'New label' });
+    expect(updated!.label).toBe('New label');
+    expect(updated!.person_id).toBe(p.id); // unchanged
+  });
+
+  it('returns existing region unchanged when no fields passed', () => {
+    const m = createMedia(db, { title: 'photo.jpg' });
+    const p = createPerson(db, { given_name: 'Erik' });
+    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: 'Face' });
+
+    const updated = updateMediaRegion(db, region.id, {});
+    expect(updated!.id).toBe(region.id);
+    expect(updated!.person_id).toBe(p.id);
+    expect(updated!.label).toBe('Face');
+  });
+
   it('returns null when updating non-existent region', () => {
     const result = updateMediaRegion(db, 'nonexistent', { label: 'test' });
     expect(result).toBeNull();

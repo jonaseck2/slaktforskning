@@ -13,6 +13,8 @@ import {
   addEventParticipant,
   getEventParticipants,
   removeEventParticipant,
+  countRelationships,
+  listRelationshipsPage,
 } from '../../src/api/relationships';
 import { createEvent, deleteEvent } from '../../src/api/events';
 
@@ -166,5 +168,57 @@ describe('event_participants', () => {
     // Delete the event — participants should be cascade-deleted
     deleteEvent(db, event.id);
     expect(getEventParticipants(db, event.id)).toHaveLength(0);
+  });
+});
+
+describe('countRelationships', () => {
+  it('returns 0 for empty database', () => {
+    expect(countRelationships(db)).toBe(0);
+  });
+
+  it('returns correct count', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'A' });
+    const b = createPerson(db, { given_name: 'Anna', surname: 'B' });
+    const c = createPerson(db, { given_name: 'Olof', surname: 'C' });
+    createRelationship(db, { type: 'couple', person1_id: a.id, person2_id: b.id });
+    createRelationship(db, { type: 'parent_child', person1_id: a.id, person2_id: c.id });
+    expect(countRelationships(db)).toBe(2);
+  });
+});
+
+describe('listRelationshipsPage', () => {
+  it('returns relationships with person name data', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+    createRelationship(db, { type: 'couple', person1_id: a.id, person2_id: b.id });
+
+    const page = listRelationshipsPage(db, 100, 0);
+    expect(page).toHaveLength(1);
+    expect(page[0].person1_given_name).toBe('Erik');
+    expect(page[0].person1_surname).toBe('Svensson');
+    expect(page[0].person2_given_name).toBe('Anna');
+    expect(page[0].person2_surname).toBe('Berg');
+  });
+
+  it('handles relationship with null person_id', () => {
+    createRelationship(db, { type: 'couple' }); // both null
+    const page = listRelationshipsPage(db, 100, 0);
+    expect(page).toHaveLength(1);
+    expect(page[0].person1_given_name).toBe('');
+    expect(page[0].person2_given_name).toBe('');
+  });
+
+  it('respects limit and offset', () => {
+    const persons = Array.from({ length: 5 }, (_, i) =>
+      createPerson(db, { given_name: `P${i}`, surname: 'Test' })
+    );
+    for (let i = 0; i < 4; i++) {
+      createRelationship(db, { type: 'sibling', person1_id: persons[i].id, person2_id: persons[i + 1].id });
+    }
+    const page1 = listRelationshipsPage(db, 2, 0);
+    const page2 = listRelationshipsPage(db, 2, 2);
+    expect(page1).toHaveLength(2);
+    expect(page2).toHaveLength(2);
+    expect(page1[0].id).not.toBe(page2[0].id);
   });
 });

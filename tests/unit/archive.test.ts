@@ -172,4 +172,63 @@ describe('archive import', () => {
     const db2 = createTestDb();
     expect(() => importArchive(db2, archivePath, path.join(tmpDir, 'media'))).toThrow('No .ged file found');
   });
+
+  it('imports .ged file from a subdirectory in the archive', () => {
+    const { zipSync } = require('fflate');
+    // Create a minimal GEDCOM in a subdirectory
+    const gedContent = [
+      '0 HEAD',
+      '1 SOUR Test',
+      '1 GEDC',
+      '2 VERS 5.5.1',
+      '0 @I1@ INDI',
+      '1 NAME Johan /Eriksson/',
+      '1 SEX M',
+      '0 TRLR',
+    ].join('\r\n');
+    const zipData = zipSync({
+      'subdir/family.ged': new Uint8Array(Buffer.from(gedContent, 'utf-8')),
+    });
+    const archivePath = path.join(tmpDir, 'subdir-ged.zip');
+    fs.writeFileSync(archivePath, zipData);
+
+    const db2 = createTestDb();
+    const report = importArchive(db2, archivePath, path.join(tmpDir, 'media'));
+    expect(report.gedcomReport.persons).toBe(1);
+  });
+
+  it('handles file collision in media directory', () => {
+    const { zipSync } = require('fflate');
+    const gedContent = [
+      '0 HEAD',
+      '1 SOUR Test',
+      '1 GEDC',
+      '2 VERS 5.5.1',
+      '0 TRLR',
+    ].join('\r\n');
+    const zipData = zipSync({
+      'family.ged': new Uint8Array(Buffer.from(gedContent, 'utf-8')),
+      'media/photo.jpg': new Uint8Array(Buffer.from('new-content')),
+    });
+    const archivePath = path.join(tmpDir, 'collision.zip');
+    fs.writeFileSync(archivePath, zipData);
+
+    // Pre-create the media directory with a file that has the same name
+    const importMediaDir = path.join(tmpDir, 'collision-media');
+    fs.mkdirSync(importMediaDir, { recursive: true });
+    fs.writeFileSync(path.join(importMediaDir, 'photo.jpg'), 'existing-content');
+
+    const db2 = createTestDb();
+    const report = importArchive(db2, archivePath, importMediaDir);
+    expect(report.mediaImported).toBe(1);
+
+    // Original file should be preserved
+    expect(fs.readFileSync(path.join(importMediaDir, 'photo.jpg'), 'utf-8')).toBe('existing-content');
+    // New file should be renamed with timestamp suffix
+    const files = fs.readdirSync(importMediaDir);
+    expect(files.length).toBe(2);
+    const renamedFile = files.find(f => f !== 'photo.jpg')!;
+    expect(renamedFile).toMatch(/^photo_\d+\.jpg$/);
+    expect(fs.readFileSync(path.join(importMediaDir, renamedFile), 'utf-8')).toBe('new-content');
+  });
 });

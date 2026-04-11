@@ -202,6 +202,56 @@ describe('wall_chart', () => {
     });
   });
 
+  describe('lifespan edge cases', () => {
+    it('shows birth only when death date is missing', () => {
+      const nodes = new Map<number, WallChartPerson>();
+      nodes.set(1, { id: '1', givenName: 'Anna', surname: 'Test', preferredName: null, birthDate: '1900-01-01', deathDate: null, sex: 'F' });
+
+      const tree: WallChartAncestorTree = { nodes, generations: 1 };
+      const svg = generatePedigreeWallChart(tree, {
+        paperWidth: PAPER_SIZES.A4.width,
+        paperHeight: PAPER_SIZES.A4.height,
+        generations: 1,
+      });
+
+      expect(svg).toContain('b. 1900');
+      expect(svg).not.toContain('\u2013'); // no en-dash
+    });
+
+    it('shows death only when birth date is missing', () => {
+      const nodes = new Map<number, WallChartPerson>();
+      nodes.set(1, { id: '1', givenName: 'Anna', surname: 'Test', preferredName: null, birthDate: null, deathDate: '1980-12-31', sex: 'F' });
+
+      const tree: WallChartAncestorTree = { nodes, generations: 1 };
+      const svg = generatePedigreeWallChart(tree, {
+        paperWidth: PAPER_SIZES.A4.width,
+        paperHeight: PAPER_SIZES.A4.height,
+        generations: 1,
+      });
+
+      expect(svg).toContain('d. 1980');
+      expect(svg).not.toContain('b.');
+    });
+
+    it('shows empty string when both dates are missing', () => {
+      const nodes = new Map<number, WallChartPerson>();
+      nodes.set(1, { id: '1', givenName: 'Anna', surname: 'Test', preferredName: null, birthDate: null, deathDate: null, sex: 'F' });
+
+      const tree: WallChartAncestorTree = { nodes, generations: 1 };
+      const svg = generatePedigreeWallChart(tree, {
+        paperWidth: PAPER_SIZES.A4.width,
+        paperHeight: PAPER_SIZES.A4.height,
+        generations: 1,
+      });
+
+      // Should not contain any date-related text
+      expect(svg).not.toContain('b.');
+      expect(svg).not.toContain('d.');
+      expect(svg).not.toContain('\u2013');
+      expect(svg).toContain('Anna Test');
+    });
+  });
+
   describe('paper sizes', () => {
     it('has correct standard dimensions', () => {
       expect(PAPER_SIZES.A4).toEqual({ width: 297, height: 210 });

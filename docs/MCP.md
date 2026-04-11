@@ -151,6 +151,19 @@ Higher-level tools that return denormalized data optimized for AI narrative gene
 | get_untagged_media | List media items with no person links, ordered by connection count. Use for batch photo tagging workflows. |
 | get_media_for_person_context | Find media that might contain a specific person based on event and relationship links. |
 
+### Media Regions (Face/Region Tagging)
+
+| Tool | Description |
+|------|-------------|
+| create_media_region | Create a face/region tag on a media item. Coordinates are fractions 0.0-1.0 of image dimensions. |
+| get_media_regions | Get all face/region tags for a media item. |
+| get_regions_for_person | Get all face/region tags linked to a specific person. |
+| update_media_region | Update a face/region tag (person assignment, label, or coordinates). |
+| delete_media_region | Delete a face/region tag. |
+| suggest_media_regions | Create multiple face/region tags at once. Used by AI agents after vision processing to batch-submit detected faces. |
+| get_persons_for_matching | Get persons with existing face region tags and coordinates. Use for face comparison against known faces. |
+| get_media_tagging_status | Get overview of tagging progress: total, tagged, untagged media counts and total region count. |
+
 ### Database
 
 | Tool | Description |
