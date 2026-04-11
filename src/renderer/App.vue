@@ -72,6 +72,10 @@
         <span class="nav-icon" aria-hidden="true">🔗</span>
         <span class="nav-label">{{ $t('nav.linkRules') }}</span>
       </router-link>
+      <router-link to="/gazetteers" class="nav-item" :aria-label="$t('nav.gazetteers')">
+        <span class="nav-icon" aria-hidden="true">🌍</span>
+        <span class="nav-label">{{ $t('nav.gazetteers') }}</span>
+      </router-link>
       <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
       <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
       <div class="settings-section">
@@ -184,6 +188,7 @@ watch(() => route.path, () => {
       '/import-export': 'importExport',
       '/search': 'search',
       '/link-rules': 'linkRules',
+      '/gazetteers': 'gazetteers',
     };
     const name = routeMap[route.path]
       ?? Object.entries(routeMap).find(([prefix]) => prefix !== '/' && route.path.startsWith(prefix + '/'))?.[1]
