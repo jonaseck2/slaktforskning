@@ -10,4 +10,5 @@ export function registerPlaceHandlers(getDb: () => ReturnType<typeof import('../
   wrapHandler('places:delete', (id) => places.deletePlace(getDb(), id as string));
   wrapHandler('places:findOrCreate', (name) => places.findOrCreatePlace(getDb(), name as string));
   wrapHandler('places:getPath', (id) => places.getPlacePath(getDb(), id as string));
+  wrapHandler('places:getPersons', (placeId) => places.getPersonsForPlace(getDb(), placeId as string));
 }
