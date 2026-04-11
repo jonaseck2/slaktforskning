@@ -57,11 +57,11 @@ Chronological view of all events for a person. Visual timeline for spotting gaps
 
 ### Steps
 
-- [ ] Create PersonTimeline.vue (self-loading component, `personId` prop):
+- [x] Create PersonTimeline.vue (self-loading component, `personId` prop):
   - [ ] Watch personId for changes (PersonPanel pattern)
   - [ ] Load events via `window.api.events.getForPerson(personId)`
   - [ ] Sort by date_value (handle null/unknown dates)
-- [ ] Timeline rendering:
+- [x] Timeline rendering:
   - [ ] Vertical layout with date axis
   - [ ] Event cards: type badge/icon, formatted date, place name, description
   - [ ] Source indicator: citation count badge on each event
@@ -70,13 +70,13 @@ Chronological view of all events for a person. Visual timeline for spotting gaps
     - About/before/after: position with uncertainty indicator (dashed border or fade)
     - Between: span bar between start and end dates
     - Unknown: separate "Undated" section at bottom
-- [ ] Gap detection: highlight gaps > 20 years between consecutive events
-- [ ] Click event card to open EventForm for editing
-- [ ] Add as tab in PersonDetailView (alongside existing sections)
-- [ ] Add as collapsible section in PersonPanel
-- [ ] Expose via `defineExpose({ reload })` for parent refresh
-- [ ] i18n for timeline labels, gap warnings, date formatting
-- [ ] Unit tests for date sorting logic and gap detection
+- [x] Gap detection: highlight gaps > 20 years between consecutive events
+- [x] Click event card to open EventForm for editing
+- [x] Add as tab in PersonDetailView (alongside existing sections)
+- [x] Add as collapsible section in PersonPanel
+- [x] Expose via `defineExpose({ reload })` for parent refresh
+- [x] i18n for timeline labels, gap warnings, date formatting
+- [x] Unit tests for date sorting logic and gap detection
 
 ### Dependencies
 None — uses existing event API.
@@ -94,28 +94,28 @@ Interactive map showing places on OpenStreetMap. Person life maps and global pla
 
 ### Steps
 
-- [ ] Install dependencies: `leaflet`, `@types/leaflet`, `vue3-leaflet` (or `@vue-leaflet/vue-leaflet`)
-- [ ] Create MapView.vue — standalone route (/map):
+- [x] Install dependencies: `leaflet`, `@types/leaflet`, `vue3-leaflet` (or `@vue-leaflet/vue-leaflet`)
+- [x] Create MapView.vue — standalone route (/map):
   - [ ] Load all places with coordinates via `window.api.places.list()`
   - [ ] OpenStreetMap tile layer (no API key needed)
   - [ ] Marker per place with popup: place name, event count, link to place detail
   - [ ] Marker clustering when zoomed out (leaflet.markercluster)
   - [ ] Auto-fit bounds to show all markers
   - [ ] Filter panel: filter by place type, search by name
-- [ ] Add route `/map` to router
-- [ ] Add Map entry to sidebar navigation
-- [ ] Create PersonMap.vue component (embeddable, personId prop):
+- [x] Add route `/map` to router
+- [x] Add Map entry to sidebar navigation
+- [x] Create PersonMap.vue component (embeddable, personId prop):
   - [ ] Load person's events with places
   - [ ] Markers for each event location
   - [ ] Lines connecting events chronologically (life path)
   - [ ] Color-code markers by event type (birth=green, death=red, etc.)
   - [ ] Popup: event type, date, place name
-- [ ] Add PersonMap as tab in PersonDetailView
-- [ ] Add PersonMap section in PersonPanel
-- [ ] PlaceDetailView: show map centered on place with child places as markers
-- [ ] Handle places without coordinates: show count of unmapped places, encourage adding lat/lon
-- [ ] i18n for map UI, popups, filter labels
-- [ ] Tests for coordinate validation and edge cases (null coords, 0/0 coords)
+- [x] Add PersonMap as tab in PersonDetailView
+- [x] Add PersonMap section in PersonPanel
+- [x] PlaceDetailView: show map centered on place with child places as markers
+- [x] Handle places without coordinates: show count of unmapped places, encourage adding lat/lon
+- [x] i18n for map UI, popups, filter labels
+- [x] Tests for coordinate validation and edge cases (null coords, 0/0 coords)
 
 ### Dependencies
 None — uses existing place data with lat/lon.

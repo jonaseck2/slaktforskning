@@ -12,21 +12,21 @@ Entity-oriented media experience with lightbox, thumbnails, and multi-entity lin
 
 ### Steps
 
-- [ ] Redesign MediaView.vue — replace file table with responsive grid/gallery layout
-- [ ] Thumbnail generation: use Electron nativeImage to create thumbnails on media attach, store in app data dir
-- [ ] Show entity badges on each media card (linked persons, events, places, sources with counts)
-- [ ] Create MediaLightbox.vue — full-size image overlay with:
+- [x] Redesign MediaView.vue — replace file table with responsive grid/gallery layout
+- [x] Thumbnail generation: use Electron nativeImage to create thumbnails on media attach, store in app data dir
+- [x] Show entity badges on each media card (linked persons, events, places, sources with counts)
+- [x] Create MediaLightbox.vue — full-size image overlay with:
   - [ ] Prev/next navigation (arrow keys)
   - [ ] Escape to close
   - [ ] Title, format, notes display
   - [ ] Linked entities panel with clickable router-links
   - [ ] Link/unlink entity controls (PersonPicker, PlacePicker for adding links)
-- [ ] Non-image media: show file icon with type label, "Open in system app" button
-- [ ] Update PersonMediaSection to open lightbox on click
-- [ ] Update media cards across all entity detail views to use lightbox
-- [ ] Gallery filtering: filter by entity type, search by title
-- [ ] i18n for all new UI elements
-- [ ] Keyboard navigation in gallery grid (arrow keys to move, Enter to open lightbox)
+- [x] Non-image media: show file icon with type label, "Open in system app" button
+- [x] Update PersonMediaSection to open lightbox on click
+- [x] Update media cards across all entity detail views to use lightbox
+- [x] Gallery filtering: filter by entity type, search by title
+- [x] i18n for all new UI elements
+- [x] Keyboard navigation in gallery grid (arrow keys to move, Enter to open lightbox)
 
 ### Dependencies
 None — works with existing media schema.

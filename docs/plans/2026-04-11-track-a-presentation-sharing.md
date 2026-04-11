@@ -44,18 +44,18 @@ Configuration UI for what goes into exports. Shared infrastructure across PDF re
 
 ### Steps
 
-- [ ] Create `src/api/export_options.ts` — ExportOptions type: `{ excludeLiving: boolean, includeMedia: boolean, includeNotes: boolean, includeSources: boolean, branchFilter?: { personId: string, direction: 'ancestors' | 'descendants' | 'both', generations?: number } }`
-- [ ] Create `filterPersons(db, persons, options)` — applies living exclusion
-- [ ] Create `filterByBranch(db, personId, direction, generations)` — returns set of person IDs in scope
-- [ ] Integrate into GEDCOM export (`src/api/gedcom/export.ts`) — filter entities before writing
-- [ ] Integrate into report generation (A1) — pass options through
-- [ ] Vue: ExportOptionsPanel.vue — reusable component with checkboxes and branch picker (uses PersonPicker)
-- [ ] Embed ExportOptionsPanel in GEDCOM export dialog
-- [ ] Embed ExportOptionsPanel in report generation UI
-- [ ] Store last-used options in db_settings via `setDbSetting(db, 'export_options', JSON.stringify(...))`
-- [ ] IPC channels for getting/setting export options
-- [ ] Unit tests for filtering logic — especially living person exclusion edge cases
-- [ ] Test branch filtering with complex family trees (multiple marriages, adoptions)
+- [x] Create `src/api/export_options.ts` — ExportOptions type: `{ excludeLiving: boolean, includeMedia: boolean, includeNotes: boolean, includeSources: boolean, branchFilter?: { personId: string, direction: 'ancestors' | 'descendants' | 'both', generations?: number } }`
+- [x] Create `filterPersons(db, persons, options)` — applies living exclusion
+- [x] Create `filterByBranch(db, personId, direction, generations)` — returns set of person IDs in scope
+- [x] Integrate into GEDCOM export (`src/api/gedcom/export.ts`) — filter entities before writing
+- [x] Integrate into report generation (A1) — pass options through
+- [x] Vue: ExportOptionsPanel.vue — reusable component with checkboxes and branch picker (uses PersonPicker)
+- [x] Embed ExportOptionsPanel in GEDCOM export dialog
+- [x] Embed ExportOptionsPanel in report generation UI
+- [x] Store last-used options in db_settings via `setDbSetting(db, 'export_options', JSON.stringify(...))`
+- [x] IPC channels for getting/setting export options
+- [x] Unit tests for filtering logic — especially living person exclusion edge cases
+- [x] Test branch filtering with complex family trees (multiple marriages, adoptions)
 
 ### Dependencies
 None, but A1 benefits from this.
