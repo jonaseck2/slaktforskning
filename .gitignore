@@ -12,3 +12,4 @@ coverage/
 /export-import/
 /src/import/genney/lib/
 /genney-media/
+.claude/worktrees/
