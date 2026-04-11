@@ -1,7 +1,9 @@
 // Hourglass chart layout algorithm.
+// Internally converts HourglassTree → TreePerson graph, then lays out the graph.
 
 import type { PersonNode, DescendantNode, HourglassTree, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
 import { BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
+import { buildHourglassTree, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
 /**
  * Lay out an hourglass chart.
@@ -14,23 +16,108 @@ export function computeHourglassLayout(
   selectedPersonId?: string | null,
 ): ChartLayout {
   const { ancestors, descendantGenerations: M, spouses = [], siblings = [] } = tree;
-  // Deep-clone descendant tree so child placeholder injection doesn't mutate the original
-  function cloneDescTree(node: DescendantNode): DescendantNode {
-    return { ...node, children: node.children.map(c => cloneDescTree(c)) };
-  }
-  const descendantRoot: DescendantNode = cloneDescTree(tree.descendantRoot);
   const { generations } = ancestors;
   const originalAncestorNodes = ancestors.nodes;
   const focalPerson = originalAncestorNodes.get(1);
   const focalId = focalPerson?.id ?? '';
+  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
 
-  // Map personId → ahnentafel key (for button generation and pruning)
+  // ── Build TreePerson graph from HourglassTree ──────────────────────────────
+  const root = buildHourglassTree(tree);
+
+  // Inject placeholders for the selected person
+  if (selectedPersonId) {
+    injectOutlines(root, selectedPersonId);
+  }
+
+  // ── Map personId → ahnentafel key (for button generation and pruning) ──────
   const personToAhnen = new Map<string, number>();
   for (const [k, person] of originalAncestorNodes) {
     personToAhnen.set(person.id, k);
   }
 
-  // Prune collapsed ancestor subtrees
+  // The TreePerson graph (root) with injected outlines is the canonical model.
+  // Collapse filtering and layout positioning below still use the ahnentafel map
+  // and DescendantNode tree for backward-compatible geometry. Future iterations
+  // will migrate the layout pass to operate directly on root.
+  void root;
+
+  const focalIsFemale = focalPerson?.sex === 'F';
+
+  // Spouses may be collapsed via :right key (original) or :left key (female focal).
+  const spouseCollapsed = collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`);
+  const effectiveSpouses = spouseCollapsed ? [] : spouses;
+
+  // Siblings on left use 'left' direction key, on right use 'right' direction key — with '__siblings__' co-parent marker.
+  const siblingDir: 'left' | 'right' = focalIsFemale ? 'right' : 'left';
+  const siblingCollapseKey = `${focalId}:${siblingDir}:__siblings__`;
+  const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : [...siblings];
+
+  // Group focal's direct children by co-parent ID (set by chartData during fetch).
+  // Use the original descendant tree for grouping (preserves coParentId)
+  const descendantRoot = tree.descendantRoot;
+  const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
+  for (const child of descendantRoot.children) {
+    const key = child.coParentId ?? null;
+    const arr = focalChildGroupMap.get(key);
+    if (arr) arr.push(child); else focalChildGroupMap.set(key, [child]);
+  }
+
+  // Handle focal child group collapse - filter out collapsed groups
+  // Also inject child placeholder into the descendant tree for layout
+  // Deep-clone descendant tree so child placeholder injection doesn't mutate the original
+  function cloneDescTree(node: DescendantNode): DescendantNode {
+    return { ...node, children: node.children.map(c => cloneDescTree(c)) };
+  }
+  const layoutDescRoot: DescendantNode = cloneDescTree(descendantRoot);
+
+  // Inject child placeholder for the selected person
+  let childPlaceholderId: string | null = null;
+  if (selectedPersonId) {
+    childPlaceholderId = PLACEHOLDER_PREFIX + 'child_' + selectedPersonId;
+    const phChild: DescendantNode = {
+      person: {
+        id: childPlaceholderId,
+        givenName: null, surname: null, preferredName: null, nickname: null,
+        sex: 'U', living: false, birthDate: null, deathDate: null,
+      },
+      children: [],
+    };
+
+    function injectChild(node: DescendantNode): boolean {
+      if (node.person.id === selectedPersonId) {
+        node.children = [...node.children, phChild];
+        return true;
+      }
+      return node.children.some(c => injectChild(c));
+    }
+    if (!injectChild(layoutDescRoot)) {
+      layoutDescRoot.children = [...layoutDescRoot.children, phChild];
+    }
+  }
+
+  // Rebuild focalChildGroupMap from the layout descendant root (with placeholders)
+  const layoutFocalChildGroupMap = new Map<string | null, DescendantNode[]>();
+  for (const child of layoutDescRoot.children) {
+    const key = child.coParentId ?? null;
+    const arr = layoutFocalChildGroupMap.get(key);
+    if (arr) arr.push(child); else layoutFocalChildGroupMap.set(key, [child]);
+  }
+
+  // When the focal person is female, place spouses to the LEFT so the convention
+  // "male left, female right" holds regardless of who is currently focal.
+  const spouseOnLeft = focalIsFemale && effectiveSpouses.length > 0;
+
+  // Siblings go on the opposite side from where spouses would go:
+  // Male focal: spouses right → siblings left. Female focal: spouses left → siblings right.
+  const siblingsOnLeft = !focalIsFemale;
+
+  // ── Ancestor geometry (using ahnentafel from original tree) ─────────────────
+  // We still use the ahnentafel structure for ancestor layout since it gives
+  // stable, predictable positioning. The TreePerson graph is used for placeholder
+  // injection (handled above via injectOutlines).
+
+  // Prune collapsed ancestor subtrees from ahnentafel map
   function removeSubtree(nodes: Map<number, PersonNode>, k: number): void {
     if (!nodes.has(k)) return;
     nodes.delete(k);
@@ -47,21 +134,15 @@ export function computeHourglassLayout(
   }
 
   const ancestorNodes = prunedAncestorNodes;
-  const focalIsFemale = focalPerson?.sex === 'F';
 
-  // ── Inject placeholder ancestor nodes for selected person's missing parents ──
-  // These participate in the layout algorithm as normal nodes, then get
-  // converted to PlaceholderBox entries after positioning.
-  const PLACEHOLDER_PREFIX = '__ph_';
+  // Inject placeholder ancestor nodes for selected person's missing parents
   const placeholderKeys = new Set<number>();
-  const ancestorHasMore = tree.ancestors.hasMoreAncestors ?? new Set<number>();
   let effectiveGenerations = generations;
 
   if (selectedPersonId) {
     const selectedK = [...ancestorNodes.entries()].find(([, p]) => p.id === selectedPersonId)?.[0];
     if (selectedK !== undefined && !ancestorHasMore.has(selectedK)) {
       const g = Math.floor(Math.log2(selectedK));
-      // Extend generation depth if needed to make room for parent placeholders
       if (g >= effectiveGenerations - 1) {
         effectiveGenerations = g + 2;
       }
@@ -86,59 +167,6 @@ export function computeHourglassLayout(
     }
   }
 
-  // Spouses may be collapsed via :right key (original) or :left key (female focal).
-  const effectiveSpouses = (collapsed.has(`${focalId}:right`) || collapsed.has(`${focalId}:left`)) ? [] : spouses;
-
-  // Siblings on left use 'left' direction key, on right use 'right' direction key — with '__siblings__' co-parent marker.
-  const siblingDir: 'left' | 'right' = focalIsFemale ? 'right' : 'left';
-  const siblingCollapseKey = `${focalId}:${siblingDir}:__siblings__`;
-  const effectiveSiblings = collapsed.has(siblingCollapseKey) ? [] : [...siblings];
-
-  // Inject child placeholder for the selected person — always, regardless of existing children.
-  // Try descendant tree first; fall back to sibling row for focal parents/siblings.
-  let childPlaceholderId: string | null = null;
-  if (selectedPersonId) {
-    childPlaceholderId = PLACEHOLDER_PREFIX + 'child_' + selectedPersonId;
-    const phChild: DescendantNode = {
-      person: {
-        id: childPlaceholderId,
-        givenName: null, surname: null, preferredName: null, nickname: null,
-        sex: 'U', living: false, birthDate: null, deathDate: null,
-      },
-      children: [],
-    };
-
-    // Try to find the selected person in the descendant tree and append child there.
-    // If not found (ancestor, sibling, spouse), add as a focal child so it appears
-    // in the descendant row below.
-    function injectChild(node: DescendantNode): boolean {
-      if (node.person.id === selectedPersonId) {
-        node.children = [...node.children, phChild];
-        return true;
-      }
-      return node.children.some(c => injectChild(c));
-    }
-    if (!injectChild(descendantRoot)) {
-      descendantRoot.children = [...descendantRoot.children, phChild];
-    }
-  }
-
-  // Group focal's direct children by co-parent ID (set by chartData during fetch).
-  const focalChildGroupMap = new Map<string | null, DescendantNode[]>();
-  for (const child of descendantRoot.children) {
-    const key = child.coParentId ?? null;
-    const arr = focalChildGroupMap.get(key);
-    if (arr) arr.push(child); else focalChildGroupMap.set(key, [child]);
-  }
-
-  // When the focal person is female, place spouses to the LEFT so the convention
-  // "male left, female right" holds regardless of who is currently focal.
-  const spouseOnLeft = focalIsFemale && effectiveSpouses.length > 0;
-
-  // Siblings go on the opposite side from where spouses would go:
-  // Male focal: spouses right → siblings left. Female focal: spouses left → siblings right.
-  const siblingsOnLeft = !focalIsFemale;
-
   const A = effectiveGenerations - 1; // ancestor levels above focal
 
   const boxes: BoxLayout[] = [];
@@ -147,10 +175,8 @@ export function computeHourglassLayout(
   // ── Ancestor geometry ────────────────────────────────────────────────────
   //
   // Compact horizontal layout: only visible leaf nodes get individual slots,
-  // preserving genealogical left-to-right order.  Internal nodes are centred
-  // over their children — the same algorithm as the pedigree chart's vertical
-  // layout but rotated 90°.  This means parents are never spread wider than
-  // their children actually require.
+  // preserving genealogical left-to-right order. Internal nodes are centred
+  // over their children.
 
   function virtualAncestorLeafPos(k: number): number {
     const g = Math.floor(Math.log2(k));
@@ -198,12 +224,7 @@ export function computeHourglassLayout(
   // ── Descendant geometry ──────────────────────────────────────────────────
   //
   // Children are placed by spacing adjacent sibling subtrees just V_GAP apart,
-  // then centering the group below the parent.  Leaf nodes take 1 slot (BOX_W).
-  // Nodes with children take as much space as their subtree needs.
-  //
-  // subtreeExtents(node, depth) → [leftExt, rightExt] measured from node's CX.
-  // placeDescendants(node, depth, nodeCX) places boxes/lines recursively.
-  // Both functions use the same spacing logic so layout and sizing agree.
+  // then centering the group below the parent.
 
   function subtreeExtents(node: DescendantNode, depth: number): [number, number] {
     const half = BOX_W / 2;
@@ -213,22 +234,18 @@ export function computeHourglassLayout(
     const n = node.children.length;
     const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
 
-    // Offsets of each child's CX from the leftmost child's CX
     const offsets: number[] = [0];
     for (let i = 1; i < n; i++) {
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
     }
-    const totalSpan = offsets[n - 1]; // distance from first to last child CX
+    const totalSpan = offsets[n - 1];
 
-    // Group is centred below node: leftmost child at node - totalSpan/2
     const leftExt  = Math.max(half, totalSpan / 2 + childExts[0][0]);
     const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]);
     return [leftExt, rightExt];
   }
 
-  // Row Y helpers (needed before focalCX is known)
-  // Ancestor rows count down from top; focal = PAD + A*(BOX_H+GEN_GAP)
-  // Extra 8px at top so the ▲ button (radius 8) on the topmost row isn't clipped.
+  // Row Y helpers
   const ancestorTopPad = PAD + 8;
   const focalRowY  = ancestorTopPad + A * (BOX_H + GEN_GAP);
   const ancestorRowY = (g: number) => ancestorTopPad + (A - g) * (BOX_H + GEN_GAP);
@@ -238,11 +255,11 @@ export function computeHourglassLayout(
   const junctionOffsetOf = (i: number): number =>
     (BOX_W + H_GAP + i * (BOX_W + V_GAP)) / 2;
 
-  // Spouse offset: distance from focalCX to junction for first spouse (used for marriage line).
+  // Spouse offset: distance from focalCX to junction for first spouse.
   const spouseOffset = effectiveSpouses.length > 0 ? junctionOffsetOf(0) : 0;
-  void spouseOffset; // preserve original variable
+  void spouseOffset;
 
-  // Compute extents of a flat list of focal children (treated as depth-1 subtrees) from their center.
+  // Compute extents of a flat list of focal children from their center.
   function computeGroupExtents(groupChildren: DescendantNode[]): [number, number] {
     if (groupChildren.length === 0) return [BOX_W / 2, BOX_W / 2];
     const n = groupChildren.length;
@@ -258,16 +275,15 @@ export function computeHourglassLayout(
     ];
   }
 
-  // Build relative group infos: anchor offset from focalCX (positive=right, negative=left),
-  // sorted left-to-right. Only non-empty, non-collapsed groups affect layout.
+  // Build relative group infos for child placement
   interface RelGroupInfo {
     coParentId: string | null;
     children: DescendantNode[];
-    anchorOffset: number; // relative to focalCX (positive=right, negative=left)
+    anchorOffset: number;
     gLeft: number;
     gRight: number;
   }
-  const relGroupInfos: RelGroupInfo[] = [...focalChildGroupMap.entries()]
+  const relGroupInfos: RelGroupInfo[] = [...layoutFocalChildGroupMap.entries()]
     .filter(([coParentId, ch]) =>
       ch.length > 0 && !collapsed.has(`${focalId}:down:${coParentId ?? 'solo'}`),
     )
@@ -281,7 +297,7 @@ export function computeHourglassLayout(
     })
     .sort((a, b) => a.anchorOffset - b.anchorOffset);
 
-  // Pack groups left-to-right: each prefers its anchor offset, but shifts right to avoid overlap.
+  // Pack groups left-to-right
   const relativeCenterOffsets: number[] = [];
   for (let i = 0; i < relGroupInfos.length; i++) {
     const g = relGroupInfos[i];
@@ -293,7 +309,7 @@ export function computeHourglassLayout(
     relativeCenterOffsets.push(co);
   }
 
-  // Compute total descendant extents from focalCX using packed positions.
+  // Compute total descendant extents from focalCX
   let descLeftFromFocal = BOX_W / 2;
   let descRightFromFocal = BOX_W / 2;
   for (let i = 0; i < relGroupInfos.length; i++) {
@@ -303,18 +319,17 @@ export function computeHourglassLayout(
     descRightFromFocal = Math.max(descRightFromFocal, Math.max(0, co + gRight));
   }
 
-  // Extra space needed on the spouse side (left or right depending on orientation).
+  // Extra space needed on the spouse side
   const spouseBoxesExtent = effectiveSpouses.length > 0
     ? BOX_W + H_GAP + (effectiveSpouses.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
     : 0;
 
-  // Extra space needed for siblings (on opposite side from spouses).
+  // Extra space needed for siblings
   const siblingBoxesExtent = effectiveSiblings.length > 0
     ? BOX_W + H_GAP + (effectiveSiblings.length - 1) * (BOX_W + V_GAP) + BOX_W / 2
     : 0;
 
-  // Place focal far enough from the left edge that nothing clips.
-  // Left side can contain: ancestor extent, descendant extent, spouses (if female), siblings (if male/default).
+  // Place focal far enough from the left edge
   const leftExtents = [ancLeftFromFocal, descLeftFromFocal];
   if (spouseOnLeft) leftExtents.push(spouseBoxesExtent);
   if (siblingsOnLeft) leftExtents.push(siblingBoxesExtent);
@@ -344,11 +359,10 @@ export function computeHourglassLayout(
   }
 
   // ── Ancestor connector lines ─────────────────────────────────────────────
-  // For each non-top ancestor, draw lines from it upward toward its parents.
 
   for (const [k] of ancestorNodes) {
     const g = Math.floor(Math.log2(k));
-    if (g >= A) continue; // top generation has no parents in tree
+    if (g >= A) continue;
 
     const fatherK = k * 2;
     const motherK = k * 2 + 1;
@@ -358,10 +372,8 @@ export function computeHourglassLayout(
 
     const kCX   = ancestorCX(k);
     const kRowY = ancestorRowY(g);
-    // Fork is midway between k's row top and parent's row bottom
     const forkY = kRowY - GEN_GAP / 2;
 
-    // Vertical line upward from k to fork
     lines.push({ x1: kCX, y1: kRowY, x2: kCX, y2: forkY });
 
     const pCXs = ([father ? ancestorCX(fatherK) : null, mother ? ancestorCX(motherK) : null]
@@ -379,17 +391,14 @@ export function computeHourglassLayout(
 
   // ── Descendant subtree layout ────────────────────────────────────────────
 
-  // CX of the i-th spouse. When focal is female the spouse goes LEFT of focal.
   const spouseCXOf = (i: number) => spouseOnLeft
     ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
     : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
 
-  // CX of the couple-junction for spouse at index i (midpoint between focal and that spouse).
   const coupleJunctionCXOf = (i: number) => spouseOnLeft
     ? focalCX - junctionOffsetOf(i)
     : focalCX + junctionOffsetOf(i);
 
-  // placeDescendants: recursively place descendant boxes and connector lines (depth >= 1 only).
   function placeDescendants(node: DescendantNode, depth: number, nodeCX: number): void {
     boxes.push({
       person:  node.person,
@@ -426,11 +435,10 @@ export function computeHourglassLayout(
     }
   }
 
-  // Place focal child groups using pre-computed packed center offsets (relGroupInfos).
-  // When a group is shifted away from its preferred anchor, an L-shaped connector is drawn.
+  // Place focal child groups using pre-computed packed center offsets
   {
     const forkY = focalRowY + BOX_H + GEN_GAP / 2;
-    const bendY = focalRowY + BOX_H + GEN_GAP / 4; // bend point for L-connectors
+    const bendY = focalRowY + BOX_H + GEN_GAP / 4;
 
     for (let gi = 0; gi < relGroupInfos.length; gi++) {
       const g = relGroupInfos[gi];
@@ -440,7 +448,6 @@ export function computeHourglassLayout(
       const lineStartY = spouseIdx >= 0 ? focalRowY + BOX_H / 2 : focalRowY + BOX_H;
       const centerCX   = focalCX + relativeCenterOffsets[gi];
 
-      // Connector from anchor down to group's actual center (straight or L-shaped).
       if (Math.abs(anchorCX - centerCX) > 1) {
         lines.push({ x1: anchorCX, y1: lineStartY, x2: anchorCX, y2: bendY });
         lines.push({ x1: anchorCX, y1: bendY,      x2: centerCX, y2: bendY });
@@ -449,7 +456,6 @@ export function computeHourglassLayout(
         lines.push({ x1: centerCX, y1: lineStartY, x2: centerCX, y2: forkY });
       }
 
-      // Place children centred at centerCX.
       const n = children.length;
       const childExts = children.map(c => subtreeExtents(c, 1));
       const offsets: number[] = [0];
@@ -473,7 +479,6 @@ export function computeHourglassLayout(
   if (effectiveSpouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
     const lastSpouseCX = spouseCXOf(effectiveSpouses.length - 1);
-    // Horizontal marriage line: spans from focal edge to outermost spouse edge.
     lines.push({
       x1: spouseOnLeft ? lastSpouseCX - BOX_W / 2 : focalCX + BOX_W / 2,
       y1: lineY,
@@ -493,10 +498,7 @@ export function computeHourglassLayout(
   }
 
   // ── Sibling placement ─────────────────────────────────────────────────────
-  // Siblings go on the opposite side from spouses, at the same row as focal.
-  // Connected to parents above via the parent fork.
 
-  // CX of the i-th sibling.
   const siblingCXOf = (i: number) => siblingsOnLeft
     ? focalCX - BOX_W - H_GAP - i * (BOX_W + V_GAP)
     : focalCX + BOX_W + H_GAP + i * (BOX_W + V_GAP);
@@ -513,8 +515,6 @@ export function computeHourglassLayout(
       });
     }
 
-    // Connect siblings + focal to parents via a shared fork.
-    // The fork goes from the parent row bottom → forkY (midpoint) → fans to all children at focal row.
     if (A >= 1) {
       const parentForkY = focalRowY - GEN_GAP / 2;
       const allChildCXs = [focalCX];
@@ -524,10 +524,8 @@ export function computeHourglassLayout(
       const minCX = Math.min(...allChildCXs);
       const maxCX = Math.max(...allChildCXs);
 
-      // Horizontal line spanning all children at fork level
       lines.push({ x1: minCX, y1: parentForkY, x2: maxCX, y2: parentForkY });
 
-      // Vertical drops from fork to each sibling box top
       for (let i = 0; i < effectiveSiblings.length; i++) {
         const scx = siblingCXOf(i);
         lines.push({ x1: scx, y1: parentForkY, x2: scx, y2: focalRowY });
@@ -537,30 +535,27 @@ export function computeHourglassLayout(
 
   // ── SVG height ───────────────────────────────────────────────────────────
 
-  const deepestDescRow = M > 0 && descendantRoot.children.length > 0
+  const deepestDescRow = M > 0 && layoutDescRoot.children.length > 0
     ? descRowY(M)
     : focalRowY;
-  // Add 20px below deepest box: 10px to button centre + ~8px button radius + 2px margin.
   const svgHeight = deepestDescRow + BOX_H + 20 + PAD;
 
   // ── Collapse buttons ─────────────────────────────────────────────────────
 
-  // Index all descendant nodes for button generation
   const descNodeMap = new Map<string, DescendantNode>();
   function indexDescendants(node: DescendantNode): void {
     descNodeMap.set(node.person.id, node);
     for (const child of node.children) indexDescendants(child);
   }
-  indexDescendants(descendantRoot);
+  indexDescendants(layoutDescRoot);
 
   const collapseButtons: CollapseButton[] = [];
 
   for (const box of boxes) {
     const k = personToAhnen.get(box.person.id);
     if (k !== undefined) {
-      // Ancestor or focal box
       if (k === 1) {
-        // Focal: one ↓ button per child group, positioned at the group's anchor CX.
+        // Focal: one down button per child group
         for (const [coParentId, groupChildren] of focalChildGroupMap) {
           if (groupChildren.length === 0) continue;
           const spouseIdx = effectiveSpouses.findIndex(s => s.id === coParentId);
@@ -595,9 +590,8 @@ export function computeHourglassLayout(
         }
         if (siblings.length > 0) {
           const sibBtnCX = siblingsOnLeft ? box.x - 10 : box.x + BOX_W + 10;
-          // If spouse button already occupies this side, offset sibling button vertically.
           const sibBtnCY = (spouses.length > 0 && siblingsOnLeft === focalIsFemale)
-            ? box.y + BOX_H / 2 + 18  // below the spouse button
+            ? box.y + BOX_H / 2 + 18
             : box.y + BOX_H / 2;
           collapseButtons.push({
             personId: box.person.id, direction: siblingDir,
@@ -608,7 +602,7 @@ export function computeHourglassLayout(
           });
         }
       } else {
-        // Ancestor: ↑ if parents exist in original tree, or load-more if hasMoreAncestors
+        // Ancestor: up button if parents exist, or load-more if hasMoreAncestors
         const hasParents = originalAncestorNodes.has(k * 2) || originalAncestorNodes.has(k * 2 + 1);
         if (hasParents) {
           collapseButtons.push({
@@ -650,14 +644,10 @@ export function computeHourglassLayout(
   }
 
   // ── Extract placeholder boxes from layout ─────────────────────────────────
-  // Virtual nodes injected above were laid out as real boxes by the algorithm.
-  // Now extract them into PlaceholderBox entries and separate their connector
-  // lines into dashed placeholderLines.
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
   const placeholderPersonIds = new Set<string>();
 
-  // Collect all placeholder person IDs
   for (const k of placeholderKeys) {
     const person = ancestorNodes.get(k);
     if (person) placeholderPersonIds.add(person.id);
@@ -669,7 +659,7 @@ export function computeHourglassLayout(
     const box = boxes[i];
     if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
     const pid = box.person.id;
-    let role: 'father' | 'mother' | 'child';
+    let role: 'father' | 'mother' | 'child' | 'spouse';
     let childPersonId: string;
     if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
       role = 'father';
@@ -677,6 +667,9 @@ export function computeHourglassLayout(
     } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'mother_')) {
       role = 'mother';
       childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'mother_').length);
+    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'spouse_')) {
+      role = 'spouse';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'spouse_').length);
     } else {
       role = 'child';
       childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'child_').length);
@@ -689,14 +682,11 @@ export function computeHourglassLayout(
   }
 
   // Convert solid connector lines touching placeholder boxes into dashed lines.
-  // A line touches a placeholder if it connects to a placeholder's center X/Y.
   const phCenters = new Set<string>();
   for (const ph of placeholders) {
     const cx = ph.x + BOX_W / 2;
-    const cy = ph.y + BOX_H / 2;
     const top = ph.y;
     const bottom = ph.y + BOX_H;
-    // Lines connect to box center X at top or bottom
     phCenters.add(`${cx},${top}`);
     phCenters.add(`${cx},${bottom}`);
   }

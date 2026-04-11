@@ -41,13 +41,36 @@ export interface CollapseButton {
 
 export interface PlaceholderBox {
   type: 'placeholder';
-  role: 'father' | 'mother' | 'child';
-  /** The person this placeholder is attached to (child for parent placeholders, parent for child placeholders). */
+  role: 'father' | 'mother' | 'child' | 'spouse';
+  /** The person this placeholder is attached to. */
   childPersonId: string;
-  /** Ahnentafel key (ancestor placeholders only). */
-  key?: number;
   x: number;
   y: number;
+}
+
+/**
+ * Uniform tree node for the hourglass layout.
+ * Each person can have N parents, M children, K spouses.
+ * The layout algorithm treats all nodes identically — real and placeholder.
+ */
+export interface TreePerson {
+  person: PersonNode;
+  parents: TreePerson[];
+  children: TreePerson[];
+  spouses: TreePerson[];
+  isFocal?: boolean;
+  /** True for outline placeholder nodes (rendered with dashed style). */
+  isPlaceholder?: boolean;
+  /** Role of the placeholder relative to its owner. */
+  placeholderRole?: 'father' | 'mother' | 'child' | 'spouse';
+  /** Person ID this placeholder belongs to. */
+  placeholderForPersonId?: string;
+  /** Whether more ancestors exist in DB but aren't loaded. */
+  hasMoreAncestors?: boolean;
+  /** Whether more children exist in DB but aren't loaded. */
+  hasMoreChildren?: boolean;
+  /** For focal's direct children: which spouse is the co-parent. */
+  coParentId?: string | null;
 }
 
 export interface ChartLayout {
