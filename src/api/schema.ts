@@ -200,6 +200,20 @@ export function initializeSchema(db: Database): void {
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS media_regions (
+      id TEXT PRIMARY KEY,
+      media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+      person_id TEXT REFERENCES persons(id) ON DELETE SET NULL,
+      x REAL NOT NULL,
+      y REAL NOT NULL,
+      width REAL NOT NULL,
+      height REAL NOT NULL,
+      label TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_media_regions_media_id ON media_regions(media_id);
+    CREATE INDEX IF NOT EXISTS idx_media_regions_person_id ON media_regions(person_id);
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)

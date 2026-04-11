@@ -26,6 +26,7 @@ import { getMediaTimeline } from '../api/media_timeline';
 import * as checks from '../api/checks';
 import * as duplicates from '../api/duplicates';
 import * as reportData from '../api/report_data';
+import * as mediaRegions from '../api/media_regions';
 import { getDbSetting, setDbSetting } from '../api/db_settings';
 import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../api/csv_export';
 import type { CsvOptions } from '../api/csv_export';
@@ -493,6 +494,12 @@ export function registerIpcHandlers(): void {
   wrapHandler('reports:placeHistory', (placeId) => reportData.getPlaceHistory(getDatabase(), placeId as string));
   wrapHandler('reports:researchGaps', (personId) => reportData.getResearchGaps(getDatabase(), personId as string));
   wrapHandler('reports:timeline', (personId) => reportData.getTimeline(getDatabase(), personId as string));
+  // Media Regions
+  wrapHandler('mediaRegions:create', (data) => mediaRegions.createMediaRegion(getDatabase(), data as Parameters<typeof mediaRegions.createMediaRegion>[1]));
+  wrapHandler('mediaRegions:getForMedia', (mediaId) => mediaRegions.getMediaRegions(getDatabase(), mediaId as string));
+  wrapHandler('mediaRegions:getForPerson', (personId) => mediaRegions.getRegionsForPerson(getDatabase(), personId as string));
+  wrapHandler('mediaRegions:update', (id, data) => mediaRegions.updateMediaRegion(getDatabase(), id as string, data as Parameters<typeof mediaRegions.updateMediaRegion>[2]));
+  wrapHandler('mediaRegions:delete', (id) => mediaRegions.deleteMediaRegion(getDatabase(), id as string));
 
   // Duplicates & Merge
   wrapHandler('duplicates:find', (limit) => duplicates.findDuplicates(getDatabase(), limit as number | undefined));

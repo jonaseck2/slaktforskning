@@ -175,3 +175,14 @@ When the Electron app is running, it starts a local HTTP server on port 19241 (o
 The Electron main process starts an HTTP server (`src/main/ui-server.ts`) that wraps `webContents` APIs. The standalone MCP server calls `http://127.0.0.1:19241` for UI operations. If the app is not running, UI tools return a descriptive error. The renderer exposes `window.__vue_router` so `ui_navigate` can push Vue Router routes cleanly.
 
 This enables agentic GUI testing workflows: seed data with data tools → navigate to the relevant view → assert the rendered DOM or screenshot matches expectations.
+
+## Workflows
+
+Step-by-step guides for using the MCP tools with Claude Desktop or Claude Code:
+
+- [Getting Started](mcp-workflows/README.md) -- Setup guide for Claude Desktop and Claude Code
+- [Generate a Research Report](mcp-workflows/research-report.md) -- Gather person data and produce a structured research summary
+- [Write a Family History Narrative](mcp-workflows/family-history.md) -- Build a multi-generation story from tree data
+- [Audit Source Coverage](mcp-workflows/source-audit.md) -- Find unsourced facts and prioritize sourcing work
+- [Check and Fix Data Quality](mcp-workflows/data-quality.md) -- Run quality checks and resolve issues
+- [Photo Tagging with AI](mcp-workflows/photo-tagging.md) -- Link photos to persons and events using Claude's vision

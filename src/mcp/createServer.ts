@@ -13,6 +13,7 @@ import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as mediaAi from '../api/media_ai';
+import * as mediaRegions from '../api/media_regions';
 import { runAllChecks, runChecksForPerson } from '../api/checks';
 import * as duplicates from '../api/duplicates';
 import * as reportData from '../api/report_data';
@@ -976,6 +977,59 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   }, async ({ person_id }) => {
     const list = mediaAi.getMediaForPersonContext(db, person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  // Media region tools
+  server.registerTool('create_media_region', {
+    description: 'Create a tagged region on a media item (e.g. a face). Coordinates are fractions 0-1 of image dimensions.',
+    inputSchema: {
+      media_id: z.string().describe('Media ID'),
+      person_id: z.string().optional().describe('Person ID to tag in this region'),
+      x: z.number().min(0).max(1).describe('Left edge as fraction of image width (0-1)'),
+      y: z.number().min(0).max(1).describe('Top edge as fraction of image height (0-1)'),
+      width: z.number().min(0).max(1).describe('Region width as fraction of image width (0-1)'),
+      height: z.number().min(0).max(1).describe('Region height as fraction of image height (0-1)'),
+      label: z.string().optional().describe('Optional text label for the region'),
+    },
+  }, async (args) => {
+    const region = mediaRegions.createMediaRegion(db, args);
+    return { content: [{ type: 'text', text: JSON.stringify(region, null, 2) }] };
+  });
+
+  server.registerTool('get_media_regions', {
+    description: 'Get all tagged regions for a media item',
+    inputSchema: { media_id: z.string().describe('Media ID') },
+  }, async ({ media_id }) => {
+    const list = mediaRegions.getMediaRegions(db, media_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('get_regions_for_person', {
+    description: 'Get all media regions tagged with a specific person',
+    inputSchema: { person_id: z.string().describe('Person ID') },
+  }, async ({ person_id }) => {
+    const list = mediaRegions.getRegionsForPerson(db, person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('update_media_region', {
+    description: 'Update a media region (change person or label)',
+    inputSchema: {
+      id: z.string().describe('Region ID'),
+      person_id: z.string().nullable().optional().describe('Person ID to assign (null to unassign)'),
+      label: z.string().nullable().optional().describe('Text label for the region'),
+    },
+  }, async ({ id, ...data }) => {
+    const region = mediaRegions.updateMediaRegion(db, id, data);
+    return { content: [{ type: 'text', text: region ? JSON.stringify(region, null, 2) : 'Region not found' }] };
+  });
+
+  server.registerTool('delete_media_region', {
+    description: 'Delete a media region',
+    inputSchema: { id: z.string().describe('Region ID') },
+  }, async ({ id }) => {
+    const ok = mediaRegions.deleteMediaRegion(db, id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
   // Duplicate detection & merge tools

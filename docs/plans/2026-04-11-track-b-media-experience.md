@@ -119,7 +119,7 @@ Select a rectangle in a photo, link it to a person, optionally use as profile pi
 
 ### Steps
 
-- [ ] Schema: add `media_regions` table:
+- [x] Schema: add `media_regions` table:
   ```sql
   CREATE TABLE IF NOT EXISTS media_regions (
     id TEXT PRIMARY KEY,
@@ -133,26 +133,26 @@ Select a rectangle in a photo, link it to a person, optionally use as profile pi
     created_at TEXT DEFAULT (datetime('now'))
   );
   ```
-- [ ] API: `src/api/media_regions.ts`:
-  - [ ] `createMediaRegion(db, { media_id, person_id?, x, y, width, height, label? })`
-  - [ ] `getMediaRegions(db, mediaId)`
-  - [ ] `getRegionsForPerson(db, personId)`
-  - [ ] `deleteMediaRegion(db, id)`
-  - [ ] `updateMediaRegion(db, id, { person_id?, label? })`
-- [ ] IPC channels for all region CRUD operations
-- [ ] Preload: expose `window.api.mediaRegions.*`
-- [ ] Lightbox enhancement: region drawing mode
-  - [ ] Click "Tag face" button to enter drawing mode
-  - [ ] Click and drag to draw rectangle overlay
-  - [ ] PersonPicker popup to assign the region to a person
-  - [ ] Show existing regions as labeled overlays (person name badges)
-  - [ ] Click region to edit/delete
-- [ ] "Use as profile" button on a region — crops and sets as profile media
-- [ ] Profile thumbnail generation: canvas crop of region → save as new media or update existing
-- [ ] MCP tools: `create_media_region`, `get_media_regions`, `delete_media_region`, `get_regions_for_person`
-- [ ] i18n for tagging UI
-- [ ] Unit tests for region CRUD
-- [ ] Update GEDCOM export to include region data as custom tags (if no standard exists)
+- [x] API: `src/api/media_regions.ts`:
+  - [x] `createMediaRegion(db, { media_id, person_id?, x, y, width, height, label? })`
+  - [x] `getMediaRegions(db, mediaId)`
+  - [x] `getRegionsForPerson(db, personId)`
+  - [x] `deleteMediaRegion(db, id)`
+  - [x] `updateMediaRegion(db, id, { person_id?, label? })`
+- [x] IPC channels for all region CRUD operations
+- [x] Preload: expose `window.api.mediaRegions.*`
+- [x] Lightbox enhancement: region drawing mode
+  - [x] Click "Tag face" button to enter drawing mode
+  - [x] Click and drag to draw rectangle overlay
+  - [x] PersonPicker popup to assign the region to a person
+  - [x] Show existing regions as labeled overlays (person name badges)
+  - [x] Click region to edit/delete
+- [x] "Use as profile" button on a region — crops and sets as profile media
+- [x] Profile thumbnail generation: canvas crop of region → save as new media or update existing
+- [x] MCP tools: `create_media_region`, `get_media_regions`, `delete_media_region`, `get_regions_for_person`
+- [x] i18n for tagging UI
+- [x] Unit tests for region CRUD
+- [x] Update GEDCOM export to include region data as custom tags (if no standard exists)
 
 ### Dependencies
 B1 (lightbox is the host for the tagging UI).

@@ -96,6 +96,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.61.0 | B3: Media Timeline — chronological media per person/place with lightbox | [plan](plans/2026-04-11-track-b-media-experience.md) |
 | v0.62.0 | A3: Wall Charts — large-format pedigree/descendant SVG with tiled PDF | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 | v0.63.0 | C1: Undo/Redo — command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests | [plan](plans/2026-04-11-track-c-core-polish.md) |
+| v0.64.0 | B4: Face/Region Tagging — manual crop, link to person, MCP tools, 14 tests | [plan](plans/2026-04-11-track-b-media-experience.md) |
+| Docs | D3: Claude Desktop Integration — 6 workflow guides, README MCP setup section | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
 ---
 
 ## Research
@@ -128,9 +130,6 @@ Generate a self-contained browsable family tree website. Person pages, index, se
 
 ### Track B: Media Experience [plan](plans/2026-04-11-track-b-media-experience.md)
 
-#### B4: Face/Region Tagging — Manual [feature]
-Rectangle crop in photos, link to person, use as profile picture. Local-only.
-
 #### B5: Face/Region Tagging — MCP for AI [feature]
 MCP tools for agents to suggest face bounding boxes and person assignments.
 
@@ -145,6 +144,5 @@ Edge case testing against RootsMagic, Gramps, Legacy, FTM exports. Import previe
 
 ### Track D: MCP & Agent Story [plan](plans/2026-04-11-track-d-mcp-agent-story.md)
 
-#### D3: Claude Desktop/Cowork Integration [research]
-Validate MCP with Claude Desktop, create workflow documentation, identify improvements from real usage.
+*All milestones complete (D1, D2, D3).*
 

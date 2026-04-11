@@ -798,6 +798,17 @@ export default {
     undated: 'Undated',
     empty: 'No media',
   },
+  mediaRegions: {
+    tagFace: 'Tag face',
+    drawHint: 'Click and drag to select',
+    assignPerson: 'Assign person',
+    useAsProfile: 'Use as profile',
+    delete: 'Remove tag',
+    regions: 'Tags',
+    noRegions: 'No tags yet.',
+    save: 'Save',
+    cancel: 'Cancel',
+  },
   errors: {
     saveFailed: 'Could not save. Please try again.',
     deleteFailed: 'Could not delete. Please try again.',

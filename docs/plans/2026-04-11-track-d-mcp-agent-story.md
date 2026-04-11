@@ -105,30 +105,30 @@ Validate MCP works with Claude's desktop products. Create documentation and exam
 
 ### Steps
 
-- [ ] Test MCP server connection from Claude Desktop:
-  - [ ] Configure claude_desktop_config.json with Släktforskning MCP server
-  - [ ] Verify tool discovery (all 80+ tools listed)
-  - [ ] Test basic CRUD operations
-  - [ ] Test report generation tools (D1)
-  - [ ] Test media tools (D2) with real photos
-- [ ] Test with Claude Code (cowork mode):
-  - [ ] Run MCP server alongside code editing
-  - [ ] Test research workflow: explore tree, find gaps, suggest next steps
-- [ ] Create workflow documentation (`docs/mcp-workflows/`):
-  - [ ] Getting started: MCP setup guide for Claude Desktop
-  - [ ] "Research a person" — find gaps, suggest sources, generate summary
-  - [ ] "Generate a family history narrative" — multi-generation story
-  - [ ] "Audit source coverage" — find unsourced facts across entire tree
-  - [ ] "Auto-tag photos" — batch face detection and person assignment
-  - [ ] "Import analysis" — review imported data quality, suggest corrections
-- [ ] Identify MCP improvements from real usage:
-  - [ ] Missing tools discovered during testing
-  - [ ] Tool output format improvements
-  - [ ] Error message clarity
-  - [ ] Performance with large databases
-- [ ] Add MCP setup section to README.md
-- [ ] Consider: app Settings UI for MCP server configuration (enable/disable, show connection status)
-- [ ] Create demo video script or GIF walkthrough of key workflows
+- [x] Test MCP server connection from Claude Desktop:
+  - [x] Configure claude_desktop_config.json with Släktforskning MCP server
+  - [x] Verify tool discovery (all 80+ tools listed)
+  - [x] Test basic CRUD operations
+  - [x] Test report generation tools (D1)
+  - [x] Test media tools (D2) with real photos
+- [x] Test with Claude Code (cowork mode):
+  - [x] Run MCP server alongside code editing
+  - [x] Test research workflow: explore tree, find gaps, suggest next steps
+- [x] Create workflow documentation (`docs/mcp-workflows/`):
+  - [x] Getting started: MCP setup guide for Claude Desktop
+  - [x] "Research a person" — find gaps, suggest sources, generate summary
+  - [x] "Generate a family history narrative" — multi-generation story
+  - [x] "Audit source coverage" — find unsourced facts across entire tree
+  - [x] "Auto-tag photos" — batch face detection and person assignment
+  - [x] "Import analysis" — review imported data quality, suggest corrections
+- [x] Identify MCP improvements from real usage:
+  - [x] Missing tools discovered during testing
+  - [x] Tool output format improvements
+  - [x] Error message clarity
+  - [x] Performance with large databases
+- [x] Add MCP setup section to README.md
+- [x] Consider: app Settings UI for MCP server configuration (enable/disable, show connection status)
+- [x] Create demo video script or GIF walkthrough of key workflows
 
 ### Dependencies
 D1 and D2 for full testing, but basic CRUD testing can happen anytime.
