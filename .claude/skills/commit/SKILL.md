@@ -42,11 +42,13 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 
 ## Version bumping
 
-Every commit that completes a milestone or fix must bump `package.json` version:
+**Every commit that ships a fix or feature MUST bump `package.json` version.** No exceptions, no batching. If it's worth committing, it's worth versioning.
 
-- **New feature** (new UI, new API surface, new MCP tools) → **minor bump** (e.g. 0.6.9 → 0.7.0, 0.9.3 → 0.10.0)
-- **Fix or improvement on existing feature** → **patch bump** (e.g. 0.6.9 → 0.6.10)
+- **Any feature** (new event type, new component, new API function, new UI element) → **minor bump** (e.g. 0.69.0 → 0.70.0)
+- **Any fix** (bug fix, i18n correction, config tweak, user feedback fix) → **patch bump** (e.g. 0.69.0 → 0.69.1)
 - **Major version stays at 0** until the first official release. Minor bumps past 9 go to 10, 11, … — never bump the major.
+
+**This applies to small changes too.** Adding one event type, fixing one i18n string, changing a CSS rule — all get a version bump. A stream of unbumped commits makes it impossible to track what changed when.
 
 Steps:
 1. Determine bump type from the nature of the change.
@@ -55,17 +57,19 @@ Steps:
 4. Update `"version"` in `package.json`.
 5. Include `package.json` in the same commit.
 
-The bumped version becomes the canonical version for that milestone — use it in the Implementation Status entry.
+The bumped version becomes the canonical version — use it in the Implementation Status entry in `docs/PLAN.md`.
 
 ## Plan + Roadmap sync
 
-If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/`:
+**Every version-bumped commit must have a matching row in `docs/PLAN.md` Implementation Status.** This includes small fixes without a plan file — they still get a one-line entry: `| v0.69.1 | Fix: cause field restricted to death events | — |`
+
+If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/` or `.claude/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
 - Update `docs/PLAN.md` accordingly
 - Include these doc updates in the same commit
 
 If the commit **fully completes** a milestone:
-- Move the plan file from `docs/plans/` to `docs/plans/archive/`
+- Move the plan file to `docs/plans/archive/` (mark all checkboxes done)
 - Add a row to the **Implementation Status** table in `docs/PLAN.md`:
   `| vX.Y.Z | Short description | [archive](plans/archive/filename.md) |`
 - **Remove the milestone's heading and checkbox list from the Roadmap section** — the Implementation Status row is the permanent record; the Roadmap must only contain future work
