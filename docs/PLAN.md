@@ -124,8 +124,8 @@ Define primary user objectives, map to current click counts, identify highest-fr
 
 ---
 
-#### Place Gazetteers [in progress]
-Render-time place resolution using bundled hierarchical gazetteers. Swedish parishes as first dataset.
+#### Place Gazetteers [done]
+Render-time place resolution using bundled hierarchical gazetteers. Swedish parishes as first dataset. Resolver in `src/api/place-gazetteers/`, composable `usePlaceResolver`, integrated into MapView, PersonMap, PlaceDetailView. GazetteersView settings page. Auto-enabled on Genney import.
 - Spec: `docs/superpowers/specs/2026-04-11-place-gazetteers-design.md`
 - Plan: `.claude/plans/2026-04-11-place-gazetteers.md`
 
