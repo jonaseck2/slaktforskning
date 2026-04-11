@@ -44,21 +44,24 @@
         class="test-input"
         :placeholder="$t('gazetteers.testPlaceholder')"
       />
-      <div v-if="testQuery && result" class="test-result">
-        <div class="result-header">
-          <span :class="['quality-badge', 'quality-' + result.matchQuality]">
-            {{ $t('gazetteers.match.' + result.matchQuality) }}
-          </span>
-          <span class="result-path">{{ result.matchedPath.join(' > ') }}</span>
-        </div>
-        <div class="result-details">
-          <span class="result-coords">{{ result.lat.toFixed(4) }}, {{ result.lon.toFixed(4) }}</span>
-          <span v-if="result.unmatchedComponents.length > 0" class="result-unmatched">
-            {{ $t('gazetteers.unmatched') }}: {{ result.unmatchedComponents.join(', ') }}
-          </span>
+      <div v-if="testQuery && results.length > 0" class="test-results">
+        <div v-for="r in results" :key="r.gaz.id" class="test-result">
+          <div class="result-header">
+            <span :class="['quality-badge', 'quality-' + r.result.matchQuality]">
+              {{ $t('gazetteers.match.' + r.result.matchQuality) }}
+            </span>
+            <span class="result-gazetteer">{{ r.gaz.name }}</span>
+          </div>
+          <div class="result-path">{{ r.result.matchedPath.join(' > ') }}</div>
+          <div class="result-details">
+            <span class="result-coords">{{ r.result.lat.toFixed(4) }}, {{ r.result.lon.toFixed(4) }}</span>
+            <span v-if="r.result.unmatchedComponents.length > 0" class="result-unmatched">
+              {{ $t('gazetteers.unmatched') }}: {{ r.result.unmatchedComponents.join(', ') }}
+            </span>
+          </div>
         </div>
       </div>
-      <p v-else-if="testQuery && !result" class="empty-hint">{{ $t('gazetteers.noMatch') }}</p>
+      <p v-else-if="testQuery && results.length === 0" class="empty-hint">{{ $t('gazetteers.noMatch') }}</p>
     </div>
   </div>
 </template>
@@ -78,7 +81,15 @@ const config = ref<GazetteerConfig>({ enabledGazetteers: allGazetteers.map(g => 
 const testQuery = ref('');
 
 const enabledGazetteers = computed(() => loadGazetteers(config.value));
-const result = computed(() => resolvePlace(testQuery.value, enabledGazetteers.value));
+
+/** Resolve against each enabled gazetteer individually so the user sees all matches */
+const results = computed(() => {
+  const q = testQuery.value;
+  if (!q) return [];
+  return enabledGazetteers.value
+    .map(gaz => ({ gaz, result: resolvePlace(q, [gaz]) }))
+    .filter((r): r is { gaz: Gazetteer; result: NonNullable<ReturnType<typeof resolvePlace>> } => r.result !== null);
+});
 
 async function loadConfig() {
   const raw = await window.api.db.getSetting('gazetteer_config') as string | null;
@@ -186,8 +197,14 @@ onMounted(loadConfig);
   box-sizing: border-box;
 }
 
-.test-result {
+.test-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 10px;
+}
+
+.test-result {
   padding: 10px;
   background: #f8f8f8;
   border-radius: 4px;
@@ -199,6 +216,11 @@ onMounted(loadConfig);
   align-items: center;
   gap: 8px;
   margin-bottom: 4px;
+}
+
+.result-gazetteer {
+  font-size: var(--font-xs);
+  color: #888;
 }
 
 .quality-badge {
