@@ -168,18 +168,26 @@ describe('loadGazetteers', () => {
     expect(result).toEqual([]);
   });
 
-  it('returns sv-parishes when enabled', () => {
-    const config: GazetteerConfig = { enabledGazetteers: ['sv-parishes'] };
+  it('returns sv-socknar when enabled', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar'] };
     const result = loadGazetteers(config);
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('sv-parishes');
+    expect(result[0].id).toBe('sv-socknar');
     expect(result[0].root.name).toBe('Sverige');
     expect(result[0].root.children!.length).toBeGreaterThan(0);
   });
 
+  it('returns both Swedish gazetteers when both enabled', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar', 'sv-forsamlingar'] };
+    const result = loadGazetteers(config);
+    expect(result).toHaveLength(2);
+    expect(result.map(g => g.id).sort()).toEqual(['sv-forsamlingar', 'sv-socknar']);
+  });
+
   it('getAllGazetteers returns all bundled gazetteers', () => {
     const all = getAllGazetteers();
-    expect(all.length).toBeGreaterThanOrEqual(1);
-    expect(all.find(g => g.id === 'sv-parishes')).toBeDefined();
+    expect(all.length).toBeGreaterThanOrEqual(2);
+    expect(all.find(g => g.id === 'sv-socknar')).toBeDefined();
+    expect(all.find(g => g.id === 'sv-forsamlingar')).toBeDefined();
   });
 });

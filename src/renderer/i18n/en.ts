@@ -1033,6 +1033,8 @@ export default {
       partial: 'Partial',
       ambiguous: 'Ambiguous',
     },
+    source: 'Source',
+    fetched: 'fetched',
   },
   undo: {
     createPerson: 'Create person',

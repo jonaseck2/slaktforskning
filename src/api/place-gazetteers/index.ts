@@ -1,8 +1,10 @@
 import type { Gazetteer, GazetteerConfig } from './types';
-import svParishes from './data/sv-parishes.json';
+import svSocknar from './data/sv-socknar.json';
+import svForsamlingar from './data/sv-forsamlingar.json';
 
 const BUNDLED_GAZETTEERS: Gazetteer[] = [
-  svParishes as Gazetteer,
+  svSocknar as Gazetteer,
+  svForsamlingar as Gazetteer,
 ];
 
 export function getAllGazetteers(): Gazetteer[] {

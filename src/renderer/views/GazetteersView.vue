@@ -11,28 +11,25 @@
       <div class="section-header">
         <h4>{{ $t('gazetteers.installed') }}</h4>
       </div>
-      <table v-if="allGazetteers.length > 0" class="data-table">
-        <thead>
-          <tr>
-            <th>{{ $t('gazetteers.enabled') }}</th>
-            <th>{{ $t('gazetteers.name') }}</th>
-            <th>{{ $t('gazetteers.locale') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="gaz in allGazetteers" :key="gaz.id">
-            <td>
-              <input
-                type="checkbox"
-                :checked="config.enabledGazetteers.includes(gaz.id)"
-                @change="toggleGazetteer(gaz.id, ($event.target as HTMLInputElement).checked)"
-              />
-            </td>
-            <td>{{ gaz.name }}</td>
-            <td>{{ gaz.locale }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-if="allGazetteers.length > 0" class="gazetteer-cards">
+        <div v-for="gaz in allGazetteers" :key="gaz.id" class="gazetteer-card">
+          <label class="gazetteer-toggle">
+            <input
+              type="checkbox"
+              :checked="config.enabledGazetteers.includes(gaz.id)"
+              @change="toggleGazetteer(gaz.id, ($event.target as HTMLInputElement).checked)"
+            />
+            <span class="gazetteer-card-name">{{ gaz.name }}</span>
+          </label>
+          <div v-if="gaz.description" class="gazetteer-card-desc">{{ gaz.description }}</div>
+          <div v-if="gaz.source" class="gazetteer-card-source">
+            {{ $t('gazetteers.source') }}:
+            <a :href="gaz.source.url" target="_blank" rel="noopener">{{ gaz.source.name }}</a>
+            <span class="source-license">({{ gaz.source.license }})</span>
+            <span class="source-date">{{ $t('gazetteers.fetched') }} {{ gaz.source.fetched }}</span>
+          </div>
+        </div>
+      </div>
       <p v-else class="empty-hint">No gazetteers installed.</p>
     </div>
 
@@ -119,6 +116,64 @@ onMounted(loadConfig);
   margin-bottom: 16px;
   max-width: 640px;
   line-height: 1.5;
+}
+
+.gazetteer-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gazetteer-card {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.gazetteer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.gazetteer-card-name {
+  font-weight: 600;
+  font-size: var(--font-base);
+}
+
+.gazetteer-card-desc {
+  font-size: var(--font-sm);
+  color: #555;
+  margin-top: 4px;
+  margin-left: 24px;
+  line-height: 1.4;
+}
+
+.gazetteer-card-source {
+  font-size: var(--font-xs);
+  color: #888;
+  margin-top: 6px;
+  margin-left: 24px;
+}
+
+.gazetteer-card-source a {
+  color: var(--color-primary, #4f46e5);
+  text-decoration: none;
+}
+
+.gazetteer-card-source a:hover {
+  text-decoration: underline;
+}
+
+.source-license {
+  margin-left: 4px;
+}
+
+.source-date {
+  margin-left: 8px;
+  color: #aaa;
 }
 
 .test-input {
