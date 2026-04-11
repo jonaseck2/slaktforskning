@@ -118,6 +118,14 @@
       <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
     </section>
 
+    <!-- Media Timeline Section -->
+    <section class="detail-section" aria-labelledby="section-media-timeline">
+      <div class="section-header">
+        <h4 id="section-media-timeline">{{ $t('mediaTimeline.title') }}</h4>
+      </div>
+      <MediaTimeline entity-type="person" :entity-id="person.id" />
+    </section>
+
     <!-- Research Tasks Section -->
     <section class="detail-section" aria-labelledby="section-person-tasks">
       <div class="section-header">
@@ -183,6 +191,7 @@ import PersonNamesTable from '../components/PersonNamesTable.vue';
 import PersonNameFormModal from '../components/PersonNameFormModal.vue';
 import PersonIdentifiersSection from '../components/PersonIdentifiersSection.vue';
 import PersonMediaSection from '../components/PersonMediaSection.vue';
+import MediaTimeline from '../components/MediaTimeline.vue';
 import PersonChecksSection from '../components/PersonChecksSection.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
