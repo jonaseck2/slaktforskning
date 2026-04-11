@@ -134,22 +134,36 @@
         </div>
       </div>
 
-      <!-- Child Places section -->
+      <!-- Hierarchy section -->
       <div class="panel-section">
         <button class="panel-section-header" @click="toggleSection('children')">
           <span class="panel-chevron">{{ sections.children ? '▾' : '▸' }}</span>
-          {{ $t('places.childPlaces') }}
-          <span v-if="childPlaces.length > 0" class="panel-section-count">{{ childPlaces.length }}</span>
+          {{ $t('places.hierarchy') }}
         </button>
         <div v-if="sections.children" class="panel-section-body">
-          <div v-if="childPlaces.length === 0" class="panel-empty-section">—</div>
-          <ul v-else class="children-list">
-            <li v-for="child in childPlaces" :key="child.id">
-              <a class="person-link" href="#" @click.prevent="emit('select-place', child.id)">
-                {{ child.name }}
-              </a>
-            </li>
-          </ul>
+          <div v-if="ancestors.length === 0 && childPlaces.length === 0" class="panel-empty-section">—</div>
+          <template v-else>
+            <!-- Ancestors (outermost first) -->
+            <ul v-if="ancestors.length > 0" class="hierarchy-list">
+              <li v-for="(anc, idx) in [...ancestors].reverse()" :key="anc.id" :style="{ paddingLeft: (idx * 12) + 'px' }">
+                <a class="person-link" href="#" @click.prevent="emit('select-place', anc.id)">
+                  {{ anc.name }}
+                </a>
+              </li>
+              <li class="hierarchy-current" :style="{ paddingLeft: (ancestors.length * 12) + 'px' }">
+                <strong>{{ place!.name }}</strong>
+              </li>
+            </ul>
+            <!-- Children -->
+            <div v-if="childPlaces.length > 0" class="hierarchy-children-label">{{ $t('places.childPlaces') }}</div>
+            <ul v-if="childPlaces.length > 0" class="hierarchy-list">
+              <li v-for="child in childPlaces" :key="child.id">
+                <a class="person-link" href="#" @click.prevent="emit('select-place', child.id)">
+                  {{ child.name }}
+                </a>
+              </li>
+            </ul>
+          </template>
         </div>
       </div>
 
@@ -261,11 +275,13 @@ const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null
 // ── Data ────────────────────────────────────────────────────────────────────
 
 const place = ref<Place | null>(null);
+const ancestors = ref<ChildPlace[]>([]);
 const childPlaces = ref<ChildPlace[]>([]);
 
 async function load(id: string | null) {
   if (!id) {
     place.value = null;
+    ancestors.value = [];
     childPlaces.value = [];
     return;
   }
@@ -275,6 +291,18 @@ async function load(id: string | null) {
   ]);
   place.value = p;
   childPlaces.value = allPlaces.filter((pl) => pl.parent_place_id === id);
+
+  // Build ancestor chain by walking up parent_place_id
+  const chain: ChildPlace[] = [];
+  const placeMap = new Map(allPlaces.map(pl => [pl.id, pl]));
+  let parentId = p?.parent_place_id ?? null;
+  while (parentId) {
+    const parent = placeMap.get(parentId);
+    if (!parent) break;
+    chain.push(parent);
+    parentId = parent.parent_place_id;
+  }
+  ancestors.value = chain;
 }
 
 watch(() => props.placeId, load, { immediate: true });
@@ -432,8 +460,8 @@ async function saveField(field: string, value: unknown) {
   border-color: #2980b9;
 }
 
-/* Children list */
-.children-list {
+/* Hierarchy list */
+.hierarchy-list {
   list-style: none;
   padding: 4px 14px;
   margin: 0;
@@ -441,7 +469,19 @@ async function saveField(field: string, value: unknown) {
   flex-direction: column;
   gap: 2px;
 }
-.children-list li {
+.hierarchy-list li {
   font-size: var(--font-xs);
+}
+.hierarchy-current {
+  color: var(--color-text);
+  font-size: var(--font-xs);
+}
+.hierarchy-children-label {
+  padding: 6px 14px 2px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 </style>
