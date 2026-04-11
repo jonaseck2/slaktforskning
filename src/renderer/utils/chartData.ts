@@ -151,7 +151,7 @@ export async function loadAncestorGeneration(
  * Fetch a descendant tree up to `maxDepth` levels below the given person.
  * At the deepest generation, also checks for children to populate hasMoreChildren.
  */
-async function fetchDescendantTree(
+export async function fetchDescendantTree(
   personId: string,
   depth: number,
   maxDepth: number,
