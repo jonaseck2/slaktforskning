@@ -127,12 +127,13 @@ const maxZoom = 18;
 const currentZoom = ref(4);
 
 // Panel state
-const selectedPlaceId = ref<string | null>(null);
+const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
 const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
 const { panelWidth, startResize } = usePanelResize();
 
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
+  localStorage.setItem('map-selected-place', id);
   if (!panelOpen.value) openPanel();
 }
 
