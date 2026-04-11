@@ -54,7 +54,8 @@
       "Bash(nohup:*)",
       "Read(//Users/jonasahnstedt/.claude/**)",
       "Read(//Users/jonasahnstedt/.agents/skills/**)",
-      "Edit(/.claude/skills/**)"
+      "Edit(/.claude/skills/**)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__*"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/docs/plans",
