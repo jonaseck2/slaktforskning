@@ -17,16 +17,7 @@
     <!-- Ancestor Chart Tab -->
     <div v-if="activeTab === 'ancestor'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <label>
-            {{ $t('reports.generations') }}
-            <select v-model="ancestorGenerations">
-              <option :value="3">3</option>
-              <option :value="4">4</option>
-              <option :value="5">5</option>
-            </select>
-          </label>
-        </div>
+        <div class="controls"></div>
         <div class="print-actions">
           <button class="btn-add btn-report-action" :disabled="!ancestorRootId" @click="printCurrent">{{ $t('reports.print') }}</button>
           <button class="btn-add btn-report-action" :disabled="!ancestorRootId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
@@ -215,7 +206,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <CircleChartReport :person-id="chartPersonId" />
+          <CircleChartReport :person-id="chartPersonId" :generations="circleGenerations" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -238,7 +229,20 @@
       </div>
     </div>
 
-    <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
+    <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+      <template v-if="activeTab === 'ancestor'">
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="ancestorGenerations <= 3" @click="ancestorGenerations--">−</button>
+        <span class="zoom-extra-value">{{ ancestorGenerations }}</span>
+        <button class="zoom-extra-btn" :disabled="ancestorGenerations >= 5" @click="ancestorGenerations++">+</button>
+      </template>
+      <template v-if="activeTab === 'circleChart'">
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="circleGenerations <= 1" @click="circleGenerations--">−</button>
+        <span class="zoom-extra-value">{{ circleGenerations }}</span>
+        <button class="zoom-extra-btn" :disabled="circleGenerations >= 6" @click="circleGenerations++">+</button>
+      </template>
+    </ZoomControls>
   </div>
 </template>
 
@@ -292,6 +296,7 @@ const ancestorBookPersonId = computed(() => focusStore.personId);
 const biographyPersonId = computed(() => focusStore.personId);
 const placeHistoryPlaceId = ref('');
 const familyNarrativeRelId = ref('');
+const circleGenerations = ref(6);
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 
 // --- Zoom ---
