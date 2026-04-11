@@ -102,20 +102,20 @@ Generate a browsable family tree website from the database. Self-contained, host
 
 ### Steps
 
-- [ ] Create `src/api/html_site/generator.ts` — orchestrates site generation
-- [ ] Create `src/api/html_site/templates.ts` — HTML templates for person pages, index, place pages, source pages
-- [ ] Person pages: names, events, relationships, media thumbnails, citations
-- [ ] Index page: alphabetical person list with search
-- [ ] Place pages: place hierarchy, events at place
-- [ ] Source pages: source details, linked citations
-- [ ] Client-side search: generate JSON index, lightweight JS search
-- [ ] Copy referenced media files into `site/media/` directory
-- [ ] Apply export content options (A2) for privacy filtering
-- [ ] Responsive CSS (mobile-friendly viewing)
-- [ ] IPC channel `export:htmlSite` with output directory picker
-- [ ] Vue: button in ImportExportView + progress indicator
-- [ ] i18n: site generated in user's current language
-- [ ] Tests for HTML generation and search index
+- [x] Create `src/api/html_site/generator.ts` — orchestrates site generation
+- [x] Create `src/api/html_site/templates.ts` — HTML templates for person pages, index, place pages, source pages
+- [x] Person pages: names, events, relationships, media thumbnails, citations
+- [x] Index page: alphabetical person list with search
+- [x] Place pages: place hierarchy, events at place
+- [x] Source pages: source details, linked citations
+- [x] Client-side search: generate JSON index, lightweight JS search
+- [x] Copy referenced media files into `site/media/` directory
+- [x] Apply export content options (A2) for privacy filtering
+- [x] Responsive CSS (mobile-friendly viewing)
+- [x] IPC channel `export:htmlSite` with output directory picker
+- [x] Vue: button in ImportExportView + progress indicator
+- [x] i18n: site generated in user's current language
+- [x] Tests for HTML generation and search index
 
 ### Dependencies
 A2 (export content options) for privacy filtering. Can be built without A2 but less useful.

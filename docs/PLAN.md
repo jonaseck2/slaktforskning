@@ -98,6 +98,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.63.0 | C1: Undo/Redo — command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests | [plan](plans/2026-04-11-track-c-core-polish.md) |
 | v0.64.0 | B4: Face/Region Tagging — manual crop, link to person, MCP tools, 14 tests | [plan](plans/2026-04-11-track-b-media-experience.md) |
 | Docs | D3: Claude Desktop Integration — 6 workflow guides, README MCP setup section | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
+| v0.65.0 | A4: Static HTML Site Export — browsable website, search, XSS-safe, 12 tests | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 ---
 
 ## Research
@@ -123,8 +124,7 @@ Define primary user objectives, map to current click counts, identify highest-fr
 
 ### Track A: Presentation & Sharing [plan](plans/2026-04-11-track-a-presentation-sharing.md)
 
-#### A4: Static HTML Site Export [feature]
-Generate a self-contained browsable family tree website. Person pages, index, search, media.
+*All milestones complete (A1, A2, A3, A4, A5).*
 
 ---
 

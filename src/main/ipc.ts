@@ -30,6 +30,7 @@ import * as mediaRegions from '../api/media_regions';
 import { getDbSetting, setDbSetting } from '../api/db_settings';
 import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../api/csv_export';
 import type { CsvOptions } from '../api/csv_export';
+import { generateHtmlSite } from '../api/html_site/generator';
 
 let importInProgress = false;
 
@@ -629,6 +630,32 @@ export function registerIpcHandlers(): void {
   wrapHandler('undo:state', () => undoManager.getState());
   wrapHandler('undo:beginGroup', (label) => { undoManager.beginGroup(label as string); });
   wrapHandler('undo:endGroup', () => { undoManager.endGroup(); });
+  // HTML Site Export
+  wrapHandler('export:htmlSiteSelectDir', async () => {
+    const dialogOpts = {
+      title: 'Select output folder',
+      properties: ['openDirectory', 'createDirectory'] as ('openDirectory' | 'createDirectory')[],
+    };
+    const win = BrowserWindow.getFocusedWindow();
+    const result = win
+      ? await dialog.showOpenDialog(win, dialogOpts)
+      : await dialog.showOpenDialog(dialogOpts);
+    if (result.canceled || !result.filePaths.length) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
+  wrapHandler('export:htmlSite', (opts) => {
+    const { outputDir, excludeLiving, siteTitle } = opts as {
+      outputDir: string;
+      excludeLiving?: boolean;
+      siteTitle?: string;
+    };
+    return generateHtmlSite(getDatabase(), outputDir, { excludeLiving, siteTitle });
+  });
+
+  wrapHandler('export:openFolder', async (folderPath) => {
+    await shell.openPath(folderPath as string);
+  });
 
   // Print / PDF
   wrapHandler('print:print', () => {

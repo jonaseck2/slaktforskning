@@ -18,6 +18,7 @@
     <HolgerImportSection v-if="activeTab === 'holger'" />
     <ArchiveSection v-if="activeTab === 'archive'" />
     <CsvExportSection v-if="activeTab === 'csv'" />
+    <HtmlSiteExportSection v-if="activeTab === 'htmlSite'" />
   </div>
 </template>
 
@@ -30,6 +31,7 @@ import GenneyImportSection from '../components/import/GenneyImportSection.vue';
 import HolgerImportSection from '../components/import/HolgerImportSection.vue';
 import ArchiveSection from '../components/import/ArchiveSection.vue';
 import CsvExportSection from '../components/import/CsvExportSection.vue';
+import HtmlSiteExportSection from '../components/import/HtmlSiteExportSection.vue';
 
 const { t } = useI18n();
 
@@ -41,6 +43,7 @@ const tabs = computed(() => [
   { id: 'holger', label: t('importExport.holgerTitle') },
   { id: 'archive', label: t('importExport.archiveTitle') },
   { id: 'csv', label: t('csv.title') },
+  { id: 'htmlSite', label: t('htmlSite.tabTitle') },
 ]);
 </script>
 
