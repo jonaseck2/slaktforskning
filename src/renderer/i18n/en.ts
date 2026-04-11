@@ -293,6 +293,8 @@ export default {
     marriage: 'Marriage',
     civil_union: 'Civil Union',
     cohabitation: 'Cohabitation',
+    living_apart: 'Living Apart',
+    relationship: 'Relationship',
     unknown: 'Unknown',
     other: 'Other',
   },
