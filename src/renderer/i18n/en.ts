@@ -709,6 +709,19 @@ export default {
     profileAlt: 'Profile picture',
     moveUp: 'Move up',
     moveDown: 'Move down',
+    gallery: 'Gallery',
+    lightbox: {
+      prev: 'Previous',
+      next: 'Next',
+      close: 'Close',
+      linkedEntities: 'Linked entities',
+      linkTo: 'Link to',
+      unlink: 'Unlink',
+      openExternal: 'Open in app',
+    },
+    filter: {
+      search: 'Search media',
+    },
   },
   errors: {
     saveFailed: 'Could not save. Please try again.',

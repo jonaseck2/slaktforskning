@@ -709,6 +709,19 @@ export default {
     profileAlt: 'Profilbild',
     moveUp: 'Flytta upp',
     moveDown: 'Flytta ner',
+    gallery: 'Galleri',
+    lightbox: {
+      prev: 'Föregående',
+      next: 'Nästa',
+      close: 'Stäng',
+      linkedEntities: 'Länkade poster',
+      linkTo: 'Länka till',
+      unlink: 'Ta bort länk',
+      openExternal: 'Öppna i app',
+    },
+    filter: {
+      search: 'Sök media',
+    },
   },
   errors: {
     saveFailed: 'Det gick inte att spara. Försök igen.',
