@@ -36,7 +36,7 @@
           @keydown.down.prevent="focusNextRow($event)"
           @keydown.up.prevent="focusPrevRow($event)"
         >
-          <td>{{ source.title }}</td>
+          <td><LinkedText :text="source.title" /></td>
           <td>{{ source.author || '—' }}</td>
           <td><span v-if="source.source_type" class="type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span></td>
           <td class="actions-cell">
@@ -93,6 +93,7 @@ import { ref, reactive, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
+import LinkedText from '../components/LinkedText.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { narrateSourceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';

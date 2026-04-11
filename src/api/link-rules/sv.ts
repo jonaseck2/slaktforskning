@@ -32,6 +32,16 @@ export const svRules: LinkRule[] = [
     priority: 20,
   },
   {
+    id: 'riksarkivet-kyrkoarkiv',
+    name: 'Riksarkivet Kyrkoarkiv',
+    pattern: '([A-ZÅÄÖ][a-zåäöé]+(?:\\s[a-zåäö]+)*)\\s*\\([A-ZÅÄÖ,\\s]+\\)\\s*[A-Z]+[IVXa-z]*:\\d+',
+    urlTemplate: 'https://sok.riksarkivet.se/kyrkoarkiv?Arkivsok=$1&Sok=true',
+    example: 'Alvesta (G) AI:6 (1813-1828)',
+    locale: 'sv',
+    enabled: true,
+    priority: 15,
+  },
+  {
     id: 'svbf',
     name: 'Sveriges Befolkning',
     pattern: 'SvBf\\d{4}|Sveriges [Bb]efolkning \\d{4}',
