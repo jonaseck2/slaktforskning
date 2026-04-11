@@ -704,6 +704,11 @@ export default {
     moveUp: 'Flytta upp',
     moveDown: 'Flytta ner',
   },
+  mediaTimeline: {
+    title: 'Mediatidslinje',
+    undated: 'Odaterade',
+    empty: 'Ingen media',
+  },
   errors: {
     saveFailed: 'Det gick inte att spara. Försök igen.',
     deleteFailed: 'Det gick inte att ta bort. Försök igen.',

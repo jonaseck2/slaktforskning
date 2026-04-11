@@ -59,6 +59,13 @@
       <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
     </section>
 
+    <section class="detail-section" aria-labelledby="section-place-media-timeline">
+      <div class="section-header">
+        <h4 id="section-place-media-timeline">{{ $t('mediaTimeline.title') }}</h4>
+      </div>
+      <MediaTimeline entity-type="place" :entity-id="placeId" />
+    </section>
+
     <section v-if="children.length" class="detail-section" aria-labelledby="section-place-children">
       <h4 id="section-place-children">{{ $t('places.childPlaces') }}</h4>
       <ul class="child-list">
@@ -77,6 +84,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
+import MediaTimeline from '../components/MediaTimeline.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }

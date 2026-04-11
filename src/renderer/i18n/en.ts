@@ -704,6 +704,11 @@ export default {
     moveUp: 'Move up',
     moveDown: 'Move down',
   },
+  mediaTimeline: {
+    title: 'Media Timeline',
+    undated: 'Undated',
+    empty: 'No media',
+  },
   errors: {
     saveFailed: 'Could not save. Please try again.',
     deleteFailed: 'Could not delete. Please try again.',
