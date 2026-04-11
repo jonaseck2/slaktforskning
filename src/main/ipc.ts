@@ -12,7 +12,7 @@ import * as places from '../api/places';
 import * as uw from '../api/undo_wrappers';
 import { undoManager } from '../api/undo';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../gedcom';
-import { readGedcomFile, parseGedcom, importGedcom, previewGedcomImport, exportGedcom } from '../gedcom';
+import { previewGedcomImport } from '../import/gedcom';
 import type { ImportOptions } from '../import/gedcom';
 import { unzipSync } from 'fflate';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../import/genney/index';
