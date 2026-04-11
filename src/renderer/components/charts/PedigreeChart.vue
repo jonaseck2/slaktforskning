@@ -118,6 +118,7 @@
             style="pointer-events: none; user-select: none;"
           >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
         </g>
+        <template v-if="!readonly">
         <line
           v-for="(ln, i) in layout.placeholderLines"
           :key="'pl' + i"
@@ -150,9 +151,10 @@
             text-anchor="middle" fill="#94a3b8" font-size="11"
           >{{ ph.role === 'father' ? $t('personDetail.addFather') : $t('personDetail.addMother') }}</text>
         </g>
+        </template>
       </svg>
     </div>
-    <div class="zoom-controls">
+    <div v-if="!readonly" class="zoom-controls">
       <button class="zoom-btn" :aria-label="$t('a11y.zoomIn')" @click="zoomIn">+</button>
       <span class="zoom-level" aria-live="polite">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" :aria-label="$t('a11y.zoomOut')" @click="zoomOut">−</button>
@@ -161,7 +163,7 @@
 
     <!-- Add popover -->
     <div
-      v-if="addPopover"
+      v-if="!readonly && addPopover"
       class="add-popover"
       :style="{ left: addPopover.x + 'px', top: addPopover.y + 'px' }"
       @click.stop
