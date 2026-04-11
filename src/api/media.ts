@@ -75,6 +75,10 @@ export function reorderMediaLinks(db: Database, linkIds: string[]): void {
   stmt.finalize();
 }
 
+export function getLinksForMedia(db: Database, mediaId: string): MediaLink[] {
+  return queryAll<MediaLink>(db, 'SELECT * FROM media_links WHERE media_id = ? ORDER BY entity_type, sort_order', [mediaId]);
+}
+
 export function removeMediaLink(db: Database, linkId: string): boolean {
   return runSqlChanges(db, 'DELETE FROM media_links WHERE id = ?', [linkId]) > 0;
 }
