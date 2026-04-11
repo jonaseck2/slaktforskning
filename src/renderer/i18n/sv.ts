@@ -682,6 +682,12 @@ export default {
     exportReportSources: '{n} källor',
     exportReportExcluded: 'Ej inkluderat i GEDCOM (inget motsvarande begrepp):',
   },
+  personTimeline: {
+    title: 'Tidslinje',
+    gap: '{years} års lucka',
+    undated: 'Odaterade',
+    empty: 'Inga händelser',
+  },
   media: {
     title: 'Media',
     nav: 'Media',

@@ -68,6 +68,14 @@
       <EventList :person-id="person.id" ref="eventListRef" />
     </section>
 
+    <!-- Timeline Section -->
+    <section id="section-timeline" class="detail-section" aria-labelledby="section-person-timeline">
+      <div class="section-header">
+        <h4 id="section-person-timeline">{{ $t('personTimeline.title') }}</h4>
+      </div>
+      <PersonTimeline ref="timelineRef" :person-id="person.id" />
+    </section>
+
     <!-- Identifiers Section -->
     <section id="section-identifiers" class="detail-section" aria-labelledby="section-person-identifiers">
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })">
@@ -184,6 +192,7 @@ import PersonNameFormModal from '../components/PersonNameFormModal.vue';
 import PersonIdentifiersSection from '../components/PersonIdentifiersSection.vue';
 import PersonMediaSection from '../components/PersonMediaSection.vue';
 import PersonChecksSection from '../components/PersonChecksSection.vue';
+import PersonTimeline from '../components/PersonTimeline.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
@@ -237,6 +246,7 @@ const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
+const timelineRef = ref<InstanceType<typeof PersonTimeline> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // Research tasks
