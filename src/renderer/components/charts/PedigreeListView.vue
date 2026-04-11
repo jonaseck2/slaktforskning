@@ -11,7 +11,7 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { fetchPedigreeTree } from '../../utils/chartData';
-import type { PedigreeTree } from '../../utils/chartLayout';
+import type { PedigreeTree } from '../../utils/chart-layout';
 import PedigreeListNode from './PedigreeListNode.vue';
 
 useI18n();

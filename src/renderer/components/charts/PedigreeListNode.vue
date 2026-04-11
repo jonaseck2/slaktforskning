@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { PedigreeTree } from '../../utils/chartLayout';
+import type { PedigreeTree } from '../../utils/chart-layout';
 
 useI18n();
 

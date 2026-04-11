@@ -5,8 +5,8 @@ import {
   computeTimelineLayout,
   BOX_W,
   BOX_H,
-} from '../../src/renderer/utils/chartLayout';
-import type { PersonNode, PedigreeTree, HourglassTree } from '../../src/renderer/utils/chartLayout';
+} from '../../src/renderer/utils/chart-layout';
+import type { PersonNode, PedigreeTree, HourglassTree } from '../../src/renderer/utils/chart-layout';
 
 function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
   return {

@@ -166,7 +166,7 @@ import {
 } from '../../utils/circleLayout';
 import CircleChartSvg from '../charts/CircleChartSvg.vue';
 import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
-import type { PersonNode } from '../../utils/chartLayout';
+import type { PersonNode } from '../../utils/chart-layout';
 import { formatFullName } from '../../utils/nameUtils';
 import { useToast } from '../../composables/useToast';
 

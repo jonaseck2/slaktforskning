@@ -92,10 +92,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeTimelineLayout } from '../../utils/chartLayout';
+import { computeTimelineLayout } from '../../utils/chart-layout';
 import { fetchTimelineEntries } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { TimelineLayout, PersonNode } from '../../utils/chartLayout';
+import type { TimelineLayout, PersonNode } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
@@ -103,7 +103,7 @@ useI18n();
 const props = defineProps<{ personId: string | undefined }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
-// Mirror constants from chartLayout.ts
+// Mirror constants from chart-layout
 const LEFT = 164;
 const RIGHT = 30;
 const TOP = 20;

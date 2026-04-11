@@ -146,10 +146,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeHourglassLayout, maxDescendantDepth } from '../../utils/chartLayout';
+import { computeHourglassLayout, maxDescendantDepth } from '../../utils/chart-layout';
 import { fetchHourglassTree, loadAncestorGeneration, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { BoxLayout, CollapseButton, HourglassTree } from '../../utils/chartLayout';
+import type { BoxLayout, CollapseButton, HourglassTree } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';

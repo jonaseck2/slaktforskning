@@ -1,6 +1,6 @@
 // Pure layout algorithm for the 360° circle chart. No DOM, no IPC.
 
-import type { PedigreeTree, PersonNode } from './chartLayout';
+import type { PedigreeTree, PersonNode } from './chart-layout';
 
 export const CIRCLE_CX = 400;
 export const CIRCLE_CY = 400;
