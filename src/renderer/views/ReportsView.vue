@@ -126,6 +126,59 @@
         </div>
       </div>
     </div>
+
+    <!-- Wall Chart Tab -->
+    <div v-if="activeTab === 'wallChart'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls">
+          <label>
+            {{ $t('wallChart.chartType') }}
+            <select v-model="wallChartType">
+              <option value="pedigree">{{ $t('wallChart.pedigree') }}</option>
+              <option value="descendant">{{ $t('wallChart.descendant') }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('wallChart.paperSize') }}
+            <select v-model="wallChartPaperSize">
+              <option v-for="size in paperSizeOptions" :key="size" :value="size">{{ size }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('wallChart.generations') }}
+            <select v-model="wallChartGenerations">
+              <option v-for="n in (wallChartType === 'pedigree' ? 9 : 5)" :key="n" :value="n + 1">{{ n + 1 }}</option>
+            </select>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="wallChartTiled" :disabled="wallChartPaperSize === 'A4'">
+            {{ $t('wallChart.tiled') }}
+          </label>
+        </div>
+        <div class="print-actions">
+          <button class="btn-add btn-report-action" :disabled="!wallChartPersonId" @click="saveWallChartSvg">{{ $t('wallChart.saveSvg') }}</button>
+          <button class="btn-add btn-report-action" :disabled="!wallChartPersonId" @click="printWallChart">{{ $t('wallChart.savePdf') }}</button>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="wallChartPersonId" class="wall-chart-preview" :style="{ zoom: effectiveZoom }">
+          <WallChartReport
+            :person-id="wallChartPersonId"
+            :chart-type="wallChartType"
+            :generations="wallChartGenerations"
+            :paper-size="wallChartPaperSize"
+            @svg-ready="onWallChartSvgReady"
+          />
+        </div>
+        <div v-else class="empty-hint">{{ $t('wallChart.selectPersonFirst') }}</div>
+        <div class="zoom-floating">
+          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">&#x2212;</button>
+          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
+          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -137,6 +190,8 @@ import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
+import WallChartReport from '../components/reports/WallChartReport.vue';
+import { PAPER_SIZES, splitIntoTiles, type PaperSizeName } from '../../api/reports/wall_chart';
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -144,13 +199,14 @@ const { t } = useI18n();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'wallChart'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
   { id: 'individual', label: t('reports.tabIndividual') },
   { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
+  { id: 'wallChart', label: t('wallChart.title') },
 ]);
 
 const ancestorRootId = computed(() => focusStore.personId);
@@ -159,6 +215,52 @@ const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
 const individualPersonId = computed(() => focusStore.personId);
 const ancestorBookPersonId = computed(() => focusStore.personId);
+
+// Wall Chart state
+const wallChartPersonId = computed(() => focusStore.personId);
+const wallChartType = ref<'pedigree' | 'descendant'>('pedigree');
+const wallChartPaperSize = ref<PaperSizeName>('A3');
+const wallChartGenerations = ref(5);
+const wallChartTiled = ref(false);
+const wallChartSvgData = ref<{ svg: string; width: number; height: number } | null>(null);
+const paperSizeOptions = Object.keys(PAPER_SIZES) as PaperSizeName[];
+
+function onWallChartSvgReady(svg: string, width: number, height: number) {
+  wallChartSvgData.value = { svg, width, height };
+}
+
+async function saveWallChartSvg() {
+  if (!wallChartSvgData.value) return;
+  if (wallChartTiled.value && (wallChartPaperSize.value !== 'A4')) {
+    // Tiled output: extract inner SVG content and split into tiles
+    const { svg, width, height } = wallChartSvgData.value;
+    // Extract content between first > and </svg>
+    const contentMatch = svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/);
+    const innerContent = contentMatch ? contentMatch[1] : '';
+    const tiles = splitIntoTiles(innerContent, width, height);
+    // Save each tile as a separate file — for now, bundle as one multi-page SVG note
+    // In a real implementation this would create a PDF; for now save the full SVG
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wall-chart-tiled-${tiles.length}-pages.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } else {
+    const blob = new Blob([wallChartSvgData.value.svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wall-chart-${wallChartType.value}-${wallChartPaperSize.value}.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function printWallChart() {
+  await window.api.print.print();
+}
 
 // --- Zoom ---
 // Natural preview width in px (A4 at 96dpi ≈ 794px).
@@ -331,9 +433,27 @@ async function exportPdf() {
   transform-origin: top center;
   flex-shrink: 0;
 }
+.wall-chart-preview {
+  background: white;
+  padding: 10mm;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transform-origin: top center;
+  flex-shrink: 0;
+}
+.checkbox-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
 @media print {
   .view-header, .tab-bar, .tab-header, .zoom-floating { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
-  .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
+  .print-preview, .wall-chart-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }
 </style>
