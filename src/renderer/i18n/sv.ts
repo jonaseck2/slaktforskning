@@ -734,6 +734,17 @@ export default {
     generations: 'Max generationer',
     generationsPlaceholder: 'Alla',
   },
+  csv: {
+    title: 'CSV-export',
+    entityType: 'Datatyp',
+    delimiter: 'Avgränsare',
+    comma: 'Komma (,)',
+    semicolon: 'Semikolon (;)',
+    tab: 'Tabb',
+    bom: 'UTF-8 BOM (för Excel)',
+    export: 'Exportera CSV',
+    success: 'CSV exporterad',
+  },
   media: {
     title: 'Media',
     nav: 'Media',

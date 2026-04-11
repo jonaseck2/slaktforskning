@@ -133,13 +133,13 @@ Tabular export of persons, events, sources, places for spreadsheet analysis.
 
 ### Steps
 
-- [ ] Create `src/api/csv_export.ts` — functions per entity type: exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv
-- [ ] Support configurable delimiter (comma, semicolon, tab) and encoding (UTF-8, UTF-8 BOM for Excel)
-- [ ] Apply export content options (A2) for filtering
-- [ ] IPC channel `export:csv` with entity type and options
-- [ ] Vue: CSV export section in ImportExportView with entity type selector and delimiter option
-- [ ] i18n for column headers
-- [ ] Unit tests for CSV generation (quoting, escaping, encoding)
+- [x] Create `src/api/csv_export.ts` — functions per entity type: exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv
+- [x] Support configurable delimiter (comma, semicolon, tab) and encoding (UTF-8, UTF-8 BOM for Excel)
+- [x] Apply export content options (A2) for filtering
+- [x] IPC channel `export:csv` with entity type and options
+- [x] Vue: CSV export section in ImportExportView with entity type selector and delimiter option
+- [x] i18n for column headers
+- [x] Unit tests for CSV generation (quoting, escaping, encoding)
 
 ### Dependencies
 A2 (export content options) optional.

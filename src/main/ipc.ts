@@ -24,6 +24,8 @@ import * as checks from '../api/checks';
 import * as duplicates from '../api/duplicates';
 import * as reportData from '../api/report_data';
 import { getDbSetting, setDbSetting } from '../api/db_settings';
+import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../api/csv_export';
+import type { CsvOptions } from '../api/csv_export';
 
 let importInProgress = false;
 
@@ -627,5 +629,50 @@ export function registerIpcHandlers(): void {
 
     fs.writeFileSync(savePath, pdfData);
     return { success: true, path: savePath };
+  });
+
+  // CSV Export
+  wrapHandler('csv:export', async (opts?: unknown) => {
+    const options = opts as { entityType: string; delimiter?: string; encoding?: 'utf-8' | 'utf-8-bom' } | undefined;
+    if (!options?.entityType) return { success: false, error: 'entityType is required' };
+
+    const csvOptions: CsvOptions = {
+      delimiter: options.delimiter ?? ',',
+      encoding: options.encoding ?? 'utf-8',
+    };
+
+    const db = getDatabase();
+    let csv: string;
+    let defaultName: string;
+    switch (options.entityType) {
+      case 'persons':
+        csv = exportPersonsCsv(db, csvOptions);
+        defaultName = 'persons.csv';
+        break;
+      case 'events':
+        csv = exportEventsCsv(db, csvOptions);
+        defaultName = 'events.csv';
+        break;
+      case 'sources':
+        csv = exportSourcesCsv(db, csvOptions);
+        defaultName = 'sources.csv';
+        break;
+      case 'places':
+        csv = exportPlacesCsv(db, csvOptions);
+        defaultName = 'places.csv';
+        break;
+      default:
+        return { success: false, error: 'Unknown entityType: ' + options.entityType };
+    }
+
+    const result = await dialog.showSaveDialog({
+      title: 'Export CSV',
+      defaultPath: defaultName,
+      filters: [{ name: 'CSV Files', extensions: ['csv'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+
+    fs.writeFileSync(result.filePath, csv, 'utf-8');
+    return { success: true, filePath: result.filePath };
   });
 }
