@@ -22,11 +22,12 @@
           v-for="box in layout.boxes"
           :key="box.person.id"
           :data-testid="'person-box-' + box.person.id"
-          :class="['person-box', 'clickable', { focused: focusedBoxId === box.person.id }]"
+          :class="['person-box', { clickable: !readonly, focused: focusedBoxId === box.person.id }]"
+          :style="{ cursor: readonly ? 'default' : 'pointer' }"
           role="treeitem"
           :aria-label="boxAriaLabel(box)"
           tabindex="0"
-          @click="$emit('navigate', box.person.id)"
+          @click="!readonly && $emit('navigate', box.person.id)"
           @mouseenter="(e: MouseEvent) => { hoveredPersonId = box.person.id; tooltipRef?.show(box.person, e.clientX, e.clientY); }"
           @mousemove="(e: MouseEvent) => tooltipRef?.move(e.clientX, e.clientY)"
           @mouseleave="hoveredPersonId = null; tooltipRef?.hide()"
@@ -72,7 +73,7 @@
             :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
           >† {{ box.person.deathDate }}</text>
           <g
-            v-if="hoveredPersonId === box.person.id"
+            v-if="!readonly && hoveredPersonId === box.person.id"
             class="add-btn"
             style="cursor: pointer;"
             @click.stop="openAddPopover(box)"
@@ -96,6 +97,7 @@
           </g>
         </g>
         <g
+          v-if="!readonly"
           v-for="btn in layout.collapseButtons"
           :key="`${btn.personId}:${btn.direction}`"
           class="collapse-btn"
@@ -200,7 +202,7 @@ import ChartTooltip from './ChartTooltip.vue';
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null }>();
+const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
