@@ -284,3 +284,7 @@ Part of Track B: `docs/plans/2026-04-11-track-b-media-experience.md`.
 ### v0.62.0 — A3: Wall Charts
 Large-format pedigree (horizontal) and descendant (vertical) SVG charts. A4-A0 paper sizes, tiled output with crop marks. 13 tests.
 Part of Track A: `docs/plans/2026-04-11-track-a-presentation-sharing.md`.
+
+### v0.63.0 — C1: Undo/Redo
+Command-pattern undo/redo for person, name, event, participant, relationship, source, citation CRUD. Keyboard shortcuts (Cmd+Z, Cmd+Shift+Z), grouped operations, toast notifications, max depth 100, clear on DB switch. 30 tests.
+Part of Track C: `docs/plans/2026-04-11-track-c-core-polish.md`.

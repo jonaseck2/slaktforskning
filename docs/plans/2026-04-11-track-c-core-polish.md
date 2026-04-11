@@ -12,33 +12,33 @@ Transaction-based undo/redo for all data mutations. Table stakes for a data-entr
 
 ### Steps
 
-- [ ] Design: command pattern with action recording
+- [x] Design: command pattern with action recording
   - Each mutation records: description (i18n key), undo function, redo function
   - Group related operations (e.g. createPerson + addPersonName = one undo step)
-- [ ] Create `src/api/undo.ts`:
-  - [ ] `UndoManager` class: `push(action)`, `undo()`, `redo()`, `canUndo()`, `canRedo()`, `getUndoLabel()`, `getRedoLabel()`
-  - [ ] Undo stack and redo stack (in memory, not persisted)
-  - [ ] `beginGroup(label)` / `endGroup()` for compound operations
-  - [ ] Max stack depth (e.g. 100 actions) to bound memory usage
-- [ ] Wrap API mutations to record undo actions:
-  - [ ] Person: create/delete, update (snapshot old values), name add/update/delete
-  - [ ] Relationship: create/delete, update
-  - [ ] Event: create/delete, update, participant add/remove
-  - [ ] Source: create/delete, update
-  - [ ] Citation: create/delete
-  - [ ] Place: create/delete, update
-  - [ ] Group: create/delete, update, member add/remove
-  - [ ] Research task: create/delete, update
-  - [ ] Media: create/delete, link/unlink, reorder
-- [ ] IPC channels: `undo:undo`, `undo:redo`, `undo:state` (returns { canUndo, canRedo, undoLabel, redoLabel })
-- [ ] Preload: expose `window.api.undo.*`
-- [ ] Keyboard shortcuts: Cmd+Z / Ctrl+Z (undo), Cmd+Shift+Z / Ctrl+Shift+Z (redo)
-- [ ] Electron menu: Edit > Undo / Redo with dynamic labels
-- [ ] Renderer: Pinia store for undo state, updated after each data operation
-- [ ] Toast notification showing what was undone/redone
-- [ ] Clear undo stack on database switch
-- [ ] Unit tests: undo/redo for each entity type, compound operations, stack overflow
-- [ ] i18n for undo labels ("Undo: Delete person", "Redo: Add event", etc.)
+- [x] Create `src/api/undo.ts`:
+  - [x] `UndoManager` class: `push(action)`, `undo()`, `redo()`, `canUndo()`, `canRedo()`, `getUndoLabel()`, `getRedoLabel()`
+  - [x] Undo stack and redo stack (in memory, not persisted)
+  - [x] `beginGroup(label)` / `endGroup()` for compound operations
+  - [x] Max stack depth (e.g. 100 actions) to bound memory usage
+- [x] Wrap API mutations to record undo actions:
+  - [x] Person: create/delete, update (snapshot old values), name add/update/delete
+  - [x] Relationship: create/delete, update
+  - [x] Event: create/delete, update, participant add/remove
+  - [x] Source: create/delete, update
+  - [x] Citation: create/delete
+  - [x] Place: create/delete, update
+  - [x] Group: create/delete, update, member add/remove
+  - [x] Research task: create/delete, update
+  - [x] Media: create/delete, link/unlink, reorder
+- [x] IPC channels: `undo:undo`, `undo:redo`, `undo:state` (returns { canUndo, canRedo, undoLabel, redoLabel })
+- [x] Preload: expose `window.api.undo.*`
+- [x] Keyboard shortcuts: Cmd+Z / Ctrl+Z (undo), Cmd+Shift+Z / Ctrl+Shift+Z (redo)
+- [x] Electron menu: Edit > Undo / Redo with dynamic labels
+- [x] Renderer: Pinia store for undo state, updated after each data operation
+- [x] Toast notification showing what was undone/redone
+- [x] Clear undo stack on database switch
+- [x] Unit tests: undo/redo for each entity type, compound operations, stack overflow
+- [x] i18n for undo labels ("Undo: Delete person", "Redo: Add event", etc.)
 
 ### Dependencies
 None.

@@ -95,6 +95,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 | v0.61.0 | B3: Media Timeline — chronological media per person/place with lightbox | [plan](plans/2026-04-11-track-b-media-experience.md) |
 | v0.62.0 | A3: Wall Charts — large-format pedigree/descendant SVG with tiled PDF | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
+| v0.63.0 | C1: Undo/Redo — command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests | [plan](plans/2026-04-11-track-c-core-polish.md) |
 ---
 
 ## Research
@@ -136,9 +137,6 @@ MCP tools for agents to suggest face bounding boxes and person assignments.
 ---
 
 ### Track C: Core Polish [plan](plans/2026-04-11-track-c-core-polish.md)
-
-#### C1: Undo/Redo [feature]
-Command-pattern undo/redo for all data mutations. Keyboard shortcuts, menu items, grouped operations.
 
 #### C4: GEDCOM Hardening [feature]
 Edge case testing against RootsMagic, Gramps, Legacy, FTM exports. Import preview, progress indicator.
