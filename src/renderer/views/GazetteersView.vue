@@ -32,7 +32,7 @@
           </div>
         </div>
       </div>
-      <p v-else class="empty-hint">No gazetteers installed.</p>
+      <p v-else class="empty-hint">{{ $t('gazetteers.noGazetteers') }}</p>
     </div>
 
     <!-- Test lookup -->

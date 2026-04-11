@@ -337,12 +337,12 @@ const generationGroups = computed((): GenGroup[] => {
 async function resolvePersonName(id: string): Promise<string> {
   try {
     const names = (await window.api.persons.getNames(id)) as RawName[];
-    if (!names.length) return '(okänd)';
+    if (!names.length) return t('common.unknown');
     const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
     const n = sorted[0];
-    return formatFullName(n) || '(okänd)';
+    return formatFullName(n) || t('common.unknown');
   } catch {
-    return '(okänd)';
+    return t('common.unknown');
   }
 }
 
@@ -499,7 +499,7 @@ async function load() {
   } catch (err) {
     console.error('[AncestorBookReport] load failed:', err);
     toast.error(t('errors.loadFailed'));
-    error.value = 'Kunde inte ladda stamtavlan.';
+    error.value = t('reports.loadFailed.ancestorBook');
   } finally {
     loading.value = false;
   }

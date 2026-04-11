@@ -16,26 +16,26 @@
 
       <!-- Narrative: Life Events -->
       <section class="narrative-section">
-        <h2 class="section-heading">{{ locale === 'sv' ? 'Levnadsberattelse' : 'Life Story' }}</h2>
+        <h2 class="section-heading">{{ $t('reports.lifeStory') }}</h2>
         <div v-if="narrativeParagraphs.length === 0" class="empty-section">
-          {{ locale === 'sv' ? 'Inga handelser registrerade.' : 'No events recorded.' }}
+          {{ $t('reports.noEvents') }}
         </div>
         <p v-for="(para, i) in narrativeParagraphs" :key="i" class="narrative-paragraph">{{ para }}</p>
       </section>
 
       <!-- Family -->
       <section class="family-section">
-        <h2 class="section-heading">{{ locale === 'sv' ? 'Familj' : 'Family' }}</h2>
+        <h2 class="section-heading">{{ $t('reports.familySection') }}</h2>
 
         <div v-if="data.parents.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">{{ locale === 'sv' ? 'Foraldrar' : 'Parents' }}</h3>
+          <h3 class="rel-group-heading">{{ $t('reports.parents') }}</h3>
           <ul class="rel-list">
             <li v-for="p in data.parents" :key="p.id">{{ p.name || $t('common.unknown') }}</li>
           </ul>
         </div>
 
         <div v-if="data.spouses.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">{{ locale === 'sv' ? 'Partner' : 'Partners' }}</h3>
+          <h3 class="rel-group-heading">{{ $t('personPanel.partners') }}</h3>
           <ul class="rel-list">
             <li v-for="s in data.spouses" :key="s.id">
               {{ s.name || $t('common.unknown') }}
@@ -45,26 +45,26 @@
         </div>
 
         <div v-if="data.children.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">{{ locale === 'sv' ? 'Barn' : 'Children' }}</h3>
+          <h3 class="rel-group-heading">{{ $t('personPanel.children') }}</h3>
           <ul class="rel-list">
             <li v-for="c in data.children" :key="c.id">{{ c.name || $t('common.unknown') }}</li>
           </ul>
         </div>
 
         <div v-if="data.parents.length === 0 && data.spouses.length === 0 && data.children.length === 0" class="empty-section">
-          {{ locale === 'sv' ? 'Inga relationer registrerade.' : 'No relationships recorded.' }}
+          {{ $t('reports.noRelationships') }}
         </div>
       </section>
 
       <!-- Notes -->
       <section v-if="data.notes" class="notes-section">
-        <h2 class="section-heading">{{ locale === 'sv' ? 'Anteckningar' : 'Notes' }}</h2>
+        <h2 class="section-heading">{{ $t('common.notes') }}</h2>
         <p class="notes-text">{{ data.notes }}</p>
       </section>
 
       <!-- Sources -->
       <section v-if="data.sources.length > 0" class="sources-section">
-        <h2 class="section-heading">{{ locale === 'sv' ? 'Kallor' : 'Sources' }}</h2>
+        <h2 class="section-heading">{{ $t('sources.title') }}</h2>
         <ol class="sources-list">
           <li v-for="(src, i) in data.sources" :key="src.id" class="source-entry">
             <span class="source-title">{{ src.title }}</span>
@@ -275,11 +275,9 @@ const narrativeParagraphs = computed(() => {
 });
 
 function subtypeLabel(st: string): string {
-  const labels: Record<string, Record<string, string>> = {
-    sv: { marriage: 'gift', civil_union: 'registrerat partnerskap', cohabitation: 'sambo', biological: 'biologisk', adopted: 'adopterad', foster: 'fosterbarn', step: 'styvbarn' },
-    en: { marriage: 'married', civil_union: 'civil union', cohabitation: 'cohabitation', biological: 'biological', adopted: 'adopted', foster: 'foster', step: 'step' },
-  };
-  return labels[locale.value]?.[st] ?? st;
+  const coupleKeys = ['marriage', 'civil_union', 'cohabitation', 'unknown'];
+  const key = coupleKeys.includes(st) ? `coupleSubtypes.${st}` : `parentChildSubtypes.${st}`;
+  return t(key, st);
 }
 
 function primaryNameStr(names: RawName[]): string {
@@ -310,7 +308,7 @@ async function load() {
     ]);
 
     if (!person) {
-      error.value = locale.value === 'sv' ? 'Personen hittades inte.' : 'Person not found.';
+      error.value = t('reports.personNotFound');
       return;
     }
 
@@ -394,7 +392,7 @@ async function load() {
   } catch (err) {
     console.error('[PersonBiography] load failed:', err);
     toast.error(t('errors.loadFailed'));
-    error.value = locale.value === 'sv' ? 'Kunde inte ladda biografi.' : 'Could not load biography.';
+    error.value = t('reports.loadFailed.biography');
   } finally {
     loading.value = false;
   }
