@@ -37,12 +37,6 @@
           <AncestorChartReport :root-person-id="ancestorRootId" :generations="ancestorGenerations" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -70,12 +64,6 @@
           <FamilyGroupSheet :relationship-id="familyRelationshipId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -94,12 +82,6 @@
           <IndividualSummary :person-id="individualPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -118,12 +100,6 @@
           <AncestorBookReport :person-id="ancestorBookPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -141,12 +117,6 @@
           <PersonBiography :person-id="biographyPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -172,12 +142,6 @@
           <PlaceHistory :place-id="placeHistoryPlaceId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -203,12 +167,6 @@
           <FamilyNarrative :relationship-id="familyNarrativeRelId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -228,12 +186,6 @@
           <PedigreeChartReport :person-id="chartPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -253,12 +205,6 @@
           <DescendantChartReport :person-id="chartPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -278,12 +224,6 @@
           <CircleChartReport :person-id="chartPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
 
@@ -303,14 +243,10 @@
           <TimelineChartReport :person-id="chartPersonId" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div class="zoom-floating">
-          <button class="zoom-btn" :disabled="effectiveZoom <= 0.2" @click="zoomOut" title="Zooma ut">−</button>
-          <span class="zoom-label">{{ Math.round(effectiveZoom * 100) }}%</span>
-          <button class="zoom-btn" @click="zoomIn" title="Zooma in">+</button>
-          <button class="zoom-btn zoom-fit-btn" @click="resetZoom" title="Anpassa till bredd">{{ $t('reports.zoomFit') }}</button>
-        </div>
       </div>
     </div>
+
+    <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
   </div>
 </template>
 
@@ -331,6 +267,7 @@ import DescendantChartReport from '../components/reports/DescendantChartReport.v
 import CircleChartReport from '../components/reports/CircleChartReport.vue';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
 import PersonPicker from '../components/PersonPicker.vue';
+import ZoomControls from '../components/ZoomControls.vue';
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -450,6 +387,24 @@ onMounted(async () => {
   }
   coupleRelationships.value = options;
 
+  // Default to first couple relationship involving the focus person
+  if (focusStore.personId) {
+    const focusCouple = couples.find(r => r.person1_id === focusStore.personId || r.person2_id === focusStore.personId);
+    if (focusCouple) {
+      familyRelationshipId.value = focusCouple.id;
+      familyNarrativeRelId.value = focusCouple.id;
+    }
+
+    // Default place to birth place of focus person
+    try {
+      const events = await window.api.events.forPerson(focusStore.personId) as Array<{ event_type: string; place_id: string | null }>;
+      const birth = events.find(e => e.event_type === 'birth' && e.place_id);
+      if (birth?.place_id && places.some(p => p.id === birth.place_id)) {
+        placeHistoryPlaceId.value = birth.place_id;
+      }
+    } catch { /* ignore */ }
+  }
+
   // Read query params for deep linking (e.g. /reports?tab=biography)
   const tabParam = route.query.tab as string | undefined;
   const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'descendantChart', 'circleChart', 'timeline'];
@@ -487,40 +442,6 @@ async function exportPdf() {
   margin-bottom: 16px;
 }
 .view-header h2 { margin: 0; }
-/* Zoom controls (floating bottom-right of preview area) */
-.zoom-floating {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 4px 8px;
-  z-index: 10;
-}
-.zoom-btn {
-  background: #f0f4f8;
-  color: #4a5568;
-  border: 1px solid #c8d0db;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-base);
-  line-height: 1;
-}
-.zoom-btn:hover:not(:disabled) { background: #e2e8f0; }
-.zoom-btn:disabled { opacity: 0.4; cursor: default; }
-.zoom-fit-btn { font-size: var(--font-xs); padding: 4px 10px; }
-.zoom-label {
-  min-width: 44px;
-  text-align: center;
-  font-size: var(--font-sm);
-  color: #555;
-}
-
 .tab-content { display: flex; flex-direction: column; gap: 12px; }
 
 .tab-header {
@@ -563,7 +484,7 @@ async function exportPdf() {
   flex-shrink: 0;
 }
 @media print {
-  .view-header, .tab-bar, .tab-header, .zoom-floating { display: none !important; }
+  .view-header, .tab-bar, .tab-header, .zoom-controls-bar { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }
