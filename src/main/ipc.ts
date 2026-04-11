@@ -20,6 +20,7 @@ import * as researchTasks from '../api/research_tasks';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
 import * as duplicates from '../api/duplicates';
+import * as reportData from '../api/report_data';
 import { getDbSetting, setDbSetting } from '../api/db_settings';
 
 let importInProgress = false;
@@ -471,6 +472,14 @@ export function registerIpcHandlers(): void {
     const data = fs.readFileSync(absPath).toString('base64');
     return `data:${mime};base64,${data}`;
   });
+
+  // Report data
+  wrapHandler('reports:personSummary', (personId) => reportData.getPersonSummary(getDatabase(), personId as string));
+  wrapHandler('reports:familyUnit', (relationshipId) => reportData.getFamilyUnit(getDatabase(), relationshipId as string));
+  wrapHandler('reports:ancestorTree', (personId, generations) => reportData.getAncestorTree(getDatabase(), personId as string, generations as number | undefined));
+  wrapHandler('reports:placeHistory', (placeId) => reportData.getPlaceHistory(getDatabase(), placeId as string));
+  wrapHandler('reports:researchGaps', (personId) => reportData.getResearchGaps(getDatabase(), personId as string));
+  wrapHandler('reports:timeline', (personId) => reportData.getTimeline(getDatabase(), personId as string));
 
   // Duplicates & Merge
   wrapHandler('duplicates:find', (limit) => duplicates.findDuplicates(getDatabase(), limit as number | undefined));

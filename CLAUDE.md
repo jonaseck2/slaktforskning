@@ -50,6 +50,7 @@ src/
 │   ├── repositories.ts           # Repository CRUD + source links
 │   ├── research_tasks.ts         # ResearchTask CRUD
 │   ├── media.ts                  # Media + MediaLink CRUD
+│   ├── report_data.ts            # Denormalized report data for AI narrative generation
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   └── link-rules/               # Default link rule sets
 │       ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
@@ -306,6 +307,16 @@ reorderMediaLinks(db, linkIds: string[]) → void
 ```
 findDuplicates(db, limit?) → DuplicateCandidate[]
 mergePersons(db, targetId, sourceId) → { moved: Record<string, number> }
+```
+
+### report_data.ts
+```
+getPersonSummary(db, personId) → PersonSummary | null     // All names, events, relationships, citations, groups, tasks
+getFamilyUnit(db, relationshipId) → FamilyUnit | null      // Couple + both persons + children with birth/death events
+getAncestorTree(db, personId, generations=4) → AncestorNode | null  // Nested ancestor tree
+getPlaceHistory(db, placeId) → PlaceHistory | null         // All events at a place with participants
+getResearchGaps(db, personId) → ResearchGaps | null        // Missing birth/death/parents, unsourced events
+getTimeline(db, personId) → TimelineEntry[] | null         // Person + family events chronologically
 ```
 
 ---
@@ -608,6 +619,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 **Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`, `reorder_media_links`
 
 **Duplicate/merge tools:** `find_duplicates`, `merge_persons`
+
+**Report/narrative tools:** `get_person_summary`, `get_family_unit`, `get_ancestor_tree`, `get_place_history`, `get_research_gaps`, `get_timeline`
 
 **Database tools:** `get_current_database`, `switch_database`
 
