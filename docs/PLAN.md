@@ -91,6 +91,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.56.0 | C3: Place Map Visualization — Leaflet/OpenStreetMap, life path, place maps | [plan](plans/2026-04-11-track-c-core-polish.md) |
 | v0.57.0 | D2: MCP Media Tools for AI — base64, untagged discovery, person context | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
 | v0.58.0 | B2: Media-Bundled Portable Archive — GEDCOM + media .zip export/import | [plan](plans/2026-04-11-track-b-media-experience.md) |
+| v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
 ---
 
 ## Research
@@ -115,9 +116,6 @@ Define primary user objectives, map to current click counts, identify highest-fr
 ---
 
 ### Track A: Presentation & Sharing [plan](plans/2026-04-11-track-a-presentation-sharing.md)
-
-#### A1: Narrative Reports [feature]
-Person biography, place history, and family narrative reports as PDF with clickable source links.
 
 #### A3: Wall Charts [feature]
 Large-format pedigree and descendant charts. SVG-based, tiled multi-page PDF for home printers.

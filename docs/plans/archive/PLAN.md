@@ -268,3 +268,7 @@ Part of Track D: `docs/plans/2026-04-11-track-d-mcp-agent-story.md`.
 ### v0.58.0 — B2: Media-Bundled Portable Archive
 GEDCOM + media .zip export/import with path rewriting. Uses fflate. 6 unit tests.
 Part of Track B: `docs/plans/2026-04-11-track-b-media-experience.md`.
+
+### v0.59.0 — A1: Narrative Reports
+Person biography, place history, and family narrative as prose-generating Vue components. Swedish + English locale support. Deep linking from detail views. getEventsForPlace() API + 2 tests.
+Part of Track A: `docs/plans/2026-04-11-track-a-presentation-sharing.md`.
