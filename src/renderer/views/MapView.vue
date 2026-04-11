@@ -21,46 +21,66 @@
       {{ $t('map.empty') }}
     </div>
 
-    <div v-else class="map-container">
-      <LMap
-        ref="mapRef"
-        :zoom="4"
-        :center="[55, 15]"
-        :use-global-leaflet="false"
-        :options="{ zoomControl: false }"
-        @ready="onMapReady"
-      >
-        <LTileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-          layer-type="base"
-        />
-        <LMarker
-          v-for="p in filteredPlaces"
-          :key="p.id"
-          :lat-lng="[p.displayLat, p.displayLon]"
-          :options="p.resolved ? { opacity: 0.65 } : {}"
+    <div v-else class="map-body" ref="mapBodyRef">
+      <div class="map-chart-area">
+        <LMap
+          ref="mapRef"
+          :zoom="4"
+          :center="[55, 15]"
+          :use-global-leaflet="false"
+          :options="{ zoomControl: false }"
+          @ready="onMapReady"
         >
-          <LPopup>
-            <router-link :to="'/places/' + p.id" class="popup-link">{{ p.name }}</router-link>
-            <div v-if="p.place_type" class="popup-type">{{ $t('placeTypes.' + p.place_type) }}</div>
-            <div v-if="p.resolved" class="popup-resolved">
-              <span :class="'match-' + p.resolved.matchQuality">{{ $t('gazetteers.match.' + p.resolved.matchQuality) }}</span>
-              <span class="match-path">{{ p.resolved.matchedPath.join(' > ') }}</span>
-            </div>
-          </LPopup>
-        </LMarker>
-      </LMap>
-    </div>
+          <LTileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+            layer-type="base"
+          />
+          <LMarker
+            v-for="p in filteredPlaces"
+            :key="p.id"
+            :lat-lng="[p.displayLat, p.displayLon]"
+            :options="p.resolved ? { opacity: 0.65 } : {}"
+            @click="selectPlace(p.id)"
+          >
+            <LPopup>
+              <a href="#" class="popup-link" @click.prevent="selectPlace(p.id)">{{ p.name }}</a>
+              <div v-if="p.place_type" class="popup-type">{{ $t('placeTypes.' + p.place_type) }}</div>
+              <div v-if="p.resolved" class="popup-resolved">
+                <span :class="'match-' + p.resolved.matchQuality">{{ $t('gazetteers.match.' + p.resolved.matchQuality) }}</span>
+                <span class="match-path">{{ p.resolved.matchedPath.join(' > ') }}</span>
+              </div>
+            </LPopup>
+          </LMarker>
+        </LMap>
 
-    <ZoomControls
-      v-if="filteredPlaces.length > 0"
-      :zoom="currentZoom / maxZoom"
-      :show-fit="true"
-      @zoom-in="zoomIn"
-      @zoom-out="zoomOut"
-      @reset="fitBounds"
-    />
+        <ZoomControls
+          :zoom="currentZoom / maxZoom"
+          :show-fit="true"
+          @zoom-in="zoomIn"
+          @zoom-out="zoomOut"
+          @reset="fitBounds"
+        />
+
+        <!-- Reopen panel button -->
+        <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
+      </div>
+
+      <!-- Drag handle + panel -->
+      <template v-if="panelOpen">
+        <div
+          class="panel-drag-handle"
+          @mousedown="(e: MouseEvent) => startResize(e, mapBodyRef!)"
+        ></div>
+        <div class="map-panel" :style="{ width: panelWidth + 'px' }">
+          <button class="panel-close-btn" @click="closePanel">◀</button>
+          <PlacePanel
+            :place-id="selectedPlaceId"
+            @select-place="selectPlace"
+          />
+        </div>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -70,7 +90,9 @@ import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ZoomControls from '../components/ZoomControls.vue';
+import PlacePanel from '../components/PlacePanel.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { usePanelResize } from '../composables/usePanelResize';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
 
 // Fix default marker icons for Vite bundler
@@ -98,10 +120,38 @@ interface DisplayPlace extends PlaceRow {
 const places = ref<PlaceRow[]>([]);
 const filterText = ref('');
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const mapBodyRef = ref<HTMLElement | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve } = usePlaceResolver();
 
 const maxZoom = 18;
 const currentZoom = ref(4);
+
+// Panel state
+const selectedPlaceId = ref<string | null>(null);
+const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
+const { panelWidth, startResize } = usePanelResize();
+
+function selectPlace(id: string) {
+  selectedPlaceId.value = id;
+  if (!panelOpen.value) openPanel();
+}
+
+function openPanel() {
+  panelOpen.value = true;
+  localStorage.setItem('map-panel-open', 'true');
+}
+
+function closePanel() {
+  panelOpen.value = false;
+  localStorage.setItem('map-panel-open', 'false');
+}
+
+// Invalidate map when panel opens/closes
+watch(panelOpen, () => {
+  nextTick(() => {
+    mapRef.value?.leafletObject?.invalidateSize();
+  });
+});
 
 function onMapReady() {
   const map = mapRef.value?.leafletObject;
@@ -193,18 +243,79 @@ onMounted(async () => {
   font-size: var(--font-sm);
   color: #999;
 }
-.map-container {
+
+/* Body: map + panel flex layout */
+.map-body {
   flex: 1;
-  min-height: 400px;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  position: relative;
+}
+.map-chart-area {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid #ddd;
 }
+
+/* Panel */
+.map-panel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-left: 1px solid #e0e0e0;
+  position: relative;
+}
+.panel-drag-handle {
+  width: 6px;
+  background: #e8e8e8;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+}
+.panel-drag-handle:hover { background: #c0c0c0; }
+.panel-close-btn {
+  position: absolute;
+  top: 8px;
+  left: -1px;
+  z-index: 10;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0 4px 4px 0;
+  padding: 4px 4px 4px 2px;
+  cursor: pointer;
+  font-size: var(--font-xs);
+  color: var(--color-text-faint);
+  line-height: 1;
+}
+.panel-close-btn:hover { color: var(--color-text-muted); }
+.panel-open-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px 0 0 4px;
+  padding: 8px 4px;
+  cursor: pointer;
+  font-size: var(--font-xs);
+  color: var(--color-text-faint);
+  z-index: 1000;
+  line-height: 1;
+}
+.panel-open-btn:hover { color: var(--color-text-muted); background: var(--color-bg-subtle); }
+
+/* Popups */
 .popup-link {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
   font-size: var(--font-base);
+  cursor: pointer;
 }
 .popup-link:hover {
   text-decoration: underline;
