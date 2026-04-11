@@ -16,11 +16,11 @@ Entity-oriented media experience with lightbox, thumbnails, and multi-entity lin
 - [x] Thumbnail generation: use Electron nativeImage to create thumbnails on media attach, store in app data dir
 - [x] Show entity badges on each media card (linked persons, events, places, sources with counts)
 - [x] Create MediaLightbox.vue — full-size image overlay with:
-  - [ ] Prev/next navigation (arrow keys)
-  - [ ] Escape to close
-  - [ ] Title, format, notes display
-  - [ ] Linked entities panel with clickable router-links
-  - [ ] Link/unlink entity controls (PersonPicker, PlacePicker for adding links)
+  - [x] Prev/next navigation (arrow keys)
+  - [x] Escape to close
+  - [x] Title, format, notes display
+  - [x] Linked entities panel with clickable router-links
+  - [x] Link/unlink entity controls (PersonPicker, PlacePicker for adding links)
 - [x] Non-image media: show file icon with type label, "Open in system app" button
 - [x] Update PersonMediaSection to open lightbox on click
 - [x] Update media cards across all entity detail views to use lightbox
@@ -47,17 +47,17 @@ Export GEDCOM + all referenced media files as a single .zip archive. Import dete
 
 - [x] Add `archiver` (or `jszip`) dependency for zip creation
 - [x] Create `src/api/archive_export.ts`:
-  - [ ] `exportArchive(db, outputPath, options?)` — generates GEDCOM + copies media files into zip
-  - [ ] Media organized in `media/` subdirectory within archive
-  - [ ] GEDCOM OBJE FILE references rewritten to relative paths (`media/filename.jpg`)
-  - [ ] Apply export content options (from A2) if available
+  - [x] `exportArchive(db, outputPath, options?)` — generates GEDCOM + copies media files into zip
+  - [x] Media organized in `media/` subdirectory within archive
+  - [x] GEDCOM OBJE FILE references rewritten to relative paths (`media/filename.jpg`)
+  - [x] Apply export content options (from A2) if available
 - [x] Create `src/api/archive_import.ts`:
-  - [ ] Detect .zip files in import dialog
-  - [ ] Extract archive to temp directory
-  - [ ] Find .ged file within archive
-  - [ ] Import GEDCOM as normal
-  - [ ] Copy media files from archive to app's media directory
-  - [ ] Re-link media file_ref paths to new locations
+  - [x] Detect .zip files in import dialog
+  - [x] Extract archive to temp directory
+  - [x] Find .ged file within archive
+  - [x] Import GEDCOM as normal
+  - [x] Copy media files from archive to app's media directory
+  - [x] Re-link media file_ref paths to new locations
 - [x] IPC channels: `archive:export`, `archive:import`
 - [x] Preload: expose `window.api.archive.export()`, `window.api.archive.import()`
 - [x] Vue: export button in ImportExportView with "Include media" checkbox

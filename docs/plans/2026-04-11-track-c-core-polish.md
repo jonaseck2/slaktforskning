@@ -58,14 +58,14 @@ Chronological view of all events for a person. Visual timeline for spotting gaps
 ### Steps
 
 - [x] Create PersonTimeline.vue (self-loading component, `personId` prop):
-  - [ ] Watch personId for changes (PersonPanel pattern)
-  - [ ] Load events via `window.api.events.getForPerson(personId)`
-  - [ ] Sort by date_value (handle null/unknown dates)
+  - [x] Watch personId for changes (PersonPanel pattern)
+  - [x] Load events via `window.api.events.getForPerson(personId)`
+  - [x] Sort by date_value (handle null/unknown dates)
 - [x] Timeline rendering:
-  - [ ] Vertical layout with date axis
-  - [ ] Event cards: type badge/icon, formatted date, place name, description
-  - [ ] Source indicator: citation count badge on each event
-  - [ ] Date type handling:
+  - [x] Vertical layout with date axis
+  - [x] Event cards: type badge/icon, formatted date, place name, description
+  - [x] Source indicator: citation count badge on each event
+  - [x] Date type handling:
     - Exact: precise position
     - About/before/after: position with uncertainty indicator (dashed border or fade)
     - Between: span bar between start and end dates
@@ -96,20 +96,20 @@ Interactive map showing places on OpenStreetMap. Person life maps and global pla
 
 - [x] Install dependencies: `leaflet`, `@types/leaflet`, `vue3-leaflet` (or `@vue-leaflet/vue-leaflet`)
 - [x] Create MapView.vue — standalone route (/map):
-  - [ ] Load all places with coordinates via `window.api.places.list()`
-  - [ ] OpenStreetMap tile layer (no API key needed)
-  - [ ] Marker per place with popup: place name, event count, link to place detail
-  - [ ] Marker clustering when zoomed out (leaflet.markercluster)
-  - [ ] Auto-fit bounds to show all markers
-  - [ ] Filter panel: filter by place type, search by name
+  - [x] Load all places with coordinates via `window.api.places.list()`
+  - [x] OpenStreetMap tile layer (no API key needed)
+  - [x] Marker per place with popup: place name, event count, link to place detail
+  - [x] Marker clustering when zoomed out (leaflet.markercluster)
+  - [x] Auto-fit bounds to show all markers
+  - [x] Filter panel: filter by place type, search by name
 - [x] Add route `/map` to router
 - [x] Add Map entry to sidebar navigation
 - [x] Create PersonMap.vue component (embeddable, personId prop):
-  - [ ] Load person's events with places
-  - [ ] Markers for each event location
-  - [ ] Lines connecting events chronologically (life path)
-  - [ ] Color-code markers by event type (birth=green, death=red, etc.)
-  - [ ] Popup: event type, date, place name
+  - [x] Load person's events with places
+  - [x] Markers for each event location
+  - [x] Lines connecting events chronologically (life path)
+  - [x] Color-code markers by event type (birth=green, death=red, etc.)
+  - [x] Popup: event type, date, place name
 - [x] Add PersonMap as tab in PersonDetailView
 - [x] Add PersonMap section in PersonPanel
 - [x] PlaceDetailView: show map centered on place with child places as markers

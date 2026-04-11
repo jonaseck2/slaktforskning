@@ -84,6 +84,13 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | Fix | macOS 26 Tahoe crash: Electron 41.2.0 + --no-incremental-marking | [archive](plans/archive/2026-04-08-macos26-electron-crash.md) |
 | v0.49.0 | Usability Optimization Suite: quick-add relatives with birth, inline birth, quick cite, source memory, tree ghost boxes, batch events — ~50% data entry reduction | [archive](plans/archive/2026-04-10-usability-optimizations.md) |
 | v0.51.0 | Source Linker: configurable auto-linking for genealogy references | [archive](plans/archive/2026-04-10-source-linker-implementation.md) |
+| v0.52.0 | C2: Person Timeline View — chronological events with gap detection | [plan](plans/2026-04-11-track-c-core-polish.md) |
+| v0.53.0 | D1: MCP Report Generation Tools — 6 higher-level tools for AI narratives | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
+| v0.54.0 | B1: Media Viewer Redesign — gallery, lightbox, entity linking | [plan](plans/2026-04-11-track-b-media-experience.md) |
+| v0.55.0 | A2: Export Content Options — branch filtering, living exclusion, content toggles | [plan](plans/2026-04-11-track-a-presentation-sharing.md) |
+| v0.56.0 | C3: Place Map Visualization — Leaflet/OpenStreetMap, life path, place maps | [plan](plans/2026-04-11-track-c-core-polish.md) |
+| v0.57.0 | D2: MCP Media Tools for AI — base64, untagged discovery, person context | [plan](plans/2026-04-11-track-d-mcp-agent-story.md) |
+| v0.58.0 | B2: Media-Bundled Portable Archive — GEDCOM + media .zip export/import | [plan](plans/2026-04-11-track-b-media-experience.md) |
 ---
 
 ## Research
@@ -112,9 +119,6 @@ Define primary user objectives, map to current click counts, identify highest-fr
 #### A1: Narrative Reports [feature]
 Person biography, place history, and family narrative reports as PDF with clickable source links.
 
-#### A2: Export Content Options [feature]
-Configuration UI for what goes into exports: living person exclusion, media, notes, sources, branch filtering. Shared across PDF and GEDCOM exports.
-
 #### A3: Wall Charts [feature]
 Large-format pedigree and descendant charts. SVG-based, tiled multi-page PDF for home printers.
 
@@ -127,12 +131,6 @@ Tabular export of persons, events, sources, places for spreadsheet analysis.
 ---
 
 ### Track B: Media Experience [plan](plans/2026-04-11-track-b-media-experience.md)
-
-#### B1: Media Viewer Redesign [feature]
-Entity-oriented gallery with lightbox, thumbnails, multi-entity linking, keyboard navigation.
-
-#### B2: Media-Bundled Portable Archive [feature]
-Export GEDCOM + all media files as a single .zip. Import detects and unpacks archives.
 
 #### B3: Media Timeline [feature]
 Chronological media display across a person's life or a place's history.
@@ -150,24 +148,12 @@ MCP tools for agents to suggest face bounding boxes and person assignments.
 #### C1: Undo/Redo [feature]
 Command-pattern undo/redo for all data mutations. Keyboard shortcuts, menu items, grouped operations.
 
-#### C2: Person Timeline View [feature]
-Chronological event view for a person. Gap detection, date type handling, edit-on-click.
-
-#### C3: Place Map Visualization [feature]
-OpenStreetMap via Leaflet. Global place map, person life path, place detail map.
-
 #### C4: GEDCOM Hardening [feature]
 Edge case testing against RootsMagic, Gramps, Legacy, FTM exports. Import preview, progress indicator.
 
 ---
 
 ### Track D: MCP & Agent Story [plan](plans/2026-04-11-track-d-mcp-agent-story.md)
-
-#### D1: MCP Report Generation Tools [feature]
-Higher-level tools returning denormalized data for narrative generation: person summary, family unit, ancestor tree, place history, research gaps, source usage, timeline.
-
-#### D2: MCP Media Tools for AI [feature]
-Tools for agents to process photos: base64 retrieval, metadata, untagged media discovery, face region suggestions.
 
 #### D3: Claude Desktop/Cowork Integration [research]
 Validate MCP with Claude Desktop, create workflow documentation, identify improvements from real usage.
