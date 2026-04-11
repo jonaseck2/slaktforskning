@@ -130,6 +130,19 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | get_media_for_entity | Get all media linked to an entity |
 | remove_media_link | Remove a media link by its link ID |
 
+### Report / Narrative Data
+
+Higher-level tools that return denormalized data optimized for AI narrative generation. One call returns everything needed — no follow-up queries required.
+
+| Tool | Description |
+|------|-------------|
+| get_person_summary | Get a comprehensive summary: all names, events (with places), relationships (with partner names), citations (with source titles), groups, research tasks |
+| get_family_unit | Get a family unit: couple + both persons with birth/death events + all children with their birth/death events |
+| get_ancestor_tree | Get a nested ancestor tree up to N generations with birth/death/marriage events per node |
+| get_place_history | Get all events at a place chronologically, with participant names and roles |
+| get_research_gaps | Analyze a person for missing data: no birth, no death (if not living), no parents, unsourced events, events without places |
+| get_timeline | Get a chronological timeline of a person's events merged with key family events (spouse/children births and deaths) |
+
 ### Database
 
 | Tool | Description |
