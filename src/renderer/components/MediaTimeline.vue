@@ -59,7 +59,7 @@
     </div>
 
     <!-- Lightbox -->
-    <div v-if="lightboxItem" class="modal-overlay" @click.self="lightboxItem = null">
+    <div v-if="lightboxItem" class="modal-overlay" @mousedown.self="lightboxItem = null">
       <div class="lightbox-modal">
         <div class="lightbox-header">
           <h3>{{ mediaDisplayName(lightboxItem.media.title, lightboxItem.media.file_ref) }}</h3>

@@ -108,6 +108,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.71.1 | Remove kyrkoarkiv/domstolsarkiv/generalmönsterrullor link rules, show citation notes in source detail, i18n additions | — |
 | v0.71.2 | Fix: hourglass outlines for all person types — spouse/child outlines for ancestors and descendants via post-layout pass | — |
 | v0.72.0 | Pedigree and descendant charts: TreePerson data model, N-parent support, outline injection for all 4 roles | — |
+| v0.72.1 | Fix: pedigree outline overlap — spouse/child outlines placed below existing boxes in same column | — |
 ---
 
 ## Research

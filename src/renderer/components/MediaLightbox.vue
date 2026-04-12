@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" class="modal-overlay lightbox-overlay" @click.self="$emit('close')" @keydown="onKeydown">
+  <div v-if="visible" class="modal-overlay lightbox-overlay" @mousedown.self="$emit('close')" @keydown="onKeydown">
     <div class="lightbox" role="dialog" :aria-label="$t('media.title')" ref="lightboxEl" tabindex="-1">
       <button class="lightbox-close" @click="$emit('close')" :title="$t('media.lightbox.close')">&#10005;</button>
 

@@ -2,6 +2,9 @@
   <div>
     <div class="header">
       <h2>{{ $t('linkRules.title') }}</h2>
+      <div class="header-actions">
+        <button class="btn-add" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('linkRules.addRule') }}</button>
+      </div>
     </div>
 
     <!-- Locale toggles -->
@@ -33,7 +36,6 @@
     <div class="detail-section">
       <div class="section-header">
         <h4>{{ $t('linkRules.activeRules') }}</h4>
-        <button class="btn-add" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('linkRules.addRule') }}</button>
       </div>
       <table v-if="resolvedRules.length > 0" class="data-table">
         <thead>
@@ -93,7 +95,7 @@
     </div>
 
     <!-- Add custom rule modal -->
-    <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
+    <div v-if="showAddModal" class="modal-overlay" @mousedown.self="closeAddModal">
       <div class="modal">
         <h3>{{ $t('linkRules.addRule') }}</h3>
         <form @submit.prevent="submitAddRule">
@@ -132,7 +134,7 @@
       </div>
     </div>
     <!-- View rule modal (read-only) -->
-    <div v-if="viewingRule" class="modal-overlay" @click.self="viewingRule = null">
+    <div v-if="viewingRule" class="modal-overlay" @mousedown.self="viewingRule = null">
       <div class="modal">
         <h3>{{ viewingRule.name }}</h3>
         <form @submit.prevent>
