@@ -128,11 +128,11 @@
         />
         <g
           v-for="ph in layout.placeholders"
-          :key="'ph-' + ph.key"
+          :key="'ph-' + ph.role + '-' + ph.childPersonId"
           class="ghost-box"
           tabindex="0"
           role="button"
-          :aria-label="ph.role === 'father' ? $t('personDetail.addFather') : $t('personDetail.addMother')"
+          :aria-label="placeholderLabel(ph.role)"
           @click="startAddFromPlaceholder(ph)"
           @keydown.enter="startAddFromPlaceholder(ph)"
           @keydown.space.prevent="startAddFromPlaceholder(ph)"
@@ -149,7 +149,7 @@
           <text
             :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 + 12"
             text-anchor="middle" fill="#94a3b8" font-size="11"
-          >{{ ph.role === 'father' ? $t('personDetail.addFather') : $t('personDetail.addMother') }}</text>
+          >{{ placeholderLabel(ph.role) }}</text>
         </g>
         </template>
       </svg>
@@ -350,10 +350,20 @@ function startAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
   showAddRelative.value = true;
 }
 
+function placeholderLabel(role: string): string {
+  const labels: Record<string, string> = {
+    father: t('personDetail.addFather'),
+    mother: t('personDetail.addMother'),
+    spouse: t('personDetail.addSpouse'),
+    child: t('personDetail.addChild'),
+  };
+  return labels[role] ?? role;
+}
+
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   const childBox = layout.value.boxes.find((b: BoxLayout) => b.person.id === ph.childPersonId);
   addRelativePersonId.value = ph.childPersonId;
-  addRelativeMode.value = ph.role;
+  addRelativeMode.value = ph.role as 'father' | 'mother' | 'spouse' | 'child';
   addRelativePersonSex.value = childBox?.person.sex ?? 'U';
   addRelativePersonSurname.value = childBox?.person.surname ?? undefined;
   showAddRelative.value = true;
