@@ -48,6 +48,12 @@
 2. **[2026-04-11] Layout must support N parents, not just 2**
    Do instead: abandon ahnentafel (binary tree) for layout. Use a general model where each person has lists of parents, children, and spouses. The data fetch can still use ahnentafel internally, but the layout algorithm works on a uniform graph.
 
+3. **[2026-04-12] All three charts share TreePerson + injectOutlines()**
+   All charts convert their input to TreePerson (`buildPedigreeTreePerson`, `buildHourglassTree`, `buildDescendantTreePerson`) then call `injectOutlines()`. Placeholder extraction (filter by `PLACEHOLDER_PREFIX`, move to `placeholders[]`) is identical across charts. Don't duplicate this pipeline — it lives in `hourglass-tree.ts`.
+
+4. **[2026-04-12] Pedigree spouse outlines: reserve leaf slot, place tight**
+   In pedigree layout, spouse outlines must reserve a leaf slot during `assignLeafSlots()` to push subsequent boxes down. But the outline itself is placed at `selBox.y + BOX_H + V_GAP` (tight spacing), not at the full ROW_H slot position. Without slot reservation the spouse overlaps existing ancestors; without tight placement it's too far from the selected person.
+
 ## Research & Design
 
 1. **[2026-04-10] Mine the user's own data files for real-world patterns**

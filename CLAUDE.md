@@ -97,6 +97,15 @@ src/
 │   │   ├── useChartNavigation.ts   # Arrow-key family tree navigation for charts
 │   │   └── useHotkeyRegistry.ts    # Hotkey registration (global + view-scoped)
 │   ├── utils/
+│   │   ├── chart-layout/
+│   │   │   ├── types.ts              # PersonNode, TreePerson, BoxLayout, ChartLayout, PedigreeTree, etc.
+│   │   │   ├── constants.ts          # BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD, ROW_H
+│   │   │   ├── hourglass-tree.ts     # TreePerson builders (buildHourglassTree, buildPedigreeTreePerson, buildDescendantTreePerson) + injectOutlines()
+│   │   │   ├── hourglass.ts          # Hourglass layout (vertical: ancestors up, descendants down)
+│   │   │   ├── pedigree.ts           # Pedigree layout (horizontal: focal left, ancestors right)
+│   │   │   ├── descendant.ts         # Descendant layout (vertical: focal top, children down)
+│   │   │   ├── timeline.ts           # Timeline layout (horizontal bar chart)
+│   │   │   └── index.ts              # Barrel re-exports
 │   │   ├── narration.ts            # Natural-language narration builders for TTS
 │   │   └── screenReaderNarration.ts # Narration builders for screen reader mode
 │   └── constants/
@@ -531,15 +540,26 @@ Use `<router-link :to="'/persons/' + personId" class="person-link" @click.stop>`
 
 ### Chart Outline Placeholders — Separation of Concerns
 
-When a user selects a person in a chart, outline placeholders show where new relatives can be added. Three strict layers:
+All three chart types (Pedigree, Hourglass, Descendants) share the same outline architecture via the **TreePerson** data model. When a user selects a person in any chart, outline placeholders show where new relatives can be added.
 
-1. **Outline injection** (trivial): For the selected person, always inject father + mother + child + spouse outlines. No conditions — even if all parents/children/spouses already exist. This is a simple function with zero branching.
+**Shared data pipeline** (`hourglass-tree.ts`):
+1. **Convert** input data to TreePerson: `buildPedigreeTreePerson(PedigreeTree)`, `buildHourglassTree(HourglassTree)`, `buildDescendantTreePerson(DescendantNode)`
+2. **Inject** outlines via `injectOutlines(root, selectedPersonId)` — always adds father + mother + child + spouse. No conditions, no branching.
+3. **Layout** — each chart's layout algorithm positions all nodes (real + outline) identically
+4. **Extract** placeholders — boxes with `PLACEHOLDER_PREFIX` IDs are moved from `boxes[]` to `placeholders[]`, lines touching them become `placeholderLines[]`
+5. **Render** — real → solid boxes, outlines → dashed boxes with "+". Click handlers open `AddRelatedPersonModal`.
 
-2. **Layout/routing** (complex): Positions ALL nodes — real and outline — identically. The algorithm sees N parents, M children, K spouses per person and lays them out. It never checks whether a node is real or outline. This means the layout must support 0+ parents (not just 2), 0+ spouses (not just for focal), and 0+ children for any person.
+**Chart-specific layout details:**
 
-3. **Focus person filtering** (tree scope): The focal person determines which real nodes exist. Collapse/expand filters real nodes. **Outlines are never filtered** by focus or collapse state.
+| Chart | Orientation | Spouse outline | Child outline | Parent outlines |
+|-------|-------------|---------------|---------------|-----------------|
+| **Pedigree** | Horizontal (focal left, ancestors right) | Below selected, reserves leaf slot for vertical space | Left of selected (toward focal) | Right of selected (next generation) — via ancestor layout |
+| **Hourglass** | Vertical (ancestors up, descendants down) | Beside selected (sex-dependent side) | Below selected | Above selected — via ancestor layout |
+| **Descendants** | Vertical (focal top, descendants down) | Beside selected (edge of row) | Below selected — via descendant layout | Above selected |
 
-4. **Rendering** (visual only): Real → solid boxes. Outlines → dashed boxes with "+". Different click handlers. That's it.
+**Pedigree-specific:** Spouse outlines reserve a leaf slot during `assignLeafSlots()` so the compact vertical layout naturally creates space. The outline is placed at `selBox.y + BOX_H + V_GAP` for tight couple-like spacing.
+
+**Post-layout pass:** All three charts have a post-layout pass that places outline nodes not handled by the main traversal (e.g., spouse outlines for ancestors in pedigree, child outlines for ancestors in hourglass).
 
 **Key rule:** The selected person ≠ the focal person. The focal person controls the tree scope. The selected person controls where outlines appear. These are independent concepts.
 
