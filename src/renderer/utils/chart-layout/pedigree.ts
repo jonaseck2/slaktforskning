@@ -146,11 +146,13 @@ export function computePedigreeLayout(
       if (selNode) {
         const selCY = selBox.y + BOX_H / 2;
 
-        // Helper: find first Y that doesn't overlap any existing box at given X
+        // Helper: find first Y that doesn't overlap any existing box
+        // Uses full rectangle intersection check (not just same-X column)
         function findClearY(x: number, startY: number, direction: 1 | -1): number {
           let y = startY;
           const overlaps = () => boxes.some(b =>
-            b.x === x && y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
+            x < b.x + b.w && x + BOX_W > b.x &&  // horizontal overlap
+            y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y  // vertical overlap (with gap)
           );
           while (overlaps()) {
             y += direction * (BOX_H + V_GAP);
