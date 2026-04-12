@@ -2,7 +2,7 @@ import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { WrapHandlerFn } from './wrap-handler';
-import { getDbSetting, setDbSetting } from '../../api/db_settings';
+import { getDbSetting, setDbSetting, deleteDbSetting } from '../../api/db_settings';
 import { undoManager } from '../../api/undo';
 
 export function registerDatabaseHandlers(
@@ -29,6 +29,10 @@ export function registerDatabaseHandlers(
 
   wrapHandler('db:setSetting', (key, value) =>
     setDbSetting(getDb(), key as string, value as string)
+  );
+
+  wrapHandler('db:deleteSetting', (key) =>
+    deleteDbSetting(getDb(), key as string)
   );
 
   wrapHandler('shell:open-external', (url) => {

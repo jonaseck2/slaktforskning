@@ -16,7 +16,7 @@
       autocomplete="off"
     />
     <ul
-      v-if="showDropdown && (results.length > 0 || query.length > 1)"
+      v-if="showDropdown && (results.length > 0 || gazetteerResults.length > 0 || query.length > 1)"
       :id="pickerId + '-listbox'"
       role="listbox"
       class="dropdown"
@@ -39,19 +39,37 @@
         <div v-if="place.parent_name || place.postal_code || place.city" class="place-subtitle">{{ place.parent_name || [place.postal_code, place.city].filter(Boolean).join(' ') }}</div>
       </li>
       <li
-        v-if="query.length > 1 && results.every(r => r.name.toLowerCase() !== query.toLowerCase())"
-        :id="pickerId + '-option-' + results.length"
+        v-for="(gaz, gIdx) in gazetteerResults"
+        :key="'gaz-' + gIdx"
+        :id="pickerId + '-option-' + (results.length + gIdx)"
         role="option"
-        :aria-selected="results.length === highlightIndex"
+        :aria-selected="(results.length + gIdx) === highlightIndex"
+        class="dropdown-item gazetteer-item"
+        :class="{ highlighted: (results.length + gIdx) === highlightIndex }"
+        v-narrate="gaz.name"
+        @mousedown.prevent="selectGazetteer(gaz)"
+      >
+        <div class="place-main">
+          <span class="place-name">{{ gaz.name }}</span>
+          <span class="place-type">{{ gaz.pathNodes[gaz.pathNodes.length - 1]?.type }}</span>
+          <span class="gazetteer-badge">{{ gaz.gazetteer }}</span>
+        </div>
+        <div class="place-subtitle">{{ gaz.matchedPath.join(' > ') }}</div>
+      </li>
+      <li
+        v-if="query.length > 1 && results.every(r => r.name.toLowerCase() !== query.toLowerCase())"
+        :id="pickerId + '-option-' + (results.length + gazetteerResults.length)"
+        role="option"
+        :aria-selected="(results.length + gazetteerResults.length) === highlightIndex"
         class="dropdown-item create-new"
-        :class="{ highlighted: results.length === highlightIndex }"
+        :class="{ highlighted: (results.length + gazetteerResults.length) === highlightIndex }"
         @mousedown.prevent="createNew"
       >
         {{ $t('places.createNew', { name: query }) }}
       </li>
     </ul>
-    <div v-if="showDropdown && results.length > 0" class="sr-only" aria-live="polite">
-      {{ $t('a11y.searchResults', { count: results.length }, results.length) }}
+    <div v-if="showDropdown && (results.length > 0 || gazetteerResults.length > 0)" class="sr-only" aria-live="polite">
+      {{ $t('a11y.searchResults', { count: results.length + gazetteerResults.length }, results.length + gazetteerResults.length) }}
     </div>
   </div>
 </template>
@@ -59,10 +77,14 @@
 <script setup lang="ts">
 import { ref, watch, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { searchGazetteer } from '../../api/place-gazetteers/resolver';
 
 const pickerId = 'place-picker-' + Math.random().toString(36).slice(2, 8);
 
 interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; parent_name?: string | null; }
+interface GazetteerPathNode { name: string; type: string; lat: number; lon: number; }
+interface GazetteerSuggestion { name: string; lat: number; lon: number; matchedPath: string[]; pathNodes: GazetteerPathNode[]; gazetteer: string; }
 
 const props = defineProps<{
   modelValue: string | null;
@@ -75,8 +97,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const screenReader = inject('screenReader', null) as any;
+const { ready: gazetteerReady, ensureLoaded: ensureGazetteersLoaded, getGazetteers } = usePlaceResolver();
 const query = ref('');
 const results = ref<PlaceRow[]>([]);
+const gazetteerResults = ref<GazetteerSuggestion[]>([]);
 const showDropdown = ref(false);
 const highlightIndex = ref(-1);
 let debounceTimer: ReturnType<typeof setTimeout>;
@@ -92,9 +116,31 @@ watch(() => props.modelValue, async (id) => {
 
 function onInput() {
   clearTimeout(debounceTimer);
-  if (query.value.length < 1) { results.value = []; return; }
+  if (query.value.length < 1) { results.value = []; gazetteerResults.value = []; return; }
   debounceTimer = setTimeout(async () => {
-    results.value = (await window.api.places.search(query.value)) as PlaceRow[];
+    const dbResults = (await window.api.places.search(query.value)) as PlaceRow[];
+    results.value = dbResults;
+
+    // Search all enabled gazetteers for matching nodes at every level
+    if (!gazetteerReady.value) await ensureGazetteersLoaded();
+    const hits = searchGazetteer(query.value, getGazetteers(), 15);
+    // Deduplicate by name + type (e.g. "Jönköping" as county vs municipality vs locality are distinct)
+    const seen = new Set<string>();
+    const gazSuggestions: GazetteerSuggestion[] = [];
+    for (const hit of hits) {
+      const key = `${hit.node.name.toLowerCase()}|${hit.node.type}|${hit.gazetteer}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      gazSuggestions.push({
+        name: hit.node.name,
+        lat: hit.node.lat,
+        lon: hit.node.lon,
+        matchedPath: hit.path.map(n => n.name),
+        pathNodes: hit.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
+        gazetteer: hit.gazetteer,
+      });
+    }
+    gazetteerResults.value = gazSuggestions;
   }, 150);
 }
 
@@ -104,7 +150,7 @@ function hasCreateNew(): boolean {
 }
 
 function totalOptions(): number {
-  return results.value.length + (hasCreateNew() ? 1 : 0);
+  return results.value.length + gazetteerResults.value.length + (hasCreateNew() ? 1 : 0);
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -119,8 +165,12 @@ function onKeydown(e: KeyboardEvent) {
     highlightIndex.value = Math.max(highlightIndex.value - 1, 0);
   } else if (e.key === 'Enter' && highlightIndex.value >= 0) {
     e.preventDefault();
-    if (highlightIndex.value < results.value.length) {
+    const dbCount = results.value.length;
+    const gazCount = gazetteerResults.value.length;
+    if (highlightIndex.value < dbCount) {
       select(results.value[highlightIndex.value]);
+    } else if (highlightIndex.value < dbCount + gazCount) {
+      selectGazetteer(gazetteerResults.value[highlightIndex.value - dbCount]);
     } else {
       createNew();
     }
@@ -138,6 +188,37 @@ async function select(place: PlaceRow) {
   if (screenReader?.isScreenReader?.value) {
     screenReader.speak(t('screenReader.selected', { name: place.name }));
   }
+}
+
+async function selectGazetteer(gaz: GazetteerSuggestion) {
+  // Create the full parent hierarchy from the gazetteer path
+  // e.g. Sverige > Blekinge län > Karlshamns kommun > Asarum
+  // Skip the country node (index 0) — start from county level
+  let parentId: string | null = null;
+  let leafPlace: PlaceRow | null = null;
+
+  for (let i = 1; i < gaz.pathNodes.length; i++) {
+    const node = gaz.pathNodes[i];
+
+    // findOrCreate deduplicates by normalized name
+    const place = (await window.api.places.findOrCreate(node.name)) as PlaceRow;
+
+    // Fill in gazetteer data — only set fields that aren't already populated
+    const full = (await window.api.places.get(place.id)) as { id: string; parent_place_id: string | null; place_type: string | null; latitude: number | null; longitude: number | null };
+    const updates: Record<string, unknown> = {};
+    if (!full.parent_place_id && parentId) updates.parent_place_id = parentId;
+    if (!full.place_type) updates.place_type = node.type;
+    if (full.latitude == null) updates.latitude = node.lat;
+    if (full.longitude == null) updates.longitude = node.lon;
+    if (Object.keys(updates).length > 0) {
+      await window.api.places.update(place.id, updates);
+    }
+
+    parentId = place.id;
+    if (i === gaz.pathNodes.length - 1) leafPlace = place;
+  }
+
+  if (leafPlace) select(leafPlace);
 }
 
 async function createNew() {
@@ -191,6 +272,14 @@ function onBlur() {
 .place-type {
   font-size: var(--font-xs);
   color: #999;
+}
+.gazetteer-badge {
+  font-size: var(--font-xs);
+  color: #065f46;
+  background: #d1fae5;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 500;
 }
 .create-new { color: #1d4ed8; font-style: italic; }
 .sr-only {

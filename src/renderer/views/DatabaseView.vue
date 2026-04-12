@@ -26,6 +26,19 @@
       </table>
     </section>
 
+    <section class="db-section">
+      <h3>{{ $t('database.treeSubject') }}</h3>
+      <p class="db-hint">{{ $t('database.treeSubjectHint') }}</p>
+      <div class="tree-subject-row">
+        <PersonPicker
+          :model-value="treeSubjectId"
+          :placeholder="$t('database.treeSubjectNone')"
+          @update:model-value="setTreeSubject"
+        />
+        <button v-if="treeSubjectId" class="btn-sm btn-cancel" @click="clearTreeSubject">✕</button>
+      </div>
+    </section>
+
     <section class="db-section db-actions">
       <button @click="createNew">{{ $t('database.createNew') }}</button>
       <button @click="openExisting">{{ $t('database.openOther') }}</button>
@@ -44,6 +57,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import PersonPicker from '../components/PersonPicker.vue';
 
 const { t } = useI18n();
 
@@ -53,12 +67,30 @@ const current = ref<DbEntry | null>(null);
 const recent = ref<DbEntry[]>([]);
 const statusMsg = ref('');
 const backupStatus = ref('');
+const treeSubjectId = ref<string | null>(null);
 
 async function load() {
   current.value = await window.api.db.getCurrent();
   const all = await window.api.db.getRecent();
   // Exclude the currently active path from the recent list
   recent.value = all.filter(e => e.path !== current.value?.path);
+  treeSubjectId.value = await window.api.db.getSetting('default_person_id') as string | null;
+}
+
+async function setTreeSubject(personId: string | null) {
+  treeSubjectId.value = personId;
+  if (personId) {
+    await window.api.db.setSetting('default_person_id', personId);
+  } else {
+    await window.api.db.deleteSetting('default_person_id');
+  }
+}
+
+async function clearTreeSubject() {
+  treeSubjectId.value = null;
+  await window.api.db.deleteSetting('default_person_id');
+  statusMsg.value = t('database.treeSubjectCleared');
+  setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function openPath(p: string) {
@@ -190,6 +222,22 @@ h2 {
 
 .db-actions button:hover {
   background: var(--color-bg-muted);
+}
+
+.db-hint {
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.tree-subject-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tree-subject-row .btn-sm {
+  flex-shrink: 0;
 }
 
 .db-status {

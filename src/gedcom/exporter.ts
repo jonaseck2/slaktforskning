@@ -16,6 +16,7 @@ import type { Place, Citation, Repository } from '../api/types';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
 import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
+import { getDbSetting } from '../api/db_settings';
 
 export interface ExportReport {
   persons: number;
@@ -117,6 +118,19 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     lines.push('0 HEAD', '1 GEDC', '2 VERS 7.0');
   } else {
     lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
+  }
+
+  // ── SUBM: write submitter from default_person_id ──────────────────────────
+  const defaultPersonId = getDbSetting(db, 'default_person_id');
+  if (defaultPersonId) {
+    const names = getPersonNames(db, defaultPersonId);
+    const primary = names.find(n => n.preferred_name) ?? names[0];
+    if (primary) {
+      const fullName = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+      lines.push('1 SUBM @SUBM@');
+      lines.push(`0 @SUBM@ SUBM`);
+      lines.push(`1 NAME ${fullName}`);
+    }
   }
 
   // ── Repositories ───────────────────────────────────────────────────────────

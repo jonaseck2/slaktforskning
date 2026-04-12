@@ -85,31 +85,24 @@
       <div class="section-header">
         <h4 id="section-place-map">{{ $t('map.placeMap') }}</h4>
       </div>
-      <div class="place-map-container">
-        <LMap
-          ref="mapRef"
-          :zoom="10"
-          :center="mapCenter"
-          :use-global-leaflet="false"
-          @ready="fitMapBounds"
+      <BaseMap
+        ref="baseMapRef"
+        height="300px"
+        :initial-zoom="10"
+        :initial-center="mapCenter"
+        @ready="fitMapBounds"
+      >
+        <LMarker
+          v-for="m in mapMarkers"
+          :key="m.id"
+          :lat-lng="[m.lat, m.lon]"
         >
-          <LTileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-            layer-type="base"
-          />
-          <LMarker
-            v-for="m in mapMarkers"
-            :key="m.id"
-            :lat-lng="[m.lat, m.lon]"
-          >
-            <LPopup>
-              <strong>{{ m.name }}</strong>
-              <span v-if="m.type"> ({{ $t('placeTypes.' + m.type) }})</span>
-            </LPopup>
-          </LMarker>
-        </LMap>
-      </div>
+          <LPopup>
+            <strong>{{ m.name }}</strong>
+            <span v-if="m.type"> ({{ $t('placeTypes.' + m.type) }})</span>
+          </LPopup>
+        </LMarker>
+      </BaseMap>
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-media-timeline">
@@ -138,19 +131,10 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
 import MediaTimeline from '../components/MediaTimeline.vue';
+import BaseMap from '../components/BaseMap.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
-import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
-
-// Fix default marker icons for Vite bundler
-delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
-  iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
-  shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
-});
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
@@ -169,7 +153,7 @@ const editStreet = ref('');
 const editPostalCode = ref('');
 const editCity = ref('');
 const editCountry = ref('');
-const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
 
 const gazetteerMatch = computed(() => {
@@ -202,14 +186,9 @@ const mapCenter = computed<[number, number]>(() => {
 
 function fitMapBounds() {
   nextTick(() => {
-    const map = mapRef.value?.leafletObject;
-    if (!map || mapMarkers.value.length === 0) return;
+    if (mapMarkers.value.length === 0) return;
     const bounds = mapMarkers.value.map(m => [m.lat, m.lon] as [number, number]);
-    if (bounds.length === 1) {
-      map.setView(bounds[0], 12);
-    } else {
-      map.fitBounds(bounds, { padding: [30, 30] });
-    }
+    baseMapRef.value?.fitBounds(bounds);
   });
 }
 
@@ -240,7 +219,7 @@ onMounted(load);
 </script>
 
 <style scoped>
-.place-detail { max-width: 700px; }
+.place-detail { max-width: none; }
 .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
 .detail-header h2 { margin: 0; }
 .btn-back { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 4px 0; font-size: var(--font-base); }
@@ -262,7 +241,6 @@ textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list a { color: var(--color-primary); text-decoration: none; font-size: var(--font-base); }
 .child-list a:hover { text-decoration: underline; }
 .empty { color: #999; padding: 40px; text-align: center; }
-.place-map-container { height: 300px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
 .gazetteer-section { background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 6px; padding: 12px; }
 .gazetteer-match { font-size: var(--font-sm); }
 .match-quality-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }

@@ -302,6 +302,45 @@ describe('GEDCOM import - SUBM to default_person_id', () => {
     const report = importGedcom(db, parseGedcom(SUBM_GED));
     expect(report.unmappedData.find(u => u.category.includes('SUBM'))).toBeUndefined();
   });
+
+  it('matches given-name-only SUBM name to a single person', () => {
+    const SUBM_GIVEN_ONLY = `
+0 HEAD
+0 @1@ SUBM
+1 NAME Lars
+0 @I1@ INDI
+1 NAME Lars /Eriksson/
+1 SEX M
+0 @I2@ INDI
+1 NAME Karin /Svensson/
+1 SEX F
+0 TRLR
+`.trim();
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(SUBM_GIVEN_ONLY));
+    const defaultId = getDbSetting(db, 'default_person_id');
+    expect(defaultId).not.toBeNull();
+    const stmt = db.prepare('SELECT given_name FROM person_names WHERE person_id = ?');
+    const row = stmt.get([defaultId!]) as { given_name: string } | undefined;
+    (stmt as unknown as { finalize(): void }).finalize();
+    expect(row?.given_name).toContain('Lars');
+  });
+
+  it('does not match given-name-only SUBM when multiple persons share the name', () => {
+    const SUBM_GIVEN_AMBIG = `
+0 HEAD
+0 @1@ SUBM
+1 NAME Lars
+0 @I1@ INDI
+1 NAME Lars /Eriksson/
+0 @I2@ INDI
+1 NAME Lars /Svensson/
+0 TRLR
+`.trim();
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(SUBM_GIVEN_AMBIG));
+    expect(getDbSetting(db, 'default_person_id')).toBeNull();
+  });
 });
 
 const EVEN_TYPE_GED = `

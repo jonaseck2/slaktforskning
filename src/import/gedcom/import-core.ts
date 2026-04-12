@@ -26,7 +26,7 @@ import { detectGedcomVersion } from './detect';
 import type { GedcomVersion } from './detect';
 import { normalizeForImport } from './normalize';
 import { findOrCreatePlace } from '../../api/places';
-import { setDbSetting } from '../../api/db_settings';
+import { getDbSetting, setDbSetting } from '../../api/db_settings';
 import { resolvePlaceFn as genneyResolvePlaceFn } from './profiles/genney';
 import type { ImportContext } from './import-types';
 import {
@@ -60,8 +60,10 @@ export interface ImportReport {
   researchTasks: number;
   skipped: { tag: string; count: number }[];  // unrecognised level-1 INDI/FAM tags (alias for tagStats)
   warnings: string[];                          // e.g. "12 OBJE records skipped"
-  /** DB id of the tree subject (first INDI), if detectable. Currently set for profile='holger'. */
+  /** DB id of the tree subject, if auto-matched from SUBM or first INDI. */
   defaultPersonId?: string;
+  /** Raw SUBM NAME value from the GEDCOM file, if present. */
+  submitterName?: string;
 }
 
 export interface UnmappedItem {
@@ -415,19 +417,48 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   const evAfterRows         = queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
 
   // Match SUBM name to a person and store as default_person_id
+  // Strategies (tried in order, first unique match wins):
+  //   1) Full "given surname" exact match
+  //   2) preferred_name + surname-starts-with (handles "Linda Ahnstedt" → "Eva Linda Marie" / "Ahnstedt f. Nord")
+  //   3) Given-name-only for single-word SUBM names (e.g. "Linda")
+  outer:
   for (const rawName of partial.submitterNames) {
-    const stmt = db.prepare(
-      "SELECT person_id FROM person_names " +
-      "WHERE lower(trim(coalesce(given_name,'') || ' ' || coalesce(surname,''))) = lower(?) LIMIT 2"
-    );
-    try {
-      const rows = stmt.all([rawName.trim()]) as { person_id: string }[];
-      if (rows.length === 1) {
-        setDbSetting(db, 'default_person_id', rows[0].person_id);
-        break;
+    const trimmed = rawName.trim();
+    const queries: { sql: string; params: string[] }[] = [
+      // 1) Full name exact match
+      {
+        sql: "SELECT person_id FROM person_names WHERE lower(trim(coalesce(given_name,'') || ' ' || coalesce(surname,''))) = lower(?) LIMIT 2",
+        params: [trimmed],
+      },
+    ];
+    // 2) preferred_name + surname prefix match (for "f. Nord" style suffixes)
+    const spaceIdx = trimmed.lastIndexOf(' ');
+    if (spaceIdx > 0) {
+      const submGiven = trimmed.slice(0, spaceIdx);
+      const submSurname = trimmed.slice(spaceIdx + 1);
+      queries.push({
+        sql: "SELECT person_id FROM person_names WHERE lower(trim(preferred_name)) = lower(?) AND lower(surname) LIKE lower(? || '%') LIMIT 2",
+        params: [submGiven, submSurname],
+      });
+    }
+    // 3) Given-name-only fallback for single-word SUBM names
+    if (!trimmed.includes(' ')) {
+      queries.push({
+        sql: "SELECT person_id FROM person_names WHERE lower(trim(given_name)) = lower(?) LIMIT 2",
+        params: [trimmed],
+      });
+    }
+    for (const q of queries) {
+      const stmt = db.prepare(q.sql);
+      try {
+        const rows = stmt.all(q.params) as { person_id: string }[];
+        if (rows.length === 1) {
+          setDbSetting(db, 'default_person_id', rows[0].person_id);
+          break outer;
+        }
+      } finally {
+        (stmt as unknown as { finalize(): void }).finalize();
       }
-    } finally {
-      (stmt as unknown as { finalize(): void }).finalize();
     }
   }
 
@@ -493,6 +524,13 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     tagStats,
     unmappedData,
     modelLimitations,
-    ...(partial.firstPersonId != null ? { defaultPersonId: partial.firstPersonId } : {}),
+    // defaultPersonId: from SUBM match if available, otherwise firstPersonId fallback
+    ...((() => {
+      const submMatch = getDbSetting(db, 'default_person_id');
+      if (submMatch) return { defaultPersonId: submMatch };
+      if (partial.firstPersonId != null) return { defaultPersonId: partial.firstPersonId };
+      return {};
+    })()),
+    ...(partial.submitterNames.length > 0 ? { submitterName: partial.submitterNames[0] } : {}),
   };
 }
