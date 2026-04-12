@@ -111,6 +111,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.72.1 | Fix: pedigree outline overlap — spouse/child outlines placed below existing boxes in same column | — |
 | v0.72.2 | Fix: pedigree outlines skip over occupied positions using findClearY; add sv-gardar/sv-kyrkor gazetteers | — |
 | v0.72.3 | Fix: findClearY uses full rectangle intersection to avoid cross-column overlap | — |
+| v0.72.4 | Fix: pedigree spouse outline placed directly below person, line from box edge not center | — |
 ---
 
 ## Research
