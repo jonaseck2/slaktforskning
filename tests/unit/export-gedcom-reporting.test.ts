@@ -6,6 +6,7 @@ import { createResearchTask } from '../../src/api/research_tasks';
 import { createRelationship } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { exportGedcom } from '../../src/gedcom/exporter';
+import { setDbSetting } from '../../src/api/db_settings';
 
 describe('GEDCOM export — ExportReport', () => {
   it('reports excluded Research Tasks', () => {
@@ -78,5 +79,34 @@ describe('GEDCOM export — place_address exclusion', () => {
       e.category.includes('free-text')
     );
     expect(entry).toBeUndefined();
+  });
+});
+
+describe('GEDCOM export — SUBM record', () => {
+  it('writes SUBM record when default_person_id is set', () => {
+    const db = createTestDb();
+    const p = createPerson(db, { given_name: 'Lars', surname: 'Eriksson' });
+    setDbSetting(db, 'default_person_id', p.id);
+    const { ged } = exportGedcom(db);
+    expect(ged).toContain('1 SUBM @SUBM@');
+    expect(ged).toContain('0 @SUBM@ SUBM');
+    expect(ged).toContain('1 NAME Lars Eriksson');
+  });
+
+  it('omits SUBM when no default_person_id is set', () => {
+    const db = createTestDb();
+    createPerson(db, { given_name: 'Lars' });
+    const { ged } = exportGedcom(db);
+    expect(ged).not.toContain('SUBM');
+  });
+
+  it('writes SUBM in GEDCOM 7.0 format too', () => {
+    const db = createTestDb();
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
+    setDbSetting(db, 'default_person_id', p.id);
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain('1 SUBM @SUBM@');
+    expect(ged).toContain('0 @SUBM@ SUBM');
+    expect(ged).toContain('1 NAME Anna Svensson');
   });
 });

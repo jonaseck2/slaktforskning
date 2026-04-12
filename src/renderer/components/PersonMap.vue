@@ -1,17 +1,12 @@
 <template>
-  <div v-if="markers.length > 0" class="person-map-container">
-    <LMap
-      ref="mapRef"
-      :zoom="4"
-      :center="[55, 15]"
-      :use-global-leaflet="false"
+  <div v-if="markers.length > 0">
+    <BaseMap
+      ref="baseMapRef"
+      height="350px"
+      :initial-zoom="4"
+      :initial-center="[55, 15]"
       @ready="fitBounds"
     >
-      <LTileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-        layer-type="base"
-      />
       <LPolyline
         v-if="polylinePoints.length > 1"
         :lat-lngs="polylinePoints"
@@ -38,15 +33,15 @@
           </div>
         </LPopup>
       </LCircleMarker>
-    </LMap>
+    </BaseMap>
   </div>
   <div v-else class="empty-hint">{{ $t('map.empty') }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import { LMap, LTileLayer, LCircleMarker, LPolyline, LPopup } from '@vue-leaflet/vue-leaflet';
-import 'leaflet/dist/leaflet.css';
+import { LCircleMarker, LPolyline, LPopup } from '@vue-leaflet/vue-leaflet';
+import BaseMap from './BaseMap.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 
 interface EventRow {
@@ -80,7 +75,7 @@ const props = defineProps<{ personId: string }>();
 const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
 
 const markers = ref<Marker[]>([]);
-const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 
 const polylinePoints = ref<[number, number][]>([]);
 
@@ -102,14 +97,8 @@ function eventColor(eventType: string): string {
 
 function fitBounds() {
   nextTick(() => {
-    const map = mapRef.value?.leafletObject;
-    if (!map || markers.value.length === 0) return;
     const bounds = markers.value.map(m => [m.lat, m.lon] as [number, number]);
-    if (bounds.length === 1) {
-      map.setView(bounds[0], 10);
-    } else {
-      map.fitBounds(bounds, { padding: [30, 30] });
-    }
+    baseMapRef.value?.fitBounds(bounds);
   });
 }
 
@@ -165,19 +154,13 @@ async function load() {
   markers.value = result;
   polylinePoints.value = result.map(m => [m.lat, m.lon] as [number, number]);
 
-  if (mapRef.value?.leafletObject) fitBounds();
+  if (baseMapRef.value?.getLeafletObject()) fitBounds();
 }
 
 watch(() => props.personId, load, { immediate: true });
 </script>
 
 <style scoped>
-.person-map-container {
-  height: 350px;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #ddd;
-}
 .popup-link {
   color: var(--color-primary);
   text-decoration: none;

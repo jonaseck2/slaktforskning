@@ -209,7 +209,7 @@ onBeforeRouteLeave(() => { stop(); });
 
 <style scoped>
 .relationship-detail {
-  max-width: 700px;
+  max-width: none;
 }
 .detail-header {
   margin-bottom: 24px;

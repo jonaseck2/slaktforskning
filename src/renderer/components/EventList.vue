@@ -11,6 +11,7 @@
           <th v-if="props.showPersons">{{ $t('persons.title') }}</th>
           <th>{{ $t('common.type') }}</th>
           <th class="th-date">{{ $t('events.date') }}</th>
+          <th>{{ $t('places.title') }}</th>
           <th>{{ $t('events.description') }}</th>
           <th v-if="!props.readonly">{{ $t('events.citeSources') }}</th>
           <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
@@ -31,6 +32,9 @@
           <td v-if="props.showPersons" class="td-persons">{{ event.participant_names || '—' }}</td>
           <td><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
           <td class="td-date">{{ formatDate(event) }}</td>
+          <td class="td-place">
+            <router-link v-if="event.place_id" :to="'/places/' + event.place_id" class="person-link" @click.stop>{{ event.place_name || '—' }}</router-link>
+          </td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
           <td v-if="!props.readonly" class="cite-cell">
             <span v-if="event.citation_count" class="cite-badge">
@@ -82,6 +86,7 @@ interface EventRow {
   date_value_end: string | null;
   date_original: string;
   place_id: string | null;
+  place_name: string | null;
   description: string;
   cause: string | null;
   citation_count: number;

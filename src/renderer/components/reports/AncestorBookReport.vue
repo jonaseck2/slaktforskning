@@ -21,6 +21,7 @@
           font-family="Georgia, serif"
           link-base="#person-"
           :stroke-width="0.5"
+          width="100%"
           class="ab-svg"
         />
       </section>
@@ -573,7 +574,6 @@ function handleAnchorClick(e: MouseEvent) {
 }
 .ab-svg {
   width: 100%;
-  max-width: 540px;
   height: auto;
 }
 

@@ -66,7 +66,7 @@
 
     <!-- Events Section -->
     <section id="section-events" class="detail-section" aria-label="Events">
-      <EventList :person-id="person.id" ref="eventListRef" />
+      <EventList :person-id="person.id" ref="eventListRef" :key="'events-' + dataVersionStore.version" />
     </section>
 
     <!-- Timeline Section -->
@@ -218,6 +218,7 @@ import PersonNotesSection from '../components/PersonNotesSection.vue';
 import PersonMap from '../components/PersonMap.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
+import { useDataVersionStore } from '../stores/dataVersion';
 
 interface PersonData {
   id: string;
@@ -261,6 +262,7 @@ const addRelatedMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 const primaryNameData = computed(() => names.value.length > 0 ? names.value[0] : null);
 const editSex = ref('U');
 const editLiving = ref(1);
+const dataVersionStore = useDataVersionStore();
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
@@ -416,7 +418,10 @@ onMounted(async () => {
   let debounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
     if (debounce) clearTimeout(debounce);
-    debounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
+    debounce = setTimeout(async () => {
+      checksSectionRef.value?.reload();
+      await checkGeoEvents();
+    }, 400);
   });
 
   if (screenReader.isScreenReader.value) {
@@ -440,7 +445,7 @@ onBeforeRouteLeave(() => { stop(); });
 
 <style scoped>
 .person-detail {
-  max-width: 700px;
+  max-width: none;
 }
 .detail-header {
   margin-bottom: 24px;

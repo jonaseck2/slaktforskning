@@ -73,6 +73,24 @@
           <li v-for="(f, i) in importReportData.mediaSkipped" :key="i">{{ f }}</li>
         </ul>
       </div>
+      <div v-if="importReportData.gedcomReport.submitterName" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.treeSubject') }}</p>
+        <p class="subm-name">{{ $t('importExport.submitterFound', { name: importReportData.gedcomReport.submitterName }) }}</p>
+        <div v-if="resolvedTreeSubjectId" class="subm-matched">
+          <span>{{ $t('importExport.submitterMatched') }}</span>
+          <router-link :to="'/persons/' + resolvedTreeSubjectId" class="person-link" @click="showImportReport = false">
+            {{ matchedPersonName || resolvedTreeSubjectId }}
+          </router-link>
+        </div>
+        <div v-else class="subm-unmatched">
+          <p>{{ $t('importExport.submitterUnmatched') }}</p>
+          <PersonPicker
+            :model-value="manualTreeSubjectId"
+            :placeholder="$t('importExport.submitterPickPerson')"
+            @update:model-value="setTreeSubjectFromImport"
+          />
+        </div>
+      </div>
       <div class="modal-actions">
         <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
       </div>
@@ -81,10 +99,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseModal from '../BaseModal.vue';
+import PersonPicker from '../PersonPicker.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -111,6 +130,8 @@ interface ImportReport {
     places: number;
     citations: number;
     warnings: string[];
+    defaultPersonId?: string;
+    submitterName?: string;
   };
   mediaImported: number;
   mediaSkipped: string[];
@@ -125,6 +146,41 @@ const showExportReport = ref(false);
 const exportReportData = ref<ExportReport | null>(null);
 const showImportReport = ref(false);
 const importReportData = ref<ImportReport | null>(null);
+const matchedPersonName = ref<string | null>(null);
+const manualTreeSubjectId = ref<string | null>(null);
+const resolvedTreeSubjectId = ref<string | null>(null);
+
+watch(() => importReportData.value?.gedcomReport?.submitterName, async () => {
+  resolvedTreeSubjectId.value = null;
+  matchedPersonName.value = null;
+  manualTreeSubjectId.value = null;
+  if (!importReportData.value?.gedcomReport?.submitterName) return;
+  const id = await window.api.db.getSetting('default_person_id') as string | null;
+  if (!id) return;
+  resolvedTreeSubjectId.value = id;
+  try {
+    const names = await window.api.persons.getNames(id) as { given_name?: string; surname?: string }[];
+    const primary = names?.[0];
+    if (primary) {
+      matchedPersonName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+    }
+  } catch { /* ignore */ }
+}, { immediate: true });
+
+async function setTreeSubjectFromImport(personId: string | null) {
+  manualTreeSubjectId.value = personId;
+  if (personId) {
+    await window.api.db.setSetting('default_person_id', personId);
+    resolvedTreeSubjectId.value = personId;
+    try {
+      const names = await window.api.persons.getNames(personId) as { given_name?: string; surname?: string }[];
+      const primary = names?.[0];
+      if (primary) {
+        matchedPersonName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+      }
+    } catch { /* ignore */ }
+  }
+}
 
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   statusMessage.value = msg;
@@ -194,5 +250,22 @@ async function handleImport() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.subm-name {
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+.subm-matched {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-sm);
+}
+.subm-unmatched {
+  font-size: var(--font-sm);
+}
+.subm-unmatched p {
+  margin-bottom: 6px;
 }
 </style>

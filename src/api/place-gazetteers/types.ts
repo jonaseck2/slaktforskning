@@ -29,6 +29,7 @@ export interface PlaceResolveResult {
   lat: number;
   lon: number;
   matchedPath: string[];
+  matchedNodes: GazetteerNode[];
   matchDepth: number;
   treeDepth: number;
   matchQuality: 'exact' | 'partial' | 'ambiguous';

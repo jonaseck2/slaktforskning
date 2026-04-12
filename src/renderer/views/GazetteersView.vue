@@ -73,11 +73,13 @@ import { ref, computed, onMounted } from 'vue';
 import { getAllGazetteers, loadGazetteers } from '../../api/place-gazetteers/index';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
 import type { GazetteerConfig, Gazetteer } from '../../api/place-gazetteers/types';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
+const { invalidate: invalidatePlaceResolver } = usePlaceResolver();
 const allGazetteers: Gazetteer[] = getAllGazetteers();
 const config = ref<GazetteerConfig>({ enabledGazetteers: allGazetteers.map(g => g.id) });
 const testQuery = ref('');
@@ -106,6 +108,7 @@ async function loadConfig() {
 
 async function saveConfig() {
   await window.api.db.setSetting('gazetteer_config', JSON.stringify(config.value));
+  invalidatePlaceResolver();
 }
 
 function toggleGazetteer(id: string, checked: boolean) {

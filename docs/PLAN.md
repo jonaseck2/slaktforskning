@@ -114,6 +114,9 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.72.4 | Fix: pedigree spouse outline placed directly below person, line from box edge not center | — |
 | v0.72.5 | Fix: pedigree spouse outline shifted right to avoid connector corridor overlap | — |
 | v0.72.6 | Fix: pedigree spouse outline uses leaf slot reservation for proper separation, tight V_GAP spacing | [archive](plans/archive/2026-04-12-pedigree-descendant-outlines.md) |
+| v0.73.0 | Tree subject (SUBM): import matching across all GEDCOM variants, SUBM export, DatabaseView picker, import report prompt for unmatched submitters | — |
+| v0.73.1 | Fix: ancestor book circle chart clips edges at reduced generations — use width="100%" and remove hardcoded max-width to match CircleChartReport scaling | — |
+| v0.73.2 | Place UX: gazetteer search in PlacePicker, BaseMap shared component, place_name JOIN in event queries, EventList place column | — |
 ---
 
 ## Research

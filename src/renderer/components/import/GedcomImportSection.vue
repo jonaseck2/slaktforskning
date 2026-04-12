@@ -85,6 +85,24 @@
           <li v-for="(lim, i) in importReport.modelLimitations" :key="i">{{ lim }}</li>
         </ul>
       </div>
+      <div v-if="importReport.submitterName" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.treeSubject') }}</p>
+        <p class="subm-name">{{ $t('importExport.submitterFound', { name: importReport.submitterName }) }}</p>
+        <div v-if="resolvedTreeSubjectId" class="subm-matched">
+          <span>{{ $t('importExport.submitterMatched') }}</span>
+          <router-link :to="'/persons/' + resolvedTreeSubjectId" class="person-link" @click="showImportReport = false">
+            {{ matchedPersonName || resolvedTreeSubjectId }}
+          </router-link>
+        </div>
+        <div v-else class="subm-unmatched">
+          <p>{{ $t('importExport.submitterUnmatched') }}</p>
+          <PersonPicker
+            :model-value="manualTreeSubjectId"
+            :placeholder="$t('importExport.submitterPickPerson')"
+            @update:model-value="setTreeSubjectFromImport"
+          />
+        </div>
+      </div>
       <div class="modal-actions">
         <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
       </div>
@@ -94,8 +112,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import BaseModal from '../BaseModal.vue';
+import PersonPicker from '../PersonPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 
@@ -130,7 +149,45 @@ const importReport = ref<{
   tagStats?: { tag: string; occurrences: number }[];
   unmappedData?: { category: string; count: number; example?: string }[];
   modelLimitations?: string[];
+  defaultPersonId?: string;
+  submitterName?: string;
 } | null>(null);
+const matchedPersonName = ref<string | null>(null);
+const manualTreeSubjectId = ref<string | null>(null);
+const resolvedTreeSubjectId = ref<string | null>(null);
+
+// When import report opens, check if the SUBM was matched (persisted to db_settings)
+watch(() => importReport.value?.submitterName, async () => {
+  resolvedTreeSubjectId.value = null;
+  matchedPersonName.value = null;
+  manualTreeSubjectId.value = null;
+  if (!importReport.value?.submitterName) return;
+  const id = await window.api.db.getSetting('default_person_id') as string | null;
+  if (!id) return;
+  resolvedTreeSubjectId.value = id;
+  try {
+    const names = await window.api.persons.getNames(id) as { given_name?: string; surname?: string }[];
+    const primary = names?.[0];
+    if (primary) {
+      matchedPersonName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+    }
+  } catch { /* ignore */ }
+}, { immediate: true });
+
+async function setTreeSubjectFromImport(personId: string | null) {
+  manualTreeSubjectId.value = personId;
+  if (personId) {
+    await window.api.db.setSetting('default_person_id', personId);
+    resolvedTreeSubjectId.value = personId;
+    try {
+      const names = await window.api.persons.getNames(personId) as { given_name?: string; surname?: string }[];
+      const primary = names?.[0];
+      if (primary) {
+        matchedPersonName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+      }
+    } catch { /* ignore */ }
+  }
+}
 
 function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   statusMessage.value = msg;
@@ -225,5 +282,22 @@ async function proceedImport() {
 .size-warning {
   color: var(--color-warning, #c57600);
   font-weight: 500;
+}
+.subm-name {
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+.subm-matched {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-sm);
+}
+.subm-unmatched {
+  font-size: var(--font-sm);
+}
+.subm-unmatched p {
+  margin-bottom: 6px;
 }
 </style>

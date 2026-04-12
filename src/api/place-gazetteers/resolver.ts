@@ -80,6 +80,49 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
   return { best, ambiguous: distinctLocations.size > 1 };
 }
 
+export interface GazetteerSearchHit {
+  node: GazetteerNode;
+  path: GazetteerNode[];
+  gazetteer: string;
+}
+
+/**
+ * Search for all nodes whose name matches the query, returning every match
+ * at every level (county, municipality, locality, etc.).
+ */
+export function searchGazetteer(
+  query: string,
+  gazetteers: Gazetteer[],
+  limit = 10,
+): GazetteerSearchHit[] {
+  if (!query.trim() || gazetteers.length === 0) return [];
+  const norm = normalize(query);
+  if (!norm) return [];
+
+  const hits: GazetteerSearchHit[] = [];
+
+  function walk(node: GazetteerNode, path: GazetteerNode[], gazId: string) {
+    const currentPath = [...path, node];
+    if (nodeMatches(node, query)) {
+      hits.push({ node, path: currentPath, gazetteer: gazId });
+    }
+    if (hits.length >= limit) return;
+    if (node.children) {
+      for (const child of node.children) {
+        walk(child, currentPath, gazId);
+        if (hits.length >= limit) return;
+      }
+    }
+  }
+
+  for (const gaz of gazetteers) {
+    walk(gaz.root, [], gaz.id);
+    if (hits.length >= limit) break;
+  }
+
+  return hits;
+}
+
 export function resolvePlace(
   placeName: string,
   gazetteers: Gazetteer[],
@@ -125,6 +168,7 @@ export function resolvePlace(
     lat: deepestNode.lat,
     lon: deepestNode.lon,
     matchedPath: candidate.matched,
+    matchedNodes: candidate.path,
     matchDepth: candidate.depth,
     treeDepth: candidate.treeDepth,
     matchQuality,

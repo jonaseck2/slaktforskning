@@ -104,6 +104,7 @@ const api = {
     onSwitched: (cb: () => void) => ipcRenderer.on('db:switched', cb),
     getSetting: (key: string) => ipcRenderer.invoke('db:getSetting', key),
     setSetting: (key: string, value: string) => ipcRenderer.invoke('db:setSetting', key, value),
+    deleteSetting: (key: string) => ipcRenderer.invoke('db:deleteSetting', key),
   },
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),

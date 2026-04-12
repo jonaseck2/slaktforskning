@@ -40,5 +40,9 @@ export function usePlaceResolver() {
     ready.value = false;
   }
 
-  return { ready, ensureLoaded, resolve, invalidate };
+  function getGazetteers(): Gazetteer[] {
+    return gazetteersRef;
+  }
+
+  return { ready, ensureLoaded, resolve, invalidate, getGazetteers };
 }

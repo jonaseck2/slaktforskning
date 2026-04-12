@@ -23,19 +23,13 @@
 
     <div v-else class="map-body" ref="mapBodyRef">
       <div class="map-chart-area">
-        <LMap
-          ref="mapRef"
-          :zoom="4"
-          :center="[55, 15]"
-          :use-global-leaflet="false"
-          :options="{ zoomControl: false }"
+        <BaseMap
+          ref="baseMapRef"
+          :initial-zoom="4"
+          :initial-center="[55, 15]"
+          :show-fit="true"
           @ready="onMapReady"
         >
-          <LTileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-            layer-type="base"
-          />
           <LMarker
             v-for="p in filteredPlaces"
             :key="p.id"
@@ -52,15 +46,7 @@
               </div>
             </LPopup>
           </LMarker>
-        </LMap>
-
-        <ZoomControls
-          :zoom="currentZoom / maxZoom"
-          :show-fit="true"
-          @zoom-in="zoomIn"
-          @zoom-out="zoomOut"
-          @reset="fitBounds"
-        />
+        </BaseMap>
 
         <!-- Reopen panel button -->
         <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
@@ -86,22 +72,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
-import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import ZoomControls from '../components/ZoomControls.vue';
+import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
+import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { usePanelResize } from '../composables/usePanelResize';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
-
-// Fix default marker icons for Vite bundler
-delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
-  iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
-  shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
-});
 
 interface PlaceRow {
   id: string;
@@ -119,12 +95,9 @@ interface DisplayPlace extends PlaceRow {
 
 const places = ref<PlaceRow[]>([]);
 const filterText = ref('');
-const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const mapBodyRef = ref<HTMLElement | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve } = usePlaceResolver();
-
-const maxZoom = 18;
-const currentZoom = ref(4);
 
 // Panel state
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
@@ -150,26 +123,13 @@ function closePanel() {
 // Invalidate map when panel opens/closes
 watch(panelOpen, () => {
   nextTick(() => {
-    mapRef.value?.leafletObject?.invalidateSize();
+    baseMapRef.value?.invalidateSize();
   });
 });
 
 function onMapReady() {
-  const map = mapRef.value?.leafletObject;
-  if (map) {
-    map.zoomControl?.remove();
-    map.on('zoomend', () => { currentZoom.value = map.getZoom(); });
-    // Invalidate after flex layout settles (panel may already be open)
-    setTimeout(() => { map.invalidateSize(); fitBounds(); }, 100);
-  }
-}
-
-function zoomIn() {
-  mapRef.value?.leafletObject?.zoomIn();
-}
-
-function zoomOut() {
-  mapRef.value?.leafletObject?.zoomOut();
+  // Invalidate after flex layout settles (panel may already be open)
+  setTimeout(() => { baseMapRef.value?.invalidateSize(); fitBounds(); }, 100);
 }
 
 const allDisplayPlaces = computed<DisplayPlace[]>(() => {
@@ -200,19 +160,14 @@ const filteredPlaces = computed(() => {
 
 function fitBounds() {
   nextTick(() => {
-    const map = mapRef.value?.leafletObject;
-    if (!map || filteredPlaces.value.length === 0) return;
+    if (filteredPlaces.value.length === 0) return;
     const bounds = filteredPlaces.value.map(p => [p.displayLat, p.displayLon] as [number, number]);
-    if (bounds.length === 1) {
-      map.setView(bounds[0], 10);
-    } else {
-      map.fitBounds(bounds, { padding: [30, 30] });
-    }
+    baseMapRef.value?.fitBounds(bounds);
   });
 }
 
 watch(filteredPlaces, () => {
-  if (mapRef.value?.leafletObject) fitBounds();
+  if (baseMapRef.value?.getLeafletObject()) fitBounds();
 });
 
 onMounted(async () => {
@@ -258,9 +213,12 @@ onMounted(async () => {
   flex: 1;
   min-width: 200px;
   position: relative;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #ddd;
+}
+/* Remove BaseMap's own border/radius — the chart area handles layout */
+.map-chart-area :deep(.base-map-container) {
+  border: none;
+  border-radius: 0;
+  height: 100%;
 }
 
 /* Panel */
@@ -349,12 +307,5 @@ onMounted(async () => {
   display: block;
   color: #666;
   font-size: var(--font-xs);
-}
-
-/* Override ZoomControls to stay within map area (not overlap panel) */
-.map-chart-area :deep(.zoom-controls-bar) {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
 }
 </style>
