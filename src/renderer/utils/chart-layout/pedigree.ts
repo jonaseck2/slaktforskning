@@ -146,13 +146,24 @@ export function computePedigreeLayout(
       if (selNode) {
         const selCY = selBox.y + BOX_H / 2;
 
-        // Unplaced spouse outlines — place below all boxes at the same X column
+        // Helper: find first Y that doesn't overlap any existing box at given X
+        function findClearY(x: number, startY: number, direction: 1 | -1): number {
+          let y = startY;
+          const overlaps = () => boxes.some(b =>
+            b.x === x && y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
+          );
+          while (overlaps()) {
+            y += direction * (BOX_H + V_GAP);
+          }
+          return y;
+        }
+
+        // Unplaced spouse outlines — place adjacent to selected person, avoiding overlap
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
         if (unplacedSpouses.length > 0) {
-          const sameColBoxes = boxes.filter(b => b.x === selBox.x);
-          const bottomEdge = Math.max(...sameColBoxes.map(b => b.y + b.h));
+          let nextY = findClearY(selBox.x, selBox.y + BOX_H + V_GAP, 1);
           for (let i = 0; i < unplacedSpouses.length; i++) {
-            const spY = bottomEdge + V_GAP + i * (BOX_H + V_GAP);
+            const spY = nextY;
             const spCY = spY + BOX_H / 2;
             boxes.push({
               person: unplacedSpouses[i].person,
@@ -160,23 +171,18 @@ export function computePedigreeLayout(
               x: selBox.x, y: spY,
               w: BOX_W, h: BOX_H,
             });
-            // Horizontal marriage line at the spouse's level, then vertical connector
             lines.push({ x1: selBox.x + BOX_W / 2, y1: selCY, x2: selBox.x + BOX_W / 2, y2: spCY });
+            nextY = spY + BOX_H + V_GAP;
           }
         }
 
-        // Unplaced child outlines — place to the left, below existing boxes at that column
+        // Unplaced child outlines — place to the left, avoiding overlap
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
         if (unplacedChildren.length > 0) {
           const childX = selBox.x - BOX_W - H_GAP;
-          const sameColBoxes = boxes.filter(b => b.x === childX);
-          const bottomEdge = sameColBoxes.length > 0
-            ? Math.max(...sameColBoxes.map(b => b.y + b.h))
-            : selBox.y - BOX_H - V_GAP;
+          let nextY = findClearY(childX, selBox.y, 1);
           for (let i = 0; i < unplacedChildren.length; i++) {
-            const childY = sameColBoxes.length > 0
-              ? bottomEdge + V_GAP + i * (BOX_H + V_GAP)
-              : selBox.y + i * (BOX_H + V_GAP);
+            const childY = nextY;
             const childCY = childY + BOX_H / 2;
             boxes.push({
               person: unplacedChildren[i].person,
@@ -188,6 +194,7 @@ export function computePedigreeLayout(
             lines.push({ x1: selBox.x, y1: selCY, x2: forkX, y2: selCY });
             lines.push({ x1: forkX, y1: childCY, x2: childX + BOX_W, y2: childCY });
             lines.push({ x1: forkX, y1: selCY, x2: forkX, y2: childCY });
+            nextY = childY + BOX_H + V_GAP;
           }
         }
       }

@@ -1,117 +1,33 @@
 /**
- * Fetch Swedish populated places (tätorter + småorter) from Wikidata SPARQL
- * and generate a gazetteer JSON file.
+ * Generate Swedish place gazetteers from GeoNames data.
+ *
+ * Source: GeoNames (https://www.geonames.org/) — CC BY 4.0
+ * Downloads the SE.zip country file and builds 3 gazetteers:
+ *   1. sv-orter       — Populated places (~28k settlements)
+ *   2. sv-gårdar      — Farms (~16k historically important farm names)
+ *   3. sv-kyrkor      — Churches (~3k church buildings)
  *
  * Usage: npx tsx scripts/fetch-sv-orter.ts
+ *
+ * Prerequisites: Download GeoNames SE data first:
+ *   curl -o /tmp/SE.zip https://download.geonames.org/export/dump/SE.zip
+ *   unzip -o /tmp/SE.zip -d /tmp/geonames_se/
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 
-const WIKIDATA_SPARQL = 'https://query.wikidata.org/sparql';
-const USER_AGENT = 'Slaktforskning-Gazetteer-Fetcher/1.0 (genealogy app)';
+const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
+const GEONAMES_FILE = '/tmp/geonames_se/SE.txt';
 
-interface RawPlace {
+interface GeoNameRow {
   name: string;
   lat: number;
   lon: number;
-  municipality: string;
-  county: string;
-  type: 'tätort' | 'småort';
-}
-
-async function sparqlQuery(query: string): Promise<any[]> {
-  const url = `${WIKIDATA_SPARQL}?query=${encodeURIComponent(query)}&format=json`;
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': USER_AGENT,
-      'Accept': 'application/sparql-results+json',
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`SPARQL query failed: ${res.status} ${res.statusText}\n${await res.text()}`);
-  }
-  const data = await res.json();
-  return data.results.bindings;
-}
-
-async function fetchTatorter(): Promise<RawPlace[]> {
-  console.log('Fetching tätorter...');
-  const query = `
-SELECT ?itemLabel ?lat ?lon ?munLabel ?countyLabel WHERE {
-  ?item wdt:P31 wd:Q12813115 .
-  ?item wdt:P625 ?coords .
-  ?item wdt:P131 ?mun .
-  ?mun wdt:P31 wd:Q127448 .
-  ?mun wdt:P131 ?county .
-  ?county wdt:P31 wd:Q200547 .
-  BIND(geof:latitude(?coords) AS ?lat)
-  BIND(geof:longitude(?coords) AS ?lon)
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "sv,en" . }
-}
-`;
-  const rows = await sparqlQuery(query);
-  console.log(`  Got ${rows.length} tätorter`);
-  return rows.map((r: any) => ({
-    name: r.itemLabel.value,
-    lat: parseFloat(r.lat.value),
-    lon: parseFloat(r.lon.value),
-    municipality: r.munLabel.value,
-    county: r.countyLabel.value,
-    type: 'tätort' as const,
-  }));
-}
-
-async function fetchSmåorter(): Promise<RawPlace[]> {
-  console.log('Fetching småorter...');
-  // Småorter can be numerous — fetch in batches by county
-  const countyQuery = `
-SELECT ?county ?countyLabel WHERE {
-  ?county wdt:P31 wd:Q200547 .
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "sv,en" . }
-} ORDER BY ?countyLabel
-`;
-  const counties = await sparqlQuery(countyQuery);
-  console.log(`  Found ${counties.length} counties`);
-
-  const allPlaces: RawPlace[] = [];
-
-  for (const c of counties) {
-    const countyUri = c.county.value;
-    const countyName = c.countyLabel.value;
-
-    const query = `
-SELECT ?itemLabel ?lat ?lon ?munLabel WHERE {
-  ?item wdt:P31 wd:Q15630849 .
-  ?item wdt:P625 ?coords .
-  ?item wdt:P131 ?mun .
-  ?mun wdt:P31 wd:Q127448 .
-  ?mun wdt:P131 <${countyUri}> .
-  BIND(geof:latitude(?coords) AS ?lat)
-  BIND(geof:longitude(?coords) AS ?lon)
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "sv,en" . }
-}
-`;
-    const rows = await sparqlQuery(query);
-    console.log(`  ${countyName}: ${rows.length} småorter`);
-
-    for (const r of rows) {
-      allPlaces.push({
-        name: r.itemLabel.value,
-        lat: parseFloat(r.lat.value),
-        lon: parseFloat(r.lon.value),
-        municipality: r.munLabel.value,
-        county: countyName,
-        type: 'småort' as const,
-      });
-    }
-
-    // Be polite to Wikidata
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-
-  console.log(`  Total småorter: ${allPlaces.length}`);
-  return allPlaces;
+  featureClass: string;
+  featureCode: string;
+  admin1: string; // county code
+  admin2: string; // municipality code
 }
 
 interface GazetteerNode {
@@ -123,26 +39,84 @@ interface GazetteerNode {
   children?: GazetteerNode[];
 }
 
-function buildGazetteer(places: RawPlace[]) {
-  // Group by county → municipality → places
-  const counties = new Map<string, Map<string, RawPlace[]>>();
+// GeoNames admin1 codes → Swedish county names
+const ADMIN1_NAMES: Record<string, string> = {};
+// GeoNames admin1.admin2 → municipality names
+const ADMIN2_NAMES: Record<string, string> = {};
 
-  for (const p of places) {
-    if (!counties.has(p.county)) counties.set(p.county, new Map());
-    const muns = counties.get(p.county)!;
-    if (!muns.has(p.municipality)) muns.set(p.municipality, []);
-    muns.get(p.municipality)!.push(p);
+function parseGeoNamesFile(filePath: string): GeoNameRow[] {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const rows: GeoNameRow[] = [];
+
+  for (const line of content.split('\n')) {
+    if (!line.trim()) continue;
+    const cols = line.split('\t');
+    // GeoNames columns: 0=id, 1=name, 2=asciiName, 3=altNames, 4=lat, 5=lon,
+    // 6=featureClass, 7=featureCode, 8=countryCode, 9=cc2, 10=admin1, 11=admin2,
+    // 12=admin3, 13=admin4, 14=population, 15=elevation, 16=dem, 17=timezone, 18=modDate
+    const featureClass = cols[6];
+    const featureCode = cols[7];
+
+    // Collect admin division names — prefer Swedish "Xs län" / "X kommun" forms
+    if (featureClass === 'A' && featureCode === 'ADM1') {
+      const altNames = (cols[3] || '').split(',').map(a => a.trim());
+      // Match "Xs län" where the base matches the English name (strip " County")
+      const baseName = cols[1].replace(/ County$/, '');
+      const svName = altNames.find(a => a.endsWith('s län') && a.toLowerCase().includes(baseName.toLowerCase()))
+        || altNames.find(a => a.endsWith(' län') && a.toLowerCase().includes(baseName.toLowerCase()));
+      ADMIN1_NAMES[cols[10]] = svName || cols[1];
+    }
+    if (featureClass === 'A' && featureCode === 'ADM2') {
+      const altNames = (cols[3] || '').split(',').map(a => a.trim());
+      const baseName = cols[1].replace(/ Kommun$/i, '');
+      const svName = altNames.find(a => / kommun$/.test(a) && a.toLowerCase().includes(baseName.toLowerCase()))
+        || altNames.find(a => / Kommun$/.test(a) && a.toLowerCase().includes(baseName.toLowerCase()));
+      // Normalize to lowercase "kommun" for consistency with Wikidata gazetteers
+      const name = svName || cols[1];
+      ADMIN2_NAMES[`${cols[10]}.${cols[11]}`] = name.replace(/ Kommun$/, ' kommun');
+    }
+
+    rows.push({
+      name: cols[1],
+      lat: parseFloat(cols[4]),
+      lon: parseFloat(cols[5]),
+      featureClass,
+      featureCode,
+      admin1: cols[10],
+      admin2: cols[11],
+    });
   }
 
-  // Deduplicate: if same name appears in same municipality, keep the one with more specific coords
-  // (prefer tätort over småort if both exist)
-  function dedup(arr: RawPlace[]): RawPlace[] {
-    const byName = new Map<string, RawPlace>();
-    for (const p of arr) {
-      const key = p.name.toLowerCase();
-      const existing = byName.get(key);
-      if (!existing || (existing.type === 'småort' && p.type === 'tätort')) {
-        byName.set(key, p);
+  return rows;
+}
+
+function round6(n: number): number {
+  return Math.round(n * 1000000) / 1000000;
+}
+
+function buildGazetteerFromRows(
+  rows: GeoNameRow[],
+  nodeType: string,
+): GazetteerNode[] {
+  // Group by admin1 (county) → admin2 (municipality) → places
+  const counties = new Map<string, Map<string, GeoNameRow[]>>();
+
+  for (const r of rows) {
+    if (!r.admin1 || !r.admin2) continue;
+    if (!counties.has(r.admin1)) counties.set(r.admin1, new Map());
+    const muns = counties.get(r.admin1)!;
+    const munKey = `${r.admin1}.${r.admin2}`;
+    if (!muns.has(munKey)) muns.set(munKey, []);
+    muns.get(munKey)!.push(r);
+  }
+
+  // Deduplicate by name within each municipality
+  function dedup(arr: GeoNameRow[]): GeoNameRow[] {
+    const byName = new Map<string, GeoNameRow>();
+    for (const r of arr) {
+      const key = r.name.toLowerCase();
+      if (!byName.has(key)) {
+        byName.set(key, r);
       }
     }
     return Array.from(byName.values());
@@ -150,31 +124,44 @@ function buildGazetteer(places: RawPlace[]) {
 
   const countyNodes: GazetteerNode[] = [];
 
-  for (const [countyName, muns] of [...counties.entries()].sort((a, b) => a[0].localeCompare(b[0], 'sv'))) {
+  for (const [admin1Code, muns] of [...counties.entries()].sort((a, b) => {
+    const nameA = ADMIN1_NAMES[a[0]] || a[0];
+    const nameB = ADMIN1_NAMES[b[0]] || b[0];
+    return nameA.localeCompare(nameB, 'sv');
+  })) {
+    const countyName = ADMIN1_NAMES[admin1Code];
+    if (!countyName) continue;
+
     const munNodes: GazetteerNode[] = [];
 
-    for (const [munName, munPlaces] of [...muns.entries()].sort((a, b) => a[0].localeCompare(b[0], 'sv'))) {
-      const uniquePlaces = dedup(munPlaces);
-      const placeNodes: GazetteerNode[] = uniquePlaces
+    for (const [munKey, munRows] of [...muns.entries()].sort((a, b) => {
+      const nameA = ADMIN2_NAMES[a[0]] || a[0];
+      const nameB = ADMIN2_NAMES[b[0]] || b[0];
+      return nameA.localeCompare(nameB, 'sv');
+    })) {
+      const munName = ADMIN2_NAMES[munKey];
+      if (!munName) continue;
+
+      const unique = dedup(munRows);
+      const placeNodes: GazetteerNode[] = unique
         .sort((a, b) => a.name.localeCompare(b.name, 'sv'))
-        .map(p => ({
-          name: p.name,
-          type: p.type === 'tätort' ? 'locality' : 'small_locality',
-          lat: Math.round(p.lat * 1000000) / 1000000,
-          lon: Math.round(p.lon * 1000000) / 1000000,
+        .map(r => ({
+          name: r.name,
+          type: nodeType,
+          lat: round6(r.lat),
+          lon: round6(r.lon),
         }));
 
       if (placeNodes.length === 0) continue;
 
-      // Municipality center = average of its places
       const avgLat = placeNodes.reduce((s, p) => s + p.lat, 0) / placeNodes.length;
       const avgLon = placeNodes.reduce((s, p) => s + p.lon, 0) / placeNodes.length;
 
       munNodes.push({
         name: munName,
         type: 'municipality',
-        lat: Math.round(avgLat * 1000000) / 1000000,
-        lon: Math.round(avgLon * 1000000) / 1000000,
+        lat: round6(avgLat),
+        lon: round6(avgLon),
         children: placeNodes,
       });
     }
@@ -187,21 +174,43 @@ function buildGazetteer(places: RawPlace[]) {
     countyNodes.push({
       name: countyName,
       type: 'county',
-      lat: Math.round(avgLat * 1000000) / 1000000,
-      lon: Math.round(avgLon * 1000000) / 1000000,
+      lat: round6(avgLat),
+      lon: round6(avgLon),
       children: munNodes,
     });
   }
 
-  return {
-    id: 'sv-orter',
-    name: 'Swedish Populated Places (Orter)',
+  return countyNodes;
+}
+
+function countPlaces(countyNodes: GazetteerNode[]): { counties: number; municipalities: number; places: number } {
+  let municipalities = 0;
+  let places = 0;
+  for (const county of countyNodes) {
+    for (const mun of county.children || []) {
+      municipalities++;
+      places += (mun.children || []).length;
+    }
+  }
+  return { counties: countyNodes.length, municipalities, places };
+}
+
+function writeGazetteer(
+  id: string,
+  name: string,
+  description: string,
+  countyNodes: GazetteerNode[],
+  outFile: string,
+) {
+  const gazetteer = {
+    id,
+    name,
     locale: 'sv',
-    description: 'Tätorter (urban localities, ~2000) and småorter (small localities, ~10000) — named populated places in Sweden. More granular than parishes.',
+    description,
     source: {
-      name: 'Wikidata',
-      url: 'https://www.wikidata.org/wiki/Q12813115',
-      license: 'CC0 1.0',
+      name: 'GeoNames',
+      url: 'https://www.geonames.org/countries/SE/sweden.html',
+      license: 'CC BY 4.0',
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
@@ -213,34 +222,71 @@ function buildGazetteer(places: RawPlace[]) {
       children: countyNodes,
     },
   };
-}
 
-async function main() {
-  const tatorter = await fetchTatorter();
-  const smaorter = await fetchSmåorter();
-
-  const allPlaces = [...tatorter, ...smaorter];
-  console.log(`\nTotal places: ${allPlaces.length}`);
-
-  const gazetteer = buildGazetteer(allPlaces);
-
-  // Count places
-  let placeCount = 0;
-  let munCount = 0;
-  for (const county of gazetteer.root.children!) {
-    for (const mun of county.children!) {
-      munCount++;
-      placeCount += mun.children!.length;
-    }
-  }
-  console.log(`Gazetteer: ${gazetteer.root.children!.length} counties, ${munCount} municipalities, ${placeCount} places`);
-
-  const outPath = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data', 'sv-orter.json');
+  const outPath = path.join(DATA_DIR, outFile);
   fs.writeFileSync(outPath, JSON.stringify(gazetteer, null, 2) + '\n');
-  console.log(`Written to ${outPath}`);
+
+  const stats = countPlaces(countyNodes);
+  console.log(`  ${id}: ${stats.counties} counties, ${stats.municipalities} municipalities, ${stats.places} places → ${outFile}`);
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+function main() {
+  if (!fs.existsSync(GEONAMES_FILE)) {
+    console.error(`GeoNames data not found at ${GEONAMES_FILE}`);
+    console.error('Download it first:');
+    console.error('  curl -o /tmp/SE.zip https://download.geonames.org/export/dump/SE.zip');
+    console.error('  unzip -o /tmp/SE.zip -d /tmp/geonames_se/');
+    process.exit(1);
+  }
+
+  console.log('Parsing GeoNames data...');
+  const allRows = parseGeoNamesFile(GEONAMES_FILE);
+  console.log(`  Total rows: ${allRows.length}`);
+  console.log(`  Admin1 (counties): ${Object.keys(ADMIN1_NAMES).length}`);
+  console.log(`  Admin2 (municipalities): ${Object.keys(ADMIN2_NAMES).length}`);
+
+  // Filter by feature class/code
+  const populated = allRows.filter(r => r.featureClass === 'P');
+  const farms = allRows.filter(r => r.featureClass === 'S' && r.featureCode === 'FRM');
+  const churches = allRows.filter(r => r.featureClass === 'S' && r.featureCode === 'CH');
+
+  console.log(`  Populated places: ${populated.length}`);
+  console.log(`  Farms: ${farms.length}`);
+  console.log(`  Churches: ${churches.length}`);
+
+  console.log('\nBuilding gazetteers...');
+
+  // 1. Populated places
+  const orterNodes = buildGazetteerFromRows(populated, 'locality');
+  writeGazetteer(
+    'sv-orter',
+    'Swedish Populated Places (Orter)',
+    'All named settlements in Sweden — cities, towns, villages, and hamlets. The most granular place gazetteer.',
+    orterNodes,
+    'sv-orter.json',
+  );
+
+  // 2. Farms
+  const gardarNodes = buildGazetteerFromRows(farms, 'farm');
+  writeGazetteer(
+    'sv-gardar',
+    'Swedish Farms (Gårdar)',
+    'Named farms in Sweden. Historically important — many genealogy records reference farm names as locations.',
+    gardarNodes,
+    'sv-gardar.json',
+  );
+
+  // 3. Churches
+  const kyrkorNodes = buildGazetteerFromRows(churches, 'church');
+  writeGazetteer(
+    'sv-kyrkor',
+    'Swedish Churches (Kyrkor)',
+    'Church buildings in Sweden. Important for genealogy — vital records (births, marriages, burials) are organized by church parish.',
+    kyrkorNodes,
+    'sv-kyrkor.json',
+  );
+
+  console.log('\nDone!');
+}
+
+main();
