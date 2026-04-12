@@ -61,9 +61,26 @@ export function computePedigreeLayout(
     visited.add(node.person.id);
     if (node.parents.length === 0) {
       leafSlots.set(node.person.id, slotIndex++);
+      // If this leaf is the selected person, reserve slots for spouse outlines
+      // so the layout naturally creates vertical space below them.
+      if (selectedPersonId && node.person.id === selectedPersonId) {
+        for (const sp of node.spouses) {
+          if (sp.isPlaceholder) {
+            leafSlots.set(sp.person.id, slotIndex++);
+          }
+        }
+      }
       return;
     }
+    // For internal nodes: also reserve spouse outline slots after their subtree
     for (const p of node.parents) assignLeafSlots(p, visited);
+    if (selectedPersonId && node.person.id === selectedPersonId) {
+      for (const sp of node.spouses) {
+        if (sp.isPlaceholder) {
+          leafSlots.set(sp.person.id, slotIndex++);
+        }
+      }
+    }
   }
   assignLeafSlots(root);
 
@@ -171,25 +188,22 @@ export function computePedigreeLayout(
           return y;
         }
 
-        // Unplaced spouse outlines — place below selected person, shifted right
-        // to avoid sitting in the vertical connector corridor between generations.
+        // Unplaced spouse outlines — place directly below selected person (V_GAP spacing).
+        // Leaf slot was reserved during assignLeafSlots to push other boxes down,
+        // but we place at selBox.y + BOX_H + V_GAP for tight couple-like spacing.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
         if (unplacedSpouses.length > 0) {
+          const selDepth = depthMap.get(selectedPersonId) ?? 0;
           for (let i = 0; i < unplacedSpouses.length; i++) {
-            const spX = selBox.x + BOX_W / 2;  // offset right by half a box
             const spY = selBox.y + BOX_H + V_GAP + i * (BOX_H + V_GAP);
             boxes.push({
               person: unplacedSpouses[i].person,
               isFocal: false,
-              x: spX, y: spY,
+              x: genXOf(selDepth), y: spY,
               w: BOX_W, h: BOX_H,
             });
-            // L-shaped connector: down from selected person, then right to spouse
-            const midY = selBox.y + BOX_H + V_GAP / 2;
-            const spCX = spX + BOX_W / 2;
-            lines.push({ x1: selBox.x + BOX_W / 2, y1: selBox.y + BOX_H, x2: selBox.x + BOX_W / 2, y2: midY });
-            lines.push({ x1: selBox.x + BOX_W / 2, y1: midY, x2: spCX, y2: midY });
-            lines.push({ x1: spCX, y1: midY, x2: spCX, y2: spY });
+            // Vertical connector from bottom of selected person to top of spouse
+            lines.push({ x1: selBox.x + BOX_W / 2, y1: selBox.y + BOX_H, x2: selBox.x + BOX_W / 2, y2: spY });
           }
         }
 
