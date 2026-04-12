@@ -81,7 +81,9 @@
         />
         <DescendantChart
           v-if="activeTab === 'descendants'"
+          :key="'descendants-' + chartKey"
           :person-id="personId"
+          :selected-person-id="selectedPersonId"
           @navigate="navigateTo"
           @reload="reloadChart"
         />

@@ -1,7 +1,7 @@
-// Hourglass tree builder: converts HourglassTree → TreePerson graph
+// Tree builders: converts various tree formats → TreePerson graph
 // and injects outline placeholders for the selected person.
 
-import type { PersonNode, HourglassTree, DescendantNode, TreePerson } from './types';
+import type { PersonNode, HourglassTree, DescendantNode, TreePerson, PedigreeTree } from './types';
 
 const PLACEHOLDER_PREFIX = '__ph_';
 
@@ -153,6 +153,60 @@ function findPerson(node: TreePerson, id: string, visited = new Set<string>()): 
     if (found) return found;
   }
   return null;
+}
+
+/**
+ * Convert PedigreeTree (ahnentafel) into a TreePerson graph.
+ * Same structure as hourglass ancestor section but without descendants/siblings/spouses.
+ */
+export function buildPedigreeTreePerson(tree: PedigreeTree): TreePerson {
+  const { nodes, hasMoreAncestors = new Set<number>() } = tree;
+  const cache = new Map<number, TreePerson>();
+
+  function build(k: number): TreePerson | null {
+    const person = nodes.get(k);
+    if (!person) return null;
+    if (cache.has(k)) return cache.get(k)!;
+
+    const tp: TreePerson = {
+      person,
+      parents: [],
+      children: [],
+      spouses: [],
+      isFocal: k === 1,
+      hasMoreAncestors: hasMoreAncestors.has(k),
+    };
+    cache.set(k, tp);
+
+    const father = build(k * 2);
+    if (father) tp.parents.push(father);
+    const mother = build(k * 2 + 1);
+    if (mother) tp.parents.push(mother);
+
+    return tp;
+  }
+
+  const focal = build(1);
+  if (!focal) throw new Error('Focal person not found in pedigree tree');
+  return focal;
+}
+
+/**
+ * Convert DescendantNode tree into a TreePerson graph.
+ */
+export function buildDescendantTreePerson(root: DescendantNode): TreePerson {
+  function build(node: DescendantNode, isFocal: boolean): TreePerson {
+    return {
+      person: node.person,
+      parents: [],
+      children: node.children.map(c => build(c, false)),
+      spouses: [],
+      isFocal,
+      hasMoreChildren: node.hasMoreChildren,
+      coParentId: node.coParentId,
+    };
+  }
+  return build(root, true);
 }
 
 export { PLACEHOLDER_PREFIX };

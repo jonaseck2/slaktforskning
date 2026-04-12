@@ -1,232 +1,287 @@
-// Pedigree chart layout algorithm.
+// Pedigree chart layout algorithm — operates on TreePerson graph.
+// Focal at left, ancestors expand rightward. Supports N parents per node.
 
-import type { PersonNode, PedigreeTree, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
+import type { PedigreeTree, TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
 import { BOX_W, BOX_H, V_GAP, H_GAP, PAD, ROW_H } from './constants';
+import { buildPedigreeTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
 /**
  * Lay out a pedigree chart (focal at left, ancestors going right).
- * Handles any number of generations via ahnentafel numbering.
+ * Uses TreePerson graph — supports N parents per person.
  */
 export function computePedigreeLayout(
   tree: PedigreeTree,
   collapsed: Set<string> = new Set(),
-  /** When set, only show add-parent placeholders for this person (prevents overlap). */
   selectedPersonId?: string | null,
 ): ChartLayout {
-  const { nodes: originalNodes, generations: G } = tree;
+  // ── 1. Build TreePerson graph ───────────────────────────────────────────────
+  const root = buildPedigreeTreePerson(tree);
+  if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
-  // Map personId → ahnentafel key (for button generation)
-  const personToAhnen = new Map<string, number>();
-  for (const [k, person] of originalNodes) {
-    personToAhnen.set(person.id, k);
-  }
+  // ── 2. Collapse filtering ──────────────────────────────────────────────────
+  const originalParentCount = new Map<string, number>();
+  const hasMoreUp = new Map<string, boolean>();
 
-  // Prune collapsed ancestor subtrees
-  function removeSubtree(nodes: Map<number, PersonNode>, k: number): void {
-    if (!nodes.has(k)) return;
-    nodes.delete(k);
-    removeSubtree(nodes, k * 2);
-    removeSubtree(nodes, k * 2 + 1);
-  }
+  function recordAndPrune(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
 
-  const prunedNodes = new Map(originalNodes);
-  for (const [k, person] of originalNodes) {
-    if (collapsed.has(`${person.id}:right`)) {
-      removeSubtree(prunedNodes, k * 2);
-      removeSubtree(prunedNodes, k * 2 + 1);
+    originalParentCount.set(node.person.id, node.parents.length);
+    hasMoreUp.set(node.person.id, !!node.hasMoreAncestors);
+
+    // Prune collapsed parents (never prune placeholders)
+    if (collapsed.has(`${node.person.id}:right`)) {
+      node.parents = node.parents.filter(p => p.isPlaceholder);
     }
+
+    for (const p of node.parents) recordAndPrune(p, visited);
+  }
+  recordAndPrune(root);
+
+  // ── 3. Compute geometry ────────────────────────────────────────────────────
+
+  // Max ancestor depth from focal
+  function maxDepth(node: TreePerson, visited = new Set<string>()): number {
+    if (visited.has(node.person.id)) return 0;
+    visited.add(node.person.id);
+    if (node.parents.length === 0) return 0;
+    return 1 + Math.max(...node.parents.map(p => maxDepth(p, visited)));
   }
 
-  const nodes = prunedNodes;
-  const boxes: BoxLayout[] = [];
-  const lines: Line[] = [];
-
-  const svgWidth = PAD + G * BOX_W + (G - 1) * H_GAP + PAD + 10; // button at box.right+10, r=8, stroke=1.5 → need ≥18.75 past box.right; +20 total
-
+  const G = maxDepth(root) + 1; // generations including focal
   const genXOf = (g: number) => PAD + g * (BOX_W + H_GAP);
 
-  // Compact vertical layout: assign slots only to visible leaves, preserving
-  // genealogical top-to-bottom order (father's family above mother's family).
-  // A node's "virtual leaf position" is where its slot-centre would fall in the
-  // full 2^(G-1)-leaf tree — used purely for sort-order, not for pixel positions.
-  function virtualLeafPos(k: number): number {
-    const g = Math.floor(Math.log2(k));
-    const pos = k - (1 << g);
-    return (pos + 0.5) * (1 << (G - 1 - g)) - 0.5;
+  // Compact vertical layout: assign sequential slots to visible leaf nodes,
+  // then internal nodes center vertically over their parents.
+  const leafSlots = new Map<string, number>();
+  let slotIndex = 0;
+
+  function assignLeafSlots(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    if (node.parents.length === 0) {
+      leafSlots.set(node.person.id, slotIndex++);
+      return;
+    }
+    for (const p of node.parents) assignLeafSlots(p, visited);
   }
+  assignLeafSlots(root);
 
-  const isLeafNode = (k: number) => !nodes.has(k * 2) && !nodes.has(k * 2 + 1);
-  const leaves = [...nodes.keys()].filter(isLeafNode).sort((a, b) => virtualLeafPos(a) - virtualLeafPos(b));
-  const leafYIndex = new Map<number, number>();
-  leaves.forEach((k, i) => leafYIndex.set(k, i));
+  const numLeaves = slotIndex;
 
-  const numLeaves = leaves.length;
-  const svgHeight = PAD + numLeaves * ROW_H - (numLeaves > 1 ? V_GAP : 0) + PAD;
-
-  // Memoised: leaves get a sequential slot; internal nodes average their children.
-  const cyCache = new Map<number, number>();
-  function centerYOf(k: number): number {
-    if (cyCache.has(k)) return cyCache.get(k)!;
+  // Memoised center Y: leaves get sequential slots, internal nodes average their parents.
+  const cyCache = new Map<string, number>();
+  function centerYOf(node: TreePerson): number {
+    if (cyCache.has(node.person.id)) return cyCache.get(node.person.id)!;
     let cy: number;
-    const idx = leafYIndex.get(k);
-    if (idx !== undefined) {
-      cy = PAD + (idx + 0.5) * ROW_H;
+    const slot = leafSlots.get(node.person.id);
+    if (slot !== undefined) {
+      cy = PAD + (slot + 0.5) * ROW_H;
     } else {
-      const childYs: number[] = [];
-      if (nodes.has(k * 2)) childYs.push(centerYOf(k * 2));
-      if (nodes.has(k * 2 + 1)) childYs.push(centerYOf(k * 2 + 1));
-      cy = childYs.length > 0
-        ? childYs.reduce((a, b) => a + b, 0) / childYs.length
+      const parentCYs = node.parents.map(p => centerYOf(p));
+      cy = parentCYs.length > 0
+        ? parentCYs.reduce((a, b) => a + b, 0) / parentCYs.length
         : PAD + 0.5 * ROW_H;
     }
-    cyCache.set(k, cy);
+    cyCache.set(node.person.id, cy);
     return cy;
   }
 
-  // Place boxes
-  for (const [k, person] of nodes) {
-    const g = Math.floor(Math.log2(k));
-    boxes.push({
-      person,
-      isFocal: k === 1,
-      x: genXOf(g),
-      y: centerYOf(k) - BOX_H / 2,
-      w: BOX_W,
-      h: BOX_H,
-    });
+  // Compute depth (generation) of each node
+  function nodeDepth(node: TreePerson, depth: number, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    depthMap.set(node.person.id, depth);
+    for (const p of node.parents) nodeDepth(p, depth + 1, visited);
   }
+  const depthMap = new Map<string, number>();
+  nodeDepth(root, 0);
 
-  // Draw connector lines: for each person, connect rightward to present parents
-  for (const [k] of nodes) {
-    const g = Math.floor(Math.log2(k));
-    if (g >= G - 1) continue; // at rightmost generation, no parents to draw
+  // ── 4. Place boxes and lines ───────────────────────────────────────────────
+  const boxes: BoxLayout[] = [];
+  const lines: Line[] = [];
 
-    const fatherK = k * 2;
-    const motherK = k * 2 + 1;
-    const father  = nodes.get(fatherK);
-    const mother  = nodes.get(motherK);
-    if (!father && !mother) continue;
+  function placeNodes(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
 
-    const cy    = centerYOf(k);
-    const forkX = genXOf(g) + BOX_W + H_GAP / 2;
+    const g = depthMap.get(node.person.id) ?? 0;
+    const cy = centerYOf(node);
 
-    lines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
+    boxes.push({
+      person: node.person,
+      isFocal: !!node.isFocal,
+      x: genXOf(g),
+      y: cy - BOX_H / 2,
+      w: BOX_W, h: BOX_H,
+    });
 
-    const pCYs = ([father ? centerYOf(fatherK) : null, mother ? centerYOf(motherK) : null]
-      .filter((y): y is number => y !== null));
+    if (node.parents.length > 0) {
+      const forkX = genXOf(g) + BOX_W + H_GAP / 2;
+      lines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
 
-    lines.push({ x1: forkX, y1: Math.min(...pCYs), x2: forkX, y2: Math.max(...pCYs) });
-    for (const pcy of pCYs) {
-      lines.push({ x1: forkX, y1: pcy, x2: genXOf(g + 1), y2: pcy });
+      const parentCYs = node.parents.map(p => centerYOf(p));
+      // Vertical fork spanning all parents
+      if (parentCYs.length > 0) {
+        lines.push({ x1: forkX, y1: Math.min(...parentCYs), x2: forkX, y2: Math.max(...parentCYs) });
+      }
+      // Horizontal lines to each parent
+      const parentGenX = genXOf(g + 1);
+      for (const pcy of parentCYs) {
+        lines.push({ x1: forkX, y1: pcy, x2: parentGenX, y2: pcy });
+      }
+    }
+
+    for (const p of node.parents) placeNodes(p, visited);
+  }
+  placeNodes(root);
+
+  // ── Place unplaced outlines for selected person ──
+  if (selectedPersonId) {
+    const selBox = boxes.find(b => b.person.id === selectedPersonId);
+    const placedIds = new Set(boxes.map(b => b.person.id));
+
+    if (selBox) {
+      const selNode = findPersonInTree(root, selectedPersonId);
+      if (selNode) {
+        const selCY = selBox.y + BOX_H / 2;
+
+        // Unplaced spouse outlines — place above or below the selected person
+        const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
+        for (let i = 0; i < unplacedSpouses.length; i++) {
+          const spY = selBox.y + (i + 1) * (BOX_H + V_GAP);
+          boxes.push({
+            person: unplacedSpouses[i].person,
+            isFocal: false,
+            x: selBox.x, y: spY,
+            w: BOX_W, h: BOX_H,
+          });
+          const lineY = selCY;
+          const spCY = spY + BOX_H / 2;
+          lines.push({ x1: selBox.x + BOX_W / 2, y1: lineY, x2: selBox.x + BOX_W / 2, y2: spCY });
+        }
+
+        // Unplaced child outlines — place to the left of the selected person
+        const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
+        for (let i = 0; i < unplacedChildren.length; i++) {
+          const childX = selBox.x - BOX_W - H_GAP;
+          const childY = selBox.y + (i) * (BOX_H + V_GAP);
+          boxes.push({
+            person: unplacedChildren[i].person,
+            isFocal: false,
+            x: childX, y: childY,
+            w: BOX_W, h: BOX_H,
+          });
+          const forkX = selBox.x - H_GAP / 2;
+          const childCY = childY + BOX_H / 2;
+          lines.push({ x1: selBox.x, y1: selCY, x2: forkX, y2: selCY });
+          lines.push({ x1: forkX, y1: childCY, x2: childX + BOX_W, y2: childCY });
+          lines.push({ x1: forkX, y1: selCY, x2: forkX, y2: childCY });
+        }
+      }
     }
   }
 
-  // Generate collapse/load-more buttons on right side of each box.
-  // Ancestors expand rightward in pedigree, so direction is 'right' (▶).
-  const hasMore = tree.hasMoreAncestors ?? new Set<number>();
+  // ── 5. Compute SVG dimensions ──────────────────────────────────────────────
+  const maxBoxRight = boxes.length > 0 ? Math.max(...boxes.map(b => b.x + b.w)) : BOX_W;
+  const maxBoxBottom = boxes.length > 0 ? Math.max(...boxes.map(b => b.y + b.h)) : BOX_H;
+  const minBoxTop = boxes.length > 0 ? Math.min(...boxes.map(b => b.y)) : 0;
+  const minBoxLeft = boxes.length > 0 ? Math.min(...boxes.map(b => b.x)) : 0;
+
+  const svgWidth = Math.max(PAD + G * BOX_W + (G - 1) * H_GAP + PAD + 20, maxBoxRight + PAD);
+  const svgHeight = Math.max(PAD + numLeaves * ROW_H - (numLeaves > 1 ? V_GAP : 0) + PAD, maxBoxBottom + PAD);
+  const viewBoxMinY = Math.min(0, minBoxTop - PAD);
+  const viewBoxMinX = Math.min(0, minBoxLeft - PAD);
+
+  // Adjust height if viewBoxMinY is negative
+  const finalHeight = viewBoxMinY < 0 ? svgHeight + (-viewBoxMinY) : svgHeight;
+
+  // ── 6. Collapse buttons ────────────────────────────────────────────────────
   const collapseButtons: CollapseButton[] = [];
   for (const box of boxes) {
-    const k = personToAhnen.get(box.person.id);
-    if (k === undefined) continue;
-    const hasParents = originalNodes.has(k * 2) || originalNodes.has(k * 2 + 1);
-    if (hasParents) {
+    const pid = box.person.id;
+    if (pid.startsWith(PLACEHOLDER_PREFIX)) continue;
+
+    const origParents = originalParentCount.get(pid) ?? 0;
+    const moreUp = hasMoreUp.get(pid) ?? false;
+
+    if (origParents > 0) {
       collapseButtons.push({
-        personId: box.person.id,
-        direction: 'right',
+        personId: pid, direction: 'right',
         cx: box.x + BOX_W + 10,
         cy: box.y + BOX_H / 2,
-        isExpanded: !collapsed.has(`${box.person.id}:right`),
+        isExpanded: !collapsed.has(`${pid}:right`),
         isLoadMore: false,
       });
-    } else if (hasMore.has(k)) {
+    } else if (moreUp) {
       collapseButtons.push({
-        personId: box.person.id,
-        direction: 'right',
+        personId: pid, direction: 'right',
         cx: box.x + BOX_W + 10,
         cy: box.y + BOX_H / 2,
-        isExpanded: false,
-        isLoadMore: true,
+        isExpanded: false, isLoadMore: true,
       });
     }
   }
 
-  // Generate placeholder ghost boxes for the selected person's missing parents only.
-  // Limiting to one person prevents overlapping placeholders when multiple leaf nodes
-  // are adjacent in the tree.
-  const selectedK = selectedPersonId
-    ? [...nodes.entries()].find(([, p]) => p.id === selectedPersonId)?.[0]
-    : undefined;
+  // ── 7. Extract placeholders ────────────────────────────────────────────────
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
-  for (const [k] of nodes) {
-    if (selectedK !== undefined && k !== selectedK) continue;
-    if (selectedK === undefined) continue; // no selection → no placeholders
-    const g = Math.floor(Math.log2(k));
-    if (g >= G - 1) continue;
-    const fatherK = k * 2;
-    const motherK = k * 2 + 1;
-    const hasFather = nodes.has(fatherK);
-    const hasMother = nodes.has(motherK);
-    if (hasFather && hasMother) continue;
-    if (hasMore.has(k)) continue;
 
-    const cy = centerYOf(k);
-    const parentGenX = genXOf(g + 1);
-    const halfStep = (BOX_H + V_GAP) / 2;
-
-    if (!hasFather) {
-      const phY = cy - halfStep - BOX_H / 2;
-      placeholders.push({
-        type: 'placeholder',
-        role: 'father',
-        childPersonId: nodes.get(k)!.id,
-        key: fatherK,
-        x: parentGenX,
-        y: phY,
-      });
-      // Dashed connector line from child to placeholder
-      const forkX = genXOf(g) + BOX_W + H_GAP / 2;
-      const phCy = phY + BOX_H / 2;
-      placeholderLines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
-      placeholderLines.push({ x1: forkX, y1: phCy, x2: forkX, y2: cy });
-      placeholderLines.push({ x1: forkX, y1: phCy, x2: parentGenX, y2: phCy });
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const box = boxes[i];
+    if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
+    const pid = box.person.id;
+    let role: 'father' | 'mother' | 'child' | 'spouse';
+    let childPersonId: string;
+    if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
+      role = 'father';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'father_').length);
+    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'mother_')) {
+      role = 'mother';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'mother_').length);
+    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'spouse_')) {
+      role = 'spouse';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'spouse_').length);
+    } else {
+      role = 'child';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'child_').length);
     }
+    placeholders.push({ type: 'placeholder', role, childPersonId, x: box.x, y: box.y });
+    boxes.splice(i, 1);
+  }
 
-    if (!hasMother) {
-      const phY = cy + halfStep - BOX_H / 2;
-      placeholders.push({
-        type: 'placeholder',
-        role: 'mother',
-        childPersonId: nodes.get(k)!.id,
-        key: motherK,
-        x: parentGenX,
-        y: phY,
-      });
-      const forkX = genXOf(g) + BOX_W + H_GAP / 2;
-      const phCy = phY + BOX_H / 2;
-      placeholderLines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
-      placeholderLines.push({ x1: forkX, y1: cy, x2: forkX, y2: phCy });
-      placeholderLines.push({ x1: forkX, y1: phCy, x2: parentGenX, y2: phCy });
+  // Convert lines touching placeholders to dashed
+  const phCenters = new Set<string>();
+  for (const ph of placeholders) {
+    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H / 2}`);
+    phCenters.add(`${ph.x + BOX_W},${ph.y + BOX_H / 2}`);
+    phCenters.add(`${ph.x},${ph.y + BOX_H / 2}`);
+    // Also check top/bottom center for vertical lines
+    phCenters.add(`${ph.x + BOX_W / 2},${ph.y}`);
+    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H}`);
+  }
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const ln = lines[i];
+    if (phCenters.has(`${ln.x1},${ln.y1}`) || phCenters.has(`${ln.x2},${ln.y2}`)) {
+      placeholderLines.push(ln);
+      lines.splice(i, 1);
     }
   }
 
-  // Deduplicate connector lines that overlap with existing solid lines
+  // Deduplicate placeholder lines that overlap with solid lines
   const lineSet = new Set(lines.map(l => `${l.x1},${l.y1},${l.x2},${l.y2}`));
   const uniquePlaceholderLines = placeholderLines.filter(l => !lineSet.has(`${l.x1},${l.y1},${l.x2},${l.y2}`));
 
-  // Expand SVG dimensions to include any placeholders that extend beyond box area
-  let viewBoxMinY = 0;
-  let finalHeight = svgHeight;
-  let finalWidth = svgWidth;
-  for (const ph of placeholders) {
-    viewBoxMinY = Math.min(viewBoxMinY, ph.y - PAD);
-    finalHeight = Math.max(finalHeight, ph.y + BOX_H + PAD);
-    finalWidth = Math.max(finalWidth, ph.x + BOX_W + PAD);
-  }
-  // If viewBoxMinY is negative, increase height to cover the extra space above
-  if (viewBoxMinY < 0) {
-    finalHeight += -viewBoxMinY;
-  }
+  return { boxes, lines, svgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
+}
 
-  return { boxes, lines, svgWidth: finalWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
+/** Find a TreePerson by ID in the graph (cycle-safe). */
+function findPersonInTree(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
+  if (node.person.id === id) return node;
+  if (visited.has(node.person.id)) return null;
+  visited.add(node.person.id);
+  for (const p of node.parents) { const f = findPersonInTree(p, id, visited); if (f) return f; }
+  for (const c of node.children) { const f = findPersonInTree(c, id, visited); if (f) return f; }
+  for (const s of node.spouses) { const f = findPersonInTree(s, id, visited); if (f) return f; }
+  return null;
 }

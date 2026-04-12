@@ -23,4 +23,4 @@ export { computePedigreeLayout } from './pedigree';
 export { computeHourglassLayout } from './hourglass';
 export { computeTimelineLayout } from './timeline';
 export { computeDescendantLayout } from './descendant';
-export { buildHourglassTree, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
+export { buildHourglassTree, buildPedigreeTreePerson, buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
