@@ -146,13 +146,11 @@ export function computePedigreeLayout(
       if (selNode) {
         const selCY = selBox.y + BOX_H / 2;
 
-        // Helper: find first Y that doesn't overlap any existing box
-        // Uses full rectangle intersection check (not just same-X column)
-        function findClearY(x: number, startY: number, direction: 1 | -1): number {
+        // Helper: find first Y that doesn't overlap any existing box at exact X
+        function findClearYSameCol(x: number, startY: number, direction: 1 | -1): number {
           let y = startY;
           const overlaps = () => boxes.some(b =>
-            x < b.x + b.w && x + BOX_W > b.x &&  // horizontal overlap
-            y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y  // vertical overlap (with gap)
+            b.x === x && y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
           );
           while (overlaps()) {
             y += direction * (BOX_H + V_GAP);
@@ -160,29 +158,42 @@ export function computePedigreeLayout(
           return y;
         }
 
-        // Unplaced spouse outlines — place adjacent to selected person, avoiding overlap
+        // Helper: find first Y using full rectangle intersection (cross-column)
+        function findClearYRect(x: number, startY: number, direction: 1 | -1): number {
+          let y = startY;
+          const overlaps = () => boxes.some(b =>
+            x < b.x + b.w && x + BOX_W > b.x &&
+            y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
+          );
+          while (overlaps()) {
+            y += direction * (BOX_H + V_GAP);
+          }
+          return y;
+        }
+
+        // Unplaced spouse outlines — place directly below selected person (no collision avoidance)
+        // In pedigree, all ancestors in a generation share the same X, so collision
+        // avoidance would push the spouse far away. Better to place it adjacent.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
         if (unplacedSpouses.length > 0) {
-          let nextY = findClearY(selBox.x, selBox.y + BOX_H + V_GAP, 1);
           for (let i = 0; i < unplacedSpouses.length; i++) {
-            const spY = nextY;
-            const spCY = spY + BOX_H / 2;
+            const spY = selBox.y + BOX_H + V_GAP + i * (BOX_H + V_GAP);
             boxes.push({
               person: unplacedSpouses[i].person,
               isFocal: false,
               x: selBox.x, y: spY,
               w: BOX_W, h: BOX_H,
             });
-            lines.push({ x1: selBox.x + BOX_W / 2, y1: selCY, x2: selBox.x + BOX_W / 2, y2: spCY });
-            nextY = spY + BOX_H + V_GAP;
+            // Vertical connector from bottom of selected person to top of spouse
+            lines.push({ x1: selBox.x + BOX_W / 2, y1: selBox.y + BOX_H, x2: selBox.x + BOX_W / 2, y2: spY });
           }
         }
 
-        // Unplaced child outlines — place to the left, avoiding overlap
+        // Unplaced child outlines — place to the left, cross-column overlap check
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
         if (unplacedChildren.length > 0) {
           const childX = selBox.x - BOX_W - H_GAP;
-          let nextY = findClearY(childX, selBox.y, 1);
+          let nextY = findClearYRect(childX, selBox.y, 1);
           for (let i = 0; i < unplacedChildren.length; i++) {
             const childY = nextY;
             const childCY = childY + BOX_H / 2;
