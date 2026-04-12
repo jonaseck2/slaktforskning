@@ -146,37 +146,49 @@ export function computePedigreeLayout(
       if (selNode) {
         const selCY = selBox.y + BOX_H / 2;
 
-        // Unplaced spouse outlines — place above or below the selected person
+        // Unplaced spouse outlines — place below all boxes at the same X column
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
-        for (let i = 0; i < unplacedSpouses.length; i++) {
-          const spY = selBox.y + (i + 1) * (BOX_H + V_GAP);
-          boxes.push({
-            person: unplacedSpouses[i].person,
-            isFocal: false,
-            x: selBox.x, y: spY,
-            w: BOX_W, h: BOX_H,
-          });
-          const lineY = selCY;
-          const spCY = spY + BOX_H / 2;
-          lines.push({ x1: selBox.x + BOX_W / 2, y1: lineY, x2: selBox.x + BOX_W / 2, y2: spCY });
+        if (unplacedSpouses.length > 0) {
+          const sameColBoxes = boxes.filter(b => b.x === selBox.x);
+          const bottomEdge = Math.max(...sameColBoxes.map(b => b.y + b.h));
+          for (let i = 0; i < unplacedSpouses.length; i++) {
+            const spY = bottomEdge + V_GAP + i * (BOX_H + V_GAP);
+            const spCY = spY + BOX_H / 2;
+            boxes.push({
+              person: unplacedSpouses[i].person,
+              isFocal: false,
+              x: selBox.x, y: spY,
+              w: BOX_W, h: BOX_H,
+            });
+            // Horizontal marriage line at the spouse's level, then vertical connector
+            lines.push({ x1: selBox.x + BOX_W / 2, y1: selCY, x2: selBox.x + BOX_W / 2, y2: spCY });
+          }
         }
 
-        // Unplaced child outlines — place to the left of the selected person
+        // Unplaced child outlines — place to the left, below existing boxes at that column
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
-        for (let i = 0; i < unplacedChildren.length; i++) {
+        if (unplacedChildren.length > 0) {
           const childX = selBox.x - BOX_W - H_GAP;
-          const childY = selBox.y + (i) * (BOX_H + V_GAP);
-          boxes.push({
-            person: unplacedChildren[i].person,
-            isFocal: false,
-            x: childX, y: childY,
-            w: BOX_W, h: BOX_H,
-          });
-          const forkX = selBox.x - H_GAP / 2;
-          const childCY = childY + BOX_H / 2;
-          lines.push({ x1: selBox.x, y1: selCY, x2: forkX, y2: selCY });
-          lines.push({ x1: forkX, y1: childCY, x2: childX + BOX_W, y2: childCY });
-          lines.push({ x1: forkX, y1: selCY, x2: forkX, y2: childCY });
+          const sameColBoxes = boxes.filter(b => b.x === childX);
+          const bottomEdge = sameColBoxes.length > 0
+            ? Math.max(...sameColBoxes.map(b => b.y + b.h))
+            : selBox.y - BOX_H - V_GAP;
+          for (let i = 0; i < unplacedChildren.length; i++) {
+            const childY = sameColBoxes.length > 0
+              ? bottomEdge + V_GAP + i * (BOX_H + V_GAP)
+              : selBox.y + i * (BOX_H + V_GAP);
+            const childCY = childY + BOX_H / 2;
+            boxes.push({
+              person: unplacedChildren[i].person,
+              isFocal: false,
+              x: childX, y: childY,
+              w: BOX_W, h: BOX_H,
+            });
+            const forkX = selBox.x - H_GAP / 2;
+            lines.push({ x1: selBox.x, y1: selCY, x2: forkX, y2: selCY });
+            lines.push({ x1: forkX, y1: childCY, x2: childX + BOX_W, y2: childCY });
+            lines.push({ x1: forkX, y1: selCY, x2: forkX, y2: childCY });
+          }
         }
       }
     }
