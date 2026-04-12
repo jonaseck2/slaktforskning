@@ -171,21 +171,25 @@ export function computePedigreeLayout(
           return y;
         }
 
-        // Unplaced spouse outlines — place directly below selected person (no collision avoidance)
-        // In pedigree, all ancestors in a generation share the same X, so collision
-        // avoidance would push the spouse far away. Better to place it adjacent.
+        // Unplaced spouse outlines — place below selected person, shifted right
+        // to avoid sitting in the vertical connector corridor between generations.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
         if (unplacedSpouses.length > 0) {
           for (let i = 0; i < unplacedSpouses.length; i++) {
+            const spX = selBox.x + BOX_W / 2;  // offset right by half a box
             const spY = selBox.y + BOX_H + V_GAP + i * (BOX_H + V_GAP);
             boxes.push({
               person: unplacedSpouses[i].person,
               isFocal: false,
-              x: selBox.x, y: spY,
+              x: spX, y: spY,
               w: BOX_W, h: BOX_H,
             });
-            // Vertical connector from bottom of selected person to top of spouse
-            lines.push({ x1: selBox.x + BOX_W / 2, y1: selBox.y + BOX_H, x2: selBox.x + BOX_W / 2, y2: spY });
+            // L-shaped connector: down from selected person, then right to spouse
+            const midY = selBox.y + BOX_H + V_GAP / 2;
+            const spCX = spX + BOX_W / 2;
+            lines.push({ x1: selBox.x + BOX_W / 2, y1: selBox.y + BOX_H, x2: selBox.x + BOX_W / 2, y2: midY });
+            lines.push({ x1: selBox.x + BOX_W / 2, y1: midY, x2: spCX, y2: midY });
+            lines.push({ x1: spCX, y1: midY, x2: spCX, y2: spY });
           }
         }
 
