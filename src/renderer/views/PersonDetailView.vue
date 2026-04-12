@@ -74,7 +74,7 @@
       <div class="section-header">
         <h4 id="section-person-timeline">{{ $t('personTimeline.title') }}</h4>
       </div>
-      <PersonTimeline ref="timelineRef" :person-id="person.id" />
+      <PersonTimeline ref="timelineRef" :person-id="person.id" :key="'timeline-' + dataVersionStore.version" />
     </section>
 
     <!-- Life Map Section -->
@@ -82,7 +82,7 @@
       <div class="section-header">
         <h4 id="section-person-map">{{ $t('map.personMap') }}</h4>
       </div>
-      <PersonMap :person-id="person.id" />
+      <PersonMap :person-id="person.id" :key="'map-' + dataVersionStore.version" />
     </section>
 
     <!-- Identifiers Section -->
