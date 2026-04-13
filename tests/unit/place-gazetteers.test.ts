@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
+import { resolvePlace, resolveBoundary } from '../../src/api/place-gazetteers/resolver';
 import { loadGazetteers, getAllGazetteers } from '../../src/api/place-gazetteers/index';
 import type { Gazetteer, GazetteerConfig } from '../../src/api/place-gazetteers/types';
 
@@ -158,6 +158,70 @@ describe('resolvePlace', () => {
     const result = resolvePlace('Vallsjö, Sverige', [gazetteerWithDup]);
     expect(result).not.toBeNull();
     expect(result!.matchQuality).toBe('ambiguous');
+  });
+});
+
+const boundaryGazetteer: Gazetteer = {
+  id: 'sv-boundaries',
+  name: 'Swedish Parish Boundaries',
+  locale: 'sv',
+  kind: 'boundary',
+  root: {
+    name: 'Sverige', type: 'country', lat: 62.0, lon: 15.0,
+    children: [{
+      name: 'Jönköpings län', type: 'county', lat: 57.78, lon: 14.16,
+      aliases: ['Jönköping'],
+      children: [{
+        name: 'Sävsjö', type: 'municipality', lat: 57.40, lon: 14.66,
+        children: [{
+          name: 'Vallsjö', type: 'parish', lat: 57.42, lon: 14.72,
+          aliases: ['Wallsjö', 'Vallsjö församling'],
+          geometry: {
+            type: 'Polygon' as const,
+            coordinates: [[[14.6, 57.3], [14.8, 57.3], [14.8, 57.5], [14.6, 57.5], [14.6, 57.3]]],
+          },
+        }],
+      }],
+    }],
+  },
+};
+
+describe('resolveBoundary', () => {
+  it('returns null for empty string', () => {
+    expect(resolveBoundary('', [boundaryGazetteer])).toBeNull();
+  });
+
+  it('returns null when no boundary gazetteers provided', () => {
+    expect(resolveBoundary('Vallsjö, Sverige', [svGazetteer])).toBeNull();
+  });
+
+  it('returns null for empty gazetteers array', () => {
+    expect(resolveBoundary('Vallsjö, Sverige', [])).toBeNull();
+  });
+
+  it('resolves boundary for exact parish match', () => {
+    const result = resolveBoundary('Vallsjö, Sävsjö, Jönköpings län, Sverige', [boundaryGazetteer]);
+    expect(result).not.toBeNull();
+    expect(result!.matchQuality).toBe('exact');
+    expect(result!.nodeType).toBe('parish');
+    expect(result!.geometry.type).toBe('Polygon');
+  });
+
+  it('returns null when matched node has no geometry', () => {
+    const result = resolveBoundary('Jönköpings län, Sverige', [boundaryGazetteer]);
+    expect(result).toBeNull();
+  });
+
+  it('resolves boundary with partial match (parish + country)', () => {
+    const result = resolveBoundary('Vallsjö, Sverige', [boundaryGazetteer]);
+    expect(result).not.toBeNull();
+    expect(result!.geometry.type).toBe('Polygon');
+  });
+
+  it('filters out point gazetteers from mixed array', () => {
+    const result = resolveBoundary('Vallsjö, Sävsjö, Jönköpings län, Sverige', [svGazetteer, boundaryGazetteer]);
+    expect(result).not.toBeNull();
+    expect(result!.geometry.type).toBe('Polygon');
   });
 });
 

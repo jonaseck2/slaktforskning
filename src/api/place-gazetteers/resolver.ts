@@ -1,4 +1,4 @@
-import type { Gazetteer, GazetteerNode, PlaceResolveResult } from './types';
+import type { Gazetteer, GazetteerNode, PlaceResolveResult, BoundaryResolveResult } from './types';
 
 function normalize(name: string): string {
   return name
@@ -175,5 +175,60 @@ export function resolvePlace(
     matchedNode: deepestNode,
     gazetteer: gazId,
     unmatchedComponents: candidate.unmatched,
+  };
+}
+
+export function resolveBoundary(
+  placeName: string,
+  gazetteers: Gazetteer[],
+): BoundaryResolveResult | null {
+  if (!placeName.trim() || gazetteers.length === 0) return null;
+
+  const boundaryGazetteers = gazetteers.filter(g => g.kind === 'boundary');
+  if (boundaryGazetteers.length === 0) return null;
+
+  const components = placeName.split(',').map(p => p.trim()).filter(Boolean);
+  if (components.length === 0) return null;
+
+  let bestOverall: { candidate: MatchCandidate; ambiguous: boolean } | null = null;
+
+  for (const gaz of boundaryGazetteers) {
+    const candidates = findMatches(components, gaz.root, []);
+    const picked = pickBest(candidates);
+    if (!picked) continue;
+
+    if (
+      !bestOverall ||
+      picked.best.unmatched.length < bestOverall.candidate.unmatched.length ||
+      (picked.best.unmatched.length === bestOverall.candidate.unmatched.length &&
+        picked.best.depth > bestOverall.candidate.depth)
+    ) {
+      bestOverall = { candidate: picked.best, ambiguous: picked.ambiguous };
+    }
+  }
+
+  if (!bestOverall) return null;
+
+  const { candidate, ambiguous } = bestOverall;
+  const deepestNode = candidate.path[candidate.path.length - 1];
+
+  if (!deepestNode.geometry) return null;
+
+  const isLeaf = !deepestNode.children || deepestNode.children.length === 0;
+
+  let matchQuality: BoundaryResolveResult['matchQuality'];
+  if (ambiguous) {
+    matchQuality = 'ambiguous';
+  } else if (candidate.unmatched.length === 0 && isLeaf) {
+    matchQuality = 'exact';
+  } else {
+    matchQuality = 'partial';
+  }
+
+  return {
+    geometry: deepestNode.geometry,
+    matchedPath: candidate.matched,
+    matchQuality,
+    nodeType: deepestNode.type,
   };
 }
