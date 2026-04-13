@@ -119,6 +119,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.73.2 | Place UX: gazetteer search in PlacePicker, BaseMap shared component, place_name JOIN in event queries, EventList place column | — |
 | v0.73.3 | Fix: PersonDetailView timeline/map reactivity on data version change | — |
 | v0.73.4 | Fix: descendant chart outline clipping — relocate parent/spouse outlines into tree for layout-driven spacing | — |
+| v0.74.1 | Fix: descendant chart outline placement — revert relocation, use post-layout gap-finding to keep outlines adjacent to selected person | — |
 ---
 
 ## Research
