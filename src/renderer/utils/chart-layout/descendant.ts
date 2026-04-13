@@ -24,41 +24,6 @@ export function computeDescendantLayout(
   // only traverses children. Move them to grandparent.children so the main layout
   // naturally pushes siblings apart to make room (same approach as pedigree's
   // leaf slot reservation).
-  let relocatedParentOutlines: TreePerson[] = [];
-  let relocatedSpouseOutlines: TreePerson[] = [];
-  if (selectedPersonId) {
-    const target = findPersonInTree(tp, selectedPersonId);
-    if (target) {
-      // Relocate parent outlines → grandparent's children (one row above selected)
-      const parentOutlines = target.parents.filter(p => p.isPlaceholder);
-      if (parentOutlines.length > 0) {
-        target.parents = target.parents.filter(p => !p.isPlaceholder);
-        const treeParent = findParentOf(tp, selectedPersonId);
-        if (treeParent) {
-          const grandparent = findParentOf(tp, treeParent.person.id);
-          if (grandparent) {
-            const idx = grandparent.children.findIndex(c => c.person.id === treeParent.person.id);
-            grandparent.children.splice(idx + 1, 0, ...parentOutlines);
-            relocatedParentOutlines = parentOutlines;
-          }
-        }
-      }
-
-      // Relocate spouse outlines → parent's children (same row as selected)
-      const spouseOutlines = target.spouses.filter(s => s.isPlaceholder);
-      if (spouseOutlines.length > 0) {
-        target.spouses = target.spouses.filter(s => !s.isPlaceholder);
-        const treeParent = findParentOf(tp, selectedPersonId);
-        if (treeParent) {
-          const idx = treeParent.children.findIndex(c => c.person.id === selectedPersonId);
-          // Spouse goes right of selected person (regardless of sex — simpler, no side preference)
-          treeParent.children.splice(idx + 1, 0, ...spouseOutlines);
-          relocatedSpouseOutlines = spouseOutlines;
-        }
-      }
-    }
-  }
-
   // ── 2. Collapse filtering ──────────────────────────────────────────────────
   const originalChildCount = new Map<string, number>();
   const hasMoreDown = new Map<string, boolean>();
@@ -79,9 +44,6 @@ export function computeDescendantLayout(
   recordAndPrune(tp);
 
   // ── 3. Layout ──────────────────────────────────────────────────────────────
-  // Relocated spouse outlines participate in layout (spacing) but NOT in parent fork lines.
-  // Relocated parent outlines DO keep their fork lines (they connect to the selected person).
-  const relocatedSpouseIds = new Set(relocatedSpouseOutlines.map(o => o.person.id));
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
   const collapseButtons: CollapseButton[] = [];
@@ -155,16 +117,11 @@ export function computeDescendantLayout(
       const leftmostCX = cx - totalSpan / 2;
       const childCXs = offsets.map(o => leftmostCX + o);
 
-      // Fork lines span only real children (relocated outlines are connected separately)
-      const realCXs = childCXs.filter((_, i) => !relocatedSpouseIds.has(node.children[i].person.id));
-      if (realCXs.length > 1) {
-        lines.push({ x1: realCXs[0], y1: forkY, x2: realCXs[realCXs.length - 1], y2: forkY });
+      if (n > 1) {
+        lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
       }
       for (let ci = 0; ci < n; ci++) {
-        // Only draw vertical connector for real children, not relocated outlines
-        if (!relocatedSpouseIds.has(node.children[ci].person.id)) {
-          lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: rowY(depth + 1) });
-        }
+        lines.push({ x1: childCXs[ci], y1: forkY, x2: childCXs[ci], y2: rowY(depth + 1) });
         place(node.children[ci], depth + 1, childCXs[ci]);
       }
     }
@@ -199,31 +156,8 @@ export function computeDescendantLayout(
           return x;
         }
 
-        // Spouse outlines — relocated ones are already placed by main layout,
-        // draw horizontal connection line. Non-relocated get post-layout placement.
-        const relocatedSpouseIds = new Set(relocatedSpouseOutlines.map(o => o.person.id));
-        const relocatedSpouseBoxes = relocatedSpouseOutlines
-          .map(o => boxes.find(b => b.person.id === o.person.id))
-          .filter((b): b is BoxLayout => !!b);
-
-        // Draw horizontal connector for relocated spouse outlines
-        for (const spBox of relocatedSpouseBoxes) {
-          const spCX = spBox.x + BOX_W / 2;
-          const lineY = selBox.y + BOX_H / 2;
-          const leftCX = Math.min(selCX, spCX);
-          const rightCX = Math.max(selCX, spCX);
-          lines.push({
-            x1: leftCX + BOX_W / 2,
-            y1: lineY,
-            x2: rightCX - BOX_W / 2,
-            y2: lineY,
-          });
-        }
-
-        // Fallback: post-layout placement for non-relocated spouse outlines
-        const unplacedSpouses = selNode.spouses.filter(s =>
-          !placedIds.has(s.person.id) && !relocatedSpouseIds.has(s.person.id)
-        );
+        // Spouse outlines — placed right next to the selected person
+        const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
         if (unplacedSpouses.length > 0) {
           for (let i = 0; i < unplacedSpouses.length; i++) {
             let spX: number;
@@ -251,51 +185,65 @@ export function computeDescendantLayout(
           }
         }
 
-        // Parent outlines — draw connection lines from selected person up to them.
-        // Relocated outlines are already placed by the main layout (pushed siblings apart).
-        // Non-relocated outlines (e.g. selected person is root's child) need post-layout placement.
-        const parentOutlines = selNode.parents.filter(p => p.isPlaceholder);
-        const relocatedIds = new Set(relocatedParentOutlines.map(o => o.person.id));
-        const relocatedBoxes = parentOutlines
-          .filter(p => relocatedIds.has(p.person.id))
-          .map(p => boxes.find(b => b.person.id === p.person.id))
-          .filter((b): b is BoxLayout => !!b);
-        const unplacedParents = parentOutlines.filter(p => !placedIds.has(p.person.id) && !relocatedIds.has(p.person.id));
-
-        // Draw connection lines for relocated parent outlines
-        if (relocatedBoxes.length > 0) {
-          const parentY = relocatedBoxes[0].y;
-          const forkY = selBox.y - GEN_GAP / 2;
-          lines.push({ x1: selCX, y1: selBox.y, x2: selCX, y2: forkY });
-          for (const pb of relocatedBoxes) {
-            const parentCX = pb.x + BOX_W / 2;
-            lines.push({ x1: parentCX, y1: forkY, x2: parentCX, y2: parentY + BOX_H });
-          }
-          if (relocatedBoxes.length > 1) {
-            const xs = relocatedBoxes.map(b => b.x + BOX_W / 2);
-            lines.push({ x1: Math.min(...xs), y1: forkY, x2: Math.max(...xs), y2: forkY });
-          }
-        }
-
-        // Fallback: post-layout placement for non-relocated parent outlines
+        // Parent outlines — placed as a group above the selected person, with gap-finding
+        const unplacedParents = selNode.parents.filter(p => !placedIds.has(p.person.id));
         if (unplacedParents.length > 0) {
           const parentY = selBox.y - BOX_H - GEN_GAP;
           const forkY = selBox.y - GEN_GAP / 2;
           lines.push({ x1: selCX, y1: selBox.y, x2: selCX, y2: forkY });
+
           const n = unplacedParents.length;
+          const groupW = n * BOX_W + (n - 1) * V_GAP;
+          const idealGroupX = selCX - groupW / 2;
+
+          function groupOverlaps(gx: number): boolean {
+            for (let i = 0; i < n; i++) {
+              const bx = gx + i * (BOX_W + V_GAP);
+              if (boxes.some(b =>
+                bx < b.x + b.w + V_GAP && bx + BOX_W + V_GAP > b.x &&
+                parentY < b.y + b.h && parentY + BOX_H > b.y
+              )) return true;
+            }
+            return false;
+          }
+
+          let groupX = idealGroupX;
+          if (groupOverlaps(groupX)) {
+            const rowBoxes = boxes
+              .filter(b => parentY < b.y + b.h && parentY + BOX_H > b.y)
+              .sort((a, b) => a.x - b.x);
+            const candidates: number[] = [idealGroupX];
+            if (rowBoxes.length > 0) {
+              for (const b of rowBoxes) candidates.push(b.x + b.w + V_GAP);
+              for (const b of rowBoxes) candidates.push(b.x - groupW - V_GAP);
+            }
+            let bestX: number | null = null;
+            let bestDist = Infinity;
+            for (const cx of candidates) {
+              if (!groupOverlaps(cx)) {
+                const dist = Math.abs((cx + groupW / 2) - selCX);
+                if (dist < bestDist) { bestDist = dist; bestX = cx; }
+              }
+            }
+            if (bestX !== null) groupX = bestX;
+          }
+
+          const parentXs: number[] = [];
           for (let i = 0; i < n; i++) {
-            const parentCX = selCX + (i - (n - 1) / 2) * (BOX_W + V_GAP);
+            const px = groupX + i * (BOX_W + V_GAP);
+            parentXs.push(px);
             boxes.push({
               person: unplacedParents[i].person,
               isFocal: false,
-              x: parentCX - BOX_W / 2, y: parentY,
+              x: px, y: parentY,
               w: BOX_W, h: BOX_H,
             });
+            const parentCX = px + BOX_W / 2;
             lines.push({ x1: parentCX, y1: forkY, x2: parentCX, y2: parentY + BOX_H });
           }
           if (n > 1) {
-            const firstCX = selCX - ((n - 1) / 2) * (BOX_W + V_GAP);
-            const lastCX = selCX + ((n - 1) / 2) * (BOX_W + V_GAP);
+            const firstCX = parentXs[0] + BOX_W / 2;
+            const lastCX = parentXs[n - 1] + BOX_W / 2;
             lines.push({ x1: firstCX, y1: forkY, x2: lastCX, y2: forkY });
           }
         }
@@ -364,18 +312,6 @@ export function computeDescendantLayout(
   }
 
   return { boxes, lines, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
-}
-
-/** Find the tree-parent of a person (the node whose children array contains it). */
-function findParentOf(root: TreePerson, childId: string, visited = new Set<string>()): TreePerson | null {
-  if (visited.has(root.person.id)) return null;
-  visited.add(root.person.id);
-  for (const c of root.children) {
-    if (c.person.id === childId) return root;
-    const found = findParentOf(c, childId, visited);
-    if (found) return found;
-  }
-  return null;
 }
 
 /** Find a TreePerson by ID in the graph (cycle-safe). */
