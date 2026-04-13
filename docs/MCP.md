@@ -164,6 +164,18 @@ Higher-level tools that return denormalized data optimized for AI narrative gene
 | get_persons_for_matching | Get persons with existing face region tags and coordinates. Use for face comparison against known faces. |
 | get_media_tagging_status | Get overview of tagging progress: total, tagged, untagged media counts and total region count. |
 
+### Gazetteers
+
+| Tool | Description |
+|------|-------------|
+| get_gazetteer_schema | Get the JSON Schema for the gazetteer format, for use when creating or validating a gazetteer file |
+| list_gazetteers | List all gazetteers available (bundled + imported), with id, name, locale, node count, and source |
+| import_gazetteer | Import a gazetteer from a JSON string; stores it in the database for use in place resolution |
+| export_gazetteer | Export an imported gazetteer as a JSON string by ID |
+| delete_gazetteer | Delete an imported gazetteer from the database by ID |
+| resolve_place | Resolve a place name string against available gazetteers and return coordinates + matched node |
+| search_gazetteer | Search gazetteer nodes by name prefix, returning matching place names with coordinates |
+
 ### Database
 
 | Tool | Description |
