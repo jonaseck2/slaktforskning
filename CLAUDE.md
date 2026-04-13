@@ -53,6 +53,7 @@ src/
 │   ├── report_data.ts            # Denormalized report data for AI narrative generation
 │   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context, tagging status
 │   ├── media_regions.ts          # Media region (face/area tagging) CRUD
+│   ├── gazetteers.ts             # Gazetteer import/export/delete CRUD (per-database blob storage)
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   ├── link-rules/               # Default link rule sets
 │   │   ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
@@ -206,6 +207,7 @@ MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number
 | `media` | file_ref, title, format, notes, is_printable | — |
 | `media_links` | media_id, entity_type, entity_id, link_type, sort_order | media → CASCADE |
 | `media_regions` | media_id, person_id, x, y, width, height, label | media → CASCADE, person → SET NULL |
+| `gazetteers` | id, name, locale, description, source_json, data (BLOB), created_at | — |
 
 ---
 
@@ -341,6 +343,16 @@ getMediaRegions(db, mediaId) → MediaRegion[]
 getRegionsForPerson(db, personId) → MediaRegion[]
 updateMediaRegion(db, id, { person_id?, label?, x?, y?, width?, height? }) → MediaRegion | null
 deleteMediaRegion(db, id) → boolean
+```
+
+### gazetteers.ts
+```
+importGazetteer(db, jsonString) → { id, name, locale, nodeCount }
+exportGazetteer(db, id) → string | null
+deleteGazetteer(db, id) → boolean
+listGazetteers(db) → GazetteerInfo[]
+getImportedGazetteers(db) → Gazetteer[]
+getGazetteerSchema() → JSON Schema object
 ```
 
 ### duplicates.ts
@@ -699,6 +711,8 @@ DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 **Duplicate/merge tools:** `find_duplicates`, `merge_persons`
 
 **Report/narrative tools:** `get_person_summary`, `get_family_unit`, `get_ancestor_tree`, `get_place_history`, `get_research_gaps`, `get_timeline`
+
+**Gazetteer tools:** `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
 
 **Database tools:** `get_current_database`, `switch_database`
 

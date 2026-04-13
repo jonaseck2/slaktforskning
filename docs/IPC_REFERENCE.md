@@ -96,6 +96,13 @@ window.api.media.forEntity(entityType, entityId)         // → (Media & { link_
 window.api.media.addLink(data)                           // → MediaLink
 window.api.media.removeLink(linkId)                      // → boolean
 
+window.api.gazetteers.list()                              // → GazetteerInfo[]
+window.api.gazetteers.import(json)                        // → { id, name, locale, nodeCount }
+window.api.gazetteers.export(id)                          // → string | null
+window.api.gazetteers.delete(id)                          // → boolean
+window.api.gazetteers.getImported()                       // → Gazetteer[]
+window.api.gazetteers.getSchema()                         // → JSON Schema object
+
 window.api.db.getCurrent()                         // → { path: string, name: string }
 window.api.db.getRecent()                          // → { path: string, name: string }[]
 window.api.db.createNew()                          // → { path, name } | { canceled: true }  (Save dialog)
@@ -192,6 +199,12 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `media:forEntity` | `media.getMediaForEntity(db, entityType, entityId)` |
 | `media:addLink` | `media.addMediaLink(db, data)` |
 | `media:removeLink` | `media.removeMediaLink(db, linkId)` |
+| `gazetteers:list` | `gazetteers.listGazetteers(db)` |
+| `gazetteers:import` | `gazetteers.importGazetteer(db, json)` |
+| `gazetteers:export` | `gazetteers.exportGazetteer(db, id)` |
+| `gazetteers:delete` | `gazetteers.deleteGazetteer(db, id)` |
+| `gazetteers:getImported` | `gazetteers.getImportedGazetteers(db)` |
+| `gazetteers:getSchema` | `gazetteers.getGazetteerSchema()` |
 | `db:getCurrent` | `getCurrentDatabasePath()` → `{ path, name }` |
 | `db:getRecent` | `loadSettings().recentDatabases` → `{ path, name }[]` |
 | `db:createNew` | `dialog.showSaveDialog` → `switchDatabase(path)` → broadcast `db:switched` |
