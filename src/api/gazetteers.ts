@@ -55,6 +55,18 @@ function validateNode(node: unknown, path: string): void {
       validateNode(n.children[i], `${path}.children[${i}]`);
     }
   }
+  if (n.geometry !== undefined) {
+    if (!n.geometry || typeof n.geometry !== 'object') {
+      throw new Error(`Invalid node at ${path}: "geometry" must be an object`);
+    }
+    const geo = n.geometry as Record<string, unknown>;
+    if (geo.type !== 'Polygon' && geo.type !== 'MultiPolygon') {
+      throw new Error(`Invalid node at ${path}: geometry.type must be "Polygon" or "MultiPolygon"`);
+    }
+    if (!Array.isArray(geo.coordinates)) {
+      throw new Error(`Invalid node at ${path}: geometry.coordinates must be an array`);
+    }
+  }
 }
 
 function validateGazetteer(obj: unknown): Gazetteer {
@@ -74,6 +86,9 @@ function validateGazetteer(obj: unknown): Gazetteer {
   }
   if (!g.root) {
     throw new Error('Missing required field "root"');
+  }
+  if (g.kind !== undefined && g.kind !== 'point' && g.kind !== 'boundary') {
+    throw new Error('Field "kind" must be "point" or "boundary"');
   }
 
   validateNode(g.root, 'root');
@@ -175,17 +190,26 @@ export function listGazetteers(db: Database): GazetteerInfo[] {
     description: g.description,
     source: g.source,
     bundled: true,
+    kind: g.kind,
   }));
 
-  const rows = queryAll<GazetteerRow>(db, 'SELECT id, name, locale, description, source_json FROM gazetteers ORDER BY created_at');
-  const imported = rows.map((row): GazetteerInfo => ({
-    id: row.id,
-    name: row.name,
-    locale: row.locale,
-    description: row.description ?? undefined,
-    source: row.source_json ? (JSON.parse(row.source_json) as GazetteerSource) : undefined,
-    bundled: false,
-  }));
+  const rows = queryAll<GazetteerRow & { data: string }>(db, 'SELECT id, name, locale, description, source_json, data FROM gazetteers ORDER BY created_at');
+  const imported = rows.map((row): GazetteerInfo => {
+    let kind: 'point' | 'boundary' | undefined;
+    try {
+      const parsed = JSON.parse(row.data);
+      kind = parsed.kind;
+    } catch { /* ignore */ }
+    return {
+      id: row.id,
+      name: row.name,
+      locale: row.locale,
+      description: row.description ?? undefined,
+      source: row.source_json ? (JSON.parse(row.source_json) as GazetteerSource) : undefined,
+      bundled: false,
+      kind,
+    };
+  });
 
   return [...bundled, ...imported];
 }
@@ -217,6 +241,11 @@ export function getGazetteerSchema(): Record<string, unknown> {
       description: {
         type: 'string',
         description: 'Optional description of the gazetteer',
+      },
+      kind: {
+        type: 'string',
+        enum: ['point', 'boundary'],
+        description: 'Gazetteer kind: point (default) for coordinate lookups, boundary for polygon overlays',
       },
       source: {
         type: 'object',
@@ -251,6 +280,15 @@ export function getGazetteerSchema(): Record<string, unknown> {
           children: {
             type: 'array',
             items: { $ref: '#/$defs/GazetteerNode' },
+          },
+          geometry: {
+            type: 'object',
+            description: 'GeoJSON Polygon or MultiPolygon geometry for boundary gazetteers',
+            required: ['type', 'coordinates'],
+            properties: {
+              type: { type: 'string', enum: ['Polygon', 'MultiPolygon'] },
+              coordinates: { type: 'array' },
+            },
           },
         },
       },

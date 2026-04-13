@@ -1108,6 +1108,8 @@ export default {
     deleteConfirmMessage: 'Delete gazetteer "{name}"? This cannot be undone.',
     bundled: 'Bundled',
     imported: 'Imported',
+    kindPoint: 'Point',
+    kindBoundary: 'Boundary',
   },
   undo: {
     createPerson: 'Create person',

@@ -1,15 +1,18 @@
 import { ref } from 'vue';
-import { resolvePlace } from '../../api/place-gazetteers/resolver';
+import { resolvePlace, resolveBoundary as resolveBoundaryFn } from '../../api/place-gazetteers/resolver';
 import { loadGazetteers } from '../../api/place-gazetteers/index';
-import type { Gazetteer, GazetteerConfig, PlaceResolveResult } from '../../api/place-gazetteers/types';
+import type { Gazetteer, GazetteerConfig, PlaceResolveResult, BoundaryResolveResult } from '../../api/place-gazetteers/types';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
 const cache = new Map<string, PlaceResolveResult | null>();
+const boundaryCache = new Map<string, BoundaryResolveResult | null>();
 let gazetteersRef: Gazetteer[] = [];
 let configLoaded = false;
+let boundaryGazetteersRef: Gazetteer[] = [];
+let boundaryLoaded = false;
 
 export function usePlaceResolver() {
   const ready = ref(false);
@@ -35,9 +38,27 @@ export function usePlaceResolver() {
     return result;
   }
 
+  async function ensureBoundaryLoaded() {
+    if (boundaryLoaded) return;
+    const imported = (await window.api.gazetteers.getImported()) as Gazetteer[];
+    boundaryGazetteersRef = imported.filter(g => g.kind === 'boundary');
+    boundaryLoaded = true;
+  }
+
+  async function resolveBoundary(placeName: string): Promise<BoundaryResolveResult | null> {
+    await ensureBoundaryLoaded();
+    if (boundaryGazetteersRef.length === 0) return null;
+    if (boundaryCache.has(placeName)) return boundaryCache.get(placeName)!;
+    const result = resolveBoundaryFn(placeName, boundaryGazetteersRef);
+    boundaryCache.set(placeName, result);
+    return result;
+  }
+
   function invalidate() {
     cache.clear();
+    boundaryCache.clear();
     configLoaded = false;
+    boundaryLoaded = false;
     ready.value = false;
   }
 
@@ -45,5 +66,5 @@ export function usePlaceResolver() {
     return gazetteersRef;
   }
 
-  return { ready, ensureLoaded, resolve, invalidate, getGazetteers };
+  return { ready, ensureLoaded, resolve, resolveBoundary, invalidate, getGazetteers };
 }

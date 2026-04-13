@@ -46,6 +46,12 @@
               </div>
             </LPopup>
           </LMarker>
+          <LGeoJson
+            v-if="boundaryGeojson"
+            :key="selectedPlaceId"
+            :geojson="boundaryGeojson"
+            :options-style="boundaryStyle"
+          />
         </BaseMap>
 
         <!-- Reopen panel button -->
@@ -72,7 +78,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
-import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
+import { LMarker, LPopup, LGeoJson } from '@vue-leaflet/vue-leaflet';
 import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
@@ -97,7 +103,11 @@ const places = ref<PlaceRow[]>([]);
 const filterText = ref('');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const mapBodyRef = ref<HTMLElement | null>(null);
-const { ready: resolverReady, ensureLoaded, resolve } = usePlaceResolver();
+const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary } = usePlaceResolver();
+
+// Boundary overlay
+const boundaryGeojson = ref<Record<string, unknown> | null>(null);
+const boundaryStyle = { color: '#4a90d9', weight: 2, fill: false };
 
 // Panel state
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
@@ -118,7 +128,20 @@ function openPanel() {
 function closePanel() {
   panelOpen.value = false;
   localStorage.setItem('map-panel-open', 'false');
+  boundaryGeojson.value = null;
 }
+
+watch(selectedPlaceId, async (id) => {
+  if (!id) { boundaryGeojson.value = null; return; }
+  const place = allDisplayPlaces.value.find(p => p.id === id);
+  if (!place) { boundaryGeojson.value = null; return; }
+  const result = await resolveBoundary(place.name);
+  if (result) {
+    boundaryGeojson.value = { type: 'Feature', properties: {}, geometry: result.geometry };
+  } else {
+    boundaryGeojson.value = null;
+  }
+});
 
 // Invalidate map when panel opens/closes
 watch(panelOpen, () => {
