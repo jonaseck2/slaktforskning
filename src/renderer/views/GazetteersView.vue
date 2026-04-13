@@ -31,6 +31,9 @@
               <span class="gazetteer-card-name">{{ gaz.name }}</span>
             </label>
             <div class="gazetteer-card-actions">
+              <span :class="['kind-badge', 'kind-' + (gaz.kind || 'point')]">
+                {{ gaz.kind === 'boundary' ? $t('gazetteers.kindBoundary') : $t('gazetteers.kindPoint') }}
+              </span>
               <span :class="['type-badge', gaz.bundled ? 'type-bundled' : 'type-imported']">
                 {{ gaz.bundled ? $t('gazetteers.bundled') : $t('gazetteers.imported') }}
               </span>
@@ -302,6 +305,24 @@ onMounted(loadAll);
   border-radius: 3px;
   font-size: var(--font-xs);
   font-weight: 500;
+}
+
+.kind-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.kind-point {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.kind-boundary {
+  background: #fce7f3;
+  color: #9d174d;
 }
 
 .type-bundled {

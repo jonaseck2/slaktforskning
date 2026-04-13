@@ -1087,6 +1087,8 @@ export default {
     deleteConfirmMessage: 'Ta bort ortsregistret "{name}"? Detta kan inte ångras.',
     bundled: 'Inbyggt',
     imported: 'Importerat',
+    kindPoint: 'Punkt',
+    kindBoundary: 'Gräns',
   },
   undo: {
     createPerson: 'Skapa person',
