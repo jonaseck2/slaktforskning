@@ -118,6 +118,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.73.1 | Fix: ancestor book circle chart clips edges at reduced generations — use width="100%" and remove hardcoded max-width to match CircleChartReport scaling | — |
 | v0.73.2 | Place UX: gazetteer search in PlacePicker, BaseMap shared component, place_name JOIN in event queries, EventList place column | — |
 | v0.73.3–v0.73.4 | Gazetteer IPC: handlers + preload API for import/export/delete/list operations | [plan](plans/2026-04-13-gazetteer-import-export.md) |
+| v0.74.0 | MCP tools for gazetteers: schema, import, export, delete, list, resolve_place, search_gazetteer | [plan](plans/2026-04-13-gazetteer-import-export.md) |
 ---
 
 ## Research
