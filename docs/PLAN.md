@@ -159,7 +159,7 @@ Render-time place resolution using bundled hierarchical gazetteers. Swedish pari
 
 #### Gazetteer Import/Export [done]
 Per-database gazetteer storage with import/export for humans (UI) and agents (MCP). `gazetteers` table stores JSON blobs. GazetteersView gains Import (.json/.json.gz), Export, Delete buttons. 7 MCP tools: `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`.
-- Spec: `docs/superpowers/specs/archive/2026-04-13-gazetteer-import-export-design.md`
+- Spec: `docs/superpowers/specs/2026-04-13-gazetteer-import-export-design.md`
 - Plan: [plans/archive/2026-04-13-gazetteer-import-export.md](plans/archive/2026-04-13-gazetteer-import-export.md)
 
 #### Place Gazetteers — Future Extensions [backlog]

@@ -17,6 +17,18 @@ function findPersonInTree(node: TreePerson, id: string, visited = new Set<string
   return null;
 }
 
+/** Find the tree-parent of a person (the node whose children array contains it). */
+function findParentOf(root: TreePerson, childId: string, visited = new Set<string>()): TreePerson | null {
+  if (visited.has(root.person.id)) return null;
+  visited.add(root.person.id);
+  for (const c of root.children) {
+    if (c.person.id === childId) return root;
+    const found = findParentOf(c, childId, visited);
+    if (found) return found;
+  }
+  return null;
+}
+
 /** Compute max descendant depth of a DescendantNode tree (used by HourglassChart for lazy loading). */
 export function maxDescendantDepth(node: { children: { children: unknown[] }[] }): number {
   if (node.children.length === 0) return 0;
@@ -103,6 +115,36 @@ export function computeHourglassLayout(
     root.siblings = (root.siblings ?? []).filter(s => s.isPlaceholder);
   }
 
+  // ── 2b. Reserve extra width for outline placeholders ────────────────────────
+  const extraRightExtent = new Map<string, number>();
+  const extraLeftExtent = new Map<string, number>();
+  const extraAncWidth = new Map<string, number>();
+  if (selectedPersonId) {
+    const target = findPersonInTree(root, selectedPersonId);
+    if (target) {
+      const spouseCount = target.spouses.filter(s => s.isPlaceholder).length;
+      if (spouseCount > 0) {
+        const extra = spouseCount * (BOX_W + V_GAP);
+        if (target.person.sex === 'F') {
+          extraLeftExtent.set(selectedPersonId, extra);
+        } else {
+          extraRightExtent.set(selectedPersonId, extra);
+        }
+        // Also widen ancestor width for ancestor-section selected persons
+        extraAncWidth.set(selectedPersonId, extra);
+      }
+      const parentCount = target.parents.filter(p => p.isPlaceholder).length;
+      if (parentCount > 0) {
+        // For descendant-section: widen the tree parent's descendant extent
+        const treeParent = findParentOf(root, selectedPersonId);
+        if (treeParent) {
+          extraRightExtent.set(treeParent.person.id, parentCount * (BOX_W + V_GAP));
+        }
+        // For ancestor-section: parent outlines are handled by placeAncestors naturally
+      }
+    }
+  }
+
   // ── 3. Compute geometry ────────────────────────────────────────────────────
 
   // Max ancestor depth from focal
@@ -135,13 +177,14 @@ export function computeHourglassLayout(
   const ancWidthCache = new Map<string, number>();
   function ancestorWidth(node: TreePerson): number {
     if (ancWidthCache.has(node.person.id)) return ancWidthCache.get(node.person.id)!;
+    const extra = extraAncWidth.get(node.person.id) ?? 0;
     let w: number;
     if (node.parents.length === 0) {
-      w = BOX_W;
+      w = BOX_W + extra;
     } else {
       w = node.parents.reduce((sum, p) => sum + ancestorWidth(p), 0)
         + (node.parents.length - 1) * V_GAP;
-      w = Math.max(w, BOX_W);
+      w = Math.max(w, BOX_W) + extra;
     }
     ancWidthCache.set(node.person.id, w);
     return w;
@@ -178,9 +221,12 @@ export function computeHourglassLayout(
   function descExtents(node: TreePerson): [number, number] {
     if (descExtCache.has(node.person.id)) return descExtCache.get(node.person.id)!;
     const half = BOX_W / 2;
+    const extraR = extraRightExtent.get(node.person.id) ?? 0;
+    const extraL = extraLeftExtent.get(node.person.id) ?? 0;
     if (node.children.length === 0) {
-      descExtCache.set(node.person.id, [half, half]);
-      return [half, half];
+      const ext: [number, number] = [half + extraL, half + extraR];
+      descExtCache.set(node.person.id, ext);
+      return ext;
     }
     const n = node.children.length;
     const childExts = node.children.map(c => descExtents(c));
@@ -189,8 +235,8 @@ export function computeHourglassLayout(
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
     }
     const totalSpan = offsets[n - 1];
-    const leftExt = Math.max(half, totalSpan / 2 + childExts[0][0]);
-    const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]);
+    const leftExt = Math.max(half, totalSpan / 2 + childExts[0][0]) + extraL;
+    const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]) + extraR;
     descExtCache.set(node.person.id, [leftExt, rightExt]);
     return [leftExt, rightExt];
   }
@@ -472,9 +518,6 @@ export function computeHourglassLayout(
   }
 
   // ── Place unplaced outlines for selected person ──
-  // placeAncestors only handles parents, placeDescendants only handles children.
-  // Spouse/child outlines on ancestors or spouse/parent outlines on descendants
-  // would be missed. Place them relative to the selected person's box.
   if (selectedPersonId) {
     const selNode = findPersonInTree(root, selectedPersonId);
     const placedIds = new Set(boxes.map(b => b.person.id));
@@ -484,20 +527,30 @@ export function computeHourglassLayout(
       const selCX = selBox.x + BOX_W / 2;
       const selIsFemale = selNode.person.sex === 'F';
 
-      // Unplaced spouse outlines — place beyond any existing boxes at the same row
+      // Helper: find first X that doesn't overlap any existing box (full rectangle check)
+      function findClearXRect(startX: number, y: number, direction: 1 | -1): number {
+        let x = startX;
+        const overlaps = () => boxes.some(b =>
+          x < b.x + b.w + V_GAP && x + BOX_W + V_GAP > b.x &&
+          y < b.y + b.h && y + BOX_H > b.y
+        );
+        while (overlaps()) {
+          x += direction * (BOX_W + V_GAP);
+        }
+        return x;
+      }
+
+      // Spouse outlines — right next to the selected person with collision detection
       const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
       if (unplacedSpouses.length > 0) {
-        // Find the edge of existing boxes at this Y level to avoid overlap
-        const sameRowBoxes = boxes.filter(b => b.y === selBox.y);
-        const rightEdge = Math.max(...sameRowBoxes.map(b => b.x + b.w));
-        const leftEdge = Math.min(...sameRowBoxes.map(b => b.x));
-
         for (let i = 0; i < unplacedSpouses.length; i++) {
           let spX: number;
           if (selIsFemale) {
-            spX = leftEdge - H_GAP - BOX_W - i * (BOX_W + V_GAP);
+            spX = selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP);
+            spX = findClearXRect(spX, selBox.y, -1);
           } else {
-            spX = rightEdge + H_GAP + i * (BOX_W + V_GAP);
+            spX = selBox.x + BOX_W + V_GAP + i * (BOX_W + V_GAP);
+            spX = findClearXRect(spX, selBox.y, 1);
           }
           const spCX = spX + BOX_W / 2;
           boxes.push({
@@ -516,27 +569,78 @@ export function computeHourglassLayout(
         }
       }
 
-      // Unplaced child outlines — place below the selected person
+      // Parent outlines — grouped above with gap-finding (for descendant-section persons)
+      const unplacedParents = selNode.parents.filter(p => !placedIds.has(p.person.id));
+      if (unplacedParents.length > 0) {
+        const parentY = selBox.y - BOX_H - GEN_GAP;
+        const forkY = selBox.y - GEN_GAP / 2;
+        lines.push({ x1: selCX, y1: selBox.y, x2: selCX, y2: forkY });
+
+        const n = unplacedParents.length;
+        const groupW = n * BOX_W + (n - 1) * V_GAP;
+        const idealGroupX = selCX - groupW / 2;
+
+        function groupOverlaps(gx: number): boolean {
+          for (let gi = 0; gi < n; gi++) {
+            const bx = gx + gi * (BOX_W + V_GAP);
+            if (boxes.some(b =>
+              bx < b.x + b.w + V_GAP && bx + BOX_W + V_GAP > b.x &&
+              parentY < b.y + b.h && parentY + BOX_H > b.y
+            )) return true;
+          }
+          return false;
+        }
+
+        let groupX = idealGroupX;
+        if (groupOverlaps(groupX)) {
+          const rowBoxes = boxes
+            .filter(b => parentY < b.y + b.h && parentY + BOX_H > b.y)
+            .sort((a, b) => a.x - b.x);
+          const candidates: number[] = [idealGroupX];
+          if (rowBoxes.length > 0) {
+            for (const b of rowBoxes) candidates.push(b.x + b.w + V_GAP);
+            for (const b of rowBoxes) candidates.push(b.x - groupW - V_GAP);
+          }
+          let bestX: number | null = null;
+          let bestDist = Infinity;
+          for (const cx of candidates) {
+            if (!groupOverlaps(cx)) {
+              const dist = Math.abs((cx + groupW / 2) - selCX);
+              if (dist < bestDist) { bestDist = dist; bestX = cx; }
+            }
+          }
+          if (bestX !== null) groupX = bestX;
+        }
+
+        const parentXs: number[] = [];
+        for (let gi = 0; gi < n; gi++) {
+          const px = groupX + gi * (BOX_W + V_GAP);
+          parentXs.push(px);
+          boxes.push({
+            person: unplacedParents[gi].person,
+            isFocal: false,
+            x: px, y: parentY,
+            w: BOX_W, h: BOX_H,
+          });
+          const parentCX = px + BOX_W / 2;
+          lines.push({ x1: parentCX, y1: forkY, x2: parentCX, y2: parentY + BOX_H });
+        }
+        if (n > 1) {
+          const firstCX = parentXs[0] + BOX_W / 2;
+          const lastCX = parentXs[n - 1] + BOX_W / 2;
+          lines.push({ x1: firstCX, y1: forkY, x2: lastCX, y2: forkY });
+        }
+      }
+
+      // Child outlines — below the selected person with collision detection
       const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
       if (unplacedChildren.length > 0) {
         const childY = selBox.y + BOX_H + GEN_GAP;
         const forkY = selBox.y + BOX_H + GEN_GAP / 2;
-
-        // Find existing boxes at childY to avoid overlap
-        const childRowBoxes = boxes.filter(b => b.y === childY);
-        // Place child outline to the right of any existing boxes at that row,
-        // or directly below the selected person if nothing is there
-        let childX: number;
-        if (childRowBoxes.length > 0) {
-          const rightEdge = Math.max(...childRowBoxes.map(b => b.x + b.w));
-          childX = rightEdge + V_GAP;
-        } else {
-          childX = selCX - BOX_W / 2;
-        }
-        const childCX = childX + BOX_W / 2;
-
-        // Stem from selected person down to fork
         lines.push({ x1: selCX, y1: selBox.y + BOX_H, x2: selCX, y2: forkY });
+
+        let childX = findClearXRect(selCX - BOX_W / 2, childY, 1);
+        const childCX = childX + BOX_W / 2;
         for (let i = 0; i < unplacedChildren.length; i++) {
           lines.push({ x1: childCX, y1: forkY, x2: childCX, y2: childY });
           boxes.push({
