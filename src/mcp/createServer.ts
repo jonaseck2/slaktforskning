@@ -8,6 +8,7 @@ import { registerPlaceTools } from './tools/places';
 import { registerMediaTools } from './tools/media';
 import { registerImportExportTools } from './tools/import-export';
 import { registerUtilityTools } from './tools/utility';
+import { registerGazetteerTools } from './tools/gazetteers';
 
 export function createMcpServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -26,6 +27,7 @@ export function createMcpServer(initialDb: Database, initialDbPath?: string): Mc
   registerPlaceTools(server, ctx);
   registerMediaTools(server, ctx);
   registerImportExportTools(server, ctx);
+  registerGazetteerTools(server, ctx);
   registerUtilityTools(server, {
     ...ctx,
     getDbPath: () => currentDbPath,

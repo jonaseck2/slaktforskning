@@ -10,6 +10,7 @@ import { registerImportHandlers } from './import';
 import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
 import { registerUtilityHandlers } from './utility';
+import { registerGazetteerHandlers } from './gazetteers';
 
 export function registerIpcHandlers(): void {
   const getDb = () => getDatabase();
@@ -23,4 +24,5 @@ export function registerIpcHandlers(): void {
   registerDatabaseHandlers(getDb, getCurrentDatabasePath, switchDatabase, loadSettings, wrapHandler);
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerUtilityHandlers(getDb, getCurrentDatabasePath, wrapHandler);
+  registerGazetteerHandlers(getDb, wrapHandler);
 }

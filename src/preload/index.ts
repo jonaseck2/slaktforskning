@@ -210,6 +210,14 @@ const api = {
     backup: () => ipcRenderer.invoke('backup:backup'),
     restore: () => ipcRenderer.invoke('backup:restore'),
   },
+  gazetteers: {
+    list: () => ipcRenderer.invoke('gazetteers:list'),
+    import: mutating((json: string) => ipcRenderer.invoke('gazetteers:import', json)),
+    export: (id: string) => ipcRenderer.invoke('gazetteers:export', id),
+    delete: mutating((id: string) => ipcRenderer.invoke('gazetteers:delete', id)),
+    getImported: () => ipcRenderer.invoke('gazetteers:getImported'),
+    getSchema: () => ipcRenderer.invoke('gazetteers:getSchema'),
+  },
   undo: {
     undo: () => ipcRenderer.invoke('undo:undo'),
     redo: () => ipcRenderer.invoke('undo:redo'),

@@ -214,6 +214,16 @@ export function initializeSchema(db: Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_media_regions_media_id ON media_regions(media_id);
     CREATE INDEX IF NOT EXISTS idx_media_regions_person_id ON media_regions(person_id);
+
+    CREATE TABLE IF NOT EXISTS gazetteers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      locale TEXT NOT NULL,
+      description TEXT,
+      source_json TEXT,
+      data TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)
