@@ -139,6 +139,10 @@ Fixes, investigations, and refactors archived in [plans/archive/PLAN.md](plans/a
 Refactor hourglass chart layout to support outline placeholders as first-class nodes. Replace ahnentafel-based layout with a general graph model where each person has N parents, M children, K spouses. Outline injection is unconditional for the selected person; layout treats outlines identically to real nodes; focal person never filters outlines.
 - Plan: [plans/2026-04-11-hourglass-outline-architecture.md](plans/2026-04-11-hourglass-outline-architecture.md)
 
+#### Chart Layout Shared Utilities Refactor [planned]
+Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion. Precondition: hourglass outline bugs fixed first.
+- Plan: [plans/2026-04-13-chart-layout-shared-refactor.md](plans/2026-04-13-chart-layout-shared-refactor.md)
+
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
 
@@ -151,9 +155,13 @@ Render-time place resolution using bundled hierarchical gazetteers. Swedish pari
 - Spec: `docs/superpowers/specs/2026-04-11-place-gazetteers-design.md`
 - Plan: `.claude/plans/2026-04-11-place-gazetteers.md`
 
+#### Gazetteer Import/Export [done]
+Per-database gazetteer storage with import/export for humans (UI) and agents (MCP). `gazetteers` table stores JSON blobs. GazetteersView gains Import (.json/.json.gz), Export, Delete buttons. 7 MCP tools: `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`.
+- Spec: `docs/superpowers/specs/2026-04-13-gazetteer-import-export-design.md`
+- Plan: [plans/archive/2026-04-13-gazetteer-import-export.md](plans/archive/2026-04-13-gazetteer-import-export.md)
+
 #### Place Gazetteers — Future Extensions [backlog]
 - Additional country gazetteers (Norway, Denmark, Finland, US, etc.)
-- User-importable custom gazetteers (JSON file import)
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
 - Batch match quality report (how many places resolved, at what quality)
 - "Confirm match" workflow — user accepts a gazetteer match and it writes coordinates to the place record
