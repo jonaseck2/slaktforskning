@@ -120,6 +120,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.73.3 | Fix: PersonDetailView timeline/map reactivity on data version change | — |
 | v0.73.4 | Fix: descendant chart outline clipping — relocate parent/spouse outlines into tree for layout-driven spacing | — |
 | v0.74.1 | Fix: descendant chart outline placement — revert relocation, use post-layout gap-finding to keep outlines adjacent to selected person | — |
+| v0.74.2 | Fix: descendant chart outline space reservation — subtree extent widening pushes siblings apart for spouse/parent outlines, sex-aware left/right side | — |
 ---
 
 ## Research

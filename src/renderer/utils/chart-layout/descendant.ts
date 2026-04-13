@@ -19,11 +19,35 @@ export function computeDescendantLayout(
   const tp = buildDescendantTreePerson(root);
   if (selectedPersonId) injectOutlines(tp, selectedPersonId);
 
-  // ── 1b. Relocate parent outlines into the tree for layout ──────────────────
-  // Parent outlines are injected into target.parents, but the descendant layout
-  // only traverses children. Move them to grandparent.children so the main layout
-  // naturally pushes siblings apart to make room (same approach as pedigree's
-  // leaf slot reservation).
+  // ── 1b. Reserve extra subtree width for outline placeholders ────────────────
+  // Like pedigree's leaf slot reservation: widen the selected person's extent
+  // (for spouse outline) and their tree parent's extent (for parent outlines)
+  // so the main layout pushes siblings apart to create room.
+  const extraRightExtent = new Map<string, number>();
+  const extraLeftExtent = new Map<string, number>();
+  if (selectedPersonId) {
+    const target = findPersonInTree(tp, selectedPersonId);
+    if (target) {
+      const spouseCount = target.spouses.filter(s => s.isPlaceholder).length;
+      if (spouseCount > 0) {
+        const extra = spouseCount * (BOX_W + V_GAP);
+        // Female → spouse goes left; male/unknown → spouse goes right
+        if (target.person.sex === 'F') {
+          extraLeftExtent.set(selectedPersonId, extra);
+        } else {
+          extraRightExtent.set(selectedPersonId, extra);
+        }
+      }
+      const parentCount = target.parents.filter(p => p.isPlaceholder).length;
+      if (parentCount > 0) {
+        const treeParent = findParentOf(tp, selectedPersonId);
+        if (treeParent) {
+          extraRightExtent.set(treeParent.person.id, parentCount * (BOX_W + V_GAP));
+        }
+      }
+    }
+  }
+
   // ── 2. Collapse filtering ──────────────────────────────────────────────────
   const originalChildCount = new Map<string, number>();
   const hasMoreDown = new Map<string, boolean>();
@@ -53,8 +77,10 @@ export function computeDescendantLayout(
   // Compute subtree extents (left, right from center X)
   function subtreeExtents(node: TreePerson, depth: number): [number, number] {
     const half = BOX_W / 2;
-    if (depth >= maxGenerations || node.children.length === 0) return [half, half];
-    if (collapsed.has(`${node.person.id}:down`)) return [half, half];
+    const extraR = extraRightExtent.get(node.person.id) ?? 0;
+    const extraL = extraLeftExtent.get(node.person.id) ?? 0;
+    if (depth >= maxGenerations || node.children.length === 0) return [half + extraL, half + extraR];
+    if (collapsed.has(`${node.person.id}:down`)) return [half + extraL, half + extraR];
 
     const n = node.children.length;
     const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
@@ -63,8 +89,8 @@ export function computeDescendantLayout(
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
     }
     const totalSpan = offsets[n - 1];
-    const leftExt = Math.max(half, totalSpan / 2 + childExts[0][0]);
-    const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]);
+    const leftExt = Math.max(half, totalSpan / 2 + childExts[0][0]) + extraL;
+    const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]) + extraR;
     return [leftExt, rightExt];
   }
 
@@ -312,6 +338,18 @@ export function computeDescendantLayout(
   }
 
   return { boxes, lines, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
+}
+
+/** Find the tree-parent of a person (the node whose children array contains it). */
+function findParentOf(root: TreePerson, childId: string, visited = new Set<string>()): TreePerson | null {
+  if (visited.has(root.person.id)) return null;
+  visited.add(root.person.id);
+  for (const c of root.children) {
+    if (c.person.id === childId) return root;
+    const found = findParentOf(c, childId, visited);
+    if (found) return found;
+  }
+  return null;
 }
 
 /** Find a TreePerson by ID in the graph (cycle-safe). */
