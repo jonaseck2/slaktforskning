@@ -710,7 +710,7 @@ export function registerGazetteerTools(server: McpServer, ctx: ToolContext): voi
 }
 ```
 
-- [ ] **Step 2: Register in `src/mcp/createServer.ts`**
+- [x] **Step 2: Register in `src/mcp/createServer.ts`**
 
 Add import after line 8:
 
@@ -724,12 +724,12 @@ Add registration call after `registerUtilityTools` (before the `return server` l
 registerGazetteerTools(server, ctx);
 ```
 
-- [ ] **Step 3: Run tests to verify nothing is broken**
+- [x] **Step 3: Run tests to verify nothing is broken**
 
 Run: `npm test`
 Expected: All tests PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
