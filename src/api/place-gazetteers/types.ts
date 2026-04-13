@@ -41,3 +41,12 @@ export interface PlaceResolveResult {
 export interface GazetteerConfig {
   enabledGazetteers: string[];
 }
+
+export interface GazetteerInfo {
+  id: string;
+  name: string;
+  locale: string;
+  description?: string;
+  source?: GazetteerSource;
+  bundled: boolean;
+}

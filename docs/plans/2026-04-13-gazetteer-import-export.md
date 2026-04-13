@@ -531,7 +531,7 @@ git commit -m "feat: loadGazetteers merges bundled + imported gazetteers"
 - Modify: `src/main/ipc/index.ts`
 - Modify: `src/preload/index.ts`
 
-- [ ] **Step 1: Create `src/main/ipc/gazetteers.ts`**
+- [x] **Step 1: Create `src/main/ipc/gazetteers.ts`**
 
 ```typescript
 import type { WrapHandlerFn } from './wrap-handler';
@@ -550,7 +550,7 @@ export function registerGazetteerHandlers(
 }
 ```
 
-- [ ] **Step 2: Register in `src/main/ipc/index.ts`**
+- [x] **Step 2: Register in `src/main/ipc/index.ts`**
 
 Add import at line 10 (after the `database` import):
 
@@ -564,7 +564,7 @@ Add registration call inside `registerIpcHandlers()` (after `registerUtilityHand
 registerGazetteerHandlers(getDb, wrapHandler);
 ```
 
-- [ ] **Step 3: Add preload API surface in `src/preload/index.ts`**
+- [x] **Step 3: Add preload API surface in `src/preload/index.ts`**
 
 Add a `gazetteers` section to the `api` object (after the `backup` section, around line 212):
 
@@ -579,12 +579,12 @@ gazetteers: {
 },
 ```
 
-- [ ] **Step 4: Run tests to verify nothing is broken**
+- [x] **Step 4: Run tests to verify nothing is broken**
 
 Run: `npm test`
 Expected: All existing tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -599,7 +599,7 @@ git commit -m "feat: IPC handlers and preload API for gazetteer import/export"
 - Create: `src/mcp/tools/gazetteers.ts`
 - Modify: `src/mcp/createServer.ts`
 
-- [ ] **Step 1: Create `src/mcp/tools/gazetteers.ts`**
+- [x] **Step 1: Create `src/mcp/tools/gazetteers.ts`**
 
 ```typescript
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
