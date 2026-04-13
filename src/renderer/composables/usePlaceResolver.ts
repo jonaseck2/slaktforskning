@@ -20,7 +20,8 @@ export function usePlaceResolver() {
     const config: GazetteerConfig = raw
       ? JSON.parse(raw) as GazetteerConfig
       : { enabledGazetteers: [] };
-    gazetteersRef = loadGazetteers(config);
+    const imported = (await window.api.gazetteers.getImported()) as Gazetteer[];
+    gazetteersRef = loadGazetteers(config, imported);
     configLoaded = true;
     ready.value = true;
   }
