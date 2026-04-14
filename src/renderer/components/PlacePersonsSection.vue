@@ -4,7 +4,7 @@
     <table v-else class="data-table">
       <thead>
         <tr>
-          <th>{{ $t('persons.name') }}</th>
+          <th>{{ $t('persons.givenName') }}</th>
           <th>{{ $t('persons.sex') }}</th>
           <th>{{ $t('places.eventCount') }}</th>
         </tr>

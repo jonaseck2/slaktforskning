@@ -107,7 +107,7 @@ const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary } = usePlac
 
 // Boundary overlay
 const boundaryGeojson = ref<Record<string, unknown> | null>(null);
-const boundaryStyle = { color: '#4a90d9', weight: 2, fill: false };
+const boundaryStyle = () => ({ color: '#4a90d9', weight: 2, fill: false });
 
 // Panel state
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
@@ -132,9 +132,12 @@ function closePanel() {
 }
 
 watch(selectedPlaceId, async (id) => {
-  if (!id) { boundaryGeojson.value = null; return; }
+  // Clear existing boundary immediately so v-if removes LGeoJson before the
+  // :key change triggers a destroy cycle (avoids removeLayer on undefined).
+  boundaryGeojson.value = null;
+  if (!id) return;
   const place = allDisplayPlaces.value.find(p => p.id === id);
-  if (!place) { boundaryGeojson.value = null; return; }
+  if (!place) return;
   const result = await resolveBoundary(place.name, { lat: place.displayLat, lon: place.displayLon });
   if (result) {
     boundaryGeojson.value = { type: 'Feature', properties: {}, geometry: result.geometry };

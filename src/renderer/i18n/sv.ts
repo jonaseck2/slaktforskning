@@ -444,6 +444,8 @@ export default {
     farm: 'Gård',
     village: 'By',
     city: 'Stad',
+    locality: 'Ort',
+    municipality: 'Kommun',
     other: 'Annat',
   },
   gedcom: {
