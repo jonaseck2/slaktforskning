@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="citations.length === 0" class="empty-hint">{{ $t('sources.noCitations') }}</div>
+    <div v-if="citations.length === 0" class="empty-hint">{{ $t('sourceDetail.noCitations') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>

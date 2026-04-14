@@ -444,6 +444,8 @@ export default {
     farm: 'Farm',
     village: 'Village',
     city: 'City',
+    locality: 'Locality',
+    municipality: 'Municipality',
     other: 'Other',
   },
   gedcom: {
