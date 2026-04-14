@@ -55,7 +55,14 @@
       "Read(//Users/jonasahnstedt/.claude/**)",
       "Read(//Users/jonasahnstedt/.agents/skills/**)",
       "Edit(/.claude/skills/**)",
-      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__*"
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__*",
+      "Bash(ogr2ogr -f GeoJSON -t_srs EPSG:4326 /tmp/distrikt.geojson export-import/distrikt.gpkg)",
+      "Read(//tmp/**)",
+      "Bash(ogr2ogr -f GeoJSON -t_srs EPSG:4326 /tmp/sockenstad.geojson export-import/sockenstad.gpkg)",
+      "Bash(ogr2ogr -f GeoJSON -t_srs EPSG:4326 -simplify 100 -lco COORDINATE_PRECISION=5 /tmp/distrikt_simple.geojson export-import/distrikt.gpkg)",
+      "Bash(ogr2ogr -f GeoJSON -t_srs EPSG:4326 -simplify 100 -lco COORDINATE_PRECISION=5 -where \"huvudomrade = 'J'\" /tmp/sockenstad_main_simple.geojson export-import/sockenstad.gpkg)",
+      "Bash(gzip -k /tmp/distrikt.geojson)",
+      "Bash(gzip -k /tmp/sockenstad.geojson)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/docs/plans",
