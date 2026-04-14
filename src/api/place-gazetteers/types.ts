@@ -1,3 +1,15 @@
+export interface GeoJSONPolygon {
+  type: 'Polygon';
+  coordinates: number[][][];
+}
+
+export interface GeoJSONMultiPolygon {
+  type: 'MultiPolygon';
+  coordinates: number[][][][];
+}
+
+export type GazetteerGeometry = GeoJSONPolygon | GeoJSONMultiPolygon;
+
 export interface GazetteerNode {
   name: string;
   type: string;
@@ -5,6 +17,7 @@ export interface GazetteerNode {
   lat: number;
   lon: number;
   children?: GazetteerNode[];
+  geometry?: GazetteerGeometry;
 }
 
 export interface GazetteerSource {
@@ -23,6 +36,7 @@ export interface Gazetteer {
   description?: string;
   source?: GazetteerSource;
   root: GazetteerNode;
+  kind?: 'point' | 'boundary';
 }
 
 export interface PlaceResolveResult {
@@ -38,6 +52,13 @@ export interface PlaceResolveResult {
   unmatchedComponents: string[];
 }
 
+export interface BoundaryResolveResult {
+  geometry: GazetteerGeometry;
+  matchedPath: string[];
+  matchQuality: 'exact' | 'partial' | 'ambiguous';
+  nodeType: string;
+}
+
 export interface GazetteerConfig {
   enabledGazetteers: string[];
 }
@@ -49,4 +70,5 @@ export interface GazetteerInfo {
   description?: string;
   source?: GazetteerSource;
   bundled: boolean;
+  kind?: 'point' | 'boundary';
 }
