@@ -1,10 +1,34 @@
-import type { Gazetteer, GazetteerConfig } from './types';
+import type { Gazetteer, GazetteerConfig, GazetteerNode } from './types';
 import svSocknar from './data/sv-socknar.json';
 import svForsamlingar from './data/sv-forsamlingar.json';
 import svOrter from './data/sv-orter.json';
 import svGardar from './data/sv-gardar.json';
 import svKyrkor from './data/sv-kyrkor.json';
 import svSockenstadBoundaries from './data/sv-sockenstad-boundaries.json';
+
+// Historical Swedish county (län) names → modern equivalents
+// These were renamed in the 1997 county reform
+const HISTORICAL_LAN_ALIASES: Record<string, string[]> = {
+  'Dalarnas län': ['Kopparbergs län', 'Kopparbergs'],
+  'Västra Götalands län': ['Älvsborgs län', 'Älvsborgs', 'Skaraborgs län', 'Skaraborgs', 'Göteborgs och Bohus län'],
+  'Skåne län': ['Malmöhus län', 'Malmöhus', 'Kristianstads län', 'Kristianstads'],
+};
+
+function enrichHistoricalAliases(gaz: Gazetteer): Gazetteer {
+  if (!gaz.root.children) return gaz;
+  for (const child of gaz.root.children) {
+    const extra = HISTORICAL_LAN_ALIASES[child.name];
+    if (extra) {
+      const existing = new Set(child.aliases ?? []);
+      const merged = [...(child.aliases ?? [])];
+      for (const alias of extra) {
+        if (!existing.has(alias)) merged.push(alias);
+      }
+      (child as GazetteerNode).aliases = merged;
+    }
+  }
+  return gaz;
+}
 
 const BUNDLED_GAZETTEERS: Gazetteer[] = [
   svSocknar as Gazetteer,
@@ -13,7 +37,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   svGardar as Gazetteer,
   svKyrkor as Gazetteer,
   svSockenstadBoundaries as Gazetteer,
-];
+].map(enrichHistoricalAliases);
 
 export function getAllGazetteers(): Gazetteer[] {
   return BUNDLED_GAZETTEERS;

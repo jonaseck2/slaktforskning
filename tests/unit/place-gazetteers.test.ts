@@ -133,6 +133,41 @@ describe('resolvePlace', () => {
     expect(result!.matchedPath).toEqual(['Sverige', 'Jönköpings län', 'Sävsjö', 'Vallsjö']);
   });
 
+  it('matches via Swedish genitive (Smedjebackens kommun ≈ Smedjebacken)', () => {
+    const gazetteer: Gazetteer = {
+      id: 'test',
+      name: 'Test',
+      locale: 'sv',
+      root: {
+        name: 'Sverige', type: 'country', lat: 62, lon: 15,
+        children: [{
+          name: 'Dalarnas län', type: 'county', lat: 61, lon: 15, aliases: ['Kopparbergs län', 'Kopparbergs'],
+          children: [
+            {
+              name: 'Smedjebackens kommun', type: 'municipality', lat: 60.14, lon: 15.39,
+              children: [{
+                name: 'Malingsbo', type: 'locality', lat: 59.99, lon: 15.59,
+              }],
+            },
+            {
+              name: 'Älvdalens kommun', type: 'municipality', lat: 61.23, lon: 14.04,
+              children: [{
+                name: 'Bruket', type: 'locality', lat: 61.22, lon: 14.07,
+              }],
+            },
+          ],
+        }],
+      },
+    };
+    // "Bruket, Malingsbo, Smedjebacken, Kopparbergs län, Sverige"
+    // Should match Malingsbo (correct hierarchy) NOT Bruket (wrong hierarchy)
+    const result = resolvePlace('Bruket, Malingsbo, Smedjebacken, Kopparbergs län, Sverige', [gazetteer]);
+    expect(result).not.toBeNull();
+    expect(result!.matchedNode.name).toBe('Malingsbo');
+    expect(result!.matchedPath).toEqual(['Sverige', 'Dalarnas län', 'Smedjebackens kommun', 'Malingsbo']);
+    expect(result!.unmatchedComponents).toEqual(['Bruket']);
+  });
+
   it('reports ambiguous when same name exists in multiple branches', () => {
     const gazetteerWithDup: Gazetteer = {
       ...svGazetteer,
