@@ -123,6 +123,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.74.2 | Fix: descendant chart outline space reservation — subtree extent widening pushes siblings apart for spouse/parent outlines, sex-aware left/right side | — |
 | v0.75.0 | Boundary gazetteer overlay — click map pin to see parish outline polygon | [archive](plans/archive/2026-04-13-boundary-gazetteer-overlay.md) |
 | v0.76.0 | Bundled Swedish boundary gazetteer (Lantmäteriet Socken och stad, CC0) with hint-based disambiguation | — |
+| v0.76.1 | Fix: place resolver now handles Swedish genitive and historical län names for correct hierarchy matching | — |
 ---
 
 ## Research

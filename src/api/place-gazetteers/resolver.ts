@@ -8,10 +8,18 @@ function normalize(name: string): string {
     .replace(/\s*(församling|socken|kommun|stad|härad|län)$/i, '');
 }
 
+function fuzzyEqual(a: string, b: string): boolean {
+  if (a === b) return true;
+  // Swedish genitive: "smedjebackens" ≈ "smedjebacken"
+  if (a + 's' === b || b + 's' === a) return true;
+  return false;
+}
+
 function nodeMatches(node: GazetteerNode, component: string): boolean {
   const norm = normalize(component);
-  if (normalize(node.name) === norm) return true;
-  return node.aliases?.some(a => normalize(a) === norm) ?? false;
+  const normNode = normalize(node.name);
+  if (fuzzyEqual(normNode, norm)) return true;
+  return node.aliases?.some(a => fuzzyEqual(normalize(a), norm)) ?? false;
 }
 
 function getTreeDepth(node: GazetteerNode): number {
