@@ -162,6 +162,16 @@ Per-database gazetteer storage with import/export for humans (UI) and agents (MC
 - Spec: `docs/superpowers/specs/2026-04-13-gazetteer-import-export-design.md`
 - Plan: [plans/archive/2026-04-13-gazetteer-import-export.md](plans/archive/2026-04-13-gazetteer-import-export.md)
 
+#### Boundary Gazetteer Overlay [done]
+New "boundary" gazetteer kind carrying polygon geometry. Click a map pin to see the place's geographic extent as an outline overlay. Extends Gazetteer type with `kind` and GazetteerNode with `geometry`. Lazy-loaded via `resolveBoundary()` in composable.
+- Spec: `docs/superpowers/specs/2026-04-13-boundary-gazetteer-design.md`
+- Plan: [plans/archive/2026-04-13-boundary-gazetteer-overlay.md](plans/archive/2026-04-13-boundary-gazetteer-overlay.md)
+
+#### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
+Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
+- Spec: `docs/superpowers/specs/2026-04-13-chart-layout-alignment-design.md`
+- Plan: `docs/plans/2026-04-13-chart-layout-alignment.md` (on branch)
+
 #### Place Gazetteers — Future Extensions [backlog]
 - Additional country gazetteers (Norway, Denmark, Finland, US, etc.)
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
