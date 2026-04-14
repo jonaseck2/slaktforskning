@@ -178,9 +178,21 @@ export function resolvePlace(
   };
 }
 
+function distanceSq(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const dLat = lat1 - lat2;
+  const dLon = lon1 - lon2;
+  return dLat * dLat + dLon * dLon;
+}
+
+export interface BoundaryHint {
+  lat: number;
+  lon: number;
+}
+
 export function resolveBoundary(
   placeName: string,
   gazetteers: Gazetteer[],
+  hint?: BoundaryHint,
 ): BoundaryResolveResult | null {
   if (!placeName.trim() || gazetteers.length === 0) return null;
 
@@ -190,36 +202,52 @@ export function resolveBoundary(
   const components = placeName.split(',').map(p => p.trim()).filter(Boolean);
   if (components.length === 0) return null;
 
-  let bestOverall: { candidate: MatchCandidate; ambiguous: boolean } | null = null;
+  // Collect all candidates across all boundary gazetteers
+  const allCandidates: MatchCandidate[] = [];
 
   for (const gaz of boundaryGazetteers) {
-    const candidates = findMatches(components, gaz.root, []);
-    const picked = pickBest(candidates);
-    if (!picked) continue;
-
-    if (
-      !bestOverall ||
-      picked.best.unmatched.length < bestOverall.candidate.unmatched.length ||
-      (picked.best.unmatched.length === bestOverall.candidate.unmatched.length &&
-        picked.best.depth > bestOverall.candidate.depth)
-    ) {
-      bestOverall = { candidate: picked.best, ambiguous: picked.ambiguous };
-    }
+    allCandidates.push(...findMatches(components, gaz.root, []));
   }
 
-  if (!bestOverall) return null;
+  if (allCandidates.length === 0) return null;
 
-  const { candidate, ambiguous } = bestOverall;
-  const deepestNode = candidate.path[candidate.path.length - 1];
+  // Sort by match quality (fewest unmatched, then deepest)
+  allCandidates.sort((a, b) => {
+    if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
+    return b.depth - a.depth;
+  });
 
+  const bestUnmatched = allCandidates[0].unmatched.length;
+  const topCandidates = allCandidates.filter(c => c.unmatched.length === bestUnmatched);
+
+  // Pick the best candidate — use hint lat/lon to disambiguate if multiple match
+  let chosen: MatchCandidate;
+  if (topCandidates.length > 1 && hint) {
+    chosen = topCandidates.reduce((best, c) => {
+      const node = c.path[c.path.length - 1];
+      const bestNode = best.path[best.path.length - 1];
+      return distanceSq(node.lat, node.lon, hint.lat, hint.lon) <
+             distanceSq(bestNode.lat, bestNode.lon, hint.lat, hint.lon)
+        ? c : best;
+    });
+  } else {
+    chosen = topCandidates[0];
+  }
+
+  const deepestNode = chosen.path[chosen.path.length - 1];
   if (!deepestNode.geometry) return null;
 
   const isLeaf = !deepestNode.children || deepestNode.children.length === 0;
+  const ambiguous = !hint && topCandidates.length > 1 &&
+    new Set(topCandidates.map(c => {
+      const n = c.path[c.path.length - 1];
+      return `${n.lat},${n.lon}`;
+    })).size > 1;
 
   let matchQuality: BoundaryResolveResult['matchQuality'];
   if (ambiguous) {
     matchQuality = 'ambiguous';
-  } else if (candidate.unmatched.length === 0 && isLeaf) {
+  } else if (chosen.unmatched.length === 0 && isLeaf) {
     matchQuality = 'exact';
   } else {
     matchQuality = 'partial';
@@ -227,7 +255,7 @@ export function resolveBoundary(
 
   return {
     geometry: deepestNode.geometry,
-    matchedPath: candidate.matched,
+    matchedPath: chosen.matched,
     matchQuality,
     nodeType: deepestNode.type,
   };

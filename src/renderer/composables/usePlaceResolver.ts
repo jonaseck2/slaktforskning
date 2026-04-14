@@ -1,6 +1,6 @@
 import { ref } from 'vue';
-import { resolvePlace, resolveBoundary as resolveBoundaryFn } from '../../api/place-gazetteers/resolver';
-import { loadGazetteers } from '../../api/place-gazetteers/index';
+import { resolvePlace, resolveBoundary as resolveBoundaryFn, type BoundaryHint } from '../../api/place-gazetteers/resolver';
+import { loadGazetteers, getAllGazetteers } from '../../api/place-gazetteers/index';
 import type { Gazetteer, GazetteerConfig, PlaceResolveResult, BoundaryResolveResult } from '../../api/place-gazetteers/types';
 
 declare const window: Window & {
@@ -41,16 +41,18 @@ export function usePlaceResolver() {
   async function ensureBoundaryLoaded() {
     if (boundaryLoaded) return;
     const imported = (await window.api.gazetteers.getImported()) as Gazetteer[];
-    boundaryGazetteersRef = imported.filter(g => g.kind === 'boundary');
+    const all = [...getAllGazetteers(), ...imported];
+    boundaryGazetteersRef = all.filter(g => g.kind === 'boundary');
     boundaryLoaded = true;
   }
 
-  async function resolveBoundary(placeName: string): Promise<BoundaryResolveResult | null> {
+  async function resolveBoundary(placeName: string, hint?: BoundaryHint): Promise<BoundaryResolveResult | null> {
     await ensureBoundaryLoaded();
     if (boundaryGazetteersRef.length === 0) return null;
-    if (boundaryCache.has(placeName)) return boundaryCache.get(placeName)!;
-    const result = resolveBoundaryFn(placeName, boundaryGazetteersRef);
-    boundaryCache.set(placeName, result);
+    const cacheKey = hint ? `${placeName}@${hint.lat},${hint.lon}` : placeName;
+    if (boundaryCache.has(cacheKey)) return boundaryCache.get(cacheKey)!;
+    const result = resolveBoundaryFn(placeName, boundaryGazetteersRef, hint);
+    boundaryCache.set(cacheKey, result);
     return result;
   }
 

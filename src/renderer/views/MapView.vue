@@ -135,7 +135,7 @@ watch(selectedPlaceId, async (id) => {
   if (!id) { boundaryGeojson.value = null; return; }
   const place = allDisplayPlaces.value.find(p => p.id === id);
   if (!place) { boundaryGeojson.value = null; return; }
-  const result = await resolveBoundary(place.name);
+  const result = await resolveBoundary(place.name, { lat: place.displayLat, lon: place.displayLon });
   if (result) {
     boundaryGeojson.value = { type: 'Feature', properties: {}, geometry: result.geometry };
   } else {
