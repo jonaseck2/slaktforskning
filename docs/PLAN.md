@@ -190,5 +190,27 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 
 ---
 
+#### User Feedback Batch (2026-04-15) — Quick Wins [in-progress]
+- `name_change` name type added (schema, i18n, MCP)
+- Event type dropdowns sorted alphabetically by translation
+- Close confirmation dialog on last window (production only)
+- Media copy-on-attach verified working (imported media paths may show as missing — expected)
+
+#### Media Detail/Editor Rework [planned]
+Table-based MediaView for managing media metadata (title, notes, format). Inline editing, media overview, linked entities. Needs brainstorming on table vs panel approach.
+- Plan: [plans/2026-04-15-media-editor-rework.md](plans/2026-04-15-media-editor-rework.md)
+
+#### Name Display Strategy for Charts [planned]
+How to display names in space-constrained contexts (charts, circle chart). Tilltalsnamn as primary display, abbreviated chart names, birth vs current name selection. Needs design discussion.
+- Plan: [plans/2026-04-15-name-display-strategy.md](plans/2026-04-15-name-display-strategy.md)
+
+#### App Naming [backlog]
+Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
+
+#### Link Rules for Genealogy Platforms [backlog]
+Add link rules for MyHeritage, Geni, and other genealogy platforms. These are better modeled as source link rules than external identifiers, since they represent source references rather than person IDs for GEDCOM roundtrip.
+
+---
+
 *All four tracks from the 2026-04-11 competitor gap analysis are complete (A1-A5, B1-B5, C1-C4, D1-D3).*
 

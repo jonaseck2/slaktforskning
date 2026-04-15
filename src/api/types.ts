@@ -12,7 +12,7 @@ export interface PersonName {
   person_id: string;
   given_name: string | null;
   surname: string | null;
-  name_type: 'birth' | 'married' | 'alias' | 'aka';
+  name_type: 'birth' | 'married' | 'name_change' | 'alias' | 'aka';
   date_from: string | null;
   date_to: string | null;
   sort_order: number;

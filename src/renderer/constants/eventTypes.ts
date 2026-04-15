@@ -49,7 +49,7 @@ export const EVENT_PARTICIPANT_ROLE_VALUES = [
 ] as const;
 
 export const NAME_TYPE_VALUES = [
-  'birth', 'married', 'alias', 'aka',
+  'birth', 'married', 'name_change', 'alias', 'aka',
 ] as const;
 
 export const PLACE_TYPE_VALUES = [

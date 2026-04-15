@@ -63,7 +63,8 @@
       "Bash(ogr2ogr -f GeoJSON -t_srs EPSG:4326 -simplify 100 -lco COORDINATE_PRECISION=5 -where \"huvudomrade = 'J'\" /tmp/sockenstad_main_simple.geojson export-import/sockenstad.gpkg)",
       "Bash(gzip -k /tmp/distrikt.geojson)",
       "Bash(gzip -k /tmp/sockenstad.geojson)",
-      "Edit(/.claude/skills/tree-layout/**)"
+      "Edit(/.claude/skills/tree-layout/**)",
+      "mcp__claude_ai_Gmail__gmail_get_profile"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/docs/plans",

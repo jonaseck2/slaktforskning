@@ -19,7 +19,7 @@ export function initializeSchema(db: Database): void {
       person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
       given_name TEXT,
       surname TEXT,
-      name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'alias', 'aka')),
+      name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'name_change', 'alias', 'aka')),
       date_from TEXT,
       date_to TEXT,
       sort_order INTEGER NOT NULL DEFAULT 0,
@@ -321,6 +321,35 @@ export function initializeSchema(db: Database): void {
   const mediaLinkCols = (db.prepare('PRAGMA table_info(media_links)').all([]) as Array<{ name: string }>).map(c => c.name);
   if (!mediaLinkCols.includes('sort_order')) {
     db.exec('ALTER TABLE media_links ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // v0.79.0 name_type: add 'name_change' to CHECK constraint
+  // SQLite CHECK constraints are baked into the schema — must recreate the table to relax them.
+  const nameTypeCheck = (db.prepare(
+    `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_names'`
+  ).get([]) as { sql: string } | undefined)?.sql ?? '';
+  if (!nameTypeCheck.includes('name_change')) {
+    db.exec(`
+      CREATE TABLE person_names_new (
+        id TEXT PRIMARY KEY,
+        person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+        given_name TEXT,
+        surname TEXT,
+        name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'name_change', 'alias', 'aka')),
+        date_from TEXT,
+        date_to TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        name_prefix TEXT,
+        name_suffix TEXT,
+        patronymic_base TEXT,
+        name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias')),
+        preferred_name TEXT,
+        nickname TEXT
+      );
+      INSERT INTO person_names_new SELECT id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname FROM person_names;
+      DROP TABLE person_names;
+      ALTER TABLE person_names_new RENAME TO person_names;
+    `);
   }
 
   // Indexes that depend on migrated columns — run after migrations
