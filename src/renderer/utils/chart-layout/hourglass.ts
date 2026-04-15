@@ -282,10 +282,33 @@ export function computeHourglassLayout(
   const siblingsOnLeft = !focalIsFemale;
   const siblings: TreePerson[] = root.siblings ?? [];
 
-  // Walk outward from focal, accumulating the CX offset for each spouse/sibling.
-  // Uses computeFootprint so toward-focal outlines get proper room.
+  // Check if outline spouse placeholders need room between focal and sibling sections.
   const focalRealSpouseNodes = root.spouses.filter(s => !s.isPlaceholder);
-  const spouseCXOffsets: number[] = [];
+  const focalPhSpouse = root.spouses.find(s => s.isPlaceholder);
+
+  // Focal's placeholder spouse → toward sibling side?
+  const phSpouseOnSiblingSide = focalPhSpouse && (
+    (spouseOnLeft && !siblingsOnLeft) || (!spouseOnLeft && siblingsOnLeft)
+  );
+  // Selected sibling's spouse's placeholder → toward focal side?
+  let phSpouseOnFocalSide = false;
+  if (selectedPersonId) {
+    for (const sib of siblings) {
+      for (const sp of sib.spouses) {
+        if (!sp.isPlaceholder && sp.person.id === selectedPersonId) {
+          const spPhSpouse = sp.spouses.find(s => s.isPlaceholder);
+          if (spPhSpouse) {
+            const spOutlineGoesRight = sp.person.sex === 'F';
+            const goesTowardFocal = siblingsOnLeft ? spOutlineGoesRight : !spOutlineGoesRight;
+            if (goesTowardFocal) phSpouseOnFocalSide = true;
+          }
+        }
+      }
+    }
+  }
+
+  // Compute CX offsets for real focal spouses (on their natural side).
+  const realSpouseCXOffsets: number[] = [];
   let focalSpouseExtent = 0;
   if (focalRealSpouseNodes.length > 0) {
     let cursor = BOX_W / 2 + H_GAP;
@@ -294,16 +317,21 @@ export function computeHourglassLayout(
       const towardFocal = spouseOnLeft ? fp.right : fp.left;
       const awayFromFocal = spouseOnLeft ? fp.left : fp.right;
       cursor += towardFocal;
-      spouseCXOffsets.push(cursor);
+      realSpouseCXOffsets.push(cursor);
       cursor += awayFromFocal + V_GAP;
     }
     focalSpouseExtent = cursor - V_GAP;
   }
-
+  // Placeholder spouse offset on OPPOSITE side: F→right, M→left
+  let phSpouseOffset = 0;
+  if (focalPhSpouse) {
+    phSpouseOffset = BOX_W / 2 + V_GAP + BOX_W / 2;
+  }
   const sibCXOffsets: number[] = [];
   let siblingExtent = 0;
   if (siblings.length > 0) {
-    let cursor = BOX_W / 2 + H_GAP;
+    const extraGap = (phSpouseOnSiblingSide ? BOX_W + V_GAP : 0) + (phSpouseOnFocalSide ? BOX_W + V_GAP : 0);
+    let cursor = BOX_W / 2 + H_GAP + extraGap;
     for (let i = 0; i < siblings.length; i++) {
       const fp = computeFootprint(siblings[i]);
       const towardFocal = siblingsOnLeft ? fp.right : fp.left;
@@ -315,14 +343,17 @@ export function computeHourglassLayout(
     siblingExtent = cursor - V_GAP;
   }
 
-  // Focal CX
+  // Focal CX — real spouses on their natural side, placeholder spouse on opposite side
   const leftExtents = [ancLeftFromFocal, descLeft];
   if (spouseOnLeft) leftExtents.push(focalSpouseExtent);
   if (siblingsOnLeft) leftExtents.push(siblingExtent);
+  // Placeholder spouse on opposite side: F has real left → ph right; M has real right → ph left
+  if (focalPhSpouse && !spouseOnLeft) leftExtents.push(phSpouseOffset);
 
   const rightExtents = [ancRightFromFocal, descRight];
-  if (!spouseOnLeft && root.spouses.length > 0) rightExtents.push(focalSpouseExtent);
+  if (!spouseOnLeft && focalRealSpouseNodes.length > 0) rightExtents.push(focalSpouseExtent);
   if (!siblingsOnLeft) rightExtents.push(siblingExtent);
+  if (focalPhSpouse && spouseOnLeft) rightExtents.push(phSpouseOffset);
 
   const focalCX = PAD + Math.max(...leftExtents);
   const rightNeeded = Math.max(...rightExtents);
@@ -543,28 +574,29 @@ export function computeHourglassLayout(
     x: focalCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
   });
 
-  // Place focal's spouses using pre-computed CX offsets (directional extents)
-  function spouseCXOf(i: number): number {
-    const offset = spouseCXOffsets[i];
+  // Place focal's REAL spouses on their natural side using realSpouseCXOffsets.
+  // Placeholder spouse is placed by Pass 4 on the opposite side.
+  function realSpouseCXAt(i: number): number {
+    const offset = realSpouseCXOffsets[i];
     return spouseOnLeft ? focalCX - offset : focalCX + offset;
   }
 
-  // Only place REAL focal spouses here. Placeholder spouse outline is handled by Pass 4.
-  const focalRealSpouses = root.spouses.filter(s => !s.isPlaceholder);
-  if (focalRealSpouses.length > 0) {
+  if (focalRealSpouseNodes.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
-    const lastCX = spouseCXOf(focalRealSpouses.length - 1);
+    const lastCX = realSpouseCXAt(focalRealSpouseNodes.length - 1);
     lines.push({
       x1: spouseOnLeft ? lastCX - BOX_W / 2 : focalCX + BOX_W / 2,
       y1: lineY,
       x2: spouseOnLeft ? focalCX + BOX_W / 2 : lastCX + BOX_W / 2,
       y2: lineY,
     });
-    for (let i = 0; i < focalRealSpouses.length; i++) {
+    for (let i = 0; i < focalRealSpouseNodes.length; i++) {
+      const spCX = realSpouseCXAt(i);
       boxes.push({
-        person: focalRealSpouses[i].person, isFocal: false,
-        x: spouseCXOf(i) - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+        person: focalRealSpouseNodes[i].person, isFocal: false,
+        x: spCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
       });
+      placeSpouses(focalRealSpouseNodes[i], spCX, focalRowY);
     }
   }
 
@@ -576,10 +608,13 @@ export function computeHourglassLayout(
 
   if (siblings.length > 0) {
     for (let i = 0; i < siblings.length; i++) {
+      const sibCX = siblingCXOf(i);
       boxes.push({
         person: siblings[i].person, isFocal: false,
-        x: siblingCXOf(i) - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+        x: sibCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
       });
+      // Place sibling's real spouses (spacing already reserved via computeFootprint)
+      placeSpouses(siblings[i], sibCX, focalRowY);
     }
     // Connect siblings to parents via shared fork
     if (A >= 1) {
@@ -628,33 +663,38 @@ export function computeHourglassLayout(
 
         const placedIds = new Set(boxes.map(b => b.person.id));
 
-        // Spouse outlines — placed on the side opposite real spouses (matching computeFootprint).
-        // Real spouses go left for F, right for M/U. Outline goes the other way.
-        // This matches the space reserved by computeFootprint so no overlap.
+        // Spouse outlines — use reserved slot if the selected person is the focal
+        // (spouseCXOffsets has a slot for the placeholder). Otherwise use findClearX.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
-        // F: real spouses go left, outline goes right. M/U: real right, outline left.
         const outlineGoesRight = selIsFemale;
         for (let i = 0; i < unplacedSpouses.length; i++) {
-          const findClearX = (startX: number, y: number, direction: 1 | -1): number => {
-            let x = startX;
-            while (boxes.some(b =>
-              x < b.x + b.w + V_GAP && x + BOX_W + V_GAP > b.x &&
-              y < b.y + b.h && y + BOX_H > b.y
-            )) { x += direction * (BOX_W + V_GAP); }
-            return x;
-          };
-          // Try preferred side first; collision avoidance will push past any obstacles
           let spX: number;
-          if (outlineGoesRight) {
-            spX = findClearX(selBox.x + BOX_W + V_GAP + i * (BOX_W + V_GAP), selBox.y, 1);
+
+          // For focal's placeholder spouse: use the reserved offset on the opposite side
+          if (selNode === root && focalPhSpouse && unplacedSpouses[i].person.id === focalPhSpouse.person.id) {
+            // Opposite side: F→right, M→left
+            const phCX = spouseOnLeft ? focalCX + phSpouseOffset : focalCX - phSpouseOffset;
+            spX = phCX - BOX_W / 2;
           } else {
-            spX = findClearX(selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP), selBox.y, -1);
+            // No reserved slot — use collision avoidance
+            const findClearX = (startX: number, y: number, direction: 1 | -1): number => {
+              let x = startX;
+              while (boxes.some(b =>
+                x < b.x + b.w + V_GAP && x + BOX_W + V_GAP > b.x &&
+                y < b.y + b.h && y + BOX_H > b.y
+              )) { x += direction * (BOX_W + V_GAP); }
+              return x;
+            };
+            if (outlineGoesRight) {
+              spX = findClearX(selBox.x + BOX_W + V_GAP + i * (BOX_W + V_GAP), selBox.y, 1);
+            } else {
+              spX = findClearX(selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP), selBox.y, -1);
+            }
           }
           const isRight = spX > selBox.x;
           boxes.push({ person: unplacedSpouses[i].person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: BOX_H });
           const spCX = spX + BOX_W / 2;
           const lineY = selBox.y + BOX_H / 2;
-          // Connector between facing edges based on actual placement side (dashed)
           if (isRight) {
             outlineLines.push({ x1: selCX + BOX_W / 2, y1: lineY, x2: spCX - BOX_W / 2, y2: lineY });
           } else {
