@@ -11,6 +11,10 @@ export interface CheckResult {
   personIds: string[];
   eventIds?: string[];
   relationshipIds?: string[];
+  placeIds?: string[];
+  resolvedLat?: number;
+  resolvedLon?: number;
+  matchedPath?: string;
 }
 
 /**
