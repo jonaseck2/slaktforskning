@@ -886,6 +886,13 @@ export default {
     filter: {
       search: 'Sök media',
     },
+    galleryView: 'Galleri',
+    tableView: 'Tabell',
+    colTitle: 'Titel',
+    colFormat: 'Format',
+    colNotes: 'Anteckningar',
+    colLinks: 'Länkar',
+    notesPlaceholder: 'Lägg till anteckningar...',
   },
   mediaTimeline: {
     title: 'Mediatidslinje',

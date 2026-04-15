@@ -19,12 +19,23 @@
       />
     </div>
 
+    <div v-if="!loading && items.length > 0" class="view-toggle">
+      <button
+        :class="['btn-sm', { active: viewMode === 'gallery' }]"
+        @click="setViewMode('gallery')"
+      >{{ $t('media.galleryView') }}</button>
+      <button
+        :class="['btn-sm', { active: viewMode === 'table' }]"
+        @click="setViewMode('table')"
+      >{{ $t('media.tableView') }}</button>
+    </div>
+
     <div v-if="loading && items.length === 0" class="loading">{{ $t('common.loading') }}</div>
     <div v-else-if="!loading && items.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
     <div v-else-if="filteredItems.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
 
     <!-- Gallery grid -->
-    <div v-else class="gallery-grid">
+    <div v-else-if="viewMode === 'gallery'" class="gallery-grid">
       <div
         v-for="(item, idx) in filteredItems"
         :key="item.id"
@@ -59,6 +70,67 @@
       </div>
     </div>
 
+    <!-- Table view -->
+    <table v-else-if="viewMode === 'table' && filteredItems.length > 0" class="data-table media-table">
+      <colgroup>
+        <col style="width: 48px">
+        <col>
+        <col style="width: 60px">
+        <col>
+        <col style="width: 60px">
+        <col style="width: 40px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th></th>
+          <th>{{ $t('media.colTitle') }}</th>
+          <th>{{ $t('media.colFormat') }}</th>
+          <th>{{ $t('media.colNotes') }}</th>
+          <th>{{ $t('media.colLinks') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(item, idx) in filteredItems" :key="item.id">
+          <td class="thumb-cell">
+            <img
+              v-if="thumbnails[item.id]"
+              :src="thumbnails[item.id]"
+              class="table-thumb"
+              @click="openLightbox(idx)"
+            />
+            <span v-else class="table-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
+          </td>
+          <td>
+            <input
+              type="text"
+              :value="item.title"
+              class="inline-edit"
+              @blur="e => { const v = (e.target as HTMLInputElement).value; if (v !== item.title) { item.title = v; saveField(item.id, 'title', v); } }"
+              @keydown.enter="($event.target as HTMLInputElement).blur()"
+            />
+          </td>
+          <td class="format-cell">
+            <span v-if="item.format" class="format-badge">{{ item.format }}</span>
+          </td>
+          <td>
+            <input
+              type="text"
+              :value="item.notes"
+              class="inline-edit"
+              :placeholder="$t('media.notesPlaceholder')"
+              @blur="e => { const v = (e.target as HTMLInputElement).value; if (v !== item.notes) { item.notes = v; saveField(item.id, 'notes', v); } }"
+              @keydown.enter="($event.target as HTMLInputElement).blur()"
+            />
+          </td>
+          <td class="links-cell">{{ item.linkCount }}</td>
+          <td>
+            <button class="btn-sm btn-delete" @click="deleteItem(item.id)" :title="$t('media.delete')">&#10005;</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
     <div ref="sentinel" class="scroll-sentinel"></div>
 
     <MediaLightbox
@@ -77,6 +149,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MediaLightbox from '../components/MediaLightbox.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import { useToast } from '../composables/useToast';
+const toast = useToast();
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -86,6 +160,25 @@ const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'
 const PAGE_SIZE = 100;
 
 const { t } = useI18n();
+
+type ViewMode = 'gallery' | 'table';
+const viewMode = ref<ViewMode>(
+  (localStorage.getItem('media-view-mode') as ViewMode) || 'gallery'
+);
+
+function setViewMode(mode: ViewMode) {
+  viewMode.value = mode;
+  localStorage.setItem('media-view-mode', mode);
+}
+
+async function saveField(itemId: string, field: 'title' | 'notes', value: string) {
+  try {
+    await window.api.media.update(itemId, { [field]: value });
+  } catch (err) {
+    console.error('[MediaView] saveField failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
 
 interface MediaItem {
   id: string;
@@ -351,6 +444,73 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   font-weight: 600;
   border-radius: 4px;
   padding: 1px 5px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.view-toggle .btn-sm.active {
+  background: #4a9eff;
+  color: white;
+  border-color: #4a9eff;
+}
+
+.media-table .thumb-cell {
+  padding: 4px;
+}
+.table-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.table-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: #888;
+}
+.inline-edit {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 6px;
+  font-size: var(--font-sm);
+  border-radius: 4px;
+  outline: none;
+}
+.inline-edit:focus {
+  border-color: #4a9eff;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.15);
+}
+.format-badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+}
+.format-cell, .links-cell {
+  text-align: center;
+}
+
+:root[data-theme="dark"] .inline-edit:focus,
+:root[data-theme="high-contrast"] .inline-edit:focus {
+  background: #333;
+  border-color: #4a9eff;
+}
+:root[data-theme="dark"] .table-thumb-placeholder,
+:root[data-theme="high-contrast"] .table-thumb-placeholder {
+  background: #333;
 }
 
 /* Dark mode support */
