@@ -132,6 +132,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.78.3 | Fix: sibling/spouse real nodes always visible, outline spouse spacing between focal and sibling sections | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 | v0.78.4 | Fix: grandparent selection no longer clips ancestor tree — placeholders excluded from depth/spacing/placement recursion, outline spouse room reserved via computeFootprint | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 | v0.80.0 | QualityView: confirm/reject/view buttons for place match checks (PLACE_MATCH_AMBIGUOUS/PARTIAL/NONE/WRONG_LEVEL) | — |
+| v0.81.0 | Add updateMedia to API, IPC, preload, and MCP with 6 unit tests | — |
 ---
 
 ## Research

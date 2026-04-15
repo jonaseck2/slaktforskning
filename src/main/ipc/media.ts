@@ -26,6 +26,7 @@ export function registerMediaHandlers(
   wrapHandler('media:get', (id) => media.getMedia(getDb(), id as string));
   wrapHandler('media:create', (data) => media.createMedia(getDb(), data as Parameters<typeof media.createMedia>[1]));
   wrapHandler('media:delete', (id) => media.deleteMedia(getDb(), id as string));
+  wrapHandler('media:update', (id, data) => media.updateMedia(getDb(), id as string, data as Parameters<typeof media.updateMedia>[2]));
   wrapHandler('media:forEntity', (entityType, entityId) => media.getMediaForEntity(getDb(), entityType as Parameters<typeof media.getMediaForEntity>[1], entityId as string));
   wrapHandler('media:linksForMedia', (mediaId) => media.getLinksForMedia(getDb(), mediaId as string));
   wrapHandler('media:addLink', (data) => media.addMediaLink(getDb(), data as Parameters<typeof media.addMediaLink>[1]));

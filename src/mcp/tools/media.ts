@@ -44,6 +44,20 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Not found' }] };
   });
 
+  server.registerTool('update_media', {
+    description: 'Update media metadata (title, notes, format, is_printable)',
+    inputSchema: {
+      id: z.string().describe('Media ID'),
+      title: z.string().optional().describe('New title'),
+      notes: z.string().optional().describe('New notes/description'),
+      format: z.string().optional().describe('File format'),
+      is_printable: z.boolean().optional().describe('Whether media is printable'),
+    },
+  }, async ({ id, ...data }) => {
+    const result = media.updateMedia(getDb(), id, data);
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  });
+
   server.registerTool('add_media_link', {
     description: 'Link a media record to an entity (person, event, relationship, place, or source)',
     inputSchema: {
