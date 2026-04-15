@@ -4,6 +4,8 @@ import path from 'path';
 import { queryAll } from '../db';
 import type { CheckResult } from './check-utils';
 import { haversineKm } from './check-utils';
+import { resolvePlace } from '../place-gazetteers/resolver';
+import type { Gazetteer } from '../place-gazetteers/types';
 
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   // Find events for same person on same exact date with place lat/lon
@@ -50,6 +52,111 @@ export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
         eventIds: [r.event1_id, r.event2_id],
       });
     }
+  }
+
+  return results;
+}
+
+const WELL_KNOWN_REGIONS = new Set([
+  'sverige', 'norway', 'norge', 'danmark', 'denmark', 'finland',
+  'england', 'amerika', 'usa', 'tyskland', 'germany', 'frankrike',
+  'france', 'polen', 'poland', 'ryssland', 'russia', 'irland',
+  'ireland', 'skottland', 'scotland', 'italien', 'italy', 'spanien',
+  'spain', 'kanada', 'canada', 'australien', 'australia',
+]);
+
+export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]): CheckResult[] {
+  if (gazetteers.length === 0) return [];
+
+  // Places used in events that have no manual coordinates
+  const places = queryAll<{ id: string; name: string }>(db, `
+    SELECT DISTINCT p.id, p.name
+    FROM places p
+    JOIN events e ON e.place_id = p.id
+    WHERE p.latitude IS NULL OR p.longitude IS NULL
+  `);
+
+  const results: CheckResult[] = [];
+  // Cache resolutions by name to avoid re-resolving duplicates
+  const cache = new Map<string, ReturnType<typeof resolvePlace>>();
+
+  for (const place of places) {
+    // Find linked persons via event_participants
+    const personRows = queryAll<{ person_id: string }>(db, `
+      SELECT DISTINCT ep.person_id
+      FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id
+      WHERE e.place_id = ?
+    `, [place.id]);
+    if (personRows.length === 0) continue;
+
+    const personIds = personRows.map(r => r.person_id);
+
+    // Resolve with caching
+    if (!cache.has(place.name)) {
+      cache.set(place.name, resolvePlace(place.name, gazetteers));
+    }
+    const resolved = cache.get(place.name)!;
+
+    if (!resolved) {
+      results.push({
+        code: 'PLACE_MATCH_NONE',
+        severity: 'notice',
+        message: `Platsen "${place.name}" kunde inte matchas mot något ortregister`,
+        messageParams: { placeName: place.name },
+        personIds,
+        placeIds: [place.id],
+      });
+      continue;
+    }
+
+    const deepestNode = resolved.matchedNode;
+    const isLeaf = !deepestNode.children || deepestNode.children.length === 0;
+    const components = place.name.split(',').map(p => p.trim()).filter(Boolean);
+    const firstComponent = components[0]?.toLowerCase() ?? '';
+    const isWellKnown = WELL_KNOWN_REGIONS.has(firstComponent);
+    const isWrongLevel =
+      (components.length === 1 && isLeaf && resolved.matchDepth > 2) ||
+      (isWellKnown && isLeaf);
+
+    if (isWrongLevel) {
+      results.push({
+        code: 'PLACE_MATCH_WRONG_LEVEL',
+        severity: 'warning',
+        message: `Platsen "${place.name}" verkar matcha en specifik ort (${resolved.matchedPath.join(', ')}) snarare än det angivna området`,
+        messageParams: { placeName: place.name, matchedPath: resolved.matchedPath.join(', ') },
+        personIds,
+        placeIds: [place.id],
+        resolvedLat: resolved.lat,
+        resolvedLon: resolved.lon,
+        matchedPath: resolved.matchedPath.join(', '),
+      });
+    } else if (resolved.matchQuality === 'ambiguous') {
+      results.push({
+        code: 'PLACE_MATCH_AMBIGUOUS',
+        severity: 'warning',
+        message: `Platsen "${place.name}" är tvetydig — flera möjliga platser hittades`,
+        messageParams: { placeName: place.name },
+        personIds,
+        placeIds: [place.id],
+        resolvedLat: resolved.lat,
+        resolvedLon: resolved.lon,
+        matchedPath: resolved.matchedPath.join(', '),
+      });
+    } else if (resolved.matchQuality === 'partial') {
+      results.push({
+        code: 'PLACE_MATCH_PARTIAL',
+        severity: 'notice',
+        message: `Platsen "${place.name}" matchades delvis (ej matchade delar: ${resolved.unmatchedComponents.join(', ')})`,
+        messageParams: { placeName: place.name, unmatched: resolved.unmatchedComponents.join(', ') },
+        personIds,
+        placeIds: [place.id],
+        resolvedLat: resolved.lat,
+        resolvedLon: resolved.lon,
+        matchedPath: resolved.matchedPath.join(', '),
+      });
+    }
+    // matchQuality === 'exact' → no result
   }
 
   return results;
