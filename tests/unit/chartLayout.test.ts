@@ -142,26 +142,27 @@ describe('computeFootprint', () => {
     expect(fp.right).toBe(BOX_W / 2);
   });
 
-  it('two placeholder parents widen both sides', () => {
+  it('two placeholder parents do NOT widen footprint (they extend vertically, not horizontally)', () => {
     const phFather: TreePerson = { person: p('__ph_father_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
     const phMother: TreePerson = { person: p('__ph_mother_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
     const node: TreePerson = { person: p('a'), parents: [phFather, phMother], children: [], spouses: [] };
     const fp = computeFootprint(node);
-    expect(fp.left).toBe(165);
-    expect(fp.right).toBe(165);
+    // Parent outlines are placed above, not beside — footprint is just the base box
+    expect(fp.left).toBe(BOX_W / 2);
+    expect(fp.right).toBe(BOX_W / 2);
   });
 
-  it('spouse + parent outlines: max of both', () => {
+  it('spouse + parent outlines: only spouse affects footprint', () => {
     const spouse: TreePerson = { person: p('s'), parents: [], children: [], spouses: [] };
     const phFather: TreePerson = { person: p('__ph_father_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
     const phMother: TreePerson = { person: p('__ph_mother_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
     const node: TreePerson = { person: p('a', { sex: 'M' }), parents: [phFather, phMother], children: [], spouses: [spouse] };
     const fp = computeFootprint(node);
-    // spouse side = BOX_W/2 + 1*(BOX_W+V_GAP) = 77.5 + 175 = 252.5
-    // parent group half = (2*155 + 20) / 2 = 165
-    // right = max(252.5, 165) = 252.5
-    // left = max(77.5, 165) = 165
-    expect(fp.left).toBe(165);
+    // Parent outlines don't affect footprint (they extend vertically)
+    // Only spouse matters: M has real spouse on right
+    // left = BOX_W/2 (no spouse outline for M — placeholder spouse goes left but
+    //         computeFootprint doesn't count parent placeholders)
+    expect(fp.left).toBe(BOX_W / 2);
     expect(fp.right).toBe(BOX_W / 2 + BOX_W + 20);
   });
 });
