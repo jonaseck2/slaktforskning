@@ -9,10 +9,7 @@ function normalize(name: string): string {
 }
 
 function fuzzyEqual(a: string, b: string): boolean {
-  if (a === b) return true;
-  // Swedish genitive: "smedjebackens" ≈ "smedjebacken"
-  if (a + 's' === b || b + 's' === a) return true;
-  return false;
+  return a === b;
 }
 
 function nodeMatches(node: GazetteerNode, component: string): boolean {

@@ -6,6 +6,7 @@ import type { CheckResult } from './check-utils';
 import { haversineKm } from './check-utils';
 import { resolvePlace } from '../place-gazetteers/resolver';
 import type { Gazetteer } from '../place-gazetteers/types';
+import { getPlacePath } from '../places';
 
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   // Find events for same person on same exact date with place lat/lon
@@ -84,11 +85,14 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
 
     const personIds = personRows.map(r => r.person_id);
 
+    // Build full place path (leaf, parent, grandparent, …) for better resolution
+    const fullPath = getPlacePath(db, place.id);
+
     // Resolve with caching
-    if (!cache.has(place.name)) {
-      cache.set(place.name, resolvePlace(place.name, gazetteers));
+    if (!cache.has(fullPath)) {
+      cache.set(fullPath, resolvePlace(fullPath, gazetteers));
     }
-    const resolved = cache.get(place.name)!;
+    const resolved = cache.get(fullPath)!;
 
     if (!resolved) {
       results.push({
