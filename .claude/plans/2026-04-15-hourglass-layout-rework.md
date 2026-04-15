@@ -179,13 +179,13 @@ describe('hourglass spacing with spouses', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify the overlap test fails**
+- [x] **Step 2: Run tests to verify the overlap test fails**
 
 The current code does not account for spouse width in ancestor spacing, so the overlap test should fail (or the width test should fail if spouse boxes aren't placed at all).
 
 Run: `npx vitest run tests/unit/chartLayout.test.ts`
 
-- [ ] **Step 3: Rewrite `ancestorWidth` to use `computeFootprint`**
+- [x] **Step 3: Rewrite `ancestorWidth` to use `computeFootprint`**
 
 Replace the current `ancestorWidth` function body:
 
@@ -208,7 +208,7 @@ function ancestorWidth(node: TreePerson): number {
 }
 ```
 
-- [ ] **Step 4: Rewrite `ancestorRelCX` to use `computeFootprint`**
+- [x] **Step 4: Rewrite `ancestorRelCX` to use `computeFootprint`**
 
 The relative CX must account for the footprint asymmetry — a female ancestor with left spouses has her center offset to the right within her subtree width.
 
@@ -238,7 +238,7 @@ function ancestorRelCX(node: TreePerson): number {
 }
 ```
 
-- [ ] **Step 5: Rewrite `descExtents` to use `computeFootprint`**
+- [x] **Step 5: Rewrite `descExtents` to use `computeFootprint`**
 
 ```typescript
 const descExtCache = new Map<string, [number, number]>();
@@ -264,7 +264,7 @@ function descExtents(node: TreePerson): [number, number] {
 }
 ```
 
-- [ ] **Step 6: Rewrite focal row extent calculation**
+- [x] **Step 6: Rewrite focal row extent calculation**
 
 Replace the focal spouse/sibling extent calculation with directional footprint walking:
 
@@ -300,12 +300,12 @@ if (siblings.length > 0) {
 }
 ```
 
-- [ ] **Step 7: Run all tests**
+- [x] **Step 7: Run all tests**
 
 Run: `npm test`
 Expected: All tests pass including the new spouse spacing tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 Message: `refactor: hourglass spacing uses computeFootprint for all nodes`
 
@@ -316,7 +316,7 @@ Message: `refactor: hourglass spacing uses computeFootprint for all nodes`
 **Files:**
 - Modify: `src/renderer/utils/chart-layout/hourglass.ts`
 
-- [ ] **Step 1: Write `placeSpouses` helper**
+- [x] **Step 1: Write `placeSpouses` helper**
 
 This places real spouses beside a node using the footprint. Used by all three passes.
 
@@ -347,7 +347,7 @@ function placeSpouses(node: TreePerson, nodeCX: number, nodeY: number): void {
 }
 ```
 
-- [ ] **Step 2: Write `placeAncestors` — places node box + real spouses + recurses to parents**
+- [x] **Step 2: Write `placeAncestors` — places node box + real spouses + recurses to parents**
 
 ```typescript
 function placeAncestors(node: TreePerson, nodeCX: number, depth: number): void {
@@ -383,7 +383,7 @@ function placeAncestors(node: TreePerson, nodeCX: number, depth: number): void {
 
 Note: parent placeholders (from `injectOutlines`) are in `node.parents[]` — they get placed by the recursion naturally. `ancestorWidth` already accounts for them via `computeFootprint`. No special handling needed.
 
-- [ ] **Step 3: Write `placeDescendants` — same pattern downward**
+- [x] **Step 3: Write `placeDescendants` — same pattern downward**
 
 ```typescript
 function placeDescendants(node: TreePerson, nodeCX: number, depth: number): void {
@@ -418,7 +418,7 @@ function placeDescendants(node: TreePerson, nodeCX: number, depth: number): void
 
 Note: child placeholders (from `injectOutlines`) are in `node.children[]` — placed naturally. Same for parent placeholders on descendants (they're in `node.parents[]` and would be placed by `placeAncestors` if the recursion went upward — but descendants only recurse down). Parent placeholders on descendants are cross-direction and handled in Task 4.
 
-- [ ] **Step 4: Write focal row placement (Pass 3)**
+- [x] **Step 4: Write focal row placement (Pass 3)**
 
 Place focal box, then focal spouses and siblings using the pre-computed `spouseCXOffsets` and `sibCXOffsets`:
 
@@ -472,12 +472,12 @@ if (siblings.length > 0) {
 }
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `npm test`
 Expected: All existing hourglass tests pass (basic layout, collapse, overlap detection).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 Message: `refactor: hourglass placement passes 1-3 with footprint-based spacing`
 
@@ -489,7 +489,7 @@ Message: `refactor: hourglass placement passes 1-3 with footprint-based spacing`
 - Modify: `src/renderer/utils/chart-layout/hourglass.ts`
 - Modify: `tests/unit/chartLayout.test.ts`
 
-- [ ] **Step 1: Write failing tests for outline placement**
+- [x] **Step 1: Write failing tests for outline placement**
 
 ```typescript
 describe('hourglass outline overlap detection', () => {
@@ -530,12 +530,12 @@ describe('hourglass outline overlap detection', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/unit/chartLayout.test.ts`
 Expected: FAIL — outlines are not placed yet (no placeholders in output when selected).
 
-- [ ] **Step 3: Implement `placeOutlineGroup` collision avoidance helper**
+- [x] **Step 3: Implement `placeOutlineGroup` collision avoidance helper**
 
 ```typescript
 /** Place a group of outline boxes at targetY, centered on ownerCX, with collision avoidance. */
@@ -597,7 +597,7 @@ function placeOutlineGroup(
 }
 ```
 
-- [ ] **Step 4: Implement Pass 4 — place outlines for the selected person**
+- [x] **Step 4: Implement Pass 4 — place outlines for the selected person**
 
 After passes 1-3, add:
 
@@ -651,12 +651,12 @@ if (selectedPersonId) {
 }
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `npm test`
 Expected: All tests pass including the new outline overlap tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 Message: `feat: hourglass outline placement pass with collision avoidance`
 

@@ -969,3 +969,40 @@ describe('hourglass sibling support', () => {
     expect(withSibs.lines.length).toBeGreaterThan(withoutSibs.lines.length);
   });
 });
+
+describe('hourglass outline overlap detection', () => {
+  it('no overlaps when focal is selected', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [p('c1')], [p('s1')]);
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 'f');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no overlaps when child is selected', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [p('c1'), p('c2')], [p('s1')]);
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 'c1');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no overlaps when ancestor is selected', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [p('gp0'), p('gp1'), null, null], [p('c1')]);
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 'dad');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no overlaps when focal spouse is selected', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [p('c1')], [p('s1')]);
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 's1');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no overlaps when sibling is selected', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [], [], [p('sib1')]);
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 'sib1');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+});

@@ -577,6 +577,55 @@ export function computeHourglassLayout(
     }
   }
 
+  // ── Pass 4: Place outlines for selected person ──────────────────────────────
+  if (selectedPersonId) {
+    const selBox = boxes.find(b => b.person.id === selectedPersonId);
+    if (selBox) {
+      const selNode = findPersonInTree(root, selectedPersonId);
+      if (selNode) {
+        const selCX = selBox.x + BOX_W / 2;
+        const selIsFemale = selNode.person.sex === 'F';
+
+        const placedIds = new Set(boxes.map(b => b.person.id));
+
+        // Spouse outlines — beside the selected person with collision avoidance
+        const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
+        for (let i = 0; i < unplacedSpouses.length; i++) {
+          const findClearX = (startX: number, y: number, direction: 1 | -1): number => {
+            let x = startX;
+            while (boxes.some(b =>
+              x < b.x + b.w + V_GAP && x + BOX_W + V_GAP > b.x &&
+              y < b.y + b.h && y + BOX_H > b.y
+            )) { x += direction * (BOX_W + V_GAP); }
+            return x;
+          };
+          let spX: number;
+          if (selIsFemale) {
+            spX = findClearX(selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP), selBox.y, -1);
+          } else {
+            spX = findClearX(selBox.x + BOX_W + V_GAP + i * (BOX_W + V_GAP), selBox.y, 1);
+          }
+          boxes.push({ person: unplacedSpouses[i].person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: BOX_H });
+          const spCX = spX + BOX_W / 2;
+          const lineY = selBox.y + BOX_H / 2;
+          lines.push({
+            x1: selIsFemale ? spCX + BOX_W / 2 : selCX + BOX_W / 2,
+            y1: lineY,
+            x2: selIsFemale ? selCX - BOX_W / 2 : spCX - BOX_W / 2,
+            y2: lineY,
+          });
+        }
+
+        // Cross-direction outlines with collision avoidance
+        const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
+        placeOutlineGroup(unplacedChildren, selCX, selBox.y, 'down');
+
+        const unplacedParents = selNode.parents.filter(par => !placedIds.has(par.person.id));
+        placeOutlineGroup(unplacedParents, selCX, selBox.y, 'up');
+      }
+    }
+  }
+
   // ── 6. SVG dimensions ───────────────────────────────────────────────────────
   const minBoxLeft = boxes.length > 0 ? Math.min(...boxes.map(b => b.x)) : 0;
   if (minBoxLeft < PAD) {
