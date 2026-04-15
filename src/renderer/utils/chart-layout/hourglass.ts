@@ -274,12 +274,13 @@ export function computeHourglassLayout(
 
   // Walk outward from focal, accumulating the CX offset for each spouse/sibling.
   // Uses computeFootprint so toward-focal outlines get proper room.
+  const focalRealSpouseNodes = root.spouses.filter(s => !s.isPlaceholder);
   const spouseCXOffsets: number[] = [];
   let focalSpouseExtent = 0;
-  if (root.spouses.length > 0) {
+  if (focalRealSpouseNodes.length > 0) {
     let cursor = BOX_W / 2 + H_GAP;
-    for (let i = 0; i < root.spouses.length; i++) {
-      const fp = computeFootprint(root.spouses[i]);
+    for (let i = 0; i < focalRealSpouseNodes.length; i++) {
+      const fp = computeFootprint(focalRealSpouseNodes[i]);
       const towardFocal = spouseOnLeft ? fp.right : fp.left;
       const awayFromFocal = spouseOnLeft ? fp.left : fp.right;
       cursor += towardFocal;
@@ -538,18 +539,20 @@ export function computeHourglassLayout(
     return spouseOnLeft ? focalCX - offset : focalCX + offset;
   }
 
-  if (root.spouses.length > 0) {
+  // Only place REAL focal spouses here. Placeholder spouse outline is handled by Pass 4.
+  const focalRealSpouses = root.spouses.filter(s => !s.isPlaceholder);
+  if (focalRealSpouses.length > 0) {
     const lineY = focalRowY + BOX_H / 2;
-    const lastCX = spouseCXOf(root.spouses.length - 1);
+    const lastCX = spouseCXOf(focalRealSpouses.length - 1);
     lines.push({
       x1: spouseOnLeft ? lastCX - BOX_W / 2 : focalCX + BOX_W / 2,
       y1: lineY,
       x2: spouseOnLeft ? focalCX + BOX_W / 2 : lastCX + BOX_W / 2,
       y2: lineY,
     });
-    for (let i = 0; i < root.spouses.length; i++) {
+    for (let i = 0; i < focalRealSpouses.length; i++) {
       boxes.push({
-        person: root.spouses[i].person, isFocal: false,
+        person: focalRealSpouses[i].person, isFocal: false,
         x: spouseCXOf(i) - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
       });
     }
