@@ -10,6 +10,10 @@ export interface QualityResult {
   personNames: string[];
   eventIds?: string[];
   relationshipIds?: string[];
+  placeIds?: string[];
+  resolvedLat?: number;
+  resolvedLon?: number;
+  matchedPath?: string;
 }
 
 export const useQualityStore = defineStore('quality', () => {
