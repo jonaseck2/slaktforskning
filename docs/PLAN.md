@@ -127,6 +127,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.77.0 | Place types (municipality, locality), map boundary overlay fixes, i18n corrections | — |
 | v0.77.1 | Refactor: add `computeFootprint` for hourglass layout measurement (Task 1 of layout rewrite) | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 | v0.77.2 | Refactor: hourglass spacing functions use `computeFootprint` — ancestorWidth, ancestorRelCX, descExtents, focal row extent (Task 2 of layout rewrite) | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
+| v0.78.0 | Feat: hourglass placement passes 1-3 (ancestors, descendants, focal row) + Pass 4 outline placement with collision avoidance (Tasks 3 & 4 of layout rewrite) | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 ---
 
 ## Research
