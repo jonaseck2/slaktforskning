@@ -329,6 +329,7 @@ export function initializeSchema(db: Database): void {
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_names'`
   ).get([]) as { sql: string } | undefined)?.sql ?? '';
   if (!nameTypeCheck.includes('name_change')) {
+    db.exec(`DROP TABLE IF EXISTS person_names_new`);
     db.exec(`
       CREATE TABLE person_names_new (
         id TEXT PRIMARY KEY,
