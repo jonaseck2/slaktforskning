@@ -70,11 +70,8 @@ export interface Footprint {
 }
 
 /** Compute the bounding footprint of a person including spouses and outline placeholders.
- *  The footprint has two levels:
- *  - The base (left/right) includes same-row items: real spouses + placeholder spouse.
- *    This is used by ancestorRelCX for centering.
- *  - ancestorWidth/descExtents use the full footprint which ALSO includes cross-row
- *    parent/child outlines so the subtree is wide enough for collision avoidance. */
+ *  Used by descExtents and focal row spacing — includes placeholder spouse width.
+ *  For ancestor spacing use ancestorFootprint() which excludes placeholder spouses. */
 export function computeFootprint(node: TreePerson): Footprint {
   const half = BOX_W / 2;
 
@@ -89,6 +86,20 @@ export function computeFootprint(node: TreePerson): Footprint {
   let right = half + (realOnLeft ? phSpouseW : realSpouseW);
 
   return { left, right };
+}
+
+/** Ancestor-only footprint: real spouses only, no placeholder spouse width.
+ *  Prevents selecting a grandparent from inflating ancestorWidth via the
+ *  placeholder spouse, which would shift the entire ancestor tree. */
+export function ancestorFootprint(node: TreePerson): Footprint {
+  const half = BOX_W / 2;
+  const realSpouses = node.spouses.filter(s => !s.isPlaceholder);
+  const realSpouseW = realSpouses.length * (BOX_W + V_GAP);
+  const realOnLeft = node.person.sex === 'F';
+  return {
+    left: half + (realOnLeft ? realSpouseW : 0),
+    right: half + (realOnLeft ? 0 : realSpouseW),
+  };
 }
 
 /** Compute the full subtree width needed including cross-row outline placeholders. */
@@ -186,15 +197,17 @@ export function computeHourglassLayout(
   function maxAncestorDepth(node: TreePerson, visited = new Set<string>()): number {
     if (visited.has(node.person.id)) return 0;
     visited.add(node.person.id);
-    if (node.parents.length === 0) return 0;
-    return 1 + Math.max(...node.parents.map(p => maxAncestorDepth(p, visited)));
+    const realParents = node.parents.filter(p => !p.isPlaceholder);
+    if (realParents.length === 0) return 0;
+    return 1 + Math.max(...realParents.map(p => maxAncestorDepth(p, visited)));
   }
 
   function maxDescDepth(node: TreePerson, visited = new Set<string>()): number {
     if (visited.has(node.person.id)) return 0;
     visited.add(node.person.id);
-    if (node.children.length === 0) return 0;
-    return 1 + Math.max(...node.children.map(c => maxDescDepth(c, visited)));
+    const realChildren = node.children.filter(c => !c.isPlaceholder);
+    if (realChildren.length === 0) return 0;
+    return 1 + Math.max(...realChildren.map(c => maxDescDepth(c, visited)));
   }
 
   const A = maxAncestorDepth(root);
@@ -205,19 +218,21 @@ export function computeHourglassLayout(
   const ancestorRowY = (depth: number) => focalRowY - depth * (BOX_H + GEN_GAP);
   const descRowY = (depth: number) => focalRowY + depth * (BOX_H + GEN_GAP);
 
-  // Ancestor subtree width (upward). Uses computeFootprint (same-row only: spouses).
-  // Cross-row outlines (parent/child) are handled by collision avoidance at their target row.
+  // Ancestor subtree width (upward). Uses computeFootprint (includes placeholder
+  // spouse so there's room for the outline) but skips placeholder parents (those
+  // are placed by Pass 4 collision avoidance, not recursive spacing).
   const ancWidthCache = new Map<string, number>();
   function ancestorWidth(node: TreePerson): number {
     if (ancWidthCache.has(node.person.id)) return ancWidthCache.get(node.person.id)!;
     const fp = computeFootprint(node);
     const nodeW = fp.left + fp.right;
+    const realParents = node.parents.filter(par => !par.isPlaceholder);
     let w: number;
-    if (node.parents.length === 0) {
+    if (realParents.length === 0) {
       w = nodeW;
     } else {
-      const parentW = node.parents.reduce((sum, par) => sum + ancestorWidth(par), 0)
-        + (node.parents.length - 1) * V_GAP;
+      const parentW = realParents.reduce((sum, par) => sum + ancestorWidth(par), 0)
+        + (realParents.length - 1) * V_GAP;
       w = Math.max(parentW, nodeW);
     }
     ancWidthCache.set(node.person.id, w);
@@ -228,19 +243,24 @@ export function computeHourglassLayout(
   function ancestorRelCX(node: TreePerson): number {
     if (ancRelCXCache.has(node.person.id)) return ancRelCXCache.get(node.person.id)!;
     const fp = computeFootprint(node);
+    const realParents = node.parents.filter(par => !par.isPlaceholder);
     let cx: number;
-    if (node.parents.length === 0) {
+    if (realParents.length === 0) {
       cx = fp.left;
     } else {
       const parentCXs: number[] = [];
       let x = 0;
-      for (const par of node.parents) {
+      for (const par of realParents) {
         parentCXs.push(x + ancestorRelCX(par));
         x += ancestorWidth(par) + V_GAP;
       }
       const parentMidCX = parentCXs.reduce((a, b) => a + b, 0) / parentCXs.length;
-      const minCX = fp.left;
-      const maxCX = ancestorWidth(node) - fp.right;
+      const totalParentW = realParents.reduce((s, par) => s + ancestorWidth(par), 0)
+        + (realParents.length - 1) * V_GAP;
+      const halfParent = totalParentW / 2;
+      // Must fit both the person's own footprint AND the parent span within the slot
+      const minCX = Math.max(fp.left, halfParent);
+      const maxCX = Math.min(ancestorWidth(node) - fp.right, ancestorWidth(node) - halfParent);
       cx = Math.max(minCX, Math.min(maxCX, parentMidCX));
     }
     ancRelCXCache.set(node.person.id, cx);
@@ -252,18 +272,21 @@ export function computeHourglassLayout(
   const ancLeftFromFocal = focalAncRelCX;
   const ancRightFromFocal = focalAncWidth - focalAncRelCX;
 
-  // Descendant subtree extents. Uses computeFootprint for outline reservation.
+  // Descendant subtree extents. Uses computeFootprint (includes placeholder spouse
+  // for the selected person's row). Skips placeholder children — those are placed
+  // by Pass 4 collision avoidance.
   const descExtCache = new Map<string, [number, number]>();
   function descExtents(node: TreePerson): [number, number] {
     if (descExtCache.has(node.person.id)) return descExtCache.get(node.person.id)!;
     const fp = computeFootprint(node);
-    if (node.children.length === 0) {
+    const realChildren = node.children.filter(c => !c.isPlaceholder);
+    if (realChildren.length === 0) {
       const ext: [number, number] = [fp.left, fp.right];
       descExtCache.set(node.person.id, ext);
       return ext;
     }
-    const n = node.children.length;
-    const childExts = node.children.map(c => descExtents(c));
+    const n = realChildren.length;
+    const childExts = realChildren.map(c => descExtents(c));
     const offsets: number[] = [0];
     for (let i = 1; i < n; i++) {
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
@@ -403,18 +426,20 @@ export function computeHourglassLayout(
 
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
 
-    if (node.parents.length === 0) return;
+    // Only recurse into real parents — placeholder parent outlines are placed by Pass 4
+    const realParents = node.parents.filter(par => !par.isPlaceholder);
+    if (realParents.length === 0) return;
 
     const forkY = nodeY - GEN_GAP / 2;
-    const parentWidths = node.parents.map(p => ancestorWidth(p));
-    const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (node.parents.length - 1) * V_GAP;
+    const parentWidths = realParents.map(p => ancestorWidth(p));
+    const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (realParents.length - 1) * V_GAP;
     let x = nodeCX - totalWidth / 2;
 
     const parentCXs: number[] = [];
-    for (let i = 0; i < node.parents.length; i++) {
-      const pcx = x + ancestorRelCX(node.parents[i]);
+    for (let i = 0; i < realParents.length; i++) {
+      const pcx = x + ancestorRelCX(realParents[i]);
       parentCXs.push(pcx);
-      placeAncestors(node.parents[i], pcx, depth + 1);
+      placeAncestors(realParents[i], pcx, depth + 1);
       x += parentWidths[i] + V_GAP;
     }
 
@@ -437,13 +462,15 @@ export function computeHourglassLayout(
 
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
 
-    if (node.children.length === 0) return;
+    // Only recurse into real children — placeholder child outlines are placed by Pass 4
+    const realChildren = node.children.filter(c => !c.isPlaceholder);
+    if (realChildren.length === 0) return;
 
     const forkY = nodeY + BOX_H + GEN_GAP / 2;
     lines.push({ x1: nodeCX, y1: nodeY + BOX_H, x2: nodeCX, y2: forkY });
 
-    const n = node.children.length;
-    const childExts = node.children.map(c => descExtents(c));
+    const n = realChildren.length;
+    const childExts = realChildren.map(c => descExtents(c));
     const offsets: number[] = [0];
     for (let i = 1; i < n; i++) {
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
@@ -457,22 +484,23 @@ export function computeHourglassLayout(
     }
     for (let i = 0; i < n; i++) {
       lines.push({ x1: childCXs[i], y1: forkY, x2: childCXs[i], y2: descRowY(depth + 1) });
-      placeDescendants(node.children[i], childCXs[i], depth + 1);
+      placeDescendants(realChildren[i], childCXs[i], depth + 1);
     }
   }
 
-  // Place focal's ancestors
-  if (root.parents.length > 0) {
+  // Place focal's ancestors (real parents only — placeholder parent outlines handled by Pass 4)
+  const focalRealParents = root.parents.filter(par => !par.isPlaceholder);
+  if (focalRealParents.length > 0) {
     const forkY = focalRowY - GEN_GAP / 2;
-    const parentWidths = root.parents.map(p => ancestorWidth(p));
-    const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (root.parents.length - 1) * V_GAP;
+    const parentWidths = focalRealParents.map(p => ancestorWidth(p));
+    const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (focalRealParents.length - 1) * V_GAP;
     let x = focalCX - totalWidth / 2;
     const parentCXs: number[] = [];
 
-    for (let i = 0; i < root.parents.length; i++) {
-      const pcx = x + ancestorRelCX(root.parents[i]);
+    for (let i = 0; i < focalRealParents.length; i++) {
+      const pcx = x + ancestorRelCX(focalRealParents[i]);
       parentCXs.push(pcx);
-      placeAncestors(root.parents[i], pcx, 1);
+      placeAncestors(focalRealParents[i], pcx, 1);
       x += parentWidths[i] + V_GAP;
     }
 
@@ -628,13 +656,14 @@ export function computeHourglassLayout(
     }
   }
 
-  // Place focal's descendants
-  if (root.children.length > 0) {
+  // Place focal's descendants (real children only — placeholder child outlines handled by Pass 4)
+  const focalRealChildren = root.children.filter(c => !c.isPlaceholder);
+  if (focalRealChildren.length > 0) {
     const forkY = focalRowY + BOX_H + GEN_GAP / 2;
     lines.push({ x1: focalCX, y1: focalRowY + BOX_H, x2: focalCX, y2: forkY });
 
-    const n = root.children.length;
-    const childExts = root.children.map(c => descExtents(c));
+    const n = focalRealChildren.length;
+    const childExts = focalRealChildren.map(c => descExtents(c));
     const offsets: number[] = [0];
     for (let i = 1; i < n; i++) {
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
@@ -648,7 +677,7 @@ export function computeHourglassLayout(
     }
     for (let i = 0; i < n; i++) {
       lines.push({ x1: childCXs[i], y1: forkY, x2: childCXs[i], y2: descRowY(1) });
-      placeDescendants(root.children[i], childCXs[i], 1);
+      placeDescendants(focalRealChildren[i], childCXs[i], 1);
     }
   }
 

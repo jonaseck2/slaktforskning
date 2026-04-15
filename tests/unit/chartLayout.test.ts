@@ -7,7 +7,7 @@ import {
   BOX_H,
 } from '../../src/renderer/utils/chart-layout';
 import type { PersonNode, PedigreeTree, TreePerson } from '../../src/renderer/utils/chart-layout';
-import { computeFootprint } from '../../src/renderer/utils/chart-layout/hourglass';
+import { computeFootprint, ancestorFootprint } from '../../src/renderer/utils/chart-layout/hourglass';
 import { V_GAP } from '../../src/renderer/utils/chart-layout/constants';
 
 function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
@@ -315,6 +315,65 @@ describe('computeHourglassLayout', () => {
     const cBox  = boxes.find(b => b.person.id === 'c')!;
     const gcBox = boxes.find(b => b.person.id === 'gc')!;
     expect(gcBox.y).toBeGreaterThan(cBox.y + BOX_H);
+  });
+});
+
+describe('ancestorFootprint', () => {
+  it('excludes placeholder spouses from footprint', () => {
+    const phSpouse: TreePerson = { person: p('__ph_spouse_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
+    const node: TreePerson = { person: p('a', { sex: 'M' }), parents: [], children: [], spouses: [phSpouse] };
+    const fp = ancestorFootprint(node);
+    // Placeholder spouse should NOT widen ancestor footprint
+    expect(fp.left).toBe(BOX_W / 2);
+    expect(fp.right).toBe(BOX_W / 2);
+  });
+
+  it('includes real spouses in footprint', () => {
+    const spouse: TreePerson = { person: p('s'), parents: [], children: [], spouses: [] };
+    const node: TreePerson = { person: p('a', { sex: 'M' }), parents: [], children: [], spouses: [spouse] };
+    const fp = ancestorFootprint(node);
+    expect(fp.left).toBe(BOX_W / 2);
+    expect(fp.right).toBe(BOX_W / 2 + BOX_W + V_GAP);
+  });
+});
+
+describe('grandparent selection reserves outline space without extra rows', () => {
+  it('selecting grandparent does not add extra generation rows', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), p('mgf', { sex: 'M' }), p('mgm', { sex: 'F' })],
+    );
+    const noSel = computeHourglassLayout(tree);
+    const withSel = computeHourglassLayout(tree, new Set(), 'pgf');
+
+    const findBox = (layout: typeof noSel, id: string) => layout.boxes.find(b => b.person.id === id)!;
+
+    // Y positions must be identical — no extra rows from placeholder parents
+    expect(findBox(withSel, 'dad').y).toBe(findBox(noSel, 'dad').y);
+    expect(findBox(withSel, 'pgf').y).toBe(findBox(noSel, 'pgf').y);
+    expect(findBox(withSel, 'f').y).toBe(findBox(noSel, 'f').y);
+  });
+
+  it('no box overlaps when grandparent is selected', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), p('mgf', { sex: 'M' }), p('mgm', { sex: 'F' })],
+    );
+    const { boxes } = computeHourglassLayout(tree, new Set(), 'pgf');
+    assertNoOverlaps(boxes);
+  });
+
+  it('placeholder spouse outline is placed for selected grandparent', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), p('mgf', { sex: 'M' }), p('mgm', { sex: 'F' })],
+    );
+    const { placeholders } = computeHourglassLayout(tree, new Set(), 'pgf');
+    const spousePh = placeholders.find(ph => ph.role === 'spouse' && ph.childPersonId === 'pgf');
+    expect(spousePh).toBeDefined();
   });
 });
 

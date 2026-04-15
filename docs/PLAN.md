@@ -130,6 +130,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.78.0 | Feat: hourglass placement passes 1-3 (ancestors, descendants, focal row) + Pass 4 outline placement with collision avoidance (Tasks 3 & 4 of layout rewrite) | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 | v0.78.1 | Fix: outline connectors rendered dashed, fork pattern matches normal connectors, spouse outline on correct side | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 | v0.78.3 | Fix: sibling/spouse real nodes always visible, outline spouse spacing between focal and sibling sections | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
+| v0.78.4 | Fix: grandparent selection no longer clips ancestor tree — placeholders excluded from depth/spacing/placement recursion, outline spouse room reserved via computeFootprint | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 ---
 
 ## Research
