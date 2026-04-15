@@ -3,6 +3,11 @@ import { Database } from 'node-sqlite3-wasm';
 import { registerPersonTools } from './tools/prod/persons';
 import { registerFamilyTools } from './tools/prod/families';
 import { registerEventTools } from './tools/prod/events';
+import { registerSourceTools } from './tools/prod/sources';
+import { registerPlaceTools } from './tools/prod/places';
+import { registerResearchTools } from './tools/prod/research';
+import { registerMediaTools } from './tools/prod/media';
+import { registerDataManagementTools } from './tools/prod/data-management';
 
 export function createProdServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -27,9 +32,11 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): M
   registerPersonTools(server, ctx);
   registerFamilyTools(server, ctx);
   registerEventTools(server, ctx);
-
-  // utilCtx kept for future utility tools (Tasks 6-7)
-  void utilCtx;
+  registerSourceTools(server, ctx);
+  registerPlaceTools(server, ctx);
+  registerResearchTools(server, ctx);
+  registerMediaTools(server, ctx);
+  registerDataManagementTools(server, utilCtx);
 
   return server;
 }
