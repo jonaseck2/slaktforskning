@@ -53,6 +53,28 @@ export function deleteMedia(db: Database, id: string): boolean {
   return runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id]) > 0;
 }
 
+export function updateMedia(db: Database, id: string, data: {
+  title?: string;
+  notes?: string;
+  format?: string | null;
+  is_printable?: boolean;
+}): Media | null {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  if (data.title !== undefined) { fields.push('title = ?'); values.push(data.title); }
+  if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
+  if (data.format !== undefined) { fields.push('format = ?'); values.push(data.format); }
+  if (data.is_printable !== undefined) { fields.push('is_printable = ?'); values.push(data.is_printable ? 1 : 0); }
+
+  if (fields.length === 0) return getMedia(db, id);
+
+  values.push(id);
+  const changes = runSqlChanges(db, `UPDATE media SET ${fields.join(', ')} WHERE id = ?`, values);
+  if (changes === 0) return null;
+  return getMedia(db, id);
+}
+
 export function addMediaLink(db: Database, data: {
   media_id: string;
   entity_type: MediaLinkEntityType;

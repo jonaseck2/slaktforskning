@@ -171,6 +171,7 @@ const api = {
     get: (id: string) => ipcRenderer.invoke('media:get', id),
     create: mutating((data: unknown) => ipcRenderer.invoke('media:create', data)),
     delete: mutating((id: string) => ipcRenderer.invoke('media:delete', id)),
+    update: mutating((id: string, data: unknown) => ipcRenderer.invoke('media:update', id, data)),
     forEntity: (entityType: string, entityId: string) => ipcRenderer.invoke('media:forEntity', entityType, entityId),
     linksForMedia: (mediaId: string) => ipcRenderer.invoke('media:linksForMedia', mediaId),
     addLink: mutating((data: unknown) => ipcRenderer.invoke('media:addLink', data)),
