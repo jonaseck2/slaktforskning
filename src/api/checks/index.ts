@@ -44,7 +44,13 @@ import {
 import {
   checkSimultaneousDistantLocations,
   checkMediaFileMissing,
+  checkGazetteerMatchQuality,
 } from './checks-location';
+
+import { loadGazetteers, getAllGazetteers } from '../place-gazetteers';
+import { getImportedGazetteers } from '../gazetteers';
+import { getDbSetting } from '../db_settings';
+import type { GazetteerConfig } from '../place-gazetteers/types';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -91,6 +97,20 @@ function runAllCheckFunctions(db: Database, dbDir?: string): CheckResult[] {
 
   // E. Geographic
   run('checkSimultaneousDistantLocations', () => checkSimultaneousDistantLocations(db));
+
+  // E2. Gazetteer match quality
+  const configJson = getDbSetting(db, 'gazetteer_config');
+  const gazConfig: GazetteerConfig = configJson
+    ? JSON.parse(configJson)
+    : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
+  const imported = getImportedGazetteers(db);
+  const gazetteers = loadGazetteers(gazConfig, imported);
+  const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
+  const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
+  run('checkGazetteerMatchQuality', () => {
+    const raw = checkGazetteerMatchQuality(db, gazetteers);
+    return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
+  });
 
   // F. Data Completeness
   run('checkNoName',                () => checkNoName(db));
