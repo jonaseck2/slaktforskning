@@ -1,7 +1,7 @@
 // src/renderer/utils/chartData.ts
 // Fetches PersonNode trees from window.api for use by chart components.
 
-import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode } from './chart-layout';
+import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode, TreePerson } from './chart-layout';
 
 type RawPerson  = { id: string; sex: string; living: boolean };
 type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number };
@@ -285,6 +285,322 @@ export async function fetchHourglassTree(focalId: string): Promise<HourglassTree
   }
 
   return { ancestors, descendantRoot: annotatedRoot, descendantGenerations: 3, spouses, siblings };
+}
+
+/**
+ * Fetch an hourglass tree as a TreePerson graph directly (no ahnentafel).
+ * Supports N parents per person. Fetches spouses for every node in the tree.
+ * Returns the focal TreePerson as root.
+ */
+export async function fetchHourglassTreePerson(
+  focalId: string,
+  ancestorDepth = 3,
+  descendantDepth = 3,
+): Promise<TreePerson> {
+  // Track all person IDs in the tree to avoid duplicate spouse nodes
+  const treePersonIds = new Set<string>();
+
+  /** Collect all person IDs that will be in the tree (ancestors + descendants + focal). */
+  async function collectTreeIds(personId: string, direction: 'up' | 'down', depth: number, maxDepth: number): Promise<void> {
+    if (treePersonIds.has(personId)) return;
+    treePersonIds.add(personId);
+    if (depth >= maxDepth) return;
+    const rels = (await window.api.relationships.getForPerson(personId)) as RawRel[];
+    if (direction === 'up') {
+      const parentIds = rels
+        .filter(r => r.type === 'parent_child' && r.person2_id === personId)
+        .map(r => r.person1_id)
+        .filter((id): id is string => id !== null);
+      await Promise.all(parentIds.map(pid => collectTreeIds(pid, 'up', depth + 1, maxDepth)));
+    } else {
+      const childIds = rels
+        .filter(r => r.type === 'parent_child' && r.person1_id === personId)
+        .map(r => r.person2_id)
+        .filter((id): id is string => id !== null);
+      await Promise.all(childIds.map(cid => collectTreeIds(cid, 'down', depth + 1, maxDepth)));
+    }
+  }
+
+  // First pass: collect all IDs that will be primary tree nodes
+  await collectTreeIds(focalId, 'up', 0, ancestorDepth);
+  await collectTreeIds(focalId, 'down', 0, descendantDepth);
+
+  // Also collect siblings
+  const focalRels = (await window.api.relationships.getForPerson(focalId)) as RawRel[];
+  const focalParentIds = focalRels
+    .filter(r => r.type === 'parent_child' && r.person2_id === focalId)
+    .map(r => r.person1_id)
+    .filter((id): id is string => id !== null);
+  const siblingIdSet = new Set<string>();
+  await Promise.all(focalParentIds.map(async (parentId) => {
+    const parentRels = (await window.api.relationships.getForPerson(parentId)) as RawRel[];
+    parentRels
+      .filter(r => r.type === 'parent_child' && r.person1_id === parentId && r.person2_id !== focalId)
+      .forEach(r => { if (r.person2_id) { siblingIdSet.add(r.person2_id); treePersonIds.add(r.person2_id); } });
+  }));
+
+  /** Fetch spouses (couple partners) for a person, excluding those already in the tree. */
+  async function fetchSpouses(personId: string): Promise<TreePerson[]> {
+    const rels = (await window.api.relationships.getForPerson(personId)) as RawRel[];
+    const spouseIds = rels
+      .filter(r => r.type === 'couple')
+      .map(r => (r.person1_id === personId ? r.person2_id : r.person1_id))
+      .filter((id): id is string => id !== null && id !== personId && !treePersonIds.has(id));
+    return Promise.all(spouseIds.map(async (id) => ({
+      person: await fetchPersonNode(id),
+      parents: [],
+      children: [],
+      spouses: [],
+    })));
+  }
+
+  function sortParentIds(ids: string[], sexes: ({ sex: string } | null)[]): string[] {
+    const sorted = [...ids];
+    sorted.sort((a, b) => {
+      const sa = sexes[ids.indexOf(a)]?.sex;
+      const sb = sexes[ids.indexOf(b)]?.sex;
+      if (sa === 'M' && sb !== 'M') return -1;
+      if (sa !== 'M' && sb === 'M') return 1;
+      return 0;
+    });
+    return sorted;
+  }
+
+  /** Recursively build ancestors as TreePerson (supports N parents). */
+  async function buildAncestors(personId: string, depth: number): Promise<TreePerson> {
+    const node = await fetchPersonNode(personId);
+    const rels = (await window.api.relationships.getForPerson(personId)) as RawRel[];
+    const spouses = await fetchSpouses(personId);
+
+    if (depth >= ancestorDepth) {
+      const hasMore = rels.some(r => r.type === 'parent_child' && r.person2_id === personId && r.person1_id !== null);
+      return { person: node, parents: [], children: [], spouses, hasMoreAncestors: hasMore };
+    }
+
+    let parentIds = rels
+      .filter(r => r.type === 'parent_child' && r.person2_id === personId)
+      .map(r => r.person1_id)
+      .filter((id): id is string => id !== null);
+
+    if (parentIds.length >= 2) {
+      const sexes = await Promise.all(
+        parentIds.map(pid => (window.api.persons.get(pid) as Promise<{ sex: string } | null>)),
+      );
+      parentIds = sortParentIds(parentIds, sexes);
+    }
+
+    const parents = await Promise.all(parentIds.map(pid => buildAncestors(pid, depth + 1)));
+    return { person: node, parents, children: [], spouses };
+  }
+
+  /** Recursively build descendants as TreePerson (with spouses). */
+  async function buildDescendants(personId: string, depth: number, isFocal: boolean): Promise<TreePerson> {
+    const node = await fetchPersonNode(personId);
+    const rels = (await window.api.relationships.getForPerson(personId)) as RawRel[];
+    const spouses = isFocal ? [] : await fetchSpouses(personId);
+
+    if (depth >= descendantDepth) {
+      const hasMore = rels.some(r => r.type === 'parent_child' && r.person1_id === personId && r.person2_id !== null);
+      return { person: node, parents: [], children: [], spouses, hasMoreChildren: hasMore, isFocal };
+    }
+
+    const childIds = rels
+      .filter(r => r.type === 'parent_child' && r.person1_id === personId)
+      .map(r => r.person2_id)
+      .filter((id): id is string => id !== null);
+
+    const children = await Promise.all(childIds.map(cid => buildDescendants(cid, depth + 1, false)));
+
+    return { person: node, parents: [], children, spouses, isFocal };
+  }
+
+  // Build ancestor parents
+  let parentIds = [...focalParentIds];
+  if (parentIds.length >= 2) {
+    const sexes = await Promise.all(
+      parentIds.map(pid => (window.api.persons.get(pid) as Promise<{ sex: string } | null>)),
+    );
+    parentIds = sortParentIds(parentIds, sexes);
+  }
+
+  const parents = await Promise.all(parentIds.map(pid => buildAncestors(pid, 1)));
+
+  // Descendant children
+  const childIds = focalRels
+    .filter(r => r.type === 'parent_child' && r.person1_id === focalId)
+    .map(r => r.person2_id)
+    .filter((id): id is string => id !== null);
+
+  // Focal spouses
+  const spouseIds = focalRels
+    .filter(r => r.type === 'couple')
+    .map(r => (r.person1_id === focalId ? r.person2_id : r.person1_id))
+    .filter((id): id is string => id !== null && id !== focalId);
+  const spouseIdSet = new Set(spouseIds);
+
+  const spouses = await Promise.all(spouseIds.map(async (id) => ({
+    person: await fetchPersonNode(id),
+    parents: [],
+    children: [],
+    spouses: [],
+  })));
+
+  // Build children with coParentId annotation
+  const children = await Promise.all(childIds.map(async (cid) => {
+    const child = await buildDescendants(cid, 1, false);
+    const childRels = (await window.api.relationships.getForPerson(cid)) as RawRel[];
+    const coParentId = childRels
+      .filter(r => r.type === 'parent_child' && r.person2_id === cid && r.person1_id !== focalId)
+      .map(r => r.person1_id)
+      .find(pid => pid !== null && spouseIdSet.has(pid!)) ?? null;
+    child.coParentId = coParentId;
+    return child;
+  }));
+
+  // Siblings (with their spouses)
+  const siblings: TreePerson[] = await Promise.all([...siblingIdSet].map(async (id) => {
+    const spouses = await fetchSpouses(id);
+    return {
+      person: await fetchPersonNode(id),
+      parents: [],
+      children: [],
+      spouses,
+    };
+  }));
+
+  const focal = await fetchPersonNode(focalId);
+  return {
+    person: focal,
+    parents,
+    children,
+    spouses,
+    siblings,
+    isFocal: true,
+    hasMoreChildren: false,
+  };
+}
+
+/**
+ * Load one generation of ancestors for a person in a TreePerson graph.
+ * Returns a new TreePerson root (Vue reactivity requires new references).
+ */
+export async function loadAncestorGenerationTP(
+  root: TreePerson,
+  targetPersonId: string,
+): Promise<TreePerson> {
+  type RR = RawRel;
+
+  async function updateNode(node: TreePerson): Promise<TreePerson> {
+    if (node.person.id === targetPersonId && node.parents.length === 0 && node.hasMoreAncestors) {
+      const rels = (await window.api.relationships.getForPerson(targetPersonId)) as RR[];
+      const parentIds = rels
+        .filter(r => r.type === 'parent_child' && r.person2_id === targetPersonId)
+        .map(r => r.person1_id)
+        .filter((id): id is string => id !== null);
+
+      if (parentIds.length >= 2) {
+        const sexes = await Promise.all(
+          parentIds.map(pid => (window.api.persons.get(pid) as Promise<{ sex: string } | null>)),
+        );
+        parentIds.sort((a, b) => {
+          const sa = sexes[parentIds.indexOf(a)]?.sex;
+          const sb = sexes[parentIds.indexOf(b)]?.sex;
+          if (sa === 'M' && sb !== 'M') return -1;
+          if (sa !== 'M' && sb === 'M') return 1;
+          return 0;
+        });
+      }
+
+      const parents = await Promise.all(parentIds.map(async (pid) => {
+        const [pNode, pRels] = await Promise.all([
+          fetchPersonNode(pid),
+          window.api.relationships.getForPerson(pid) as Promise<RR[]>,
+        ]);
+        // Fetch spouses for each new parent
+        const spouseIds = pRels
+          .filter(r => r.type === 'couple')
+          .map(r => (r.person1_id === pid ? r.person2_id : r.person1_id))
+          .filter((id): id is string => id !== null && id !== pid);
+        const spouses: TreePerson[] = await Promise.all(spouseIds.map(async (sid) => ({
+          person: await fetchPersonNode(sid),
+          parents: [], children: [], spouses: [],
+        })));
+        const hasMore = pRels.some(r => r.type === 'parent_child' && r.person2_id === pid && r.person1_id !== null);
+        return { person: pNode, parents: [], children: [], spouses, hasMoreAncestors: hasMore } as TreePerson;
+      }));
+
+      return { ...node, parents, hasMoreAncestors: false };
+    }
+
+    // Recurse into parents
+    let changed = false;
+    const newParents = await Promise.all(node.parents.map(async (p) => {
+      const updated = await updateNode(p);
+      if (updated !== p) changed = true;
+      return updated;
+    }));
+
+    if (!changed) return node;
+    return { ...node, parents: newParents };
+  }
+
+  return updateNode(root);
+}
+
+/**
+ * Load children for a node in a TreePerson graph.
+ * Returns a new TreePerson root (Vue reactivity requires new references).
+ */
+export async function loadChildrenForNodeTP(
+  root: TreePerson,
+  targetPersonId: string,
+): Promise<TreePerson> {
+  type RR = RawRel;
+
+  async function updateNode(node: TreePerson): Promise<TreePerson> {
+    if (node.person.id === targetPersonId && node.children.length === 0) {
+      const rels = (await window.api.relationships.getForPerson(targetPersonId)) as RR[];
+      const childIds = rels
+        .filter(r => r.type === 'parent_child' && r.person1_id === targetPersonId)
+        .map(r => r.person2_id)
+        .filter((id): id is string => id !== null);
+
+      const children = await Promise.all(childIds.map(async (cid) => {
+        const [childNode, childRels] = await Promise.all([
+          fetchPersonNode(cid),
+          window.api.relationships.getForPerson(cid) as Promise<RR[]>,
+        ]);
+        const hasMore = childRels.some(
+          r => r.type === 'parent_child' && r.person1_id === cid && r.person2_id !== null,
+        );
+        // Fetch spouses for each new child
+        const spouseIds = childRels
+          .filter(r => r.type === 'couple')
+          .map(r => (r.person1_id === cid ? r.person2_id : r.person1_id))
+          .filter((id): id is string => id !== null && id !== cid);
+        const spouses: TreePerson[] = await Promise.all(spouseIds.map(async (sid) => ({
+          person: await fetchPersonNode(sid),
+          parents: [], children: [], spouses: [],
+        })));
+        return { person: childNode, parents: [], children: [], spouses, hasMoreChildren: hasMore } as TreePerson;
+      }));
+
+      return { ...node, children, hasMoreChildren: false };
+    }
+
+    // Recurse into children
+    let changed = false;
+    const newChildren = await Promise.all(node.children.map(async (c) => {
+      const updated = await updateNode(c);
+      if (updated !== c) changed = true;
+      return updated;
+    }));
+
+    if (!changed) return node;
+    return { ...node, children: newChildren };
+  }
+
+  return updateNode(root);
 }
 
 export async function fetchTimelineEntries(focalId: string): Promise<TimelineEntry[]> {

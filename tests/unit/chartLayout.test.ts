@@ -6,11 +6,13 @@ import {
   BOX_W,
   BOX_H,
 } from '../../src/renderer/utils/chart-layout';
-import type { PersonNode, PedigreeTree, HourglassTree } from '../../src/renderer/utils/chart-layout';
+import type { PersonNode, PedigreeTree, TreePerson } from '../../src/renderer/utils/chart-layout';
+import { computeFootprint } from '../../src/renderer/utils/chart-layout/hourglass';
+import { V_GAP } from '../../src/renderer/utils/chart-layout/constants';
 
 function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
   return {
-    id, givenName: 'Test', surname: 'Person', preferredName: null,
+    id, givenName: 'Test', surname: 'Person', preferredName: null, nickname: null,
     sex: 'U', living: true, birthDate: null, deathDate: null,
     ...overrides,
   };
@@ -34,7 +36,8 @@ function pedigree3(
   return { nodes, generations: 3 };
 }
 
-// Build a minimal HourglassTree with 2 ancestor levels (A=2: parents+gp).
+// Build a minimal TreePerson for hourglass tests.
+// parents[0]=father, parents[1]=mother; grandparents[0..3]=pat.gf, pat.gm, mat.gf, mat.gm
 function hourglass(
   focal: PersonNode,
   parents: [PersonNode | null, PersonNode | null] = [null, null],
@@ -42,15 +45,126 @@ function hourglass(
   children: PersonNode[] = [],
   spouses: PersonNode[] = [],
   siblings: PersonNode[] = [],
-): HourglassTree {
+): TreePerson {
+  const parentTPs: TreePerson[] = [];
+  if (parents[0]) {
+    const fatherParents: TreePerson[] = [];
+    if (grandparents[0]) fatherParents.push({ person: grandparents[0], parents: [], children: [], spouses: [] });
+    if (grandparents[1]) fatherParents.push({ person: grandparents[1], parents: [], children: [], spouses: [] });
+    parentTPs.push({ person: parents[0], parents: fatherParents, children: [], spouses: [] });
+  }
+  if (parents[1]) {
+    const motherParents: TreePerson[] = [];
+    if (grandparents[2]) motherParents.push({ person: grandparents[2], parents: [], children: [], spouses: [] });
+    if (grandparents[3]) motherParents.push({ person: grandparents[3], parents: [], children: [], spouses: [] });
+    parentTPs.push({ person: parents[1], parents: motherParents, children: [], spouses: [] });
+  }
+  const childTPs: TreePerson[] = children.map(c => ({ person: c, parents: [], children: [], spouses: [] }));
+  const spouseTPs: TreePerson[] = spouses.map(s => ({ person: s, parents: [], children: [], spouses: [] }));
+  const siblingTPs: TreePerson[] = siblings.map(s => ({ person: s, parents: [], children: [], spouses: [] }));
   return {
-    ancestors: pedigree3(focal, parents, grandparents),
-    descendantRoot: { person: focal, children: children.map(c => ({ person: c, children: [] })) },
-    descendantGenerations: 3,
-    spouses,
-    siblings,
+    person: focal,
+    parents: parentTPs,
+    children: childTPs,
+    spouses: spouseTPs,
+    siblings: siblingTPs,
+    isFocal: true,
   };
 }
+
+/** Convert an old-style DescendantNode-like object to TreePerson (for test migration). */
+interface DN { person: PersonNode; children: DN[]; hasMoreChildren?: boolean; coParentId?: string | null; }
+function dnToTP(dn: DN, isFocal = false): TreePerson {
+  return {
+    person: dn.person,
+    parents: [],
+    children: dn.children.map(c => dnToTP(c)),
+    spouses: [],
+    isFocal,
+    hasMoreChildren: dn.hasMoreChildren,
+    coParentId: dn.coParentId,
+  };
+}
+
+/** Build TreePerson from old HourglassTree-style spec (for test migration). */
+function hourglassFromOld(opts: {
+  focal: PersonNode;
+  parents?: TreePerson[];
+  children?: DN[];
+  spouses?: PersonNode[];
+  siblings?: PersonNode[];
+  hasMoreChildren?: boolean;
+}): TreePerson {
+  const childTPs = (opts.children ?? []).map(c => dnToTP(c));
+  return {
+    person: opts.focal,
+    parents: opts.parents ?? [],
+    children: childTPs,
+    spouses: (opts.spouses ?? []).map(s => ({ person: s, parents: [], children: [], spouses: [] })),
+    siblings: (opts.siblings ?? []).map(s => ({ person: s, parents: [], children: [], spouses: [] })),
+    isFocal: true,
+    hasMoreChildren: opts.hasMoreChildren,
+  };
+}
+
+/** Build a parent TreePerson with optional grandparents and hasMoreAncestors. */
+function makeParentTP(person: PersonNode, grandparents: PersonNode[] = [], hasMore = false): TreePerson {
+  return {
+    person,
+    parents: grandparents.map(gp => ({ person: gp, parents: [], children: [], spouses: [] })),
+    children: [],
+    spouses: [],
+    hasMoreAncestors: hasMore,
+  };
+}
+
+describe('computeFootprint', () => {
+  it('base footprint is BOX_W/2 each side', () => {
+    const node: TreePerson = { person: p('a'), parents: [], children: [], spouses: [] };
+    const fp = computeFootprint(node);
+    expect(fp.left).toBe(BOX_W / 2);
+    expect(fp.right).toBe(BOX_W / 2);
+  });
+
+  it('male with one real spouse extends right', () => {
+    const spouse: TreePerson = { person: p('s'), parents: [], children: [], spouses: [] };
+    const node: TreePerson = { person: p('a', { sex: 'M' }), parents: [], children: [], spouses: [spouse] };
+    const fp = computeFootprint(node);
+    expect(fp.left).toBe(BOX_W / 2);
+    expect(fp.right).toBe(BOX_W / 2 + BOX_W + 20); // BOX_W + V_GAP
+  });
+
+  it('female with one real spouse extends left', () => {
+    const spouse: TreePerson = { person: p('s'), parents: [], children: [], spouses: [] };
+    const node: TreePerson = { person: p('a', { sex: 'F' }), parents: [], children: [], spouses: [spouse] };
+    const fp = computeFootprint(node);
+    expect(fp.left).toBe(BOX_W / 2 + BOX_W + 20);
+    expect(fp.right).toBe(BOX_W / 2);
+  });
+
+  it('two placeholder parents widen both sides', () => {
+    const phFather: TreePerson = { person: p('__ph_father_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
+    const phMother: TreePerson = { person: p('__ph_mother_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
+    const node: TreePerson = { person: p('a'), parents: [phFather, phMother], children: [], spouses: [] };
+    const fp = computeFootprint(node);
+    expect(fp.left).toBe(165);
+    expect(fp.right).toBe(165);
+  });
+
+  it('spouse + parent outlines: max of both', () => {
+    const spouse: TreePerson = { person: p('s'), parents: [], children: [], spouses: [] };
+    const phFather: TreePerson = { person: p('__ph_father_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
+    const phMother: TreePerson = { person: p('__ph_mother_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
+    const node: TreePerson = { person: p('a', { sex: 'M' }), parents: [phFather, phMother], children: [], spouses: [spouse] };
+    const fp = computeFootprint(node);
+    // spouse side = BOX_W/2 + 1*(BOX_W+V_GAP) = 77.5 + 175 = 252.5
+    // parent group half = (2*155 + 20) / 2 = 165
+    // right = max(252.5, 165) = 252.5
+    // left = max(77.5, 165) = 165
+    expect(fp.left).toBe(165);
+    expect(fp.right).toBe(BOX_W / 2 + BOX_W + 20);
+  });
+});
 
 describe('computePedigreeLayout', () => {
   it('returns one focal box when tree has no ancestors', () => {
@@ -165,17 +279,10 @@ describe('computeHourglassLayout', () => {
   });
 
   it('grandchildren appear below children', () => {
-    const f = p('f');
-    const c = p('c');
-    const gc = p('gc');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, f]]), generations: 4 },
-      descendantRoot: {
-        person: f,
-        children: [{ person: c, children: [{ person: gc, children: [] }] }],
-      },
-      descendantGenerations: 3,
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [{ person: p('c'), children: [{ person: p('gc'), children: [] }] }],
+    });
     const { boxes } = computeHourglassLayout(tree);
     const cBox  = boxes.find(b => b.person.id === 'c')!;
     const gcBox = boxes.find(b => b.person.id === 'gc')!;
@@ -312,16 +419,11 @@ describe('collapse — computeHourglassLayout', () => {
 });
 
 describe('collapse — per-node descendant collapse', () => {
-  function hourglassWithGrandchild(): HourglassTree {
-    const focal = p('f');
-    const child = p('c');
-    const gc = p('gc');
-    return {
-      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
-      descendantRoot: { person: focal, children: [{ person: child, children: [{ person: gc, children: [] }] }] },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+  function hourglassWithGrandchild(): TreePerson {
+    return hourglassFromOld({
+      focal: p('f'),
+      children: [{ person: p('c'), children: [{ person: p('gc'), children: [] }] }],
+    });
   }
 
   it('collapseButtons includes down button for non-focal child with children', () => {
@@ -343,21 +445,13 @@ describe('collapse — per-node descendant collapse', () => {
   });
 
   it('leafCount shrinks when a non-focal child is collapsed', () => {
-    const focal = p('f');
-    const c1 = p('c1');
-    const c2 = p('c2');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
-      descendantRoot: {
-        person: focal,
-        children: [
-          { person: c1, children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }] },
-          { person: c2, children: [] },
-        ],
-      },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [
+        { person: p('c1'), children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }] },
+        { person: p('c2'), children: [] },
+      ],
+    });
     const { svgWidth: widthExpanded } = computeHourglassLayout(tree);
     const { svgWidth: widthCollapsed } = computeHourglassLayout(tree, new Set(['c1:down']));
     expect(widthCollapsed).toBeLessThan(widthExpanded);
@@ -366,18 +460,10 @@ describe('collapse — per-node descendant collapse', () => {
 
 describe('load-more buttons', () => {
   it('hourglass ancestor leaf with hasMoreAncestors gets a load-more up button', () => {
-    const f = p('f');
-    const par = p('par');
-    const tree: HourglassTree = {
-      ancestors: {
-        nodes: new Map([[1, f], [2, par]]),
-        generations: 3,
-        hasMoreAncestors: new Set([2]),
-      },
-      descendantRoot: { person: f, children: [] },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      parents: [makeParentTP(p('par'), [], true)],
+    });
     const { collapseButtons } = computeHourglassLayout(tree);
     const btn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
     expect(btn).toBeDefined();
@@ -386,19 +472,10 @@ describe('load-more buttons', () => {
   });
 
   it('hourglass ancestor with loaded parents gets collapse button, not load-more', () => {
-    const f = p('f');
-    const par = p('par');
-    const gp = p('gp');
-    const tree: HourglassTree = {
-      ancestors: {
-        nodes: new Map([[1, f], [2, par], [4, gp]]),
-        generations: 3,
-        hasMoreAncestors: new Set([2]),
-      },
-      descendantRoot: { person: f, children: [] },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      parents: [makeParentTP(p('par'), [p('gp')], true)],
+    });
     const { collapseButtons } = computeHourglassLayout(tree);
     const loadMoreBtn = collapseButtons.find(b => b.personId === 'par' && b.isLoadMore);
     expect(loadMoreBtn).toBeUndefined();
@@ -407,17 +484,10 @@ describe('load-more buttons', () => {
   });
 
   it('hourglass descendant leaf with hasMoreChildren gets a load-more down button', () => {
-    const f = p('f');
-    const c = p('c');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
-      descendantRoot: {
-        person: f,
-        children: [{ person: c, children: [], hasMoreChildren: true }],
-      },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [{ person: p('c'), children: [], hasMoreChildren: true }],
+    });
     const { collapseButtons } = computeHourglassLayout(tree);
     const btn = collapseButtons.find(b => b.personId === 'c' && b.isLoadMore);
     expect(btn).toBeDefined();
@@ -425,29 +495,16 @@ describe('load-more buttons', () => {
   });
 
   it('hourglass descendant leaf without hasMoreChildren gets no button', () => {
-    const f = p('f');
-    const c = p('c');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
-      descendantRoot: {
-        person: f,
-        children: [{ person: c, children: [], hasMoreChildren: false }],
-      },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [{ person: p('c'), children: [], hasMoreChildren: false }],
+    });
     const { collapseButtons } = computeHourglassLayout(tree);
     expect(collapseButtons.find(b => b.personId === 'c')).toBeUndefined();
   });
 
   it('hourglass focal with hasMoreChildren and no loaded children gets a load-more down button', () => {
-    const f = p('f');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, f]]), generations: 1 },
-      descendantRoot: { person: f, children: [], hasMoreChildren: true },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({ focal: p('f'), hasMoreChildren: true });
     const { collapseButtons } = computeHourglassLayout(tree);
     const btn = collapseButtons.find(b => b.personId === 'f' && b.isLoadMore);
     expect(btn).toBeDefined();
@@ -634,164 +691,136 @@ describe('hourglass overlap detection', () => {
 
   it('no overlaps: many children (6) from one spouse', () => {
     const children = Array.from({ length: 6 }, (_, i) => p(`c${i}`));
-    const spouse = p('s1');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, p('f')]]), generations: 1 },
-      descendantRoot: {
-        person: p('f'),
-        children: children.map(c => ({ person: c, children: [], coParentId: 's1' })),
-      },
-      descendantGenerations: 3,
-      spouses: [spouse],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: children.map(c => ({ person: c, children: [], coParentId: 's1' as string | null })),
+      spouses: [p('s1')],
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: children from 2 different spouses', () => {
-    const focal = p('f', { sex: 'M' });
-    const s1 = p('s1', { sex: 'F' });
-    const s2 = p('s2', { sex: 'F' });
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
-      descendantRoot: {
-        person: focal,
-        children: [
-          { person: p('c1'), children: [], coParentId: 's1' },
-          { person: p('c2'), children: [], coParentId: 's1' },
-          { person: p('c3'), children: [], coParentId: 's2' },
-          { person: p('c4'), children: [], coParentId: 's2' },
-        ],
-      },
-      descendantGenerations: 3,
-      spouses: [s1, s2],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'M' }),
+      children: [
+        { person: p('c1'), children: [], coParentId: 's1' },
+        { person: p('c2'), children: [], coParentId: 's1' },
+        { person: p('c3'), children: [], coParentId: 's2' },
+        { person: p('c4'), children: [], coParentId: 's2' },
+      ],
+      spouses: [p('s1', { sex: 'F' }), p('s2', { sex: 'F' })],
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: children from 2 spouses + solo children', () => {
-    const focal = p('f', { sex: 'M' });
-    const s1 = p('s1', { sex: 'F' });
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
-      descendantRoot: {
-        person: focal,
-        children: [
-          { person: p('c1'), children: [], coParentId: 's1' },
-          { person: p('c2'), children: [], coParentId: null },
-          { person: p('c3'), children: [], coParentId: null },
-        ],
-      },
-      descendantGenerations: 3,
-      spouses: [s1],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'M' }),
+      children: [
+        { person: p('c1'), children: [], coParentId: 's1' },
+        { person: p('c2'), children: [], coParentId: null },
+        { person: p('c3'), children: [], coParentId: null },
+      ],
+      spouses: [p('s1', { sex: 'F' })],
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: deep descendant subtree under one child, none under other', () => {
-    const focal = p('f');
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, focal]]), generations: 1 },
-      descendantRoot: {
-        person: focal,
-        children: [
-          {
-            person: p('c1'),
-            children: [
-              { person: p('gc1'), children: [{ person: p('ggc1'), children: [] }] },
-              { person: p('gc2'), children: [{ person: p('ggc2'), children: [] }] },
-              { person: p('gc3'), children: [] },
-            ],
-          },
-          { person: p('c2'), children: [] },
-        ],
-      },
-      descendantGenerations: 3,
-      spouses: [],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [
+        {
+          person: p('c1'),
+          children: [
+            { person: p('gc1'), children: [{ person: p('ggc1'), children: [] }] },
+            { person: p('gc2'), children: [{ person: p('ggc2'), children: [] }] },
+            { person: p('gc3'), children: [] },
+          ],
+        },
+        { person: p('c2'), children: [] },
+      ],
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: female focal with left spouses + wide descendant tree', () => {
-    const focal = p('f', { sex: 'F' });
-    const s1 = p('s1', { sex: 'M' });
-    const s2 = p('s2', { sex: 'M' });
-    const tree: HourglassTree = {
-      ancestors: { nodes: new Map([[1, focal], [2, p('father')], [3, p('mother')]]), generations: 2 },
-      descendantRoot: {
-        person: focal,
-        children: [
-          { person: p('c1'), children: [], coParentId: 's1' },
-          { person: p('c2'), children: [], coParentId: 's1' },
-          { person: p('c3'), children: [], coParentId: 's1' },
-          { person: p('c4'), children: [], coParentId: 's2' },
-          { person: p('c5'), children: [], coParentId: 's2' },
-        ],
-      },
-      descendantGenerations: 3,
-      spouses: [s1, s2],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'F' }),
+      parents: [
+        makeParentTP(p('father')),
+        makeParentTP(p('mother')),
+      ],
+      children: [
+        { person: p('c1'), children: [], coParentId: 's1' },
+        { person: p('c2'), children: [], coParentId: 's1' },
+        { person: p('c3'), children: [], coParentId: 's1' },
+        { person: p('c4'), children: [], coParentId: 's2' },
+        { person: p('c5'), children: [], coParentId: 's2' },
+      ],
+      spouses: [p('s1', { sex: 'M' }), p('s2', { sex: 'M' })],
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: full tree — parents, grandparents, 2 spouses, children from each, grandchildren', () => {
-    const focal = p('f', { sex: 'M' });
-    const s1 = p('s1', { sex: 'F' });
-    const s2 = p('s2', { sex: 'F' });
-    const tree: HourglassTree = {
-      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
-      descendantRoot: {
-        person: focal,
-        children: [
-          {
-            person: p('c1'), coParentId: 's1',
-            children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }],
-          },
-          { person: p('c2'), children: [], coParentId: 's1' },
-          {
-            person: p('c3'), coParentId: 's2',
-            children: [{ person: p('gc3'), children: [] }],
-          },
-        ],
-      },
-      descendantGenerations: 3,
-      spouses: [s1, s2],
-    };
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'M' }),
+      parents: [
+        makeParentTP(p('father'), [p('pgf'), p('pgm')]),
+        makeParentTP(p('mother'), [p('mgf'), p('mgm')]),
+      ],
+      children: [
+        {
+          person: p('c1'), coParentId: 's1',
+          children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }],
+        },
+        { person: p('c2'), children: [], coParentId: 's1' },
+        {
+          person: p('c3'), coParentId: 's2',
+          children: [{ person: p('gc3'), children: [] }],
+        },
+      ],
+      spouses: [p('s1', { sex: 'F' }), p('s2', { sex: 'F' })],
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: spouse boxes do not overlap with ancestor boxes (wide ancestor section)', () => {
-    const focal = p('f', { sex: 'M' });
-    const tree: HourglassTree = {
-      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
-      descendantRoot: { person: focal, children: [] },
-      descendantGenerations: 3,
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'M' }),
+      parents: [
+        makeParentTP(p('father'), [p('pgf'), p('pgm')]),
+        makeParentTP(p('mother'), [p('mgf'), p('mgm')]),
+      ],
       spouses: [p('s1'), p('s2'), p('s3'), p('s4')],
-    };
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: female focal — left spouses do not overlap ancestor section', () => {
-    const focal = p('f', { sex: 'F' });
-    const tree: HourglassTree = {
-      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
-      descendantRoot: { person: focal, children: [] },
-      descendantGenerations: 3,
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'F' }),
+      parents: [
+        makeParentTP(p('father'), [p('pgf'), p('pgm')]),
+        makeParentTP(p('mother'), [p('mgf'), p('mgm')]),
+      ],
       spouses: [p('s1'), p('s2'), p('s3'), p('s4')],
-    };
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
@@ -849,35 +878,34 @@ describe('hourglass sibling support', () => {
   });
 
   it('no overlaps: siblings + children + spouses + grandparents', () => {
-    const focal = p('f', { sex: 'M' });
-    const tree: HourglassTree = {
-      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
-      descendantRoot: {
-        person: focal,
-        children: [
-          { person: p('c1'), children: [{ person: p('gc1'), children: [] }], coParentId: 's1' },
-          { person: p('c2'), children: [], coParentId: 's1' },
-        ],
-      },
-      descendantGenerations: 3,
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'M' }),
+      parents: [
+        makeParentTP(p('father'), [p('pgf'), p('pgm')]),
+        makeParentTP(p('mother'), [p('mgf'), p('mgm')]),
+      ],
+      children: [
+        { person: p('c1'), children: [{ person: p('gc1'), children: [] }], coParentId: 's1' },
+        { person: p('c2'), children: [], coParentId: 's1' },
+      ],
       spouses: [p('s1', { sex: 'F' })],
       siblings: [p('sib1'), p('sib2'), p('sib3')],
-    };
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);
   });
 
   it('no overlaps: 5 siblings + 4 grandparents (wide ancestor section)', () => {
-    const focal = p('f', { sex: 'M' });
     const sibs = Array.from({ length: 5 }, (_, i) => p(`sib${i}`));
-    const tree: HourglassTree = {
-      ancestors: pedigree3(focal, [p('father'), p('mother')], [p('pgf'), p('pgm'), p('mgf'), p('mgm')]),
-      descendantRoot: { person: focal, children: [] },
-      descendantGenerations: 3,
-      spouses: [],
+    const tree = hourglassFromOld({
+      focal: p('f', { sex: 'M' }),
+      parents: [
+        makeParentTP(p('father'), [p('pgf'), p('pgm')]),
+        makeParentTP(p('mother'), [p('mgf'), p('mgm')]),
+      ],
       siblings: sibs,
-    };
+    });
     const { boxes, svgWidth, svgHeight } = computeHourglassLayout(tree);
     assertNoOverlaps(boxes);
     assertWithinBounds(boxes, svgWidth, svgHeight);

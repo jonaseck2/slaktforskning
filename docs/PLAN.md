@@ -125,6 +125,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.76.0 | Bundled Swedish boundary gazetteer (Lantmäteriet Socken och stad, CC0) with hint-based disambiguation | — |
 | v0.76.1 | Fix: place resolver now handles Swedish genitive and historical län names for correct hierarchy matching | — |
 | v0.77.0 | Place types (municipality, locality), map boundary overlay fixes, i18n corrections | — |
+| v0.77.1 | Refactor: add `computeFootprint` for hourglass layout measurement (Task 1 of layout rewrite) | [plan](.claude/plans/2026-04-15-hourglass-layout-rework.md) |
 ---
 
 ## Research
