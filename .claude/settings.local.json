@@ -76,6 +76,7 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "slaktforskning"
+    "slaktforskning",
+    "slaktforskning-dev"
   ]
 }

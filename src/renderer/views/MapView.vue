@@ -89,6 +89,7 @@ interface PlaceRow {
   id: string;
   name: string;
   place_type: string | null;
+  parent_place_id: string | null;
   latitude: number | null;
   longitude: number | null;
 }
@@ -158,13 +159,27 @@ function onMapReady() {
   setTimeout(() => { baseMapRef.value?.invalidateSize(); fitBounds(); }, 100);
 }
 
+/** Build a full comma-separated path (leaf, parent, grandparent, …) using loaded places. */
+function buildPlacePath(place: PlaceRow): string {
+  const byId = new Map(places.value.map(p => [p.id, p]));
+  const parts: string[] = [place.name];
+  let cur = place.parent_place_id;
+  while (cur) {
+    const parent = byId.get(cur);
+    if (!parent) break;
+    parts.push(parent.name);
+    cur = parent.parent_place_id;
+  }
+  return parts.join(', ');
+}
+
 const allDisplayPlaces = computed<DisplayPlace[]>(() => {
   const result: DisplayPlace[] = [];
   for (const p of places.value) {
     if (p.latitude != null && p.longitude != null) {
       result.push({ ...p, displayLat: p.latitude, displayLon: p.longitude });
     } else if (resolverReady.value) {
-      const resolved = resolve(p.name);
+      const resolved = resolve(buildPlacePath(p));
       if (resolved) {
         result.push({ ...p, displayLat: resolved.lat, displayLon: resolved.lon, resolved });
       }
