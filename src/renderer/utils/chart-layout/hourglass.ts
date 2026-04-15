@@ -73,11 +73,16 @@ export interface Footprint {
 export function computeFootprint(node: TreePerson): Footprint {
   const half = BOX_W / 2;
 
-  // Spouse extent: spouses stack to one side (left for F, right for M/U)
-  const spouseW = node.spouses.length * (BOX_W + V_GAP);
-  const onLeft = node.person.sex === 'F';
-  let left = onLeft ? half + spouseW : half;
-  let right = onLeft ? half : half + spouseW;
+  // Real spouses go to one side (left for F, right for M/U).
+  // Placeholder spouse outline goes to the free side at placement time — we don't
+  // know which side until then, so reserve space on BOTH sides for the outline.
+  const realSpouses = node.spouses.filter(s => !s.isPlaceholder);
+  const phSpouses = node.spouses.filter(s => s.isPlaceholder);
+  const realSpouseW = realSpouses.length * (BOX_W + V_GAP);
+  const phSpouseW = phSpouses.length * (BOX_W + V_GAP);
+  const realOnLeft = node.person.sex === 'F';
+  let left = half + (realOnLeft ? realSpouseW : 0) + phSpouseW;
+  let right = half + (realOnLeft ? 0 : realSpouseW) + phSpouseW;
 
   // Parent/child placeholder outlines are centered — may be wider than the box
   for (const arr of [
@@ -609,8 +614,21 @@ export function computeHourglassLayout(
 
         const placedIds = new Set(boxes.map(b => b.person.id));
 
-        // Spouse outlines — beside the selected person with collision avoidance
+        // Spouse outlines — placed on whichever side has the nearest free slot.
+        // Check both sides and pick the one with free space closest to the selected person.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
+        const rightStart = selBox.x + BOX_W + V_GAP;
+        const leftStart = selBox.x - BOX_W - V_GAP;
+        const rightBlocked = boxes.some(b =>
+          rightStart < b.x + b.w + V_GAP && rightStart + BOX_W + V_GAP > b.x &&
+          selBox.y < b.y + b.h && selBox.y + BOX_H > b.y
+        );
+        const leftBlocked = boxes.some(b =>
+          leftStart < b.x + b.w + V_GAP && leftStart + BOX_W + V_GAP > b.x &&
+          selBox.y < b.y + b.h && selBox.y + BOX_H > b.y
+        );
+        // Prefer right if free, else left if free, else right (findClearX will push)
+        const outlineGoesRight = !rightBlocked || (rightBlocked && leftBlocked);
         for (let i = 0; i < unplacedSpouses.length; i++) {
           const findClearX = (startX: number, y: number, direction: 1 | -1): number => {
             let x = startX;
@@ -620,21 +638,23 @@ export function computeHourglassLayout(
             )) { x += direction * (BOX_W + V_GAP); }
             return x;
           };
+          // Try preferred side first; collision avoidance will push past any obstacles
           let spX: number;
-          if (selIsFemale) {
-            spX = findClearX(selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP), selBox.y, -1);
-          } else {
+          if (outlineGoesRight) {
             spX = findClearX(selBox.x + BOX_W + V_GAP + i * (BOX_W + V_GAP), selBox.y, 1);
+          } else {
+            spX = findClearX(selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP), selBox.y, -1);
           }
+          const isRight = spX > selBox.x;
           boxes.push({ person: unplacedSpouses[i].person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: BOX_H });
           const spCX = spX + BOX_W / 2;
           const lineY = selBox.y + BOX_H / 2;
-          lines.push({
-            x1: selIsFemale ? spCX + BOX_W / 2 : selCX + BOX_W / 2,
-            y1: lineY,
-            x2: selIsFemale ? selCX - BOX_W / 2 : spCX - BOX_W / 2,
-            y2: lineY,
-          });
+          // Connector between facing edges based on actual placement side
+          if (isRight) {
+            lines.push({ x1: selCX + BOX_W / 2, y1: lineY, x2: spCX - BOX_W / 2, y2: lineY });
+          } else {
+            lines.push({ x1: spCX + BOX_W / 2, y1: lineY, x2: selCX - BOX_W / 2, y2: lineY });
+          }
         }
 
         // Cross-direction outlines with collision avoidance
