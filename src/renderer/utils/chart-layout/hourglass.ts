@@ -74,15 +74,15 @@ export function computeFootprint(node: TreePerson): Footprint {
   const half = BOX_W / 2;
 
   // Real spouses go to one side (left for F, right for M/U).
-  // Placeholder spouse outline goes to the free side at placement time — we don't
-  // know which side until then, so reserve space on BOTH sides for the outline.
+  // Placeholder spouse outline goes to the OPPOSITE side (away from real spouses).
   const realSpouses = node.spouses.filter(s => !s.isPlaceholder);
   const phSpouses = node.spouses.filter(s => s.isPlaceholder);
   const realSpouseW = realSpouses.length * (BOX_W + V_GAP);
   const phSpouseW = phSpouses.length * (BOX_W + V_GAP);
   const realOnLeft = node.person.sex === 'F';
-  let left = half + (realOnLeft ? realSpouseW : 0) + phSpouseW;
-  let right = half + (realOnLeft ? 0 : realSpouseW) + phSpouseW;
+  // Real on their natural side, placeholder on the opposite
+  let left = half + (realOnLeft ? realSpouseW : phSpouseW);
+  let right = half + (realOnLeft ? phSpouseW : realSpouseW);
 
   // Parent/child placeholder outlines are centered — may be wider than the box
   for (const arr of [
@@ -324,21 +324,22 @@ export function computeHourglassLayout(
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
-  /** Place real spouse boxes and marriage line beside a node. Does NOT place any outlines. */
+  /** Place REAL spouse boxes and marriage line beside a node. Skips placeholder spouses (Pass 4 handles those). */
   function placeSpouses(node: TreePerson, nodeCX: number, nodeY: number): void {
-    if (node.spouses.length === 0) return;
+    const realSpouses = node.spouses.filter(s => !s.isPlaceholder);
+    if (realSpouses.length === 0) return;
     const onLeft = node.person.sex === 'F';
     const lineY = nodeY + BOX_H / 2;
-    for (let i = 0; i < node.spouses.length; i++) {
+    for (let i = 0; i < realSpouses.length; i++) {
       const spCX = onLeft
         ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - i * (BOX_W + V_GAP)
         : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + i * (BOX_W + V_GAP);
       boxes.push({
-        person: node.spouses[i].person, isFocal: false,
+        person: realSpouses[i].person, isFocal: false,
         x: spCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
       });
     }
-    const lastIdx = node.spouses.length - 1;
+    const lastIdx = realSpouses.length - 1;
     const lastCX = onLeft
       ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - lastIdx * (BOX_W + V_GAP)
       : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + lastIdx * (BOX_W + V_GAP);
@@ -614,21 +615,12 @@ export function computeHourglassLayout(
 
         const placedIds = new Set(boxes.map(b => b.person.id));
 
-        // Spouse outlines — placed on whichever side has the nearest free slot.
-        // Check both sides and pick the one with free space closest to the selected person.
+        // Spouse outlines — placed on the side opposite real spouses (matching computeFootprint).
+        // Real spouses go left for F, right for M/U. Outline goes the other way.
+        // This matches the space reserved by computeFootprint so no overlap.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
-        const rightStart = selBox.x + BOX_W + V_GAP;
-        const leftStart = selBox.x - BOX_W - V_GAP;
-        const rightBlocked = boxes.some(b =>
-          rightStart < b.x + b.w + V_GAP && rightStart + BOX_W + V_GAP > b.x &&
-          selBox.y < b.y + b.h && selBox.y + BOX_H > b.y
-        );
-        const leftBlocked = boxes.some(b =>
-          leftStart < b.x + b.w + V_GAP && leftStart + BOX_W + V_GAP > b.x &&
-          selBox.y < b.y + b.h && selBox.y + BOX_H > b.y
-        );
-        // Prefer right if free, else left if free, else right (findClearX will push)
-        const outlineGoesRight = !rightBlocked || (rightBlocked && leftBlocked);
+        // F: real spouses go left, outline goes right. M/U: real right, outline left.
+        const outlineGoesRight = selIsFemale;
         for (let i = 0; i < unplacedSpouses.length; i++) {
           const findClearX = (startX: number, y: number, direction: 1 | -1): number => {
             let x = startX;
