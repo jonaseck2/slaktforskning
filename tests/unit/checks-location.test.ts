@@ -49,8 +49,8 @@ describe('checkGazetteerMatchQuality', () => {
     expect(hit[0].severity).toBe('notice');
   });
 
-  it('returns PLACE_MATCH_WRONG_LEVEL when a well-known region name matches a leaf parish', () => {
-    // "Amerika" is in WELL_KNOWN_REGIONS and matches a leaf node (a parish) in the test gazetteer
+  it('returns PLACE_MATCH_WRONG_LEVEL when a single-word name matches a deep leaf', () => {
+    // "Amerika" is a single component that matches a leaf parish at depth 3
     const place = createPlace(db, { name: 'Amerika' });
     const person = createPerson(db, {});
     const event = createEvent(db, { event_type: 'emigration', place_id: place.id });
