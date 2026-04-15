@@ -166,6 +166,33 @@ describe('computeFootprint', () => {
   });
 });
 
+describe('hourglass spacing with spouses', () => {
+  it('ancestor with spouse gets wider subtree', () => {
+    const spouse: TreePerson = { person: p('sp', { sex: 'F' }), parents: [], children: [], spouses: [] };
+    const father: TreePerson = { person: p('dad', { sex: 'M' }), parents: [], children: [], spouses: [spouse] };
+    const tree: TreePerson = {
+      person: p('f'), parents: [father], children: [], spouses: [], isFocal: true,
+    };
+    const withSpouse = computeHourglassLayout(tree);
+    const fatherNoSpouse: TreePerson = { person: p('dad', { sex: 'M' }), parents: [], children: [], spouses: [] };
+    const treeNoSpouse: TreePerson = {
+      person: p('f'), parents: [fatherNoSpouse], children: [], spouses: [], isFocal: true,
+    };
+    const without = computeHourglassLayout(treeNoSpouse);
+    expect(withSpouse.svgWidth).toBeGreaterThan(without.svgWidth);
+  });
+
+  it('no overlaps: ancestor with spouse', () => {
+    const spouse: TreePerson = { person: p('sp', { sex: 'F' }), parents: [], children: [], spouses: [] };
+    const father: TreePerson = { person: p('dad', { sex: 'M' }), parents: [], children: [], spouses: [spouse] };
+    const tree: TreePerson = {
+      person: p('f'), parents: [father], children: [], spouses: [], isFocal: true,
+    };
+    const { boxes } = computeHourglassLayout(tree);
+    assertNoOverlaps(boxes);
+  });
+});
+
 describe('computePedigreeLayout', () => {
   it('returns one focal box when tree has no ancestors', () => {
     const { boxes } = computePedigreeLayout(pedigree3(p('f')));
