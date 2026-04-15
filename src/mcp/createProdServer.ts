@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Database } from 'node-sqlite3-wasm';
 import { registerPersonTools } from './tools/prod/persons';
+import { registerFamilyTools } from './tools/prod/families';
 
 export function createProdServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -23,8 +24,9 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): M
   };
 
   registerPersonTools(server, ctx);
+  registerFamilyTools(server, ctx);
 
-  // utilCtx kept for future utility tools (Tasks 4-7)
+  // utilCtx kept for future utility tools (Tasks 5-7)
   void utilCtx;
 
   return server;
