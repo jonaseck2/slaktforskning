@@ -886,6 +886,13 @@ export default {
     filter: {
       search: 'Search media',
     },
+    galleryView: 'Gallery',
+    tableView: 'Table',
+    colTitle: 'Title',
+    colFormat: 'Format',
+    colNotes: 'Notes',
+    colLinks: 'Links',
+    notesPlaceholder: 'Add notes...',
   },
   mediaTimeline: {
     title: 'Media Timeline',
