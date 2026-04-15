@@ -319,29 +319,24 @@ export function computeHourglassLayout(
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
 
-  /** Place spouses beside a node (real + placeholder). */
+  /** Place real spouse boxes and marriage line beside a node. Does NOT place any outlines. */
   function placeSpouses(node: TreePerson, nodeCX: number, nodeY: number): void {
     if (node.spouses.length === 0) return;
-    const onLeft = spousesGoLeft(node);
+    const onLeft = node.person.sex === 'F';
     const lineY = nodeY + BOX_H / 2;
     for (let i = 0; i < node.spouses.length; i++) {
       const spCX = onLeft
         ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - i * (BOX_W + V_GAP)
         : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + i * (BOX_W + V_GAP);
-      const sp = node.spouses[i];
       boxes.push({
-        person: sp.person, isFocal: false,
+        person: node.spouses[i].person, isFocal: false,
         x: spCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
       });
-      // Place outlines for this spouse if it's the selected person
-      placeOutlineGroup(sp.parents.filter(p => p.isPlaceholder), spCX, nodeY, 'up');
-      placeOutlineGroup(sp.children.filter(c => c.isPlaceholder), spCX, nodeY, 'down');
-      // Recursively place inner spouses (spouse-of-spouse outlines)
-      if (sp.spouses.length > 0) placeSpouses(sp, spCX, nodeY);
     }
+    const lastIdx = node.spouses.length - 1;
     const lastCX = onLeft
-      ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - (node.spouses.length - 1) * (BOX_W + V_GAP)
-      : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + (node.spouses.length - 1) * (BOX_W + V_GAP);
+      ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - lastIdx * (BOX_W + V_GAP)
+      : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + lastIdx * (BOX_W + V_GAP);
     lines.push({
       x1: onLeft ? lastCX - BOX_W / 2 : nodeCX + BOX_W / 2,
       y1: lineY,
@@ -357,11 +352,7 @@ export function computeHourglassLayout(
       x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
     });
 
-    // Place spouses beside this ancestor (spacing reserved via computeFootprint)
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
-
-    // Place child outlines below (cross-direction, with collision avoidance)
-    placeOutlineGroup(node.children.filter(c => c.isPlaceholder), nodeCX, nodeY, 'down');
 
     if (node.parents.length === 0) return;
 
@@ -395,11 +386,7 @@ export function computeHourglassLayout(
       x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
     });
 
-    // Place spouses beside this descendant (spacing reserved via computeFootprint)
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
-
-    // Place parent outlines above (cross-direction, with collision avoidance)
-    placeOutlineGroup(node.parents.filter(p => p.isPlaceholder), nodeCX, nodeY, 'up');
 
     if (node.children.length === 0) return;
 
@@ -534,16 +521,10 @@ export function computeHourglassLayout(
       y2: lineY,
     });
     for (let i = 0; i < root.spouses.length; i++) {
-      const sp = root.spouses[i];
-      const spCX = spouseCXOf(i);
       boxes.push({
-        person: sp.person, isFocal: false,
-        x: spCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+        person: root.spouses[i].person, isFocal: false,
+        x: spouseCXOf(i) - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
       });
-      // Place outlines for this spouse (if selected)
-      placeSpouses(sp, spCX, focalRowY);
-      placeOutlineGroup(sp.parents.filter(pp => pp.isPlaceholder), spCX, focalRowY, 'up');
-      placeOutlineGroup(sp.children.filter(cc => cc.isPlaceholder), spCX, focalRowY, 'down');
     }
   }
 
@@ -555,16 +536,10 @@ export function computeHourglassLayout(
 
   if (siblings.length > 0) {
     for (let i = 0; i < siblings.length; i++) {
-      const sib = siblings[i];
-      const sibCX = siblingCXOf(i);
       boxes.push({
-        person: sib.person, isFocal: false,
-        x: sibCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+        person: siblings[i].person, isFocal: false,
+        x: siblingCXOf(i) - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
       });
-      // Place outlines for this sibling (if selected)
-      placeSpouses(sib, sibCX, focalRowY);
-      placeOutlineGroup(sib.children.filter(cc => cc.isPlaceholder), sibCX, focalRowY, 'down');
-      placeOutlineGroup(sib.parents.filter(pp => pp.isPlaceholder), sibCX, focalRowY, 'up');
     }
     // Connect siblings to parents via shared fork
     if (A >= 1) {
