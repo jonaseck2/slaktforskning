@@ -36,7 +36,7 @@
           <col style="width: 120px">
           <col style="width: 28%">
           <col>
-          <col style="width: 80px">
+          <col style="width: 220px">
         </colgroup>
         <thead>
           <tr>
@@ -79,6 +79,25 @@
             </td>
             <td class="message-cell">{{ checkMessage(r) }}</td>
             <td class="actions-td">
+              <template v-if="isPlaceMatch(r) && !isIgnored(r)">
+                <button
+                  v-if="r.resolvedLat != null"
+                  class="btn-sm btn-confirm"
+                  @click.stop="confirmMatch(r)"
+                  :title="$t('quality.confirmMatch')"
+                >{{ $t('quality.confirm') }}</button>
+                <button
+                  class="btn-sm btn-reject"
+                  @click.stop="rejectMatch(r)"
+                  :title="$t('quality.rejectMatch')"
+                >{{ $t('quality.reject') }}</button>
+                <router-link
+                  v-if="r.placeIds?.[0]"
+                  :to="'/places/' + r.placeIds[0]"
+                  class="btn-sm btn-view"
+                  @click.stop
+                >{{ $t('quality.viewPlace') }}</router-link>
+              </template>
               <button
                 :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
                 @click.stop="toggleIgnore(r)"
@@ -206,6 +225,48 @@ function navigateTo(r: QualityResult) {
   }
 }
 
+// --- Place match helpers ---
+const PLACE_MATCH_CODES = new Set([
+  'PLACE_MATCH_AMBIGUOUS', 'PLACE_MATCH_PARTIAL',
+  'PLACE_MATCH_NONE', 'PLACE_MATCH_WRONG_LEVEL',
+]);
+
+function isPlaceMatch(r: QualityResult): boolean {
+  return PLACE_MATCH_CODES.has(r.code);
+}
+
+async function confirmMatch(r: QualityResult) {
+  if (!r.placeIds?.[0] || r.resolvedLat == null || r.resolvedLon == null) return;
+  try {
+    await window.api.places.update(r.placeIds[0], {
+      latitude: r.resolvedLat,
+      longitude: r.resolvedLon,
+    });
+    toast.success(t('quality.matchConfirmed'));
+    await runChecks();
+  } catch (err) {
+    console.error('[QualityView] confirmMatch failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
+async function rejectMatch(r: QualityResult) {
+  if (!r.placeIds?.[0]) return;
+  try {
+    const raw = await window.api.db.getSetting('gazetteer_rejections') as string | null;
+    const rejections: string[] = raw ? JSON.parse(raw) : [];
+    if (!rejections.includes(r.placeIds[0])) {
+      rejections.push(r.placeIds[0]);
+    }
+    await window.api.db.setSetting('gazetteer_rejections', JSON.stringify(rejections));
+    toast.success(t('quality.matchRejected'));
+    await runChecks();
+  } catch (err) {
+    console.error('[QualityView] rejectMatch failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
 // --- Data loading ---
 async function runChecks() {
   if (!window.api) return;
@@ -264,4 +325,37 @@ onActivated(() => {
 
 .btn-ignore  { background: #e2e8f0; color: #4a5568; }
 .btn-unignore { background: #c6f6d5; color: #276749; }
+
+.btn-confirm {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+.btn-confirm:hover {
+  background: #f0fdf4;
+}
+.btn-reject {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+.btn-reject:hover {
+  background: #fef2f2;
+}
+.btn-view {
+  color: #2563eb;
+  border-color: #2563eb;
+  text-decoration: none;
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 4px;
+  font-size: var(--font-xs);
+}
+.btn-view:hover {
+  background: #eff6ff;
+}
+.actions-td {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
 </style>
