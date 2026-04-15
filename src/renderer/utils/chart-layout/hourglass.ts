@@ -69,7 +69,12 @@ export interface Footprint {
   right: number;  // extent right of person's center
 }
 
-/** Compute the bounding footprint of a person including spouses and outline placeholders. */
+/** Compute the bounding footprint of a person including spouses and outline placeholders.
+ *  The footprint has two levels:
+ *  - The base (left/right) includes same-row items: real spouses + placeholder spouse.
+ *    This is used by ancestorRelCX for centering.
+ *  - ancestorWidth/descExtents use the full footprint which ALSO includes cross-row
+ *    parent/child outlines so the subtree is wide enough for collision avoidance. */
 export function computeFootprint(node: TreePerson): Footprint {
   const half = BOX_W / 2;
 
@@ -80,23 +85,27 @@ export function computeFootprint(node: TreePerson): Footprint {
   const realSpouseW = realSpouses.length * (BOX_W + V_GAP);
   const phSpouseW = phSpouses.length * (BOX_W + V_GAP);
   const realOnLeft = node.person.sex === 'F';
-  // Real on their natural side, placeholder on the opposite
   let left = half + (realOnLeft ? realSpouseW : phSpouseW);
   let right = half + (realOnLeft ? phSpouseW : realSpouseW);
 
-  // Parent/child placeholder outlines are centered — may be wider than the box
+  return { left, right };
+}
+
+/** Compute the full subtree width needed including cross-row outline placeholders. */
+function fullFootprintWidth(node: TreePerson): number {
+  const fp = computeFootprint(node);
+  let w = fp.left + fp.right;
+  // Parent/child placeholder outlines are centered — may be wider than spouse extent
   for (const arr of [
     node.parents.filter(p => p.isPlaceholder),
     node.children.filter(c => c.isPlaceholder),
   ]) {
     if (arr.length > 0) {
-      const groupHalf = (arr.length * BOX_W + (arr.length - 1) * V_GAP) / 2;
-      left = Math.max(left, groupHalf);
-      right = Math.max(right, groupHalf);
+      const groupW = arr.length * BOX_W + (arr.length - 1) * V_GAP;
+      w = Math.max(w, groupW);
     }
   }
-
-  return { left, right };
+  return w;
 }
 
 // ── Main layout ──────────────────────────────────────────────────────────────
@@ -196,7 +205,8 @@ export function computeHourglassLayout(
   const ancestorRowY = (depth: number) => focalRowY - depth * (BOX_H + GEN_GAP);
   const descRowY = (depth: number) => focalRowY + depth * (BOX_H + GEN_GAP);
 
-  // Ancestor subtree width (upward). Uses computeFootprint for outline reservation.
+  // Ancestor subtree width (upward). Uses computeFootprint (same-row only: spouses).
+  // Cross-row outlines (parent/child) are handled by collision avoidance at their target row.
   const ancWidthCache = new Map<string, number>();
   function ancestorWidth(node: TreePerson): number {
     if (ancWidthCache.has(node.person.id)) return ancWidthCache.get(node.person.id)!;
