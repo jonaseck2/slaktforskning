@@ -476,26 +476,47 @@ export function computeHourglassLayout(
       if (bestX !== null) startX = bestX;
     }
 
-    // Connector from owner to fork
-    if (dir === 'down') {
-      lines.push({ x1: ownerCX, y1: ownerY + BOX_H, x2: ownerCX, y2: forkY });
-    } else {
-      lines.push({ x1: ownerCX, y1: ownerY, x2: ownerCX, y2: forkY });
+    // Place outline boxes
+    for (let i = 0; i < n; i++) {
+      const px = startX + i * (BOX_W + V_GAP);
+      boxes.push({ person: nodes[i].person, isFocal: false, x: px, y: targetY, w: BOX_W, h: BOX_H });
     }
-    // Place boxes + vertical connectors
+
+    // Connectors: use a safe fork Y that doesn't intersect any box.
+    // The forkY between owner and target rows could intersect boxes on adjacent rows.
+    // Safe Y is just outside the target row boxes (1px gap).
+    const safeForkY = dir === 'down' ? targetY - 1 : targetY + BOX_H + 1;
+
+    // Owner → safe fork (vertical)
+    if (dir === 'down') {
+      lines.push({ x1: ownerCX, y1: ownerY + BOX_H, x2: ownerCX, y2: safeForkY });
+    } else {
+      lines.push({ x1: ownerCX, y1: ownerY, x2: ownerCX, y2: safeForkY });
+    }
+
+    // Safe fork → each outline box (vertical drop from fork to box)
     for (let i = 0; i < n; i++) {
       const px = startX + i * (BOX_W + V_GAP);
       const pCX = px + BOX_W / 2;
-      boxes.push({ person: nodes[i].person, isFocal: false, x: px, y: targetY, w: BOX_W, h: BOX_H });
       if (dir === 'down') {
-        lines.push({ x1: pCX, y1: forkY, x2: pCX, y2: targetY });
+        lines.push({ x1: pCX, y1: safeForkY, x2: pCX, y2: targetY });
       } else {
-        lines.push({ x1: pCX, y1: forkY, x2: pCX, y2: targetY + BOX_H });
+        lines.push({ x1: pCX, y1: safeForkY, x2: pCX, y2: targetY + BOX_H });
       }
     }
-    // Horizontal fork if multiple
+
+    // Horizontal fork spanning all outlines (at safe Y — no boxes here)
     if (n > 1) {
-      lines.push({ x1: startX + BOX_W / 2, y1: forkY, x2: startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2, y2: forkY });
+      lines.push({ x1: startX + BOX_W / 2, y1: safeForkY, x2: startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2, y2: safeForkY });
+    }
+    // If outline is shifted from owner, add horizontal connector from ownerCX to outline CX at safeForkY
+    const groupCenterX = startX + groupW / 2;
+    if (Math.abs(groupCenterX - ownerCX) > 1) {
+      const outlineCX = n === 1 ? startX + BOX_W / 2 : (startX + BOX_W / 2 + startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2) / 2;
+      // Horizontal link from owner's vertical drop to the outline group
+      const minX = Math.min(ownerCX, startX + BOX_W / 2);
+      const maxX = Math.max(ownerCX, startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2);
+      lines.push({ x1: minX, y1: safeForkY, x2: maxX, y2: safeForkY });
     }
   }
 

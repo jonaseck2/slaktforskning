@@ -623,6 +623,53 @@ function assertWithinBounds(
   }
 }
 
+/** Check if a line segment (horizontal or vertical) passes THROUGH a box interior,
+ *  excluding lines that merely touch a box edge (which are valid connectors).
+ *  A line "passes through" if it enters one side and exits the other. */
+function linePassesThroughBox(
+  line: { x1: number; y1: number; x2: number; y2: number },
+  box: { x: number; y: number; w: number; h: number },
+): boolean {
+  const { x1, y1, x2, y2 } = line;
+  const bx = box.x, by = box.y, bw = box.w, bh = box.h;
+
+  if (y1 === y2) {
+    // Horizontal line: passes through box if Y is inside box AND line extends
+    // across the box interior (both start and end are beyond opposite edges)
+    if (y1 <= by || y1 >= by + bh) return false; // Y outside box
+    const minX = Math.min(x1, x2);
+    const maxX = Math.max(x1, x2);
+    // Line must enter from one side and exit the other — meaning it spans
+    // the full box width (strictly inside on both sides)
+    if (minX < bx && maxX > bx + bw) return true;
+  } else if (x1 === x2) {
+    // Vertical line: passes through box if X is inside box AND line extends
+    // across the box interior
+    if (x1 <= bx || x1 >= bx + bw) return false; // X outside box
+    const minY = Math.min(y1, y2);
+    const maxY = Math.max(y1, y2);
+    if (minY < by && maxY > by + bh) return true;
+  }
+  return false;
+}
+
+/** Assert no line passes through any box. Lines that START or END at a box edge are OK (connectors). */
+function assertNoLinesCrossBoxes(
+  allLines: { x1: number; y1: number; x2: number; y2: number }[],
+  allBoxes: { x: number; y: number; w: number; h: number; person?: { id: string } }[],
+): void {
+  for (const ln of allLines) {
+    for (const box of allBoxes) {
+      if (linePassesThroughBox(ln, box)) {
+        const id = (box as any).person?.id ?? '?';
+        throw new Error(
+          `Line (${ln.x1},${ln.y1})→(${ln.x2},${ln.y2}) passes through box ${id} at (${box.x},${box.y})`,
+        );
+      }
+    }
+  }
+}
+
 describe('pedigree overlap detection', () => {
   it('no overlaps: full 3-generation tree', () => {
     const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), p('gp2'), p('gp3')]);
@@ -997,6 +1044,75 @@ describe('hourglass outline overlap detection', () => {
     const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 's1');
     const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
     assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no overlaps when focal spouse is selected with ancestors who have spouses', () => {
+    // Realistic scenario: father has a real spouse at the parent row
+    const dadSpouse: TreePerson = { person: p('dadsp', { sex: 'F' }), parents: [], children: [], spouses: [] };
+    const father: TreePerson = { person: p('dad', { sex: 'M' }), parents: [], children: [], spouses: [dadSpouse] };
+    const momSpouse: TreePerson = { person: p('momsp', { sex: 'M' }), parents: [], children: [], spouses: [] };
+    const mother: TreePerson = { person: p('mom', { sex: 'F' }), parents: [], children: [], spouses: [momSpouse] };
+    const tree: TreePerson = {
+      person: p('f', { sex: 'F' }),
+      parents: [father, mother],
+      children: [
+        { person: p('c1'), parents: [], children: [], spouses: [] },
+        { person: p('c2'), parents: [], children: [], spouses: [] },
+      ],
+      spouses: [{ person: p('s1', { sex: 'M' }), parents: [], children: [], spouses: [] }],
+      siblings: [],
+      isFocal: true,
+    };
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 's1');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no lines cross boxes when focal spouse is selected with ancestors', () => {
+    // Issue: selecting a spouse leads to parent outline lines crossing ancestor boxes
+    const dadSpouse: TreePerson = { person: p('dadsp', { sex: 'F' }), parents: [], children: [], spouses: [] };
+    const father: TreePerson = { person: p('dad', { sex: 'M' }), parents: [], children: [], spouses: [dadSpouse] };
+    const mother: TreePerson = { person: p('mom', { sex: 'F' }), parents: [], children: [], spouses: [] };
+    const tree: TreePerson = {
+      person: p('f', { sex: 'F' }),
+      parents: [father, mother],
+      children: [{ person: p('c1'), parents: [], children: [], spouses: [] }],
+      spouses: [{ person: p('s1', { sex: 'M' }), parents: [], children: [], spouses: [] }],
+      siblings: [],
+      isFocal: true,
+    };
+    const { boxes, lines, placeholders, placeholderLines } = computeHourglassLayout(tree, new Set(), 's1');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ x: ph.x, y: ph.y, w: BOX_W, h: BOX_H, person: { id: ph.role + '_' + ph.childPersonId } }))];
+    const allLines = [...lines, ...placeholderLines];
+    assertNoLinesCrossBoxes(allLines, allBoxes as any);
+  });
+
+  it('no lines cross boxes when ancestor is selected', () => {
+    // Issue: child outline on ancestor may have lines crossing the focal row
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [p('c1')], [p('s1')]);
+    const { boxes, lines, placeholders, placeholderLines } = computeHourglassLayout(tree, new Set(), 'dad');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ x: ph.x, y: ph.y, w: BOX_W, h: BOX_H, person: { id: ph.role + '_' + ph.childPersonId } }))];
+    const allLines = [...lines, ...placeholderLines];
+    assertNoLinesCrossBoxes(allLines, allBoxes as any);
+  });
+
+  it('outline placeholders are connected to their owner', () => {
+    // Issue: after collision avoidance shifts outlines, they may become disconnected
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [p('c1'), p('c2')], [p('s1')]);
+    const { placeholders, placeholderLines } = computeHourglassLayout(tree, new Set(), 'c1');
+    // Every placeholder should have at least one placeholder line touching it
+    for (const ph of placeholders) {
+      const cx = ph.x + BOX_W / 2;
+      const touches = placeholderLines.some(ln =>
+        (ln.x1 === cx && (ln.y1 === ph.y || ln.y1 === ph.y + BOX_H)) ||
+        (ln.x2 === cx && (ln.y2 === ph.y || ln.y2 === ph.y + BOX_H)) ||
+        (ln.x1 === ph.x && ln.y1 === ph.y + BOX_H / 2) ||
+        (ln.x2 === ph.x && ln.y2 === ph.y + BOX_H / 2) ||
+        (ln.x1 === ph.x + BOX_W && ln.y1 === ph.y + BOX_H / 2) ||
+        (ln.x2 === ph.x + BOX_W && ln.y2 === ph.y + BOX_H / 2)
+      );
+      expect(touches, `Placeholder ${ph.role} for ${ph.childPersonId} at (${ph.x},${ph.y}) has no connecting line`).toBe(true);
+    }
   });
 
   it('no overlaps when sibling is selected', () => {
