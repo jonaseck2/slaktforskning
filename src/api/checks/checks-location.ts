@@ -57,14 +57,6 @@ export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   return results;
 }
 
-const WELL_KNOWN_REGIONS = new Set([
-  'sverige', 'norway', 'norge', 'danmark', 'denmark', 'finland',
-  'england', 'amerika', 'usa', 'tyskland', 'germany', 'frankrike',
-  'france', 'polen', 'poland', 'ryssland', 'russia', 'irland',
-  'ireland', 'skottland', 'scotland', 'italien', 'italy', 'spanien',
-  'spain', 'kanada', 'canada', 'australien', 'australia',
-]);
-
 export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]): CheckResult[] {
   if (gazetteers.length === 0) return [];
 
@@ -113,11 +105,9 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
     const deepestNode = resolved.matchedNode;
     const isLeaf = !deepestNode.children || deepestNode.children.length === 0;
     const components = place.name.split(',').map(p => p.trim()).filter(Boolean);
-    const firstComponent = components[0]?.toLowerCase() ?? '';
-    const isWellKnown = WELL_KNOWN_REGIONS.has(firstComponent);
-    const isWrongLevel =
-      (components.length === 1 && isLeaf && resolved.matchDepth > 2) ||
-      (isWellKnown && isLeaf);
+    // Wrong-level: single-word input matched a deep leaf — likely a country/region
+    // name that happened to match a village with the same name
+    const isWrongLevel = components.length === 1 && isLeaf && resolved.matchDepth > 2;
 
     if (isWrongLevel) {
       results.push({
