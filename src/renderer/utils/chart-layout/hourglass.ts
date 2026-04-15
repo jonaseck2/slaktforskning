@@ -324,6 +324,7 @@ export function computeHourglassLayout(
 
   const boxes: BoxLayout[] = [];
   const lines: Line[] = [];
+  const outlineLines: Line[] = []; // Lines connecting to outline placeholders (rendered dashed)
 
   /** Place REAL spouse boxes and marriage line beside a node. Skips placeholder spouses (Pass 4 handles those). */
   function placeSpouses(node: TreePerson, nodeCX: number, nodeY: number): void {
@@ -489,41 +490,40 @@ export function computeHourglassLayout(
       boxes.push({ person: nodes[i].person, isFocal: false, x: px, y: targetY, w: BOX_W, h: BOX_H });
     }
 
-    // Connectors: use a safe fork Y that doesn't intersect any box.
-    // The forkY between owner and target rows could intersect boxes on adjacent rows.
-    // Safe Y is just outside the target row boxes (1px gap).
-    const safeForkY = dir === 'down' ? targetY - 1 : targetY + BOX_H + 1;
+    // Connectors: fork near the owner (matching normal parent-child connector pattern).
+    // Pattern: short vertical from owner edge → horizontal fork → long verticals to outlines.
+    const nearForkY = dir === 'down'
+      ? ownerY + BOX_H + GEN_GAP / 2  // midpoint below owner
+      : ownerY - GEN_GAP / 2;          // midpoint above owner
 
-    // Owner → safe fork (vertical)
+    // Owner edge → fork (short vertical) — all outline connectors go to outlineLines (dashed)
     if (dir === 'down') {
-      lines.push({ x1: ownerCX, y1: ownerY + BOX_H, x2: ownerCX, y2: safeForkY });
+      outlineLines.push({ x1: ownerCX, y1: ownerY + BOX_H, x2: ownerCX, y2: nearForkY });
     } else {
-      lines.push({ x1: ownerCX, y1: ownerY, x2: ownerCX, y2: safeForkY });
+      outlineLines.push({ x1: ownerCX, y1: ownerY, x2: ownerCX, y2: nearForkY });
     }
 
-    // Safe fork → each outline box (vertical drop from fork to box)
+    // Horizontal fork from ownerCX to all outline CXs
+    const allCXs = [];
+    for (let i = 0; i < n; i++) {
+      allCXs.push(startX + i * (BOX_W + V_GAP) + BOX_W / 2);
+    }
+    allCXs.push(ownerCX);
+    const minCX = Math.min(...allCXs);
+    const maxCX = Math.max(...allCXs);
+    if (minCX !== maxCX) {
+      outlineLines.push({ x1: minCX, y1: nearForkY, x2: maxCX, y2: nearForkY });
+    }
+
+    // Fork → each outline box (long vertical)
     for (let i = 0; i < n; i++) {
       const px = startX + i * (BOX_W + V_GAP);
       const pCX = px + BOX_W / 2;
       if (dir === 'down') {
-        lines.push({ x1: pCX, y1: safeForkY, x2: pCX, y2: targetY });
+        outlineLines.push({ x1: pCX, y1: nearForkY, x2: pCX, y2: targetY });
       } else {
-        lines.push({ x1: pCX, y1: safeForkY, x2: pCX, y2: targetY + BOX_H });
+        outlineLines.push({ x1: pCX, y1: nearForkY, x2: pCX, y2: targetY + BOX_H });
       }
-    }
-
-    // Horizontal fork spanning all outlines (at safe Y — no boxes here)
-    if (n > 1) {
-      lines.push({ x1: startX + BOX_W / 2, y1: safeForkY, x2: startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2, y2: safeForkY });
-    }
-    // If outline is shifted from owner, add horizontal connector from ownerCX to outline CX at safeForkY
-    const groupCenterX = startX + groupW / 2;
-    if (Math.abs(groupCenterX - ownerCX) > 1) {
-      const outlineCX = n === 1 ? startX + BOX_W / 2 : (startX + BOX_W / 2 + startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2) / 2;
-      // Horizontal link from owner's vertical drop to the outline group
-      const minX = Math.min(ownerCX, startX + BOX_W / 2);
-      const maxX = Math.max(ownerCX, startX + (n - 1) * (BOX_W + V_GAP) + BOX_W / 2);
-      lines.push({ x1: minX, y1: safeForkY, x2: maxX, y2: safeForkY });
     }
   }
 
@@ -644,11 +644,11 @@ export function computeHourglassLayout(
           boxes.push({ person: unplacedSpouses[i].person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: BOX_H });
           const spCX = spX + BOX_W / 2;
           const lineY = selBox.y + BOX_H / 2;
-          // Connector between facing edges based on actual placement side
+          // Connector between facing edges based on actual placement side (dashed)
           if (isRight) {
-            lines.push({ x1: selCX + BOX_W / 2, y1: lineY, x2: spCX - BOX_W / 2, y2: lineY });
+            outlineLines.push({ x1: selCX + BOX_W / 2, y1: lineY, x2: spCX - BOX_W / 2, y2: lineY });
           } else {
-            lines.push({ x1: spCX + BOX_W / 2, y1: lineY, x2: selCX - BOX_W / 2, y2: lineY });
+            outlineLines.push({ x1: spCX + BOX_W / 2, y1: lineY, x2: selCX - BOX_W / 2, y2: lineY });
           }
         }
 
@@ -668,6 +668,7 @@ export function computeHourglassLayout(
     const shift = PAD - minBoxLeft;
     for (const box of boxes) box.x += shift;
     for (const ln of lines) { ln.x1 += shift; ln.x2 += shift; }
+    for (const ln of outlineLines) { ln.x1 += shift; ln.x2 += shift; }
   }
 
   const maxBoxRight = Math.max(...boxes.map(b => b.x + b.w));
@@ -807,6 +808,9 @@ export function computeHourglassLayout(
       lines.splice(i, 1);
     }
   }
+
+  // Merge explicitly-tracked outline lines into placeholderLines
+  placeholderLines.push(...outlineLines);
 
   return { boxes, lines, svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
 }
