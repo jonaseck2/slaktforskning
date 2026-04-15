@@ -134,6 +134,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.80.0 | QualityView: confirm/reject/view buttons for place match checks (PLACE_MATCH_AMBIGUOUS/PARTIAL/NONE/WRONG_LEVEL) | — |
 | v0.81.0 | Add updateMedia to API, IPC, preload, and MCP with 6 unit tests | — |
 | v0.82.0 | Media table view with inline title/notes editing, gallery/table toggle persisted to localStorage | — |
+| v0.82.1 | Refactor: prod server factory (`createProdServer`), shared prod types, UI tools removed from prod entry point | — |
 ---
 
 ## Research
