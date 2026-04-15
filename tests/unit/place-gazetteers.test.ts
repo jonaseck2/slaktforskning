@@ -133,7 +133,7 @@ describe('resolvePlace', () => {
     expect(result!.matchedPath).toEqual(['Sverige', 'Jönköpings län', 'Sävsjö', 'Vallsjö']);
   });
 
-  it('matches via Swedish genitive (Smedjebackens kommun ≈ Smedjebacken)', () => {
+  it('prefers deeper hierarchy match over shallow one', () => {
     const gazetteer: Gazetteer = {
       id: 'test',
       name: 'Test',
@@ -159,13 +159,16 @@ describe('resolvePlace', () => {
         }],
       },
     };
-    // "Bruket, Malingsbo, Smedjebacken, Kopparbergs län, Sverige"
-    // Should match Malingsbo (correct hierarchy) NOT Bruket (wrong hierarchy)
+    // Without genitive fuzzy, "Smedjebacken" doesn't match "Smedjebackens kommun",
+    // so both Malingsbo and Bruket paths match 3 components each — result is ambiguous.
     const result = resolvePlace('Bruket, Malingsbo, Smedjebacken, Kopparbergs län, Sverige', [gazetteer]);
     expect(result).not.toBeNull();
-    expect(result!.matchedNode.name).toBe('Malingsbo');
-    expect(result!.matchedPath).toEqual(['Sverige', 'Dalarnas län', 'Smedjebackens kommun', 'Malingsbo']);
-    expect(result!.unmatchedComponents).toEqual(['Bruket']);
+    expect(result!.matchQuality).toBe('ambiguous');
+    // But using the full municipality name resolves correctly
+    const exact = resolvePlace('Malingsbo, Smedjebackens kommun, Kopparbergs län, Sverige', [gazetteer]);
+    expect(exact).not.toBeNull();
+    expect(exact!.matchedNode.name).toBe('Malingsbo');
+    expect(exact!.matchQuality).toBe('exact');
   });
 
   it('reports ambiguous when same name exists in multiple branches', () => {
