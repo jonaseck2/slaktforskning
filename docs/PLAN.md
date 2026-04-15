@@ -136,6 +136,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.82.0 | Media table view with inline title/notes editing, gallery/table toggle persisted to localStorage | — |
 | v0.82.1 | Refactor: prod server factory (`createProdServer`), shared prod types, UI tools removed from prod entry point | — |
 | v0.83.0 | feat(mcp): person workflow tools — `create_person` (with birth event + citation in one call), `search_persons`, `get_person_summary`, `update_person`, `delete_person`, `add_person_name`, `merge_persons`, `find_duplicates`; `findOrCreateSource` shared helper | — |
+| v0.84.0 | feat(mcp): event workflow tools — `record_event` (multi-participant, place findOrCreate, citation in one call), `get_timeline`, `update_event` (place string resolves to place_id) | — |
 ---
 
 ## Research
