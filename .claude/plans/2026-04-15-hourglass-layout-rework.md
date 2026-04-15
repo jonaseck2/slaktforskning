@@ -146,7 +146,7 @@ Message: `refactor: add computeFootprint for hourglass layout measurement`
 
 This task replaces the current `ancestorWidth`, `ancestorRelCX`, `descExtents`, and focal row extent calculations with versions that consume `computeFootprint`.
 
-- [ ] **Step 1: Write failing tests for spacing with spouses**
+- [x] **Step 1: Write failing tests for spacing with spouses**
 
 Add to `tests/unit/chartLayout.test.ts`:
 

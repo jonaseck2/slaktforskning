@@ -106,69 +106,11 @@ export function computeHourglassLayout(
   const root = cloneTree(inputRoot);
   if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
-  // ── 2. Reserve extra width for ALL outline placeholders ──────────────────
-  // Spouse width: every person's spouses (real + placeholder) widen their subtree.
-  // Cross-direction outlines: child placeholder on ancestor widens the ancestor;
-  // parent placeholder on descendant widens the descendant's tree-parent.
-  const extraRightExtent = new Map<string, number>();
-  const extraLeftExtent = new Map<string, number>();
-  const extraAncWidth = new Map<string, number>();
-
-  /** Compute spouse group width for a node (real + placeholder spouses). */
-  function spouseGroupWidth(node: TreePerson): number {
-    if (node.spouses.length === 0) return 0;
-    return node.spouses.length * (BOX_W + V_GAP);
-  }
+  // ── 2. Placement helpers (used by placeSpouses) ────────────────────────────
 
   /** Whether spouses go left (true for female). */
   function spousesGoLeft(node: TreePerson): boolean {
     return node.person.sex === 'F';
-  }
-
-  // Walk all ancestors and descendants to reserve spouse width for every node
-  function reserveSpouseWidth(node: TreePerson, section: 'anc' | 'desc', visited = new Set<string>()): void {
-    if (visited.has(node.person.id)) return;
-    visited.add(node.person.id);
-    if (node.isFocal) return; // focal spouses handled separately
-    const sw = spouseGroupWidth(node);
-    if (sw > 0) {
-      if (section === 'anc') {
-        extraAncWidth.set(node.person.id, (extraAncWidth.get(node.person.id) ?? 0) + sw);
-      } else {
-        if (spousesGoLeft(node)) {
-          extraLeftExtent.set(node.person.id, (extraLeftExtent.get(node.person.id) ?? 0) + sw);
-        } else {
-          extraRightExtent.set(node.person.id, (extraRightExtent.get(node.person.id) ?? 0) + sw);
-        }
-      }
-    }
-    if (section === 'anc') {
-      for (const p of node.parents) reserveSpouseWidth(p, 'anc', visited);
-    } else {
-      for (const c of node.children) reserveSpouseWidth(c, 'desc', visited);
-    }
-  }
-  for (const p of root.parents) reserveSpouseWidth(p, 'anc');
-  for (const c of root.children) reserveSpouseWidth(c, 'desc');
-
-  // Reserve width for selected person's cross-direction outlines
-  if (selectedPersonId) {
-    const target = findPersonInTree(root, selectedPersonId);
-    if (target) {
-      // Child outline on ancestor: widen the ancestor's subtree
-      const phChildCount = target.children.filter(c => c.isPlaceholder).length;
-      if (phChildCount > 0) {
-        extraAncWidth.set(selectedPersonId, (extraAncWidth.get(selectedPersonId) ?? 0) + phChildCount * (BOX_W + V_GAP));
-      }
-      // Parent outline on descendant: widen the tree-parent's extent
-      const phParentCount = target.parents.filter(p => p.isPlaceholder).length;
-      if (phParentCount > 0) {
-        const treeParent = findParentOf(root, selectedPersonId);
-        if (treeParent) {
-          extraRightExtent.set(treeParent.person.id, (extraRightExtent.get(treeParent.person.id) ?? 0) + phParentCount * (BOX_W + V_GAP));
-        }
-      }
-    }
   }
 
   // ── 3. Collapse filtering ──────────────────────────────────────────────────
@@ -249,18 +191,19 @@ export function computeHourglassLayout(
   const ancestorRowY = (depth: number) => focalRowY - depth * (BOX_H + GEN_GAP);
   const descRowY = (depth: number) => focalRowY + depth * (BOX_H + GEN_GAP);
 
-  // Ancestor subtree width (upward). Uses extraAncWidth for outline reservation.
+  // Ancestor subtree width (upward). Uses computeFootprint for outline reservation.
   const ancWidthCache = new Map<string, number>();
   function ancestorWidth(node: TreePerson): number {
     if (ancWidthCache.has(node.person.id)) return ancWidthCache.get(node.person.id)!;
-    const extra = extraAncWidth.get(node.person.id) ?? 0;
+    const fp = computeFootprint(node);
+    const nodeW = fp.left + fp.right;
     let w: number;
     if (node.parents.length === 0) {
-      w = BOX_W + extra;
+      w = nodeW;
     } else {
-      w = node.parents.reduce((sum, p) => sum + ancestorWidth(p), 0)
+      const parentW = node.parents.reduce((sum, par) => sum + ancestorWidth(par), 0)
         + (node.parents.length - 1) * V_GAP;
-      w = Math.max(w, BOX_W) + extra;
+      w = Math.max(parentW, nodeW);
     }
     ancWidthCache.set(node.person.id, w);
     return w;
@@ -269,17 +212,21 @@ export function computeHourglassLayout(
   const ancRelCXCache = new Map<string, number>();
   function ancestorRelCX(node: TreePerson): number {
     if (ancRelCXCache.has(node.person.id)) return ancRelCXCache.get(node.person.id)!;
+    const fp = computeFootprint(node);
     let cx: number;
     if (node.parents.length === 0) {
-      cx = BOX_W / 2;
+      cx = fp.left;
     } else {
       const parentCXs: number[] = [];
       let x = 0;
-      for (const p of node.parents) {
-        parentCXs.push(x + ancestorRelCX(p));
-        x += ancestorWidth(p) + V_GAP;
+      for (const par of node.parents) {
+        parentCXs.push(x + ancestorRelCX(par));
+        x += ancestorWidth(par) + V_GAP;
       }
-      cx = parentCXs.reduce((a, b) => a + b, 0) / parentCXs.length;
+      const parentMidCX = parentCXs.reduce((a, b) => a + b, 0) / parentCXs.length;
+      const minCX = fp.left;
+      const maxCX = ancestorWidth(node) - fp.right;
+      cx = Math.max(minCX, Math.min(maxCX, parentMidCX));
     }
     ancRelCXCache.set(node.person.id, cx);
     return cx;
@@ -290,15 +237,13 @@ export function computeHourglassLayout(
   const ancLeftFromFocal = focalAncRelCX;
   const ancRightFromFocal = focalAncWidth - focalAncRelCX;
 
-  // Descendant subtree extents. Uses extraRight/extraLeft for outline reservation.
+  // Descendant subtree extents. Uses computeFootprint for outline reservation.
   const descExtCache = new Map<string, [number, number]>();
   function descExtents(node: TreePerson): [number, number] {
     if (descExtCache.has(node.person.id)) return descExtCache.get(node.person.id)!;
-    const half = BOX_W / 2;
-    const extraR = extraRightExtent.get(node.person.id) ?? 0;
-    const extraL = extraLeftExtent.get(node.person.id) ?? 0;
+    const fp = computeFootprint(node);
     if (node.children.length === 0) {
-      const ext: [number, number] = [half + extraL, half + extraR];
+      const ext: [number, number] = [fp.left, fp.right];
       descExtCache.set(node.person.id, ext);
       return ext;
     }
@@ -309,8 +254,8 @@ export function computeHourglassLayout(
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
     }
     const totalSpan = offsets[n - 1];
-    const leftExt = Math.max(half, totalSpan / 2 + childExts[0][0]) + extraL;
-    const rightExt = Math.max(half, totalSpan / 2 + childExts[n - 1][1]) + extraR;
+    const leftExt = Math.max(fp.left, totalSpan / 2 + childExts[0][0]);
+    const rightExt = Math.max(fp.right, totalSpan / 2 + childExts[n - 1][1]);
     descExtCache.set(node.person.id, [leftExt, rightExt]);
     return [leftExt, rightExt];
   }
@@ -322,35 +267,16 @@ export function computeHourglassLayout(
   const siblingsOnLeft = !focalIsFemale;
   const siblings: TreePerson[] = root.siblings ?? [];
 
-  // Asymmetric left/right extent from center for a node including its outlines.
-  // Spouse outlines go to one SIDE (right for males, left for females), not both.
-  function nodeExtents(node: TreePerson): [number, number] {
-    const half = BOX_W / 2;
-    const sw = spouseGroupWidth(node);
-    const onLeft = spousesGoLeft(node);
-    let leftExt = onLeft ? half + sw : half;
-    let rightExt = onLeft ? half : half + sw;
-    // Parent/child outlines are centered on node but may be wider
-    for (const arr of [node.parents.filter(p => p.isPlaceholder), node.children.filter(c => c.isPlaceholder)]) {
-      if (arr.length > 0) {
-        const groupHalf = (arr.length * BOX_W + (arr.length - 1) * V_GAP) / 2;
-        leftExt = Math.max(leftExt, groupHalf);
-        rightExt = Math.max(rightExt, groupHalf);
-      }
-    }
-    return [leftExt, rightExt];
-  }
-
   // Walk outward from focal, accumulating the CX offset for each spouse/sibling.
-  // Uses directional extents so toward-focal outlines get proper room.
+  // Uses computeFootprint so toward-focal outlines get proper room.
   const spouseCXOffsets: number[] = [];
   let focalSpouseExtent = 0;
   if (root.spouses.length > 0) {
     let cursor = BOX_W / 2 + H_GAP;
     for (let i = 0; i < root.spouses.length; i++) {
-      const [le, re] = nodeExtents(root.spouses[i]);
-      const towardFocal = spouseOnLeft ? re : le;
-      const awayFromFocal = spouseOnLeft ? le : re;
+      const fp = computeFootprint(root.spouses[i]);
+      const towardFocal = spouseOnLeft ? fp.right : fp.left;
+      const awayFromFocal = spouseOnLeft ? fp.left : fp.right;
       cursor += towardFocal;
       spouseCXOffsets.push(cursor);
       cursor += awayFromFocal + V_GAP;
@@ -363,9 +289,9 @@ export function computeHourglassLayout(
   if (siblings.length > 0) {
     let cursor = BOX_W / 2 + H_GAP;
     for (let i = 0; i < siblings.length; i++) {
-      const [le, re] = nodeExtents(siblings[i]);
-      const towardFocal = siblingsOnLeft ? re : le;
-      const awayFromFocal = siblingsOnLeft ? le : re;
+      const fp = computeFootprint(siblings[i]);
+      const towardFocal = siblingsOnLeft ? fp.right : fp.left;
+      const awayFromFocal = siblingsOnLeft ? fp.left : fp.right;
       cursor += towardFocal;
       sibCXOffsets.push(cursor);
       cursor += awayFromFocal + V_GAP;
@@ -431,7 +357,7 @@ export function computeHourglassLayout(
       x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
     });
 
-    // Place spouses beside this ancestor (spacing reserved via extraAncWidth)
+    // Place spouses beside this ancestor (spacing reserved via computeFootprint)
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
 
     // Place child outlines below (cross-direction, with collision avoidance)
@@ -469,7 +395,7 @@ export function computeHourglassLayout(
       x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
     });
 
-    // Place spouses beside this descendant (spacing reserved via extraLeft/RightExtent)
+    // Place spouses beside this descendant (spacing reserved via computeFootprint)
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
 
     // Place parent outlines above (cross-direction, with collision avoidance)
