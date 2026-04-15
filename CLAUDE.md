@@ -779,6 +779,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `/web-research` | Competitive analysis | Research genealogy platforms |
 | `/performance-profiling` | CPU saturation / slow operations | Profile, analyze, and fix performance bottlenecks |
 | `/a11y` | Adding/modifying interactive UI | ARIA patterns, keyboard nav, focus management, TTS |
+| `/tree-layout` | Building/modifying chart layouts | Measurement→placement→connection pipeline, footprint spacing, collision avoidance |
 
 ### Required Global Skills (`~/.claude/skills/`)
 
