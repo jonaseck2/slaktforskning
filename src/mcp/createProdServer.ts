@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Database } from 'node-sqlite3-wasm';
+import { registerPersonTools } from './tools/prod/persons';
 
 export function createProdServer(initialDb: Database, initialDbPath?: string): McpServer {
   let db = initialDb;
@@ -21,9 +22,9 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): M
     setDbPath: (newPath: string) => { currentDbPath = newPath; },
   };
 
-  // Tools will be registered here in Tasks 3-7.
-  // ctx and utilCtx are kept to avoid unused-variable errors once tools are added.
-  void ctx;
+  registerPersonTools(server, ctx);
+
+  // utilCtx kept for future utility tools (Tasks 4-7)
   void utilCtx;
 
   return server;

@@ -142,6 +142,7 @@ const { t } = useI18n();
 const route = useRoute();
 const placeId = route.params.id as string;
 const place = ref<PlaceRow | null>(null);
+const placePath = ref('');
 const children = ref<PlaceRow[]>([]);
 const editName = ref('');
 const editType = ref('');
@@ -159,7 +160,7 @@ const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceRe
 const gazetteerMatch = computed(() => {
   if (!resolverReady.value || !place.value) return null;
   if (place.value.latitude != null && place.value.longitude != null) return null;
-  return resolvePlace(place.value.name);
+  return resolvePlace(placePath.value || place.value.name);
 });
 
 interface MapMarker { id: string; name: string; lat: number; lon: number; type: string | null; }
@@ -196,6 +197,7 @@ async function load() {
   await ensureLoaded();
   place.value = (await window.api.places.get(placeId)) as PlaceRow | null;
   if (!place.value) return;
+  placePath.value = (await window.api.places.getPath(placeId)) as string;
   editName.value = place.value.name;
   editType.value = place.value.place_type ?? '';
   editParentId.value = place.value.parent_place_id;

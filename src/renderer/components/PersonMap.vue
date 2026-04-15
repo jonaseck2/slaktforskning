@@ -109,6 +109,7 @@ async function load() {
   const eventsWithPlaces = events.filter(e => e.place_id);
 
   const placeCache = new Map<string, PlaceRow | null>();
+  const pathCache = new Map<string, string>();
   const result: Marker[] = [];
 
   for (const ev of eventsWithPlaces) {
@@ -127,7 +128,12 @@ async function load() {
         placeId: place.id,
       });
     } else if (place && resolverReady.value) {
-      const resolved = resolvePlace(place.name);
+      let fullPath = pathCache.get(place.id);
+      if (fullPath === undefined) {
+        fullPath = (await window.api.places.getPath(place.id)) as string;
+        pathCache.set(place.id, fullPath);
+      }
+      const resolved = resolvePlace(fullPath);
       if (resolved) {
         result.push({
           lat: resolved.lat,
