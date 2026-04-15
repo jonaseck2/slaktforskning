@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, dialog, Menu } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { getDatabase, closeDatabase } from './database';
@@ -47,6 +47,22 @@ function createWindow(): BrowserWindow {
   activeWindow = win;
   win.on('focus', () => { activeWindow = win; });
   win.on('closed', () => { if (activeWindow === win) activeWindow = null; });
+
+  // Close confirmation for last window — skip in dev mode to avoid friction
+  if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    win.on('close', (e) => {
+      if (BrowserWindow.getAllWindows().length > 1) return;
+      const choice = dialog.showMessageBoxSync(win, {
+        type: 'question',
+        buttons: ['Avsluta', 'Avbryt'],
+        defaultId: 1,
+        cancelId: 1,
+        title: 'Avsluta programmet',
+        message: 'Vill du verkligen avsluta programmet?',
+      });
+      if (choice === 1) e.preventDefault();
+    });
+  }
 
   return win;
 }

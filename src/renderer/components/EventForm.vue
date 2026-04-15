@@ -139,7 +139,13 @@ const sourceSession = useSourceSession();
 const editing = computed(() => !!props.editingEvent);
 const addedCount = ref(0);
 
-const eventTypeValues = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
+const unsortedEventTypes = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
+const eventTypeValues = computed(() =>
+  [...unsortedEventTypes]
+    .filter(et => et !== 'other')
+    .sort((a, b) => t('eventTypes.' + a).localeCompare(t('eventTypes.' + b), undefined, { sensitivity: 'base' }))
+    .concat(['other'] as typeof unsortedEventTypes[number][]),
+);
 
 const form = reactive({
   event_type: props.editingEvent?.event_type ?? '',

@@ -320,6 +320,7 @@ export default {
   nameTypes: {
     birth: 'Födelsenamn',
     married: 'Gift namn',
+    name_change: 'Namnändring',
     alias: 'Alias',
     aka: 'Även känd som',
   },
