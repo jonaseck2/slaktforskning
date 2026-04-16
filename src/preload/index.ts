@@ -230,6 +230,38 @@ const api = {
       ipcRenderer.on('undo:performed', (_e, data: { type: string; label: string }) => cb(data)),
   },
   onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
+  chart: {
+    onGetVisiblePersons: (callback: () => unknown) => {
+      ipcRenderer.on('chart:getVisiblePersons', (_event, replyChannel) => {
+        const result = callback();
+        ipcRenderer.send(replyChannel, result);
+      });
+    },
+    onSelectPerson: (callback: (args: { person_id?: string; name?: string }) => unknown) => {
+      ipcRenderer.on('chart:selectPerson', (_event, replyChannel, args) => {
+        const result = callback(args);
+        ipcRenderer.send(replyChannel, result);
+      });
+    },
+    onFocusPerson: (callback: (args: { person_id: string }) => unknown) => {
+      ipcRenderer.on('chart:focusPerson', (_event, replyChannel, args) => {
+        const result = callback(args);
+        ipcRenderer.send(replyChannel, result);
+      });
+    },
+    onGetLayout: (callback: () => unknown) => {
+      ipcRenderer.on('chart:getLayout', (_event, replyChannel) => {
+        const result = callback();
+        ipcRenderer.send(replyChannel, result);
+      });
+    },
+    removeAllChartHandlers: () => {
+      ipcRenderer.removeAllListeners('chart:getVisiblePersons');
+      ipcRenderer.removeAllListeners('chart:selectPerson');
+      ipcRenderer.removeAllListeners('chart:focusPerson');
+      ipcRenderer.removeAllListeners('chart:getLayout');
+    },
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);

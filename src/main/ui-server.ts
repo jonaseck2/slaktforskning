@@ -1,5 +1,5 @@
 import * as http from 'node:http';
-import type { BrowserWindow } from 'electron';
+import { ipcMain, type BrowserWindow } from 'electron';
 
 export const UI_SERVER_PORT = process.env.SLAKTFORSKNING_UI_PORT
   ? parseInt(process.env.SLAKTFORSKNING_UI_PORT)
@@ -96,6 +96,59 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
         );
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(html);
+
+      } else if (method === 'POST' && url === '/chart/persons') {
+        const replyChannel = `chart-reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const result = await new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve({ error: 'No chart is currently displayed' }), 2000);
+          ipcMain.once(replyChannel, (_event, data) => {
+            clearTimeout(timeout);
+            resolve(data);
+          });
+          win.webContents.send('chart:getVisiblePersons', replyChannel);
+        });
+        json(res, 200, result);
+
+      } else if (method === 'POST' && url === '/chart/select') {
+        const body = await readBody(req) as { person_id?: string; name?: string };
+        const replyChannel = `chart-reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const result = await new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve({ error: 'No chart is currently displayed' }), 2000);
+          ipcMain.once(replyChannel, (_event, data) => {
+            clearTimeout(timeout);
+            resolve(data);
+          });
+          win.webContents.send('chart:selectPerson', replyChannel, body);
+        });
+        json(res, 200, result);
+
+      } else if (method === 'POST' && url === '/chart/focus') {
+        const body = await readBody(req) as { person_id: string };
+        const replyChannel = `chart-reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const result = await new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve({ error: 'No chart is currently displayed' }), 2000);
+          ipcMain.once(replyChannel, (_event, data) => {
+            clearTimeout(timeout);
+            resolve(data);
+          });
+          win.webContents.send('chart:focusPerson', replyChannel, body);
+        });
+        json(res, 200, result);
+
+      } else if (method === 'GET' && url === '/chart/layout') {
+        const replyChannel = `chart-reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const result = await new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve({ error: 'No chart is currently displayed' }), 2000);
+          ipcMain.once(replyChannel, (_event, data) => {
+            clearTimeout(timeout);
+            resolve(data);
+          });
+          win.webContents.send('chart:getLayout', replyChannel);
+        });
+        json(res, 200, result);
+
+      } else if (method === 'POST' && url === '/chart/screenshot') {
+        json(res, 501, { error: 'not yet implemented' });
 
       } else {
         json(res, 404, { error: 'Not found' });
