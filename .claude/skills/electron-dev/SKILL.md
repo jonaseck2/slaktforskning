@@ -98,6 +98,30 @@ Connects via the browser debug protocol. Use for things the native tools can't d
 - Use `list_pages` + `select_page` if the snapshot shows the wrong page (e.g. DevTools instead of app)
 - Mix native and Chrome DevTools tools freely — use `ui_navigate` for routing, `fill` for inputs, `ui_screenshot` for verification
 
+### Post-Implementation Verification with chrome-devtools-mcp
+
+After implementing a feature, use `chrome-devtools-mcp` to verify correctness before committing:
+
+**Check for console errors:**
+```
+list_console_messages()   → look for errors or warnings from your new code
+```
+
+**Accessibility audit:**
+```
+take_snapshot()           → inspect the a11y tree for your new elements
+                           → check ARIA roles, labels, focus order
+```
+
+**Performance check (if the feature does heavy work):**
+```
+performance_start_trace() → trigger the expensive operation
+performance_stop_trace()  → stop recording
+performance_analyze_insight() → identify hot functions and call stacks
+```
+
+This catches issues that unit tests miss: unhandled promise rejections, missing ARIA labels, and CPU spikes from N+1 queries in the renderer.
+
 ### Common issues
 
 **Wrong Electron binary (macOS binary in Linux container):**
