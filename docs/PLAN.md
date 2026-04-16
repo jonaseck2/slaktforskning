@@ -142,6 +142,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.87.0 | feat(mcp-dev): chart inspection HTTP bridge — `/chart/persons`, `/chart/select`, `/chart/focus`, `/chart/layout` endpoints + `useChartBridge` composable wired into VisualizationView | — |
 | v0.88.0 | feat(mcp-dev): chart MCP tools — `chart_list_persons`, `chart_select_person`, `chart_focus_person`, `chart_get_layout`, `chart_screenshot_person` wrapping chart HTTP bridge endpoints | — |
 | v0.89.0 | feat(mcp-dev): seed and inspect MCP tools — `seed_person`, `seed_family`, `clear_test_data`, `db_stats`, `app_status`; `/status` endpoint in ui-server; 10 unit tests for seed workflow | — |
+| v0.89.1 | test: E2E test for dev MCP server initialize handshake | — |
 ---
 
 ## Research

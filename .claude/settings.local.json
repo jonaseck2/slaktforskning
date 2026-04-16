@@ -64,7 +64,8 @@
       "Bash(gzip -k /tmp/distrikt.geojson)",
       "Bash(gzip -k /tmp/sockenstad.geojson)",
       "Edit(/.claude/skills/tree-layout/**)",
-      "mcp__claude_ai_Gmail__gmail_get_profile"
+      "mcp__claude_ai_Gmail__gmail_get_profile",
+      "Bash(wait)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/docs/plans",
