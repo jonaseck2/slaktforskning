@@ -59,6 +59,7 @@
         />
         <PedigreeChart
           v-else-if="activeTab === 'pedigree'"
+          ref="pedigreeChartRef"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
           :selected-person-id="selectedPersonId"
@@ -73,6 +74,7 @@
         />
         <HourglassChart
           v-if="activeTab === 'hourglass'"
+          ref="hourglassChartRef"
           :key="'hourglass-' + chartKey"
           :person-id="personId"
           :selected-person-id="selectedPersonId"
@@ -81,6 +83,7 @@
         />
         <DescendantChart
           v-if="activeTab === 'descendants'"
+          ref="descendantChartRef"
           :key="'descendants-' + chartKey"
           :person-id="personId"
           :selected-person-id="selectedPersonId"
@@ -121,6 +124,8 @@ import { ref, computed, inject, watch, onMounted, onActivated, onUnmounted } fro
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import type { Ref } from 'vue';
+import type { BoxLayout } from '../utils/chart-layout/types';
+import { useChartBridge } from '../composables/useChartBridge';
 import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import PedigreeListView from '../components/charts/PedigreeListView.vue';
@@ -154,6 +159,19 @@ const chartKey = ref(0);
 
 // Selected node in the chart (may differ from chart focal person)
 const selectedPersonId = ref<string | null>(null);
+
+// Template refs for chart components — used by useChartBridge to read layout boxes
+const pedigreeChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
+const hourglassChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
+const descendantChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
+
+// Boxes from whichever chart is currently active
+const chartBoxes = computed<BoxLayout[]>(() => {
+  if (activeTab.value === 'pedigree') return pedigreeChartRef.value?.boxes ?? [];
+  if (activeTab.value === 'hourglass') return hourglassChartRef.value?.boxes ?? [];
+  if (activeTab.value === 'descendants') return descendantChartRef.value?.boxes ?? [];
+  return [];
+});
 
 type TabName = 'pedigree' | 'circle' | 'hourglass' | 'descendants' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
@@ -311,6 +329,16 @@ watch([() => activeTab.value, () => personId.value, () => screenReader.isScreenR
 
 onUnmounted(() => {
   unregisterChartNav();
+});
+
+// Chart inspection bridge — wires Vue state to HTTP endpoints via IPC
+useChartBridge({
+  boxes: chartBoxes,
+  selectedPersonId,
+  focalPersonId: computed(() => personId.value ?? null),
+  chartType: activeTab,
+  selectPerson: selectNode,
+  focusPerson: (id: string) => router.push('/visualisering/' + id),
 });
 
 // When App.vue auto-sets the focus store after this view is already mounted, navigate to that person

@@ -402,6 +402,8 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onDocumentMousedown);
 });
+
+defineExpose({ boxes: computed(() => layout.value.boxes) });
 </script>
 
 <style scoped>
