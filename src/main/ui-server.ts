@@ -150,6 +150,12 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
       } else if (method === 'POST' && url === '/chart/screenshot') {
         json(res, 501, { error: 'not yet implemented' });
 
+      } else if (method === 'GET' && url === '/status') {
+        const result = await win.webContents.executeJavaScript(
+          `({ route: window.__vue_router ? window.__vue_router.currentRoute.value.fullPath : null, windowWidth: window.innerWidth, windowHeight: window.innerHeight })`
+        ) as { route: string | null; windowWidth: number; windowHeight: number };
+        json(res, 200, result);
+
       } else {
         json(res, 404, { error: 'Not found' });
       }
