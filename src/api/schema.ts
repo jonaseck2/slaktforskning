@@ -1,4 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
+import { queryAll, queryOne } from './db';
 
 export function initializeSchema(db: Database): void {
   db.exec('PRAGMA journal_mode = WAL');
@@ -227,12 +228,12 @@ export function initializeSchema(db: Database): void {
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)
-  const eventCols = (db.prepare('PRAGMA table_info(events)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const eventCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(events)').map(c => c.name);
   if (!eventCols.includes('relationship_id')) {
     db.exec(`ALTER TABLE events ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
   }
 
-  const citationCols = (db.prepare('PRAGMA table_info(citations)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const citationCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(citations)').map(c => c.name);
   if (!citationCols.includes('relationship_id')) {
     db.exec(`ALTER TABLE citations ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
   }
@@ -242,7 +243,7 @@ export function initializeSchema(db: Database): void {
 
   // v0.4.0 places column migrations — idempotent
   // v0.3.1 migration: person_names gained name_prefix, name_suffix, patronymic_base, name_qualifier
-  const personNamesCols = (db.prepare('PRAGMA table_info(person_names)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const personNamesCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(person_names)').map(c => c.name);
   if (!personNamesCols.includes('name_prefix')) {
     db.exec(`ALTER TABLE person_names ADD COLUMN name_prefix TEXT`);
   }
@@ -264,7 +265,7 @@ export function initializeSchema(db: Database): void {
     db.exec('ALTER TABLE person_names ADD COLUMN nickname TEXT');
   }
 
-  const placesCols = (db.prepare('PRAGMA table_info(places)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const placesCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(places)').map(c => c.name);
   if (!placesCols.includes('place_type')) {
     db.exec(`ALTER TABLE places ADD COLUMN place_type TEXT`);
   }
@@ -303,7 +304,7 @@ export function initializeSchema(db: Database): void {
   }
 
   // v0.7.0 sources: call_number + abstract
-  const sourcesCols = (db.prepare('PRAGMA table_info(sources)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const sourcesCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(sources)').map(c => c.name);
   if (!sourcesCols.includes('call_number')) {
     db.exec('ALTER TABLE sources ADD COLUMN call_number TEXT');
   }
@@ -312,22 +313,22 @@ export function initializeSchema(db: Database): void {
   }
 
   // v0.8.0 media: is_missing flag for files that couldn't be found/extracted
-  const mediaCols = (db.prepare('PRAGMA table_info(media)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const mediaCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(media)').map(c => c.name);
   if (!mediaCols.includes('is_missing')) {
     db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
   }
 
   // v0.9.0 media_links: sort_order for user-controlled ordering
-  const mediaLinkCols = (db.prepare('PRAGMA table_info(media_links)').all([]) as Array<{ name: string }>).map(c => c.name);
+  const mediaLinkCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(media_links)').map(c => c.name);
   if (!mediaLinkCols.includes('sort_order')) {
     db.exec('ALTER TABLE media_links ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
   }
 
   // v0.79.0 name_type: add 'name_change' to CHECK constraint
   // SQLite CHECK constraints are baked into the schema — must recreate the table to relax them.
-  const nameTypeCheck = (db.prepare(
+  const nameTypeCheck = (queryOne<{ sql: string }>(db,
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_names'`
-  ).get([]) as { sql: string } | undefined)?.sql ?? '';
+  ))?.sql ?? '';
   if (!nameTypeCheck.includes('name_change')) {
     db.exec(`DROP TABLE IF EXISTS person_names_new`);
     db.exec(`

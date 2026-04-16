@@ -680,49 +680,51 @@ Tests live in `tests/e2e/`. Two tests: app launch smoke test + MCP server `initi
 
 ## MCP Server
 
-Data tools wrapping the same api/ functions, plus UI tools. Runs standalone via `npx tsx src/mcp/server.ts`.
+The MCP server has two entry points with different tool sets. DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
 
-DB path: `SLAKTFORSKNING_DB` env var, or platform's app data dir by default.
+### Production Server (`src/mcp/createProdServer.ts`)
 
-**Person tools:** `create_person`, `get_person`, `list_persons`, `search_persons`, `update_person`, `delete_person`, `add_person_name`, `get_person_names`, `update_person_name`, `delete_person_name`, `add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`
+34 workflow tools designed for genealogy research and AI narrative generation. Each tool does more in a single call — creates relationships, resolves places, records citations — so agents need fewer round-trips.
 
-**Relationship tools:** `create_relationship`, `get_relationship`, `list_relationships`, `update_relationship`, `delete_relationship`, `get_relationships_of_person`, `search_relationships`
+Entry point: `npx tsx src/mcp/server.ts`
 
-**Event participant tools:** `add_event_participant`, `get_event_participants`, `remove_event_participant`
+**Persons (8):** `create_person` (with optional birth event + citation in one call), `search_persons`, `get_person_summary`, `update_person`, `delete_person`, `add_person_name`, `merge_persons`, `find_duplicates`
 
-**Event tools:** `add_event`, `get_event`, `get_events_for_person`, `get_events_for_relationship`, `update_event`, `delete_event`
+**Families (4):** `add_relationship` (couple/parent_child/sibling/godparent), `add_child` (child + parent_child relationship in one call), `get_family_unit`, `get_ancestor_tree`
 
-**Source/citation tools:** `add_source`, `get_source`, `list_sources`, `update_source`, `delete_source`, `search_sources`, `add_citation`, `get_citation`, `get_citations_for_source`, `get_citations_for_event`, `delete_citation`
+**Events (3):** `record_event` (multi-participant, place findOrCreate, citation in one call), `get_timeline`, `update_event`
 
-**Place tools:** `add_place`, `get_place`, `list_places`, `search_places`, `update_place`, `delete_place`
+**Sources (4):** `add_source`, `search_sources`, `cite` (link source to event/person/relationship/place), `get_citations_for_person`
 
-**Group tools:** `create_group`, `get_group`, `list_groups`, `update_group`, `delete_group`, `add_group_member`, `remove_group_member`, `get_group_members`, `get_groups_for_person`
+**Places (4):** `add_place`, `search_places`, `get_place_history`, `resolve_place`
 
-**Repository tools:** `create_repository`, `get_repository`, `list_repositories`, `update_repository`, `delete_repository`, `link_source_repository`, `unlink_source_repository`, `get_repositories_for_source`
+**Research (4):** `get_research_gaps`, `add_research_task`, `update_research_task`, `run_checks`
 
-**Research task tools:** `create_research_task`, `get_research_task`, `list_research_tasks`, `get_research_tasks_for_person`, `update_research_task`, `delete_research_task`
+**Media (3):** `attach_media` (link file to entity), `tag_person_in_media` (create face/region tag), `get_media_for_person_context`
 
-**Media tools:** `create_media`, `get_media`, `list_media`, `delete_media`, `add_media_link`, `get_media_for_entity`, `remove_media_link`, `reorder_media_links`
+**Data Management (4):** `import_file` (unified — detects GEDCOM/Genney/Holger by extension and content), `export_gedcom` (version: '5.5.1' | '7.0'), `get_current_database`, `switch_database`
 
-**Media AI tools:** `get_media_file_base64`, `get_untagged_media`, `get_media_for_person_context`, `suggest_media_regions`, `get_persons_for_matching`, `get_media_tagging_status`
+### Development Server (`src/mcp/createDevServer.ts`)
 
-**Media region tools:** `create_media_region`, `get_media_regions`, `get_regions_for_person`, `update_media_region`, `delete_media_region`
+All 34 prod tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection.
 
-**Duplicate/merge tools:** `find_duplicates`, `merge_persons`
+Entry point: `npx tsx src/mcp/devServer.ts`
 
-**Report/narrative tools:** `get_person_summary`, `get_family_unit`, `get_ancestor_tree`, `get_place_history`, `get_research_gaps`, `get_timeline`
+**UI Automation (5):** `ui_screenshot`, `ui_navigate`, `ui_click`, `ui_fill`, `ui_get_dom`
 
-**Gazetteer tools:** `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
+**Chart Inspection (5):** `chart_list_persons`, `chart_select_person`, `chart_focus_person`, `chart_get_layout`, `chart_screenshot_person`
 
-**Database tools:** `get_current_database`, `switch_database`
+**Seed (3):** `seed_person` (realistic test person with events), `seed_family` (couple + children), `clear_test_data`
 
-**Per-database settings:** `src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
+**Inspect (2):** `app_status` (Electron running, UI bridge reachable, DB path), `db_stats` (table row counts)
 
-**GEDCOM/import tools:** `import_gedcom` (`.ged` files only — for Genney GEDCOM exports use `profile: "genney"`), `import_genney` (`.backup`/`.gcc` archives or Derby directories), `import_holger` (`.ged` or `.zip` file or folder containing `.ged` — for Holger/OurKind GEDCOM exports; handles ENGA TYPE → couple subtype, ADOP TYPE → parent_child subtype, REMA/MISC → person notes; accepts `media_dir` for remapping Windows OBJE FILE paths to a local directory; returns `defaultPersonId` set to the first INDI's DB id), `export_gedcom` (accepts optional `version: '5.5.1' | '7.0'`, default `'5.5.1'`)
+### Per-database settings
 
-**Import/export data integrity:** All import tools (`import_gedcom`, `import_genney`, `import_holger`) return a report object with `warnings: string[]` (human-readable messages for remapped/converted data) and `unmappedData` or `skipped` arrays documenting what data was lost and why (e.g., LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `ImportReport` includes `repositories`, `groups`, and `researchTasks` counts for REPO, _GRP, and _TODO records imported. REPO records are linked to sources via `source_repositories`. Genney `_GRP` records become groups with memberships; `_TODO` records become research tasks linked to persons via `_TARG`. SUBM records are matched to persons using three strategies (full name, preferred_name + surname prefix, given-name-only) and stored as `default_person_id` in `db_settings`. `ImportReport` includes `submitterName` (raw SUBM NAME) so the UI can prompt the user to select a tree subject when auto-matching fails. `export_gedcom` writes a SUBM record from `default_person_id` when set. `export_gedcom` returns `{ ged: string; report: ExportReport }`. `ExportReport` includes `excluded: { category, count, reason }[]` for entities that cannot be represented in GEDCOM 5.5.1: Research Tasks, Groups, and event place_address fields. The export report is displayed to the user after export, ensuring transparency about data loss during round-trip operations.
+`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
 
-**UI tools** (requires Electron app running): `ui_screenshot`, `ui_navigate`, `ui_get_dom`, `ui_click`, `ui_execute_js`
+**Gazetteer tools** (prod server): `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
+
+**Import/export data integrity:** `import_file` and the underlying import functions return a report object with `warnings: string[]` and `unmappedData`/`skipped` arrays documenting what data was lost and why (e.g., LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `ImportReport` includes `repositories`, `groups`, and `researchTasks` counts. SUBM records are matched to persons and stored as `default_person_id`. `export_gedcom` returns `{ ged: string; report: ExportReport }` with `excluded[]` for entities that cannot be represented in GEDCOM 5.5.1 (Research Tasks, Groups, place_address fields).
 
 ---
 

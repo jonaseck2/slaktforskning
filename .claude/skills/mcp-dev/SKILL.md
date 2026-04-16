@@ -5,16 +5,28 @@ description: Add new MCP tools, test the MCP server, and debug MCP communication
 
 # MCP Dev Skill
 
+## Prod vs Dev Server
+
+The MCP server has two entry points:
+
+| Server | Entry point | Tools |
+|--------|-------------|-------|
+| Production | `src/mcp/server.ts` | 34 workflow tools for genealogy research |
+| Development | `src/mcp/devServer.ts` | All prod tools + 15 dev-only tools |
+
+Use the **dev server** for all agent-driven development, UI testing, and chart debugging. Use the **prod server** for research sessions and narrative generation.
+
 ## Three Modes of Use
 
 The MCP server is not just an API surface — it is the primary tool for agents to develop, test, and research in the running app.
 
 ### Mode 1: Agent-Driven Development
 
-Seed test data and verify new UI features without touching the app manually:
+Seed test data and verify new UI features without touching the app manually. **Use the dev server** (`src/mcp/devServer.ts`):
 
 ```
-1. create_person / add_event / ... — seed realistic test data
+1. seed_family({ children: 2 })  — realistic test data in one call
+   — or — create_person / record_event / ...
 2. ui_navigate("/your-new-route") — go to the view
 3. ui_screenshot()                — visual confirmation it renders
 4. ui_get_dom()                   — assert specific elements exist in the DOM
@@ -23,12 +35,26 @@ Seed test data and verify new UI features without touching the app manually:
 
 **The MCP server shares the same SQLite database as the running app.** Data seeded via MCP tools is immediately visible in the app — no restart needed.
 
+#### Chart debugging with the dev server
+
+When working on chart layout bugs, use the chart inspection tools:
+
+```
+1. chart_list_persons()                    — see all boxes with x/y positions
+2. chart_select_person({ id: "..." })      — select a person (shows outlines)
+3. chart_get_layout()                      — full layout: boxes, lines, placeholders
+4. chart_screenshot_person({ id: "..." })  — screenshot cropped to one box
+5. ui_screenshot()                         — full chart screenshot for context
+```
+
+This lets you verify connector positions, outline placement, and spacing without reading raw layout data from source files.
+
 ### Mode 2: Acceptance Testing After Feature Implementation
 
 After implementing a UI feature (e.g. ResearchTasksView), before committing:
 
-1. Ensure the app is running (`npm start` or check with `ui_screenshot`)
-2. Seed data via MCP: `create_research_task`, `create_person`, etc.
+1. Ensure the app is running (`npm start` or check with `app_status`)
+2. Seed data via MCP: `seed_person`, `seed_family`, or direct workflow tools
 3. `ui_navigate("/research-tasks")` → verify the view loads
 4. `ui_get_dom()` → assert tasks appear in the table
 5. `ui_click()` → test status change, filter, add/delete interactions
@@ -37,12 +63,12 @@ This is faster than writing a full Playwright E2E test and covers the full IPC �
 
 ### Mode 3: Active Research Session
 
-During genealogy research, use MCP tools to query and update data:
+During genealogy research, use the **prod server** (`src/mcp/server.ts`):
 
 - `search_persons("Nilsson")` → find candidates
-- `get_events_for_person(id)` → see what's already known
-- `add_event(...)` → record a newly found birth record
-- `get_research_tasks_for_person(id)` → check open tasks
+- `get_person_summary(id)` → everything about a person in one call
+- `record_event(...)` → record a newly found birth record with place + citation
+- `get_research_gaps(id)` → check what's missing
 - `get_current_database` → confirm which DB is active before making changes
 
 ### Data integrity rule: search before create
@@ -60,19 +86,35 @@ At the start of any session where UI work or research will happen:
 
 ## Running the MCP Server
 
-### Standalone (for testing)
+### Production server (for research sessions)
 ```bash
 npx tsx src/mcp/server.ts
 ```
 Uses the default DB path (`~/Library/Application Support/slaktforskning/slaktforskning.db` on macOS).
 
+### Development server (for agent-driven development)
+```bash
+npx tsx src/mcp/devServer.ts
+```
+Includes all prod tools plus UI automation, chart inspection, seed, and inspect tools.
+
 ### With a test database
 ```bash
-SLAKTFORSKNING_DB=/tmp/test.db npx tsx src/mcp/server.ts
+SLAKTFORSKNING_DB=/tmp/test.db npx tsx src/mcp/devServer.ts
 ```
 
 ### Via Claude Code
-The MCP server is configured in `.claude/settings.local.json` as `slaktforskning`. Claude can call its tools directly (create_person, list_persons, etc.).
+The MCP server is configured in `.claude/settings.local.json` as `slaktforskning`. Configure it to use the dev server for development work:
+```json
+{
+  "mcpServers": {
+    "slaktforskning": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/devServer.ts"]
+    }
+  }
+}
+```
 
 ## Testing MCP Tools
 
@@ -97,7 +139,7 @@ Use ToolSearch to find and call the `slaktforskning` MCP tools directly:
 
 ## Adding a New MCP Tool
 
-MCP tools live in `src/mcp/createServer.ts` (not `server.ts` — that file only handles DB setup and launches the server). Use `registerTool()`, not the deprecated `tool()` overload:
+**Production tools** live in `src/mcp/createProdServer.ts`. **Dev-only tools** live in `src/mcp/createDevServer.ts` (which imports and extends prod). Use `registerTool()`, not the deprecated `tool()` overload:
 
 ```typescript
 // src/mcp/createServer.ts — inside createMcpServer(db)
@@ -133,17 +175,20 @@ server.registerTool('tool_name', {
 
 ## Current MCP Tools
 
-Read `references/tools.md` (in this skill directory) for the full tool list grouped by domain. `src/mcp/server.ts` is always authoritative — the reference file is a convenience summary.
+See `docs/MCP.md` for the full tool reference grouped by domain. Source files are always authoritative:
+- Production tools: `src/mcp/createProdServer.ts`
+- Dev-only tools: `src/mcp/createDevServer.ts`
+- Entry points: `src/mcp/server.ts` (prod), `src/mcp/devServer.ts` (dev)
 
 ## MCP Server Config
 
-In `.claude/settings.local.json`:
+In `.claude/settings.local.json` — use the dev server for development work:
 ```json
 {
   "mcpServers": {
     "slaktforskning": {
       "command": "npx",
-      "args": ["tsx", "src/mcp/server.ts"]
+      "args": ["tsx", "src/mcp/devServer.ts"]
     }
   }
 }
