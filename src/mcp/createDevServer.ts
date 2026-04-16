@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Database } from 'node-sqlite3-wasm';
 import { createProdServer } from './createProdServer';
+import { registerUiTools } from './tools/dev/ui';
 
 const DEFAULT_UI_PORT = 19241;
 
@@ -12,9 +13,7 @@ export function createDevServer(initialDb: Database, initialDbPath?: string): Mc
     : DEFAULT_UI_PORT;
   const uiBase = `http://localhost:${uiPort}`;
 
-  // Dev-only tools will be registered here in Tasks 9-12.
-  // uiBase is kept to avoid unused-variable error once tools are added.
-  void uiBase;
+  registerUiTools(server, uiBase);
 
   return server;
 }

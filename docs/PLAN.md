@@ -138,6 +138,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.83.0 | feat(mcp): person workflow tools — `create_person` (with birth event + citation in one call), `search_persons`, `get_person_summary`, `update_person`, `delete_person`, `add_person_name`, `merge_persons`, `find_duplicates`; `findOrCreateSource` shared helper | — |
 | v0.84.0 | feat(mcp): event workflow tools — `record_event` (multi-participant, place findOrCreate, citation in one call), `get_timeline`, `update_event` (place string resolves to place_id) | — |
 | v0.85.0 | feat(mcp): source, place, research, media, and data-management workflow tools — `add_source`, `search_sources`, `cite`, `get_citations_for_person`, `add_place`, `search_places`, `get_place_history`, `resolve_place`, `get_research_gaps`, `add_research_task`, `update_research_task`, `run_checks`, `attach_media`, `tag_person_in_media`, `get_media_for_person_context`, `import_file`, `export_gedcom`, `get_current_database`, `switch_database` | — |
+| v0.86.0 | feat(mcp-dev): UI automation tools — `ui_screenshot`, `ui_navigate`, `ui_click`, `ui_fill`, `ui_get_dom`; `/fill` endpoint in ui-server | — |
 ---
 
 ## Research

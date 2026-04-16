@@ -77,6 +77,19 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
           json(res, 200, { ok: true });
         }
 
+      } else if (method === 'POST' && url === '/fill') {
+        const body = await readBody(req) as { selector: string; value: string };
+        const selector = JSON.stringify(body.selector);
+        const value = JSON.stringify(body.value);
+        const result = await win.webContents.executeJavaScript(
+          `(() => { const el = document.querySelector(${selector}); if (!el) return { error: 'Element not found: ' + ${selector} }; const nativeSetter = Object.getOwnPropertyDescriptor(el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value')?.set; if (nativeSetter) { nativeSetter.call(el, ${value}); } else { el.value = ${value}; } el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return { ok: true }; })()`
+        ) as { ok?: boolean; error?: string };
+        if (result.error) {
+          json(res, 400, { error: result.error });
+        } else {
+          json(res, 200, { ok: true });
+        }
+
       } else if (method === 'GET' && url === '/dom') {
         const html = await win.webContents.executeJavaScript(
           'document.documentElement.outerHTML'
