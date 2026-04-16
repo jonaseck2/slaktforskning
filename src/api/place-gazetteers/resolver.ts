@@ -19,9 +19,15 @@ function nodeMatches(node: GazetteerNode, component: string): boolean {
   return node.aliases?.some(a => fuzzyEqual(normalize(a), norm)) ?? false;
 }
 
+const treeDepthCache = new WeakMap<GazetteerNode, number>();
 function getTreeDepth(node: GazetteerNode): number {
-  if (!node.children || node.children.length === 0) return 1;
-  return 1 + Math.max(...node.children.map(getTreeDepth));
+  const cached = treeDepthCache.get(node);
+  if (cached !== undefined) return cached;
+  const depth = (!node.children || node.children.length === 0)
+    ? 1
+    : 1 + Math.max(...node.children.map(getTreeDepth));
+  treeDepthCache.set(node, depth);
+  return depth;
 }
 
 interface MatchCandidate {
@@ -32,31 +38,68 @@ interface MatchCandidate {
   treeDepth: number;
 }
 
-function findMatches(
-  components: string[],
-  node: GazetteerNode,
-  path: GazetteerNode[],
-): MatchCandidate[] {
-  const currentPath = [...path, node];
-  const remaining = components.filter(c => !nodeMatches(node, c));
-  const matchedHere = components.length - remaining.length;
+// Name index: maps normalized name → list of { node, ancestors } for O(1) lookup
+type NodeEntry = { node: GazetteerNode; ancestors: GazetteerNode[] };
+const nameIndexCache = new WeakMap<GazetteerNode, Map<string, NodeEntry[]>>();
 
-  const candidates: MatchCandidate[] = [];
-
-  if (node.children && node.children.length > 0) {
-    for (const child of node.children) {
-      candidates.push(...findMatches(remaining, child, currentPath));
+function getNameIndex(root: GazetteerNode): Map<string, NodeEntry[]> {
+  const cached = nameIndexCache.get(root);
+  if (cached) return cached;
+  const index = new Map<string, NodeEntry[]>();
+  function walk(node: GazetteerNode, ancestors: GazetteerNode[]) {
+    const norm = normalize(node.name);
+    if (!index.has(norm)) index.set(norm, []);
+    index.get(norm)!.push({ node, ancestors });
+    if (node.aliases) {
+      for (const alias of node.aliases) {
+        const na = normalize(alias);
+        if (!index.has(na)) index.set(na, []);
+        index.get(na)!.push({ node, ancestors });
+      }
+    }
+    if (node.children) {
+      const nextAncestors = [...ancestors, node];
+      for (const child of node.children) walk(child, nextAncestors);
     }
   }
+  // Index the root node itself
+  walk(root, []);
 
-  if (matchedHere > 0) {
-    candidates.push({
-      path: currentPath,
-      matched: currentPath.map(n => n.name),
-      unmatched: remaining,
-      depth: currentPath.length,
-      treeDepth: getTreeDepth(node) + currentPath.length - 1,
-    });
+  nameIndexCache.set(root, index);
+  return index;
+}
+
+function findMatches(
+  components: string[],
+  root: GazetteerNode,
+): MatchCandidate[] {
+  const index = getNameIndex(root);
+  const candidates: MatchCandidate[] = [];
+
+  // Find all nodes that match any component
+  for (const component of components) {
+    const norm = normalize(component);
+    const entries = index.get(norm);
+    if (!entries) continue;
+
+    for (const { node, ancestors } of entries) {
+      const fullPath = [...ancestors, node];
+      // Check which other components match nodes on this path
+      const remaining = components.filter(c => {
+        const cn = normalize(c);
+        return !fullPath.some(n =>
+          normalize(n.name) === cn || (n.aliases?.some(a => normalize(a) === cn) ?? false)
+        );
+      });
+
+      candidates.push({
+        path: fullPath,
+        matched: fullPath.map(n => n.name),
+        unmatched: remaining,
+        depth: fullPath.length,
+        treeDepth: getTreeDepth(node) + fullPath.length - 1,
+      });
+    }
   }
 
   return candidates;
@@ -140,7 +183,7 @@ export function resolvePlace(
   let bestOverall: { candidate: MatchCandidate; ambiguous: boolean; gazId: string } | null = null;
 
   for (const gaz of gazetteers) {
-    const candidates = findMatches(components, gaz.root, []);
+    const candidates = findMatches(components, gaz.root);
     const picked = pickBest(candidates);
     if (!picked) continue;
 

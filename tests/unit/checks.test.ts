@@ -415,7 +415,7 @@ describe('UNRELATED_PERSON', () => {
 describe('MEDIA_FILE_MISSING', () => {
   it('fires for a media record pointing to a non-existent file', () => {
     const p = createPerson(db, {});
-    const m = createMedia(db, { title: 'Photo', file_ref: '/nonexistent/path/photo.jpg' });
+    const m = createMedia(db, { title: 'Photo', file_ref: '/nonexistent/path/photo.jpg', is_missing: true });
     addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
     const results = runAllChecks(db);
     const hit = results.filter(r => r.code === 'MEDIA_FILE_MISSING');

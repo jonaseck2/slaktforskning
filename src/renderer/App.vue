@@ -255,9 +255,9 @@ async function loadDbName() {
 async function autoSetFocusPerson() {
   if (focusStore.personId) return;
   try {
-    const persons = await window.api.persons.list();
-    if (persons.length > 0) {
-      const p = persons[0];
+    const result = await window.api.persons.listPage(1, 0) as { persons: Array<{ id: string; given_name: string; surname: string }>; total: number };
+    if (result.persons.length > 0) {
+      const p = result.persons[0];
       const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
       focusStore.set(p.id, name);
     }
@@ -296,10 +296,11 @@ onMounted(() => {
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
   loadDbName();
-  loadQualityBadge();
-  loadResearchBadge();
   autoSetFocusPerson();
   loadDefaultPerson();
+  // Delay heavy quality checks so initial navigation/data loading isn't blocked
+  setTimeout(loadQualityBadge, 5000);
+  setTimeout(loadResearchBadge, 1000);
   window.api.db.onSwitched(() => {
     window.location.reload();
   });
@@ -320,8 +321,11 @@ onMounted(() => {
   });
   window.addEventListener('data-imported', () => {
     dataVersionStore.increment();
-    loadQualityBadge();
-    loadResearchBadge();
+    // Debounce heavy checks so navigation/data loading IPC isn't blocked
+    if (qualityDebounce) clearTimeout(qualityDebounce);
+    qualityDebounce = setTimeout(loadQualityBadge, 2000);
+    if (researchDebounce) clearTimeout(researchDebounce);
+    researchDebounce = setTimeout(loadResearchBadge, 400);
   });
   window.api.onDataChanged(() => {
     dataVersionStore.increment();

@@ -144,6 +144,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.89.0 | feat(mcp-dev): seed and inspect MCP tools — `seed_person`, `seed_family`, `clear_test_data`, `db_stats`, `app_status`; `/status` endpoint in ui-server; 10 unit tests for seed workflow | — |
 | v0.89.1 | test: E2E test for dev MCP server initialize handshake | — |
 | v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/superpowers/specs/2026-04-15-mcp-overhaul-design.md) |
+| v0.90.1 | Fix: startup and quality check CPU contention on large databases | [archive](plans/archive/2026-04-16-startup-perf-fix.md) |
 ---
 
 ## Research
