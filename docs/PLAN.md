@@ -140,6 +140,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.85.0 | feat(mcp): source, place, research, media, and data-management workflow tools — `add_source`, `search_sources`, `cite`, `get_citations_for_person`, `add_place`, `search_places`, `get_place_history`, `resolve_place`, `get_research_gaps`, `add_research_task`, `update_research_task`, `run_checks`, `attach_media`, `tag_person_in_media`, `get_media_for_person_context`, `import_file`, `export_gedcom`, `get_current_database`, `switch_database` | — |
 | v0.86.0 | feat(mcp-dev): UI automation tools — `ui_screenshot`, `ui_navigate`, `ui_click`, `ui_fill`, `ui_get_dom`; `/fill` endpoint in ui-server | — |
 | v0.87.0 | feat(mcp-dev): chart inspection HTTP bridge — `/chart/persons`, `/chart/select`, `/chart/focus`, `/chart/layout` endpoints + `useChartBridge` composable wired into VisualizationView | — |
+| v0.88.0 | feat(mcp-dev): chart MCP tools — `chart_list_persons`, `chart_select_person`, `chart_focus_person`, `chart_get_layout`, `chart_screenshot_person` wrapping chart HTTP bridge endpoints | — |
+| v0.89.0 | feat(mcp-dev): seed and inspect MCP tools — `seed_person`, `seed_family`, `clear_test_data`, `db_stats`, `app_status`; `/status` endpoint in ui-server; 10 unit tests for seed workflow | — |
 ---
 
 ## Research
