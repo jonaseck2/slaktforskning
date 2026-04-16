@@ -48,7 +48,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="(r, i) in filteredResults"
+            v-for="(r, i) in visibleResults"
             :key="resultKey(r) + ':' + i"
             v-narrate="() => narrateQualityRow({
               severity: r.severity,
@@ -108,12 +108,16 @@
           </tr>
         </tbody>
       </table>
+      <div ref="sentinel" class="scroll-sentinel"></div>
+      <p v-if="visibleResults.length < filteredResults.length" class="count-label">
+        {{ visibleResults.length }} / {{ filteredResults.length }}
+      </p>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
@@ -129,6 +133,9 @@ const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
 const activeFilter = ref<'all' | 'error' | 'warning' | 'notice' | 'ignored'>('all');
+const PAGE_SIZE = 100;
+const visibleCount = ref(PAGE_SIZE);
+const sentinel = ref<HTMLElement | null>(null);
 
 // --- Ignored checks (persisted in localStorage) ---
 const STORAGE_KEY = 'quality:ignored';
@@ -191,6 +198,27 @@ const filteredResults = computed(() => {
   const active = sorted.filter(r => !isIgnored(r));
   if (activeFilter.value === 'all') return active;
   return active.filter(r => r.severity === activeFilter.value);
+});
+
+const visibleResults = computed(() => filteredResults.value.slice(0, visibleCount.value));
+
+// Reset visible count when filter changes
+watch(activeFilter, () => { visibleCount.value = PAGE_SIZE; });
+
+// Infinite scroll
+let observer: IntersectionObserver | null = null;
+watch(sentinel, (el) => {
+  if (observer) { observer.disconnect(); observer = null; }
+  if (!el) return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && visibleCount.value < filteredResults.value.length) {
+        visibleCount.value += PAGE_SIZE;
+      }
+    },
+    { rootMargin: '200px 0px' }
+  );
+  observer.observe(el);
 });
 
 // --- Helpers ---
@@ -274,6 +302,7 @@ async function runChecks() {
   try {
     const raw = (await window.api.checks.runAll()) as QualityResult[];
     qualityStore.setResults(raw);
+    visibleCount.value = PAGE_SIZE;
   } catch (err) {
     console.error('[QualityView] runChecks failed:', err);
     toast.error(t('errors.loadFailed'));
