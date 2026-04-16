@@ -1,12 +1,9 @@
 import type { Database } from 'node-sqlite3-wasm';
-import { existsSync } from 'fs';
-import path from 'path';
 import { queryAll } from '../db';
 import type { CheckResult } from './check-utils';
 import { haversineKm } from './check-utils';
 import { resolvePlace } from '../place-gazetteers/resolver';
 import type { Gazetteer } from '../place-gazetteers/types';
-import { getPlacePath } from '../places';
 
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   // Find events for same person on same exact date with place lat/lon
@@ -69,24 +66,51 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
     WHERE p.latitude IS NULL OR p.longitude IS NULL
   `);
 
+  if (places.length === 0) return [];
+
+  // Bulk-load all person→place associations in one query (avoids N+1)
+  const placeIds = places.map(p => p.id);
+  const placeholders = placeIds.map(() => '?').join(',');
+  const personPlaceRows = queryAll<{ place_id: string; person_id: string }>(db, `
+    SELECT DISTINCT e.place_id, ep.person_id
+    FROM event_participants ep
+    JOIN events e ON e.id = ep.event_id
+    WHERE e.place_id IN (${placeholders})
+  `, placeIds);
+  const personsByPlace = new Map<string, string[]>();
+  for (const row of personPlaceRows) {
+    const arr = personsByPlace.get(row.place_id);
+    if (arr) arr.push(row.person_id);
+    else personsByPlace.set(row.place_id, [row.person_id]);
+  }
+
+  // Bulk-load all place hierarchy data for path building (avoids N+1 getPlacePath)
+  const allPlaceRows = queryAll<{ id: string; name: string; parent_place_id: string | null }>(db,
+    'SELECT id, name, parent_place_id FROM places'
+  );
+  const placeMap = new Map(allPlaceRows.map(r => [r.id, r]));
+  function buildPlacePath(id: string): string {
+    const parts: string[] = [];
+    let currentId: string | null = id;
+    while (currentId) {
+      const row = placeMap.get(currentId);
+      if (!row) break;
+      parts.push(row.name);
+      currentId = row.parent_place_id;
+    }
+    return parts.join(', ');
+  }
+
   const results: CheckResult[] = [];
   // Cache resolutions by name to avoid re-resolving duplicates
   const cache = new Map<string, ReturnType<typeof resolvePlace>>();
 
   for (const place of places) {
-    // Find linked persons via event_participants
-    const personRows = queryAll<{ person_id: string }>(db, `
-      SELECT DISTINCT ep.person_id
-      FROM event_participants ep
-      JOIN events e ON e.id = ep.event_id
-      WHERE e.place_id = ?
-    `, [place.id]);
-    if (personRows.length === 0) continue;
+    const personIds = personsByPlace.get(place.id);
+    if (!personIds || personIds.length === 0) continue;
 
-    const personIds = personRows.map(r => r.person_id);
-
-    // Build full place path (leaf, parent, grandparent, …) for better resolution
-    const fullPath = getPlacePath(db, place.id);
+    // Build full place path from in-memory map
+    const fullPath = buildPlacePath(place.id);
 
     // Resolve with caching
     if (!cache.has(fullPath)) {
@@ -156,30 +180,35 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
   return results;
 }
 
-export function checkMediaFileMissing(db: Database, dbDir?: string): CheckResult[] {
+export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResult[] {
+  // Use the is_missing flag set during import instead of calling existsSync per file.
+  // This avoids thousands of synchronous filesystem checks that block the event loop.
   const rows = queryAll<{ id: string; file_ref: string }>(db, `
-    SELECT id, file_ref FROM media WHERE file_ref IS NOT NULL AND file_ref != ''
+    SELECT id, file_ref FROM media
+    WHERE is_missing = 1 AND file_ref IS NOT NULL AND file_ref != ''
   `);
 
-  const results: CheckResult[] = [];
-  for (const row of rows) {
-    const absPath = dbDir ? path.resolve(dbDir, row.file_ref) : row.file_ref;
-    if (!existsSync(absPath)) {
-      // Find linked persons
-      const links = queryAll<{ entity_type: string; entity_id: string }>(db, `
-        SELECT entity_type, entity_id FROM media_links WHERE media_id = ?
-      `, [row.id]);
-      const personIds = links.filter(l => l.entity_type === 'person').map(l => l.entity_id);
+  if (rows.length === 0) return [];
 
-      results.push({
-        code: 'MEDIA_FILE_MISSING',
-        severity: 'warning',
-        message: `Mediafil saknas: ${row.file_ref}`,
-        messageParams: { filePath: row.file_ref },
-        personIds,
-      });
-    }
+  // Bulk-load all person links for missing media (avoids N+1)
+  const mediaIds = rows.map(r => r.id);
+  const placeholders = mediaIds.map(() => '?').join(',');
+  const linkRows = queryAll<{ media_id: string; entity_id: string }>(db, `
+    SELECT media_id, entity_id FROM media_links
+    WHERE media_id IN (${placeholders}) AND entity_type = 'person'
+  `, mediaIds);
+  const personsByMedia = new Map<string, string[]>();
+  for (const link of linkRows) {
+    const arr = personsByMedia.get(link.media_id);
+    if (arr) arr.push(link.entity_id);
+    else personsByMedia.set(link.media_id, [link.entity_id]);
   }
 
-  return results;
+  return rows.map(row => ({
+    code: 'MEDIA_FILE_MISSING' as const,
+    severity: 'warning' as const,
+    message: `Mediafil saknas: ${row.file_ref}`,
+    messageParams: { filePath: row.file_ref },
+    personIds: personsByMedia.get(row.id) ?? [],
+  }));
 }

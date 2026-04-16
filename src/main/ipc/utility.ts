@@ -69,7 +69,9 @@ export function registerUtilityHandlers(
     {
       const db = getDb();
       const dbDir = path.dirname(getCurrentDatabasePath());
+      let t0 = Date.now();
       const raw = checks.runAllChecks(db, dbDir);
+      console.log(`[checks] runAllChecks: ${Date.now() - t0}ms → ${raw.length} raw results`);
       // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
       // can return 20k+ results for large trees, making the name-resolution query very slow.
       const countByCode = new Map<string, number>();
@@ -79,8 +81,12 @@ export function registerUtilityHandlers(
         countByCode.set(r.code, n);
         return n <= 500;
       });
+      console.log(`[checks] capped to ${capped.length} results`);
       const allIds = [...new Set(capped.flatMap(r => r.personIds))];
+      console.log(`[checks] resolving ${allIds.length} person names`);
+      t0 = Date.now();
       const nameMap = persons.getPersonDisplayNames(db, allIds);
+      console.log(`[checks] getPersonDisplayNames: ${Date.now() - t0}ms`);
       return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
     }
   });

@@ -56,7 +56,7 @@ import type { GazetteerConfig } from '../place-gazetteers/types';
 // Public API
 // ---------------------------------------------------------------------------
 
-function runAllCheckFunctions(db: Database, dbDir?: string): CheckResult[] {
+function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?: boolean }): CheckResult[] {
   const results: CheckResult[] = [];
   console.log('[checks] runAllCheckFunctions starting');
   const t0 = Date.now();
@@ -98,19 +98,21 @@ function runAllCheckFunctions(db: Database, dbDir?: string): CheckResult[] {
   // E. Geographic
   run('checkSimultaneousDistantLocations', () => checkSimultaneousDistantLocations(db));
 
-  // E2. Gazetteer match quality
-  const configJson = getDbSetting(db, 'gazetteer_config');
-  const gazConfig: GazetteerConfig = configJson
-    ? JSON.parse(configJson)
-    : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
-  const imported = getImportedGazetteers(db);
-  const gazetteers = loadGazetteers(gazConfig, imported);
-  const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
-  const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
-  run('checkGazetteerMatchQuality', () => {
-    const raw = checkGazetteerMatchQuality(db, gazetteers);
-    return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
-  });
+  // E2. Gazetteer match quality (global — skipped for per-person checks)
+  if (!opts?.skipGlobal) {
+    run('checkGazetteerMatchQuality', () => {
+      const configJson = getDbSetting(db, 'gazetteer_config');
+      const gazConfig: GazetteerConfig = configJson
+        ? JSON.parse(configJson)
+        : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
+      const imported = getImportedGazetteers(db);
+      const gazetteers = loadGazetteers(gazConfig, imported);
+      const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
+      const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
+      const raw = checkGazetteerMatchQuality(db, gazetteers);
+      return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
+    });
+  }
 
   // F. Data Completeness
   run('checkNoName',                () => checkNoName(db));
@@ -122,7 +124,10 @@ function runAllCheckFunctions(db: Database, dbDir?: string): CheckResult[] {
   // G. Data Validation
   run('checkInvalidDates',          () => checkInvalidDates(db));
   run('checkUnrelatedPerson',       () => checkUnrelatedPerson(db));
-  run('checkMediaFileMissing',      () => checkMediaFileMissing(db, dbDir));
+  // Media file check is global — skipped for per-person checks
+  if (!opts?.skipGlobal) {
+    run('checkMediaFileMissing',      () => checkMediaFileMissing(db, dbDir));
+  }
   run('checkOrphanedSource',        () => checkOrphanedSource(db));
   run('checkTextControlChars',      () => checkTextControlChars(db));
 
@@ -135,5 +140,8 @@ export function runAllChecks(db: Database, dbDir?: string): CheckResult[] {
 }
 
 export function runChecksForPerson(db: Database, personId: string, dbDir?: string): CheckResult[] {
-  return runAllCheckFunctions(db, dbDir).filter(r => r.personIds.includes(personId));
+  // Skip expensive global checks (media file existence, gazetteer matching) that
+  // aren't person-scoped and cause multi-minute hangs on large databases.
+  return runAllCheckFunctions(db, dbDir, { skipGlobal: true })
+    .filter(r => r.personIds.includes(personId));
 }

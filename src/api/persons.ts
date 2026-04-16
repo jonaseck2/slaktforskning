@@ -262,14 +262,20 @@ const PERSON_LIST_QUERY = `${PERSON_LIST_BASE_QUERY} ORDER BY pn.surname, pn.giv
 export function listPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
   // Pass 1: sort + paginate with only name data — no birth/death subqueries.
   // Correlated subqueries on all N persons before LIMIT caused O(4N) lookups on large DBs.
+  // Use a derived table to find min sort_order per person, avoiding correlated subquery per row.
   const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname
     FROM persons p
+    LEFT JOIN (
+      SELECT person_id, MIN(sort_order) AS min_sort
+      FROM person_names
+      GROUP BY person_id
+    ) ms ON ms.person_id = p.id
     LEFT JOIN person_names pn
       ON pn.person_id = p.id
-      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+      AND pn.sort_order = ms.min_sort
     ORDER BY pn.surname, pn.given_name
     LIMIT ? OFFSET ?
   `, [limit, offset]);

@@ -1,5 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
-import { queryAll, queryOne } from './db';
+import { queryAll, queryOne, runSql } from './db';
 
 export function initializeSchema(db: Database): void {
   db.exec('PRAGMA journal_mode = WAL');
@@ -361,4 +361,8 @@ export function initializeSchema(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_events_type_datetype ON events(event_type, date_type);
     CREATE INDEX IF NOT EXISTS idx_person_names_person_sort ON person_names(person_id, sort_order);
   `);
+
+  // Drop bad index that confuses the query planner on listPersonsPage
+  runSql(db, 'DROP INDEX IF EXISTS idx_person_names_sort_name');
+
 }

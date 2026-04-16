@@ -67,7 +67,10 @@
       "mcp__claude_ai_Gmail__gmail_get_profile",
       "Bash(wait)",
       "Edit(/.claude/skills/mcp-dev/**)",
-      "Edit(/.claude/skills/electron-dev/**)"
+      "Edit(/.claude/skills/electron-dev/**)",
+      "Read(//Users/jonasahnstedt/Library/Application Support/slaktforskning/**)",
+      "Bash(tee /tmp/electron-startup.log)",
+      "Read(//Users/jonasahnstedt/Library/Application Support/Släktforskning/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/docs/plans",
