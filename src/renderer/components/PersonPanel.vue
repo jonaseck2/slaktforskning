@@ -311,7 +311,11 @@ async function onRelativeSaved() {
 function handleCheckFix(action: string) {
   switch (action) {
     case 'add-birth-event':
+      eventListRef.value?.openAddForm('birth');
+      break;
     case 'add-death-event':
+      eventListRef.value?.openAddForm('death');
+      break;
     case 'add-event':
       eventListRef.value?.openAddForm();
       break;

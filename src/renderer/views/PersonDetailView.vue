@@ -419,7 +419,11 @@ async function updateLiving(living: number) {
 function handleCheckFix(action: string) {
   switch (action) {
     case 'add-birth-event':
+      eventListRef.value?.openAddForm('birth');
+      break;
     case 'add-death-event':
+      eventListRef.value?.openAddForm('death');
+      break;
     case 'add-event':
       eventListRef.value?.openAddForm();
       break;
@@ -454,11 +458,9 @@ let cleanupHotkeys: (() => void) | undefined;
 
 onMounted(async () => {
   await load();
-  // Handle ?action= query param from QualityView navigation
-  const pendingAction = route.query.action as string | undefined;
-  if (pendingAction) {
-    router.replace({ path: route.path, query: {} });
-  }
+  // Action query param is handled by the watch(person) above — no need to clear it here.
+  // IMPORTANT: Do NOT call router.replace to strip the query param — it changes route.fullPath
+  // which is the component :key, causing the component to remount and destroy the modal.
   let debounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
     if (debounce) clearTimeout(debounce);
