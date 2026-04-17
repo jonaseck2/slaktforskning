@@ -249,5 +249,27 @@ Add link rules for MyHeritage, Geni, and other genealogy platforms. These are be
 
 ---
 
-*All four tracks from the 2026-04-11 competitor gap analysis are complete (A1-A5, B1-B5, C1-C4, D1-D3).*
+#### Design System Overhaul [planned]
+Full visual redesign: design tokens (3 color themes), 11 primitive components, all 28 views/panels/modals rebuilt on shared patterns. Three research perspectives (People/Places/Media) with right-side panel workbenches. Sidebar restructured into Research/Organize/Review workflow groups. New MediaPanel component. Settings page absorbs Database, Import/Export, Link Rules, Gazetteers.
+- Spec: [docs/superpowers/specs/2026-04-17-design-system-spec.md](docs/superpowers/specs/2026-04-17-design-system-spec.md)
+- Gap analysis: [plans/2026-04-17-competitor-gap-analysis-v2.md](plans/2026-04-17-competitor-gap-analysis-v2.md)
+
+#### Onboarding & Welcome Screen [backlog]
+First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder. Depends on design system being in place first.
+
+#### Face/Region Tagging UI [backlog]
+Drawing canvas in MediaLightbox or MediaPanel for creating face/region rectangles on images. Displaying existing regions as overlays. Person assignment popup. All API, IPC, MCP tools, i18n strings, and tests already exist (v0.64.0, v0.67.0) — only the Vue UI is missing.
+
+#### Wall Chart Generation UI [backlog]
+UI button/dialog to trigger wall chart generation from the app. Paper size selection, font customization, tiled PDF output. SVG generation API already exists (v0.62.0).
+
+#### Dark Mode Theme Refinement [backlog]
+Refine dark mode colors to work with the new theme system. Each theme (Forest/Nordic/Twilight) gets a proper dark variant with appropriate contrast and accent colors.
+
+#### Duplicate Merge Side-by-Side UI [backlog]
+Side-by-side person comparison view for duplicate detection. Show conflicting data with merge controls. API has `findDuplicates` and `mergePersons` — needs a visual comparison UI.
+
+---
+
+*All four tracks from the 2026-04-11 competitor gap analysis are complete (A1-A5, B1-B5, C1-C4, D1-D3). Next focus: design system overhaul for polish and consistency.*
 
