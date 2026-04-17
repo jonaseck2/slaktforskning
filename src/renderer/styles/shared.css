@@ -230,16 +230,19 @@
   z-index: 1000;
 }
 .modal {
-  background: white;
-  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  border-radius: var(--radius-lg);
   padding: 24px;
   width: 450px;
   max-width: 95vw;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 .modal h3 {
   margin: 0 0 16px;
   font-size: var(--font-lg);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
 }
 .modal form {
   display: flex;
@@ -252,7 +255,7 @@
   gap: 4px;
   font-size: var(--font-sm);
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
 }
 .modal form input[type='text'],
 .modal form input[type='url'],
@@ -260,22 +263,35 @@
 .modal form select,
 .modal form textarea {
   padding: 6px 8px;
-  border: 1px solid var(--color-border-input);
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   font-family: inherit;
+  color: var(--text-primary);
+  background: var(--surface);
+}
+.modal form input[type='text']:focus,
+.modal form input[type='url']:focus,
+.modal form input[type='number']:focus,
+.modal form select:focus,
+.modal form textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
 }
 .field-hint {
   display: block;
   font-size: var(--font-xs);
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   margin-top: 2px;
 }
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-sm);
   margin-top: 8px;
+  border-top: 1px solid var(--surface-border-subtle);
+  padding-top: var(--space-lg);
 }
 .modal-actions button {
   padding: 8px 16px;
