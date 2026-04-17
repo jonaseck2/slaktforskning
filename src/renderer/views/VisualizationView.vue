@@ -111,6 +111,7 @@
             :person-id="selectedPersonId ?? personId ?? null"
             :show-tree-btn="true"
             @relative-added="reloadChart"
+            @person-changed="reloadChart"
             @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
           />
         </div>
