@@ -78,7 +78,7 @@
         <div class="modal-actions">
           <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
           <button type="submit" :disabled="entryMode === 'existing' && !existingPersonId">
-            {{ $t('personDetail.addAndLink') }}
+            {{ entryMode === 'existing' ? $t('personDetail.linkExisting') : $t('personDetail.addAndLink') }}
           </button>
         </div>
       </form>

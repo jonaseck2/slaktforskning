@@ -104,6 +104,7 @@ export default {
     addChildTitle: 'Add Child',
     coupleSubtype: 'Relationship Type',
     addAndLink: 'Create and Link',
+    linkExisting: 'Link',
     detailsTitle: 'Person Details',
     statusLabel: 'Status',
     statusLiving: 'Living',

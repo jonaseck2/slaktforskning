@@ -341,10 +341,12 @@ async function deleteName(nameId: string) {
   if (!props.personId) return;
   await window.api.persons.deleteName(nameId);
   await loadNames(props.personId);
+  emit('person-changed');
 }
 
 async function reloadNames(id: string) {
   await loadNames(id);
+  emit('person-changed');
 }
 
 // ── Group actions ───────────────────────────────────────────────────────────

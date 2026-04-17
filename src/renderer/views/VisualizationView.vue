@@ -229,8 +229,15 @@ async function navigateTo(id: string) {
   } catch { /* ignore */ }
 }
 
-function showInTree(id: string) {
-  // Explicitly change the chart focal person (re-centers the chart)
+async function showInTree(id: string) {
+  // Update sidebar focus indicator
+  try {
+    const names = (await window.api.persons.getNames(id)) as { given_name: string; surname: string }[];
+    const n = names[0];
+    const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+    focusStore.set(id, name);
+  } catch { /* best-effort */ }
+  // Change the chart focal person (re-centers the chart)
   router.push('/visualisering/' + id);
 }
 
