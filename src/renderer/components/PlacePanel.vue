@@ -19,11 +19,7 @@
 
       <!-- Place section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('place')">
-          <span class="panel-chevron">{{ sections.place ? '▾' : '▸' }}</span>
-          {{ $t('places.detailsTitle') }}
-          <router-link :to="'/places/' + placeId" class="panel-section-header-action" @click.stop>{{ $t('common.edit') }}</router-link>
-        </button>
+        <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" :action-label="$t('common.edit')" @toggle="toggleSection('place')" @action="$router.push('/places/' + placeId)" />
         <div v-if="sections.place" class="panel-section-body">
           <div class="compact-form">
             <div class="compact-field">
@@ -88,10 +84,7 @@
 
       <!-- Address section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('address')">
-          <span class="panel-chevron">{{ sections.address ? '▾' : '▸' }}</span>
-          {{ $t('places.address') }}
-        </button>
+        <SectionHeader :title="$t('places.address')" :collapsed="!sections.address" @toggle="toggleSection('address')" />
         <div v-if="sections.address" class="panel-section-body">
           <div class="compact-form">
             <div class="compact-field">
@@ -136,10 +129,7 @@
 
       <!-- Hierarchy section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('children')">
-          <span class="panel-chevron">{{ sections.children ? '▾' : '▸' }}</span>
-          {{ $t('places.hierarchy') }}
-        </button>
+        <SectionHeader :title="$t('places.hierarchy')" :count="childPlaces.length" :collapsed="!sections.children" @toggle="toggleSection('children')" />
         <div v-if="sections.children" class="panel-section-body">
           <div v-if="ancestors.length === 0 && childPlaces.length === 0" class="panel-empty-section">—</div>
           <template v-else>
@@ -169,10 +159,7 @@
 
       <!-- Persons section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('persons')">
-          <span class="panel-chevron">{{ sections.persons ? '▾' : '▸' }}</span>
-          {{ $t('persons.title') }}
-        </button>
+        <SectionHeader :title="$t('persons.title')" :collapsed="!sections.persons" @toggle="toggleSection('persons')" />
         <div v-if="sections.persons" class="panel-section-body">
           <PlacePersonsSection :place-id="placeId!" />
         </div>
@@ -180,10 +167,7 @@
 
       <!-- Events section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('events')">
-          <span class="panel-chevron">{{ sections.events ? '▾' : '▸' }}</span>
-          {{ $t('panel.events') }}
-        </button>
+        <SectionHeader :title="$t('panel.events')" :collapsed="!sections.events" @toggle="toggleSection('events')" />
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
         </div>
@@ -191,10 +175,7 @@
 
       <!-- Citations section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('citations')">
-          <span class="panel-chevron">{{ sections.citations ? '▾' : '▸' }}</span>
-          {{ $t('sourceDetail.citations') }}
-        </button>
+        <SectionHeader :title="$t('sourceDetail.citations')" :collapsed="!sections.citations" @toggle="toggleSection('citations')" />
         <div v-if="sections.citations" class="panel-section-body">
           <PlaceCitationsSection :place-id="placeId!" />
         </div>
@@ -202,11 +183,7 @@
 
       <!-- Media section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('media')">
-          <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
-          {{ $t('media.title') }}
-          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()"><span aria-hidden="true">+ </span>{{ $t('media.attachShort') }}</span>
-        </button>
+        <SectionHeader :title="$t('media.title')" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
           <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" />
         </div>
@@ -214,10 +191,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('mediaTimeline')">
-          <span class="panel-chevron">{{ sections.mediaTimeline ? '▾' : '▸' }}</span>
-          {{ $t('mediaTimeline.title') }}
-        </button>
+        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="place" :entity-id="placeId!" />
         </div>
@@ -234,6 +208,8 @@ import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
+import SectionHeader from './ui/SectionHeader.vue';
+import AppButton from './ui/AppButton.vue';
 import { usePlacePanelSections } from '../composables/usePlacePanelSections';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
@@ -322,7 +298,7 @@ async function saveField(field: string, value: unknown) {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  background: var(--color-bg);
+  background: var(--surface);
   font-size: var(--font-sm);
 }
 
@@ -331,34 +307,34 @@ async function saveField(field: string, value: unknown) {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--color-text-faint);
+  color: var(--text-muted);
   font-size: var(--font-sm);
-  padding: 24px;
+  padding: var(--space-xl);
   text-align: center;
 }
 
 /* Header */
 .panel-header {
   display: flex;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--surface);
+  border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
 }
 .panel-header-content {
-  padding: 10px 14px;
+  padding: var(--space-sm) var(--space-md);
   flex: 1;
   min-width: 0;
 }
 .panel-name-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
 }
 .panel-name {
   font-size: var(--font-base);
-  font-weight: 600;
-  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -366,70 +342,34 @@ async function saveField(field: string, value: unknown) {
 }
 .place-type-badge {
   flex-shrink: 0;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
+  background: var(--surface-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
   padding: 1px 6px;
   font-size: var(--font-xs);
 }
 .panel-view-full {
   font-size: var(--font-xs);
-  color: var(--color-primary);
+  color: var(--accent);
   text-decoration: none;
 }
 .panel-view-full:hover { text-decoration: underline; }
 
 /* Sections */
 .panel-section {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
+  padding: 0 var(--space-md);
 }
-.panel-section-header {
-  width: 100%;
-  text-align: left;
-  background: var(--color-bg-subtle);
-  border: none;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.panel-section-header:hover { background: var(--color-bg-muted); }
-.panel-chevron { font-size: var(--font-xs); color: var(--color-text-faint); }
-.panel-section-count {
-  background: var(--color-bg-muted);
-  color: var(--color-text-muted);
-  border-radius: 10px;
-  padding: 0 6px;
-  font-size: var(--font-xs);
-}
-.panel-section-header-action {
-  margin-left: auto;
-  background: var(--color-primary);
-  color: white;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-block;
-  cursor: pointer;
-}
-.panel-section-header-action:hover { opacity: 0.85; }
-.panel-section-body { padding: 4px 0 8px; }
-.panel-empty-section { padding: 4px 14px; color: var(--color-text-faint); font-size: var(--font-xs); }
+.panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
+.panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }
 
 /* Compact form */
 .compact-form {
-  padding: 4px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 .compact-field {
   display: flex;
@@ -438,18 +378,18 @@ async function saveField(field: string, value: unknown) {
 }
 .compact-label {
   font-size: var(--font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  color: var(--color-text-subtle);
+  color: var(--text-muted);
   letter-spacing: 0.4px;
 }
 .compact-control {
   font-size: var(--font-xs);
-  padding: 4px 6px;
-  border: 1px solid var(--color-border-input);
-  border-radius: 4px;
-  background: var(--color-bg);
-  color: var(--color-text);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
@@ -457,13 +397,13 @@ async function saveField(field: string, value: unknown) {
 }
 .compact-control:focus {
   outline: none;
-  border-color: #2980b9;
+  border-color: var(--accent);
 }
 
 /* Hierarchy list */
 .hierarchy-list {
   list-style: none;
-  padding: 4px 14px;
+  padding: var(--space-xs) 0;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -473,14 +413,14 @@ async function saveField(field: string, value: unknown) {
   font-size: var(--font-xs);
 }
 .hierarchy-current {
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: var(--font-xs);
 }
 .hierarchy-children-label {
-  padding: 6px 14px 2px;
+  padding: var(--space-xs) 0 2px;
   font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--color-text-subtle);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }

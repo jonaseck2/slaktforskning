@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div class="media-layout">
+  <div class="media-main">
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
       <AppButton variant="primary" @click="attachFile"><span aria-hidden="true">+ </span>{{ $t('media.attach') }}</AppButton>
@@ -42,8 +43,9 @@
         v-for="(item, idx) in filteredItems"
         :key="item.id"
         class="gallery-card"
-        :class="{ 'missing-card': item.is_missing }"
-        @click="openLightbox(idx)"
+        :class="{ 'missing-card': item.is_missing, 'selected-card': selectedMediaId === item.id }"
+        @click="selectMedia(item.id)"
+        @dblclick="openLightbox(idx)"
         tabindex="0"
         @keydown.enter="openLightbox(idx)"
       >
@@ -95,7 +97,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, idx) in filteredItems" :key="item.id">
+        <tr v-for="(item, idx) in filteredItems" :key="item.id" :class="{ 'selected-row': selectedMediaId === item.id }" @click="selectMedia(item.id)">
           <td class="thumb-cell">
             <img
               v-if="thumbnails[item.id]"
@@ -146,12 +148,20 @@
       @link-changed="reload"
     />
   </div>
+  <MediaPanel
+    v-if="selectedMediaId"
+    :media-id="selectedMediaId"
+    class="media-panel-container"
+    @link-changed="reload"
+  />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MediaLightbox from '../components/MediaLightbox.vue';
+import MediaPanel from '../components/MediaPanel.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
@@ -207,6 +217,7 @@ const searchQuery = ref('');
 const thumbnails = ref<Record<string, string>>({});
 const lightboxVisible = ref(false);
 const lightboxIndex = ref(0);
+const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 
@@ -288,6 +299,10 @@ async function loadThumbnails(mediaItems: MediaItem[]) {
   }
 }
 
+function selectMedia(id: string) {
+  selectedMediaId.value = selectedMediaId.value === id ? null : id;
+}
+
 function openLightbox(idx: number) {
   lightboxIndex.value = idx;
   lightboxVisible.value = true;
@@ -327,6 +342,23 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <style scoped>
+.media-layout {
+  display: flex;
+  gap: var(--space-lg);
+  height: 100%;
+}
+.media-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+.media-panel-container {
+  width: 300px;
+  flex-shrink: 0;
+  border-left: 2px solid var(--accent);
+  overflow-y: auto;
+}
+
 .gallery-filter {
   margin-bottom: 12px;
 }
@@ -365,6 +397,13 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   border-color: var(--accent);
   box-shadow: var(--shadow-md);
   outline: none;
+}
+.gallery-card.selected-card {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.selected-row {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .gallery-card.missing-card {
   opacity: 0.6;
