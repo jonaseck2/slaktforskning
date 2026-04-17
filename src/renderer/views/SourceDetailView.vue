@@ -2,14 +2,19 @@
   <div v-if="source" class="source-detail">
     <div class="detail-header">
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('sourceDetail.back') }}</button>
-      <h2><LinkedText :text="source.title" /></h2>
+      <div class="header-row">
+        <h2><LinkedText :text="source.title" /></h2>
+        <AppBadge v-if="source.source_type" variant="event">{{ $t('sourceTypes.' + source.source_type) }}</AppBadge>
+      </div>
     </div>
 
     <!-- Source Fields -->
     <section class="detail-section" aria-labelledby="section-source-details">
-      <div class="section-header" tabindex="0" :data-narrate="$t('screenReader.navSourceDetail', { title: source.title || $t('common.unknown') })">
-        <h4 id="section-source-details">{{ $t('sourceDetail.title') }}</h4>
-      </div>
+      <SectionHeader
+        :title="$t('sourceDetail.title')"
+        tabindex="0"
+        :data-narrate="$t('screenReader.navSourceDetail', { title: source.title || $t('common.unknown') })"
+      />
       <div class="field-grid">
         <label>
           {{ $t('sources.sourceTitle') }}
@@ -45,10 +50,14 @@
 
     <!-- Citations Section -->
     <section class="detail-section" aria-labelledby="section-source-citations">
-      <div class="section-header" tabindex="0" :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length">
-        <h4 id="section-source-citations">{{ $t('sourceDetail.citations') }}</h4>
-        <button class="btn-add" @click="showCitationForm = true"><span aria-hidden="true">+ </span>{{ $t('sourceDetail.addCitation') }}</button>
-      </div>
+      <SectionHeader
+        :title="$t('sourceDetail.citations')"
+        :count="citations.length"
+        :action-label="$t('sourceDetail.addCitation')"
+        tabindex="0"
+        :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length"
+        @action="showCitationForm = true"
+      />
       <div v-if="citations.length === 0" class="empty-hint">{{ $t('sourceDetail.noCitations') }}</div>
       <table v-else class="data-table">
         <thead>
@@ -77,7 +86,7 @@
               </td>
               <td class="transcription-cell">{{ truncate(cit.transcription, 80) }}</td>
               <td>
-                <button class="btn-sm btn-delete" @click.stop="removeCitation(cit.id)">✕</button>
+                <AppButton variant="ghost" size="sm" @click.stop="removeCitation(cit.id)">✕</AppButton>
               </td>
             </tr>
           </template>
@@ -109,6 +118,9 @@ import { onBeforeRouteLeave } from 'vue-router';
 import CitationForm from '../components/CitationForm.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
 import LinkedText from '../components/LinkedText.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import SectionHeader from '../components/ui/SectionHeader.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
@@ -280,12 +292,18 @@ onBeforeRouteLeave(() => { stop(); });
   margin-bottom: 24px;
 }
 .detail-header h2 {
-  margin: 8px 0 0;
+  margin: 0;
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
 }
 .btn-back {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--accent);
   cursor: pointer;
   padding: 4px 0;
   font-size: var(--font-base);
@@ -296,17 +314,7 @@ onBeforeRouteLeave(() => { stop(); });
 .detail-section {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.section-header h4 {
-  margin: 0;
-  font-size: var(--font-md);
+  border-bottom: 1px solid var(--surface-border-subtle, #eee);
 }
 .field-grid {
   display: grid;
@@ -319,24 +327,24 @@ onBeforeRouteLeave(() => { stop(); });
   gap: 4px;
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
 }
 .field-grid input,
 .field-grid select {
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   font-family: inherit;
 }
 .entity-link {
-  color: #1565c0;
+  color: var(--accent);
   text-decoration: none;
   cursor: pointer;
 }
 .entity-link:hover { text-decoration: underline; }
 .transcription-cell {
-  color: #555;
+  color: var(--text-secondary);
   font-style: italic;
   max-width: 300px;
 }
@@ -346,8 +354,8 @@ onBeforeRouteLeave(() => { stop(); });
   font-size: var(--font-xs);
   white-space: nowrap;
 }
-.confidence-0 { background: var(--color-danger-bg); color: #991b1b; }
-.confidence-1 { background: #fef3c7; color: #92400e; }
-.confidence-2 { background: #e0f2fe; color: #075985; }
-.confidence-3 { background: #dcfce7; color: #166534; }
+.confidence-0 { background: var(--error-bg); color: var(--error-text); }
+.confidence-1 { background: var(--warning-bg); color: var(--warning-text); }
+.confidence-2 { background: var(--info-bg, #e0f2fe); color: var(--info-text, #075985); }
+.confidence-3 { background: var(--success-bg); color: var(--success-text); }
 </style>

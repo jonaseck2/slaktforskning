@@ -3,30 +3,33 @@
     <div class="detail-header">
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('personDetail.back') }}</button>
       <div class="header-row">
+        <AppAvatar
+          v-if="!profilePicUrl"
+          :given-name="primaryNameData?.given_name ?? ''"
+          :surname="primaryNameData?.surname ?? ''"
+          :sex="(person.sex as 'M' | 'F' | 'U')"
+          size="xl"
+        />
         <img
-          v-if="profilePicUrl"
+          v-else
           :src="profilePicUrl"
           class="profile-thumbnail"
           :alt="$t('media.profileAlt')"
         />
-        <div v-else class="profile-placeholder" :class="'sex-' + person.sex">
-          {{ person.sex === 'F' ? '♀' : person.sex === 'M' ? '♂' : '?' }}
-        </div>
         <div class="header-info">
           <h2>{{ primaryName }}</h2>
-          <span v-if="!person.living" class="deceased-badge">{{ $t('personDetail.deceased') }}</span>
-          <span v-if="person.living" class="status-text-label">{{ $t('persons.living') }}</span>
-          <button type="button" class="btn-view-tree" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</button>
-          <button type="button" class="btn-view-tree" @click="$router.push('/reports?tab=biography')">{{ $t('reports.tabBiography') }} →</button>
+          <AppBadge :variant="('sex-' + person.sex.toLowerCase()) as 'sex-m' | 'sex-f' | 'sex-u'">{{ $t('sex.' + person.sex) }}</AppBadge>
+          <AppBadge v-if="!person.living" variant="status">{{ $t('personDetail.deceased') }}</AppBadge>
+          <AppBadge v-if="person.living" variant="status">{{ $t('persons.living') }}</AppBadge>
+          <AppButton variant="ghost" size="sm" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</AppButton>
+          <AppButton variant="ghost" size="sm" @click="$router.push('/reports?tab=biography')">{{ $t('reports.tabBiography') }} →</AppButton>
         </div>
       </div>
     </div>
 
     <!-- Person Details -->
     <section class="detail-section" aria-labelledby="section-person-details">
-      <div class="section-header">
-        <h4 id="section-person-details">{{ $t('personDetail.detailsTitle') }}</h4>
-      </div>
+      <SectionHeader :title="$t('personDetail.detailsTitle')" />
       <div class="field-grid">
         <label>
           {{ $t('persons.sex') }}
@@ -56,10 +59,14 @@
 
     <!-- Names Section -->
     <section id="section-names" class="detail-section" aria-labelledby="section-person-names">
-      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })">
-        <h4 id="section-person-names">{{ $t('personDetail.names') }}</h4>
-        <button class="btn-add" @click="showNameForm = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addName') }}</button>
-      </div>
+      <SectionHeader
+        :title="$t('personDetail.names')"
+        :count="names.length"
+        :action-label="$t('personDetail.addName')"
+        tabindex="0"
+        :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })"
+        @action="showNameForm = true"
+      />
       <div v-if="names.length === 0" class="empty-hint">{{ $t('personDetail.noNames') }}</div>
       <PersonNamesTable v-else :names="names" @edit="openEditName" @delete="removeName" />
     </section>
@@ -71,38 +78,37 @@
 
     <!-- Timeline Section -->
     <section id="section-timeline" class="detail-section" aria-labelledby="section-person-timeline">
-      <div class="section-header">
-        <h4 id="section-person-timeline">{{ $t('personTimeline.title') }}</h4>
-      </div>
+      <SectionHeader :title="$t('personTimeline.title')" />
       <PersonTimeline ref="timelineRef" :person-id="person.id" :key="'timeline-' + dataVersionStore.version" />
     </section>
 
     <!-- Life Map Section -->
     <section v-if="hasGeoEvents" class="detail-section" aria-labelledby="section-person-map">
-      <div class="section-header">
-        <h4 id="section-person-map">{{ $t('map.personMap') }}</h4>
-      </div>
+      <SectionHeader :title="$t('map.personMap')" />
       <PersonMap :person-id="person.id" :key="'map-' + dataVersionStore.version" />
     </section>
 
     <!-- Identifiers Section -->
     <section id="section-identifiers" class="detail-section" aria-labelledby="section-person-identifiers">
-      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })">
-        <h4 id="section-person-identifiers">{{ $t('identifiers.title') }}</h4>
-        <button class="btn-add" @click="identifiersSectionRef?.openAddForm()"><span aria-hidden="true">+ </span>{{ $t('identifiers.add') }}</button>
-      </div>
+      <SectionHeader
+        :title="$t('identifiers.title')"
+        :action-label="$t('identifiers.add')"
+        tabindex="0"
+        :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })"
+        @action="identifiersSectionRef?.openAddForm()"
+      />
       <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="person.id" />
     </section>
 
     <!-- Relationships Section -->
     <section id="section-relationships" class="detail-section" aria-labelledby="section-person-relationships">
-      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
-        <h4 id="section-person-relationships">{{ $t('personDetail.relationships') }}</h4>
+      <div class="section-header-custom" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
+        <span class="section-title-label">{{ $t('personDetail.relationships') }}</span>
         <div class="rel-actions">
-          <button class="btn-add" @click="addRelatedMode = 'father'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addFather') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'mother'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addMother') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'spouse'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addSpouse') }}</button>
-          <button class="btn-add" @click="addRelatedMode = 'child'; showAddRelated = true"><span aria-hidden="true">+ </span>{{ $t('personDetail.addChild') }}</button>
+          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'father'; showAddRelated = true">{{ $t('personDetail.addFather') }}</AppButton>
+          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'mother'; showAddRelated = true">{{ $t('personDetail.addMother') }}</AppButton>
+          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</AppButton>
+          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</AppButton>
         </div>
       </div>
       <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
@@ -110,10 +116,12 @@
 
     <!-- Groups Section -->
     <section class="detail-section" aria-labelledby="section-person-groups">
-      <div class="section-header">
-        <h4 id="section-person-groups">{{ $t('groups.title') }}</h4>
-        <button v-if="!showGroupPicker" class="btn-add" @click="showGroupPicker = true"><span aria-hidden="true">+ </span>{{ $t('groups.addMember') }}</button>
-      </div>
+      <SectionHeader
+        :title="$t('groups.title')"
+        :count="personGroups.length"
+        :action-label="!showGroupPicker ? $t('groups.addMember') : ''"
+        @action="showGroupPicker = true"
+      />
       <div v-if="showGroupPicker" class="group-picker-row">
         <GroupPicker
           :person-id="personId"
@@ -128,27 +136,30 @@
 
     <!-- Media Section -->
     <section id="section-media" class="detail-section" aria-labelledby="section-person-media">
-      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionMedia', { count: 0, summary: '' })">
-        <h4 id="section-person-media">{{ $t('media.title') }}</h4>
-        <button class="btn-add" @click="mediaSectionRef?.attach()"><span aria-hidden="true">+ </span>{{ $t('media.attach') }}</button>
-      </div>
+      <SectionHeader
+        :title="$t('media.title')"
+        :action-label="$t('media.attach')"
+        tabindex="0"
+        :data-narrate="t('screenReader.sectionMedia', { count: 0, summary: '' })"
+        @action="mediaSectionRef?.attach()"
+      />
       <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
     </section>
 
     <!-- Media Timeline Section -->
     <section class="detail-section" aria-labelledby="section-media-timeline">
-      <div class="section-header">
-        <h4 id="section-media-timeline">{{ $t('mediaTimeline.title') }}</h4>
-      </div>
+      <SectionHeader :title="$t('mediaTimeline.title')" />
       <MediaTimeline entity-type="person" :entity-id="person.id" />
     </section>
 
     <!-- Research Tasks Section -->
     <section class="detail-section" aria-labelledby="section-person-tasks">
-      <div class="section-header">
-        <h4 id="section-person-tasks">{{ $t('researchTasks.title') }}</h4>
-        <button class="btn-add" @click="showAddTaskModal = true"><span aria-hidden="true">+ </span>{{ $t('researchTasks.addTask') }}</button>
-      </div>
+      <SectionHeader
+        :title="$t('researchTasks.title')"
+        :count="personTasks.length"
+        :action-label="$t('researchTasks.addTask')"
+        @action="showAddTaskModal = true"
+      />
       <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
       <ResearchTasksTable v-else :tasks="personTasks" @updated="loadPersonTasks" />
     </section>
@@ -163,9 +174,11 @@
 
     <!-- Quality Section -->
     <section id="section-checks" class="detail-section" aria-labelledby="section-person-quality">
-      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionChecks', { count: 0, summary: '' })">
-        <h4 id="section-person-quality">{{ $t('quality.nav') }}</h4>
-      </div>
+      <SectionHeader
+        :title="$t('quality.nav')"
+        tabindex="0"
+        :data-narrate="t('screenReader.sectionChecks', { count: 0, summary: '' })"
+      />
       <PersonChecksSection ref="checksSectionRef" :person-id="person.id" @fix="handleCheckFix" />
     </section>
 
@@ -217,6 +230,10 @@ import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
 import PersonNotesSection from '../components/PersonNotesSection.vue';
 import PersonMap from '../components/PersonMap.vue';
+import AppAvatar from '../components/ui/AppAvatar.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import SectionHeader from '../components/ui/SectionHeader.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -514,29 +531,13 @@ onBeforeRouteLeave(() => { stop(); });
   gap: 16px;
 }
 .profile-thumbnail {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  background: #f5f5f5;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-full, 50%);
+  border: 1px solid var(--surface-border);
   flex-shrink: 0;
 }
-.profile-placeholder {
-  width: 80px;
-  height: 80px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  color: #bbb;
-  flex-shrink: 0;
-}
-.profile-placeholder.sex-M { color: #6fa8dc; }
-.profile-placeholder.sex-F { color: #e06666; }
 .header-info {
   display: flex;
   align-items: center;
@@ -560,36 +561,10 @@ onBeforeRouteLeave(() => { stop(); });
 .sex-select.sex-M { background-color: var(--color-sex-m-bg); color: var(--color-sex-m-text); }
 .sex-select.sex-F { background-color: var(--color-sex-f-bg); color: var(--color-sex-f-text); }
 .sex-select.sex-U { background-color: var(--color-sex-u-bg); color: var(--color-sex-u-text); }
-.deceased-badge {
-  background: #fef3c7;
-  color: #92400e;
-  padding: 2px 10px;
-  border-radius: 10px;
-  font-size: var(--font-xs);
-}
-.btn-view-tree {
-  background: var(--color-bg-muted);
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  padding: 3px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-}
 .detail-section {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.section-header h4 {
-  margin: 0;
-  font-size: var(--font-md);
+  border-bottom: 1px solid var(--surface-border-subtle, #eee);
 }
 .field-grid {
   display: grid;
@@ -602,11 +577,11 @@ onBeforeRouteLeave(() => { stop(); });
   gap: 4px;
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
 }
 .field-grid select {
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   font-family: inherit;
@@ -617,33 +592,33 @@ onBeforeRouteLeave(() => { stop(); });
   gap: 4px;
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
   margin-top: 12px;
 }
 textarea {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-family: inherit;
   font-size: var(--font-base);
   resize: vertical;
 }
+.section-header-custom {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-sm, 8px) 0;
+}
+.section-title-label {
+  font-weight: var(--font-weight-bold, 700);
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  margin-right: auto;
+}
 .rel-actions {
   display: flex;
-  gap: 6px;
-}
-.btn-rel-add {
-  background: var(--color-bg-subtle);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  padding: 3px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-}
-.btn-rel-add:hover {
-  background: var(--color-bg-muted);
+  gap: 4px;
 }
 .group-picker-row {
   margin-bottom: 8px;

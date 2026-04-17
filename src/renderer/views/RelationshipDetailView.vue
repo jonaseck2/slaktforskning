@@ -3,16 +3,20 @@
     <div class="detail-header">
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('relationshipDetail.back') }}</button>
       <div class="header-row">
-        <h2>{{ $t('relationshipDetail.title') }} — {{ $t('relTypes.' + relationship.type) }}</h2>
-        <button v-if="relationship.type === 'couple'" type="button" class="btn-add" @click="$router.push('/reports?tab=familyNarrative&relationshipId=' + relationship.id)">{{ $t('reports.tabFamilyNarrative') }} →</button>
+        <h2>{{ $t('relationshipDetail.title') }}</h2>
+        <AppBadge variant="event">{{ $t('relTypes.' + relationship.type) }}</AppBadge>
+        <AppBadge v-if="relationship.subtype" variant="status">{{ $t((relationship.type === 'couple' ? 'coupleSubtypes.' : 'parentChildSubtypes.') + relationship.subtype) }}</AppBadge>
+        <AppButton v-if="relationship.type === 'couple'" variant="ghost" size="sm" @click="$router.push('/reports?tab=familyNarrative&relationshipId=' + relationship.id)">{{ $t('reports.tabFamilyNarrative') }} →</AppButton>
       </div>
     </div>
 
     <!-- Type & Subtype -->
     <section class="detail-section" aria-labelledby="section-rel-type">
-      <div class="section-header" tabindex="0" :data-narrate="$t('common.type') + ': ' + $t('relTypes.' + relationship.type)">
-        <h4 id="section-rel-type">{{ $t('common.type') }}</h4>
-      </div>
+      <SectionHeader
+        :title="$t('common.type')"
+        tabindex="0"
+        :data-narrate="$t('common.type') + ': ' + $t('relTypes.' + relationship.type)"
+      />
       <div class="type-fields">
         <label>
           {{ $t('common.type') }}
@@ -52,9 +56,11 @@
 
     <!-- Persons Section -->
     <section class="detail-section" aria-labelledby="section-rel-persons">
-      <div class="section-header" tabindex="0" :data-narrate="$t('relationshipDetail.persons')">
-        <h4 id="section-rel-persons">{{ $t('relationshipDetail.persons') }}</h4>
-      </div>
+      <SectionHeader
+        :title="$t('relationshipDetail.persons')"
+        tabindex="0"
+        :data-narrate="$t('relationshipDetail.persons')"
+      />
       <div class="persons-grid">
         <label>
           {{ person1Label }}
@@ -93,6 +99,9 @@ import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import PersonPicker from '../components/PersonPicker.vue';
 import EventList from '../components/EventList.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import SectionHeader from '../components/ui/SectionHeader.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts, resolvePersonDisplayName } from '../utils/nameUtils';
@@ -217,7 +226,7 @@ onBeforeRouteLeave(() => { stop(); });
 .btn-back {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--accent);
   cursor: pointer;
   padding: 4px 0;
   font-size: var(--font-base);
@@ -228,7 +237,7 @@ onBeforeRouteLeave(() => { stop(); });
 .header-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 8px;
 }
 .header-row h2 {
@@ -237,17 +246,7 @@ onBeforeRouteLeave(() => { stop(); });
 .detail-section {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.section-header h4 {
-  margin: 0;
-  font-size: var(--font-md);
+  border-bottom: 1px solid var(--surface-border-subtle, #eee);
 }
 .persons-grid {
   display: grid;
@@ -261,7 +260,7 @@ onBeforeRouteLeave(() => { stop(); });
   gap: 4px;
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
 }
 .type-fields {
   display: flex;
@@ -271,13 +270,13 @@ onBeforeRouteLeave(() => { stop(); });
 .type-fields select,
 .type-fields textarea {
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   font-family: inherit;
 }
 .empty {
-  color: #999;
+  color: var(--text-muted);
   padding: 40px;
   text-align: center;
 }
