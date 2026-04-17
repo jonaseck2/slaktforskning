@@ -517,6 +517,7 @@ export default {
     viewPerson: 'View',
     ignore: 'Ignore',
     unignore: 'Restore',
+    fix: 'Fix',
     confirm: 'Confirm',
     reject: 'Reject',
     viewPlace: 'View place',

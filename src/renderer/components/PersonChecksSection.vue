@@ -23,6 +23,11 @@
           <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
           <td class="actions-cell">
             <button
+              v-if="fixAction(r.code) && !isIgnored(r)"
+              class="btn-sm btn-fix"
+              @click="emit('fix', fixAction(r.code)!)"
+            >{{ $t('quality.fix') }}</button>
+            <button
               :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
               @click="toggleIgnore(r)"
             >{{ isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore') }}</button>
@@ -45,8 +50,32 @@ export interface CheckResult {
   personIds: string[];
 }
 
+export type FixAction =
+  | 'add-birth-event'
+  | 'add-death-event'
+  | 'add-name'
+  | 'add-father'
+  | 'add-mother'
+  | 'toggle-living'
+  | 'add-event';
+
+const FIX_ACTIONS: Record<string, FixAction> = {
+  NO_BIRTH_EVENT: 'add-birth-event',
+  UNSOURCED_BIRTH: 'add-birth-event',
+  NO_PARENTS: 'add-father',
+  NO_NAME: 'add-name',
+  NOT_LIVING_WITHOUT_DEATH: 'add-death-event',
+  UNSOURCED_DEATH: 'add-death-event',
+  LIVING_WITH_DEATH_EVENT: 'toggle-living',
+  DEATH_WITHOUT_BIRTH: 'add-birth-event',
+  UNRELATED_PERSON: 'add-father',
+};
+
 const { t } = useI18n();
 const props = defineProps<{ personId: string }>();
+const emit = defineEmits<{
+  fix: [action: FixAction];
+}>();
 
 const issues = ref<CheckResult[]>([]);
 
@@ -80,6 +109,10 @@ function checkMessage(r: CheckResult): string {
   return translated !== key ? translated : r.message;
 }
 
+function fixAction(code: string): FixAction | null {
+  return FIX_ACTIONS[code] ?? null;
+}
+
 async function load() {
   if (!window.api?.checks) return;
   issues.value = (await window.api.checks.forPerson(props.personId)) as CheckResult[];
@@ -108,4 +141,5 @@ watch(() => props.personId, load, { immediate: true });
 .ignored-text { color: #9ca3af; }
 .btn-ignore   { background: #e2e8f0; color: #4a5568; }
 .btn-unignore { background: #c6f6d5; color: #276749; }
+.btn-fix { background: #dbeafe; color: #1e40af; }
 </style>

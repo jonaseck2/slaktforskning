@@ -247,9 +247,23 @@ function focusPrevRow(e: KeyboardEvent): void {
   if (row?.matches('tr[tabindex]')) row.focus();
 }
 
+const FIX_ACTIONS: Record<string, string> = {
+  NO_BIRTH_EVENT: 'add-birth-event',
+  UNSOURCED_BIRTH: 'add-birth-event',
+  NO_PARENTS: 'add-father',
+  NO_NAME: 'add-name',
+  NOT_LIVING_WITHOUT_DEATH: 'add-death-event',
+  UNSOURCED_DEATH: 'add-death-event',
+  LIVING_WITH_DEATH_EVENT: 'toggle-living',
+  DEATH_WITHOUT_BIRTH: 'add-birth-event',
+  UNRELATED_PERSON: 'add-father',
+};
+
 function navigateTo(r: QualityResult) {
   if (r.personIds.length > 0) {
-    router.push('/persons/' + r.personIds[0]);
+    const action = FIX_ACTIONS[r.code];
+    const query = action ? { action } : undefined;
+    router.push({ path: '/persons/' + r.personIds[0], query });
   }
 }
 

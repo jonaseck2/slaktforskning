@@ -140,6 +140,8 @@ function onInput() {
         gazetteer: hit.gazetteer,
       });
     }
+    // Sort most specific (deepest hierarchy) first
+    gazSuggestions.sort((a, b) => b.pathNodes.length - a.pathNodes.length);
     gazetteerResults.value = gazSuggestions;
   }, 150);
 }
