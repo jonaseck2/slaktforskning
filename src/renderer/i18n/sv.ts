@@ -79,6 +79,9 @@ export default {
     filterAll: 'Alla',
     filterUnsourced: 'Utan källa',
     allSourced: 'Alla personer har minst en källhänvisning.',
+    emptyHint: 'Lägg till din första person för att börja bygga ditt släktträd.',
+    name: 'Namn',
+    info: 'Info',
   },
   personDetail: {
     deceased: 'Avliden',
