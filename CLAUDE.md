@@ -85,7 +85,7 @@ src/
 │   │   └── SourceDetailView.vue  # Source detail: editable fields, citations
 │   ├── components/
 │   │   ├── PersonPicker.vue      # Searchable person dropdown (typeahead)
-│   │   ├── DateInput.vue         # Compound genealogy date input
+│   │   ├── DateInput.vue         # YYYY-MM-DD date input with auto-advance
 │   │   ├── EventForm.vue         # Event create/edit modal
 │   │   ├── EventList.vue         # Event table with add/edit/delete
 │   │   └── CitationForm.vue      # Citation create modal
@@ -418,20 +418,19 @@ declare const window: Window & {
 
 Used for all create/edit forms. Stays in context (no page navigation).
 
+Always use `<BaseModal>` — it handles overlay, Escape key, and focus trap. Click-outside does NOT close modals. Submit buttons use action verbs: `$t('common.create')` for new, `$t('common.save')` for updates.
+
 ```vue
-<!-- Toggle visibility -->
-<div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
-  <div class="modal">
-    <h3>Title</h3>
-    <form @submit.prevent="handleSubmit">
-      <!-- fields -->
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" @click="showForm = false">Cancel</button>
-        <button type="submit">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
+<BaseModal v-if="showForm" @close="showForm = false" title-id="modal-title">
+  <h3 id="modal-title">Title</h3>
+  <form @submit.prevent="handleSubmit">
+    <!-- fields -->
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" @click="showForm = false">{{ $t('common.cancel') }}</button>
+      <button type="submit">{{ $t('common.create') }}</button>
+    </div>
+  </form>
+</BaseModal>
 ```
 
 ### List View Pattern
@@ -483,12 +482,13 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | Component | Props | Emits | Description |
 |-----------|-------|-------|-------------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
-| `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Compound date input. Shows `date_value_end` only when type is "between". Preserves original source text. |
+| `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Separate YYYY-MM-DD text inputs with auto-advance (4-digit year → month, 2-digit month → day). Shows end date only when type is "between". Preserves original source text. |
 | `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
 | `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `readonly?: boolean`, `hideHeader?: boolean`, `showPersons?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. `showPersons` adds a participant names column (used in PlacePanel). Uses `watch` for reactive reloading on prop changes. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
 | `ConfirmModal` | `visible`, `title`, `message` | `confirm`, `cancel` | Accessible delete confirmation modal |
 | `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
+| `SourcePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(source)` | Searchable autocomplete for sources. 150ms debounced search via `window.api.sources.search()`. Creates new source inline. Shows all sources on focus when field is empty. |
 | `PersonNamesTable` | `names: NameRow[]` | `edit(name)`, `delete(nameId)` | Names table with ★ primary indicator. Prop-driven. |
 | `PersonNameFormModal` | `personId: string`, `name: NameRow\|null` | `close`, `saved` | Add/edit name modal (`name=null` → add mode). |
 | `ResearchTasksTable` | `tasks: ResearchTaskRow[]`, `showPerson?: boolean` | `updated` | Inline-expand-to-edit task rows, status chip cycling, priority badge. Prop-driven. |
