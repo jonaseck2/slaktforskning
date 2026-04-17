@@ -148,6 +148,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.90.2 | QualityView infinite scroll pagination (100 results at a time) | — |
 | v0.91.0 | UX improvements: multi-token search, SourcePicker autocomplete, DateInput YYYY-MM-DD fields with auto-advance, modal redesign (no click-outside close, action verb buttons), EventForm source always visible with Save & Next keeping place/source, gazetteer auto-init, scroll zoom disabled on maps, name surname pre-fill, GEDCOM UTF-8 auto-detection, stable file dialog paths | — |
 | v0.91.1 | Fix: Add Person modal aligned with AddRelatedPersonModal pattern (select for sex, living checkbox, birth details), person changes (sex/living) propagate to visualization chart | — |
+| v0.91.2 | Fix: chart reloads on name changes, "Link" button for existing person mode, focus in tree updates sidebar, PlacePicker only creates leaf place | — |
 ---
 
 ## Research

@@ -191,34 +191,24 @@ async function select(place: PlaceRow) {
 }
 
 async function selectGazetteer(gaz: GazetteerSuggestion) {
-  // Create the full parent hierarchy from the gazetteer path
-  // e.g. Sverige > Blekinge län > Karlshamns kommun > Asarum
-  // Skip the country node (index 0) — start from county level
-  let parentId: string | null = null;
-  let leafPlace: PlaceRow | null = null;
+  // Only create the leaf node — don't create intermediate hierarchy nodes
+  // (county, municipality) that aren't directly connected to any entity
+  const leafNode = gaz.pathNodes[gaz.pathNodes.length - 1];
+  if (!leafNode) return;
 
-  for (let i = 1; i < gaz.pathNodes.length; i++) {
-    const node = gaz.pathNodes[i];
+  const place = (await window.api.places.findOrCreate(leafNode.name)) as PlaceRow;
 
-    // findOrCreate deduplicates by normalized name
-    const place = (await window.api.places.findOrCreate(node.name)) as PlaceRow;
-
-    // Fill in gazetteer data — only set fields that aren't already populated
-    const full = (await window.api.places.get(place.id)) as { id: string; parent_place_id: string | null; place_type: string | null; latitude: number | null; longitude: number | null };
-    const updates: Record<string, unknown> = {};
-    if (!full.parent_place_id && parentId) updates.parent_place_id = parentId;
-    if (!full.place_type) updates.place_type = node.type;
-    if (full.latitude == null) updates.latitude = node.lat;
-    if (full.longitude == null) updates.longitude = node.lon;
-    if (Object.keys(updates).length > 0) {
-      await window.api.places.update(place.id, updates);
-    }
-
-    parentId = place.id;
-    if (i === gaz.pathNodes.length - 1) leafPlace = place;
+  // Fill in gazetteer data — only set fields that aren't already populated
+  const full = (await window.api.places.get(place.id)) as { id: string; place_type: string | null; latitude: number | null; longitude: number | null };
+  const updates: Record<string, unknown> = {};
+  if (!full.place_type) updates.place_type = leafNode.type;
+  if (full.latitude == null) updates.latitude = leafNode.lat;
+  if (full.longitude == null) updates.longitude = leafNode.lon;
+  if (Object.keys(updates).length > 0) {
+    await window.api.places.update(place.id, updates);
   }
 
-  if (leafPlace) select(leafPlace);
+  select(place);
 }
 
 async function createNew() {

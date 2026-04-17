@@ -104,6 +104,7 @@ export default {
     addChildTitle: 'Lägg till barn',
     coupleSubtype: 'Relationstyp',
     addAndLink: 'Skapa och koppla',
+    linkExisting: 'Koppla',
     detailsTitle: 'Personuppgifter',
     statusLabel: 'Status',
     statusLiving: 'Levande',
