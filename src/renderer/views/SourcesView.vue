@@ -2,12 +2,10 @@
   <div>
     <div class="header">
       <h2>{{ $t('sources.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('sources.addSource') }}</button>
+      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('sources.addSource') }}</AppButton>
     </div>
     <p v-if="sourceList.length > 0" class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
-    <div v-if="sourceList.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('sources.title') })">
-      {{ $t('sources.emptyState') }}
-    </div>
+    <AppEmptyState v-if="sourceList.length === 0" icon="📚" :title="$t('sources.emptyState')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -38,9 +36,9 @@
         >
           <td><LinkedText :text="source.title" /></td>
           <td>{{ source.author || '—' }}</td>
-          <td><span v-if="source.source_type" class="type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span></td>
+          <td><AppBadge v-if="source.source_type" variant="event">{{ $t('sourceTypes.' + source.source_type) }}</AppBadge></td>
           <td class="actions-cell">
-            <button class="btn-sm btn-delete" @click.stop="removeSource(source.id)">✕</button>
+            <AppButton variant="ghost" size="sm" @click.stop="removeSource(source.id)">✕</AppButton>
           </td>
         </tr>
       </tbody>
@@ -80,8 +78,8 @@
             <input v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.create') }}</button>
+            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
+            <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
           </div>
         </form>
     </BaseModal>
@@ -94,6 +92,9 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import LinkedText from '../components/LinkedText.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { narrateSourceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -200,11 +201,4 @@ onActivated(async () => {
 <style scoped>
 /* Unique to SourcesView */
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
-.type-badge {
-  background: #ede9fe;
-  color: #5b21b6;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: var(--font-xs);
-}
 </style>

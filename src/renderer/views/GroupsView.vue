@@ -2,10 +2,10 @@
   <div>
     <div class="header">
       <h2>{{ $t('groups.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('groups.addGroup') }}</button>
+      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('groups.addGroup') }}</AppButton>
     </div>
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
-    <div v-if="groups.length === 0" class="empty">{{ $t('groups.emptyState') }}</div>
+    <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('groups.emptyState')" />
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
     <!-- Add Group Modal -->
@@ -21,8 +21,8 @@
             <textarea v-model="form.notes" rows="2" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
+            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
+            <AppButton variant="primary" type="submit">{{ $t('common.save') }}</AppButton>
           </div>
         </form>
     </BaseModal>
@@ -33,6 +33,8 @@
 import { ref, reactive, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useDataVersionStore } from '../stores/dataVersion';
 import GroupsTable from '../components/GroupsTable.vue';
 const dataVersionStore = useDataVersionStore();

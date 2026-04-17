@@ -2,7 +2,7 @@
   <div class="research-tasks">
     <div class="header">
       <h2>{{ $t('researchTasks.title') }}</h2>
-      <button class="btn-add" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('researchTasks.addTask') }}</button>
+      <AppButton variant="primary" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('researchTasks.addTask') }}</AppButton>
     </div>
 
     <p v-if="tasks.length > 0" class="count-label">
@@ -10,19 +10,10 @@
     </p>
 
     <!-- Status filter chips -->
-    <div class="filter-chips">
-      <button
-        v-for="f in filters"
-        :key="f.value"
-        :class="['chip', { active: activeFilter === f.value }]"
-        @click="activeFilter = f.value"
-      >
-        {{ f.label }}
-      </button>
-    </div>
+    <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
 
     <!-- Task list -->
-    <div v-if="filteredTasks.length === 0" class="empty">{{ $t('researchTasks.noTasks') }}</div>
+    <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('researchTasks.noTasks')" />
     <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->
@@ -60,8 +51,8 @@
             <textarea v-model="addForm.notes" rows="2" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddModal = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
+            <AppButton variant="secondary" @click="showAddModal = false">{{ $t('common.cancel') }}</AppButton>
+            <AppButton variant="primary" type="submit">{{ $t('common.save') }}</AppButton>
           </div>
         </form>
     </BaseModal>
@@ -74,6 +65,9 @@ import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import PersonPicker from '../components/PersonPicker.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 
 const { t } = useI18n();
 
@@ -101,11 +95,11 @@ const openCount = computed(() =>
 const showAddModal = ref(false);
 
 const filters = computed(() => [
-  { value: 'all',         label: `${t('researchTasks.filterAll')} (${tasks.value.length})` },
-  { value: 'open',        label: `${t('researchTasks.statuses.open')} (${tasks.value.filter(t => t.status === 'open').length})` },
-  { value: 'in_progress', label: `${t('researchTasks.statuses.in_progress')} (${tasks.value.filter(t => t.status === 'in_progress').length})` },
-  { value: 'done',        label: `${t('researchTasks.statuses.done')} (${tasks.value.filter(t => t.status === 'done').length})` },
-  { value: 'stopped',     label: `${t('researchTasks.statuses.stopped')} (${tasks.value.filter(t => t.status === 'stopped').length})` },
+  { value: 'all',         label: t('researchTasks.filterAll'), count: tasks.value.length },
+  { value: 'open',        label: t('researchTasks.statuses.open'), count: tasks.value.filter(t => t.status === 'open').length },
+  { value: 'in_progress', label: t('researchTasks.statuses.in_progress'), count: tasks.value.filter(t => t.status === 'in_progress').length },
+  { value: 'done',        label: t('researchTasks.statuses.done'), count: tasks.value.filter(t => t.status === 'done').length },
+  { value: 'stopped',     label: t('researchTasks.statuses.stopped'), count: tasks.value.filter(t => t.status === 'stopped').length },
 ]);
 
 const filteredTasks = computed(() => {

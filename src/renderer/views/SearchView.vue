@@ -10,12 +10,12 @@
           class="search-input"
           autofocus
         />
-        <button type="submit">{{ $t('search.button') }}</button>
+        <AppButton variant="primary" type="submit">{{ $t('search.button') }}</AppButton>
       </form>
     </div>
 
-    <div v-if="!searched" class="empty">{{ $t('search.emptyState') }}</div>
-    <div v-else-if="totalResults === 0" class="empty">{{ $t('search.noResults', { query: displayedQuery }) }}</div>
+    <AppEmptyState v-if="!searched" icon="🔍" :title="$t('search.emptyState')" />
+    <AppEmptyState v-else-if="totalResults === 0" icon="🔍" :title="$t('search.noResults', { query: displayedQuery })" />
 
     <template v-else>
       <!-- Persons -->
@@ -145,6 +145,8 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { narratePersonRow, narrateRelationshipRow, narrateSourceRow } from '../utils/screenReaderNarration';
@@ -260,26 +262,16 @@ onMounted(() => {
 .search-input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
   font-size: var(--font-base);
   font-family: inherit;
+  background: var(--surface);
+  color: var(--text-primary);
 }
 .search-input:focus {
   outline: none;
-  border-color: var(--color-primary);
-}
-button {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-base);
-}
-button:hover {
-  opacity: 0.9;
+  border-color: var(--accent);
 }
 .result-section {
   margin-bottom: 32px;
@@ -289,15 +281,15 @@ button:hover {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #666;
+  color: var(--text-muted);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 .count {
-  background: #e0e0e0;
-  color: #555;
+  background: var(--surface-hover);
+  color: var(--text-secondary);
   padding: 1px 7px;
   border-radius: 10px;
   font-size: var(--font-xs);
