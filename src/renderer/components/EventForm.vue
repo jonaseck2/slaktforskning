@@ -45,7 +45,7 @@
           <div v-for="cit in existingCitations" :key="cit.id" class="citation-row">
             <span class="citation-source">{{ cit.sourceTitle }}</span>
             <span v-if="cit.page" class="citation-page">{{ cit.page }}</span>
-            <button type="button" class="btn-sm btn-delete" @click="deleteCitation(cit.id)">✕</button>
+            <AppButton variant="ghost" size="sm" @click="deleteCitation(cit.id)">✕</AppButton>
           </div>
         </div>
 
@@ -65,16 +65,15 @@
           <span v-if="addedCount > 0" class="added-badge">
             {{ $t('events.eventsAdded', addedCount) }}
           </span>
-          <button type="button" class="btn-cancel" @click="$emit('close')">
+          <AppButton variant="secondary" @click="$emit('close')">
             {{ $t('common.cancel') }}
-          </button>
-          <button v-if="!editing" type="button" class="btn-secondary"
-            @click="saveAndAnother">
+          </AppButton>
+          <AppButton v-if="!editing" variant="secondary" @click="saveAndAnother">
             {{ $t('events.saveAndAnother') }}
-          </button>
-          <button type="submit">
+          </AppButton>
+          <AppButton variant="primary" type="submit">
             {{ editing ? $t('events.updateEvent') : $t('events.addEvent') }}
-          </button>
+          </AppButton>
         </div>
       </form>
   </BaseModal>
@@ -84,6 +83,7 @@
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
+import AppButton from './ui/AppButton.vue';
 import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
 import SourcePicker from './SourcePicker.vue';
@@ -277,11 +277,11 @@ async function saveAndAnother() {
 
 <style scoped>
 .source-section {
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--surface-border-subtle);
   padding-top: 8px;
 }
 .citations-section {
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--surface-border-subtle);
   padding-top: 8px;
   margin-bottom: 4px;
 }
@@ -289,13 +289,13 @@ async function saveAndAnother() {
   font-size: var(--font-xs);
   font-weight: 600;
   text-transform: uppercase;
-  color: #888;
+  color: var(--text-muted);
   letter-spacing: 0.4px;
   margin-bottom: 6px;
 }
 .citations-empty {
   font-size: var(--font-xs);
-  color: #aaa;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 .citation-row {
@@ -308,30 +308,19 @@ async function saveAndAnother() {
 .citation-source {
   flex: 1;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .citation-page {
-  color: #666;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 .added-badge {
   font-size: var(--font-xs);
-  color: var(--color-text-muted, #64748b);
+  color: var(--text-muted);
   margin-right: auto;
-}
-.btn-secondary {
-  padding: 6px 14px;
-  border: 1px solid var(--color-border, #cbd5e1);
-  background: var(--color-bg-subtle, #f8fafc);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-}
-.btn-secondary:hover {
-  background: var(--color-bg-hover, #f1f5f9);
 }
 </style>
