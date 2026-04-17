@@ -1,6 +1,35 @@
 import * as fs from 'fs';
 
 /**
+ * Check if a buffer looks like valid UTF-8 by scanning for multi-byte sequences.
+ * Returns true if at least one valid multi-byte sequence is found and no
+ * invalid sequences are detected (within a reasonable sample).
+ */
+function looksLikeUtf8(buf: Buffer): boolean {
+  const len = Math.min(buf.length, 4096);
+  let multiByteCount = 0;
+  for (let i = 0; i < len; ) {
+    const b = buf[i];
+    if (b < 0x80) { i++; continue; }
+    // 2-byte: 110xxxxx 10xxxxxx
+    if ((b & 0xE0) === 0xC0 && i + 1 < len && (buf[i + 1] & 0xC0) === 0x80) {
+      multiByteCount++; i += 2; continue;
+    }
+    // 3-byte: 1110xxxx 10xxxxxx 10xxxxxx
+    if ((b & 0xF0) === 0xE0 && i + 2 < len && (buf[i + 1] & 0xC0) === 0x80 && (buf[i + 2] & 0xC0) === 0x80) {
+      multiByteCount++; i += 3; continue;
+    }
+    // 4-byte: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+    if ((b & 0xF8) === 0xF0 && i + 3 < len && (buf[i + 1] & 0xC0) === 0x80 && (buf[i + 2] & 0xC0) === 0x80 && (buf[i + 3] & 0xC0) === 0x80) {
+      multiByteCount++; i += 4; continue;
+    }
+    // Invalid UTF-8 sequence — not UTF-8
+    return false;
+  }
+  return multiByteCount > 0;
+}
+
+/**
  * Read a GEDCOM file from disk with correct character encoding.
  *
  * GEDCOM files declare their encoding in the HEAD record:
@@ -47,6 +76,13 @@ export function readGedcomFile(filePath: string): string {
   const gedChar = charMatch?.[1]?.trim().toUpperCase() ?? '';
 
   if (gedChar === 'UTF-8') {
+    return buf.toString('utf-8');
+  }
+
+  // Heuristic: if the file looks like valid UTF-8 with multi-byte sequences,
+  // decode as UTF-8 even without a BOM or CHAR tag. Many modern programs
+  // (e.g. Holger 8) export UTF-8 without declaring it.
+  if (looksLikeUtf8(buf)) {
     return buf.toString('utf-8');
   }
 

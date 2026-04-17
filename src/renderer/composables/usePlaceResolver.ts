@@ -20,9 +20,16 @@ export function usePlaceResolver() {
   async function ensureLoaded() {
     if (configLoaded) { ready.value = true; return; }
     const raw = (await window.api.db.getSetting('gazetteer_config')) as string | null;
-    const config: GazetteerConfig = raw
-      ? JSON.parse(raw) as GazetteerConfig
-      : { enabledGazetteers: [] };
+    let config: GazetteerConfig;
+    if (raw) {
+      config = JSON.parse(raw) as GazetteerConfig;
+    } else {
+      // Default: enable all bundled gazetteers on new databases
+      const bundledIds = getAllGazetteers().map(g => g.id);
+      config = { enabledGazetteers: bundledIds };
+      // Persist so it stays consistent with GazetteersView
+      await window.api.db.setSetting('gazetteer_config', JSON.stringify(config));
+    }
     const imported = (await window.api.gazetteers.getImported()) as Gazetteer[];
     gazetteersRef = loadGazetteers(config, imported);
     configLoaded = true;

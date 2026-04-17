@@ -85,7 +85,21 @@ export function deletePerson(db: Database, id: string): boolean {
 }
 
 export function searchPersons(db: Database, query: string): (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[] {
+  // Split query into tokens so "Linda Ahnstedt" matches "Eva Linda* Marie f. Ahnstedt"
+  const tokens = query.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [];
+
+  // Each token must match at least one name field (given_name, surname, preferred_name) on ANY name row
+  const tokenClauses = tokens.map(() =>
+    `EXISTS (
+       SELECT 1 FROM person_names n
+       WHERE n.person_id = p.id
+         AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
+     )`
+  ).join(' AND ');
   const like = `%${query}%`;
+  const tokenParams = tokens.flatMap(t => { const l = `%${t}%`; return [l, l, l]; });
+
   return queryAll<Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
@@ -93,13 +107,9 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
     WHERE p.notes LIKE ?
-       OR EXISTS (
-         SELECT 1 FROM person_names n
-         WHERE n.person_id = p.id
-           AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
-       )
+       OR (${tokenClauses})
     ORDER BY pn.surname, pn.given_name
-  `, [like, like, like, like]);
+  `, [like, ...tokenParams]);
 }
 
 export function addPersonName(
@@ -395,17 +405,25 @@ export function countUnsourcedPersons(db: Database): number {
 }
 
 export function searchPersonsWithDetails(db: Database, query: string): PersonListItem[] {
+  const tokens = query.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [];
+
+  const tokenClauses = tokens.map(() =>
+    `EXISTS (
+       SELECT 1 FROM person_names n
+       WHERE n.person_id = p.id
+         AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
+     )`
+  ).join(' AND ');
   const like = `%${query}%`;
+  const tokenParams = tokens.flatMap(t => { const l = `%${t}%`; return [l, l, l]; });
+
   return queryAll<PersonListItem>(db, `
     ${PERSON_LIST_BASE_QUERY}
     WHERE p.notes LIKE ?
-       OR EXISTS (
-         SELECT 1 FROM person_names n
-         WHERE n.person_id = p.id
-           AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
-       )
+       OR (${tokenClauses})
     ORDER BY pn.surname, pn.given_name
-  `, [like, like, like, like]);
+  `, [like, ...tokenParams]);
 }
 
 export function getPersonDisplayNames(db: Database, ids: string[]): Map<string, string> {

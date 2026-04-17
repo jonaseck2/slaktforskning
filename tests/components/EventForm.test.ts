@@ -14,7 +14,7 @@ const editingEvent = {
   description: '',
 };
 
-describe('EventForm optional source section', () => {
+describe('EventForm source section', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (window as unknown as { api: unknown }).api = {
@@ -27,31 +27,32 @@ describe('EventForm optional source section', () => {
       sources: {
         list: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Church Records' }]),
         get: vi.fn().mockResolvedValue({ title: 'Church Records' }),
+        search: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Church Records' }]),
       },
     };
   });
 
-  it('shows source toggle when creating a new event', async () => {
+  it('shows source section when creating a new event', async () => {
     const wrapper = mount(EventForm, {
       global: { plugins: [i18n] },
       props: { personId: 'p1' },
     });
     await flushPromises();
 
-    expect(wrapper.find('.source-toggle').exists()).toBe(true);
+    expect(wrapper.find('.source-section').exists()).toBe(true);
   });
 
-  it('shows source toggle when editing an existing event', async () => {
+  it('shows source section when editing an existing event', async () => {
     const wrapper = mount(EventForm, {
       global: { plugins: [i18n] },
       props: { personId: 'p1', editingEvent },
     });
     await flushPromises();
 
-    expect(wrapper.find('.source-toggle').exists()).toBe(true);
+    expect(wrapper.find('.source-section').exists()).toBe(true);
   });
 
-  it('creates a citation linked to the event when source is selected', async () => {
+  it('creates a citation linked to the event when source is provided', async () => {
     const mockEventsCreate = vi.fn().mockResolvedValue({ id: 'new-evt' });
     const mockCitationsCreate = vi.fn().mockResolvedValue({ id: 'new-cit' });
     (window as unknown as { api: unknown }).api = {
@@ -61,6 +62,7 @@ describe('EventForm optional source section', () => {
       sources: {
         list: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Church Records' }]),
         get: vi.fn().mockResolvedValue({ title: 'Church Records' }),
+        search: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Church Records' }]),
       },
     };
 
@@ -70,17 +72,15 @@ describe('EventForm optional source section', () => {
     });
     await flushPromises();
 
-    // Set event type (first select)
+    // Set event type
     await wrapper.find('select').setValue('birth');
 
-    // Check the "Add Source" checkbox
-    await wrapper.find('.source-toggle input[type="checkbox"]').setValue(true);
-    await wrapper.vm.$nextTick();
-
-    // Source picker appears after event-type select and date-type select (from DateInput)
-    const selects = wrapper.findAll('select');
-    // selects[0] = event type, selects[1] = date type (DateInput), selects[2] = source
-    await selects[selects.length - 1].setValue('src-1');
+    // Set source via the SourcePicker's internal model
+    const sourcePicker = wrapper.findComponent({ name: 'SourcePicker' });
+    if (sourcePicker.exists()) {
+      sourcePicker.vm.$emit('update:modelValue', 'src-1');
+      await wrapper.vm.$nextTick();
+    }
 
     await wrapper.find('form').trigger('submit');
     await flushPromises();

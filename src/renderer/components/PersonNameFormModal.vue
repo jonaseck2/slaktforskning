@@ -50,7 +50,7 @@
         </label>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-          <button type="submit">{{ name ? $t('common.save') : $t('personDetail.addNameTitle') }}</button>
+          <button type="submit">{{ name ? $t('common.save') : $t('common.create') }}</button>
         </div>
       </form>
   </BaseModal>
@@ -66,6 +66,7 @@ import type { NameRow } from './PersonNamesTable.vue';
 const props = defineProps<{
   personId: string;
   name: NameRow | null;
+  defaultSurname?: string;
 }>();
 
 const emit = defineEmits<{
@@ -87,7 +88,7 @@ const form = reactive({
 
 watch(() => props.name, (n) => {
   form.given_name = n?.given_name ?? '';
-  form.surname = n?.surname ?? '';
+  form.surname = n?.surname ?? (props.defaultSurname || '');
   form.name_type = n?.name_type ?? 'married';
   form.name_prefix = n?.name_prefix ?? '';
   form.name_suffix = n?.name_suffix ?? '';

@@ -95,7 +95,7 @@
     </div>
 
     <!-- Add custom rule modal -->
-    <div v-if="showAddModal" class="modal-overlay" @mousedown.self="closeAddModal">
+    <div v-if="showAddModal" class="modal-overlay">
       <div class="modal">
         <h3>{{ $t('linkRules.addRule') }}</h3>
         <form @submit.prevent="submitAddRule">
@@ -134,7 +134,7 @@
       </div>
     </div>
     <!-- View rule modal (read-only) -->
-    <div v-if="viewingRule" class="modal-overlay" @mousedown.self="viewingRule = null">
+    <div v-if="viewingRule" class="modal-overlay">
       <div class="modal">
         <h3>{{ viewingRule.name }}</h3>
         <form @submit.prevent>

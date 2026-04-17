@@ -39,15 +39,16 @@ export function registerMediaHandlers(
 
   wrapHandler('media:attach', async (data) => {
     const opts = data as { entityType?: string; entityId?: string } | undefined;
+    const dbDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showOpenDialog({
       title: 'Välj mediafil',
+      defaultPath: dbDir,
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
 
     const srcPath = result.filePaths[0];
     const dbPath = getCurrentDatabasePath();
-    const dbDir = path.dirname(dbPath);
     const mediaFolder = mediaFolderName(dbPath);
     const mediaDir = path.join(dbDir, mediaFolder);
     fs.mkdirSync(mediaDir, { recursive: true });

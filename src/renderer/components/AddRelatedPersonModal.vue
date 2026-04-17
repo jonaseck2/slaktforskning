@@ -54,20 +54,12 @@
             <label>{{ $t('addRelated.birthPlace') }}
               <PlacePicker v-model="birthForm.place_id" />
             </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="addBirthSource" />{{ $t('addRelated.addSource') }}
+            <label>{{ $t('citations.source') }}
+              <SourcePicker v-model="birthSourceForm.source_id" />
             </label>
-            <template v-if="addBirthSource">
-              <label>{{ $t('addRelated.addSource') }}
-                <select v-model="birthSourceForm.source_id">
-                  <option value="">{{ $t('addRelated.sourcePlaceholder') }}</option>
-                  <option v-for="s in sources" :key="s.id" :value="s.id">{{ s.title }}</option>
-                </select>
-              </label>
-              <label>{{ $t('addRelated.page') }}
-                <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
-              </label>
-            </template>
+            <label>{{ $t('addRelated.page') }}
+              <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
+            </label>
           </details>
         </template>
 
@@ -100,6 +92,7 @@ import BaseModal from './BaseModal.vue';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
+import SourcePicker from './SourcePicker.vue';
 import { useToast } from '../composables/useToast';
 import { useBirthEventCreation } from '../composables/useBirthEventCreation';
 import { useSourceSession } from '../stores/sourceSession';
@@ -163,16 +156,11 @@ const birthForm = reactive({
   date_original: '',
   place_id: null as string | null,
 });
-const addBirthSource = ref(false);
-const birthSourceForm = reactive({ source_id: '', page: '' });
-const sources = ref<{ id: string; title: string }[]>([]);
+const birthSourceForm = reactive({ source_id: null as string | null, page: '' });
 
 onMounted(async () => {
-  if (window.api?.sources) {
-    sources.value = (await window.api.sources.list()) as { id: string; title: string }[];
-    if (sourceSession.lastSourceId) {
-      birthSourceForm.source_id = sourceSession.lastSourceId;
-    }
+  if (sourceSession.lastSourceId) {
+    birthSourceForm.source_id = sourceSession.lastSourceId;
   }
 });
 
@@ -193,16 +181,15 @@ async function save() {
       targetPersonId = newPerson.id;
 
       // Create birth event if any birth data was provided
-      const usedSourceId = addBirthSource.value ? birthSourceForm.source_id || undefined : undefined;
       await createBirthEvent(targetPersonId, {
         date_value: birthForm.date_value || undefined,
         date_original: birthForm.date_original || undefined,
         place_id: birthForm.place_id,
-        source_id: usedSourceId,
-        page: addBirthSource.value ? birthSourceForm.page : undefined,
+        source_id: birthSourceForm.source_id || undefined,
+        page: birthSourceForm.page || undefined,
       });
-      if (usedSourceId) {
-        sourceSession.setLastUsed(usedSourceId, birthSourceForm.page);
+      if (birthSourceForm.source_id) {
+        sourceSession.setLastUsed(birthSourceForm.source_id, birthSourceForm.page);
       }
     }
 

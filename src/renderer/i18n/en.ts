@@ -55,7 +55,7 @@ export default {
   },
   persons: {
     title: 'Persons',
-    addPerson: 'Person',
+    addPerson: 'Add Person',
     emptyState: 'No persons yet.',
     givenName: 'Given Name (full)',
     givenNameHint: 'Mark preferred name with * or ! after it, e.g. Eva Linda* Marie',
@@ -145,6 +145,7 @@ export default {
     url: 'URL',
     urlPlaceholder: 'https://\u2026',
     confirmDelete: 'Delete this source? This cannot be undone.',
+    createNew: 'Create "{name}"',
   },
   sourceDetail: {
     title: 'Source Details',
@@ -170,7 +171,7 @@ export default {
   events: {
     title: 'Events',
     event: 'Event',
-    addEvent: 'Event',
+    addEvent: 'Create',
     noEvents: 'No events recorded.',
     date: 'Date',
     description: 'Description',
@@ -190,9 +191,11 @@ export default {
     addSourceOptional: 'Source (optional)',
     cause: 'Cause',
     causePlaceholder: 'e.g. heart attack',
-    updateEvent: 'Update Event',
+    updateEvent: 'Save',
     saveAndAnother: 'Save & Next',
     eventsAdded: '{count} event added | {count} events added',
+    commonTypes: 'Common',
+    allTypes: 'All',
   },
   citations: {
     title: 'Citations',
@@ -214,6 +217,9 @@ export default {
   dateInput: {
     to: 'to',
     originalPlaceholder: "Original text (e.g. 'abt. 1845')",
+    year: 'YYYY',
+    month: 'MM',
+    day: 'DD',
   },
   datePrefix: {
     about: 'abt. ',

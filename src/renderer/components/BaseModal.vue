@@ -1,6 +1,6 @@
 <!-- src/renderer/components/BaseModal.vue -->
 <template>
-  <div class="modal-overlay" role="presentation" @mousedown.self="$emit('close')">
+  <div class="modal-overlay" role="presentation">
     <div
       ref="modalRef"
       class="modal"
