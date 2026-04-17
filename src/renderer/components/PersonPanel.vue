@@ -8,9 +8,12 @@
     <template v-else-if="person">
       <!-- Header -->
       <div class="panel-header">
-        <div class="panel-sex-bar" :style="{ background: sexColor }">
-          <span class="sex-indicator-label">{{ person.sex }}</span>
-        </div>
+        <AppAvatar
+          :given-name="primaryName?.given_name ?? ''"
+          :surname="primaryName?.surname ?? ''"
+          :sex="person.sex"
+          size="lg"
+        />
         <div class="panel-header-content">
           <div class="panel-name-row">
             <div class="panel-name">
@@ -21,28 +24,24 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-            <button v-if="showTreeBtn" class="btn-tree-inline" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</button>
+            <AppButton v-if="showTreeBtn" variant="primary" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
           </div>
           <div class="panel-lifelines">
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
           <div class="panel-add-relative-btns">
-            <button class="btn-dark" @click="openAddRelative('father')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addFather') }}</button>
-            <button class="btn-dark" @click="openAddRelative('mother')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addMother') }}</button>
-            <button class="btn-dark" @click="openAddRelative('spouse')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addSpouse') }}</button>
-            <button class="btn-dark" @click="openAddRelative('child')"><span aria-hidden="true">+ </span>{{ $t('personDetail.addChild') }}</button>
+            <AppButton variant="secondary" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
+            <AppButton variant="secondary" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
+            <AppButton variant="secondary" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
+            <AppButton variant="secondary" size="sm" @click="openAddRelative('child')">+ {{ $t('personDetail.addChild') }}</AppButton>
           </div>
         </div>
       </div>
 
       <!-- Person section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('person')">
-          <span class="panel-chevron">{{ sections.person ? '▾' : '▸' }}</span>
-          Person
-          <router-link :to="'/persons/' + personId" class="panel-section-header-action" @click.stop>{{ $t('common.edit') }}</router-link>
-        </button>
+        <SectionHeader :title="'Person'" :collapsed="!sections.person" :action-label="$t('common.edit')" @toggle="toggleSection('person')" @action="$router.push('/persons/' + personId)" />
         <div v-if="sections.person" class="panel-section-body">
           <div class="compact-form">
             <div class="compact-field">
@@ -70,11 +69,7 @@
 
       <!-- Namen section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('names')">
-          <span class="panel-chevron">{{ sections.names ? '▾' : '▸' }}</span>
-          {{ $t('personDetail.names') }}
-          <span class="panel-section-header-action" @click.stop="openNameForm(null)"><span aria-hidden="true">+ </span>{{ $t('personDetail.addName') }}</span>
-        </button>
+        <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" :action-label="'+ ' + $t('personDetail.addName')" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
           <div v-if="names.length === 0" class="panel-empty-section">—</div>
           <PersonNamesTable v-else :names="names" @edit="openNameForm" @delete="deleteName" />
@@ -83,11 +78,7 @@
 
       <!-- Händelser section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('events')">
-          <span class="panel-chevron">{{ sections.events ? '▾' : '▸' }}</span>
-          {{ $t('panel.events') }}
-          <span class="panel-section-header-action" @click.stop="eventListRef?.openAddForm()"><span aria-hidden="true">+ </span>{{ $t('events.event') }}</span>
-        </button>
+        <SectionHeader :title="$t('panel.events')" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :person-id="personId" hide-header />
         </div>
@@ -95,10 +86,7 @@
 
       <!-- Timeline section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('timeline')">
-          <span class="panel-chevron">{{ sections.timeline ? '▾' : '▸' }}</span>
-          {{ $t('personTimeline.title') }}
-        </button>
+        <SectionHeader :title="$t('personTimeline.title')" :collapsed="!sections.timeline" @toggle="toggleSection('timeline')" />
         <div v-if="sections.timeline" class="panel-section-body">
           <PersonTimeline :person-id="personId!" />
         </div>
@@ -106,11 +94,7 @@
 
       <!-- Identifiers section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('identifiers')">
-          <span class="panel-chevron">{{ sections.identifiers ? '▾' : '▸' }}</span>
-          {{ $t('identifiers.title') }}
-          <span class="panel-section-header-action" @click.stop="identifiersSectionRef?.openAddForm()"><span aria-hidden="true">+ </span>{{ $t('identifiers.add') }}</span>
-        </button>
+        <SectionHeader :title="$t('identifiers.title')" :collapsed="!sections.identifiers" :action-label="'+ ' + $t('identifiers.add')" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
         <div v-if="sections.identifiers" class="panel-section-body">
           <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
         </div>
@@ -118,10 +102,7 @@
 
       <!-- Relationer section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('relationships')">
-          <span class="panel-chevron">{{ sections.relationships ? '▾' : '▸' }}</span>
-          {{ $t('personDetail.relationships') }}
-        </button>
+        <SectionHeader :title="$t('personDetail.relationships')" :collapsed="!sections.relationships" @toggle="toggleSection('relationships')" />
         <div v-if="sections.relationships" class="panel-section-body">
           <PersonRelationshipsSection ref="relSectionRef" :person-id="personId!" />
         </div>
@@ -129,11 +110,7 @@
 
       <!-- Grupper section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('groups')">
-          <span class="panel-chevron">{{ sections.groups ? '▾' : '▸' }}</span>
-          {{ $t('groups.title') }}
-          <span class="panel-section-header-action" @click.stop="showGroupPicker = !showGroupPicker"><span aria-hidden="true">+ </span>{{ $t('groups.addGroupShort') }}</span>
-        </button>
+        <SectionHeader :title="$t('groups.title')" :count="groups.length" :collapsed="!sections.groups" :action-label="'+ ' + $t('groups.addGroupShort')" @toggle="toggleSection('groups')" @action="showGroupPicker = !showGroupPicker" />
         <div v-if="sections.groups" class="panel-section-body">
           <div v-if="showGroupPicker && personId" class="panel-group-picker-wrap">
             <GroupPicker
@@ -150,11 +127,7 @@
 
       <!-- Media section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('media')">
-          <span class="panel-chevron">{{ sections.media ? '▾' : '▸' }}</span>
-          {{ $t('media.title') }}
-          <span class="panel-section-header-action" @click.stop="mediaSectionRef?.attach()"><span aria-hidden="true">+ </span>{{ $t('media.attachShort') }}</span>
-        </button>
+        <SectionHeader :title="$t('media.title')" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
           <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
         </div>
@@ -162,10 +135,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('mediaTimeline')">
-          <span class="panel-chevron">{{ sections.mediaTimeline ? '▾' : '▸' }}</span>
-          {{ $t('mediaTimeline.title') }}
-        </button>
+        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="person" :entity-id="personId!" />
         </div>
@@ -173,11 +143,7 @@
 
       <!-- Forskning section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('research')">
-          <span class="panel-chevron">{{ sections.research ? '▾' : '▸' }}</span>
-          {{ $t('researchTasks.nav') }}
-          <span class="panel-section-header-action" @click.stop="openTaskForm()"><span aria-hidden="true">+ </span>{{ $t('researchTasks.nav') }}</span>
-        </button>
+        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.nav')" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
           <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
@@ -186,10 +152,7 @@
 
       <!-- Quality section -->
       <div class="panel-section">
-        <button class="panel-section-header" @click="toggleSection('quality')">
-          <span class="panel-chevron">{{ sections.quality ? '▾' : '▸' }}</span>
-          {{ $t('quality.nav') }}
-        </button>
+        <SectionHeader :title="$t('quality.nav')" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
         <div v-if="sections.quality" class="panel-section-body">
           <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
@@ -228,7 +191,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, toRef, onMounted } from 'vue';
+import { ref, toRef, onMounted } from 'vue';
 import AddResearchTaskModal from './AddResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -246,6 +209,9 @@ import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonNotesSection from './PersonNotesSection.vue';
 import PersonTimeline from './PersonTimeline.vue';
+import AppAvatar from './ui/AppAvatar.vue';
+import AppButton from './ui/AppButton.vue';
+import SectionHeader from './ui/SectionHeader.vue';
 import { usePersonPanelData, type NameData } from '../composables/usePersonPanelData';
 import { useSectionState } from '../composables/useSectionState';
 
@@ -406,9 +372,6 @@ async function onTaskSaved() {
 
 // ── Derived ─────────────────────────────────────────────────────────────────
 
-const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
-const sexColor = computed(() => SEX_COLORS[person.value?.sex ?? 'U'] ?? '#ccc');
-
 // ── Data change listener ────────────────────────────────────────────────────
 
 onMounted(() => {
@@ -426,7 +389,7 @@ onMounted(() => {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  background: var(--color-bg);
+  background: var(--surface);
   font-size: var(--font-sm);
 }
 
@@ -435,122 +398,69 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--color-text-faint);
+  color: var(--text-muted);
   font-size: var(--font-sm);
-  padding: 24px;
+  padding: var(--space-xl);
   text-align: center;
 }
 
 /* Header */
 .panel-header {
   display: flex;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  align-items: flex-start;
+  gap: var(--space-sm);
+  background: var(--surface);
+  border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
-}
-.panel-sex-bar {
-  width: 4px;
-  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-md);
 }
 .panel-header-content {
-  padding: 10px 14px 10px 10px;
   flex: 1;
   min-width: 0;
 }
 .panel-name-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
 }
 .panel-name {
   font-size: var(--font-base);
-  font-weight: 600;
-  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
-.btn-tree-inline {
-  margin-left: auto;
-  flex-shrink: 0;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn-tree-inline:hover { opacity: 0.85; }
 .panel-lifelines {
-  margin-bottom: 6px;
+  margin-bottom: var(--space-xs);
 }
 .panel-lifeline {
   font-size: var(--font-xs);
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   line-height: 1.5;
 }
 .panel-add-relative-btns {
   display: flex;
-  gap: 6px;
+  gap: var(--space-xs);
   flex-wrap: wrap;
 }
-.btn-dark {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 3px 10px;
-  font-size: var(--font-xs);
-  cursor: pointer;
-}
-.btn-dark:hover { opacity: 0.9; }
 
 /* Sections */
 .panel-section {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
+  padding: 0 var(--space-md);
 }
-.panel-section-header {
-  width: 100%;
-  text-align: left;
-  background: var(--color-bg-subtle);
-  border: none;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.panel-section-header:hover { background: var(--color-bg-muted); }
-.panel-chevron { font-size: var(--font-xs); color: var(--color-text-faint); }
-.panel-section-header-action {
-  margin-left: auto;
-  background: var(--color-primary);
-  color: white;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-block;
-}
-.panel-section-header-action:hover { opacity: 0.85; }
-.panel-section-body { padding: 4px 0 8px; }
-.panel-empty-section { padding: 4px 14px; color: var(--color-text-faint); font-size: var(--font-xs); }
+.panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
+.panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }
 
 /* Compact form */
 .compact-form {
-  padding: 4px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 .compact-field {
   display: flex;
@@ -559,18 +469,18 @@ onMounted(() => {
 }
 .compact-label {
   font-size: var(--font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  color: var(--color-text-subtle);
+  color: var(--text-muted);
   letter-spacing: 0.4px;
 }
 .compact-control {
   font-size: var(--font-xs);
-  padding: 4px 6px;
-  border: 1px solid var(--color-border-input);
-  border-radius: 4px;
-  background: var(--color-bg);
-  color: var(--color-text);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
@@ -578,37 +488,13 @@ onMounted(() => {
 }
 .compact-control:focus {
   outline: none;
-  border-color: #2980b9;
+  border-color: var(--accent);
 }
-
-.btn-cancel {
-  background: var(--color-bg-muted);
-  color: var(--color-text-muted);
-  border: none;
-  border-radius: 4px;
-  padding: 3px 10px;
-  font-size: var(--font-xs);
-  cursor: pointer;
-}
-.btn-cancel:hover { background: var(--color-border); }
-.btn-sm {
-  padding: 3px 8px;
-  font-size: var(--font-xs);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.btn-delete {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-}
-.btn-delete:hover { background: var(--color-danger-hover); }
 
 /* Groups */
 .panel-group-picker-wrap {
-  padding: 6px 14px;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 </style>

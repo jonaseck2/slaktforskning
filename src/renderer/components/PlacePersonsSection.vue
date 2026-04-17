@@ -11,7 +11,8 @@
       </thead>
       <tbody>
         <tr v-for="p in persons" :key="p.id" class="clickable-row" @click="$router.push('/persons/' + p.id)">
-          <td>
+          <td class="person-cell">
+            <AppAvatar :given-name="p.given_name" :surname="p.surname" :sex="p.sex" size="sm" />
             <router-link :to="'/persons/' + p.id" class="person-link" @click.stop>
               {{ [p.given_name, p.surname].filter(Boolean).join(' ') || '—' }}
             </router-link>
@@ -26,6 +27,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import AppAvatar from './ui/AppAvatar.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -50,3 +52,7 @@ watch(() => props.placeId, () => load(), { immediate: true });
 
 defineExpose({ reload: load });
 </script>
+
+<style scoped>
+.person-cell { display: flex; align-items: center; gap: var(--space-xs); }
+</style>

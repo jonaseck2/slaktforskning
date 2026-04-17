@@ -22,7 +22,8 @@
         @keydown.space.prevent="router.push('/relationships/' + rel.id)"
       >
         <td><span class="type-badge">{{ rel.typeLabel }}</span></td>
-        <td>
+        <td class="person-cell">
+          <AppAvatar v-if="rel.otherId" :given-name="rel.otherGivenName" :surname="rel.otherSurname" :sex="rel.otherSex" size="sm" />
           <router-link v-if="rel.otherId" :to="'/persons/' + rel.otherId" class="person-link" @click.stop>
             {{ rel.otherName }}
           </router-link>
@@ -42,6 +43,7 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { formatFullName, resolvePersonDisplayName } from '../utils/nameUtils';
+import AppAvatar from './ui/AppAvatar.vue';
 
 interface PersonRelRow {
   id: string;
@@ -51,6 +53,9 @@ interface PersonRelRow {
   subtype: string | null;
   otherId: string | null;
   otherName: string;
+  otherGivenName: string;
+  otherSurname: string;
+  otherSex: 'M' | 'F' | 'U';
   typeLabel: string;
   subtypeLabel: string;
 }
@@ -82,8 +87,19 @@ async function load() {
   for (const r of rawRels) {
     const otherId = r.person1_id === props.personId ? r.person2_id : r.person1_id;
     let otherName = t('common.unknown');
+    let otherGivenName = '';
+    let otherSurname = '';
+    let otherSex: 'M' | 'F' | 'U' = 'U';
     if (otherId) {
       otherName = await resolvePersonDisplayName(otherId, t('common.unknown'));
+      try {
+        const otherPerson = await window.api.persons.get(otherId) as { sex?: string; given_name?: string; surname?: string } | null;
+        if (otherPerson) {
+          otherSex = (otherPerson.sex as 'M' | 'F' | 'U') || 'U';
+          otherGivenName = otherPerson.given_name || '';
+          otherSurname = otherPerson.surname || '';
+        }
+      } catch { /* ignore */ }
     }
 
     let typeLabel = t('relTypes.' + r.type);
@@ -99,6 +115,9 @@ async function load() {
       subtype: r.subtype,
       otherId,
       otherName,
+      otherGivenName,
+      otherSurname,
+      otherSex,
       typeLabel,
       subtypeLabel: getSubtypeLabel(r.type, r.subtype),
     });
@@ -125,5 +144,6 @@ watch(() => props.personId, load, { immediate: true });
   border-radius: 10px;
   font-size: var(--font-xs);
 }
+.person-cell { display: flex; align-items: center; gap: var(--space-xs); }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 </style>
