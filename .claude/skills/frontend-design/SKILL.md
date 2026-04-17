@@ -7,6 +7,8 @@ description: Frontend design patterns for Släktforskning — Vue 3 components, 
 
 Use this skill when building any new view, component, or UI change in the renderer. It documents the established patterns that all views must follow for consistency.
 
+**Before committing any UI change:** verify it works in the running app via the UI server (`curl -s http://127.0.0.1:19241/status`) or Chrome DevTools MCP. See the `/test` and `/electron-dev` skills for the full verification workflow. Never commit UI changes based solely on unit tests passing.
+
 ---
 
 ## Layout

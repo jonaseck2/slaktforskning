@@ -424,22 +424,41 @@ Every new UI feature should be evaluated against the number of user actions (cli
 - `EventForm` "Save & Add Another" — batch event entry
 - Ghost placeholder boxes in `PedigreeChart` — click-to-add missing parents
 
-## MCP Verification Loop (Step 9 — for UI features)
+## UI Verification (Step 9 — REQUIRED for any UI change)
 
-After `npm test` passes, if the feature includes a new or modified Vue view, verify it in the running app using the MCP server's UI tools:
+**Unit tests alone do not verify UI changes.** They don't cover modal lifecycle, Vue Router behavior, or visual correctness. Before committing, verify in the running app.
 
-```
-1. Confirm app is running (npm start or check with ui_screenshot)
-2. Seed realistic test data via MCP data tools (create_person, add_event, etc.)
-3. ui_navigate("/your-new-route")
-4. ui_screenshot()   → visual confirmation the view renders
-5. ui_get_dom()      → assert specific elements exist (table rows, labels, etc.)
-6. ui_click()        → exercise primary interactions (add, delete, status change)
+### Setup
+Ask the user to run `./scripts/dev-debug.sh` from their terminal (cannot be launched from Claude Code's shell on macOS — needs window server access). Verify with:
+```bash
+curl -s http://127.0.0.1:19241/status   # UI server running?
 ```
 
-The MCP server shares the same SQLite database as the running app — data seeded via MCP is immediately visible in the app. This loop is faster than writing a Playwright test for every feature, and it tests the full IPC → Vue rendering stack that unit tests don't cover.
+### Verification loop via UI server
+```bash
+# 1. Seed test data via MCP data tools (create_person, add_event, etc.)
+# 2. Navigate to the view
+curl -s -X POST http://127.0.0.1:19241/navigate -d '{"path":"/your-route"}'
+# 3. Screenshot → visually inspect
+curl -s -X POST http://127.0.0.1:19241/screenshot | python3 -c "
+import sys,json,base64; d=json.load(sys.stdin)
+open('/tmp/verify.png','wb').write(base64.b64decode(d['data']))"
+# 4. Interact (click buttons, check modal opens)
+curl -s -X POST http://127.0.0.1:19241/click -d '{"selector":"button.btn-add"}'
+# 5. Screenshot again to confirm result
+```
 
-See `docs/plans/2026-04-04-mcp-agent-workflow.md` for the full MCP workflow design.
+### What this catches that unit tests miss
+- Modals opening but immediately closing (route key change remounts component)
+- Form fields not pre-filled (ref timing issues with `watch` vs `onMounted`)
+- Click handlers on wrong element (event bubbling through overlays)
+- Autocomplete dropdowns not appearing (gazetteer/source data not loaded)
+- Component rendering conditional on async data (`v-if="person"` gating)
+
+### Notes
+- MCP data tools work without the Electron app — they go straight to SQLite
+- UI server and the app share the same SQLite DB — data seeded via MCP is immediately visible
+- **Never commit UI changes without visual verification** — see `/commit` skill
 
 ## Before implementing a non-trivial feature
 
