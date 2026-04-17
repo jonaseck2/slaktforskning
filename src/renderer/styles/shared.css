@@ -14,50 +14,50 @@
   --font-xl:   18px;
   --font-2xl:  22px;
 
-  /* -- Semantic badge colors (use vars in scoped CSS so dark mode overrides work) -- */
-  --color-sex-m-bg:       #dbeafe;
-  --color-sex-m-text:     #1d4ed8;
-  --color-sex-f-bg:       #fce7f3;
-  --color-sex-f-text:     #be185d;
-  --color-sex-u-bg:       #f3f4f6;
-  --color-sex-u-text:     #6b7280;
-  --color-event-badge-bg:   #eef2ff;
-  --color-event-badge-text: #3b5bdb;
+  /* -- Semantic badge colors — derived from tokens -- */
+  --color-sex-m-bg:       var(--sex-m-bg);
+  --color-sex-m-text:     var(--sex-m-text);
+  --color-sex-f-bg:       var(--sex-f-bg);
+  --color-sex-f-text:     var(--sex-f-text);
+  --color-sex-u-bg:       var(--sex-u-bg);
+  --color-sex-u-text:     var(--sex-u-text);
+  --color-event-badge-bg:   var(--accent);
+  --color-event-badge-text: var(--accent-text);
 
-  /* -- Color palette -- */
+  /* -- Color palette — derived from tokens -- */
   /* Primary/brand */
-  --color-primary:        #2c3e50;
-  --color-primary-hover:  #3d5166;
+  --color-primary:        var(--accent);
+  --color-primary-hover:  var(--accent-hover);
 
   /* Backgrounds */
-  --color-bg:             #ffffff;
-  --color-bg-subtle:      #f8f9fa;
-  --color-bg-muted:       #f0f4f8;
-  --color-bg-table-head:  #eeeeee;
+  --color-bg:             var(--surface);
+  --color-bg-subtle:      var(--surface-bg);
+  --color-bg-muted:       var(--surface-bg);
+  --color-bg-table-head:  var(--surface-bg);
 
   /* Borders */
-  --color-border:         #dddddd;
-  --color-border-input:   #cccccc;
-  --color-border-chip:    #c8d0db;
+  --color-border:         var(--surface-border);
+  --color-border-input:   var(--surface-border);
+  --color-border-chip:    var(--surface-border);
 
   /* Text */
-  --color-text:           #333333;
-  --color-text-muted:     #555555;
-  --color-text-subtle:    #666666;
-  --color-text-faint:     #999999;
+  --color-text:           var(--text-primary);
+  --color-text-muted:     var(--text-secondary);
+  --color-text-subtle:    var(--text-muted);
+  --color-text-faint:     var(--text-muted);
 
   /* Semantic */
-  --color-danger-bg:      #fee2e2;
-  --color-danger-text:    #b91c1c;
-  --color-danger-hover:   #fecaca;
-  --color-link:           #2563eb;
+  --color-danger-bg:      var(--error-bg);
+  --color-danger-text:    var(--error-text);
+  --color-danger-hover:   var(--error-bg);
+  --color-link:           var(--accent);
 
   /* Success / status */
-  --color-success-bg:     #dcfce7;
-  --color-success-text:   #15803d;
+  --color-success-bg:     var(--success-bg);
+  --color-success-text:   var(--success-text);
 
   /* Row hover */
-  --color-row-hover:      #f0f4ff;
+  --color-row-hover:      var(--surface-hover);
 }
 
 /* ── 2. Text size tiers (screen only — never affects print/export) */
@@ -519,33 +519,37 @@
 /* ── 14. Dark mode (screen only) ──────────────────────── */
 @media screen {
   html.dark {
-    /* Override palette for dark mode */
-    --color-primary:        #374151;
-    --color-primary-hover:  #4b5563;
-    --color-bg:             #111827;
-    --color-bg-subtle:      #1f2937;
-    --color-bg-muted:       #1f2937;
-    --color-bg-table-head:  #1f2937;
-    --color-border:         #374151;
-    --color-border-input:   #374151;
-    --color-border-chip:    #374151;
-    --color-text:           #e2e8f0;
-    --color-text-muted:     #9ca3af;
+    /* Override tokens for dark mode — aliases in :root cascade automatically */
+    --surface-bg:            #1f2937;
+    --surface:               #111827;
+    --surface-hover:         #1e293b;
+    --surface-border:        #374151;
+    --surface-border-subtle: #1f2937;
+
+    --text-primary:   #e2e8f0;
+    --text-secondary: #9ca3af;
+    --text-muted:     #6b7280;
+
+    --accent:       #374151;
+    --accent-hover: #4b5563;
+    --accent-text:  #93c5fd;
+
+    --error-bg:   #450a0a;
+    --error-text: #fca5a5;
+    --success-bg: #14532d;
+    --success-text: #86efac;
+
+    --sex-m-bg:   #1e3a8a;
+    --sex-m-text: #93c5fd;
+    --sex-f-bg:   #831843;
+    --sex-f-text: #fbcfe8;
+    --sex-u-bg:   #374151;
+    --sex-u-text: #9ca3af;
+
+    /* Legacy overrides — values that differ from token aliases */
     --color-text-subtle:    #9ca3af;
-    --color-text-faint:     #6b7280;
-    --color-danger-bg:      #450a0a;
-    --color-danger-text:    #fca5a5;
     --color-danger-hover:   #7f1d1d;
     --color-link:           #60a5fa;
-    --color-success-bg:     #14532d;
-    --color-success-text:   #86efac;
-    --color-row-hover:      #1e293b;
-    --color-sex-m-bg:       #1e3a8a;
-    --color-sex-m-text:     #93c5fd;
-    --color-sex-f-bg:       #831843;
-    --color-sex-f-text:     #fbcfe8;
-    --color-sex-u-bg:       #374151;
-    --color-sex-u-text:     #9ca3af;
     --color-event-badge-bg:   #1e3a8a;
     --color-event-badge-text: #93c5fd;
   }
@@ -679,32 +683,39 @@
 /* === High Contrast Theme === */
 @media screen {
   html.high-contrast {
-    --color-primary:        #005fcc;
-    --color-primary-hover:  #004499;
-    --color-bg:             #000000;
-    --color-bg-subtle:      #111111;
-    --color-bg-muted:       #111111;
+    /* Override tokens for high-contrast mode */
+    --surface-bg:            #111111;
+    --surface:               #000000;
+    --surface-hover:         #333333;
+    --surface-border:        #ffffff;
+    --surface-border-subtle: #333333;
+
+    --text-primary:   #ffffff;
+    --text-secondary: #e0e0e0;
+    --text-muted:     #aaaaaa;
+
+    --accent:       #005fcc;
+    --accent-hover: #004499;
+    --accent-text:  #99ccff;
+
+    --error-bg:   #5c0000;
+    --error-text: #ff6666;
+    --success-bg: #003300;
+    --success-text: #00ff00;
+
+    --sex-m-bg:   #001a4d;
+    --sex-m-text: #99ccff;
+    --sex-f-bg:   #4d001a;
+    --sex-f-text: #ffaacc;
+    --sex-u-bg:   #333333;
+    --sex-u-text: #cccccc;
+
+    /* Legacy overrides — values that differ from token aliases */
     --color-bg-table-head:  #1a1a1a;
-    --color-border:         #ffffff;
-    --color-border-input:   #ffffff;
-    --color-border-chip:    #cccccc;
-    --color-text:           #ffffff;
-    --color-text-muted:     #e0e0e0;
     --color-text-subtle:    #cccccc;
-    --color-text-faint:     #aaaaaa;
-    --color-danger-bg:      #5c0000;
-    --color-danger-text:    #ff6666;
+    --color-border-chip:    #cccccc;
     --color-danger-hover:   #7a0000;
     --color-link:           #66aaff;
-    --color-success-bg:     #003300;
-    --color-success-text:   #00ff00;
-    --color-row-hover:      #333333;
-    --color-sex-m-bg:       #001a4d;
-    --color-sex-m-text:     #99ccff;
-    --color-sex-f-bg:       #4d001a;
-    --color-sex-f-text:     #ffaacc;
-    --color-sex-u-bg:       #333333;
-    --color-sex-u-text:     #cccccc;
     --color-event-badge-bg:   #001a4d;
     --color-event-badge-text: #99ccff;
   }
