@@ -160,7 +160,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 | Date | Topic | Location |
 |------|-------|----------|
-| 2026-04-11 | Competitor gap analysis | [plans/2026-04-11-competitor-gap-analysis.md](plans/2026-04-11-competitor-gap-analysis.md) |
+| 2026-04-17 | Competitor gap analysis v2 | [plans/2026-04-17-competitor-gap-analysis-v2.md](plans/2026-04-17-competitor-gap-analysis-v2.md) |
+| 2026-04-11 | Competitor gap analysis v1 | [plans/archive/2026-04-11-competitor-gap-analysis.md](plans/archive/2026-04-11-competitor-gap-analysis.md) |
 
 ---
 
