@@ -154,6 +154,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.92.2 | Fix: QualityView → PersonDetailView action routing uses watch on person ref for reliable modal opening | — |
 | v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
 | v0.93.1 | Fix: quality fix actions work end-to-end — modal stays open (no router.replace remount), event type pre-filled (birth/death), electron-dev skill updated with CDP verification workflow | — |
+| Infra | Design tokens: `tokens.css` with Forest/Nordic/Twilight themes, `setTheme()` + `currentTheme` ref in App.vue (no visible change — Task 1 of Design System Overhaul) | — |
 ---
 
 ## Research
