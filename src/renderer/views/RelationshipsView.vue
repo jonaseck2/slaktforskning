@@ -70,7 +70,7 @@
           </label>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('relationships.addRelationship') }}</button>
+            <button type="submit">{{ $t('common.create') }}</button>
           </div>
         </form>
     </BaseModal>

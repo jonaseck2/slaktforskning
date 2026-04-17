@@ -5,7 +5,7 @@
       :zoom="initialZoom"
       :center="initialCenter"
       :use-global-leaflet="false"
-      :options="{ zoomControl: false }"
+      :options="{ zoomControl: false, scrollWheelZoom: false }"
       @ready="onMapReady"
     >
       <LTileLayer

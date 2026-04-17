@@ -6,7 +6,12 @@
           {{ $t('events.eventType') }}
           <select v-model="form.event_type" required>
             <option value="" disabled>{{ $t('events.selectType') }}</option>
-            <option v-for="et in eventTypeValues" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
+            <optgroup v-if="commonTypes.length > 0" :label="$t('events.commonTypes')">
+              <option v-for="et in commonTypes" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
+            </optgroup>
+            <optgroup :label="commonTypes.length > 0 ? $t('events.allTypes') : undefined">
+              <option v-for="et in otherTypes" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
+            </optgroup>
           </select>
         </label>
 
@@ -44,26 +49,17 @@
           </div>
         </div>
 
-        <!-- Source toggle — for both create and edit -->
-        <div class="source-toggle">
-          <label class="checkbox-label">
-            <input type="checkbox" v-model="addSource" />
-            {{ $t('events.addSourceOptional') }}
-          </label>
-        </div>
-        <template v-if="addSource">
+        <!-- Source — always visible, not behind a checkbox -->
+        <div class="source-section">
           <label>
             {{ $t('citations.source') }}
-            <select v-model="sourceForm.source_id">
-              <option value="" disabled>{{ $t('citations.selectSource') }}</option>
-              <option v-for="src in sources" :key="src.id" :value="src.id">{{ src.title }}</option>
-            </select>
+            <SourcePicker v-model="sourceForm.source_id" />
           </label>
           <label>
             {{ $t('citations.pageLocation') }}
             <input v-model="sourceForm.page" type="text" :placeholder="$t('citations.pagePlaceholder')" />
           </label>
-        </template>
+        </div>
 
         <div class="modal-actions">
           <span v-if="addedCount > 0" class="added-badge">
@@ -90,12 +86,18 @@ import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
+import SourcePicker from './SourcePicker.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 import type { EventTypeValue } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';
 
 const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death'];
+
+// Most commonly used event types — shown first with a separator
+const COMMON_EVENT_TYPES: readonly EventTypeValue[] = [
+  'birth', 'baptism', 'death', 'burial', 'marriage', 'residence', 'census', 'emigration', 'immigration',
+];
 
 interface EventData {
   id: string;
@@ -107,11 +109,6 @@ interface EventData {
   place_id: string | null;
   description: string;
   cause: string | null;
-}
-
-interface SourceRow {
-  id: string;
-  title: string;
 }
 
 interface CitationRow {
@@ -140,11 +137,16 @@ const editing = computed(() => !!props.editingEvent);
 const addedCount = ref(0);
 
 const unsortedEventTypes = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
-const eventTypeValues = computed(() =>
+
+// Split into common (top) and other (bottom) groups
+const commonTypes = computed(() =>
+  COMMON_EVENT_TYPES.filter(et => (unsortedEventTypes as readonly string[]).includes(et))
+);
+const otherTypes = computed(() =>
   [...unsortedEventTypes]
-    .filter(et => et !== 'other')
+    .filter(et => !COMMON_EVENT_TYPES.includes(et) && et !== 'other')
     .sort((a, b) => t('eventTypes.' + a).localeCompare(t('eventTypes.' + b), undefined, { sensitivity: 'base' }))
-    .concat(['other'] as typeof unsortedEventTypes[number][]),
+    .concat(['other'] as typeof unsortedEventTypes[number][])
 );
 
 const form = reactive({
@@ -158,14 +160,11 @@ const form = reactive({
   cause: props.editingEvent?.cause ?? '',
 });
 
-const addSource = ref(false);
-const sources = ref<SourceRow[]>([]);
-const sourceForm = reactive({ source_id: '', page: '' });
+const sourceForm = reactive({ source_id: null as string | null, page: '' });
 const existingCitations = ref<CitationRow[]>([]);
 
 onMounted(async () => {
   if (!window.api) return;
-  sources.value = (await window.api.sources.list()) as SourceRow[];
   if (sourceSession.lastSourceId) {
     sourceForm.source_id = sourceSession.lastSourceId;
   }
@@ -230,7 +229,7 @@ async function doSave(): Promise<boolean> {
       }
     }
 
-    if (addSource.value && sourceForm.source_id && eventId) {
+    if (sourceForm.source_id && eventId) {
       const citData: Record<string, unknown> = {
         source_id: sourceForm.source_id,
         page: sourceForm.page,
@@ -260,16 +259,15 @@ async function save() {
 async function saveAndAnother() {
   if (await doSave()) {
     emit('saved');
-    // Reset form for next entry but keep modal open
+    // Reset event-specific fields but keep place, source, page for rapid entry
     form.event_type = '';
     form.date_type = 'exact';
     form.date_value = '';
     form.date_value_end = '';
     form.date_original = '';
-    form.place_id = null;
     form.description = '';
     form.cause = '';
-    addSource.value = false;
+    // Keep: form.place_id, sourceForm.source_id, sourceForm.page
     existingCitations.value = [];
     addedCount.value++;
   }
@@ -277,21 +275,9 @@ async function saveAndAnother() {
 </script>
 
 <style scoped>
-.source-toggle {
+.source-section {
   border-top: 1px solid #eee;
   padding-top: 8px;
-}
-.checkbox-label {
-  flex-direction: row !important;
-  align-items: center;
-  gap: 8px !important;
-  font-weight: 500 !important;
-  cursor: pointer;
-}
-.checkbox-label input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
 }
 .citations-section {
   border-top: 1px solid #eee;

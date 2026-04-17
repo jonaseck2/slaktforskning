@@ -44,9 +44,10 @@ export function registerDatabaseHandlers(
   });
 
   ipcMain.handle('db:createNew', async () => {
+    const currentDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showSaveDialog({
       title: 'Ny databas',
-      defaultPath: 'slaktforskning.db',
+      defaultPath: path.join(currentDir, 'slaktforskning.db'),
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
@@ -62,8 +63,10 @@ export function registerDatabaseHandlers(
   });
 
   ipcMain.handle('db:openExisting', async () => {
+    const currentDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showOpenDialog({
       title: 'Öppna databas',
+      defaultPath: currentDir,
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
       properties: ['openFile'],
     });
@@ -79,9 +82,11 @@ export function registerDatabaseHandlers(
     if (!win) return { success: false, error: 'No window' };
 
     const currentPath = getCurrentDatabasePath();
+    const currentDir = path.dirname(currentPath);
+    const backupName = path.basename(currentPath).replace('.db', '') + '-backup-' + new Date().toISOString().slice(0, 10) + '.db';
     const result = await dialog.showSaveDialog(win, {
       title: 'Spara säkerhetskopia',
-      defaultPath: path.basename(currentPath).replace('.db', '') + '-backup-' + new Date().toISOString().slice(0, 10) + '.db',
+      defaultPath: path.join(currentDir, backupName),
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
     if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
@@ -94,8 +99,10 @@ export function registerDatabaseHandlers(
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
 
+    const currentDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showOpenDialog(win, {
       title: 'Välj säkerhetskopia',
+      defaultPath: currentDir,
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
       properties: ['openFile'],
     });

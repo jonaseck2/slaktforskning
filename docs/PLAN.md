@@ -146,6 +146,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/superpowers/specs/2026-04-15-mcp-overhaul-design.md) |
 | v0.90.1 | Fix: startup and quality check CPU contention on large databases | [archive](plans/archive/2026-04-16-startup-perf-fix.md) |
 | v0.90.2 | QualityView infinite scroll pagination (100 results at a time) | — |
+| v0.91.0 | UX improvements: multi-token search, SourcePicker autocomplete, DateInput YYYY-MM-DD fields with auto-advance, modal redesign (no click-outside close, action verb buttons), EventForm source always visible with Save & Next keeping place/source, gazetteer auto-init, scroll zoom disabled on maps, name surname pre-fill, GEDCOM UTF-8 auto-detection, stable file dialog paths | — |
 ---
 
 ## Research

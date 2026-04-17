@@ -201,6 +201,7 @@
       v-if="showNameForm && personId"
       :person-id="personId"
       :name="editingName"
+      :default-surname="primaryName?.surname ?? ''"
       @close="cancelNameForm"
       @saved="reloadNames(personId!)"
     />

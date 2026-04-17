@@ -5,7 +5,10 @@ declare const window: Window & {
 };
 
 interface BirthEventData {
+  event_type?: string;
+  date_type?: string;
   date_value?: string;
+  date_value_end?: string;
   date_original?: string;
   place_id?: string | null;
   source_id?: string | null;
@@ -22,9 +25,10 @@ export function useBirthEventCreation() {
     if (!hasData) return null;
 
     const event = (await window.api.events.create({
-      event_type: 'birth',
-      date_type: 'exact',
+      event_type: data.event_type || 'birth',
+      date_type: data.date_type || 'exact',
       date_value: data.date_value || null,
+      date_value_end: data.date_value_end || null,
       date_original: data.date_original || '',
       place_id: data.place_id || null,
     })) as { id: string };

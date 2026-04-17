@@ -41,7 +41,7 @@
 
         <div class="modal-actions">
           <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-          <button type="submit">{{ $t('citations.addTitle') }}</button>
+          <button type="submit">{{ $t('common.create') }}</button>
         </div>
       </form>
   </BaseModal>

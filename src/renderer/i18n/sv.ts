@@ -55,7 +55,7 @@ export default {
   },
   persons: {
     title: 'Personer',
-    addPerson: 'Person',
+    addPerson: 'Lägg till person',
     emptyState: 'Inga personer ännu.',
     givenName: 'Förnamn (fullständigt)',
     givenNameHint: 'Markera tilltalsnamn med * eller ! efter det, t.ex. Eva Linda* Marie',
@@ -145,6 +145,7 @@ export default {
     url: 'URL',
     urlPlaceholder: 'https://\u2026',
     confirmDelete: 'Ta bort denna källa? Detta kan inte ångras.',
+    createNew: 'Skapa "{name}"',
   },
   sourceDetail: {
     title: 'Källdetaljer',
@@ -170,7 +171,7 @@ export default {
   events: {
     title: 'Händelser',
     event: 'Händelse',
-    addEvent: 'Händelse',
+    addEvent: 'Skapa',
     noEvents: 'Inga händelser registrerade.',
     date: 'Datum',
     description: 'Beskrivning',
@@ -190,9 +191,11 @@ export default {
     addSourceOptional: 'Källa (valfritt)',
     cause: 'Orsak',
     causePlaceholder: 't.ex. hjärtinfarkt',
-    updateEvent: 'Uppdatera händelse',
+    updateEvent: 'Spara',
     saveAndAnother: 'Spara & lägg till fler',
     eventsAdded: '{count} händelse tillagd | {count} händelser tillagda',
+    commonTypes: 'Vanliga',
+    allTypes: 'Alla',
   },
   citations: {
     title: 'Hänvisningar',
@@ -214,6 +217,9 @@ export default {
   dateInput: {
     to: 'till',
     originalPlaceholder: "Originaltext (t.ex. 'ca 1845')",
+    year: 'ÅÅÅÅ',
+    month: 'MM',
+    day: 'DD',
   },
   datePrefix: {
     about: 'ca ',

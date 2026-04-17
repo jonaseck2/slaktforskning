@@ -184,6 +184,7 @@
       v-if="showNameForm || showEditNameForm"
       :person-id="personId"
       :name="showEditNameForm ? editingName : null"
+      :default-surname="names.length > 0 ? names[0].surname : ''"
       @close="showNameForm = false; showEditNameForm = false"
       @saved="load"
     />

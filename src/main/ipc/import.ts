@@ -25,10 +25,14 @@ export function registerImportHandlers(
   getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
+  // Use database directory as default for all file dialogs
+  const getDefaultDir = () => path.dirname(getCurrentDatabasePath());
+
   // GEDCOM
   wrapHandler('gedcom:selectFile', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Select GEDCOM File',
+      defaultPath: getDefaultDir(),
       filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
       properties: ['openFile'],
     });
@@ -44,6 +48,7 @@ export function registerImportHandlers(
     } else {
       const result = await dialog.showOpenDialog({
         title: 'Preview GEDCOM File',
+        defaultPath: getDefaultDir(),
         filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
         properties: ['openFile'],
       });
@@ -80,6 +85,7 @@ export function registerImportHandlers(
     } else {
       const result = await dialog.showOpenDialog({
         title: 'Import GEDCOM File',
+        defaultPath: getDefaultDir(),
         filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
         properties: ['openFile'],
       });
@@ -114,10 +120,10 @@ export function registerImportHandlers(
     const typedOpts = opts as { version?: string; exportOptions?: ExportOptions } | undefined;
     const version = typedOpts?.version === '7.0' ? '7.0' : '5.5.1';
     const exportOptions = typedOpts?.exportOptions;
-    const defaultPath = version === '7.0' ? 'family-tree-70.ged' : 'family-tree.ged';
+    const fileName = version === '7.0' ? 'family-tree-70.ged' : 'family-tree.ged';
     const result = await dialog.showSaveDialog({
       title: 'Export GEDCOM File',
-      defaultPath,
+      defaultPath: path.join(getDefaultDir(), fileName),
       filters: [{ name: 'GEDCOM Files', extensions: ['ged'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
@@ -134,6 +140,7 @@ export function registerImportHandlers(
   wrapHandler('import:genneySelectDerby', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Välj Genney Derby-databasmapp',
+      defaultPath: getDefaultDir(),
       properties: ['openDirectory'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
@@ -143,6 +150,7 @@ export function registerImportHandlers(
   wrapHandler('import:genneySelectArchive', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Välj Genney-arkivfil (.gcc, .backup)',
+      defaultPath: getDefaultDir(),
       filters: [{ name: 'Genney-arkiv', extensions: ['gcc', 'backup', 'zip'] }],
       properties: ['openFile'],
     });
@@ -153,6 +161,7 @@ export function registerImportHandlers(
   wrapHandler('import:genneySelectMedia', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Select Genney media folder (optional)',
+      defaultPath: getDefaultDir(),
       properties: ['openDirectory'],
     });
     if (result.canceled || !result.filePaths.length) return { canceled: true };
@@ -199,6 +208,7 @@ export function registerImportHandlers(
   wrapHandler('import:holgerSelectFile', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Select Holger GEDCOM export',
+      defaultPath: getDefaultDir(),
       properties: ['openFile'],
       filters: [
         { name: 'GEDCOM / Zip', extensions: ['ged', 'zip'] },
@@ -212,6 +222,7 @@ export function registerImportHandlers(
   wrapHandler('import:holgerSelectMedia', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Select OurKind Media folder (optional)',
+      defaultPath: getDefaultDir(),
       properties: ['openDirectory'],
     });
     if (result.canceled || !result.filePaths.length) return { canceled: true };
@@ -242,7 +253,7 @@ export function registerImportHandlers(
     const version = options?.gedcomVersion ?? '5.5.1';
     const result = await dialog.showSaveDialog({
       title: 'Export Archive',
-      defaultPath: 'family-tree.zip',
+      defaultPath: path.join(getDefaultDir(), 'family-tree.zip'),
       filters: [{ name: 'Zip Archive', extensions: ['zip'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
@@ -254,6 +265,7 @@ export function registerImportHandlers(
   wrapHandler('archive:import', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Import Archive',
+      defaultPath: getDefaultDir(),
       filters: [{ name: 'Zip Archive', extensions: ['zip'] }],
       properties: ['openFile'],
     });
