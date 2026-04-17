@@ -13,7 +13,12 @@
         <tr
           v-for="(r, i) in issues"
           :key="r.code + ':' + i"
-          :class="{ 'row-ignored': isIgnored(r) }"
+          :class="[{ 'row-ignored': isIgnored(r) }, fixAction(r.code) && !isIgnored(r) ? 'clickable-row' : '']"
+          :role="fixAction(r.code) && !isIgnored(r) ? 'button' : undefined"
+          :tabindex="fixAction(r.code) && !isIgnored(r) ? 0 : undefined"
+          @click="onRowClick(r)"
+          @keydown.enter="onRowClick(r)"
+          @keydown.space.prevent="onRowClick(r)"
         >
           <td class="td-shrink">
             <span :class="['severity-badge', 'badge-' + r.severity]">
@@ -23,13 +28,8 @@
           <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
           <td class="actions-cell">
             <button
-              v-if="fixAction(r.code) && !isIgnored(r)"
-              class="btn-sm btn-fix"
-              @click="emit('fix', fixAction(r.code)!)"
-            >{{ $t('quality.fix') }}</button>
-            <button
               :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
-              @click="toggleIgnore(r)"
+              @click.stop="toggleIgnore(r)"
             >{{ isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore') }}</button>
           </td>
         </tr>
@@ -111,6 +111,11 @@ function checkMessage(r: CheckResult): string {
 
 function fixAction(code: string): FixAction | null {
   return FIX_ACTIONS[code] ?? null;
+}
+
+function onRowClick(r: CheckResult) {
+  const action = fixAction(r.code);
+  if (action && !isIgnored(r)) emit('fix', action);
 }
 
 async function load() {
