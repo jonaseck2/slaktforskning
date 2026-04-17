@@ -257,6 +257,7 @@ const props = defineProps<{ personId: string | null; showTreeBtn?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
   'show-in-tree': [];
+  'person-changed': [];
 }>();
 
 // ── Data (composable) ───────────────────────────────────────────────────────
@@ -311,12 +312,14 @@ async function updateSex(value: 'M' | 'F' | 'U') {
   if (!props.personId || !person.value) return;
   await window.api.persons.update(props.personId, { sex: value });
   person.value.sex = value;
+  emit('person-changed');
 }
 
 async function updateLiving(value: boolean) {
   if (!props.personId || !person.value) return;
   await window.api.persons.update(props.personId, { living: value });
   person.value.living = value;
+  emit('person-changed');
 }
 
 // ── Name form ───────────────────────────────────────────────────────────────

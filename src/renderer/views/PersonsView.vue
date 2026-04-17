@@ -113,37 +113,26 @@
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-person">
         <h3 id="modal-title-add-person">{{ $t('persons.addPerson') }}</h3>
         <form @submit.prevent="addPerson">
-          <label>
-            {{ $t('persons.givenName') }}
+          <label>{{ $t('persons.givenName') }}
             <input v-model="form.given_name" type="text" required autofocus />
           </label>
-          <label>
-            {{ $t('persons.surname') }}
+          <label>{{ $t('persons.surname') }}
             <input v-model="form.surname" type="text" />
           </label>
-          <label>
-            {{ $t('persons.sex') }}
-            <div class="radio-group">
-              <label class="radio-label">
-                <input v-model="form.sex" type="radio" value="M" /> {{ $t('persons.male') }}
-              </label>
-              <label class="radio-label">
-                <input v-model="form.sex" type="radio" value="F" /> {{ $t('persons.female') }}
-              </label>
-              <label class="radio-label">
-                <input v-model="form.sex" type="radio" value="U" /> {{ $t('persons.sexUnknown') }}
-              </label>
-            </div>
+          <label>{{ $t('persons.sex') }}
+            <select v-model="form.sex">
+              <option value="U">{{ $t('persons.sexUnknown') }}</option>
+              <option value="M">{{ $t('persons.male') }}</option>
+              <option value="F">{{ $t('persons.female') }}</option>
+            </select>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="form.living" />{{ $t('persons.living') }}
           </label>
 
-          <!-- Event section — always visible, defaults to birth -->
-          <div class="event-section">
-            <label>
-              {{ $t('events.eventType') }}
-              <select v-model="birthForm.event_type">
-                <option v-for="et in PERSON_EVENT_TYPE_VALUES" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
-              </select>
-            </label>
+          <!-- Birth / event section -->
+          <details class="birth-section" open>
+            <summary>{{ $t('eventTypes.birth') }}</summary>
             <label>{{ $t('addRelated.birthDate') }}</label>
             <DateInput
               v-model:dateType="birthForm.date_type"
@@ -151,24 +140,16 @@
               v-model:dateValueEnd="birthForm.date_value_end"
               v-model:dateOriginal="birthForm.date_original"
             />
-            <label>
-              {{ $t('addRelated.birthPlace') }}
+            <label>{{ $t('addRelated.birthPlace') }}
               <PlacePicker v-model="birthForm.place_id" />
             </label>
-            <label>
-              {{ $t('citations.source') }}
+            <label>{{ $t('citations.source') }}
               <SourcePicker v-model="birthSourceForm.source_id" />
             </label>
-            <label>
-              {{ $t('addRelated.page') }}
+            <label>{{ $t('addRelated.page') }}
               <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
             </label>
-          </div>
-
-          <label>
-            {{ $t('common.notes') }}
-            <textarea v-model="form.notes" rows="2" />
-          </label>
+          </details>
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
             <button type="submit">{{ $t('common.create') }}</button>
@@ -208,7 +189,6 @@ import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { useBirthEventCreation } from '../composables/useBirthEventCreation';
 import { useSourceSession } from '../stores/sourceSession';
-import { PERSON_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 const dataVersionStore = useDataVersionStore();
 const { createBirthEvent } = useBirthEventCreation();
 const sourceSession = useSourceSession();
@@ -278,11 +258,10 @@ const form = reactive({
   given_name: '',
   surname: '',
   sex: 'U',
-  notes: '',
+  living: true,
 });
 
 const birthForm = reactive({
-  event_type: 'birth',
   date_type: 'exact',
   date_value: '',
   date_value_end: '',
@@ -370,11 +349,10 @@ async function addPerson() {
       given_name: form.given_name,
       surname: form.surname,
       sex: form.sex,
-      notes: form.notes,
+      living: form.living,
     });
     const newPerson = person as { id: string };
     await createBirthEvent(newPerson.id, {
-      event_type: birthForm.event_type,
       date_type: birthForm.date_type !== 'exact' ? birthForm.date_type : undefined,
       date_value: birthForm.date_value || undefined,
       date_value_end: birthForm.date_value_end || undefined,
@@ -390,8 +368,7 @@ async function addPerson() {
     form.given_name = '';
     form.surname = '';
     form.sex = 'U';
-    form.notes = '';
-    birthForm.event_type = 'birth';
+    form.living = true;
     birthForm.date_type = 'exact';
     birthForm.date_value = '';
     birthForm.date_value_end = '';
@@ -456,8 +433,6 @@ onActivated(async () => {
   gap: 8px;
   align-items: center;
 }
-.radio-group { display: flex; gap: 16px; margin-top: 4px; }
-.radio-label { display: flex; flex-direction: row; align-items: center; gap: 6px; font-weight: normal; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .date-cell { white-space: nowrap; }
 .birth-hint { color: var(--color-text-subtle); font-size: var(--font-xs); }
@@ -475,9 +450,28 @@ onActivated(async () => {
   background: var(--color-warning-bg, #fef3c7);
   color: var(--color-warning-badge, #92400e);
 }
-.event-section {
-  border-top: 1px solid var(--color-border, #e2e8f0);
-  padding-top: 8px;
-  margin-top: 4px;
+.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.checkbox-label input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.birth-section {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 4px 0;
+}
+.birth-section summary {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted, #64748b);
 }
 </style>
