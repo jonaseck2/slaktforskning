@@ -2,25 +2,14 @@
   <div>
     <div class="header">
       <h2>{{ $t('relationships.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('relationships.addRelationship') }}</button>
+      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('relationships.addRelationship') }}</AppButton>
     </div>
     <p v-if="total > 0" class="count-label">
       {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>
-    <div v-if="relationships.length > 0" class="filter-chips">
-      <button
-        v-for="f in typeFilters"
-        :key="f.value"
-        :class="['chip', { active: activeTypeFilter === f.value }]"
-        @click="activeTypeFilter = f.value"
-      >{{ f.label }}</button>
-    </div>
-    <div v-if="relationships.length === 0 && !loading" class="empty">
-      {{ $t('relationships.emptyState') }}
-    </div>
-    <div v-else-if="filteredRelationships.length === 0 && !loading" class="empty">
-      {{ $t('relationships.noMatchingFilter') }}
-    </div>
+    <FilterChips v-if="relationships.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
+    <AppEmptyState v-if="relationships.length === 0 && !loading" icon="🔗" :title="$t('relationships.emptyState')" />
+    <AppEmptyState v-else-if="filteredRelationships.length === 0 && !loading" icon="🔗" :title="$t('relationships.noMatchingFilter')" />
     <RelationshipsTable
       v-else
       :relationships="filteredRelationships"
@@ -69,8 +58,8 @@
             <textarea v-model="form.notes" rows="2" />
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.create') }}</button>
+            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
+            <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
           </div>
         </form>
     </BaseModal>
@@ -83,6 +72,9 @@ import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import PersonPicker from '../components/PersonPicker.vue';
 import RelationshipsTable from '../components/RelationshipsTable.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import type { RelRow } from '../components/RelationshipsTable.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -130,12 +122,13 @@ const typeCounts = computed(() => {
 });
 
 const typeFilters = computed(() => [
-  { value: 'all', label: `${t('common.all')} (${relationships.value.length})` },
+  { value: 'all', label: t('common.all'), count: relationships.value.length },
   ...RELATIONSHIP_TYPE_VALUES
     .filter(type => (typeCounts.value[type] ?? 0) > 0)
     .map(type => ({
       value: type,
-      label: `${t('relTypes.' + type)} (${typeCounts.value[type] ?? 0})`,
+      label: t('relTypes.' + type),
+      count: typeCounts.value[type] ?? 0,
     })),
 ]);
 

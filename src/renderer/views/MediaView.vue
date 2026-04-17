@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
-      <button class="btn-add" @click="attachFile"><span aria-hidden="true">+ </span>{{ $t('media.attach') }}</button>
+      <AppButton variant="primary" @click="attachFile"><span aria-hidden="true">+ </span>{{ $t('media.attach') }}</AppButton>
     </div>
 
     <p v-if="!loading && items.length > 0" class="count-label">
@@ -20,19 +20,21 @@
     </div>
 
     <div v-if="!loading && items.length > 0" class="view-toggle">
-      <button
-        :class="['btn-sm', { active: viewMode === 'gallery' }]"
+      <AppButton
+        :variant="viewMode === 'gallery' ? 'primary' : 'secondary'"
+        size="sm"
         @click="setViewMode('gallery')"
-      >{{ $t('media.galleryView') }}</button>
-      <button
-        :class="['btn-sm', { active: viewMode === 'table' }]"
+      >{{ $t('media.galleryView') }}</AppButton>
+      <AppButton
+        :variant="viewMode === 'table' ? 'primary' : 'secondary'"
+        size="sm"
         @click="setViewMode('table')"
-      >{{ $t('media.tableView') }}</button>
+      >{{ $t('media.tableView') }}</AppButton>
     </div>
 
-    <div v-if="loading && items.length === 0" class="loading">{{ $t('common.loading') }}</div>
-    <div v-else-if="!loading && items.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
-    <div v-else-if="filteredItems.length === 0" class="empty-state">{{ $t('media.noMedia') }}</div>
+    <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
+    <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('media.noMedia')" />
+    <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('media.noMedia')" />
 
     <!-- Gallery grid -->
     <div v-else-if="viewMode === 'gallery'" class="gallery-grid">
@@ -62,11 +64,13 @@
           <span class="card-title">{{ mediaDisplayName(item.title, item.file_ref) }}</span>
           <span v-if="item.linkCount > 0" class="card-badge">{{ item.linkCount }} {{ $t('media.lightbox.linkedEntities').toLowerCase() }}</span>
         </div>
-        <button
-          class="card-delete btn-sm btn-delete"
+        <AppButton
+          class="card-delete"
+          variant="ghost"
+          size="sm"
           @click.stop="deleteItem(item.id)"
           :title="$t('media.delete')"
-        >&#10005;</button>
+        >&#10005;</AppButton>
       </div>
     </div>
 
@@ -125,7 +129,7 @@
           </td>
           <td class="links-cell">{{ item.linkCount }}</td>
           <td>
-            <button class="btn-sm btn-delete" @click="deleteItem(item.id)" :title="$t('media.delete')">&#10005;</button>
+            <AppButton variant="ghost" size="sm" @click="deleteItem(item.id)" :title="$t('media.delete')">&#10005;</AppButton>
           </td>
         </tr>
       </tbody>
@@ -148,6 +152,9 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MediaLightbox from '../components/MediaLightbox.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
+import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { useToast } from '../composables/useToast';
 const toast = useToast();
@@ -328,13 +335,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   max-width: 300px;
   padding: 6px 10px;
   font-size: var(--font-sm);
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
   outline: none;
+  background: var(--surface);
+  color: var(--text-primary);
 }
 .gallery-search:focus {
-  border-color: #4a9eff;
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .gallery-grid {
@@ -345,16 +354,16 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
 .gallery-card {
   position: relative;
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 .gallery-card:hover, .gallery-card:focus {
-  border-color: #4a9eff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
   outline: none;
 }
 .gallery-card.missing-card {
@@ -365,7 +374,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   position: relative;
   width: 100%;
   height: 140px;
-  background: #f5f5f5;
+  background: var(--surface-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,8 +388,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 .card-image-loading {
   width: 32px;
   height: 32px;
-  border: 2px solid #ddd;
-  border-top-color: #888;
+  border: 2px solid var(--surface-border);
+  border-top-color: var(--text-muted);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -392,14 +401,14 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   justify-content: center;
   width: 64px;
   height: 80px;
-  background: #e8e8e8;
-  border-radius: 6px;
-  border: 1px solid #d0d0d0;
+  background: var(--surface-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-border);
 }
 .card-file-ext {
   font-size: var(--font-sm);
   font-weight: 700;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .card-info {
@@ -414,10 +423,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 .card-badge {
   font-size: var(--font-xs);
-  color: #888;
+  color: var(--text-muted);
 }
 
 .card-delete {
@@ -426,9 +436,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   right: 6px;
   opacity: 0;
   transition: opacity 0.15s;
-  background: rgba(255,255,255,0.9);
-  border-radius: 4px;
-  padding: 2px 6px;
 }
 .gallery-card:hover .card-delete {
   opacity: 1;
@@ -438,11 +445,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   position: absolute;
   bottom: 6px;
   left: 6px;
-  background: #e53e3e;
-  color: white;
+  background: var(--error-bg);
+  color: var(--error-text);
   font-size: var(--font-xs);
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 1px 5px;
 }
 
@@ -450,11 +457,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   display: flex;
   gap: 4px;
   margin-bottom: 12px;
-}
-.view-toggle .btn-sm.active {
-  background: #4a9eff;
-  color: white;
-  border-color: #4a9eff;
 }
 
 .media-table .thumb-cell {
@@ -464,7 +466,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   width: 40px;
   height: 40px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .table-thumb-placeholder {
@@ -473,11 +475,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #f0f0f0;
-  border-radius: 4px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-sm);
   font-size: var(--font-xs);
   font-weight: 600;
-  color: #888;
+  color: var(--text-muted);
 }
 .inline-edit {
   width: 100%;
@@ -485,57 +487,22 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   background: transparent;
   padding: 4px 6px;
   font-size: var(--font-sm);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   outline: none;
+  color: var(--text-primary);
 }
 .inline-edit:focus {
-  border-color: #4a9eff;
-  background: white;
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.15);
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .format-badge {
   font-size: var(--font-xs);
   font-weight: 600;
-  color: #888;
+  color: var(--text-muted);
   text-transform: uppercase;
 }
 .format-cell, .links-cell {
   text-align: center;
-}
-
-:root[data-theme="dark"] .inline-edit:focus,
-:root[data-theme="high-contrast"] .inline-edit:focus {
-  background: #333;
-  border-color: #4a9eff;
-}
-:root[data-theme="dark"] .table-thumb-placeholder,
-:root[data-theme="high-contrast"] .table-thumb-placeholder {
-  background: #333;
-}
-
-/* Dark mode support */
-:root[data-theme="dark"] .gallery-card,
-:root[data-theme="high-contrast"] .gallery-card {
-  background: #2a2a2a;
-  border-color: #444;
-}
-:root[data-theme="dark"] .card-thumbnail,
-:root[data-theme="high-contrast"] .card-thumbnail {
-  background: #1e1e1e;
-}
-:root[data-theme="dark"] .card-file-icon,
-:root[data-theme="high-contrast"] .card-file-icon {
-  background: #333;
-  border-color: #555;
-}
-:root[data-theme="dark"] .gallery-search,
-:root[data-theme="high-contrast"] .gallery-search {
-  background: #2a2a2a;
-  border-color: #444;
-  color: #e0e0e0;
-}
-:root[data-theme="dark"] .card-delete,
-:root[data-theme="high-contrast"] .card-delete {
-  background: rgba(40,40,40,0.9);
 }
 </style>

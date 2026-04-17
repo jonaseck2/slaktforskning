@@ -2,19 +2,12 @@
   <div>
     <div class="header">
       <h2>{{ $t('places.title') }}</h2>
-      <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('places.addTitle') }}</button>
+      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('places.addTitle') }}</AppButton>
     </div>
     <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
-    <div v-if="places.length > 0" class="filter-chips">
-      <button
-        v-for="f in typeFilters"
-        :key="f.value"
-        :class="['chip', { active: activeTypeFilter === f.value }]"
-        @click="activeTypeFilter = f.value"
-      >{{ f.label }}</button>
-    </div>
-    <div v-if="places.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('places.title') })">{{ $t('places.none') }}</div>
-    <div v-else-if="filteredPlaces.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('places.title') })">{{ $t('places.noMatchingFilter') }}</div>
+    <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
+    <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('places.none')" />
+    <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('places.noMatchingFilter')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -43,8 +36,7 @@
         >
           <td>{{ place.name }}</td>
           <td class="actions-cell">
-            <button class="btn-sm btn-delete" @click.stop="deletePlace(place.id)">✕
-            </button>
+            <AppButton variant="ghost" size="sm" @click.stop="deletePlace(place.id)">✕</AppButton>
           </td>
         </tr>
       </tbody>
@@ -68,8 +60,8 @@
             </select>
           </label>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
+            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
+            <AppButton variant="primary" type="submit">{{ $t('common.save') }}</AppButton>
           </div>
         </form>
     </BaseModal>
@@ -81,6 +73,9 @@ import { ref, reactive, computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -104,12 +99,13 @@ const typeCounts = computed(() => {
 });
 
 const typeFilters = computed(() => [
-  { value: 'all', label: `${t('common.all')} (${places.value.length})` },
+  { value: 'all', label: t('common.all'), count: places.value.length },
   ...PLACE_TYPE_VALUES
     .filter(type => (typeCounts.value[type] ?? 0) > 0)
     .map(type => ({
       value: type,
-      label: `${t('placeTypes.' + type)} (${typeCounts.value[type] ?? 0})`,
+      label: t('placeTypes.' + type),
+      count: typeCounts.value[type] ?? 0,
     })),
 ]);
 

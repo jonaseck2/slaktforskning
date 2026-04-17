@@ -5,12 +5,8 @@
       <span v-if="qualityStore.running" class="running-hint">{{ $t('quality.running') }}</span>
     </div>
 
-    <div v-if="!qualityStore.hasRun && qualityStore.running" class="empty">
-      {{ $t('quality.running') }}
-    </div>
-    <div v-else-if="!qualityStore.hasRun" class="empty">
-      {{ $t('quality.notRun') }}
-    </div>
+    <AppLoadingState v-if="!qualityStore.hasRun && qualityStore.running" :rows="5" />
+    <AppEmptyState v-else-if="!qualityStore.hasRun" icon="⚠️" :title="$t('quality.notRun')" />
 
     <template v-else>
       <p class="count-label">
@@ -18,18 +14,9 @@
         <span v-if="ignoredCount > 0"> · {{ $t('quality.ignoredCount', { count: ignoredCount }) }}</span>
       </p>
 
-      <div class="filter-chips">
-        <button
-          v-for="f in filters"
-          :key="f.value"
-          :class="['chip', { active: activeFilter === f.value }]"
-          @click="activeFilter = f.value"
-        >{{ f.label }}</button>
-      </div>
+      <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
 
-      <div v-if="filteredResults.length === 0" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('quality.title') })">
-        {{ $t('quality.noResults') }}
-      </div>
+      <AppEmptyState v-if="filteredResults.length === 0" icon="✅" :title="$t('quality.noResults')" />
 
       <table v-else class="data-table quality-table">
         <colgroup>
@@ -65,9 +52,9 @@
             @keydown.up.prevent="focusPrevRow($event)"
           >
             <td>
-              <span :class="['severity-badge', 'badge-' + r.severity]">
+              <AppBadge :variant="severityVariant(r.severity)">
                 {{ $t('quality.severity.' + r.severity) }}
-              </span>
+              </AppBadge>
             </td>
             <td class="persons-cell">
               <template v-for="(name, i) in r.personNames" :key="r.personIds[i]">
@@ -80,17 +67,21 @@
             <td class="message-cell">{{ checkMessage(r) }}</td>
             <td class="actions-td">
               <template v-if="isPlaceMatch(r) && !isIgnored(r)">
-                <button
+                <AppButton
                   v-if="r.resolvedLat != null"
-                  class="btn-sm btn-confirm"
+                  variant="ghost"
+                  size="sm"
+                  class="btn-confirm"
                   @click.stop="confirmMatch(r)"
                   :title="$t('quality.confirmMatch')"
-                >{{ $t('quality.confirm') }}</button>
-                <button
-                  class="btn-sm btn-reject"
+                >{{ $t('quality.confirm') }}</AppButton>
+                <AppButton
+                  variant="ghost"
+                  size="sm"
+                  class="btn-reject"
                   @click.stop="rejectMatch(r)"
                   :title="$t('quality.rejectMatch')"
-                >{{ $t('quality.reject') }}</button>
+                >{{ $t('quality.reject') }}</AppButton>
                 <router-link
                   v-if="r.placeIds?.[0]"
                   :to="'/places/' + r.placeIds[0]"
@@ -98,12 +89,13 @@
                   @click.stop
                 >{{ $t('quality.viewPlace') }}</router-link>
               </template>
-              <button
-                :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
+              <AppButton
+                :variant="isIgnored(r) ? 'secondary' : 'ghost'"
+                size="sm"
                 @click.stop="toggleIgnore(r)"
               >
                 {{ isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore') }}
-              </button>
+              </AppButton>
             </td>
           </tr>
         </tbody>
@@ -122,6 +114,11 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
 import { narrateQualityRow } from '../utils/screenReaderNarration';
+import AppButton from '../components/ui/AppButton.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
+import AppLoadingState from '../components/ui/AppLoadingState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 
@@ -222,6 +219,12 @@ watch(sentinel, (el) => {
 });
 
 // --- Helpers ---
+function severityVariant(severity: string): 'severity-high' | 'severity-medium' | 'severity-low' {
+  if (severity === 'error') return 'severity-high';
+  if (severity === 'warning') return 'severity-medium';
+  return 'severity-low';
+}
+
 function resultKey(r: QualityResult): string {
   return ignoreKey(r);
 }
@@ -346,18 +349,6 @@ onActivated(() => {
 
 <style scoped>
 /* Unique to QualityView */
-.severity-badge {
-  font-size: var(--font-xs);
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 8px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.badge-error   { background: #feb2b2; color: #742a2a; }
-.badge-warning { background: #fef3c7; color: #78350f; }
-.badge-notice  { background: #bfdbfe; color: #1e3a8a; }
-
 .quality-table { table-layout: fixed; width: 100%; }
 
 .row-ignored { opacity: 0.5; }
@@ -366,35 +357,24 @@ onActivated(() => {
 .persons-cell { font-size: var(--font-sm); }
 .actions-th, .actions-td { text-align: right; }
 
-.btn-ignore  { background: #e2e8f0; color: #4a5568; }
-.btn-unignore { background: #c6f6d5; color: #276749; }
-
 .btn-confirm {
-  color: #16a34a;
-  border-color: #16a34a;
-}
-.btn-confirm:hover {
-  background: #f0fdf4;
+  color: var(--success-text);
 }
 .btn-reject {
-  color: #dc2626;
-  border-color: #dc2626;
-}
-.btn-reject:hover {
-  background: #fef2f2;
+  color: var(--error-text);
 }
 .btn-view {
-  color: #2563eb;
-  border-color: #2563eb;
+  color: var(--accent);
+  border-color: var(--accent);
   text-decoration: none;
   display: inline-block;
   padding: 2px 8px;
   border: 1px solid;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-xs);
 }
 .btn-view:hover {
-  background: #eff6ff;
+  background: var(--surface-hover);
 }
 .actions-td {
   display: flex;
