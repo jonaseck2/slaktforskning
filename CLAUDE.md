@@ -131,7 +131,9 @@ docs/
 ├── MCP.md                        # MCP server tools and UI bridge reference
 ├── IPC_REFERENCE.md              # Complete window.api surface + IPC channel mapping
 ├── napkin.md                     # Per-repo runbook (auto-curated)
-└── plans/                        # Implementation plans (active + archive/)
+├── plans/                        # Implementation plans (active + archive/)
+└── superpowers/
+    └── specs/                    # Design specs from brainstorming (active + archive/)
 
 .claude/
 └── skills/                       # Claude skills (commit, test, electron-dev, etc.)
@@ -633,6 +635,8 @@ A standalone screen reader mode (third Read Aloud option alongside Off and Narra
 
 ```bash
 npm start              # Launch Electron app in dev mode (Vite HMR)
+./scripts/dev-debug.sh # Launch with Chrome DevTools Protocol (CDP port 9222)
+./scripts/dev-debug.sh 9223 19242  # Custom ports for parallel instances
 npm test               # Run unit tests (Vitest, 68 tests)
 npm test -- --coverage # Run with coverage report (80% threshold on src/api/)
 npx playwright test    # Run E2E tests (app launch + MCP server)
@@ -812,4 +816,5 @@ After `writing-plans` finishes, **always invoke `superpowers:subagent-driven-dev
 - **Persist implementation plans** — Write plans to `docs/plans/` immediately (e.g. `docs/plans/YYYY-MM-DD-description.md`). Context can be lost. When asked to "continue according to plan", look there for the most recent plan file.
 - **Keep plan files and roadmap in sync** — When adding a plan file in `docs/plans/`, add a matching milestone to `docs/PLAN.md` roadmap with a pointer to the plan file. When completing a milestone, mark it done in both the plan file (checkboxes) and `docs/PLAN.md`. The roadmap is the index; the plan files are the detail.
 - **Archive completed plans** — When a milestone is fully complete, move its plan file from `docs/plans/` to `docs/plans/archive/`. Update the `docs/PLAN.md` pointer to the archived path. This prevents completed plans from being loaded into context unnecessarily. `docs/PLAN.md` Done entries are brief summaries only — full implementation details live in the archived plan files.
+- **Archive completed design specs** — Design specs live in `docs/superpowers/specs/`. When a spec is fully implemented, move it to `docs/superpowers/specs/archive/`. Update any `docs/PLAN.md` spec references to the archived path. Add a `[done]` roadmap entry with the archived spec pointer if one doesn't exist.
 - **Version bumps only when work is complete** — Features bump minor (x.Y.0) when done. Fixes bump patch (x.y.Z) when done. Never bump version during partial implementation — intermediate commits within a multi-task feature do not get version bumps. Half a feature is not a release. Bump once in the final commit when the work is complete and tested.

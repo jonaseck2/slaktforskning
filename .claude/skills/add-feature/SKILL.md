@@ -462,3 +462,8 @@ Use `superpowers:subagent-driven-development` to dispatch these with two-stage r
 ## After implementing
 
 Use the `/test` skill to run and write tests. Then commit with `/commit`.
+
+**Archive completed artifacts:**
+- Move finished plans from `docs/plans/` to `docs/plans/archive/`
+- Move finished design specs from `docs/superpowers/specs/` to `docs/superpowers/specs/archive/`
+- Update `docs/PLAN.md` pointers to archived paths and mark roadmap entries as `[done]`

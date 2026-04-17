@@ -143,7 +143,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.88.0 | feat(mcp-dev): chart MCP tools — `chart_list_persons`, `chart_select_person`, `chart_focus_person`, `chart_get_layout`, `chart_screenshot_person` wrapping chart HTTP bridge endpoints | — |
 | v0.89.0 | feat(mcp-dev): seed and inspect MCP tools — `seed_person`, `seed_family`, `clear_test_data`, `db_stats`, `app_status`; `/status` endpoint in ui-server; 10 unit tests for seed workflow | — |
 | v0.89.1 | test: E2E test for dev MCP server initialize handshake | — |
-| v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/superpowers/specs/2026-04-15-mcp-overhaul-design.md) |
+| v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/superpowers/specs/archive/2026-04-15-mcp-overhaul-design.md) |
 | v0.90.1 | Fix: startup and quality check CPU contention on large databases | [archive](plans/archive/2026-04-16-startup-perf-fix.md) |
 | v0.90.2 | QualityView infinite scroll pagination (100 results at a time) | — |
 | v0.91.0 | UX improvements: multi-token search, SourcePicker autocomplete, DateInput YYYY-MM-DD fields with auto-advance, modal redesign (no click-outside close, action verb buttons), EventForm source always visible with Save & Next keeping place/source, gazetteer auto-init, scroll zoom disabled on maps, name surname pre-fill, GEDCOM UTF-8 auto-detection, stable file dialog paths | — |
@@ -152,6 +152,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.92.0 | Quality check fix actions: Fix button opens correct modal per check type, QualityView navigates with action param, PlacePicker sorts gazetteer results by specificity | — |
 | v0.92.1 | Fix: quality check rows clickable to trigger fix action | — |
 | v0.92.2 | Fix: QualityView → PersonDetailView action routing uses watch on person ref for reliable modal opening | — |
+| v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
 ---
 
 ## Research
@@ -172,6 +173,19 @@ Fixes, investigations, and refactors archived in [plans/archive/PLAN.md](plans/a
 Refactor hourglass chart layout to support outline placeholders as first-class nodes. Replace ahnentafel-based layout with a general graph model where each person has N parents, M children, K spouses. Outline injection is unconditional for the selected person; layout treats outlines identically to real nodes; focal person never filters outlines.
 - Plan: [plans/archive/2026-04-11-hourglass-outline-architecture.md](plans/archive/2026-04-11-hourglass-outline-architecture.md)
 
+#### Hourglass Layout Rework [done]
+Complete rewrite of hourglass layout: clone → inject outlines → measure (computeFootprint) → 4-pass placement (ancestors, descendants, focal, outlines) → line routing → finalize. Collision avoidance for outline placeholders.
+- Spec: `docs/superpowers/specs/archive/2026-04-15-hourglass-layout-rework-design.md`
+- Plan: `.claude/plans/2026-04-15-hourglass-layout-rework.md`
+
+#### Gazetteer Quality Checks + Media Editor [done]
+Gazetteer match quality checks (PLACE_MATCH_AMBIGUOUS/PARTIAL/NONE/WRONG_LEVEL), confirm/reject match in QualityView, and MediaView table mode with inline editing.
+- Spec: `docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md`
+
+#### MCP Server Overhaul [done]
+Prod/dev server split. 34 workflow tools in prod (persons, families, events, sources, places, research, media, data). 15 dev tools (UI automation, chart inspection, seed, inspect). Factory pattern via createProdServer/createDevServer.
+- Spec: `docs/superpowers/specs/archive/2026-04-15-mcp-overhaul-design.md`
+
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion. Precondition: hourglass outline bugs fixed first.
 - Plan: [plans/2026-04-13-chart-layout-shared-refactor.md](plans/2026-04-13-chart-layout-shared-refactor.md)
@@ -190,12 +204,12 @@ Render-time place resolution using bundled hierarchical gazetteers. Swedish pari
 
 #### Gazetteer Import/Export [done]
 Per-database gazetteer storage with import/export for humans (UI) and agents (MCP). `gazetteers` table stores JSON blobs. GazetteersView gains Import (.json/.json.gz), Export, Delete buttons. 7 MCP tools: `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`.
-- Spec: `docs/superpowers/specs/2026-04-13-gazetteer-import-export-design.md`
+- Spec: `docs/superpowers/specs/archive/2026-04-13-gazetteer-import-export-design.md`
 - Plan: [plans/archive/2026-04-13-gazetteer-import-export.md](plans/archive/2026-04-13-gazetteer-import-export.md)
 
 #### Boundary Gazetteer Overlay [done]
 New "boundary" gazetteer kind carrying polygon geometry. Click a map pin to see the place's geographic extent as an outline overlay. Extends Gazetteer type with `kind` and GazetteerNode with `geometry`. Lazy-loaded via `resolveBoundary()` in composable.
-- Spec: `docs/superpowers/specs/2026-04-13-boundary-gazetteer-design.md`
+- Spec: `docs/superpowers/specs/archive/2026-04-13-boundary-gazetteer-design.md`
 - Plan: [plans/archive/2026-04-13-boundary-gazetteer-overlay.md](plans/archive/2026-04-13-boundary-gazetteer-overlay.md)
 
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
@@ -207,7 +221,6 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 - Additional country gazetteers (Norway, Denmark, Finland, US, etc.)
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
 - Batch match quality report (how many places resolved, at what quality)
-- "Confirm match" workflow — user accepts a gazetteer match and it writes coordinates to the place record
 
 ---
 
@@ -217,9 +230,10 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 - Close confirmation dialog on last window (production only)
 - Media copy-on-attach verified working (imported media paths may show as missing — expected)
 
-#### Media Detail/Editor Rework [planned]
-Table-based MediaView for managing media metadata (title, notes, format). Inline editing, media overview, linked entities. Needs brainstorming on table vs panel approach.
-- Plan: [plans/2026-04-15-media-editor-rework.md](plans/2026-04-15-media-editor-rework.md)
+#### Media Detail/Editor Rework [done]
+Table-based MediaView with gallery/table toggle, inline editing for title and notes, format badges. Persisted view mode to localStorage.
+- Plan: [plans/archive/2026-04-15-media-editor-rework.md](plans/archive/2026-04-15-media-editor-rework.md)
+- Spec: [docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md](docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md)
 
 #### Name Display Strategy for Charts [planned]
 How to display names in space-constrained contexts (charts, circle chart). Tilltalsnamn as primary display, abbreviated chart names, birth vs current name selection. Needs design discussion.
