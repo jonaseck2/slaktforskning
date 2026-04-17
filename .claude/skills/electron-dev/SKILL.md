@@ -133,6 +133,34 @@ performance_analyze_insight() → identify hot functions and call stacks
 
 This catches issues that unit tests miss: unhandled promise rejections, missing ARIA labels, and CPU spikes from N+1 queries in the renderer.
 
+### UI Verification Workflow
+
+**Before committing UI changes, verify they work in the running app:**
+
+1. **Ask the user** to launch the app with CDP: `./scripts/dev-debug.sh`
+2. **Verify CDP is active:** `./scripts/verify-cdp.sh` (or `curl -s http://127.0.0.1:9222/json/version`)
+3. **Use Chrome DevTools MCP** to interact with the app:
+   ```
+   list_pages()              → find the app page
+   select_page(pageId)       → select it
+   take_snapshot()            → get the accessibility tree
+   navigate_page(url)         → navigate within the app
+   take_screenshot()          → capture the current state
+   click(uid)                → click elements
+   fill(uid, value)          → fill form inputs
+   ```
+4. **Verify the change visually and functionally** before committing
+
+**Important macOS limitation:** Electron GUI apps cannot be launched from Claude Code's background shell — they need window server access. Always ask the user to run `./scripts/dev-debug.sh` from their own terminal. Use `./scripts/verify-cdp.sh` to confirm the connection works before attempting Chrome DevTools MCP commands.
+
+**Parallel instances:** Each subagent can have its own instance with unique ports:
+```
+Terminal 1: ./scripts/dev-debug.sh 9222 19241
+Terminal 2: ./scripts/dev-debug.sh 9223 19242
+```
+
+**Never `pkill -f Electron`** — this kills ALL Electron apps including the user's main instance. Instead, kill only the specific PID you started.
+
 ### Common issues
 
 **Wrong Electron binary (macOS binary in Linux container):**

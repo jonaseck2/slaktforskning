@@ -122,6 +122,7 @@ const props = defineProps<{
   personId?: string;
   relationshipId?: string;
   editingEvent?: EventData | null;
+  defaultEventType?: string;
 }>();
 
 const emit = defineEmits<{
@@ -150,7 +151,7 @@ const otherTypes = computed(() =>
 );
 
 const form = reactive({
-  event_type: props.editingEvent?.event_type ?? '',
+  event_type: props.editingEvent?.event_type ?? props.defaultEventType ?? '',
   date_type: props.editingEvent?.date_type ?? 'exact',
   date_value: props.editingEvent?.date_value ?? '',
   date_value_end: props.editingEvent?.date_value_end ?? '',

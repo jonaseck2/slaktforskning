@@ -31,115 +31,131 @@ The desktop genealogy market splits into three tiers:
 
 ## Feature Gap Matrix
 
+*Updated 2026-04-17 to reflect all features implemented through v0.93.0.*
+
 | Category | Competitors | Släktforskning Today | Status |
 |----------|-------------|---------------------|--------|
-| Core data model | Person, family, events, sources, citations | Same + places, groups, research tasks, repositories | **Ahead** |
-| Source/citation model | Most have basic source attachment | Source → Citation with confidence levels, link rules auto-linking | **Ahead** |
-| Quality checks | Gramps has plugins; RootsMagic has basic validation | 26 built-in checks, ignore/restore, per-person and global views | **Ahead** |
-| AI integration | MyHeritage: cloud photo AI. Others: none. | MCP server with 80+ tools, agent can read/write all data | **Ahead** |
-| Charts | Pedigree, hourglass, fan, descendant, wall-sized | Pedigree, hourglass, circle chart, collapsible nodes, infinite expansion | On par |
-| Wall charts | RootsMagic, Legacy, MacFamilyTree: large-format print | Not yet | **Gap** |
-| Media viewer | RootsMagic: gallery view. Gramps: cropping/regions. MacFamilyTree: lightbox | File table with ordering, profile pictures | **Gap** |
-| Media portability | Gramps: .gpkg bundles media+data | GEDCOM media export (references only, not bundled) | **Gap** |
-| Face/region tagging | Gramps: crop region → link to person. MyHeritage: auto face detection (cloud). | Not yet | **Gap** |
-| Reports/books | RootsMagic/Legacy: narrative reports, book publishing center, PDF export | Ancestor chart, family group sheet, summary PDF | **Gap** (narrow report set) |
-| Narrative/story output | Legacy: Publishing Centre (chapters, cover). Storied: storytelling focus. | Not yet | **Gap** |
-| CSV export | Gramps: yes. Most others: no. | Not yet | Minor gap |
-| Import formats | GEDCOM universal. RootsMagic imports from 10+ programs. | GEDCOM 5.5.1/7.0, Genney, Holger | On par for open source |
-| GEDCOM robustness | Family Tree Maker notoriously lossy. RootsMagic solid. Gramps extensive. | Good with validation report, room for edge cases | Needs hardening |
+| Core data model | Person, family, events, sources, citations | Same + places, groups, research tasks, repositories, gazetteers | **Ahead** |
+| Source/citation model | Most have basic source attachment | Source → Citation with confidence levels, configurable link rules auto-linking (sv/en/universal) | **Ahead** |
+| Quality checks | Gramps has plugins; RootsMagic has basic validation | 26 built-in checks + gazetteer place-match checks, ignore/restore, per-person and global views, fix actions from QualityView | **Ahead** |
+| AI integration | MyHeritage: cloud photo AI. Others: none. | MCP server: 34 prod workflow tools + 15 dev tools (UI automation, chart inspection, seeding), AI media tools (base64, untagged discovery, person context, tagging status) | **Ahead** |
+| Charts | Pedigree, hourglass, fan, descendant, wall-sized | Pedigree, hourglass, descendant, circle chart, collapsible nodes, infinite expansion, outline placeholders for adding relatives, wall charts (SVG + tiled PDF) | **Ahead** |
+| Wall charts | RootsMagic, Legacy, MacFamilyTree: large-format print, customizable fonts/colors/backgrounds | Large-format pedigree/descendant SVG with tiled PDF (v0.62.0) | **On par** |
+| Media viewer | RootsMagic: gallery view. Gramps: cropping/regions. MacFamilyTree: lightbox | Gallery + table toggle, lightbox viewing, entity linking, inline editing, media timeline per person/place (v0.54.0, v0.61.0, v0.82.0) | **On par** |
+| Media portability | Gramps: .gpkg bundles media+data | GEDCOM + media .zip portable archive export/import (v0.58.0) | **On par** |
+| Face/region tagging | Gramps: crop region → link to person. MyHeritage: auto face detection (cloud). | Manual crop + link to person (v0.64.0), MCP tools for AI batch suggest + person matching + tagging status (v0.67.0) | **Ahead** |
+| Reports/books | RootsMagic/Legacy: narrative reports, book publishing center, PDF export | Ancestor chart, family group sheet, summary PDF, person biography, place history, family narrative, ancestor book with circle chart (v0.59.0, v0.20.0) | **On par** |
+| Narrative/story output | Legacy: Publishing Centre (chapters, cover). Storied: storytelling focus. | Person biography, place history, family narrative reports (v0.59.0), MCP report generation tools for AI narratives (v0.53.0) | **On par** |
+| CSV export | Gramps: yes. Most others: no. | Persons, events, sources, places with delimiter/BOM options (v0.60.0) | **On par** |
+| Static HTML site | webtrees: full web app. Gramps Web: self-hosted. | Static snapshot export with search, XSS-safe (v0.65.0) | **On par** |
+| Import formats | GEDCOM universal. RootsMagic imports from 10+ programs. | GEDCOM 5.5.1/7.0, Genney (XML + Derby), Holger (ElevateDB), import preview, validation report | **On par** |
+| GEDCOM robustness | Family Tree Maker notoriously lossy. RootsMagic solid. Gramps extensive. | 8 edge case fixtures, improved date parser, import preview, 40 hardening tests, UTF-8 auto-detection (v0.66.0) | **On par** |
 | Plugin/addon system | Gramps: Python plugin API, 100+ community addons | MCP tools (agent-extensible, not user-installable plugins) | Different approach |
 | i18n | Gramps: 40+ languages. MacFamilyTree: 15+. | Swedish + English | Acceptable for target audience |
-| Undo/redo | Universal in paid apps, Gramps has it | Not yet | **Gap** |
-| Timeline view | Several competitors have person timelines | Not yet | **Gap** |
-| Place mapping | Most have map integration (Google/OpenStreetMap) | Places with lat/lon but no map view | **Gap** |
+| Undo/redo | Universal in paid apps, Gramps has it | Command pattern, Cmd+Z/Shift+Z, grouped operations (v0.63.0) | **On par** |
+| Timeline view | Several competitors have visual timeline bars/charts | Chronological event list with gap detection (v0.52.0) | **On par** |
+| Place mapping | Most have map integration (Google/OpenStreetMap) | Leaflet/OpenStreetMap, place pins, PlacePanel side panel, boundary gazetteer overlays (parish outlines), person life path (v0.56.0, v0.68.0, v0.75.0) | **Ahead** |
+| Place gazetteers | Most have no place resolution. Gramps: places hierarchy only. | Bundled Swedish parishes/boundaries, render-time resolution, gazetteer import/export, 7 MCP tools, disambiguation via hints | **Ahead** |
+| Accessibility | Variable. Most desktop apps: basic keyboard nav. | WCAG 2.1 AA, screen reader mode (AAA), TTS narration, focus trapping, skip links, ARIA roles, arrow-key chart navigation (v0.44.0, v0.48.0) | **Ahead** |
 | Multi-database | RootsMagic: multiple open simultaneously with drag-drop | Database switcher, one active at a time | Acceptable |
 
 ---
 
 ## Prioritized Recommendations
 
-### Track A: Presentation & Sharing
+*All four tracks (A1-A5, B1-B5, C1-C4, D1-D3) are complete as of v0.93.0.*
 
-The "output" story — research tool that produces something worth sharing.
+### Track A: Presentation & Sharing [complete]
 
-**A1. Richer narrative reports**
-Person biography (life summary with events, relationships, sources in prose), place history (events at a place over time), family narrative (a couple and their children). PDF with clickable links to sources.
+**A1. Richer narrative reports** [v0.59.0]
+Person biography, place history, family narrative reports with PDF output.
 
-**A2. Export content options**
-Configuration UI for what goes into exports: include/exclude living persons, media, notes, sources, specific branches. Shared across PDF and GEDCOM exports. Infrastructure that makes every export better.
+**A2. Export content options** [v0.55.0]
+Branch filtering, living person exclusion, content toggles for exports.
 
-**A3. Wall charts**
-Large-format pedigree and descendant charts for printing. SVG-based (reuse existing chart infrastructure). A3/A0 paper sizes and tiled multi-page PDF for home printers.
+**A3. Wall charts** [v0.62.0]
+Large-format pedigree/descendant SVG with tiled multi-page PDF.
 
-**A4. Static HTML site export**
-Generate a browsable family tree website from the database. Lower priority than PDF but adds self-hosting option. Could reuse report components.
+**A4. Static HTML site export** [v0.65.0]
+Browsable family tree website with search, XSS-safe output.
 
-**A5. CSV export**
-Simple tabular export of persons, events, sources. Low effort, useful for analysis.
+**A5. CSV export** [v0.60.0]
+Persons, events, sources, places with delimiter/BOM options.
 
-### Track B: Media Experience
+### Track B: Media Experience [complete]
 
-Step-by-step evolution from file table to rich media management.
+**B1. Media viewer redesign** [v0.54.0, v0.82.0]
+Gallery + table toggle, lightbox viewing, entity linking, inline title/notes editing.
 
-**B1. Media viewer redesign**
-Entity-oriented (not file-oriented). Show what each media item links to, support linking to multiple entities, lightbox/gallery viewing, thumbnail previews. Foundation for everything else.
+**B2. Media-bundled portable archive** [v0.58.0]
+GEDCOM + all referenced media files as a single .zip export/import.
 
-**B2. Media-bundled portable archive**
-Export GEDCOM + all referenced media files as a single .zip. Import should unpack and re-link. Closes the portability gap — users know they can take everything with them.
+**B3. Media timeline** [v0.61.0]
+Chronological media per person/place with lightbox integration.
 
-**B3. Media timeline**
-Photos and documents arranged chronologically across a person's life, or across a place's history. Leverages entity links from B1.
+**B4. Face/region tagging — manual** [v0.64.0]
+Crop rectangle → link to person, use as profile picture. 14 tests.
 
-**B4. Face/region tagging (step 1 — manual)**
-Select a rectangle in a photo, link it to a person, optionally use as profile picture. Local-only, no AI. Gramps proves this is valuable.
+**B5. Face/region tagging — MCP** [v0.67.0]
+AI batch suggest, person matching, tagging status tools.
 
-**B5. Face/region tagging (step 2 — MCP)**
-MCP tools for bounding box detection so AI agents can suggest face regions. Keeps AI in the agent layer.
+### Track C: Core Polish [complete]
 
-### Track C: Core Polish
+**C1. Undo/redo** [v0.63.0]
+Command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests.
 
-Features users expect from a serious genealogy app.
+**C2. Person timeline view** [v0.52.0]
+Chronological events with gap detection.
 
-**C1. Undo/redo**
-Already on the roadmap. Table stakes for data-entry-heavy app.
+**C3. Place map visualization** [v0.56.0, v0.68.0, v0.75.0]
+Leaflet/OpenStreetMap with place pins, PlacePanel side panel (8 collapsible sections, drag-resize), boundary gazetteer overlays (parish outlines), person life path.
 
-**C2. Person timeline view**
-Chronological view of all events for a person. Useful for spotting gaps and conflicts.
+**C4. GEDCOM hardening** [v0.66.0]
+8 edge case fixtures, improved date parser, import preview, 40 tests.
 
-**C3. Place map visualization**
-Display places on OpenStreetMap. Already store lat/lon. Show a person's life geographically or all events at a place.
+### Track D: MCP & Agent Story [complete]
 
-**C4. GEDCOM hardening**
-Edge case testing against exports from RootsMagic, Gramps, Legacy, Family Tree Maker. Make import truly bulletproof. Directly serves "reduce switching apprehension."
+**D1. MCP report generation** [v0.53.0]
+6 higher-level tools for AI narrative generation (person summary, family unit, ancestor tree, place history, research gaps, timeline).
 
-### Track D: MCP & Agent Story
+**D2. MCP media tools for AI** [v0.57.0, v0.67.0]
+Base64 retrieval, untagged media discovery, person context, batch face tagging, tagging status.
 
-Amplify the differentiator nobody else has.
+**D3. Claude Desktop/cowork integration** [docs]
+6 workflow guides, README MCP setup section.
 
-**D1. MCP report generation**
-Design MCP tools for generating narrative content (person summaries, research reports, conflict analysis). Lets Claude Desktop/cowork produce rich research output directly from the data.
+### Beyond the Original Tracks
 
-**D2. MCP media tools for AI**
-Tools for face detection results, photo metadata extraction, suggested entity linking. Keeps AI in the agent layer.
+Features implemented since the gap analysis that were not in the original plan:
 
-**D3. Claude Desktop/cowork integration testing**
-Validate the MCP works well with Claude's desktop products. Document workflows. Product validation and demonstration.
+| Feature | Version | Description |
+|---------|---------|-------------|
+| Place gazetteers | v0.73.2–v0.77.0 | Bundled Swedish parishes, render-time resolution, gazetteer import/export, boundary overlays, disambiguation |
+| MCP server overhaul | v0.82.1–v0.90.0 | Prod/dev split, 34 workflow tools + 15 dev tools, chart inspection, UI automation, seed/inspect |
+| Accessibility + Screen reader | v0.44.0, v0.48.0 | WCAG 2.1 AA/AAA, TTS narration, focus trapping, arrow-key chart nav, 80+ i18n keys |
+| Usability optimizations | v0.49.0, v0.91.0 | Quick-add relatives, source memory, multi-token search, DateInput auto-advance, modal redesign |
+| Quality check fix actions | v0.92.0 | Fix button per check type, QualityView → PersonDetailView action routing |
+| CDP debugging | v0.93.0 | Chrome DevTools Protocol support for development |
 
 ---
 
 ## Unique Value Proposition Assessment
 
+*Updated 2026-04-17.*
+
 | Differentiator | Tried elsewhere? | Assessment |
 |----------------|-----------------|------------|
-| MCP server for AI agents | No. Zero competitors. | **Genuine innovation.** First-mover advantage. Risk: users don't know what MCP is — value must be shown through outcomes (reports, suggestions), not technology. |
-| Source linker (auto-linking references) | No. Users manually copy-paste URLs everywhere. | **Novel and useful.** No one has tried regex-based configurable linking. Extensible by community via locale rule sets. |
-| 26 integrated quality checks | Gramps has some via plugins (fragmented). | **Strong differentiator.** Built-in with good UX is meaningfully better than plugin-based. |
-| Local-first + modern UI + open source | Gramps is the only peer but uses GTK/Python. | **Real gap in the market.** Gramps proves the audience exists; modern stack is the upgrade. |
-| Swedish genealogy first-class | No competitor has patronymics, Swedish archive link rules, or Swedish-specific import profiles. | **Strong niche differentiator.** The wedge for initial adoption. |
-| Research tasks integrated | Ancestral Quest and Ancestris have research managers. | On par, but MCP integration makes them more powerful. |
-| Groups | Rare — most apps use tags or color coding. | Minor differentiator. Useful for organizing but not a switching reason. |
+| MCP server for AI agents (34 workflow + 15 dev tools) | No. Zero competitors. | **Genuine innovation.** First-mover advantage. Now proven with Claude Desktop workflows, documented integration guides, and AI-powered media tagging. |
+| Source linker (auto-linking references) | No. Users manually copy-paste URLs everywhere. | **Novel and useful.** Configurable regex rules for Swedish (ArkivDigital, Riksarkivet) and English (FamilySearch, Ancestry) sources. Community-extensible via locale rule sets. |
+| Quality checks with fix actions | Gramps has some via plugins (fragmented). | **Strong differentiator.** 26+ built-in checks including gazetteer place-match validation (ambiguous/partial/none/wrong_level), per-row fix actions routing to correct modal, ignore/restore. |
+| Place gazetteers with boundary overlays | No desktop app has this. | **Genuine innovation.** Bundled Swedish parishes + boundaries (Lantmäteriet CC0), render-time resolution, disambiguation hints, polygon overlay on map pins. |
+| Local-first + modern UI + open source | Gramps is the only peer but uses GTK/Python. | **Real gap in the market.** Now with full presentation layer (reports, wall charts, HTML export, CSV) that was previously the gap. |
+| Swedish genealogy first-class | No competitor has patronymics, Swedish archive link rules, Swedish-specific import profiles, or bundled Swedish gazetteers. | **Strong niche differentiator.** Genney + Holger direct import, Swedish parish gazetteers, patronymic handling. |
+| WCAG 2.1 AA/AAA + screen reader mode | Most desktop genealogy apps have basic keyboard nav at best. | **Strong differentiator.** TTS narration, focus trapping, arrow-key chart navigation, 80+ i18n keys for screen reader mode. |
+| Research tasks integrated | Ancestral Quest and Ancestris have research managers. | On par, but MCP integration makes them uniquely powerful for AI-assisted research. |
+| Face/region tagging with MCP AI pipeline | Gramps: manual only. MyHeritage: cloud AI. | **Ahead.** Manual local tagging + MCP tools for AI batch suggest, keeping AI in the agent layer without cloud dependency. |
 
-**Bottom line:** MCP, source linker, and quality checks are genuine innovations. Swedish niche + modern open-source stack fill a real market gap. The presentation/sharing features (Track A) are where competitors lead, and closing that gap completes the product.
+**Bottom line:** All four tracks from the original gap analysis are complete. The presentation/sharing gap that competitors led on is now closed. MCP, source linker, quality checks, place gazetteers, and accessibility are genuine innovations where Släktforskning leads. The remaining competitive gaps are narrow: plugin ecosystem (different approach via MCP), i18n breadth (acceptable for target audience), and multi-database UX (acceptable).
 
 ---
 

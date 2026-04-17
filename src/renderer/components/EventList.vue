@@ -58,6 +58,7 @@
       :person-id="personId"
       :relationship-id="relationshipId"
       :editing-event="editingEvent"
+      :default-event-type="defaultEventType"
       @close="closeForm"
       @saved="onSaved"
     />
@@ -184,8 +185,11 @@ watch(
   { immediate: true }
 );
 
-function openAddForm() {
+const defaultEventType = ref('');
+
+function openAddForm(eventType?: string) {
   editingEvent.value = null;
+  defaultEventType.value = eventType || '';
   showForm.value = true;
 }
 
