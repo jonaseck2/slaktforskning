@@ -5,7 +5,11 @@
 #   ./scripts/dev-debug.sh              # CDP on port 9222, UI server on 19241
 #   ./scripts/dev-debug.sh 9223 19242   # Custom ports (for parallel instances)
 #
-# Then in Claude Code or another terminal, connect Chrome DevTools MCP:
+# Verify connection (in another terminal):
+#   ./scripts/verify-cdp.sh
+#   curl -s http://127.0.0.1:19241/status
+#
+# Connect Chrome DevTools MCP:
 #   npx chrome-devtools-mcp@latest --browserUrl http://127.0.0.1:9222
 #
 # For parallel subagent instances, use different ports:
@@ -22,8 +26,12 @@ export SLAKTFORSKNING_CDP_PORT="$CDP_PORT"
 export SLAKTFORSKNING_UI_PORT="$UI_PORT"
 
 echo "Starting Släktforskning with:"
-echo "  CDP port: $CDP_PORT (Chrome DevTools MCP: --browserUrl http://127.0.0.1:$CDP_PORT)"
-echo "  UI port:  $UI_PORT (MCP dev tools)"
+echo "  CDP port:    $CDP_PORT"
+echo "  UI port:     $UI_PORT"
+echo ""
+echo "Verify (in another terminal):"
+echo "  ./scripts/verify-cdp.sh $CDP_PORT"
+echo "  curl -s http://127.0.0.1:$UI_PORT/status"
 echo ""
 
 npm start

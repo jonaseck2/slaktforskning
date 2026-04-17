@@ -110,35 +110,76 @@ E2E tests live in `tests/e2e/` and use Playwright (not browser Playwright — pr
 - Process spawning with timeout (30s for app, 15s for MCP)
 - Cleanup: `fs.rmSync(dbPath)` after test
 
-## MCP-Assisted Verification (UI Features)
+## UI Verification (REQUIRED for UI changes)
 
-After `npm test` passes, verify new UI features in the live app using the MCP server's tools. This is faster than writing a Playwright test for every feature and covers the full IPC → Vue rendering stack.
+**Unit tests alone are not sufficient for UI changes.** They don't cover the rendering stack, modal lifecycle, Vue Router behavior, or visual correctness. Always verify in the running app before committing.
 
-**Requires:** the Electron app running (`npm start`).
+### Setup
 
-### Verification loop
+Ask the user to launch the app with debugging enabled:
+```bash
+./scripts/dev-debug.sh   # CDP port 9222, UI server port 19241
+```
+
+Verify the connection:
+```bash
+./scripts/verify-cdp.sh                              # check CDP
+curl -s http://127.0.0.1:19241/status                # check UI server
+```
+
+**Cannot launch Electron from Claude Code's shell** — it needs macOS window server access. Always ask the user to run the script from their terminal.
+
+### Verification via UI server (always available when app is running)
+
+```bash
+# Navigate to the view you changed
+curl -s -X POST http://127.0.0.1:19241/navigate -d '{"path":"/your-route"}'
+
+# Take a screenshot and inspect visually
+curl -s -X POST http://127.0.0.1:19241/screenshot | python3 -c "
+import sys,json,base64; d=json.load(sys.stdin)
+open('/tmp/verify.png','wb').write(base64.b64decode(d['data']))"
+
+# Read the file to see it
+# Read /tmp/verify.png
+
+# Click elements
+curl -s -X POST http://127.0.0.1:19241/click -d '{"selector":"button.btn-add"}'
+
+# Execute JS to check state
+curl -s -X POST http://127.0.0.1:19241/execute_js -d '{"code":"document.querySelector(\".modal\") !== null"}'
+```
+
+### Verification via Chrome DevTools MCP (when CDP is active)
 
 ```
-1. get_current_database        — confirm you're on the right DB
-2. create_person / add_event / create_research_task / ...
-                               — seed realistic test data
-3. ui_navigate("/your-route")  — go to the affected view
-4. ui_screenshot()             — visual confirmation it renders
-5. ui_get_dom()                — assert specific elements exist (table rows, labels, etc.)
-6. ui_click("button.add")      — exercise primary interactions
+list_pages()          → find the Släktforskning page (not DevTools)
+select_page(id)       → select it
+take_snapshot()       → accessibility tree with uid's
+click(uid)            → click elements reliably
+fill(uid, value)      → fill form inputs (triggers Vue reactivity)
+take_screenshot()     → capture current state
 ```
 
 ### When to use it
 
-- After building any new Vue view or component
-- When a UI bug is reported and hard to reproduce via unit tests
-- To confirm IPC wiring is correct end-to-end (unit tests don't reach the preload layer)
+- **ALWAYS** after changing Vue components, modals, or routing behavior
+- When a UI bug is reported — reproduce it visually before fixing
+- To confirm IPC wiring is correct end-to-end
+- After fixing a bug — verify the fix visually, then commit
+
+### Common pitfalls caught by UI verification
+
+- Modal opens but immediately closes (route key change destroys component)
+- Form fields not pre-filled (ref timing issues)
+- Click handlers on wrong element (event bubbling)
+- Autocomplete dropdowns not appearing (gazetteer not loaded)
 
 ### Notes
 
 - MCP data tools work without the Electron app — they go straight to SQLite
-- UI tools (`ui_navigate`, `ui_screenshot`, `ui_get_dom`, `ui_click`) require the app to be running; they return a descriptive error if it's not
-- The MCP server and the running app share the same SQLite DB — data seeded via MCP is immediately visible in the app
+- UI server tools require the app to be running
+- The MCP server and the running app share the same SQLite DB
 
 ## When Tests Fail
 
