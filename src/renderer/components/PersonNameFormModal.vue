@@ -49,8 +49,8 @@
           <input v-model="form.nickname" type="text" :placeholder="$t('persons.nicknamePlaceholder')" />
         </label>
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-          <button type="submit">{{ name ? $t('common.save') : $t('common.create') }}</button>
+          <AppButton variant="secondary" @click="$emit('close')">{{ $t('common.cancel') }}</AppButton>
+          <AppButton variant="primary" type="submit">{{ name ? $t('common.save') : $t('common.create') }}</AppButton>
         </div>
       </form>
   </BaseModal>
@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
 import BaseModal from './BaseModal.vue';
+import AppButton from './ui/AppButton.vue';
 import { NAME_TYPE_VALUES } from '../constants/eventTypes';
 import { parseAsteriskNotation } from '../utils/nameUtils';
 import type { NameRow } from './PersonNamesTable.vue';

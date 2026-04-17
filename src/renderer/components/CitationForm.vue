@@ -40,8 +40,8 @@
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-          <button type="submit">{{ $t('common.create') }}</button>
+          <AppButton variant="secondary" @click="$emit('close')">{{ $t('common.cancel') }}</AppButton>
+          <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
         </div>
       </form>
   </BaseModal>
@@ -51,6 +51,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
+import AppButton from './ui/AppButton.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';

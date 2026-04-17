@@ -76,10 +76,10 @@
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-          <button type="submit" :disabled="entryMode === 'existing' && !existingPersonId">
+          <AppButton variant="secondary" @click="$emit('close')">{{ $t('common.cancel') }}</AppButton>
+          <AppButton variant="primary" type="submit" :disabled="entryMode === 'existing' && !existingPersonId">
             {{ entryMode === 'existing' ? $t('personDetail.linkExisting') : $t('personDetail.addAndLink') }}
-          </button>
+          </AppButton>
         </div>
       </form>
   </BaseModal>
@@ -89,6 +89,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
+import AppButton from './ui/AppButton.vue';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
@@ -236,7 +237,7 @@ async function save() {
 }
 .entry-mode-toggle {
   display: flex;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 4px;
@@ -252,7 +253,7 @@ async function save() {
 }
 .toggle-btn.active { background: var(--color-primary); color: white; }
 .birth-section {
-  border: 1px solid var(--color-border, #ddd);
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
   padding: 8px 12px;
   margin-top: 4px;
