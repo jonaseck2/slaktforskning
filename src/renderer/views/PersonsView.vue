@@ -3,7 +3,7 @@
     <div class="header">
       <h2>{{ $t('persons.title') }}</h2>
       <div class="header-actions">
-        <button class="btn-add" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('persons.addPerson') }}</button>
+        <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('persons.addPerson') }}</AppButton>
       </div>
     </div>
 
@@ -11,15 +11,11 @@
       {{ $t('persons.showingOf', { shown: persons.length, total }) }}
     </p>
 
-    <div class="filter-chips">
-      <button :class="['chip', { active: filter === 'all' }]" @click="setFilter('all')">{{ $t('persons.filterAll') }}</button>
-      <button :class="['chip', { active: filter === 'unsourced' }]" @click="setFilter('unsourced')">{{ $t('persons.filterUnsourced') }}</button>
-      <button :class="['chip', { active: filter === 'duplicates' }]" @click="setFilter('duplicates')">{{ $t('duplicates.filterDuplicates') }}</button>
-    </div>
+    <FilterChips :options="filterOptions" :model-value="filter" @update:model-value="setFilter" />
 
     <!-- Duplicates view -->
     <template v-if="filter === 'duplicates'">
-      <div v-if="duplicatesLoading" class="empty">{{ $t('common.loading') }}</div>
+      <AppLoadingState v-if="duplicatesLoading" :rows="5" />
       <div v-else-if="duplicates.length === 0" class="empty">{{ $t('duplicates.noDuplicates') }}</div>
       <table v-else class="data-table">
         <thead>
@@ -42,29 +38,33 @@
             </td>
             <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
             <td class="actions-cell">
-              <button class="btn-sm btn-merge-action" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</button>
+              <AppButton size="sm" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</AppButton>
             </td>
           </tr>
         </tbody>
       </table>
     </template>
 
-    <div v-else-if="persons.length === 0 && !loading" class="empty" tabindex="0" :data-narrate="$t('screenReader.tableEmpty', { type: $t('persons.title') })">
-      {{ filter === 'unsourced' ? $t('persons.allSourced') : $t('persons.emptyState') }}
-    </div>
+    <template v-else-if="loading && persons.length === 0">
+      <AppLoadingState :rows="5" />
+    </template>
+
+    <AppEmptyState
+      v-else-if="persons.length === 0 && !loading"
+      icon="🌳"
+      :title="filter === 'unsourced' ? $t('persons.allSourced') : $t('persons.emptyState')"
+      :description="filter === 'all' ? $t('persons.emptyHint') : ''"
+      :action-label="filter === 'all' ? $t('persons.addPerson') : ''"
+      @action="showAddForm = true"
+    />
 
     <template v-else-if="filter !== 'duplicates'">
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ $t('persons.givenName') }}</th>
-            <th>{{ $t('persons.surname') }}</th>
-            <th>{{ $t('persons.sex') }}</th>
-            <th>{{ $t('persons.birthDate') }}</th>
-            <th>{{ $t('persons.birthPlace') }}</th>
-            <th>{{ $t('persons.deathDate') }}</th>
-            <th>{{ $t('persons.deathPlace') }}</th>
-            <th class="actions-cell">{{ $t('common.actions') }}</th>
+            <th>{{ $t('persons.name') }}</th>
+            <th>{{ $t('persons.info') }}</th>
+            <th class="actions-cell"></th>
           </tr>
         </thead>
         <tbody>
@@ -89,18 +89,18 @@
             @keydown.up.prevent="focusPrevRow($event)"
           >
             <td>
-              <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
-                <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
-              </router-link>
+              <div style="display: flex; align-items: center; gap: var(--space-sm)">
+                <AppAvatar :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
+                <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
+                  <strong><PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" /></strong>
+                  <span class="surname-text"> {{ person.surname }}</span>
+                </router-link>
+              </div>
             </td>
-            <td>{{ person.surname }}</td>
-            <td><span :class="'sex-badge sex-' + person.sex">{{ person.sex }}</span></td>
-            <td class="date-cell">{{ person.birth_date ?? '' }}</td>
-            <td>{{ person.birth_place ?? '' }}</td>
-            <td class="date-cell">{{ person.death_date ?? '' }}</td>
-            <td>{{ person.death_place ?? '' }}</td>
+            <td class="info-cell">{{ formatPersonInfo(person) }}</td>
             <td class="actions-cell">
-              <button class="btn-sm btn-delete" @click.stop="removePerson(person.id)">✕</button>
+              <AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge>
+              <AppButton variant="ghost" size="sm" @click.stop="removePerson(person.id)">✕</AppButton>
             </td>
           </tr>
         </tbody>
@@ -151,8 +151,8 @@
             </label>
           </details>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.create') }}</button>
+            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
+            <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
           </div>
         </form>
     </BaseModal>
@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
@@ -183,6 +183,12 @@ import PersonName from '../components/PersonName.vue';
 import MergePersonsModal from '../components/MergePersonsModal.vue';
 import PlacePicker from '../components/PlacePicker.vue';
 import SourcePicker from '../components/SourcePicker.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppAvatar from '../components/ui/AppAvatar.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
+import AppLoadingState from '../components/ui/AppLoadingState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -219,6 +225,12 @@ const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
 const filter = ref<'all' | 'unsourced' | 'duplicates'>('all');
+
+const filterOptions = computed(() => [
+  { value: 'all', label: t('persons.filterAll') },
+  { value: 'unsourced', label: t('persons.filterUnsourced') },
+  { value: 'duplicates', label: t('duplicates.filterDuplicates') },
+]);
 
 interface DuplicateCandidate {
   person1_id: string;
@@ -270,6 +282,15 @@ const birthForm = reactive({
 });
 const birthSourceForm = reactive({ source_id: null as string | null, page: '' });
 
+function formatPersonInfo(person: PersonListItem): string {
+  const parts: string[] = [];
+  if (person.birth_date) parts.push('b. ' + person.birth_date);
+  if (person.birth_place) parts.push(person.birth_place);
+  if (person.death_date) parts.push('d. ' + person.death_date);
+  if (person.death_place && !person.birth_place) parts.push(person.death_place);
+  return parts.join(' \u00b7 ');
+}
+
 async function load() {
   if (!window.api) return;
   loading.value = true;
@@ -304,10 +325,11 @@ async function loadMore() {
   }
 }
 
-function setFilter(f: 'all' | 'unsourced' | 'duplicates') {
-  if (filter.value === f) return;
-  filter.value = f;
-  if (f === 'duplicates') {
+function setFilter(f: string) {
+  const val = f as 'all' | 'unsourced' | 'duplicates';
+  if (filter.value === val) return;
+  filter.value = val;
+  if (val === 'duplicates') {
     loadDuplicates();
   } else {
     load();
@@ -434,8 +456,9 @@ onActivated(async () => {
   align-items: center;
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
-.date-cell { white-space: nowrap; }
-.birth-hint { color: var(--color-text-subtle); font-size: var(--font-xs); }
+.surname-text { color: var(--text-muted); }
+.info-cell { color: var(--text-muted); font-size: var(--font-sm); }
+.birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
 .score-badge {
   display: inline-block;
   padding: 1px 8px;
@@ -446,10 +469,6 @@ onActivated(async () => {
 .score-high { background: #fee2e2; color: #991b1b; }
 .score-medium { background: #fef3c7; color: #92400e; }
 .score-low { background: #e0f2fe; color: #075985; }
-.btn-merge-action {
-  background: var(--color-warning-bg, #fef3c7);
-  color: var(--color-warning-badge, #92400e);
-}
 .checkbox-label {
   flex-direction: row;
   align-items: center;
@@ -463,7 +482,7 @@ onActivated(async () => {
   cursor: pointer;
 }
 .birth-section {
-  border: 1px solid var(--color-border, #e2e8f0);
+  border: 1px solid var(--surface-border, #e2e8f0);
   border-radius: 6px;
   padding: 8px 12px;
   margin: 4px 0;
@@ -472,6 +491,6 @@ onActivated(async () => {
   cursor: pointer;
   font-weight: 500;
   font-size: var(--font-sm);
-  color: var(--color-text-muted, #64748b);
+  color: var(--text-muted);
 }
 </style>

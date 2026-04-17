@@ -79,6 +79,9 @@ export default {
     filterAll: 'All',
     filterUnsourced: 'Unsourced',
     allSourced: 'All persons have at least one source citation.',
+    emptyHint: 'Add your first person to start building your family tree.',
+    name: 'Name',
+    info: 'Info',
   },
   personDetail: {
     deceased: 'Deceased',
