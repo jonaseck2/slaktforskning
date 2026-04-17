@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, inject, nextTick, type Ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted, inject, nextTick, watch, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
@@ -271,6 +271,19 @@ const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
 const timelineRef = ref<InstanceType<typeof PersonTimeline> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
+
+// Pending fix action from ?action= query param (QualityView navigation)
+const pendingFixAction = ref<string | null>((route.query.action as string) || null);
+
+// Execute pending action once person data loads and child components mount
+watch(person, (p) => {
+  if (p && pendingFixAction.value) {
+    const action = pendingFixAction.value;
+    pendingFixAction.value = null;
+    // Two nextTicks: first for v-if="person" to render children, second for child refs to populate
+    nextTick(() => nextTick(() => handleCheckFix(action)));
+  }
+});
 
 // Research tasks
 const personTasks = ref<import('../components/ResearchTasksTable.vue').ResearchTaskRow[]>([]);
@@ -442,9 +455,8 @@ let cleanupHotkeys: (() => void) | undefined;
 onMounted(async () => {
   await load();
   // Handle ?action= query param from QualityView navigation
-  const action = route.query.action as string | undefined;
-  if (action) {
-    nextTick(() => handleCheckFix(action));
+  const pendingAction = route.query.action as string | undefined;
+  if (pendingAction) {
     router.replace({ path: route.path, query: {} });
   }
   let debounce: ReturnType<typeof setTimeout> | null = null;

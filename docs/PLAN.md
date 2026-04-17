@@ -150,7 +150,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.91.1 | Fix: Add Person modal aligned with AddRelatedPersonModal pattern (select for sex, living checkbox, birth details), person changes (sex/living) propagate to visualization chart | — |
 | v0.91.2 | Fix: chart reloads on name changes, "Link" button for existing person mode, focus in tree updates sidebar, PlacePicker only creates leaf place | — |
 | v0.92.0 | Quality check fix actions: Fix button opens correct modal per check type, QualityView navigates with action param, PlacePicker sorts gazetteer results by specificity | — |
-| v0.92.1 | Fix: quality check rows are clickable — clicking the row triggers the fix action, not just the button | — |
+| v0.92.1 | Fix: quality check rows clickable to trigger fix action | — |
+| v0.92.2 | Fix: QualityView → PersonDetailView action routing uses watch on person ref for reliable modal opening | — |
 ---
 
 ## Research
