@@ -153,6 +153,19 @@ const appearance = ref<Appearance>(
   (localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light')
 );
 
+const THEME_CLASSES = ['theme-forest', 'theme-nordic', 'theme-twilight'] as const;
+type Theme = 'forest' | 'nordic' | 'twilight';
+const currentTheme = ref<Theme>(
+  (localStorage.getItem('slaktforskning-theme') as Theme) || 'forest'
+);
+
+function setTheme(theme: Theme) {
+  currentTheme.value = theme;
+  document.documentElement.classList.remove(...THEME_CLASSES);
+  document.documentElement.classList.add(`theme-${theme}`);
+  localStorage.setItem('slaktforskning-theme', theme);
+}
+
 const APPEARANCE_I18N = { light: 'settings.lightMode', dark: 'settings.darkMode', contrast: 'settings.contrastMode' } as const;
 
 function setAppearance(value: Appearance) {
@@ -291,6 +304,7 @@ async function loadQualityBadge() {
 }
 
 onMounted(() => {
+  setTheme(currentTheme.value);
   setAppearance(appearance.value);
   applyTextSize();
   screenReader.init();
