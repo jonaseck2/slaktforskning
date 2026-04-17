@@ -3,14 +3,16 @@
     <div class="detail-header">
       <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
-      <span v-if="place.place_type" class="type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
-      <button type="button" class="btn-add" @click="$router.push('/reports?tab=placeHistory&placeId=' + place.id)">{{ $t('reports.tabPlaceHistory') }} →</button>
+      <AppBadge v-if="place.place_type" variant="event">{{ $t('placeTypes.' + place.place_type) }}</AppBadge>
+      <AppButton variant="ghost" size="sm" @click="$router.push('/reports?tab=placeHistory&placeId=' + place.id)">{{ $t('reports.tabPlaceHistory') }} →</AppButton>
     </div>
 
     <section class="detail-section" aria-labelledby="section-place-details">
-      <div class="section-header" tabindex="0" :data-narrate="t('screenReader.navPlaceDetail', { name: place.name })">
-        <h4 id="section-place-details">{{ $t('places.detailsTitle') }}</h4>
-      </div>
+      <SectionHeader
+        :title="$t('places.detailsTitle')"
+        tabindex="0"
+        :data-narrate="t('screenReader.navPlaceDetail', { name: place.name })"
+      />
       <div class="field-grid">
         <label>{{ $t('places.name') }}
           <input v-model="editName" type="text" @blur="save({ name: editName })" />
@@ -36,9 +38,11 @@
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-address">
-      <div class="section-header" tabindex="0" :data-narrate="$t('places.address')">
-        <h4 id="section-place-address">{{ $t('places.address') }}</h4>
-      </div>
+      <SectionHeader
+        :title="$t('places.address')"
+        tabindex="0"
+        :data-narrate="$t('places.address')"
+      />
       <div class="field-grid">
         <label>{{ $t('places.street') }}
           <input v-model="editStreet" type="text" @blur="save({ street: editStreet || null })" />
@@ -62,9 +66,7 @@
 
     <!-- Gazetteer Match Section -->
     <section v-if="gazetteerMatch" class="detail-section gazetteer-section" aria-labelledby="section-gazetteer-match">
-      <div class="section-header">
-        <h4 id="section-gazetteer-match">{{ $t('gazetteers.matchTitle') }}</h4>
-      </div>
+      <SectionHeader :title="$t('gazetteers.matchTitle')" />
       <div class="gazetteer-match">
         <div class="match-quality-row">
           <span class="match-badge" :class="'match-' + gazetteerMatch.matchQuality">
@@ -82,9 +84,7 @@
 
     <!-- Map Section -->
     <section v-if="mapMarkers.length > 0" class="detail-section" aria-labelledby="section-place-map">
-      <div class="section-header">
-        <h4 id="section-place-map">{{ $t('map.placeMap') }}</h4>
-      </div>
+      <SectionHeader :title="$t('map.placeMap')" />
       <BaseMap
         ref="baseMapRef"
         height="300px"
@@ -106,18 +106,16 @@
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-media-timeline">
-      <div class="section-header">
-        <h4 id="section-place-media-timeline">{{ $t('mediaTimeline.title') }}</h4>
-      </div>
+      <SectionHeader :title="$t('mediaTimeline.title')" />
       <MediaTimeline entity-type="place" :entity-id="placeId" />
     </section>
 
     <section v-if="children.length" class="detail-section" aria-labelledby="section-place-children">
-      <h4 id="section-place-children">{{ $t('places.childPlaces') }}</h4>
+      <SectionHeader :title="$t('places.childPlaces')" :count="children.length" />
       <ul class="child-list">
         <li v-for="child in children" :key="child.id">
           <a href="#" @click.prevent="$router.push('/places/' + child.id)">{{ child.name }}</a>
-          <span v-if="child.place_type" class="type-badge">{{ $t('placeTypes.' + child.place_type) }}</span>
+          <AppBadge v-if="child.place_type" variant="event">{{ $t('placeTypes.' + child.place_type) }}</AppBadge>
         </li>
       </ul>
     </section>
@@ -132,6 +130,9 @@ import { useI18n } from 'vue-i18n';
 import PlacePicker from '../components/PlacePicker.vue';
 import MediaTimeline from '../components/MediaTimeline.vue';
 import BaseMap from '../components/BaseMap.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import SectionHeader from '../components/ui/SectionHeader.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
@@ -224,34 +225,30 @@ onMounted(load);
 .place-detail { max-width: none; }
 .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
 .detail-header h2 { margin: 0; }
-.btn-back { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 4px 0; font-size: var(--font-base); }
+.btn-back { background: none; border: none; color: var(--accent); cursor: pointer; padding: 4px 0; font-size: var(--font-base); }
 .btn-back:hover { text-decoration: underline; }
-.type-badge { background: var(--color-bg-muted); color: var(--color-text-subtle); padding: 2px 8px; border-radius: 10px; font-size: var(--font-xs); }
-.detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
-.detail-section h4 { margin: 0 0 8px; font-size: var(--font-md); }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.section-header h4 { margin: 0; font-size: var(--font-md); }
+.detail-section { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--surface-border-subtle, #eee); }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .full-width { grid-column: 1 / -1; }
-label { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-sm); font-weight: 600; color: #555; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-sm); font-weight: 600; color: var(--text-secondary); }
 input[type='text'], input[type='number'], select, textarea {
-  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: var(--font-base); font-family: inherit;
+  padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-size: var(--font-base); font-family: inherit;
 }
 textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .child-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .child-list li { display: flex; align-items: center; gap: 8px; }
-.child-list a { color: var(--color-primary); text-decoration: none; font-size: var(--font-base); }
+.child-list a { color: var(--accent); text-decoration: none; font-size: var(--font-base); }
 .child-list a:hover { text-decoration: underline; }
-.empty { color: #999; padding: 40px; text-align: center; }
-.gazetteer-section { background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 6px; padding: 12px; }
+.empty { color: var(--text-muted); padding: 40px; text-align: center; }
+.gazetteer-section { background: var(--surface-bg, #f8f9fa); border: 1px dashed var(--surface-border); border-radius: 6px; padding: 12px; }
 .gazetteer-match { font-size: var(--font-sm); }
 .match-quality-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .match-badge { font-size: var(--font-xs); font-weight: 600; padding: 2px 6px; border-radius: 3px; }
-.match-exact { background: #dcfce7; color: #166534; }
-.match-partial { background: #fef3c7; color: #92400e; }
-.match-ambiguous { background: #fee2e2; color: #991b1b; }
-.gazetteer-name { color: #666; font-size: var(--font-xs); }
-.match-path { color: #374151; margin-bottom: 4px; }
-.unmatched { color: #9ca3af; font-size: var(--font-xs); margin-bottom: 4px; }
-.resolved-coords { color: #6b7280; font-size: var(--font-xs); font-family: monospace; }
+.match-exact { background: var(--success-bg); color: var(--success-text); }
+.match-partial { background: var(--warning-bg); color: var(--warning-text); }
+.match-ambiguous { background: var(--error-bg); color: var(--error-text); }
+.gazetteer-name { color: var(--text-muted); font-size: var(--font-xs); }
+.match-path { color: var(--text-primary); margin-bottom: 4px; }
+.unmatched { color: var(--text-muted); font-size: var(--font-xs); margin-bottom: 4px; }
+.resolved-coords { color: var(--text-secondary); font-size: var(--font-xs); font-family: monospace; }
 </style>

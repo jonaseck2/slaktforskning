@@ -18,16 +18,18 @@
     />
 
     <!-- Members -->
-    <div class="members-header">
-      <h4>{{ $t('groups.members') }} <span class="count">({{ members.length }})</span></h4>
-      <button v-if="!showAddMember" class="btn-add" @click="showAddMember = true"><span aria-hidden="true">+ </span>{{ $t('groups.addMember') }}</button>
-    </div>
+    <SectionHeader
+      :title="$t('groups.members')"
+      :count="members.length"
+      :action-label="!showAddMember ? $t('groups.addMember') : ''"
+      @action="showAddMember = true"
+    />
 
     <!-- Add member picker -->
     <div v-if="showAddMember" class="add-member-row">
       <PersonPicker v-model="newMemberId" :placeholder="$t('common.unknown')" />
-      <button class="btn-sm" @click="addMember" :disabled="!newMemberId">{{ $t('groups.addMember') }}</button>
-      <button class="btn-sm btn-cancel-inline" @click="showAddMember = false; newMemberId = null">{{ $t('common.cancel') }}</button>
+      <AppButton variant="primary" size="sm" @click="addMember" :disabled="!newMemberId">{{ $t('groups.addMember') }}</AppButton>
+      <AppButton variant="secondary" size="sm" @click="showAddMember = false; newMemberId = null">{{ $t('common.cancel') }}</AppButton>
     </div>
 
     <div v-if="members.length === 0" class="empty-hint">{{ $t('groups.noGroups') }}</div>
@@ -52,13 +54,14 @@
           @keydown.space.prevent="goToPerson(m)"
         >
           <td>
-            <span class="person-link">
+            <span class="person-link" style="display: inline-flex; align-items: center; gap: 6px;">
+              <AppAvatar :given-name="m.given_name ?? ''" :surname="m.surname ?? ''" :sex="(m.sex as 'M' | 'F' | 'U')" size="sm" />
               <PersonName :given-name="m.given_name" :surname="m.surname" :preferred-name="m.preferred_name" :nickname="m.nickname" />
             </span>
           </td>
-          <td><span :class="'sex-badge sex-' + m.sex">{{ m.sex }}</span></td>
+          <td><AppBadge :variant="('sex-' + m.sex.toLowerCase()) as 'sex-m' | 'sex-f' | 'sex-u'">{{ m.sex }}</AppBadge></td>
           <td class="actions-cell">
-            <button class="btn-sm btn-delete" @click.stop="removeMember(m.person_id)">✕</button>
+            <AppButton variant="ghost" size="sm" @click.stop="removeMember(m.person_id)">✕</AppButton>
           </td>
         </tr>
       </tbody>
@@ -71,6 +74,10 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PersonPicker from '../components/PersonPicker.vue';
 import PersonName from '../components/PersonName.vue';
+import AppAvatar from '../components/ui/AppAvatar.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
+import AppButton from '../components/ui/AppButton.vue';
+import SectionHeader from '../components/ui/SectionHeader.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 
@@ -159,7 +166,7 @@ onMounted(load);
 .btn-back {
   background: none;
   border: none;
-  color: #3498db;
+  color: var(--accent);
   cursor: pointer;
   font-size: var(--font-sm);
   padding: 0;
@@ -180,11 +187,11 @@ onMounted(load);
 }
 .group-name-input:focus {
   outline: none;
-  border-bottom-color: #3498db;
+  border-bottom-color: var(--accent);
 }
 .group-notes-input {
   width: 100%;
-  border: 1px solid #ddd;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   padding: 8px;
   font-size: var(--font-base);
@@ -193,14 +200,6 @@ onMounted(load);
   margin-bottom: 24px;
   box-sizing: border-box;
 }
-.members-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.members-header h4 { margin: 0; font-size: var(--font-md); }
-.count { font-weight: 400; color: #888; font-size: var(--font-sm); }
 .add-member-row {
   display: flex;
   gap: 8px;
@@ -208,5 +207,4 @@ onMounted(load);
   margin-bottom: 12px;
 }
 .add-member-row > :first-child { flex: 1; }
-.btn-cancel-inline { background: #e0e0e0; color: #333; }
 </style>
