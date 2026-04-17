@@ -111,6 +111,33 @@ describe('persons', () => {
     expect(results.some(p => p.id === person.id)).toBe(true);
   });
 
+  it('multi-token search matches given_name + surname across tokens', () => {
+    createPerson(db, { given_name: 'Eva Linda Marie', surname: 'Ahnstedt' });
+    createPerson(db, { given_name: 'Erik', surname: 'Andersson' });
+    const results = searchPersons(db, 'Linda Ahnstedt');
+    expect(results).toHaveLength(1);
+    expect(results[0].surname).toBe('Ahnstedt');
+  });
+
+  it('multi-token search requires all tokens to match', () => {
+    createPerson(db, { given_name: 'Eva Linda', surname: 'Ahnstedt' });
+    createPerson(db, { given_name: 'Erik', surname: 'Andersson' });
+    const results = searchPersons(db, 'Linda Andersson');
+    expect(results).toHaveLength(0);
+  });
+
+  it('multi-token search with three tokens', () => {
+    createPerson(db, { given_name: 'Eva Linda Marie', surname: 'Ahnstedt' });
+    const results = searchPersons(db, 'Eva Linda Ahnstedt');
+    expect(results).toHaveLength(1);
+  });
+
+  it('empty search returns empty array', () => {
+    createPerson(db, { given_name: 'Erik', surname: 'Test' });
+    expect(searchPersons(db, '')).toHaveLength(0);
+    expect(searchPersons(db, '   ')).toHaveLength(0);
+  });
+
   it('adds multiple names to a person', () => {
     const person = createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
     addPersonName(db, person.id, { given_name: 'Anna', surname: 'Bergström', name_type: 'married' });
@@ -342,6 +369,20 @@ describe('listPersonsPage / countPersons / searchPersonsWithDetails', () => {
     expect(results).toHaveLength(1);
     expect(results[0].given_name).toBe('Karl');
     expect(results[0].birth_date).toBe('5 MAJ 1850');
+  });
+
+  it('searchPersonsWithDetails multi-token matches given + surname', () => {
+    createPerson(db, { given_name: 'Karl Erik', surname: 'Johansson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
+
+    const results = searchPersonsWithDetails(db, 'Erik Johansson');
+    expect(results).toHaveLength(1);
+    expect(results[0].given_name).toBe('Karl Erik');
+  });
+
+  it('searchPersonsWithDetails empty query returns empty', () => {
+    createPerson(db, { given_name: 'Test', surname: 'Person' });
+    expect(searchPersonsWithDetails(db, '')).toHaveLength(0);
   });
 });
 
