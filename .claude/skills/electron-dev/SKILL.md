@@ -70,6 +70,17 @@ These run inside the Electron main process with direct access to the app's state
 
 #### Chrome DevTools MCP (`chrome-devtools-mcp`) — complementary
 
+**Setup:** Launch the app with CDP enabled via `scripts/dev-debug.sh`:
+```bash
+./scripts/dev-debug.sh              # CDP port 9222, UI server port 19241
+./scripts/dev-debug.sh 9223 19242   # Custom ports for parallel instances
+```
+This sets `ELECTRON_EXTRA_LAUNCH_ARGS="--remote-debugging-port=<port>"` which Electron passes to the Chromium process. The Chrome DevTools MCP then connects via `--browserUrl http://127.0.0.1:<port>`.
+
+**Important:** The script must run in a **foreground terminal** — Electron GUI apps need window server access on macOS and will exit immediately if launched in background/nohup.
+
+**Parallel subagent support:** Each instance uses a different CDP port + UI server port pair. Subagents configure their Chrome DevTools MCP to point at their instance's port.
+
 Connects via the browser debug protocol. Use for things the native tools can't do well.
 
 | Tool | Best for |

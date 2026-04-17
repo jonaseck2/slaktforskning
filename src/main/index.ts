@@ -16,6 +16,13 @@ process.on('uncaughtException', (err) => {
 // Workaround for macOS 26 Tahoe cppgc crash (electron/electron#49522)
 app.commandLine.appendSwitch('js-flags', '--no-incremental-marking');
 
+// Enable Chrome DevTools Protocol for external debugging (Chrome DevTools MCP, etc.)
+// Set SLAKTFORSKNING_CDP_PORT=9222 to enable. Each instance needs a unique port.
+if (process.env.SLAKTFORSKNING_CDP_PORT) {
+  app.commandLine.appendSwitch('remote-debugging-port', process.env.SLAKTFORSKNING_CDP_PORT);
+}
+
+
 if (started) {
   app.quit();
 }
