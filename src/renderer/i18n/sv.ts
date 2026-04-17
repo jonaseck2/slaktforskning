@@ -517,6 +517,7 @@ export default {
     viewPerson: 'Visa',
     ignore: 'Ignorera',
     unignore: 'Återaktivera',
+    fix: 'Åtgärda',
     confirm: 'Bekräfta',
     reject: 'Avvisa',
     viewPlace: 'Visa plats',

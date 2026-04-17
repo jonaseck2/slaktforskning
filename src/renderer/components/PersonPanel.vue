@@ -191,7 +191,7 @@
           {{ $t('quality.nav') }}
         </button>
         <div v-if="sections.quality" class="panel-section-body">
-          <PersonChecksSection ref="checksSectionRef" :person-id="personId!" />
+          <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
       </div>
     </template>
@@ -304,6 +304,30 @@ async function onRelativeSaved() {
     await loadPerson(props.personId);
   }
   emit('relative-added');
+}
+
+// ── Quality check fix actions ───────────────────────────────────────────────
+
+function handleCheckFix(action: string) {
+  switch (action) {
+    case 'add-birth-event':
+    case 'add-death-event':
+    case 'add-event':
+      eventListRef.value?.openAddForm();
+      break;
+    case 'add-name':
+      openNameForm(null);
+      break;
+    case 'add-father':
+      openAddRelative('father');
+      break;
+    case 'add-mother':
+      openAddRelative('mother');
+      break;
+    case 'toggle-living':
+      if (person.value) updateLiving(!person.value.living);
+      break;
+  }
 }
 
 // ── Person field updates ────────────────────────────────────────────────────

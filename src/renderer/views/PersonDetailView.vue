@@ -166,7 +166,7 @@
       <div class="section-header" tabindex="0" :data-narrate="t('screenReader.sectionChecks', { count: 0, summary: '' })">
         <h4 id="section-person-quality">{{ $t('quality.nav') }}</h4>
       </div>
-      <PersonChecksSection ref="checksSectionRef" :person-id="person.id" />
+      <PersonChecksSection ref="checksSectionRef" :person-id="person.id" @fix="handleCheckFix" />
     </section>
 
     <AddRelatedPersonModal
@@ -193,8 +193,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, computed, onMounted, onUnmounted, inject, nextTick, type Ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
@@ -243,6 +243,7 @@ interface NameRow {
 }
 
 const route = useRoute();
+const router = useRouter();
 const personId = route.params.id as string;
 const focusStore = useFocusStore();
 const { t, locale } = useI18n();
@@ -402,6 +403,30 @@ async function updateLiving(living: number) {
   person.value.living = living;
 }
 
+function handleCheckFix(action: string) {
+  switch (action) {
+    case 'add-birth-event':
+    case 'add-death-event':
+    case 'add-event':
+      eventListRef.value?.openAddForm();
+      break;
+    case 'add-name':
+      showNameForm.value = true;
+      break;
+    case 'add-father':
+      addRelatedMode.value = 'father';
+      showAddRelated.value = true;
+      break;
+    case 'add-mother':
+      addRelatedMode.value = 'mother';
+      showAddRelated.value = true;
+      break;
+    case 'toggle-living':
+      if (person.value) updateLiving(person.value.living ? 0 : 1);
+      break;
+  }
+}
+
 function jumpToSection(sectionId: string): void {
   const el = document.getElementById(sectionId);
   if (el) {
@@ -416,6 +441,12 @@ let cleanupHotkeys: (() => void) | undefined;
 
 onMounted(async () => {
   await load();
+  // Handle ?action= query param from QualityView navigation
+  const action = route.query.action as string | undefined;
+  if (action) {
+    nextTick(() => handleCheckFix(action));
+    router.replace({ path: route.path, query: {} });
+  }
   let debounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
     if (debounce) clearTimeout(debounce);
