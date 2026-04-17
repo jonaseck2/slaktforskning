@@ -255,10 +255,11 @@ import BaseModal from '../components/BaseModal.vue';
 - Sections for related entities (events, names, citations) with embedded components
 
 ### Shared components to reuse
-- `BaseModal` — modal shell with overlay click-to-close and Escape key. **Always use this** — never write `div.modal-overlay > div.modal` directly. Import from `'../components/BaseModal.vue'`.
+- `BaseModal` — modal shell with Escape key close. Click-outside does NOT close. **Always use this** — never write `div.modal-overlay > div.modal` directly. Import from `'../components/BaseModal.vue'`.
 - `PersonPicker` — searchable autocomplete for selecting a person; has `width: 100%` so it fills any container
 - `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
-- `DateInput` — compound date input with genealogy date types
+- `SourcePicker` — searchable autocomplete for selecting/creating a source; inline create-new; replaces source dropdowns
+- `DateInput` — separate YYYY-MM-DD inputs with auto-advance (4-digit year → month, 2-digit month → day)
 - `EventForm` / `EventList` — event CRUD, embeds in detail views; event rows are clickable (no Edit button)
 - `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`); wire `:place-id` for place views
 - `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`

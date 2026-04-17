@@ -210,7 +210,9 @@ Rules:
 
 ## Modal dialogs
 
-All create/edit forms open in a modal, never on a new page. **Always use `<BaseModal>`** — it owns the overlay, click-to-close, and Escape key. Never write the `div.modal-overlay > div.modal` shell directly.
+All create/edit forms open in a modal, never on a new page. **Always use `<BaseModal>`** — it owns the overlay and Escape key. Never write the `div.modal-overlay > div.modal` shell directly.
+
+**Click-outside does NOT close modals.** Only Cancel button and Escape key close form modals. This prevents accidental data loss when clicking outside (e.g. selecting a place from a dropdown).
 
 ```html
 <BaseModal v-if="showAddForm" @close="showAddForm = false">
@@ -224,7 +226,7 @@ All create/edit forms open in a modal, never on a new page. **Always use `<BaseM
       <button type="button" class="btn-cancel" @click="showAddForm = false">
         {{ $t('common.cancel') }}
       </button>
-      <button type="submit">{{ $t('common.save') }}</button>
+      <button type="submit">{{ $t('common.create') }}</button>
     </div>
   </form>
 </BaseModal>
@@ -236,41 +238,24 @@ import BaseModal from '../components/BaseModal.vue';
 
 Rules:
 - `autofocus` on first field
-- Escape and overlay-click are handled by `BaseModal` — no local keyboard handler needed
+- Escape is handled by `BaseModal` — no local keyboard handler needed
 - Required fields marked with ` *` in label text
+- **Submit buttons use action verbs**: `$t('common.create')` for new entities, `$t('common.save')` for updates. Never use entity names as button text (e.g. "Person", "Event").
 
-### Optional form sections with `<details>`
+### Source and place fields — always visible
 
-When a modal has optional fields (birth info, source citation), wrap them in a collapsible `<details>` element instead of making them always visible:
+Source and place fields are always visible in modals (not behind a checkbox toggle). Use `SourcePicker` and `PlacePicker` autocomplete components — users can leave them empty if not needed:
 
 ```html
-<details class="birth-section" open>
-  <summary>{{ $t('events.birth') }}</summary>
-  <label>{{ $t('addRelated.birthDate') }}
-    <input v-model="birthForm.date_value" type="date" />
-  </label>
-  <label>{{ $t('addRelated.birthPlace') }}
-    <PlacePicker v-model="birthForm.place_id" />
-  </label>
-</details>
+<label>{{ $t('citations.source') }}
+  <SourcePicker v-model="sourceForm.source_id" />
+</label>
+<label>{{ $t('addRelated.page') }}
+  <input v-model="sourceForm.page" type="text" />
+</label>
 ```
 
-```css
-.birth-section {
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin: 4px 0;
-}
-.birth-section summary {
-  cursor: pointer;
-  font-weight: 500;
-  font-size: var(--font-sm);
-  color: var(--color-text-muted, #64748b);
-}
-```
-
-Use `open` when the section is likely needed (e.g. birth fields on "Add Person"). Omit `open` when secondary (e.g. birth fields on "Add Father" where the focus is the relationship).
+Only use `<details>` for truly secondary sections (e.g. birth fields on "Add Father" where the focus is the relationship). The "Add Person" modal keeps birth fields always visible.
 
 ### Batch entry with "Save & Add Another"
 
@@ -344,7 +329,7 @@ Session-only (no persistence needed) — resets when app restarts. Pre-fill is a
 
 ## Keyboard handling
 
-`BaseModal` handles Escape-to-close and overlay click-to-close — views with modals no longer need a global keydown listener. Only add a view-level keydown listener for non-modal keyboard shortcuts (e.g. focus jump, custom hotkeys).
+`BaseModal` handles Escape-to-close — views with modals no longer need a global keydown listener. Click-outside does NOT close modals. Only add a view-level keydown listener for non-modal keyboard shortcuts (e.g. focus jump, custom hotkeys).
 
 ---
 
@@ -355,8 +340,9 @@ Session-only (no persistence needed) — resets when app restarts. Pre-fill is a
 | `PersonName` | Rendering any person's name (handles preferred name underline + nickname in quotes) |
 | `PersonPicker` | Any input where user selects an existing person |
 | `PlacePicker` | Any input where user selects or creates a place |
+| `SourcePicker` | Any input where user selects or creates a source (autocomplete with inline create) |
 | `GroupPicker` | Adding a person to a group |
-| `DateInput` | Any genealogy date field (supports date types: exact, about, before, after, between) |
+| `DateInput` | Any genealogy date field — separate YYYY-MM-DD inputs with auto-advance (4-digit year → month, 2-digit month → day) |
 | `EventList` | Embedding events on a person or relationship detail view |
 | `EventForm` | Creating or editing a life event |
 | `CitationForm` | Adding a citation to any entity |

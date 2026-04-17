@@ -70,7 +70,8 @@
       "Edit(/.claude/skills/electron-dev/**)",
       "Read(//Users/jonasahnstedt/Library/Application Support/slaktforskning/**)",
       "Bash(tee /tmp/electron-startup.log)",
-      "Read(//Users/jonasahnstedt/Library/Application Support/Släktforskning/**)"
+      "Read(//Users/jonasahnstedt/Library/Application Support/Släktforskning/**)",
+      "Edit(/.claude/skills/frontend-design/**)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/docs/plans",
