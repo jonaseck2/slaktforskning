@@ -67,6 +67,7 @@
           :place-id="selectedPlaceId"
           @select-place="selectPlace"
           @close="closePanel"
+          @place-updated="refreshPlace"
         />
       </div>
     </template>
@@ -141,7 +142,7 @@ const filterText = ref('');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const mapBodyRef = ref<HTMLElement | null>(null);
 const mapInitialized = ref(false);
-const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary } = usePlaceResolver();
+const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary, invalidate } = usePlaceResolver();
 
 // Boundary overlay
 const boundaryGeojson = ref<Record<string, unknown> | null>(null);
@@ -279,6 +280,19 @@ function fitBounds() {
 watch(filteredPlaces, () => {
   if (mapInitialized.value && baseMapRef.value?.getLeafletObject()) fitBounds();
 });
+
+async function refreshPlace(id: string) {
+  const updated = (await window.api.places.get(id)) as PlaceRow | null;
+  if (!updated) return;
+  const idx = places.value.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    places.value[idx] = updated;
+    places.value = [...places.value]; // trigger reactivity
+    cachedPlaces = places.value;
+    invalidate(); // clear resolver cache so gazetteer re-resolves the new name
+    await ensureLoaded();
+  }
+}
 
 onMounted(async () => {
   const freshPlaces = (await window.api.places.list()) as PlaceRow[];
