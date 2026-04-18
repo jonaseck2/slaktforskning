@@ -1,6 +1,6 @@
 // Timeline chart layout algorithm.
 
-import type { TimelineEntry, TimelineLayout, BarLayout, TickMark } from './types';
+import type { TimelineEntry, TimelineLayout, BarLayout, TickMark, EventMarker } from './types';
 import { yearFromDate } from './utils';
 
 const TL_LEFT_MARGIN = 164;
@@ -8,10 +8,30 @@ const TL_RIGHT_MARGIN = 30;
 const TL_TOP_PAD = 20;
 const TL_BAR_H = 22;
 const TL_ROW_H = 36;
-const TL_SVG_W = 800;
+const TL_DEFAULT_W = 800;
 const TL_AXIS_H = 30;
 
-export function computeTimelineLayout(entries: TimelineEntry[], currentYear: number): TimelineLayout {
+const EVENT_SYMBOLS: Record<string, string> = {
+  birth: '★',
+  death: '†',
+  marriage: '♥',
+  divorce: '✕',
+  christening: '✝',
+  burial: '⚰',
+};
+const DEFAULT_SYMBOL = '◆';
+
+export function eventSymbol(eventType: string): string {
+  return EVENT_SYMBOLS[eventType] ?? DEFAULT_SYMBOL;
+}
+
+export function computeTimelineLayout(
+  entries: TimelineEntry[],
+  currentYear: number,
+  containerWidth?: number,
+): TimelineLayout {
+  const svgW = containerWidth && containerWidth > 400 ? containerWidth : TL_DEFAULT_W;
+
   const years = entries
     .flatMap(e => [yearFromDate(e.person.birthDate), yearFromDate(e.person.deathDate)])
     .filter((y): y is number => y !== null);
@@ -38,7 +58,7 @@ export function computeTimelineLayout(entries: TimelineEntry[], currentYear: num
     return ay - by;
   });
 
-  const chartW = TL_SVG_W - TL_LEFT_MARGIN - TL_RIGHT_MARGIN;
+  const chartW = svgW - TL_LEFT_MARGIN - TL_RIGHT_MARGIN;
   const scale = chartW / (maxYear - minYear);
   const xOfYear = (year: number) => TL_LEFT_MARGIN + (year - minYear) * scale;
 
@@ -51,6 +71,23 @@ export function computeTimelineLayout(entries: TimelineEntry[], currentYear: num
     const endYear = isOpen ? currentYear : (deathYear ?? currentYear);
     const x = xOfYear(startYear);
     const endX = xOfYear(endYear);
+
+    // Compute event markers
+    const markers: EventMarker[] = [];
+    if (entry.events) {
+      for (const evt of entry.events) {
+        const evtYear = yearFromDate(evt.date_value);
+        if (evtYear !== null && evtYear >= startYear && evtYear <= endYear) {
+          markers.push({
+            x: xOfYear(evtYear),
+            eventType: evt.event_type,
+            year: evtYear,
+            symbol: eventSymbol(evt.event_type),
+          });
+        }
+      }
+    }
+
     return {
       person: entry.person,
       isFocal: entry.isFocal,
@@ -59,6 +96,7 @@ export function computeTimelineLayout(entries: TimelineEntry[], currentYear: num
       h: TL_BAR_H,
       isOpen,
       hasNoDate,
+      markers,
     };
   });
 
@@ -71,5 +109,5 @@ export function computeTimelineLayout(entries: TimelineEntry[], currentYear: num
   const todayX = xOfYear(currentYear);
   const svgHeight = axisY + TL_AXIS_H;
 
-  return { bars, ticks, todayX, svgWidth: TL_SVG_W, svgHeight, axisY };
+  return { bars, ticks, todayX, svgWidth: svgW, svgHeight, axisY };
 }

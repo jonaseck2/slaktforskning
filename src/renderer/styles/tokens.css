@@ -97,6 +97,21 @@
   --sex-u-bg:   #e8e8e8;
   --sex-u-text: #666666;
 
+  /* Timeline chart */
+  --tl-bar-m:          #7eb8f7;
+  --tl-bar-f:          #f7a5c0;
+  --tl-bar-u:          #bbb;
+  --tl-bar-focal:      var(--accent);
+  --tl-grid:           #f0f0f0;
+  --tl-axis:           #ddd;
+  --tl-text:           var(--text-secondary);
+  --tl-tick:           var(--text-muted);
+  --tl-today:          #ef4444;
+  --tl-marker:         var(--text-primary);
+  --tl-tooltip-bg:     var(--surface);
+  --tl-tooltip-border: var(--surface-border);
+  --tl-tooltip-text:   var(--text-primary);
+
   --error-bg:     #fee2e2;
   --error-text:   #b91c1c;
   --warning-bg:   #fef3c7;

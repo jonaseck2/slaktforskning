@@ -122,6 +122,17 @@ export interface HourglassTree {
   siblings?: PersonNode[];
 }
 
+export interface EventMarker {
+  /** X position on the SVG (computed from event year) */
+  x: number;
+  /** Event type (birth, death, marriage, etc.) */
+  eventType: string;
+  /** Year extracted from date_value */
+  year: number;
+  /** Symbol to render: '★' birth, '†' death, '♥' marriage, '◆' other */
+  symbol: string;
+}
+
 export interface BarLayout {
   person: PersonNode;
   isFocal: boolean;
@@ -131,6 +142,7 @@ export interface BarLayout {
   h: number;
   isOpen: boolean;
   hasNoDate: boolean;
+  markers: EventMarker[];
 }
 
 export interface TickMark {
@@ -150,4 +162,5 @@ export interface TimelineLayout {
 export interface TimelineEntry {
   person: PersonNode;
   isFocal: boolean;
+  events?: Array<{ event_type: string; date_value: string | null }>;
 }

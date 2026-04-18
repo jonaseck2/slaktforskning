@@ -589,6 +589,14 @@
     --chart-line:         var(--surface-border);
     --chart-placeholder-stroke: var(--text-muted);
     --chart-placeholder-text:   var(--text-muted);
+
+    /* Timeline chart — dark */
+    --tl-bar-m:   #4a8ad4;
+    --tl-bar-f:   #d47a9a;
+    --tl-bar-u:   #666;
+    --tl-grid:    #2a2a2a;
+    --tl-axis:    #444;
+    --tl-today:   #f87171;
   }
 
   /* ── Dark mode: Forest theme ───── */
@@ -815,6 +823,14 @@
     --color-link:           #66aaff;
     --color-event-badge-bg:   #001a4d;
     --color-event-badge-text: #99ccff;
+
+    /* Timeline chart — high contrast */
+    --tl-bar-m:    #3b82f6;
+    --tl-bar-f:    #ec4899;
+    --tl-bar-u:    #9ca3af;
+    --tl-grid:     #444;
+    --tl-axis:     #666;
+    --tl-marker:   #fff;
   }
 
   html.high-contrast :focus-visible {

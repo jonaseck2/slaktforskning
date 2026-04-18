@@ -453,6 +453,9 @@ export default {
     selectPerson: 'Välj fokusperson\u2026',
     viewDetail: 'Visa detaljer',
     today: 'Idag',
+    timelineBorn: 'Född',
+    timelineDied: 'Död',
+    timelineAge: 'Ålder',
   },
   personPanel: {
     status: 'Status',
