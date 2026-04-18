@@ -82,11 +82,14 @@ function parseGeoNamesFile(filePath: string): GeoNameRow[] {
     if (!ADMIN1_NAMES[admin1]) continue;
 
     // Collect county names and coordinates from ADM2 rows
-    // Include ADM2H (historical) for DC which has no current ADM2
+    // Include ADM2H (historical) as fallback for DC which has no current ADM2
     if (featureClass === 'A' && (featureCode === 'ADM2' || featureCode === 'ADM2H')) {
       const key = `${admin1}.${cols[11]}`;
-      ADMIN2_NAMES[key] = cols[1];
-      ADMIN2_COORDS[key] = { lat: parseFloat(cols[4]), lon: parseFloat(cols[5]) };
+      // ADM2 takes priority over ADM2H
+      if (!ADMIN2_NAMES[key] || featureCode === 'ADM2') {
+        ADMIN2_NAMES[key] = cols[1];
+        ADMIN2_COORDS[key] = { lat: parseFloat(cols[4]), lon: parseFloat(cols[5]) };
+      }
     }
 
     rows.push({
