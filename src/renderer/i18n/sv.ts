@@ -5,7 +5,9 @@ export default {
   },
   nav: {
     visualization: 'Visualisering',
+    familyTree: 'Släktträd',
     persons: 'Personer',
+    people: 'Personer',
     relationships: 'Relationer',
     sources: 'Källor',
     importExport: 'Import / Export',
@@ -16,6 +18,11 @@ export default {
     linkRules: 'Länkregler',
     map: 'Karta',
     gazetteers: 'Ortsregister',
+    quality: 'Kvalitet',
+    researchTasks: 'Forskningsuppgifter',
+    research: 'FORSKNING',
+    organize: 'ORGANISERA',
+    review: 'GRANSKA',
   },
   settings: {
     title: 'Inställningar',

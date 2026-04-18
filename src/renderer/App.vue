@@ -20,47 +20,45 @@
           {{ focusStore.personName }}
         </router-link>
       </div>
-      <h2 class="nav-section-label">{{ $t('nav.navigate') }}</h2>
-      <router-link to="/visualisering" class="nav-item" :aria-label="$t('nav.visualization')">
+      <h2 class="nav-section-label">{{ $t('nav.research') }}</h2>
+      <router-link to="/visualisering" class="nav-item" :aria-label="$t('nav.familyTree')">
         <span class="nav-icon" aria-hidden="true">🌳</span>
-        <span class="nav-label">{{ $t('nav.visualization') }}</span>
+        <span class="nav-label">{{ $t('nav.familyTree') }}</span>
       </router-link>
-      <router-link to="/" class="nav-item" :aria-label="$t('nav.persons')">
-        <span class="nav-icon" aria-hidden="true">👥</span>
-        <span class="nav-label">{{ $t('nav.persons') }}</span>
-      </router-link>
-      <router-link to="/relationships" class="nav-item" :aria-label="$t('nav.relationships')">
-        <span class="nav-icon" aria-hidden="true">🔗</span>
-        <span class="nav-label">{{ $t('nav.relationships') }}</span>
-      </router-link>
-      <router-link to="/places" class="nav-item" :aria-label="$t('places.title')">
-        <span class="nav-icon" aria-hidden="true">📍</span>
-        <span class="nav-label">{{ $t('places.title') }}</span>
-      </router-link>
-      <router-link to="/map" class="nav-item" :aria-label="$t('nav.map')">
-        <span class="nav-icon" aria-hidden="true">🗺️</span>
-        <span class="nav-label">{{ $t('nav.map') }}</span>
+      <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
+        <span class="nav-icon" aria-hidden="true">👤</span>
+        <span class="nav-label">{{ $t('nav.people') }}</span>
       </router-link>
       <router-link to="/sources" class="nav-item" :aria-label="$t('nav.sources')">
         <span class="nav-icon" aria-hidden="true">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
+      <router-link to="/places" class="nav-item" :aria-label="$t('places.title')">
+        <span class="nav-icon" aria-hidden="true">📍</span>
+        <span class="nav-label">{{ $t('places.title') }}</span>
+      </router-link>
+      <router-link to="/media" class="nav-item" :aria-label="$t('media.nav')">
+        <span class="nav-icon" aria-hidden="true">📷</span>
+        <span class="nav-label">{{ $t('media.nav') }}</span>
+      </router-link>
+      <h2 class="nav-section-label">{{ $t('nav.organize') }}</h2>
+      <router-link to="/relationships" class="nav-item" :aria-label="$t('nav.relationships')">
+        <span class="nav-icon" aria-hidden="true">🔗</span>
+        <span class="nav-label">{{ $t('nav.relationships') }}</span>
+      </router-link>
       <router-link to="/groups" class="nav-item" :aria-label="$t('nav.groups')">
         <span class="nav-icon" aria-hidden="true">🏷️</span>
         <span class="nav-label">{{ $t('nav.groups') }}</span>
       </router-link>
-      <router-link to="/media" class="nav-item" :aria-label="$t('media.nav')">
-        <span class="nav-icon" aria-hidden="true">🖼️</span>
-        <span class="nav-label">{{ $t('media.nav') }}</span>
-      </router-link>
-      <router-link to="/research-tasks" class="nav-item" :aria-label="openTaskCount > 0 ? $t('researchTasks.nav') + ', ' + openTaskCount + ' ' + $t('a11y.openTasks', { count: openTaskCount }) : $t('researchTasks.nav')">
+      <router-link to="/research-tasks" class="nav-item" :aria-label="openTaskCount > 0 ? $t('nav.researchTasks') + ', ' + openTaskCount + ' ' + $t('a11y.openTasks', { count: openTaskCount }) : $t('nav.researchTasks')">
         <span class="nav-icon" aria-hidden="true">🔬</span>
-        <span class="nav-label">{{ $t('researchTasks.nav') }}</span>
+        <span class="nav-label">{{ $t('nav.researchTasks') }}</span>
         <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
       </router-link>
-      <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('quality.nav') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : $t('quality.nav')">
+      <h2 class="nav-section-label">{{ $t('nav.review') }}</h2>
+      <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('nav.quality') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : $t('nav.quality')">
         <span class="nav-icon" aria-hidden="true">⚠️</span>
-        <span class="nav-label">{{ $t('quality.nav') }}</span>
+        <span class="nav-label">{{ $t('nav.quality') }}</span>
         <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
       <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
@@ -68,48 +66,10 @@
         <span class="nav-label">{{ $t('reports.nav') }}</span>
       </router-link>
       <div class="sidebar-spacer"></div>
-      <router-link to="/link-rules" class="nav-item" :aria-label="$t('nav.linkRules')">
-        <span class="nav-icon" aria-hidden="true">🔗</span>
-        <span class="nav-label">{{ $t('nav.linkRules') }}</span>
+      <router-link to="/settings" class="nav-item nav-bottom-item" :aria-label="$t('nav.settings')">
+        <span class="nav-icon" aria-hidden="true">⚙️</span>
+        <span class="nav-label">{{ $t('nav.settings') }}</span>
       </router-link>
-      <router-link to="/gazetteers" class="nav-item" :aria-label="$t('nav.gazetteers')">
-        <span class="nav-icon" aria-hidden="true">🌍</span>
-        <span class="nav-label">{{ $t('nav.gazetteers') }}</span>
-      </router-link>
-      <router-link to="/database" class="nav-bottom">{{ $t('database.nav') }} {{ currentDbName }}</router-link>
-      <router-link to="/import-export" class="nav-bottom">{{ $t('nav.importExport') }}</router-link>
-      <div class="settings-section">
-        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="toggleSettings()">
-          <span class="nav-icon" aria-hidden="true">⚙️</span>
-          <span class="nav-label">{{ $t('nav.settings') }}</span>
-          <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
-        </button>
-        <div v-if="isSettingsOpen" ref="settingsPanelRef" class="settings-panel">
-          <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
-            <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀ {{ $t('settings.light') }}</button>
-            <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙 {{ $t('settings.dark') }}</button>
-            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁 {{ $t('settings.contrast') }}</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
-            <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
-            <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
-            <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.language') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
-            <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Svenska</button>
-            <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">English</button>
-          </div>
-          <div class="settings-group-label">{{ $t('a11y.readAloud') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('a11y.readAloud')">
-            <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" @click="screenReader.setMode('off')">{{ $t('settings.off') }}</button>
-            <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" @click="screenReader.setMode('narrate')">{{ $t('settings.narrate') }}</button>
-            <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" @click="screenReader.setMode('screenReader')">{{ $t('settings.screenReaderMode') }}</button>
-          </div>
-        </div>
-      </div>
     </nav>
     <main id="main-content" class="content">
       <router-view v-slot="{ Component, route }">
@@ -126,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted, provide, watch } from 'vue';
+import { ref, onMounted, onUnmounted, provide, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
@@ -202,6 +162,7 @@ watch(() => route.path, () => {
       '/search': 'search',
       '/link-rules': 'linkRules',
       '/gazetteers': 'gazetteers',
+      '/settings': 'settings',
     };
     const name = routeMap[route.path]
       ?? Object.entries(routeMap).find(([prefix]) => prefix !== '/' && route.path.startsWith(prefix + '/'))?.[1]
@@ -212,18 +173,8 @@ watch(() => route.path, () => {
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
-const currentDbName = ref('');
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
-const isSettingsOpen = ref(false);
-const settingsPanelRef = ref<HTMLElement | null>(null);
-
-function toggleSettings() {
-  isSettingsOpen.value = !isSettingsOpen.value;
-  if (isSettingsOpen.value) {
-    nextTick(() => settingsPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' }));
-  }
-}
 
 const RAW_TEXT_SIZE = localStorage.getItem('textSize');
 const textSize = ref<'small' | 'medium' | 'large'>(
@@ -258,11 +209,6 @@ function handleGlobalKey(e: KeyboardEvent) {
     searchInputRef.value?.focus();
     searchInputRef.value?.select();
   }
-}
-
-async function loadDbName() {
-  const info = await window.api.db.getCurrent();
-  currentDbName.value = info.name;
 }
 
 async function autoSetFocusPerson() {
@@ -309,7 +255,6 @@ onMounted(() => {
   applyTextSize();
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
-  loadDbName();
   autoSetFocusPerson();
   loadDefaultPerson();
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
@@ -495,20 +440,10 @@ body {
   flex: 1;
 }
 
-.nav-bottom {
+.nav-bottom-item {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: 10px !important;
+  padding-top: 8px !important;
   margin-top: 4px;
-  font-size: var(--font-xs) !important;
-  color: rgba(255, 255, 255, 0.45) !important;
-  flex-direction: row;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.nav-bottom:hover,
-.nav-bottom.router-link-active {
-  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .error-badge {
@@ -541,72 +476,5 @@ body {
   .content { padding: 0; height: auto; overflow: visible; }
 }
 
-.settings-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  margin-top: 4px;
-  padding-top: 4px;
-  flex-shrink: 0;
-}
-.settings-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: var(--font-sm);
-  text-align: left;
-}
-.settings-toggle:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
-}
-.settings-arrow { margin-left: auto; font-size: var(--font-xs); }
-.settings-panel {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  padding: 10px;
-  margin: 2px 0 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.settings-group-label {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.35);
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-.settings-group-label:first-child { margin-top: 0; }
-.settings-row { display: flex; gap: 4px; }
-.settings-option {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.6);
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  font-family: inherit;
-  text-align: center;
-}
-.settings-option:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: white;
-}
-.settings-option.active {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.4);
-  font-weight: 600;
-}
 
 </style>
