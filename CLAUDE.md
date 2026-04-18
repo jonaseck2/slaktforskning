@@ -843,6 +843,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `/add-feature` | Adding any new feature or entity | Full 10-step checklist: schema → API → IPC → MCP → Vue |
 | `/mcp-dev` | When adding/testing MCP tools | Tool patterns, server testing, tool reference |
 | `/data-modeling` | Schema design questions | GEDCOM-X model, this project's schema reference |
+| `/gazetteers` | Adding/debugging gazetteers | Build scripts, resolver, data sources, adding new countries |
 | `/gedcom` | GEDCOM import/export | GEDCOM 5.5.1/7.0 parsing, validation |
 | `/interview-synthesis` | Processing user research | Extract insights from interviews |
 | `/web-research` | Competitive analysis | Research genealogy platforms |
