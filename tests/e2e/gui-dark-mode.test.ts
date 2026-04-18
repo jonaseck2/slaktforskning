@@ -9,7 +9,7 @@ import {
   teardownApp,
 } from './fixture';
 
-const UI_PORT = 19249;
+const UI_PORT = 19251;
 let instance: AppInstance;
 const app = new AppDriver(UI_PORT);
 

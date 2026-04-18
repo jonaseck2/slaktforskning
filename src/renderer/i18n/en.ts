@@ -453,6 +453,9 @@ export default {
     selectPerson: 'Select focal person\u2026',
     viewDetail: 'View details',
     today: 'Today',
+    timelineBorn: 'Born',
+    timelineDied: 'Died',
+    timelineAge: 'Age',
   },
   personPanel: {
     status: 'Status',

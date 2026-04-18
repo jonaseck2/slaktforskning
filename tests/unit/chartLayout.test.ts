@@ -3,6 +3,7 @@ import {
   computePedigreeLayout,
   computeHourglassLayout,
   computeTimelineLayout,
+  eventSymbol,
   BOX_W,
   BOX_H,
 } from '../../src/renderer/utils/chart-layout';
@@ -644,6 +645,91 @@ describe('computeTimelineLayout', () => {
   it('marks person with no birth year as hasNoDate', () => {
     const entries = [{ person: p('x'), isFocal: false }];
     expect(computeTimelineLayout(entries, 2024).bars[0].hasNoDate).toBe(true);
+  });
+});
+
+describe('computeTimelineLayout — event markers', () => {
+  it('populates markers when events are provided', () => {
+    const entries = [{
+      person: p('f', { birthDate: '1950', deathDate: '2010' }),
+      isFocal: true,
+      events: [
+        { event_type: 'birth', date_value: '1950-01-15' },
+        { event_type: 'marriage', date_value: '1975-06-20' },
+        { event_type: 'death', date_value: '2010-12-01' },
+      ],
+    }];
+    const { bars } = computeTimelineLayout(entries, 2024);
+    expect(bars[0].markers).toHaveLength(3);
+    expect(bars[0].markers[0].symbol).toBe('★');
+    expect(bars[0].markers[1].symbol).toBe('♥');
+    expect(bars[0].markers[2].symbol).toBe('†');
+  });
+
+  it('returns empty markers when no events provided', () => {
+    const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
+    const { bars } = computeTimelineLayout(entries, 2024);
+    expect(bars[0].markers).toEqual([]);
+  });
+
+  it('filters out events outside bar range', () => {
+    const entries = [{
+      person: p('f', { birthDate: '1950', deathDate: '2010' }),
+      isFocal: true,
+      events: [
+        { event_type: 'census', date_value: '1920-01-01' }, // before birth
+        { event_type: 'marriage', date_value: '1975-06-20' }, // in range
+      ],
+    }];
+    const { bars } = computeTimelineLayout(entries, 2024);
+    expect(bars[0].markers).toHaveLength(1);
+    expect(bars[0].markers[0].eventType).toBe('marriage');
+  });
+
+  it('marker x is within bar x..x+w', () => {
+    const entries = [{
+      person: p('f', { birthDate: '1950', deathDate: '2010' }),
+      isFocal: true,
+      events: [{ event_type: 'marriage', date_value: '1975' }],
+    }];
+    const { bars } = computeTimelineLayout(entries, 2024);
+    const bar = bars[0];
+    const marker = bar.markers[0];
+    expect(marker.x).toBeGreaterThanOrEqual(bar.x);
+    expect(marker.x).toBeLessThanOrEqual(bar.x + bar.w);
+  });
+});
+
+describe('computeTimelineLayout — responsive width', () => {
+  it('uses containerWidth when provided', () => {
+    const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
+    const layout = computeTimelineLayout(entries, 2024, 1200);
+    expect(layout.svgWidth).toBe(1200);
+  });
+
+  it('falls back to 800 when containerWidth is too small', () => {
+    const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
+    const layout = computeTimelineLayout(entries, 2024, 300);
+    expect(layout.svgWidth).toBe(800);
+  });
+
+  it('falls back to 800 when containerWidth is undefined', () => {
+    const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
+    const layout = computeTimelineLayout(entries, 2024);
+    expect(layout.svgWidth).toBe(800);
+  });
+});
+
+describe('eventSymbol', () => {
+  it('maps known event types to symbols', () => {
+    expect(eventSymbol('birth')).toBe('★');
+    expect(eventSymbol('death')).toBe('†');
+    expect(eventSymbol('marriage')).toBe('♥');
+  });
+
+  it('returns default diamond for unknown types', () => {
+    expect(eventSymbol('census')).toBe('◆');
+    expect(eventSymbol('immigration')).toBe('◆');
   });
 });
 

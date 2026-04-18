@@ -613,11 +613,26 @@ export async function fetchTimelineEntries(focalId: string): Promise<TimelineEnt
   });
 
   const allIds = [focalId, ...relatedIds];
-  const nodes = await Promise.all(allIds.map(id => fetchPersonNode(id).catch(() => null)));
 
-  return nodes
-    .filter((n): n is PersonNode => n !== null)
-    .map(person => ({ person, isFocal: person.id === focalId }));
+  const results = await Promise.all(
+    allIds.map(async (id) => {
+      try {
+        const [node, events] = await Promise.all([
+          fetchPersonNode(id),
+          window.api.events.forPerson(id) as Promise<RawEvent[]>,
+        ]);
+        return {
+          person: node,
+          isFocal: id === focalId,
+          events: events.map(e => ({ event_type: e.event_type, date_value: e.date_value })),
+        };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return results.filter((n): n is TimelineEntry => n !== null);
 }
 
 /**
