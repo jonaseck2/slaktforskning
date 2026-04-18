@@ -198,5 +198,5 @@ take_screenshot()     → capture current state
 - **After changing any `src/api/*.ts` file** → `npm test`
 - **After adding a new API function** → `npm test -- --coverage` to verify thresholds still pass
 - **After changing IPC, preload, or main process** → `npx playwright test`
-- **Before every commit** → `npm test && npx playwright test`
+- **Before every commit** → `npm run lint && npm test && npx playwright test`
 - **When adding a new feature** → write unit tests for the api/ functions FIRST, then implement

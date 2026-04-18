@@ -85,11 +85,15 @@ async function load() {
     if (otherId) {
       otherName = await resolvePersonDisplayName(otherId, t('common.unknown'));
       try {
-        const otherPerson = await window.api.persons.get(otherId) as { sex?: string; given_name?: string; surname?: string } | null;
+        const otherPerson = await window.api.persons.get(otherId) as { sex?: string } | null;
         if (otherPerson) {
           otherSex = (otherPerson.sex as 'M' | 'F' | 'U') || 'U';
-          otherGivenName = otherPerson.given_name || '';
-          otherSurname = otherPerson.surname || '';
+        }
+        const names = (await window.api.persons.getNames(otherId)) as Array<{ given_name: string | null; surname: string | null; sort_order: number }>;
+        if (names.length > 0) {
+          const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+          otherGivenName = primary.given_name || '';
+          otherSurname = primary.surname || '';
         }
       } catch { /* ignore */ }
     }
