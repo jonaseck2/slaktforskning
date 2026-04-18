@@ -7,12 +7,10 @@
       :use-global-leaflet="true"
       :options="{
         zoomControl: false,
-        scrollWheelZoom: props.scrollWheelZoom,
+        scrollWheelZoom: false,
         preferCanvas: true,
-        zoomSnap: 0.5,
+        zoomSnap: 0,
         zoomDelta: 0.5,
-        wheelDebounceTime: 80,
-        wheelPxPerZoomLevel: 120,
       }"
       @ready="onMapReady"
     >
@@ -85,8 +83,65 @@ function onMapReady() {
   const map = mapRef.value?.leafletObject;
   if (map) {
     map.on('zoomend', () => { currentZoom.value = map.getZoom(); });
+    map.on('zoom', () => { currentZoom.value = map.getZoom(); });
+    if (props.scrollWheelZoom) {
+      setupSmoothWheel(map);
+    }
   }
   emit('ready');
+}
+
+/**
+ * Continuous wheel zoom using CSS transforms.
+ * During scrolling, tiles are scaled via CSS (no grey flash). The actual
+ * Leaflet zoom is committed only after scrolling stops (150ms idle).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setupSmoothWheel(map: any) {
+  let targetZoom = map.getZoom();
+  let commitTimer = 0;
+  const PX_PER_ZOOM = 150;
+
+  // After the user stops scrolling, commit the final zoom level
+  function commitZoom() {
+    commitTimer = 0;
+    map.setZoom(targetZoom, { animate: false });
+  }
+
+  map.getContainer().addEventListener('wheel', (e: WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const delta = -e.deltaY * (e.deltaMode === 1 ? 20 : 1);
+    const zoomChange = delta / PX_PER_ZOOM;
+    targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom + zoomChange));
+
+    // CSS-transform the tile pane for instant visual feedback (no tile reload)
+    const currentZoomLevel = map.getZoom();
+    const scale = Math.pow(2, targetZoom - currentZoomLevel);
+    const tilePane = map.getPane('tilePane');
+    if (tilePane) {
+      const center = map.getContainer().getBoundingClientRect();
+      const cx = center.width / 2;
+      const cy = center.height / 2;
+      tilePane.style.transformOrigin = `${cx}px ${cy}px`;
+      tilePane.style.transform = `scale(${scale})`;
+    }
+
+    // Debounce the actual zoom commit so tiles only reload when scrolling stops
+    if (commitTimer) clearTimeout(commitTimer);
+    commitTimer = window.setTimeout(commitZoom, 150);
+  }, { passive: false });
+
+  // Reset transform after Leaflet commits the zoom and reloads tiles
+  map.on('zoomend', () => {
+    const tilePane = map.getPane('tilePane');
+    if (tilePane) {
+      tilePane.style.transform = '';
+      tilePane.style.transformOrigin = '';
+    }
+    targetZoom = map.getZoom();
+  });
 }
 
 function zoomIn() {
