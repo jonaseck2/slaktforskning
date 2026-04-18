@@ -94,13 +94,13 @@
           @mousedown="(e) => startResize(e, vizBodyRef!)"
         ></div>
         <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
-          <button class="panel-close-btn" @click="closePanel" title="Dölj panel">◀</button>
           <PersonPanel
             :person-id="selectedPersonId ?? personId ?? null"
             :show-tree-btn="true"
             @relative-added="reloadChart"
             @person-changed="reloadChart"
             @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
+            @close="closePanel"
           />
         </div>
       </template>
@@ -422,29 +422,11 @@ onActivated(load);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  border-left: 1px solid var(--surface-border);
   position: relative;
   overflow: hidden;
   min-width: 200px;
   max-width: 1040px;
 }
-.panel-close-btn {
-  position: absolute;
-  top: var(--space-sm);
-  left: -1px;
-  z-index: 10;
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-right: none;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  padding: 4px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  line-height: 1;
-  transform: translateX(-100%);
-}
-.panel-close-btn:hover { color: var(--text-secondary); }
 
 
 .empty-state {

@@ -8,6 +8,7 @@
     <template v-else-if="person">
       <!-- Header -->
       <div class="panel-header">
+        <button class="panel-close-btn" @click="emit('close')" :title="$t('common.close')">&#10005;</button>
         <AppAvatar
           :given-name="primaryName?.given_name ?? ''"
           :surname="primaryName?.surname ?? ''"
@@ -224,6 +225,7 @@ const emit = defineEmits<{
   'relative-added': [];
   'show-in-tree': [];
   'person-changed': [];
+  'close': [];
 }>();
 
 // ── Data (composable) ───────────────────────────────────────────────────────
@@ -404,6 +406,23 @@ onMounted(() => {
   text-align: center;
 }
 
+/* Close button */
+.panel-close-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 10;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
+
 /* Header */
 .panel-header {
   display: flex;
@@ -413,6 +432,7 @@ onMounted(() => {
   border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
   padding: var(--space-sm) var(--space-md);
+  position: relative;
 }
 .panel-header-content {
   flex: 1;

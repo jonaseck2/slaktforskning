@@ -60,10 +60,10 @@
           @mousedown="(e: MouseEvent) => startResize(e, mapBodyRef!)"
         ></div>
         <div class="map-panel" :style="{ width: panelWidth + 'px' }">
-          <button class="panel-close-btn" @click="closePanel">◀</button>
           <PlacePanel
             :place-id="selectedPlaceId"
             @select-place="selectPlace"
+            @close="closePanel"
           />
         </div>
       </template>
@@ -108,7 +108,7 @@ const boundaryStyle = () => ({ color: '#4a90d9', weight: 2, fill: false });
 // Panel state
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
 const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize();
+const { panelWidth, startResize } = usePanelResize({ storageKey: 'map-panel-width' });
 
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
@@ -262,48 +262,37 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  border-left: 1px solid var(--surface-border);
   position: relative;
+  overflow: hidden;
+  min-width: 200px;
+  max-width: 1040px;
 }
 .panel-drag-handle {
   width: 6px;
-  background: var(--surface-bg);
+  background: var(--surface-border-subtle);
   cursor: col-resize;
   flex-shrink: 0;
   position: relative;
+  transition: background 0.1s;
 }
 .panel-drag-handle:hover { background: var(--surface-border); }
-.panel-close-btn {
-  position: absolute;
-  top: 8px;
-  left: -1px;
-  z-index: 10;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 0 4px 4px 0;
-  padding: 4px 4px 4px 2px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  color: var(--color-text-faint);
-  line-height: 1;
-}
-.panel-close-btn:hover { color: var(--color-text-muted); }
 .panel-open-btn {
   position: absolute;
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 4px 0 0 4px;
-  padding: 8px 4px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
   cursor: pointer;
+  color: var(--text-muted);
   font-size: var(--font-xs);
-  color: var(--color-text-faint);
-  z-index: 1000;
+  z-index: 10;
   line-height: 1;
 }
-.panel-open-btn:hover { color: var(--color-text-muted); background: var(--color-bg-subtle); }
+.panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
 /* Popups */
 .popup-link {

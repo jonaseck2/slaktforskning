@@ -1,17 +1,29 @@
 import { ref, onUnmounted } from 'vue';
 
-const MIN_WIDTH = 200;
-const MAX_WIDTH_RATIO = 0.75;
+const DEFAULT_MIN_WIDTH = 200;
+const DEFAULT_MAX_WIDTH_RATIO = 0.75;
 const DEFAULT_WIDTH = 300;
-const STORAGE_KEY = 'viz-panel-width';
+const DEFAULT_STORAGE_KEY = 'viz-panel-width';
 
-export function clampWidth(w: number, maxWidth: number): number {
-  return Math.min(maxWidth, Math.max(MIN_WIDTH, w));
+export interface PanelResizeOptions {
+  storageKey?: string;
+  minWidth?: number;
+  maxWidthRatio?: number;
+  defaultWidth?: number;
 }
 
-export function usePanelResize() {
-  const stored = parseInt(localStorage.getItem(STORAGE_KEY) ?? '', 10);
-  const panelWidth = ref(isNaN(stored) ? DEFAULT_WIDTH : Math.max(MIN_WIDTH, stored));
+export function clampWidth(w: number, maxWidth: number, minWidth = DEFAULT_MIN_WIDTH): number {
+  return Math.min(maxWidth, Math.max(minWidth, w));
+}
+
+export function usePanelResize(options: PanelResizeOptions = {}) {
+  const storageKey = options.storageKey ?? DEFAULT_STORAGE_KEY;
+  const minWidth = options.minWidth ?? DEFAULT_MIN_WIDTH;
+  const maxWidthRatio = options.maxWidthRatio ?? DEFAULT_MAX_WIDTH_RATIO;
+  const defaultWidth = options.defaultWidth ?? DEFAULT_WIDTH;
+
+  const stored = parseInt(localStorage.getItem(storageKey) ?? '', 10);
+  const panelWidth = ref(isNaN(stored) ? defaultWidth : Math.max(minWidth, stored));
 
   let rafId: number | null = null;
   let cleanup: (() => void) | null = null;
@@ -23,8 +35,8 @@ export function usePanelResize() {
       if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const rect = containerEl.getBoundingClientRect();
-        const maxWidth = rect.width * MAX_WIDTH_RATIO;
-        panelWidth.value = clampWidth(rect.right - ev.clientX, maxWidth);
+        const maxW = rect.width * maxWidthRatio;
+        panelWidth.value = clampWidth(rect.right - ev.clientX, maxW, minWidth);
       });
     }
 
@@ -33,7 +45,7 @@ export function usePanelResize() {
       document.removeEventListener('mouseup', onUp);
       cleanup = null;
       if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-      localStorage.setItem(STORAGE_KEY, String(panelWidth.value));
+      localStorage.setItem(storageKey, String(panelWidth.value));
     }
 
     cleanup = onUp;

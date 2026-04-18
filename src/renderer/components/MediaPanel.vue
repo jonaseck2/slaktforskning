@@ -14,6 +14,7 @@
     <template v-else-if="media">
       <!-- Header: thumbnail + title -->
       <div class="panel-header">
+        <button class="panel-close-btn" @click="emit('close')" :title="$t('common.close')">&#10005;</button>
         <div class="media-thumbnail">
           <img v-if="thumbnailSrc" :src="thumbnailSrc" :alt="media.title || ''" class="media-thumb-img" />
           <div v-else class="media-placeholder">
@@ -155,7 +156,7 @@ interface RegionData {
 }
 
 const props = defineProps<{ mediaId: string | null }>();
-const emit = defineEmits<{ 'link-changed': [] }>();
+const emit = defineEmits<{ 'link-changed': []; 'close': [] }>();
 
 const media = ref<MediaData | null>(null);
 const loading = ref(false);
@@ -364,6 +365,23 @@ watch(() => props.mediaId, load, { immediate: true });
   padding: var(--space-lg);
 }
 
+/* Close button */
+.panel-close-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 10;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
+
 /* Header */
 .panel-header {
   display: flex;
@@ -372,6 +390,7 @@ watch(() => props.mediaId, load, { immediate: true });
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
+  position: relative;
 }
 
 .media-thumbnail {

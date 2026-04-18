@@ -1,5 +1,5 @@
 <template>
-  <div class="media-layout">
+  <div class="media-layout" ref="mediaBodyRef">
   <div class="media-main">
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
@@ -148,12 +148,19 @@
       @link-changed="reload"
     />
   </div>
-  <MediaPanel
-    v-if="selectedMediaId"
-    :media-id="selectedMediaId"
-    class="media-panel-container"
-    @link-changed="reload"
-  />
+  <template v-if="selectedMediaId">
+    <div
+      class="panel-drag-handle"
+      @mousedown="(e: MouseEvent) => startResize(e, mediaBodyRef!)"
+    ></div>
+    <div class="media-panel-container" :style="{ width: panelWidth + 'px' }">
+      <MediaPanel
+        :media-id="selectedMediaId"
+        @link-changed="reload"
+        @close="selectedMediaId = null"
+      />
+    </div>
+  </template>
   </div>
 </template>
 
@@ -166,6 +173,7 @@ import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import { usePanelResize } from '../composables/usePanelResize';
 import { useToast } from '../composables/useToast';
 const toast = useToast();
 
@@ -208,6 +216,9 @@ interface MediaItem {
   created_at: string;
   linkCount: number;
 }
+
+const mediaBodyRef = ref<HTMLElement | null>(null);
+const { panelWidth, startResize } = usePanelResize({ storageKey: 'media-panel-width', maxWidthRatio: 0.5 });
 
 const items = ref<MediaItem[]>([]);
 const total = ref(0);
@@ -344,7 +355,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 <style scoped>
 .media-layout {
   display: flex;
-  gap: var(--space-lg);
   height: 100%;
 }
 .media-main {
@@ -352,11 +362,20 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   min-width: 0;
   overflow-y: auto;
 }
-.media-panel-container {
-  width: 300px;
+.panel-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
   flex-shrink: 0;
-  border-left: 2px solid var(--accent);
-  overflow-y: auto;
+  position: relative;
+  transition: background 0.1s;
+}
+.panel-drag-handle:hover { background: var(--surface-border); }
+.media-panel-container {
+  flex-shrink: 0;
+  overflow: hidden;
+  min-width: 200px;
+  max-width: 1040px;
 }
 
 .gallery-filter {
