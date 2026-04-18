@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { getAllGazetteers } from '../../src/api/place-gazetteers';
+import { getAllGazetteers, loadGazetteers } from '../../src/api/place-gazetteers';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
+import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
 
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
@@ -91,7 +92,10 @@ describe('boundary gazetteers', () => {
 });
 
 describe('cross-country place resolution', () => {
-  const gazetteers = getAllGazetteers();
+  const allEnabled: GazetteerConfig = {
+    enabledGazetteers: getAllGazetteers().map(g => g.id),
+  };
+  const gazetteers = loadGazetteers(allEnabled);
 
   it('resolves a Danish parish', () => {
     const result = resolvePlace('Roskilde, Danmark', gazetteers);
@@ -111,5 +115,24 @@ describe('cross-country place resolution', () => {
   it('resolves a country by ISO code alias', () => {
     const result = resolvePlace('SE', gazetteers);
     expect(result).not.toBeNull();
+  });
+
+  it('resolves "Ontario, Kanada" via Swedish language gazetteer', () => {
+    const result = resolvePlace('Ontario, Kanada', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Canada');
+    expect(result!.matchedPath).toContain('Ontario');
+  });
+
+  it('resolves "Canada" by its English name', () => {
+    const result = resolvePlace('Canada', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Canada');
+  });
+
+  it('resolves "USA" via Swedish language gazetteer alias for United States', () => {
+    const result = resolvePlace('USA', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('United States');
   });
 });
