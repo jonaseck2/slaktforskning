@@ -56,51 +56,53 @@ import type { GazetteerConfig } from '../place-gazetteers/types';
 // Public API
 // ---------------------------------------------------------------------------
 
-function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?: boolean }): CheckResult[] {
-  const results: CheckResult[] = [];
-  console.log('[checks] runAllCheckFunctions starting');
-  const t0 = Date.now();
-  function run(name: string, fn: () => CheckResult[]): void {
-    const start = Date.now();
-    const res = fn();
-    const ms = Date.now() - start;
-    console.log(`[checks] ${name}: ${ms}ms → ${res.length} result(s)`);
-    results.push(...res);
-  }
+/** A named check function that can be run individually. */
+export interface NamedCheck {
+  name: string;
+  fn: (db: Database, dbDir?: string) => CheckResult[];
+  /** If true, this check is expensive and skipped for per-person runs. */
+  global?: boolean;
+}
 
-  // A. Chronological — Person
-  run('checkBirthAfterDeath',       () => checkBirthAfterDeath(db));
-  run('checkEventAfterDeath',       () => checkEventAfterDeath(db));
-  run('checkBurialBeforeDeath',     () => checkBurialBeforeDeath(db));
-  run('checkLifespan',              () => checkLifespan(db));
-  run('checkFutureDates',           () => checkFutureDates(db));
-  run('checkBaptismLate',           () => checkBaptismLate(db));
-  run('checkDeathWithoutBirth',     () => checkDeathWithoutBirth(db));
-  run('checkNoBirthEvent',          () => checkNoBirthEvent(db));
+/**
+ * Returns the ordered list of all check functions.
+ * Each entry is independent — callers can run them one at a time
+ * (yielding the event loop between each) to avoid blocking.
+ */
+export function getAllCheckFunctions(): NamedCheck[] {
+  return [
+    // A. Chronological — Person
+    { name: 'checkBirthAfterDeath',       fn: (db) => checkBirthAfterDeath(db) },
+    { name: 'checkEventAfterDeath',       fn: (db) => checkEventAfterDeath(db) },
+    { name: 'checkBurialBeforeDeath',     fn: (db) => checkBurialBeforeDeath(db) },
+    { name: 'checkLifespan',              fn: (db) => checkLifespan(db) },
+    { name: 'checkFutureDates',           fn: (db) => checkFutureDates(db) },
+    { name: 'checkBaptismLate',           fn: (db) => checkBaptismLate(db) },
+    { name: 'checkDeathWithoutBirth',     fn: (db) => checkDeathWithoutBirth(db) },
+    { name: 'checkNoBirthEvent',          fn: (db) => checkNoBirthEvent(db) },
 
-  // B. Parenthood Age
-  run('checkParenthoodAge',         () => checkParenthoodAge(db));
+    // B. Parenthood Age
+    { name: 'checkParenthoodAge',         fn: (db) => checkParenthoodAge(db) },
 
-  // C. Sibling & Family Structure
-  run('checkSiblingAgeLarge',       () => checkSiblingAgeLarge(db));
-  run('checkDuplicateParentChild',  () => checkDuplicateParentChild(db));
-  run('checkMultipleBiologicalParents', () => checkMultipleBiologicalParents(db));
-  run('checkNoParents',             () => checkNoParents(db));
+    // C. Sibling & Family Structure
+    { name: 'checkSiblingAgeLarge',       fn: (db) => checkSiblingAgeLarge(db) },
+    { name: 'checkDuplicateParentChild',  fn: (db) => checkDuplicateParentChild(db) },
+    { name: 'checkMultipleBiologicalParents', fn: (db) => checkMultipleBiologicalParents(db) },
+    { name: 'checkNoParents',             fn: (db) => checkNoParents(db) },
 
-  // D. Relationship Integrity
-  run('checkCircularAncestry',      () => checkCircularAncestry(db));
-  run('checkDuplicateRelationship', () => checkDuplicateRelationship(db));
-  run('checkMarriageAge',           () => checkMarriageAge(db));
-  run('checkMarriageAfterDeath',    () => checkMarriageAfterDeath(db));
-  run('checkMarriageBeforeBirth',   () => checkMarriageBeforeBirth(db));
-  run('checkCoupleWithSelf',        () => checkCoupleWithSelf(db));
+    // D. Relationship Integrity
+    { name: 'checkCircularAncestry',      fn: (db) => checkCircularAncestry(db) },
+    { name: 'checkDuplicateRelationship', fn: (db) => checkDuplicateRelationship(db) },
+    { name: 'checkMarriageAge',           fn: (db) => checkMarriageAge(db) },
+    { name: 'checkMarriageAfterDeath',    fn: (db) => checkMarriageAfterDeath(db) },
+    { name: 'checkMarriageBeforeBirth',   fn: (db) => checkMarriageBeforeBirth(db) },
+    { name: 'checkCoupleWithSelf',        fn: (db) => checkCoupleWithSelf(db) },
 
-  // E. Geographic
-  run('checkSimultaneousDistantLocations', () => checkSimultaneousDistantLocations(db));
+    // E. Geographic
+    { name: 'checkSimultaneousDistantLocations', fn: (db) => checkSimultaneousDistantLocations(db) },
 
-  // E2. Gazetteer match quality (global — skipped for per-person checks)
-  if (!opts?.skipGlobal) {
-    run('checkGazetteerMatchQuality', () => {
+    // E2. Gazetteer match quality (global)
+    { name: 'checkGazetteerMatchQuality', global: true, fn: (db) => {
       const configJson = getDbSetting(db, 'gazetteer_config');
       const gazConfig: GazetteerConfig = configJson
         ? JSON.parse(configJson)
@@ -111,25 +113,37 @@ function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?
       const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
       const raw = checkGazetteerMatchQuality(db, gazetteers);
       return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
-    });
-  }
+    }},
 
-  // F. Data Completeness
-  run('checkNoName',                () => checkNoName(db));
-  run('checkLivingWithDeathEvent',  () => checkLivingWithDeathEvent(db));
-  run('checkNotLivingWithoutDeathEvent', () => checkNotLivingWithoutDeathEvent(db));
-  run('checkUnsourcedLifeEvent(birth)', () => checkUnsourcedLifeEvent(db, 'birth'));
-  run('checkUnsourcedLifeEvent(death)', () => checkUnsourcedLifeEvent(db, 'death'));
+    // F. Data Completeness
+    { name: 'checkNoName',                fn: (db) => checkNoName(db) },
+    { name: 'checkLivingWithDeathEvent',  fn: (db) => checkLivingWithDeathEvent(db) },
+    { name: 'checkNotLivingWithoutDeathEvent', fn: (db) => checkNotLivingWithoutDeathEvent(db) },
+    { name: 'checkUnsourcedLifeEvent(birth)', fn: (db) => checkUnsourcedLifeEvent(db, 'birth') },
+    { name: 'checkUnsourcedLifeEvent(death)', fn: (db) => checkUnsourcedLifeEvent(db, 'death') },
 
-  // G. Data Validation
-  run('checkInvalidDates',          () => checkInvalidDates(db));
-  run('checkUnrelatedPerson',       () => checkUnrelatedPerson(db));
-  // Media file check is global — skipped for per-person checks
-  if (!opts?.skipGlobal) {
-    run('checkMediaFileMissing',      () => checkMediaFileMissing(db, dbDir));
+    // G. Data Validation
+    { name: 'checkInvalidDates',          fn: (db) => checkInvalidDates(db) },
+    { name: 'checkUnrelatedPerson',       fn: (db) => checkUnrelatedPerson(db) },
+    { name: 'checkMediaFileMissing',      global: true, fn: (db, dbDir) => checkMediaFileMissing(db, dbDir) },
+    { name: 'checkOrphanedSource',        fn: (db) => checkOrphanedSource(db) },
+    { name: 'checkTextControlChars',      fn: (db) => checkTextControlChars(db) },
+  ];
+}
+
+function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?: boolean }): CheckResult[] {
+  const results: CheckResult[] = [];
+  console.log('[checks] runAllCheckFunctions starting');
+  const t0 = Date.now();
+
+  for (const check of getAllCheckFunctions()) {
+    if (opts?.skipGlobal && check.global) continue;
+    const start = Date.now();
+    const res = check.fn(db, dbDir);
+    const ms = Date.now() - start;
+    console.log(`[checks] ${check.name}: ${ms}ms → ${res.length} result(s)`);
+    results.push(...res);
   }
-  run('checkOrphanedSource',        () => checkOrphanedSource(db));
-  run('checkTextControlChars',      () => checkTextControlChars(db));
 
   console.log(`[checks] total: ${Date.now() - t0}ms`);
   return results;
