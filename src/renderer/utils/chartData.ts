@@ -10,6 +10,24 @@ type RawRel     = { type: string; person1_id: string | null; person2_id: string 
 type RawMedia   = { id: string; file_ref?: string | null; sort_order: number };
 type RawPlace   = { id: string; name: string };
 
+// Session cache: media id → resolved data URL (or null if the app reported no file).
+// Keyed by media id so the same photo shared across persons only pays the IPC cost once.
+const photoDataUrlCache = new Map<string, string | null>();
+
+/** Test hook — reset the module-level photo cache between test cases. */
+export function _resetPhotoCacheForTests(): void {
+  photoDataUrlCache.clear();
+}
+
+async function resolvePhotoDataUrl(mediaId: string): Promise<string | null> {
+  if (photoDataUrlCache.has(mediaId)) return photoDataUrlCache.get(mediaId) ?? null;
+  const url = (await window.api.media.readAsDataUrl(mediaId)) as string | null;
+  const resolved = url ?? null;
+  // Only cache non-null — a transient null (e.g. file missing) shouldn't poison the cache permanently.
+  if (resolved !== null) photoDataUrlCache.set(mediaId, resolved);
+  return resolved;
+}
+
 export async function fetchPersonNode(id: string): Promise<PersonNode> {
   const [person, names, events, mediaLinks] = await Promise.all([
     window.api.persons.get(id),
@@ -25,7 +43,6 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
   const birthEvent = events.find(e => e.event_type === 'birth');
   const deathEvent = events.find(e => e.event_type === 'death');
 
-  // Fetch place names for birth/death events (sequential — depends on event data)
   let birthPlace: string | null = null;
   let deathPlace: string | null = null;
 
@@ -42,9 +59,10 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
     } catch { /* ignore */ }
   }
 
-  // Profile photo: first media link sorted by sort_order
+  // Profile photo: first media link sorted by sort_order, resolved to a data URL.
   const sortedMedia = [...mediaLinks].sort((a, b) => a.sort_order - b.sort_order);
-  const photoUrl = sortedMedia[0]?.file_ref ?? null;
+  const profileMediaId = sortedMedia[0]?.id ?? null;
+  const photoUrl = profileMediaId ? await resolvePhotoDataUrl(profileMediaId) : null;
 
   return {
     id,
