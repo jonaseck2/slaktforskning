@@ -7,7 +7,7 @@ description: Build, extend, and debug gazetteers for place resolution. Use when 
 
 ## Overview
 
-The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 15 bundled gazetteers cover Sweden, Denmark, Norway, Finland, Iceland, 9 US states, 5 Canadian provinces, and ~244 countries globally.
+The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 16 bundled gazetteers cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, and ~244 countries globally.
 
 ## Architecture
 
@@ -56,7 +56,7 @@ interface GazetteerNode {
 
 When adding a new country, add its admin suffixes here too.
 
-## Bundled Gazetteers (15)
+## Bundled Gazetteers (16)
 
 | ID | Name | Source | Nodes | Size |
 |----|------|--------|-------|------|
@@ -72,7 +72,8 @@ When adding a new country, add its admin suffixes here too.
 | `fi-kunnat` | Finnish Municipalities | GeoNames | ~26,887 | 4.4 MB |
 | `is-sveitarfelog` | Icelandic Municipalities | GeoNames | ~115 | 32 KB |
 | `us-immigration-states` | US Immigration States | GeoNames | ~20,936 | 3.6 MB |
-| `ca-provinces` | Canadian Provinces | GeoNames | ~11,854 | 2.1 MB |
+| `us-all-states` | US All States | GeoNames | ~21,568 | 4.1 MB |
+| `ca-provinces` | Canadian Provinces/Territories | GeoNames | ~11,854 | 2.1 MB |
 | `world-countries` | World Countries | GeoNames | ~244 | 45 KB |
 | `world-admin1` | World States & Provinces | GeoNames | ~2,754 | 452 KB |
 
@@ -91,7 +92,8 @@ Each country/source has its own build script in `scripts/`:
 | `build-fi-municipalities.ts` | GeoNames FI.zip | Parse TSV, bilingual Finnish+Swedish | fi-kunnat |
 | `build-is-municipalities.ts` | GeoNames IS.zip | Parse TSV, Icelandic admin names | is-sveitarfelog |
 | `build-us-places.ts` | GeoNames US.zip | Parse TSV, filter 9 states | us-immigration-states |
-| `build-ca-places.ts` | GeoNames CA.zip | Parse TSV, filter 5 provinces | ca-provinces |
+| `build-us-places-all.ts` | GeoNames US.zip | Parse TSV, all 50 states + DC, pop >= 500 | us-all-states |
+| `build-ca-places.ts` | GeoNames CA.zip | Parse TSV, all 13 provinces/territories | ca-provinces |
 | `build-world.ts` | GeoNames countryInfo + cities15000 + admin1 | Parse 3 files, population-weighted centroids | world-countries, world-admin1 |
 
 ## Adding a New Country Gazetteer
