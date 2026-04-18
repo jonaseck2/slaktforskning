@@ -78,7 +78,7 @@
     </section>
 
     <!-- Life Map Section -->
-    <section v-if="hasGeoEvents" class="detail-section" aria-labelledby="section-person-map">
+    <section class="detail-section" aria-labelledby="section-person-map">
       <SectionHeader :title="$t('map.personMap')" :collapsible="false" />
       <PersonMap :person-id="person.id" :key="'map-' + dataVersionStore.version" />
     </section>
@@ -219,7 +219,6 @@ import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
 import PersonDetailsSection from '../components/PersonDetailsSection.vue';
 import PersonMap from '../components/PersonMap.vue';
-import { usePlaceResolver } from '../composables/usePlaceResolver';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
 import AppButton from '../components/ui/AppButton.vue';
@@ -258,7 +257,6 @@ const screenReader = useScreenReaderMode();
 const toast = useToast();
 const ttsEnabled = inject<Ref<boolean>>('ttsEnabled', ref(false));
 const { speak, stop } = useTTS();
-const { ensureLoaded: ensureGazetteersLoaded, resolve: resolveGazetteerPlace } = usePlaceResolver();
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
@@ -298,8 +296,6 @@ const showAddTaskModal = ref(false);
 
 const personGroups = ref<import('../components/GroupsTable.vue').GroupRow[]>([]);
 const showGroupPicker = ref(false);
-const hasGeoEvents = ref(false);
-
 async function loadPersonTasks() {
   if (!window.api?.researchTasks) return;
   personTasks.value = (await window.api.researchTasks.forPerson(personId)) as import('../components/ResearchTasksTable.vue').ResearchTaskRow[];
@@ -307,35 +303,6 @@ async function loadPersonTasks() {
 
 async function loadPersonGroups() {
   personGroups.value = (await window.api.groups.forPerson(personId)) as PersonGroup[];
-}
-
-async function checkGeoEvents() {
-  try {
-    const events = (await window.api.events.forPerson(personId)) as Array<{ place_id: string | null }>;
-    const eventsWithPlaces = events.filter(e => e.place_id);
-    for (const ev of eventsWithPlaces) {
-      const place = (await window.api.places.get(ev.place_id!)) as { id: string; name: string; latitude: number | null; longitude: number | null } | null;
-      if (place && place.latitude != null && place.longitude != null) {
-        hasGeoEvents.value = true;
-        return;
-      }
-    }
-    // No raw coordinates — try gazetteer resolution
-    await ensureGazetteersLoaded();
-    for (const ev of eventsWithPlaces) {
-      const place = (await window.api.places.get(ev.place_id!)) as { id: string; name: string; latitude: number | null; longitude: number | null } | null;
-      if (place && place.latitude == null) {
-        const fullPath = (await window.api.places.getPath(place.id)) as string;
-        if (resolveGazetteerPlace(fullPath)) {
-          hasGeoEvents.value = true;
-          return;
-        }
-      }
-    }
-    hasGeoEvents.value = false;
-  } catch {
-    hasGeoEvents.value = false;
-  }
 }
 
 async function removeFromGroup(groupId: string) {
@@ -375,7 +342,6 @@ async function load() {
     await loadPersonTasks();
     await loadPersonGroups();
     await loadProfilePic();
-    await checkGeoEvents();
     await autoNarrate();
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
@@ -491,7 +457,6 @@ onMounted(async () => {
     if (debounce) clearTimeout(debounce);
     debounce = setTimeout(async () => {
       checksSectionRef.value?.reload();
-      await checkGeoEvents();
     }, 400);
   });
 

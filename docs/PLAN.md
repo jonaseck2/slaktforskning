@@ -182,6 +182,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.102.0 | Language gazetteer build script (lang-sv-wikidata): Swedish translations for Nordic administrative divisions (DK/NO/FI/IS) via Wikidata SPARQL | — |
 | v0.102.1 | Fix: face tag drag/resize reliability, auto-assign person, search relevance | — |
 | v0.102.2 | Fix: smooth map scroll zoom with CSS transform, add admin1 place type | — |
+| v0.103.0 | Shared place coordinate resolution with gazetteer fallback, Life Map in PersonPanel | [spec](superpowers/specs/2026-04-18-shared-place-coordinate-resolution-design.md) |
 ---
 
 ## Research
