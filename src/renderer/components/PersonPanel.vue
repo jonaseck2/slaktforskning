@@ -125,7 +125,7 @@
 
       <!-- Forskning section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.nav')" @toggle="toggleSection('research')" @action="openTaskForm()" />
+        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.addTask')" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
           <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
