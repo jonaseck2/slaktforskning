@@ -45,22 +45,22 @@ export function getEventsForPerson(db: Database, personId: string): (GenealogyEv
     SELECT e.*, COALESCE(cc.cnt, 0) AS citation_count, p.name AS place_name
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
-    LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations GROUP BY event_id) cc ON cc.event_id = e.id
+    LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations WHERE event_id IN (SELECT e2.id FROM events e2 JOIN event_participants ep2 ON ep2.event_id = e2.id WHERE ep2.person_id = ?) GROUP BY event_id) cc ON cc.event_id = e.id
     LEFT JOIN places p ON p.id = e.place_id
     WHERE ep.person_id = ?
     ORDER BY e.date_value
-  `, [personId]);
+  `, [personId, personId]);
 }
 
 export function getEventsForRelationship(db: Database, relationshipId: string): (GenealogyEvent & { citation_count: number })[] {
   return queryAll<GenealogyEvent & { citation_count: number }>(db, `
     SELECT e.*, COALESCE(cc.cnt, 0) AS citation_count, p.name AS place_name
     FROM events e
-    LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations GROUP BY event_id) cc ON cc.event_id = e.id
+    LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations WHERE event_id IN (SELECT e2.id FROM events e2 WHERE e2.relationship_id = ?) GROUP BY event_id) cc ON cc.event_id = e.id
     LEFT JOIN places p ON p.id = e.place_id
     WHERE e.relationship_id = ?
     ORDER BY e.date_value
-  `, [relationshipId]);
+  `, [relationshipId, relationshipId]);
 }
 
 export function getEventsForPlace(db: Database, placeId: string): (GenealogyEvent & { participant_names: string })[] {
