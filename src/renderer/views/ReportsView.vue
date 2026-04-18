@@ -5,22 +5,19 @@
       <span v-if="reportLoading" class="running-hint">{{ $t('reports.loadingReport') }}</span>
     </div>
 
-    <div class="tab-bar">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        :class="['tab-btn', { active: activeTab === tab.id }]"
-        @click="activeTab = tab.id"
-      >{{ tab.label }}</button>
-    </div>
+    <FilterChips
+      :model-value="activeTab"
+      :options="tabs.map(t => ({ value: t.id, label: t.label }))"
+      @update:model-value="activeTab = $event as typeof activeTab"
+    />
 
     <!-- Ancestor Chart Tab -->
     <div v-if="activeTab === 'ancestor'" class="tab-content">
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!ancestorRootId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!ancestorRootId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!ancestorRootId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!ancestorRootId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -46,8 +43,8 @@
           </label>
         </div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!familyRelationshipId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!familyRelationshipId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!familyRelationshipId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!familyRelationshipId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -64,8 +61,8 @@
         <div class="controls">
         </div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!individualPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!individualPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -82,8 +79,8 @@
         <div class="controls">
         </div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!ancestorBookPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!ancestorBookPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -99,8 +96,8 @@
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!biographyPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!biographyPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!biographyPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!biographyPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -124,8 +121,8 @@
           </label>
         </div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!placeHistoryPlaceId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!placeHistoryPlaceId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!placeHistoryPlaceId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!placeHistoryPlaceId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -149,8 +146,8 @@
           </label>
         </div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!familyNarrativeRelId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!familyNarrativeRelId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!familyNarrativeRelId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!familyNarrativeRelId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -166,8 +163,8 @@
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -183,8 +180,8 @@
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -200,8 +197,8 @@
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -217,8 +214,8 @@
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</button>
-          <button class="btn-add btn-report-action" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</button>
+          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -252,6 +249,8 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import AppButton from '../components/ui/AppButton.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import AncestorChartReport from '../components/reports/AncestorChartReport.vue';
 import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
@@ -438,35 +437,34 @@ async function exportPdf() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg);
 }
 .view-header h2 { margin: 0; }
-.tab-content { display: flex; flex-direction: column; gap: 12px; }
+.tab-content { display: flex; flex-direction: column; gap: var(--space-md); }
 
 .tab-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 16px;
+  gap: var(--space-lg);
   flex-wrap: wrap;
 }
-.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.controls { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: center; }
 .controls label {
-  display: flex; flex-direction: column; gap: 4px;
-  font-size: var(--font-sm); font-weight: 600; color: #555; min-width: 200px;
+  display: flex; flex-direction: column; gap: var(--space-xs);
+  font-size: var(--font-sm); font-weight: var(--font-weight-bold); color: var(--text-secondary); min-width: 200px;
 }
 .controls select {
-  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: var(--font-base); font-family: inherit;
+  padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: var(--radius-sm); font-size: var(--font-base); font-family: inherit;
 }
-.print-actions { display: flex; gap: 8px; align-items: center; }
-.btn-report-action:disabled { opacity: 0.5; cursor: default; }
+.print-actions { display: flex; gap: var(--space-sm); align-items: center; }
 
 /* Preview area: grey background with scrollable paper preview */
 .preview-area {
   position: relative;
-  background: #d0d0d0;
-  padding: 24px;
-  border-radius: 4px;
+  background: var(--surface-bg);
+  padding: var(--space-xl);
+  border-radius: var(--radius-sm);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -478,7 +476,7 @@ async function exportPdf() {
   width: 210mm;
   min-height: 297mm;
   padding: 20mm;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
   transform-origin: top center;
   flex-shrink: 0;
 }

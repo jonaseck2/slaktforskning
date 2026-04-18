@@ -4,39 +4,27 @@
       <h2>{{ $t('nav.visualization') }}</h2>
     </div>
     <!-- Tab bar -->
-    <div v-if="focalPerson" class="tab-bar" role="tablist">
-      <button class="btn-back" @click="router.back()">←</button>
-      <button
-        role="tab" :aria-selected="activeTab === 'pedigree'"
-        :class="['tab-btn', { active: activeTab === 'pedigree' }]"
-        data-testid="tab-pedigree" @click="setTab('pedigree')"
-      >{{ $t('visualization.tab.pedigree') }}</button>
-      <button
-        role="tab" :aria-selected="activeTab === 'circle'"
-        :class="['tab-btn', { active: activeTab === 'circle' }]"
-        data-testid="tab-circle" @click="setTab('circle')"
-      >{{ $t('visualization.tab.circle') }}</button>
-      <button
-        role="tab" :aria-selected="activeTab === 'hourglass'"
-        :class="['tab-btn', { active: activeTab === 'hourglass' }]"
-        data-testid="tab-hourglass" @click="setTab('hourglass')"
-      >{{ $t('visualization.tab.hourglass') }}</button>
-      <button
-        role="tab" :aria-selected="activeTab === 'descendants'"
-        :class="['tab-btn', { active: activeTab === 'descendants' }]"
-        data-testid="tab-descendants" @click="setTab('descendants')"
-      >{{ $t('visualization.tab.descendants') }}</button>
-      <button
-        role="tab" :aria-selected="activeTab === 'timeline'"
-        :class="['tab-btn', { active: activeTab === 'timeline' }]"
-        data-testid="tab-timeline" @click="setTab('timeline')"
-      >{{ $t('visualization.tab.timeline') }}</button>
-      <button
+    <div v-if="focalPerson" class="viz-tab-bar">
+      <AppButton variant="ghost" size="sm" @click="router.back()">←</AppButton>
+      <FilterChips
+        :model-value="activeTab"
+        :options="[
+          { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
+          { value: 'circle',      label: $t('visualization.tab.circle') },
+          { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
+          { value: 'descendants', label: $t('visualization.tab.descendants') },
+          { value: 'timeline',    label: $t('visualization.tab.timeline') },
+        ]"
+        @update:model-value="setTab($event as TabName)"
+      />
+      <AppButton
         v-if="activeTab === 'pedigree'"
-        class="btn-sm tab-toggle-btn"
+        variant="secondary"
+        size="sm"
+        class="tab-toggle-btn"
         :aria-label="pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView')"
         @click="pedigreeListMode = !pedigreeListMode"
-      >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</button>
+      >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</AppButton>
     </div>
 
     <!-- Empty state -->
@@ -128,6 +116,8 @@ import type { Ref } from 'vue';
 import type { BoxLayout } from '../utils/chart-layout/types';
 import { useChartBridge } from '../composables/useChartBridge';
 import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
+import AppButton from '../components/ui/AppButton.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import PedigreeListView from '../components/charts/PedigreeListView.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
@@ -368,22 +358,19 @@ onActivated(load);
   height: 100%;
 }
 
-/* Back and detail navigation buttons (view-specific) */
-.btn-back {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  cursor: pointer;
-  padding: 4px 8px;
-  font-size: var(--font-lg);
-  margin-right: 4px;
+/* Tab bar row: back button + FilterChips + optional toggle */
+.viz-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--surface-border-subtle);
 }
-.btn-back:hover { opacity: 0.7; }
 
 /* List/chart toggle button in pedigree tab */
 .tab-toggle-btn {
   margin-left: auto;
-  margin-right: 4px;
+  margin-right: var(--space-xs);
 }
 
 /* Body: chart + panel */
@@ -407,35 +394,35 @@ onActivated(load);
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   border-right: none;
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   padding: 6px 5px;
   cursor: pointer;
-  color: var(--color-text-faint);
+  color: var(--text-muted);
   font-size: var(--font-xs);
   z-index: 10;
 }
-.panel-open-btn:hover { color: var(--color-text-muted); background: var(--color-bg-subtle); }
+.panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
 /* Drag handle */
 .panel-drag-handle {
   width: 6px;
-  background: #e8e8e8;
+  background: var(--surface-border-subtle);
   cursor: col-resize;
   flex-shrink: 0;
   position: relative;
   transition: background 0.1s;
 }
-.panel-drag-handle:hover { background: #c0c0c0; }
+.panel-drag-handle:hover { background: var(--surface-border); }
 
 /* Panel */
 .viz-panel {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--surface-border);
   position: relative;
   overflow: hidden;
   min-width: 200px;
@@ -443,25 +430,25 @@ onActivated(load);
 }
 .panel-close-btn {
   position: absolute;
-  top: 8px;
+  top: var(--space-sm);
   left: -1px;
   z-index: 10;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   border-right: none;
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   padding: 4px 5px;
   cursor: pointer;
-  color: var(--color-text-faint);
+  color: var(--text-muted);
   font-size: var(--font-xs);
   line-height: 1;
   transform: translateX(-100%);
 }
-.panel-close-btn:hover { color: var(--color-text-muted); }
+.panel-close-btn:hover { color: var(--text-secondary); }
 
 
 .empty-state {
-  color: #999;
+  color: var(--text-muted);
   padding: 60px;
   text-align: center;
   font-size: var(--font-md);
