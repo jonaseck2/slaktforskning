@@ -313,11 +313,18 @@ async function removeFromGroup(groupId: string) {
 async function load() {
   if (!window.api) return;
   try {
-    person.value = (await window.api.persons.get(personId)) as PersonData | null;
+    // Load person, names, events, tasks, groups, and profile pic in parallel where possible
+    const [personData, namesData, eventsData] = await Promise.all([
+      window.api.persons.get(personId) as Promise<PersonData | null>,
+      window.api.persons.getNames(personId) as Promise<NameRow[]>,
+      window.api.events.forPerson(personId) as Promise<Array<{ event_type: string; date_value: string | null; place_name?: string | null }>>,
+    ]);
+
+    person.value = personData;
     if (!person.value) return;
     localStorage.setItem('viz-focal-person', personId);
 
-    names.value = (await window.api.persons.getNames(personId)) as NameRow[];
+    names.value = namesData;
     if (names.value.length > 0) {
       const n = names.value[0];
       primaryName.value = fullNameParts(n.given_name ?? null, n.surname ?? null, n.preferred_name ?? null, n.nickname ?? null)
@@ -325,31 +332,31 @@ async function load() {
     }
     focusStore.set(personId, primaryName.value);
 
-    // Build birth summary for header
-    try {
-      const events = await window.api.events.forPerson(personId) as Array<{ event_type: string; date_value: string | null; place_name?: string | null }>;
-      const birth = events.find((e: { event_type: string }) => e.event_type === 'birth');
-      if (birth) {
-        const parts: string[] = [];
-        if (birth.place_name) parts.push(birth.place_name);
-        if (birth.date_value) parts.push('b. ' + birth.date_value);
-        birthSummary.value = parts.length > 0 ? parts.join(', ') : '';
-      } else {
-        birthSummary.value = '';
-      }
-    } catch { birthSummary.value = ''; }
+    // Build birth summary from already-loaded events (no extra IPC call)
+    const birth = eventsData.find(e => e.event_type === 'birth');
+    if (birth) {
+      const parts: string[] = [];
+      if (birth.place_name) parts.push(birth.place_name);
+      if (birth.date_value) parts.push('b. ' + birth.date_value);
+      birthSummary.value = parts.length > 0 ? parts.join(', ') : '';
+    } else {
+      birthSummary.value = '';
+    }
 
-    await loadPersonTasks();
-    await loadPersonGroups();
-    await loadProfilePic();
-    await autoNarrate();
+    // Load remaining data in parallel
+    await Promise.all([
+      loadPersonTasks(),
+      loadPersonGroups(),
+      loadProfilePic(),
+    ]);
+    await autoNarrate(eventsData);
   } catch (err) {
     console.error('[PersonDetailView] load failed:', err);
     toast.error(t('errors.loadFailed'));
   }
 }
 
-async function autoNarrate() {
+async function autoNarrate(eventsData?: Array<{ event_type: string; date_value: string | null; place_name?: string | null }>) {
   if (!ttsEnabled.value) return;
   const primaryName_ = names.value[0];
   const name = primaryName_
@@ -361,15 +368,13 @@ async function autoNarrate() {
   let deathDate: string | undefined;
   let deathPlace: string | undefined;
 
-  try {
-    const events = await window.api.events.forPerson(personId) as Array<{ event_type: string; date_value: string | null; place_name?: string | null }>;
-    const birth = events.find(e => e.event_type === 'birth');
-    const death = events.find(e => e.event_type === 'death');
-    birthDate = birth?.date_value ?? undefined;
-    birthPlace = birth?.place_name ?? undefined;
-    deathDate = death?.date_value ?? undefined;
-    deathPlace = death?.place_name ?? undefined;
-  } catch { /* ignore */ }
+  const events = eventsData ?? await window.api.events.forPerson(personId) as Array<{ event_type: string; date_value: string | null; place_name?: string | null }>;
+  const birth = events.find(e => e.event_type === 'birth');
+  const death = events.find(e => e.event_type === 'death');
+  birthDate = birth?.date_value ?? undefined;
+  birthPlace = birth?.place_name ?? undefined;
+  deathDate = death?.date_value ?? undefined;
+  deathPlace = death?.place_name ?? undefined;
 
   const text = narratePerson({ name, birthDate, birthPlace, deathDate, deathPlace }, narrationLabelsFromI18n(t));
   speak(text, locale.value);

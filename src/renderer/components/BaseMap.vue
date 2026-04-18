@@ -7,12 +7,10 @@
       :use-global-leaflet="true"
       :options="{
         zoomControl: false,
-        scrollWheelZoom: props.scrollWheelZoom,
+        scrollWheelZoom: false,
         preferCanvas: true,
         zoomSnap: 0,
         zoomDelta: 0.5,
-        wheelDebounceTime: 0,
-        wheelPxPerZoomLevel: 120,
       }"
       @ready="onMapReady"
     >
@@ -86,8 +84,44 @@ function onMapReady() {
   if (map) {
     map.on('zoomend', () => { currentZoom.value = map.getZoom(); });
     map.on('zoom', () => { currentZoom.value = map.getZoom(); });
+    if (props.scrollWheelZoom) {
+      setupSmoothWheel(map);
+    }
   }
   emit('ready');
+}
+
+/**
+ * Custom wheel zoom: accumulates scroll delta per frame, applies zoom via
+ * setZoom(animate:false). With preferCanvas the markers redraw instantly;
+ * tiles flash briefly but zoom is continuous and never blocked by animation.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setupSmoothWheel(map: any) {
+  let pendingDelta = 0;
+  let rafId = 0;
+  const PX_PER_ZOOM = 120;
+  const minZoom = map.getMinZoom();
+  const maxZoom = map.getMaxZoom();
+
+  function tick() {
+    rafId = 0;
+    if (!pendingDelta) return;
+    const zoom = map.getZoom();
+    const d = pendingDelta / PX_PER_ZOOM;
+    pendingDelta = 0;
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + d));
+    if (newZoom !== zoom) {
+      map.setZoom(newZoom, { animate: false });
+    }
+  }
+
+  map.getContainer().addEventListener('wheel', (e: WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pendingDelta += -e.deltaY * (e.deltaMode === 1 ? 20 : 1);
+    if (!rafId) rafId = requestAnimationFrame(tick);
+  }, { passive: false });
 }
 
 function zoomIn() {

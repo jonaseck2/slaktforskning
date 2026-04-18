@@ -83,6 +83,7 @@ interface EventRow {
   date_value_end: string | null;
   date_original: string;
   place_id: string | null;
+  place_name: string | null;
   place_address: string | null;
   description: string;
   cause: string | null;
@@ -135,13 +136,8 @@ function formatDate(event: EventRow): string {
   return `${prefix}${event.date_value}`;
 }
 
-async function resolvePlaceName(event: EventRow): Promise<string | null> {
-  if (event.place_id) {
-    try {
-      const place = (await window.api.places.get(event.place_id)) as { name?: string } | null;
-      return place?.name ?? null;
-    } catch { /* ignore */ }
-  }
+function resolvePlaceName(event: EventRow): string | null {
+  if (event.place_name) return event.place_name;
   if (event.place_address) return event.place_address;
   return null;
 }
@@ -151,8 +147,8 @@ async function load() {
   try {
     const events = (await window.api.events.forPerson(props.personId)) as EventRow[];
 
-    // Resolve place names in parallel
-    const placeNames = await Promise.all(events.map(e => resolvePlaceName(e)));
+    // Place names are already included from the SQL JOIN
+    const placeNames = events.map(e => resolvePlaceName(e));
 
     // Find birth year for age calculation
     const birthEvent = events.find(e => e.event_type === 'birth');

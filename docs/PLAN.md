@@ -183,6 +183,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.102.1 | Fix: face tag drag/resize reliability, auto-assign person, search relevance | — |
 | v0.102.2 | Fix: smooth map scroll zoom with CSS transform, add admin1 place type | — |
 | v0.103.0 | Shared place coordinate resolution with gazetteer fallback, Life Map in PersonPanel | [spec](superpowers/specs/2026-04-18-shared-place-coordinate-resolution-design.md) |
+| v0.103.1 | Fix: fast continuous map zoom, canvas markers, citation query optimization | — |
 ---
 
 ## Research
