@@ -97,13 +97,27 @@
           :title="$t('media.faceTags')"
           :count="regions.length"
           :collapsed="!sections.faceTags"
+          :action-label="drawMode ? $t('media.viewer.drawDone') : $t('media.viewer.drawTag')"
           @toggle="toggleSection('faceTags')"
+          @action="drawMode ? emit('stop-draw-mode') : emit('start-draw-mode')"
         />
         <div v-if="sections.faceTags" class="panel-section-body">
-          <div v-if="regions.length === 0" class="panel-empty-section">{{ $t('media.noFaceTags') }}</div>
-          <div v-for="r in regions" :key="r.id" class="linked-row">
+          <div v-if="regions.length === 0 && !drawMode" class="panel-empty-section">{{ $t('media.noFaceTags') }}</div>
+          <div
+            v-for="r in regions"
+            :key="r.id"
+            class="linked-row face-tag-row"
+            :class="{ 'face-tag-highlighted': highlightedRegionId === r.id }"
+            @mouseenter="emit('highlight-region', r.id)"
+            @mouseleave="emit('highlight-region', null)"
+          >
             <AppAvatar v-if="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
-            <span>{{ r.label || r.personName || $t('media.untitled') }}</span>
+            <div v-else class="face-tag-unknown">?</div>
+            <span v-if="r.person_id" class="face-tag-name">{{ r.personName || $t('media.untitled') }}</span>
+            <div v-else class="face-tag-assign">
+              <PersonPicker :model-value="null" :placeholder="$t('media.viewer.assignPerson')" @select="(person: { id: string }) => assignPersonToRegion(r.id, person.id)" />
+            </div>
+            <AppButton variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -155,8 +169,20 @@ interface RegionData {
   personSex: 'M' | 'F' | 'U';
 }
 
-const props = defineProps<{ mediaId: string | null }>();
-const emit = defineEmits<{ 'link-changed': []; 'close': [] }>();
+const props = defineProps<{
+  mediaId: string | null;
+  drawMode?: boolean;
+  highlightedRegionId?: string | null;
+}>();
+
+const emit = defineEmits<{
+  'link-changed': [];
+  'close': [];
+  'start-draw-mode': [];
+  'stop-draw-mode': [];
+  'highlight-region': [id: string | null];
+  'region-deleted': [];
+}>();
 
 const media = ref<MediaData | null>(null);
 const loading = ref(false);
@@ -337,6 +363,18 @@ async function linkPlace(place: { id: string }) {
   await load();
 }
 
+async function deleteRegion(regionId: string) {
+  await window.api.mediaRegions.delete(regionId);
+  emit('region-deleted');
+  if (props.mediaId) await load();
+}
+
+async function assignPersonToRegion(regionId: string, personId: string) {
+  await window.api.mediaRegions.update(regionId, { person_id: personId });
+  emit('region-deleted'); // triggers viewer reload too
+  if (props.mediaId) await load();
+}
+
 watch(() => props.mediaId, load, { immediate: true });
 </script>
 
@@ -487,5 +525,40 @@ watch(() => props.mediaId, load, { immediate: true });
   padding: var(--space-xs) 0;
   border-bottom: 1px solid var(--surface-border-subtle);
   margin-bottom: var(--space-xs);
+}
+
+/* Face tag rows */
+.face-tag-row {
+  transition: background 0.15s;
+  padding: var(--space-xs) var(--space-xs);
+  border-radius: var(--radius-sm);
+  margin: 0 calc(-1 * var(--space-xs));
+}
+.face-tag-highlighted {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.face-tag-unknown {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.face-tag-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.face-tag-assign {
+  flex: 1;
+  min-width: 0;
 }
 </style>

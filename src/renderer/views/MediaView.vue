@@ -1,6 +1,21 @@
 <template>
   <div class="media-layout" ref="mediaBodyRef">
   <div class="media-main">
+    <MediaViewer
+      v-if="viewerMode"
+      ref="viewerRef"
+      :media-items="filteredItems"
+      :initial-index="viewerIndex"
+      :thumbnails="thumbnails"
+      :draw-mode="drawMode"
+      :highlighted-region-id="highlightedRegionId"
+      @close="closeViewer"
+      @update:current-index="onViewerIndexChange"
+      @region-drawn="onRegionDrawn"
+      @region-clicked="(id: string) => highlightedRegionId = id"
+      @region-hovered="(id: string | null) => highlightedRegionId = id"
+    />
+    <template v-else>
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
       <div class="header-right">
@@ -38,9 +53,9 @@
         class="gallery-card"
         :class="{ 'missing-card': item.is_missing, 'selected-card': selectedMediaId === item.id }"
         @click="selectMedia(item.id)"
-        @dblclick="openLightbox(idx)"
+        @dblclick="openViewer(idx)"
         tabindex="0"
-        @keydown.enter="openLightbox(idx)"
+        @keydown.enter="openViewer(idx)"
       >
         <div class="card-thumbnail">
           <img
@@ -57,7 +72,7 @@
           <button
             class="card-expand"
             :title="$t('media.lightbox.open')"
-            @click.stop="openLightbox(idx)"
+            @click.stop="openViewer(idx)"
           >&#x26F6;</button>
         </div>
         <div class="card-info">
@@ -101,7 +116,7 @@
               v-if="thumbnails[item.id]"
               :src="thumbnails[item.id]"
               class="table-thumb"
-              @click.stop="openLightbox(idx)"
+              @click.stop="openViewer(idx)"
             />
             <span v-else class="table-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
           </td>
@@ -136,14 +151,7 @@
     </table>
 
     <div ref="sentinel" class="scroll-sentinel"></div>
-
-    <MediaLightbox
-      :media-items="filteredItems"
-      :current-index="lightboxIndex"
-      :visible="lightboxVisible"
-      @close="lightboxVisible = false"
-      @update:current-index="lightboxIndex = $event"
-    />
+    </template>
   </div>
   <template v-if="selectedMediaId">
     <div
@@ -153,8 +161,14 @@
     <div class="media-panel-container" :style="{ width: panelWidth + 'px' }">
       <MediaPanel
         :media-id="selectedMediaId"
+        :draw-mode="drawMode"
+        :highlighted-region-id="highlightedRegionId"
         @link-changed="reload"
         @close="selectedMediaId = null"
+        @start-draw-mode="drawMode = true"
+        @stop-draw-mode="drawMode = false"
+        @highlight-region="(id: string | null) => highlightedRegionId = id"
+        @region-deleted="() => viewerRef?.reloadRegions()"
       />
     </div>
   </template>
@@ -164,7 +178,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import MediaLightbox from '../components/MediaLightbox.vue';
+import MediaViewer from '../components/MediaViewer.vue';
 import MediaPanel from '../components/MediaPanel.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
@@ -225,8 +239,11 @@ const offset = ref(0);
 const loading = ref(true);
 const searchQuery = ref('');
 const thumbnails = ref<Record<string, string>>({});
-const lightboxVisible = ref(false);
-const lightboxIndex = ref(0);
+const viewerMode = ref(false);
+const viewerIndex = ref(0);
+const drawMode = ref(false);
+const highlightedRegionId = ref<string | null>(null);
+const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
 const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
@@ -322,9 +339,32 @@ function selectMedia(id: string) {
   selectedMediaId.value = id;
 }
 
-function openLightbox(idx: number) {
-  lightboxIndex.value = idx;
-  lightboxVisible.value = true;
+function openViewer(idx: number) {
+  viewerIndex.value = idx;
+  const item = filteredItems.value[idx];
+  if (item) selectedMediaId.value = item.id;
+  viewerMode.value = true;
+}
+
+function onViewerIndexChange(idx: number) {
+  viewerIndex.value = idx;
+  const item = filteredItems.value[idx];
+  if (item) selectedMediaId.value = item.id;
+}
+
+function closeViewer() {
+  viewerMode.value = false;
+  drawMode.value = false;
+}
+
+async function onRegionDrawn(rect: { x: number; y: number; width: number; height: number }) {
+  if (!selectedMediaId.value) return;
+  await window.api.mediaRegions.create({
+    media_id: selectedMediaId.value,
+    x: rect.x, y: rect.y,
+    width: rect.width, height: rect.height,
+  });
+  viewerRef.value?.reloadRegions();
 }
 
 async function attachFile() {
