@@ -2,7 +2,9 @@
 // Focal at left, ancestors expand rightward. Supports N parents per node.
 
 import type { PedigreeTree, TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
-import { BOX_W, BOX_H, V_GAP, H_GAP, PAD, ROW_H } from './constants';
+import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, PAD } from './constants';
+import { measureBoxHeight } from './measure';
+import { curvedElbow } from './connectors';
 import { buildPedigreeTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
 /**
@@ -14,11 +16,10 @@ export function computePedigreeLayout(
   collapsed: Set<string> = new Set(),
   selectedPersonId?: string | null,
 ): ChartLayout {
-  // ── 1. Build TreePerson graph ───────────────────────────────────────────────
   const root = buildPedigreeTreePerson(tree);
   if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
-  // ── 2. Collapse filtering ──────────────────────────────────────────────────
+  // ── Collapse filtering ──────────────────────────────────────────────────
   const originalParentCount = new Map<string, number>();
   const hasMoreUp = new Map<string, boolean>();
 
@@ -29,7 +30,6 @@ export function computePedigreeLayout(
     originalParentCount.set(node.person.id, node.parents.length);
     hasMoreUp.set(node.person.id, !!node.hasMoreAncestors);
 
-    // Prune collapsed parents (never prune placeholders)
     if (collapsed.has(`${node.person.id}:right`)) {
       node.parents = node.parents.filter(p => p.isPlaceholder);
     }
@@ -38,9 +38,22 @@ export function computePedigreeLayout(
   }
   recordAndPrune(root);
 
-  // ── 3. Compute geometry ────────────────────────────────────────────────────
+  // ── Pre-measure heights ────────────────────────────────────────────────
+  const heightOf = new Map<string, number>();
+  function measureAll(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    const h = node.isPlaceholder ? MIN_BOX_H : measureBoxHeight(node.person);
+    heightOf.set(node.person.id, h);
+    for (const p of node.parents) measureAll(p, visited);
+    for (const s of node.spouses) measureAll(s, visited);
+    for (const c of node.children) measureAll(c, visited);
+  }
+  measureAll(root);
+  const hOf = (node: TreePerson): number => heightOf.get(node.person.id) ?? MIN_BOX_H;
 
-  // Max ancestor depth from focal
+  // ── Geometry ───────────────────────────────────────────────────────────
+
   function maxDepth(node: TreePerson, visited = new Set<string>()): number {
     if (visited.has(node.person.id)) return 0;
     visited.add(node.person.id);
@@ -48,75 +61,75 @@ export function computePedigreeLayout(
     return 1 + Math.max(...node.parents.map(p => maxDepth(p, visited)));
   }
 
-  const G = maxDepth(root) + 1; // generations including focal
+  const G = maxDepth(root) + 1;
   const genXOf = (g: number) => PAD + g * (BOX_W + H_GAP);
 
-  // Compact vertical layout: assign sequential slots to visible leaf nodes,
-  // then internal nodes center vertically over their parents.
-  const leafSlots = new Map<string, number>();
-  let slotIndex = 0;
+  // Leaf Y assignment via running cumulative cursor — replaces slot * ROW_H.
+  const leafCY = new Map<string, number>();
+  let cursorY = PAD;
 
-  function assignLeafSlots(node: TreePerson, visited = new Set<string>()): void {
+  function assignLeafYs(node: TreePerson, visited = new Set<string>()): void {
     if (visited.has(node.person.id)) return;
     visited.add(node.person.id);
     if (node.parents.length === 0) {
-      leafSlots.set(node.person.id, slotIndex++);
-      // If this leaf is the selected person, reserve slots for spouse outlines
-      // so the layout naturally creates vertical space below them.
+      const h = hOf(node);
+      leafCY.set(node.person.id, cursorY + h / 2);
+      cursorY += h + V_GAP;
       if (selectedPersonId && node.person.id === selectedPersonId) {
         for (const sp of node.spouses) {
           if (sp.isPlaceholder) {
-            leafSlots.set(sp.person.id, slotIndex++);
+            const sh = hOf(sp);
+            leafCY.set(sp.person.id, cursorY + sh / 2);
+            cursorY += sh + V_GAP;
           }
         }
       }
       return;
     }
-    // For internal nodes: also reserve spouse outline slots after their subtree
-    for (const p of node.parents) assignLeafSlots(p, visited);
+    for (const p of node.parents) assignLeafYs(p, visited);
     if (selectedPersonId && node.person.id === selectedPersonId) {
       for (const sp of node.spouses) {
         if (sp.isPlaceholder) {
-          leafSlots.set(sp.person.id, slotIndex++);
+          const sh = hOf(sp);
+          leafCY.set(sp.person.id, cursorY + sh / 2);
+          cursorY += sh + V_GAP;
         }
       }
     }
   }
-  assignLeafSlots(root);
+  assignLeafYs(root);
 
-  const numLeaves = slotIndex;
+  const totalLeafExtent = Math.max(cursorY - V_GAP, MIN_BOX_H);
 
-  // Memoised center Y: leaves get sequential slots, internal nodes average their parents.
   const cyCache = new Map<string, number>();
   function centerYOf(node: TreePerson): number {
     if (cyCache.has(node.person.id)) return cyCache.get(node.person.id)!;
     let cy: number;
-    const slot = leafSlots.get(node.person.id);
-    if (slot !== undefined) {
-      cy = PAD + (slot + 0.5) * ROW_H;
+    const leafY = leafCY.get(node.person.id);
+    if (leafY !== undefined) {
+      cy = leafY;
     } else {
       const parentCYs = node.parents.map(p => centerYOf(p));
       cy = parentCYs.length > 0
         ? parentCYs.reduce((a, b) => a + b, 0) / parentCYs.length
-        : PAD + 0.5 * ROW_H;
+        : PAD + hOf(node) / 2;
     }
     cyCache.set(node.person.id, cy);
     return cy;
   }
 
-  // Compute depth (generation) of each node
+  const depthMap = new Map<string, number>();
   function nodeDepth(node: TreePerson, depth: number, visited = new Set<string>()): void {
     if (visited.has(node.person.id)) return;
     visited.add(node.person.id);
     depthMap.set(node.person.id, depth);
     for (const p of node.parents) nodeDepth(p, depth + 1, visited);
   }
-  const depthMap = new Map<string, number>();
   nodeDepth(root, 0);
 
-  // ── 4. Place boxes and lines ───────────────────────────────────────────────
+  // ── Place boxes and curved paths ───────────────────────────────────────
   const boxes: BoxLayout[] = [];
-  const lines: Line[] = [];
+  const paths: string[] = [];
 
   function placeNodes(node: TreePerson, visited = new Set<string>()): void {
     if (visited.has(node.person.id)) return;
@@ -124,36 +137,30 @@ export function computePedigreeLayout(
 
     const g = depthMap.get(node.person.id) ?? 0;
     const cy = centerYOf(node);
+    const h = hOf(node);
 
     boxes.push({
       person: node.person,
       isFocal: !!node.isFocal,
       x: genXOf(g),
-      y: cy - BOX_H / 2,
-      w: BOX_W, h: BOX_H,
+      y: cy - h / 2,
+      w: BOX_W, h,
     });
 
-    if (node.parents.length > 0) {
-      const forkX = genXOf(g) + BOX_W + H_GAP / 2;
-      lines.push({ x1: genXOf(g) + BOX_W, y1: cy, x2: forkX, y2: cy });
-
-      const parentCYs = node.parents.map(p => centerYOf(p));
-      // Vertical fork spanning all parents
-      if (parentCYs.length > 0) {
-        lines.push({ x1: forkX, y1: Math.min(...parentCYs), x2: forkX, y2: Math.max(...parentCYs) });
-      }
-      // Horizontal lines to each parent
-      const parentGenX = genXOf(g + 1);
-      for (const pcy of parentCYs) {
-        lines.push({ x1: forkX, y1: pcy, x2: parentGenX, y2: pcy });
-      }
+    const childRightX = genXOf(g) + BOX_W;
+    const parentLeftX = genXOf(g + 1);
+    for (const p of node.parents) {
+      const pcy = centerYOf(p);
+      paths.push(curvedElbow(childRightX, cy, parentLeftX, pcy, 'right'));
     }
 
     for (const p of node.parents) placeNodes(p, visited);
   }
   placeNodes(root);
 
-  // ── Place unplaced outlines for selected person ──
+  // ── Unplaced outlines for selected person ──────────────────────────────
+  const placeholderPaths: string[] = [];
+
   if (selectedPersonId) {
     const selBox = boxes.find(b => b.person.id === selectedPersonId);
     const placedIds = new Set(boxes.map(b => b.person.id));
@@ -161,92 +168,75 @@ export function computePedigreeLayout(
     if (selBox) {
       const selNode = findPersonInTree(root, selectedPersonId);
       if (selNode) {
-        const selCY = selBox.y + BOX_H / 2;
+        const selCX = selBox.x + BOX_W / 2;
+        const selCY = selBox.y + selBox.h / 2;
 
-        // Helper: find first Y that doesn't overlap any existing box at exact X
-        function _findClearYSameCol(x: number, startY: number, direction: 1 | -1): number {
-          let y = startY;
-          const overlaps = () => boxes.some(b =>
-            b.x === x && y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
-          );
-          while (overlaps()) {
-            y += direction * (BOX_H + V_GAP);
-          }
-          return y;
-        }
-
-        // Helper: find first Y using full rectangle intersection (cross-column)
-        function findClearYRect(x: number, startY: number, direction: 1 | -1): number {
+        function findClearYRect(x: number, startY: number, direction: 1 | -1, boxH: number): number {
           let y = startY;
           const overlaps = () => boxes.some(b =>
             x < b.x + b.w && x + BOX_W > b.x &&
-            y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
+            y < b.y + b.h + V_GAP && y + boxH + V_GAP > b.y
           );
           while (overlaps()) {
-            y += direction * (BOX_H + V_GAP);
+            y += direction * (boxH + V_GAP);
           }
           return y;
         }
 
-        // Unplaced spouse outlines — place directly below selected person (V_GAP spacing).
-        // Leaf slot was reserved during assignLeafSlots to push other boxes down,
-        // but we place at selBox.y + BOX_H + V_GAP for tight couple-like spacing.
         const unplacedSpouses = selNode.spouses.filter(s => !placedIds.has(s.person.id));
         if (unplacedSpouses.length > 0) {
           const selDepth = depthMap.get(selectedPersonId) ?? 0;
-          for (let i = 0; i < unplacedSpouses.length; i++) {
-            const spY = selBox.y + BOX_H + V_GAP + i * (BOX_H + V_GAP);
+          let spTop = selBox.y + selBox.h + V_GAP;
+          for (const sp of unplacedSpouses) {
+            const sh = hOf(sp);
             boxes.push({
-              person: unplacedSpouses[i].person,
+              person: sp.person,
               isFocal: false,
-              x: genXOf(selDepth), y: spY,
-              w: BOX_W, h: BOX_H,
+              x: genXOf(selDepth), y: spTop,
+              w: BOX_W, h: sh,
             });
-            // Vertical connector from bottom of selected person to top of spouse
-            lines.push({ x1: selBox.x + BOX_W / 2, y1: selBox.y + BOX_H, x2: selBox.x + BOX_W / 2, y2: spY });
+            placeholderPaths.push(
+              curvedElbow(selCX, selBox.y + selBox.h, selCX, spTop, 'down'),
+            );
+            spTop += sh + V_GAP;
           }
         }
 
-        // Unplaced child outlines — place to the left, cross-column overlap check
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
         if (unplacedChildren.length > 0) {
           const childX = selBox.x - BOX_W - H_GAP;
-          let nextY = findClearYRect(childX, selBox.y, 1);
-          for (let i = 0; i < unplacedChildren.length; i++) {
+          let nextY = findClearYRect(childX, selBox.y, 1, MIN_BOX_H);
+          for (const ch of unplacedChildren) {
+            const chH = hOf(ch);
             const childY = nextY;
-            const childCY = childY + BOX_H / 2;
+            const childCY = childY + chH / 2;
             boxes.push({
-              person: unplacedChildren[i].person,
+              person: ch.person,
               isFocal: false,
               x: childX, y: childY,
-              w: BOX_W, h: BOX_H,
+              w: BOX_W, h: chH,
             });
-            const forkX = selBox.x - H_GAP / 2;
-            lines.push({ x1: selBox.x, y1: selCY, x2: forkX, y2: selCY });
-            lines.push({ x1: forkX, y1: childCY, x2: childX + BOX_W, y2: childCY });
-            lines.push({ x1: forkX, y1: selCY, x2: forkX, y2: childCY });
-            nextY = childY + BOX_H + V_GAP;
+            placeholderPaths.push(
+              curvedElbow(selBox.x, selCY, childX + BOX_W, childCY, 'right'),
+            );
+            nextY = childY + chH + V_GAP;
           }
         }
       }
     }
   }
 
-  // ── 5. Compute SVG dimensions ──────────────────────────────────────────────
+  // ── SVG dimensions ─────────────────────────────────────────────────────
   const maxBoxRight = boxes.length > 0 ? Math.max(...boxes.map(b => b.x + b.w)) : BOX_W;
-  const maxBoxBottom = boxes.length > 0 ? Math.max(...boxes.map(b => b.y + b.h)) : BOX_H;
+  const maxBoxBottom = boxes.length > 0 ? Math.max(...boxes.map(b => b.y + b.h)) : MIN_BOX_H;
   const minBoxTop = boxes.length > 0 ? Math.min(...boxes.map(b => b.y)) : 0;
-  const minBoxLeft = boxes.length > 0 ? Math.min(...boxes.map(b => b.x)) : 0;
 
   const svgWidth = Math.max(PAD + G * BOX_W + (G - 1) * H_GAP + PAD + 20, maxBoxRight + PAD);
-  const svgHeight = Math.max(PAD + numLeaves * ROW_H - (numLeaves > 1 ? V_GAP : 0) + PAD, maxBoxBottom + PAD);
+  const svgHeight = Math.max(PAD + totalLeafExtent + PAD, maxBoxBottom + PAD);
   const viewBoxMinY = Math.min(0, minBoxTop - PAD);
-  const _viewBoxMinX = Math.min(0, minBoxLeft - PAD);
-
-  // Adjust height if viewBoxMinY is negative
   const finalHeight = viewBoxMinY < 0 ? svgHeight + (-viewBoxMinY) : svgHeight;
 
-  // ── 6. Collapse buttons ────────────────────────────────────────────────────
+  // ── Collapse buttons ───────────────────────────────────────────────────
   const collapseButtons: CollapseButton[] = [];
   for (const box of boxes) {
     const pid = box.person.id;
@@ -259,7 +249,7 @@ export function computePedigreeLayout(
       collapseButtons.push({
         personId: pid, direction: 'right',
         cx: box.x + BOX_W + 10,
-        cy: box.y + BOX_H / 2,
+        cy: box.y + box.h / 2,
         isExpanded: !collapsed.has(`${pid}:right`),
         isLoadMore: false,
       });
@@ -267,13 +257,13 @@ export function computePedigreeLayout(
       collapseButtons.push({
         personId: pid, direction: 'right',
         cx: box.x + BOX_W + 10,
-        cy: box.y + BOX_H / 2,
+        cy: box.y + box.h / 2,
         isExpanded: false, isLoadMore: true,
       });
     }
   }
 
-  // ── 7. Extract placeholders ────────────────────────────────────────────────
+  // ── Extract placeholders ───────────────────────────────────────────────
   const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
 
@@ -300,32 +290,21 @@ export function computePedigreeLayout(
     boxes.splice(i, 1);
   }
 
-  // Convert lines touching placeholders to dashed
-  const phCenters = new Set<string>();
-  for (const ph of placeholders) {
-    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H / 2}`);
-    phCenters.add(`${ph.x + BOX_W},${ph.y + BOX_H / 2}`);
-    phCenters.add(`${ph.x},${ph.y + BOX_H / 2}`);
-    // Also check top/bottom center for vertical lines
-    phCenters.add(`${ph.x + BOX_W / 2},${ph.y}`);
-    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H}`);
-  }
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const ln = lines[i];
-    if (phCenters.has(`${ln.x1},${ln.y1}`) || phCenters.has(`${ln.x2},${ln.y2}`)) {
-      placeholderLines.push(ln);
-      lines.splice(i, 1);
-    }
-  }
+  for (const d of placeholderPaths) paths.push('D:' + d);
 
-  // Deduplicate placeholder lines that overlap with solid lines
-  const lineSet = new Set(lines.map(l => `${l.x1},${l.y1},${l.x2},${l.y2}`));
-  const uniquePlaceholderLines = placeholderLines.filter(l => !lineSet.has(`${l.x1},${l.y1},${l.x2},${l.y2}`));
-
-  return { boxes, lines, paths: [], svgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
+  return {
+    boxes,
+    lines: [],
+    paths,
+    svgWidth,
+    svgHeight: finalHeight,
+    viewBoxMinY,
+    collapseButtons,
+    placeholders,
+    placeholderLines,
+  };
 }
 
-/** Find a TreePerson by ID in the graph (cycle-safe). */
 function findPersonInTree(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
   if (node.person.id === id) return node;
   if (visited.has(node.person.id)) return null;
