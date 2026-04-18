@@ -162,11 +162,18 @@ const { ready: resolverReady, ensureLoaded, resolve: resolvePlace, invalidate: i
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-notes');
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {
-  if (selected.id === placeId) return; // selected self, no change
-  // User picked a different place — update THIS place's name to match the selected path
+  if (selected.id === placeId) return;
+  // Fetch the selected place's full data to copy coordinates and type
+  const source = (await window.api.places.get(selected.id)) as PlaceRow | null;
   const path = (await window.api.places.getPath(selected.id)) as string;
-  const newName = path || selected.name;
-  await save({ name: newName });
+  const updates: Record<string, unknown> = { name: path || selected.name };
+  if (source) {
+    if (source.latitude != null) updates.latitude = source.latitude;
+    if (source.longitude != null) updates.longitude = source.longitude;
+    if (source.place_type) updates.place_type = source.place_type;
+    if (source.parent_place_id) updates.parent_place_id = source.parent_place_id;
+  }
+  await save(updates);
   nextTick(() => fitMapBounds());
 }
 
