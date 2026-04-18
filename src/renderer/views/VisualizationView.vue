@@ -26,6 +26,7 @@
           :options="[
             { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
             { value: 'circle',      label: $t('visualization.tab.circle') },
+            { value: 'fan',         label: $t('visualization.tab.fan') },
             { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
             { value: 'descendants', label: $t('visualization.tab.descendants') },
             { value: 'timeline',    label: $t('visualization.tab.timeline') },
@@ -58,6 +59,11 @@
         />
         <CircleChart
           v-if="activeTab === 'circle'"
+          :person-id="personId"
+          @navigate="navigateTo"
+        />
+        <FanChart
+          v-if="activeTab === 'fan'"
           :person-id="personId"
           @navigate="navigateTo"
         />
@@ -125,6 +131,7 @@ import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
+import FanChart from '../components/charts/FanChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import DescendantChart from '../components/charts/DescendantChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
@@ -188,7 +195,7 @@ const chartBoxes = computed<BoxLayout[]>(() => {
   return [];
 });
 
-type TabName = 'pedigree' | 'circle' | 'hourglass' | 'descendants' | 'timeline';
+type TabName = 'pedigree' | 'circle' | 'fan' | 'hourglass' | 'descendants' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
 
 // Panel open/closed

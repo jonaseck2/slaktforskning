@@ -14,10 +14,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { linkify, type LinkedSegment } from '../../api/source-linker';
+import { ref, computed, onMounted } from 'vue';
+import { linkify, resolveRules, type LinkedSegment, type LinkRuleOverrides } from '../../api/source-linker';
 import { svRules } from '../../api/link-rules/sv';
 import { enRules } from '../../api/link-rules/en';
+import { deRules } from '../../api/link-rules/de';
+import { daRules } from '../../api/link-rules/da';
+import { noRules } from '../../api/link-rules/no';
 import { universalRules } from '../../api/link-rules/universal';
 
 declare const window: Window & {
@@ -28,16 +31,34 @@ const props = defineProps<{
   text: string;
 }>();
 
-const allRules = [...svRules, ...enRules, ...universalRules];
+const allDefaults = [...universalRules, ...svRules, ...enRules, ...deRules, ...daRules, ...noRules];
+
+const config = ref<LinkRuleOverrides>({ enabledLocales: ['sv'], overrides: {} });
+const loaded = ref(false);
+
+async function loadConfig() {
+  try {
+    const raw = await window.api.db.getSetting('link_rules_config') as string | null;
+    if (raw) {
+      config.value = JSON.parse(raw) as LinkRuleOverrides;
+    }
+  } catch {
+    // keep default
+  }
+  loaded.value = true;
+}
 
 const segments = computed<LinkedSegment[]>(() => {
-  if (!props.text) return [];
-  return linkify(props.text, allRules);
+  if (!props.text || !loaded.value) return [];
+  const rules = resolveRules(allDefaults, config.value);
+  return linkify(props.text, rules);
 });
 
 function openExternal(url: string) {
   window.api.shell.openExternal(url);
 }
+
+onMounted(loadConfig);
 </script>
 
 <style scoped>

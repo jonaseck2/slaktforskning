@@ -34,7 +34,7 @@ test.setTimeout(30_000);
 test.describe('Persons CRUD', () => {
   test('empty state shows placeholder', async () => {
     await app.navigate('/');
-    await app.expectText('No persons yet');
+    await app.waitForText('No persons yet');
   });
 
   test('create a person via the Add Person modal', async () => {

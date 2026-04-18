@@ -246,14 +246,22 @@ export class AppDriver {
     await this.settle();
   }
 
-  /** Click an element by CSS selector. */
-  async click(selector: string): Promise<void> {
-    const result = (await this.post('/click', { selector })) as {
-      ok?: boolean;
-      error?: string;
-    };
-    if (result.error) throw new Error(`click(${selector}): ${result.error}`);
-    await this.settle();
+  /** Click an element by CSS selector. Polls until the element exists (up to timeoutMs). */
+  async click(selector: string, timeoutMs = 8000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const result = (await this.post('/click', { selector })) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (result.ok) {
+        await this.settle();
+        return;
+      }
+      // Element not found — retry after a short delay
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    throw new Error(`click(${selector}): Element not found after ${timeoutMs}ms`);
   }
 
   /** Run JavaScript in the renderer and return the serialized result. */
@@ -300,14 +308,14 @@ export class AppDriver {
     );
   }
 
-  /** Assert the DOM contains a text string. */
+  /** Assert the DOM contains a text string. Waits up to 5s for it to appear. */
   async expectText(text: string): Promise<void> {
-    const dom = await this.getDom();
-    expect(dom).toContain(text);
+    await this.waitForText(text, 5000);
   }
 
-  /** Assert the DOM does NOT contain a text string. */
+  /** Assert the DOM does NOT contain a text string. Settles first to ensure latest state. */
   async expectNoText(text: string): Promise<void> {
+    await this.settle(100);
     const dom = await this.getDom();
     expect(dom).not.toContain(text);
   }

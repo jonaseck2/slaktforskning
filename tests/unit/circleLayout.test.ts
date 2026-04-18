@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeCircleLayout } from '../../src/renderer/utils/circleLayout';
+import { branchBaseColors, branchFill } from '../../src/renderer/utils/circleColors';
 import type { PedigreeTree, PersonNode } from '../../src/renderer/utils/chartLayout';
 
 function makeNode(id: string): PersonNode {
@@ -49,18 +50,33 @@ describe('computeCircleLayout', () => {
     }
   });
 
-  it('ahnentafel 4 gets base paternal-grandfather blue fill', () => {
-    const segs = computeCircleLayout(makeTree(7));
-    expect(segs.find(s => s.ahnNum === 4)!.fill).toBe('#6a9cc0');
+  it('fillFn is called and its return value is used as fill', () => {
+    const branches = branchBaseColors('#2d5a27') as [string, string, string, string];
+    const fillFn = (ahnNum: number, gen: number, isEmpty: boolean) =>
+      branchFill(ahnNum, gen, isEmpty, branches, false);
+    const segs = computeCircleLayout(makeTree(7), 6, fillFn);
+    // Father (ahnNum=2, gen=1) gets branch 0 color
+    const father = segs.find(s => s.ahnNum === 2)!;
+    expect(father.fill).toBe(branches[0]);
+    // Mother (ahnNum=3, gen=1) gets branch 2 color
+    const mother = segs.find(s => s.ahnNum === 3)!;
+    expect(mother.fill).toBe(branches[2]);
   });
 
-  it('ahnentafel 5 gets base paternal-grandmother green fill', () => {
-    const segs = computeCircleLayout(makeTree(7));
-    expect(segs.find(s => s.ahnNum === 5)!.fill).toBe('#6aaa78');
+  it('without fillFn, default fallback is used (non-empty = #999, empty = #e0e0e0)', () => {
+    const treeWithOnlyFocal: PedigreeTree = { nodes: new Map([[1, makeNode('1')]]), generations: 7 };
+    const segs = computeCircleLayout(treeWithOnlyFocal);
+    const nonFocal = segs.filter(s => !s.isFocal);
+    expect(nonFocal.every(s => s.fill === '#e0e0e0')).toBe(true);
+    const filled = computeCircleLayout(makeTree(7));
+    expect(filled.find(s => s.ahnNum === 2)!.fill).toBe('#999');
   });
 
-  it('deeper generations of same branch are lighter', () => {
-    const segs = computeCircleLayout(makeTree(127));
+  it('deeper generations with fillFn produce lighter fills in light mode', () => {
+    const branches = branchBaseColors('#2d5a27') as [string, string, string, string];
+    const fillFn = (ahnNum: number, gen: number, isEmpty: boolean) =>
+      branchFill(ahnNum, gen, isEmpty, branches, false);
+    const segs = computeCircleLayout(makeTree(127), 6, fillFn);
     const r4  = parseInt(segs.find(s => s.ahnNum === 4)!.fill.slice(1, 3), 16);
     const r8  = parseInt(segs.find(s => s.ahnNum === 8)!.fill.slice(1, 3), 16);
     const r16 = parseInt(segs.find(s => s.ahnNum === 16)!.fill.slice(1, 3), 16);
@@ -68,14 +84,15 @@ describe('computeCircleLayout', () => {
     expect(r16).toBeGreaterThan(r8);
   });
 
-  it('ahnentafel 8 and 9 are in the same blue branch as ahnentafel 4', () => {
-    const segs = computeCircleLayout(makeTree(15));
+  it('ahnentafel 8 and 9 share same branch fill via fillFn', () => {
+    const branches = branchBaseColors('#2d5a27') as [string, string, string, string];
+    const fillFn = (ahnNum: number, gen: number, isEmpty: boolean) =>
+      branchFill(ahnNum, gen, isEmpty, branches, false);
+    const segs = computeCircleLayout(makeTree(15), 6, fillFn);
     const fill8  = segs.find(s => s.ahnNum === 8)!.fill;
     const fill9  = segs.find(s => s.ahnNum === 9)!.fill;
-    const fill8r = parseInt(fill8.slice(1, 3), 16);
-    const fill9r = parseInt(fill9.slice(1, 3), 16);
-    expect(fill8r).toBeGreaterThan(106);
-    expect(fill8r).toBe(fill9r);
+    // ahn 8 and 9 both map to branch 0 (rootAhn >> (gen-2): 8>>2=2→branchIdx -2... wait: gen=3, rootAhn=8>>1=4, branchIdx=0)
+    expect(fill8).toBe(fill9);
   });
 
   it('non-focal pathD starts with M and contains an A arc command', () => {

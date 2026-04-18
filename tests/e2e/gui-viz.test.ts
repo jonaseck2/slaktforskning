@@ -120,10 +120,11 @@ test.describe('Visualization with persons', () => {
     await app.waitForText('Maja');
     await app.settle(80);
 
+    // Tabs are FilterChips — click by text content
     await app.executeJs(`
-      document.querySelector('[data-testid="tab-hourglass"]').click()
+      Array.from(document.querySelectorAll('.chip-btn')).find(b => b.textContent.includes('Hourglass'))?.click()
     `);
-    await app.settle(80);
+    await app.settle(200);
 
     const dom = await app.getDom();
     expect(dom).toContain('<svg');
@@ -135,43 +136,45 @@ test.describe('Visualization with persons', () => {
     await app.settle(80);
 
     await app.executeJs(`
-      document.querySelector('[data-testid="tab-timeline"]').click()
+      Array.from(document.querySelectorAll('.chip-btn')).find(b => b.textContent.includes('Timeline'))?.click()
     `);
-    await app.settle(80);
+    await app.settle(200);
 
     const dom = await app.getDom();
     // Timeline should render an SVG now that the person has birth and death events
     expect(dom).toContain('<svg');
   });
 
-  test('switching tabs updates aria-selected', async () => {
+  test('switching tabs updates active chip', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(50);
 
     await app.executeJs(`
-      document.querySelector('[data-testid="tab-hourglass"]').click()
+      Array.from(document.querySelectorAll('.chip-btn')).find(b => b.textContent.includes('Hourglass'))?.click()
     `);
-    await app.settle(50);
+    await app.settle(100);
 
-    const selected = await app.executeJs<string>(
-      'document.querySelector("[data-testid=\'tab-hourglass\']").getAttribute("aria-selected")'
-    );
-    expect(selected).toBe('true');
+    const hourglassActive = await app.executeJs<boolean>(`
+      Array.from(document.querySelectorAll('.chip-btn')).find(b => b.textContent.includes('Hourglass'))?.classList.contains('chip-btn--active') ?? false
+    `);
+    expect(hourglassActive).toBe(true);
 
-    const pedigreeSelected = await app.executeJs<string>(
-      'document.querySelector("[data-testid=\'tab-pedigree\']").getAttribute("aria-selected")'
-    );
-    expect(pedigreeSelected).toBe('false');
+    const pedigreeActive = await app.executeJs<boolean>(`
+      Array.from(document.querySelectorAll('.chip-btn')).find(b => b.textContent.includes('Pedigree'))?.classList.contains('chip-btn--active') ?? false
+    `);
+    expect(pedigreeActive).toBe(false);
   });
 
-  test('View details link navigates to person detail', async () => {
+  test('Edit action navigates to person detail', async () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
-    await app.settle(50);
+    await app.settle(100);
 
-    // The PersonPanel has a router-link with class panel-section-header-action in the Person section header.
-    await app.click('a.panel-section-header-action');
+    // The PersonPanel has a SectionHeader with "Edit" action that navigates to /persons/:id
+    await app.executeJs(`
+      Array.from(document.querySelectorAll('.section-header-bar .app-btn--soft')).find(b => b.textContent.trim() === 'Edit')?.click()
+    `);
     await app.settle(80);
 
     const routePath = await app.executeJs<string>(

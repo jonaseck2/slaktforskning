@@ -254,9 +254,8 @@ test.describe('Research Tasks filtering', () => {
     `);
     await app.settle(200);
 
-    const dom = await app.getDom();
-    expect(dom).toContain('Open task alpha');
-    expect(dom).toContain('Done task beta');
+    await app.waitForText('Open task alpha');
+    await app.expectText('Done task beta');
   });
 });
 
@@ -267,12 +266,9 @@ test.describe('Research Tasks filtering', () => {
 test.describe('Research Tasks summary', () => {
   test('summary shows total and active count', async () => {
     await app.navigate('/research-tasks');
-    await app.settle(300);
-
-    const dom = await app.getDom();
     // Summary format: "X research tasks · Y active"
-    expect(dom).toContain('research tasks');
-    expect(dom).toContain('active');
+    await app.waitForText('research tasks');
+    await app.expectText('active');
   });
 });
 

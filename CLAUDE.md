@@ -64,8 +64,11 @@ src/
 │   ├── gazetteers.ts             # Gazetteer import/export/delete CRUD (per-database blob storage)
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   ├── link-rules/               # Default link rule sets
-│   │   ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, etc.)
-│   │   ├── en.ts                  # English rules (FamilySearch, FindAGrave, Ancestry)
+│   │   ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, SVAR, DDB, etc.)
+│   │   ├── en.ts                  # English rules (FamilySearch, FindAGrave, Ancestry, MyHeritage, Geni, WikiTree, BillionGraves)
+│   │   ├── de.ts                  # German rules (Archion, Matricula, Ancestry.de)
+│   │   ├── da.ts                  # Danish rules (Arkivalieronline, KIP)
+│   │   ├── no.ts                  # Norwegian rules (Digitalarkivet, Arkivverket)
 │   │   └── universal.ts           # Universal rules (plain URLs)
 │   └── place-gazetteers/          # Render-time place resolution (coordinates from reference data)
 │       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
@@ -570,7 +573,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonMediaSection` | `personId: string` | — | Self-loading media table with open/unlink/reorder (up/down). First item shows "Profile" badge. Emits `profileChanged` when media order changes. Exposes `attach()` and `reload()`. |
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 | `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
-| `LinkedText` | `text: string` | — | Auto-links structured references in text. Scans with regex rules (ArkivDigital AID, Riksarkivet NAD, FamilySearch ARK, etc.), renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
+| `LinkedText` | `text: string` | — | Auto-links structured references in text. Loads `link_rules_config` from db settings on mount and applies `resolveRules()` to filter by enabled locales. Renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
 | `AddRelatedPersonModal` | `personId: string`, `mode: 'father'\|'mother'\|'spouse'\|'child'`, `personSex?`, `personSurname?` | `close`, `saved` | Combined person + relationship + birth event creation. Auto-infers sex (father→M, mother→F, spouse→opposite). Pre-fills surname for child mode. Optional birth date/place/source fields in collapsible `<details>`. Uses `useBirthEventCreation` composable. |
 | `PlacePanel` | `placeId: string\|null` | `close` | Collapsible side panel showing full place details when a map pin is clicked. 8 sections: info, events, persons, media, citations, child places, notes, coordinates. Mirrors PersonPanel pattern. Used by MapView. |
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |

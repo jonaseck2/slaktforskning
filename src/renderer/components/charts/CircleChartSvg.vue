@@ -8,12 +8,38 @@
     :height="height"
     data-testid="circle-svg"
   >
-    <!-- Curved text paths in defs (only for gen 1-4 when curvedText is on) -->
-    <defs v-if="curvedText">
-      <path v-for="seg in nonFocalSegments" :key="`tpg-${seg.ahnNum}`" :id="`tpg-${seg.ahnNum}`" :d="seg.textPathGivenD" />
-      <path v-for="seg in nonFocalSegments" :key="`tp-${seg.ahnNum}`"  :id="`tp-${seg.ahnNum}`"  :d="seg.textPathD" />
-      <path v-for="seg in nonFocalSegments" :key="`tpb-${seg.ahnNum}`" :id="`tpb-${seg.ahnNum}`" :d="seg.textPathBirthD" />
-      <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDeathD" />
+    <!-- Defs: text paths, radial gradients, empty segment pattern, focal shadow filter -->
+    <defs>
+      <!-- Curved text paths (only for gen 1-4 when curvedText is on) -->
+      <template v-if="curvedText">
+        <path v-for="seg in nonFocalSegments" :key="`tpg-${seg.ahnNum}`" :id="`tpg-${seg.ahnNum}`" :d="seg.textPathGivenD" />
+        <path v-for="seg in nonFocalSegments" :key="`tp-${seg.ahnNum}`"  :id="`tp-${seg.ahnNum}`"  :d="seg.textPathD" />
+        <path v-for="seg in nonFocalSegments" :key="`tpb-${seg.ahnNum}`" :id="`tpb-${seg.ahnNum}`" :d="seg.textPathBirthD" />
+        <path v-for="seg in nonFocalSegments" :key="`tpd-${seg.ahnNum}`" :id="`tpd-${seg.ahnNum}`" :d="seg.textPathDeathD" />
+      </template>
+
+      <!-- Radial gradient per non-focal segment (subtle depth) -->
+      <template v-if="!noGradients">
+        <radialGradient
+          v-for="seg in nonFocalSegments"
+          :key="`grad-${seg.ahnNum}`"
+          :id="`grad-${seg.ahnNum}`"
+          cx="50%" cy="50%" r="70%"
+        >
+          <stop offset="0%" :stop-color="gradientStops(seg)[0]" />
+          <stop offset="100%" :stop-color="gradientStops(seg)[1]" />
+        </radialGradient>
+      </template>
+
+      <!-- Subtle diagonal stripe pattern for empty segments -->
+      <pattern id="empty-pattern" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="6" :stroke="emptyPatternStroke" stroke-width="0.5" />
+      </pattern>
+
+      <!-- Focal circle shadow filter -->
+      <filter id="focal-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0" stdDeviation="3" :flood-color="focalShadowColor" flood-opacity="0.3" />
+      </filter>
     </defs>
 
     <!-- Non-focal segments -->
@@ -29,10 +55,12 @@
       <!-- Segment arc: link wrapper in print mode, plain path in interactive mode -->
       <a v-if="linkBase && seg.person" :href="`${linkBase}${seg.person.id}`">
         <title>{{ tooltipLabel(seg) }}</title>
-        <path :d="seg.pathD" :fill="seg.fill" stroke="white" :stroke-width="strokeWidth" stroke-linejoin="round" />
+        <path :d="seg.pathD" :fill="noGradients ? seg.fill : (seg.isEmpty ? seg.fill : `url(#grad-${seg.ahnNum})`)" :stroke="strokeColor" :stroke-width="strokeWidth" stroke-linejoin="round" class="seg-path" />
+        <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
       </a>
       <template v-else>
-        <path :d="seg.pathD" :fill="seg.fill" stroke="white" :stroke-width="strokeWidth" stroke-linejoin="round" />
+        <path :d="seg.pathD" :fill="noGradients ? seg.fill : (seg.isEmpty ? seg.fill : `url(#grad-${seg.ahnNum})`)" :stroke="strokeColor" :stroke-width="strokeWidth" stroke-linejoin="round" class="seg-path" />
+        <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
         <title v-if="seg.person && !linkBase">{{ tooltipLabel(seg) }}</title>
       </template>
 
@@ -86,36 +114,36 @@
       <!-- Link wrapper for print/export mode -->
       <a v-if="linkBase && focalSegment.person" :href="`${linkBase}${focalSegment.person.id}`">
         <title>{{ tooltipLabel(focalSegment) }}</title>
-        <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" />
+        <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" filter="url(#focal-shadow)" />
         <text
           v-for="(line, i) in focalNameLines" :key="i"
           :x="CIRCLE_CX" :y="focalLineY(i, focalNameLines.length)"
           text-anchor="middle" dominant-baseline="central"
-          :font-size="focalNameLines.length > 2 ? 9 : 10"
+          :font-size="focalNameLines.length > 2 ? 10 : 11"
           font-weight="600" :font-family="fontFamily" fill="white"
         >{{ line }}</text>
         <text
           v-if="focalSegment.person.birthDate"
           :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length, focalNameLines.length)"
           text-anchor="middle" dominant-baseline="central"
-          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+          font-size="9" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
         >* {{ focalSegment.person.birthDate }}</text>
         <text
           v-if="focalSegment.person.deathDate"
           :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
           text-anchor="middle" dominant-baseline="central"
-          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+          font-size="9" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
         >† {{ focalSegment.person.deathDate }}</text>
       </a>
       <!-- Interactive mode (no link wrapper) -->
       <template v-else>
-        <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" />
+        <circle :cx="CIRCLE_CX" :cy="CIRCLE_CY" r="50" :fill="focalSegment.fill" filter="url(#focal-shadow)" />
         <title v-if="focalSegment.person && !linkBase">{{ tooltipLabel(focalSegment) }}</title>
         <text
           v-for="(line, i) in focalNameLines" :key="i"
           :x="CIRCLE_CX" :y="focalLineY(i, focalNameLines.length)"
           text-anchor="middle" dominant-baseline="central"
-          :font-size="focalNameLines.length > 2 ? 9 : 10"
+          :font-size="focalNameLines.length > 2 ? 10 : 11"
           font-weight="600" :font-family="fontFamily" fill="white"
           style="pointer-events: none; user-select: none;"
         >{{ line }}</text>
@@ -123,14 +151,14 @@
           v-if="focalSegment?.person?.birthDate"
           :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length, focalNameLines.length)"
           text-anchor="middle" dominant-baseline="central"
-          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+          font-size="9" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
           style="pointer-events: none; user-select: none;"
         >* {{ focalSegment.person.birthDate }}</text>
         <text
           v-if="focalSegment?.person?.deathDate"
           :x="CIRCLE_CX" :y="focalLineY(focalNameLines.length + 1, focalNameLines.length)"
           text-anchor="middle" dominant-baseline="central"
-          font-size="8" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
+          font-size="9" :font-family="fontFamily" fill="rgba(255,255,255,0.65)"
           style="pointer-events: none; user-select: none;"
         >† {{ focalSegment.person.deathDate }}</text>
       </template>
@@ -142,6 +170,7 @@
 import { computed } from 'vue';
 import { CIRCLE_CX, CIRCLE_CY, CIRCLE_SVG_SIZE, type CircleSegment } from '../../utils/circleLayout';
 import { fullNameParts } from '../../utils/nameUtils';
+import { segmentGradientStops } from '../../utils/circleColors';
 
 interface Props {
   segments: CircleSegment[];
@@ -153,6 +182,10 @@ interface Props {
   viewBoxSize?: number;
   width?: number | string;
   height?: number | string;
+  strokeColor?: string;
+  emptyPatternStroke?: string;
+  focalShadowColor?: string;
+  noGradients?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -160,6 +193,10 @@ const props = withDefaults(defineProps<Props>(), {
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   linkBase: null,
   strokeWidth: 1.5,
+  strokeColor: 'white',
+  emptyPatternStroke: 'rgba(0,0,0,0.15)',
+  focalShadowColor: 'rgba(0,0,0,0.3)',
+  noGradients: false,
 });
 
 const emit = defineEmits<{
@@ -170,6 +207,10 @@ const emit = defineEmits<{
 }>();
 
 const svgSize = computed(() => props.viewBoxSize ?? CIRCLE_SVG_SIZE);
+
+function gradientStops(seg: CircleSegment): [string, string] {
+  return segmentGradientStops(seg.fill, props.strokeColor === 'rgba(255,255,255,0.15)');
+}
 const viewBox = computed(() => {
   const s = svgSize.value;
   const offset = CIRCLE_CX - s / 2;
@@ -279,3 +320,12 @@ function lineDy(seg: CircleSegment): { given: string; surname: string; birth: st
   };
 }
 </script>
+
+<style>
+.seg-path {
+  transition: filter 0.15s ease;
+}
+.circle-seg.clickable:hover .seg-path {
+  filter: brightness(1.12);
+}
+</style>

@@ -3,6 +3,9 @@ import { linkify, resolveRules, type LinkRule } from '../../src/api/source-linke
 import { svRules } from '../../src/api/link-rules/sv';
 import { enRules } from '../../src/api/link-rules/en';
 import { universalRules } from '../../src/api/link-rules/universal';
+import { deRules } from '../../src/api/link-rules/de';
+import { daRules } from '../../src/api/link-rules/da';
+import { noRules } from '../../src/api/link-rules/no';
 
 const testRule: LinkRule = {
   id: 'test-aid',
@@ -216,5 +219,108 @@ describe('resolveRules', () => {
     for (let i = 1; i < result.length; i++) {
       expect(result[i].priority).toBeGreaterThanOrEqual(result[i - 1].priority);
     }
+  });
+});
+
+describe('German default rules', () => {
+  it('matches Archion reference', () => {
+    const result = linkify('Archion: Taufregister 1680-1720', deRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('archion.de');
+    expect(seg!.url).toContain('Taufregister');
+  });
+
+  it('matches Matricula reference', () => {
+    const result = linkify('Matricula: Wien, St. Stephan, more text', deRules);
+    const seg = result.find((s) => s.ruleName === 'Matricula');
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('matricula-online.eu');
+  });
+
+  it('matches Ancestry.de record URL', () => {
+    const result = linkify('ancestry.de/discoveryui-content/view/45678:1234', deRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://www.ancestry.de/discoveryui-content/view/45678:1234');
+  });
+});
+
+describe('Danish default rules', () => {
+  it('matches Arkivalieronline AO reference', () => {
+    const result = linkify('AO: 12345', daRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('sa.dk');
+    expect(seg!.url).toContain('12345');
+  });
+
+  it('matches KIP reference', () => {
+    const result = linkify('KIP: Odense 1787, some note', daRules);
+    const seg = result.find((s) => s.ruleName?.includes('KIP'));
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('kip.rfrn.dk');
+  });
+});
+
+describe('Norwegian default rules', () => {
+  it('matches Digitalarkivet DA reference', () => {
+    const result = linkify('DA: Bergen 1801, census', noRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('digitalarkivet.no');
+  });
+
+  it('matches Arkivverket URL passthrough', () => {
+    const result = linkify('see arkivverket.no/search/archives for details', noRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.text).toBe('arkivverket.no/search/archives');
+  });
+});
+
+describe('Swedish rule additions', () => {
+  it('matches SVAR reference', () => {
+    const result = linkify('SVAR: Husförhör Lekeberga 1820-1830, page 5', svRules);
+    const seg = result.find((s) => s.ruleName === 'SVAR');
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('riksarkivet.se/svar/');
+  });
+
+  it('matches DDB reference', () => {
+    const result = linkify('DDB: Skellefteå 1890, birth record', svRules);
+    const seg = result.find((s) => s.ruleName?.includes('DDB'));
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('ddb.umu.se');
+  });
+});
+
+describe('English rule additions', () => {
+  it('matches MyHeritage record URL', () => {
+    const result = linkify('myheritage.com/research/record-1-300123456', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://www.myheritage.com/research/record-1-300123456');
+  });
+
+  it('matches Geni profile URL', () => {
+    const result = linkify('geni.com/people/John-Smith/6000000012345678', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toContain('geni.com/people/profile/6000000012345678');
+  });
+
+  it('matches WikiTree ID reference', () => {
+    const result = linkify('WikiTree: Smith-12345', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://www.wikitree.com/wiki/Smith-12345');
+  });
+
+  it('matches BillionGraves memorial', () => {
+    const result = linkify('BillionGraves memorial 1234567', enRules);
+    const seg = result.find((s) => s.url);
+    expect(seg).toBeDefined();
+    expect(seg!.url).toBe('https://billiongraves.com/grave/1234567');
   });
 });

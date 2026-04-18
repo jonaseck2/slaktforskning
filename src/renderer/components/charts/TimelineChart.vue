@@ -52,7 +52,7 @@
               class="row-label" :class="{ 'focal-label': bar.isFocal }"
               text-anchor="end" dominant-baseline="middle"
             ><tspan
-                v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName, bar.person.nickname), 22)"
+                v-for="(part, pi) in truncateNameParts(chartNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName), 22)"
                 :key="pi"
                 :text-decoration="part.underline ? 'underline' : undefined"
               >{{ part.text }}</tspan></text>
@@ -97,7 +97,7 @@ import { computeTimelineLayout } from '../../utils/chart-layout';
 import { fetchTimelineEntries } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { TimelineLayout, PersonNode } from '../../utils/chart-layout';
-import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
+import { chartNameParts, truncateNameParts } from '../../utils/nameUtils';
 
 useI18n();
 
