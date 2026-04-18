@@ -163,7 +163,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.96.1 | Fix: Places map view moves header/buttons inside left sheet, matching Family Tree layout | — |
 | v0.96.2 | Fix: Media view auto-selects focus person's media or first item, left sheet padding | — |
 | v0.96.3 | Fix: PlacePanel section headers show counts (persons, events, citations, media) | — |
-| v0.96.4 | Fix: map zoom controls moved to bottom-left, map respects sheet rounded corners | — |
+| v0.96.4 | Fix: map zoom controls above attribution, map respects sheet rounded corners | — |
+| v0.96.5 | Fix: PlacePanel adds + Event and + Citation action buttons to section headers | — |
 ---
 
 ## Research
