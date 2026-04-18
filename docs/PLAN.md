@@ -177,6 +177,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.97.6 | Fix: separate media selection from lightbox, make lightbox view-only | — |
 | v0.99.1 | Inline media viewer with zoom/pan, filmstrip navigation, face tag drawing | [spec](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md), [plan](plans/2026-04-18-media-viewer-face-tagging.md) |
 | v0.99.2 | Fix: map performance — canvas rendering, smooth zoom, SVG pin markers | — |
+| v0.100.0 | Face tag region move/resize, Vite build optimization (externalize gazetteers) | — |
 ---
 
 ## Research
