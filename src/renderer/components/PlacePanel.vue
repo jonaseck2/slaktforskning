@@ -8,6 +8,7 @@
     <template v-else-if="place">
       <!-- Header -->
       <div class="panel-header">
+        <button class="panel-close-btn" @click="emit('close')" :title="$t('common.close')">&#10005;</button>
         <div class="panel-header-content">
           <div class="panel-name-row">
             <div class="panel-name">{{ place.name }}</div>
@@ -209,7 +210,6 @@ import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import SectionHeader from './ui/SectionHeader.vue';
-import AppButton from './ui/AppButton.vue';
 import { usePlacePanelSections } from '../composables/usePlacePanelSections';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
@@ -238,7 +238,7 @@ interface ChildPlace {
 }
 
 const props = defineProps<{ placeId: string | null }>();
-const emit = defineEmits<{ 'select-place': [id: string] }>();
+const emit = defineEmits<{ 'select-place': [id: string]; 'close': [] }>();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
@@ -313,12 +313,30 @@ async function saveField(field: string, value: unknown) {
   text-align: center;
 }
 
+/* Close button */
+.panel-close-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 10;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
+
 /* Header */
 .panel-header {
   display: flex;
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
+  position: relative;
 }
 .panel-header-content {
   padding: var(--space-sm) var(--space-md);
