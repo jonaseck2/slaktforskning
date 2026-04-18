@@ -223,6 +223,25 @@ onMounted(async () => {
   places.value = freshPlaces;
   cachedPlaces = freshPlaces;
   loading.value = false;
+
+  // Auto-select a place if none is selected
+  if (!selectedPlaceId.value && allDisplayPlaces.value.length > 0) {
+    let autoId: string | null = null;
+
+    // Try focus person's first place
+    const focusPersonId = await window.api.db.getSetting('default_person_id') as string | null;
+    if (focusPersonId) {
+      const events = (await window.api.events.forPerson(focusPersonId)) as { place_id?: string | null }[];
+      const placeIds = new Set(events.map(e => e.place_id).filter(Boolean));
+      const displayIds = new Set(allDisplayPlaces.value.map(p => p.id));
+      autoId = [...placeIds].find(pid => displayIds.has(pid!)) as string | undefined ?? null;
+    }
+
+    // Fall back to first place in the list
+    if (!autoId) autoId = allDisplayPlaces.value[0].id;
+
+    selectPlace(autoId);
+  }
 });
 </script>
 
