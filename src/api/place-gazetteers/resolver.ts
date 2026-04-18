@@ -49,6 +49,7 @@ interface MatchCandidate {
   unmatched: string[];
   depth: number;
   treeDepth: number;
+  contradictions: number;
 }
 
 // Name index: maps normalized name → list of { node, ancestors } for O(1) lookup
@@ -97,6 +98,7 @@ function findMatches(
 
     for (const { node, ancestors } of entries) {
       const fullPath = [...ancestors, node];
+      const pathSet = new Set(fullPath);
       // Check which other components match nodes on this path
       const remaining = components.filter(c => {
         const cn = normalize(c);
@@ -105,12 +107,28 @@ function findMatches(
         );
       });
 
+      // Count contradictions: unmatched components that match nodes
+      // ELSEWHERE in the tree (i.e. the input names a place that exists
+      // but in a different branch than this candidate)
+      let contradictions = 0;
+      for (const um of remaining) {
+        const umNorm = normalize(um);
+        const umEntries = index.get(umNorm);
+        if (umEntries) {
+          // The component matches something in this gazetteer —
+          // check if ALL matches are outside this candidate's path
+          const allOutside = umEntries.every(e => !pathSet.has(e.node));
+          if (allOutside) contradictions++;
+        }
+      }
+
       candidates.push({
         path: fullPath,
         matched: fullPath.map(n => n.name),
         unmatched: remaining,
         depth: fullPath.length,
         treeDepth: getTreeDepth(node) + fullPath.length - 1,
+        contradictions,
       });
     }
   }
@@ -122,15 +140,20 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
   if (candidates.length === 0) return null;
 
   candidates.sort((a, b) => {
+    // 1. Fewer contradictions first (unmatched components that exist elsewhere)
+    if (a.contradictions !== b.contradictions) return a.contradictions - b.contradictions;
+    // 2. Fewer unmatched components
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
+    // 3. Deeper match
     return b.depth - a.depth;
   });
 
   const best = candidates[0];
-  // Ambiguous if multiple candidates with the same unmatched count resolve to
+  // Ambiguous if multiple candidates with the same quality resolve to
   // different leaf nodes (i.e. different geographical locations)
   const sameQuality = candidates.filter(
-    c => c.unmatched.length === best.unmatched.length
+    c => c.contradictions === best.contradictions &&
+         c.unmatched.length === best.unmatched.length
   );
   const distinctLocations = new Set(
     sameQuality.map(c => {
@@ -184,6 +207,12 @@ export function searchGazetteer(
   return hits;
 }
 
+function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
+  if (a.contradictions !== b.contradictions) return a.contradictions < b.contradictions;
+  if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length < b.unmatched.length;
+  return a.depth > b.depth;
+}
+
 export function resolvePlace(
   placeName: string,
   gazetteers: Gazetteer[],
@@ -193,20 +222,53 @@ export function resolvePlace(
   const components = placeName.split(',').map(p => p.trim()).filter(Boolean);
   if (components.length === 0) return null;
 
-  let bestOverall: { candidate: MatchCandidate; ambiguous: boolean; gazId: string } | null = null;
+  // Build a global map of normalized name → minimum depth (ancestor count)
+  // across all gazetteers.  Shallow entries (countries, depth 1–2) are strong
+  // geographic anchors; deep entries (localities, depth 4+) are weak ones.
+  // Used to weight contradictions: an unmatched component that matches a
+  // shallow/broad node elsewhere is a stronger signal than one matching a leaf.
+  const globalNameDepth = new Map<string, number>();
+  for (const gaz of gazetteers) {
+    for (const [name, entries] of getNameIndex(gaz.root).entries()) {
+      for (const entry of entries) {
+        const depth = entry.ancestors.length + 1;
+        const existing = globalNameDepth.get(name);
+        if (existing === undefined || depth < existing) {
+          globalNameDepth.set(name, depth);
+        }
+      }
+    }
+  }
+
+  // Collect best candidate per gazetteer, then compute contradiction weight
+  // using global depth info so cross-gazetteer conflicts are detected.
+  const perGaz: { candidate: MatchCandidate; ambiguous: boolean; gazId: string }[] = [];
 
   for (const gaz of gazetteers) {
     const candidates = findMatches(components, gaz.root);
     const picked = pickBest(candidates);
     if (!picked) continue;
 
-    if (
-      !bestOverall ||
-      picked.best.unmatched.length < bestOverall.candidate.unmatched.length ||
-      (picked.best.unmatched.length === bestOverall.candidate.unmatched.length &&
-        picked.best.depth > bestOverall.candidate.depth)
-    ) {
-      bestOverall = { candidate: picked.best, ambiguous: picked.ambiguous, gazId: gaz.id };
+    // Compute contradiction weight: sum of 1/depth for each unmatched
+    // component that exists in another gazetteer.  Shallow matches (country
+    // names) produce large weights; deep matches (localities) produce small
+    // ones.  Stored as integer (×1000) to avoid floating-point comparison.
+    let weightedContradictions = 0;
+    for (const um of picked.best.unmatched) {
+      const depth = globalNameDepth.get(normalize(um));
+      if (depth !== undefined) {
+        weightedContradictions += Math.round(1000 / depth);
+      }
+    }
+    picked.best.contradictions = weightedContradictions;
+
+    perGaz.push({ candidate: picked.best, ambiguous: picked.ambiguous, gazId: gaz.id });
+  }
+
+  let bestOverall: { candidate: MatchCandidate; ambiguous: boolean; gazId: string } | null = null;
+  for (const entry of perGaz) {
+    if (!bestOverall || isBetterCandidate(entry.candidate, bestOverall.candidate)) {
+      bestOverall = entry;
     }
   }
 
@@ -267,13 +329,14 @@ export function resolveBoundary(
   const allCandidates: MatchCandidate[] = [];
 
   for (const gaz of boundaryGazetteers) {
-    allCandidates.push(...findMatches(components, gaz.root, []));
+    allCandidates.push(...findMatches(components, gaz.root));
   }
 
   if (allCandidates.length === 0) return null;
 
-  // Sort by match quality (fewest unmatched, then deepest)
+  // Sort by match quality (fewest contradictions, then fewest unmatched, then deepest)
   allCandidates.sort((a, b) => {
+    if (a.contradictions !== b.contradictions) return a.contradictions - b.contradictions;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
     return b.depth - a.depth;
   });
