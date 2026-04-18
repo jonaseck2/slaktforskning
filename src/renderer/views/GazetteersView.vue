@@ -104,7 +104,7 @@
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
-import { getAllGazetteers } from '../../api/place-gazetteers/index';
+import { getAllGazetteers, loadGazetteers } from '../../api/place-gazetteers/index';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
 import type { GazetteerConfig, Gazetteer, GazetteerInfo } from '../../api/place-gazetteers/types';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
@@ -189,10 +189,7 @@ const results = computed(() => {
 });
 
 function buildEnabledGazetteers(cfg: GazetteerConfig, imported: Gazetteer[]): Gazetteer[] {
-  const enabled = new Set(cfg.enabledGazetteers);
-  const bundled = getAllGazetteers().filter(g => enabled.has(g.id));
-  const imp = imported.filter(g => enabled.has(g.id));
-  return [...bundled, ...imp];
+  return loadGazetteers(cfg, imported);
 }
 
 async function loadAll() {
