@@ -172,24 +172,6 @@ function setAppearance(value: Appearance) {
 // --- Sidebar appearance panel ---
 const isSettingsOpen = ref(false);
 
-const RAW_TEXT_SIZE = localStorage.getItem('textSize');
-const textSize = ref<'small' | 'medium' | 'large'>(
-  (RAW_TEXT_SIZE === 'medium' || RAW_TEXT_SIZE === 'large') ? RAW_TEXT_SIZE : 'small'
-);
-
-function setTextSize(size: 'small' | 'medium' | 'large') {
-  textSize.value = size;
-  localStorage.setItem('textSize', size);
-  document.documentElement.classList.remove('text-medium', 'text-large');
-  if (size === 'medium') document.documentElement.classList.add('text-medium');
-  if (size === 'large') document.documentElement.classList.add('text-large');
-}
-
-function setLocale(val: SupportedLocale) {
-  locale.value = val;
-  saveLocale(val);
-}
-
 provide('ttsEnabled', screenReader.isTtsEnabled);
 provide('tts', tts);
 provide('screenReader', screenReader);
