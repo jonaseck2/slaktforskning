@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 export interface CheckResult {
@@ -123,7 +123,7 @@ async function load() {
   issues.value = (await window.api.checks.forPerson(props.personId)) as CheckResult[];
 }
 
-defineExpose({ reload: load });
+defineExpose({ reload: load, count: computed(() => issues.value.length) });
 
 watch(() => props.personId, load, { immediate: true });
 </script>

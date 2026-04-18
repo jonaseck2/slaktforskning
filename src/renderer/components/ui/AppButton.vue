@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'soft';
   size?: 'sm' | 'md';
   loading?: boolean;
   disabled?: boolean;
@@ -78,6 +78,15 @@ withDefaults(defineProps<{
 }
 .app-btn--ghost:hover:not(:disabled) {
   background: var(--surface-hover);
+}
+
+.app-btn--soft {
+  background: var(--surface-hover);
+  border: none;
+  color: var(--accent);
+}
+.app-btn--soft:hover:not(:disabled) {
+  background: var(--surface-border-subtle);
 }
 
 /* Disabled / loading */

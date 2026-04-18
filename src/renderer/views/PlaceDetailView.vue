@@ -1,7 +1,6 @@
 <template>
   <div v-if="place" class="place-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">← {{ $t('common.back') }}</button>
       <h2>{{ place.name }}</h2>
       <AppBadge v-if="place.place_type" variant="event">{{ $t('placeTypes.' + place.place_type) }}</AppBadge>
       <AppButton variant="ghost" size="sm" @click="$router.push('/reports?tab=placeHistory&placeId=' + place.id)">{{ $t('reports.tabPlaceHistory') }} →</AppButton>
@@ -10,6 +9,7 @@
     <section class="detail-section" aria-labelledby="section-place-details">
       <SectionHeader
         :title="$t('places.detailsTitle')"
+        :collapsible="false"
         tabindex="0"
         :data-narrate="t('screenReader.navPlaceDetail', { name: place.name })"
       />
@@ -40,6 +40,7 @@
     <section class="detail-section" aria-labelledby="section-place-address">
       <SectionHeader
         :title="$t('places.address')"
+        :collapsible="false"
         tabindex="0"
         :data-narrate="$t('places.address')"
       />
@@ -61,12 +62,12 @@
 
     <section class="detail-section" aria-labelledby="section-place-notes">
       <h4 id="section-place-notes" tabindex="0" :data-narrate="editNotes ? t('screenReader.sectionNotes', { content: editNotes }) : t('screenReader.sectionNotesEmpty')">{{ $t('common.notes') }}</h4>
-      <textarea v-model="editNotes" rows="3" @blur="save({ notes: editNotes })" />
+      <textarea ref="notesRef" v-model="editNotes" rows="3" :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined" @blur="persistNotesHeight(); save({ notes: editNotes })" @mouseup="persistNotesHeight" />
     </section>
 
     <!-- Gazetteer Match Section -->
     <section v-if="gazetteerMatch" class="detail-section gazetteer-section" aria-labelledby="section-gazetteer-match">
-      <SectionHeader :title="$t('gazetteers.matchTitle')" />
+      <SectionHeader :title="$t('gazetteers.matchTitle')" :collapsible="false" />
       <div class="gazetteer-match">
         <div class="match-quality-row">
           <span class="match-badge" :class="'match-' + gazetteerMatch.matchQuality">
@@ -84,7 +85,7 @@
 
     <!-- Map Section -->
     <section v-if="mapMarkers.length > 0" class="detail-section" aria-labelledby="section-place-map">
-      <SectionHeader :title="$t('map.placeMap')" />
+      <SectionHeader :title="$t('map.placeMap')" :collapsible="false" />
       <BaseMap
         ref="baseMapRef"
         height="300px"
@@ -106,12 +107,12 @@
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-media-timeline">
-      <SectionHeader :title="$t('mediaTimeline.title')" />
+      <SectionHeader :title="$t('mediaTimeline.title')" :collapsible="false" />
       <MediaTimeline entity-type="place" :entity-id="placeId" />
     </section>
 
     <section v-if="children.length" class="detail-section" aria-labelledby="section-place-children">
-      <SectionHeader :title="$t('places.childPlaces')" :count="children.length" />
+      <SectionHeader :title="$t('places.childPlaces')" :count="children.length" :collapsible="false" />
       <ul class="child-list">
         <li v-for="child in children" :key="child.id">
           <a href="#" @click.prevent="$router.push('/places/' + child.id)">{{ child.name }}</a>
@@ -136,6 +137,7 @@ import SectionHeader from '../components/ui/SectionHeader.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
@@ -157,6 +159,7 @@ const editCity = ref('');
 const editCountry = ref('');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-notes');
 
 const gazetteerMatch = computed(() => {
   if (!resolverReady.value || !place.value) return null;

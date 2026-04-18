@@ -1,7 +1,6 @@
 <template>
   <div v-if="relationship" class="relationship-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('relationshipDetail.back') }}</button>
       <div class="header-row">
         <h2>{{ $t('relationshipDetail.title') }}</h2>
         <AppBadge variant="event">{{ $t('relTypes.' + relationship.type) }}</AppBadge>
@@ -14,6 +13,7 @@
     <section class="detail-section" aria-labelledby="section-rel-type">
       <SectionHeader
         :title="$t('common.type')"
+        :collapsible="false"
         tabindex="0"
         :data-narrate="$t('common.type') + ': ' + $t('relTypes.' + relationship.type)"
       />
@@ -45,10 +45,13 @@
         <label>
           {{ $t('common.notes') }}
           <textarea
+            ref="notesRef"
             v-model="notesText"
             rows="2"
             :placeholder="$t('relationshipDetail.notesPlaceholder')"
-            @blur="saveNotes"
+            :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+            @blur="persistNotesHeight(); saveNotes()"
+            @mouseup="persistNotesHeight"
           />
         </label>
       </div>
@@ -58,6 +61,7 @@
     <section class="detail-section" aria-labelledby="section-rel-persons">
       <SectionHeader
         :title="$t('relationshipDetail.persons')"
+        :collapsible="false"
         tabindex="0"
         :data-narrate="$t('relationshipDetail.persons')"
       />
@@ -107,6 +111,7 @@ import { useFocusStore } from '../stores/focus';
 import { fullNameParts, resolvePersonDisplayName } from '../utils/nameUtils';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { narrateRelationship, narrationLabelsFromI18n } from '../utils/narration';
 
 interface RelData {
@@ -128,6 +133,7 @@ const { speak, stop } = useTTS();
 
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('relationship-notes');
 const person1Label = computed(() => {
   const type = relationship.value?.type;
   if (type === 'parent_child') return t('relTypes.parent');

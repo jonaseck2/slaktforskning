@@ -4,6 +4,7 @@
     <nav class="sidebar" aria-label="Main navigation">
       <div class="sidebar-header">
         <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
+        <button v-if="canGoBack" class="btn-sidebar-back" :aria-label="$t('a11y.goBack')" @click="router.back()">←</button>
       </div>
       <form class="sidebar-search" @submit.prevent="submitSearch">
         <input
@@ -87,11 +88,23 @@
             <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
             <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
           </div>
+          <div class="settings-group-label">{{ $t('settings.theme') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.theme')">
+            <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="String(currentTheme === 'forest')" @click="setTheme('forest')">🌲</button>
+            <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
+            <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
+          </div>
           <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
             <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
             <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
             <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.readAloud') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.readAloud')">
+            <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
           </div>
           <div class="settings-group-label">{{ $t('settings.language') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
@@ -116,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, provide, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, provide, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
@@ -131,6 +144,9 @@ import { useToast } from './composables/useToast';
 const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
+const navCount = ref(0);
+router.afterEach(() => { navCount.value++; });
+const canGoBack = computed(() => navCount.value > 0);
 const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
@@ -379,10 +395,29 @@ body {
 }
 
 .sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 4px 8px 10px;
   border-bottom: 1px solid var(--sidebar-border);
   margin-bottom: 8px;
   flex-shrink: 0;
+}
+
+.btn-sidebar-back {
+  background: none;
+  border: none;
+  color: var(--sidebar-text-muted);
+  cursor: pointer;
+  font-size: var(--font-md);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+
+.btn-sidebar-back:hover {
+  color: var(--sidebar-active-text);
+  background: var(--sidebar-active-bg);
 }
 
 .sidebar-title {

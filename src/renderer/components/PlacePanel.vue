@@ -73,10 +73,13 @@
             <div class="compact-field">
               <label class="compact-label">{{ $t('panel.notes') }}</label>
               <textarea
+                ref="notesRef"
                 class="compact-control"
                 rows="2"
                 :value="place.notes ?? ''"
-                @blur="saveField('notes', ($event.target as HTMLTextAreaElement).value || null)"
+                :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+                @blur="persistNotesHeight(); saveField('notes', ($event.target as HTMLTextAreaElement).value || null)"
+                @mouseup="persistNotesHeight"
               />
             </div>
           </div>
@@ -211,6 +214,7 @@ import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { usePlacePanelSections } from '../composables/usePlacePanelSections';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -247,6 +251,7 @@ const { sections, toggleSection } = usePlacePanelSections();
 // ── Template refs ───────────────────────────────────────────────────────────
 
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
 
 // ── Data ────────────────────────────────────────────────────────────────────
 

@@ -128,9 +128,9 @@ function emitUpdate() {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 1px solid var(--border, #ddd);
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
-  background: var(--bg-secondary, #f9f9f9);
+  background: var(--surface-bg);
 }
 .export-options-panel h4 {
   margin: 0 0 4px 0;

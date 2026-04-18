@@ -114,13 +114,20 @@
 /* ── 4. Data table ─────────────────────────────────────── */
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 .data-table th,
 .data-table td {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--surface-border-subtle);
   text-align: left;
+}
+.data-table tr:last-child td {
+  border-bottom: none;
 }
 .data-table th {
   background: var(--color-bg-table-head);
@@ -230,7 +237,7 @@
   z-index: 1000;
 }
 .modal {
-  background: var(--surface);
+  background: var(--surface-bg);
   color: var(--text-primary);
   border-radius: var(--radius-lg);
   padding: 24px;
@@ -262,9 +269,9 @@
 .modal form input[type='number'],
 .modal form select,
 .modal form textarea {
-  padding: 6px 8px;
+  padding: 7px 10px;
   border: 1px solid var(--surface-border);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   font-size: var(--font-base);
   font-family: inherit;
   color: var(--text-primary);
@@ -303,7 +310,12 @@
 }
 .modal-actions button[type='submit'] {
   background: var(--color-primary);
-  color: white;
+  color: var(--accent-text);
+  font-weight: var(--font-weight-medium);
+}
+.modal-actions .btn-cancel,
+.modal-actions button[type='button']:not([type='submit']) {
+  border: 1px solid var(--surface-border);
 }
 
 /* ── 10. Person links ──────────────────────────────────── */

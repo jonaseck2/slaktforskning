@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import BaseModal from './BaseModal.vue';
 
 export interface IdentifierRow {
@@ -64,7 +64,7 @@ const identifiers = ref<IdentifierRow[]>([]);
 const showAddForm = ref(false);
 const form = reactive({ identifier_type: 'familysearch', identifier_value: '' });
 
-defineExpose({ openAddForm: () => { showAddForm.value = true; } });
+defineExpose({ openAddForm: () => { showAddForm.value = true; }, count: computed(() => identifiers.value.length) });
 
 async function load() {
   identifiers.value = (await window.api.persons.getIdentifiers(props.personId)) as IdentifierRow[];

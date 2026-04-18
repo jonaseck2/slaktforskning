@@ -1,12 +1,12 @@
 <template>
   <div class="event-list">
     <div v-if="!props.hideHeader" class="section-header">
-      <h4>{{ $t('events.title') }}</h4>
+      <h4>{{ $t('events.title') }} <span v-if="events.length" class="section-count">({{ events.length }})</span></h4>
       <button v-if="!props.readonly" type="button" class="btn-add" @click="showForm = true"><span aria-hidden="true">+ </span>{{ $t('events.addEvent') }}</button>
     </div>
     <div v-if="events.length === 0" class="empty-hint">{{ $t('events.noEvents') }}</div>
-    <table v-else class="data-table">
-      <thead>
+    <table v-else class="data-table events-table">
+      <thead v-if="props.showPersons">
         <tr>
           <th v-if="props.showPersons">{{ $t('persons.title') }}</th>
           <th>{{ $t('common.type') }}</th>
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
 import CitationForm from './CitationForm.vue';
@@ -193,7 +193,7 @@ function openAddForm(eventType?: string) {
   showForm.value = true;
 }
 
-defineExpose({ reload: load, openAddForm });
+defineExpose({ reload: load, openAddForm, count: computed(() => events.value.length) });
 </script>
 
 <style scoped>
@@ -207,12 +207,18 @@ defineExpose({ reload: load, openAddForm });
   margin: 0;
   font-size: var(--font-md);
 }
+.section-count {
+  font-weight: var(--font-weight-normal);
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
 .event-badge {
-  background: var(--color-event-badge-bg);
-  color: var(--color-event-badge-text);
-  padding: 2px 8px;
-  border-radius: 10px;
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-xs);
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
 }
 .td-persons {

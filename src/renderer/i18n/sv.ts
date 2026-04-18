@@ -39,6 +39,7 @@ export default {
     language: 'Språk',
     highContrast: 'Hög kontrast',
     contrast: 'Kontrast',
+    readAloud: 'Läs upp',
     off: 'Av',
     narrate: 'Berätta',
     screenReaderMode: 'Skärm',

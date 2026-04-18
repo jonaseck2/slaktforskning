@@ -1,6 +1,6 @@
 <template>
-  <div class="section-header-bar" @click="$emit('toggle')">
-    <button type="button" class="chevron-btn" :aria-expanded="!collapsed" aria-label="Toggle section">
+  <div class="section-header-bar" :class="{ 'not-collapsible': !collapsible }" @click="collapsible && $emit('toggle')">
+    <button v-if="collapsible" type="button" class="chevron-btn" :aria-expanded="!collapsed" aria-label="Toggle section">
       {{ collapsed ? '►' : '▼' }}
     </button>
     <span class="section-title">{{ title }}</span>
@@ -8,7 +8,7 @@
     <span class="spacer" />
     <AppButton
       v-if="actionLabel"
-      variant="ghost"
+      variant="secondary"
       size="sm"
       @click.stop="$emit('action')"
     >
@@ -24,9 +24,11 @@ withDefaults(defineProps<{
   title: string;
   count?: number;
   collapsed?: boolean;
+  collapsible?: boolean;
   actionLabel?: string;
 }>(), {
   collapsed: false,
+  collapsible: true,
   actionLabel: '',
 });
 
@@ -41,6 +43,10 @@ defineEmits<{ toggle: []; action: [] }>();
   padding: var(--space-sm) 0;
   cursor: pointer;
   user-select: none;
+}
+
+.section-header-bar.not-collapsible {
+  cursor: default;
 }
 
 .chevron-btn {

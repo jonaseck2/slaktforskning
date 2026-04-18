@@ -121,37 +121,22 @@
           <label>{{ $t('persons.surname') }}
             <input v-model="form.surname" type="text" />
           </label>
-          <label>{{ $t('persons.sex') }}
-            <select v-model="form.sex">
-              <option value="U">{{ $t('persons.sexUnknown') }}</option>
-              <option value="M">{{ $t('persons.male') }}</option>
-              <option value="F">{{ $t('persons.female') }}</option>
-            </select>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" v-model="form.living" />{{ $t('persons.living') }}
-          </label>
-
-          <!-- Birth / event section -->
-          <details class="birth-section" open>
-            <summary>{{ $t('eventTypes.birth') }}</summary>
-            <label>{{ $t('addRelated.birthDate') }}</label>
-            <DateInput
-              v-model:dateType="birthForm.date_type"
-              v-model:dateValue="birthForm.date_value"
-              v-model:dateValueEnd="birthForm.date_value_end"
-              v-model:dateOriginal="birthForm.date_original"
-            />
-            <label>{{ $t('addRelated.birthPlace') }}
-              <PlacePicker v-model="birthForm.place_id" />
+          <div class="form-row-2col">
+            <label>{{ $t('persons.sex') }}
+              <select v-model="form.sex">
+                <option value="U">{{ $t('persons.sexUnknown') }}</option>
+                <option value="M">{{ $t('persons.male') }}</option>
+                <option value="F">{{ $t('persons.female') }}</option>
+              </select>
             </label>
-            <label>{{ $t('citations.source') }}
-              <SourcePicker v-model="birthSourceForm.source_id" />
+            <label class="checkbox-label">
+              {{ $t('persons.living') }}
+              <div class="checkbox-wrap">
+                <input type="checkbox" v-model="form.living" />
+                {{ form.living ? $t('personDetail.statusLiving') : $t('personDetail.statusDeceased') }}
+              </div>
             </label>
-            <label>{{ $t('addRelated.page') }}
-              <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
-            </label>
-          </details>
+          </div>
           <div class="modal-actions">
             <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
             <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
@@ -179,12 +164,9 @@ import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch } f
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
-import DateInput from '../components/DateInput.vue';
 import { narratePersonRow } from '../utils/screenReaderNarration';
 import PersonName from '../components/PersonName.vue';
 import MergePersonsModal from '../components/MergePersonsModal.vue';
-import PlacePicker from '../components/PlacePicker.vue';
-import SourcePicker from '../components/SourcePicker.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
 import AppAvatar from '../components/ui/AppAvatar.vue';
@@ -195,11 +177,7 @@ import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
-import { useBirthEventCreation } from '../composables/useBirthEventCreation';
-import { useSourceSession } from '../stores/sourceSession';
 const dataVersionStore = useDataVersionStore();
-const { createBirthEvent } = useBirthEventCreation();
-const sourceSession = useSourceSession();
 let loadedVersion = -1;
 
 interface PersonListItem {
@@ -275,14 +253,6 @@ const form = reactive({
   living: true,
 });
 
-const birthForm = reactive({
-  date_type: 'exact',
-  date_value: '',
-  date_value_end: '',
-  date_original: '',
-  place_id: null as string | null,
-});
-const birthSourceForm = reactive({ source_id: null as string | null, page: '' });
 
 function formatPersonInfo(person: PersonListItem): string {
   const parts: string[] = [];
@@ -369,37 +339,17 @@ async function onMerged() {
 async function addPerson() {
   if (!window.api) return;
   try {
-    const person = await window.api.persons.create({
+    await window.api.persons.create({
       given_name: form.given_name,
       surname: form.surname,
       sex: form.sex,
       living: form.living,
     });
-    const newPerson = person as { id: string };
-    await createBirthEvent(newPerson.id, {
-      date_type: birthForm.date_type !== 'exact' ? birthForm.date_type : undefined,
-      date_value: birthForm.date_value || undefined,
-      date_value_end: birthForm.date_value_end || undefined,
-      date_original: birthForm.date_original || undefined,
-      place_id: birthForm.place_id,
-      source_id: birthSourceForm.source_id || undefined,
-      page: birthSourceForm.page || undefined,
-    });
-    if (birthSourceForm.source_id) {
-      sourceSession.setLastUsed(birthSourceForm.source_id, birthSourceForm.page);
-    }
     showAddForm.value = false;
     form.given_name = '';
     form.surname = '';
     form.sex = 'U';
     form.living = true;
-    birthForm.date_type = 'exact';
-    birthForm.date_value = '';
-    birthForm.date_value_end = '';
-    birthForm.date_original = '';
-    birthForm.place_id = null;
-    birthSourceForm.source_id = null;
-    birthSourceForm.page = '';
     await load();
   } catch (err) {
     console.error('[PersonsView] addPerson failed:', err);
@@ -437,9 +387,6 @@ function goToDetail(person: PersonListItem) {
 onMounted(async () => {
   await load();
   loadedVersion = dataVersionStore.version;
-  if (sourceSession.lastSourceId) {
-    birthSourceForm.source_id = sourceSession.lastSourceId;
-  }
 });
 
 onActivated(async () => {
@@ -471,28 +418,28 @@ onActivated(async () => {
 .score-high { background: var(--error-bg); color: var(--error-text); }
 .score-medium { background: var(--warning-bg); color: var(--warning-text); }
 .score-low { background: var(--info-bg); color: var(--info-text); }
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 .checkbox-label {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
   font-weight: 500;
   cursor: pointer;
 }
-.checkbox-label input[type='checkbox'] {
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 0;
+  font-size: var(--font-base);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-primary);
+}
+.checkbox-wrap input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;
-}
-.birth-section {
-  border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin: 4px 0;
-}
-.birth-section summary {
-  cursor: pointer;
-  font-weight: 500;
-  font-size: var(--font-sm);
-  color: var(--text-muted);
+  accent-color: var(--accent);
 }
 </style>
