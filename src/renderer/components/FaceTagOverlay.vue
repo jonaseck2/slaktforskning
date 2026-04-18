@@ -2,7 +2,7 @@
   <div
     ref="layerEl"
     class="face-tag-layer"
-    :class="{ 'draw-mode': drawMode }"
+    :class="{ 'draw-mode': drawMode, 'dragging': !!dragMode }"
     @mousedown="onLayerMouseDown"
     @mousemove="onLayerMouseMove"
     @mouseup="onLayerMouseUp"
@@ -19,7 +19,7 @@
         'highlighted': highlightedId === region.id,
         'editing': editingId === region.id,
       }"
-      :style="[regionStyle(region), dragMode ? { pointerEvents: 'none' } : {}]"
+      :style="regionStyle(region)"
       @mousedown.stop="onRegionMouseDown($event, region)"
       @mousemove.stop="onRegionMouseMove($event, region)"
       @click.stop="onRegionClick(region.id)"
@@ -377,6 +377,11 @@ function edgeCursor(edge: Edge): string {
 .face-tag-layer.draw-mode {
   pointer-events: auto;
   cursor: crosshair;
+}
+
+.face-tag-layer.dragging,
+.face-tag-layer.dragging * {
+  pointer-events: none !important;
 }
 
 .face-tag-region {
