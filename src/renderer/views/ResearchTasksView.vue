@@ -1,7 +1,7 @@
 <template>
   <div class="research-tasks">
     <div class="header">
-      <h2>{{ $t('researchTasks.title') }}</h2>
+      <h2>{{ $t('nav.researchTasks') }}</h2>
       <AppButton variant="primary" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('researchTasks.addTask') }}</AppButton>
     </div>
 

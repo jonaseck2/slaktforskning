@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="header">
-      <h2>{{ $t('quality.title') }}</h2>
+      <h2>{{ $t('nav.quality') }}</h2>
       <span v-if="qualityStore.running" class="running-hint">{{ $t('quality.running') }}</span>
     </div>
 

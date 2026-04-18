@@ -65,7 +65,7 @@ export default {
     all: 'All',
   },
   persons: {
-    title: 'Persons',
+    title: 'People',
     addPerson: 'Add Person',
     emptyState: 'No persons yet.',
     givenName: 'Given Name (full)',
@@ -518,8 +518,8 @@ export default {
     treeSubjectCleared: 'Tree subject cleared.',
   },
   quality: {
-    nav: 'Data Quality',
-    title: 'Data Quality',
+    nav: 'Quality',
+    title: 'Quality',
     runChecks: 'Run checks',
     notRun: 'Click "Run checks" to analyse the tree.',
     summary: '{errors} errors · {warnings} warnings · {notices} notices',
@@ -694,7 +694,7 @@ export default {
   },
   researchTasks: {
     title: 'Research Tasks',
-    nav: 'Research',
+    nav: 'Research Tasks',
     priority: 'Priority',
     status: 'Status',
     task: 'Task',

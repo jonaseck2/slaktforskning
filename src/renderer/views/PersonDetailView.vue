@@ -155,7 +155,7 @@
     <!-- Research Tasks Section -->
     <section class="detail-section" aria-labelledby="section-person-tasks">
       <SectionHeader
-        :title="$t('researchTasks.title')"
+        :title="$t('nav.researchTasks')"
         :count="personTasks.length"
         :action-label="$t('researchTasks.addTask')"
         @action="showAddTaskModal = true"

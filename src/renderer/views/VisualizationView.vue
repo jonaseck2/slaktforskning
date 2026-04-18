@@ -1,7 +1,7 @@
 <template>
   <div class="visualization-view">
     <div class="header">
-      <h2>{{ $t('nav.visualization') }}</h2>
+      <h2>{{ $t('nav.familyTree') }}</h2>
     </div>
     <!-- Tab bar -->
     <div v-if="focalPerson" class="viz-tab-bar">
