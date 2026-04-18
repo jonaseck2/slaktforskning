@@ -79,9 +79,13 @@ describe('boundary gazetteers', () => {
       const gaz = gazetteers.find(g => g.id === id);
       expect(gaz).toBeDefined();
       expect((gaz as any).kind).toBe('boundary');
-      const firstChild = gaz!.root.children![0];
-      expect(firstChild.geometry).toBeDefined();
-      expect(['Polygon', 'MultiPolygon']).toContain(firstChild.geometry!.type);
+      // Walk to the first leaf node with geometry (may be nested under state nodes)
+      let node = gaz!.root.children![0];
+      while (node.children?.length && !node.geometry) {
+        node = node.children[0];
+      }
+      expect(node.geometry).toBeDefined();
+      expect(['Polygon', 'MultiPolygon']).toContain(node.geometry!.type);
     });
   }
 });

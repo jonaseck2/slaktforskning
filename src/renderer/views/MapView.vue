@@ -16,7 +16,7 @@
       </div>
 
       <AppLoadingState v-if="loading" />
-      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :message="$t('map.empty')" />
+      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('map.empty')" />
 
       <div v-else class="map-content">
         <BaseMap
@@ -186,7 +186,7 @@ const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary, invalidate
 
 // Boundary overlay
 const boundaryGeojson = ref<Record<string, unknown> | null>(null);
-const boundaryStyle = () => ({ color: '#4a90d9', weight: 2, fill: false });
+const boundaryStyle = () => ({ color: '#4a90d9', weight: 2, fill: false, interactive: false });
 
 // Panel state
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
@@ -217,7 +217,14 @@ watch(selectedPlaceId, async (id) => {
   if (!id) return;
   const place = allDisplayPlaces.value.find(p => p.id === id);
   if (!place) return;
-  const result = await resolveBoundary(place.name, { lat: place.displayLat, lon: place.displayLon });
+  // Use the point gazetteer's matched path (reversed, excluding the leaf city)
+  // to query the boundary gazetteer. This avoids city-name conflicts (e.g.
+  // "Wichita" matching Wichita County instead of Sedgwick County).
+  // Falls back to the raw place name if no resolved path is available.
+  const boundaryQuery = place.resolved?.matchedPath
+    ? [...place.resolved.matchedPath].reverse().join(', ')
+    : place.name;
+  const result = await resolveBoundary(boundaryQuery, { lat: place.displayLat, lon: place.displayLon });
   if (result) {
     boundaryGeojson.value = { type: 'Feature', properties: {}, geometry: result.geometry };
   } else {
@@ -467,43 +474,54 @@ onMounted(async () => {
 }
 .panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
-/* Popups */
-.popup-link {
+/* Popups — use :deep() because Leaflet injects popup HTML outside Vue's template */
+:deep(.popup-link) {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
   font-size: var(--font-base);
   cursor: pointer;
 }
-.popup-link:hover {
+:deep(.popup-link:hover) {
   text-decoration: underline;
 }
-.popup-type {
+:deep(.popup-type) {
   font-size: var(--font-xs);
   color: var(--text-secondary);
   margin-top: 2px;
 }
-.popup-resolved {
+:deep(.popup-resolved) {
   font-size: var(--font-xs);
   margin-top: 4px;
   border-top: 1px solid var(--surface-border-subtle);
   padding-top: 4px;
 }
-.match-exact {
+:deep(.match-exact),
+:deep(.match-partial),
+:deep(.match-ambiguous) {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  line-height: 1.4;
+}
+:deep(.match-exact) {
+  background: var(--success-bg);
   color: var(--success-text);
-  font-weight: 600;
 }
-.match-partial {
+:deep(.match-partial) {
+  background: var(--warning-bg);
   color: var(--warning-text);
-  font-weight: 600;
 }
-.match-ambiguous {
+:deep(.match-ambiguous) {
+  background: var(--error-bg);
   color: var(--error-text);
-  font-weight: 600;
 }
-.match-path {
+:deep(.match-path) {
   display: block;
   color: var(--text-secondary);
   font-size: var(--font-xs);
+  margin-top: 2px;
 }
 </style>

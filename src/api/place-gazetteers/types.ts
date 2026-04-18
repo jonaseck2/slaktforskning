@@ -71,5 +71,6 @@ export interface GazetteerInfo {
   description?: string;
   source?: GazetteerSource;
   bundled: boolean;
-  kind?: 'point' | 'boundary';
+  kind?: 'point' | 'boundary' | 'language';
+  rootName?: string;
 }

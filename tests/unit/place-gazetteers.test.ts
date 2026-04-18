@@ -451,6 +451,20 @@ describe('hierarchy-aware matching', () => {
     expect(result!.matchedPath).toContain('Dirleton');
   });
 
+  it('prefers Scotland over US Pennington for "Tulliochie, Pennington, Skottland"', () => {
+    // "Skottland" (Swedish for Scotland) as the last component should anchor to Scotland,
+    // not resolve to Pennington County in the US
+    const config: GazetteerConfig = {
+      enabledGazetteers: ['us-all-states', 'world-admin1', 'lang-sv-geonames'],
+    };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Tulliochie, Pennington, Skottland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Scotland');
+    expect(result!.matchedPath).toContain('United Kingdom');
+    expect(result!.gazetteer).toBe('world-admin1');
+  });
+
   it('prefers USA over Canadian leaf for "Hudson Bay, Long Island, USA"', () => {
     const config: GazetteerConfig = {
       enabledGazetteers: ['ca-provinces', 'us-all-states', 'world-countries', 'lang-sv-geonames'],

@@ -80,6 +80,25 @@ interface Gazetteer {
   root: GazetteerNode;
 }
 
+// ── FIPS state codes → full state names ─────────────────────────────
+
+const STATE_NAMES: Record<string, string> = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', DC: 'District of Columbia',
+  FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois',
+  IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana',
+  ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota',
+  MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada',
+  NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York',
+  NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon',
+  PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota',
+  TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia',
+  WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
+  // Territories
+  AS: 'American Samoa', GU: 'Guam', MP: 'Northern Mariana Islands',
+  PR: 'Puerto Rico', VI: 'U.S. Virgin Islands',
+};
+
 // ── Paths ────────────────────────────────────────────────────────────
 
 const ROOT = path.resolve(__dirname, '..');
@@ -149,29 +168,54 @@ function computeCentroid(geometry: GazetteerGeometry): [number, number] {
   return [sumLat / count, sumLon / count];
 }
 
-const nodes: GazetteerNode[] = [];
+// Group counties by state using STUSPS property
+const stateMap = new Map<string, GazetteerNode[]>();
+let countyCount = 0;
 
 for (const f of geojson.features) {
   const props = f.properties;
+  const stateCode = props.STUSPS;
+  const stateName = STATE_NAMES[stateCode];
+  if (!stateName) {
+    console.warn(`  Skipping unknown state code: ${stateCode} (${props.NAME})`);
+    continue;
+  }
+
   const geometry: GazetteerGeometry = {
     type: f.geometry.type,
     coordinates: f.geometry.coordinates,
   };
   const [lat, lon] = computeCentroid(geometry);
 
-  nodes.push({
+  if (!stateMap.has(stateCode)) stateMap.set(stateCode, []);
+  stateMap.get(stateCode)!.push({
     name: props.NAME,
     type: 'county',
     lat: Math.round(lat * 10000) / 10000,
     lon: Math.round(lon * 10000) / 10000,
     geometry,
   });
+  countyCount++;
 }
 
-// Sort by name for deterministic output
-nodes.sort((a, b) => a.name.localeCompare(b.name, 'en'));
+// Build state nodes with county children, sorted alphabetically
+const stateNodes: GazetteerNode[] = [...stateMap.entries()]
+  .sort((a, b) => STATE_NAMES[a[0]].localeCompare(STATE_NAMES[b[0]], 'en'))
+  .map(([code, counties]) => {
+    counties.sort((a, b) => a.name.localeCompare(b.name, 'en'));
+    // State centroid = average of county centroids
+    const avgLat = counties.reduce((s, c) => s + c.lat, 0) / counties.length;
+    const avgLon = counties.reduce((s, c) => s + c.lon, 0) / counties.length;
+    return {
+      name: STATE_NAMES[code],
+      type: 'state',
+      lat: Math.round(avgLat * 10000) / 10000,
+      lon: Math.round(avgLon * 10000) / 10000,
+      children: counties,
+    };
+  });
 
-console.log(`  ${nodes.length} counties`);
+console.log(`  ${stateNodes.length} states, ${countyCount} counties`);
 
 // ── Step 5: Build gazetteer ──────────────────────────────────────────
 
@@ -179,7 +223,7 @@ const gazetteer: Gazetteer = {
   id: 'us-counties-boundaries',
   name: 'US Counties — Boundaries',
   locale: 'en',
-  description: `County boundaries from US Census Bureau TIGER/Line 20m cartographic boundary file. ${nodes.length} counties and county equivalents.`,
+  description: `County boundaries from US Census Bureau TIGER/Line 20m cartographic boundary file. ${countyCount} counties in ${stateNodes.length} states.`,
   source: {
     name: 'US Census Bureau',
     url: 'https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html',
@@ -192,7 +236,7 @@ const gazetteer: Gazetteer = {
     lat: 39.8,
     lon: -98.6,
     aliases: ['USA', 'US', 'United States of America'],
-    children: nodes,
+    children: stateNodes,
   },
 };
 
@@ -203,7 +247,7 @@ fs.writeFileSync(OUTPUT, json, 'utf-8');
 
 const sizeMB = (fs.statSync(OUTPUT).size / 1024 / 1024).toFixed(1);
 console.log(`\nWrote ${OUTPUT}`);
-console.log(`  ${sizeMB} MB (${nodes.length} counties)`);
+console.log(`  ${sizeMB} MB (${countyCount} counties in ${stateNodes.length} states)`);
 
 // Clean up temp file
 if (fs.existsSync(TMP_GEOJSON)) fs.unlinkSync(TMP_GEOJSON);

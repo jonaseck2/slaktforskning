@@ -14,13 +14,48 @@
 
     <p class="gazetteers-description">{{ $t('gazetteers.description') }}</p>
 
+    <!-- Test lookup -->
+    <div class="detail-section">
+      <div class="section-header">
+        <h4>{{ $t('gazetteers.testLookup') }}</h4>
+      </div>
+      <input
+        v-model="testQuery"
+        type="text"
+        class="test-input"
+        :placeholder="$t('gazetteers.testPlaceholder')"
+      />
+      <div v-if="testQuery && results.length > 0" class="test-results">
+        <div v-for="r in results" :key="r.gaz.id" class="test-result">
+          <div class="result-header">
+            <span :class="['quality-badge', 'quality-' + r.result.matchQuality]">
+              {{ $t('gazetteers.match.' + r.result.matchQuality) }}
+            </span>
+            <span class="result-gazetteer">{{ r.gaz.name }}</span>
+          </div>
+          <div class="result-path">{{ r.result.matchedPath.join(' > ') }}</div>
+          <div class="result-details">
+            <span class="result-coords">{{ r.result.lat.toFixed(4) }}, {{ r.result.lon.toFixed(4) }}</span>
+            <span v-if="r.result.unmatchedComponents.length > 0" class="result-unmatched">
+              {{ $t('gazetteers.unmatched') }}: {{ r.result.unmatchedComponents.join(', ') }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <p v-else-if="testQuery && results.length === 0" class="empty-hint">{{ $t('gazetteers.noMatch') }}</p>
+    </div>
+
     <!-- Installed gazetteers -->
     <div class="detail-section">
       <div class="section-header">
         <h4>{{ $t('gazetteers.installed') }}</h4>
       </div>
-      <div v-if="gazetteerList.length > 0" class="gazetteer-cards">
-        <div v-for="gaz in gazetteerList" :key="gaz.id" class="gazetteer-card">
+      <div v-if="gazetteerList.length > 0" class="filter-bars">
+        <FilterChips :model-value="filterCountry" :options="countryOptions" @update:model-value="toggleCountry" />
+        <FilterChips :model-value="filterKind" :options="kindOptions" @update:model-value="toggleKind" />
+      </div>
+      <div v-if="filteredGazetteers.length > 0" class="gazetteer-cards">
+        <div v-for="gaz in filteredGazetteers" :key="gaz.id" class="gazetteer-card">
           <div class="gazetteer-card-header">
             <label class="gazetteer-toggle">
               <input
@@ -55,37 +90,6 @@
       <p v-else class="empty-hint">{{ $t('gazetteers.noGazetteers') }}</p>
     </div>
 
-    <!-- Test lookup -->
-    <div class="detail-section">
-      <div class="section-header">
-        <h4>{{ $t('gazetteers.testLookup') }}</h4>
-      </div>
-      <input
-        v-model="testQuery"
-        type="text"
-        class="test-input"
-        :placeholder="$t('gazetteers.testPlaceholder')"
-      />
-      <div v-if="testQuery && results.length > 0" class="test-results">
-        <div v-for="r in results" :key="r.gaz.id" class="test-result">
-          <div class="result-header">
-            <span :class="['quality-badge', 'quality-' + r.result.matchQuality]">
-              {{ $t('gazetteers.match.' + r.result.matchQuality) }}
-            </span>
-            <span class="result-gazetteer">{{ r.gaz.name }}</span>
-          </div>
-          <div class="result-path">{{ r.result.matchedPath.join(' > ') }}</div>
-          <div class="result-details">
-            <span class="result-coords">{{ r.result.lat.toFixed(4) }}, {{ r.result.lon.toFixed(4) }}</span>
-            <span v-if="r.result.unmatchedComponents.length > 0" class="result-unmatched">
-              {{ $t('gazetteers.unmatched') }}: {{ r.result.unmatchedComponents.join(', ') }}
-            </span>
-          </div>
-        </div>
-      </div>
-      <p v-else-if="testQuery && results.length === 0" class="empty-hint">{{ $t('gazetteers.noMatch') }}</p>
-    </div>
-
     <ConfirmModal
       :visible="deleteModal.visible"
       :title="$t('gazetteers.deleteConfirmTitle')"
@@ -99,6 +103,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import { getAllGazetteers } from '../../api/place-gazetteers/index';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
 import type { GazetteerConfig, Gazetteer, GazetteerInfo } from '../../api/place-gazetteers/types';
@@ -118,6 +123,54 @@ const gazetteerList = ref<GazetteerInfo[]>([]);
 const config = ref<GazetteerConfig>({ enabledGazetteers: [] });
 const enabledGazetteerObjects = ref<Gazetteer[]>([]);
 const testQuery = ref('');
+const filterCountry = ref('');
+const filterKind = ref('');
+
+const countryOptions = computed(() => {
+  const counts = new Map<string, number>();
+  for (const g of gazetteerList.value) {
+    if (g.rootName) counts.set(g.rootName, (counts.get(g.rootName) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([country, count]) => ({ value: country, label: country, count }));
+});
+
+const kindOptions = computed(() => {
+  const counts = new Map<string, number>();
+  const base = filterCountry.value
+    ? gazetteerList.value.filter(g => g.rootName === filterCountry.value)
+    : gazetteerList.value;
+  for (const g of base) {
+    const kind = g.kind || 'point';
+    counts.set(kind, (counts.get(kind) || 0) + 1);
+  }
+  const options: { value: string; label: string; count: number }[] = [];
+  for (const kind of ['point', 'boundary', 'language']) {
+    const count = counts.get(kind);
+    if (count) {
+      options.push({ value: kind, label: t('gazetteers.kind' + (kind === 'boundary' ? 'Boundary' : kind === 'language' ? 'Language' : 'Point')), count });
+    }
+  }
+  return options;
+});
+
+function toggleCountry(value: string) {
+  filterCountry.value = filterCountry.value === value ? '' : value;
+  filterKind.value = '';
+}
+
+function toggleKind(value: string) {
+  filterKind.value = filterKind.value === value ? '' : value;
+}
+
+const filteredGazetteers = computed(() => {
+  return gazetteerList.value.filter(g => {
+    if (filterCountry.value && g.rootName !== filterCountry.value) return false;
+    if (filterKind.value && (g.kind || 'point') !== filterKind.value) return false;
+    return true;
+  });
+});
 
 const deleteModal = ref<{ visible: boolean; id: string; name: string; message: string }>({
   visible: false,
@@ -273,6 +326,13 @@ onMounted(loadAll);
   margin-bottom: 16px;
   max-width: 640px;
   line-height: 1.5;
+}
+
+.filter-bars {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .gazetteer-cards {
