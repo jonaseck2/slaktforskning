@@ -171,7 +171,7 @@
 
       <!-- Events section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" @toggle="toggleSection('events')" />
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
         </div>
@@ -179,9 +179,9 @@
 
       <!-- Citations section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" @toggle="toggleSection('citations')" />
+        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" :action-label="'+ ' + $t('sourceDetail.addCitation')" @toggle="toggleSection('citations')" @action="showCitationForm = true" />
         <div v-if="sections.citations" class="panel-section-body">
-          <PlaceCitationsSection :place-id="placeId!" />
+          <PlaceCitationsSection ref="citationsSectionRef" :place-id="placeId!" />
         </div>
       </div>
 
@@ -201,6 +201,14 @@
         </div>
       </div>
     </template>
+
+    <!-- Citation form modal -->
+    <CitationForm
+      v-if="showCitationForm && placeId"
+      :place-id="placeId"
+      @close="showCitationForm = false"
+      @saved="showCitationForm = false; citationsSectionRef?.reload(); load(placeId)"
+    />
   </div>
 </template>
 
@@ -212,6 +220,8 @@ import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
+import CitationForm from './CitationForm.vue';
+import type { ComponentPublicInstance } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { usePlacePanelSections } from '../composables/usePlacePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
@@ -250,7 +260,10 @@ const { sections, toggleSection } = usePlacePanelSections();
 
 // ── Template refs ───────────────────────────────────────────────────────────
 
+const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
+const citationsSectionRef = ref<InstanceType<typeof PlaceCitationsSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
+const showCitationForm = ref(false);
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
 
 // ── Data ────────────────────────────────────────────────────────────────────
