@@ -518,6 +518,7 @@ watch(activeTab, () => { userZoomDelta.value = 0; });
 
 // Recompute fit when paper size or orientation changes
 watch(naturalWidth, () => {
+  userZoomDelta.value = 0;
   const el = previewContainer.value;
   if (!el) return;
   const w = el.clientWidth - 48;
