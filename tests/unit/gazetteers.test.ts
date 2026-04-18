@@ -5,11 +5,11 @@ import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 23 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(23);
+  it('loads all 25 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(25);
   });
 
-  const expectedIds = [
+  const dataIds = [
     'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-sockenstad-boundaries',
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
@@ -20,7 +20,7 @@ describe('bundled gazetteers', () => {
     'world-boundaries',
   ];
 
-  for (const id of expectedIds) {
+  for (const id of dataIds) {
     it(`includes ${id}`, () => {
       const gaz = gazetteers.find(g => g.id === id);
       expect(gaz).toBeDefined();
@@ -28,6 +28,18 @@ describe('bundled gazetteers', () => {
       expect(gaz!.root.name).toBeTruthy();
       expect(gaz!.root.children).toBeDefined();
       expect(gaz!.root.children!.length).toBeGreaterThan(0);
+    });
+  }
+
+  const langIds = ['lang-sv-geonames', 'lang-sv-wikidata'];
+
+  for (const id of langIds) {
+    it(`includes language gazetteer ${id}`, () => {
+      const gaz = gazetteers.find(g => g.id === id);
+      expect(gaz).toBeDefined();
+      expect(gaz!.kind).toBe('language');
+      expect(gaz!.translations).toBeDefined();
+      expect(Object.keys(gaz!.translations!).length).toBeGreaterThan(0);
     });
   }
 

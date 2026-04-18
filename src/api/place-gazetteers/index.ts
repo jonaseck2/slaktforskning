@@ -22,6 +22,9 @@ import caProvinces from './data/ca-provinces.json';
 // Global
 import worldCountries from './data/world-countries.json';
 import worldAdmin1 from './data/world-admin1.json';
+// Language gazetteers
+import langSvGeonames from './data/lang-sv-geonames.json';
+import langSvWikidata from './data/lang-sv-wikidata.json';
 // Boundary gazetteers
 import dkSogneBoundaries from './data/dk-sogne-boundaries.json';
 import noKommunerBoundaries from './data/no-kommuner-boundaries.json';
@@ -79,6 +82,9 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   // Global
   worldCountries as Gazetteer,
   worldAdmin1 as Gazetteer,
+  // Language gazetteers
+  langSvGeonames as Gazetteer,
+  langSvWikidata as Gazetteer,
   // Boundary gazetteers
   dkSogneBoundaries as Gazetteer,
   noKommunerBoundaries as Gazetteer,
