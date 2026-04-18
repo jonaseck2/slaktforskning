@@ -124,7 +124,7 @@ defineExpose({ fitBounds, invalidateSize, getLeafletObject });
 /* Override ZoomControls fixed positioning to be within the map container */
 .base-map-container :deep(.zoom-controls-bar) {
   position: absolute;
-  bottom: 12px;
+  bottom: 32px;
   right: 12px;
 }
 </style>

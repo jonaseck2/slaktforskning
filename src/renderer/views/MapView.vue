@@ -294,6 +294,8 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   position: relative;
+  overflow: hidden;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 /* Remove BaseMap's own border/radius — the chart area handles layout */
 .map-chart-area :deep(.base-map-container) {
