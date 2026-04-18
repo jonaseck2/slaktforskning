@@ -248,6 +248,10 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 #### Expanded Gazetteer Coverage [done]
 23 bundled gazetteers (15 point + 8 boundary) covering Scandinavia (SE/DK/NO/FI/IS), North America (US full 50-state + immigration states, CA all 13 provinces/territories), and global (countries + admin1 divisions). ~40 MB total data. 19 build scripts sourcing from Wikidata, GeoNames, DAWA API, Lantmäteriet, Statistics Finland, Natural Earth, Census Bureau, ok-dk/dagi, LMI, Kartverket, and Statistics Canada. Boundary gazetteers provide polygon overlays for 7 countries plus the Swedish parish boundaries from Lantmäteriet.
 
+#### Language Gazetteers [done]
+Multilingual place name translation layer. Two Swedish language gazetteers inject translated aliases into point/boundary gazetteers at load time so "Danmark" resolves to Denmark, "Brasilien" to Brazil, etc. `lang-sv-geonames` covers 133 countries + 1014 admin1 divisions (GeoNames, CC BY 4.0); `lang-sv-wikidata` covers 304 Nordic administrative divisions (Wikidata, CC0). New `'language'` gazetteer kind extends the `Gazetteer` type.
+- Spec: `docs/superpowers/specs/archive/2026-04-18-language-gazetteers-design.md`
+
 #### Place Gazetteers — Future Extensions [backlog]
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
 - Batch match quality report (how many places resolved, at what quality)
