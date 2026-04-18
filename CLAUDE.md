@@ -151,7 +151,9 @@ src/
 │   ├── utils/
 │   │   ├── chart-layout/
 │   │   │   ├── types.ts              # PersonNode, TreePerson, BoxLayout, ChartLayout, PedigreeTree, etc.
-│   │   │   ├── constants.ts          # BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD, ROW_H
+│   │   │   ├── constants.ts          # BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD, PORTRAIT_W/H, CURVE_R, TEXT_AREA_W
+│   │   │   ├── measure.ts            # wrapName(), measureBoxHeight() — dynamic per-box height via Canvas measureText
+│   │   │   ├── connectors.ts         # curvedElbow() — SVG path builder for chart connectors
 │   │   │   ├── hourglass-tree.ts     # TreePerson builders (buildHourglassTree, buildPedigreeTreePerson, buildDescendantTreePerson) + injectOutlines()
 │   │   │   ├── hourglass.ts          # Hourglass layout (vertical: ancestors up, descendants down)
 │   │   │   ├── pedigree.ts           # Pedigree layout (horizontal: focal left, ancestors right)
