@@ -170,6 +170,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.96.8 | Fix: + Person button in Family Tree header, "Add Person" → "Person" in i18n | — |
 | v0.97.0 | Unified research views: People combines Tree/List (like Places), Media toggle moved to header, Family Tree nav merged into People | — |
 | v0.97.1 | Fix: chart area feathering — padding around charts, remove tab bar border | — |
+| v0.97.2 | Fix: remove redundant List view button from pedigree tab, shorten "+ Research Tasks" to "+ Task" | — |
 ---
 
 ## Research

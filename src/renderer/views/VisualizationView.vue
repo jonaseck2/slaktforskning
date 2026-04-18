@@ -32,14 +32,6 @@
           ]"
           @update:model-value="setTab($event as TabName)"
         />
-        <AppButton
-          v-if="activeTab === 'pedigree'"
-          variant="secondary"
-          size="sm"
-          class="tab-toggle-btn"
-          :aria-label="pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView')"
-          @click="pedigreeListMode = !pedigreeListMode"
-        >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</AppButton>
       </div>
 
       <!-- Empty state -->
@@ -54,12 +46,8 @@
 
       <!-- Chart content -->
       <div v-else-if="focalPerson" class="viz-chart-content" data-testid="viz-area">
-        <PedigreeListView
-          v-if="activeTab === 'pedigree' && pedigreeListMode"
-          :person-id="personId"
-        />
         <PedigreeChart
-          v-else-if="activeTab === 'pedigree'"
+          v-if="activeTab === 'pedigree'"
           ref="pedigreeChartRef"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
@@ -136,7 +124,6 @@ import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
-import PedigreeListView from '../components/charts/PedigreeListView.vue';
 import CircleChart from '../components/charts/CircleChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import DescendantChart from '../components/charts/DescendantChart.vue';
@@ -203,9 +190,6 @@ const chartBoxes = computed<BoxLayout[]>(() => {
 
 type TabName = 'pedigree' | 'circle' | 'hourglass' | 'descendants' | 'timeline';
 const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
-
-// Pedigree list/chart toggle
-const pedigreeListMode = ref(false);
 
 // Panel open/closed
 const panelOpen = ref(localStorage.getItem('viz-panel-open') !== 'false');
@@ -432,12 +416,6 @@ onActivated(load);
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-lg);
-}
-
-/* List/chart toggle button in pedigree tab */
-.tab-toggle-btn {
-  margin-left: auto;
-  margin-right: var(--space-xs);
 }
 
 /* Panel reopen button */
