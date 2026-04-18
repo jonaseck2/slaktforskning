@@ -324,6 +324,93 @@ try {
 
 ---
 
+## Leaflet / OpenStreetMap Maps
+
+All maps use `BaseMap.vue` which wraps `@vue-leaflet/vue-leaflet`'s `LMap`. Leaflet is imported synchronously and exposed as `window.L` so vue-leaflet skips its async dynamic import (prevents race conditions).
+
+### BaseMap configuration
+
+```html
+<BaseMap
+  ref="baseMapRef"
+  :initial-zoom="4"
+  :initial-center="[55, 15]"
+  :scroll-wheel-zoom="true"
+  @ready="onMapReady"
+>
+  <!-- markers, geojson, etc. -->
+</BaseMap>
+```
+
+BaseMap sets these Leaflet options globally:
+- `preferCanvas: true` — all vector layers (circles, polylines, geojson) render on a single `<canvas>` instead of individual SVG/DOM elements
+- `zoomSnap: 0.5` / `zoomDelta: 0.5` — half-step zoom levels for smooth scrolling
+- `wheelDebounceTime: 80` / `wheelPxPerZoomLevel: 120` — prevents rapid-fire double-zoom on scroll
+
+### Marker performance
+
+**Never use `LMarker` with default icons for many markers.** Each default `LMarker` creates an `<img>` DOM element. With hundreds of markers this causes sluggish zoom/pan.
+
+Options (fastest to slowest):
+1. **`LCircleMarker`** — canvas-rendered (with `preferCanvas`), zero DOM elements per marker. Best for homogeneous data points.
+2. **`LMarker` + `L.divIcon`** — one `<div>` per marker with inline SVG. Use when markers need custom shapes (pins, triangles). Cache icons to avoid per-render allocation.
+3. **`LMarker` + default icon** — one `<img>` per marker. Only for a handful of markers.
+
+### SVG pin markers (MapView pattern)
+
+MapView uses `L.divIcon` with inline SVG for accurate point-down pins:
+
+```typescript
+function makePinIcon(selected: boolean, resolved: boolean) {
+  const color = selected ? SELECTED_COLOR : resolved ? RESOLVED_COLOR : BASE_COLOR;
+  const size = selected ? 14 : 11;
+  return L.divIcon({
+    className: '',                              // no default leaflet-div-icon styling
+    iconSize: [size * 2, size * 2 + 6],
+    iconAnchor: [size, size * 2 + 6],           // anchor at triangle tip (bottom center)
+    popupAnchor: [0, -(size * 2 + 4)],          // popup above pin
+    html: `<svg ...>
+      <circle ... />                             <!-- circle head -->
+      <polygon ... />                            <!-- triangle tip pointing down -->
+    </svg>`,
+  });
+}
+```
+
+Key rules:
+- **Cache icons** — only 4 variants (normal/selected × resolved/exact), create once and reuse
+- **`iconAnchor` at the triangle tip** — so the point sits exactly on the coordinate
+- **Thin stroke (0.5–1px white)** — separates overlapping pins without creating visual noise
+- **Lower opacity for resolved/inferred coordinates** — communicates uncertainty
+
+### invalidateSize and resize handling
+
+When the map container changes size (panel open/close, drag resize, window resize), call `baseMapRef.value?.invalidateSize()`. But **always debounce**:
+
+```typescript
+// ResizeObserver — debounce to avoid feedback loops during zoom animations
+resizeObserver = new ResizeObserver(() => {
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => baseMapRef.value?.invalidateSize(), 150);
+});
+
+// Panel width watcher — debounce per-pixel drag events
+watch(panelWidth, () => {
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(() => baseMapRef.value?.invalidateSize(), 50);
+});
+```
+
+Without debouncing, `invalidateSize()` triggers a resize → observer fires → `invalidateSize()` again → feedback loop that causes jank during zoom animations.
+
+### Computed data for markers
+
+When building marker data in a `computed`, avoid per-item allocations:
+- Build lookup Maps **once** at the top of the computed, not inside the loop
+- The `usePlaceResolver` composable caches resolve results — safe to call in a computed loop
+
+---
+
 ## Design Principles
 
 - **Sheets, not borders** — visual separation comes from elevation (shadow + background contrast), not borders between areas
