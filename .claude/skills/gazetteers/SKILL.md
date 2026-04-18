@@ -27,7 +27,10 @@ Resolver (resolver.ts)       →  resolvePlace(query, gazetteers) → PlaceResol
 | `src/api/place-gazetteers/resolver.ts` | `resolvePlace()`, `resolveBoundary()`, `searchGazetteer()`, `normalize()` |
 | `src/api/place-gazetteers/index.ts` | `getAllGazetteers()`, `loadGazetteers()`, bundled imports, historical alias enrichment, language gazetteer merge |
 | `src/api/gazetteers.ts` | Import/export/storage in SQLite, JSON schema validation |
+| `src/gazetteer-build/` | Shared build utilities: `geo.ts` (round6, computeCentroid, avgCoordinates, weightedCentroid), `geonames.ts` (TSV parsing, dedup), `wikidata.ts` (parseWktPoint, generateAliases), `sparql.ts` (sparqlFetch, sleep), `tree.ts` (countNodes, walkTree), `io.ts` (writeGazetteer, DATA_DIR) |
 | `tests/unit/gazetteers.test.ts` | Unit tests for loading and resolution |
+| `tests/unit/gazetteer-build.test.ts` | Unit tests for shared build utilities |
+| `tests/unit/gazetteers-crud.test.ts` | Unit tests for import/export/delete/list |
 
 ### GazetteerNode Type
 
@@ -158,7 +161,12 @@ Each country/source has its own build script in `scripts/`:
 
 ### From GeoNames (most common)
 
-1. **Create build script** -- copy `scripts/build-no-municipalities.ts` as template:
+1. **Create build script** -- use `scripts/build-no-municipalities.ts` as a structural template, but **import shared utils from `src/gazetteer-build/`** instead of inlining:
+   ```typescript
+   import { round6, avgCoordinates } from '../src/gazetteer-build/geo';
+   import { dedup } from '../src/gazetteer-build/geonames';
+   import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+   ```
    ```bash
    # Download country data
    curl -o /tmp/XX.zip https://download.geonames.org/export/dump/XX.zip
@@ -172,6 +180,7 @@ Each country/source has its own build script in `scripts/`:
    - Choose hierarchy: Country > ADM1 (type varies) > ADM2 (type varies) > PPL (type: "locality")
    - Prefer local-language admin names from GeoNames altNames over English
    - Set appropriate node types for each level
+   - Use `avgCoordinates()` for parent node coordinates, `dedup()` for name deduplication
 
 3. **Register in loader** -- add import + entry in `src/api/place-gazetteers/index.ts`:
    ```typescript
@@ -190,7 +199,15 @@ Each country/source has its own build script in `scripts/`:
 
 ### From Wikidata SPARQL
 
-Use `scripts/build-dk-parishes.ts` as template. Requires:
+Use `scripts/build-dk-parishes.ts` as structural template, importing shared utils:
+```typescript
+import { avgCoordinates } from '../src/gazetteer-build/geo';
+import { parseWktPoint, generateAliases } from '../src/gazetteer-build/wikidata';
+import { sparqlFetch } from '../src/gazetteer-build/sparql';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+```
+
+Requires:
 - Wikidata class ID for the entity type (e.g. Q814648 for Danish parishes)
 - Sufficient entries with P625 (coordinates) and P131 (admin hierarchy)
 - Check Wikidata coverage first -- some countries have very few entries

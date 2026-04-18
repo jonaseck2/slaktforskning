@@ -14,9 +14,12 @@ npm test -- --coverage     # Run with coverage report (v8, src/api/ only)
 npm run test:watch         # Watch mode for active development
 ```
 
-### E2E tests (app launch + MCP server)
+### E2E tests (Electron GUI + MCP server)
 ```bash
-npx playwright test   # Run both E2E tests
+npx playwright test                              # All 10 projects in parallel
+npx playwright test --project=gui-persons        # Single project
+npx playwright test --project=gui-quality --project=gui-media  # Multiple projects
+npx playwright test -g 'create a person'         # Filter by test name
 ```
 
 ### Lint
@@ -100,20 +103,285 @@ expect(listPlaces(db)).toHaveLength(2);
 expect(getEventsForPerson(db, id)).toHaveLength(1);
 ```
 
-Why: if both the transform code and the test fixture share the same wrong assumption (e.g. a misnamed column), a fixture-only comparison will silently pass while the bug exists. DB-level assertions catch this. This pattern discovered the `EVENT_PLACE` and `REMARK` column bugs in the Genney importer — the fixtures mirrored the bug.
+Why: if both the transform code and the test fixture share the same wrong assumption (e.g. a misnamed column), a fixture-only comparison will silently pass while the bug exists. DB-level assertions catch this.
+
+## Component Tests
+
+Component tests live in `tests/components/` and test Vue components with Happy DOM (no real browser). Use for components with significant interaction logic.
+
+### Good candidates for component tests:
+- Form components with validation/debounce (DateInput, PersonPicker, PlacePicker)
+- Modal components with multi-step workflows (EventForm, CitationForm, AddRelatedPersonModal)
+- Chart/layout components (PedigreeChart, VisualizationView)
+- Components with keyboard navigation or accessibility logic
+
+### Not worth component-testing:
+- Presentational components (AppBadge, AppAvatar, AppButton) — E2E covers them
+- Simple list/table views — E2E covers CRUD flows
 
 ## E2E Tests
 
-E2E tests live in `tests/e2e/` and use Playwright (not browser Playwright — process spawning).
+E2E tests live in `tests/e2e/` and use the `AppDriver` class to control a live Electron app via the UI HTTP bridge. Each test file spawns its own Electron instance on a unique port.
 
-### Existing tests:
-1. **App smoke test** — spawns `electron-forge start`, verifies "Launched Electron" in output
-2. **MCP server test** — spawns `npx tsx src/mcp/server.ts`, sends JSON-RPC `initialize`, verifies `serverInfo` response
+### Architecture
 
-### Both use:
-- `SLAKTFORSKNING_DB` env var pointed at a temp file
-- Process spawning with timeout (30s for app, 15s for MCP)
-- Cleanup: `fs.rmSync(dbPath)` after test
+```
+tests/e2e/
+├── fixture.ts                  # AppDriver class + startApp/teardownApp helpers
+├── app.test.ts                 # Smoke: app launch + MCP server handshake
+├── gui-persons.test.ts         # Persons CRUD, navigation, search, add related person (port 19242)
+├── gui-sources-rels.test.ts    # Sources CRUD, relationships CRUD, global search (port 19243)
+├── gui-places.test.ts          # Places CRUD, detail, address fields, hierarchy (port 19244)
+├── gui-viz.test.ts             # Visualization: empty state, tabs, SVG rendering (port 19245)
+├── gui-a11y.test.ts            # ARIA accessibility verification (port 19246)
+├── gui-quality.test.ts         # Quality checks: run, filter, ignore/restore (port 19247)
+├── gui-media.test.ts           # Media library: gallery/list, search, inline edit, delete (port 19248)
+├── gui-settings.test.ts        # Settings: database tab, tree subject, tab navigation (port 19249)
+└── gui-research-tasks.test.ts  # Research tasks: CRUD, status cycling, inline edit, filters (port 19250)
+```
+
+All 10 projects run in parallel. Each gets a fresh temp DB via `SLAKTFORSKNING_DB` env var. Windows use `SLAKTFORSKNING_NO_FOCUS=1` to avoid stealing focus during tests.
+
+### Writing a new E2E test file
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { AppDriver, AppInstance, startApp, teardownApp } from './fixture';
+
+const UI_PORT = 192XX; // Unique port — check existing files!
+let instance: AppInstance;
+const app = new AppDriver(UI_PORT);
+
+test.beforeAll(async () => {
+  instance = await startApp(UI_PORT, 'tag-for-db-filename');
+  await app.settle(150);
+  await app.setLocale('en');
+  await app.settle(300); // Extra settle for locale to take effect
+});
+
+test.afterAll(async () => {
+  await teardownApp(instance);
+});
+
+test.setTimeout(30_000);
+```
+
+Then add the test file to `playwright.config.ts` as a new project:
+```typescript
+{
+  name: 'gui-xxx',
+  testMatch: 'gui-xxx.test.ts',
+  timeout: 120000,
+  retries: 1,
+},
+```
+
+### AppDriver API
+
+**Navigation & DOM:**
+- `app.navigate(path)` — Vue Router push
+- `app.getDom()` — full rendered HTML (includes `<style>` blocks!)
+- `app.waitForText(text, timeoutMs?)` — poll DOM until text appears
+- `app.expectText(text)` / `app.expectNoText(text)` — assert DOM content
+- `app.settle(ms?)` — wait for Vue to re-render (requestAnimationFrame + delay)
+
+**Interaction:**
+- `app.click(selector)` — click element
+- `app.fillInput(selector, value)` — set value via native setter + `input` event
+- `app.waitAndFill(selector, value)` — wait for element to exist, then fill
+- `app.executeJs<T>(code)` — run JS in renderer, return serialized result
+
+**Data seeding** (call `window.api.*` in the renderer):
+- `app.createPerson({ given_name, surname, sex? })`
+- `app.createEvent({ event_type, date_original?, relationship_id? })`
+- `app.addEventParticipant({ event_id, person_id, role })`
+- `app.createSource({ title, author? })`
+- `app.createCitation({ source_id, event_id?, person_id?, confidence? })`
+- `app.createPlace({ name, place_type?, street?, postal_code?, city?, country? })`
+- `app.createRelationship({ type, person1_id?, person2_id?, subtype? })`
+- `app.createResearchTask({ task, person_id?, priority?, status?, notes? })`
+- `app.createMedia({ title, file_ref?, format?, notes? })`
+- `app.addMediaLink({ media_id, entity_type, entity_id, sort_order? })`
+- `app.createGroup({ name, notes? })`
+- `app.addGroupMember(groupId, personId)`
+
+### Critical E2E patterns and pitfalls
+
+#### 1. CSS selector mismatches — the #1 source of failures
+
+**Always check the actual rendered class names.** Vue scoped styles and component abstractions mean the class you see in the template may not match what you expect:
+
+| Component | Template usage | Rendered class | Common mistake |
+|-----------|---------------|----------------|----------------|
+| `AppButton variant="soft"` | `<AppButton variant="soft">` | `.app-btn.app-btn--soft` | Using `.btn-add` |
+| `AppButton variant="primary"` | `<AppButton variant="primary" type="submit">` | `.app-btn.app-btn--primary` | Using `button[type="submit"]` alone |
+| `FilterChips` | `<FilterChips :options="..." />` | `.chip-btn`, `.chip-btn--active` | Using `.chip`, `.tab-btn` |
+| Settings tabs | `<FilterChips>` for tabs | `.chip-btn` | Using `.tab-btn` (doesn't exist) |
+
+**shared.css also defines `.btn-add`, `.btn-delete`, `.btn-cancel`** — these are used directly in some components (ResearchTasksTable, MediaLightbox) but NOT in views that use AppButton.
+
+Before writing selectors, grep the component source to see what classes are actually used:
+```bash
+# Check what class AppButton renders
+grep 'class.*btn\|:class' src/renderer/components/ui/AppButton.vue
+# Check what a view uses for its "add" button
+grep 'btn-add\|AppButton' src/renderer/views/ResearchTasksView.vue
+```
+
+#### 2. executeJs must use IIFEs for multi-statement code
+
+The `execute_js` endpoint evaluates code in the renderer context. Multi-statement code with `return` will fail unless wrapped. **Always wrap in an IIFE:**
+
+```typescript
+// WRONG — throws "return not in function"
+const count = await app.executeJs<number>(`
+  const rows = document.querySelectorAll('.row');
+  return rows.length;
+`);
+
+// RIGHT — IIFE
+const count = await app.executeJs<number>(`
+  (() => {
+    const rows = document.querySelectorAll('.row');
+    return rows.length;
+  })()
+`);
+
+// ALSO RIGHT — single expression (no return needed)
+const count = await app.executeJs<number>(`
+  document.querySelectorAll('.row').length
+`);
+```
+
+#### 3. getDom() includes `<style>` blocks
+
+`getDom()` returns the full HTML including `<style>` tags. If you check `dom.includes('row-ignored')`, it will match the CSS class definition in the stylesheet, not actual DOM elements.
+
+```typescript
+// WRONG — matches CSS definition ".row-ignored { opacity: 0.5 }"
+const dom = await app.getDom();
+expect(dom).not.toContain('row-ignored');
+
+// RIGHT — check actual DOM elements
+const hasIgnored = await app.executeJs<boolean>(`
+  !!document.querySelector('.quality-table .row-ignored')
+`);
+expect(hasIgnored).toBe(false);
+```
+
+Use `getDom()` + `toContain()` only for **text content** (person names, labels, etc.), never for CSS class names.
+
+#### 4. Data seeding requires navigate-away-then-back
+
+After seeding data via `window.api.*`, the current view may not reload. Force a fresh mount:
+
+```typescript
+await app.createResearchTask({ task: 'New Task' });
+// WRONG — view may show stale data
+await app.navigate('/research-tasks');
+
+// RIGHT — force remount
+await app.navigate('/');
+await app.navigate('/research-tasks');
+await app.waitForText('New Task');
+```
+
+#### 5. Vue `:value` + `@blur` pattern (inline edit fields)
+
+Some inputs use `:value` + `@blur` instead of `v-model`. The native setter trick doesn't update Vue state — only the `blur` handler saves:
+
+```typescript
+// For :value + @blur inputs (e.g., MediaView inline-edit)
+await app.executeJs(`
+  new Promise(resolve => {
+    const input = document.querySelector('.inline-edit');
+    if (input) {
+      input.focus();
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype, 'value'
+      ).set;
+      setter.call(input, 'New Value');
+      input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+    }
+    setTimeout(resolve, 200);
+  })
+`);
+```
+
+#### 6. localStorage persists across Playwright retries
+
+The same Electron process runs for all retries. If your test writes to localStorage (e.g., quality ignore state), clear it at the start:
+
+```typescript
+await app.executeJs(`localStorage.removeItem('quality:ignored')`);
+await app.navigate('/');
+await app.navigate('/quality');
+```
+
+#### 7. setLocale timing
+
+`setLocale('en')` updates Vue reactivity but views need time to re-render:
+
+```typescript
+await app.setLocale('en');
+await app.settle(300); // Must settle before navigating
+```
+
+#### 8. Port allocation
+
+Each E2E file needs a unique port. Current assignments: 19242–19250. Check with:
+```bash
+grep 'UI_PORT = ' tests/e2e/gui-*.test.ts
+```
+
+#### 9. Clicking buttons by text content
+
+When AppButton or FilterChips make simple CSS selectors unreliable, match by text:
+
+```typescript
+await app.executeJs(`
+  (() => {
+    const btns = document.querySelectorAll('.view-toggle button');
+    for (const btn of btns) {
+      if (btn.textContent.trim() === 'List') { btn.click(); return; }
+    }
+  })()
+`);
+```
+
+#### 10. Confirm dialogs in delete operations
+
+Delete buttons often use `window.confirm()`. Override it before clicking:
+
+```typescript
+await app.executeJs(`
+  (() => {
+    window.confirm = () => true;
+    const rows = document.querySelectorAll('.clickable-row');
+    for (const row of rows) {
+      if (row.textContent.includes('Target Item')) {
+        const delBtn = row.querySelector('.btn-delete');
+        if (delBtn) { delBtn.click(); return; }
+      }
+    }
+  })()
+`);
+```
+
+### What to E2E test vs. not
+
+**Good E2E candidates:**
+- CRUD flows (create via modal, list, detail, delete)
+- Filter/search interactions
+- State management visible in UI (ignore/restore, status cycling)
+- Cross-view navigation (list → detail → back)
+- Form validation visible to user
+
+**Not worth E2E testing:**
+- Map/canvas rendering (flaky viewport-dependent tests)
+- File dialog operations (OS-level, can't automate)
+- Multi-window behavior (fragile Electron window management)
+- AI-generated content (non-deterministic)
 
 ## UI Verification (REQUIRED for UI changes)
 
@@ -192,11 +460,13 @@ take_screenshot()     → capture current state
 - **Check if it's a test bug or a code bug** — the test may have wrong expectations after a legitimate code change.
 - **For SQLite errors** — remember `db.get()` returns `undefined` not `null`, and parameter binding uses arrays.
 - **For E2E timeouts** — check if a previous Electron process is still running (`pkill -f "electron-forge"`).
+- **For E2E flaky tests** — common causes: timing (add `settle()`), stale data (navigate away/back), localStorage from previous retry (clear it), CSS selector matching wrong element.
 
 ## When to Run Tests
 
 - **After changing any `src/api/*.ts` file** → `npm test`
 - **After adding a new API function** → `npm test -- --coverage` to verify thresholds still pass
 - **After changing IPC, preload, or main process** → `npx playwright test`
+- **After changing a Vue view or component** → `npx playwright test --project=gui-xxx` (the relevant project)
 - **Before every commit** → `npm run lint && npm test && npx playwright test`
 - **When adding a new feature** → write unit tests for the api/ functions FIRST, then implement
