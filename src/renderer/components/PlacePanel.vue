@@ -334,8 +334,16 @@ async function saveField(field: string, value: unknown) {
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {
   if (!props.placeId || selected.id === props.placeId) return;
+  const source = (await window.api.places.get(selected.id)) as Place | null;
   const path = (await window.api.places.getPath(selected.id)) as string;
-  await saveField('name', path || selected.name);
+  const updates: Record<string, unknown> = { name: path || selected.name };
+  if (source) {
+    if (source.latitude != null) updates.latitude = source.latitude;
+    if (source.longitude != null) updates.longitude = source.longitude;
+    if (source.place_type) updates.place_type = source.place_type;
+    if (source.parent_place_id) updates.parent_place_id = source.parent_place_id;
+  }
+  await window.api.places.update(props.placeId, updates);
   await load(props.placeId);
 }
 </script>
