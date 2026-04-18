@@ -26,8 +26,7 @@
           <td>{{ mediaDisplayName(m.title, m.file_ref) }}</td>
           <td class="td-shrink">{{ m.format || '—' }}</td>
           <td class="actions-cell">
-            <button v-if="m.file_ref" class="btn-sm" @click.stop="openFile(m.id)">{{ $t('media.open') }}</button>
-            <button class="btn-sm btn-delete" @click.stop="unlink(m.link_id)">&#10005;</button>
+            <button class="btn-sm btn-delete" @click.stop="unlink(m.link_id)">✕</button>
           </td>
         </tr>
       </tbody>
@@ -109,9 +108,7 @@ async function attach() {
   }
 }
 
-async function openFile(id: string) {
-  await window.api.media.openFile(id);
-}
+
 
 async function unlink(linkId: string) {
   await window.api.media.removeLink(linkId);

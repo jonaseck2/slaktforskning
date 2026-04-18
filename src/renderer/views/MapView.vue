@@ -12,9 +12,8 @@
       </span>
     </div>
 
-    <div v-if="filteredPlaces.length === 0" class="empty">
-      {{ $t('map.empty') }}
-    </div>
+    <AppLoadingState v-if="loading" />
+    <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :message="$t('map.empty')" />
 
     <div v-else class="map-body" ref="mapBodyRef">
       <div class="map-chart-area">
@@ -77,6 +76,8 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { LMarker, LPopup, LGeoJson } from '@vue-leaflet/vue-leaflet';
 import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
+import AppLoadingState from '../components/ui/AppLoadingState.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { usePanelResize } from '../composables/usePanelResize';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
@@ -96,10 +97,15 @@ interface DisplayPlace extends PlaceRow {
   resolved?: PlaceResolveResult;
 }
 
-const places = ref<PlaceRow[]>([]);
+// Module-level cache so data survives navigation (component remounts)
+let cachedPlaces: PlaceRow[] | null = null;
+
+const places = ref<PlaceRow[]>(cachedPlaces ?? []);
+const loading = ref(cachedPlaces === null);
 const filterText = ref('');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const mapBodyRef = ref<HTMLElement | null>(null);
+const mapInitialized = ref(false);
 const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary } = usePlaceResolver();
 
 // Boundary overlay
@@ -152,7 +158,11 @@ watch(panelOpen, () => {
 
 function onMapReady() {
   // Invalidate after flex layout settles (panel may already be open)
-  setTimeout(() => { baseMapRef.value?.invalidateSize(); fitBounds(); }, 100);
+  setTimeout(() => {
+    baseMapRef.value?.invalidateSize();
+    fitBounds();
+    mapInitialized.value = true;
+  }, 200);
 }
 
 /** Build a full comma-separated path (leaf, parent, grandparent, …) using loaded places. */
@@ -204,12 +214,15 @@ function fitBounds() {
 }
 
 watch(filteredPlaces, () => {
-  if (baseMapRef.value?.getLeafletObject()) fitBounds();
+  if (mapInitialized.value && baseMapRef.value?.getLeafletObject()) fitBounds();
 });
 
 onMounted(async () => {
-  places.value = (await window.api.places.list()) as PlaceRow[];
+  const freshPlaces = (await window.api.places.list()) as PlaceRow[];
   await ensureLoaded();
+  places.value = freshPlaces;
+  cachedPlaces = freshPlaces;
+  loading.value = false;
 });
 </script>
 
