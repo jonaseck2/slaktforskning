@@ -68,7 +68,7 @@ export default {
   },
   persons: {
     title: 'People',
-    addPerson: 'Add Person',
+    addPerson: 'Person',
     emptyState: 'No persons yet.',
     givenName: 'Given Name (full)',
     givenNameHint: 'Mark preferred name with * or ! after it, e.g. Eva Linda* Marie',
