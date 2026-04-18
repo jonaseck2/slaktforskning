@@ -111,12 +111,16 @@
             @mouseenter="emit('highlight-region', r.id)"
             @mouseleave="emit('highlight-region', null)"
           >
-            <AppAvatar v-if="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
-            <div v-else class="face-tag-unknown">?</div>
-            <span v-if="r.person_id" class="face-tag-name">{{ r.personName || $t('media.untitled') }}</span>
-            <div v-else class="face-tag-assign">
-              <PersonPicker :model-value="null" :placeholder="$t('media.viewer.assignPerson')" @select="(person: { id: string }) => assignPersonToRegion(r.id, person.id)" />
-            </div>
+            <template v-if="editingTagId === r.id">
+              <div class="face-tag-assign">
+                <PersonPicker :model-value="null" :placeholder="$t('media.viewer.assignPerson')" @select="(person: { id: string }) => assignPersonToRegion(r.id, person.id)" />
+              </div>
+            </template>
+            <template v-else>
+              <AppAvatar v-if="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
+              <div v-else class="face-tag-unknown">?</div>
+              <span class="face-tag-name face-tag-clickable" @click="editingTagId = r.id">{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
+            </template>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
           </div>
         </div>
@@ -193,6 +197,7 @@ const linkedEvents = ref<LinkedEntity[]>([]);
 const regions = ref<RegionData[]>([]);
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
+const editingTagId = ref<string | null>(null);
 
 const sections = reactive({
   persons: true,
@@ -382,6 +387,7 @@ async function deleteRegion(regionId: string) {
 }
 
 async function assignPersonToRegion(regionId: string, personId: string) {
+  editingTagId.value = null;
   await window.api.mediaRegions.update(regionId, { person_id: personId });
   emit('region-deleted'); // triggers viewer reload too
   if (props.mediaId) await load();
@@ -389,7 +395,11 @@ async function assignPersonToRegion(regionId: string, personId: string) {
 
 watch(() => props.mediaId, load, { immediate: true });
 
-defineExpose({ reload: load });
+function expandFaceTags() {
+  sections.faceTags = true;
+}
+
+defineExpose({ reload: load, expandFaceTags });
 </script>
 
 <style scoped>
@@ -570,6 +580,15 @@ defineExpose({ reload: load });
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.face-tag-clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 1px 4px;
+  margin: -1px -4px;
+}
+.face-tag-clickable:hover {
+  background: var(--surface-hover);
 }
 .face-tag-assign {
   flex: 1;

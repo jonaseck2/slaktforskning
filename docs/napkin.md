@@ -62,6 +62,17 @@
 2. **[2026-04-10] Prefer presentation enrichment over stored derived data**
    Do instead: when a feature derives info from existing data (auto-linking, computed labels), compute at render time in a pure function. Don't add columns/tables for derived data that needs sync. The data model stores facts, the UI enriches presentation. See `src/api/source-linker.ts` as the reference implementation.
 
+## Drag/Mouse Interactions
+
+1. **[2026-04-18] Window listeners for drag, never element listeners**
+   Do instead: attach mousemove/mouseup to `window` on mousedown. The mouse leaves element bounds during fast drags. Track active listeners with a cleanup function. Kill all `pointer-events` on the container and children during drag via CSS class (`!important` + `*` selector).
+
+2. **[2026-04-18] Never reset reactive state inside listener cleanup**
+   Do instead: keep `clearWindowListeners()` pure — only removes event listeners. Have a separate `resetDragState()` for refs. If cleanup resets `dragMode`, then `attachWindowListeners` (which calls cleanup first) will immediately undo any state set before the attach call.
+
+3. **[2026-04-18] Screen pixels during drag, fractions only on save**
+   Do instead: use raw `e.clientX/Y` deltas for drag math. Cache display dimensions at drag start. Render with percentages (`screenPx / displayWidth * 100 + '%'`). Convert to fractional coords only on mouseup. This gives 1:1 mouse tracking regardless of zoom.
+
 ## UI Conventions
 
 1. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**

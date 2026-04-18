@@ -98,7 +98,7 @@ watch(
 );
 
 async function search(query: string) {
-  if (!window.api || query.length < 1) {
+  if (!window.api || query.length < 2) {
     results.value = [];
     return;
   }
@@ -110,7 +110,7 @@ function onInput(e: Event) {
   searchQuery.value = val;
   open.value = true;
   if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => search(val), 150);
+  debounceTimer = setTimeout(() => search(val), 100);
 }
 
 function select(person: PersonResult) {
