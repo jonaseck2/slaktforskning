@@ -424,3 +424,40 @@ describe('language gazetteer integration', () => {
     expect(result).toBeNull();
   });
 });
+
+describe('hierarchy-aware matching', () => {
+  it('prefers country match over leaf match when input has hierarchical context', () => {
+    // "Dirleton, East Lothian, Skottland" should match Scotland (via language alias)
+    // not the Canadian locality named Dirleton, because "Skottland" anchors the hierarchy
+    const config: GazetteerConfig = {
+      enabledGazetteers: ['ca-provinces', 'world-admin1', 'lang-sv-geonames'],
+    };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Dirleton, East Lothian, Skottland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Scotland');
+    expect(result!.matchedPath).toContain('United Kingdom');
+  });
+
+  it('still matches leaf when input has no hierarchical context', () => {
+    // Plain "Dirleton" should still match the Canadian locality (exact leaf match)
+    const config: GazetteerConfig = {
+      enabledGazetteers: ['ca-provinces', 'world-admin1', 'lang-sv-geonames'],
+    };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Dirleton', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchQuality).toBe('exact');
+    expect(result!.matchedPath).toContain('Dirleton');
+  });
+
+  it('prefers USA over Canadian leaf for "Hudson Bay, Long Island, USA"', () => {
+    const config: GazetteerConfig = {
+      enabledGazetteers: ['ca-provinces', 'us-all-states', 'world-countries', 'lang-sv-geonames'],
+    };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Hudson Bay, Long Island, USA', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('United States');
+  });
+});
