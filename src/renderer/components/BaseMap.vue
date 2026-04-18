@@ -5,7 +5,7 @@
       :zoom="initialZoom"
       :center="initialCenter"
       :use-global-leaflet="false"
-      :options="{ zoomControl: false, scrollWheelZoom: false }"
+      :options="{ zoomControl: false, scrollWheelZoom: props.scrollWheelZoom }"
       @ready="onMapReady"
     >
       <LTileLayer
@@ -48,10 +48,12 @@ const props = withDefaults(defineProps<{
   initialZoom?: number;
   initialCenter?: [number, number];
   showFit?: boolean;
+  scrollWheelZoom?: boolean;
 }>(), {
   height: '100%',
   initialZoom: 4,
   initialCenter: () => [55, 15],
+  scrollWheelZoom: false,
   showFit: true,
 });
 
