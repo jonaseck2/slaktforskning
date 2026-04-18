@@ -2,13 +2,10 @@
 
 export const BOX_W = 200;
 export const MIN_BOX_H = 58;
-/** @deprecated Use MIN_BOX_H — box height is now dynamic per node. */
-export const BOX_H = MIN_BOX_H;
 export const V_GAP = 24;
 export const H_GAP = 70;
 export const GEN_GAP = 70;
 export const PAD = 10;
-export const ROW_H = MIN_BOX_H + V_GAP;
 
 // Box internal layout
 export const PORTRAIT_W = 34;
