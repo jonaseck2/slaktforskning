@@ -64,7 +64,7 @@ export function computePedigreeLayout(
   const G = maxDepth(root) + 1;
   const genXOf = (g: number) => PAD + g * (BOX_W + H_GAP);
 
-  // Leaf Y assignment via running cumulative cursor — replaces slot * ROW_H.
+  // Leaf Y assignment via running cumulative cursor — replaces fixed-height slot math.
   const leafCY = new Map<string, number>();
   let cursorY = PAD;
 
