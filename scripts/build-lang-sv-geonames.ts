@@ -386,6 +386,12 @@ async function main() {
     console.log(`  ${ok} ${check.key} → ${found} (expected: ${check.expected})`);
   }
 
+  // Also add country translations to world-admin1 — its country parent nodes
+  // need the same aliases so "São Paulo, Brasilien" fully matches.
+  for (const [countryName, svNames] of Object.entries(countryTranslations)) {
+    admin1Translations[countryName] = svNames;
+  }
+
   // Build output gazetteer
   const today = new Date().toISOString().slice(0, 10);
 

@@ -408,6 +408,15 @@ describe('language gazetteer integration', () => {
     expect(result!.matchedPath).toContain('Brazil');
   });
 
+  it('resolves "São Paulo, Brasilien" as exact match with world-admin1', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-admin1', 'lang-sv-geonames'] };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('São Paulo, Brasilien', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Brazil');
+    expect(result!.matchQuality).toBe('exact');
+  });
+
   it('does not resolve "Danmark" without language gazetteer', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries'] };
     const gazetteers = loadGazetteers(config);

@@ -434,6 +434,15 @@
       "Afghanistan > Sar-e Pol Province": [
         "Sar-e Pol"
       ],
+      "Aland Islands": [
+        "Ålands län"
+      ],
+      "Albania": [
+        "Albanien"
+      ],
+      "Algeria": [
+        "Algeriet"
+      ],
       "Algeria > Algiers": [
         "Alger"
       ],
@@ -446,11 +455,17 @@
       "Algeria > Oum el Bouaghi": [
         "Oum El Bouaghi"
       ],
+      "American Samoa": [
+        "Amerikanska Samoa"
+      ],
       "Angola > Kwanza Sul": [
         "Cuanza Sul"
       ],
       "Angola > Luanda Norte": [
         "Lunda Norte"
+      ],
+      "Antigua and Barbuda": [
+        "Antigua och Barbuda"
       ],
       "Antigua and Barbuda > Saint John Parish": [
         "Parish of Saint John"
@@ -473,6 +488,9 @@
       "Argentina > Tucuman": [
         "Tucumán"
       ],
+      "Armenia": [
+        "Armenien"
+      ],
       "Armenia > Kotayk": [
         "Kotajk"
       ],
@@ -488,8 +506,14 @@
       "Armenia > Yerevan": [
         "Jerevan"
       ],
+      "Australia": [
+        "Australien"
+      ],
       "Australia > Tasmania": [
         "Tasmanien"
+      ],
+      "Austria": [
+        "Österrike"
       ],
       "Austria > Carinthia": [
         "Kärnten"
@@ -511,6 +535,9 @@
       ],
       "Austria > Upper Austria": [
         "Oberösterreich"
+      ],
+      "Azerbaijan": [
+        "Azerbajdzjan"
       ],
       "Azerbaijan > Agsu District": [
         "Ağsu Rayonu"
@@ -596,6 +623,9 @@
       "Belarus > Vitebsk": [
         "Vitsebsks voblast"
       ],
+      "Belgium": [
+        "Belgien"
+      ],
       "Belgium > Brussels Capital": [
         "Brysselregionen"
       ],
@@ -638,17 +668,32 @@
       "Bolivia > Tarija Department": [
         "Tarija"
       ],
+      "Bonaire, Saint Eustatius and Saba ": [
+        "Karibiska Nederländerna"
+      ],
+      "Bosnia and Herzegovina": [
+        "Bosnien och Hercegovina"
+      ],
       "Botswana > Ngwaketsi": [
         "Southern"
       ],
       "Botswana > North-West": [
         "Northwest"
       ],
+      "Brazil": [
+        "Brasilien"
+      ],
       "Brazil > Federal District": [
         "Federala distrikt"
       ],
+      "British Virgin Islands": [
+        "Brittiska Jungfruöarna"
+      ],
       "Brunei > Brunei-Muara District": [
         "Brunei and Muara District"
+      ],
+      "Bulgaria": [
+        "Bulgarien"
       ],
       "Bulgaria > Sofia": [
         "Sofijska oblast"
@@ -659,11 +704,20 @@
       "Burundi > Bujumbura Mairie": [
         "Mairie de Bujumbura"
       ],
+      "Cabo Verde": [
+        "Kap Verde"
+      ],
+      "Cambodia": [
+        "Kambodja"
+      ],
       "Cambodia > Kampong Speu Province": [
         "Kampong Spoe"
       ],
       "Cambodia > Kampong Thom": [
         "Kompong Thom"
+      ],
+      "Cameroon": [
+        "Kamerun"
       ],
       "Cameroon > Adamaoua": [
         "Adamaouaregionen"
@@ -689,17 +743,29 @@
       "Cameroon > West": [
         "Västra regionen"
       ],
+      "Canada": [
+        "Kanada"
+      ],
       "Canada > Newfoundland and Labrador": [
         "Newfoundland och Labrador"
       ],
       "Canada > Prince Edward Island": [
         "Prins Edwards ö"
       ],
+      "Cayman Islands": [
+        "Caymanöarna"
+      ],
+      "Central African Republic": [
+        "Centralafrikanska republiken"
+      ],
       "Central African Republic > Kémo": [
         "Préfecture de la Kémo"
       ],
       "Central African Republic > Ombella-M'Poko": [
         "Ombella-Mpoko"
+      ],
+      "Chad": [
+        "Tchad"
       ],
       "Chad > Ouadaï": [
         "Ouaddaï"
@@ -724,6 +790,15 @@
       ],
       "Chile > Tarapacá": [
         "Región de Tarapacá"
+      ],
+      "China": [
+        "Kina"
+      ],
+      "Christmas Island": [
+        "Julön"
+      ],
+      "Cocos Islands": [
+        "Kokosöarna"
       ],
       "Colombia > Amazonas Department": [
         "Amazonas"
@@ -785,6 +860,12 @@
       "Colombia > Vichada Department": [
         "Vichada"
       ],
+      "Comoros": [
+        "Komorerna"
+      ],
+      "Cook Islands": [
+        "Cooköarna"
+      ],
       "Costa Rica > Alajuela Province": [
         "Alajuela"
       ],
@@ -802,6 +883,9 @@
       ],
       "Costa Rica > Puntarenas Province": [
         "Puntarenas"
+      ],
+      "Croatia": [
+        "Kroatien"
       ],
       "Croatia > County of Osijek-Baranja": [
         "Osijek-Baranja"
@@ -826,6 +910,9 @@
       ],
       "Croatia > Zagreb County": [
         "Zagreb"
+      ],
+      "Cuba": [
+        "Kuba"
       ],
       "Cuba > Ciego de Ávila Province": [
         "Provincia de Ciego de Ávila"
@@ -860,6 +947,12 @@
       "Cuba > Villa Clara Province": [
         "Provincia de Villa Clara"
       ],
+      "Curacao": [
+        "Curaçao"
+      ],
+      "Cyprus": [
+        "Cypern"
+      ],
       "Cyprus > Ammochostos": [
         "Famagusta"
       ],
@@ -878,6 +971,9 @@
       "Cyprus > Pafos": [
         "Eparchía Páfou"
       ],
+      "Czechia": [
+        "Tjeckien"
+      ],
       "Czechia > Central Bohemia": [
         "Mellersta Böhmen"
       ],
@@ -887,6 +983,9 @@
       "Czechia > South Moravian": [
         "Södra Mähren"
       ],
+      "Democratic Republic of the Congo": [
+        "Demokratiska Republiken Kongo"
+      ],
       "Democratic Republic of the Congo > Kasai-Central": [
         "Lulua"
       ],
@@ -895,6 +994,9 @@
       ],
       "Democratic Republic of the Congo > South Kivu": [
         "Södra Kivu"
+      ],
+      "Denmark": [
+        "Danmark"
       ],
       "Denmark > Capital Region": [
         "Huvudstadsregionen"
@@ -913,6 +1015,9 @@
       ],
       "Dominica > Saint George Parish": [
         "Saint George"
+      ],
+      "Dominican Republic": [
+        "Dominikanska republiken"
       ],
       "Dominican Republic > Azua Province": [
         "Ázua"
@@ -967,6 +1072,9 @@
       ],
       "Ecuador > Tungurahua Province": [
         "Tungurahua"
+      ],
+      "Egypt": [
+        "Egypten"
       ],
       "Egypt > Aswan": [
         "Assuan"
@@ -1028,6 +1136,9 @@
       "El Salvador > Santa Ana Department": [
         "Santa Ana department"
       ],
+      "Equatorial Guinea": [
+        "Ekvatorialguinea"
+      ],
       "Eritrea > Anseba": [
         "Ansebaregionen"
       ],
@@ -1045,6 +1156,9 @@
       ],
       "Eritrea > Southern Red Sea": [
         "Södra rödahavsregionen"
+      ],
+      "Estonia": [
+        "Estland"
       ],
       "Estonia > Harjumaa": [
         "Harju län"
@@ -1067,6 +1181,9 @@
       "Eswatini > Manzini Region": [
         "Manzini"
       ],
+      "Ethiopia": [
+        "Etiopien"
+      ],
       "Ethiopia > Āfar": [
         "Afar"
       ],
@@ -1078,6 +1195,12 @@
       ],
       "Ethiopia > Oromiya": [
         "Oromia"
+      ],
+      "Falkland Islands": [
+        "Falklandsöarna"
+      ],
+      "Faroe Islands": [
+        "Färöarna"
       ],
       "Fiji > Central": [
         "Centrala divisionen"
@@ -1139,6 +1262,9 @@
       "Finland > Uusimaa": [
         "Nyland"
       ],
+      "France": [
+        "Frankrike"
+      ],
       "France > Bourgogne": [
         "Bourgogne-Franche-Comté"
       ],
@@ -1154,6 +1280,15 @@
       "France > Rhône-Alpes": [
         "Auvergne-Rhône-Alpes"
       ],
+      "French Guiana": [
+        "Franska Guyana"
+      ],
+      "French Polynesia": [
+        "Franska Polynesien"
+      ],
+      "French Southern Territories": [
+        "Franska Sydterritorierna"
+      ],
       "Gambia > Lower River": [
         "Lower River Division"
       ],
@@ -1162,6 +1297,9 @@
       ],
       "Gambia > Upper River": [
         "Upper River Division"
+      ],
+      "Georgia": [
+        "Georgien"
       ],
       "Georgia > Abkhazia": [
         "Abchazien"
@@ -1187,6 +1325,9 @@
       "Georgia > Shida Kartli": [
         "Inre Kartlien"
       ],
+      "Germany": [
+        "Tyskland"
+      ],
       "Germany > Baden-Wurttemberg": [
         "Baden-Württemberg"
       ],
@@ -1211,6 +1352,9 @@
       "Germany > Saxony-Anhalt": [
         "Sachsen-Anhalt"
       ],
+      "Greece": [
+        "Grekland"
+      ],
       "Greece > Central Macedonia": [
         "Mellersta Makedonien"
       ],
@@ -1222,6 +1366,9 @@
       ],
       "Greece > West Macedonia": [
         "Västra Makedonien"
+      ],
+      "Greenland": [
+        "Grönland"
       ],
       "Grenada > Saint George Parish": [
         "Saint George"
@@ -1310,6 +1457,12 @@
       "Honduras > Yoro Department": [
         "Departamento de Yoro"
       ],
+      "Hong Kong": [
+        "Hongkong"
+      ],
+      "Hungary": [
+        "Ungern"
+      ],
       "Hungary > Heves County": [
         "Heves"
       ],
@@ -1328,6 +1481,9 @@
       "Hungary > Zala County": [
         "Zala"
       ],
+      "Iceland": [
+        "Island"
+      ],
       "Iceland > Capital Region": [
         "Huvudstadsregion"
       ],
@@ -1337,11 +1493,17 @@
       "Iceland > Southern Peninsula": [
         "Södra halvön"
       ],
+      "India": [
+        "Indien"
+      ],
       "India > Andaman and Nicobar": [
         "Andaman & Nicobar"
       ],
       "India > West Bengal": [
         "Bengalen"
+      ],
+      "Indonesia": [
+        "Indonesien"
       ],
       "Indonesia > Bangka–Belitung Islands": [
         "Bangka-Belitung"
@@ -1448,6 +1610,9 @@
       "Iran > Yazd Province": [
         "Yazd"
       ],
+      "Iraq": [
+        "Irak"
+      ],
       "Iraq > Anbar": [
         "al-Anbar"
       ],
@@ -1463,6 +1628,9 @@
       "Iraq > Salah ad Din": [
         "Saladin"
       ],
+      "Ireland": [
+        "Irland"
+      ],
       "Israel > Central District": [
         "Centrala distriktet"
       ],
@@ -1471,6 +1639,9 @@
       ],
       "Israel > Southern District": [
         "Södra distriktet"
+      ],
+      "Italy": [
+        "Italien"
       ],
       "Italy > Aosta Valley": [
         "Aostadalen"
@@ -1504,6 +1675,9 @@
       ],
       "Italy > Umbria": [
         "Umbrien"
+      ],
+      "Ivory Coast": [
+        "Elfenbenskusten"
       ],
       "Ivory Coast > Bas-Sassandra District": [
         "Bas-Sassandra"
@@ -1676,6 +1850,9 @@
       "Japan > Yamanashi": [
         "Yamanashi prefektur"
       ],
+      "Jordan": [
+        "Jordanien"
+      ],
       "Jordan > Ajloun": [
         "Ajlun"
       ],
@@ -1684,6 +1861,9 @@
       ],
       "Jordan > Tafielah": [
         "Tafilah"
+      ],
+      "Kazakhstan": [
+        "Kazakstan"
       ],
       "Kazakhstan > East Kazakhstan": [
         "Östkazakstan"
@@ -1805,6 +1985,9 @@
       "Kuwait > Al Jahra Governorate": [
         "Muḩāfaz̧at al Jahrā'"
       ],
+      "Kyrgyzstan": [
+        "Kirgizistan"
+      ],
       "Kyrgyzstan > Chuy Region": [
         "Tjüj"
       ],
@@ -1838,6 +2021,9 @@
       "Laos > Savannakhet Province": [
         "Savannakhet"
       ],
+      "Latvia": [
+        "Lettland"
+      ],
       "Latvia > Cēsis Municipality": [
         "Cēsis kommun"
       ],
@@ -1846,6 +2032,9 @@
       ],
       "Latvia > Salaspils Municipality": [
         "Salaspils kommun"
+      ],
+      "Lebanon": [
+        "Libanon"
       ],
       "Lebanon > Baalbek-Hermel Governorate": [
         "Mohafazat Baalbek-Hermel"
@@ -1865,6 +2054,9 @@
       "Liberia > Nimba": [
         "Nimba County"
       ],
+      "Libya": [
+        "Libyen"
+      ],
       "Libya > Jabal al Gharbi": [
         "Al Jabal al Gharbi"
       ],
@@ -1873,6 +2065,9 @@
       ],
       "Libya > Sabha District": [
         "Sabha"
+      ],
+      "Lithuania": [
+        "Litauen"
       ],
       "Lithuania > Klaipėda County": [
         "Klaipėda"
@@ -1889,11 +2084,29 @@
       "Lithuania > Telsiai": [
         "Telšiai"
       ],
+      "Luxembourg": [
+        "Luxemburg"
+      ],
+      "Madagascar": [
+        "Madagaskar"
+      ],
       "Malaysia > Penang": [
         "Pinang"
       ],
+      "Maldives": [
+        "Maldiverna"
+      ],
+      "Marshall Islands": [
+        "Marshallöarna"
+      ],
+      "Mauritania": [
+        "Mauretanien"
+      ],
       "Mauritania > Hodh Ech Chargi": [
         "Hodh Ech Chargui"
+      ],
+      "Mexico": [
+        "Mexiko"
       ],
       "Mexico > México": [
         "Mexiko"
@@ -1903,6 +2116,12 @@
       ],
       "Mexico > Querétaro": [
         "Querétaro Arteaga"
+      ],
+      "Micronesia": [
+        "Mikronesien"
+      ],
+      "Moldova": [
+        "Moldavien"
       ],
       "Moldova > Cahul": [
         "Cahul rajon"
@@ -1928,6 +2147,9 @@
       "Moldova > Ungheni": [
         "Ungheni rajon"
       ],
+      "Mongolia": [
+        "Mongoliet"
+      ],
       "Mongolia > Arkhangai Province": [
         "Archangaj"
       ],
@@ -1949,6 +2171,12 @@
       "Mongolia > Uvs Province": [
         "Uvs"
       ],
+      "Morocco": [
+        "Marocko"
+      ],
+      "Mozambique": [
+        "Moçambique"
+      ],
       "Mozambique > Cabo Delgado Province": [
         "Cabo Delgado"
       ],
@@ -1966,6 +2194,9 @@
       ],
       "Mozambique > Zambezia Province": [
         "Zambezia"
+      ],
+      "Myanmar": [
+        "Myanmar (Burma)"
       ],
       "Myanmar > Bago Region": [
         "Bagoregionen"
@@ -2032,6 +2263,12 @@
       ],
       "Nauru > Yaren District": [
         "Yaren"
+      ],
+      "New Caledonia": [
+        "Nya Kaledonien"
+      ],
+      "New Zealand": [
+        "Nya Zeeland"
       ],
       "New Zealand > Hawke's Bay Region": [
         "Hawke's Bay"
@@ -2201,6 +2438,21 @@
       "Nigeria > Zamfara State": [
         "Zamfara"
       ],
+      "Norfolk Island": [
+        "Norfolkön"
+      ],
+      "North Korea": [
+        "Nordkorea"
+      ],
+      "North Macedonia": [
+        "Nordmakedonien"
+      ],
+      "Northern Mariana Islands": [
+        "Nordmarianerna"
+      ],
+      "Norway": [
+        "Norge"
+      ],
       "Norway > Agder": [
         "Agder fylke"
       ],
@@ -2258,6 +2510,9 @@
       "Pakistan > Khyber Pakhtunkhwa": [
         "Nordvästra gränsprovinsen"
       ],
+      "Palestinian Territory": [
+        "Palestina"
+      ],
       "Palestinian Territory > Gaza Strip": [
         "Gazaremsan"
       ],
@@ -2272,6 +2527,9 @@
       ],
       "Panama > Veraguas Province": [
         "Veraguas"
+      ],
+      "Papua New Guinea": [
+        "Papua Nya Guinea"
       ],
       "Papua New Guinea > East New Britain Province": [
         "East New Britain"
@@ -2339,6 +2597,9 @@
       "Peru > San Martín Department": [
         "San Martín"
       ],
+      "Philippines": [
+        "Filippinerna"
+      ],
       "Philippines > Autonomous Region in Muslim Mindanao": [
         "Muslimska Mindanao"
       ],
@@ -2374,6 +2635,12 @@
       ],
       "Philippines > Zamboanga Peninsula": [
         "Zamboangahalvön"
+      ],
+      "Pitcairn": [
+        "Pitcairnöarna"
+      ],
+      "Poland": [
+        "Polen"
       ],
       "Poland > Greater Poland": [
         "Storpolens vojvodskap"
@@ -2428,6 +2695,15 @@
       ],
       "Qatar > Umm Salal": [
         "Umm Salal Kommun"
+      ],
+      "Republic of the Congo": [
+        "Republiken Kongo"
+      ],
+      "Reunion": [
+        "Réunion"
+      ],
+      "Romania": [
+        "Rumänien"
       ],
       "Romania > Alba County": [
         "Alba"
@@ -2527,6 +2803,9 @@
       ],
       "Romania > Vâlcea County": [
         "Vâlcea"
+      ],
+      "Russia": [
+        "Ryssland"
       ],
       "Russia > Adygeya Republic": [
         "Adygeiska republiken"
@@ -2774,6 +3053,33 @@
       "Rwanda > Western Province": [
         "Västra provinsen"
       ],
+      "Saint Barthelemy": [
+        "S:t Barthélemy"
+      ],
+      "Saint Helena": [
+        "S:t Helena"
+      ],
+      "Saint Kitts and Nevis": [
+        "S:t Kitts och Nevis"
+      ],
+      "Saint Lucia": [
+        "S:t Lucia"
+      ],
+      "Saint Martin": [
+        "Saint-Martin"
+      ],
+      "Saint Pierre and Miquelon": [
+        "S:t Pierre och Miquelon"
+      ],
+      "Saint Vincent and the Grenadines": [
+        "S:t Vincent och Grenadinerna"
+      ],
+      "Sao Tome and Principe": [
+        "São Tomé och Príncipe"
+      ],
+      "Saudi Arabia": [
+        "Saudiarabien"
+      ],
       "Saudi Arabia > 'Asir Region": [
         "'Asir"
       ],
@@ -2795,6 +3101,12 @@
       "Senegal > Diourbel Region": [
         "Diourbel"
       ],
+      "Serbia": [
+        "Serbien"
+      ],
+      "Seychelles": [
+        "Seychellerna"
+      ],
       "Seychelles > La Rivière Anglaise": [
         "English River"
       ],
@@ -2809,6 +3121,9 @@
       ],
       "Sierra Leone > Western Area": [
         "Freetown Peninsula"
+      ],
+      "Slovakia": [
+        "Slovakien"
       ],
       "Slovakia > Banská Bystrica Region": [
         "Banská Bystrica"
@@ -2831,14 +3146,23 @@
       "Slovakia > Žilina Region": [
         "Žilina"
       ],
+      "Slovenia": [
+        "Slovenien"
+      ],
       "Slovenia > Ljubljana": [
         "Ljubljana stadskommun"
       ],
       "Slovenia > Urban Municipality of Maribor": [
         "Maribors stadskommun"
       ],
+      "Solomon Islands": [
+        "Salomonöarna"
+      ],
       "Solomon Islands > Guadalcanal Province": [
         "Guadalcanal provinsen"
+      ],
+      "South Africa": [
+        "Sydafrika"
       ],
       "South Africa > Eastern Cape": [
         "Östra Kapprovinsen"
@@ -2855,6 +3179,15 @@
       "South Africa > Western Cape": [
         "Västra Kapprovinsen"
       ],
+      "South Georgia and the South Sandwich Islands": [
+        "Sydgeorgien och Sydsandwichöarna"
+      ],
+      "South Korea": [
+        "Sydkorea"
+      ],
+      "South Sudan": [
+        "Sydsudan"
+      ],
       "South Sudan > Northern Bahr al Ghazal": [
         "Northern Bahr el Ghazal"
       ],
@@ -2863,6 +3196,9 @@
       ],
       "South Sudan > Western Bahr al Ghazal": [
         "Western Bahr el Ghazal"
+      ],
+      "Spain": [
+        "Spanien"
       ],
       "Spain > Andalusia": [
         "Andalusien"
@@ -2972,11 +3308,20 @@
       "Sudan > White Nile": [
         "An-Nil al-Abyad"
       ],
+      "Suriname": [
+        "Surinam"
+      ],
       "Suriname > Paramaribo District": [
         "Paramaribo"
       ],
       "Suriname > Wanica District": [
         "Wanica"
+      ],
+      "Svalbard and Jan Mayen": [
+        "Svalbard och Jan Mayen"
+      ],
+      "Sweden": [
+        "Sverige"
       ],
       "Sweden > Blekinge": [
         "Blekinge län"
@@ -3041,6 +3386,9 @@
       "Sweden > Västra Götaland": [
         "Västra Götalands län"
       ],
+      "Switzerland": [
+        "Schweiz"
+      ],
       "Switzerland > Basel-City": [
         "Basel-Stadt"
       ],
@@ -3055,6 +3403,9 @@
       ],
       "Switzerland > Zurich": [
         "Zürich"
+      ],
+      "Syria": [
+        "Syrien"
       ],
       "Syria > Daraa": [
         "Dar'a"
@@ -3073,6 +3424,9 @@
       ],
       "Syria > Suwayda": [
         "As-Suwayda'"
+      ],
+      "Tajikistan": [
+        "Tadzjikistan"
       ],
       "Tajikistan > Khatlon Province": [
         "Chatlon"
@@ -3104,6 +3458,9 @@
       "Thailand > Suphan Buri": [
         "Suphanburi"
       ],
+      "The Netherlands": [
+        "Nederländerna"
+      ],
       "The Netherlands > North Brabant": [
         "Noord-Brabant"
       ],
@@ -3113,14 +3470,23 @@
       "The Netherlands > South Holland": [
         "Sydholland"
       ],
+      "Timor Leste": [
+        "Östtimor"
+      ],
       "Timor Leste > Dili Municipality": [
         "Dili"
+      ],
+      "Trinidad and Tobago": [
+        "Trinidad och Tobago"
       ],
       "Trinidad and Tobago > Borough of Arima": [
         "Arima"
       ],
       "Trinidad and Tobago > Diego Martin Regional Corporation": [
         "Diego Martin"
+      ],
+      "Tunisia": [
+        "Tunisien"
       ],
       "Tunisia > Ariana Governorate": [
         "Ariana"
@@ -3179,6 +3545,9 @@
       "Tunisia > Zaghouan Governorate": [
         "Zaghouan"
       ],
+      "Turkey": [
+        "Turkiet"
+      ],
       "Turkey > Adıyaman Province": [
         "Adıyaman"
       ],
@@ -3232,6 +3601,15 @@
       ],
       "Turkmenistan > Ahal": [
         "Achal"
+      ],
+      "Turks and Caicos Islands": [
+        "Turks- och Caicosöarna"
+      ],
+      "U.S. Virgin Islands": [
+        "Amerikanska Jungfruöarna"
+      ],
+      "Ukraine": [
+        "Ukraina"
       ],
       "Ukraine > Cherkasy": [
         "Tjerkasy oblast"
@@ -3290,14 +3668,23 @@
       "Ukraine > Zaporizhzhia": [
         "Zaporizjzja oblast"
       ],
+      "United Arab Emirates": [
+        "Förenade Arabemiraten"
+      ],
       "United Arab Emirates > Abu Dhabi": [
         "Emiratet Abu Dhabi"
+      ],
+      "United Kingdom": [
+        "Storbritannien"
       ],
       "United Kingdom > Northern Ireland": [
         "Nordirland"
       ],
       "United Kingdom > Scotland": [
         "Skottland"
+      ],
+      "United States": [
+        "USA"
       ],
       "United States > California": [
         "Kalifornien"
@@ -3362,6 +3749,9 @@
       "Uzbekistan > Xorazm Region": [
         "Khwarezm"
       ],
+      "Vatican": [
+        "Heliga stolen (Vatikanstaten)"
+      ],
       "Venezuela > Distrito Federal": [
         "Venezuelas huvudstadsdistrikt"
       ],
@@ -3385,6 +3775,15 @@
       ],
       "Vietnam > Thanh Hóa Province": [
         "Thanh Hoa"
+      ],
+      "Wallis and Futuna": [
+        "Wallis- och Futunaöarna"
+      ],
+      "Western Sahara": [
+        "Västsahara"
+      ],
+      "Yemen": [
+        "Jemen"
       ],
       "Yemen > Abyan Governorate": [
         "Abyan"
