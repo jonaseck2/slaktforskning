@@ -86,6 +86,46 @@
         </div>
       </div>
 
+      <!-- Persons section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('persons.title')" :count="personCount" :collapsed="!sections.persons" @toggle="toggleSection('persons')" />
+        <div v-if="sections.persons" class="panel-section-body">
+          <PlacePersonsSection :place-id="placeId!" />
+        </div>
+      </div>
+
+      <!-- Events section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
+        <div v-if="sections.events" class="panel-section-body">
+          <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
+        </div>
+      </div>
+
+      <!-- Citations section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" :action-label="'+ ' + $t('sourceDetail.addCitation')" @toggle="toggleSection('citations')" @action="showCitationForm = true" />
+        <div v-if="sections.citations" class="panel-section-body">
+          <PlaceCitationsSection ref="citationsSectionRef" :place-id="placeId!" />
+        </div>
+      </div>
+
+      <!-- Media section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
+        <div v-if="sections.media" class="panel-section-body">
+          <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" />
+        </div>
+      </div>
+
+      <!-- Media Timeline section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
+        <div v-if="sections.mediaTimeline" class="panel-section-body">
+          <MediaTimeline entity-type="place" :entity-id="placeId!" />
+        </div>
+      </div>
+
       <!-- Address section -->
       <div class="panel-section">
         <SectionHeader :title="$t('places.address')" :collapsed="!sections.address" @toggle="toggleSection('address')" />
@@ -158,46 +198,6 @@
               </li>
             </ul>
           </template>
-        </div>
-      </div>
-
-      <!-- Persons section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('persons.title')" :count="personCount" :collapsed="!sections.persons" @toggle="toggleSection('persons')" />
-        <div v-if="sections.persons" class="panel-section-body">
-          <PlacePersonsSection :place-id="placeId!" />
-        </div>
-      </div>
-
-      <!-- Events section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
-        <div v-if="sections.events" class="panel-section-body">
-          <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
-        </div>
-      </div>
-
-      <!-- Citations section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" :action-label="'+ ' + $t('sourceDetail.addCitation')" @toggle="toggleSection('citations')" @action="showCitationForm = true" />
-        <div v-if="sections.citations" class="panel-section-body">
-          <PlaceCitationsSection ref="citationsSectionRef" :place-id="placeId!" />
-        </div>
-      </div>
-
-      <!-- Media section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
-        <div v-if="sections.media" class="panel-section-body">
-          <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" />
-        </div>
-      </div>
-
-      <!-- Media Timeline section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
-        <div v-if="sections.mediaTimeline" class="panel-section-body">
-          <MediaTimeline entity-type="place" :entity-id="placeId!" />
         </div>
       </div>
     </template>
