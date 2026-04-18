@@ -423,6 +423,7 @@ onActivated(load);
   min-height: 0;
   position: relative;
   overflow: hidden;
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
 
 /* Tab bar row: back button + FilterChips + optional toggle */
@@ -431,7 +432,6 @@ onActivated(load);
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-lg);
-  border-bottom: 1px solid var(--surface-border-subtle);
 }
 
 /* List/chart toggle button in pedigree tab */
