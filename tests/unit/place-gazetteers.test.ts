@@ -389,3 +389,29 @@ describe('loadGazetteers', () => {
     expect(all.find(g => g.id === 'sv-forsamlingar')).toBeDefined();
   });
 });
+
+describe('language gazetteer integration', () => {
+  it('resolves "Danmark" when lang-sv-geonames is enabled with world-countries', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Danmark', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Denmark');
+    expect(result!.matchQuality).not.toBe('ambiguous');
+  });
+
+  it('resolves "Brasilien" when lang-sv-geonames is enabled', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Brasilien', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Brazil');
+  });
+
+  it('does not resolve "Danmark" without language gazetteer', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries'] };
+    const gazetteers = loadGazetteers(config);
+    const result = resolvePlace('Danmark', gazetteers);
+    expect(result).toBeNull();
+  });
+});
