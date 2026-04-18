@@ -1181,6 +1181,7 @@ export default {
     imported: 'Imported',
     kindPoint: 'Point',
     kindBoundary: 'Boundary',
+    kindLanguage: 'Language',
   },
   undo: {
     createPerson: 'Create person',

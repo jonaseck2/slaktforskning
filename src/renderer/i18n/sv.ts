@@ -1160,6 +1160,7 @@ export default {
     imported: 'Importerat',
     kindPoint: 'Punkt',
     kindBoundary: 'Gräns',
+    kindLanguage: 'Språk',
   },
   undo: {
     createPerson: 'Skapa person',
