@@ -275,8 +275,15 @@ Add link rules for MyHeritage, Geni, and other genealogy platforms. These are be
 #### Onboarding & Welcome Screen [backlog]
 First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder. Depends on design system being in place first.
 
-#### Face/Region Tagging UI [backlog]
-Drawing canvas in MediaLightbox or MediaPanel for creating face/region rectangles on images. Displaying existing regions as overlays. Person assignment popup. All API, IPC, MCP tools, i18n strings, and tests already exist (v0.64.0, v0.67.0) — only the Vue UI is missing.
+#### Media Viewer & Face Tagging [planned]
+Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigation, zoom/pan controls, face tag drawing on the canvas. All API, IPC, MCP tools, i18n strings, and tests already exist (v0.64.0, v0.67.0) — only the Vue UI is missing.
+- Spec: [docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md)
+
+#### Media Viewer — Future Extensions [backlog]
+- AI-assisted face detection (suggest regions automatically)
+- Resize/move existing face tag regions
+- Face tag suggestions based on other tagged photos
+- Crop/rotate/edit image tools
 
 #### Wall Chart Generation UI [backlog]
 UI button/dialog to trigger wall chart generation from the app. Paper size selection, font customization, tiled PDF output. SVG generation API already exists (v0.62.0).
