@@ -26,36 +26,6 @@ export function circleSvgSizeForGenerations(generations: number): number {
   return (outerR + padding) * 2;
 }
 
-const BRANCH_BASE: readonly string[] = [
-  '#6a9cc0', // 0 — paternal grandfather (slate blue)
-  '#6aaa78', // 1 — paternal grandmother (sage green)
-  '#c07848', // 2 — maternal grandfather (terracotta)
-  '#a078b0', // 3 — maternal grandmother (dusty mauve)
-];
-
-function lightenHex(hex: string, amount: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const lr = Math.min(255, Math.round(r + (255 - r) * amount));
-  const lg = Math.min(255, Math.round(g + (255 - g) * amount));
-  const lb = Math.min(255, Math.round(b + (255 - b) * amount));
-  return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
-}
-
-function computeFill(ahnNum: number, gen: number, isEmpty: boolean): string {
-  let base: string;
-  if (gen === 0) {
-    base = '#2c3e50';
-  } else if (gen === 1) {
-    base = ahnNum === 2 ? '#5888b0' : '#b07860';
-  } else {
-    const rootAhn = ahnNum >> (gen - 2);    // lands in range 4–7
-    const branchIdx = rootAhn - 4;          // 0–3
-    base = lightenHex(BRANCH_BASE[branchIdx] ?? '#cccccc', (gen - 2) * 0.07);
-  }
-  return isEmpty ? lightenHex(base, 0.55) : base;
-}
 
 function toRad(deg: number): number { return (deg * Math.PI) / 180; }
 
@@ -107,7 +77,11 @@ export interface CircleSegment {
   isFocal: boolean;
 }
 
-export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegment[] {
+export function computeCircleLayout(
+  tree: PedigreeTree,
+  maxGen = 6,
+  fillFn?: (ahnNum: number, gen: number, isEmpty: boolean, person: PersonNode | null) => string,
+): CircleSegment[] {
   const segments: CircleSegment[] = [];
   const limit = Math.min(Math.max(maxGen, 1), 6);
 
@@ -128,7 +102,9 @@ export function computeCircleLayout(tree: PedigreeTree, maxGen = 6): CircleSegme
       const isFocal = gen === 0;
 
       const pathD = isFocal ? '' : buildPath(rInner, rOuter, startDeg, endDeg);
-      const fill  = computeFill(ahnNum, gen, isEmpty);
+      const fill = fillFn
+        ? fillFn(ahnNum, gen, isEmpty, person)
+        : isEmpty ? '#e0e0e0' : (gen === 0 ? '#2c3e50' : '#999');
 
       const rMid = (rInner + rOuter) / 2;
 

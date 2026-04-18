@@ -46,7 +46,7 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="box.isFocal ? 'white' : '#333'"
           ><tspan
-              v-for="(part, pi) in truncateNameParts(fullNameParts(box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname), 20)"
+              v-for="(part, pi) in truncateNameParts(chartNameParts(box.person.givenName, box.person.surname, box.person.preferredName), 20)"
               :key="pi"
               :text-decoration="part.underline ? 'underline' : undefined"
             >{{ part.text }}</tspan></text>
@@ -194,7 +194,7 @@ import { computeDescendantLayout, BOX_W, BOX_H } from '../../utils/chart-layout'
 import { fetchDescendantTree, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, DescendantNode, PlaceholderBox } from '../../utils/chart-layout';
-import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
+import { chartNameParts, truncateNameParts } from '../../utils/nameUtils';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
 

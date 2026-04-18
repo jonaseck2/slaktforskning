@@ -29,6 +29,30 @@
           />
           {{ $t('linkRules.english') }}
         </label>
+        <label class="locale-toggle">
+          <input
+            type="checkbox"
+            :checked="config.enabledLocales.includes('de')"
+            @change="toggleLocale('de', ($event.target as HTMLInputElement).checked)"
+          />
+          {{ $t('linkRules.german') }}
+        </label>
+        <label class="locale-toggle">
+          <input
+            type="checkbox"
+            :checked="config.enabledLocales.includes('da')"
+            @change="toggleLocale('da', ($event.target as HTMLInputElement).checked)"
+          />
+          {{ $t('linkRules.danish') }}
+        </label>
+        <label class="locale-toggle">
+          <input
+            type="checkbox"
+            :checked="config.enabledLocales.includes('no')"
+            @change="toggleLocale('no', ($event.target as HTMLInputElement).checked)"
+          />
+          {{ $t('linkRules.norwegian') }}
+        </label>
       </div>
     </div>
 
@@ -173,13 +197,16 @@ import AppButton from '../components/ui/AppButton.vue';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
 import { svRules } from '../../api/link-rules/sv';
 import { enRules } from '../../api/link-rules/en';
+import { deRules } from '../../api/link-rules/de';
+import { daRules } from '../../api/link-rules/da';
+import { noRules } from '../../api/link-rules/no';
 import { universalRules } from '../../api/link-rules/universal';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const allDefaults: LinkRule[] = [...universalRules, ...svRules, ...enRules];
+const allDefaults: LinkRule[] = [...universalRules, ...svRules, ...enRules, ...deRules, ...daRules, ...noRules];
 const defaultIds = new Set(allDefaults.map((r) => r.id));
 
 const config = ref<LinkRuleOverrides>({ enabledLocales: ['sv'], overrides: {} });

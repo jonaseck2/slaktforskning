@@ -190,6 +190,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.104.1 | Docs: comprehensive test skill rewrite with 10 E2E pitfall patterns, quality test fix | — |
 | v0.105.0 | Cross-platform build scripts + DMG maker for macOS | — |
 | v0.106.0 | Open source publishing: governance files, plans, spec | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
+| v0.107.0 | Link Rules Expansion: de/da/no rule sets, sv/en additions, LinkedText db config fix, locale toggles | [archive](plans/archive/2026-04-18-link-rules-expansion.md) |
 ---
 
 ## Research
@@ -286,10 +287,6 @@ How to display names in space-constrained contexts (charts, circle chart). Tillt
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
-#### Link Rules Expansion [planned]
-13 new rules across 3 new locales (German, Danish, Norwegian) + additions to Swedish and English. Covers Archion, Matricula, Arkivalieronline, Digitalarkivet, MyHeritage, Geni, WikiTree, BillionGraves, SVAR, DDB. Also fixes LinkedText to read db config.
-- Plan: [plans/2026-04-18-link-rules-expansion.md](plans/2026-04-18-link-rules-expansion.md)
-
 ---
 
 #### Onboarding & Welcome Screen [backlog]
@@ -298,7 +295,7 @@ First-run experience: welcome screen, getting started guidance, empty tree with 
 #### Media Viewer & Face Tagging [done]
 Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigation, zoom/pan controls, face tag drawing on the canvas.
 - Spec: [docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md)
-- Plan: [plans/2026-04-18-media-viewer-face-tagging.md](plans/2026-04-18-media-viewer-face-tagging.md)
+- Plan: [plans/archive/2026-04-18-media-viewer-face-tagging.md](plans/archive/2026-04-18-media-viewer-face-tagging.md)
 
 #### Media Viewer — Future Extensions [backlog]
 - AI-assisted face detection (suggest regions automatically)

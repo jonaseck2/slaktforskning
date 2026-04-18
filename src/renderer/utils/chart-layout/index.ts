@@ -24,3 +24,4 @@ export { computeHourglassLayout, maxDescendantDepthTP } from './hourglass';
 export { computeTimelineLayout } from './timeline';
 export { computeDescendantLayout } from './descendant';
 export { buildHourglassTree, buildPedigreeTreePerson, buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
+export type { FanSegment, ArcSpan, FanLayoutOptions } from '../fanLayout';

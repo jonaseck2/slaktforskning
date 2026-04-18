@@ -107,7 +107,7 @@ test('modal has role=dialog and aria-modal', async () => {
 test('person detail view has aria-labelledby sections', async () => {
   const person = await app.createPerson({ given_name: 'Test', surname: 'Person' });
   await app.navigate('/persons/' + person.id);
-  await app.settle(200);
+  await app.waitForText('Test Person');
 
   const sections = await app.executeJs<number>(`
     document.querySelectorAll('section[aria-labelledby]').length
@@ -130,7 +130,7 @@ test('person detail view has aria-labelledby sections', async () => {
 test('person detail has accessible sections', async () => {
   const person = await app.createPerson({ given_name: 'Back', surname: 'Test' });
   await app.navigate('/persons/' + person.id);
-  await app.settle(200);
+  await app.waitForText('Back Test');
 
   // PersonDetailView has no back button — check that sections have proper labels instead
   const hasSections = await app.executeJs<boolean>(`
@@ -161,7 +161,7 @@ test('toast notification has role=alert', async () => {
 test('clickable table rows have tabindex and role', async () => {
   await app.createPerson({ given_name: 'Row', surname: 'Test' });
   await app.navigate('/');
-  await app.settle(200);
+  await app.waitForText('Row');
 
   const hasKeyboardAccess = await app.executeJs<boolean>(`
     (() => {

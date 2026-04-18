@@ -13,3 +13,4 @@ coverage/
 /src/import/genney/lib/
 /genney-media/
 .claude/worktrees/
+.env*

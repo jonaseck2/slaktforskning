@@ -72,11 +72,11 @@ describe('VisualizationView', () => {
 
   // ── Tab chip accessibility ──────────────────────────────────────────────────
 
-  it('renders 5 tab chips in the FilterChips bar', async () => {
+  it('renders 6 tab chips in the FilterChips bar', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     const chips = wrapper.findAll('.chip-btn');
-    expect(chips).toHaveLength(5);
+    expect(chips).toHaveLength(6);
   });
 
   it('active tab chip has the active class, others do not', async () => {

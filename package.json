@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.106.0",
+  "version": "0.107.0",
   "description": "A genealogy desktop application",
   "main": ".vite/build/index.js",
   "private": true,
@@ -24,6 +24,11 @@
     "email": "jonas.ahnstedt@imeto.se"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jonaseck2/slaktforskning.git"
+  },
+  "homepage": "https://github.com/jonaseck2/slaktforskning",
   "devDependencies": {
     "@electron-forge/cli": "^7.11.1",
     "@electron-forge/maker-deb": "^7.11.1",

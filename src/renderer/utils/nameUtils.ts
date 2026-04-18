@@ -126,6 +126,62 @@ export function formatFullName(name: {
   return parts.join(' ');
 }
 
+/**
+ * Select the display name from a list of PersonName records.
+ * Returns the record with the highest sort_order (most recent name — typically the
+ * married/changed name). Falls back to the record with the lowest sort_order (primary)
+ * if the array has only one element.
+ *
+ * This is the canonical way to pick which name record to show in lists and charts.
+ */
+export function getDisplayName<T extends { sort_order: number }>(names: T[]): T | null {
+  if (names.length === 0) return null;
+  return [...names].sort((a, b) => b.sort_order - a.sort_order)[0];
+}
+
+/**
+ * Abbreviated name parts for space-constrained contexts (chart boxes, circle segments).
+ * Shows preferred_name (tilltalsnamn) if set, otherwise the first token of given_name.
+ * Appends surname. The selected given-name token is marked underline: true.
+ *
+ * Examples:
+ *   givenName="Bengt Gunnar", preferredName="Gunnar", surname="Persson"
+ *     → [{ text:"Gunnar", underline:true }, { text:" ", underline:false }, { text:"Persson", underline:false }]
+ *   givenName="Anna Maria", preferredName=null, surname="Holm"
+ *     → [{ text:"Anna", underline:false }, { text:" ", underline:false }, { text:"Holm", underline:false }]
+ */
+export function chartNameParts(
+  givenName: string | null,
+  surname: string | null,
+  preferredName: string | null,
+): NamePart[] {
+  const parts: NamePart[] = [];
+  const tokens = (givenName ?? '').split(' ').filter(t => t.length > 0);
+  const displayGiven = preferredName ?? tokens[0] ?? null;
+  if (displayGiven) {
+    parts.push({ text: displayGiven, underline: !!preferredName });
+  }
+  if (surname) {
+    if (parts.length > 0) parts.push({ text: ' ', underline: false });
+    parts.push({ text: surname, underline: false });
+  }
+  return parts;
+}
+
+/**
+ * Plain-string abbreviated name for chart boxes and space-constrained non-component contexts.
+ * Uses preferred_name (tilltalsnamn) if set, otherwise the first token of given_name, then surname.
+ */
+export function formatChartName(name: {
+  given_name?: string | null;
+  surname?: string | null;
+  preferred_name?: string | null;
+}): string {
+  const tokens = (name.given_name ?? '').split(' ').filter(Boolean);
+  const first = name.preferred_name ?? tokens[0] ?? '';
+  return [first, name.surname].filter(Boolean).join(' ');
+}
+
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };

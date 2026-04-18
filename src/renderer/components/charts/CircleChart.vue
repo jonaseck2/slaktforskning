@@ -10,6 +10,10 @@
         :curved-text="curvedText"
         :width="svgDisplaySize"
         :height="svgDisplaySize"
+        :stroke-color="dark ? 'rgba(255,255,255,0.15)' : 'white'"
+        :empty-pattern-stroke="dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'"
+        :focal-shadow-color="dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)'"
+        :no-gradients="highContrast"
         @navigate="$emit('navigate', $event)"
         @personenter="(p, e) => tooltipRef?.show(p, e.clientX, e.clientY)"
         @personmove="(e) => tooltipRef?.move(e.clientX, e.clientY)"
@@ -31,6 +35,13 @@
         title="Böj text längs cirkeln"
       >⌒</button>
       <span class="zoom-sep">|</span>
+      <button
+        class="zoom-btn"
+        :class="{ active: colorMode === 'sex' }"
+        @click="toggleColorMode"
+        :title="$t('visualization.circleColorMode')"
+      >{{ colorMode === 'branch' ? $t('visualization.circleColorBranch') : $t('visualization.circleColorSex') }}</button>
+      <span class="zoom-sep">|</span>
       <button class="zoom-btn" @click="zoomIn" title="Zoom in">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" @click="zoomOut">−</button>
@@ -46,6 +57,11 @@ import { computeCircleLayout, type CircleSegment } from '../../utils/circleLayou
 import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { PedigreeTree } from '../../utils/chart-layout';
+import {
+  readThemeColors, isDarkMode, isHighContrast,
+  branchBaseColors, branchFill, sexFill, highContrastBranchFill,
+  type CircleColorMode,
+} from '../../utils/circleColors';
 import CircleChartSvg from './CircleChartSvg.vue';
 import ChartTooltip from './ChartTooltip.vue';
 
@@ -60,6 +76,9 @@ const loading = ref(true);
 const tree = ref<PedigreeTree | null>(null);
 const selectedGens = ref(6);
 const curvedText = ref(false);
+const colorMode = ref<CircleColorMode>(
+  (localStorage.getItem('circle-color-mode') as CircleColorMode) || 'branch',
+);
 const outerRef = ref<HTMLElement | null>(null);
 const containerSize = ref(700);
 
@@ -86,10 +105,33 @@ onUnmounted(() => {
 
 function incrGens() { if (selectedGens.value < 6) selectedGens.value++; }
 function decrGens() { if (selectedGens.value > 1) selectedGens.value--; }
+function toggleColorMode() {
+  colorMode.value = colorMode.value === 'branch' ? 'sex' : 'branch';
+}
+watch(colorMode, (v) => localStorage.setItem('circle-color-mode', v));
 
-const layout = computed<CircleSegment[]>(() =>
-  tree.value ? computeCircleLayout(tree.value, selectedGens.value) : [],
-);
+const dark = computed(() => isDarkMode());
+const highContrast = computed(() => isHighContrast());
+
+const layout = computed<CircleSegment[]>(() => {
+  if (!tree.value) return [];
+  const isDark = dark.value;
+  const theme = readThemeColors();
+  const branches = branchBaseColors(theme.accent);
+
+  if (highContrast.value) {
+    return computeCircleLayout(tree.value, selectedGens.value, (ahnNum, gen, isEmpty) => {
+      return highContrastBranchFill(ahnNum, gen, isEmpty, branches);
+    });
+  }
+
+  return computeCircleLayout(tree.value, selectedGens.value, (ahnNum, gen, isEmpty, person) => {
+    if (colorMode.value === 'sex' && person) {
+      return sexFill(person.sex, gen, isEmpty, theme, isDark);
+    }
+    return branchFill(ahnNum, gen, isEmpty, branches, isDark);
+  });
+});
 
 const focalSegment = computed(() => layout.value.find(s => s.isFocal) ?? null);
 
