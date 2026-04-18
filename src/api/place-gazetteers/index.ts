@@ -1,10 +1,26 @@
 import type { Gazetteer, GazetteerConfig, GazetteerNode } from './types';
+// Swedish
 import svSocknar from './data/sv-socknar.json';
 import svForsamlingar from './data/sv-forsamlingar.json';
 import svOrter from './data/sv-orter.json';
 import svGardar from './data/sv-gardar.json';
 import svKyrkor from './data/sv-kyrkor.json';
 import svSockenstadBoundaries from './data/sv-sockenstad-boundaries.json';
+// Danish
+import dkSogne from './data/dk-sogne.json';
+import dkSogneDawa from './data/dk-sogne-dawa.json';
+// Norwegian
+import noKommuner from './data/no-kommuner.json';
+// Finnish
+import fiKunnat from './data/fi-kunnat.json';
+// Icelandic
+import isSveitarfelog from './data/is-sveitarfelog.json';
+// North American
+import usImmigrationStates from './data/us-immigration-states.json';
+import caProvinces from './data/ca-provinces.json';
+// Global
+import worldCountries from './data/world-countries.json';
+import worldAdmin1 from './data/world-admin1.json';
 
 // Historical Swedish county (län) names → modern equivalents
 // These were renamed in the 1997 county reform
@@ -31,12 +47,28 @@ function enrichHistoricalAliases(gaz: Gazetteer): Gazetteer {
 }
 
 const BUNDLED_GAZETTEERS: Gazetteer[] = [
+  // Swedish
   svSocknar as Gazetteer,
   svForsamlingar as Gazetteer,
   svOrter as Gazetteer,
   svGardar as Gazetteer,
   svKyrkor as Gazetteer,
   svSockenstadBoundaries as Gazetteer,
+  // Danish
+  dkSogne as Gazetteer,
+  dkSogneDawa as Gazetteer,
+  // Norwegian
+  noKommuner as Gazetteer,
+  // Finnish
+  fiKunnat as Gazetteer,
+  // Icelandic
+  isSveitarfelog as Gazetteer,
+  // North American
+  usImmigrationStates as Gazetteer,
+  caProvinces as Gazetteer,
+  // Global
+  worldCountries as Gazetteer,
+  worldAdmin1 as Gazetteer,
 ].map(enrichHistoricalAliases);
 
 export function getAllGazetteers(): Gazetteer[] {
