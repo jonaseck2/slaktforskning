@@ -409,6 +409,100 @@ When building marker data in a `computed`, avoid per-item allocations:
 - Build lookup Maps **once** at the top of the computed, not inside the loop
 - The `usePlaceResolver` composable caches resolve results — safe to call in a computed loop
 
+### Map reactivity on data changes
+
+Maps load data once on mount and cache it at module level. **Pins do not move automatically when entities are edited via a side panel.** The pattern to fix this:
+
+1. **Panel emits `'entity-updated'`** after saving:
+   ```typescript
+   const emit = defineEmits<{ 'entity-updated': [id: string]; /* ... */ }>();
+   async function saveField(field: string, value: unknown) {
+     await window.api.entity.update(id, { [field]: value });
+     (entity.value as Record<string, unknown>)[field] = value;
+     emit('entity-updated', id);
+   }
+   ```
+
+2. **Map view listens and refreshes that specific item** (not the full list):
+   ```typescript
+   async function refreshPlace(id: string) {
+     const updated = (await window.api.places.get(id)) as PlaceRow | null;
+     if (!updated) return;
+     const idx = places.value.findIndex(p => p.id === id);
+     if (idx >= 0) {
+       places.value[idx] = updated;
+       places.value = [...places.value]; // trigger reactivity
+       cachedPlaces = places.value;
+       invalidate();        // clear resolver cache
+       await ensureLoaded(); // rebuild resolver
+     }
+   }
+   ```
+
+3. **Wire up in template:**
+   ```html
+   <PlacePanel :place-id="selectedId" @place-updated="refreshPlace" />
+   ```
+
+**Key rule:** always invalidate the `usePlaceResolver` cache after name changes — the old name's resolved coordinates are stale. Call `invalidate()` then `ensureLoaded()`.
+
+---
+
+## Refreshing Views on Data Changes
+
+The app uses `dataVersionStore` (Pinia) to detect mutations. The preload `mutating()` wrapper calls `dataChangedListeners` after every `window.api` write, which increments `dataVersionStore.version`.
+
+**But not all views react to this automatically.** Views that cache data at the module level (MapView, etc.) must explicitly refresh. Two patterns:
+
+### Pattern 1: Panel-emits-refresh (preferred for targeted updates)
+
+The panel emits an event after saving. The parent view refreshes only the changed item. Used by MapView + PlacePanel, MediaView + MediaPanel. See the map reactivity section above.
+
+### Pattern 2: Watch dataVersionStore (for full reloads)
+
+Use when many items might change or when targeted refresh is impractical:
+
+```typescript
+import { useDataVersionStore } from '../stores/dataVersion';
+const dataVersionStore = useDataVersionStore();
+watch(() => dataVersionStore.version, () => { loadAll(); });
+```
+
+**Prefer Pattern 1** — it's faster (single-item refresh) and doesn't cause the map/list to flash.
+
+---
+
+## PlacePicker as Name Editor
+
+When a field needs gazetteer-aware autocomplete for place names, **reuse `PlacePicker`** — don't build custom autocomplete. PlacePicker already has database search, gazetteer search, keyboard navigation, and create-new.
+
+### Using PlacePicker to rename a place
+
+Point the picker at the current place's ID. When the user selects a different place, copy its data onto the current place:
+
+```html
+<PlacePicker :model-value="placeId" @select="onNamePlaceSelected" />
+```
+
+```typescript
+async function onNamePlaceSelected(selected: { id: string; name: string }) {
+  if (selected.id === currentId) return;
+  const source = await window.api.places.get(selected.id);
+  const path = await window.api.places.getPath(selected.id);
+  const updates: Record<string, unknown> = { name: path || selected.name };
+  if (source) {
+    if (source.latitude != null) updates.latitude = source.latitude;
+    if (source.longitude != null) updates.longitude = source.longitude;
+    if (source.place_type) updates.place_type = source.place_type;
+    if (source.parent_place_id) updates.parent_place_id = source.parent_place_id;
+  }
+  await window.api.places.update(currentId, updates);
+  await reload();
+}
+```
+
+**Key rule:** always copy lat/lon, type, and parent — not just the name. Otherwise the map pin won't move and fields go stale.
+
 ---
 
 ## Design Principles
