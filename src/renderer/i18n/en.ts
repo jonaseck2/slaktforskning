@@ -912,6 +912,7 @@ export default {
       linkTo: 'Link to',
       unlink: 'Unlink',
       openExternal: 'Open in app',
+      open: 'View fullscreen',
     },
     filter: {
       search: 'Search media',

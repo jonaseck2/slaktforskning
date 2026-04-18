@@ -912,6 +912,7 @@ export default {
       linkTo: 'Länka till',
       unlink: 'Ta bort länk',
       openExternal: 'Öppna i app',
+      open: 'Visa i helskärm',
     },
     filter: {
       search: 'Sök media',

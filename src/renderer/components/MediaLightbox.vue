@@ -69,47 +69,7 @@
                   class="person-link"
                   @click="$emit('close')"
                 >{{ link.label }}</router-link>
-                <button class="btn-unlink" @click="unlinkEntity(link.linkId)" :title="$t('media.lightbox.unlink')">&#10005;</button>
               </div>
-            </div>
-          </div>
-
-          <!-- Add link controls -->
-          <div class="link-add-section">
-            <div v-if="!showLinkPicker" class="link-add-trigger">
-              <button class="btn-sm" @click="showLinkPicker = true">{{ $t('media.lightbox.linkTo') }}</button>
-            </div>
-            <div v-else class="link-picker-panel">
-              <div class="link-picker-tabs">
-                <button
-                  v-for="tab in linkTabs"
-                  :key="tab"
-                  class="tab-btn"
-                  :class="{ active: linkTab === tab }"
-                  @click="linkTab = tab"
-                >{{ entityTypeLabel(tab) }}</button>
-              </div>
-              <div class="link-picker-input">
-                <PersonPicker
-                  v-if="linkTab === 'person'"
-                  :model-value="null"
-                  :placeholder="$t('app.search')"
-                  @select="linkToPerson"
-                />
-                <PlacePicker
-                  v-if="linkTab === 'place'"
-                  :model-value="null"
-                  :placeholder="$t('app.search')"
-                  @select="linkToPlace"
-                />
-                <div v-if="linkTab === 'source'" class="source-picker">
-                  <select v-model="selectedSourceId" @change="linkToSource">
-                    <option value="">{{ $t('app.search') }}</option>
-                    <option v-for="s in allSources" :key="s.id" :value="s.id">{{ s.title || '—' }}</option>
-                  </select>
-                </div>
-              </div>
-              <button class="btn-cancel btn-sm" @click="showLinkPicker = false">{{ $t('common.cancel') }}</button>
             </div>
           </div>
         </div>
@@ -121,8 +81,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import PersonPicker from './PersonPicker.vue';
-import PlacePicker from './PlacePicker.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 
@@ -145,11 +103,6 @@ interface LinkedEntity {
   label: string;
 }
 
-interface SourceItem {
-  id: string;
-  title: string;
-}
-
 const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
 
 const props = defineProps<{
@@ -161,7 +114,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   'update:currentIndex': [index: number];
-  linkChanged: [];
 }>();
 
 const { t } = useI18n();
@@ -169,12 +121,6 @@ const lightboxEl = ref<HTMLDivElement | null>(null);
 const dataUrl = ref<string | null>(null);
 const linkedEntities = ref<LinkedEntity[]>([]);
 const loadingLinks = ref(true);
-const showLinkPicker = ref(false);
-const linkTab = ref<'person' | 'place' | 'source'>('person');
-const selectedSourceId = ref('');
-const allSources = ref<SourceItem[]>([]);
-
-const linkTabs = ['person', 'place', 'source'] as const;
 
 const currentItem = computed(() => props.mediaItems[props.currentIndex] ?? null);
 
@@ -271,49 +217,6 @@ async function resolveEntityLabel(entityType: string, entityId: string): Promise
   return entityId.slice(0, 8);
 }
 
-async function unlinkEntity(linkId: string) {
-  await window.api.media.removeLink(linkId);
-  await loadLinks();
-  emit('linkChanged');
-}
-
-async function linkToPerson(person: { id: string }) {
-  if (!currentItem.value) return;
-  await window.api.media.addLink({
-    media_id: currentItem.value.id,
-    entity_type: 'person',
-    entity_id: person.id,
-  });
-  showLinkPicker.value = false;
-  await loadLinks();
-  emit('linkChanged');
-}
-
-async function linkToPlace(place: { id: string }) {
-  if (!currentItem.value) return;
-  await window.api.media.addLink({
-    media_id: currentItem.value.id,
-    entity_type: 'place',
-    entity_id: place.id,
-  });
-  showLinkPicker.value = false;
-  await loadLinks();
-  emit('linkChanged');
-}
-
-async function linkToSource() {
-  if (!currentItem.value || !selectedSourceId.value) return;
-  await window.api.media.addLink({
-    media_id: currentItem.value.id,
-    entity_type: 'source',
-    entity_id: selectedSourceId.value,
-  });
-  selectedSourceId.value = '';
-  showLinkPicker.value = false;
-  await loadLinks();
-  emit('linkChanged');
-}
-
 async function openExternal() {
   if (!currentItem.value) return;
   await window.api.media.openFile(currentItem.value.id);
@@ -331,23 +234,11 @@ function onKeydown(e: KeyboardEvent) {
 
 watch(() => [props.visible, props.currentIndex], async () => {
   if (!props.visible) return;
-  showLinkPicker.value = false;
   await Promise.all([loadImage(), loadLinks()]);
   await nextTick();
   lightboxEl.value?.focus();
 }, { immediate: true });
 
-watch(() => props.visible, async (vis) => {
-  if (vis && showLinkPicker.value) {
-    allSources.value = (await window.api.sources.list()) as SourceItem[];
-  }
-});
-
-watch(() => showLinkPicker.value, async (val) => {
-  if (val) {
-    allSources.value = (await window.api.sources.list()) as SourceItem[];
-  }
-});
 </script>
 
 <style scoped>
@@ -525,57 +416,5 @@ watch(() => showLinkPicker.value, async (val) => {
 .link-item .person-link {
   color: #7ab3f0;
   font-size: var(--font-sm);
-}
-.btn-unlink {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 3px;
-}
-.btn-unlink:hover { color: #e53e3e; background: rgba(229,62,62,0.1); }
-
-.link-add-section {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #333;
-}
-.link-picker-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.link-picker-tabs {
-  display: flex;
-  gap: 4px;
-}
-.link-picker-tabs .tab-btn {
-  font-size: var(--font-xs);
-  padding: 3px 8px;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  color: #aaa;
-  border-radius: 3px;
-  cursor: pointer;
-}
-.link-picker-tabs .tab-btn.active {
-  background: #333;
-  color: #fff;
-  border-color: #666;
-}
-.link-picker-input :deep(input),
-.link-picker-input select {
-  width: 100%;
-  padding: 4px 8px;
-  font-size: var(--font-sm);
-  background: #2a2a2a;
-  border: 1px solid #444;
-  color: #e0e0e0;
-  border-radius: 4px;
-}
-.source-picker select {
-  width: 100%;
 }
 </style>

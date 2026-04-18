@@ -54,6 +54,11 @@
             <span class="card-file-ext">{{ (item.format || '?').toUpperCase() }}</span>
           </div>
           <span v-if="item.is_missing" class="missing-badge">{{ $t('media.isMissing') }}</span>
+          <button
+            class="card-expand"
+            :title="$t('media.lightbox.open')"
+            @click.stop="openLightbox(idx)"
+          >&#x26F6;</button>
         </div>
         <div class="card-info">
           <span class="card-title">{{ mediaDisplayName(item.title, item.file_ref) }}</span>
@@ -96,7 +101,7 @@
               v-if="thumbnails[item.id]"
               :src="thumbnails[item.id]"
               class="table-thumb"
-              @click="openLightbox(idx)"
+              @click.stop="openLightbox(idx)"
             />
             <span v-else class="table-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
           </td>
@@ -138,7 +143,6 @@
       :visible="lightboxVisible"
       @close="lightboxVisible = false"
       @update:current-index="lightboxIndex = $event"
-      @link-changed="reload"
     />
   </div>
   <template v-if="selectedMediaId">
@@ -315,7 +319,7 @@ async function loadThumbnails(mediaItems: MediaItem[]) {
 }
 
 function selectMedia(id: string) {
-  selectedMediaId.value = selectedMediaId.value === id ? null : id;
+  selectedMediaId.value = id;
 }
 
 function openLightbox(idx: number) {
@@ -496,6 +500,31 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   color: var(--text-muted);
 }
 
+.card-expand {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  opacity: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.1s;
+  backdrop-filter: blur(4px);
+}
+.card-expand:hover {
+  background: var(--surface);
+}
+.gallery-card:hover .card-expand {
+  opacity: 1;
+}
 .card-delete {
   position: absolute;
   top: 6px;

@@ -174,6 +174,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.97.3 | Fix: consistent count labels (showingOf) and view toggle labels across Places, Media, People views | — |
 | v0.97.4 | Fix: add explicit space between given name and surname in PersonNamesTable | — |
 | v0.97.5 | Fix: parallelize panel relationship loading to prevent scroll lock | — |
+| v0.97.6 | Fix: separate media selection from lightbox, make lightbox view-only | — |
 ---
 
 ## Research
