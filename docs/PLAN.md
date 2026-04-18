@@ -165,6 +165,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.96.3 | Fix: PlacePanel section headers show counts (persons, events, citations, media) | — |
 | v0.96.4 | Fix: map zoom controls above attribution, map respects sheet rounded corners | — |
 | v0.96.5 | Fix: PlacePanel adds + Event and + Citation action buttons to section headers | — |
+| v0.96.6 | Fix: map inset with padding and rounded corners, zoom controls above attribution | — |
 ---
 
 ## Research
