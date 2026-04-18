@@ -191,14 +191,17 @@ export function listGazetteers(db: Database): GazetteerInfo[] {
     source: g.source,
     bundled: true,
     kind: g.kind,
+    rootName: g.root.name,
   }));
 
   const rows = queryAll<GazetteerRow & { data: string }>(db, 'SELECT id, name, locale, description, source_json, data FROM gazetteers ORDER BY created_at');
   const imported = rows.map((row): GazetteerInfo => {
-    let kind: 'point' | 'boundary' | undefined;
+    let kind: 'point' | 'boundary' | 'language' | undefined;
+    let rootName: string | undefined;
     try {
       const parsed = JSON.parse(row.data);
       kind = parsed.kind;
+      rootName = parsed.root?.name;
     } catch { /* ignore */ }
     return {
       id: row.id,
@@ -208,6 +211,7 @@ export function listGazetteers(db: Database): GazetteerInfo[] {
       source: row.source_json ? (JSON.parse(row.source_json) as GazetteerSource) : undefined,
       bundled: false,
       kind,
+      rootName,
     };
   });
 

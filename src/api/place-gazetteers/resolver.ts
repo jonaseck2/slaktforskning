@@ -50,6 +50,8 @@ interface MatchCandidate {
   depth: number;
   treeDepth: number;
   contradictions: number;
+  /** Whether the last input component (typically the broadest geographic scope) matched a node on this path */
+  lastComponentMatched: boolean;
 }
 
 // Name index: maps normalized name → list of { node, ancestors } for O(1) lookup
@@ -89,6 +91,7 @@ function findMatches(
 ): MatchCandidate[] {
   const index = getNameIndex(root);
   const candidates: MatchCandidate[] = [];
+  const lastComponent = components[components.length - 1];
 
   // Find all nodes that match any component
   for (const component of components) {
@@ -99,12 +102,22 @@ function findMatches(
     for (const { node, ancestors } of entries) {
       const fullPath = [...ancestors, node];
       const pathSet = new Set(fullPath);
-      // Check which other components match nodes on this path
+      // Check which components match nodes on this path.
+      // Use greedy 1:1 matching so one input component can only satisfy
+      // one path node — prevents "Iowa" from matching both Iowa (state)
+      // and Iowa (county) on the same path.
+      const usedPathIndices = new Set<number>();
       const remaining = components.filter(c => {
         const cn = normalize(c);
-        return !fullPath.some(n =>
-          normalize(n.name) === cn || (n.aliases?.some(a => normalize(a) === cn) ?? false)
-        );
+        for (let i = 0; i < fullPath.length; i++) {
+          if (usedPathIndices.has(i)) continue;
+          const n = fullPath[i];
+          if (normalize(n.name) === cn || (n.aliases?.some(a => normalize(a) === cn) ?? false)) {
+            usedPathIndices.add(i);
+            return false; // matched — not remaining
+          }
+        }
+        return true; // no match found
       });
 
       // Count contradictions: unmatched components that match nodes
@@ -129,6 +142,7 @@ function findMatches(
         depth: fullPath.length,
         treeDepth: getTreeDepth(node) + fullPath.length - 1,
         contradictions,
+        lastComponentMatched: !remaining.includes(lastComponent),
       });
     }
   }
@@ -142,9 +156,13 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
   candidates.sort((a, b) => {
     // 1. Fewer contradictions first (unmatched components that exist elsewhere)
     if (a.contradictions !== b.contradictions) return a.contradictions - b.contradictions;
-    // 2. Fewer unmatched components
+    // 2. Prefer candidates where the last input component matched (geographic anchor)
+    // In genealogy, places are formatted specific→general, so the last component
+    // is typically the country/region — matching it is a strong signal.
+    if (a.lastComponentMatched !== b.lastComponentMatched) return a.lastComponentMatched ? -1 : 1;
+    // 3. Fewer unmatched components
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
-    // 3. Deeper match
+    // 4. Deeper match
     return b.depth - a.depth;
   });
 
@@ -208,8 +226,14 @@ export function searchGazetteer(
 }
 
 function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
+  // 1. Last component = broadest geographic scope (country/region) — strongest signal.
+  //    "Pitcairn, Skottland" matching Scotland beats matching Pitcairn, PA.
+  if (a.lastComponentMatched !== b.lastComponentMatched) return a.lastComponentMatched;
+  // 2. Fewer contradictions (unmatched components that exist elsewhere)
   if (a.contradictions !== b.contradictions) return a.contradictions < b.contradictions;
+  // 3. Fewer unmatched components
   if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length < b.unmatched.length;
+  // 4. Deeper match
   return a.depth > b.depth;
 }
 
