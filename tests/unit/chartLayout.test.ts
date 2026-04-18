@@ -402,6 +402,38 @@ describe('computeHourglassLayout', () => {
   });
 });
 
+describe('computeHourglassLayout — dynamic heights and curved paths', () => {
+  it('sizes each box via measureBoxHeight', () => {
+    const focal: PersonNode = {
+      id: 'f',
+      givenName: 'Aaaaa Bbbbb Ccccc Ddddd Eeeee',
+      surname: 'Fffff Ggggg',
+      preferredName: null, nickname: null, sex: 'M', living: true,
+      birthDate: '1940', deathDate: '2010',
+      birthPlace: 'Very Long Place', deathPlace: null, photoUrl: null,
+    };
+    const tree = hourglass(focal);
+    const layout = computeHourglassLayout(tree);
+    const focalBox = layout.boxes.find(b => b.isFocal)!;
+    expect(focalBox.h).toBeGreaterThan(MIN_BOX_H);
+  });
+
+  it('emits curved SVG paths instead of lines', () => {
+    const focal: PersonNode = {
+      id: 'f', sex: 'M', living: true,
+      givenName: 'F', surname: 'F',
+      preferredName: null, nickname: null,
+      birthDate: null, deathDate: null, birthPlace: null, deathPlace: null, photoUrl: null,
+    };
+    const dad: PersonNode = { ...focal, id: 'd' };
+    const tree = hourglass(focal, [dad, null]);
+    const layout = computeHourglassLayout(tree);
+    expect(layout.paths.length).toBeGreaterThan(0);
+    expect(layout.lines.length).toBe(0);
+    for (const d of layout.paths) expect(d).toMatch(/^M |^D:M /);
+  });
+});
+
 describe('ancestorFootprint', () => {
   it('excludes placeholder spouses from footprint', () => {
     const phSpouse: TreePerson = { person: p('__ph_spouse_a'), parents: [], children: [], spouses: [], isPlaceholder: true };
@@ -1242,7 +1274,8 @@ describe('hourglass sibling support', () => {
     const withoutSibs = computeHourglassLayout(
       hourglass(p('f', { sex: 'M' }), [p('p0'), p('p1')]),
     );
-    expect(withSibs.lines.length).toBeGreaterThan(withoutSibs.lines.length);
+    // Paths replaced lines in the curved-connector refactor; siblings add extra curved elbows.
+    expect(withSibs.paths.length).toBeGreaterThan(withoutSibs.paths.length);
   });
 });
 
@@ -1326,21 +1359,53 @@ describe('hourglass outline overlap detection', () => {
   });
 
   it('outline placeholders are connected to their owner', () => {
-    // Issue: after collision avoidance shifts outlines, they may become disconnected
+    // Issue: after collision avoidance shifts outlines, they may become disconnected.
+    // Dashed paths carry a "D:" prefix — each placeholder should have a dashed path whose
+    // endpoint lies on one of the placeholder's edge centers (top/bottom/left/right).
     const tree = hourglass(p('f', { sex: 'M' }), [p('dad'), p('mom')], [null, null, null, null], [p('c1'), p('c2')], [p('s1')]);
-    const { placeholders, placeholderLines } = computeHourglassLayout(tree, new Set(), 'c1');
-    // Every placeholder should have at least one placeholder line touching it
+    const { placeholders, paths } = computeHourglassLayout(tree, new Set(), 'c1');
+    const dashedPaths = paths.filter(d => d.startsWith('D:')).map(d => d.slice(2));
+
+    // Extract the start (M x,y) and end point (track through the path).
+    function endpoints(d: string): Array<[number, number]> {
+      const tokens = d.split(/\s+/);
+      let x = 0, y = 0;
+      const pts: Array<[number, number]> = [];
+      for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t === 'M') {
+          const [mx, my] = tokens[i + 1].split(',').map(parseFloat);
+          x = mx; y = my; pts.push([x, y]);
+          i++;
+        } else if (t === 'H') {
+          x = parseFloat(tokens[++i]);
+        } else if (t === 'V') {
+          y = parseFloat(tokens[++i]);
+        } else if (t === 'Q') {
+          // Q cx,cy ex,ey — advance to end point
+          const _ctl = tokens[++i];
+          const [ex, ey] = tokens[++i].split(',').map(parseFloat);
+          void _ctl;
+          x = ex; y = ey;
+        }
+      }
+      pts.push([x, y]);
+      return pts;
+    }
+
     for (const ph of placeholders) {
       const cx = ph.x + BOX_W / 2;
-      const touches = placeholderLines.some(ln =>
-        (ln.x1 === cx && (ln.y1 === ph.y || ln.y1 === ph.y + BOX_H)) ||
-        (ln.x2 === cx && (ln.y2 === ph.y || ln.y2 === ph.y + BOX_H)) ||
-        (ln.x1 === ph.x && ln.y1 === ph.y + BOX_H / 2) ||
-        (ln.x2 === ph.x && ln.y2 === ph.y + BOX_H / 2) ||
-        (ln.x1 === ph.x + BOX_W && ln.y1 === ph.y + BOX_H / 2) ||
-        (ln.x2 === ph.x + BOX_W && ln.y2 === ph.y + BOX_H / 2)
-      );
-      expect(touches, `Placeholder ${ph.role} for ${ph.childPersonId} at (${ph.x},${ph.y}) has no connecting line`).toBe(true);
+      const edgeYs = [ph.y, ph.y + MIN_BOX_H];
+      const edgeYC = ph.y + MIN_BOX_H / 2;
+      const touches = dashedPaths.some(d => {
+        const pts = endpoints(d);
+        return pts.some(([x, y]) =>
+          (Math.abs(x - cx) < 0.5 && edgeYs.some(ey => Math.abs(y - ey) < 0.5)) ||
+          (Math.abs(x - ph.x) < 0.5 && Math.abs(y - edgeYC) < 0.5) ||
+          (Math.abs(x - (ph.x + BOX_W)) < 0.5 && Math.abs(y - edgeYC) < 0.5)
+        );
+      });
+      expect(touches, `Placeholder ${ph.role} for ${ph.childPersonId} at (${ph.x},${ph.y}) has no connecting path`).toBe(true);
     }
   });
 

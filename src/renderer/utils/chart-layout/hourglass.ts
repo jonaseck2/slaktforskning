@@ -10,8 +10,10 @@
 // 6. Recursive placement — ALL outlines placed inline (no post-layout)
 // 7. SVG dimensions, shift, collapse buttons, extract placeholders
 
-import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
-import { BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
+import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox } from './types';
+import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
+import { measureBoxHeight } from './measure';
+import { curvedElbow } from './connectors';
 import { injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -103,6 +105,20 @@ export function computeHourglassLayout(
   const root = cloneTree(inputRoot);
   if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
+  // ── 1b. Pre-measure heights for every node in the tree ─────────────────────
+  const heightOf = new Map<string, number>();
+  function measureAll(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    heightOf.set(node.person.id, node.isPlaceholder ? MIN_BOX_H : measureBoxHeight(node.person));
+    for (const p of node.parents) measureAll(p, visited);
+    for (const c of node.children) measureAll(c, visited);
+    for (const s of node.spouses) measureAll(s, visited);
+    if (node.siblings) for (const s of node.siblings) measureAll(s, visited);
+  }
+  measureAll(root);
+  const hOf = (node: TreePerson): number => heightOf.get(node.person.id) ?? MIN_BOX_H;
+
   // ── 2. Placement helpers (used by placeSpouses) ────────────────────────────
 
   /** Whether spouses go left (true for female). */
@@ -185,10 +201,51 @@ export function computeHourglassLayout(
   const A = maxAncestorDepth(root);
   const D = maxDescDepth(root);
 
+  // Per-row max heights, collected by walking the tree.
+  const ancRowMaxH: number[] = new Array(A + 1).fill(MIN_BOX_H);
+  const descRowMaxH: number[] = new Array(D + 1).fill(MIN_BOX_H);
+
+  function collectAncestorHeights(node: TreePerson, depth: number, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    if (depth <= A) ancRowMaxH[depth] = Math.max(ancRowMaxH[depth], hOf(node));
+    for (const par of node.parents) if (!par.isPlaceholder) collectAncestorHeights(par, depth + 1, visited);
+  }
+  function collectDescHeights(node: TreePerson, depth: number, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    if (depth > 0 && depth <= D) descRowMaxH[depth] = Math.max(descRowMaxH[depth], hOf(node));
+    for (const c of node.children) if (!c.isPlaceholder) collectDescHeights(c, depth + 1, visited);
+  }
+  collectAncestorHeights(root, 0);
+  collectDescHeights(root, 0);
+
+  // Focal row height also accounts for focal's spouses and siblings (all on same row).
+  let focalRowH = Math.max(ancRowMaxH[0], descRowMaxH[0], MIN_BOX_H, hOf(root));
+  for (const sp of root.spouses) focalRowH = Math.max(focalRowH, hOf(sp));
+  for (const sib of (root.siblings ?? [])) focalRowH = Math.max(focalRowH, hOf(sib));
+  ancRowMaxH[0] = focalRowH;
+  descRowMaxH[0] = focalRowH;
+
   const ancestorTopPad = PAD + 8;
-  const focalRowY = ancestorTopPad + A * (BOX_H + GEN_GAP);
-  const ancestorRowY = (depth: number) => focalRowY - depth * (BOX_H + GEN_GAP);
-  const descRowY = (depth: number) => focalRowY + depth * (BOX_H + GEN_GAP);
+  const ancestorRowTopY: number[] = new Array(A + 1);
+  // focalRowY = ancestorTopPad + sum of (anc row h + GEN_GAP) for depths 1..A
+  let aboveSum = 0;
+  for (let d = 1; d <= A; d++) aboveSum += ancRowMaxH[d] + GEN_GAP;
+  const focalRowY = ancestorTopPad + aboveSum;
+  ancestorRowTopY[0] = focalRowY;
+  for (let d = 1; d <= A; d++) {
+    ancestorRowTopY[d] = ancestorRowTopY[d - 1] - GEN_GAP - ancRowMaxH[d];
+  }
+
+  const descendantRowTopY: number[] = new Array(D + 1);
+  descendantRowTopY[0] = focalRowY;
+  for (let d = 1; d <= D; d++) {
+    descendantRowTopY[d] = descendantRowTopY[d - 1] + (d === 1 ? focalRowH : descRowMaxH[d - 1]) + GEN_GAP;
+  }
+
+  const ancestorRowY = (depth: number) => ancestorRowTopY[depth];
+  const descRowY = (depth: number) => descendantRowTopY[depth];
 
   // Ancestor subtree width (upward). Uses computeFootprint (includes placeholder
   // spouse so there's room for the outline) but skips placeholder parents (those
@@ -359,41 +416,40 @@ export function computeHourglassLayout(
   // Spacing has already reserved room for spouses and cross-direction outlines.
 
   const boxes: BoxLayout[] = [];
-  const lines: Line[] = [];
-  const outlineLines: Line[] = []; // Lines connecting to outline placeholders (rendered dashed)
+  const paths: string[] = [];
+  const placeholderPaths: string[] = [];
 
   /** Place REAL spouse boxes and marriage line beside a node. Skips placeholder spouses (Pass 4 handles those). */
   function placeSpouses(node: TreePerson, nodeCX: number, nodeY: number): void {
     const realSpouses = node.spouses.filter(s => !s.isPlaceholder);
     if (realSpouses.length === 0) return;
     const onLeft = node.person.sex === 'F';
-    const lineY = nodeY + BOX_H / 2;
+    const nodeH = hOf(node);
+    const lineY = nodeY + nodeH / 2;
     for (let i = 0; i < realSpouses.length; i++) {
       const spCX = onLeft
         ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - i * (BOX_W + V_GAP)
         : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + i * (BOX_W + V_GAP);
       boxes.push({
         person: realSpouses[i].person, isFocal: false,
-        x: spCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
+        x: spCX - BOX_W / 2, y: nodeY, w: BOX_W, h: hOf(realSpouses[i]),
       });
     }
     const lastIdx = realSpouses.length - 1;
     const lastCX = onLeft
       ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - lastIdx * (BOX_W + V_GAP)
       : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + lastIdx * (BOX_W + V_GAP);
-    lines.push({
-      x1: onLeft ? lastCX - BOX_W / 2 : nodeCX + BOX_W / 2,
-      y1: lineY,
-      x2: onLeft ? nodeCX - BOX_W / 2 : lastCX + BOX_W / 2,
-      y2: lineY,
-    });
+    const fromX = onLeft ? lastCX - BOX_W / 2 : nodeCX + BOX_W / 2;
+    const toX = onLeft ? nodeCX - BOX_W / 2 : lastCX + BOX_W / 2;
+    paths.push(curvedElbow(fromX, lineY, toX, lineY, 'right'));
   }
 
   function placeAncestors(node: TreePerson, nodeCX: number, depth: number): void {
     const nodeY = ancestorRowY(depth);
+    const nodeH = hOf(node);
     boxes.push({
       person: node.person, isFocal: !!node.isFocal,
-      x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
+      x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: nodeH,
     });
 
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
@@ -402,7 +458,6 @@ export function computeHourglassLayout(
     const realParents = node.parents.filter(par => !par.isPlaceholder);
     if (realParents.length === 0) return;
 
-    const forkY = nodeY - GEN_GAP / 2;
     const parentWidths = realParents.map(p => ancestorWidth(p));
     const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (realParents.length - 1) * V_GAP;
     let x = nodeCX - totalWidth / 2;
@@ -415,21 +470,19 @@ export function computeHourglassLayout(
       x += parentWidths[i] + V_GAP;
     }
 
-    lines.push({ x1: nodeCX, y1: nodeY, x2: nodeCX, y2: forkY });
-    if (parentCXs.length > 1) {
-      lines.push({ x1: Math.min(...parentCXs), y1: forkY, x2: Math.max(...parentCXs), y2: forkY });
-    }
-    const parentRowBottom = ancestorRowY(depth + 1) + BOX_H;
+    const parentRowBottom = ancestorRowY(depth + 1) + ancRowMaxH[depth + 1];
+    // One curved elbow per parent: from child top → parent bottom (direction: 'down')
     for (const pcx of parentCXs) {
-      lines.push({ x1: pcx, y1: forkY, x2: pcx, y2: parentRowBottom });
+      paths.push(curvedElbow(nodeCX, nodeY, pcx, parentRowBottom, 'down'));
     }
   }
 
   function placeDescendants(node: TreePerson, nodeCX: number, depth: number): void {
     const nodeY = descRowY(depth);
+    const nodeH = hOf(node);
     boxes.push({
       person: node.person, isFocal: !!node.isFocal,
-      x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: BOX_H,
+      x: nodeCX - BOX_W / 2, y: nodeY, w: BOX_W, h: nodeH,
     });
 
     if (!node.isFocal) placeSpouses(node, nodeCX, nodeY);
@@ -437,9 +490,6 @@ export function computeHourglassLayout(
     // Only recurse into real children — placeholder child outlines are placed by Pass 4
     const realChildren = node.children.filter(c => !c.isPlaceholder);
     if (realChildren.length === 0) return;
-
-    const forkY = nodeY + BOX_H + GEN_GAP / 2;
-    lines.push({ x1: nodeCX, y1: nodeY + BOX_H, x2: nodeCX, y2: forkY });
 
     const n = realChildren.length;
     const childExts = realChildren.map(c => descExtents(c));
@@ -451,11 +501,9 @@ export function computeHourglassLayout(
     const leftmostCX = nodeCX - totalSpan / 2;
     const childCXs = offsets.map(o => leftmostCX + o);
 
-    if (n > 1) {
-      lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
-    }
+    // One curved elbow per child: from parent bottom → child top
     for (let i = 0; i < n; i++) {
-      lines.push({ x1: childCXs[i], y1: forkY, x2: childCXs[i], y2: descRowY(depth + 1) });
+      paths.push(curvedElbow(nodeCX, nodeY + nodeH, childCXs[i], descRowY(depth + 1), 'down'));
       placeDescendants(realChildren[i], childCXs[i], depth + 1);
     }
   }
@@ -463,7 +511,6 @@ export function computeHourglassLayout(
   // Place focal's ancestors (real parents only — placeholder parent outlines handled by Pass 4)
   const focalRealParents = root.parents.filter(par => !par.isPlaceholder);
   if (focalRealParents.length > 0) {
-    const forkY = focalRowY - GEN_GAP / 2;
     const parentWidths = focalRealParents.map(p => ancestorWidth(p));
     const totalWidth = parentWidths.reduce((s, w) => s + w, 0) + (focalRealParents.length - 1) * V_GAP;
     let x = focalCX - totalWidth / 2;
@@ -476,21 +523,20 @@ export function computeHourglassLayout(
       x += parentWidths[i] + V_GAP;
     }
 
-    lines.push({ x1: focalCX, y1: focalRowY, x2: focalCX, y2: forkY });
-    if (parentCXs.length > 1) {
-      lines.push({ x1: Math.min(...parentCXs), y1: forkY, x2: Math.max(...parentCXs), y2: forkY });
-    }
-    const parentRowBottom = ancestorRowY(1) + BOX_H;
+    const parentRowBottom = ancestorRowY(1) + ancRowMaxH[1];
+    // One curved elbow per parent: from focal top → parent bottom
     for (const pcx of parentCXs) {
-      lines.push({ x1: pcx, y1: forkY, x2: pcx, y2: parentRowBottom });
+      paths.push(curvedElbow(focalCX, focalRowY, pcx, parentRowBottom, 'down'));
     }
   }
 
   /** Place a group of outline nodes (parents above or children below) with collision avoidance. */
-  function placeOutlineGroup(nodes: TreePerson[], ownerCX: number, ownerY: number, dir: 'up' | 'down'): void {
+  function placeOutlineGroup(nodes: TreePerson[], ownerCX: number, ownerY: number, ownerH: number, dir: 'up' | 'down'): void {
     if (nodes.length === 0) return;
-    const targetY = dir === 'down' ? ownerY + BOX_H + GEN_GAP : ownerY - BOX_H - GEN_GAP;
     const n = nodes.length;
+    // Row height for this outline group is the tallest outline node.
+    const rowH = nodes.reduce((m, nd) => Math.max(m, hOf(nd)), MIN_BOX_H);
+    const targetY = dir === 'down' ? ownerY + ownerH + GEN_GAP : ownerY - rowH - GEN_GAP;
     const groupW = n * BOX_W + (n - 1) * V_GAP;
 
     // Try centered on owner first, then shift to avoid overlaps
@@ -500,14 +546,14 @@ export function computeHourglassLayout(
         const bx = gx + i * (BOX_W + V_GAP);
         if (boxes.some(b =>
           bx < b.x + b.w + V_GAP && bx + BOX_W + V_GAP > b.x &&
-          targetY < b.y + b.h && targetY + BOX_H > b.y
+          targetY < b.y + b.h && targetY + rowH > b.y
         )) return true;
       }
       return false;
     };
     if (collides(startX)) {
       // Try positions to the left of existing boxes at that row
-      const rowBoxes = boxes.filter(b => targetY < b.y + b.h && targetY + BOX_H > b.y).sort((a, b) => a.x - b.x);
+      const rowBoxes = boxes.filter(b => targetY < b.y + b.h && targetY + rowH > b.y).sort((a, b) => a.x - b.x);
       const candidates = [startX];
       for (const b of rowBoxes) {
         candidates.push(b.x + b.w + V_GAP);
@@ -527,50 +573,28 @@ export function computeHourglassLayout(
     // Place outline boxes
     for (let i = 0; i < n; i++) {
       const px = startX + i * (BOX_W + V_GAP);
-      boxes.push({ person: nodes[i].person, isFocal: false, x: px, y: targetY, w: BOX_W, h: BOX_H });
+      const ph = hOf(nodes[i]);
+      boxes.push({ person: nodes[i].person, isFocal: false, x: px, y: targetY, w: BOX_W, h: ph });
     }
 
-    // Connectors: fork near the owner (matching normal parent-child connector pattern).
-    // Pattern: short vertical from owner edge → horizontal fork → long verticals to outlines.
-    const nearForkY = dir === 'down'
-      ? ownerY + BOX_H + GEN_GAP / 2  // midpoint below owner
-      : ownerY - GEN_GAP / 2;          // midpoint above owner
-
-    // Owner edge → fork (short vertical) — all outline connectors go to outlineLines (dashed)
-    if (dir === 'down') {
-      outlineLines.push({ x1: ownerCX, y1: ownerY + BOX_H, x2: ownerCX, y2: nearForkY });
-    } else {
-      outlineLines.push({ x1: ownerCX, y1: ownerY, x2: ownerCX, y2: nearForkY });
-    }
-
-    // Horizontal fork from ownerCX to all outline CXs
-    const allCXs = [];
-    for (let i = 0; i < n; i++) {
-      allCXs.push(startX + i * (BOX_W + V_GAP) + BOX_W / 2);
-    }
-    allCXs.push(ownerCX);
-    const minCX = Math.min(...allCXs);
-    const maxCX = Math.max(...allCXs);
-    if (minCX !== maxCX) {
-      outlineLines.push({ x1: minCX, y1: nearForkY, x2: maxCX, y2: nearForkY });
-    }
-
-    // Fork → each outline box (long vertical)
+    // Connectors: one curved elbow per outline box, owner edge → outline box near edge.
     for (let i = 0; i < n; i++) {
       const px = startX + i * (BOX_W + V_GAP);
       const pCX = px + BOX_W / 2;
+      const ph = hOf(nodes[i]);
       if (dir === 'down') {
-        outlineLines.push({ x1: pCX, y1: nearForkY, x2: pCX, y2: targetY });
+        placeholderPaths.push(curvedElbow(ownerCX, ownerY + ownerH, pCX, targetY, 'down'));
       } else {
-        outlineLines.push({ x1: pCX, y1: nearForkY, x2: pCX, y2: targetY + BOX_H });
+        placeholderPaths.push(curvedElbow(pCX, targetY + ph, ownerCX, ownerY, 'down'));
       }
     }
   }
 
-  // Place focal box
+  // Place focal box (focal row height = focalRowH, which accounts for spouses/siblings too)
+  const focalH = hOf(root);
   boxes.push({
     person: root.person, isFocal: true,
-    x: focalCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+    x: focalCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: focalH,
   });
 
   // Place focal's REAL spouses on their natural side using realSpouseCXOffsets.
@@ -581,19 +605,16 @@ export function computeHourglassLayout(
   }
 
   if (focalRealSpouseNodes.length > 0) {
-    const lineY = focalRowY + BOX_H / 2;
+    const lineY = focalRowY + focalH / 2;
     const lastCX = realSpouseCXAt(focalRealSpouseNodes.length - 1);
-    lines.push({
-      x1: spouseOnLeft ? lastCX - BOX_W / 2 : focalCX + BOX_W / 2,
-      y1: lineY,
-      x2: spouseOnLeft ? focalCX + BOX_W / 2 : lastCX + BOX_W / 2,
-      y2: lineY,
-    });
+    const fromX = spouseOnLeft ? lastCX - BOX_W / 2 : focalCX + BOX_W / 2;
+    const toX = spouseOnLeft ? focalCX - BOX_W / 2 : lastCX + BOX_W / 2;
+    paths.push(curvedElbow(fromX, lineY, toX, lineY, 'right'));
     for (let i = 0; i < focalRealSpouseNodes.length; i++) {
       const spCX = realSpouseCXAt(i);
       boxes.push({
         person: focalRealSpouseNodes[i].person, isFocal: false,
-        x: spCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+        x: spCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: hOf(focalRealSpouseNodes[i]),
       });
       placeSpouses(focalRealSpouseNodes[i], spCX, focalRowY);
     }
@@ -610,19 +631,18 @@ export function computeHourglassLayout(
       const sibCX = siblingCXOf(i);
       boxes.push({
         person: siblings[i].person, isFocal: false,
-        x: sibCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: BOX_H,
+        x: sibCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: hOf(siblings[i]),
       });
       // Place sibling's real spouses (spacing already reserved via computeFootprint)
       placeSpouses(siblings[i], sibCX, focalRowY);
     }
-    // Connect siblings to parents via shared fork
+    // Connect siblings to parent row (parents already connect to focal; siblings need their own elbows up to parents)
     if (A >= 1) {
-      const parentForkY = focalRowY - GEN_GAP / 2;
-      const allCXs = [focalCX, ...siblings.map((_, i) => siblingCXOf(i))];
-      lines.push({ x1: Math.min(...allCXs), y1: parentForkY, x2: Math.max(...allCXs), y2: parentForkY });
+      const parentRowBottom = ancestorRowY(1) + ancRowMaxH[1];
       for (let i = 0; i < siblings.length; i++) {
         const scx = siblingCXOf(i);
-        lines.push({ x1: scx, y1: parentForkY, x2: scx, y2: focalRowY });
+        // Elbow: sibling top → parent row bottom (which parent is not meaningful — share focalCX as fork anchor via midpoint)
+        paths.push(curvedElbow(scx, focalRowY, focalCX, parentRowBottom, 'down'));
       }
     }
   }
@@ -630,9 +650,6 @@ export function computeHourglassLayout(
   // Place focal's descendants (real children only — placeholder child outlines handled by Pass 4)
   const focalRealChildren = root.children.filter(c => !c.isPlaceholder);
   if (focalRealChildren.length > 0) {
-    const forkY = focalRowY + BOX_H + GEN_GAP / 2;
-    lines.push({ x1: focalCX, y1: focalRowY + BOX_H, x2: focalCX, y2: forkY });
-
     const n = focalRealChildren.length;
     const childExts = focalRealChildren.map(c => descExtents(c));
     const offsets: number[] = [0];
@@ -643,11 +660,9 @@ export function computeHourglassLayout(
     const leftmostCX = focalCX - totalSpan / 2;
     const childCXs = offsets.map(o => leftmostCX + o);
 
-    if (n > 1) {
-      lines.push({ x1: childCXs[0], y1: forkY, x2: childCXs[n - 1], y2: forkY });
-    }
+    // One curved elbow per child: from focal bottom → child top
     for (let i = 0; i < n; i++) {
-      lines.push({ x1: childCXs[i], y1: forkY, x2: childCXs[i], y2: descRowY(1) });
+      paths.push(curvedElbow(focalCX, focalRowY + focalH, childCXs[i], descRowY(1), 'down'));
       placeDescendants(focalRealChildren[i], childCXs[i], 1);
     }
   }
@@ -669,6 +684,7 @@ export function computeHourglassLayout(
         const outlineGoesRight = selIsFemale;
         for (let i = 0; i < unplacedSpouses.length; i++) {
           let spX: number;
+          const spH = hOf(unplacedSpouses[i]);
 
           // For focal's placeholder spouse: use the reserved offset on the opposite side
           if (selNode === root && focalPhSpouse && unplacedSpouses[i].person.id === focalPhSpouse.person.id) {
@@ -681,7 +697,7 @@ export function computeHourglassLayout(
               let x = startX;
               while (boxes.some(b =>
                 x < b.x + b.w + V_GAP && x + BOX_W + V_GAP > b.x &&
-                y < b.y + b.h && y + BOX_H > b.y
+                y < b.y + b.h && y + spH > b.y
               )) { x += direction * (BOX_W + V_GAP); }
               return x;
             };
@@ -692,22 +708,22 @@ export function computeHourglassLayout(
             }
           }
           const isRight = spX > selBox.x;
-          boxes.push({ person: unplacedSpouses[i].person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: BOX_H });
+          boxes.push({ person: unplacedSpouses[i].person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: spH });
           const spCX = spX + BOX_W / 2;
-          const lineY = selBox.y + BOX_H / 2;
+          const lineY = selBox.y + selBox.h / 2;
           if (isRight) {
-            outlineLines.push({ x1: selCX + BOX_W / 2, y1: lineY, x2: spCX - BOX_W / 2, y2: lineY });
+            placeholderPaths.push(curvedElbow(selCX + BOX_W / 2, lineY, spCX - BOX_W / 2, lineY, 'right'));
           } else {
-            outlineLines.push({ x1: spCX + BOX_W / 2, y1: lineY, x2: selCX - BOX_W / 2, y2: lineY });
+            placeholderPaths.push(curvedElbow(spCX + BOX_W / 2, lineY, selCX - BOX_W / 2, lineY, 'right'));
           }
         }
 
         // Cross-direction outlines with collision avoidance
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
-        placeOutlineGroup(unplacedChildren, selCX, selBox.y, 'down');
+        placeOutlineGroup(unplacedChildren, selCX, selBox.y, selBox.h, 'down');
 
         const unplacedParents = selNode.parents.filter(par => !placedIds.has(par.person.id));
-        placeOutlineGroup(unplacedParents, selCX, selBox.y, 'up');
+        placeOutlineGroup(unplacedParents, selCX, selBox.y, selBox.h, 'up');
       }
     }
   }
@@ -717,16 +733,38 @@ export function computeHourglassLayout(
   if (minBoxLeft < PAD) {
     const shift = PAD - minBoxLeft;
     for (const box of boxes) box.x += shift;
-    for (const ln of lines) { ln.x1 += shift; ln.x2 += shift; }
-    for (const ln of outlineLines) { ln.x1 += shift; ln.x2 += shift; }
+    // Shift path coordinates by `shift` on the X axis. curvedElbow emits only
+    // M x,y / H x / V y / Q x,y x,y — X values are the FIRST number in each
+    // coordinate pair, plus the lone number after H. V values are Y only
+    // (unchanged). We shift paths token-by-token.
+    const shiftPath = (d: string): number[] | string => {
+      const tokens = d.split(/\s+/);
+      for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t === 'M' || t === 'Q') {
+          // next two tokens are coordinate pairs "x,y" — shift X of each
+          for (let j = 1; j <= (t === 'Q' ? 2 : 1); j++) {
+            const pair = tokens[i + j];
+            if (!pair) break;
+            const [x, y] = pair.split(',');
+            if (x !== undefined && y !== undefined) tokens[i + j] = `${parseFloat(x) + shift},${y}`;
+          }
+        } else if (t === 'H') {
+          const next = tokens[i + 1];
+          if (next !== undefined) tokens[i + 1] = String(parseFloat(next) + shift);
+        }
+      }
+      return tokens.join(' ');
+    };
+    for (let i = 0; i < paths.length; i++) paths[i] = shiftPath(paths[i]) as string;
+    for (let i = 0; i < placeholderPaths.length; i++) placeholderPaths[i] = shiftPath(placeholderPaths[i]) as string;
   }
 
   const maxBoxRight = Math.max(...boxes.map(b => b.x + b.w));
   const maxBoxBottom = Math.max(...boxes.map(b => b.y + b.h));
   const minBoxTop = Math.min(...boxes.map(b => b.y));
   const finalSvgWidth = Math.max(svgWidth, maxBoxRight + PAD);
-  const deepestDescRow = D > 0 ? descRowY(D) : focalRowY;
-  const svgHeight = Math.max(deepestDescRow + BOX_H + 20 + PAD, maxBoxBottom + 20 + PAD);
+  const svgHeight = Math.max(descendantRowTopY[D] + descRowMaxH[D] + 20 + PAD, maxBoxBottom + 20 + PAD);
   const viewBoxMinY = Math.min(0, minBoxTop - PAD);
   const finalHeight = viewBoxMinY < 0 ? svgHeight + (-viewBoxMinY) : svgHeight;
 
@@ -770,14 +808,14 @@ export function computeHourglassLayout(
         const groupKey = `${focalId}:down:${coParentId ?? 'solo'}`;
         collapseButtons.push({
           personId: focalId, direction: 'down',
-          cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+          cx: box.x + BOX_W / 2, cy: box.y + box.h + 10,
           isExpanded: !collapsed.has(groupKey), isLoadMore: false, coParentId,
         });
       }
       if (groups.size === 0 && moreDown) {
         collapseButtons.push({
           personId: focalId, direction: 'down',
-          cx: focalCX, cy: box.y + BOX_H + 10,
+          cx: focalCX, cy: box.y + box.h + 10,
           isExpanded: false, isLoadMore: true, coParentId: null,
         });
       }
@@ -787,7 +825,7 @@ export function computeHourglassLayout(
         const btnCX = focalIsFemale ? box.x - 10 : box.x + BOX_W + 10;
         collapseButtons.push({
           personId: pid, direction: spouseDir as 'left' | 'right',
-          cx: btnCX, cy: box.y + BOX_H / 2,
+          cx: btnCX, cy: box.y + box.h / 2,
           isExpanded: !collapsed.has(`${pid}:right`) && !collapsed.has(`${pid}:left`),
           isLoadMore: false,
         });
@@ -796,8 +834,8 @@ export function computeHourglassLayout(
       if (originalSiblingCount > 0) {
         const sibBtnCX = siblingsOnLeft ? box.x - 10 : box.x + BOX_W + 10;
         const sibBtnCY = (origSpouses > 0 && siblingsOnLeft === focalIsFemale)
-          ? box.y + BOX_H / 2 + 18
-          : box.y + BOX_H / 2;
+          ? box.y + box.h / 2 + 18
+          : box.y + box.h / 2;
         collapseButtons.push({
           personId: pid, direction: siblingDir as 'left' | 'right',
           cx: sibBtnCX, cy: sibBtnCY,
@@ -808,13 +846,13 @@ export function computeHourglassLayout(
     } else if (origChildren > 0) {
       collapseButtons.push({
         personId: pid, direction: 'down',
-        cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+        cx: box.x + BOX_W / 2, cy: box.y + box.h + 10,
         isExpanded: !collapsed.has(`${pid}:down`), isLoadMore: false,
       });
     } else if (moreDown) {
       collapseButtons.push({
         personId: pid, direction: 'down',
-        cx: box.x + BOX_W / 2, cy: box.y + BOX_H + 10,
+        cx: box.x + BOX_W / 2, cy: box.y + box.h + 10,
         isExpanded: false, isLoadMore: true,
       });
     }
@@ -822,7 +860,6 @@ export function computeHourglassLayout(
 
   // ── 9. Extract placeholders ────────────────────────────────────────────────
   const placeholders: PlaceholderBox[] = [];
-  const placeholderLines: Line[] = [];
 
   for (let i = boxes.length - 1; i >= 0; i--) {
     const box = boxes[i];
@@ -843,24 +880,7 @@ export function computeHourglassLayout(
     boxes.splice(i, 1);
   }
 
-  const phCenters = new Set<string>();
-  for (const ph of placeholders) {
-    phCenters.add(`${ph.x + BOX_W / 2},${ph.y}`);
-    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H}`);
-    phCenters.add(`${ph.x + BOX_W / 2},${ph.y + BOX_H / 2}`);
-    phCenters.add(`${ph.x},${ph.y + BOX_H / 2}`);
-    phCenters.add(`${ph.x + BOX_W},${ph.y + BOX_H / 2}`);
-  }
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const ln = lines[i];
-    if (phCenters.has(`${ln.x1},${ln.y1}`) || phCenters.has(`${ln.x2},${ln.y2}`)) {
-      placeholderLines.push(ln);
-      lines.splice(i, 1);
-    }
-  }
+  for (const d of placeholderPaths) paths.push('D:' + d);
 
-  // Merge explicitly-tracked outline lines into placeholderLines
-  placeholderLines.push(...outlineLines);
-
-  return { boxes, lines, paths: [], svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
+  return { boxes, lines: [], paths, svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: [] };
 }
