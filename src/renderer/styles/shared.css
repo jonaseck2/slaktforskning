@@ -209,10 +209,14 @@
   font-family: inherit;
 }
 .btn-delete {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
 }
-.btn-delete:hover { background: var(--color-danger-hover); }
+.btn-delete:hover {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
 
 .btn-cancel {
   background: var(--surface-bg);
@@ -611,8 +615,8 @@
   html.dark .btn-add:hover { background: var(--accent-hover); }
   html.dark .btn-cancel { background: var(--accent); color: var(--text-primary); }
   html.dark .btn-sm { background: var(--accent); color: var(--text-primary); }
-  html.dark .btn-delete { background: var(--error-bg); color: var(--error-text); }
-  html.dark .btn-delete:hover { background: var(--color-danger-hover); }
+  html.dark .btn-delete { background: var(--surface-hover); color: var(--text-muted); }
+  html.dark .btn-delete:hover { background: var(--error-bg); color: var(--error-text); }
   html.dark .btn-view-tree { background: var(--accent); color: var(--accent-text); border-color: var(--surface-border); }
   html.dark .btn-back { background: var(--accent); color: var(--text-primary); border-color: var(--surface-border); }
 
@@ -758,8 +762,8 @@
   html.high-contrast .btn-add:hover { background: var(--accent-hover); }
   html.high-contrast .btn-cancel { background: var(--surface-hover); color: var(--text-primary); }
   html.high-contrast .btn-sm { background: var(--surface-hover); color: var(--text-primary); }
-  html.high-contrast .btn-delete { background: var(--error-bg); color: var(--error-text); }
-  html.high-contrast .btn-delete:hover { background: var(--color-danger-hover); }
+  html.high-contrast .btn-delete { background: var(--surface-hover); color: var(--text-muted); }
+  html.high-contrast .btn-delete:hover { background: var(--error-bg); color: var(--error-text); }
 
   /* Chips */
   html.high-contrast .chip { background: var(--surface-bg); border-color: var(--surface-border); color: var(--text-secondary); }

@@ -3,7 +3,7 @@
     <div class="header">
       <h2>{{ $t('nav.people') }}</h2>
       <div class="header-actions">
-        <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('persons.addPerson') }}</AppButton>
+        <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('persons.addPerson') }}</AppButton>
       </div>
     </div>
 

@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('gazetteers.title') }}</h2>
-      <button class="btn-add" @click="fileInput?.click()">+ {{ $t('gazetteers.importBtn') }}</button>
+      <AppButton variant="soft" @click="fileInput?.click()">+ {{ $t('gazetteers.importBtn') }}</AppButton>
       <input
         ref="fileInput"
         type="file"
@@ -98,6 +98,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import AppButton from '../components/ui/AppButton.vue';
 import { getAllGazetteers } from '../../api/place-gazetteers/index';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
 import type { GazetteerConfig, Gazetteer, GazetteerInfo } from '../../api/place-gazetteers/types';

@@ -23,7 +23,7 @@
       :title="$t('groups.members')"
       :count="members.length"
       :collapsible="false"
-      :action-label="!showAddMember ? $t('groups.addMember') : ''"
+      :action-label="!showAddMember ? '+ ' + $t('groups.addMember') : ''"
       @action="showAddMember = true"
     />
 

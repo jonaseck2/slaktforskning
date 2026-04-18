@@ -54,7 +54,7 @@
         :title="$t('sourceDetail.citations')"
         :count="citations.length"
         :collapsible="false"
-        :action-label="$t('sourceDetail.addCitation')"
+        :action-label="'+ ' + $t('sourceDetail.addCitation')"
         tabindex="0"
         :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length"
         @action="showCitationForm = true"

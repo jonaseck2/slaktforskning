@@ -3,7 +3,7 @@
     <div class="header">
       <h2>{{ $t('linkRules.title') }}</h2>
       <div class="header-actions">
-        <button class="btn-add" @click="showAddModal = true"><span aria-hidden="true">+ </span>{{ $t('linkRules.addRule') }}</button>
+        <AppButton variant="soft" @click="showAddModal = true">+ {{ $t('linkRules.addRule') }}</AppButton>
       </div>
     </div>
 
@@ -169,6 +169,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import AppButton from '../components/ui/AppButton.vue';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
 import { svRules } from '../../api/link-rules/sv';
 import { enRules } from '../../api/link-rules/en';

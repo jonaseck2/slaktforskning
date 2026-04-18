@@ -90,10 +90,10 @@
                 >{{ $t('quality.viewPlace') }}</router-link>
               </template>
               <button
-                class="btn-dismiss"
+                class="btn-sm btn-delete"
                 :title="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
                 @click.stop="toggleIgnore(r)"
-              >×</button>
+              >✕</button>
             </td>
           </tr>
         </tbody>
@@ -382,19 +382,5 @@ onActivated(() => {
 .actions-td {
   white-space: nowrap;
   vertical-align: middle;
-}
-.btn-dismiss {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-lg);
-  color: var(--text-muted);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  line-height: 1;
-}
-.btn-dismiss:hover {
-  color: var(--error-text);
-  background: var(--error-bg);
 }
 </style>

@@ -82,6 +82,13 @@ export function usePersonPanelData(personId: Ref<string | null>) {
   const groups = ref<GroupData[]>([]);
   const researchTasks = ref<ResearchTaskRow[]>([]);
 
+  // Counts for collapsed sections (loaded independently of child components)
+  const eventCount = ref(0);
+  const relationshipCount = ref(0);
+  const identifierCount = ref(0);
+  const mediaCount = ref(0);
+  const checkCount = ref(0);
+
   async function loadNames(id: string) {
     const fetched = (await window.api.persons.getNames(id)) as NameData[];
     const sorted = [...fetched].sort((a, b) => a.sort_order - b.sort_order);
@@ -126,6 +133,8 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     ]);
     if (personId.value !== id) return;
 
+    eventCount.value = events.length;
+
     person.value = {
       id: raw.id,
       sex: raw.sex as 'M' | 'F' | 'U',
@@ -136,6 +145,25 @@ export function usePersonPanelData(personId: Ref<string | null>) {
 
     await loadGroups(id);
     await loadResearchTasks(id);
+    await loadCounts(id);
+  }
+
+  async function loadCounts(id: string) {
+    try {
+      const [rels, ids, media, checks] = await Promise.all([
+        window.api.relationships.getForPerson(id) as Promise<unknown[]>,
+        window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
+        window.api.media.forEntity('person', id) as Promise<unknown[]>,
+        (window.api.checks?.forPerson(id) ?? Promise.resolve([])) as Promise<unknown[]>,
+      ]);
+      if (personId.value !== id) return;
+      relationshipCount.value = rels.length;
+      identifierCount.value = ids.length;
+      mediaCount.value = media.length;
+      checkCount.value = checks.length;
+    } catch {
+      // ignore — counts are non-critical
+    }
   }
 
   watch(personId, async (id) => {
@@ -143,6 +171,11 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     names.value = [];
     groups.value = [];
     researchTasks.value = [];
+    eventCount.value = 0;
+    relationshipCount.value = 0;
+    identifierCount.value = 0;
+    mediaCount.value = 0;
+    checkCount.value = 0;
     if (id) await loadPerson(id);
   }, { immediate: true });
 
@@ -156,5 +189,10 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     loadNames,
     loadGroups,
     loadResearchTasks,
+    eventCount,
+    relationshipCount,
+    identifierCount,
+    mediaCount,
+    checkCount,
   };
 }

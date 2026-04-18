@@ -34,25 +34,7 @@
     <!-- Person Details -->
     <section class="detail-section" aria-labelledby="section-person-details">
       <SectionHeader :title="$t('personDetail.detailsTitle')" :collapsible="false" />
-      <div class="details-row">
-        <select
-          :class="'sex-select sex-' + editSex"
-          v-model="editSex"
-          @change="updateSex(editSex)"
-        >
-          <option value="M">{{ $t('sex.M') }}</option>
-          <option value="F">{{ $t('sex.F') }}</option>
-          <option value="U">{{ $t('sex.U') }}</option>
-        </select>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="editLiving" :true-value="1" :false-value="0" @change="updateLiving(editLiving)" />
-          {{ $t('personDetail.statusLiving') }}
-        </label>
-      </div>
-      <label class="notes-label">
-        {{ $t('common.notes') }}
-        <PersonNotesSection :person-id="person.id" />
-      </label>
+      <PersonDetailsSection :person-id="person.id" :sex="person.sex" :living="person.living" @updated="onDetailUpdated" />
     </section>
 
     <!-- Names Section -->
@@ -61,7 +43,7 @@
         :title="$t('personDetail.names')"
         :count="names.length"
         :collapsible="false"
-        :action-label="$t('personDetail.addName')"
+        :action-label="'+ ' + $t('personDetail.addName')"
         tabindex="0"
         :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })"
         @action="showNameForm = true"
@@ -107,7 +89,7 @@
         :title="$t('identifiers.title')"
         :count="identifiersSectionRef?.count"
         :collapsible="false"
-        :action-label="$t('identifiers.add')"
+        :action-label="'+ ' + $t('identifiers.add')"
         tabindex="0"
         :data-narrate="t('screenReader.sectionIdentifiers', { count: identifiersSectionRef?.count ?? 0, summary: '' })"
         @action="identifiersSectionRef?.openAddForm()"
@@ -121,7 +103,7 @@
         :title="$t('groups.title')"
         :count="personGroups.length"
         :collapsible="false"
-        :action-label="!showGroupPicker ? $t('groups.addMember') : ''"
+        :action-label="!showGroupPicker ? '+ ' + $t('groups.addMember') : ''"
         @action="showGroupPicker = true"
       />
       <div v-if="showGroupPicker" class="group-picker-row">
@@ -142,7 +124,7 @@
         :title="$t('media.title')"
         :count="mediaSectionRef?.count"
         :collapsible="false"
-        :action-label="$t('media.attach')"
+        :action-label="'+ ' + $t('media.attach')"
         tabindex="0"
         :data-narrate="t('screenReader.sectionMedia', { count: mediaSectionRef?.count ?? 0, summary: '' })"
         @action="mediaSectionRef?.attach()"
@@ -162,7 +144,7 @@
         :title="$t('nav.researchTasks')"
         :count="personTasks.length"
         :collapsible="false"
-        :action-label="$t('researchTasks.addTask')"
+        :action-label="'+ ' + $t('researchTasks.addTask')"
         @action="showAddTaskModal = true"
       />
       <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
@@ -235,7 +217,7 @@ import PersonTimeline from '../components/PersonTimeline.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
-import PersonNotesSection from '../components/PersonNotesSection.vue';
+import PersonDetailsSection from '../components/PersonDetailsSection.vue';
 import PersonMap from '../components/PersonMap.vue';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
@@ -287,8 +269,6 @@ const showAddRelated = ref(false);
 const addRelatedMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 const primaryNameData = computed(() => names.value.length > 0 ? names.value[0] : null);
 const birthSummary = ref('');
-const editSex = ref('U');
-const editLiving = ref(1);
 const dataVersionStore = useDataVersionStore();
 const eventListRef = ref<InstanceType<typeof EventList> | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
@@ -355,8 +335,6 @@ async function load() {
     person.value = (await window.api.persons.get(personId)) as PersonData | null;
     if (!person.value) return;
     localStorage.setItem('viz-focal-person', personId);
-    editSex.value = person.value.sex;
-    editLiving.value = person.value.living;
 
     names.value = (await window.api.persons.getNames(personId)) as NameRow[];
     if (names.value.length > 0) {
@@ -443,16 +421,10 @@ async function removeName(id: string) {
   }
 }
 
-async function updateSex(sex: string) {
-  if (!window.api || !person.value) return;
-  await window.api.persons.update(personId, { sex });
-  person.value.sex = sex;
-}
-
-async function updateLiving(living: number) {
-  if (!window.api || !person.value) return;
-  await window.api.persons.update(personId, { living });
-  person.value.living = living;
+function onDetailUpdated(field: string, value: unknown) {
+  if (!person.value) return;
+  if (field === 'sex') person.value.sex = value as string;
+  if (field === 'living') person.value.living = value as number;
 }
 
 function handleCheckFix(action: string) {
@@ -595,54 +567,6 @@ onBeforeRouteLeave(() => { stop(); });
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--surface-border-subtle, #eee);
-}
-.field-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.field-grid label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-.details-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-.checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-}
-.field-grid select {
-  padding: 6px 8px;
-  border: 1px solid var(--surface-border);
-  border-radius: 4px;
-  font-size: var(--font-base);
-  font-family: inherit;
-}
-.notes-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-top: 12px;
 }
 textarea {
   width: 100%;
