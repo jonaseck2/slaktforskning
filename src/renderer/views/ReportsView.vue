@@ -85,7 +85,12 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="ancestorBookPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AncestorBookReport :person-id="ancestorBookPersonId" :circle-generations="circleGenerations" :circle-curved-text="circleCurvedText" />
+          <AncestorBookReport
+            :person-id="ancestorBookPersonId"
+            :fan-generations="fanGenerations"
+            :fan-arc-span="fanArcSpan"
+            :fan-curved-text="fanCurvedText"
+          />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
       </div>
@@ -192,8 +197,8 @@
       </div>
     </div>
 
-    <!-- Circle Chart Tab -->
-    <div v-if="activeTab === 'circleChart'" class="tab-content">
+    <!-- Fan Chart Tab -->
+    <div v-if="activeTab === 'fanChart'" class="tab-content">
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
@@ -203,7 +208,12 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <CircleChartReport :person-id="chartPersonId" :generations="circleGenerations" :curved-text="circleCurvedText" />
+          <FanChartReport
+            :person-id="chartPersonId"
+            :generations="fanGenerations"
+            :arc-span="fanArcSpan"
+            :curved-text="fanCurvedText"
+          />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -251,13 +261,22 @@
         <span class="zoom-extra-value">{{ ancestorGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="ancestorGenerations >= 5" @click="ancestorGenerations++">+</button>
       </template>
-      <template v-if="activeTab === 'ancestorBook' || activeTab === 'circleChart'">
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="circleGenerations <= 1" @click="circleGenerations--">−</button>
-        <span class="zoom-extra-value">{{ circleGenerations }}</span>
-        <button class="zoom-extra-btn" :disabled="circleGenerations >= 6" @click="circleGenerations++">+</button>
+      <template v-if="activeTab === 'ancestorBook' || activeTab === 'fanChart'">
+        <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
+        <button
+          v-for="span in fanArcOptions"
+          :key="span"
+          class="zoom-extra-btn"
+          :class="{ active: fanArcSpan === span }"
+          @click="fanArcSpan = span"
+        >{{ span }}°</button>
         <span class="zoom-extra-sep">|</span>
-        <button class="zoom-extra-btn" :class="{ active: circleCurvedText }" @click="circleCurvedText = !circleCurvedText" :title="$t('visualization.curvedText')">⌒</button>
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="fanGenerations <= 1" @click="fanGenerations--">−</button>
+        <span class="zoom-extra-value">{{ fanGenerations }}</span>
+        <button class="zoom-extra-btn" :disabled="fanGenerations >= 8" @click="fanGenerations++">+</button>
+        <span class="zoom-extra-sep">|</span>
+        <button class="zoom-extra-btn" :class="{ active: fanCurvedText }" @click="fanCurvedText = !fanCurvedText" :title="$t('visualization.curvedText')">⌒</button>
       </template>
     </ZoomControls>
 
@@ -286,7 +305,8 @@ import PlaceHistory from '../components/reports/PlaceHistory.vue';
 import FamilyNarrative from '../components/reports/FamilyNarrative.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
 import DescendantChartReport from '../components/reports/DescendantChartReport.vue';
-import CircleChartReport from '../components/reports/CircleChartReport.vue';
+import FanChartReport from '../components/reports/FanChartReport.vue';
+import type { ArcSpan } from '../utils/fanLayout';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
 import WallChartModal from '../components/reports/WallChartModal.vue';
 import ZoomControls from '../components/ZoomControls.vue';
@@ -298,7 +318,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'descendantChart' | 'circleChart' | 'timeline' | 'wallChart'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'descendantChart' | 'fanChart' | 'timeline' | 'wallChart'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -310,7 +330,7 @@ const tabs = computed(() => [
   { id: 'familyNarrative', label: t('reports.tabFamilyNarrative') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
   { id: 'descendantChart', label: t('reports.tabDescendantChart') },
-  { id: 'circleChart', label: t('reports.tabCircleChart') },
+  { id: 'fanChart', label: t('reports.tabFanChart') },
   { id: 'timeline', label: t('reports.tabTimeline') },
   { id: 'wallChart', label: t('wallChart.tabWallChart') },
 ]);
@@ -324,8 +344,10 @@ const ancestorBookPersonId = computed(() => focusStore.personId);
 const biographyPersonId = computed(() => focusStore.personId);
 const placeHistoryPlaceId = ref('');
 const familyNarrativeRelId = ref('');
-const circleGenerations = ref(6);
-const circleCurvedText = ref(true);
+const fanGenerations = ref(6);
+const fanArcSpan = ref<ArcSpan>(360);
+const fanCurvedText = ref(true);
+const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 
 // --- Zoom ---
@@ -433,7 +455,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=biography)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'descendantChart', 'circleChart', 'timeline', 'wallChart'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'descendantChart', 'fanChart', 'timeline', 'wallChart'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }

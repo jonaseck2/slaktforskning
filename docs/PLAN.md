@@ -197,6 +197,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.111.0 | Chart visual overhaul: measurement/connectors modules, WCAG contrast, box redesign for pedigree/hourglass/descendant | [archive](plans/archive/2026-04-18-chart-visual-overhaul.md) |
 | v0.111.1 | WCAG math unit tests (parseHex/luminance/contrast/thresholds); e2e viz back-button test hardening | — |
 | v0.111.2 | Skill docs: WCAG contrast enforcement in a11y/frontend-design/test skills; export color-invariance tests | [spec](superpowers/specs/2026-04-18-export-color-invariance-tests-design.md) |
+| v0.112.0 | Unified fan/circle chart: fan subsumes the 360° circle; adds theming, branch/sex/high-contrast fills, curved-text toggle, radial gen 5+ text, deeper gen 5-8 rings; circle chart removed from viz tabs and reports; ReportsView + AncestorBookReport expose arc-span + generations + curved-text; `circleColors`/`useCircleThemeColors` renamed to `fanColors`/`useFanThemeColors` | — |
 ---
 
 ## Research

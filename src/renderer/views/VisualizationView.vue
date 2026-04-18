@@ -25,7 +25,6 @@
           :model-value="activeTab"
           :options="[
             { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
-            { value: 'circle',      label: $t('visualization.tab.circle') },
             { value: 'fan',         label: $t('visualization.tab.fan') },
             { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
             { value: 'descendants', label: $t('visualization.tab.descendants') },
@@ -59,11 +58,6 @@
           :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           @navigate="navigateTo"
           @reload="reloadChart"
-        />
-        <CircleChart
-          v-if="activeTab === 'circle'"
-          :person-id="personId"
-          @navigate="navigateTo"
         />
         <FanChart
           v-if="activeTab === 'fan'"
@@ -142,7 +136,6 @@ import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
-import CircleChart from '../components/charts/CircleChart.vue';
 import FanChart from '../components/charts/FanChart.vue';
 import HourglassChart from '../components/charts/HourglassChart.vue';
 import DescendantChart from '../components/charts/DescendantChart.vue';
@@ -211,8 +204,11 @@ const chartBoxes = computed<BoxLayout[]>(() => {
   return [];
 });
 
-type TabName = 'pedigree' | 'circle' | 'fan' | 'hourglass' | 'descendants' | 'timeline';
-const activeTab = ref<TabName>((localStorage.getItem('viz-tab') as TabName) || 'hourglass');
+type TabName = 'pedigree' | 'fan' | 'hourglass' | 'descendants' | 'timeline';
+const VALID_TABS: readonly TabName[] = ['pedigree', 'fan', 'hourglass', 'descendants', 'timeline'];
+const stored = localStorage.getItem('viz-tab');
+const initialTab: TabName = stored && (VALID_TABS as readonly string[]).includes(stored) ? (stored as TabName) : 'hourglass';
+const activeTab = ref<TabName>(initialTab);
 
 // Panel open/closed
 const panelOpen = ref(localStorage.getItem('viz-panel-open') !== 'false');

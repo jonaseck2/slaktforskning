@@ -2,6 +2,7 @@
 // Returns CSS custom property values when themed, or hardcoded neutral palette for export.
 
 import { computed } from 'vue';
+import { useThemeSignal } from './useThemeSignal';
 
 export interface ChartColors {
   surface: string;
@@ -76,8 +77,14 @@ function readCssVar(style: CSSStyleDeclaration, name: string, fallback: string):
  * When `themed` is false, returns `EXPORT_COLORS` for unthemed export.
  */
 export function useChartColors(themed: boolean) {
+  const themeVersion = useThemeSignal();
   return computed<ChartColors>(() => {
     if (!themed) return EXPORT_COLORS;
+
+    // Register a dependency on the theme signal so changes to
+    // html.classList invalidate this computed. Not read in the
+    // non-themed branch — exports must stay invariant.
+    void themeVersion.value;
 
     const s = getComputedStyle(document.documentElement);
     const g = (name: string, fallback: string) => readCssVar(s, name, fallback);
