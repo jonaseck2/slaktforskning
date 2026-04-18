@@ -22,6 +22,7 @@
           ref="baseMapRef"
           :initial-zoom="4"
           :initial-center="[55, 15]"
+          :scroll-wheel-zoom="true"
           :show-fit="true"
           @ready="onMapReady"
         >
