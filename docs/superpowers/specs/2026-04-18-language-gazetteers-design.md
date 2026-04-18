@@ -16,13 +16,13 @@ A new gazetteer kind — `language` — that contains only name translations. La
 
 ```json
 {
-  "id": "lang-sv",
-  "name": "Swedish place names",
+  "id": "lang-sv-geonames",
+  "name": "Swedish place names (GeoNames)",
   "locale": "sv",
   "kind": "language",
-  "description": "Swedish translations for place names in world and Nordic gazetteers",
+  "description": "Swedish translations for countries and admin1 divisions",
   "source": {
-    "name": "GeoNames + Wikidata",
+    "name": "GeoNames",
     "url": "https://www.geonames.org/",
     "license": "CC BY 4.0",
     "fetched": "2026-04-18"
