@@ -3,7 +3,13 @@
   <div class="media-main">
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
-      <AppButton variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
+      <div class="header-right">
+        <div v-if="!loading && items.length > 0" class="view-toggle">
+          <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
+          <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.tableView') }}</AppButton>
+        </div>
+        <AppButton variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
+      </div>
     </div>
 
     <p v-if="!loading && items.length > 0" class="count-label">
@@ -18,19 +24,6 @@
         :placeholder="$t('media.filter.search')"
         class="gallery-search"
       />
-    </div>
-
-    <div v-if="!loading && items.length > 0" class="view-toggle">
-      <AppButton
-        :variant="viewMode === 'gallery' ? 'primary' : 'secondary'"
-        size="sm"
-        @click="setViewMode('gallery')"
-      >{{ $t('media.galleryView') }}</AppButton>
-      <AppButton
-        :variant="viewMode === 'table' ? 'primary' : 'secondary'"
-        size="sm"
-        @click="setViewMode('table')"
-      >{{ $t('media.tableView') }}</AppButton>
     </div>
 
     <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
@@ -526,11 +519,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   padding: 1px 5px;
 }
 
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
-}
+.header-right { display: flex; align-items: center; gap: 8px; }
+.view-toggle { display: flex; gap: 2px; }
 
 .media-table .thumb-cell {
   padding: 4px;

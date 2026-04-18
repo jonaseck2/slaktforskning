@@ -424,6 +424,7 @@ export default {
   },
   visualization: {
     tab: {
+      tree: 'Träd',
       pedigree: 'Stamtavla',
       circle: 'Cirkel',
       hourglass: 'Timglas',

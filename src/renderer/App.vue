@@ -22,10 +22,6 @@
         </router-link>
       </div>
       <h2 class="nav-section-label">{{ $t('nav.research') }}</h2>
-      <router-link to="/visualisering" class="nav-item" :aria-label="$t('nav.familyTree')">
-        <span class="nav-icon" aria-hidden="true">🌳</span>
-        <span class="nav-label">{{ $t('nav.familyTree') }}</span>
-      </router-link>
       <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
         <span class="nav-icon" aria-hidden="true">👤</span>
         <span class="nav-label">{{ $t('nav.people') }}</span>
