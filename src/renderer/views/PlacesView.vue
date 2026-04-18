@@ -102,7 +102,7 @@ const route = useRoute();
 const places = ref<PlaceRow[]>([]);
 
 const LS_KEY = 'slaktforskning-places-view';
-const viewMode = ref<'list' | 'map'>((localStorage.getItem(LS_KEY) as 'list' | 'map') ?? 'list');
+const viewMode = ref<'list' | 'map'>((localStorage.getItem(LS_KEY) as 'list' | 'map') ?? 'map');
 watch(viewMode, (v) => localStorage.setItem(LS_KEY, v));
 const activeTypeFilter = ref<string>('all');
 

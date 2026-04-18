@@ -518,8 +518,8 @@ export default {
     treeSubjectCleared: 'Huvudperson borttagen.',
   },
   quality: {
-    nav: 'Datakvalitet',
-    title: 'Datakvalitet',
+    nav: 'Kvalitet',
+    title: 'Kvalitet',
     runChecks: 'Kör kontroller',
     notRun: 'Klicka "Kör kontroller" för att analysera trädet.',
     summary: '{errors} fel · {warnings} varningar · {notices} notiser',
@@ -693,8 +693,8 @@ export default {
     },
   },
   researchTasks: {
-    title: 'Forskningstips',
-    nav: 'Forskning',
+    title: 'Forskningsuppgifter',
+    nav: 'Forskningsuppgifter',
     priority: 'Prioritet',
     status: 'Status',
     task: 'Uppgift',

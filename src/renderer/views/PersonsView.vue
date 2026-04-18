@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="header">
-      <h2>{{ $t('persons.title') }}</h2>
+      <h2>{{ $t('nav.people') }}</h2>
       <div class="header-actions">
         <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('persons.addPerson') }}</AppButton>
       </div>
@@ -62,7 +62,9 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ $t('persons.name') }}</th>
+            <th>{{ $t('persons.givenName') }}</th>
+            <th>{{ $t('persons.surname') }}</th>
+            <th>{{ $t('persons.sex') }}</th>
             <th>{{ $t('persons.info') }}</th>
             <th class="actions-cell"></th>
           </tr>
@@ -89,17 +91,17 @@
             @keydown.up.prevent="focusPrevRow($event)"
           >
             <td>
-              <div style="display: flex; align-items: center; gap: var(--space-sm)">
+              <div class="name-cell">
                 <AppAvatar :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
                 <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
-                  <strong><PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" /></strong>
-                  <span class="surname-text"> {{ person.surname }}</span>
+                  <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
                 </router-link>
               </div>
             </td>
+            <td>{{ person.surname }}</td>
+            <td><AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge></td>
             <td class="info-cell">{{ formatPersonInfo(person) }}</td>
             <td class="actions-cell">
-              <AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge>
               <AppButton variant="ghost" size="sm" @click.stop="removePerson(person.id)">✕</AppButton>
             </td>
           </tr>
@@ -456,7 +458,7 @@ onActivated(async () => {
   align-items: center;
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
-.surname-text { color: var(--text-muted); }
+.name-cell { display: flex; align-items: center; gap: var(--space-sm); }
 .info-cell { color: var(--text-muted); font-size: var(--font-sm); }
 .birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
 .score-badge {

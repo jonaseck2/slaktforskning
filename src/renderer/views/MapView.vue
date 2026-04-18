@@ -1,10 +1,5 @@
 <template>
   <div class="map-view">
-    <div class="header">
-      <h2>{{ $t('map.title') }}</h2>
-      <span class="count-label">{{ filteredPlaces.length }} {{ $t('places.title').toLowerCase() }}</span>
-    </div>
-
     <div v-if="filterText || allDisplayPlaces.length > 0" class="map-toolbar">
       <input
         v-model="filterText"
