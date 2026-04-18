@@ -143,9 +143,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
       deathLine,
     };
 
-    await loadGroups(id);
-    await loadResearchTasks(id);
-    await loadCounts(id);
+    await Promise.all([loadGroups(id), loadResearchTasks(id), loadCounts(id)]);
   }
 
   async function loadCounts(id: string) {

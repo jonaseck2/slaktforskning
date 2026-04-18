@@ -173,6 +173,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.97.2 | Fix: remove redundant List view button from pedigree tab, shorten "+ Research Tasks" to "+ Task" | — |
 | v0.97.3 | Fix: consistent count labels (showingOf) and view toggle labels across Places, Media, People views | — |
 | v0.97.4 | Fix: add explicit space between given name and surname in PersonNamesTable | — |
+| v0.97.5 | Fix: parallelize panel relationship loading to prevent scroll lock | — |
 ---
 
 ## Research

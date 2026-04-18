@@ -34,7 +34,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { formatFullName, resolvePersonDisplayName } from '../utils/nameUtils';
+import { formatFullName } from '../utils/nameUtils';
 import AppAvatar from './ui/AppAvatar.vue';
 
 interface PersonRelRow {
@@ -75,25 +75,26 @@ async function load() {
     subtype: string | null;
   }>;
 
-  const enriched: PersonRelRow[] = [];
-  for (const r of rawRels) {
+  const enriched = await Promise.all(rawRels.map(async (r) => {
     const otherId = r.person1_id === props.personId ? r.person2_id : r.person1_id;
     let otherName = t('common.unknown');
     let otherGivenName = '';
     let otherSurname = '';
     let otherSex: 'M' | 'F' | 'U' = 'U';
     if (otherId) {
-      otherName = await resolvePersonDisplayName(otherId, t('common.unknown'));
       try {
-        const otherPerson = await window.api.persons.get(otherId) as { sex?: string } | null;
-        if (otherPerson) {
-          otherSex = (otherPerson.sex as 'M' | 'F' | 'U') || 'U';
+        const [person, names] = await Promise.all([
+          window.api.persons.get(otherId) as Promise<{ sex?: string } | null>,
+          window.api.persons.getNames(otherId) as Promise<Array<{ given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; name_prefix: string | null; name_suffix: string | null; sort_order: number }>>,
+        ]);
+        if (person) {
+          otherSex = (person.sex as 'M' | 'F' | 'U') || 'U';
         }
-        const names = (await window.api.persons.getNames(otherId)) as Array<{ given_name: string | null; surname: string | null; sort_order: number }>;
         if (names.length > 0) {
           const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
           otherGivenName = primary.given_name || '';
           otherSurname = primary.surname || '';
+          otherName = formatFullName(primary) || t('common.unknown');
         }
       } catch { /* ignore */ }
     }
@@ -103,7 +104,7 @@ async function load() {
       typeLabel = r.person1_id === props.personId ? t('relTypes.child') : t('relTypes.parent');
     }
 
-    enriched.push({
+    return {
       id: r.id,
       type: r.type,
       person1_id: r.person1_id,
@@ -116,8 +117,8 @@ async function load() {
       otherSex,
       typeLabel,
       subtypeLabel: getSubtypeLabel(r.type, r.subtype),
-    });
-  }
+    } as PersonRelRow;
+  }));
   rels.value = enriched;
 }
 
