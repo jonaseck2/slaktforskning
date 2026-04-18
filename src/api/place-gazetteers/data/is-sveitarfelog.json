@@ -1,0 +1,1209 @@
+{
+  "id": "is-sveitarfelog",
+  "name": "Icelandic Municipalities & Places",
+  "locale": "is",
+  "description": "Icelandic regions, municipalities (sveitarfélög), and populated places.",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://www.geonames.org/countries/IS/iceland.html",
+    "license": "CC BY 4.0",
+    "fetched": "2026-04-18"
+  },
+  "root": {
+    "name": "Ísland",
+    "type": "country",
+    "aliases": [
+      "Iceland"
+    ],
+    "lat": 65,
+    "lon": -18.5,
+    "children": [
+      {
+        "name": "Austurland",
+        "type": "region",
+        "lat": 65.031793,
+        "lon": -14.689927,
+        "children": [
+          {
+            "name": "Fjarðabyggð",
+            "type": "municipality",
+            "lat": 64.968208,
+            "lon": -13.969595,
+            "children": [
+              {
+                "name": "Breiðdalsvík",
+                "type": "locality",
+                "lat": 64.79212,
+                "lon": -14.0065
+              },
+              {
+                "name": "Eskifjörður",
+                "type": "locality",
+                "lat": 65.07306,
+                "lon": -14.01525
+              },
+              {
+                "name": "Fáskrúðsfjörður",
+                "type": "locality",
+                "lat": 64.93128,
+                "lon": -14.0189
+              },
+              {
+                "name": "Neskaupstaður",
+                "type": "locality",
+                "lat": 65.14819,
+                "lon": -13.68368
+              },
+              {
+                "name": "Reyðarfjörður",
+                "type": "locality",
+                "lat": 65.03164,
+                "lon": -14.21832
+              },
+              {
+                "name": "Stöðvarfjörður",
+                "type": "locality",
+                "lat": 64.83296,
+                "lon": -13.87492
+              }
+            ]
+          },
+          {
+            "name": "Múlaþing",
+            "type": "municipality",
+            "lat": 65.227622,
+            "lon": -14.210737,
+            "children": [
+              {
+                "name": "Bakkagerði",
+                "type": "locality",
+                "lat": 65.52548,
+                "lon": -13.80376
+              },
+              {
+                "name": "Djúpivogur",
+                "type": "locality",
+                "lat": 64.65713,
+                "lon": -14.28517
+              },
+              {
+                "name": "Egilsstaðir",
+                "type": "locality",
+                "lat": 65.26687,
+                "lon": -14.39485
+              },
+              {
+                "name": "Eidar",
+                "type": "locality",
+                "lat": 65.37199,
+                "lon": -14.34866
+              },
+              {
+                "name": "Fellabaer",
+                "type": "locality",
+                "lat": 65.28418,
+                "lon": -14.42621
+              },
+              {
+                "name": "Seyðisfjörður",
+                "type": "locality",
+                "lat": 65.26008,
+                "lon": -14.00577
+              }
+            ]
+          },
+          {
+            "name": "Sveitarfélagið Hornafjörður",
+            "type": "municipality",
+            "lat": 64.174763,
+            "lon": -15.751607,
+            "children": [
+              {
+                "name": "Fagurhólsmýri",
+                "type": "locality",
+                "lat": 63.87733,
+                "lon": -16.64879
+              },
+              {
+                "name": "Hoffell",
+                "type": "locality",
+                "lat": 64.39308,
+                "lon": -15.39391
+              },
+              {
+                "name": "Höfn",
+                "type": "locality",
+                "lat": 64.25388,
+                "lon": -15.21212
+              }
+            ]
+          },
+          {
+            "name": "Vopnafjarðarhreppur",
+            "type": "municipality",
+            "lat": 65.75658,
+            "lon": -14.82777,
+            "children": [
+              {
+                "name": "Vopnafjörður",
+                "type": "locality",
+                "lat": 65.75658,
+                "lon": -14.82777
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Höfuðborgarsvæði",
+        "type": "region",
+        "lat": 64.130259,
+        "lon": -21.896932,
+        "children": [
+          {
+            "name": "Garðabær",
+            "type": "municipality",
+            "lat": 64.094325,
+            "lon": -21.969825,
+            "children": [
+              {
+                "name": "Álftanes",
+                "type": "locality",
+                "lat": 64.1,
+                "lon": -22.01667
+              },
+              {
+                "name": "Garðabær",
+                "type": "locality",
+                "lat": 64.08865,
+                "lon": -21.92298
+              }
+            ]
+          },
+          {
+            "name": "Hafnarfjarðarkaupstaður",
+            "type": "municipality",
+            "lat": 64.0671,
+            "lon": -21.93774,
+            "children": [
+              {
+                "name": "Hafnarfjörður",
+                "type": "locality",
+                "lat": 64.0671,
+                "lon": -21.93774
+              }
+            ]
+          },
+          {
+            "name": "Kópavogsbær",
+            "type": "municipality",
+            "lat": 64.11234,
+            "lon": -21.91298,
+            "children": [
+              {
+                "name": "Kópavogur",
+                "type": "locality",
+                "lat": 64.11234,
+                "lon": -21.91298
+              }
+            ]
+          },
+          {
+            "name": "Mosfellsbaer",
+            "type": "municipality",
+            "lat": 64.16667,
+            "lon": -21.7,
+            "children": [
+              {
+                "name": "Mosfellsbær",
+                "type": "locality",
+                "lat": 64.16667,
+                "lon": -21.7
+              }
+            ]
+          },
+          {
+            "name": "Reykjavíkurborg",
+            "type": "municipality",
+            "lat": 64.18803,
+            "lon": -21.866055,
+            "children": [
+              {
+                "name": "Grundarhverfi",
+                "type": "locality",
+                "lat": 64.24058,
+                "lon": -21.8367
+              },
+              {
+                "name": "Reykjavík",
+                "type": "locality",
+                "lat": 64.13548,
+                "lon": -21.89541
+              }
+            ]
+          },
+          {
+            "name": "Seltjarnarneskaupstaður",
+            "type": "municipality",
+            "lat": 64.15309,
+            "lon": -21.99499,
+            "children": [
+              {
+                "name": "Seltjarnarnes",
+                "type": "locality",
+                "lat": 64.15309,
+                "lon": -21.99499
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Norðurland Eystra",
+        "type": "region",
+        "lat": 65.963469,
+        "lon": -17.636763,
+        "children": [
+          {
+            "name": "Akureyrarkaupstaður",
+            "type": "municipality",
+            "lat": 66.067087,
+            "lon": -18.159683,
+            "children": [
+              {
+                "name": "Akureyri",
+                "type": "locality",
+                "lat": 65.68353,
+                "lon": -18.0878
+              },
+              {
+                "name": "Grímsey",
+                "type": "locality",
+                "lat": 66.53938,
+                "lon": -18.01348
+              },
+              {
+                "name": "Hrísey",
+                "type": "locality",
+                "lat": 65.97835,
+                "lon": -18.37777
+              }
+            ]
+          },
+          {
+            "name": "Dalvíkurbyggð",
+            "type": "municipality",
+            "lat": 65.906453,
+            "lon": -18.496833,
+            "children": [
+              {
+                "name": "Dalvík",
+                "type": "locality",
+                "lat": 65.97018,
+                "lon": -18.52861
+              },
+              {
+                "name": "Litli-Árskógssandur",
+                "type": "locality",
+                "lat": 65.94422,
+                "lon": -18.35654
+              },
+              {
+                "name": "Urðir",
+                "type": "locality",
+                "lat": 65.80496,
+                "lon": -18.60535
+              }
+            ]
+          },
+          {
+            "name": "Fjallabyggð",
+            "type": "municipality",
+            "lat": 66.1096,
+            "lon": -18.77607,
+            "children": [
+              {
+                "name": "Ólafsfjörður",
+                "type": "locality",
+                "lat": 66.06722,
+                "lon": -18.64399
+              },
+              {
+                "name": "Siglufjörður",
+                "type": "locality",
+                "lat": 66.15198,
+                "lon": -18.90815
+              }
+            ]
+          },
+          {
+            "name": "Grýtubakkahreppur",
+            "type": "municipality",
+            "lat": 65.95102,
+            "lon": -18.17493,
+            "children": [
+              {
+                "name": "Grenivík",
+                "type": "locality",
+                "lat": 65.95102,
+                "lon": -18.17493
+              }
+            ]
+          },
+          {
+            "name": "Hörgársveit",
+            "type": "municipality",
+            "lat": 65.84817,
+            "lon": -18.20127,
+            "children": [
+              {
+                "name": "Hjalteyri",
+                "type": "locality",
+                "lat": 65.84817,
+                "lon": -18.20127
+              }
+            ]
+          },
+          {
+            "name": "Langanesbyggð",
+            "type": "municipality",
+            "lat": 66.11793,
+            "lon": -15.06497,
+            "children": [
+              {
+                "name": "Bakkafjörður",
+                "type": "locality",
+                "lat": 66.03772,
+                "lon": -14.79315
+              },
+              {
+                "name": "Þórshöfn",
+                "type": "locality",
+                "lat": 66.19814,
+                "lon": -15.33679
+              }
+            ]
+          },
+          {
+            "name": "Norðurþing",
+            "type": "municipality",
+            "lat": 66.26585,
+            "lon": -16.577987,
+            "children": [
+              {
+                "name": "Kópasker",
+                "type": "locality",
+                "lat": 66.30178,
+                "lon": -16.44452
+              },
+              {
+                "name": "Norðurþing",
+                "type": "locality",
+                "lat": 66.04148,
+                "lon": -17.33834
+              },
+              {
+                "name": "Raufarhöfn",
+                "type": "locality",
+                "lat": 66.45429,
+                "lon": -15.9511
+              }
+            ]
+          },
+          {
+            "name": "Svalbarðsstrandarhreppur",
+            "type": "municipality",
+            "lat": 65.74107,
+            "lon": -18.07744,
+            "children": [
+              {
+                "name": "Svalbarðseyri",
+                "type": "locality",
+                "lat": 65.74107,
+                "lon": -18.07744
+              }
+            ]
+          },
+          {
+            "name": "Þingeyjarsveit",
+            "type": "municipality",
+            "lat": 65.664043,
+            "lon": -17.20168,
+            "children": [
+              {
+                "name": "Laugar",
+                "type": "locality",
+                "lat": 65.72159,
+                "lon": -17.37352
+              },
+              {
+                "name": "Reykjahlíð",
+                "type": "locality",
+                "lat": 65.64205,
+                "lon": -16.91244
+              },
+              {
+                "name": "Stafn",
+                "type": "locality",
+                "lat": 65.62849,
+                "lon": -17.31908
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Norðurland Vestra",
+        "type": "region",
+        "lat": 65.633577,
+        "lon": -20.197665,
+        "children": [
+          {
+            "name": "Húnabyggð",
+            "type": "municipality",
+            "lat": 65.606615,
+            "lon": -20.251955,
+            "children": [
+              {
+                "name": "Blönduós",
+                "type": "locality",
+                "lat": 65.65932,
+                "lon": -20.28083
+              },
+              {
+                "name": "Reykir",
+                "type": "locality",
+                "lat": 65.55391,
+                "lon": -20.22308
+              }
+            ]
+          },
+          {
+            "name": "Húnaþing Vestra",
+            "type": "municipality",
+            "lat": 65.380647,
+            "lon": -20.81247,
+            "children": [
+              {
+                "name": "Hvammstangi",
+                "type": "locality",
+                "lat": 65.39711,
+                "lon": -20.94346
+              },
+              {
+                "name": "Laugarbakki",
+                "type": "locality",
+                "lat": 65.32624,
+                "lon": -20.89295
+              },
+              {
+                "name": "Lækjamót",
+                "type": "locality",
+                "lat": 65.41859,
+                "lon": -20.601
+              }
+            ]
+          },
+          {
+            "name": "Sveitarfélagið Skagafjörður",
+            "type": "municipality",
+            "lat": 65.723854,
+            "lon": -19.423756,
+            "children": [
+              {
+                "name": "Hofsós",
+                "type": "locality",
+                "lat": 65.89896,
+                "lon": -19.41298
+              },
+              {
+                "name": "Hólar",
+                "type": "locality",
+                "lat": 65.73079,
+                "lon": -19.11164
+              },
+              {
+                "name": "Rip",
+                "type": "locality",
+                "lat": 65.69038,
+                "lon": -19.50863
+              },
+              {
+                "name": "Sauðárkrókur",
+                "type": "locality",
+                "lat": 65.74611,
+                "lon": -19.63944
+              },
+              {
+                "name": "Varmahlíð",
+                "type": "locality",
+                "lat": 65.55303,
+                "lon": -19.44609
+              }
+            ]
+          },
+          {
+            "name": "Sveitarfélagið Skagaströnd",
+            "type": "municipality",
+            "lat": 65.82319,
+            "lon": -20.30248,
+            "children": [
+              {
+                "name": "Skagaströnd",
+                "type": "locality",
+                "lat": 65.82319,
+                "lon": -20.30248
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Suðurland",
+        "type": "region",
+        "lat": 63.840409,
+        "lon": -20.265618,
+        "children": [
+          {
+            "name": "Bláskógabyggð",
+            "type": "municipality",
+            "lat": 64.170487,
+            "lon": -20.556427,
+            "children": [
+              {
+                "name": "Laugarás",
+                "type": "locality",
+                "lat": 64.11555,
+                "lon": -20.49381
+              },
+              {
+                "name": "Laugarvatn",
+                "type": "locality",
+                "lat": 64.21762,
+                "lon": -20.73386
+              },
+              {
+                "name": "Reykholt",
+                "type": "locality",
+                "lat": 64.17829,
+                "lon": -20.44161
+              }
+            ]
+          },
+          {
+            "name": "Grímsnes- og Grafningshreppur",
+            "type": "municipality",
+            "lat": 64.07522,
+            "lon": -20.76472,
+            "children": [
+              {
+                "name": "Borg",
+                "type": "locality",
+                "lat": 64.07522,
+                "lon": -20.76472
+              }
+            ]
+          },
+          {
+            "name": "Hrunamannahreppur",
+            "type": "municipality",
+            "lat": 64.13428,
+            "lon": -20.32265,
+            "children": [
+              {
+                "name": "Flúðir",
+                "type": "locality",
+                "lat": 64.13428,
+                "lon": -20.32265
+              }
+            ]
+          },
+          {
+            "name": "Hveragerðisbær",
+            "type": "municipality",
+            "lat": 64.00039,
+            "lon": -21.18602,
+            "children": [
+              {
+                "name": "Hveragerði",
+                "type": "locality",
+                "lat": 64.00039,
+                "lon": -21.18602
+              }
+            ]
+          },
+          {
+            "name": "Mýrdalshreppur",
+            "type": "municipality",
+            "lat": 63.41944,
+            "lon": -19.00972,
+            "children": [
+              {
+                "name": "Vík í Mýrdal",
+                "type": "locality",
+                "lat": 63.41944,
+                "lon": -19.00972
+              }
+            ]
+          },
+          {
+            "name": "Rangárþing Eystra",
+            "type": "municipality",
+            "lat": 63.689935,
+            "lon": -19.799465,
+            "children": [
+              {
+                "name": "Hvolsvöllur",
+                "type": "locality",
+                "lat": 63.75069,
+                "lon": -20.22454
+              },
+              {
+                "name": "Skogar",
+                "type": "locality",
+                "lat": 63.62918,
+                "lon": -19.37439
+              }
+            ]
+          },
+          {
+            "name": "Rangárþing Ytra",
+            "type": "municipality",
+            "lat": 63.78868,
+            "lon": -20.50498,
+            "children": [
+              {
+                "name": "Hella",
+                "type": "locality",
+                "lat": 63.8348,
+                "lon": -20.40084
+              },
+              {
+                "name": "Þykkvibær",
+                "type": "locality",
+                "lat": 63.74256,
+                "lon": -20.60912
+              }
+            ]
+          },
+          {
+            "name": "Skaftárhreppur",
+            "type": "municipality",
+            "lat": 63.78935,
+            "lon": -18.05273,
+            "children": [
+              {
+                "name": "Kirkjubæjarklaustur",
+                "type": "locality",
+                "lat": 63.78935,
+                "lon": -18.05273
+              }
+            ]
+          },
+          {
+            "name": "Sveitarfélagið Árborg",
+            "type": "municipality",
+            "lat": 63.878073,
+            "lon": -21.068323,
+            "children": [
+              {
+                "name": "Eyrarbakki",
+                "type": "locality",
+                "lat": 63.86323,
+                "lon": -21.14915
+              },
+              {
+                "name": "Selfoss",
+                "type": "locality",
+                "lat": 63.93311,
+                "lon": -20.99712
+              },
+              {
+                "name": "Stokkseyri",
+                "type": "locality",
+                "lat": 63.83788,
+                "lon": -21.0587
+              }
+            ]
+          },
+          {
+            "name": "Sveitarfélagið Ölfus",
+            "type": "municipality",
+            "lat": 63.85591,
+            "lon": -21.38337,
+            "children": [
+              {
+                "name": "Þorlákshöfn",
+                "type": "locality",
+                "lat": 63.85591,
+                "lon": -21.38337
+              }
+            ]
+          },
+          {
+            "name": "Vestmannaeyjabær",
+            "type": "municipality",
+            "lat": 63.44273,
+            "lon": -20.27339,
+            "children": [
+              {
+                "name": "Vestmannaeyjar",
+                "type": "locality",
+                "lat": 63.44273,
+                "lon": -20.27339
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Suðurnes",
+        "type": "region",
+        "lat": 63.963365,
+        "lon": -22.520931,
+        "children": [
+          {
+            "name": "Grindavíkurbær",
+            "type": "municipality",
+            "lat": 63.83849,
+            "lon": -22.43931,
+            "children": [
+              {
+                "name": "Grindavík",
+                "type": "locality",
+                "lat": 63.83849,
+                "lon": -22.43931
+              }
+            ]
+          },
+          {
+            "name": "Reykjanesbær",
+            "type": "municipality",
+            "lat": 63.979285,
+            "lon": -22.580037,
+            "children": [
+              {
+                "name": "Hafnir",
+                "type": "locality",
+                "lat": 63.93319,
+                "lon": -22.68212
+              },
+              {
+                "name": "Keflavík",
+                "type": "locality",
+                "lat": 64.00492,
+                "lon": -22.56242
+              },
+              {
+                "name": "Njarðvík",
+                "type": "locality",
+                "lat": 63.9809,
+                "lon": -22.5145
+              },
+              {
+                "name": "Reykjanesbær",
+                "type": "locality",
+                "lat": 63.99813,
+                "lon": -22.56111
+              }
+            ]
+          },
+          {
+            "name": "Suðurnesjabær",
+            "type": "municipality",
+            "lat": 64.054085,
+            "lon": -22.679645,
+            "children": [
+              {
+                "name": "Garður",
+                "type": "locality",
+                "lat": 64.07055,
+                "lon": -22.6513
+              },
+              {
+                "name": "Sandgerði",
+                "type": "locality",
+                "lat": 64.03762,
+                "lon": -22.70799
+              }
+            ]
+          },
+          {
+            "name": "Sveitarfélagið Vogar",
+            "type": "municipality",
+            "lat": 63.9816,
+            "lon": -22.38473,
+            "children": [
+              {
+                "name": "Vogar",
+                "type": "locality",
+                "lat": 63.9816,
+                "lon": -22.38473
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Vestfirðir",
+        "type": "region",
+        "lat": 65.802803,
+        "lon": -22.659345,
+        "children": [
+          {
+            "name": "Árneshreppur",
+            "type": "municipality",
+            "lat": 66.00371,
+            "lon": -21.49981,
+            "children": [
+              {
+                "name": "Árneshreppur",
+                "type": "locality",
+                "lat": 66.00371,
+                "lon": -21.49981
+              }
+            ]
+          },
+          {
+            "name": "Bolungarvíkurkaupstaður",
+            "type": "municipality",
+            "lat": 66.15917,
+            "lon": -23.24941,
+            "children": [
+              {
+                "name": "Bolungarvík",
+                "type": "locality",
+                "lat": 66.15917,
+                "lon": -23.24941
+              }
+            ]
+          },
+          {
+            "name": "Ísafjarðarbær",
+            "type": "municipality",
+            "lat": 66.045474,
+            "lon": -23.454553,
+            "children": [
+              {
+                "name": "Flateyri",
+                "type": "locality",
+                "lat": 66.05119,
+                "lon": -23.51547
+              },
+              {
+                "name": "Hnífsdalur",
+                "type": "locality",
+                "lat": 66.11131,
+                "lon": -23.12036
+              },
+              {
+                "name": "Ingjaldssandur",
+                "type": "locality",
+                "lat": 66.02761,
+                "lon": -23.68464
+              },
+              {
+                "name": "Ísafjörður",
+                "type": "locality",
+                "lat": 66.07475,
+                "lon": -23.13498
+              },
+              {
+                "name": "Suðureyri",
+                "type": "locality",
+                "lat": 66.13041,
+                "lon": -23.52804
+              },
+              {
+                "name": "Sæból",
+                "type": "locality",
+                "lat": 66.04406,
+                "lon": -23.70549
+              },
+              {
+                "name": "Þingeyri",
+                "type": "locality",
+                "lat": 65.87899,
+                "lon": -23.49289
+              }
+            ]
+          },
+          {
+            "name": "Kaldrananeshreppur",
+            "type": "municipality",
+            "lat": 65.68918,
+            "lon": -21.44353,
+            "children": [
+              {
+                "name": "Drangsnes",
+                "type": "locality",
+                "lat": 65.68918,
+                "lon": -21.44353
+              }
+            ]
+          },
+          {
+            "name": "Reykhólahreppur",
+            "type": "municipality",
+            "lat": 65.410995,
+            "lon": -22.553875,
+            "children": [
+              {
+                "name": "Flatey",
+                "type": "locality",
+                "lat": 65.37587,
+                "lon": -22.91785
+              },
+              {
+                "name": "Reykhólar",
+                "type": "locality",
+                "lat": 65.44612,
+                "lon": -22.1899
+              }
+            ]
+          },
+          {
+            "name": "Strandabyggð",
+            "type": "municipality",
+            "lat": 65.70767,
+            "lon": -21.67065,
+            "children": [
+              {
+                "name": "Hólmavík",
+                "type": "locality",
+                "lat": 65.70767,
+                "lon": -21.67065
+              }
+            ]
+          },
+          {
+            "name": "Súðavíkurhreppur",
+            "type": "municipality",
+            "lat": 65.9852,
+            "lon": -22.74837,
+            "children": [
+              {
+                "name": "Súðavík",
+                "type": "locality",
+                "lat": 66.03829,
+                "lon": -22.98593
+              },
+              {
+                "name": "Vatnsfjordhur",
+                "type": "locality",
+                "lat": 65.93211,
+                "lon": -22.51081
+              }
+            ]
+          },
+          {
+            "name": "Tálknafjarðarhreppur",
+            "type": "municipality",
+            "lat": 65.62648,
+            "lon": -23.8246,
+            "children": [
+              {
+                "name": "Talknafjordur",
+                "type": "locality",
+                "lat": 65.62648,
+                "lon": -23.8246
+              }
+            ]
+          },
+          {
+            "name": "Vesturbyggð",
+            "type": "municipality",
+            "lat": 65.597345,
+            "lon": -23.48931,
+            "children": [
+              {
+                "name": "Bíldudalur",
+                "type": "locality",
+                "lat": 65.6853,
+                "lon": -23.59992
+              },
+              {
+                "name": "Brjánslækur",
+                "type": "locality",
+                "lat": 65.53,
+                "lon": -23.19437
+              },
+              {
+                "name": "Flókalundur",
+                "type": "locality",
+                "lat": 65.57625,
+                "lon": -23.16699
+              },
+              {
+                "name": "Patreksfjörður",
+                "type": "locality",
+                "lat": 65.59783,
+                "lon": -23.99596
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Vesturland",
+        "type": "region",
+        "lat": 64.824174,
+        "lon": -22.527049,
+        "children": [
+          {
+            "name": "Akraneskaupstaður",
+            "type": "municipality",
+            "lat": 64.32179,
+            "lon": -22.0749,
+            "children": [
+              {
+                "name": "Akranes",
+                "type": "locality",
+                "lat": 64.32179,
+                "lon": -22.0749
+              }
+            ]
+          },
+          {
+            "name": "Borgarbyggð",
+            "type": "municipality",
+            "lat": 64.588917,
+            "lon": -21.657013,
+            "children": [
+              {
+                "name": "Borgarnes",
+                "type": "locality",
+                "lat": 64.53834,
+                "lon": -21.92064
+              },
+              {
+                "name": "Hvanneyri",
+                "type": "locality",
+                "lat": 64.56404,
+                "lon": -21.7589
+              },
+              {
+                "name": "Reykholt",
+                "type": "locality",
+                "lat": 64.66437,
+                "lon": -21.2915
+              }
+            ]
+          },
+          {
+            "name": "Dalabyggð",
+            "type": "municipality",
+            "lat": 65.17781,
+            "lon": -21.78384,
+            "children": [
+              {
+                "name": "Búðardalur",
+                "type": "locality",
+                "lat": 65.10944,
+                "lon": -21.76392
+              },
+              {
+                "name": "Saelingsdal",
+                "type": "locality",
+                "lat": 65.24618,
+                "lon": -21.80376
+              }
+            ]
+          },
+          {
+            "name": "Eyja- og Miklaholtshreppur",
+            "type": "municipality",
+            "lat": 64.834885,
+            "lon": -22.502835,
+            "children": [
+              {
+                "name": "Eyja- og Miklaholtshreppur",
+                "type": "locality",
+                "lat": 64.83463,
+                "lon": -22.57107
+              },
+              {
+                "name": "Sodulsholt",
+                "type": "locality",
+                "lat": 64.83514,
+                "lon": -22.4346
+              }
+            ]
+          },
+          {
+            "name": "Grundarfjarðarbær",
+            "type": "municipality",
+            "lat": 64.92427,
+            "lon": -23.26313,
+            "children": [
+              {
+                "name": "Grundarfjörður",
+                "type": "locality",
+                "lat": 64.92427,
+                "lon": -23.26313
+              }
+            ]
+          },
+          {
+            "name": "Snæfellsbær",
+            "type": "municipality",
+            "lat": 64.846178,
+            "lon": -23.677855,
+            "children": [
+              {
+                "name": "Arnarstapi",
+                "type": "locality",
+                "lat": 64.76936,
+                "lon": -23.62258
+              },
+              {
+                "name": "Búðir",
+                "type": "locality",
+                "lat": 64.82285,
+                "lon": -23.38431
+              },
+              {
+                "name": "Hellissandur",
+                "type": "locality",
+                "lat": 64.91757,
+                "lon": -23.88557
+              },
+              {
+                "name": "Hellnar",
+                "type": "locality",
+                "lat": 64.75055,
+                "lon": -23.64747
+              },
+              {
+                "name": "Ólafsvík",
+                "type": "locality",
+                "lat": 64.89429,
+                "lon": -23.70918
+              },
+              {
+                "name": "Rif",
+                "type": "locality",
+                "lat": 64.92245,
+                "lon": -23.81802
+              }
+            ]
+          },
+          {
+            "name": "Stykkishólmur-Helgafellssveit",
+            "type": "municipality",
+            "lat": 65.07537,
+            "lon": -22.72977,
+            "children": [
+              {
+                "name": "Stykkishólmur",
+                "type": "locality",
+                "lat": 65.07537,
+                "lon": -22.72977
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
