@@ -108,27 +108,25 @@ Merge is O(T × N) where T = number of translations and N = average tree depth f
 
 ## Build Scripts
 
-Two scripts, one output file:
+Two separate scripts, two separate output files — one per data source. No merge step.
 
-### `scripts/build-lang-sv-world.ts`
+### `scripts/build-lang-sv-geonames.ts`
 
 - **Source:** GeoNames `alternateNamesV2.zip` — filter `isolanguage == 'sv'`
 - **Scope:** Countries (match against `world-countries` gazetteer node names) + admin1 divisions (match against `world-admin1`)
-- **Output:** Swedish names for ~200 countries and ~500 admin1 divisions where names differ from English
+- **Output:** `src/api/place-gazetteers/data/lang-sv-geonames.json` — Swedish names for ~200 countries and ~500 admin1 divisions where names differ from English
+- **License:** CC BY 4.0
 
-### `scripts/build-lang-sv-nordic.ts`
+### `scripts/build-lang-sv-wikidata.ts`
 
 - **Source:** Wikidata SPARQL — query `rdfs:label` with `FILTER(LANG(?label) = "sv")` for Danish, Norwegian, Finnish, Icelandic places
 - **Scope:** Municipalities, counties, parishes in dk-sogne, no-kommuner, fi-kunnat, is-sveitarfelog gazetteers (Swedish parishes already use Swedish names natively)
-- **Output:** Swedish names for Nordic administrative divisions where names differ
-
-### Merge Script
-
-A third script `scripts/build-lang-sv.ts` merges the outputs of the two scripts into a single `src/api/place-gazetteers/data/lang-sv.json`. This keeps the data sources independent while producing one file for the app.
+- **Output:** `src/api/place-gazetteers/data/lang-sv-wikidata.json` — Swedish names for Nordic administrative divisions where names differ
+- **License:** CC0 1.0
 
 ### Only-if-different Filter
 
-Both build scripts compare fetched Swedish names against the canonical (English) gazetteer names and only include entries where they differ. This keeps the file lean.
+Both build scripts compare fetched Swedish names against the canonical gazetteer names and only include entries where they differ. This keeps the files lean.
 
 ## UI (GazetteersView)
 
@@ -152,7 +150,7 @@ New keys in `gazetteers` namespace:
 
 ## Config
 
-No changes to `GazetteerConfig`. `lang-sv` is just another ID in `enabledGazetteers[]`. New databases default to all bundled gazetteers enabled (existing behavior in `usePlaceResolver.ensureLoaded()`).
+No changes to `GazetteerConfig`. `lang-sv-geonames` and `lang-sv-wikidata` are IDs in `enabledGazetteers[]` like any other gazetteer. New databases default to all bundled gazetteers enabled (existing behavior in `usePlaceResolver.ensureLoaded()`).
 
 ## Testing
 
@@ -166,13 +164,14 @@ No changes to `GazetteerConfig`. `lang-sv` is just another ID in `enabledGazette
 
 ### Manual Testing
 
-- Enable `lang-sv` in GazetteersView
+- Enable `lang-sv-geonames` in GazetteersView
 - Type "Brasilien" in the test lookup → should get exact match for Brazil
 - Type "Sao Paulo, Brasilien" → should get exact match for São Paulo state
-- Disable `lang-sv` → "Brasilien" should no longer match
+- Disable `lang-sv-geonames` → "Brasilien" should no longer match
+- Enable `lang-sv-wikidata` → verify Nordic place translations work
 
 ## Future Extensions
 
-- **More languages:** Add `lang-da.json`, `lang-no.json`, `lang-fi.json` etc. with the same format and separate build scripts.
+- **More languages:** Add `lang-da-geonames.json`, `lang-no-geonames.json`, etc. with the same format and separate build scripts per source.
 - **User-contributed:** Language gazetteers can be imported/exported like any other gazetteer — users can create and share their own translation files.
 - **Boundary gazetteers:** The merge targets both point and boundary gazetteers, so boundary resolution also benefits from language translations.
