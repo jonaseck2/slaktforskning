@@ -154,8 +154,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.92.2 | Fix: QualityView → PersonDetailView action routing uses watch on person ref for reliable modal opening | — |
 | v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
 | v0.93.1 | Fix: quality fix actions work end-to-end — modal stays open (no router.replace remount), event type pre-filled (birth/death), electron-dev skill updated with CDP verification workflow | — |
-| Infra | Design tokens: `tokens.css` with Forest/Nordic/Twilight themes, `setTheme()` + `currentTheme` ref in App.vue (no visible change — Task 1 of Design System Overhaul) | — |
-| | Design System Overhaul: tokens.css (3 themes), 8 UI primitives, SettingsView absorbs Database/ImportExport/LinkRules/Gazetteers, sidebar uses token variables, hardcoded colors replaced with tokens, dark/high-contrast modes use token cascade | [spec](docs/superpowers/specs/2026-04-17-design-system-spec.md) |
+| v0.94.0 | Design System Overhaul: 3 color themes (Forest/Nordic/Twilight), 9 UI primitives, MediaPanel, SettingsView, sidebar restructured (Research/Organize/Review), all views/panels/modals use design tokens | [spec](docs/superpowers/specs/2026-04-17-design-system-spec.md) [plan](plans/archive/2026-04-17-design-system-overhaul.md) |
 ---
 
 ## Research
@@ -250,11 +249,6 @@ Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släk
 Add link rules for MyHeritage, Geni, and other genealogy platforms. These are better modeled as source link rules than external identifiers, since they represent source references rather than person IDs for GEDCOM roundtrip.
 
 ---
-
-#### Design System Overhaul [done]
-Design tokens (`tokens.css`) with 3 color themes (Forest/Nordic/Twilight), 8 UI primitive components (`ui/`), SettingsView absorbs Database/ImportExport/LinkRules/Gazetteers, sidebar uses token variables, all hardcoded hex colors replaced with token references, dark/high-contrast modes use token cascade. MediaPanel component for entity linking.
-- Spec: [docs/superpowers/specs/2026-04-17-design-system-spec.md](docs/superpowers/specs/2026-04-17-design-system-spec.md)
-- Gap analysis: [plans/2026-04-17-competitor-gap-analysis-v2.md](plans/2026-04-17-competitor-gap-analysis-v2.md)
 
 #### Onboarding & Welcome Screen [backlog]
 First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder. Depends on design system being in place first.
