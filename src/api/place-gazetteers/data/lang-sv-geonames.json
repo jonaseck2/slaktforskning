@@ -1,0 +1,3466 @@
+{
+  "id": "lang-sv-geonames",
+  "name": "Swedish place names (GeoNames)",
+  "locale": "sv",
+  "kind": "language",
+  "description": "Swedish translations for countries and admin1 divisions",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://www.geonames.org/",
+    "license": "CC BY 4.0",
+    "fetched": "2026-04-18"
+  },
+  "root": {
+    "name": "sv",
+    "type": "language",
+    "lat": 0,
+    "lon": 0
+  },
+  "translations": {
+    "world-countries": {
+      "Aland Islands": [
+        "Ålands län"
+      ],
+      "Albania": [
+        "Albanien"
+      ],
+      "Algeria": [
+        "Algeriet"
+      ],
+      "American Samoa": [
+        "Amerikanska Samoa"
+      ],
+      "Antigua and Barbuda": [
+        "Antigua och Barbuda"
+      ],
+      "Armenia": [
+        "Armenien"
+      ],
+      "Australia": [
+        "Australien"
+      ],
+      "Austria": [
+        "Österrike"
+      ],
+      "Azerbaijan": [
+        "Azerbajdzjan"
+      ],
+      "Belgium": [
+        "Belgien"
+      ],
+      "Bonaire, Saint Eustatius and Saba ": [
+        "Karibiska Nederländerna"
+      ],
+      "Bosnia and Herzegovina": [
+        "Bosnien och Hercegovina"
+      ],
+      "Brazil": [
+        "Brasilien"
+      ],
+      "British Virgin Islands": [
+        "Brittiska Jungfruöarna"
+      ],
+      "Bulgaria": [
+        "Bulgarien"
+      ],
+      "Cabo Verde": [
+        "Kap Verde"
+      ],
+      "Cambodia": [
+        "Kambodja"
+      ],
+      "Cameroon": [
+        "Kamerun"
+      ],
+      "Canada": [
+        "Kanada"
+      ],
+      "Cayman Islands": [
+        "Caymanöarna"
+      ],
+      "Central African Republic": [
+        "Centralafrikanska republiken"
+      ],
+      "Chad": [
+        "Tchad"
+      ],
+      "China": [
+        "Kina"
+      ],
+      "Christmas Island": [
+        "Julön"
+      ],
+      "Cocos Islands": [
+        "Kokosöarna"
+      ],
+      "Comoros": [
+        "Komorerna"
+      ],
+      "Cook Islands": [
+        "Cooköarna"
+      ],
+      "Croatia": [
+        "Kroatien"
+      ],
+      "Cuba": [
+        "Kuba"
+      ],
+      "Curacao": [
+        "Curaçao"
+      ],
+      "Cyprus": [
+        "Cypern"
+      ],
+      "Czechia": [
+        "Tjeckien"
+      ],
+      "Democratic Republic of the Congo": [
+        "Demokratiska Republiken Kongo"
+      ],
+      "Denmark": [
+        "Danmark"
+      ],
+      "Dominican Republic": [
+        "Dominikanska republiken"
+      ],
+      "Egypt": [
+        "Egypten"
+      ],
+      "Equatorial Guinea": [
+        "Ekvatorialguinea"
+      ],
+      "Estonia": [
+        "Estland"
+      ],
+      "Ethiopia": [
+        "Etiopien"
+      ],
+      "Falkland Islands": [
+        "Falklandsöarna"
+      ],
+      "Faroe Islands": [
+        "Färöarna"
+      ],
+      "France": [
+        "Frankrike"
+      ],
+      "French Guiana": [
+        "Franska Guyana"
+      ],
+      "French Polynesia": [
+        "Franska Polynesien"
+      ],
+      "French Southern Territories": [
+        "Franska Sydterritorierna"
+      ],
+      "Georgia": [
+        "Georgien"
+      ],
+      "Germany": [
+        "Tyskland"
+      ],
+      "Greece": [
+        "Grekland"
+      ],
+      "Greenland": [
+        "Grönland"
+      ],
+      "Hong Kong": [
+        "Hongkong"
+      ],
+      "Hungary": [
+        "Ungern"
+      ],
+      "Iceland": [
+        "Island"
+      ],
+      "India": [
+        "Indien"
+      ],
+      "Indonesia": [
+        "Indonesien"
+      ],
+      "Iraq": [
+        "Irak"
+      ],
+      "Ireland": [
+        "Irland"
+      ],
+      "Italy": [
+        "Italien"
+      ],
+      "Ivory Coast": [
+        "Elfenbenskusten"
+      ],
+      "Jordan": [
+        "Jordanien"
+      ],
+      "Kazakhstan": [
+        "Kazakstan"
+      ],
+      "Kyrgyzstan": [
+        "Kirgizistan"
+      ],
+      "Latvia": [
+        "Lettland"
+      ],
+      "Lebanon": [
+        "Libanon"
+      ],
+      "Libya": [
+        "Libyen"
+      ],
+      "Lithuania": [
+        "Litauen"
+      ],
+      "Luxembourg": [
+        "Luxemburg"
+      ],
+      "Madagascar": [
+        "Madagaskar"
+      ],
+      "Maldives": [
+        "Maldiverna"
+      ],
+      "Marshall Islands": [
+        "Marshallöarna"
+      ],
+      "Mauritania": [
+        "Mauretanien"
+      ],
+      "Mexico": [
+        "Mexiko"
+      ],
+      "Micronesia": [
+        "Mikronesien"
+      ],
+      "Moldova": [
+        "Moldavien"
+      ],
+      "Mongolia": [
+        "Mongoliet"
+      ],
+      "Morocco": [
+        "Marocko"
+      ],
+      "Mozambique": [
+        "Moçambique"
+      ],
+      "Myanmar": [
+        "Myanmar (Burma)"
+      ],
+      "New Caledonia": [
+        "Nya Kaledonien"
+      ],
+      "New Zealand": [
+        "Nya Zeeland"
+      ],
+      "Norfolk Island": [
+        "Norfolkön"
+      ],
+      "North Korea": [
+        "Nordkorea"
+      ],
+      "North Macedonia": [
+        "Nordmakedonien"
+      ],
+      "Northern Mariana Islands": [
+        "Nordmarianerna"
+      ],
+      "Norway": [
+        "Norge"
+      ],
+      "Palestinian Territory": [
+        "Palestina"
+      ],
+      "Papua New Guinea": [
+        "Papua Nya Guinea"
+      ],
+      "Philippines": [
+        "Filippinerna"
+      ],
+      "Pitcairn": [
+        "Pitcairnöarna"
+      ],
+      "Poland": [
+        "Polen"
+      ],
+      "Republic of the Congo": [
+        "Republiken Kongo"
+      ],
+      "Reunion": [
+        "Réunion"
+      ],
+      "Romania": [
+        "Rumänien"
+      ],
+      "Russia": [
+        "Ryssland"
+      ],
+      "Saint Barthelemy": [
+        "S:t Barthélemy"
+      ],
+      "Saint Helena": [
+        "S:t Helena"
+      ],
+      "Saint Kitts and Nevis": [
+        "S:t Kitts och Nevis"
+      ],
+      "Saint Lucia": [
+        "S:t Lucia"
+      ],
+      "Saint Martin": [
+        "Saint-Martin"
+      ],
+      "Saint Pierre and Miquelon": [
+        "S:t Pierre och Miquelon"
+      ],
+      "Saint Vincent and the Grenadines": [
+        "S:t Vincent och Grenadinerna"
+      ],
+      "Sao Tome and Principe": [
+        "São Tomé och Príncipe"
+      ],
+      "Saudi Arabia": [
+        "Saudiarabien"
+      ],
+      "Serbia": [
+        "Serbien"
+      ],
+      "Seychelles": [
+        "Seychellerna"
+      ],
+      "Slovakia": [
+        "Slovakien"
+      ],
+      "Slovenia": [
+        "Slovenien"
+      ],
+      "Solomon Islands": [
+        "Salomonöarna"
+      ],
+      "South Africa": [
+        "Sydafrika"
+      ],
+      "South Georgia and the South Sandwich Islands": [
+        "Sydgeorgien och Sydsandwichöarna"
+      ],
+      "South Korea": [
+        "Sydkorea"
+      ],
+      "South Sudan": [
+        "Sydsudan"
+      ],
+      "Spain": [
+        "Spanien"
+      ],
+      "Suriname": [
+        "Surinam"
+      ],
+      "Svalbard and Jan Mayen": [
+        "Svalbard och Jan Mayen"
+      ],
+      "Sweden": [
+        "Sverige"
+      ],
+      "Switzerland": [
+        "Schweiz"
+      ],
+      "Syria": [
+        "Syrien"
+      ],
+      "Tajikistan": [
+        "Tadzjikistan"
+      ],
+      "The Netherlands": [
+        "Nederländerna"
+      ],
+      "Timor Leste": [
+        "Östtimor"
+      ],
+      "Trinidad and Tobago": [
+        "Trinidad och Tobago"
+      ],
+      "Tunisia": [
+        "Tunisien"
+      ],
+      "Turkey": [
+        "Turkiet"
+      ],
+      "Turks and Caicos Islands": [
+        "Turks- och Caicosöarna"
+      ],
+      "U.S. Virgin Islands": [
+        "Amerikanska Jungfruöarna"
+      ],
+      "Ukraine": [
+        "Ukraina"
+      ],
+      "United Arab Emirates": [
+        "Förenade Arabemiraten"
+      ],
+      "United Kingdom": [
+        "Storbritannien"
+      ],
+      "United States": [
+        "USA"
+      ],
+      "Vatican": [
+        "Heliga stolen (Vatikanstaten)"
+      ],
+      "Wallis and Futuna": [
+        "Wallis- och Futunaöarna"
+      ],
+      "Western Sahara": [
+        "Västsahara"
+      ],
+      "Yemen": [
+        "Jemen"
+      ]
+    },
+    "world-admin1": {
+      "Afghanistan > Bamyan": [
+        "Bamiyan"
+      ],
+      "Afghanistan > Daykundi": [
+        "Daykondi"
+      ],
+      "Afghanistan > Ghowr": [
+        "Ghor"
+      ],
+      "Afghanistan > Khowst": [
+        "Khost"
+      ],
+      "Afghanistan > Sar-e Pol Province": [
+        "Sar-e Pol"
+      ],
+      "Algeria > Algiers": [
+        "Alger"
+      ],
+      "Algeria > Mascara": [
+        "Muaskar"
+      ],
+      "Algeria > Naama": [
+        "Naâma"
+      ],
+      "Algeria > Oum el Bouaghi": [
+        "Oum El Bouaghi"
+      ],
+      "Angola > Kwanza Sul": [
+        "Cuanza Sul"
+      ],
+      "Angola > Luanda Norte": [
+        "Lunda Norte"
+      ],
+      "Antigua and Barbuda > Saint John Parish": [
+        "Parish of Saint John"
+      ],
+      "Argentina > Cordoba": [
+        "Córdoba"
+      ],
+      "Argentina > Entre Rios": [
+        "Entre Ríos"
+      ],
+      "Argentina > Neuquen": [
+        "Neuquén"
+      ],
+      "Argentina > Rio Negro": [
+        "Río Negro"
+      ],
+      "Argentina > Tierra del Fuego": [
+        "Eldslandet, Atlantöarna och Antarktis"
+      ],
+      "Argentina > Tucuman": [
+        "Tucumán"
+      ],
+      "Armenia > Kotayk": [
+        "Kotajk"
+      ],
+      "Armenia > Shirak": [
+        "Sjirak"
+      ],
+      "Armenia > Syunik": [
+        "Siunik"
+      ],
+      "Armenia > Tavush": [
+        "Tavusj"
+      ],
+      "Armenia > Yerevan": [
+        "Jerevan"
+      ],
+      "Australia > Tasmania": [
+        "Tasmanien"
+      ],
+      "Austria > Carinthia": [
+        "Kärnten"
+      ],
+      "Austria > Lower Austria": [
+        "Niederösterreich"
+      ],
+      "Austria > State of Salzburg": [
+        "Salzburg"
+      ],
+      "Austria > State of Vienna": [
+        "Wien"
+      ],
+      "Austria > Styria": [
+        "Steiermark"
+      ],
+      "Austria > Tyrol": [
+        "Tyrolen"
+      ],
+      "Austria > Upper Austria": [
+        "Oberösterreich"
+      ],
+      "Azerbaijan > Agsu District": [
+        "Ağsu Rayonu"
+      ],
+      "Azerbaijan > Barda": [
+        "Bərdə Rayonu"
+      ],
+      "Azerbaijan > Bilasuvar District": [
+        "Biläsuvar"
+      ],
+      "Azerbaijan > Fuzuli District": [
+        "Füzuli Rayonu"
+      ],
+      "Azerbaijan > Ismayilli District": [
+        "Ismajylly"
+      ],
+      "Azerbaijan > Jalilabad": [
+        "Cəlilabad"
+      ],
+      "Azerbaijan > Kurdamir District": [
+        "Kürdämir"
+      ],
+      "Azerbaijan > Lerik District": [
+        "Lerik Rayonu"
+      ],
+      "Azerbaijan > Nakhchivan": [
+        "Nachitjevan"
+      ],
+      "Azerbaijan > Qusar District": [
+        "Qusar Rayonu"
+      ],
+      "Azerbaijan > Sabirabad District": [
+        "Sabirabad Rayonu"
+      ],
+      "Azerbaijan > Salyan District": [
+        "Saljan"
+      ],
+      "Azerbaijan > Shabran": [
+        "Shabran Rayon"
+      ],
+      "Azerbaijan > Tartar District": [
+        "Tärtär"
+      ],
+      "Azerbaijan > Tovuz District": [
+        "Tovuz Rayonu"
+      ],
+      "Azerbaijan > Zaqatala District": [
+        "Zaqatala"
+      ],
+      "Bahrain > Manama": [
+        "Capital Governorate"
+      ],
+      "Bahrain > Muharraq": [
+        "Muharraq Governorate"
+      ],
+      "Bahrain > Northern": [
+        "Northern Governorate"
+      ],
+      "Bangladesh > Barisal Division": [
+        "Barisal"
+      ],
+      "Bangladesh > Dhaka Division": [
+        "Dhaka"
+      ],
+      "Bangladesh > Khulna Division": [
+        "Khulna"
+      ],
+      "Bangladesh > Rajshahi Division": [
+        "Rajshahi"
+      ],
+      "Bangladesh > Sylhet Division": [
+        "Sylhet"
+      ],
+      "Barbados > Saint Michael": [
+        "St. Michael"
+      ],
+      "Belarus > Minsk": [
+        "Minsk voblast"
+      ],
+      "Belarus > Minsk City": [
+        "Minsk"
+      ],
+      "Belarus > Vitebsk": [
+        "Vitsebsks voblast"
+      ],
+      "Belgium > Brussels Capital": [
+        "Brysselregionen"
+      ],
+      "Belgium > Flanders": [
+        "Flandern"
+      ],
+      "Belgium > Wallonia": [
+        "Vallonien"
+      ],
+      "Belize > Belize District": [
+        "Belize"
+      ],
+      "Belize > Cayo District": [
+        "Cayo"
+      ],
+      "Belize > Orange Walk District": [
+        "Orange Walk"
+      ],
+      "Benin > Atakora": [
+        "Atacora"
+      ],
+      "Benin > Kouffo": [
+        "Couffo"
+      ],
+      "Bolivia > Beni Department": [
+        "Beni"
+      ],
+      "Bolivia > Chuquisaca Department": [
+        "Chuquisaca"
+      ],
+      "Bolivia > La Paz Department": [
+        "La Paz"
+      ],
+      "Bolivia > Potosí Department": [
+        "Potosí"
+      ],
+      "Bolivia > Santa Cruz Department": [
+        "Santa Cruz"
+      ],
+      "Bolivia > Tarija Department": [
+        "Tarija"
+      ],
+      "Botswana > Ngwaketsi": [
+        "Southern"
+      ],
+      "Botswana > North-West": [
+        "Northwest"
+      ],
+      "Brazil > Federal District": [
+        "Federala distrikt"
+      ],
+      "Brunei > Brunei-Muara District": [
+        "Brunei and Muara District"
+      ],
+      "Bulgaria > Sofia": [
+        "Sofijska oblast"
+      ],
+      "Burkina Faso > Cascades Region": [
+        "Cascades"
+      ],
+      "Burundi > Bujumbura Mairie": [
+        "Mairie de Bujumbura"
+      ],
+      "Cambodia > Kampong Speu Province": [
+        "Kampong Spoe"
+      ],
+      "Cambodia > Kampong Thom": [
+        "Kompong Thom"
+      ],
+      "Cameroon > Adamaoua": [
+        "Adamaouaregionen"
+      ],
+      "Cameroon > Centre": [
+        "Centrumregionen"
+      ],
+      "Cameroon > East": [
+        "Östra regionen"
+      ],
+      "Cameroon > Far North": [
+        "Nordligaste regionen"
+      ],
+      "Cameroon > Littoral": [
+        "Kustregionen"
+      ],
+      "Cameroon > North": [
+        "Norra regionen"
+      ],
+      "Cameroon > South": [
+        "Södra regionen"
+      ],
+      "Cameroon > West": [
+        "Västra regionen"
+      ],
+      "Canada > Newfoundland and Labrador": [
+        "Newfoundland och Labrador"
+      ],
+      "Canada > Prince Edward Island": [
+        "Prins Edwards ö"
+      ],
+      "Central African Republic > Kémo": [
+        "Préfecture de la Kémo"
+      ],
+      "Central African Republic > Ombella-M'Poko": [
+        "Ombella-Mpoko"
+      ],
+      "Chad > Ouadaï": [
+        "Ouaddaï"
+      ],
+      "Chile > Arica y Parinacota Region": [
+        "Región de Arica y Parinacota"
+      ],
+      "Chile > Coquimbo Region": [
+        "Región de Coquimbo"
+      ],
+      "Chile > Los Lagos Region": [
+        "Región de Los Lagos"
+      ],
+      "Chile > Los Ríos Region": [
+        "Región de Los Ríos"
+      ],
+      "Chile > O'Higgins Region": [
+        "Región de O'Higgins"
+      ],
+      "Chile > Santiago Metropolitan": [
+        "Región Metropolitana de Santiago"
+      ],
+      "Chile > Tarapacá": [
+        "Región de Tarapacá"
+      ],
+      "Colombia > Amazonas Department": [
+        "Amazonas"
+      ],
+      "Colombia > Arauca Department": [
+        "Arauca"
+      ],
+      "Colombia > Caldas Department": [
+        "Caldas"
+      ],
+      "Colombia > Casanare Department": [
+        "Casanare"
+      ],
+      "Colombia > Cauca Department": [
+        "Cauca"
+      ],
+      "Colombia > Cesar Department": [
+        "Cesar"
+      ],
+      "Colombia > Guaviare Department": [
+        "Guaviare"
+      ],
+      "Colombia > Huila Department": [
+        "Huila"
+      ],
+      "Colombia > La Guajira Department": [
+        "La Guajira"
+      ],
+      "Colombia > Magdalena Department": [
+        "Magdalena"
+      ],
+      "Colombia > Meta Department": [
+        "Meta"
+      ],
+      "Colombia > Norte de Santander Department": [
+        "Norte de Santander"
+      ],
+      "Colombia > Putumayo Department": [
+        "Putumayo"
+      ],
+      "Colombia > Quindío Department": [
+        "Quindío"
+      ],
+      "Colombia > Risaralda Department": [
+        "Risaralda"
+      ],
+      "Colombia > Santander Department": [
+        "Santander"
+      ],
+      "Colombia > Sucre Department": [
+        "Sucre"
+      ],
+      "Colombia > Tolima Department": [
+        "Tolima"
+      ],
+      "Colombia > Valle del Cauca Department": [
+        "Valle del Cauca"
+      ],
+      "Colombia > Vichada Department": [
+        "Vichada"
+      ],
+      "Costa Rica > Alajuela Province": [
+        "Alajuela"
+      ],
+      "Costa Rica > Cartago Province": [
+        "Cartago"
+      ],
+      "Costa Rica > Guanacaste Province": [
+        "Guanacaste"
+      ],
+      "Costa Rica > Heredia Province": [
+        "Heredia"
+      ],
+      "Costa Rica > Limón Province": [
+        "Limón"
+      ],
+      "Costa Rica > Puntarenas Province": [
+        "Puntarenas"
+      ],
+      "Croatia > County of Osijek-Baranja": [
+        "Osijek-Baranja"
+      ],
+      "Croatia > Istria": [
+        "Istrien"
+      ],
+      "Croatia > Požega-Slavonia": [
+        "Požega-Slavonien"
+      ],
+      "Croatia > Primorje-Gorski Kotar": [
+        "Primorje-Gorski kotar"
+      ],
+      "Croatia > Split-Dalmatia": [
+        "Split-Dalmatien"
+      ],
+      "Croatia > Zadar": [
+        "Zadar-regionen"
+      ],
+      "Croatia > Zagreb": [
+        "Zagreb stad"
+      ],
+      "Croatia > Zagreb County": [
+        "Zagreb"
+      ],
+      "Cuba > Ciego de Ávila Province": [
+        "Provincia de Ciego de Ávila"
+      ],
+      "Cuba > Cienfuegos Province": [
+        "Provincia de Cienfuegos"
+      ],
+      "Cuba > Granma Province": [
+        "Provincia Granma"
+      ],
+      "Cuba > Guantánamo Province": [
+        "Provincia de Guantánamo"
+      ],
+      "Cuba > Holguín Province": [
+        "Provincia de Holguín"
+      ],
+      "Cuba > Las Tunas Province": [
+        "Las Tunas"
+      ],
+      "Cuba > Matanzas Province": [
+        "Matanzas"
+      ],
+      "Cuba > Mayabeque": [
+        "Provincia Mayabeque"
+      ],
+      "Cuba > Sancti Spíritus Province": [
+        "Provincia de Sancti Spíritus"
+      ],
+      "Cuba > Santiago de Cuba Province": [
+        "Provincia de Santiago de Cuba"
+      ],
+      "Cuba > Villa Clara Province": [
+        "Provincia de Villa Clara"
+      ],
+      "Cyprus > Ammochostos": [
+        "Famagusta"
+      ],
+      "Cyprus > Keryneia": [
+        "Kyrenia"
+      ],
+      "Cyprus > Larnaka": [
+        "Eparchía Lárnakas"
+      ],
+      "Cyprus > Limassol": [
+        "Eparchía Lemesoú"
+      ],
+      "Cyprus > Nicosia": [
+        "Eparchía Lefkosías"
+      ],
+      "Cyprus > Pafos": [
+        "Eparchía Páfou"
+      ],
+      "Czechia > Central Bohemia": [
+        "Mellersta Böhmen"
+      ],
+      "Czechia > South Bohemian Region": [
+        "Södra Böhmen"
+      ],
+      "Czechia > South Moravian": [
+        "Södra Mähren"
+      ],
+      "Democratic Republic of the Congo > Kasai-Central": [
+        "Lulua"
+      ],
+      "Democratic Republic of the Congo > North Kivu": [
+        "Norra Kivu"
+      ],
+      "Democratic Republic of the Congo > South Kivu": [
+        "Södra Kivu"
+      ],
+      "Denmark > Capital Region": [
+        "Huvudstadsregionen"
+      ],
+      "Denmark > Central Jutland": [
+        "Mittjylland"
+      ],
+      "Denmark > North Denmark": [
+        "Nordjylland"
+      ],
+      "Denmark > South Denmark": [
+        "Syddanmark"
+      ],
+      "Denmark > Zealand": [
+        "Själland"
+      ],
+      "Dominica > Saint George Parish": [
+        "Saint George"
+      ],
+      "Dominican Republic > Azua Province": [
+        "Ázua"
+      ],
+      "Dominican Republic > Baoruco Province": [
+        "Baoruco"
+      ],
+      "Dominican Republic > Barahona Province": [
+        "Barahona"
+      ],
+      "Dominican Republic > Duarte Province": [
+        "Duarte"
+      ],
+      "Dominican Republic > Espaillat Province": [
+        "Espaillat"
+      ],
+      "Dominican Republic > Hato Mayor Province": [
+        "Hato Mayor"
+      ],
+      "Dominican Republic > La Altagracia Province": [
+        "La Altagracia"
+      ],
+      "Dominican Republic > Monte Cristi Province": [
+        "Monte Cristi"
+      ],
+      "Dominican Republic > Monte Plata Province": [
+        "Monte Plata"
+      ],
+      "Dominican Republic > San Juan Province": [
+        "San Juan"
+      ],
+      "Dominican Republic > Santiago Province": [
+        "Santiago"
+      ],
+      "Dominican Republic > Santo Domingo Province": [
+        "Santo Domingo"
+      ],
+      "Dominican Republic > Valverde Province": [
+        "Valverde"
+      ],
+      "Ecuador > Chimborazo Province": [
+        "Chimborazo"
+      ],
+      "Ecuador > Morona-Santiago Province": [
+        "Morona Santiago"
+      ],
+      "Ecuador > Orellana Province": [
+        "Orellana"
+      ],
+      "Ecuador > Pastaza Province": [
+        "Pastaza"
+      ],
+      "Ecuador > Tungurahua Province": [
+        "Tungurahua"
+      ],
+      "Egypt > Aswan": [
+        "Assuan"
+      ],
+      "Egypt > Beheira": [
+        "Guvernementet Beheira"
+      ],
+      "Egypt > Cairo": [
+        "Guvernementet Kairo"
+      ],
+      "Egypt > Dakahlia": [
+        "Ad-Daqahliyya"
+      ],
+      "Egypt > Damietta": [
+        "Guvernementet Damietta"
+      ],
+      "Egypt > Faiyum": [
+        "Faijum"
+      ],
+      "Egypt > Gharbia": [
+        "Al-Gharbiyya"
+      ],
+      "Egypt > Ismailia": [
+        "Guvernementet Ismailia"
+      ],
+      "Egypt > Matruh": [
+        "Guvernementet Matruh"
+      ],
+      "Egypt > Minya": [
+        "Al-Minya"
+      ],
+      "Egypt > Monufia": [
+        "Guvernementet Al-Minufiyya"
+      ],
+      "Egypt > New Valley": [
+        "Al-Wadi al-Jadid"
+      ],
+      "Egypt > North Sinai": [
+        "Sina ash-Shamaliyya"
+      ],
+      "Egypt > Qalyubia": [
+        "Al-Qalyubiyya"
+      ],
+      "Egypt > Red Sea": [
+        "Guvernementet Al-Bahr al-Ahmar"
+      ],
+      "Egypt > South Sinai": [
+        "Sina al-Janubiyya"
+      ],
+      "El Salvador > La Paz Department": [
+        "La Paz"
+      ],
+      "El Salvador > San Salvador Department": [
+        "San Salvador"
+      ],
+      "El Salvador > San Vicente Department": [
+        "San Vincente department"
+      ],
+      "El Salvador > Santa Ana Department": [
+        "Santa Ana department"
+      ],
+      "Eritrea > Anseba": [
+        "Ansebaregionen"
+      ],
+      "Eritrea > Debub": [
+        "Debubregionen"
+      ],
+      "Eritrea > Gash-Barka": [
+        "Gash-Barkaregionen"
+      ],
+      "Eritrea > Maekel": [
+        "Maakel"
+      ],
+      "Eritrea > Northern Red Sea": [
+        "Norra rödahavsregionen"
+      ],
+      "Eritrea > Southern Red Sea": [
+        "Södra rödahavsregionen"
+      ],
+      "Estonia > Harjumaa": [
+        "Harju län"
+      ],
+      "Estonia > Ida-Virumaa": [
+        "Ida-Viru län"
+      ],
+      "Estonia > Pärnumaa": [
+        "Pärnu län"
+      ],
+      "Estonia > Tartu": [
+        "Tartu län"
+      ],
+      "Estonia > Viljandimaa": [
+        "Viljandi län"
+      ],
+      "Eswatini > Hhohho Region": [
+        "Hhohho"
+      ],
+      "Eswatini > Manzini Region": [
+        "Manzini"
+      ],
+      "Ethiopia > Āfar": [
+        "Afar"
+      ],
+      "Ethiopia > Bīnshangul Gumuz": [
+        "Benishangul-Gumuz"
+      ],
+      "Ethiopia > Gambela": [
+        "Gambela Hizboch"
+      ],
+      "Ethiopia > Oromiya": [
+        "Oromia"
+      ],
+      "Fiji > Central": [
+        "Centrala divisionen"
+      ],
+      "Fiji > Northern": [
+        "Norra divisionen"
+      ],
+      "Fiji > Western": [
+        "Västra divisionen"
+      ],
+      "Finland > Central Finland": [
+        "Mellersta Finland"
+      ],
+      "Finland > Central Ostrobothnia": [
+        "Mellersta Österbotten"
+      ],
+      "Finland > Kainuu": [
+        "Kajanaland"
+      ],
+      "Finland > Kanta-Häme": [
+        "Egentliga Tavastland"
+      ],
+      "Finland > Kymenlaakso": [
+        "Kymmenedalen"
+      ],
+      "Finland > Lapland": [
+        "Lappland"
+      ],
+      "Finland > North Karelia": [
+        "Norra Karelen"
+      ],
+      "Finland > North Ostrobothnia": [
+        "Norra Österbotten"
+      ],
+      "Finland > North Savo": [
+        "Landskapet Norra Savolax"
+      ],
+      "Finland > Ostrobothnia": [
+        "Österbotten"
+      ],
+      "Finland > Paijat-Hame": [
+        "Päijänne-Tavastland"
+      ],
+      "Finland > Pirkanmaa": [
+        "Birkaland"
+      ],
+      "Finland > South Karelia": [
+        "Södra Karelen"
+      ],
+      "Finland > South Ostrobothnia": [
+        "Södra Österbotten"
+      ],
+      "Finland > South Savo": [
+        "Södra Savolax"
+      ],
+      "Finland > Southwest Finland": [
+        "Egentliga Finland"
+      ],
+      "Finland > Uusimaa": [
+        "Nyland"
+      ],
+      "France > Bourgogne": [
+        "Bourgogne-Franche-Comté"
+      ],
+      "France > Brittany": [
+        "Bretagne"
+      ],
+      "France > Corsica": [
+        "Korsika"
+      ],
+      "France > Normandy": [
+        "Normandie"
+      ],
+      "France > Rhône-Alpes": [
+        "Auvergne-Rhône-Alpes"
+      ],
+      "Gambia > Lower River": [
+        "Lower River Division"
+      ],
+      "Gambia > North Bank": [
+        "North Bank Division"
+      ],
+      "Gambia > Upper River": [
+        "Upper River Division"
+      ],
+      "Georgia > Abkhazia": [
+        "Abchazien"
+      ],
+      "Georgia > Adjara": [
+        "Adzjarien"
+      ],
+      "Georgia > Imereti": [
+        "Imeretien"
+      ],
+      "Georgia > Kakheti": [
+        "Kachetien"
+      ],
+      "Georgia > Kvemo Kartli": [
+        "Nedre Kartlien"
+      ],
+      "Georgia > Samegrelo and Zemo Svaneti": [
+        "Megrelien-Övre Svanetien"
+      ],
+      "Georgia > Samtskhe-Javakheti": [
+        "Samtsche-Dzjavachetien"
+      ],
+      "Georgia > Shida Kartli": [
+        "Inre Kartlien"
+      ],
+      "Germany > Baden-Wurttemberg": [
+        "Baden-Württemberg"
+      ],
+      "Germany > Bavaria": [
+        "Bayern"
+      ],
+      "Germany > Free and Hanseatic City of Hamburg": [
+        "Hamburg"
+      ],
+      "Germany > Hesse": [
+        "Hessen"
+      ],
+      "Germany > Lower Saxony": [
+        "Niedersachsen"
+      ],
+      "Germany > North Rhine-Westphalia": [
+        "Nordrhein-Westfalen"
+      ],
+      "Germany > Saxony": [
+        "Sachsen"
+      ],
+      "Germany > Saxony-Anhalt": [
+        "Sachsen-Anhalt"
+      ],
+      "Greece > Central Macedonia": [
+        "Mellersta Makedonien"
+      ],
+      "Greece > Crete": [
+        "Kreta"
+      ],
+      "Greece > East Macedonia and Thrace": [
+        "Östra Makedonien och Thrakien"
+      ],
+      "Greece > West Macedonia": [
+        "Västra Makedonien"
+      ],
+      "Grenada > Saint George Parish": [
+        "Saint George"
+      ],
+      "Guatemala > Alta Verapaz": [
+        "Departamento de Alta Verapaz"
+      ],
+      "Guatemala > Baja Verapaz": [
+        "Departamento de Baja Verapaz"
+      ],
+      "Guatemala > Chimaltenango": [
+        "Departamento de Chimaltenango"
+      ],
+      "Guatemala > El Progreso": [
+        "Departamento de El Progreso"
+      ],
+      "Guatemala > Izabal Department": [
+        "Departamento de Izabal"
+      ],
+      "Guatemala > Quetzaltenango": [
+        "Departamento de Quetzaltenango"
+      ],
+      "Guatemala > Quiché": [
+        "Departamento del Quiché"
+      ],
+      "Guatemala > Sacatepéquez": [
+        "Departamento de Sacatepéquez"
+      ],
+      "Guatemala > San Marcos": [
+        "Departamento de San Marcos"
+      ],
+      "Guatemala > Santa Rosa Department": [
+        "Departamento de Santa Rosa"
+      ],
+      "Guatemala > Sololá": [
+        "Departamento de Sololá"
+      ],
+      "Guatemala > Zacapa": [
+        "Departamento de Zacapa"
+      ],
+      "Guinea > Boké Region": [
+        "Boke Region"
+      ],
+      "Guinea > Faranah": [
+        "Faranah Region"
+      ],
+      "Guinea > Kindia": [
+        "Kindia Region"
+      ],
+      "Guinea > Nzérékoré Region": [
+        "Nzerekore Region"
+      ],
+      "Honduras > Atlántida Department": [
+        "Atlántida"
+      ],
+      "Honduras > Choluteca Department": [
+        "Choluteca"
+      ],
+      "Honduras > Colón Department": [
+        "Departamento de Colón"
+      ],
+      "Honduras > Comayagua Department": [
+        "Departamento de Comayagua"
+      ],
+      "Honduras > Copán Department": [
+        "Departamento de Copán"
+      ],
+      "Honduras > Cortés Department": [
+        "Departamento de Cortés"
+      ],
+      "Honduras > El Paraíso Department": [
+        "El Paraiso"
+      ],
+      "Honduras > Francisco Morazán Department": [
+        "Departamento de Francisco Morazán"
+      ],
+      "Honduras > La Paz Department": [
+        "Departamento de La Paz"
+      ],
+      "Honduras > Olancho Department": [
+        "Departamento de Olancho"
+      ],
+      "Honduras > Valle Department": [
+        "Departamento de Valle"
+      ],
+      "Honduras > Yoro Department": [
+        "Departamento de Yoro"
+      ],
+      "Hungary > Heves County": [
+        "Heves"
+      ],
+      "Hungary > Pest County": [
+        "Pest"
+      ],
+      "Hungary > Somogy County": [
+        "Somogy"
+      ],
+      "Hungary > Tolna County": [
+        "Tolna"
+      ],
+      "Hungary > Vas County": [
+        "Vas"
+      ],
+      "Hungary > Zala County": [
+        "Zala"
+      ],
+      "Iceland > Capital Region": [
+        "Huvudstadsregion"
+      ],
+      "Iceland > Northeast": [
+        "Nordöst"
+      ],
+      "Iceland > Southern Peninsula": [
+        "Södra halvön"
+      ],
+      "India > Andaman and Nicobar": [
+        "Andaman & Nicobar"
+      ],
+      "India > West Bengal": [
+        "Bengalen"
+      ],
+      "Indonesia > Bangka–Belitung Islands": [
+        "Bangka-Belitung"
+      ],
+      "Indonesia > Central Java": [
+        "Jawa Tengah"
+      ],
+      "Indonesia > Central Sulawesi": [
+        "Sulawesi Tengah"
+      ],
+      "Indonesia > East Java": [
+        "Jawa Timur"
+      ],
+      "Indonesia > East Kalimantan": [
+        "Kalimantan Timur"
+      ],
+      "Indonesia > North Sulawesi": [
+        "Sulawesi Utara"
+      ],
+      "Indonesia > North Sumatra": [
+        "Sumatera Utara"
+      ],
+      "Indonesia > South Kalimantan": [
+        "Kalimantan Selatan"
+      ],
+      "Indonesia > South Sulawesi": [
+        "Sulawesi Selatan"
+      ],
+      "Indonesia > South Sumatra": [
+        "Sumatera Selatan"
+      ],
+      "Indonesia > West Java": [
+        "Jawa Barat"
+      ],
+      "Indonesia > West Kalimantan": [
+        "Kalimantan Barat"
+      ],
+      "Indonesia > West Sumatra": [
+        "Sumatera Barat"
+      ],
+      "Iran > Alborz Province": [
+        "Alborz"
+      ],
+      "Iran > Ardabil Province": [
+        "Ardabil"
+      ],
+      "Iran > Chaharmahal and Bakhtiari": [
+        "Chahar Mahal och Bakhtiari"
+      ],
+      "Iran > East Azerbaijan": [
+        "Östazarbaijan"
+      ],
+      "Iran > Gilan Province": [
+        "Gilan"
+      ],
+      "Iran > Hamadan Province": [
+        "Hamadan"
+      ],
+      "Iran > Ilam Province": [
+        "Ilam"
+      ],
+      "Iran > Isfahan": [
+        "Esfahan"
+      ],
+      "Iran > Kermanshah Province": [
+        "Kermanshah"
+      ],
+      "Iran > Kohgiluyeh and Boyer-Ahmad": [
+        "Kohgiluyeh och Buyer Ahmad"
+      ],
+      "Iran > Kurdistan Province": [
+        "Kurdistan"
+      ],
+      "Iran > Lorestan Province": [
+        "Lorestan"
+      ],
+      "Iran > Māzandarān": [
+        "Mazandaran"
+      ],
+      "Iran > North Khorasan": [
+        "Nordkhorasan"
+      ],
+      "Iran > Qazvin Province": [
+        "Qazvin"
+      ],
+      "Iran > Qom Province": [
+        "Qom"
+      ],
+      "Iran > Razavi Khorasan": [
+        "Razavikhorasan"
+      ],
+      "Iran > Sistan and Baluchestan": [
+        "Sistan och Baluchistan"
+      ],
+      "Iran > South Khorasan Province": [
+        "Sydkhorasan"
+      ],
+      "Iran > Tehran": [
+        "Teheran"
+      ],
+      "Iran > West Azerbaijan": [
+        "Västazarbaijan"
+      ],
+      "Iran > Yazd Province": [
+        "Yazd"
+      ],
+      "Iraq > Anbar": [
+        "al-Anbar"
+      ],
+      "Iraq > Baghdad": [
+        "Guvernementet Bagdad"
+      ],
+      "Iraq > Duhok": [
+        "Dahuk"
+      ],
+      "Iraq > Muthanna": [
+        "Al-Muthanna"
+      ],
+      "Iraq > Salah ad Din": [
+        "Saladin"
+      ],
+      "Israel > Central District": [
+        "Centrala distriktet"
+      ],
+      "Israel > Northern District": [
+        "Norra distriktet"
+      ],
+      "Israel > Southern District": [
+        "Södra distriktet"
+      ],
+      "Italy > Aosta Valley": [
+        "Aostadalen"
+      ],
+      "Italy > Apulia": [
+        "Apulien"
+      ],
+      "Italy > Calabria": [
+        "Kalabrien"
+      ],
+      "Italy > Campania": [
+        "Kampanien"
+      ],
+      "Italy > Liguria": [
+        "Ligurien"
+      ],
+      "Italy > Lombardy": [
+        "Lombardiet"
+      ],
+      "Italy > Sardinia": [
+        "Sardinien"
+      ],
+      "Italy > Sicily": [
+        "Sicilien"
+      ],
+      "Italy > Trentino-Alto Adige": [
+        "Sydtyrolen"
+      ],
+      "Italy > Tuscany": [
+        "Toscana"
+      ],
+      "Italy > Umbria": [
+        "Umbrien"
+      ],
+      "Ivory Coast > Bas-Sassandra District": [
+        "Bas-Sassandra"
+      ],
+      "Ivory Coast > Denguélé District": [
+        "Denguélé"
+      ],
+      "Ivory Coast > Lacs District": [
+        "Lacs"
+      ],
+      "Ivory Coast > Lagunes District": [
+        "Lagunes"
+      ],
+      "Ivory Coast > Savanes District": [
+        "Savanes"
+      ],
+      "Ivory Coast > Vallée du Bandama District": [
+        "Vallée du Bandama"
+      ],
+      "Ivory Coast > Zanzan District": [
+        "Zanzan"
+      ],
+      "Jamaica > Kingston": [
+        "Kingston Parish"
+      ],
+      "Jamaica > Manchester": [
+        "Parish of Manchester"
+      ],
+      "Jamaica > Saint James Parish": [
+        "Parish of Saint James"
+      ],
+      "Jamaica > Westmoreland": [
+        "Westmoreland Parish"
+      ],
+      "Japan > Aichi": [
+        "Aichi prefektur"
+      ],
+      "Japan > Akita": [
+        "Akita prefektur"
+      ],
+      "Japan > Aomori": [
+        "Aomori prefektur"
+      ],
+      "Japan > Chiba": [
+        "Chiba prefektur"
+      ],
+      "Japan > Ehime": [
+        "Ehime prefektur"
+      ],
+      "Japan > Fukui": [
+        "Fukui prefektur"
+      ],
+      "Japan > Fukuoka": [
+        "Fukuoka prefektur"
+      ],
+      "Japan > Fukushima": [
+        "Fukushima prefektur"
+      ],
+      "Japan > Gifu": [
+        "Gifu prefektur"
+      ],
+      "Japan > Gunma": [
+        "Gunma prefektur"
+      ],
+      "Japan > Hiroshima": [
+        "Hiroshima prefektur"
+      ],
+      "Japan > Hyōgo": [
+        "Hyogo prefektur"
+      ],
+      "Japan > Ibaraki": [
+        "Ibaraki prefektur"
+      ],
+      "Japan > Ishikawa": [
+        "Ishikawa prefektur"
+      ],
+      "Japan > Iwate": [
+        "Iwate prefektur"
+      ],
+      "Japan > Kagawa": [
+        "Kagawa prefektur"
+      ],
+      "Japan > Kagoshima": [
+        "Kagoshima prefektur"
+      ],
+      "Japan > Kanagawa": [
+        "Kanagawa prefektur"
+      ],
+      "Japan > Kochi": [
+        "Kochi prefektur"
+      ],
+      "Japan > Kumamoto": [
+        "Kumamoto prefektur"
+      ],
+      "Japan > Kyoto": [
+        "Kyoto prefektur"
+      ],
+      "Japan > Mie": [
+        "Mie prefektur"
+      ],
+      "Japan > Miyagi": [
+        "Miyagi prefektur"
+      ],
+      "Japan > Miyazaki": [
+        "Miyazaki prefektur"
+      ],
+      "Japan > Nagano": [
+        "Nagano prefektur"
+      ],
+      "Japan > Nagasaki": [
+        "Nagasaki prefektur"
+      ],
+      "Japan > Nara": [
+        "Nara prefektur"
+      ],
+      "Japan > Niigata": [
+        "Niigata prefektur"
+      ],
+      "Japan > Oita": [
+        "Oita prefektur"
+      ],
+      "Japan > Okayama": [
+        "Okayama prefektur"
+      ],
+      "Japan > Okinawa": [
+        "Okinawa prefektur"
+      ],
+      "Japan > Osaka": [
+        "Osaka prefektur"
+      ],
+      "Japan > Saga": [
+        "Saga prefektur"
+      ],
+      "Japan > Saitama": [
+        "Saitama prefektur"
+      ],
+      "Japan > Shiga": [
+        "Shiga prefektur"
+      ],
+      "Japan > Shimane": [
+        "Shimane prefektur"
+      ],
+      "Japan > Shizuoka": [
+        "Shizuoka prefektur"
+      ],
+      "Japan > Tochigi": [
+        "Tochigi prefektur"
+      ],
+      "Japan > Tokushima": [
+        "Tokushima prefektur"
+      ],
+      "Japan > Tokyo": [
+        "Tokyo prefektur"
+      ],
+      "Japan > Tottori": [
+        "Tottori prefektur"
+      ],
+      "Japan > Toyama": [
+        "Toyama prefektur"
+      ],
+      "Japan > Wakayama": [
+        "Wakayama prefektur"
+      ],
+      "Japan > Yamagata": [
+        "Yamagata prefektur"
+      ],
+      "Japan > Yamaguchi": [
+        "Yamaguchi prefektur"
+      ],
+      "Japan > Yamanashi": [
+        "Yamanashi prefektur"
+      ],
+      "Jordan > Ajloun": [
+        "Ajlun"
+      ],
+      "Jordan > Ma’an": [
+        "Ma'an"
+      ],
+      "Jordan > Tafielah": [
+        "Tafilah"
+      ],
+      "Kazakhstan > East Kazakhstan": [
+        "Östkazakstan"
+      ],
+      "Kazakhstan > Karaganda": [
+        "Qaraghandy oblysy"
+      ],
+      "Kazakhstan > Pavlodar Region": [
+        "Pavlodar"
+      ],
+      "Kazakhstan > West Kazakhstan": [
+        "Västkazakstan"
+      ],
+      "Kenya > Busia County": [
+        "Busia"
+      ],
+      "Kenya > Embu County": [
+        "Embu"
+      ],
+      "Kenya > Garissa County": [
+        "Garissa"
+      ],
+      "Kenya > Homa Bay County": [
+        "Homa Bay"
+      ],
+      "Kenya > Isiolo County": [
+        "Isiolo"
+      ],
+      "Kenya > Kajiado County": [
+        "Kajiado"
+      ],
+      "Kenya > Kakamega County": [
+        "Kakamega"
+      ],
+      "Kenya > Kericho County": [
+        "Kericho"
+      ],
+      "Kenya > Kiambu County": [
+        "Kiambu"
+      ],
+      "Kenya > Kilifi County": [
+        "Kilifi"
+      ],
+      "Kenya > Kirinyaga County": [
+        "Kirinyaga"
+      ],
+      "Kenya > Kisii County": [
+        "Kisii"
+      ],
+      "Kenya > Kisumu County": [
+        "Kisumu"
+      ],
+      "Kenya > Kitui County": [
+        "Kitui"
+      ],
+      "Kenya > Kwale County": [
+        "Kwale"
+      ],
+      "Kenya > Machakos County": [
+        "Machakos"
+      ],
+      "Kenya > Makueni County": [
+        "Makueni"
+      ],
+      "Kenya > Mandera County": [
+        "Mandera"
+      ],
+      "Kenya > Marsabit County": [
+        "Marsabit"
+      ],
+      "Kenya > Meru County": [
+        "Meru"
+      ],
+      "Kenya > Migori County": [
+        "Migori"
+      ],
+      "Kenya > Nakuru County": [
+        "Nakuru"
+      ],
+      "Kenya > Narok County": [
+        "Narok"
+      ],
+      "Kenya > Nyamira county": [
+        "Nyamira"
+      ],
+      "Kenya > Nyandarua County": [
+        "Nyandarua"
+      ],
+      "Kenya > Nyeri County": [
+        "Nyeri"
+      ],
+      "Kenya > Samburu County": [
+        "Samburu"
+      ],
+      "Kenya > Siaya County": [
+        "Siaya"
+      ],
+      "Kenya > Tana River County": [
+        "Tana River"
+      ],
+      "Kenya > Turkana County": [
+        "Turkana"
+      ],
+      "Kenya > Uasin Gishu County": [
+        "Uasin Gishu"
+      ],
+      "Kenya > Vihiga County": [
+        "Vihiga"
+      ],
+      "Kenya > Wajir County": [
+        "Wajir"
+      ],
+      "Kenya > West Pokot County": [
+        "Västra Pokot"
+      ],
+      "Kuwait > Al Aḩmadī": [
+        "Muḩāfaz̧at al Aḩmadī"
+      ],
+      "Kuwait > Al Jahra Governorate": [
+        "Muḩāfaz̧at al Jahrā'"
+      ],
+      "Kyrgyzstan > Chuy Region": [
+        "Tjüj"
+      ],
+      "Kyrgyzstan > Issyk-Kul": [
+        "Ysyk-Köl"
+      ],
+      "Kyrgyzstan > Jalal-Abad Region": [
+        "Dzjalal-Abad"
+      ],
+      "Kyrgyzstan > Naryn Region": [
+        "Naryn"
+      ],
+      "Kyrgyzstan > Osh Region": [
+        "Osj"
+      ],
+      "Kyrgyzstan > Talas Region": [
+        "Talas"
+      ],
+      "Laos > Champasak Province": [
+        "Champasack"
+      ],
+      "Laos > Khammouane Province": [
+        "Khammuan"
+      ],
+      "Laos > Luang Prabang Province": [
+        "Louang Prabang"
+      ],
+      "Laos > Salavan Province": [
+        "Saravane"
+      ],
+      "Laos > Savannakhet Province": [
+        "Savannakhet"
+      ],
+      "Latvia > Cēsis Municipality": [
+        "Cēsis kommun"
+      ],
+      "Latvia > Ogre": [
+        "Ogre kommun"
+      ],
+      "Latvia > Salaspils Municipality": [
+        "Salaspils kommun"
+      ],
+      "Lebanon > Baalbek-Hermel Governorate": [
+        "Mohafazat Baalbek-Hermel"
+      ],
+      "Lebanon > South Governorate": [
+        "Mohafazat Liban-Sud"
+      ],
+      "Lesotho > Leribe": [
+        "Leribe District"
+      ],
+      "Lesotho > Maseru District": [
+        "Maseru"
+      ],
+      "Lesotho > Qacha's Nek District": [
+        "Qacha's Nek"
+      ],
+      "Liberia > Nimba": [
+        "Nimba County"
+      ],
+      "Libya > Jabal al Gharbi": [
+        "Al Jabal al Gharbi"
+      ],
+      "Libya > Murzuq District": [
+        "Murzuq"
+      ],
+      "Libya > Sabha District": [
+        "Sabha"
+      ],
+      "Lithuania > Klaipėda County": [
+        "Klaipėda"
+      ],
+      "Lithuania > Marijampolė County": [
+        "Marijampolė"
+      ],
+      "Lithuania > Siauliai": [
+        "Šiauliai"
+      ],
+      "Lithuania > Tauragė County": [
+        "Tauragė"
+      ],
+      "Lithuania > Telsiai": [
+        "Telšiai"
+      ],
+      "Malaysia > Penang": [
+        "Pinang"
+      ],
+      "Mauritania > Hodh Ech Chargi": [
+        "Hodh Ech Chargui"
+      ],
+      "Mexico > México": [
+        "Mexiko"
+      ],
+      "Mexico > Michoacán": [
+        "Michoacán de Ocampo"
+      ],
+      "Mexico > Querétaro": [
+        "Querétaro Arteaga"
+      ],
+      "Moldova > Cahul": [
+        "Cahul rajon"
+      ],
+      "Moldova > Floreşti": [
+        "Florești"
+      ],
+      "Moldova > Gagauzia": [
+        "Gagauzien"
+      ],
+      "Moldova > Hînceşti": [
+        "Hîncești"
+      ],
+      "Moldova > Orhei": [
+        "Orhei rajon"
+      ],
+      "Moldova > Soroca District": [
+        "Soroca rajon"
+      ],
+      "Moldova > Strășeni": [
+        "Raionul Strășeni"
+      ],
+      "Moldova > Ungheni": [
+        "Ungheni rajon"
+      ],
+      "Mongolia > Arkhangai Province": [
+        "Archangaj"
+      ],
+      "Mongolia > East Aimak": [
+        "Dornod"
+      ],
+      "Mongolia > East Gobi Aymag": [
+        "Dornogobi"
+      ],
+      "Mongolia > Govi-Altai Province": [
+        "Gobi-Altaj"
+      ],
+      "Mongolia > Ömnögovĭ": [
+        "Ömnögobi"
+      ],
+      "Mongolia > Selenge Province": [
+        "Selenga"
+      ],
+      "Mongolia > Uvs Province": [
+        "Uvs"
+      ],
+      "Mozambique > Cabo Delgado Province": [
+        "Cabo Delgado"
+      ],
+      "Mozambique > Gaza Province": [
+        "Gaza"
+      ],
+      "Mozambique > Inhambane Province": [
+        "Inhambane"
+      ],
+      "Mozambique > Maputo Province": [
+        "Maputo-provinsen"
+      ],
+      "Mozambique > Niassa Province": [
+        "Niassa"
+      ],
+      "Mozambique > Zambezia Province": [
+        "Zambezia"
+      ],
+      "Myanmar > Bago Region": [
+        "Bagoregionen"
+      ],
+      "Myanmar > Chin State": [
+        "Chinstaten"
+      ],
+      "Myanmar > Kachin State": [
+        "Kachinstaten"
+      ],
+      "Myanmar > Kayah State": [
+        "Kayahstaten"
+      ],
+      "Myanmar > Kayin State": [
+        "Kachinstaten"
+      ],
+      "Myanmar > Mandalay Region": [
+        "Mandalayregionen"
+      ],
+      "Myanmar > Mon": [
+        "Monstaten"
+      ],
+      "Myanmar > Rakhine": [
+        "Rakhinestaten"
+      ],
+      "Myanmar > Sagaing Region": [
+        "Sagaingregionen"
+      ],
+      "Myanmar > Shan State": [
+        "Shanstaten"
+      ],
+      "Myanmar > Tanintharyi Region": [
+        "Taninthayiregionen"
+      ],
+      "Myanmar > Yangon": [
+        "Yangonregionen"
+      ],
+      "Namibia > Erongo Region": [
+        "Erongo"
+      ],
+      "Namibia > Hardap Region": [
+        "Hardap"
+      ],
+      "Namibia > Karas Region": [
+        "Karas"
+      ],
+      "Namibia > Khomas Region": [
+        "Khomas"
+      ],
+      "Namibia > Ohangwena Region": [
+        "Ohangwena"
+      ],
+      "Namibia > Oshana Region": [
+        "Oshana"
+      ],
+      "Namibia > Oshikoto Region": [
+        "Oshikoto"
+      ],
+      "Namibia > Otjozondjupa Region": [
+        "Otjozondjupa"
+      ],
+      "Namibia > Zambezi Region": [
+        "Caprivi"
+      ],
+      "Nauru > Yaren District": [
+        "Yaren"
+      ],
+      "New Zealand > Hawke's Bay Region": [
+        "Hawke's Bay"
+      ],
+      "New Zealand > Nelson Region": [
+        "Nelson"
+      ],
+      "New Zealand > Taranaki Region": [
+        "Taranaki"
+      ],
+      "New Zealand > Tasman District": [
+        "Tasman"
+      ],
+      "New Zealand > Waikato Region": [
+        "Waikato"
+      ],
+      "New Zealand > Wellington Region": [
+        "Wellington"
+      ],
+      "Nicaragua > Boaco Department": [
+        "Boaco"
+      ],
+      "Nicaragua > Carazo Department": [
+        "Carazo"
+      ],
+      "Nicaragua > Chinandega Department": [
+        "Chinandega"
+      ],
+      "Nicaragua > Chontales Department": [
+        "Chontales"
+      ],
+      "Nicaragua > Estelí Department": [
+        "Estelí"
+      ],
+      "Nicaragua > Granada Department": [
+        "Granada"
+      ],
+      "Nicaragua > Jinotega Department": [
+        "Jinotega"
+      ],
+      "Nicaragua > León Department": [
+        "León"
+      ],
+      "Nicaragua > Madriz Department": [
+        "Madriz"
+      ],
+      "Nicaragua > Masaya Department": [
+        "Masaya"
+      ],
+      "Nicaragua > Matagalpa Department": [
+        "Matagalpa"
+      ],
+      "Nicaragua > North Caribbean Coast": [
+        "Región Autónoma del Atlántico Norte"
+      ],
+      "Nicaragua > Nueva Segovia Department": [
+        "Nueva Segovia"
+      ],
+      "Nicaragua > Rivas Department": [
+        "Rivas"
+      ],
+      "Nicaragua > South Caribbean Coast": [
+        "Región Autónoma del Atlántico Sur"
+      ],
+      "Niger > Dosso Region": [
+        "Dosso"
+      ],
+      "Niger > Maradi Region": [
+        "Maradi"
+      ],
+      "Niger > Tahoua Region": [
+        "Tahoua"
+      ],
+      "Niger > Tillabéri Region": [
+        "Tillaberi"
+      ],
+      "Niger > Zinder Region": [
+        "Zinder"
+      ],
+      "Nigeria > Abia State": [
+        "Abia"
+      ],
+      "Nigeria > Akwa Ibom State": [
+        "Akwa Ibom"
+      ],
+      "Nigeria > Bayelsa State": [
+        "Bayelsa"
+      ],
+      "Nigeria > Benue State": [
+        "Benue"
+      ],
+      "Nigeria > Borno State": [
+        "Borno"
+      ],
+      "Nigeria > Cross River State": [
+        "Cross River"
+      ],
+      "Nigeria > Ebonyi State": [
+        "Ebonyi"
+      ],
+      "Nigeria > Edo State": [
+        "Edo"
+      ],
+      "Nigeria > Ekiti State": [
+        "Ekiti"
+      ],
+      "Nigeria > Enugu State": [
+        "Enugu"
+      ],
+      "Nigeria > FCT": [
+        "Federal Capital Territory"
+      ],
+      "Nigeria > Gombe State": [
+        "Gombe"
+      ],
+      "Nigeria > Imo State": [
+        "Imo"
+      ],
+      "Nigeria > Jigawa State": [
+        "Jigawa"
+      ],
+      "Nigeria > Kaduna State": [
+        "Kaduna"
+      ],
+      "Nigeria > Kano State": [
+        "Kano"
+      ],
+      "Nigeria > Katsina State": [
+        "Katsina"
+      ],
+      "Nigeria > Kogi State": [
+        "Kogi"
+      ],
+      "Nigeria > Kwara State": [
+        "Kwara"
+      ],
+      "Nigeria > Nasarawa State": [
+        "Nasarawa"
+      ],
+      "Nigeria > Niger State": [
+        "Niger"
+      ],
+      "Nigeria > Ogun State": [
+        "Ogun"
+      ],
+      "Nigeria > Ondo State": [
+        "Ondo"
+      ],
+      "Nigeria > Osun State": [
+        "Osun"
+      ],
+      "Nigeria > Oyo State": [
+        "Oyo"
+      ],
+      "Nigeria > Plateau State": [
+        "Plateau"
+      ],
+      "Nigeria > Rivers State": [
+        "Rivers"
+      ],
+      "Nigeria > Taraba State": [
+        "Taraba"
+      ],
+      "Nigeria > Yobe State": [
+        "Yobe"
+      ],
+      "Nigeria > Zamfara State": [
+        "Zamfara"
+      ],
+      "Norway > Agder": [
+        "Agder fylke"
+      ],
+      "Norway > Akershus": [
+        "Akershus fylke"
+      ],
+      "Norway > Finnmark": [
+        "Finnmark fylke"
+      ],
+      "Norway > Innlandet": [
+        "Innlandet fylke"
+      ],
+      "Norway > Nordland": [
+        "Nordland fylke"
+      ],
+      "Norway > Østfold": [
+        "Østfold fylke"
+      ],
+      "Norway > Rogaland": [
+        "Rogaland fylke"
+      ],
+      "Norway > Telemark": [
+        "Telemark fylke"
+      ],
+      "Norway > Troms": [
+        "Troms fylke"
+      ],
+      "Norway > Trøndelag": [
+        "Trøndelag fylke"
+      ],
+      "Norway > Vestfold": [
+        "Vestfold fylke"
+      ],
+      "Norway > Vestland": [
+        "Vestland fylke"
+      ],
+      "Oman > Al Batinah South": [
+        "Södra Al Barinah"
+      ],
+      "Oman > Musandam Governorate": [
+        "Musandam"
+      ],
+      "Oman > Muscat": [
+        "Muskat"
+      ],
+      "Oman > Northeastern Governorate": [
+        "Nord-Ash Sharqiyah"
+      ],
+      "Pakistan > Balochistan": [
+        "Baluchistan"
+      ],
+      "Pakistan > Islamabad": [
+        "Huvudstadsregionen Islamabad"
+      ],
+      "Pakistan > Khyber Pakhtunkhwa": [
+        "Nordvästra gränsprovinsen"
+      ],
+      "Palestinian Territory > Gaza Strip": [
+        "Gazaremsan"
+      ],
+      "Palestinian Territory > West Bank": [
+        "Västbanken"
+      ],
+      "Panama > Bocas del Toro Province": [
+        "Bocas del Toro"
+      ],
+      "Panama > Chiriquí Province": [
+        "Chiriquí"
+      ],
+      "Panama > Veraguas Province": [
+        "Veraguas"
+      ],
+      "Papua New Guinea > East New Britain Province": [
+        "East New Britain"
+      ],
+      "Papua New Guinea > East Sepik Province": [
+        "East Sepik"
+      ],
+      "Papua New Guinea > Eastern Highlands Province": [
+        "Eastern Highlands"
+      ],
+      "Papua New Guinea > Madang Province": [
+        "Madang"
+      ],
+      "Papua New Guinea > Morobe Province": [
+        "Morobe"
+      ],
+      "Papua New Guinea > Oro Province": [
+        "Oro"
+      ],
+      "Papua New Guinea > Southern Highlands Province": [
+        "Southern Highlands"
+      ],
+      "Papua New Guinea > West New Britain Province": [
+        "West New Britain"
+      ],
+      "Papua New Guinea > Western Highlands Province": [
+        "Western Highlands"
+      ],
+      "Paraguay > Amambay Department": [
+        "Amambay"
+      ],
+      "Paraguay > Central Department": [
+        "Central"
+      ],
+      "Paraguay > Cordillera Department": [
+        "Cordillera"
+      ],
+      "Paraguay > Misiones Department": [
+        "Misiones"
+      ],
+      "Peru > Apurímac Department": [
+        "Apurímac"
+      ],
+      "Peru > Cajamarca Department": [
+        "Cajamarca"
+      ],
+      "Peru > Cuzco Department": [
+        "Cusco"
+      ],
+      "Peru > Huánuco Department": [
+        "Huánuco"
+      ],
+      "Peru > Junin": [
+        "Junín"
+      ],
+      "Peru > Lima Province": [
+        "Lima"
+      ],
+      "Peru > Lima region": [
+        "Lima"
+      ],
+      "Peru > Moquegua Department": [
+        "Moquegua"
+      ],
+      "Peru > San Martín Department": [
+        "San Martín"
+      ],
+      "Philippines > Autonomous Region in Muslim Mindanao": [
+        "Muslimska Mindanao"
+      ],
+      "Philippines > Bicol Region": [
+        "Bikolregionen"
+      ],
+      "Philippines > Cagayan Valley": [
+        "Cagayandalen"
+      ],
+      "Philippines > Central Luzon": [
+        "Centrala Luzon"
+      ],
+      "Philippines > Central Visayas": [
+        "Centrala Visayas"
+      ],
+      "Philippines > Cordillera": [
+        "Kordiljärernas administrativa region"
+      ],
+      "Philippines > Davao Region": [
+        "Davaoregionen"
+      ],
+      "Philippines > Eastern Visayas": [
+        "Östra Visayas"
+      ],
+      "Philippines > Ilocos": [
+        "Ilocosregionen"
+      ],
+      "Philippines > Northern Mindanao": [
+        "Norra Mindanao"
+      ],
+      "Philippines > Western Visayas": [
+        "Västra Visayas"
+      ],
+      "Philippines > Zamboanga Peninsula": [
+        "Zamboangahalvön"
+      ],
+      "Poland > Greater Poland": [
+        "Storpolens vojvodskap"
+      ],
+      "Poland > Kujawsko-Pomorskie": [
+        "Kujawy-Pomorze"
+      ],
+      "Poland > Lesser Poland": [
+        "Lillpolens vojvodskap"
+      ],
+      "Poland > Łódź Voivodeship": [
+        "Łódź vojvodskap"
+      ],
+      "Poland > Lower Silesia": [
+        "Nedre Schlesiens vojvodskap"
+      ],
+      "Poland > Lublin": [
+        "Lublins vojvodskap"
+      ],
+      "Poland > Mazovia": [
+        "Masoviens vojvodskap"
+      ],
+      "Poland > Opole Voivodeship": [
+        "Opole vojvodskap"
+      ],
+      "Poland > Pomerania": [
+        "Pomorze"
+      ],
+      "Poland > Silesia": [
+        "Śląsk"
+      ],
+      "Poland > Subcarpathia": [
+        "Nedre Karpaternas vojvodskap"
+      ],
+      "Poland > Świętokrzyskie": [
+        "Święty Krzyż"
+      ],
+      "Poland > Warmia-Masuria": [
+        "Warmia-Mazury"
+      ],
+      "Poland > West Pomerania": [
+        "Västpommerns vojvodskap"
+      ],
+      "Portugal > Azores": [
+        "Azorerna"
+      ],
+      "Portugal > Lisbon": [
+        "Lissabon distrikt"
+      ],
+      "Qatar > Al Daayen": [
+        "Al Dayeen"
+      ],
+      "Qatar > Umm Salal": [
+        "Umm Salal Kommun"
+      ],
+      "Romania > Alba County": [
+        "Alba"
+      ],
+      "Romania > Arad County": [
+        "Arad"
+      ],
+      "Romania > Arges": [
+        "Argeș"
+      ],
+      "Romania > Bacău County": [
+        "Bacău"
+      ],
+      "Romania > Bihor County": [
+        "Bihor"
+      ],
+      "Romania > Bistrița-Năsăud County": [
+        "Bistrița-Năsăud"
+      ],
+      "Romania > Botoșani County": [
+        "Botoșani"
+      ],
+      "Romania > Brăila County": [
+        "Brăila"
+      ],
+      "Romania > Brașov County": [
+        "Brașov"
+      ],
+      "Romania > Buzău County": [
+        "Buzău"
+      ],
+      "Romania > Călărași County": [
+        "Călărași"
+      ],
+      "Romania > Caraș-Severin County": [
+        "Caraș-Severin"
+      ],
+      "Romania > Cluj County": [
+        "Cluj"
+      ],
+      "Romania > Constanța County": [
+        "Constanța"
+      ],
+      "Romania > Covasna County": [
+        "Covasna"
+      ],
+      "Romania > Dâmbovița County": [
+        "Dâmbovița"
+      ],
+      "Romania > Galați County": [
+        "Galați"
+      ],
+      "Romania > Giurgiu County": [
+        "Giurgiu"
+      ],
+      "Romania > Gorj County": [
+        "Gorj"
+      ],
+      "Romania > Hunedoara County": [
+        "Hunedoara"
+      ],
+      "Romania > Ialomița County": [
+        "Ialomița"
+      ],
+      "Romania > Iași County": [
+        "Iași"
+      ],
+      "Romania > Maramureş": [
+        "Maramureș"
+      ],
+      "Romania > Mehedinți County": [
+        "Mehedinți"
+      ],
+      "Romania > Mureș County": [
+        "Mureș"
+      ],
+      "Romania > Neamț County": [
+        "Neamț"
+      ],
+      "Romania > Sălaj County": [
+        "Sălaj"
+      ],
+      "Romania > Satu Mare County": [
+        "Satu Mare"
+      ],
+      "Romania > Sibiu County": [
+        "Sibiu"
+      ],
+      "Romania > Teleorman County": [
+        "Teleorman"
+      ],
+      "Romania > Timiș County": [
+        "Timiș"
+      ],
+      "Romania > Tulcea County": [
+        "Tulcea"
+      ],
+      "Romania > Vâlcea County": [
+        "Vâlcea"
+      ],
+      "Russia > Adygeya Republic": [
+        "Adygeiska republiken"
+      ],
+      "Russia > Altai": [
+        "Altajrepubliken"
+      ],
+      "Russia > Altai Krai": [
+        "Altaj"
+      ],
+      "Russia > Amur Oblast": [
+        "Amur"
+      ],
+      "Russia > Arkhangelskaya": [
+        "Archangelsk"
+      ],
+      "Russia > Astrakhan Oblast": [
+        "Astrakan"
+      ],
+      "Russia > Bashkortostan Republic": [
+        "Basjkirien"
+      ],
+      "Russia > Belgorod Oblast": [
+        "Belgorod"
+      ],
+      "Russia > Bryansk Oblast": [
+        "Brjasnk"
+      ],
+      "Russia > Buryatiya Republic": [
+        "Burjatien"
+      ],
+      "Russia > Chechnya": [
+        "Tjetjenien"
+      ],
+      "Russia > Chelyabinsk": [
+        "Tjeljabinsk"
+      ],
+      "Russia > Chukotka": [
+        "Tjuktjien"
+      ],
+      "Russia > Chuvash Republic": [
+        "Tjuvasjien"
+      ],
+      "Russia > Ingushetiya Republic": [
+        "Ingusjien"
+      ],
+      "Russia > Irkutsk Oblast": [
+        "Irkutsk"
+      ],
+      "Russia > Ivanovo Oblast": [
+        "Ivanovo"
+      ],
+      "Russia > Jewish Autonomous Oblast": [
+        "Judiska autonoma länet"
+      ],
+      "Russia > Kabardino-Balkariya Republic": [
+        "Kabardinien-Balkarien"
+      ],
+      "Russia > Kaliningrad Oblast": [
+        "Kaliningrad"
+      ],
+      "Russia > Kalmykiya Republic": [
+        "Kalmuckien"
+      ],
+      "Russia > Kaluga Oblast": [
+        "Kaluga"
+      ],
+      "Russia > Kamchatka": [
+        "Kamtjatka"
+      ],
+      "Russia > Karachayevo-Cherkesiya Republic": [
+        "Karatjajen-Tjerkessien"
+      ],
+      "Russia > Karelia": [
+        "Karelska republiken"
+      ],
+      "Russia > Khabarovsk": [
+        "Chabarovsk"
+      ],
+      "Russia > Khakasiya Republic": [
+        "Chakassien"
+      ],
+      "Russia > Khanty-Mansia": [
+        "Chantien-Mansien"
+      ],
+      "Russia > Kirov Oblast": [
+        "Kirov"
+      ],
+      "Russia > Kostroma Oblast": [
+        "Kostroma"
+      ],
+      "Russia > Krasnodar Krai": [
+        "Krasnodar"
+      ],
+      "Russia > Krasnoyarsk Krai": [
+        "Krasnojarsk"
+      ],
+      "Russia > Kurgan Oblast": [
+        "Kurgan"
+      ],
+      "Russia > Kursk Oblast": [
+        "Kursk"
+      ],
+      "Russia > Kuzbass": [
+        "Kemerovo"
+      ],
+      "Russia > Leningradskaya Oblast'": [
+        "Leningrad oblast"
+      ],
+      "Russia > Lipetsk Oblast": [
+        "Lipetsk"
+      ],
+      "Russia > Magadan Oblast": [
+        "Magadan"
+      ],
+      "Russia > Mariy-El Republic": [
+        "Marij El"
+      ],
+      "Russia > Mordoviya Republic": [
+        "Mordvinien"
+      ],
+      "Russia > Moscow": [
+        "Moskva"
+      ],
+      "Russia > Moscow Oblast": [
+        "Moskva oblast"
+      ],
+      "Russia > Murmansk": [
+        "Murmansk oblast"
+      ],
+      "Russia > Nenets": [
+        "Nentsien"
+      ],
+      "Russia > Nizhny Novgorod Oblast": [
+        "Nizjnij Novgorod"
+      ],
+      "Russia > North Ossetia–Alania": [
+        "Nordossetien-Alanien"
+      ],
+      "Russia > Novgorod Oblast": [
+        "Novgorod"
+      ],
+      "Russia > Novosibirsk Oblast": [
+        "Novosibirsk"
+      ],
+      "Russia > Omsk Oblast": [
+        "Omsk"
+      ],
+      "Russia > Orenburg Oblast": [
+        "Orenburg"
+      ],
+      "Russia > Oryol oblast": [
+        "Orjol"
+      ],
+      "Russia > Penza Oblast": [
+        "Penza"
+      ],
+      "Russia > Perm Krai": [
+        "Perm"
+      ],
+      "Russia > Primorye": [
+        "Primorje"
+      ],
+      "Russia > Pskov Oblast": [
+        "Pskov"
+      ],
+      "Russia > Republic of Tyva": [
+        "Tuva"
+      ],
+      "Russia > Rostov": [
+        "Rostov oblast"
+      ],
+      "Russia > Ryazan Oblast": [
+        "Rjazan"
+      ],
+      "Russia > Sakhalin Oblast": [
+        "Sachalin"
+      ],
+      "Russia > Samara Oblast": [
+        "Samara"
+      ],
+      "Russia > Saratov Oblast": [
+        "Saratov"
+      ],
+      "Russia > Smolensk Oblast": [
+        "Smolensk"
+      ],
+      "Russia > St.-Petersburg": [
+        "Sankt Petersburg"
+      ],
+      "Russia > Stavropol Kray": [
+        "Stavropol"
+      ],
+      "Russia > Sverdlovsk Oblast": [
+        "Sverdlovsk"
+      ],
+      "Russia > Tambov Oblast": [
+        "Stavropol"
+      ],
+      "Russia > Tatarstan Republic": [
+        "Tatarstan"
+      ],
+      "Russia > Tomsk Oblast": [
+        "Tomsk"
+      ],
+      "Russia > Tula Oblast": [
+        "Tula"
+      ],
+      "Russia > Tver Oblast": [
+        "Tver"
+      ],
+      "Russia > Tyumen Oblast": [
+        "Tiumen"
+      ],
+      "Russia > Udmurtiya Republic": [
+        "Udmurtien"
+      ],
+      "Russia > Ulyanovsk": [
+        "Uljanovsk"
+      ],
+      "Russia > Vladimir Oblast": [
+        "Vladimir"
+      ],
+      "Russia > Volgograd Oblast": [
+        "Volgograd"
+      ],
+      "Russia > Vologda Oblast": [
+        "Vologda"
+      ],
+      "Russia > Voronezh Oblast": [
+        "Voronezj"
+      ],
+      "Russia > Yamalo-Nenets": [
+        "Jamalo-Nentsien"
+      ],
+      "Russia > Yaroslavl Oblast": [
+        "Jaroslavl"
+      ],
+      "Rwanda > Northern Province": [
+        "Nord provinsen"
+      ],
+      "Rwanda > Southern Province": [
+        "Sydprovinsen"
+      ],
+      "Rwanda > Western Province": [
+        "Västra provinsen"
+      ],
+      "Saudi Arabia > 'Asir Region": [
+        "'Asir"
+      ],
+      "Saudi Arabia > Eastern Province": [
+        "ash-Sharqiyah"
+      ],
+      "Saudi Arabia > Mecca Region": [
+        "Mekka"
+      ],
+      "Saudi Arabia > Najran Region": [
+        "Najran"
+      ],
+      "Saudi Arabia > Riyadh Region": [
+        "Ar-Riyad"
+      ],
+      "Saudi Arabia > Tabuk Region": [
+        "Tabuk"
+      ],
+      "Senegal > Diourbel Region": [
+        "Diourbel"
+      ],
+      "Seychelles > La Rivière Anglaise": [
+        "English River"
+      ],
+      "Sierra Leone > Eastern Province": [
+        "Östra provinsen"
+      ],
+      "Sierra Leone > Northern Province": [
+        "Nord"
+      ],
+      "Sierra Leone > Southern Province": [
+        "Södra provinsen"
+      ],
+      "Sierra Leone > Western Area": [
+        "Freetown Peninsula"
+      ],
+      "Slovakia > Banská Bystrica Region": [
+        "Banská Bystrica"
+      ],
+      "Slovakia > Bratislava Region": [
+        "Bratislava"
+      ],
+      "Slovakia > Košice Region": [
+        "Košice"
+      ],
+      "Slovakia > Nitra Region": [
+        "Nitra"
+      ],
+      "Slovakia > Prešov Region": [
+        "Prešov"
+      ],
+      "Slovakia > Trnava Region": [
+        "Trnava"
+      ],
+      "Slovakia > Žilina Region": [
+        "Žilina"
+      ],
+      "Slovenia > Ljubljana": [
+        "Ljubljana stadskommun"
+      ],
+      "Slovenia > Urban Municipality of Maribor": [
+        "Maribors stadskommun"
+      ],
+      "Solomon Islands > Guadalcanal Province": [
+        "Guadalcanal provinsen"
+      ],
+      "South Africa > Eastern Cape": [
+        "Östra Kapprovinsen"
+      ],
+      "South Africa > Free State": [
+        "Fristaten"
+      ],
+      "South Africa > North West": [
+        "Nordvästprovinsen"
+      ],
+      "South Africa > Northern Cape": [
+        "Norra Kapprovinsen"
+      ],
+      "South Africa > Western Cape": [
+        "Västra Kapprovinsen"
+      ],
+      "South Sudan > Northern Bahr al Ghazal": [
+        "Northern Bahr el Ghazal"
+      ],
+      "South Sudan > Upper Nile": [
+        "Övre Nilen"
+      ],
+      "South Sudan > Western Bahr al Ghazal": [
+        "Western Bahr el Ghazal"
+      ],
+      "Spain > Andalusia": [
+        "Andalusien"
+      ],
+      "Spain > Aragon": [
+        "Aragonien"
+      ],
+      "Spain > Asturias": [
+        "Asturien"
+      ],
+      "Spain > Balearic Islands": [
+        "Balearerna"
+      ],
+      "Spain > Basque Country": [
+        "Baskien"
+      ],
+      "Spain > Canary Islands": [
+        "Kanarieöarna"
+      ],
+      "Spain > Cantabria": [
+        "Kantabrien"
+      ],
+      "Spain > Castille and León": [
+        "Kastilien-Leon"
+      ],
+      "Spain > Castille-La Mancha": [
+        "Kastilien-La Mancha"
+      ],
+      "Spain > Catalonia": [
+        "Katalonien"
+      ],
+      "Spain > Galicia": [
+        "Galicien"
+      ],
+      "Spain > Madrid": [
+        "regionen Madrid"
+      ],
+      "Spain > Navarre": [
+        "Navarra"
+      ],
+      "Sri Lanka > Central Province": [
+        "Centralprovinsen"
+      ],
+      "Sri Lanka > Eastern Province": [
+        "Östprovinsen"
+      ],
+      "Sri Lanka > North Central Province": [
+        "Norra centralprovinsen"
+      ],
+      "Sri Lanka > North Western Province": [
+        "Nordvästprovinsen"
+      ],
+      "Sri Lanka > Northern Province": [
+        "Nordprovinsen"
+      ],
+      "Sri Lanka > Sabaragamuwa Province": [
+        "Sabaragamuwa"
+      ],
+      "Sri Lanka > Southern Province": [
+        "Sydprovinsen"
+      ],
+      "Sri Lanka > Uva Province": [
+        "Uvaprovinsen"
+      ],
+      "Sri Lanka > Western Province": [
+        "Västprovinsen"
+      ],
+      "Sudan > Al Jazirah": [
+        "Al-Jazirah"
+      ],
+      "Sudan > Al Qaḑārif": [
+        "Al-Qadarif"
+      ],
+      "Sudan > Blue Nile": [
+        "An-Nil al-Azraq"
+      ],
+      "Sudan > Central Darfur": [
+        "Centrala Dafur"
+      ],
+      "Sudan > Eastern Darfur": [
+        "Västra Dafur"
+      ],
+      "Sudan > North Kordofan": [
+        "Shamal Kurdufan"
+      ],
+      "Sudan > Northern Darfur": [
+        "Shamal Darfur"
+      ],
+      "Sudan > Northern State": [
+        "Ash-Shamaliyya"
+      ],
+      "Sudan > Red Sea": [
+        "Al-Bahr al-Ahmar"
+      ],
+      "Sudan > River Nile": [
+        "Nahr an-Nil"
+      ],
+      "Sudan > Southern Darfur": [
+        "Janub Darfur"
+      ],
+      "Sudan > Southern Kordofan": [
+        "Janub Kurdufan"
+      ],
+      "Sudan > Western Darfur": [
+        "Gharb Darfur"
+      ],
+      "Sudan > White Nile": [
+        "An-Nil al-Abyad"
+      ],
+      "Suriname > Paramaribo District": [
+        "Paramaribo"
+      ],
+      "Suriname > Wanica District": [
+        "Wanica"
+      ],
+      "Sweden > Blekinge": [
+        "Blekinge län"
+      ],
+      "Sweden > Dalarna": [
+        "Dalarnas län"
+      ],
+      "Sweden > Gävleborg": [
+        "Gävleborgs län"
+      ],
+      "Sweden > Gotland": [
+        "Gotlands län"
+      ],
+      "Sweden > Halland": [
+        "Hallands län"
+      ],
+      "Sweden > Jämtland": [
+        "Jämtlands län"
+      ],
+      "Sweden > Jönköping": [
+        "Jönköpings län"
+      ],
+      "Sweden > Kalmar": [
+        "Kalmar län"
+      ],
+      "Sweden > Kronoberg": [
+        "Kronobergs län"
+      ],
+      "Sweden > Norrbotten": [
+        "Norrbottens län"
+      ],
+      "Sweden > Örebro": [
+        "Örebro län"
+      ],
+      "Sweden > Östergötland": [
+        "Östergötlands län"
+      ],
+      "Sweden > Skåne": [
+        "Skåne län"
+      ],
+      "Sweden > Södermanland": [
+        "Södermanlands län"
+      ],
+      "Sweden > Stockholm": [
+        "Stockholms län"
+      ],
+      "Sweden > Uppsala": [
+        "Uppsala län"
+      ],
+      "Sweden > Värmland": [
+        "Värmlands län"
+      ],
+      "Sweden > Västerbotten": [
+        "Västerbottens län"
+      ],
+      "Sweden > Västernorrland": [
+        "Västernorrlands län"
+      ],
+      "Sweden > Västmanland": [
+        "Västmanlands län"
+      ],
+      "Sweden > Västra Götaland": [
+        "Västra Götalands län"
+      ],
+      "Switzerland > Basel-City": [
+        "Basel-Stadt"
+      ],
+      "Switzerland > Geneva": [
+        "Genève"
+      ],
+      "Switzerland > Grisons": [
+        "Graubünden"
+      ],
+      "Switzerland > Lucerne": [
+        "Luzern"
+      ],
+      "Switzerland > Zurich": [
+        "Zürich"
+      ],
+      "Syria > Daraa": [
+        "Dar'a"
+      ],
+      "Syria > Deir ez-Zor": [
+        "Dayr az-Zawr"
+      ],
+      "Syria > Hama": [
+        "Guvernementet Hamah"
+      ],
+      "Syria > Quneitra": [
+        "al-Qunaytirah"
+      ],
+      "Syria > Rif-dimashq": [
+        "Rif Dimashq"
+      ],
+      "Syria > Suwayda": [
+        "As-Suwayda'"
+      ],
+      "Tajikistan > Khatlon Province": [
+        "Chatlon"
+      ],
+      "Tanzania > Dar es Salaam Region": [
+        "Dar-es-Salaam"
+      ],
+      "Thailand > Buriram": [
+        "Buri Ram"
+      ],
+      "Thailand > Lopburi": [
+        "Lop Buri"
+      ],
+      "Thailand > Nakhon Si Thammarat": [
+        "Provins Nakhon Si Thammarat"
+      ],
+      "Thailand > Nong Bua Lamphu": [
+        "Nong Bua Lam Phu"
+      ],
+      "Thailand > Phra Nakhon Si Ayutthaya": [
+        "Ayutthaya"
+      ],
+      "Thailand > Ranong province": [
+        "Ranong"
+      ],
+      "Thailand > Si Sa Ket": [
+        "Sisaket"
+      ],
+      "Thailand > Suphan Buri": [
+        "Suphanburi"
+      ],
+      "The Netherlands > North Brabant": [
+        "Noord-Brabant"
+      ],
+      "The Netherlands > North Holland": [
+        "Nordholland"
+      ],
+      "The Netherlands > South Holland": [
+        "Sydholland"
+      ],
+      "Timor Leste > Dili Municipality": [
+        "Dili"
+      ],
+      "Trinidad and Tobago > Borough of Arima": [
+        "Arima"
+      ],
+      "Trinidad and Tobago > Diego Martin Regional Corporation": [
+        "Diego Martin"
+      ],
+      "Tunisia > Ariana Governorate": [
+        "Ariana"
+      ],
+      "Tunisia > Ben Arous Governorate": [
+        "Ben Arous"
+      ],
+      "Tunisia > Bizerte Governorate": [
+        "Bizerte"
+      ],
+      "Tunisia > Gabès Governorate": [
+        "Gabès"
+      ],
+      "Tunisia > Jendouba Governorate": [
+        "Jendouba"
+      ],
+      "Tunisia > Kasserine Governorate": [
+        "Kasserine"
+      ],
+      "Tunisia > Kebili Governorate": [
+        "Kebili"
+      ],
+      "Tunisia > Kef Governorate": [
+        "Kef"
+      ],
+      "Tunisia > Mahdia Governorate": [
+        "Mahdia"
+      ],
+      "Tunisia > Medenine Governorate": [
+        "Medenine"
+      ],
+      "Tunisia > Monastir Governorate": [
+        "Monastir"
+      ],
+      "Tunisia > Nabeul Governorate": [
+        "Nabeul"
+      ],
+      "Tunisia > Sfax Governorate": [
+        "Sfax"
+      ],
+      "Tunisia > Sidi Bouzid Governorate": [
+        "Sidi Bouzid"
+      ],
+      "Tunisia > Siliana Governorate": [
+        "Siliana"
+      ],
+      "Tunisia > Sousse Governorate": [
+        "Sousse"
+      ],
+      "Tunisia > Tozeur Governorate": [
+        "Tozeur"
+      ],
+      "Tunisia > Tunis Governorate": [
+        "Tunis"
+      ],
+      "Tunisia > Zaghouan Governorate": [
+        "Zaghouan"
+      ],
+      "Turkey > Adıyaman Province": [
+        "Adıyaman"
+      ],
+      "Turkey > Afyonkarahisar Province": [
+        "Afyonkarahisar"
+      ],
+      "Turkey > Bayburt Province": [
+        "Bayburt"
+      ],
+      "Turkey > Bursa Province": [
+        "Bursa"
+      ],
+      "Turkey > Canakkale": [
+        "Çanakkale"
+      ],
+      "Turkey > Diyarbakır Province": [
+        "Diyarbakır"
+      ],
+      "Turkey > Gümüşhane Province": [
+        "Gümüşhane"
+      ],
+      "Turkey > Hakkâri": [
+        "Hakkari"
+      ],
+      "Turkey > Istanbul": [
+        "İstanbul"
+      ],
+      "Turkey > İzmir Province": [
+        "İzmir"
+      ],
+      "Turkey > Karabük Province": [
+        "Karabük"
+      ],
+      "Turkey > Kars Province": [
+        "Kars"
+      ],
+      "Turkey > Nevşehir Province": [
+        "Nevşehir"
+      ],
+      "Turkey > Niğde Province": [
+        "Niğde"
+      ],
+      "Turkey > Rize Province": [
+        "Rize"
+      ],
+      "Turkey > Tokat Province": [
+        "Tokat"
+      ],
+      "Turkey > Zonguldak Province": [
+        "Zonguldak"
+      ],
+      "Turkmenistan > Ahal": [
+        "Achal"
+      ],
+      "Ukraine > Cherkasy": [
+        "Tjerkasy oblast"
+      ],
+      "Ukraine > Chernihiv": [
+        "Tjernihiv oblast"
+      ],
+      "Ukraine > Crimea": [
+        "Autonoma republiken Krim"
+      ],
+      "Ukraine > Donetsk": [
+        "Donetsk oblast"
+      ],
+      "Ukraine > Ivano-Frankivsk": [
+        "Ivano-Frankivsk oblast"
+      ],
+      "Ukraine > Kharkivs’ka Oblast’": [
+        "Charkiv oblast"
+      ],
+      "Ukraine > Khmelnytskyi": [
+        "Chmelnytskyj oblast"
+      ],
+      "Ukraine > Kirovohrad": [
+        "Kirovohrad oblast"
+      ],
+      "Ukraine > Luhansk": [
+        "Luhansk oblast"
+      ],
+      "Ukraine > Lviv": [
+        "Lviv oblast"
+      ],
+      "Ukraine > Mykolaiv": [
+        "Mykolajiv oblast"
+      ],
+      "Ukraine > Odesa": [
+        "Odessa oblast"
+      ],
+      "Ukraine > Poltava": [
+        "Poltava oblast"
+      ],
+      "Ukraine > Sumy": [
+        "Sumy oblast"
+      ],
+      "Ukraine > Ternopil": [
+        "Ternopil oblast"
+      ],
+      "Ukraine > Vinnytsia": [
+        "Vinnytsia oblast"
+      ],
+      "Ukraine > Volyn": [
+        "Volyn oblast"
+      ],
+      "Ukraine > Zakarpattia": [
+        "Transkarpatiens oblast"
+      ],
+      "Ukraine > Zaporizhzhia": [
+        "Zaporizjzja oblast"
+      ],
+      "United Arab Emirates > Abu Dhabi": [
+        "Emiratet Abu Dhabi"
+      ],
+      "United Kingdom > Northern Ireland": [
+        "Nordirland"
+      ],
+      "United Kingdom > Scotland": [
+        "Skottland"
+      ],
+      "United States > California": [
+        "Kalifornien"
+      ],
+      "Uruguay > Durazno Department": [
+        "Durazno"
+      ],
+      "Uruguay > Montevideo Department": [
+        "Montevideo"
+      ],
+      "Uruguay > Paysandú Department": [
+        "Paysandú"
+      ],
+      "Uruguay > Río Negro Department": [
+        "Río Negro"
+      ],
+      "Uruguay > Rivera Department": [
+        "Rivera"
+      ],
+      "Uruguay > Rocha Department": [
+        "Rocha"
+      ],
+      "Uruguay > Salto Department": [
+        "Salto"
+      ],
+      "Uruguay > San José Department": [
+        "San José"
+      ],
+      "Uruguay > Tacuarembó Department": [
+        "Tacuarembó"
+      ],
+      "Uruguay > Treinta y Tres Department": [
+        "Treinta y Tres"
+      ],
+      "Uzbekistan > Andijan Region": [
+        "Andizjan"
+      ],
+      "Uzbekistan > Bukhara": [
+        "Buchara"
+      ],
+      "Uzbekistan > Jizzakh Region": [
+        "Jizzax viloyati"
+      ],
+      "Uzbekistan > Navoiy Region": [
+        "Navoiy viloyati"
+      ],
+      "Uzbekistan > Qashqadaryo": [
+        "Qasjqadarja"
+      ],
+      "Uzbekistan > Samarqand Region": [
+        "Samarkand"
+      ],
+      "Uzbekistan > Sirdaryo Region": [
+        "Syr-Darja"
+      ],
+      "Uzbekistan > Surxondaryo Region": [
+        "Surchondarja"
+      ],
+      "Uzbekistan > Tashkent Region": [
+        "Tasjkent"
+      ],
+      "Uzbekistan > Xorazm Region": [
+        "Khwarezm"
+      ],
+      "Venezuela > Distrito Federal": [
+        "Venezuelas huvudstadsdistrikt"
+      ],
+      "Vietnam > Cao Bằng Province": [
+        "Cao Bang"
+      ],
+      "Vietnam > Hà Tĩnh Province": [
+        "Ha Tinh"
+      ],
+      "Vietnam > Lai Châu Province": [
+        "Lai Chau"
+      ],
+      "Vietnam > Lạng Sơn Province": [
+        "Lang Son"
+      ],
+      "Vietnam > Quảng Ninh": [
+        "Quang Ninh"
+      ],
+      "Vietnam > Sơn La Province": [
+        "Son La"
+      ],
+      "Vietnam > Thanh Hóa Province": [
+        "Thanh Hoa"
+      ],
+      "Yemen > Abyan Governorate": [
+        "Abyan"
+      ],
+      "Yemen > Al Bayda": [
+        "Al-Bayda"
+      ],
+      "Yemen > Al Hudaydah": [
+        "al-Hudayda"
+      ],
+      "Yemen > Al Jawf": [
+        "Al-Jawf"
+      ],
+      "Yemen > Dhamār": [
+        "Dhamar"
+      ],
+      "Yemen > Ḩajjah": [
+        "Hajjah"
+      ],
+      "Yemen > Ibb Governorate": [
+        "Ibb"
+      ],
+      "Yemen > Laḩij": [
+        "Lahij"
+      ],
+      "Yemen > Ma’rib": [
+        "Marib"
+      ],
+      "Yemen > Muhafazat Hadramaout": [
+        "Guvernementet Hadhramaut"
+      ],
+      "Yemen > Omran": [
+        "Amran"
+      ],
+      "Yemen > Şa‘dah": [
+        "Sadah"
+      ],
+      "Yemen > Sanaa Governorate": [
+        "Guvernementet Sana'a"
+      ],
+      "Yemen > Ta‘izz": [
+        "Taizz"
+      ],
+      "Zambia > Central Province": [
+        "Central"
+      ],
+      "Zambia > Eastern Province": [
+        "Eastern"
+      ],
+      "Zambia > Luapula Province": [
+        "Luapula"
+      ],
+      "Zambia > Lusaka Province": [
+        "Lusaka"
+      ],
+      "Zambia > Northern Province": [
+        "Northern"
+      ],
+      "Zambia > Southern Province": [
+        "Södra Zambia"
+      ],
+      "Zambia > Western Province": [
+        "Western"
+      ],
+      "Zimbabwe > Mashonaland East Province": [
+        "Mashonaland East"
+      ],
+      "Zimbabwe > Masvingo Province": [
+        "Masvingo"
+      ],
+      "Zimbabwe > Matabeleland South Province": [
+        "Matabeleland South"
+      ],
+      "Zimbabwe > Midlands Province": [
+        "Midlands"
+      ]
+    }
+  }
+}
