@@ -1,6 +1,6 @@
-import type { WrapHandlerFn } from './wrap-handler';
 import * as relationships from '../../api/relationships';
 import * as uw from '../../api/undo_wrappers';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerRelationshipHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
   // Relationships (undo-wrapped)

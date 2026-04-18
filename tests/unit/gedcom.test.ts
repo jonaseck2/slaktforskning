@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { parseGedcomDate, formatGedcomDate } from '../../src/gedcom/date';
 import { importGedcom } from '../../src/import/gedcom';
@@ -12,6 +11,7 @@ import { createSource, listSources, createCitation, getCitationsForPerson, getCi
 import { createPlace, listPlaces, getPlace } from '../../src/api/places';
 import { createMedia, addMediaLink, getMediaForEntity } from '../../src/api/media';
 import { createRepository, linkSourceRepository } from '../../src/api/repositories';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });

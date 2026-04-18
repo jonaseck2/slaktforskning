@@ -15,7 +15,6 @@ import {
   checkDeathWithoutBirth,
   checkNoBirthEvent,
 } from './checks-chronology';
-
 import {
   checkParenthoodAge,
   checkSiblingAgeLarge,
@@ -29,7 +28,6 @@ import {
   checkMarriageBeforeBirth,
   checkCoupleWithSelf,
 } from './checks-relationships';
-
 import {
   checkNoName,
   checkLivingWithDeathEvent,
@@ -40,13 +38,11 @@ import {
   checkOrphanedSource,
   checkTextControlChars,
 } from './checks-quality';
-
 import {
   checkSimultaneousDistantLocations,
   checkMediaFileMissing,
   checkGazetteerMatchQuality,
 } from './checks-location';
-
 import { loadGazetteers, getAllGazetteers } from '../place-gazetteers';
 import { getImportedGazetteers } from '../gazetteers';
 import { getDbSetting } from '../db_settings';

@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { createTestDb } from './helpers';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
@@ -10,6 +9,7 @@ import { createRelationship } from '../../src/api/relationships';
 import { createSource, createCitation, updateSource } from '../../src/api/sources';
 import { createPlace } from '../../src/api/places';
 import { generateHtmlSite } from '../../src/api/html_site/generator';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 let tmpDir: string;

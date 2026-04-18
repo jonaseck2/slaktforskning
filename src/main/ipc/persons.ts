@@ -1,6 +1,6 @@
-import type { WrapHandlerFn } from './wrap-handler';
 import * as persons from '../../api/persons';
 import * as uw from '../../api/undo_wrappers';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerPersonHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
   // Persons (undo-wrapped)

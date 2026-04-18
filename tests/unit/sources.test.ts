@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type Database from 'better-sqlite3';
-import { createTestDb } from './helpers';
 import { createEvent } from '../../src/api/events';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship } from '../../src/api/relationships';
@@ -22,6 +21,7 @@ import {
   deleteCitation,
   updateCitation,
 } from '../../src/api/sources';
+import { createTestDb } from './helpers';
 
 let db: Database.Database;
 

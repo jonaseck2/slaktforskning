@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
-import { createTestDb } from './helpers';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createProdServer } from '../../src/mcp/createProdServer';
+import { createTestDb } from './helpers';
 
 let client: Client;
 

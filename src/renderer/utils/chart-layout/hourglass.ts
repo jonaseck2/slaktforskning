@@ -82,8 +82,8 @@ export function computeFootprint(node: TreePerson): Footprint {
   const realSpouseW = realSpouses.length * (BOX_W + V_GAP);
   const phSpouseW = phSpouses.length * (BOX_W + V_GAP);
   const realOnLeft = node.person.sex === 'F';
-  let left = half + (realOnLeft ? realSpouseW : phSpouseW);
-  let right = half + (realOnLeft ? phSpouseW : realSpouseW);
+  const left = half + (realOnLeft ? realSpouseW : phSpouseW);
+  const right = half + (realOnLeft ? phSpouseW : realSpouseW);
 
   return { left, right };
 }

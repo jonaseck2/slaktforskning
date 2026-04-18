@@ -1,6 +1,6 @@
-import type { Database } from 'node-sqlite3-wasm';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { Database } from 'node-sqlite3-wasm';
 import { zipSync } from 'fflate';
 import { exportGedcom } from '../gedcom/exporter';
 import { listMedia } from './media';

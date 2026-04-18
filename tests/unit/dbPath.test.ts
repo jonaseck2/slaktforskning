@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { describe, it, expect } from 'vitest';
 import { getDefaultDbPath } from '../../src/shared/dbPath';
 
 const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8')) as {

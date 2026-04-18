@@ -8,8 +8,8 @@ import * as placeApi from '../../../api/places';
 import * as sourceApi from '../../../api/sources';
 import * as reportData from '../../../api/report_data';
 import * as duplicates from '../../../api/duplicates';
-import type { ToolContext } from './types';
 import type { Citation, GenealogyEvent, Person, Source } from '../../../api/types';
+import type { ToolContext } from './types';
 
 export interface CreatePersonArgs {
   given_name: string;

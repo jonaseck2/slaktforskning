@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { checkGazetteerMatchQuality } from '../../src/api/checks/checks-location';
 import { createPlace } from '../../src/api/places';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import type { Gazetteer } from '../../src/api/place-gazetteers/types';
+import { createTestDb } from './helpers';
 
 const testGazetteer: Gazetteer = {
   id: 'test-gaz', name: 'Test', locale: 'sv', kind: 'point',

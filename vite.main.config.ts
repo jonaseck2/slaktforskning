@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
 import { builtinModules } from 'node:module';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {

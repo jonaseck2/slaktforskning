@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import {
   createGroup,
@@ -12,6 +11,7 @@ import {
   getGroupMembers,
   getGroupsForPerson,
 } from '../../src/api/groups';
+import { createTestDb } from './helpers';
 
 let db: any;
 

@@ -1,7 +1,6 @@
-import { dialog, BrowserWindow, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { WrapHandlerFn } from './wrap-handler';
+import { dialog, BrowserWindow, shell } from 'electron';
 import * as groups from '../../api/groups';
 import * as repositories from '../../api/repositories';
 import * as researchTasks from '../../api/research_tasks';
@@ -12,6 +11,7 @@ import * as persons from '../../api/persons';
 import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../../api/csv_export';
 import type { CsvOptions } from '../../api/csv_export';
 import { generateHtmlSite } from '../../api/html_site/generator';
+import type { WrapHandlerFn } from './wrap-handler';
 import { isImportInProgress } from './import';
 
 export function registerUtilityHandlers(

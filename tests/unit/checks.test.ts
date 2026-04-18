@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
-import { createTestDb } from './helpers';
 import { runAllChecks, runChecksForPerson } from '../../src/api/checks';
 import { createPerson, updatePerson } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
@@ -8,6 +7,7 @@ import { createEvent } from '../../src/api/events';
 import { addPersonName } from '../../src/api/persons';
 import { createSource, createCitation } from '../../src/api/sources';
 import { createMedia, addMediaLink } from '../../src/api/media';
+import { createTestDb } from './helpers';
 
 // Helper: create a person with a birth event on the given date (YYYY-MM-DD)
 function personWithBirth(db: ReturnType<typeof createTestDb>, birthDate: string, opts?: Parameters<typeof createPerson>[1]) {

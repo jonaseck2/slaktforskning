@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { createTestDb } from './helpers';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
+import { createTestDb } from './helpers';
 
 const HOLGER_SAMBO_GED = `
 0 HEAD

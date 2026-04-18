@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { seedFamilyWorkflow, clearTestData } from '../../src/mcp/tools/dev/seed';
 import * as groupApi from '../../src/api/groups';
 import * as personApi from '../../src/api/persons';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 

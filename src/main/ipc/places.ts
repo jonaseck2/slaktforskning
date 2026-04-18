@@ -1,5 +1,5 @@
-import type { WrapHandlerFn } from './wrap-handler';
 import * as places from '../../api/places';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerPlaceHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
   wrapHandler('places:create', (data) => places.createPlace(getDb(), data as Parameters<typeof places.createPlace>[1]));

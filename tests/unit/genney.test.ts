@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { transformGenney, parseNdJson, type GenneyTables } from '../../src/import/genney/transform';
 import { listPersons, getPersonNames } from '../../src/api/persons';
 import { listRelationships } from '../../src/api/relationships';
 import { getEventsForPerson, getEventsForRelationship } from '../../src/api/events';
 import { listSources, getCitationsForEvent } from '../../src/api/sources';
 import { listPlaces } from '../../src/api/places';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 

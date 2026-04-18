@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createMedia, getMedia, updateMedia } from '../../src/api/media';
+import { createTestDb } from './helpers';
 
 describe('updateMedia', () => {
   let db: ReturnType<typeof createTestDb>;

@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { describe, it, expect } from 'vitest';
 import { readGedcomFile } from '../../src/gedcom/encoding';
 
 function writeTempFile(content: Buffer | string, ext = '.ged'): string {

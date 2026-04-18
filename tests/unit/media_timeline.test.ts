@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createMedia, addMediaLink } from '../../src/api/media';
 import { createPlace } from '../../src/api/places';
 import { getMediaTimeline } from '../../src/api/media_timeline';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 

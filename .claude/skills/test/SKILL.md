@@ -19,9 +19,14 @@ npm run test:watch         # Watch mode for active development
 npx playwright test   # Run both E2E tests
 ```
 
+### Lint
+```bash
+npm run lint                # Run ESLint (must pass with 0 errors)
+```
+
 ### Full verification before committing
 ```bash
-npm test && npx playwright test
+npm run lint && npm test && npx playwright test
 ```
 
 ### Coverage thresholds

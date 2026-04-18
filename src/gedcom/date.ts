@@ -46,7 +46,7 @@ export function parseGedcomDate(raw: string): ParsedDate {
   if (abtMatch) return { date_type: 'about', date_value: parseDate(abtMatch[1]), date_value_end: null, date_original: orig };
 
   // Non-standard range: "1850/1860" or "1850-1860" (year/year)
-  const slashRange = s.match(/^(\d{4})[/\-](\d{4})$/);
+  const slashRange = s.match(/^(\d{4})[/-](\d{4})$/);
   if (slashRange) return { date_type: 'between', date_value: slashRange[1], date_value_end: slashRange[2], date_original: orig };
 
   // Non-standard: "between YYYY and YYYY" (lowercase, no BET prefix)

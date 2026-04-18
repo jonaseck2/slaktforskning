@@ -1,10 +1,10 @@
-import { app, BrowserWindow, dialog, Menu } from 'electron';
 import path from 'node:path';
+import { app, BrowserWindow, dialog, Menu } from 'electron';
 import started from 'electron-squirrel-startup';
+import { undoManager } from '../api/undo';
 import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { startUiServer, stopUiServer } from './ui-server';
-import { undoManager } from '../api/undo';
 
 // Suppress EPIPE errors (occur when stdout pipe closes, e.g. during E2E tests).
 // Without this, a single console.log to a closed pipe kills the main process.

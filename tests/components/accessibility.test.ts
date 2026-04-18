@@ -1,6 +1,6 @@
-import { describe, it, expect, afterEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { describe, it, expect, afterEach } from 'vitest';
 
 // ── 1. Text size class toggle ──────────────────────────────────────────────────
 // Mirrors App.vue's applyTextSize / setTextSize logic.

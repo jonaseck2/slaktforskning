@@ -1,9 +1,9 @@
-import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { WrapHandlerFn } from './wrap-handler';
+import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import { getDbSetting, setDbSetting, deleteDbSetting } from '../../api/db_settings';
 import { undoManager } from '../../api/undo';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerDatabaseHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,
