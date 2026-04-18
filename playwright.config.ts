@@ -79,5 +79,12 @@ export default defineConfig({
       timeout: 120000,
       retries: 1,
     },
+    {
+      // Dark mode: per-theme distinct surfaces (Forest/Nordic/Twilight)
+      name: 'gui-dark-mode',
+      testMatch: 'gui-dark-mode.test.ts',
+      timeout: 60000,
+      retries: 1,
+    },
   ],
 });

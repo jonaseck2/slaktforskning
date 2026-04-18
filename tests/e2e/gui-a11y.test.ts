@@ -13,6 +13,8 @@ test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'a11y');
   await app.settle(150);
   await app.setLocale('en');
+  // Force VisualizationView into list mode so the embedded PersonsView renders on `/`.
+  await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
 });
 
 test.afterAll(async () => {
@@ -82,7 +84,11 @@ test('settings rows have role=radiogroup', async () => {
 
 test('modal has role=dialog and aria-modal', async () => {
   await app.navigate('/');
-  await app.click('.app-btn--soft');
+  await app.settle(300);
+  // Multiple .app-btn--soft buttons on this page — click the one containing "Person"
+  await app.executeJs(`
+    Array.from(document.querySelectorAll('.app-btn--soft')).find(b => b.textContent.includes('Person'))?.click()
+  `);
   await app.settle();
 
   const hasDialog = await app.executeJs<boolean>(`

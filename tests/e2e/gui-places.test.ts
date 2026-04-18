@@ -19,6 +19,8 @@ test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'places');
   await app.settle(150);
   await app.setLocale('en');
+  // Force PlacesView into list mode (defaults to map) so the list-based tests work.
+  await app.executeJs(`localStorage.setItem('slaktforskning-places-view', 'list')`);
 });
 
 test.afterAll(async () => {
@@ -39,7 +41,10 @@ test.describe('Places CRUD', () => {
 
   test('create a place via modal', async () => {
     await app.navigate('/places');
-    await app.click('.app-btn--soft');
+    // PlacesView has view toggles (.app-btn--soft for active) + Add; click the "Place" button
+    await app.executeJs(`
+      Array.from(document.querySelectorAll('.app-btn--soft')).find(b => b.textContent.match(/\\bplace\\b/i) && b.textContent.includes('+'))?.click()
+    `);
     await app.settle();
 
     await app.waitAndFill('.modal input[type="text"]', 'Björkvik');
