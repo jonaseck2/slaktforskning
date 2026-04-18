@@ -147,6 +147,21 @@ function buildTranslationMap(
 }
 
 // ── SPARQL queries ───────────────────────────────────────────────────────
+//
+// Correct QIDs (verified against Wikidata):
+//   Q814648   = parish of Denmark
+//   Q102854139= former parish in Denmark
+//   Q29946056 = municipality of Denmark (Q29946056 → 33 items)
+//   Q62326    = region of Denmark (5 regions)
+//   Q755707   = municipality of Norway (358 items)
+//   Q192299   = county of Norway (fylke, 16 items)
+//   Q856076   = municipality of Finland (308 items)
+//   Q193512   = region of Finland (maakunta, 20 items)
+//   Q955655   = municipality of Iceland (sveitarfélag)
+//   Q842100   = region of Iceland
+//
+// Pattern: use OPTIONAL for both language labels so that missing labels
+// don't silently drop rows. Wikidata SPARQL requires rdfs: prefix declaration.
 
 /**
  * Danish parishes (Q814648) and former parishes (Q102854139).
@@ -157,109 +172,109 @@ SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
   { ?item wdt:P31 wd:Q814648 . }
   UNION
   { ?item wdt:P31 wd:Q102854139 . }
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "da")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "da") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
 /**
- * Danish municipalities (Q29946056) — for region/kommune matching.
+ * Danish municipalities (Q29946056) — for kommune name matching.
  */
 const DK_KOMMUNER_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31/wdt:P279* wd:Q29946056 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "da")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  ?item wdt:P31 wd:Q29946056 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "da") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
 /**
- * Danish regions (Q1523821).
+ * Danish regions (Q62326) — 5 regions.
  */
 const DK_REGIONS_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31 wd:Q1523821 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "da")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  ?item wdt:P31 wd:Q62326 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "da") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
 /**
  * Norwegian municipalities (Q755707).
+ * Norwegian label: nb (bokmål) or no.
  */
 const NO_KOMMUNER_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
   ?item wdt:P31 wd:Q755707 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "no")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "nb") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
 /**
- * Norwegian counties/fylker (Q5880884 = fylke of Norway).
+ * Norwegian municipalities — also try "no" tag (some entries use "no" instead of "nb").
+ */
+const NO_KOMMUNER_NO_QUERY = `
+SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
+  ?item wdt:P31 wd:Q755707 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "no") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
+}
+`;
+
+/**
+ * Norwegian counties/fylker (Q192299 = county of Norway).
  */
 const NO_FYLKER_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31 wd:Q5880884 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "no")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  ?item wdt:P31 wd:Q192299 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "nb") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
 /**
- * Finnish municipalities (Q515708).
+ * Finnish municipalities (Q856076).
  * Finland is officially bilingual; many municipalities have Swedish names.
  * Native language: fi, Swedish label: sv.
+ * Includes cases where fi == sv (e.g. Åland municipalities) to map fi→sv.
  */
-const FI_KUNNAT_FI_QUERY = `
+const FI_KUNNAT_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31 wd:Q515708 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "fi")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  ?item wdt:P31 wd:Q856076 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "fi") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel))
 }
 `;
 
 /**
- * Finnish municipalities — also via native Swedish label (for bilingual communes
- * where the Swedish name is the official native name too).
- * This catches cases where ?nativeLabel = ?svLabel but the Finnish name differs.
- * We still want to map Finnish name → Swedish name.
- */
-const FI_KUNNAT_SV_QUERY = `
-SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31 wd:Q515708 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "fi")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-}
-`;
-
-/**
- * Finnish regions (Q1307620 = region of Finland).
+ * Finnish regions/maakunnat (Q193512 = region of Finland).
  */
 const FI_MAAKUNTA_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31 wd:Q1307620 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "fi")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  ?item wdt:P31 wd:Q193512 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "fi") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
 /**
- * Icelandic municipalities (Q132700).
+ * Icelandic municipalities (Q955655 = municipality of Iceland / sveitarfélag).
  */
 const IS_SVEITARFELOG_QUERY = `
 SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
-  ?item wdt:P31 wd:Q132700 .
-  ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "is")
-  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
-  FILTER(?nativeLabel != ?svLabel)
+  ?item wdt:P31 wd:Q955655 .
+  OPTIONAL { ?item rdfs:label ?nativeLabel . FILTER(LANG(?nativeLabel) = "is") }
+  OPTIONAL { ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv") }
+  FILTER(BOUND(?nativeLabel) && BOUND(?svLabel) && ?nativeLabel != ?svLabel)
 }
 `;
 
@@ -319,28 +334,30 @@ async function main() {
   const dkSogneRows = await fetchWithRetry(DK_SOGNE_QUERY, 'Danish parishes (sogne)');
   await sleep(1500);
 
-  // Danish municipalities/regions (for kommune + region name matching)
+  // Danish municipalities (for kommune name matching)
   const dkKommunerRows = await fetchWithRetry(DK_KOMMUNER_QUERY, 'Danish municipalities (kommuner)');
   await sleep(1500);
 
+  // Danish regions
   const dkRegionRows = await fetchWithRetry(DK_REGIONS_QUERY, 'Danish regions');
   await sleep(1500);
 
-  // Norwegian municipalities
-  const noKommunerRows = await fetchWithRetry(NO_KOMMUNER_QUERY, 'Norwegian municipalities (kommuner)');
+  // Norwegian municipalities (try both "nb" and "no" language tags)
+  const noKommunerNbRows = await fetchWithRetry(NO_KOMMUNER_QUERY, 'Norwegian municipalities (nb label)');
   await sleep(1500);
 
+  const noKommunerNoRows = await fetchWithRetry(NO_KOMMUNER_NO_QUERY, 'Norwegian municipalities (no label)');
+  await sleep(1500);
+
+  // Norwegian counties/fylker
   const noFylkerRows = await fetchWithRetry(NO_FYLKER_QUERY, 'Norwegian counties (fylker)');
   await sleep(1500);
 
-  // Finnish municipalities (Finnish names → Swedish)
-  const fiKunnatRows = await fetchWithRetry(FI_KUNNAT_FI_QUERY, 'Finnish municipalities (fi → sv, differing only)');
+  // Finnish municipalities (fi → sv, including fi==sv cases for our index mapping)
+  const fiKunnatRows = await fetchWithRetry(FI_KUNNAT_QUERY, 'Finnish municipalities (fi → sv)');
   await sleep(1500);
 
-  // Also include all Finnish → Swedish mappings (even where fi==sv, to map fi names in our gazetteer)
-  const fiKunnatAllRows = await fetchWithRetry(FI_KUNNAT_SV_QUERY, 'Finnish municipalities (fi → sv, all)');
-  await sleep(1500);
-
+  // Finnish regions/maakunnat
   const fiMaakuntaRows = await fetchWithRetry(FI_MAAKUNTA_QUERY, 'Finnish regions (maakunnat)');
   await sleep(1500);
 
@@ -356,13 +373,14 @@ async function main() {
   const dkSogneTranslations = buildTranslationMap(dkAllRows, dkSogneIndex);
   const dkSogneDawaTranslations = buildTranslationMap(dkAllRows, dkSogneDawaIndex);
 
-  // Norwegian: merge kommuner + fylker
-  const noAllRows = [...noKommunerRows, ...noFylkerRows];
+  // Norwegian: merge kommuner (nb + no labels) + fylker
+  const noAllRows = [...noKommunerNbRows, ...noKommunerNoRows, ...noFylkerRows];
   const noTranslations = buildTranslationMap(noAllRows, noKommunerIndex);
 
-  // Finnish: use the full set (fi → sv all), so Finnish municipality names in our
-  // gazetteer get Swedish translations even when fi name == sv name.
-  const fiAllRows = [...fiKunnatRows, ...fiKunnatAllRows, ...fiMaakuntaRows];
+  // Finnish: municipalities + regions. Include fi==sv cases because our gazetteer
+  // uses Finnish names as keys; even when the Swedish name is the same, it may
+  // be recorded differently in practice.
+  const fiAllRows = [...fiKunnatRows, ...fiMaakuntaRows];
   const fiTranslations = buildTranslationMap(fiAllRows, fiKunnatIndex);
 
   // Icelandic
