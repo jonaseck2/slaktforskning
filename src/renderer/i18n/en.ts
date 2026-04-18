@@ -914,6 +914,14 @@ export default {
       openExternal: 'Open in app',
       open: 'View fullscreen',
     },
+    viewer: {
+      zoomIn: 'Zoom in',
+      zoomOut: 'Zoom out',
+      fit: 'Fit',
+      drawTag: '+ Draw',
+      drawDone: 'Done',
+      assignPerson: 'Assign person...',
+    },
     filter: {
       search: 'Search media',
     },

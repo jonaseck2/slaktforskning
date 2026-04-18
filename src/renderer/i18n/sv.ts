@@ -914,6 +914,14 @@ export default {
       openExternal: 'Öppna i app',
       open: 'Visa i helskärm',
     },
+    viewer: {
+      zoomIn: 'Zooma in',
+      zoomOut: 'Zooma ut',
+      fit: 'Anpassa',
+      drawTag: '+ Rita',
+      drawDone: 'Klar',
+      assignPerson: 'Tilldela person...',
+    },
     filter: {
       search: 'Sök media',
     },
