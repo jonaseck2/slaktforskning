@@ -3,7 +3,7 @@
     <a href="#main-content" class="skip-link">{{ $t('a11y.skipToMain') }}</a>
     <nav class="sidebar" aria-label="Main navigation">
       <div class="sidebar-header">
-        <span class="sidebar-title">{{ $t('app.title') }}</span>
+        <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
       </div>
       <form class="sidebar-search" @submit.prevent="submitSearch">
         <input
@@ -326,6 +326,10 @@ body {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background: var(--surface-bg);
+  padding: var(--space-md);
+  gap: var(--space-md);
+  box-sizing: border-box;
 }
 
 .sidebar {
@@ -338,6 +342,7 @@ body {
   gap: 2px;
   flex-shrink: 0;
   overflow-y: auto;
+  border-radius: var(--radius-lg);
 }
 
 .sidebar-header {
@@ -360,8 +365,8 @@ body {
 .sidebar-search-input {
   width: 100%;
   padding: 6px 10px;
-  border-radius: 4px;
-  border: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sidebar-border);
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active-text);
   font-size: var(--font-sm);
@@ -468,6 +473,8 @@ body {
   padding: 24px;
   overflow-y: auto;
   will-change: scroll-position;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
 }
 
 @media print {
