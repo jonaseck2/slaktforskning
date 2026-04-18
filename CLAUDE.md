@@ -63,8 +63,22 @@ src/
 │       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
 │       ├── resolver.ts            # resolvePlace() — match place strings against gazetteer trees
 │       ├── index.ts               # loadGazetteers(), getAllGazetteers()
-│       └── data/
-│           └── sv-parishes.json   # Bundled Swedish parish gazetteer
+│       └── data/                    # 15 bundled gazetteers (~27 MB)
+│           ├── sv-socknar.json      # Swedish socknar (Wikidata)
+│           ├── sv-forsamlingar.json # Swedish församlingar (Wikidata)
+│           ├── sv-orter.json        # Swedish orter (GeoNames)
+│           ├── sv-gardar.json       # Swedish gårdar (Wikidata)
+│           ├── sv-kyrkor.json       # Swedish kyrkor (Wikidata)
+│           ├── sv-sockenstad-boundaries.json # Swedish parish boundaries (Lantmäteriet)
+│           ├── dk-sogne.json        # Danish sogne (Wikidata)
+│           ├── dk-sogne-dawa.json   # Danish sogne (DAWA API)
+│           ├── no-kommuner.json     # Norwegian kommuner (GeoNames)
+│           ├── fi-kunnat.json       # Finnish kunnat (GeoNames)
+│           ├── is-sveitarfelog.json  # Icelandic sveitarfélög (GeoNames)
+│           ├── us-immigration-states.json # US immigration states (GeoNames)
+│           ├── ca-provinces.json    # Canadian provinces (GeoNames)
+│           ├── world-countries.json # ~244 countries (GeoNames)
+│           └── world-admin1.json    # ~2,754 admin1 divisions (GeoNames)
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
@@ -690,6 +704,9 @@ npx playwright test    # Run E2E tests (app launch + MCP server)
 npm run package        # Package for current platform
 npm run make           # Build distributable installers
 npx tsx src/mcp/server.ts  # Run MCP server standalone
+npx tsx scripts/build-sv-parishes.ts   # Rebuild Swedish parish gazetteer (Wikidata)
+npx tsx scripts/build-world.ts         # Rebuild world gazetteers (GeoNames)
+# See scripts/build-*.ts and scripts/fetch-*.ts for all 11 gazetteer build scripts
 ```
 
 ### In the Dev Container

@@ -240,8 +240,10 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 - Spec: `docs/superpowers/specs/2026-04-13-chart-layout-alignment-design.md`
 - Plan: `docs/plans/2026-04-13-chart-layout-alignment.md` (on branch)
 
+#### Expanded Gazetteer Coverage [done]
+15 bundled gazetteers covering Scandinavia (SE/DK/NO/FI/IS), North America (US/CA), and global (countries + admin1 divisions). ~27 MB total data. 11 build scripts sourcing from Wikidata, GeoNames, DAWA API, and Lantmäteriet.
+
 #### Place Gazetteers — Future Extensions [backlog]
-- Additional country gazetteers (Norway, Denmark, Finland, US, etc.)
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
 - Batch match quality report (how many places resolved, at what quality)
 
