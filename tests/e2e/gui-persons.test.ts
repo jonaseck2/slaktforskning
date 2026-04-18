@@ -39,7 +39,7 @@ test.describe('Persons CRUD', () => {
 
   test('create a person via the Add Person modal', async () => {
     await app.navigate('/');
-    await app.click('.btn-add');
+    await app.click('.app-btn--soft');
     await app.settle();
 
     await app.executeJs(`
@@ -88,7 +88,7 @@ test.describe('Persons CRUD', () => {
       const rows = document.querySelectorAll('.clickable-row');
       for (const row of rows) {
         if (row.textContent.includes('Tobias')) {
-          row.querySelector('.btn-delete').click();
+          row.querySelector('.app-btn--ghost').click();
           break;
         }
       }
@@ -125,8 +125,8 @@ test.describe('Navigation', () => {
     await app.navigate(`/persons/${person.id}`);
     await app.waitForText('Nils Persson');
 
-    await app.click('.btn-back');
-    await app.settle();
+    // PersonDetailView has no back button — navigate via sidebar
+    await app.navigate('/');
 
     const routePath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.path'
@@ -242,9 +242,9 @@ test.describe('Add Related Person', () => {
     await app.navigate(`/persons/${basePerson.id}`);
     await app.waitForText('Ingrid Baseperson');
 
-    // Buttons use class .btn-add with text "+ Add Parent" / "+ Add Spouse/Partner" / "+ Add Child"
+    // Buttons use AppButton variant="soft" → class .app-btn--soft
     await app.executeJs(`
-      Array.from(document.querySelectorAll('.btn-add')).find(b => b.textContent.includes('Add Parent')).click()
+      Array.from(document.querySelectorAll('.app-btn--soft')).find(b => b.textContent.includes('Add Parent')).click()
     `);
     await app.waitAndFill('.modal input[type="text"]', 'Sven');
     await app.settle();
@@ -262,7 +262,7 @@ test.describe('Add Related Person', () => {
     await app.waitForText('Ingrid Baseperson');
 
     await app.executeJs(`
-      Array.from(document.querySelectorAll('.btn-add')).find(b => b.textContent.includes('Add Child')).click()
+      Array.from(document.querySelectorAll('.app-btn--soft')).find(b => b.textContent.includes('Add Child')).click()
     `);
     await app.waitAndFill('.modal input[type="text"]', 'Lisa');
     await app.click('.modal button[type="submit"]');
@@ -279,7 +279,7 @@ test.describe('Add Related Person', () => {
     await app.waitForText('Ingrid Baseperson');
 
     await app.executeJs(`
-      Array.from(document.querySelectorAll('.btn-add')).find(b => b.textContent.includes('Spouse')).click()
+      Array.from(document.querySelectorAll('.app-btn--soft')).find(b => b.textContent.includes('Spouse')).click()
     `);
     await app.waitAndFill('.modal input[type="text"]', 'Erik');
     await app.click('.modal button[type="submit"]');

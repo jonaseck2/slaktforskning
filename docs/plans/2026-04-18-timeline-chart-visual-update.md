@@ -619,7 +619,7 @@ import { useI18n } from 'vue-i18n';
 import { computeTimelineLayout } from '../../utils/chart-layout';
 import { fetchTimelineEntries } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { TimelineLayout, BarLayout, TickMark, PersonNode } from '../../utils/chart-layout';
+import type { TimelineLayout, TimelineEntry, BarLayout, TickMark, PersonNode } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import { yearFromDate } from '../../utils/chart-layout/utils';
 
@@ -707,22 +707,24 @@ function displayName(person: PersonNode): string {
   return [person.givenName, person.surname].filter(Boolean).join(' ') || '?';
 }
 
+// Cache fetched entries so resize can re-layout without re-fetching
+const cachedEntries = ref<TimelineEntry[]>([]);
+
 async function load() {
   if (!props.personId) return;
   loading.value = true;
   try {
-    const entries = await fetchTimelineEntries(props.personId);
-    layout.value = computeTimelineLayout(entries, new Date().getFullYear(), containerWidth.value);
+    cachedEntries.value = await fetchTimelineEntries(props.personId);
+    layout.value = computeTimelineLayout(cachedEntries.value, new Date().getFullYear(), containerWidth.value);
   } finally {
     loading.value = false;
   }
 }
 
-// Re-layout when container resizes
+// Re-layout when container resizes — uses cached entries, no API call
 watch(containerWidth, () => {
-  if (layout.value.bars.length > 0) {
-    // Re-run with stored entries not available — trigger full reload
-    load();
+  if (cachedEntries.value.length > 0) {
+    layout.value = computeTimelineLayout(cachedEntries.value, new Date().getFullYear(), containerWidth.value);
   }
 });
 

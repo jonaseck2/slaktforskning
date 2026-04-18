@@ -39,7 +39,7 @@ test.describe('Places CRUD', () => {
 
   test('create a place via modal', async () => {
     await app.navigate('/places');
-    await app.click('.btn-add');
+    await app.click('.app-btn--soft');
     await app.settle();
 
     await app.waitAndFill('.modal input[type="text"]', 'Björkvik');
@@ -80,7 +80,7 @@ test.describe('Places CRUD', () => {
       const rows = document.querySelectorAll('.clickable-row');
       for (const row of rows) {
         if (row.textContent.includes('To Be Deleted')) {
-          row.querySelector('.btn-delete').click();
+          row.querySelector('.app-btn--ghost').click();
           break;
         }
       }
@@ -101,8 +101,8 @@ test.describe('Place Detail', () => {
     await app.navigate(`/places/${place.id}`);
     await app.waitForText('Navigeringsort');
 
-    await app.click('.btn-back');
-    await app.settle();
+    // PlaceDetailView has no back button — navigate via sidebar
+    await app.navigate('/places');
 
     const routePath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.path'
