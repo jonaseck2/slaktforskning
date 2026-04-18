@@ -23,8 +23,8 @@
 
   /* Text */
   --text-primary:   #1a2e1a;
-  --text-secondary: #6a8a6a;
-  --text-muted:     #8a9a7a;
+  --text-secondary: #4a6a4a;
+  --text-muted:     #6a7a62;
 
   /* Accent */
   --accent:       #2d5a27;
@@ -51,8 +51,8 @@
 
   /* Text */
   --text-primary:   #0f172a;
-  --text-secondary: #64748b;
-  --text-muted:     #94a3b8;
+  --text-secondary: #475569;
+  --text-muted:     #64748b;
 
   /* Accent */
   --accent:       #1d4ed8;
@@ -79,8 +79,8 @@
 
   /* Text */
   --text-primary:   #1e1b2e;
-  --text-secondary: #6a6090;
-  --text-muted:     #9088b0;
+  --text-secondary: #4a4070;
+  --text-muted:     #6a6090;
 
   /* Accent */
   --accent:       #6c5ce7;
