@@ -180,6 +180,66 @@ export function registerUtilityHandlers(
     return { success: true, path: savePath };
   });
 
+  // Wall chart SVG export
+  wrapHandler('wallChart:saveSvg', async (svgContent: unknown) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return { success: false, error: 'No window' };
+
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Save Wall Chart SVG',
+      defaultPath: 'wall-chart.svg',
+      filters: [{ name: 'SVG', extensions: ['svg'] }],
+    });
+    if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
+
+    fs.writeFileSync(result.filePath, svgContent as string, 'utf-8');
+    return { success: true, path: result.filePath };
+  });
+
+  // Wall chart tiled PDF export — receives array of SVG page strings
+  wrapHandler('wallChart:saveTiledPdf', async (pages: unknown) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return { success: false, error: 'No window' };
+
+    const svgPages = pages as string[];
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Save Wall Chart PDF',
+      defaultPath: 'wall-chart.pdf',
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    });
+    if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
+
+    // Use a hidden BrowserWindow to render each SVG page to PDF
+    const { BrowserWindow: BW } = require('electron');
+    const pdfParts: Buffer[] = [];
+
+    for (const svgPage of svgPages) {
+      const hidden = new BW({ show: false, width: 794, height: 1123, webPreferences: { offscreen: true } });
+      const html = `<!DOCTYPE html><html><body style="margin:0;padding:0">${svgPage}</body></html>`;
+      await hidden.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      const pdf = await hidden.webContents.printToPDF({
+        pageSize: 'A4',
+        printBackground: true,
+        margins: { marginType: 'none' },
+      });
+      pdfParts.push(Buffer.from(pdf));
+      hidden.destroy();
+    }
+
+    // Merge all PDF pages into a single file using pdf-lib
+    const { PDFDocument } = require('pdf-lib');
+    const merged = await PDFDocument.create();
+    for (const part of pdfParts) {
+      const src = await PDFDocument.load(part);
+      const [page] = await merged.copyPages(src, [0]);
+      merged.addPage(page);
+    }
+    const mergedBytes = await merged.save();
+    fs.writeFileSync(result.filePath, Buffer.from(mergedBytes));
+
+    return { success: true, path: result.filePath, pageCount: pdfParts.length };
+  });
+
   // CSV Export
   wrapHandler('csv:export', async (opts?: unknown) => {
     const options = opts as { entityType: string; delimiter?: string; encoding?: 'utf-8' | 'utf-8-bom' } | undefined;
