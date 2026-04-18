@@ -301,6 +301,19 @@ Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigatio
 - Face tag suggestions based on other tagged photos
 - Crop/rotate/edit image tools
 
+#### Chart Visual Overhaul [planned]
+Person boxes redesigned for competitor parity: portrait photo, wrapping names, birth/death places, dynamic box height, curved connectors, theme-aware colors + unthemed export mode. Applies to pedigree, hourglass, and descendant charts.
+- Spec: [docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md](docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md)
+
+#### Fan Chart [backlog]
+Circular/semi-circular ancestor chart. Compact display of many generations in a radial layout. Common in competitor apps (Ancestry, MacFamilyTree, FamilySearch).
+
+#### Circle Chart Visual Update [backlog]
+Apply the new person box styling (portrait, places, theme colors) to the existing circle chart. Currently uses a separate rendering path.
+
+#### Timeline Chart Visual Update [backlog]
+Apply the new visual style to the timeline chart. Currently uses its own bar layout and rendering.
+
 #### Wall Chart Generation UI [backlog]
 UI button/dialog to trigger wall chart generation from the app. Paper size selection, font customization, tiled PDF output. SVG generation API already exists (v0.62.0).
 
