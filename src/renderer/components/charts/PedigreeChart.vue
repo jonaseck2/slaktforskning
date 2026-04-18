@@ -12,16 +12,25 @@
         role="tree"
         :aria-label="$t('a11y.pedigreeChart')"
       >
-        <line
-          v-for="(ln, i) in layout.lines"
-          :key="'l' + i"
-          :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
-          :stroke="chartTokens.line" stroke-width="1.5" vector-effect="non-scaling-stroke"
+        <defs>
+          <filter id="chart-shadow" x="-3%" y="-6%" width="106%" height="116%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.06" />
+          </filter>
+        </defs>
+        <path
+          v-for="(d, i) in solidPaths"
+          :key="'p' + i"
+          :d="d"
+          fill="none"
+          :stroke="chartTokens.line"
+          stroke-width="1.5"
+          vector-effect="non-scaling-stroke"
         />
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
           :data-testid="'person-box-' + box.person.id"
+          filter="url(#chart-shadow)"
           :class="['person-box', { clickable: !readonly, focused: focusedBoxId === box.person.id }]"
           :style="{ cursor: readonly ? 'default' : 'pointer' }"
           role="treeitem"
@@ -154,11 +163,14 @@
           >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
         </g>
         <template v-if="!readonly">
-        <line
-          v-for="(ln, i) in layout.placeholderLines"
-          :key="'pl' + i"
-          :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
-          :stroke="chartTokens.placeholderStroke" stroke-width="1" stroke-dasharray="4 3"
+        <path
+          v-for="(d, i) in dashedPaths"
+          :key="'dp' + i"
+          :d="d"
+          fill="none"
+          :stroke="chartTokens.placeholderStroke"
+          stroke-width="1"
+          stroke-dasharray="4 3"
           vector-effect="non-scaling-stroke"
         />
         <g
@@ -173,16 +185,16 @@
           @keydown.space.prevent="startAddFromPlaceholder(ph)"
         >
           <rect
-            :x="ph.x" :y="ph.y" :width="BOX_W" :height="BOX_H"
+            :x="ph.x" :y="ph.y" :width="BOX_W" :height="MIN_BOX_H"
             rx="6" ry="6"
             fill="transparent" :stroke="chartTokens.placeholderStroke" stroke-dasharray="4 3" stroke-width="1.5"
           />
           <text
-            :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 - 6"
+            :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 - 6"
             text-anchor="middle" :fill="chartTokens.placeholderText" font-size="18"
           >+</text>
           <text
-            :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 + 12"
+            :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 + 12"
             text-anchor="middle" :fill="chartTokens.placeholderText" font-size="11"
           >{{ placeholderLabel(ph.role) }}</text>
         </g>
@@ -228,7 +240,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computePedigreeLayout, BOX_W, BOX_H, H_GAP, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
+import { computePedigreeLayout, BOX_W, MIN_BOX_H, H_GAP, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
 import { wrapName } from '../../utils/chart-layout/measure';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
@@ -315,6 +327,13 @@ const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 995, svgHeight: 1024, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
   return computePedigreeLayout(tree.value, collapsed.value, props.selectedPersonId);
 });
+
+const solidPaths = computed(() =>
+  layout.value.paths.filter(d => !d.startsWith('D:')),
+);
+const dashedPaths = computed(() =>
+  layout.value.paths.filter(d => d.startsWith('D:')).map(d => d.slice(2)),
+);
 
 // Reverse map: personId → ahnentafel key — needed by handleCollapseButton to call loadAncestorGeneration
 const personToAhnen = computed(() => {
