@@ -109,6 +109,13 @@ function clearWindowListeners() {
   }
 }
 
+function resetDragState() {
+  dragMode.value = null;
+  resizeEdge.value = null;
+  dragLiveRect.value = null;
+  editingId.value = null;
+}
+
 function attachWindowListeners(onMove: (e: MouseEvent) => void, onUp: (e: MouseEvent) => void) {
   clearWindowListeners(); // remove any previous leaked listeners
   window.addEventListener('mousemove', onMove);
@@ -119,7 +126,7 @@ function attachWindowListeners(onMove: (e: MouseEvent) => void, onUp: (e: MouseE
   };
 }
 
-onBeforeUnmount(clearWindowListeners);
+onBeforeUnmount(() => { clearWindowListeners(); resetDragState(); });
 
 const drawRect = computed(() => {
   if (!drawStart.value || !drawCurrent.value) return null;
@@ -243,6 +250,7 @@ function onRegionClick(id: string) {
 
 function startResize(e: MouseEvent, region: Region, edge: Edge) {
   if (props.drawMode) return;
+  if (dragMode.value) return;
   e.preventDefault();
   startDrag(e, region, 'resize', edge);
 }
@@ -307,17 +315,19 @@ function finishDrag() {
       width: r.width / dw,
       height: r.height / dh,
     });
+    // Keep dragLiveRect + editingId alive until regions prop updates (prevents bounce)
+    dragMode.value = null;
+    resizeEdge.value = null;
+  } else {
+    resetDragState();
   }
-  // Keep dragLiveRect visible until regions prop updates with fresh data
-  // — prevents bounce-back to stale coords
-  dragMode.value = null;
-  resizeEdge.value = null;
 }
 
-// Clear visual override when regions data refreshes from DB
+// Clear visual override when regions data refreshes from DB — but not during active drag
 watch(() => props.regions, () => {
-  dragLiveRect.value = null;
-  editingId.value = null;
+  if (!dragMode.value) {
+    resetDragState();
+  }
 });
 
 // --- Helpers ---

@@ -97,8 +97,11 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
          AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ?)
      )`
   ).join(' AND ');
-  const like = `%${query}%`;
   const tokenParams = tokens.flatMap(t => { const l = `%${t}%`; return [l, l, l]; });
+
+  // Relevance: prefix matches on surname/given_name score higher than substring matches
+  const firstToken = `${tokens[0]}%`;
+  const relevanceParams = [firstToken, firstToken];
 
   return queryAll<Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname
@@ -106,10 +109,12 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
-    WHERE p.notes LIKE ?
-       OR (${tokenClauses})
-    ORDER BY pn.surname, pn.given_name
-  `, [like, ...tokenParams]);
+    WHERE ${tokenClauses}
+    ORDER BY
+      CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 0 ELSE 1 END,
+      pn.surname, pn.given_name
+    LIMIT 20
+  `, [...tokenParams, ...relevanceParams]);
 }
 
 export function addPersonName(

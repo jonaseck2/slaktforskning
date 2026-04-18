@@ -362,13 +362,25 @@ function closeViewer() {
 
 async function onRegionDrawn(rect: { x: number; y: number; width: number; height: number }) {
   if (!selectedMediaId.value) return;
+  // If media is linked to exactly one person, auto-assign them to the tag
+  let personId: string | undefined;
+  try {
+    const links = await window.api.media.linksForMedia(selectedMediaId.value) as Array<{ entity_type: string; entity_id: string }>;
+    const personLinks = links.filter(l => l.entity_type === 'person');
+    if (personLinks.length === 1) {
+      personId = personLinks[0].entity_id;
+    }
+  } catch { /* ignore */ }
   await window.api.mediaRegions.create({
     media_id: selectedMediaId.value,
     x: rect.x, y: rect.y,
     width: rect.width, height: rect.height,
+    ...(personId ? { person_id: personId } : {}),
   });
+  drawMode.value = false; // exit draw mode after creating a tag
   viewerRef.value?.reloadRegions();
   panelRef.value?.reload();
+  panelRef.value?.expandFaceTags();
 }
 
 async function onRegionUpdated(id: string, rect: { x: number; y: number; width: number; height: number }) {

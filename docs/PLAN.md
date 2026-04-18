@@ -180,6 +180,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.100.0 | Face tag region move/resize, Vite build optimization (externalize gazetteers) | — |
 | v0.101.0 | Language gazetteer build script (lang-sv-geonames): Swedish translations for 133 countries + 1014 admin1 divisions | — |
 | v0.102.0 | Language gazetteer build script (lang-sv-wikidata): Swedish translations for Nordic administrative divisions (DK/NO/FI/IS) via Wikidata SPARQL | — |
+| v0.102.1 | Fix: face tag drag/resize reliability, auto-assign person, search relevance | — |
 ---
 
 ## Research
