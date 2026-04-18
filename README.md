@@ -38,7 +38,7 @@ The database captures the full complexity of genealogical research:
 - **Persons** with multiple names (birth, married, alias)
 - **Relationships** (couple, parent-child, sibling, godparent) with subtypes (marriage, biological, adopted, etc.)
 - **Events** (birth, death, marriage, baptism, immigration, census, etc.) with flexible date handling and multi-person participation via roles
-- **Places** with hierarchical structure (farm → parish → härad → county), types, and optional coordinates. 15 bundled gazetteers provide place resolution for Scandinavia (Sweden, Denmark, Norway, Finland, Iceland), North America (US, Canada), and the world (~244 countries)
+- **Places** with hierarchical structure (farm → parish → härad → county), types, and optional coordinates. 16 bundled gazetteers provide place resolution for Scandinavia (Sweden, Denmark, Norway, Finland, Iceland), North America (US, Canada), and the world (~244 countries)
 - **Sources and Citations** linking to events, persons, relationships, and places with confidence levels and verbatim transcriptions
 
 ## MCP Server

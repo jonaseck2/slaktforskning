@@ -63,7 +63,7 @@ src/
 │       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
 │       ├── resolver.ts            # resolvePlace() — match place strings against gazetteer trees
 │       ├── index.ts               # loadGazetteers(), getAllGazetteers()
-│       └── data/                    # 15 bundled gazetteers (~27 MB)
+│       └── data/                    # 16 bundled gazetteers (~31 MB)
 │           ├── sv-socknar.json      # Swedish socknar (Wikidata)
 │           ├── sv-forsamlingar.json # Swedish församlingar (Wikidata)
 │           ├── sv-orter.json        # Swedish orter (GeoNames)
@@ -76,7 +76,8 @@ src/
 │           ├── fi-kunnat.json       # Finnish kunnat (GeoNames)
 │           ├── is-sveitarfelog.json  # Icelandic sveitarfélög (GeoNames)
 │           ├── us-immigration-states.json # US immigration states (GeoNames)
-│           ├── ca-provinces.json    # Canadian provinces (GeoNames)
+│           ├── us-all-states.json   # Full US gazetteer, all 50 states + DC (GeoNames)
+│           ├── ca-provinces.json    # Canadian provinces/territories (GeoNames)
 │           ├── world-countries.json # ~244 countries (GeoNames)
 │           └── world-admin1.json    # ~2,754 admin1 divisions (GeoNames)
 ├── main/                         # Electron main process
