@@ -7,7 +7,7 @@ description: Build, extend, and debug gazetteers for place resolution. Use when 
 
 ## Overview
 
-The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 23 bundled gazetteers (15 point + 8 boundary) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, and ~244 countries globally.
+The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 25 bundled gazetteers (15 point + 8 boundary + 2 language) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, and ~244 countries globally. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").
 
 ## Architecture
 
@@ -25,7 +25,7 @@ Resolver (resolver.ts)       →  resolvePlace(query, gazetteers) → PlaceResol
 |------|---------|
 | `src/api/place-gazetteers/types.ts` | `Gazetteer`, `GazetteerNode`, `PlaceResolveResult`, `BoundaryResolveResult` |
 | `src/api/place-gazetteers/resolver.ts` | `resolvePlace()`, `resolveBoundary()`, `searchGazetteer()`, `normalize()` |
-| `src/api/place-gazetteers/index.ts` | `getAllGazetteers()`, `loadGazetteers()`, bundled imports, historical alias enrichment |
+| `src/api/place-gazetteers/index.ts` | `getAllGazetteers()`, `loadGazetteers()`, bundled imports, historical alias enrichment, language gazetteer merge |
 | `src/api/gazetteers.ts` | Import/export/storage in SQLite, JSON schema validation |
 | `tests/unit/gazetteers.test.ts` | Unit tests for loading and resolution |
 
@@ -56,7 +56,18 @@ interface GazetteerNode {
 
 When adding a new country, add its admin suffixes here too.
 
-## Bundled Gazetteers (23)
+### Resolver Hierarchy Awareness
+
+The resolver uses **depth-weighted contradiction scoring** when comparing candidates across gazetteers. If an unmatched input component matches a known place name in another gazetteer, that's a contradiction — and its weight depends on the depth of the contradicting match:
+
+- **Shallow matches** (countries, admin1 — depth 1–2) produce strong contradictions
+- **Deep matches** (localities, leaves — depth 4+) produce weak contradictions
+
+This ensures "Dirleton, East Lothian, Skottland" matches Scotland (via language alias) rather than the Canadian locality named Dirleton. Plain "Dirleton" without hierarchy still matches the leaf as before.
+
+The global name-depth map is cached across `resolvePlace` calls for the same gazetteer set.
+
+## Bundled Gazetteers (25)
 
 ### Point Gazetteers (15)
 
@@ -91,6 +102,30 @@ When adding a new country, add its admin suffixes here too.
 | `no-kommuner-boundaries` | Norwegian Municipalities — Boundaries | Kartverket | 357 | 474 KB |
 | `ca-divisions-boundaries` | Canadian Census Divisions — Boundaries | Statistics Canada | 293 | 637 KB |
 
+### Language Gazetteers (2)
+
+Language gazetteers (`kind: "language"`) contain no coordinates — they inject translated place names as aliases into point/boundary gazetteers at load time via `mergeTranslations()` in `index.ts`.
+
+| ID | Name | Source | Translations | License |
+|----|------|--------|-------------|---------|
+| `lang-sv-geonames` | Swedish (GeoNames) | GeoNames alternateNames | 133 countries + 1,014 admin1 | CC BY 4.0 |
+| `lang-sv-wikidata` | Swedish (Wikidata) | Wikidata SPARQL | 304 Nordic divisions | CC0 1.0 |
+
+**Format:** `translations` field maps target gazetteer ID → path key → translated names array:
+```json
+{
+  "kind": "language",
+  "translations": {
+    "world-countries": { "Denmark": ["Danmark"], "Germany": ["Tyskland"] },
+    "world-admin1": { "United Kingdom > Scotland": ["Skottland"] }
+  }
+}
+```
+
+**Merge rules:** Language gazetteers are separated in `loadGazetteers()`, their translations are injected as aliases into data gazetteers (deep-cloned to protect singletons), then only data gazetteers are returned.
+
+**Adding a new language:** Create a build script per data source (e.g. `build-lang-da-geonames.ts`), register the output in `BUNDLED_GAZETTEERS`, update tests and docs. Keep sources separate for license clarity.
+
 ## Build Scripts
 
 Each country/source has its own build script in `scripts/`:
@@ -116,6 +151,8 @@ Each country/source has its own build script in `scripts/`:
 | `build-is-boundaries.ts` | LMI WFS | Fetch GeoJSON, round coords | is-sveitarfelog-boundaries |
 | `build-no-boundaries.ts` | Kartverket/Geonorge | ogr2ogr reproject+simplify | no-kommuner-boundaries |
 | `build-ca-boundaries.ts` | Statistics Canada | ogr2ogr reproject+simplify | ca-divisions-boundaries |
+| `build-lang-sv-geonames.ts` | GeoNames alternateNamesV2 | Filter isolanguage=sv, match to world gazetteers | lang-sv-geonames |
+| `build-lang-sv-wikidata.ts` | Wikidata SPARQL | Swedish labels for Nordic admin divisions | lang-sv-wikidata |
 
 ## Adding a New Country Gazetteer
 
