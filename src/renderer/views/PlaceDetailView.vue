@@ -15,7 +15,28 @@
       />
       <div class="field-grid">
         <label>{{ $t('places.name') }}
-          <input v-model="editName" type="text" @blur="save({ name: editName })" />
+          <div class="name-autocomplete">
+            <input
+              v-model="editName"
+              type="text"
+              autocomplete="off"
+              @input="onNameInput"
+              @blur="onNameBlur"
+              @keydown="onNameKeydown"
+            />
+            <ul v-if="showNameSuggestions && nameSuggestions.length > 0" class="name-dropdown">
+              <li
+                v-for="(sug, idx) in nameSuggestions"
+                :key="idx"
+                class="name-suggestion"
+                :class="{ highlighted: idx === nameHighlight }"
+                @mousedown.prevent="acceptSuggestion(sug)"
+              >
+                <span class="sug-path">{{ sug.matchedPath.join(', ') }}</span>
+                <span class="sug-type">{{ sug.pathNodes[sug.pathNodes.length - 1]?.type }}</span>
+              </li>
+            </ul>
+          </div>
         </label>
         <label>{{ $t('places.type') }}
           <select v-model="editType" @change="save({ place_type: editType || null })">
@@ -137,6 +158,7 @@ import SectionHeader from '../components/ui/SectionHeader.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { searchGazetteer } from '../../api/place-gazetteers/resolver';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
@@ -158,8 +180,79 @@ const editPostalCode = ref('');
 const editCity = ref('');
 const editCountry = ref('');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
-const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
+const { ready: resolverReady, ensureLoaded, resolve: resolvePlace, invalidate: invalidateResolver, getGazetteers } = usePlaceResolver();
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-notes');
+
+// Name field gazetteer autocomplete
+interface GazetteerSuggestion { matchedPath: string[]; pathNodes: { name: string; type: string; lat: number; lon: number }[]; }
+const nameSuggestions = ref<GazetteerSuggestion[]>([]);
+const showNameSuggestions = ref(false);
+const nameHighlight = ref(-1);
+let nameDebounce: ReturnType<typeof setTimeout>;
+
+function onNameInput() {
+  clearTimeout(nameDebounce);
+  if (editName.value.length < 2) { nameSuggestions.value = []; return; }
+  nameDebounce = setTimeout(async () => {
+    if (!resolverReady.value) await ensureLoaded();
+    const hits = searchGazetteer(editName.value, getGazetteers(), 8);
+    const seen = new Set<string>();
+    const suggestions: GazetteerSuggestion[] = [];
+    for (const hit of hits) {
+      const key = hit.path.map(n => n.name).join('>');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      suggestions.push({
+        matchedPath: hit.path.map(n => n.name),
+        pathNodes: hit.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
+      });
+    }
+    suggestions.sort((a, b) => b.pathNodes.length - a.pathNodes.length);
+    nameSuggestions.value = suggestions;
+    showNameSuggestions.value = suggestions.length > 0;
+    nameHighlight.value = -1;
+  }, 150);
+}
+
+function onNameBlur() {
+  setTimeout(() => {
+    if (!showNameSuggestions.value) {
+      // No suggestion accepted — save the raw typed name
+      save({ name: editName.value });
+    }
+    showNameSuggestions.value = false;
+  }, 150);
+}
+
+function onNameKeydown(e: KeyboardEvent) {
+  if (!showNameSuggestions.value || nameSuggestions.value.length === 0) {
+    if (e.key === 'Enter') { e.preventDefault(); save({ name: editName.value }); }
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    nameHighlight.value = Math.min(nameHighlight.value + 1, nameSuggestions.value.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    nameHighlight.value = Math.max(nameHighlight.value - 1, 0);
+  } else if (e.key === 'Enter' && nameHighlight.value >= 0) {
+    e.preventDefault();
+    acceptSuggestion(nameSuggestions.value[nameHighlight.value]);
+  } else if (e.key === 'Escape') {
+    showNameSuggestions.value = false;
+  }
+}
+
+async function acceptSuggestion(sug: GazetteerSuggestion) {
+  showNameSuggestions.value = false;
+  // Build hierarchical name from matched path (leaf first: "Kew, Victoria, Australia")
+  const reversedPath = [...sug.matchedPath].reverse();
+  const newName = reversedPath.join(', ');
+  editName.value = newName;
+  await save({ name: newName });
+  // Map will update via load() → gazetteerMatch recomputes → mapMarkers updates
+  nextTick(() => fitMapBounds());
+}
 
 const gazetteerMatch = computed(() => {
   if (!resolverReady.value || !place.value) return null;
@@ -171,8 +264,13 @@ interface MapMarker { id: string; name: string; lat: number; lon: number; type: 
 
 const mapMarkers = computed<MapMarker[]>(() => {
   const result: MapMarker[] = [];
-  if (place.value && place.value.latitude != null && place.value.longitude != null) {
-    result.push({ id: place.value.id, name: place.value.name, lat: place.value.latitude, lon: place.value.longitude, type: place.value.place_type });
+  if (place.value) {
+    if (place.value.latitude != null && place.value.longitude != null) {
+      result.push({ id: place.value.id, name: place.value.name, lat: place.value.latitude, lon: place.value.longitude, type: place.value.place_type });
+    } else if (gazetteerMatch.value) {
+      // Use gazetteer-resolved coordinates when no stored lat/lon
+      result.push({ id: place.value.id, name: place.value.name, lat: gazetteerMatch.value.lat, lon: gazetteerMatch.value.lon, type: place.value.place_type });
+    }
   }
   for (const child of children.value) {
     if (child.latitude != null && child.longitude != null) {
@@ -218,7 +316,12 @@ async function load() {
 
 async function save(data: Record<string, unknown>) {
   await window.api.places.update(placeId, data);
+  if ('name' in data) {
+    invalidateResolver();
+    await ensureLoaded();
+  }
   await load();
+  if ('name' in data) nextTick(() => fitMapBounds());
 }
 
 onMounted(load);
@@ -254,4 +357,18 @@ textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .match-path { color: var(--text-primary); margin-bottom: 4px; }
 .unmatched { color: var(--text-muted); font-size: var(--font-xs); margin-bottom: 4px; }
 .resolved-coords { color: var(--text-secondary); font-size: var(--font-xs); font-family: monospace; }
+.name-autocomplete { position: relative; }
+.name-autocomplete input { width: 100%; box-sizing: border-box; }
+.name-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: var(--color-bg, #fff); border: 1px solid var(--color-border-input, #ccc);
+  border-radius: 0 0 4px 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto;
+}
+.name-suggestion {
+  padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+}
+.name-suggestion:hover, .name-suggestion.highlighted { background: var(--color-row-hover, #f0f0f0); }
+.sug-path { font-size: var(--font-sm); }
+.sug-type { font-size: var(--font-xs); color: var(--text-muted); margin-left: 8px; }
 </style>
