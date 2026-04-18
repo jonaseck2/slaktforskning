@@ -25,11 +25,11 @@
           <div class="compact-form">
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.name') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="place.name"
-                @blur="saveField('name', ($event.target as HTMLInputElement).value)"
+              <PlaceNameInput
+                :model-value="place.name"
+                input-class="compact-control"
+                @save="saveField('name', $event)"
+                @accept="onAcceptNameSuggestion"
               />
             </div>
             <div class="compact-field">
@@ -220,10 +220,12 @@ import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
+import PlaceNameInput from './PlaceNameInput.vue';
 import CitationForm from './CitationForm.vue';
 import type { ComponentPublicInstance } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { usePlacePanelSections } from '../composables/usePlacePanelSections';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
@@ -257,6 +259,7 @@ const emit = defineEmits<{ 'select-place': [id: string]; 'close': [] }>();
 // ── Section state ───────────────────────────────────────────────────────────
 
 const { sections, toggleSection } = usePlacePanelSections();
+const { invalidate: invalidateResolver } = usePlaceResolver();
 
 // ── Template refs ───────────────────────────────────────────────────────────
 
@@ -332,6 +335,16 @@ async function saveField(field: string, value: unknown) {
   if (!props.placeId || !place.value) return;
   await window.api.places.update(props.placeId, { [field]: value });
   (place.value as Record<string, unknown>)[field] = value;
+  if (field === 'name') invalidateResolver();
+}
+
+interface NameSuggestion { matchedPath: string[]; pathNodes: { name: string; type: string; lat: number; lon: number }[]; }
+
+async function onAcceptNameSuggestion(sug: NameSuggestion) {
+  const newName = [...sug.matchedPath].reverse().join(', ');
+  await saveField('name', newName);
+  // Reload to refresh header, hierarchy, and trigger map update via dataVersionStore
+  await load(props.placeId);
 }
 </script>
 
