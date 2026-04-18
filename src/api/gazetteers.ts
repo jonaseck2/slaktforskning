@@ -3,6 +3,7 @@ import type { Gazetteer, GazetteerNode, GazetteerSource, GazetteerInfo } from '.
 import { getAllGazetteers } from './place-gazetteers/index';
 import { getDbSetting, setDbSetting } from './db_settings';
 import { queryOne, queryAll, runSql } from './db';
+import { countNodes } from '../gazetteer-build/tree';
 
 const MAX_JSON_BYTES = 50 * 1024 * 1024; // 50 MB
 
@@ -13,16 +14,6 @@ export interface ImportGazetteerResult {
   name: string;
   locale: string;
   nodeCount: number;
-}
-
-function countNodes(node: GazetteerNode): number {
-  let count = 1;
-  if (node.children) {
-    for (const child of node.children) {
-      count += countNodes(child);
-    }
-  }
-  return count;
 }
 
 function validateNode(node: unknown, path: string): void {

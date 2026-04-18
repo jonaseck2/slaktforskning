@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
-      include: ['src/api/**/*.ts'],
+      include: ['src/api/**/*.ts', 'src/gazetteer-build/**/*.ts'],
       exclude: ['src/api/types.ts', 'src/api/schema.ts'],
       reporter: ['text', 'lcov'],
       thresholds: {
