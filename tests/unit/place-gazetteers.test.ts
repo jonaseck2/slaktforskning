@@ -263,6 +263,102 @@ describe('resolveBoundary', () => {
   });
 });
 
+// Minimal world gazetteer for testing language merge
+const worldGazetteer: Gazetteer = {
+  id: 'world-countries',
+  name: 'World Countries',
+  locale: 'en',
+  root: {
+    name: 'World',
+    type: 'root',
+    lat: 0,
+    lon: 0,
+    children: [
+      { name: 'Denmark', type: 'country', aliases: ['DK', 'DNK'], lat: 56.0, lon: 10.0 },
+      { name: 'Germany', type: 'country', aliases: ['DE', 'DEU'], lat: 51.0, lon: 9.0,
+        children: [
+          { name: 'Bavaria', type: 'admin1', lat: 48.8, lon: 11.5 },
+        ],
+      },
+      { name: 'Brazil', type: 'country', aliases: ['BR', 'BRA'], lat: -10.0, lon: -55.0 },
+    ],
+  },
+};
+
+const langSvGeonames: Gazetteer = {
+  id: 'lang-sv-geonames',
+  name: 'Swedish place names (GeoNames)',
+  locale: 'sv',
+  kind: 'language',
+  root: { name: 'sv', type: 'language', lat: 0, lon: 0 },
+  translations: {
+    'world-countries': {
+      'Denmark': ['Danmark'],
+      'Germany': ['Tyskland'],
+      'Brazil': ['Brasilien'],
+      'Germany > Bavaria': ['Bayern'],
+    },
+  },
+};
+
+describe('language gazetteer merge', () => {
+  it('injects translations as aliases so resolver matches Swedish names', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
+    const gazetteers = loadGazetteers(config, [worldGazetteer, langSvGeonames]);
+
+    // Only point/boundary gazetteers returned, not language ones
+    expect(gazetteers).toHaveLength(1);
+    expect(gazetteers[0].id).toBe('world-countries');
+
+    // "Danmark" should now resolve to Denmark
+    const result = resolvePlace('Danmark', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.lat).toBe(56.0);
+    expect(result!.lon).toBe(10.0);
+    expect(result!.matchedPath).toContain('Denmark');
+  });
+
+  it('resolves path-keyed translations (Germany > Bavaria -> Bayern)', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
+    const gazetteers = loadGazetteers(config, [worldGazetteer, langSvGeonames]);
+
+    const result = resolvePlace('Bayern, Tyskland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.lat).toBe(48.8);
+    expect(result!.matchQuality).toBe('exact');
+  });
+
+  it('does not duplicate aliases that already exist', () => {
+    const langWithExisting: Gazetteer = {
+      ...langSvGeonames,
+      translations: {
+        'world-countries': {
+          'Denmark': ['DK'],  // DK already exists as alias
+        },
+      },
+    };
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
+    const gazetteers = loadGazetteers(config, [worldGazetteer, langWithExisting]);
+    const dk = gazetteers[0].root.children!.find(c => c.name === 'Denmark')!;
+    // Should not have duplicate 'DK'
+    expect(dk.aliases!.filter(a => a === 'DK')).toHaveLength(1);
+  });
+
+  it('skips translations targeting a gazetteer that is not enabled', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['lang-sv-geonames'] };
+    // Only language gaz enabled, no target — should return empty
+    const gazetteers = loadGazetteers(config, [worldGazetteer, langSvGeonames]);
+    expect(gazetteers).toHaveLength(0);
+  });
+
+  it('without language gazetteer, Swedish names do not resolve', () => {
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries'] };
+    const gazetteers = loadGazetteers(config, [worldGazetteer]);
+    const result = resolvePlace('Danmark', gazetteers);
+    expect(result).toBeNull();
+  });
+});
+
 describe('loadGazetteers', () => {
   it('returns empty array when no gazetteers enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: [] };
