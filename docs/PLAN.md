@@ -175,6 +175,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.97.4 | Fix: add explicit space between given name and surname in PersonNamesTable | — |
 | v0.97.5 | Fix: parallelize panel relationship loading to prevent scroll lock | — |
 | v0.97.6 | Fix: separate media selection from lightbox, make lightbox view-only | — |
+| v0.99.1 | feat: FaceTagOverlay component for region rendering and drawing; fix ca-provinces test count (5→13) | — |
 ---
 
 ## Research

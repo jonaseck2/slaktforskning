@@ -39,9 +39,9 @@ describe('bundled gazetteers', () => {
     expect(us.root.children!.length).toBe(9);
   });
 
-  it('ca-provinces has 5 provinces', () => {
+  it('ca-provinces has 13 provinces and territories', () => {
     const ca = gazetteers.find(g => g.id === 'ca-provinces')!;
-    expect(ca.root.children!.length).toBe(5);
+    expect(ca.root.children!.length).toBe(13);
   });
 });
 
