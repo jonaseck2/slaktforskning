@@ -34,7 +34,7 @@
       >
         <div class="place-main">
           <span class="place-name">{{ place.name }}</span>
-          <span v-if="place.place_type" class="place-type">{{ $t('placeTypes.' + place.place_type) }}</span>
+          <span v-if="place.place_type" class="place-type">{{ $te('placeTypes.' + place.place_type) ? $t('placeTypes.' + place.place_type) : place.place_type }}</span>
         </div>
         <div v-if="place.parent_name || place.postal_code || place.city" class="place-subtitle">{{ place.parent_name || [place.postal_code, place.city].filter(Boolean).join(' ') }}</div>
       </li>
