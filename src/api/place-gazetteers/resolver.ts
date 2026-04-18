@@ -213,6 +213,36 @@ function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
   return a.depth > b.depth;
 }
 
+// Cache: global name → minimum depth across all gazetteers in a set.
+// Built once per unique gazetteers array (by identity), reused across
+// all resolvePlace calls for the same loaded gazetteer set.
+let cachedGlobalNameDepth: Map<string, number> | null = null;
+let cachedGazRoots: GazetteerNode[] | null = null;
+
+function getGlobalNameDepth(gazetteers: Gazetteer[]): Map<string, number> {
+  const roots = gazetteers.map(g => g.root);
+  if (cachedGlobalNameDepth && cachedGazRoots &&
+      roots.length === cachedGazRoots.length &&
+      roots.every((r, i) => r === cachedGazRoots![i])) {
+    return cachedGlobalNameDepth;
+  }
+  const map = new Map<string, number>();
+  for (const gaz of gazetteers) {
+    for (const [name, entries] of getNameIndex(gaz.root).entries()) {
+      for (const entry of entries) {
+        const depth = entry.ancestors.length + 1;
+        const existing = map.get(name);
+        if (existing === undefined || depth < existing) {
+          map.set(name, depth);
+        }
+      }
+    }
+  }
+  cachedGazRoots = roots;
+  cachedGlobalNameDepth = map;
+  return map;
+}
+
 export function resolvePlace(
   placeName: string,
   gazetteers: Gazetteer[],
@@ -222,23 +252,10 @@ export function resolvePlace(
   const components = placeName.split(',').map(p => p.trim()).filter(Boolean);
   if (components.length === 0) return null;
 
-  // Build a global map of normalized name → minimum depth (ancestor count)
-  // across all gazetteers.  Shallow entries (countries, depth 1–2) are strong
-  // geographic anchors; deep entries (localities, depth 4+) are weak ones.
-  // Used to weight contradictions: an unmatched component that matches a
-  // shallow/broad node elsewhere is a stronger signal than one matching a leaf.
-  const globalNameDepth = new Map<string, number>();
-  for (const gaz of gazetteers) {
-    for (const [name, entries] of getNameIndex(gaz.root).entries()) {
-      for (const entry of entries) {
-        const depth = entry.ancestors.length + 1;
-        const existing = globalNameDepth.get(name);
-        if (existing === undefined || depth < existing) {
-          globalNameDepth.set(name, depth);
-        }
-      }
-    }
-  }
+  // Global name → minimum depth, cached across calls for the same gazetteer set.
+  // Shallow entries (countries, depth 1–2) are strong geographic anchors;
+  // deep entries (localities, depth 4+) are weak ones.
+  const globalNameDepth = getGlobalNameDepth(gazetteers);
 
   // Collect best candidate per gazetteer, then compute contradiction weight
   // using global depth info so cross-gazetteer conflicts are detected.
