@@ -22,6 +22,14 @@ import caProvinces from './data/ca-provinces.json';
 // Global
 import worldCountries from './data/world-countries.json';
 import worldAdmin1 from './data/world-admin1.json';
+// Boundary gazetteers
+import dkSogneBoundaries from './data/dk-sogne-boundaries.json';
+import noKommunerBoundaries from './data/no-kommuner-boundaries.json';
+import fiKunnatBoundaries from './data/fi-kunnat-boundaries.json';
+import isSveitarfelogBoundaries from './data/is-sveitarfelog-boundaries.json';
+import usCountiesBoundaries from './data/us-counties-boundaries.json';
+import caDivisionsBoundaries from './data/ca-divisions-boundaries.json';
+import worldBoundaries from './data/world-boundaries.json';
 
 // Historical Swedish county (län) names → modern equivalents
 // These were renamed in the 1997 county reform
@@ -71,6 +79,14 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   // Global
   worldCountries as Gazetteer,
   worldAdmin1 as Gazetteer,
+  // Boundary gazetteers
+  dkSogneBoundaries as Gazetteer,
+  noKommunerBoundaries as Gazetteer,
+  fiKunnatBoundaries as Gazetteer,
+  isSveitarfelogBoundaries as Gazetteer,
+  usCountiesBoundaries as Gazetteer,
+  caDivisionsBoundaries as Gazetteer,
+  worldBoundaries as Gazetteer,
 ].map(enrichHistoricalAliases);
 
 export function getAllGazetteers(): Gazetteer[] {
