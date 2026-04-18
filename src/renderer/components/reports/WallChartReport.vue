@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import {
   generatePedigreeWallChart,
   generateDescendantWallChart,
@@ -33,15 +33,21 @@ const emit = defineEmits<{
 const svgContent = ref<string | null>(null);
 const generating = ref(false);
 
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let runId = 0;
+
 async function generateChart() {
+  const myRun = ++runId;
   generating.value = true;
   svgContent.value = null;
   try {
     if (props.options.chartType === 'pedigree') {
       const tree = await fetchWallChartAncestorTree(props.personId, props.options.generations);
+      if (myRun !== runId) return;
       svgContent.value = generatePedigreeWallChart(tree, props.options);
     } else {
       const tree = await fetchWallChartDescendantTree(props.personId, props.options.generations);
+      if (myRun !== runId) return;
       svgContent.value = generateDescendantWallChart(tree, props.options);
     }
     emit('svgGenerated', svgContent.value);
@@ -62,11 +68,12 @@ async function generateChart() {
   } catch (err) {
     console.error('Wall chart generation failed:', err);
   } finally {
-    generating.value = false;
+    if (myRun === runId) {
+      generating.value = false;
+    }
   }
 }
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
   () => [props.personId, { ...props.options }],
   () => {
@@ -77,6 +84,10 @@ watch(
 );
 
 onMounted(generateChart);
+
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+});
 </script>
 
 <style scoped>
