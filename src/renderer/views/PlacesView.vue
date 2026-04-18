@@ -1,17 +1,16 @@
 <template>
-  <div :class="{ 'map-active': viewMode === 'map' }">
-    <div class="header">
-      <h2>{{ $t('places.title') }}</h2>
-      <div class="header-right">
-        <div class="view-toggle">
-          <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
-          <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
+  <div class="places-view">
+    <div v-if="viewMode === 'list'" class="places-list-sheet">
+      <div class="header">
+        <h2>{{ $t('places.title') }}</h2>
+        <div class="header-right">
+          <div class="view-toggle">
+            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
+            <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
+          </div>
+          <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
         </div>
-        <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
       </div>
-    </div>
-
-    <template v-if="viewMode === 'list'">
       <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
       <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
       <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('places.none')" />
@@ -49,9 +48,22 @@
           </tr>
         </tbody>
       </table>
-    </template>
+    </div>
 
-    <MapView v-else />
+    <MapView v-else>
+      <template #header>
+        <div class="header">
+          <h2>{{ $t('places.title') }}</h2>
+          <div class="header-right">
+            <div class="view-toggle">
+              <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
+              <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
+            </div>
+            <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
+          </div>
+        </div>
+      </template>
+    </MapView>
 
     <!-- Add modal -->
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-place">
@@ -179,9 +191,16 @@ onActivated(async () => {
 
 <style scoped>
 /* Unique to PlacesView */
+.places-view { height: 100%; }
+.places-list-sheet {
+  height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .header-right { display: flex; align-items: center; gap: 8px; }
 .view-toggle { display: flex; gap: 2px; }
-.map-active { display: flex; flex-direction: column; height: 100%; }
-.map-active .header { flex-shrink: 0; }
 </style>

@@ -2,6 +2,7 @@
   <div class="map-view" ref="mapBodyRef">
     <!-- Left sheet: toolbar + map -->
     <div class="map-chart-area">
+      <slot name="header" />
       <div v-if="filterText || allDisplayPlaces.length > 0" class="map-toolbar">
         <input
           v-model="filterText"
@@ -254,7 +255,11 @@ onMounted(async () => {
   gap: var(--space-xs);
 }
 
-/* Left sheet: toolbar + map */
+/* Left sheet: header slot + toolbar + map */
+.map-chart-area :deep(.header) {
+  padding: var(--space-lg) var(--space-lg) 0;
+  margin-bottom: var(--space-sm);
+}
 .map-chart-area {
   flex: 1;
   min-width: 200px;
