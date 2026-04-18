@@ -196,6 +196,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.110.0 | Timeline chart visual overhaul: event markers, tooltips, responsive width, theme-aware colors | [archive](plans/archive/2026-04-18-timeline-chart-visual-update.md) |
 | v0.111.0 | Chart visual overhaul: measurement/connectors modules, WCAG contrast, box redesign for pedigree/hourglass/descendant | [archive](plans/archive/2026-04-18-chart-visual-overhaul.md) |
 | v0.111.1 | WCAG math unit tests (parseHex/luminance/contrast/thresholds); e2e viz back-button test hardening | — |
+| v0.111.2 | Skill docs: WCAG contrast enforcement in a11y/frontend-design/test skills; export color-invariance tests | [spec](superpowers/specs/2026-04-18-export-color-invariance-tests-design.md) |
 ---
 
 ## Research

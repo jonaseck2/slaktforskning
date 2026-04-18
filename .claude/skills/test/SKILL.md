@@ -16,11 +16,13 @@ npm run test:watch         # Watch mode for active development
 
 ### E2E tests (Electron GUI + MCP server)
 ```bash
-npx playwright test                              # All 10 projects in parallel
+npx playwright test                              # All 11 projects in parallel
 npx playwright test --project=gui-persons        # Single project
 npx playwright test --project=gui-quality --project=gui-media  # Multiple projects
 npx playwright test -g 'create a person'         # Filter by test name
 ```
+
+Full run: ~1.5 min wall clock (11 suites × 10 workers). Slowest suite governs total time; Electron cold-start dominates per-suite time.
 
 ### Lint
 ```bash
@@ -105,6 +107,15 @@ expect(getEventsForPerson(db, id)).toHaveLength(1);
 
 Why: if both the transform code and the test fixture share the same wrong assumption (e.g. a misnamed column), a fixture-only comparison will silently pass while the bug exists. DB-level assertions catch this.
 
+### Design-token tests — WCAG contrast
+
+Any change to color tokens in `tokens.css` or `shared.css` is guarded by `tests/unit/wcagContrast.test.ts`. It parses both CSS files, builds the effective palette for every (theme × appearance) combination (Forest/Nordic/Twilight × light/dark/high-contrast), and asserts every text-on-bg pair against its WCAG 2.1 threshold:
+- **High-contrast mode** → AAA (≥7:1 body, ≥4.5:1 large)
+- **Light + dark modes** → AA (≥4.5:1 body, ≥3:1 large)
+- **Non-text UI** (borders on surfaces) → ≥3:1
+
+The math lives in `src/renderer/utils/wcag.ts` and is independently tested by `tests/unit/wcag.test.ts` (W3C reference values for luminance, contrast, and thresholds). Run `npx vitest run tests/unit/wcag*` after any color-token edit — failure messages print the exact ratio and the threshold it needs to clear.
+
 ## Component Tests
 
 Component tests live in `tests/components/` and test Vue components with Happy DOM (no real browser). Use for components with significant interaction logic.
@@ -137,10 +148,13 @@ tests/e2e/
 ├── gui-quality.test.ts         # Quality checks: run, filter, ignore/restore (port 19247)
 ├── gui-media.test.ts           # Media library: gallery/list, search, inline edit, delete (port 19248)
 ├── gui-settings.test.ts        # Settings: database tab, tree subject, tab navigation (port 19249)
-└── gui-research-tasks.test.ts  # Research tasks: CRUD, status cycling, inline edit, filters (port 19250)
+├── gui-research-tasks.test.ts  # Research tasks: CRUD, status cycling, inline edit, filters (port 19250)
+└── gui-dark-mode.test.ts       # Per-theme dark mode surface distinctness (port 19251)
 ```
 
-All 10 projects run in parallel. Each gets a fresh temp DB via `SLAKTFORSKNING_DB` env var. Windows use `SLAKTFORSKNING_NO_FOCUS=1` to avoid stealing focus during tests.
+All 11 projects run in parallel. Each gets a fresh temp DB via `SLAKTFORSKNING_DB` env var. Windows use `SLAKTFORSKNING_NO_FOCUS=1` to avoid stealing focus during tests.
+
+**Port must be unique per test file.** Two files sharing a port cause one Electron instance to kill the other mid-run, producing confusing "Vue did not initialize in time" errors. Allocate the next free port when adding a suite.
 
 ### Writing a new E2E test file
 
@@ -179,17 +193,17 @@ Then add the test file to `playwright.config.ts` as a new project:
 ### AppDriver API
 
 **Navigation & DOM:**
-- `app.navigate(path)` — Vue Router push
+- `app.navigate(path)` — Vue Router push (calls `settle()`; does NOT await async redirects)
 - `app.getDom()` — full rendered HTML (includes `<style>` blocks!)
-- `app.waitForText(text, timeoutMs?)` — poll DOM until text appears
-- `app.expectText(text)` / `app.expectNoText(text)` — assert DOM content
-- `app.settle(ms?)` — wait for Vue to re-render (requestAnimationFrame + delay)
+- `app.waitForText(text, timeoutMs?)` — poll DOM until text appears (default 12s)
+- `app.expectText(text)` — polls up to 5s for text; `expectNoText(text)` settles first
+- `app.settle(ms?)` — wait for Vue to re-render (requestAnimationFrame + 50ms default)
 
 **Interaction:**
-- `app.click(selector)` — click element
-- `app.fillInput(selector, value)` — set value via native setter + `input` event
+- `app.click(selector, timeoutMs?)` — polls up to 8s for element to exist, then clicks
+- `app.fillInput(selector, value)` — set value via native setter + `input` event (fails if missing)
 - `app.waitAndFill(selector, value)` — wait for element to exist, then fill
-- `app.executeJs<T>(code)` — run JS in renderer, return serialized result
+- `app.executeJs<T>(code)` — run JS in renderer, return serialized result (must be IIFE for multi-statement)
 
 **Data seeding** (call `window.api.*` in the renderer):
 - `app.createPerson({ given_name, surname, sex? })`
@@ -213,12 +227,21 @@ Then add the test file to `playwright.config.ts` as a new project:
 
 | Component | Template usage | Rendered class | Common mistake |
 |-----------|---------------|----------------|----------------|
-| `AppButton variant="soft"` | `<AppButton variant="soft">` | `.app-btn.app-btn--soft` | Using `.btn-add` |
+| `AppButton variant="soft"` | `<AppButton variant="soft">+ Add Person</AppButton>` | `.app-btn.app-btn--soft` | Using `.btn-add` |
+| `AppButton variant="ghost" size="sm"` | `<AppButton variant="ghost" size="sm">✕</AppButton>` | `.app-btn.app-btn--ghost.app-btn--sm` | Using `.btn-delete` |
 | `AppButton variant="primary"` | `<AppButton variant="primary" type="submit">` | `.app-btn.app-btn--primary` | Using `button[type="submit"]` alone |
-| `FilterChips` | `<FilterChips :options="..." />` | `.chip-btn`, `.chip-btn--active` | Using `.chip`, `.tab-btn` |
+| `FilterChips` | `<FilterChips :options="..." />` | `.chip-btn`, `.chip-btn--active` | Using `.chip`, `.tab-btn`, `[data-testid="tab-*"]` |
+| Visualization tabs | `<FilterChips>` for chart tabs | `.chip-btn` | `[data-testid="tab-hourglass"]` (removed) |
 | Settings tabs | `<FilterChips>` for tabs | `.chip-btn` | Using `.tab-btn` (doesn't exist) |
 
-**shared.css also defines `.btn-add`, `.btn-delete`, `.btn-cancel`** — these are used directly in some components (ResearchTasksTable, MediaLightbox) but NOT in views that use AppButton.
+**shared.css also defines `.btn-add`, `.btn-delete`, `.btn-cancel`** — these are used directly in some components (ResearchTasksTable save, MediaLightbox, QualityView ignore button, GazetteersView) but NOT in views that use AppButton.
+
+**Common real patterns in the current codebase:**
+- PersonsView/SourcesView/PlacesView: `<AppButton variant="soft">+ {label}</AppButton>` for add, `<AppButton variant="ghost" size="sm">✕</AppButton>` for delete
+- PersonDetailView add relative buttons: `<AppButton variant="soft" size="sm">+ Father/Mother/Spouse/Child</AppButton>` (text is the role word only — no "Add Parent")
+- EventList add: `<AppButton variant="soft" size="sm">+ Event</AppButton>`
+- VisualizationView back button: `<AppButton variant="ghost" size="sm">←</AppButton>` inside `.viz-tab-bar`
+- No back button exists on PersonDetailView / PlaceDetailView / RelationshipDetailView — navigate via sidebar
 
 Before writing selectors, grep the component source to see what classes are actually used:
 ```bash
@@ -226,6 +249,14 @@ Before writing selectors, grep the component source to see what classes are actu
 grep 'class.*btn\|:class' src/renderer/components/ui/AppButton.vue
 # Check what a view uses for its "add" button
 grep 'btn-add\|AppButton' src/renderer/views/ResearchTasksView.vue
+```
+
+**When multiple `.app-btn--soft` exist on one view** (e.g., VisualizationView has an active view-toggle + Add Person button), match by text to disambiguate:
+```typescript
+await app.executeJs(`
+  Array.from(document.querySelectorAll('.app-btn--soft'))
+    .find(b => b.textContent.includes('Person'))?.click()
+`);
 ```
 
 #### 2. executeJs must use IIFEs for multi-statement code
