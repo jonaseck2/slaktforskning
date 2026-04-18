@@ -313,14 +313,19 @@ async function rejectMatch(r: QualityResult) {
 }
 
 // --- Data loading ---
+let checksRunId = 0;
 async function runChecks() {
   if (!window.api) return;
+  const myRunId = ++checksRunId;
   qualityStore.running = true;
   try {
     const raw = (await window.api.checks.runAll()) as QualityResult[];
+    // Ignore stale results from a cancelled/superseded run
+    if (myRunId !== checksRunId) return;
     qualityStore.setResults(raw);
     visibleCount.value = PAGE_SIZE;
   } catch (err) {
+    if (myRunId !== checksRunId) return;
     console.error('[QualityView] runChecks failed:', err);
     toast.error(t('errors.loadFailed'));
     qualityStore.running = false;

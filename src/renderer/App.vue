@@ -66,10 +66,40 @@
         <span class="nav-label">{{ $t('reports.nav') }}</span>
       </router-link>
       <div class="sidebar-spacer"></div>
+      <router-link to="/import-export" class="nav-item nav-bottom-item" :aria-label="$t('nav.importExport')">
+        <span class="nav-icon" aria-hidden="true">📦</span>
+        <span class="nav-label">{{ $t('nav.importExport') }}</span>
+      </router-link>
       <router-link to="/settings" class="nav-item nav-bottom-item" :aria-label="$t('nav.settings')">
         <span class="nav-icon" aria-hidden="true">⚙️</span>
         <span class="nav-label">{{ $t('nav.settings') }}</span>
       </router-link>
+      <div class="settings-section">
+        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="isSettingsOpen = !isSettingsOpen">
+          <span class="nav-icon" aria-hidden="true">🎨</span>
+          <span class="nav-label">{{ $t('settings.appearance') }}</span>
+          <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
+        </button>
+        <div v-if="isSettingsOpen" class="settings-panel">
+          <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
+            <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
+            <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
+            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
+            <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
+            <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
+            <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.language') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
+            <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Sv</button>
+            <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">En</button>
+          </div>
+        </div>
+      </div>
     </nav>
     <main id="main-content" class="content">
       <router-view v-slot="{ Component, route }">
@@ -137,6 +167,27 @@ function setAppearance(value: Appearance) {
   if (screenReader.isTtsEnabled.value) {
     tts.speak(t(APPEARANCE_I18N[value]), locale.value);
   }
+}
+
+// --- Sidebar appearance panel ---
+const isSettingsOpen = ref(false);
+
+const RAW_TEXT_SIZE = localStorage.getItem('textSize');
+const textSize = ref<'small' | 'medium' | 'large'>(
+  (RAW_TEXT_SIZE === 'medium' || RAW_TEXT_SIZE === 'large') ? RAW_TEXT_SIZE : 'small'
+);
+
+function setTextSize(size: 'small' | 'medium' | 'large') {
+  textSize.value = size;
+  localStorage.setItem('textSize', size);
+  document.documentElement.classList.remove('text-medium', 'text-large');
+  if (size === 'medium') document.documentElement.classList.add('text-medium');
+  if (size === 'large') document.documentElement.classList.add('text-large');
+}
+
+function setLocale(val: SupportedLocale) {
+  locale.value = val;
+  saveLocale(val);
 }
 
 provide('ttsEnabled', screenReader.isTtsEnabled);
@@ -446,9 +497,74 @@ body {
 }
 
 .nav-bottom-item {
-  border-top: 1px solid var(--sidebar-border);
-  padding-top: 8px !important;
+  margin-top: 2px;
+}
+
+.settings-section {
   margin-top: 4px;
+  border-top: 1px solid var(--sidebar-border);
+  padding-top: 6px;
+}
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  text-align: left;
+}
+.settings-toggle:hover {
+  background: var(--sidebar-active-bg);
+}
+.settings-arrow {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  color: var(--sidebar-text-muted);
+}
+.settings-panel {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-group-label {
+  font-size: var(--font-xs);
+  color: var(--sidebar-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.settings-row {
+  display: flex;
+  gap: 3px;
+}
+.settings-option {
+  flex: 1;
+  background: var(--sidebar-active-bg);
+  border: none;
+  color: var(--sidebar-text);
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-xs);
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.15s;
+}
+.settings-option:hover {
+  color: var(--sidebar-active-text);
+}
+.settings-option.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 .error-badge {

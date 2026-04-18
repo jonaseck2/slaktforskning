@@ -1,14 +1,9 @@
 <template>
   <div class="import-export-view">
-    <div class="tab-bar">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        class="tab-btn"
-        :class="{ active: activeTab === tab.id }"
-        @click="activeTab = tab.id"
-      >{{ tab.label }}</button>
+    <div class="header">
+      <h2>{{ $t('nav.importExport') }}</h2>
     </div>
+    <FilterChips :options="filterOptions" :model-value="activeTab" @update:model-value="activeTab = $event" />
 
     <template v-if="activeTab === 'gedcom'">
       <GedcomImportSection />
@@ -25,6 +20,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import FilterChips from '../components/ui/FilterChips.vue';
 import GedcomImportSection from '../components/import/GedcomImportSection.vue';
 import GedcomExportSection from '../components/import/GedcomExportSection.vue';
 import GenneyImportSection from '../components/import/GenneyImportSection.vue';
@@ -37,13 +33,13 @@ const { t } = useI18n();
 
 const activeTab = ref('gedcom');
 
-const tabs = computed(() => [
-  { id: 'gedcom', label: t('importExport.gedcomTitle') },
-  { id: 'genney', label: t('importExport.genneyTitle') },
-  { id: 'holger', label: t('importExport.holgerTitle') },
-  { id: 'archive', label: t('importExport.archiveTitle') },
-  { id: 'csv', label: t('csv.title') },
-  { id: 'htmlSite', label: t('htmlSite.tabTitle') },
+const filterOptions = computed(() => [
+  { value: 'gedcom', label: t('importExport.gedcomTitle') },
+  { value: 'genney', label: t('importExport.genneyTitle') },
+  { value: 'holger', label: t('importExport.holgerTitle') },
+  { value: 'archive', label: t('importExport.archiveTitle') },
+  { value: 'csv', label: t('csv.title') },
+  { value: 'htmlSite', label: t('htmlSite.tabTitle') },
 ]);
 </script>
 

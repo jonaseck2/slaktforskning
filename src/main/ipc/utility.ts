@@ -60,35 +60,62 @@ export function registerUtilityHandlers(
   wrapHandler('duplicates:find', (limit) => duplicates.findDuplicates(getDb(), limit as number | undefined));
   wrapHandler('duplicates:merge', (targetId, sourceId) => duplicates.mergePersons(getDb(), targetId as string, sourceId as string));
 
-  // Checks
-  wrapHandler('checks:runAll', () => {
+  // Checks — run incrementally, yielding the event loop between each check
+  // so navigation and other IPC calls are not blocked.
+  let checksRunId = 0;
+  wrapHandler('checks:runAll', async () => {
     if (isImportInProgress()) {
       console.log('[IPC] checks:runAll skipped — import in progress');
       return [];
     }
-    {
-      const db = getDb();
-      const dbDir = path.dirname(getCurrentDatabasePath());
-      let t0 = Date.now();
-      const raw = checks.runAllChecks(db, dbDir);
-      console.log(`[checks] runAllChecks: ${Date.now() - t0}ms → ${raw.length} raw results`);
-      // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
-      // can return 20k+ results for large trees, making the name-resolution query very slow.
-      const countByCode = new Map<string, number>();
-      const capped = raw.filter(r => {
-        if (r.severity !== 'notice') return true;
-        const n = (countByCode.get(r.code) ?? 0) + 1;
-        countByCode.set(r.code, n);
-        return n <= 500;
-      });
-      console.log(`[checks] capped to ${capped.length} results`);
-      const allIds = [...new Set(capped.flatMap(r => r.personIds))];
-      console.log(`[checks] resolving ${allIds.length} person names`);
-      t0 = Date.now();
-      const nameMap = persons.getPersonDisplayNames(db, allIds);
-      console.log(`[checks] getPersonDisplayNames: ${Date.now() - t0}ms`);
-      return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
+
+    const runId = ++checksRunId;
+    const db = getDb();
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const allChecks = checks.getAllCheckFunctions();
+    const results: checks.CheckResult[] = [];
+    const t0 = Date.now();
+    console.log(`[checks] runAll #${runId} starting (${allChecks.length} checks)`);
+
+    for (const check of allChecks) {
+      // Abort if a newer run was started
+      if (runId !== checksRunId) {
+        console.log(`[checks] runAll #${runId} cancelled — superseded by #${checksRunId}`);
+        return [];
+      }
+      // Yield the event loop so other IPC handlers can run
+      await new Promise<void>(resolve => setImmediate(resolve));
+      if (runId !== checksRunId) {
+        console.log(`[checks] runAll #${runId} cancelled — superseded by #${checksRunId}`);
+        return [];
+      }
+
+      const start = Date.now();
+      const res = check.fn(db, dbDir);
+      console.log(`[checks] ${check.name}: ${Date.now() - start}ms → ${res.length} result(s)`);
+      results.push(...res);
     }
+
+    if (runId !== checksRunId) return [];
+
+    console.log(`[checks] runAll #${runId}: ${Date.now() - t0}ms → ${results.length} raw results`);
+
+    // Cap notice-severity results per check code to 500 — checks like NO_BIRTH_EVENT
+    // can return 20k+ results for large trees, making the name-resolution query very slow.
+    const countByCode = new Map<string, number>();
+    const capped = results.filter(r => {
+      if (r.severity !== 'notice') return true;
+      const n = (countByCode.get(r.code) ?? 0) + 1;
+      countByCode.set(r.code, n);
+      return n <= 500;
+    });
+    console.log(`[checks] capped to ${capped.length} results`);
+    const allIds = [...new Set(capped.flatMap(r => r.personIds))];
+    console.log(`[checks] resolving ${allIds.length} person names`);
+    const t1 = Date.now();
+    const nameMap = persons.getPersonDisplayNames(db, allIds);
+    console.log(`[checks] getPersonDisplayNames: ${Date.now() - t1}ms`);
+    return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
   });
   wrapHandler('checks:forPerson', (personId) => {
     const dbDir = path.dirname(getCurrentDatabasePath());
