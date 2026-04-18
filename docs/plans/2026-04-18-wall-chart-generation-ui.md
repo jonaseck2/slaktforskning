@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript (api layer), Vue 3 `<script setup>` (modal UI), Electron IPC (file save), SVG string generation (no external SVG libs), `webContents.printToPDF()` for PDF pages.
 
+**History:** Wall chart SVG generation was originally built in v0.62.0 (`src/api/reports/wall_chart.ts`) but was deleted in v0.66.0 when charts were unified to reuse visualization components in readonly mode. This plan recreates the feature from scratch with a different approach: a configuration modal with live preview and export, rather than the original print-oriented report tab.
+
 ---
 
 ## Task 1: Wall Chart SVG Generation API
@@ -800,6 +802,12 @@ export async function fetchWallChartDescendantTree(
 
 **Files:** `src/main/ipc/utility.ts`, `src/preload/index.ts`
 
+- [ ] **Step 0: Install pdf-lib for multi-page PDF merging**
+
+```bash
+npm install pdf-lib
+```
+
 - [ ] **Step 1: Add IPC handler for saving SVG to file**
 
 In `src/main/ipc/utility.ts`, add inside the `registerUtilityHandlers` function (after the `print:exportPdf` handler):
@@ -851,18 +859,17 @@ In `src/main/ipc/utility.ts`, add inside the `registerUtilityHandlers` function 
       hidden.destroy();
     }
 
-    // For single page, write directly; for multi-page, we write the first page
-    // (multi-page PDF merging requires a library — for v1, each page is separate)
-    // TODO: Use pdf-lib to merge pages in a future iteration
-    if (pdfParts.length === 1) {
-      fs.writeFileSync(result.filePath, pdfParts[0]);
-    } else {
-      // Write individual pages as separate PDFs for now
-      const basePath = result.filePath.replace(/\.pdf$/, '');
-      for (let i = 0; i < pdfParts.length; i++) {
-        fs.writeFileSync(`${basePath}-page-${i + 1}.pdf`, pdfParts[i]);
-      }
+    // Merge all PDF pages into a single file using pdf-lib
+    // npm install pdf-lib (add to dependencies)
+    const { PDFDocument } = require('pdf-lib');
+    const merged = await PDFDocument.create();
+    for (const part of pdfParts) {
+      const src = await PDFDocument.load(part);
+      const [page] = await merged.copyPages(src, [0]);
+      merged.addPage(page);
     }
+    const mergedBytes = await merged.save();
+    fs.writeFileSync(result.filePath, Buffer.from(mergedBytes));
 
     return { success: true, path: result.filePath, pageCount: pdfParts.length };
   });

@@ -457,13 +457,13 @@ test.describe('Dark mode theme identity', () => {
   for (const theme of themes) {
     test(`${theme} dark mode has theme-tinted surface`, async () => {
       // Set theme and dark mode via evaluate
-      await app.evaluate(`
+      await app.executeJs(`
         document.documentElement.className = 'theme-${theme} dark';
       `);
       await app.settle(100);
 
       // Read computed surface-bg
-      const surfaceBg = await app.evaluate(`
+      const surfaceBg = await app.executeJs(`
         getComputedStyle(document.documentElement).getPropertyValue('--surface-bg').trim()
       `);
 
@@ -477,11 +477,11 @@ test.describe('Dark mode theme identity', () => {
   test('all three themes have distinct dark surface colors', async () => {
     const surfaces: string[] = [];
     for (const theme of themes) {
-      await app.evaluate(`
+      await app.executeJs(`
         document.documentElement.className = 'theme-${theme} dark';
       `);
       await app.settle(50);
-      const bg = await app.evaluate(`
+      const bg = await app.executeJs(`
         getComputedStyle(document.documentElement).getPropertyValue('--surface-bg').trim()
       `) as string;
       surfaces.push(bg);

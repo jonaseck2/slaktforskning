@@ -36,7 +36,7 @@ test.describe('Visualization empty state', () => {
     // Clear the last-used focal person so the view doesn't redirect to a stored person ID.
     await app.executeJs(`localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
-    await app.waitForText('Add a person to start visualizing');
+    await app.waitForText('Create a person to start visualizing');
   });
 
   test('empty state has data-testid attribute for reliable selection', async () => {
@@ -186,7 +186,10 @@ test.describe('Visualization with persons', () => {
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
 
-    await app.click('.btn-back');
+    // Back button is AppButton variant="ghost" size="sm" with ← text
+    await app.executeJs(`
+      Array.from(document.querySelectorAll('.app-btn--ghost')).find(b => b.textContent.trim() === '←')?.click()
+    `);
     await app.settle();
 
     // back() returns to previous history entry (/), not a hardcoded route

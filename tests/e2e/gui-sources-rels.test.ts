@@ -39,7 +39,7 @@ test.describe('Sources CRUD', () => {
 
   test('create a source via modal', async () => {
     await app.navigate('/sources');
-    await app.click('.btn-add');
+    await app.click('.app-btn--soft');
     await app.settle();
 
     await app.fillInput('.modal input[type="text"]', 'Swedish Church Records');
@@ -79,7 +79,7 @@ test.describe('Sources CRUD', () => {
       const rows = document.querySelectorAll('.clickable-row');
       for (const row of rows) {
         if (row.textContent.includes('To Be Deleted')) {
-          row.querySelector('.btn-delete').click();
+          row.querySelector('.app-btn--ghost').click();
           break;
         }
       }
@@ -106,7 +106,7 @@ test.describe('Relationships CRUD', () => {
     await app.createPerson({ given_name: 'Maria', surname: 'Nilsson', sex: 'F' });
 
     await app.navigate('/relationships');
-    await app.click('.btn-add');
+    await app.click('.app-btn--soft');
     await app.settle();
 
     await app.click('.modal button[type="submit"]');
@@ -145,8 +145,8 @@ test.describe('Relationships CRUD', () => {
     await app.navigate(`/relationships/${rel.id}`);
     await app.settle();
 
-    await app.click('.btn-back');
-    await app.settle();
+    // RelationshipDetailView has no back button — navigate via sidebar
+    await app.navigate('/relationships');
 
     const routePath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.path'

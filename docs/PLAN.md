@@ -189,6 +189,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage (4.9% → 91%) | [spec](superpowers/specs/2026-04-18-gazetteer-build-extraction-design.md) |
 | v0.104.1 | Docs: comprehensive test skill rewrite with 10 E2E pitfall patterns, quality test fix | — |
 | v0.105.0 | Cross-platform build scripts + DMG maker for macOS | — |
+| v0.106.0 | Open source publishing: governance files, plans, spec | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
 ---
 
 ## Research
@@ -285,8 +286,9 @@ How to display names in space-constrained contexts (charts, circle chart). Tillt
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
-#### Link Rules for Genealogy Platforms [backlog]
-Add link rules for MyHeritage, Geni, and other genealogy platforms. These are better modeled as source link rules than external identifiers, since they represent source references rather than person IDs for GEDCOM roundtrip.
+#### Link Rules Expansion [planned]
+13 new rules across 3 new locales (German, Danish, Norwegian) + additions to Swedish and English. Covers Archion, Matricula, Arkivalieronline, Digitalarkivet, MyHeritage, Geni, WikiTree, BillionGraves, SVAR, DDB. Also fixes LinkedText to read db config.
+- Plan: [plans/2026-04-18-link-rules-expansion.md](plans/2026-04-18-link-rules-expansion.md)
 
 ---
 
@@ -308,20 +310,30 @@ Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigatio
 Person boxes redesigned for competitor parity: portrait photo, wrapping names, birth/death places, dynamic box height, curved connectors, theme-aware colors + unthemed export mode. Applies to pedigree, hourglass, and descendant charts.
 - Spec: [docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md](docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md)
 
-#### Fan Chart [backlog]
-Circular/semi-circular ancestor chart. Compact display of many generations in a radial layout. Common in competitor apps (Ancestry, MacFamilyTree, FamilySearch).
+#### Fan Chart [planned]
+Semi-circular/configurable-arc ancestor chart. Supports 180°–360° arc spans, 4–8 generations, branch coloring, click navigation, and print export. New layout algorithm, SVG presentation component, and VisualizationView tab.
+- Plan: [plans/2026-04-18-fan-chart.md](plans/2026-04-18-fan-chart.md)
 
-#### Circle Chart Visual Update [backlog]
-Apply the new person box styling (portrait, places, theme colors) to the existing circle chart. Currently uses a separate rendering path.
+#### Circle Chart Visual Update [planned]
+Theme-aware colors from CSS tokens, subtle gradients, sex-based coloring toggle, enhanced focal circle, empty segment patterns, dark mode + high-contrast support, print mode (unthemed grayscale).
+- Plan: [plans/2026-04-18-circle-chart-visual-update.md](plans/2026-04-18-circle-chart-visual-update.md)
 
-#### Timeline Chart Visual Update [backlog]
-Apply the new visual style to the timeline chart. Currently uses its own bar layout and rendering.
+#### Timeline Chart Visual Update [planned]
+Theme-aware bars with sex coloring, event markers (birth/marriage/death), rounded bars with gradients, responsive width, hover tooltips with age, dark mode + high-contrast + print support.
+- Plan: [plans/2026-04-18-timeline-chart-visual-update.md](plans/2026-04-18-timeline-chart-visual-update.md)
 
-#### Wall Chart Generation UI [backlog]
-UI button/dialog to trigger wall chart generation from the app. Paper size selection, font customization, tiled PDF output. SVG generation API already exists (v0.62.0).
+#### Wall Chart Generation UI [planned]
+Modal with chart type/paper size/orientation/generations/content/font/color options, live preview, SVG export, merged multi-page PDF via pdf-lib. Entry points in ReportsView and VisualizationView. (Original wall chart code from v0.62.0 was deleted in v0.66.0 when charts were unified — this is a fresh implementation.)
+- Plan: [plans/2026-04-18-wall-chart-generation-ui.md](plans/2026-04-18-wall-chart-generation-ui.md)
 
-#### Dark Mode Theme Refinement [backlog]
-Refine dark mode colors to work with the new theme system. Each theme (Forest/Nordic/Twilight) gets a proper dark variant with appropriate contrast and accent colors.
+#### Dark Mode Theme Refinement [planned]
+Per-theme dark variants so Forest/Nordic/Twilight retain identity in dark mode. Green-tinted, blue-tinted, and purple-tinted dark surfaces + theme-appropriate accents. Refactored CSS selectors: `html.dark.theme-*`.
+- Plan: [plans/2026-04-18-dark-mode-theme-refinement.md](plans/2026-04-18-dark-mode-theme-refinement.md)
+
+#### Open Source Publishing [planned]
+CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign, GitHub Actions badges.
+- Spec: [docs/superpowers/specs/2026-04-18-open-source-publishing-design.md](docs/superpowers/specs/2026-04-18-open-source-publishing-design.md)
+- Plan: [plans/2026-04-18-open-source-publishing.md](plans/2026-04-18-open-source-publishing.md)
 
 #### Duplicate Merge Side-by-Side UI [backlog]
 Side-by-side person comparison view for duplicate detection. Show conflicting data with merge controls. API has `findDuplicates` and `mergePersons` — needs a visual comparison UI.
