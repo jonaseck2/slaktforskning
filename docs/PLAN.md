@@ -190,12 +190,12 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.104.1 | Docs: comprehensive test skill rewrite with 10 E2E pitfall patterns, quality test fix | — |
 | v0.105.0 | Cross-platform build scripts + DMG maker for macOS | — |
 | v0.106.0 | Open source publishing: governance files, plans, spec | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
-| v0.107.0 | Open source infra (templates, CI/CD), link rules expansion (de/da/no), circle+fan charts, name display | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
-| v0.108.0 | Per-theme dark mode with tinted surfaces (Forest/Nordic/Twilight) | [plan](plans/2026-04-18-dark-mode-theme-refinement.md) |
-| v0.109.0 | Wall chart generation UI (SVG/tiled PDF export, A4-A0 paper sizes) | [plan](plans/2026-04-18-wall-chart-generation-ui.md) |
-| v0.110.0 | Timeline chart visual overhaul: event markers, tooltips, responsive width, theme-aware colors | [plan](plans/2026-04-18-timeline-chart-visual-update.md) |
-| v0.111.0 | Chart visual overhaul: measurement/connectors modules, WCAG contrast, box redesign for pedigree/hourglass/descendant | [plan](plans/2026-04-18-chart-visual-overhaul.md) |
-| v0.107.0 | Link Rules Expansion: de/da/no rule sets, sv/en additions, LinkedText db config fix, locale toggles | [archive](plans/archive/2026-04-18-link-rules-expansion.md) |
+| v0.107.0 | Open source infra (templates, CI/CD), link rules expansion (de/da/no), circle+fan charts, name display | [archive](plans/archive/2026-04-18-link-rules-expansion.md), [archive](plans/archive/2026-04-18-circle-chart-visual-update.md), [archive](plans/archive/2026-04-18-fan-chart.md), [archive](plans/archive/2026-04-15-name-display-strategy.md) |
+| v0.108.0 | Per-theme dark mode with tinted surfaces (Forest/Nordic/Twilight) | [archive](plans/archive/2026-04-18-dark-mode-theme-refinement.md) |
+| v0.109.0 | Wall chart generation UI (SVG/tiled PDF export, A4-A0 paper sizes) | [archive](plans/archive/2026-04-18-wall-chart-generation-ui.md) |
+| v0.110.0 | Timeline chart visual overhaul: event markers, tooltips, responsive width, theme-aware colors | [archive](plans/archive/2026-04-18-timeline-chart-visual-update.md) |
+| v0.111.0 | Chart visual overhaul: measurement/connectors modules, WCAG contrast, box redesign for pedigree/hourglass/descendant | [archive](plans/archive/2026-04-18-chart-visual-overhaul.md) |
+| v0.111.1 | WCAG math unit tests (parseHex/luminance/contrast/thresholds); e2e viz back-button test hardening | — |
 ---
 
 ## Research
@@ -285,10 +285,6 @@ Table-based MediaView with gallery/table toggle, inline editing for title and no
 - Plan: [plans/archive/2026-04-15-media-editor-rework.md](plans/archive/2026-04-15-media-editor-rework.md)
 - Spec: [docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md](docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md)
 
-#### Name Display Strategy for Charts [planned]
-How to display names in space-constrained contexts (charts, circle chart). Tilltalsnamn as primary display, abbreviated chart names, birth vs current name selection. Needs design discussion.
-- Plan: [plans/2026-04-15-name-display-strategy.md](plans/2026-04-15-name-display-strategy.md)
-
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
@@ -308,31 +304,7 @@ Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigatio
 - Face tag suggestions based on other tagged photos
 - Crop/rotate/edit image tools
 
-#### Chart Visual Overhaul [planned]
-Person boxes redesigned for competitor parity: portrait photo, wrapping names, birth/death places, dynamic box height, curved connectors, theme-aware colors + unthemed export mode. Applies to pedigree, hourglass, and descendant charts.
-- Spec: [docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md](docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md)
-
-#### Fan Chart [planned]
-Semi-circular/configurable-arc ancestor chart. Supports 180°–360° arc spans, 4–8 generations, branch coloring, click navigation, and print export. New layout algorithm, SVG presentation component, and VisualizationView tab.
-- Plan: [plans/2026-04-18-fan-chart.md](plans/2026-04-18-fan-chart.md)
-
-#### Circle Chart Visual Update [planned]
-Theme-aware colors from CSS tokens, subtle gradients, sex-based coloring toggle, enhanced focal circle, empty segment patterns, dark mode + high-contrast support, print mode (unthemed grayscale).
-- Plan: [plans/2026-04-18-circle-chart-visual-update.md](plans/2026-04-18-circle-chart-visual-update.md)
-
-#### Timeline Chart Visual Update [planned]
-Theme-aware bars with sex coloring, event markers (birth/marriage/death), rounded bars with gradients, responsive width, hover tooltips with age, dark mode + high-contrast + print support.
-- Plan: [plans/2026-04-18-timeline-chart-visual-update.md](plans/2026-04-18-timeline-chart-visual-update.md)
-
-#### Wall Chart Generation UI [planned]
-Modal with chart type/paper size/orientation/generations/content/font/color options, live preview, SVG export, merged multi-page PDF via pdf-lib. Entry points in ReportsView and VisualizationView. (Original wall chart code from v0.62.0 was deleted in v0.66.0 when charts were unified — this is a fresh implementation.)
-- Plan: [plans/2026-04-18-wall-chart-generation-ui.md](plans/2026-04-18-wall-chart-generation-ui.md)
-
-#### Dark Mode Theme Refinement [planned]
-Per-theme dark variants so Forest/Nordic/Twilight retain identity in dark mode. Green-tinted, blue-tinted, and purple-tinted dark surfaces + theme-appropriate accents. Refactored CSS selectors: `html.dark.theme-*`.
-- Plan: [plans/2026-04-18-dark-mode-theme-refinement.md](plans/2026-04-18-dark-mode-theme-refinement.md)
-
-#### Open Source Publishing [planned]
+#### Open Source Publishing [in progress]
 CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign, GitHub Actions badges.
 - Spec: [docs/superpowers/specs/2026-04-18-open-source-publishing-design.md](docs/superpowers/specs/2026-04-18-open-source-publishing-design.md)
 - Plan: [plans/2026-04-18-open-source-publishing.md](plans/2026-04-18-open-source-publishing.md)
