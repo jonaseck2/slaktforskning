@@ -14,6 +14,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { round6, avgCoordinates } from '../src/gazetteer-build/geo';
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
 const GEONAMES_FILE = '/tmp/geonames_us/US.txt';
@@ -30,25 +32,12 @@ interface GeoNameRow {
   population: number;
 }
 
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
-
 // Maps: admin1 code → state name (populated from ADM1 rows)
 const ADMIN1_NAMES: Record<string, string> = {};
 // Maps: "admin1.admin2" → county name (populated from ADM2 rows)
 const ADMIN2_NAMES: Record<string, string> = {};
 // Maps: "admin1.admin2" → { lat, lon } from ADM2 rows
 const ADMIN2_COORDS: Record<string, { lat: number; lon: number }> = {};
-
-function round6(n: number): number {
-  return Math.round(n * 1000000) / 1000000;
-}
 
 function parseGeoNamesFile(filePath: string): GeoNameRow[] {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -168,28 +157,28 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
 
       // Use ADM2 coordinates if available, otherwise average
       const coords = ADMIN2_COORDS[countyKey];
-      const countyLat = coords ? coords.lat : placeNodes.reduce((s, p) => s + p.lat, 0) / placeNodes.length;
-      const countyLon = coords ? coords.lon : placeNodes.reduce((s, p) => s + p.lon, 0) / placeNodes.length;
+      const countyCoords = coords
+        ? { lat: round6(coords.lat), lon: round6(coords.lon) }
+        : avgCoordinates(placeNodes);
 
       countyNodes.push({
         name: countyName,
         type: 'county',
-        lat: round6(countyLat),
-        lon: round6(countyLon),
+        lat: countyCoords.lat,
+        lon: countyCoords.lon,
         children: placeNodes,
       });
     }
 
     if (countyNodes.length === 0) continue;
 
-    const avgLat = countyNodes.reduce((s, n) => s + n.lat, 0) / countyNodes.length;
-    const avgLon = countyNodes.reduce((s, n) => s + n.lon, 0) / countyNodes.length;
+    const stateCoords = avgCoordinates(countyNodes);
 
     stateNodes.push({
       name: stateName,
       type: 'state',
-      lat: round6(avgLat),
-      lon: round6(avgLon),
+      lat: stateCoords.lat,
+      lon: stateCoords.lon,
       children: countyNodes,
     });
   }

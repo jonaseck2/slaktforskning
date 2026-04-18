@@ -27,6 +27,8 @@
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode, GazetteerGeometry } from '../src/api/place-gazetteers/types';
+import { computeCentroid, round4 } from '../src/gazetteer-build/geo';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -47,21 +49,6 @@ interface GeoJSONFeature {
 interface GeoJSONCollection {
   type: 'FeatureCollection';
   features: GeoJSONFeature[];
-}
-
-interface GazetteerGeometry {
-  type: 'Polygon' | 'MultiPolygon';
-  coordinates: number[][][] | number[][][][];
-}
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  lat: number;
-  lon: number;
-  aliases?: string[];
-  geometry?: GazetteerGeometry;
-  children?: GazetteerNode[];
 }
 
 interface Gazetteer {
@@ -129,31 +116,13 @@ console.log(`  ${geojson.features.length} features loaded`);
 
 // ── Step 4: Build gazetteer nodes ────────────────────────────────────
 
-function computeCentroid(geometry: GazetteerGeometry): [number, number] {
-  let sumLat = 0, sumLon = 0, count = 0;
-  const coords = geometry.type === 'Polygon'
-    ? [geometry.coordinates as number[][][]]
-    : geometry.coordinates as number[][][][];
-
-  for (const polygon of coords) {
-    const ring = polygon[0]; // exterior ring only
-    for (const [lon, lat] of ring) {
-      sumLon += lon;
-      sumLat += lat;
-      count++;
-    }
-  }
-  return [sumLat / count, sumLon / count];
-}
-
 const nodes: GazetteerNode[] = [];
 
 for (const f of geojson.features) {
   const props = f.properties;
-  const geometry: GazetteerGeometry = {
-    type: f.geometry.type,
-    coordinates: f.geometry.coordinates,
-  };
+  const geometry: GazetteerGeometry = f.geometry.type === 'Polygon'
+    ? { type: 'Polygon', coordinates: f.geometry.coordinates as number[][][] }
+    : { type: 'MultiPolygon', coordinates: f.geometry.coordinates as number[][][][] };
   const [lat, lon] = computeCentroid(geometry);
 
   // Build aliases from ISO codes, filtering out -99 (no code assigned)
@@ -164,8 +133,8 @@ for (const f of geojson.features) {
   const node: GazetteerNode = {
     name: props.NAME,
     type: 'country',
-    lat: Math.round(lat * 10000) / 10000,
-    lon: Math.round(lon * 10000) / 10000,
+    lat: round4(lat),
+    lon: round4(lon),
     geometry,
   };
   if (aliases.length > 0) node.aliases = aliases;

@@ -42,6 +42,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { round6, avgCoordinates } from '../src/gazetteer-build/geo';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -68,15 +70,6 @@ interface EnrichedSogn {
   regionNavn: string;
 }
 
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
-
 // ── Constants ────────────────────────────────────────────────────────
 
 const SOGNE_URL = 'https://api.dataforsyningen.dk/sogne';
@@ -85,12 +78,6 @@ const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'd
 
 /** Max concurrent reverse-geocode requests */
 const CONCURRENCY = 30;
-
-// ── Helpers ──────────────────────────────────────────────────────────
-
-function round6(n: number): number {
-  return Math.round(n * 1_000_000) / 1_000_000;
-}
 
 /** Run async tasks with bounded concurrency */
 async function mapConcurrent<T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -221,14 +208,13 @@ function buildTree(sogne: EnrichedSogn[]): GazetteerNode {
     for (const [, kommuneData] of [...regionData.kommuner.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name, 'da'))) {
       kommuneData.parishes.sort((a, b) => a.name.localeCompare(b.name, 'da'));
 
-      const kommuneLat = round6(kommuneData.parishes.reduce((s, n) => s + n.lat, 0) / kommuneData.parishes.length);
-      const kommuneLon = round6(kommuneData.parishes.reduce((s, n) => s + n.lon, 0) / kommuneData.parishes.length);
+      const kommuneCoords = avgCoordinates(kommuneData.parishes);
 
       const kommuneNode: GazetteerNode = {
         name: kommuneData.name,
         type: 'municipality',
-        lat: kommuneLat,
-        lon: kommuneLon,
+        lat: kommuneCoords.lat,
+        lon: kommuneCoords.lon,
         children: kommuneData.parishes,
       };
 
@@ -240,14 +226,13 @@ function buildTree(sogne: EnrichedSogn[]): GazetteerNode {
       kommuneNodes.push(kommuneNode);
     }
 
-    const regionLat = round6(kommuneNodes.reduce((s, n) => s + n.lat, 0) / kommuneNodes.length);
-    const regionLon = round6(kommuneNodes.reduce((s, n) => s + n.lon, 0) / kommuneNodes.length);
+    const regionCoords = avgCoordinates(kommuneNodes);
 
     const regionNode: GazetteerNode = {
       name: regionData.name,
       type: 'region',
-      lat: regionLat,
-      lon: regionLon,
+      lat: regionCoords.lat,
+      lon: regionCoords.lon,
       children: kommuneNodes,
     };
 

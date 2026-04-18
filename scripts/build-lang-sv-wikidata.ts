@@ -16,12 +16,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { sparqlFetch as sparqlFetchRaw, sleep } from '../src/gazetteer-build/sparql';
 
 // ── Constants ────────────────────────────────────────────────────────────
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
-const SPARQL_ENDPOINT = 'https://query.wikidata.org/sparql';
-const USER_AGENT = 'SlaktforskningGazetteerBuilder/1.0 (https://github.com/jonasahnstedt/slaktforskning)';
 
 // Standard Wikidata SPARQL prefix declarations (rdfs: is not auto-imported)
 const SPARQL_PREFIXES = `
@@ -31,15 +31,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 `;
 
 // ── Types ────────────────────────────────────────────────────────────────
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
 
 interface Gazetteer {
   id: string;
@@ -58,34 +49,12 @@ type TranslationMap = Record<string, string[]>;
 
 async function sparqlFetch(query: string): Promise<WikidataTranslationRow[]> {
   const fullQuery = SPARQL_PREFIXES + query;
-  const url = `${SPARQL_ENDPOINT}?format=json&query=${encodeURIComponent(fullQuery)}`;
-
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/sparql-results+json',
-      'User-Agent': USER_AGENT,
-    },
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`SPARQL query failed: ${response.status} ${response.statusText}\n${body.slice(0, 500)}`);
-  }
-
-  const json = await response.json() as {
-    results: {
-      bindings: Array<Record<string, { value: string }>>;
-    };
-  };
-
-  return json.results.bindings.map(b => ({
+  type Binding = Record<string, { value: string }>;
+  const bindings = await sparqlFetchRaw<Binding>(fullQuery);
+  return bindings.map(b => ({
     nativeLabel: b.nativeLabel?.value ?? '',
     svLabel: b.svLabel?.value ?? '',
   }));
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // ── Gazetteer tree walking ───────────────────────────────────────────────

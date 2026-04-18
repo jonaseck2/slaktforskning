@@ -40,6 +40,8 @@
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode, GazetteerGeometry } from '../src/api/place-gazetteers/types';
+import { computeCentroid, round4 } from '../src/gazetteer-build/geo';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -59,21 +61,6 @@ interface GeoJSONFeature {
 interface GeoJSONCollection {
   type: 'FeatureCollection';
   features: GeoJSONFeature[];
-}
-
-interface GazetteerGeometry {
-  type: 'Polygon' | 'MultiPolygon';
-  coordinates: number[][][] | number[][][][];
-}
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  lat: number;
-  lon: number;
-  geometry?: GazetteerGeometry;
-  children?: GazetteerNode[];
-  aliases?: string[];
 }
 
 interface Gazetteer {
@@ -183,23 +170,6 @@ console.log(`  ${byDivision.size} unique census divisions`);
 
 // ── Step 4: Build gazetteer nodes ────────────────────────────────────
 
-function computeCentroid(geometry: GazetteerGeometry): [number, number] {
-  let sumLat = 0, sumLon = 0, count = 0;
-  const coords = geometry.type === 'Polygon'
-    ? [geometry.coordinates as number[][][]]
-    : geometry.coordinates as number[][][][];
-
-  for (const polygon of coords) {
-    const ring = polygon[0]; // exterior ring only
-    for (const [lon, lat] of ring) {
-      sumLon += lon;
-      sumLat += lat;
-      count++;
-    }
-  }
-  return [sumLat / count, sumLon / count];
-}
-
 function mergeGeometries(features: GeoJSONFeature[]): GazetteerGeometry {
   if (features.length === 1) {
     const g = features[0].geometry;
@@ -230,8 +200,8 @@ for (const [_code, features] of byDivision) {
   nodes.push({
     name: props.CDNAME,
     type: 'division',
-    lat: Math.round(lat * 10000) / 10000,
-    lon: Math.round(lon * 10000) / 10000,
+    lat: round4(lat),
+    lon: round4(lon),
     geometry,
   });
 }

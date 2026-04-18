@@ -21,6 +21,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
 
@@ -32,15 +33,6 @@ const WORLD_COUNTRIES_FILE = path.join(DATA_DIR, 'world-countries.json');
 const WORLD_ADMIN1_FILE = path.join(DATA_DIR, 'world-admin1.json');
 
 // ── Types ────────────────────────────────────────────────────────────
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
 
 interface Gazetteer {
   id: string;

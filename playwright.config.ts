@@ -4,8 +4,8 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 30000,
   retries: 0,
-  // 6 workers = all projects run simultaneously on a 12-core machine.
-  workers: 6,
+  // 10 workers = all projects run simultaneously on a 12-core machine.
+  workers: 10,
   use: {
     trace: 'on-first-retry',
   },
@@ -48,6 +48,34 @@ export default defineConfig({
       // ARIA accessibility verification
       name: 'gui-a11y',
       testMatch: 'gui-a11y.test.ts',
+      timeout: 120000,
+      retries: 1,
+    },
+    {
+      // Quality checks: run, filter, ignore/restore
+      name: 'gui-quality',
+      testMatch: 'gui-quality.test.ts',
+      timeout: 120000,
+      retries: 1,
+    },
+    {
+      // Media library: gallery/list toggle, search, inline edit, delete
+      name: 'gui-media',
+      testMatch: 'gui-media.test.ts',
+      timeout: 120000,
+      retries: 1,
+    },
+    {
+      // Settings: database tab, tree subject, tabs navigation, import/export
+      name: 'gui-settings',
+      testMatch: 'gui-settings.test.ts',
+      timeout: 120000,
+      retries: 1,
+    },
+    {
+      // Research Tasks: CRUD, status cycling, inline edit, filter chips
+      name: 'gui-research-tasks',
+      testMatch: 'gui-research-tasks.test.ts',
       timeout: 120000,
       retries: 1,
     },

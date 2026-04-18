@@ -55,6 +55,10 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { avgCoordinates } from '../src/gazetteer-build/geo';
+import { parseWktPoint, generateAliases } from '../src/gazetteer-build/wikidata';
+import { sparqlFetch as sparqlFetchRaw } from '../src/gazetteer-build/sparql';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -67,21 +71,9 @@ interface WikidataRow {
   altLabels: string;   // pipe-separated
 }
 
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
-
 // ── Constants ────────────────────────────────────────────────────────
 
-const SPARQL_ENDPOINT = 'https://query.wikidata.org/sparql';
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
-
-const USER_AGENT = 'SlaktforskningGazetteerBuilder/1.0 (https://github.com/jonasahnstedt/slaktforskning)';
 
 // Suffixes to strip when generating aliases
 const PARISH_SUFFIXES = /\s+(sogn|pastorat|kirkedistrikt)$/i;
@@ -117,27 +109,9 @@ const QUERY = `
 // ── Fetch helper ─────────────────────────────────────────────────────
 
 async function sparqlFetch(query: string): Promise<WikidataRow[]> {
-  const url = `${SPARQL_ENDPOINT}?format=json&query=${encodeURIComponent(query)}`;
-
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/sparql-results+json',
-      'User-Agent': USER_AGENT,
-    },
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`SPARQL query failed: ${response.status} ${response.statusText}\n${body}`);
-  }
-
-  const json = await response.json() as {
-    results: {
-      bindings: Array<Record<string, { value: string }>>;
-    };
-  };
-
-  return json.results.bindings.map(b => ({
+  type Binding = Record<string, { value: string }>;
+  const bindings = await sparqlFetchRaw<Binding>(query);
+  return bindings.map(b => ({
     item: b.item?.value ?? '',
     itemLabel: b.itemLabel?.value ?? '',
     coord: b.coord?.value ?? '',
@@ -145,59 +119,6 @@ async function sparqlFetch(query: string): Promise<WikidataRow[]> {
     regionLabel: b.regionLabel?.value ?? '',
     altLabels: b.altLabels?.value ?? '',
   }));
-}
-
-// ── Coordinate parsing ───────────────────────────────────────────────
-
-/** Parse WKT "Point(lon lat)" → { lat, lon } */
-function parseWktPoint(wkt: string): { lat: number; lon: number } | null {
-  const match = wkt.match(/Point\(([^ ]+)\s+([^ ]+)\)/i);
-  if (!match) return null;
-  const lon = parseFloat(match[1]);
-  const lat = parseFloat(match[2]);
-  if (isNaN(lat) || isNaN(lon)) return null;
-  return { lat: round6(lat), lon: round6(lon) };
-}
-
-function round6(n: number): number {
-  return Math.round(n * 1_000_000) / 1_000_000;
-}
-
-// ── Alias generation ─────────────────────────────────────────────────
-
-/**
- * Generate aliases for a parish. Combines:
- * 1. Wikidata altLabels (historical names, abbreviations, variants)
- * 2. Suffix-stripped form of the primary name
- */
-function generateAliases(name: string, altLabels: string): string[] {
-  const aliases = new Set<string>();
-
-  // Add Wikidata alt labels
-  if (altLabels) {
-    for (const label of altLabels.split('|')) {
-      const trimmed = label.trim();
-      if (trimmed && trimmed !== name) {
-        aliases.add(trimmed);
-      }
-    }
-  }
-
-  // Strip parish suffixes from name to generate bare alias
-  const bare = name.replace(PARISH_SUFFIXES, '').trim();
-  if (bare && bare !== name) {
-    aliases.add(bare);
-  }
-
-  // Also strip suffixes from alt labels
-  for (const alias of [...aliases]) {
-    const bareAlias = alias.replace(PARISH_SUFFIXES, '').trim();
-    if (bareAlias && bareAlias !== alias && bareAlias !== name) {
-      aliases.add(bareAlias);
-    }
-  }
-
-  return [...aliases].sort();
 }
 
 // ── Tree building ────────────────────────────────────────────────────
@@ -228,7 +149,7 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       kommuneMap.set(name, {
         lat: coord.lat,
         lon: coord.lon,
-        aliases: generateAliases(name, row.altLabels),
+        aliases: generateAliases(name, row.altLabels, PARISH_SUFFIXES),
       });
     }
   }
@@ -254,8 +175,7 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       }
 
       // Kommune centroid = mean of parish coordinates
-      const kommuneLat = round6(parishNodes.reduce((s, n) => s + n.lat, 0) / parishNodes.length);
-      const kommuneLon = round6(parishNodes.reduce((s, n) => s + n.lon, 0) / parishNodes.length);
+      const kommuneCoords = avgCoordinates(parishNodes);
 
       // Kommune alias: strip " Kommune" suffix
       const kommuneAliases: string[] = [];
@@ -265,8 +185,8 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       const kommuneNode: GazetteerNode = {
         name: kommuneName,
         type: 'municipality',
-        lat: kommuneLat,
-        lon: kommuneLon,
+        lat: kommuneCoords.lat,
+        lon: kommuneCoords.lon,
         children: parishNodes,
       };
       if (kommuneAliases.length > 0) kommuneNode.aliases = kommuneAliases;
@@ -274,8 +194,7 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
     }
 
     // Region centroid = mean of kommune centroids
-    const regionLat = round6(kommuneNodes.reduce((s, n) => s + n.lat, 0) / kommuneNodes.length);
-    const regionLon = round6(kommuneNodes.reduce((s, n) => s + n.lon, 0) / kommuneNodes.length);
+    const regionCoords = avgCoordinates(kommuneNodes);
 
     // Region alias: strip "Region " prefix
     const regionAliases: string[] = [];
@@ -285,8 +204,8 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
     const regionNode: GazetteerNode = {
       name: regionName,
       type: 'region',
-      lat: regionLat,
-      lon: regionLon,
+      lat: regionCoords.lat,
+      lon: regionCoords.lon,
       children: kommuneNodes,
     };
     if (regionAliases.length > 0) regionNode.aliases = regionAliases;
