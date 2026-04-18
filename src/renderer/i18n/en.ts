@@ -403,6 +403,8 @@ export default {
     latitude: 'Latitude',
     longitude: 'Longitude',
     childPlaces: 'Child places',
+    listView: 'List',
+    mapView: 'Map',
     detailsTitle: 'Place Details',
     citeSources: 'Cite',
     address: 'Address',

@@ -1,46 +1,57 @@
 <template>
-  <div>
+  <div :class="{ 'map-active': viewMode === 'map' }">
     <div class="header">
       <h2>{{ $t('places.title') }}</h2>
-      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('places.addTitle') }}</AppButton>
+      <div class="header-right">
+        <div class="view-toggle">
+          <AppButton :variant="viewMode === 'list' ? 'primary' : 'secondary'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
+          <AppButton :variant="viewMode === 'map' ? 'primary' : 'secondary'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
+        </div>
+        <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('places.addTitle') }}</AppButton>
+      </div>
     </div>
-    <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
-    <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
-    <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('places.none')" />
-    <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('places.noMatchingFilter')" />
-    <table v-else class="data-table">
-      <thead>
-        <tr>
-          <th>{{ $t('places.name') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="place in filteredPlaces"
-          :key="place.id"
-          v-narrate="() => narratePlaceRow({
-            name: place.name || '',
-            place_type: place.place_type || '',
-            path: '',
-          }, t)"
-          class="clickable-row"
-          tabindex="0"
-          role="button"
-          :aria-label="$t('a11y.editItem', { item: place.name })"
-          @click="$router.push('/places/' + place.id)"
-          @keydown.enter="$router.push('/places/' + place.id)"
-          @keydown.space.prevent="$router.push('/places/' + place.id)"
-          @keydown.down.prevent="focusNextRow($event)"
-          @keydown.up.prevent="focusPrevRow($event)"
-        >
-          <td>{{ place.name }}</td>
-          <td class="actions-cell">
-            <AppButton variant="ghost" size="sm" @click.stop="deletePlace(place.id)">✕</AppButton>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+    <template v-if="viewMode === 'list'">
+      <p v-if="places.length > 0" class="count-label">{{ places.length }} {{ $t('places.title').toLowerCase() }}</p>
+      <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
+      <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('places.none')" />
+      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('places.noMatchingFilter')" />
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>{{ $t('places.name') }}</th>
+            <th class="actions-cell">{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="place in filteredPlaces"
+            :key="place.id"
+            v-narrate="() => narratePlaceRow({
+              name: place.name || '',
+              place_type: place.place_type || '',
+              path: '',
+            }, t)"
+            class="clickable-row"
+            tabindex="0"
+            role="button"
+            :aria-label="$t('a11y.editItem', { item: place.name })"
+            @click="$router.push('/places/' + place.id)"
+            @keydown.enter="$router.push('/places/' + place.id)"
+            @keydown.space.prevent="$router.push('/places/' + place.id)"
+            @keydown.down.prevent="focusNextRow($event)"
+            @keydown.up.prevent="focusPrevRow($event)"
+          >
+            <td>{{ place.name }}</td>
+            <td class="actions-cell">
+              <AppButton variant="ghost" size="sm" @click.stop="deletePlace(place.id)">✕</AppButton>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+
+    <MapView v-else />
 
     <!-- Add modal -->
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-place">
@@ -69,13 +80,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onActivated } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, computed, onMounted, onActivated, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../components/BaseModal.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
+import MapView from './MapView.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -86,7 +98,12 @@ interface PlaceRow { id: string; name: string; place_type: string | null; }
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const places = ref<PlaceRow[]>([]);
+
+const LS_KEY = 'slaktforskning-places-view';
+const viewMode = ref<'list' | 'map'>((localStorage.getItem(LS_KEY) as 'list' | 'map') ?? 'list');
+watch(viewMode, (v) => localStorage.setItem(LS_KEY, v));
 const activeTypeFilter = ref<string>('all');
 
 const typeCounts = computed(() => {
@@ -147,6 +164,7 @@ async function deletePlace(id: string) {
 }
 
 onMounted(async () => {
+  if (route.query.view === 'map') viewMode.value = 'map';
   await load();
   loadedVersion = dataVersionStore.version;
 });
@@ -162,4 +180,8 @@ onActivated(async () => {
 <style scoped>
 /* Unique to PlacesView */
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.view-toggle { display: flex; gap: 2px; }
+.map-active { display: flex; flex-direction: column; height: 100%; }
+.map-active .header { flex-shrink: 0; }
 </style>

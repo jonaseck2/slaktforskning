@@ -403,6 +403,8 @@ export default {
     latitude: 'Latitud',
     longitude: 'Longitud',
     childPlaces: 'Underliggande orter',
+    listView: 'Lista',
+    mapView: 'Karta',
     detailsTitle: 'Platsuppgifter',
     citeSources: 'Citera',
     address: 'Adress',
