@@ -28,6 +28,11 @@ vi.mock('../../src/renderer/components/PersonPanel.vue', () => ({
   default: { template: '<div class="stub-person-panel" />', props: ['personId'], emits: ['focus', 'select'] },
 }));
 
+/** Find a FilterChips chip button by its text label */
+function findChip(wrapper: ReturnType<typeof mount>, label: string) {
+  return wrapper.findAll('.chip-btn').find(b => b.text().trim() === label);
+}
+
 describe('VisualizationView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,54 +55,49 @@ describe('VisualizationView', () => {
   it('switches to hourglass tab when clicked', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
-    const tabs = wrapper.findAll('.tab-btn');
-    const hourglassTab = tabs.find(t => t.attributes('data-testid') === 'tab-hourglass');
-    expect(hourglassTab).toBeDefined();
-    await hourglassTab!.trigger('click');
+    const chip = findChip(wrapper, 'Hourglass');
+    expect(chip).toBeDefined();
+    await chip!.trigger('click');
     expect(wrapper.find('.stub-hourglass').exists()).toBe(true);
   });
 
   it('switches to timeline tab when clicked', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
-    const timelineTab = wrapper.find('[data-testid="tab-timeline"]');
-    await timelineTab.trigger('click');
+    const chip = findChip(wrapper, 'Timeline');
+    expect(chip).toBeDefined();
+    await chip!.trigger('click');
     expect(wrapper.find('.stub-timeline').exists()).toBe(true);
   });
 
-  // ── ARIA accessibility ──────────────────────────────────────────────────────
+  // ── Tab chip accessibility ──────────────────────────────────────────────────
 
-  it('tab bar has role="tablist"', async () => {
+  it('renders 5 tab chips in the FilterChips bar', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
-    expect(wrapper.find('[role="tablist"]').exists()).toBe(true);
+    const chips = wrapper.findAll('.chip-btn');
+    expect(chips).toHaveLength(5);
   });
 
-  it('all tab buttons have role="tab"', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
-    await flushPromises();
-    const tabs = wrapper.findAll('[role="tab"]');
-    expect(tabs).toHaveLength(5);
-  });
-
-  it('active tab has aria-selected="true", others "false"', async () => {
+  it('active tab chip has the active class, others do not', async () => {
     localStorage.clear(); // default tab is hourglass
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
 
-    const hourglass = wrapper.find('[data-testid="tab-hourglass"]');
-    const pedigree = wrapper.find('[data-testid="tab-pedigree"]');
-    expect(hourglass.attributes('aria-selected')).toBe('true');
-    expect(pedigree.attributes('aria-selected')).toBe('false');
+    const hourglass = findChip(wrapper, 'Hourglass');
+    const pedigree = findChip(wrapper, 'Pedigree');
+    expect(hourglass?.classes()).toContain('chip-btn--active');
+    expect(pedigree?.classes()).not.toContain('chip-btn--active');
   });
 
-  it('aria-selected updates when tab changes', async () => {
+  it('active class updates when tab changes', async () => {
     localStorage.clear();
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
 
-    await wrapper.find('[data-testid="tab-pedigree"]').trigger('click');
-    expect(wrapper.find('[data-testid="tab-pedigree"]').attributes('aria-selected')).toBe('true');
-    expect(wrapper.find('[data-testid="tab-hourglass"]').attributes('aria-selected')).toBe('false');
+    const pedigree = findChip(wrapper, 'Pedigree');
+    await pedigree!.trigger('click');
+    expect(findChip(wrapper, 'Pedigree')?.classes()).toContain('chip-btn--active');
+    expect(findChip(wrapper, 'Hourglass')?.classes()).not.toContain('chip-btn--active');
   });
 });

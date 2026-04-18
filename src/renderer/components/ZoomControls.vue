@@ -31,11 +31,11 @@ defineEmits<{
   display: flex;
   align-items: center;
   gap: 2px;
-  background: rgba(255, 255, 255, 0.93);
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
   padding: 3px 5px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
 }
 .zoom-btn {
@@ -44,28 +44,28 @@ defineEmits<{
   padding: 2px 7px;
   cursor: pointer;
   font-size: var(--font-base);
-  border-radius: 3px;
-  color: #555;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   line-height: 1.4;
 }
-.zoom-btn:hover:not(:disabled) { background: var(--color-bg-muted); }
+.zoom-btn:hover:not(:disabled) { background: var(--surface-hover); }
 .zoom-btn:disabled { opacity: 0.4; cursor: default; }
 .zoom-level {
   padding: 0 4px;
   font-size: var(--font-xs);
-  color: #666;
+  color: var(--text-muted);
   min-width: 38px;
   text-align: center;
 }
 .zoom-sep {
-  color: #ccc;
+  color: var(--surface-border);
   padding: 0 3px;
 }
 
 /* Styles for slotted content (generation pickers, toggles) */
 :slotted(.zoom-extra-label) {
   font-size: var(--font-xs);
-  color: #888;
+  color: var(--text-muted);
   padding: 0 4px 0 2px;
 }
 :slotted(.zoom-extra-btn) {
@@ -74,18 +74,18 @@ defineEmits<{
   padding: 2px 7px;
   cursor: pointer;
   font-size: var(--font-base);
-  border-radius: 3px;
-  color: #555;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   line-height: 1.4;
 }
-:slotted(.zoom-extra-btn:hover:not(:disabled)) { background: var(--color-bg-muted); }
+:slotted(.zoom-extra-btn:hover:not(:disabled)) { background: var(--surface-hover); }
 :slotted(.zoom-extra-btn:disabled) { opacity: 0.4; cursor: default; }
-:slotted(.zoom-extra-btn.active) { background: #e0eaf5; color: #2060a0; }
-:slotted(.zoom-extra-sep) { color: #ccc; padding: 0 3px; }
+:slotted(.zoom-extra-btn.active) { background: var(--surface-hover); color: var(--accent); }
+:slotted(.zoom-extra-sep) { color: var(--surface-border); padding: 0 3px; }
 :slotted(.zoom-extra-value) {
   padding: 0 4px;
   font-size: var(--font-xs);
-  color: #666;
+  color: var(--text-muted);
   min-width: 24px;
   text-align: center;
 }
