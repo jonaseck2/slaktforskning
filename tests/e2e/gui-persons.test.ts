@@ -19,6 +19,8 @@ test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'persons');
   await app.settle(150);
   await app.setLocale('en');
+  // Force VisualizationView (the `/` redirect target) into list mode so the embedded PersonsView is visible.
+  await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
 });
 
 test.afterAll(async () => {
@@ -39,7 +41,10 @@ test.describe('Persons CRUD', () => {
 
   test('create a person via the Add Person modal', async () => {
     await app.navigate('/');
-    await app.click('.app-btn--soft');
+    // Multiple .app-btn--soft exist (view toggles + Add Person); click the one labelled with "Person"
+    await app.executeJs(`
+      Array.from(document.querySelectorAll('.app-btn--soft')).find(b => b.textContent.includes('Person'))?.click()
+    `);
     await app.settle();
 
     await app.executeJs(`

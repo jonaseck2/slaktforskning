@@ -190,6 +190,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.104.1 | Docs: comprehensive test skill rewrite with 10 E2E pitfall patterns, quality test fix | — |
 | v0.105.0 | Cross-platform build scripts + DMG maker for macOS | — |
 | v0.106.0 | Open source publishing: governance files, plans, spec | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
+| v0.107.0 | Open source infra (templates, CI/CD), link rules expansion (de/da/no), circle+fan charts, name display | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
+| v0.108.0 | Per-theme dark mode with tinted surfaces (Forest/Nordic/Twilight) | [plan](plans/2026-04-18-dark-mode-theme-refinement.md) |
 | v0.107.0 | Link Rules Expansion: de/da/no rule sets, sv/en additions, LinkedText db config fix, locale toggles | [archive](plans/archive/2026-04-18-link-rules-expansion.md) |
 ---
 

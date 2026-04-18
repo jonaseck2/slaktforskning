@@ -115,7 +115,11 @@ const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 8
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-timeline');
 
-const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#bbb' };
+const SEX_COLORS: Record<string, string> = {
+  M: getComputedStyle(document.documentElement).getPropertyValue('--sex-m-bg').trim() || '#7eb8f7',
+  F: getComputedStyle(document.documentElement).getPropertyValue('--sex-f-bg').trim() || '#f7a5c0',
+  U: getComputedStyle(document.documentElement).getPropertyValue('--sex-u-bg').trim() || '#bbb',
+};
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#bbb'; }
 
 async function load() {

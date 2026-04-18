@@ -33,14 +33,14 @@ test.setTimeout(30_000);
 
 test.describe('Visualization empty state', () => {
   test('shows empty state when no persons exist', async () => {
-    // Clear the last-used focal person so the view doesn't redirect to a stored person ID.
-    await app.executeJs(`localStorage.removeItem('viz-focal-person')`);
+    // Ensure tree mode so the viz empty state renders (list mode embeds PersonsView).
+    await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree'); localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
     await app.waitForText('Create a person to start visualizing');
   });
 
   test('empty state has data-testid attribute for reliable selection', async () => {
-    await app.executeJs(`localStorage.removeItem('viz-focal-person')`);
+    await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree'); localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
     const dom = await app.getDom();
     expect(dom).toContain('viz-empty');
@@ -184,14 +184,17 @@ test.describe('Visualization with persons', () => {
   });
 
   test('back button navigates away from visualization', async () => {
+    // Ensure tree mode so the viz tab bar (containing the back button) renders.
+    await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree')`);
     // Navigate from / so router.back() returns to /
     await app.navigate('/');
     await app.navigate(`/visualisering/${focalPerson.id}`);
     await app.waitForText('Maja');
+    await app.settle(200);
 
-    // Back button is AppButton variant="ghost" size="sm" with ← text
+    // Back button is inside .viz-tab-bar with ← text
     await app.executeJs(`
-      Array.from(document.querySelectorAll('.app-btn--ghost')).find(b => b.textContent.trim() === '←')?.click()
+      Array.from(document.querySelectorAll('.viz-tab-bar .app-btn--ghost')).find(b => b.textContent.trim() === '←')?.click()
     `);
     await app.settle();
 

@@ -550,22 +550,9 @@
 
 /* ── 14. Dark mode (screen only) ──────────────────────── */
 @media screen {
+  /* ── Dark mode: shared base (semantic + legacy) ───── */
   html.dark {
-    /* Override tokens for dark mode — aliases in :root cascade automatically */
-    --surface-bg:            #1f2937;
-    --surface:               #111827;
-    --surface-hover:         #1e293b;
-    --surface-border:        #374151;
-    --surface-border-subtle: #1f2937;
-
-    --text-primary:   #e2e8f0;
-    --text-secondary: #9ca3af;
-    --text-muted:     #6b7280;
-
-    --accent:       #374151;
-    --accent-hover: #4b5563;
-    --accent-text:  #93c5fd;
-
+    /* Semantic colors — theme-invariant in dark mode */
     --error-bg:   #450a0a;
     --error-text: #fca5a5;
     --warning-bg:   #78350f;
@@ -582,12 +569,111 @@
     --sex-u-bg:   #374151;
     --sex-u-text: #9ca3af;
 
-    /* Legacy overrides — values that differ from token aliases */
+    /* Legacy overrides */
     --color-text-subtle:    #9ca3af;
     --color-danger-hover:   #7f1d1d;
     --color-link:           #60a5fa;
     --color-event-badge-bg:   #1e3a8a;
     --color-event-badge-text: #93c5fd;
+
+    /* Chart */
+    --chart-box-bg:       var(--surface-bg);
+    --chart-box-deceased: var(--surface);
+    --chart-box-focal:    var(--accent);
+    --chart-box-stroke:   var(--surface-border);
+    --chart-focal-stroke: var(--accent-hover);
+    --chart-text:         var(--text-primary);
+    --chart-text-sub:     var(--text-secondary);
+    --chart-text-focal:   var(--accent-text);
+    --chart-text-focal-sub: rgba(255,255,255,0.65);
+    --chart-line:         var(--surface-border);
+    --chart-placeholder-stroke: var(--text-muted);
+    --chart-placeholder-text:   var(--text-muted);
+  }
+
+  /* ── Dark mode: Forest theme ───── */
+  html.dark.theme-forest,
+  html.dark:not(.theme-nordic):not(.theme-twilight) {
+    --surface-bg:            #1a2a1e;
+    --surface:               #0f1a12;
+    --surface-hover:         #243a28;
+    --surface-border:        #2e4a2e;
+    --surface-border-subtle: #1a2a1e;
+
+    --text-primary:   #d0e8d0;
+    --text-secondary: #8fb88f;
+    --text-muted:     #5a7a5a;
+
+    --accent:       #3a7a34;
+    --accent-hover: #4a9a44;
+    --accent-text:  #d0f0cc;
+
+    --sidebar-bg:          #0f1a0f;
+    --sidebar-text:        #7aaa7a;
+    --sidebar-text-muted:  #4a6a4a;
+    --sidebar-active-bg:   #1a3a1a;
+    --sidebar-active-text: #b0d8b0;
+    --sidebar-border:      #1a3a1a;
+
+    --shadow-sm: 0 1px 2px rgba(0, 40, 0, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 40, 0, 0.4);
+    --shadow-lg: 0 4px 16px rgba(0, 40, 0, 0.5);
+  }
+
+  /* ── Dark mode: Nordic theme ───── */
+  html.dark.theme-nordic {
+    --surface-bg:            #1a2030;
+    --surface:               #0f1520;
+    --surface-hover:         #243048;
+    --surface-border:        #2a3a5a;
+    --surface-border-subtle: #1a2030;
+
+    --text-primary:   #d0daf0;
+    --text-secondary: #7a9abe;
+    --text-muted:     #5a7a9a;
+
+    --accent:       #3b6ef0;
+    --accent-hover: #5080f8;
+    --accent-text:  #ffffff;
+
+    --sidebar-bg:          #0a1020;
+    --sidebar-text:        #6a8aae;
+    --sidebar-text-muted:  #4a6a8a;
+    --sidebar-active-bg:   #142040;
+    --sidebar-active-text: #90b8e0;
+    --sidebar-border:      #142040;
+
+    --shadow-sm: 0 1px 2px rgba(0, 20, 60, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 20, 60, 0.4);
+    --shadow-lg: 0 4px 16px rgba(0, 20, 60, 0.5);
+  }
+
+  /* ── Dark mode: Twilight theme ───── */
+  html.dark.theme-twilight {
+    --surface-bg:            #1e1a28;
+    --surface:               #12101e;
+    --surface-hover:         #2a2440;
+    --surface-border:        #362e52;
+    --surface-border-subtle: #1e1a28;
+
+    --text-primary:   #d8d0f0;
+    --text-secondary: #9a8cc0;
+    --text-muted:     #7a70a0;
+
+    --accent:       #7d6ef0;
+    --accent-hover: #9080f8;
+    --accent-text:  #ffffff;
+
+    --sidebar-bg:          #141220;
+    --sidebar-text:        #8a7cb0;
+    --sidebar-text-muted:  #6a6090;
+    --sidebar-active-bg:   #221e38;
+    --sidebar-active-text: #b0a8d0;
+    --sidebar-border:      #221e38;
+
+    --shadow-sm: 0 1px 2px rgba(30, 0, 60, 0.3);
+    --shadow-md: 0 2px 8px rgba(30, 0, 60, 0.4);
+    --shadow-lg: 0 4px 16px rgba(30, 0, 60, 0.5);
   }
 
   /* Element-specific dark overrides for properties not covered by tokens.
@@ -630,8 +716,8 @@
   html.dark .status-chip { opacity: 0.85; }
 
   /* Headings — slightly brighter than text-primary */
-  html.dark h2, html.dark h3, html.dark h4 { color: #f3f4f6; }
-  html.dark .section-header h4 { color: #f3f4f6; }
+  html.dark h2, html.dark h3, html.dark h4 { color: var(--text-primary); }
+  html.dark .section-header h4 { color: var(--text-primary); }
 
   /* Detail views */
   html.dark .detail-section { border-color: var(--surface-bg); }
@@ -640,7 +726,7 @@
   html.dark .field-grid textarea { background: var(--surface-bg); color: var(--text-primary); border-color: var(--surface-border); }
 
   /* Banners */
-  html.dark .issues-banner { background: #1e2a3a; border-color: var(--surface-border); color: #fbbf24; }
+  html.dark .issues-banner { background: var(--surface-bg); border-color: var(--surface-border); color: #fbbf24; }
   html.dark .banner-error { background: #2d1a1a; border-color: var(--color-danger-hover); }
 
   /* Group chips */

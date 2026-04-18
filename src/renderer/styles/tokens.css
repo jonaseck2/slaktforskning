@@ -137,3 +137,19 @@
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
+
+/* ─── Chart colors ──────────────────────────────────────────────────────── */
+:root {
+  --chart-box-bg:       #ffffff;
+  --chart-box-deceased: #f8f8f8;
+  --chart-box-focal:    #2c3e50;
+  --chart-box-stroke:   #dddddd;
+  --chart-focal-stroke: #1a2a3a;
+  --chart-text:         #333333;
+  --chart-text-sub:     #888888;
+  --chart-text-focal:   #ffffff;
+  --chart-text-focal-sub: rgba(255,255,255,0.65);
+  --chart-line:         #cccccc;
+  --chart-placeholder-stroke: #94a3b8;
+  --chart-placeholder-text:   #94a3b8;
+}

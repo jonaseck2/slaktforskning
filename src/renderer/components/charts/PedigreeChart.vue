@@ -16,7 +16,7 @@
           v-for="(ln, i) in layout.lines"
           :key="'l' + i"
           :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
-          stroke="#ccc" stroke-width="1.5" vector-effect="non-scaling-stroke"
+          :stroke="chartTokens.line" stroke-width="1.5" vector-effect="non-scaling-stroke"
         />
         <g
           v-for="box in layout.boxes"
@@ -39,7 +39,7 @@
             :x="box.x" :y="box.y" :width="box.w" :height="box.h"
             rx="4"
             :fill="boxFill(box)"
-            :stroke="box.isFocal ? '#1a2a3a' : '#ddd'"
+            :stroke="box.isFocal ? chartTokens.focalStroke : chartTokens.boxStroke"
             stroke-width="1"
           />
           <rect
@@ -52,7 +52,7 @@
             :x="box.x + 12" :y="box.y + 17"
             font-size="12" font-weight="600"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="box.isFocal ? 'white' : '#333'"
+            :fill="box.isFocal ? chartTokens.textFocal : chartTokens.text"
           ><tspan
               v-for="(part, pi) in truncateNameParts(chartNameParts(box.person.givenName, box.person.surname, box.person.preferredName), 20)"
               :key="pi"
@@ -63,14 +63,14 @@
             :x="box.x + 12" :y="box.y + 30"
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
+            :fill="box.isFocal ? chartTokens.textFocalSub : chartTokens.textSub"
           >* {{ box.person.birthDate }}</text>
           <text
             v-if="box.person.deathDate"
             :x="box.x + 12" :y="box.y + 43"
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="box.isFocal ? 'rgba(255,255,255,0.65)' : '#888'"
+            :fill="box.isFocal ? chartTokens.textFocalSub : chartTokens.textSub"
           >† {{ box.person.deathDate }}</text>
           <g
             v-if="!readonly && hoveredPersonId === box.person.id"
@@ -123,7 +123,7 @@
           v-for="(ln, i) in layout.placeholderLines"
           :key="'pl' + i"
           :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
-          stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3"
+          :stroke="chartTokens.placeholderStroke" stroke-width="1" stroke-dasharray="4 3"
           vector-effect="non-scaling-stroke"
         />
         <g
@@ -140,15 +140,15 @@
           <rect
             :x="ph.x" :y="ph.y" :width="BOX_W" :height="BOX_H"
             rx="6" ry="6"
-            fill="transparent" stroke="#94a3b8" stroke-dasharray="4 3" stroke-width="1.5"
+            fill="transparent" :stroke="chartTokens.placeholderStroke" stroke-dasharray="4 3" stroke-width="1.5"
           />
           <text
             :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 - 6"
-            text-anchor="middle" fill="#94a3b8" font-size="18"
+            text-anchor="middle" :fill="chartTokens.placeholderText" font-size="18"
           >+</text>
           <text
             :x="ph.x + BOX_W / 2" :y="ph.y + BOX_H / 2 + 12"
-            text-anchor="middle" fill="#94a3b8" font-size="11"
+            text-anchor="middle" :fill="chartTokens.placeholderText" font-size="11"
           >{{ placeholderLabel(ph.role) }}</text>
         </g>
         </template>
@@ -317,10 +317,29 @@ const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouse
 const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
 function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#ccc'; }
 
+const chartTokens = computed(() => {
+  const s = getComputedStyle(document.documentElement);
+  const g = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback;
+  return {
+    boxBg: g('--chart-box-bg', 'white'),
+    boxDeceased: g('--chart-box-deceased', '#f8f8f8'),
+    boxFocal: g('--chart-box-focal', '#2c3e50'),
+    boxStroke: g('--chart-box-stroke', '#ddd'),
+    focalStroke: g('--chart-focal-stroke', '#1a2a3a'),
+    text: g('--chart-text', '#333'),
+    textSub: g('--chart-text-sub', '#888'),
+    textFocal: g('--chart-text-focal', 'white'),
+    textFocalSub: g('--chart-text-focal-sub', 'rgba(255,255,255,0.65)'),
+    line: g('--chart-line', '#ccc'),
+    placeholderStroke: g('--chart-placeholder-stroke', '#94a3b8'),
+    placeholderText: g('--chart-placeholder-text', '#94a3b8'),
+  };
+});
+
 function boxFill(box: BoxLayout): string {
-  if (box.isFocal) return '#2c3e50';
-  if (!box.person.living) return '#f8f8f8';
-  return 'white';
+  if (box.isFocal) return chartTokens.value.boxFocal;
+  if (!box.person.living) return chartTokens.value.boxDeceased;
+  return chartTokens.value.boxBg;
 }
 
 function getPopoverPosition(box: BoxLayout): { x: number; y: number } {
