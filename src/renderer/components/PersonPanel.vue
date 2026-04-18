@@ -74,6 +74,14 @@
         </div>
       </div>
 
+      <!-- Life Map section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('map.personMap')" :collapsed="!sections.map" @toggle="toggleSection('map')" />
+        <div v-if="sections.map" class="panel-section-body">
+          <PersonMap :person-id="personId!" />
+        </div>
+      </div>
+
       <!-- Identifiers section -->
       <div class="panel-section">
         <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" :action-label="'+ ' + $t('identifiers.add')" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
@@ -191,6 +199,7 @@ import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonDetailsSection from './PersonDetailsSection.vue';
 import PersonTimeline from './PersonTimeline.vue';
+import PersonMap from './PersonMap.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import SectionHeader from './ui/SectionHeader.vue';

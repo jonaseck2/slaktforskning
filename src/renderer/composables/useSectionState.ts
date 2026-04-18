@@ -5,6 +5,7 @@ export interface PersonPanelSections {
   names: boolean;
   events: boolean;
   timeline: boolean;
+  map: boolean;
   relationships: boolean;
   groups: boolean;
   research: boolean;
@@ -26,6 +27,7 @@ const SECTION_DEFAULTS: Record<keyof PersonPanelSections, boolean> = {
   names: false,
   events: true,
   timeline: false,
+  map: false,
   relationships: true,
   groups: false,
   research: false,

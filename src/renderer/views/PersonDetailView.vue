@@ -219,6 +219,7 @@ import GroupPicker from '../components/GroupPicker.vue';
 import GroupsTable from '../components/GroupsTable.vue';
 import PersonDetailsSection from '../components/PersonDetailsSection.vue';
 import PersonMap from '../components/PersonMap.vue';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
 import AppButton from '../components/ui/AppButton.vue';
@@ -257,6 +258,7 @@ const screenReader = useScreenReaderMode();
 const toast = useToast();
 const ttsEnabled = inject<Ref<boolean>>('ttsEnabled', ref(false));
 const { speak, stop } = useTTS();
+const { ensureLoaded: ensureGazetteersLoaded, resolve: resolveGazetteerPlace } = usePlaceResolver();
 
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
@@ -312,10 +314,22 @@ async function checkGeoEvents() {
     const events = (await window.api.events.forPerson(personId)) as Array<{ place_id: string | null }>;
     const eventsWithPlaces = events.filter(e => e.place_id);
     for (const ev of eventsWithPlaces) {
-      const place = (await window.api.places.get(ev.place_id!)) as { latitude: number | null; longitude: number | null } | null;
+      const place = (await window.api.places.get(ev.place_id!)) as { id: string; name: string; latitude: number | null; longitude: number | null } | null;
       if (place && place.latitude != null && place.longitude != null) {
         hasGeoEvents.value = true;
         return;
+      }
+    }
+    // No raw coordinates — try gazetteer resolution
+    await ensureGazetteersLoaded();
+    for (const ev of eventsWithPlaces) {
+      const place = (await window.api.places.get(ev.place_id!)) as { id: string; name: string; latitude: number | null; longitude: number | null } | null;
+      if (place && place.latitude == null) {
+        const fullPath = (await window.api.places.getPath(place.id)) as string;
+        if (resolveGazetteerPlace(fullPath)) {
+          hasGeoEvents.value = true;
+          return;
+        }
       }
     }
     hasGeoEvents.value = false;
