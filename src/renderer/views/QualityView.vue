@@ -23,14 +23,14 @@
           <col style="width: 120px">
           <col style="width: 28%">
           <col>
-          <col style="width: 220px">
+          <col style="width: 1%">
         </colgroup>
         <thead>
           <tr>
             <th>{{ $t('quality.colSeverity') }}</th>
             <th>{{ $t('quality.colPersons') }}</th>
             <th>{{ $t('quality.colIssue') }}</th>
-            <th class="actions-th">{{ $t('common.actions') }}</th>
+            <th class="actions-th"></th>
           </tr>
         </thead>
         <tbody>
@@ -89,13 +89,11 @@
                   @click.stop
                 >{{ $t('quality.viewPlace') }}</router-link>
               </template>
-              <AppButton
-                :variant="isIgnored(r) ? 'secondary' : 'ghost'"
-                size="sm"
+              <button
+                class="btn-dismiss"
+                :title="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
                 @click.stop="toggleIgnore(r)"
-              >
-                {{ isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore') }}
-              </AppButton>
+              >×</button>
             </td>
           </tr>
         </tbody>
@@ -382,8 +380,21 @@ onActivated(() => {
   background: var(--surface-hover);
 }
 .actions-td {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.btn-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-lg);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+.btn-dismiss:hover {
+  color: var(--error-text);
+  background: var(--error-bg);
 }
 </style>

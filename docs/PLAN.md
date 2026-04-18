@@ -155,6 +155,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
 | v0.93.1 | Fix: quality fix actions work end-to-end — modal stays open (no router.replace remount), event type pre-filled (birth/death), electron-dev skill updated with CDP verification workflow | — |
 | v0.94.0 | Design System Overhaul: 3 color themes (Forest/Nordic/Twilight), 9 UI primitives, MediaPanel, SettingsView, sidebar restructured (Research/Organize/Review), all views/panels/modals use design tokens | [spec](docs/superpowers/specs/2026-04-17-design-system-spec.md) [plan](plans/archive/2026-04-17-design-system-overhaul.md) |
+| v0.94.8 | Fix: map initial zoom race condition, loading/empty states, cached places across navigation; panel close button and quality dismiss button refinements | — |
 ---
 
 ## Research

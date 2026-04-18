@@ -8,11 +8,11 @@
     <template v-else-if="place">
       <!-- Header -->
       <div class="panel-header">
-        <button class="panel-close-btn" @click="emit('close')" :title="$t('common.close')">&#10005;</button>
         <div class="panel-header-content">
           <div class="panel-name-row">
             <div class="panel-name">{{ place.name }}</div>
             <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
+            <button class="btn-sm btn-delete" @click="emit('close')" :title="$t('common.close')">✕</button>
           </div>
           <router-link :to="'/places/' + placeId" class="panel-view-full">{{ $t('placePanel.viewFull') }}</router-link>
         </div>
@@ -313,30 +313,12 @@ async function saveField(field: string, value: unknown) {
   text-align: center;
 }
 
-/* Close button */
-.panel-close-btn {
-  position: absolute;
-  top: var(--space-xs);
-  right: var(--space-xs);
-  z-index: 10;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  line-height: 1;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
-
 /* Header */
 .panel-header {
   display: flex;
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
-  position: relative;
 }
 .panel-header-content {
   padding: var(--space-sm) var(--space-md);
