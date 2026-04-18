@@ -163,7 +163,7 @@
 
       <!-- Persons section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('persons.title')" :collapsed="!sections.persons" @toggle="toggleSection('persons')" />
+        <SectionHeader :title="$t('persons.title')" :count="personCount" :collapsed="!sections.persons" @toggle="toggleSection('persons')" />
         <div v-if="sections.persons" class="panel-section-body">
           <PlacePersonsSection :place-id="placeId!" />
         </div>
@@ -171,7 +171,7 @@
 
       <!-- Events section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :collapsed="!sections.events" @toggle="toggleSection('events')" />
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" @toggle="toggleSection('events')" />
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
         </div>
@@ -179,7 +179,7 @@
 
       <!-- Citations section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('sourceDetail.citations')" :collapsed="!sections.citations" @toggle="toggleSection('citations')" />
+        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" @toggle="toggleSection('citations')" />
         <div v-if="sections.citations" class="panel-section-body">
           <PlaceCitationsSection :place-id="placeId!" />
         </div>
@@ -187,7 +187,7 @@
 
       <!-- Media section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('media.title')" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
+        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
           <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" />
         </div>
@@ -258,12 +258,20 @@ const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: p
 const place = ref<Place | null>(null);
 const ancestors = ref<ChildPlace[]>([]);
 const childPlaces = ref<ChildPlace[]>([]);
+const personCount = ref(0);
+const eventCount = ref(0);
+const citationCount = ref(0);
+const mediaCount = ref(0);
 
 async function load(id: string | null) {
   if (!id) {
     place.value = null;
     ancestors.value = [];
     childPlaces.value = [];
+    personCount.value = 0;
+    eventCount.value = 0;
+    citationCount.value = 0;
+    mediaCount.value = 0;
     return;
   }
   const [p, allPlaces] = await Promise.all([
@@ -284,6 +292,23 @@ async function load(id: string | null) {
     parentId = parent.parent_place_id;
   }
   ancestors.value = chain;
+
+  // Load counts for collapsed section headers
+  try {
+    const [persons, events, citations, media] = await Promise.all([
+      window.api.places.getPersons(id) as Promise<unknown[]>,
+      window.api.events.forPlace(id) as Promise<unknown[]>,
+      window.api.citations.forPlace(id) as Promise<unknown[]>,
+      window.api.media.forEntity('place', id) as Promise<unknown[]>,
+    ]);
+    if (props.placeId !== id) return;
+    personCount.value = persons.length;
+    eventCount.value = events.length;
+    citationCount.value = citations.length;
+    mediaCount.value = media.length;
+  } catch {
+    // counts are non-critical
+  }
 }
 
 watch(() => props.placeId, load, { immediate: true });

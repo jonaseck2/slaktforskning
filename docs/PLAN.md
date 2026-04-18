@@ -162,6 +162,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.96.0 | Three-sheet layout: nav, main content, and side panel as separate elevated sheets on shared background | — |
 | v0.96.1 | Fix: Places map view moves header/buttons inside left sheet, matching Family Tree layout | — |
 | v0.96.2 | Fix: Media view auto-selects focus person's media or first item, left sheet padding | — |
+| v0.96.3 | Fix: PlacePanel section headers show counts (persons, events, citations, media) | — |
 ---
 
 ## Research
