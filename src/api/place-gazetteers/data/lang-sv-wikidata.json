@@ -1,0 +1,30 @@
+{
+  "id": "lang-sv-wikidata",
+  "name": "Swedish place names (Wikidata)",
+  "locale": "sv",
+  "kind": "language",
+  "description": "Swedish translations for Nordic administrative divisions (Danish, Norwegian, Finnish, Icelandic)",
+  "source": {
+    "name": "Wikidata",
+    "url": "https://www.wikidata.org/",
+    "license": "CC0 1.0",
+    "fetched": "2026-04-18"
+  },
+  "root": {
+    "name": "sv",
+    "type": "language",
+    "lat": 0,
+    "lon": 0
+  },
+  "translations": {
+    "dk-sogne": {},
+    "dk-sogne-dawa": {},
+    "no-kommuner": {
+      "Akershus fylke > Ås kommune": [
+        "Ås kommun"
+      ]
+    },
+    "fi-kunnat": {},
+    "is-sveitarfelog": {}
+  }
+}

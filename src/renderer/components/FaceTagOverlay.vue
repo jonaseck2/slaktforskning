@@ -19,7 +19,7 @@
         'highlighted': highlightedId === region.id,
         'editing': editingId === region.id,
       }"
-      :style="[regionStyle(region), editingId && editingId !== region.id ? { pointerEvents: 'none' } : {}]"
+      :style="[regionStyle(region), dragMode ? { pointerEvents: 'none' } : {}]"
       @mousedown.stop="onRegionMouseDown($event, region)"
       @mousemove.stop="onRegionMouseMove($event, region)"
       @click.stop="onRegionClick(region.id)"
@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 
 interface Region {
   id: string;
@@ -88,9 +88,12 @@ const drawCurrent = ref<{ x: number; y: number } | null>(null);
 const editingId = ref<string | null>(null);
 const dragMode = ref<'move' | 'resize' | null>(null);
 const resizeEdge = ref<Edge | null>(null);
-const dragOrigin = ref<{ x: number; y: number }>({ x: 0, y: 0 });
-const dragOriginalRect = ref<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
-// Live position during drag (pixels) — avoids mutating props
+// All drag coords in screen pixels for sub-pixel precision
+const dragOriginScreen = ref<{ x: number; y: number }>({ x: 0, y: 0 });
+const dragOriginalScreen = ref<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
+// Cached overlay display size at drag start (avoids getBoundingClientRect per frame)
+const dragDisplaySize = ref<{ w: number; h: number }>({ w: 1, h: 1 });
+// Live position during drag (screen pixels relative to overlay display size)
 const dragLiveRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
 
 const MIN_SIZE_PX = 10;
@@ -141,12 +144,13 @@ const drawRectStyle = computed(() => {
 function regionStyle(region: Region) {
   // Use live drag rect for the region being moved/resized
   if (dragLiveRect.value && editingId.value === region.id) {
-    // dragLiveRect is in pixel coords (imageWidth space) — convert to percentages
+    const dw = dragDisplaySize.value.w;
+    const dh = dragDisplaySize.value.h;
     return {
-      left: (dragLiveRect.value.x / props.imageWidth * 100) + '%',
-      top: (dragLiveRect.value.y / props.imageHeight * 100) + '%',
-      width: (dragLiveRect.value.width / props.imageWidth * 100) + '%',
-      height: (dragLiveRect.value.height / props.imageHeight * 100) + '%',
+      left: (dragLiveRect.value.x / dw * 100) + '%',
+      top: (dragLiveRect.value.y / dh * 100) + '%',
+      width: (dragLiveRect.value.width / dw * 100) + '%',
+      height: (dragLiveRect.value.height / dh * 100) + '%',
     };
   }
   // Regions store fractional coords (0-1) — render as percentages
@@ -209,24 +213,9 @@ function onLayerMouseUp() {
 
 function onRegionMouseDown(e: MouseEvent, region: Region) {
   if (props.drawMode) return;
+  if (dragMode.value) return; // actively dragging — don't interfere
   e.preventDefault();
-  // Wait for mouse movement to distinguish click from drag
-  const startPos = { x: e.clientX, y: e.clientY };
-  const startEvent = e; // capture for startDrag
-  const DRAG_THRESHOLD = 3;
-  attachWindowListeners(
-    (ev: MouseEvent) => {
-      const dx = ev.clientX - startPos.x;
-      const dy = ev.clientY - startPos.y;
-      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-        clearWindowListeners();
-        startDrag(startEvent, region, 'move', null);
-      }
-    },
-    () => {
-      clearWindowListeners(); // no drag — just a click
-    },
-  );
+  startDrag(e, region, 'move', null);
 }
 
 function onRegionMouseMove(e: MouseEvent, region: Region) {
@@ -263,12 +252,15 @@ function startDrag(e: MouseEvent, region: Region, mode: 'move' | 'resize', edge:
   editingId.value = region.id;
   dragMode.value = mode;
   resizeEdge.value = edge;
-  dragOrigin.value = getLocalCoords(e);
-  dragOriginalRect.value = {
-    x: region.x * props.imageWidth,
-    y: region.y * props.imageHeight,
-    width: region.width * props.imageWidth,
-    height: region.height * props.imageHeight,
+  dragOriginScreen.value = { x: e.clientX, y: e.clientY };
+  const el = layerEl.value;
+  const rect = el ? el.getBoundingClientRect() : { width: 1, height: 1 };
+  dragDisplaySize.value = { w: rect.width, h: rect.height };
+  dragOriginalScreen.value = {
+    x: region.x * rect.width,
+    y: region.y * rect.height,
+    width: region.width * rect.width,
+    height: region.height * rect.height,
   };
 
   attachWindowListeners(
@@ -281,28 +273,24 @@ function startDrag(e: MouseEvent, region: Region, mode: 'move' | 'resize', edge:
 
 function handleDrag(e: MouseEvent) {
   didDrag = true;
-  const pos = getLocalCoords(e);
-  const dx = pos.x - dragOrigin.value.x;
-  const dy = pos.y - dragOrigin.value.y;
-  const orig = dragOriginalRect.value;
-
+  // Work in screen pixels — 1:1 with mouse movement for smooth dragging
+  const dx = e.clientX - dragOriginScreen.value.x;
+  const dy = e.clientY - dragOriginScreen.value.y;
+  const orig = dragOriginalScreen.value;
+  const displayW = dragDisplaySize.value.w;
+  const displayH = dragDisplaySize.value.h;
   let x = orig.x, y = orig.y, width = orig.width, height = orig.height;
 
   if (dragMode.value === 'move') {
-    x = clamp(orig.x + dx, 0, props.imageWidth - orig.width);
-    y = clamp(orig.y + dy, 0, props.imageHeight - orig.height);
+    x = clamp(orig.x + dx, 0, displayW - orig.width);
+    y = clamp(orig.y + dy, 0, displayH - orig.height);
   } else if (dragMode.value === 'resize' && resizeEdge.value) {
     const edge = resizeEdge.value;
 
-    if (edge.includes('e')) { width = Math.max(MIN_SIZE_PX, orig.width + dx); }
-    if (edge.includes('w')) { x = orig.x + dx; width = Math.max(MIN_SIZE_PX, orig.width - dx); if (width === MIN_SIZE_PX) x = orig.x + orig.width - MIN_SIZE_PX; }
-    if (edge.includes('s')) { height = Math.max(MIN_SIZE_PX, orig.height + dy); }
-    if (edge.includes('n')) { y = orig.y + dy; height = Math.max(MIN_SIZE_PX, orig.height - dy); if (height === MIN_SIZE_PX) y = orig.y + orig.height - MIN_SIZE_PX; }
-
-    x = clamp(x, 0, props.imageWidth - MIN_SIZE_PX);
-    y = clamp(y, 0, props.imageHeight - MIN_SIZE_PX);
-    width = Math.min(width, props.imageWidth - x);
-    height = Math.min(height, props.imageHeight - y);
+    if (edge.includes('e')) { width = orig.width + dx; }
+    if (edge.includes('w')) { x = orig.x + dx; width = orig.width - dx; }
+    if (edge.includes('s')) { height = orig.height + dy; }
+    if (edge.includes('n')) { y = orig.y + dy; height = orig.height - dy; }
   }
 
   dragLiveRect.value = { x, y, width, height };
@@ -311,18 +299,26 @@ function handleDrag(e: MouseEvent) {
 function finishDrag() {
   if (didDrag && dragLiveRect.value && editingId.value) {
     const r = dragLiveRect.value;
+    const dw = dragDisplaySize.value.w;
+    const dh = dragDisplaySize.value.h;
     emit('regionUpdated', editingId.value, {
-      x: r.x / props.imageWidth,
-      y: r.y / props.imageHeight,
-      width: r.width / props.imageWidth,
-      height: r.height / props.imageHeight,
+      x: r.x / dw,
+      y: r.y / dh,
+      width: r.width / dw,
+      height: r.height / dh,
     });
   }
-  dragLiveRect.value = null;
+  // Keep dragLiveRect visible until regions prop updates with fresh data
+  // — prevents bounce-back to stale coords
   dragMode.value = null;
   resizeEdge.value = null;
-  editingId.value = null;
 }
+
+// Clear visual override when regions data refreshes from DB
+watch(() => props.regions, () => {
+  dragLiveRect.value = null;
+  editingId.value = null;
+});
 
 // --- Helpers ---
 

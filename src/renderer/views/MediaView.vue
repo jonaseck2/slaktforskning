@@ -374,6 +374,7 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
 async function onRegionUpdated(id: string, rect: { x: number; y: number; width: number; height: number }) {
   // Use updateGeometry (non-mutating) to avoid triggering quality checks
   await window.api.mediaRegions.updateGeometry(id, rect);
+  viewerRef.value?.reloadRegions();
 }
 
 async function attachFile() {
