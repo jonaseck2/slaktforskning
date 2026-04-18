@@ -347,6 +347,8 @@ watch(() => props.mediaId, load, { immediate: true });
   height: 100%;
   overflow-y: auto;
   background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
 }
 
@@ -387,9 +389,10 @@ watch(() => props.mediaId, load, { immediate: true });
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--surface-border);
+  padding: var(--space-lg) var(--space-lg);
+  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   position: relative;
 }
 

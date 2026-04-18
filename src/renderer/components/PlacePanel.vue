@@ -304,6 +304,8 @@ async function saveField(field: string, value: unknown) {
   height: 100%;
   overflow-y: auto;
   background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
 }
 
@@ -322,11 +324,12 @@ async function saveField(field: string, value: unknown) {
 .panel-header {
   display: flex;
   background: var(--surface);
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-header-content {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   flex: 1;
   min-width: 0;
 }
@@ -363,9 +366,9 @@ async function saveField(field: string, value: unknown) {
 
 /* Sections */
 .panel-section {
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: 0 var(--space-md);
+  padding: 0 var(--space-lg);
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 .panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }

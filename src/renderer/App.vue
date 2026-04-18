@@ -114,7 +114,7 @@
         </div>
       </div>
     </nav>
-    <main id="main-content" class="content">
+    <main id="main-content" :class="['content', { 'content-paneled': isPaneledView }]">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="CACHED_VIEWS">
           <component
@@ -220,6 +220,8 @@ watch(() => route.path, () => {
   }
 });
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
+const PANELED_ROUTES = ['/visualisering', '/media', '/places'];
+const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
 const qualityErrorCount = ref(0);
@@ -608,6 +610,12 @@ body {
   will-change: scroll-position;
   background: var(--surface);
   border-radius: var(--radius-lg);
+}
+.content-paneled {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  overflow: hidden;
 }
 
 @media print {

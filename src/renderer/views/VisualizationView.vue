@@ -1,46 +1,46 @@
 <template>
-  <div class="visualization-view">
-    <div class="header">
-      <h2>{{ $t('nav.familyTree') }}</h2>
-    </div>
-    <!-- Tab bar -->
-    <div v-if="focalPerson" class="viz-tab-bar">
-      <AppButton variant="ghost" size="sm" @click="router.back()">←</AppButton>
-      <FilterChips
-        :model-value="activeTab"
-        :options="[
-          { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
-          { value: 'circle',      label: $t('visualization.tab.circle') },
-          { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
-          { value: 'descendants', label: $t('visualization.tab.descendants') },
-          { value: 'timeline',    label: $t('visualization.tab.timeline') },
-        ]"
-        @update:model-value="setTab($event as TabName)"
-      />
-      <AppButton
-        v-if="activeTab === 'pedigree'"
-        variant="secondary"
-        size="sm"
-        class="tab-toggle-btn"
-        :aria-label="pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView')"
-        @click="pedigreeListMode = !pedigreeListMode"
-      >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</AppButton>
-    </div>
+  <div class="visualization-view" ref="vizBodyRef">
+    <!-- Chart area (left sheet) -->
+    <div class="viz-chart-area">
+      <div class="header">
+        <h2>{{ $t('nav.familyTree') }}</h2>
+      </div>
+      <!-- Tab bar -->
+      <div v-if="focalPerson" class="viz-tab-bar">
+        <AppButton variant="ghost" size="sm" @click="router.back()">←</AppButton>
+        <FilterChips
+          :model-value="activeTab"
+          :options="[
+            { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
+            { value: 'circle',      label: $t('visualization.tab.circle') },
+            { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
+            { value: 'descendants', label: $t('visualization.tab.descendants') },
+            { value: 'timeline',    label: $t('visualization.tab.timeline') },
+          ]"
+          @update:model-value="setTab($event as TabName)"
+        />
+        <AppButton
+          v-if="activeTab === 'pedigree'"
+          variant="secondary"
+          size="sm"
+          class="tab-toggle-btn"
+          :aria-label="pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView')"
+          @click="pedigreeListMode = !pedigreeListMode"
+        >{{ pedigreeListMode ? $t('a11y.chartView') : $t('a11y.listView') }}</AppButton>
+      </div>
 
-    <!-- Empty state -->
-    <div v-if="noPersonsExist" class="empty-state" data-testid="viz-empty">
-      {{ $t('visualization.empty') }}
-    </div>
+      <!-- Empty state -->
+      <div v-if="noPersonsExist" class="empty-state" data-testid="viz-empty">
+        {{ $t('visualization.empty') }}
+      </div>
 
-    <!-- No focal person selected -->
-    <div v-else-if="noFocalPerson" class="empty-state" data-testid="viz-no-focal">
-      {{ $t('visualization.noFocalPerson') }}
-    </div>
+      <!-- No focal person selected -->
+      <div v-else-if="noFocalPerson" class="empty-state" data-testid="viz-no-focal">
+        {{ $t('visualization.noFocalPerson') }}
+      </div>
 
-    <!-- Chart + panel body -->
-    <div v-else-if="focalPerson" class="viz-body" ref="vizBodyRef" data-testid="viz-area">
-      <!-- Chart area -->
-      <div class="viz-chart-area">
+      <!-- Chart content -->
+      <div v-else-if="focalPerson" class="viz-chart-content" data-testid="viz-area">
         <PedigreeListView
           v-if="activeTab === 'pedigree' && pedigreeListMode"
           :person-id="personId"
@@ -83,28 +83,28 @@
           :person-id="personId"
           @navigate="navigateTo"
         />
-        <!-- Reopen panel button when panel is closed -->
-        <button v-if="!panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
       </div>
-
-      <!-- Drag handle + panel -->
-      <template v-if="panelOpen">
-        <div
-          class="panel-drag-handle"
-          @mousedown="(e) => startResize(e, vizBodyRef!)"
-        ></div>
-        <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
-          <PersonPanel
-            :person-id="selectedPersonId ?? personId ?? null"
-            :show-tree-btn="true"
-            @relative-added="reloadChart"
-            @person-changed="reloadChart"
-            @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
-            @close="closePanel"
-          />
-        </div>
-      </template>
+      <!-- Reopen panel button when panel is closed -->
+      <button v-if="!panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
+
+    <!-- Drag handle + panel (right sheet) -->
+    <template v-if="panelOpen">
+      <div
+        class="panel-drag-handle"
+        @mousedown="(e) => startResize(e, vizBodyRef!)"
+      ></div>
+      <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
+        <PersonPanel
+          :person-id="selectedPersonId ?? personId ?? null"
+          :show-tree-btn="true"
+          @relative-added="reloadChart"
+          @person-changed="reloadChart"
+          @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
+          @close="closePanel"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -354,8 +354,32 @@ onActivated(load);
 <style scoped>
 .visualization-view {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
+  gap: var(--space-xs);
+}
+
+/* Left sheet: header + tabs + chart */
+.viz-chart-area > .header {
+  padding: var(--space-lg) var(--space-lg) 0;
+  margin-bottom: var(--space-sm);
+}
+.viz-chart-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.viz-chart-content {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Tab bar row: back button + FilterChips + optional toggle */
@@ -363,7 +387,7 @@ onActivated(load);
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--space-xs) var(--space-lg);
   border-bottom: 1px solid var(--surface-border-subtle);
 }
 
@@ -371,21 +395,6 @@ onActivated(load);
 .tab-toggle-btn {
   margin-left: auto;
   margin-right: var(--space-xs);
-}
-
-/* Body: chart + panel */
-.viz-body {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  min-height: 0;
-  position: relative;
-}
-.viz-chart-area {
-  flex: 1;
-  min-width: 0;
-  position: relative;
-  overflow: hidden;
 }
 
 /* Panel reopen button */
@@ -423,7 +432,6 @@ onActivated(load);
   flex-direction: column;
   flex-shrink: 0;
   position: relative;
-  overflow: hidden;
   min-width: 200px;
   max-width: 1040px;
 }
