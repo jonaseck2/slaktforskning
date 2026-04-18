@@ -1,7 +1,5 @@
 <template>
   <div v-if="group" class="group-detail">
-    <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">← {{ $t('groups.title') }}</button>
-
     <input
       class="group-name-input"
       v-model="editName"
@@ -10,17 +8,21 @@
     />
 
     <textarea
+      ref="notesRef"
       class="group-notes-input"
       v-model="editNotes"
       rows="2"
       :placeholder="$t('groups.notes')"
-      @blur="saveNotes"
+      :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+      @blur="persistNotesHeight(); saveNotes()"
+      @mouseup="persistNotesHeight"
     />
 
     <!-- Members -->
     <SectionHeader
       :title="$t('groups.members')"
       :count="members.length"
+      :collapsible="false"
       :action-label="!showAddMember ? $t('groups.addMember') : ''"
       @action="showAddMember = true"
     />
@@ -80,6 +82,7 @@ import AppButton from '../components/ui/AppButton.vue';
 import SectionHeader from '../components/ui/SectionHeader.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 
 interface Group { id: string; name: string; notes: string; }
 interface MemberRow {
@@ -102,6 +105,7 @@ const editNotes = ref('');
 const members = ref<MemberRow[]>([]);
 const showAddMember = ref(false);
 const newMemberId = ref<string | null>(null);
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('group-notes');
 
 function goToPerson(m: MemberRow) {
   const name = fullNameParts(m.given_name ?? null, m.surname ?? null, m.preferred_name ?? null, m.nickname ?? null).map(p => p.text).join('');

@@ -32,10 +32,10 @@
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
           <div class="panel-add-relative-btns">
-            <AppButton variant="secondary" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
-            <AppButton variant="secondary" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
-            <AppButton variant="secondary" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
-            <AppButton variant="secondary" size="sm" @click="openAddRelative('child')">+ {{ $t('personDetail.addChild') }}</AppButton>
+            <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
+            <AppButton variant="soft" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
+            <AppButton variant="soft" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
+            <AppButton variant="soft" size="sm" @click="openAddRelative('child')">+ {{ $t('personDetail.addChild') }}</AppButton>
           </div>
         </div>
       </div>
@@ -392,6 +392,8 @@ onMounted(() => {
   height: 100%;
   overflow-y: auto;
   background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   font-size: var(--font-sm);
 }
 
@@ -412,9 +414,10 @@ onMounted(() => {
   align-items: flex-start;
   gap: var(--space-sm);
   background: var(--surface);
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-md);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-header-content {
   flex: 1;
@@ -453,7 +456,7 @@ onMounted(() => {
 
 /* Sections */
 .panel-section {
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
   padding: 0 var(--space-md);
 }

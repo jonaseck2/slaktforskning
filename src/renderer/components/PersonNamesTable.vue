@@ -1,45 +1,39 @@
 <template>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>{{ $t('persons.givenName') }}</th>
-        <th>{{ $t('persons.surname') }}</th>
-        <th class="th-shrink">{{ $t('common.type') }}</th>
-        <th class="actions-cell">{{ $t('common.actions') }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        v-for="name in names"
-        :key="name.id"
-        class="clickable-row"
-        tabindex="0"
-        role="button"
-        :aria-label="$t('a11y.editItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
-        @click="$emit('edit', name)"
-        @keydown.enter="$emit('edit', name)"
-        @keydown.space.prevent="$emit('edit', name)"
-      >
-        <td>
+  <div class="names-card">
+    <div
+      v-for="name in names"
+      :key="name.id"
+      class="name-row clickable-row"
+      tabindex="0"
+      role="button"
+      :aria-label="$t('a11y.editItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
+      @click="$emit('edit', name)"
+      @keydown.enter="$emit('edit', name)"
+      @keydown.space.prevent="$emit('edit', name)"
+    >
+      <div class="name-content">
+        <span class="name-full">
           <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
-          <PersonName :given-name="name.given_name" :preferred-name="name.preferred_name ?? null" :nickname="name.nickname ?? null" />
-        </td>
-        <td>
-          {{ name.surname }}{{ name.name_suffix ? ' ' : '' }}<span v-if="name.name_suffix" class="name-suffix">{{ name.name_suffix }}</span><span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span><span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
-        </td>
-        <td class="td-type"><span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span></td>
-        <td class="actions-cell">
-          <span v-if="name.sort_order === 0" class="primary-star" title="Primary name">★</span>
-          <button
-            v-else
-            class="btn-sm btn-delete"
-            :aria-label="$t('a11y.deleteItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
-            @click.stop="$emit('delete', name.id)"
-          >✕</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          <strong><PersonName :given-name="name.given_name" :preferred-name="name.preferred_name ?? null" :nickname="name.nickname ?? null" /></strong>
+          <span class="name-surname"> {{ name.surname }}</span>
+          <span v-if="name.name_suffix" class="name-suffix"> {{ name.name_suffix }}</span>
+          <span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span>
+          <span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
+        </span>
+      </div>
+      <div class="name-meta">
+        <span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span>
+        <span v-if="name.preferred_name" class="preferred-hint">{{ $t('personDetail.preferred') }}: {{ name.preferred_name }}</span>
+        <span v-if="name.sort_order === 0" class="primary-star" title="Primary name">★</span>
+        <button
+          v-if="name.sort_order !== 0"
+          class="btn-sm btn-delete"
+          :aria-label="$t('a11y.deleteItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
+          @click.stop="$emit('delete', name.id)"
+        >✕</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -67,30 +61,59 @@ defineEmits<{
 </script>
 
 <style scoped>
-.th-shrink,
-.td-type {
-  width: 1%;
-  white-space: nowrap;
+.names-card {
+  border: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
+.name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  cursor: pointer;
+}
+.name-row:not(:last-child) {
+  border-bottom: 1px solid var(--surface-border-subtle);
+}
+.name-row:hover {
+  background: var(--surface-hover);
+}
+.name-content {
+  flex: 1;
+  min-width: 0;
+}
+.name-full {
+  font-size: var(--font-base);
+  color: var(--text-primary);
+}
+.name-surname {
+  font-weight: var(--font-weight-normal);
+  color: var(--text-secondary);
+}
+.name-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .type-badge {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  padding: 2px 8px;
-  border-radius: 10px;
+  color: var(--text-muted);
   font-size: var(--font-xs);
 }
-
+.preferred-hint {
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  font-style: italic;
+}
 .primary-star {
-  display: inline-block;
   font-size: var(--font-xs);
   color: #f0a500;
-  padding: 3px 6px;
-  text-align: center;
 }
 .name-prefix,
 .name-suffix {
-  color: #6b7280;
+  color: var(--text-muted);
   font-style: italic;
 }
 .name-qual-badge {

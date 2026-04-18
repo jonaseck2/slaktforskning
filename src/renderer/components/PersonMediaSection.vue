@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import MediaLightbox from './MediaLightbox.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 
@@ -73,7 +73,7 @@ const thumbnails = ref<Record<string, string>>({});
 const lightboxVisible = ref(false);
 const lightboxIndex = ref(0);
 
-defineExpose({ attach, reload: load });
+defineExpose({ attach, reload: load, count: computed(() => media.value.length) });
 
 function isImage(format: string | null): boolean {
   return format ? IMAGE_FORMATS.has(format.toLowerCase()) : false;

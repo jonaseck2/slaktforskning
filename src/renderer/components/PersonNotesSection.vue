@@ -4,15 +4,17 @@
     :value="notes"
     :rows="rows ?? 3"
     :placeholder="$t('personDetail.notesPlaceholder')"
-    :style="savedHeight ? { height: savedHeight + 'px' } : undefined"
-    @blur="save(($event.target as HTMLTextAreaElement).value)"
+    :style="storedHeight ? { height: storedHeight + 'px' } : undefined"
+    @blur="onBlur(($event.target as HTMLTextAreaElement).value)"
+    @mouseup="persistHeight"
   />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -24,24 +26,17 @@ const toast = useToast();
 const props = defineProps<{ personId: string; rows?: number }>();
 
 const notes = ref('');
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
-const savedHeight = ref<number | null>(null);
+const { textareaRef, storedHeight, persistHeight } = useTextareaHeight('person-notes');
 
 async function load(id: string) {
-  // Capture current height before reload
-  if (textareaRef.value) {
-    savedHeight.value = textareaRef.value.offsetHeight;
-  }
   const raw = (await window.api.persons.get(id)) as { notes: string | null } | null;
   if (props.personId !== id) return;
   notes.value = raw?.notes ?? '';
-  // Reapply saved height after DOM update
-  if (savedHeight.value) {
-    await nextTick();
-    if (textareaRef.value) {
-      textareaRef.value.style.height = savedHeight.value + 'px';
-    }
-  }
+}
+
+function onBlur(value: string) {
+  persistHeight();
+  save(value);
 }
 
 async function save(value: string) {

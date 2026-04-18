@@ -1,14 +1,6 @@
 <template>
   <div v-if="rels.length === 0" class="empty-hint">{{ $t('personDetail.noRelationships') }}</div>
   <table v-else class="data-table">
-    <thead>
-      <tr>
-        <th>{{ $t('common.type') }}</th>
-        <th>{{ $t('common.name') }}</th>
-        <th>{{ $t('relationshipDetail.subtype') }}</th>
-        <th class="actions-cell">{{ $t('common.actions') }}</th>
-      </tr>
-    </thead>
     <tbody>
       <tr
         v-for="rel in rels"
@@ -39,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { formatFullName, resolvePersonDisplayName } from '../utils/nameUtils';
@@ -131,17 +123,14 @@ async function remove(id: string) {
   emit('deleted');
 }
 
-defineExpose({ reload: load });
+defineExpose({ reload: load, count: computed(() => rels.value.length) });
 
 watch(() => props.personId, load, { immediate: true });
 </script>
 
 <style scoped>
 .type-badge {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  padding: 2px 8px;
-  border-radius: 10px;
+  color: var(--text-muted);
   font-size: var(--font-xs);
 }
 .person-cell { display: flex; align-items: center; gap: var(--space-xs); }

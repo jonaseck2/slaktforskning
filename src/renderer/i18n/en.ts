@@ -39,6 +39,7 @@ export default {
     language: 'Language',
     highContrast: 'High Contrast',
     contrast: 'Contrast',
+    readAloud: 'Read aloud',
     off: 'Off',
     narrate: 'Narrate',
     screenReaderMode: 'Screen',

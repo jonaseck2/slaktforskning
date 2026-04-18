@@ -1,7 +1,6 @@
 <template>
   <div v-if="source" class="source-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('sourceDetail.back') }}</button>
       <div class="header-row">
         <h2><LinkedText :text="source.title" /></h2>
         <AppBadge v-if="source.source_type" variant="event">{{ $t('sourceTypes.' + source.source_type) }}</AppBadge>
@@ -12,6 +11,7 @@
     <section class="detail-section" aria-labelledby="section-source-details">
       <SectionHeader
         :title="$t('sourceDetail.title')"
+        :collapsible="false"
         tabindex="0"
         :data-narrate="$t('screenReader.navSourceDetail', { title: source.title || $t('common.unknown') })"
       />
@@ -53,6 +53,7 @@
       <SectionHeader
         :title="$t('sourceDetail.citations')"
         :count="citations.length"
+        :collapsible="false"
         :action-label="$t('sourceDetail.addCitation')"
         tabindex="0"
         :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length"

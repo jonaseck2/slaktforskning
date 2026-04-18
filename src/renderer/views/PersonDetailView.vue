@@ -1,7 +1,6 @@
 <template>
   <div v-if="person" class="person-detail">
     <div class="detail-header">
-      <button class="btn-back" @click="$router.back()" :aria-label="$t('a11y.goBack')">{{ $t('personDetail.back') }}</button>
       <div class="header-row">
         <AppAvatar
           v-if="!profilePicUrl"
@@ -18,37 +17,36 @@
         />
         <div class="header-info">
           <h2>{{ primaryName }}</h2>
-          <AppBadge :variant="('sex-' + person.sex.toLowerCase()) as 'sex-m' | 'sex-f' | 'sex-u'">{{ $t('sex.' + person.sex) }}</AppBadge>
-          <AppBadge v-if="!person.living" variant="status">{{ $t('personDetail.deceased') }}</AppBadge>
-          <AppBadge v-if="person.living" variant="status">{{ $t('persons.living') }}</AppBadge>
-          <AppButton variant="ghost" size="sm" data-testid="view-in-tree-btn" @click="$router.push('/visualisering/' + personId)">{{ $t('personDetail.viewInTree') }} →</AppButton>
-          <AppButton variant="ghost" size="sm" @click="$router.push('/reports?tab=biography')">{{ $t('reports.tabBiography') }} →</AppButton>
+          <div class="header-summary">
+            <span v-if="birthSummary" class="summary-text">{{ birthSummary }}</span>
+            <span v-if="birthSummary && (person.living || !person.living)" class="summary-sep">&middot;</span>
+            <span class="summary-text">{{ person.living ? $t('persons.living') : $t('personDetail.deceased') }}</span>
+          </div>
+          <div class="header-badges">
+            <AppBadge :variant="('sex-' + person.sex.toLowerCase()) as 'sex-m' | 'sex-f' | 'sex-u'">{{ $t('sex.' + person.sex) }}</AppBadge>
+            <AppBadge v-if="person.living" variant="status">{{ $t('persons.living') }}</AppBadge>
+            <AppBadge v-else variant="status">{{ $t('personDetail.deceased') }}</AppBadge>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Person Details -->
     <section class="detail-section" aria-labelledby="section-person-details">
-      <SectionHeader :title="$t('personDetail.detailsTitle')" />
-      <div class="field-grid">
-        <label>
-          {{ $t('persons.sex') }}
-          <select
-            :class="'sex-select sex-' + editSex"
-            v-model="editSex"
-            @change="updateSex(editSex)"
-          >
-            <option value="M">{{ $t('sex.M') }}</option>
-            <option value="F">{{ $t('sex.F') }}</option>
-            <option value="U">{{ $t('sex.U') }}</option>
-          </select>
-        </label>
-        <label>
-          {{ $t('personDetail.statusLabel') }}
-          <select v-model="editLiving" @change="updateLiving(editLiving)">
-            <option :value="1">{{ $t('personDetail.statusLiving') }}</option>
-            <option :value="0">{{ $t('personDetail.statusDeceased') }}</option>
-          </select>
+      <SectionHeader :title="$t('personDetail.detailsTitle')" :collapsible="false" />
+      <div class="details-row">
+        <select
+          :class="'sex-select sex-' + editSex"
+          v-model="editSex"
+          @change="updateSex(editSex)"
+        >
+          <option value="M">{{ $t('sex.M') }}</option>
+          <option value="F">{{ $t('sex.F') }}</option>
+          <option value="U">{{ $t('sex.U') }}</option>
+        </select>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="editLiving" :true-value="1" :false-value="0" @change="updateLiving(editLiving)" />
+          {{ $t('personDetail.statusLiving') }}
         </label>
       </div>
       <label class="notes-label">
@@ -62,6 +60,7 @@
       <SectionHeader
         :title="$t('personDetail.names')"
         :count="names.length"
+        :collapsible="false"
         :action-label="$t('personDetail.addName')"
         tabindex="0"
         :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })"
@@ -71,6 +70,20 @@
       <PersonNamesTable v-else :names="names" @edit="openEditName" @delete="removeName" />
     </section>
 
+    <!-- Relationships Section -->
+    <section id="section-relationships" class="detail-section" aria-labelledby="section-person-relationships">
+      <div class="section-header-custom" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
+        <span class="section-title-label">{{ $t('personDetail.relationships') }} <span v-if="relSectionRef?.count" class="section-count">({{ relSectionRef.count }})</span></span>
+        <div class="rel-actions">
+          <AppButton variant="soft" size="sm" @click="addRelatedMode = 'father'; showAddRelated = true">+ {{ $t('personDetail.addFather') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="addRelatedMode = 'mother'; showAddRelated = true">+ {{ $t('personDetail.addMother') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="addRelatedMode = 'spouse'; showAddRelated = true">+ {{ $t('personDetail.addSpouse') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="addRelatedMode = 'child'; showAddRelated = true">+ {{ $t('personDetail.addChild') }}</AppButton>
+        </div>
+      </div>
+      <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
+    </section>
+
     <!-- Events Section -->
     <section id="section-events" class="detail-section" aria-label="Events">
       <EventList :person-id="person.id" ref="eventListRef" :key="'events-' + dataVersionStore.version" />
@@ -78,13 +91,13 @@
 
     <!-- Timeline Section -->
     <section id="section-timeline" class="detail-section" aria-labelledby="section-person-timeline">
-      <SectionHeader :title="$t('personTimeline.title')" />
+      <SectionHeader :title="$t('personTimeline.title')" :collapsible="false" />
       <PersonTimeline ref="timelineRef" :person-id="person.id" :key="'timeline-' + dataVersionStore.version" />
     </section>
 
     <!-- Life Map Section -->
     <section v-if="hasGeoEvents" class="detail-section" aria-labelledby="section-person-map">
-      <SectionHeader :title="$t('map.personMap')" />
+      <SectionHeader :title="$t('map.personMap')" :collapsible="false" />
       <PersonMap :person-id="person.id" :key="'map-' + dataVersionStore.version" />
     </section>
 
@@ -92,26 +105,14 @@
     <section id="section-identifiers" class="detail-section" aria-labelledby="section-person-identifiers">
       <SectionHeader
         :title="$t('identifiers.title')"
+        :count="identifiersSectionRef?.count"
+        :collapsible="false"
         :action-label="$t('identifiers.add')"
         tabindex="0"
-        :data-narrate="t('screenReader.sectionIdentifiers', { count: 0, summary: '' })"
+        :data-narrate="t('screenReader.sectionIdentifiers', { count: identifiersSectionRef?.count ?? 0, summary: '' })"
         @action="identifiersSectionRef?.openAddForm()"
       />
       <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="person.id" />
-    </section>
-
-    <!-- Relationships Section -->
-    <section id="section-relationships" class="detail-section" aria-labelledby="section-person-relationships">
-      <div class="section-header-custom" tabindex="0" :data-narrate="t('screenReader.sectionRelationships', { count: 0, summary: '' })">
-        <span class="section-title-label">{{ $t('personDetail.relationships') }}</span>
-        <div class="rel-actions">
-          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'father'; showAddRelated = true">{{ $t('personDetail.addFather') }}</AppButton>
-          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'mother'; showAddRelated = true">{{ $t('personDetail.addMother') }}</AppButton>
-          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'spouse'; showAddRelated = true">{{ $t('personDetail.addSpouse') }}</AppButton>
-          <AppButton variant="ghost" size="sm" @click="addRelatedMode = 'child'; showAddRelated = true">{{ $t('personDetail.addChild') }}</AppButton>
-        </div>
-      </div>
-      <PersonRelationshipsSection ref="relSectionRef" :person-id="personId" />
     </section>
 
     <!-- Groups Section -->
@@ -119,6 +120,7 @@
       <SectionHeader
         :title="$t('groups.title')"
         :count="personGroups.length"
+        :collapsible="false"
         :action-label="!showGroupPicker ? $t('groups.addMember') : ''"
         @action="showGroupPicker = true"
       />
@@ -138,9 +140,11 @@
     <section id="section-media" class="detail-section" aria-labelledby="section-person-media">
       <SectionHeader
         :title="$t('media.title')"
+        :count="mediaSectionRef?.count"
+        :collapsible="false"
         :action-label="$t('media.attach')"
         tabindex="0"
-        :data-narrate="t('screenReader.sectionMedia', { count: 0, summary: '' })"
+        :data-narrate="t('screenReader.sectionMedia', { count: mediaSectionRef?.count ?? 0, summary: '' })"
         @action="mediaSectionRef?.attach()"
       />
       <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
@@ -148,7 +152,7 @@
 
     <!-- Media Timeline Section -->
     <section class="detail-section" aria-labelledby="section-media-timeline">
-      <SectionHeader :title="$t('mediaTimeline.title')" />
+      <SectionHeader :title="$t('mediaTimeline.title')" :collapsible="false" />
       <MediaTimeline entity-type="person" :entity-id="person.id" />
     </section>
 
@@ -157,6 +161,7 @@
       <SectionHeader
         :title="$t('nav.researchTasks')"
         :count="personTasks.length"
+        :collapsible="false"
         :action-label="$t('researchTasks.addTask')"
         @action="showAddTaskModal = true"
       />
@@ -176,8 +181,10 @@
     <section id="section-checks" class="detail-section" aria-labelledby="section-person-quality">
       <SectionHeader
         :title="$t('quality.nav')"
+        :count="checksSectionRef?.count"
+        :collapsible="false"
         tabindex="0"
-        :data-narrate="t('screenReader.sectionChecks', { count: 0, summary: '' })"
+        :data-narrate="t('screenReader.sectionChecks', { count: checksSectionRef?.count ?? 0, summary: '' })"
       />
       <PersonChecksSection ref="checksSectionRef" :person-id="person.id" @fix="handleCheckFix" />
     </section>
@@ -279,6 +286,7 @@ const editingName = ref<NameRow | null>(null);
 const showAddRelated = ref(false);
 const addRelatedMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 const primaryNameData = computed(() => names.value.length > 0 ? names.value[0] : null);
+const birthSummary = ref('');
 const editSex = ref('U');
 const editLiving = ref(1);
 const dataVersionStore = useDataVersionStore();
@@ -357,6 +365,20 @@ async function load() {
         .map(p => p.text).join('');
     }
     focusStore.set(personId, primaryName.value);
+
+    // Build birth summary for header
+    try {
+      const events = await window.api.events.forPerson(personId) as Array<{ event_type: string; date_value: string | null; place_name?: string | null }>;
+      const birth = events.find((e: { event_type: string }) => e.event_type === 'birth');
+      if (birth) {
+        const parts: string[] = [];
+        if (birth.place_name) parts.push(birth.place_name);
+        if (birth.date_value) parts.push('b. ' + birth.date_value);
+        birthSummary.value = parts.length > 0 ? parts.join(', ') : '';
+      } else {
+        birthSummary.value = '';
+      }
+    } catch { birthSummary.value = ''; }
 
     await loadPersonTasks();
     await loadPersonGroups();
@@ -513,22 +535,12 @@ onBeforeRouteLeave(() => { stop(); });
 .detail-header {
   margin-bottom: 24px;
 }
-.btn-back {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  cursor: pointer;
-  padding: 4px 0;
-  font-size: var(--font-base);
-  margin-bottom: 8px;
-}
-.btn-back:hover {
-  text-decoration: underline;
-}
 .header-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--surface-border-subtle);
 }
 .profile-thumbnail {
   width: 56px;
@@ -539,12 +551,30 @@ onBeforeRouteLeave(() => { stop(); });
   flex-shrink: 0;
 }
 .header-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  flex: 1;
 }
 .header-info h2 {
   margin: 0;
+  font-size: var(--font-xl);
+}
+.header-summary {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.summary-sep {
+  margin: 0 6px;
+}
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.header-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
 }
 .sex-select {
   padding: 2px 20px 2px 8px;
@@ -578,6 +608,25 @@ onBeforeRouteLeave(() => { stop(); });
   font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-secondary);
+}
+.details-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
 }
 .field-grid select {
   padding: 6px 8px;
@@ -615,6 +664,11 @@ textarea {
   font-size: var(--font-base);
   color: var(--text-primary);
   margin-right: auto;
+}
+.section-count {
+  font-weight: var(--font-weight-normal);
+  color: var(--text-muted);
+  font-size: var(--font-sm);
 }
 .rel-actions {
   display: flex;
