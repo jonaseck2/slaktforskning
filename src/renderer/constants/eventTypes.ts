@@ -53,7 +53,7 @@ export const NAME_TYPE_VALUES = [
 ] as const;
 
 export const PLACE_TYPE_VALUES = [
-  'country', 'province', 'county', 'municipality', 'härad', 'parish',
+  'country', 'admin1', 'province', 'county', 'municipality', 'härad', 'parish',
   'locality', 'farm', 'village', 'city', 'other',
 ] as const;
 

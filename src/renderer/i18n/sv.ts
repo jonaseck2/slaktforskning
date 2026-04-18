@@ -466,6 +466,7 @@ export default {
   },
   placeTypes: {
     country: 'Land',
+    admin1: 'Delstat/Region',
     province: 'Landskap',
     county: 'Län',
     härad: 'Härad',
