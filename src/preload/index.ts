@@ -230,6 +230,10 @@ const api = {
     onPerformed: (cb: (data: { type: string; label: string }) => void) =>
       ipcRenderer.on('undo:performed', (_e, data: { type: string; label: string }) => cb(data)),
   },
+  wallChart: {
+    saveSvg: (svgContent: string) => ipcRenderer.invoke('wallChart:saveSvg', svgContent),
+    saveTiledPdf: (pages: string[]) => ipcRenderer.invoke('wallChart:saveTiledPdf', pages),
+  },
   onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
   chart: {
     onGetVisiblePersons: (callback: () => unknown) => {

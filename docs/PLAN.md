@@ -192,6 +192,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.106.0 | Open source publishing: governance files, plans, spec | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
 | v0.107.0 | Open source infra (templates, CI/CD), link rules expansion (de/da/no), circle+fan charts, name display | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
 | v0.108.0 | Per-theme dark mode with tinted surfaces (Forest/Nordic/Twilight) | [plan](plans/2026-04-18-dark-mode-theme-refinement.md) |
+| v0.109.0 | Wall chart generation UI (SVG/tiled PDF export, A4-A0 paper sizes) | [plan](plans/2026-04-18-wall-chart-generation-ui.md) |
 | v0.107.0 | Link Rules Expansion: de/da/no rule sets, sv/en additions, LinkedText db config fix, locale toggles | [archive](plans/archive/2026-04-18-link-rules-expansion.md) |
 ---
 

@@ -62,6 +62,7 @@ src/
 │   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context, tagging status
 │   ├── media_regions.ts          # Media region (face/area tagging) CRUD
 │   ├── gazetteers.ts             # Gazetteer import/export/delete CRUD (per-database blob storage)
+│   ├── wall-charts.ts            # Wall chart SVG generation (pedigree/descendant, paper sizes, tiling)
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   ├── link-rules/               # Default link rule sets
 │   │   ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, SVAR, DDB, etc.)
@@ -158,7 +159,8 @@ src/
 │   │   │   ├── timeline.ts           # Timeline layout (horizontal bar chart)
 │   │   │   └── index.ts              # Barrel re-exports
 │   │   ├── narration.ts            # Natural-language narration builders for TTS
-│   │   └── screenReaderNarration.ts # Narration builders for screen reader mode
+│   │   ├── screenReaderNarration.ts # Narration builders for screen reader mode
+│   │   └── wallChartData.ts      # Fetch tree data for wall chart SVG generation
 │   └── constants/
 │       └── eventTypes.ts         # GEDCOM event types, date types, confidence levels, etc.
 └── mcp/

@@ -226,6 +226,24 @@
       </div>
     </div>
 
+    <!-- Wall Chart Tab -->
+    <div v-if="activeTab === 'wallChart'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls"></div>
+        <div class="print-actions">
+          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="showWallChartModal = true">{{ $t('wallChart.title') }}</AppButton>
+        </div>
+      </div>
+      <div class="preview-area">
+        <div v-if="chartPersonId" class="empty-hint">
+          {{ $t('wallChart.noPreview') }}
+          <br /><br />
+          <AppButton variant="primary" @click="showWallChartModal = true">{{ $t('wallChart.title') }}</AppButton>
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+      </div>
+    </div>
+
     <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
       <template v-if="activeTab === 'ancestor'">
         <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
@@ -242,6 +260,13 @@
         <button class="zoom-extra-btn" :class="{ active: circleCurvedText }" @click="circleCurvedText = !circleCurvedText" :title="$t('visualization.curvedText')">⌒</button>
       </template>
     </ZoomControls>
+
+    <WallChartModal
+      v-if="showWallChartModal && chartPersonId"
+      :person-id="chartPersonId"
+      :person-name="focusStore.personName ?? ''"
+      @close="showWallChartModal = false"
+    />
   </div>
 </template>
 
@@ -263,6 +288,7 @@ import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
 import DescendantChartReport from '../components/reports/DescendantChartReport.vue';
 import CircleChartReport from '../components/reports/CircleChartReport.vue';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
+import WallChartModal from '../components/reports/WallChartModal.vue';
 import ZoomControls from '../components/ZoomControls.vue';
 
 interface RelationshipOption { id: string; label: string; }
@@ -272,7 +298,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'descendantChart' | 'circleChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'descendantChart' | 'circleChart' | 'timeline' | 'wallChart'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -286,6 +312,7 @@ const tabs = computed(() => [
   { id: 'descendantChart', label: t('reports.tabDescendantChart') },
   { id: 'circleChart', label: t('reports.tabCircleChart') },
   { id: 'timeline', label: t('reports.tabTimeline') },
+  { id: 'wallChart', label: t('wallChart.tabWallChart') },
 ]);
 
 const ancestorRootId = computed(() => focusStore.personId);
@@ -338,6 +365,7 @@ function triggerLoading() {
   nextTick(() => setTimeout(() => { reportLoading.value = false; }, 800));
 }
 const chartPersonId = computed(() => focusStore.personId);
+const showWallChartModal = ref(false);
 
 watch(activeTab, triggerLoading);
 watch(ancestorRootId, triggerLoading);
@@ -405,7 +433,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=biography)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'descendantChart', 'circleChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'descendantChart', 'circleChart', 'timeline', 'wallChart'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
