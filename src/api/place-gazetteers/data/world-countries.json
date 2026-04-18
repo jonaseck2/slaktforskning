@@ -1,0 +1,2460 @@
+{
+  "id": "world-countries",
+  "name": "World Countries",
+  "locale": "en",
+  "description": "All countries with ISO alpha-2 and alpha-3 codes. Coordinates are population-weighted centroids.",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://www.geonames.org/",
+    "license": "CC BY 4.0",
+    "fetched": "2026-04-18"
+  },
+  "root": {
+    "name": "World",
+    "type": "root",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Afghanistan",
+        "type": "country",
+        "aliases": [
+          "AF",
+          "AFG"
+        ],
+        "lat": 34.629974,
+        "lon": 67.998873
+      },
+      {
+        "name": "Aland Islands",
+        "type": "country",
+        "aliases": [
+          "AX",
+          "ALA"
+        ],
+        "lat": 60.09726,
+        "lon": 19.93481
+      },
+      {
+        "name": "Albania",
+        "type": "country",
+        "aliases": [
+          "AL",
+          "ALB"
+        ],
+        "lat": 41.130694,
+        "lon": 19.813253
+      },
+      {
+        "name": "Algeria",
+        "type": "country",
+        "aliases": [
+          "DZ",
+          "DZA"
+        ],
+        "lat": 35.623065,
+        "lon": 3.546606
+      },
+      {
+        "name": "American Samoa",
+        "type": "country",
+        "aliases": [
+          "AS",
+          "ASM"
+        ],
+        "lat": -14.27806,
+        "lon": -170.7025
+      },
+      {
+        "name": "Andorra",
+        "type": "country",
+        "aliases": [
+          "AD",
+          "AND"
+        ],
+        "lat": 42.507572,
+        "lon": 1.526792
+      },
+      {
+        "name": "Angola",
+        "type": "country",
+        "aliases": [
+          "AO",
+          "AGO"
+        ],
+        "lat": -10.17558,
+        "lon": 14.650444
+      },
+      {
+        "name": "Anguilla",
+        "type": "country",
+        "aliases": [
+          "AI",
+          "AIA"
+        ],
+        "lat": 18.21704,
+        "lon": -63.05783
+      },
+      {
+        "name": "Antigua and Barbuda",
+        "type": "country",
+        "aliases": [
+          "AG",
+          "ATG"
+        ],
+        "lat": 17.12096,
+        "lon": -61.84329
+      },
+      {
+        "name": "Argentina",
+        "type": "country",
+        "aliases": [
+          "AR",
+          "ARG"
+        ],
+        "lat": -32.749386,
+        "lon": -61.32225
+      },
+      {
+        "name": "Armenia",
+        "type": "country",
+        "aliases": [
+          "AM",
+          "ARM"
+        ],
+        "lat": 40.225805,
+        "lon": 44.524602
+      },
+      {
+        "name": "Aruba",
+        "type": "country",
+        "aliases": [
+          "AW",
+          "ABW"
+        ],
+        "lat": 12.524067,
+        "lon": -70.006643
+      },
+      {
+        "name": "Australia",
+        "type": "country",
+        "aliases": [
+          "AU",
+          "AUS"
+        ],
+        "lat": -33.483217,
+        "lon": 144.999563
+      },
+      {
+        "name": "Austria",
+        "type": "country",
+        "aliases": [
+          "AT",
+          "AUT"
+        ],
+        "lat": 47.939788,
+        "lon": 15.510358
+      },
+      {
+        "name": "Azerbaijan",
+        "type": "country",
+        "aliases": [
+          "AZ",
+          "AZE"
+        ],
+        "lat": 40.321434,
+        "lon": 48.875273
+      },
+      {
+        "name": "Bahamas",
+        "type": "country",
+        "aliases": [
+          "BS",
+          "BHS"
+        ],
+        "lat": 25.39729,
+        "lon": -77.654598
+      },
+      {
+        "name": "Bahrain",
+        "type": "country",
+        "aliases": [
+          "BH",
+          "BHR"
+        ],
+        "lat": 26.179335,
+        "lon": 50.565794
+      },
+      {
+        "name": "Bangladesh",
+        "type": "country",
+        "aliases": [
+          "BD",
+          "BGD"
+        ],
+        "lat": 23.645913,
+        "lon": 90.427748
+      },
+      {
+        "name": "Barbados",
+        "type": "country",
+        "aliases": [
+          "BB",
+          "BRB"
+        ],
+        "lat": 13.10732,
+        "lon": -59.62021
+      },
+      {
+        "name": "Belarus",
+        "type": "country",
+        "aliases": [
+          "BY",
+          "BLR"
+        ],
+        "lat": 53.564499,
+        "lon": 27.82127
+      },
+      {
+        "name": "Belgium",
+        "type": "country",
+        "aliases": [
+          "BE",
+          "BEL"
+        ],
+        "lat": 50.890493,
+        "lon": 4.374623
+      },
+      {
+        "name": "Belize",
+        "type": "country",
+        "aliases": [
+          "BZ",
+          "BLZ"
+        ],
+        "lat": 17.615114,
+        "lon": -88.27963
+      },
+      {
+        "name": "Benin",
+        "type": "country",
+        "aliases": [
+          "BJ",
+          "BEN"
+        ],
+        "lat": 7.649967,
+        "lon": 2.330541
+      },
+      {
+        "name": "Bermuda",
+        "type": "country",
+        "aliases": [
+          "BM",
+          "BMU"
+        ],
+        "lat": 32.2949,
+        "lon": -64.78303
+      },
+      {
+        "name": "Bhutan",
+        "type": "country",
+        "aliases": [
+          "BT",
+          "BTN"
+        ],
+        "lat": 27.323677,
+        "lon": 89.693694
+      },
+      {
+        "name": "Bolivia",
+        "type": "country",
+        "aliases": [
+          "BO",
+          "BOL"
+        ],
+        "lat": -17.386232,
+        "lon": -65.786666
+      },
+      {
+        "name": "Bonaire, Saint Eustatius and Saba ",
+        "type": "country",
+        "aliases": [
+          "BQ",
+          "BES"
+        ],
+        "lat": 12.15,
+        "lon": -68.26667
+      },
+      {
+        "name": "Bosnia and Herzegovina",
+        "type": "country",
+        "aliases": [
+          "BA",
+          "BIH"
+        ],
+        "lat": 44.176963,
+        "lon": 17.970579
+      },
+      {
+        "name": "Botswana",
+        "type": "country",
+        "aliases": [
+          "BW",
+          "BWA"
+        ],
+        "lat": -23.42853,
+        "lon": 25.986262
+      },
+      {
+        "name": "Brazil",
+        "type": "country",
+        "aliases": [
+          "BR",
+          "BRA"
+        ],
+        "lat": -17.452519,
+        "lon": -45.846747
+      },
+      {
+        "name": "British Virgin Islands",
+        "type": "country",
+        "aliases": [
+          "VG",
+          "VGB"
+        ],
+        "lat": 18.42693,
+        "lon": -64.62079
+      },
+      {
+        "name": "Brunei",
+        "type": "country",
+        "aliases": [
+          "BN",
+          "BRN"
+        ],
+        "lat": 4.820733,
+        "lon": 114.737891
+      },
+      {
+        "name": "Bulgaria",
+        "type": "country",
+        "aliases": [
+          "BG",
+          "BGR"
+        ],
+        "lat": 42.707514,
+        "lon": 24.918859
+      },
+      {
+        "name": "Burkina Faso",
+        "type": "country",
+        "aliases": [
+          "BF",
+          "BFA"
+        ],
+        "lat": 12.14798,
+        "lon": -2.083052
+      },
+      {
+        "name": "Burundi",
+        "type": "country",
+        "aliases": [
+          "BI",
+          "BDI"
+        ],
+        "lat": -3.340425,
+        "lon": 29.492494
+      },
+      {
+        "name": "Cabo Verde",
+        "type": "country",
+        "aliases": [
+          "CV",
+          "CPV"
+        ],
+        "lat": 15.657501,
+        "lon": -23.872783
+      },
+      {
+        "name": "Cambodia",
+        "type": "country",
+        "aliases": [
+          "KH",
+          "KHM"
+        ],
+        "lat": 11.74728,
+        "lon": 104.698086
+      },
+      {
+        "name": "Cameroon",
+        "type": "country",
+        "aliases": [
+          "CM",
+          "CMR"
+        ],
+        "lat": 5.405724,
+        "lon": 11.186733
+      },
+      {
+        "name": "Canada",
+        "type": "country",
+        "aliases": [
+          "CA",
+          "CAN"
+        ],
+        "lat": 46.479776,
+        "lon": -88.736641
+      },
+      {
+        "name": "Cayman Islands",
+        "type": "country",
+        "aliases": [
+          "KY",
+          "CYM"
+        ],
+        "lat": 19.319314,
+        "lon": -81.380689
+      },
+      {
+        "name": "Central African Republic",
+        "type": "country",
+        "aliases": [
+          "CF",
+          "CAF"
+        ],
+        "lat": 4.940744,
+        "lon": 18.347769
+      },
+      {
+        "name": "Chad",
+        "type": "country",
+        "aliases": [
+          "TD",
+          "TCD"
+        ],
+        "lat": 11.534967,
+        "lon": 16.56702
+      },
+      {
+        "name": "Chile",
+        "type": "country",
+        "aliases": [
+          "CL",
+          "CHL"
+        ],
+        "lat": -33.687594,
+        "lon": -71.193397
+      },
+      {
+        "name": "China",
+        "type": "country",
+        "aliases": [
+          "CN",
+          "CHN"
+        ],
+        "lat": 32.010051,
+        "lon": 114.364347
+      },
+      {
+        "name": "Christmas Island",
+        "type": "country",
+        "aliases": [
+          "CX",
+          "CXR"
+        ],
+        "lat": -10.42172,
+        "lon": 105.67912
+      },
+      {
+        "name": "Cocos Islands",
+        "type": "country",
+        "aliases": [
+          "CC",
+          "CCK"
+        ],
+        "lat": -12.15681,
+        "lon": 96.82251
+      },
+      {
+        "name": "Colombia",
+        "type": "country",
+        "aliases": [
+          "CO",
+          "COL"
+        ],
+        "lat": 5.965452,
+        "lon": -74.868672
+      },
+      {
+        "name": "Comoros",
+        "type": "country",
+        "aliases": [
+          "KM",
+          "COM"
+        ],
+        "lat": -11.890973,
+        "lon": 43.580837
+      },
+      {
+        "name": "Cook Islands",
+        "type": "country",
+        "aliases": [
+          "CK",
+          "COK"
+        ],
+        "lat": -21.2075,
+        "lon": -159.77546
+      },
+      {
+        "name": "Costa Rica",
+        "type": "country",
+        "aliases": [
+          "CR",
+          "CRI"
+        ],
+        "lat": 9.987634,
+        "lon": -84.144691
+      },
+      {
+        "name": "Croatia",
+        "type": "country",
+        "aliases": [
+          "HR",
+          "HRV"
+        ],
+        "lat": 45.305884,
+        "lon": 16.206438
+      },
+      {
+        "name": "Cuba",
+        "type": "country",
+        "aliases": [
+          "CU",
+          "CUB"
+        ],
+        "lat": 22.20683,
+        "lon": -80.253224
+      },
+      {
+        "name": "Curacao",
+        "type": "country",
+        "aliases": [
+          "CW",
+          "CUW"
+        ],
+        "lat": 12.118189,
+        "lon": -68.878481
+      },
+      {
+        "name": "Cyprus",
+        "type": "country",
+        "aliases": [
+          "CY",
+          "CYP"
+        ],
+        "lat": 35.000087,
+        "lon": 33.314418
+      },
+      {
+        "name": "Czechia",
+        "type": "country",
+        "aliases": [
+          "CZ",
+          "CZE"
+        ],
+        "lat": 49.891082,
+        "lon": 15.436382
+      },
+      {
+        "name": "Democratic Republic of the Congo",
+        "type": "country",
+        "aliases": [
+          "CD",
+          "COD"
+        ],
+        "lat": -4.723159,
+        "lon": 20.23484
+      },
+      {
+        "name": "Denmark",
+        "type": "country",
+        "aliases": [
+          "DK",
+          "DNK"
+        ],
+        "lat": 55.79149,
+        "lon": 11.41607
+      },
+      {
+        "name": "Djibouti",
+        "type": "country",
+        "aliases": [
+          "DJ",
+          "DJI"
+        ],
+        "lat": 11.551027,
+        "lon": 43.072691
+      },
+      {
+        "name": "Dominica",
+        "type": "country",
+        "aliases": [
+          "DM",
+          "DMA"
+        ],
+        "lat": 15.30174,
+        "lon": -61.38808
+      },
+      {
+        "name": "Dominican Republic",
+        "type": "country",
+        "aliases": [
+          "DO",
+          "DOM"
+        ],
+        "lat": 18.753458,
+        "lon": -70.076202
+      },
+      {
+        "name": "Ecuador",
+        "type": "country",
+        "aliases": [
+          "EC",
+          "ECU"
+        ],
+        "lat": -1.403722,
+        "lon": -79.289809
+      },
+      {
+        "name": "Egypt",
+        "type": "country",
+        "aliases": [
+          "EG",
+          "EGY"
+        ],
+        "lat": 29.824566,
+        "lon": 31.212796
+      },
+      {
+        "name": "El Salvador",
+        "type": "country",
+        "aliases": [
+          "SV",
+          "SLV"
+        ],
+        "lat": 13.70082,
+        "lon": -89.079342
+      },
+      {
+        "name": "Equatorial Guinea",
+        "type": "country",
+        "aliases": [
+          "GQ",
+          "GNQ"
+        ],
+        "lat": 2.711698,
+        "lon": 9.449572
+      },
+      {
+        "name": "Eritrea",
+        "type": "country",
+        "aliases": [
+          "ER",
+          "ERI"
+        ],
+        "lat": 15.24652,
+        "lon": 38.836246
+      },
+      {
+        "name": "Estonia",
+        "type": "country",
+        "aliases": [
+          "EE",
+          "EST"
+        ],
+        "lat": 59.198894,
+        "lon": 25.423839
+      },
+      {
+        "name": "Eswatini",
+        "type": "country",
+        "aliases": [
+          "SZ",
+          "SWZ"
+        ],
+        "lat": -26.425498,
+        "lon": 31.277463
+      },
+      {
+        "name": "Ethiopia",
+        "type": "country",
+        "aliases": [
+          "ET",
+          "ETH"
+        ],
+        "lat": 9.257129,
+        "lon": 39.021883
+      },
+      {
+        "name": "Falkland Islands",
+        "type": "country",
+        "aliases": [
+          "FK",
+          "FLK"
+        ],
+        "lat": -51.69382,
+        "lon": -57.85701
+      },
+      {
+        "name": "Faroe Islands",
+        "type": "country",
+        "aliases": [
+          "FO",
+          "FRO"
+        ],
+        "lat": 62.00973,
+        "lon": -6.77164
+      },
+      {
+        "name": "Fiji",
+        "type": "country",
+        "aliases": [
+          "FJ",
+          "FJI"
+        ],
+        "lat": -17.850776,
+        "lon": 178.197767
+      },
+      {
+        "name": "Finland",
+        "type": "country",
+        "aliases": [
+          "FI",
+          "FIN"
+        ],
+        "lat": 61.258512,
+        "lon": 24.869625
+      },
+      {
+        "name": "France",
+        "type": "country",
+        "aliases": [
+          "FR",
+          "FRA"
+        ],
+        "lat": 47.282419,
+        "lon": 2.866613
+      },
+      {
+        "name": "French Guiana",
+        "type": "country",
+        "aliases": [
+          "GF",
+          "GUF"
+        ],
+        "lat": 5.043311,
+        "lon": -52.637161
+      },
+      {
+        "name": "French Polynesia",
+        "type": "country",
+        "aliases": [
+          "PF",
+          "PYF"
+        ],
+        "lat": -17.574659,
+        "lon": -149.591129
+      },
+      {
+        "name": "French Southern Territories",
+        "type": "country",
+        "aliases": [
+          "TF",
+          "ATF"
+        ],
+        "lat": -49.34916,
+        "lon": 70.21937
+      },
+      {
+        "name": "Gabon",
+        "type": "country",
+        "aliases": [
+          "GA",
+          "GAB"
+        ],
+        "lat": -0.056045,
+        "lon": 10.217763
+      },
+      {
+        "name": "Gambia",
+        "type": "country",
+        "aliases": [
+          "GM",
+          "GMB"
+        ],
+        "lat": 13.407824,
+        "lon": -16.585849
+      },
+      {
+        "name": "Georgia",
+        "type": "country",
+        "aliases": [
+          "GE",
+          "GEO"
+        ],
+        "lat": 41.840337,
+        "lon": 43.922325
+      },
+      {
+        "name": "Germany",
+        "type": "country",
+        "aliases": [
+          "DE",
+          "DEU"
+        ],
+        "lat": 51.253932,
+        "lon": 9.65008
+      },
+      {
+        "name": "Ghana",
+        "type": "country",
+        "aliases": [
+          "GH",
+          "GHA"
+        ],
+        "lat": 6.403232,
+        "lon": -0.98115
+      },
+      {
+        "name": "Gibraltar",
+        "type": "country",
+        "aliases": [
+          "GI",
+          "GIB"
+        ],
+        "lat": 36.14474,
+        "lon": -5.35257
+      },
+      {
+        "name": "Greece",
+        "type": "country",
+        "aliases": [
+          "GR",
+          "GRC"
+        ],
+        "lat": 38.637115,
+        "lon": 23.430214
+      },
+      {
+        "name": "Greenland",
+        "type": "country",
+        "aliases": [
+          "GL",
+          "GRL"
+        ],
+        "lat": 64.18347,
+        "lon": -51.72157
+      },
+      {
+        "name": "Grenada",
+        "type": "country",
+        "aliases": [
+          "GD",
+          "GRD"
+        ],
+        "lat": 12.05288,
+        "lon": -61.75226
+      },
+      {
+        "name": "Guadeloupe",
+        "type": "country",
+        "aliases": [
+          "GP",
+          "GLP"
+        ],
+        "lat": 16.229393,
+        "lon": -61.528874
+      },
+      {
+        "name": "Guam",
+        "type": "country",
+        "aliases": [
+          "GU",
+          "GUM"
+        ],
+        "lat": 13.501906,
+        "lon": 144.823178
+      },
+      {
+        "name": "Guatemala",
+        "type": "country",
+        "aliases": [
+          "GT",
+          "GTM"
+        ],
+        "lat": 14.734942,
+        "lon": -90.706269
+      },
+      {
+        "name": "Guernsey",
+        "type": "country",
+        "aliases": [
+          "GG",
+          "GGY"
+        ],
+        "lat": 49.45981,
+        "lon": -2.53527
+      },
+      {
+        "name": "Guinea",
+        "type": "country",
+        "aliases": [
+          "GN",
+          "GIN"
+        ],
+        "lat": 9.754737,
+        "lon": -12.797825
+      },
+      {
+        "name": "Guinea-Bissau",
+        "type": "country",
+        "aliases": [
+          "GW",
+          "GNB"
+        ],
+        "lat": 11.915518,
+        "lon": -15.386535
+      },
+      {
+        "name": "Guyana",
+        "type": "country",
+        "aliases": [
+          "GY",
+          "GUY"
+        ],
+        "lat": 6.629599,
+        "lon": -58.105657
+      },
+      {
+        "name": "Haiti",
+        "type": "country",
+        "aliases": [
+          "HT",
+          "HTI"
+        ],
+        "lat": 18.739907,
+        "lon": -72.500627
+      },
+      {
+        "name": "Honduras",
+        "type": "country",
+        "aliases": [
+          "HN",
+          "HND"
+        ],
+        "lat": 14.908569,
+        "lon": -87.51801
+      },
+      {
+        "name": "Hong Kong",
+        "type": "country",
+        "aliases": [
+          "HK",
+          "HKG"
+        ],
+        "lat": 22.334943,
+        "lon": 114.151921
+      },
+      {
+        "name": "Hungary",
+        "type": "country",
+        "aliases": [
+          "HU",
+          "HUN"
+        ],
+        "lat": 47.386003,
+        "lon": 19.213814
+      },
+      {
+        "name": "Iceland",
+        "type": "country",
+        "aliases": [
+          "IS",
+          "ISL"
+        ],
+        "lat": 64.22664,
+        "lon": -21.698956
+      },
+      {
+        "name": "India",
+        "type": "country",
+        "aliases": [
+          "IN",
+          "IND"
+        ],
+        "lat": 20.976921,
+        "lon": 78.359468
+      },
+      {
+        "name": "Indonesia",
+        "type": "country",
+        "aliases": [
+          "ID",
+          "IDN"
+        ],
+        "lat": -4.80648,
+        "lon": 109.466063
+      },
+      {
+        "name": "Iran",
+        "type": "country",
+        "aliases": [
+          "IR",
+          "IRN"
+        ],
+        "lat": 34.445758,
+        "lon": 51.58388
+      },
+      {
+        "name": "Iraq",
+        "type": "country",
+        "aliases": [
+          "IQ",
+          "IRQ"
+        ],
+        "lat": 33.591265,
+        "lon": 44.777386
+      },
+      {
+        "name": "Ireland",
+        "type": "country",
+        "aliases": [
+          "IE",
+          "IRL"
+        ],
+        "lat": 53.13497,
+        "lon": -6.836247
+      },
+      {
+        "name": "Isle of Man",
+        "type": "country",
+        "aliases": [
+          "IM",
+          "IMN"
+        ],
+        "lat": 54.15,
+        "lon": -4.48333
+      },
+      {
+        "name": "Israel",
+        "type": "country",
+        "aliases": [
+          "IL",
+          "ISR"
+        ],
+        "lat": 32.070525,
+        "lon": 34.966846
+      },
+      {
+        "name": "Italy",
+        "type": "country",
+        "aliases": [
+          "IT",
+          "ITA"
+        ],
+        "lat": 42.718173,
+        "lon": 12.013577
+      },
+      {
+        "name": "Ivory Coast",
+        "type": "country",
+        "aliases": [
+          "CI",
+          "CIV"
+        ],
+        "lat": 6.159645,
+        "lon": -4.892402
+      },
+      {
+        "name": "Jamaica",
+        "type": "country",
+        "aliases": [
+          "JM",
+          "JAM"
+        ],
+        "lat": 18.020666,
+        "lon": -76.897119
+      },
+      {
+        "name": "Japan",
+        "type": "country",
+        "aliases": [
+          "JP",
+          "JPN"
+        ],
+        "lat": 35.526828,
+        "lon": 137.267004
+      },
+      {
+        "name": "Jersey",
+        "type": "country",
+        "aliases": [
+          "JE",
+          "JEY"
+        ],
+        "lat": 49.18804,
+        "lon": -2.10491
+      },
+      {
+        "name": "Jordan",
+        "type": "country",
+        "aliases": [
+          "JO",
+          "JOR"
+        ],
+        "lat": 32.026412,
+        "lon": 35.959163
+      },
+      {
+        "name": "Kazakhstan",
+        "type": "country",
+        "aliases": [
+          "KZ",
+          "KAZ"
+        ],
+        "lat": 46.79921,
+        "lon": 70.005941
+      },
+      {
+        "name": "Kenya",
+        "type": "country",
+        "aliases": [
+          "KE",
+          "KEN"
+        ],
+        "lat": -0.970019,
+        "lon": 36.805986
+      },
+      {
+        "name": "Kiribati",
+        "type": "country",
+        "aliases": [
+          "KI",
+          "KIR"
+        ],
+        "lat": 1.3278,
+        "lon": 172.97696
+      },
+      {
+        "name": "Kosovo",
+        "type": "country",
+        "aliases": [
+          "XK",
+          "XKX"
+        ],
+        "lat": 42.56401,
+        "lon": 20.935093
+      },
+      {
+        "name": "Kuwait",
+        "type": "country",
+        "aliases": [
+          "KW",
+          "KWT"
+        ],
+        "lat": 29.197528,
+        "lon": 48.056745
+      },
+      {
+        "name": "Kyrgyzstan",
+        "type": "country",
+        "aliases": [
+          "KG",
+          "KGZ"
+        ],
+        "lat": 41.937696,
+        "lon": 73.957702
+      },
+      {
+        "name": "Laos",
+        "type": "country",
+        "aliases": [
+          "LA",
+          "LAO"
+        ],
+        "lat": 17.998416,
+        "lon": 103.29247
+      },
+      {
+        "name": "Latvia",
+        "type": "country",
+        "aliases": [
+          "LV",
+          "LVA"
+        ],
+        "lat": 56.846594,
+        "lon": 24.130479
+      },
+      {
+        "name": "Lebanon",
+        "type": "country",
+        "aliases": [
+          "LB",
+          "LBN"
+        ],
+        "lat": 33.866944,
+        "lon": 35.534003
+      },
+      {
+        "name": "Lesotho",
+        "type": "country",
+        "aliases": [
+          "LS",
+          "LSO"
+        ],
+        "lat": -29.381342,
+        "lon": 27.667145
+      },
+      {
+        "name": "Liberia",
+        "type": "country",
+        "aliases": [
+          "LR",
+          "LBR"
+        ],
+        "lat": 6.358362,
+        "lon": -10.392997
+      },
+      {
+        "name": "Libya",
+        "type": "country",
+        "aliases": [
+          "LY",
+          "LBY"
+        ],
+        "lat": 31.996323,
+        "lon": 15.464045
+      },
+      {
+        "name": "Liechtenstein",
+        "type": "country",
+        "aliases": [
+          "LI",
+          "LIE"
+        ],
+        "lat": 47.14151,
+        "lon": 9.52154
+      },
+      {
+        "name": "Lithuania",
+        "type": "country",
+        "aliases": [
+          "LT",
+          "LTU"
+        ],
+        "lat": 55.041302,
+        "lon": 24.176327
+      },
+      {
+        "name": "Luxembourg",
+        "type": "country",
+        "aliases": [
+          "LU",
+          "LUX"
+        ],
+        "lat": 49.560299,
+        "lon": 6.084057
+      },
+      {
+        "name": "Macao",
+        "type": "country",
+        "aliases": [
+          "MO",
+          "MAC"
+        ],
+        "lat": 22.188009,
+        "lon": 113.548171
+      },
+      {
+        "name": "Madagascar",
+        "type": "country",
+        "aliases": [
+          "MG",
+          "MDG"
+        ],
+        "lat": -18.89035,
+        "lon": 47.458786
+      },
+      {
+        "name": "Malawi",
+        "type": "country",
+        "aliases": [
+          "MW",
+          "MWI"
+        ],
+        "lat": -14.243135,
+        "lon": 34.342488
+      },
+      {
+        "name": "Malaysia",
+        "type": "country",
+        "aliases": [
+          "MY",
+          "MYS"
+        ],
+        "lat": 3.448378,
+        "lon": 103.347026
+      },
+      {
+        "name": "Maldives",
+        "type": "country",
+        "aliases": [
+          "MV",
+          "MDV"
+        ],
+        "lat": 4.17521,
+        "lon": 73.50916
+      },
+      {
+        "name": "Mali",
+        "type": "country",
+        "aliases": [
+          "ML",
+          "MLI"
+        ],
+        "lat": 12.94455,
+        "lon": -7.170803
+      },
+      {
+        "name": "Malta",
+        "type": "country",
+        "aliases": [
+          "MT",
+          "MLT"
+        ],
+        "lat": 35.90908,
+        "lon": 14.463559
+      },
+      {
+        "name": "Marshall Islands",
+        "type": "country",
+        "aliases": [
+          "MH",
+          "MHL"
+        ],
+        "lat": 7.08971,
+        "lon": 171.38027
+      },
+      {
+        "name": "Martinique",
+        "type": "country",
+        "aliases": [
+          "MQ",
+          "MTQ"
+        ],
+        "lat": 14.6394,
+        "lon": -61.011844
+      },
+      {
+        "name": "Mauritania",
+        "type": "country",
+        "aliases": [
+          "MR",
+          "MRT"
+        ],
+        "lat": 18.009632,
+        "lon": -14.576454
+      },
+      {
+        "name": "Mauritius",
+        "type": "country",
+        "aliases": [
+          "MU",
+          "MUS"
+        ],
+        "lat": -20.228343,
+        "lon": 57.513291
+      },
+      {
+        "name": "Mayotte",
+        "type": "country",
+        "aliases": [
+          "YT",
+          "MYT"
+        ],
+        "lat": -12.774511,
+        "lon": 45.233642
+      },
+      {
+        "name": "Mexico",
+        "type": "country",
+        "aliases": [
+          "MX",
+          "MEX"
+        ],
+        "lat": 21.594509,
+        "lon": -100.648308
+      },
+      {
+        "name": "Micronesia",
+        "type": "country",
+        "aliases": [
+          "FM",
+          "FSM"
+        ],
+        "lat": 6.92477,
+        "lon": 158.16109
+      },
+      {
+        "name": "Moldova",
+        "type": "country",
+        "aliases": [
+          "MD",
+          "MDA"
+        ],
+        "lat": 47.093531,
+        "lon": 28.821353
+      },
+      {
+        "name": "Monaco",
+        "type": "country",
+        "aliases": [
+          "MC",
+          "MCO"
+        ],
+        "lat": 43.738023,
+        "lon": 7.423369
+      },
+      {
+        "name": "Mongolia",
+        "type": "country",
+        "aliases": [
+          "MN",
+          "MNG"
+        ],
+        "lat": 47.941516,
+        "lon": 105.329199
+      },
+      {
+        "name": "Montenegro",
+        "type": "country",
+        "aliases": [
+          "ME",
+          "MNE"
+        ],
+        "lat": 42.533375,
+        "lon": 19.16509
+      },
+      {
+        "name": "Montserrat",
+        "type": "country",
+        "aliases": [
+          "MS",
+          "MSR"
+        ],
+        "lat": 16.79183,
+        "lon": -62.21058
+      },
+      {
+        "name": "Morocco",
+        "type": "country",
+        "aliases": [
+          "MA",
+          "MAR"
+        ],
+        "lat": 33.43182,
+        "lon": -6.650572
+      },
+      {
+        "name": "Mozambique",
+        "type": "country",
+        "aliases": [
+          "MZ",
+          "MOZ"
+        ],
+        "lat": -19.899175,
+        "lon": 35.306332
+      },
+      {
+        "name": "Myanmar",
+        "type": "country",
+        "aliases": [
+          "MM",
+          "MMR"
+        ],
+        "lat": 18.737955,
+        "lon": 96.183216
+      },
+      {
+        "name": "Namibia",
+        "type": "country",
+        "aliases": [
+          "NA",
+          "NAM"
+        ],
+        "lat": -21.340179,
+        "lon": 17.186791
+      },
+      {
+        "name": "Nauru",
+        "type": "country",
+        "aliases": [
+          "NR",
+          "NRU"
+        ],
+        "lat": -0.55085,
+        "lon": 166.9252
+      },
+      {
+        "name": "Nepal",
+        "type": "country",
+        "aliases": [
+          "NP",
+          "NPL"
+        ],
+        "lat": 27.641669,
+        "lon": 84.701563
+      },
+      {
+        "name": "New Caledonia",
+        "type": "country",
+        "aliases": [
+          "NC",
+          "NCL"
+        ],
+        "lat": -22.255559,
+        "lon": 166.47115
+      },
+      {
+        "name": "New Zealand",
+        "type": "country",
+        "aliases": [
+          "NZ",
+          "NZL"
+        ],
+        "lat": -38.898402,
+        "lon": 174.539372
+      },
+      {
+        "name": "Nicaragua",
+        "type": "country",
+        "aliases": [
+          "NI",
+          "NIC"
+        ],
+        "lat": 12.332768,
+        "lon": -86.167417
+      },
+      {
+        "name": "Niger",
+        "type": "country",
+        "aliases": [
+          "NE",
+          "NER"
+        ],
+        "lat": 14.041694,
+        "lon": 5.051728
+      },
+      {
+        "name": "Nigeria",
+        "type": "country",
+        "aliases": [
+          "NG",
+          "NGA"
+        ],
+        "lat": 7.885502,
+        "lon": 5.953895
+      },
+      {
+        "name": "Niue",
+        "type": "country",
+        "aliases": [
+          "NU",
+          "NIU"
+        ],
+        "lat": -19.05294,
+        "lon": -169.91957
+      },
+      {
+        "name": "Norfolk Island",
+        "type": "country",
+        "aliases": [
+          "NF",
+          "NFK"
+        ],
+        "lat": -29.05459,
+        "lon": 167.96628
+      },
+      {
+        "name": "North Korea",
+        "type": "country",
+        "aliases": [
+          "KP",
+          "PRK"
+        ],
+        "lat": 39.515714,
+        "lon": 126.543465
+      },
+      {
+        "name": "North Macedonia",
+        "type": "country",
+        "aliases": [
+          "MK",
+          "MKD"
+        ],
+        "lat": 41.797453,
+        "lon": 21.470962
+      },
+      {
+        "name": "Northern Mariana Islands",
+        "type": "country",
+        "aliases": [
+          "MP",
+          "MNP"
+        ],
+        "lat": 15.21233,
+        "lon": 145.7545
+      },
+      {
+        "name": "Norway",
+        "type": "country",
+        "aliases": [
+          "NO",
+          "NOR"
+        ],
+        "lat": 60.471929,
+        "lon": 9.659446
+      },
+      {
+        "name": "Oman",
+        "type": "country",
+        "aliases": [
+          "OM",
+          "OMN"
+        ],
+        "lat": 23.273144,
+        "lon": 57.690041
+      },
+      {
+        "name": "Pakistan",
+        "type": "country",
+        "aliases": [
+          "PK",
+          "PAK"
+        ],
+        "lat": 30.297468,
+        "lon": 71.444064
+      },
+      {
+        "name": "Palau",
+        "type": "country",
+        "aliases": [
+          "PW",
+          "PLW"
+        ],
+        "lat": 7.50077,
+        "lon": 134.6238
+      },
+      {
+        "name": "Palestinian Territory",
+        "type": "country",
+        "aliases": [
+          "PS",
+          "PSE"
+        ],
+        "lat": 31.659562,
+        "lon": 34.840052
+      },
+      {
+        "name": "Panama",
+        "type": "country",
+        "aliases": [
+          "PA",
+          "PAN"
+        ],
+        "lat": 8.979689,
+        "lon": -79.82412
+      },
+      {
+        "name": "Papua New Guinea",
+        "type": "country",
+        "aliases": [
+          "PG",
+          "PNG"
+        ],
+        "lat": -7.713862,
+        "lon": 147.398975
+      },
+      {
+        "name": "Paraguay",
+        "type": "country",
+        "aliases": [
+          "PY",
+          "PRY"
+        ],
+        "lat": -25.28389,
+        "lon": -57.153701
+      },
+      {
+        "name": "Peru",
+        "type": "country",
+        "aliases": [
+          "PE",
+          "PER"
+        ],
+        "lat": -11.208384,
+        "lon": -76.417338
+      },
+      {
+        "name": "Philippines",
+        "type": "country",
+        "aliases": [
+          "PH",
+          "PHL"
+        ],
+        "lat": 12.369094,
+        "lon": 122.26598
+      },
+      {
+        "name": "Pitcairn",
+        "type": "country",
+        "aliases": [
+          "PN",
+          "PCN"
+        ],
+        "lat": -25.06597,
+        "lon": -130.10147
+      },
+      {
+        "name": "Poland",
+        "type": "country",
+        "aliases": [
+          "PL",
+          "POL"
+        ],
+        "lat": 51.79481,
+        "lon": 19.263471
+      },
+      {
+        "name": "Portugal",
+        "type": "country",
+        "aliases": [
+          "PT",
+          "PRT"
+        ],
+        "lat": 39.418881,
+        "lon": -9.084992
+      },
+      {
+        "name": "Puerto Rico",
+        "type": "country",
+        "aliases": [
+          "PR",
+          "PRI"
+        ],
+        "lat": 18.348925,
+        "lon": -66.239522
+      },
+      {
+        "name": "Qatar",
+        "type": "country",
+        "aliases": [
+          "QA",
+          "QAT"
+        ],
+        "lat": 25.322778,
+        "lon": 51.49144
+      },
+      {
+        "name": "Republic of the Congo",
+        "type": "country",
+        "aliases": [
+          "CG",
+          "COG"
+        ],
+        "lat": -4.035266,
+        "lon": 14.182487
+      },
+      {
+        "name": "Reunion",
+        "type": "country",
+        "aliases": [
+          "RE",
+          "REU"
+        ],
+        "lat": -21.081251,
+        "lon": 55.454066
+      },
+      {
+        "name": "Romania",
+        "type": "country",
+        "aliases": [
+          "RO",
+          "ROU"
+        ],
+        "lat": 45.376384,
+        "lon": 25.47458
+      },
+      {
+        "name": "Russia",
+        "type": "country",
+        "aliases": [
+          "RU",
+          "RUS"
+        ],
+        "lat": 54.485503,
+        "lon": 52.275838
+      },
+      {
+        "name": "Rwanda",
+        "type": "country",
+        "aliases": [
+          "RW",
+          "RWA"
+        ],
+        "lat": -1.980846,
+        "lon": 29.782943
+      },
+      {
+        "name": "Saint Barthelemy",
+        "type": "country",
+        "aliases": [
+          "BL",
+          "BLM"
+        ],
+        "lat": 17.89618,
+        "lon": -62.84978
+      },
+      {
+        "name": "Saint Helena",
+        "type": "country",
+        "aliases": [
+          "SH",
+          "SHN"
+        ],
+        "lat": -15.92488,
+        "lon": -5.71816
+      },
+      {
+        "name": "Saint Kitts and Nevis",
+        "type": "country",
+        "aliases": [
+          "KN",
+          "KNA"
+        ],
+        "lat": 17.2955,
+        "lon": -62.72499
+      },
+      {
+        "name": "Saint Lucia",
+        "type": "country",
+        "aliases": [
+          "LC",
+          "LCA"
+        ],
+        "lat": 14.035274,
+        "lon": -60.974835
+      },
+      {
+        "name": "Saint Martin",
+        "type": "country",
+        "aliases": [
+          "MF",
+          "MAF"
+        ],
+        "lat": 18.06819,
+        "lon": -63.08302
+      },
+      {
+        "name": "Saint Pierre and Miquelon",
+        "type": "country",
+        "aliases": [
+          "PM",
+          "SPM"
+        ],
+        "lat": 46.77914,
+        "lon": -56.1773
+      },
+      {
+        "name": "Saint Vincent and the Grenadines",
+        "type": "country",
+        "aliases": [
+          "VC",
+          "VCT"
+        ],
+        "lat": 13.142055,
+        "lon": -61.209714
+      },
+      {
+        "name": "Samoa",
+        "type": "country",
+        "aliases": [
+          "WS",
+          "WSM"
+        ],
+        "lat": -13.83333,
+        "lon": -171.76666
+      },
+      {
+        "name": "San Marino",
+        "type": "country",
+        "aliases": [
+          "SM",
+          "SMR"
+        ],
+        "lat": 43.93667,
+        "lon": 12.44639
+      },
+      {
+        "name": "Sao Tome and Principe",
+        "type": "country",
+        "aliases": [
+          "ST",
+          "STP"
+        ],
+        "lat": 0.33756,
+        "lon": 6.7299
+      },
+      {
+        "name": "Saudi Arabia",
+        "type": "country",
+        "aliases": [
+          "SA",
+          "SAU"
+        ],
+        "lat": 23.834001,
+        "lon": 43.002836
+      },
+      {
+        "name": "Senegal",
+        "type": "country",
+        "aliases": [
+          "SN",
+          "SEN"
+        ],
+        "lat": 14.655125,
+        "lon": -16.708138
+      },
+      {
+        "name": "Serbia",
+        "type": "country",
+        "aliases": [
+          "RS",
+          "SRB"
+        ],
+        "lat": 44.503286,
+        "lon": 20.620594
+      },
+      {
+        "name": "Seychelles",
+        "type": "country",
+        "aliases": [
+          "SC",
+          "SYC"
+        ],
+        "lat": -4.62001,
+        "lon": 55.45501
+      },
+      {
+        "name": "Sierra Leone",
+        "type": "country",
+        "aliases": [
+          "SL",
+          "SLE"
+        ],
+        "lat": 8.402768,
+        "lon": -12.510928
+      },
+      {
+        "name": "Singapore",
+        "type": "country",
+        "aliases": [
+          "SG",
+          "SGP"
+        ],
+        "lat": 1.325719,
+        "lon": 103.848775
+      },
+      {
+        "name": "Sint Maarten",
+        "type": "country",
+        "aliases": [
+          "SX",
+          "SXM"
+        ],
+        "lat": 18.026,
+        "lon": -63.04582
+      },
+      {
+        "name": "Slovakia",
+        "type": "country",
+        "aliases": [
+          "SK",
+          "SVK"
+        ],
+        "lat": 48.546381,
+        "lon": 18.693023
+      },
+      {
+        "name": "Slovenia",
+        "type": "country",
+        "aliases": [
+          "SI",
+          "SVN"
+        ],
+        "lat": 46.158281,
+        "lon": 14.825163
+      },
+      {
+        "name": "Solomon Islands",
+        "type": "country",
+        "aliases": [
+          "SB",
+          "SLB"
+        ],
+        "lat": -9.435447,
+        "lon": 159.969106
+      },
+      {
+        "name": "Somalia",
+        "type": "country",
+        "aliases": [
+          "SO",
+          "SOM"
+        ],
+        "lat": 4.921204,
+        "lon": 44.969723
+      },
+      {
+        "name": "South Africa",
+        "type": "country",
+        "aliases": [
+          "ZA",
+          "ZAF"
+        ],
+        "lat": -28.329802,
+        "lon": 26.961795
+      },
+      {
+        "name": "South Georgia and the South Sandwich Islands",
+        "type": "country",
+        "aliases": [
+          "GS",
+          "SGS"
+        ],
+        "lat": -54.28111,
+        "lon": -36.5092
+      },
+      {
+        "name": "South Korea",
+        "type": "country",
+        "aliases": [
+          "KR",
+          "KOR"
+        ],
+        "lat": 36.577026,
+        "lon": 127.509474
+      },
+      {
+        "name": "South Sudan",
+        "type": "country",
+        "aliases": [
+          "SS",
+          "SSD"
+        ],
+        "lat": 6.611584,
+        "lon": 29.914979
+      },
+      {
+        "name": "Spain",
+        "type": "country",
+        "aliases": [
+          "ES",
+          "ESP"
+        ],
+        "lat": 39.686171,
+        "lon": -2.91087
+      },
+      {
+        "name": "Sri Lanka",
+        "type": "country",
+        "aliases": [
+          "LK",
+          "LKA"
+        ],
+        "lat": 7.252448,
+        "lon": 80.246674
+      },
+      {
+        "name": "Sudan",
+        "type": "country",
+        "aliases": [
+          "SD",
+          "SDN"
+        ],
+        "lat": 14.67325,
+        "lon": 31.666018
+      },
+      {
+        "name": "Suriname",
+        "type": "country",
+        "aliases": [
+          "SR",
+          "SUR"
+        ],
+        "lat": 5.8397,
+        "lon": -55.177011
+      },
+      {
+        "name": "Svalbard and Jan Mayen",
+        "type": "country",
+        "aliases": [
+          "SJ",
+          "SJM"
+        ],
+        "lat": 78.22334,
+        "lon": 15.64689
+      },
+      {
+        "name": "Sweden",
+        "type": "country",
+        "aliases": [
+          "SE",
+          "SWE"
+        ],
+        "lat": 58.860257,
+        "lon": 16.03247
+      },
+      {
+        "name": "Switzerland",
+        "type": "country",
+        "aliases": [
+          "CH",
+          "CHE"
+        ],
+        "lat": 47.06632,
+        "lon": 7.953376
+      },
+      {
+        "name": "Syria",
+        "type": "country",
+        "aliases": [
+          "SY",
+          "SYR"
+        ],
+        "lat": 35.168627,
+        "lon": 37.200377
+      },
+      {
+        "name": "Taiwan",
+        "type": "country",
+        "aliases": [
+          "TW",
+          "TWN"
+        ],
+        "lat": 24.376922,
+        "lon": 121.062257
+      },
+      {
+        "name": "Tajikistan",
+        "type": "country",
+        "aliases": [
+          "TJ",
+          "TJK"
+        ],
+        "lat": 39.081801,
+        "lon": 69.39045
+      },
+      {
+        "name": "Tanzania",
+        "type": "country",
+        "aliases": [
+          "TZ",
+          "TZA"
+        ],
+        "lat": -5.879385,
+        "lon": 36.105234
+      },
+      {
+        "name": "Thailand",
+        "type": "country",
+        "aliases": [
+          "TH",
+          "THA"
+        ],
+        "lat": 13.723858,
+        "lon": 100.711632
+      },
+      {
+        "name": "The Netherlands",
+        "type": "country",
+        "aliases": [
+          "NL",
+          "NLD"
+        ],
+        "lat": 52.08589,
+        "lon": 5.208625
+      },
+      {
+        "name": "Timor Leste",
+        "type": "country",
+        "aliases": [
+          "TL",
+          "TLS"
+        ],
+        "lat": -8.658557,
+        "lon": 125.662819
+      },
+      {
+        "name": "Togo",
+        "type": "country",
+        "aliases": [
+          "TG",
+          "TGO"
+        ],
+        "lat": 6.801011,
+        "lon": 1.155921
+      },
+      {
+        "name": "Tonga",
+        "type": "country",
+        "aliases": [
+          "TO",
+          "TON"
+        ],
+        "lat": -21.13683,
+        "lon": -175.20114
+      },
+      {
+        "name": "Trinidad and Tobago",
+        "type": "country",
+        "aliases": [
+          "TT",
+          "TTO"
+        ],
+        "lat": 10.495429,
+        "lon": -61.395167
+      },
+      {
+        "name": "Tunisia",
+        "type": "country",
+        "aliases": [
+          "TN",
+          "TUN"
+        ],
+        "lat": 35.902872,
+        "lon": 10.222618
+      },
+      {
+        "name": "Turkey",
+        "type": "country",
+        "aliases": [
+          "TR",
+          "TUR"
+        ],
+        "lat": 39.442424,
+        "lon": 32.249047
+      },
+      {
+        "name": "Turkmenistan",
+        "type": "country",
+        "aliases": [
+          "TM",
+          "TKM"
+        ],
+        "lat": 38.74705,
+        "lon": 59.387405
+      },
+      {
+        "name": "Turks and Caicos Islands",
+        "type": "country",
+        "aliases": [
+          "TC",
+          "TCA"
+        ],
+        "lat": 21.739057,
+        "lon": -72.101823
+      },
+      {
+        "name": "Tuvalu",
+        "type": "country",
+        "aliases": [
+          "TV",
+          "TUV"
+        ],
+        "lat": -8.52425,
+        "lon": 179.19417
+      },
+      {
+        "name": "U.S. Virgin Islands",
+        "type": "country",
+        "aliases": [
+          "VI",
+          "VIR"
+        ],
+        "lat": 17.901556,
+        "lon": -64.799025
+      },
+      {
+        "name": "Uganda",
+        "type": "country",
+        "aliases": [
+          "UG",
+          "UGA"
+        ],
+        "lat": 0.585229,
+        "lon": 32.233498
+      },
+      {
+        "name": "Ukraine",
+        "type": "country",
+        "aliases": [
+          "UA",
+          "UKR"
+        ],
+        "lat": 49.021547,
+        "lon": 32.711077
+      },
+      {
+        "name": "United Arab Emirates",
+        "type": "country",
+        "aliases": [
+          "AE",
+          "ARE"
+        ],
+        "lat": 24.990875,
+        "lon": 55.237293
+      },
+      {
+        "name": "United Kingdom",
+        "type": "country",
+        "aliases": [
+          "GB",
+          "GBR"
+        ],
+        "lat": 52.490132,
+        "lon": -1.366964
+      },
+      {
+        "name": "United States",
+        "type": "country",
+        "aliases": [
+          "US",
+          "USA"
+        ],
+        "lat": 37.41444,
+        "lon": -93.449058
+      },
+      {
+        "name": "Uruguay",
+        "type": "country",
+        "aliases": [
+          "UY",
+          "URY"
+        ],
+        "lat": -34.157254,
+        "lon": -56.293165
+      },
+      {
+        "name": "Uzbekistan",
+        "type": "country",
+        "aliases": [
+          "UZ",
+          "UZB"
+        ],
+        "lat": 40.694527,
+        "lon": 68.467345
+      },
+      {
+        "name": "Vanuatu",
+        "type": "country",
+        "aliases": [
+          "VU",
+          "VUT"
+        ],
+        "lat": -17.73648,
+        "lon": 168.31366
+      },
+      {
+        "name": "Vatican",
+        "type": "country",
+        "aliases": [
+          "VA",
+          "VAT"
+        ],
+        "lat": 41.90268,
+        "lon": 12.45414
+      },
+      {
+        "name": "Venezuela",
+        "type": "country",
+        "aliases": [
+          "VE",
+          "VEN"
+        ],
+        "lat": 9.834691,
+        "lon": -67.818783
+      },
+      {
+        "name": "Vietnam",
+        "type": "country",
+        "aliases": [
+          "VN",
+          "VNM"
+        ],
+        "lat": 15.15561,
+        "lon": 106.491391
+      },
+      {
+        "name": "Wallis and Futuna",
+        "type": "country",
+        "aliases": [
+          "WF",
+          "WLF"
+        ],
+        "lat": -13.28163,
+        "lon": -176.17453
+      },
+      {
+        "name": "Western Sahara",
+        "type": "country",
+        "aliases": [
+          "EH",
+          "ESH"
+        ],
+        "lat": 26.040928,
+        "lon": -14.140336
+      },
+      {
+        "name": "Yemen",
+        "type": "country",
+        "aliases": [
+          "YE",
+          "YEM"
+        ],
+        "lat": 14.364022,
+        "lon": 44.622847
+      },
+      {
+        "name": "Zambia",
+        "type": "country",
+        "aliases": [
+          "ZM",
+          "ZMB"
+        ],
+        "lat": -13.863962,
+        "lon": 28.408633
+      },
+      {
+        "name": "Zimbabwe",
+        "type": "country",
+        "aliases": [
+          "ZW",
+          "ZWE"
+        ],
+        "lat": -18.562826,
+        "lon": 30.485876
+      }
+    ]
+  }
+}
