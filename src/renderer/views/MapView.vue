@@ -1,22 +1,23 @@
 <template>
-  <div class="map-view">
-    <div v-if="filterText || allDisplayPlaces.length > 0" class="map-toolbar">
-      <input
-        v-model="filterText"
-        type="text"
-        :placeholder="$t('app.search')"
-        class="map-search"
-      />
-      <span v-if="placesWithoutCoords > 0" class="no-coords-hint">
-        {{ $t('map.noCoordinates', { count: placesWithoutCoords }) }}
-      </span>
-    </div>
+  <div class="map-view" ref="mapBodyRef">
+    <!-- Left sheet: toolbar + map -->
+    <div class="map-chart-area">
+      <div v-if="filterText || allDisplayPlaces.length > 0" class="map-toolbar">
+        <input
+          v-model="filterText"
+          type="text"
+          :placeholder="$t('app.search')"
+          class="map-search"
+        />
+        <span v-if="placesWithoutCoords > 0" class="no-coords-hint">
+          {{ $t('map.noCoordinates', { count: placesWithoutCoords }) }}
+        </span>
+      </div>
 
-    <AppLoadingState v-if="loading" />
-    <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :message="$t('map.empty')" />
+      <AppLoadingState v-if="loading" />
+      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :message="$t('map.empty')" />
 
-    <div v-else class="map-body" ref="mapBodyRef">
-      <div class="map-chart-area">
+      <div v-else class="map-content">
         <BaseMap
           ref="baseMapRef"
           :initial-zoom="4"
@@ -48,26 +49,26 @@
             :options-style="boundaryStyle"
           />
         </BaseMap>
-
-        <!-- Reopen panel button -->
-        <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
       </div>
 
-      <!-- Drag handle + panel -->
-      <template v-if="panelOpen">
-        <div
-          class="panel-drag-handle"
-          @mousedown="(e: MouseEvent) => startResize(e, mapBodyRef!)"
-        ></div>
-        <div class="map-panel" :style="{ width: panelWidth + 'px' }">
-          <PlacePanel
-            :place-id="selectedPlaceId"
-            @select-place="selectPlace"
-            @close="closePanel"
-          />
-        </div>
-      </template>
+      <!-- Reopen panel button -->
+      <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
+
+    <!-- Drag handle + panel (right sheet) -->
+    <template v-if="panelOpen">
+      <div
+        class="panel-drag-handle"
+        @mousedown="(e: MouseEvent) => startResize(e, mapBodyRef!)"
+      ></div>
+      <div class="map-panel" :style="{ width: panelWidth + 'px' }">
+        <PlacePanel
+          :place-id="selectedPlaceId"
+          @select-place="selectPlace"
+          @close="closePanel"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -248,14 +249,29 @@ onMounted(async () => {
 <style scoped>
 .map-view {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
+  gap: var(--space-xs);
+}
+
+/* Left sheet: toolbar + map */
+.map-chart-area {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 .map-toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--surface-border-subtle);
 }
 .map-search {
   padding: 6px 10px;
@@ -269,18 +285,9 @@ onMounted(async () => {
   font-size: var(--font-sm);
   color: var(--text-muted);
 }
-
-/* Body: map + panel flex layout */
-.map-body {
+.map-content {
   flex: 1;
-  display: flex;
-  flex-direction: row;
   min-height: 0;
-  position: relative;
-}
-.map-chart-area {
-  flex: 1;
-  min-width: 200px;
   position: relative;
 }
 /* Remove BaseMap's own border/radius — the chart area handles layout */
@@ -296,7 +303,6 @@ onMounted(async () => {
   flex-direction: column;
   flex-shrink: 0;
   position: relative;
-  overflow: hidden;
   min-width: 200px;
   max-width: 1040px;
 }

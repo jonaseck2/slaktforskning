@@ -372,7 +372,7 @@ onMounted(() => {
   overflow-y: auto;
   background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
 }
 
@@ -395,7 +395,7 @@ onMounted(() => {
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: var(--space-md) var(--space-md);
+  padding: var(--space-lg) var(--space-lg);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-header-content {
@@ -439,7 +439,7 @@ onMounted(() => {
 .panel-section {
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: 0 var(--space-md);
+  padding: 0 var(--space-lg);
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 .panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }

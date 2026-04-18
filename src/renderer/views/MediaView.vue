@@ -356,11 +356,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 .media-layout {
   display: flex;
   height: 100%;
+  gap: var(--space-xs);
 }
 .media-main {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 .panel-drag-handle {
   width: 6px;
@@ -373,7 +377,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 .panel-drag-handle:hover { background: var(--surface-border); }
 .media-panel-container {
   flex-shrink: 0;
-  overflow: hidden;
   min-width: 200px;
   max-width: 1040px;
 }
