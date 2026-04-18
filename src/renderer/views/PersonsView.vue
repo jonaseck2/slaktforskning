@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="header">
+  <div class="persons-view-content">
+    <div v-if="!embedded" class="header">
       <h2>{{ $t('nav.people') }}</h2>
       <div class="header-actions">
         <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('persons.addPerson') }}</AppButton>
@@ -165,6 +165,7 @@ const PAGE_SIZE = 100;
 
 const { t } = useI18n();
 const toast = useToast();
+const props = defineProps<{ embedded?: boolean }>();
 const router = useRouter();
 const focusStore = useFocusStore();
 

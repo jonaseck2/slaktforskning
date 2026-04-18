@@ -1,11 +1,23 @@
 <template>
   <div class="visualization-view" ref="vizBodyRef">
-    <!-- Chart area (left sheet) -->
-    <div class="viz-chart-area">
+    <!-- Left sheet -->
+    <div class="viz-chart-area" :class="{ 'viz-list-mode': viewMode === 'list' }">
       <div class="header">
-        <h2>{{ $t('nav.familyTree') }}</h2>
-        <AppButton variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
+        <h2>{{ $t('nav.people') }}</h2>
+        <div class="header-right">
+          <div class="view-toggle">
+            <AppButton :variant="viewMode === 'tree' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('tree')">{{ $t('visualization.tab.tree') }}</AppButton>
+            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('list')">{{ $t('places.listView') }}</AppButton>
+          </div>
+          <AppButton variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
+        </div>
       </div>
+
+      <!-- List mode: person list -->
+      <PersonsView v-if="viewMode === 'list'" embedded @person-added="onPersonAdded" />
+
+      <!-- Tree mode: tab bar + chart -->
+      <template v-if="viewMode === 'tree'">
       <!-- Tab bar -->
       <div v-if="focalPerson" class="viz-tab-bar">
         <AppButton variant="ghost" size="sm" @click="router.back()">←</AppButton>
@@ -87,10 +99,11 @@
       </div>
       <!-- Reopen panel button when panel is closed -->
       <button v-if="!panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
+      </template>
     </div>
 
-    <!-- Drag handle + panel (right sheet) -->
-    <template v-if="panelOpen">
+    <!-- Drag handle + panel (right sheet, tree mode only) -->
+    <template v-if="panelOpen && viewMode === 'tree'">
       <div
         class="panel-drag-handle"
         @mousedown="(e) => startResize(e, vizBodyRef!)"
@@ -130,6 +143,7 @@ import DescendantChart from '../components/charts/DescendantChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import AddPersonModal from '../components/AddPersonModal.vue';
+import PersonsView from './PersonsView.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
@@ -149,6 +163,16 @@ const tts = inject<{ speak: (text: string, locale?: string) => void }>('tts');
 
 const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
+
+// View mode: tree or list
+type ViewMode = 'tree' | 'list';
+const viewMode = ref<ViewMode>(
+  (localStorage.getItem('persons-view-mode') as ViewMode) || 'tree'
+);
+function setViewMode(mode: ViewMode) {
+  viewMode.value = mode;
+  localStorage.setItem('persons-view-mode', mode);
+}
 
 // Add person modal
 const showAddPerson = ref(false);
@@ -373,9 +397,15 @@ onActivated(load);
 }
 
 /* Left sheet: header + tabs + chart */
+.header-right { display: flex; align-items: center; gap: 8px; }
+.view-toggle { display: flex; gap: 2px; }
 .viz-chart-area > .header {
   padding: var(--space-lg) var(--space-lg) 0;
   margin-bottom: var(--space-sm);
+}
+.viz-list-mode {
+  padding: var(--space-lg);
+  overflow-y: auto;
 }
 .viz-chart-area {
   flex: 1;

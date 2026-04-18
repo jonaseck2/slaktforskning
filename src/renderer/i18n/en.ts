@@ -424,6 +424,7 @@ export default {
   },
   visualization: {
     tab: {
+      tree: 'Tree',
       pedigree: 'Pedigree',
       circle: 'Circle Chart',
       hourglass: 'Hourglass',

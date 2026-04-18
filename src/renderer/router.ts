@@ -10,7 +10,7 @@ import SearchView from './views/SearchView.vue';
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', component: PersonsView },
+    { path: '/', redirect: '/visualisering' },
     { path: '/persons/:id', component: PersonDetailView },
     { path: '/relationships', component: RelationshipsView },
     { path: '/relationships/:id', component: RelationshipDetailView },
