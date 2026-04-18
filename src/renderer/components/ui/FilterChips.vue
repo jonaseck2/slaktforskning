@@ -27,7 +27,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
 .filter-chips-bar {
   display: flex;
   gap: 2px;
-  background: var(--surface-bg);
+  background: var(--surface-border-subtle);
   border-radius: var(--radius-md);
   padding: 2px;
 }
@@ -39,16 +39,19 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
   font-size: var(--font-sm);
   cursor: pointer;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   transition: all 0.15s;
   font-family: inherit;
 }
 
-.chip-btn--active {
-  background: var(--surface);
+.chip-btn:hover {
   color: var(--text-primary);
+}
+
+.chip-btn--active {
+  background: var(--accent);
+  color: var(--accent-text);
   font-weight: var(--font-weight-medium);
-  box-shadow: var(--shadow-sm);
 }
 
 .chip-count {
