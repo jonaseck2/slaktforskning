@@ -97,12 +97,14 @@
   --sex-u-bg:   #e8e8e8;
   --sex-u-text: #666666;
 
-  --error-bg:   #fee2e2;
-  --error-text: #b91c1c;
-  --warning-bg: #fef3c7;
-  --warning-text: #92400e;
-  --success-bg: #dcfce7;
+  --error-bg:     #fee2e2;
+  --error-text:   #b91c1c;
+  --warning-bg:   #fef3c7;
+  --warning-text:  #92400e;
+  --success-bg:   #dcfce7;
   --success-text: #15803d;
+  --info-bg:      #e0f2fe;
+  --info-text:    #075985;
 }
 
 /* ─── Spacing (theme-invariant) ──────────────────────────────────────────── */

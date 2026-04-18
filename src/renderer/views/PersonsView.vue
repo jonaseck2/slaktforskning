@@ -466,9 +466,9 @@ onActivated(async () => {
   font-size: var(--font-xs);
   font-weight: 600;
 }
-.score-high { background: #fee2e2; color: #991b1b; }
-.score-medium { background: #fef3c7; color: #92400e; }
-.score-low { background: #e0f2fe; color: #075985; }
+.score-high { background: var(--error-bg); color: var(--error-text); }
+.score-medium { background: var(--warning-bg); color: var(--warning-text); }
+.score-low { background: var(--info-bg); color: var(--info-text); }
 .checkbox-label {
   flex-direction: row;
   align-items: center;

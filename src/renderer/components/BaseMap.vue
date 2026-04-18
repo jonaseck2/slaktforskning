@@ -116,7 +116,7 @@ defineExpose({ fitBounds, invalidateSize, getLeafletObject });
   position: relative;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #ddd;
+  border: 1px solid var(--surface-border);
 }
 
 /* Override ZoomControls fixed positioning to be within the map container */

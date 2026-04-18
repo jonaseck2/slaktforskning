@@ -268,7 +268,7 @@ onMounted(loadAll);
 <style scoped>
 .gazetteers-description {
   font-size: var(--font-sm);
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 16px;
   max-width: 640px;
   line-height: 1.5;
@@ -282,9 +282,9 @@ onMounted(loadAll);
 
 .gazetteer-card {
   padding: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
-  background: #fafafa;
+  background: var(--surface);
 }
 
 .gazetteer-card-header {
@@ -316,23 +316,23 @@ onMounted(loadAll);
 }
 
 .kind-point {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--info-bg);
+  color: var(--info-text);
 }
 
 .kind-boundary {
-  background: #fce7f3;
-  color: #9d174d;
+  background: var(--sex-f-bg);
+  color: var(--sex-f-text);
 }
 
 .type-bundled {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--sex-m-bg);
+  color: var(--sex-m-text);
 }
 
 .type-imported {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .gazetteer-toggle {
@@ -349,7 +349,7 @@ onMounted(loadAll);
 
 .gazetteer-card-desc {
   font-size: var(--font-sm);
-  color: #555;
+  color: var(--text-secondary);
   margin-top: 4px;
   margin-left: 24px;
   line-height: 1.4;
@@ -357,13 +357,13 @@ onMounted(loadAll);
 
 .gazetteer-card-source {
   font-size: var(--font-xs);
-  color: #888;
+  color: var(--text-muted);
   margin-top: 6px;
   margin-left: 24px;
 }
 
 .gazetteer-card-source a {
-  color: var(--color-primary, #4f46e5);
+  color: var(--color-link);
   text-decoration: none;
 }
 
@@ -377,7 +377,7 @@ onMounted(loadAll);
 
 .source-date {
   margin-left: 8px;
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .source-kg-link {
@@ -389,7 +389,7 @@ onMounted(loadAll);
   padding: 8px;
   font-family: inherit;
   font-size: var(--font-sm);
-  border: 1px solid #ddd;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   box-sizing: border-box;
 }
@@ -403,7 +403,7 @@ onMounted(loadAll);
 
 .test-result {
   padding: 10px;
-  background: #f8f8f8;
+  background: var(--surface-bg);
   border-radius: 4px;
   font-size: var(--font-sm);
 }
@@ -417,7 +417,7 @@ onMounted(loadAll);
 
 .result-gazetteer {
   font-size: var(--font-xs);
-  color: #888;
+  color: var(--text-muted);
 }
 
 .quality-badge {
@@ -429,18 +429,18 @@ onMounted(loadAll);
 }
 
 .quality-exact {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .quality-partial {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
 .quality-ambiguous {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--error-bg);
+  color: var(--error-text);
 }
 
 .result-path {
@@ -451,11 +451,11 @@ onMounted(loadAll);
   display: flex;
   gap: 16px;
   font-size: var(--font-xs);
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .result-unmatched {
-  color: #b45309;
+  color: var(--warning-text);
 }
 
 .result-coords {

@@ -318,8 +318,8 @@ function submitSearch() {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f5;
-  color: #333;
+  background: var(--surface-bg);
+  color: var(--text-primary);
 }
 
 .app {
@@ -330,8 +330,8 @@ body {
 
 .sidebar {
   width: 220px;
-  background: var(--color-primary);
-  color: white;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
@@ -342,7 +342,7 @@ body {
 
 .sidebar-header {
   padding: 4px 8px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid var(--sidebar-border);
   margin-bottom: 8px;
   flex-shrink: 0;
 }
@@ -350,7 +350,7 @@ body {
 .sidebar-title {
   font-size: var(--font-sm);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--sidebar-active-text);
 }
 
 .sidebar-search {
@@ -362,18 +362,18 @@ body {
   padding: 6px 10px;
   border-radius: 4px;
   border: none;
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
   font-size: var(--font-sm);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
 }
 .sidebar-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--sidebar-text-muted);
 }
 .sidebar-search-input:focus {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--sidebar-border);
 }
 
 .focus-indicator {
@@ -381,40 +381,40 @@ body {
   flex-direction: column;
   padding: 6px 10px;
   margin-bottom: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--sidebar-active-bg);
   border-radius: 6px;
-  border-left: 3px solid rgba(100, 180, 255, 0.7);
+  border-left: 3px solid var(--accent);
   flex-shrink: 0;
 }
 .focus-label {
   font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--sidebar-text-muted);
   text-transform: uppercase;
 }
 .focus-name {
   font-size: var(--font-xs);
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--sidebar-active-text);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.focus-name:hover { color: white; text-decoration: underline; }
+.focus-name:hover { color: var(--sidebar-active-text); text-decoration: underline; }
 
 .nav-section-label {
   font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--sidebar-text-muted);
   padding: 2px 10px 6px;
   flex-shrink: 0;
 }
 
 .sidebar a,
 .nav-item {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sidebar-text);
   text-decoration: none;
   padding: 7px 10px;
   border-radius: 6px;
@@ -429,8 +429,8 @@ body {
 .sidebar a.router-link-active,
 .nav-item:hover,
 .nav-item.router-link-active {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
 }
 
 .nav-icon { font-size: var(--font-base); line-height: 1; flex-shrink: 0; }
@@ -441,7 +441,7 @@ body {
 }
 
 .nav-bottom-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid var(--sidebar-border);
   padding-top: 8px !important;
   margin-top: 4px;
 }
@@ -450,7 +450,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #e53e3e;
+  background: var(--error-text);
   color: white;
   border-radius: 8px;
   padding: 1px 5px;

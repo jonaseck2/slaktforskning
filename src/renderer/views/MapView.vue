@@ -231,7 +231,7 @@ onMounted(async () => {
 }
 .map-search {
   padding: 6px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   font-family: inherit;
@@ -239,7 +239,7 @@ onMounted(async () => {
 }
 .no-coords-hint {
   font-size: var(--font-sm);
-  color: #999;
+  color: var(--text-muted);
 }
 
 /* Body: map + panel flex layout */
@@ -267,17 +267,17 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--surface-border);
   position: relative;
 }
 .panel-drag-handle {
   width: 6px;
-  background: #e8e8e8;
+  background: var(--surface-bg);
   cursor: col-resize;
   flex-shrink: 0;
   position: relative;
 }
-.panel-drag-handle:hover { background: #c0c0c0; }
+.panel-drag-handle:hover { background: var(--surface-border); }
 .panel-close-btn {
   position: absolute;
   top: 8px;
@@ -323,30 +323,30 @@ onMounted(async () => {
 }
 .popup-type {
   font-size: var(--font-xs);
-  color: #666;
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 .popup-resolved {
   font-size: var(--font-xs);
   margin-top: 4px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--surface-border-subtle);
   padding-top: 4px;
 }
 .match-exact {
-  color: #22c55e;
+  color: var(--success-text);
   font-weight: 600;
 }
 .match-partial {
-  color: #f59e0b;
+  color: var(--warning-text);
   font-weight: 600;
 }
 .match-ambiguous {
-  color: #ef4444;
+  color: var(--error-text);
   font-weight: 600;
 }
 .match-path {
   display: block;
-  color: #666;
+  color: var(--text-secondary);
   font-size: var(--font-xs);
 }
 </style>

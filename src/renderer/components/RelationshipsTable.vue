@@ -155,7 +155,7 @@ function subtypeLabel(type: string, subtype: string): string {
 .role-label {
   display: inline;
   font-size: var(--font-xs);
-  color: #888;
+  color: var(--text-muted);
   margin-right: 5px;
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
