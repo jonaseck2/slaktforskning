@@ -17,6 +17,7 @@ import fiKunnat from './data/fi-kunnat.json';
 import isSveitarfelog from './data/is-sveitarfelog.json';
 // North American
 import usImmigrationStates from './data/us-immigration-states.json';
+import usAllStates from './data/us-all-states.json';
 import caProvinces from './data/ca-provinces.json';
 // Global
 import worldCountries from './data/world-countries.json';
@@ -65,6 +66,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   isSveitarfelog as Gazetteer,
   // North American
   usImmigrationStates as Gazetteer,
+  usAllStates as Gazetteer,
   caProvinces as Gazetteer,
   // Global
   worldCountries as Gazetteer,

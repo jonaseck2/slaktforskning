@@ -5,15 +5,15 @@ import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 15 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(15);
+  it('loads all 16 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(16);
   });
 
   const expectedIds = [
     'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-sockenstad-boundaries',
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
-    'us-immigration-states', 'ca-provinces',
+    'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
   ];
 
@@ -37,6 +37,11 @@ describe('bundled gazetteers', () => {
   it('us-immigration-states has 9 states', () => {
     const us = gazetteers.find(g => g.id === 'us-immigration-states')!;
     expect(us.root.children!.length).toBe(9);
+  });
+
+  it('us-all-states has 51 states', () => {
+    const us = gazetteers.find(g => g.id === 'us-all-states')!;
+    expect(us.root.children!.length).toBe(51);
   });
 
   it('ca-provinces has 13 provinces and territories', () => {

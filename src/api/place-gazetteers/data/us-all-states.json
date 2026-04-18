@@ -20061,6 +20061,232 @@
         ]
       },
       {
+        "name": "District of Columbia",
+        "type": "state",
+        "lat": 38.96678,
+        "lon": -77.04137,
+        "children": [
+          {
+            "name": "Washington County",
+            "type": "county",
+            "lat": 38.96678,
+            "lon": -77.04137,
+            "children": [
+              {
+                "name": "Adams Morgan",
+                "type": "locality",
+                "lat": 38.9215,
+                "lon": -77.0422
+              },
+              {
+                "name": "Anacostia",
+                "type": "locality",
+                "lat": 38.8665,
+                "lon": -76.98386
+              },
+              {
+                "name": "Barry Farms",
+                "type": "locality",
+                "lat": 38.8565,
+                "lon": -76.99136
+              },
+              {
+                "name": "Bellevue",
+                "type": "locality",
+                "lat": 38.82678,
+                "lon": -77.0197
+              },
+              {
+                "name": "Benning",
+                "type": "locality",
+                "lat": 38.89511,
+                "lon": -76.94886
+              },
+              {
+                "name": "Bloomingdale",
+                "type": "locality",
+                "lat": 38.91678,
+                "lon": -77.01137
+              },
+              {
+                "name": "Brentwood Village",
+                "type": "locality",
+                "lat": 38.92094,
+                "lon": -76.98442
+              },
+              {
+                "name": "Brightwood",
+                "type": "locality",
+                "lat": 38.96122,
+                "lon": -77.02748
+              },
+              {
+                "name": "Brookland",
+                "type": "locality",
+                "lat": 38.93289,
+                "lon": -76.98414
+              },
+              {
+                "name": "Capitol Hill",
+                "type": "locality",
+                "lat": 38.889,
+                "lon": -77.00025
+              },
+              {
+                "name": "Chevy Chase",
+                "type": "locality",
+                "lat": 38.981,
+                "lon": -77.083
+              },
+              {
+                "name": "Cleveland Park",
+                "type": "locality",
+                "lat": 38.93622,
+                "lon": -77.06553
+              },
+              {
+                "name": "Columbia Heights",
+                "type": "locality",
+                "lat": 38.92567,
+                "lon": -77.02942
+              },
+              {
+                "name": "Congress Heights",
+                "type": "locality",
+                "lat": 38.84289,
+                "lon": -77.00025
+              },
+              {
+                "name": "Deanwood",
+                "type": "locality",
+                "lat": 38.89845,
+                "lon": -76.92942
+              },
+              {
+                "name": "Dupont Circle",
+                "type": "locality",
+                "lat": 38.90844,
+                "lon": -77.04414
+              },
+              {
+                "name": "Foggy Bottom",
+                "type": "locality",
+                "lat": 38.9015,
+                "lon": -77.0622
+              },
+              {
+                "name": "Fort Lincoln",
+                "type": "locality",
+                "lat": 38.92233,
+                "lon": -76.95636
+              },
+              {
+                "name": "Georgetown",
+                "type": "locality",
+                "lat": 38.90483,
+                "lon": -77.06248
+              },
+              {
+                "name": "Glover Park",
+                "type": "locality",
+                "lat": 38.92094,
+                "lon": -77.0772
+              },
+              {
+                "name": "Hillcrest",
+                "type": "locality",
+                "lat": 38.86206,
+                "lon": -76.95803
+              },
+              {
+                "name": "Ivy City",
+                "type": "locality",
+                "lat": 38.91122,
+                "lon": -76.9847
+              },
+              {
+                "name": "Kenilworth",
+                "type": "locality",
+                "lat": 38.90595,
+                "lon": -76.94025
+              },
+              {
+                "name": "Lincoln Heights",
+                "type": "locality",
+                "lat": 38.89456,
+                "lon": -76.92886
+              },
+              {
+                "name": "Mount Pleasant",
+                "type": "locality",
+                "lat": 38.93067,
+                "lon": -77.04081
+              },
+              {
+                "name": "Park View",
+                "type": "locality",
+                "lat": 38.93206,
+                "lon": -77.02359
+              },
+              {
+                "name": "Pennsylvania Avenue SE",
+                "type": "locality",
+                "lat": 38.86817,
+                "lon": -76.95803
+              },
+              {
+                "name": "Petworth",
+                "type": "locality",
+                "lat": 38.94594,
+                "lon": -77.02498
+              },
+              {
+                "name": "Pleasant Plains",
+                "type": "locality",
+                "lat": 38.93067,
+                "lon": -77.03025
+              },
+              {
+                "name": "Riggs Park",
+                "type": "locality",
+                "lat": 38.95428,
+                "lon": -76.99414
+              },
+              {
+                "name": "Shaw",
+                "type": "locality",
+                "lat": 38.91206,
+                "lon": -77.02137
+              },
+              {
+                "name": "Tenleytown",
+                "type": "locality",
+                "lat": 38.94956,
+                "lon": -77.08581
+              },
+              {
+                "name": "Washington",
+                "type": "locality",
+                "lat": 38.89511,
+                "lon": -77.03637
+              },
+              {
+                "name": "Woodley Park",
+                "type": "locality",
+                "lat": 38.92872,
+                "lon": -77.05581
+              },
+              {
+                "name": "Woodridge",
+                "type": "locality",
+                "lat": 38.93122,
+                "lon": -76.97109
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "Florida",
         "type": "state",
         "lat": 28.941558,
