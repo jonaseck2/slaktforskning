@@ -155,6 +155,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
 | v0.93.1 | Fix: quality fix actions work end-to-end — modal stays open (no router.replace remount), event type pre-filled (birth/death), electron-dev skill updated with CDP verification workflow | — |
 | Infra | Design tokens: `tokens.css` with Forest/Nordic/Twilight themes, `setTheme()` + `currentTheme` ref in App.vue (no visible change — Task 1 of Design System Overhaul) | — |
+| | Design System Overhaul: tokens.css (3 themes), 8 UI primitives, SettingsView absorbs Database/ImportExport/LinkRules/Gazetteers, sidebar uses token variables, hardcoded colors replaced with tokens, dark/high-contrast modes use token cascade | [spec](docs/superpowers/specs/2026-04-17-design-system-spec.md) |
 ---
 
 ## Research
@@ -250,8 +251,8 @@ Add link rules for MyHeritage, Geni, and other genealogy platforms. These are be
 
 ---
 
-#### Design System Overhaul [planned]
-Full visual redesign: design tokens (3 color themes), 11 primitive components, all 28 views/panels/modals rebuilt on shared patterns. Three research perspectives (People/Places/Media) with right-side panel workbenches. Sidebar restructured into Research/Organize/Review workflow groups. New MediaPanel component. Settings page absorbs Database, Import/Export, Link Rules, Gazetteers.
+#### Design System Overhaul [done]
+Design tokens (`tokens.css`) with 3 color themes (Forest/Nordic/Twilight), 8 UI primitive components (`ui/`), SettingsView absorbs Database/ImportExport/LinkRules/Gazetteers, sidebar uses token variables, all hardcoded hex colors replaced with token references, dark/high-contrast modes use token cascade. MediaPanel component for entity linking.
 - Spec: [docs/superpowers/specs/2026-04-17-design-system-spec.md](docs/superpowers/specs/2026-04-17-design-system-spec.md)
 - Gap analysis: [plans/2026-04-17-competitor-gap-analysis-v2.md](plans/2026-04-17-competitor-gap-analysis-v2.md)
 

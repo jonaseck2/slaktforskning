@@ -76,14 +76,29 @@ src/
 │   ├── App.vue                   # Root layout: sidebar (Persons/Relationships/Sources) + <router-view>
 │   ├── router.ts                 # Hash-based router with 7 routes
 │   ├── main.ts                   # Vue bootstrap (createApp + router)
+│   ├── styles/
+│   │   ├── tokens.css            # Design tokens: 3 color themes (Forest/Nordic/Twilight), spacing, typography, shapes
+│   │   └── shared.css            # Global design system: shared classes, dark/high-contrast overrides
 │   ├── views/
 │   │   ├── PersonsView.vue       # Person list + "Add Person" modal
 │   │   ├── PersonDetailView.vue  # Person detail: names, events, relationships, notes
 │   │   ├── RelationshipsView.vue # Relationship list + "Add Relationship" modal (with PersonPicker)
 │   │   ├── RelationshipDetailView.vue # Relationship detail: persons, type/subtype, events
 │   │   ├── SourcesView.vue       # Source list + "Add Source" modal
-│   │   └── SourceDetailView.vue  # Source detail: editable fields, citations
+│   │   ├── SourceDetailView.vue  # Source detail: editable fields, citations
+│   │   ├── SettingsView.vue      # Settings: theme, appearance, text size, language, database, import/export
+│   │   └── MediaView.vue         # Media library browser
 │   ├── components/
+│   │   ├── ui/                   # Primitive UI components (design system)
+│   │   │   ├── AppAvatar.vue       # Person avatar with sex-colored badge
+│   │   │   ├── AppBadge.vue        # Semantic badge (info/success/warning/error variants)
+│   │   │   ├── AppButton.vue       # Button with variant/size props (primary/ghost/danger)
+│   │   │   ├── AppEmptyState.vue   # Empty state placeholder with icon + message
+│   │   │   ├── AppInput.vue        # Text input with label + error state
+│   │   │   ├── AppLoadingState.vue # Loading spinner placeholder
+│   │   │   ├── FilterChips.vue     # Chip bar for filtering lists
+│   │   │   └── SectionHeader.vue   # Section header with title + action button slot
+│   │   ├── MediaPanel.vue        # Media linking workbench panel (attach media to entities)
 │   │   ├── PersonPicker.vue      # Searchable person dropdown (typeahead)
 │   │   ├── DateInput.vue         # YYYY-MM-DD date input with auto-advance
 │   │   ├── EventForm.vue         # Event create/edit modal
@@ -157,10 +172,19 @@ docs/
 | `/search` | `SearchView` | Global search across persons, relationships, sources |
 | `/places` | `PlacesView` | Place list with "Add Place" modal |
 | `/places/:id` | `PlaceDetailView` | Place detail: name, type, parent, lat/lon, child places |
-| `/database` | `DatabaseView` | Active database path, recent databases list, tree subject picker, New/Open buttons, backup/restore |
-| `/link-rules` | `LinkRulesView` | Link rule management: locale toggles, rule table, custom rules, test field |
-| `/gazetteers` | `GazetteersView` | Place gazetteer management: toggle gazetteers on/off, test place lookup |
-| `/map` | `MapView` | Interactive Leaflet/OpenStreetMap with place pins and a drag-resizable PlacePanel side panel that shows full place details on pin click |
+| `/visualisering` | `VisualizationView` | Family tree charts (pedigree, hourglass, descendant) |
+| `/settings` | `SettingsView` | Settings: theme, appearance, text size, language, database management, import/export |
+| `/quality` | `QualityView` | Data quality checks with per-row fix actions |
+| `/reports` | `ReportsView` | AI-generated narrative reports |
+| `/research-tasks` | `ResearchTasksView` | Research task list with inline editing |
+| `/groups` | `GroupsView` | Person group management |
+| `/groups/:id` | `GroupDetailView` | Group detail with member list |
+| `/media` | `MediaView` | Media library browser |
+| `/database` | redirect | Redirects to `/settings` |
+| `/import-export` | redirect | Redirects to `/settings` |
+| `/link-rules` | redirect | Redirects to `/settings` |
+| `/gazetteers` | redirect | Redirects to `/settings` |
+| `/map` | redirect | Redirects to `/places` |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
 
@@ -481,6 +505,21 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 
 ### Shared Components
 
+**UI Primitives (`src/renderer/components/ui/`):**
+
+| Component | Props | Description |
+|-----------|-------|-------------|
+| `AppAvatar` | `name?: string`, `sex?: string`, `size?: 'sm'\|'md'\|'lg'` | Person avatar circle with sex-colored background and initials |
+| `AppBadge` | `variant?: 'info'\|'success'\|'warning'\|'error'` | Semantic badge pill using design tokens |
+| `AppButton` | `variant?: 'primary'\|'ghost'\|'danger'`, `size?: 'sm'\|'md'`, `disabled?` | Button with variant/size system |
+| `AppEmptyState` | `icon?: string`, `message: string` | Empty state placeholder with centered icon + text |
+| `AppInput` | `modelValue`, `label?`, `error?`, `type?` | Text input with label and error state |
+| `AppLoadingState` | `message?: string` | Loading spinner with optional message |
+| `FilterChips` | `options`, `modelValue` | Chip bar for list filtering |
+| `SectionHeader` | `title` | Section header with slot for action buttons |
+
+**Domain Components:**
+
 | Component | Props | Emits | Description |
 |-----------|-------|-------|-------------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
@@ -522,6 +561,8 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 
 ### UI Design System
 
+**Design tokens** are defined in `src/renderer/styles/tokens.css` (imported first in `main.ts`). Three color themes (Forest, Nordic, Twilight) set sidebar, surface, text, and accent token values. Semantic tokens (`--error-*`, `--warning-*`, `--success-*`, `--info-*`, `--sex-*`) are theme-invariant. Dark and high-contrast modes override tokens in `shared.css`. **Always use token variables** — never hardcode hex colors.
+
 Shared classes are defined **once** in `src/renderer/styles/shared.css` (imported globally in `main.ts`). **Never redefine these in `<style scoped>` blocks** — scoped styles have higher specificity than global styles and will override the CSS variables (`var(--font-sm)` etc.) that power the text-size accessibility feature.
 
 **Shared classes (do NOT copy to scoped blocks):**
@@ -534,13 +575,18 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 - Sex badges: `.sex-badge`, `.sex-M`, `.sex-F`, `.sex-U`
 - Tabs: `.tab-bar`, `.tab-btn`, `.tab-btn.active`, `.tab-btn:hover`
 
-**CSS custom properties** (use these in any view-specific styles instead of hardcoded px values):
+**Design token categories** (from `tokens.css`):
 ```css
---font-xs: 11px   /* table headers, badges */
---font-sm: 13px   /* body text, chips, count labels */
---font-base: 14px /* default UI text */
---font-md: 15px   /* slightly larger labels */
---font-lg: 16px   /* section headings */
+/* Sidebar */     --sidebar-bg, --sidebar-text, --sidebar-text-muted, --sidebar-active-bg, --sidebar-active-text, --sidebar-border
+/* Surface */     --surface-bg, --surface, --surface-hover, --surface-border, --surface-border-subtle
+/* Text */        --text-primary, --text-secondary, --text-muted
+/* Accent */      --accent, --accent-hover, --accent-text
+/* Semantic */    --error-bg/text, --warning-bg/text, --success-bg/text, --info-bg/text
+/* Sex badges */  --sex-m-bg/text, --sex-f-bg/text, --sex-u-bg/text
+/* Spacing */     --space-xs(4) --space-sm(8) --space-md(12) --space-lg(16) --space-xl(24) --space-2xl(32)
+/* Typography */  --font-xs(11) --font-sm(13) --font-base(14) --font-md(15) --font-lg(16)
+/* Shape */       --radius-sm(4) --radius-md(6) --radius-lg(10) --radius-full(9999)
+/* Shadows */     --shadow-sm, --shadow-md, --shadow-lg
 ```
 
 Each view's `<style scoped>` keeps **only** classes unique to that view (badges, layout specific to that view, etc.).
