@@ -21,6 +21,8 @@ export interface TooltipPerson {
   nickname?: string | null;
   birthDate?: string | null;
   deathDate?: string | null;
+  birthPlace?: string | null;
+  deathPlace?: string | null;
 }
 
 const visible = ref(false);
@@ -38,8 +40,10 @@ function show(person: TooltipPerson, clientX: number, clientY: number) {
   const given = person.preferredName ?? person.givenName ?? '';
   const sur = person.surname ?? '';
   name.value = [given, sur].filter(Boolean).join(' ') || '?';
-  birth.value = person.birthDate ?? '';
-  death.value = person.deathDate ?? '';
+  const birthParts = [person.birthDate, person.birthPlace].filter(Boolean);
+  birth.value = birthParts.join(' ');
+  const deathParts = [person.deathDate, person.deathPlace].filter(Boolean);
+  death.value = deathParts.join(' ');
   x.value = clientX + 12;
   y.value = clientY + 12;
   visible.value = true;

@@ -18,7 +18,9 @@ export type {
   EventMarker,
 } from './types';
 
-export { BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP } from './constants';
+export { BOX_W, BOX_H, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD, ROW_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_Y, BOX_PAD_X_LEFT, PORTRAIT_GAP, BOX_PAD_X_RIGHT, CURVE_R, TEXT_AREA_W } from './constants';
+export { wrapName, measureBoxHeight } from './measure';
+export { curvedElbow } from './connectors';
 export { yearFromDate, maxDescendantDepth } from './utils';
 export { computePedigreeLayout } from './pedigree';
 export { computeHourglassLayout, maxDescendantDepthTP } from './hourglass';

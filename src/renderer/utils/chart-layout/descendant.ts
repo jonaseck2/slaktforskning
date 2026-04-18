@@ -337,7 +337,7 @@ export function computeDescendantLayout(
     }
   }
 
-  return { boxes, lines, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
+  return { boxes, lines, paths: [], svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
 }
 
 /** Find the tree-parent of a person (the node whose children array contains it). */

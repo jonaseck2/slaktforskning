@@ -612,13 +612,13 @@
     --text-secondary: #8fb88f;
     --text-muted:     #5a7a5a;
 
-    --accent:       #3a7a34;
-    --accent-hover: #4a9a44;
-    --accent-text:  #d0f0cc;
+    --accent:       #2c6426;
+    --accent-hover: #1f4a1a;
+    --accent-text:  #ffffff;
 
     --sidebar-bg:          #0f1a0f;
     --sidebar-text:        #7aaa7a;
-    --sidebar-text-muted:  #4a6a4a;
+    --sidebar-text-muted:  #5a7a5a;
     --sidebar-active-bg:   #1a3a1a;
     --sidebar-active-text: #b0d8b0;
     --sidebar-border:      #1a3a1a;
@@ -640,8 +640,8 @@
     --text-secondary: #7a9abe;
     --text-muted:     #5a7a9a;
 
-    --accent:       #3b6ef0;
-    --accent-hover: #5080f8;
+    --accent:       #2a55c8;
+    --accent-hover: #1e40af;
     --accent-text:  #ffffff;
 
     --sidebar-bg:          #0a1020;
@@ -668,8 +668,8 @@
     --text-secondary: #9a8cc0;
     --text-muted:     #7a70a0;
 
-    --accent:       #7d6ef0;
-    --accent-hover: #9080f8;
+    --accent:       #5a4bd1;
+    --accent-hover: #4030a0;
     --accent-text:  #ffffff;
 
     --sidebar-bg:          #141220;
@@ -781,48 +781,39 @@
   html.dark .confidence-1 { background: var(--warning-bg); color: var(--warning-text); }
 }
 
-/* === High Contrast Theme === */
+/* === High Contrast Theme ===
+ * Theme-tinted high-contrast palettes. Each theme has its own deep-tinted
+ * background + high-luminance text palette verified at WCAG 2.1 AAA
+ * (≥7:1 body text / ≥4.5:1 large text / ≥3:1 non-text UI) by
+ * tests/unit/wcagContrast.test.ts. The shared base block holds semantic
+ * colors and legacy aliases that are the same across all three themes. */
 @media screen {
+  /* ── High Contrast: shared base (semantic + legacy) ───── */
   html.high-contrast {
-    /* Override tokens for high-contrast mode */
-    --surface-bg:            #111111;
-    --surface:               #000000;
-    --surface-hover:         #333333;
-    --surface-border:        #ffffff;
-    --surface-border-subtle: #333333;
-
-    --text-primary:   #ffffff;
-    --text-secondary: #e0e0e0;
-    --text-muted:     #aaaaaa;
-
-    --accent:       #005fcc;
-    --accent-hover: #004499;
-    --accent-text:  #99ccff;
-
-    --error-bg:   #5c0000;
-    --error-text: #ff6666;
-    --warning-bg:   #4a2800;
+    --error-bg:   #400000;
+    --error-text: #ff9a9a;
+    --warning-bg:   #3a2000;
     --warning-text:  #ffd700;
-    --success-bg: #003300;
-    --success-text: #00ff00;
-    --info-bg:    #001a4d;
-    --info-text:  #99ccff;
+    --success-bg: #002a00;
+    --success-text: #7dff7d;
+    --info-bg:    #00153a;
+    --info-text:  #b0d0ff;
 
-    --sex-m-bg:   #001a4d;
-    --sex-m-text: #99ccff;
-    --sex-f-bg:   #4d001a;
-    --sex-f-text: #ffaacc;
-    --sex-u-bg:   #333333;
-    --sex-u-text: #cccccc;
+    --sex-m-bg:   #00153a;
+    --sex-m-text: #b0d0ff;
+    --sex-f-bg:   #3a0f1e;
+    --sex-f-text: #ffc4d8;
+    --sex-u-bg:   #2a2a2a;
+    --sex-u-text: #d8d8d8;
 
     /* Legacy overrides — values that differ from token aliases */
     --color-bg-table-head:  #1a1a1a;
-    --color-text-subtle:    #cccccc;
+    --color-text-subtle:    #d8d8d8;
     --color-border-chip:    #cccccc;
     --color-danger-hover:   #7a0000;
-    --color-link:           #66aaff;
-    --color-event-badge-bg:   #001a4d;
-    --color-event-badge-text: #99ccff;
+    --color-link:           #8ab8ff;
+    --color-event-badge-bg:   #00153a;
+    --color-event-badge-text: #b0d0ff;
 
     /* Timeline chart — high contrast */
     --tl-bar-m:    #3b82f6;
@@ -831,6 +822,79 @@
     --tl-grid:     #444;
     --tl-axis:     #666;
     --tl-marker:   #fff;
+  }
+
+  /* ── High Contrast: Forest theme (deep green, pale mint) ───── */
+  html.high-contrast.theme-forest,
+  html.high-contrast:not(.theme-nordic):not(.theme-twilight) {
+    --surface-bg:            #0d1a0d;
+    --surface:               #000800;
+    --surface-hover:         #1a2e1a;
+    --surface-border:        #c8e8c8;
+    --surface-border-subtle: #2e4a2e;
+
+    --text-primary:   #f0fff0;
+    --text-secondary: #c8e8c8;
+    --text-muted:     #9ac29a;
+
+    --accent:       #1e4a1a;
+    --accent-hover: #255c20;
+    --accent-text:  #ffffff;
+
+    --sidebar-bg:          #030a03;
+    --sidebar-text:        #e0f5e0;
+    --sidebar-text-muted:  #9ac29a;
+    --sidebar-active-bg:   #1a3a1a;
+    --sidebar-active-text: #ffffff;
+    --sidebar-border:      #2e4a2e;
+  }
+
+  /* ── High Contrast: Nordic theme (deep navy, pale blue) ───── */
+  html.high-contrast.theme-nordic {
+    --surface-bg:            #0a1428;
+    --surface:               #000210;
+    --surface-hover:         #1a2848;
+    --surface-border:        #c0d4f0;
+    --surface-border-subtle: #2a3a5a;
+
+    --text-primary:   #e8f0ff;
+    --text-secondary: #bcd0f0;
+    --text-muted:     #8aa8d0;
+
+    --accent:       #1a3a80;
+    --accent-hover: #2550a0;
+    --accent-text:  #ffffff;
+
+    --sidebar-bg:          #020618;
+    --sidebar-text:        #d0e0f8;
+    --sidebar-text-muted:  #8aa8d0;
+    --sidebar-active-bg:   #142040;
+    --sidebar-active-text: #ffffff;
+    --sidebar-border:      #2a3a5a;
+  }
+
+  /* ── High Contrast: Twilight theme (deep indigo, pale lavender) ───── */
+  html.high-contrast.theme-twilight {
+    --surface-bg:            #120a28;
+    --surface:               #0a0515;
+    --surface-hover:         #281c48;
+    --surface-border:        #d4c8f0;
+    --surface-border-subtle: #3a2e5a;
+
+    --text-primary:   #f0e8ff;
+    --text-secondary: #c8b8f0;
+    --text-muted:     #a090c8;
+
+    --accent:       #3a2880;
+    --accent-hover: #4a38a0;
+    --accent-text:  #ffffff;
+
+    --sidebar-bg:          #080418;
+    --sidebar-text:        #e0d0f8;
+    --sidebar-text-muted:  #a090c8;
+    --sidebar-active-bg:   #221e38;
+    --sidebar-active-text: #ffffff;
+    --sidebar-border:      #3a2e5a;
   }
 
   html.high-contrast :focus-visible {

@@ -6,6 +6,7 @@ import {
   eventSymbol,
   BOX_W,
   BOX_H,
+  MIN_BOX_H,
 } from '../../src/renderer/utils/chart-layout';
 import type { PersonNode, PedigreeTree, TreePerson } from '../../src/renderer/utils/chart-layout';
 import { computeFootprint, ancestorFootprint } from '../../src/renderer/utils/chart-layout/hourglass';
@@ -15,6 +16,7 @@ function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
   return {
     id, givenName: 'Test', surname: 'Person', preferredName: null, nickname: null,
     sex: 'U', living: true, birthDate: null, deathDate: null,
+    birthPlace: null, deathPlace: null, photoUrl: null,
     ...overrides,
   };
 }
@@ -132,14 +134,14 @@ describe('computeFootprint', () => {
     const node: TreePerson = { person: p('a', { sex: 'M' }), parents: [], children: [], spouses: [spouse] };
     const fp = computeFootprint(node);
     expect(fp.left).toBe(BOX_W / 2);
-    expect(fp.right).toBe(BOX_W / 2 + BOX_W + 20); // BOX_W + V_GAP
+    expect(fp.right).toBe(BOX_W / 2 + BOX_W + V_GAP); // BOX_W + V_GAP
   });
 
   it('female with one real spouse extends left', () => {
     const spouse: TreePerson = { person: p('s'), parents: [], children: [], spouses: [] };
     const node: TreePerson = { person: p('a', { sex: 'F' }), parents: [], children: [], spouses: [spouse] };
     const fp = computeFootprint(node);
-    expect(fp.left).toBe(BOX_W / 2 + BOX_W + 20);
+    expect(fp.left).toBe(BOX_W / 2 + BOX_W + V_GAP);
     expect(fp.right).toBe(BOX_W / 2);
   });
 
@@ -164,7 +166,7 @@ describe('computeFootprint', () => {
     // left = BOX_W/2 (no spouse outline for M — placeholder spouse goes left but
     //         computeFootprint doesn't count parent placeholders)
     expect(fp.left).toBe(BOX_W / 2);
-    expect(fp.right).toBe(BOX_W / 2 + BOX_W + 20);
+    expect(fp.right).toBe(BOX_W / 2 + BOX_W + V_GAP);
   });
 });
 
@@ -201,7 +203,7 @@ describe('computePedigreeLayout', () => {
     expect(boxes).toHaveLength(1);
     expect(boxes[0].isFocal).toBe(true);
     expect(boxes[0].w).toBe(BOX_W);
-    expect(boxes[0].h).toBe(BOX_H);
+    expect(boxes[0].h).toBeGreaterThanOrEqual(MIN_BOX_H);
   });
 
   it('places focal box at leftmost x (PAD=10)', () => {
@@ -213,11 +215,11 @@ describe('computePedigreeLayout', () => {
     expect(computePedigreeLayout(pedigree3(p('f'))).lines).toHaveLength(0);
   });
 
-  it('adds both parent boxes at genX[1]=215', () => {
+  it('adds both parent boxes at genX[1]=280', () => {
     const { boxes } = computePedigreeLayout(pedigree3(p('f'), [p('p0'), p('p1')]));
     const parentBoxes = boxes.filter(b => !b.isFocal);
     expect(parentBoxes).toHaveLength(2);
-    parentBoxes.forEach(b => expect(b.x).toBe(215));
+    parentBoxes.forEach(b => expect(b.x).toBe(280));
   });
 
   it('places parents[0] above parents[1]', () => {
@@ -237,11 +239,11 @@ describe('computePedigreeLayout', () => {
     expect(computePedigreeLayout(tree).boxes).toHaveLength(7);
   });
 
-  it('places grandparent boxes at genX[2]=420', () => {
+  it('places grandparent boxes at genX[2]=550', () => {
     const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), null, p('gp2'), null]);
     const { boxes } = computePedigreeLayout(tree);
     const gpBoxes = boxes.filter(b => b.person.id === 'gp0' || b.person.id === 'gp2');
-    gpBoxes.forEach(b => expect(b.x).toBe(420));
+    gpBoxes.forEach(b => expect(b.x).toBe(550));
   });
 
   it('focal is vertically centered between parents', () => {

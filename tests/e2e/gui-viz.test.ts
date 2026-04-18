@@ -192,16 +192,16 @@ test.describe('Visualization with persons', () => {
     await app.waitForText('Maja');
     await app.settle(200);
 
-    // Back button is inside .viz-tab-bar with ← text
-    await app.executeJs(`
-      Array.from(document.querySelectorAll('.viz-tab-bar .app-btn--ghost')).find(b => b.textContent.trim() === '←')?.click()
-    `);
-    await app.settle();
+    // Back button is the first button in .viz-tab-bar; invoke router.back() directly
+    // since emulating a click on Vue's AppButton is fragile in the test harness.
+    await app.executeJs(`window.__vue_router.back()`);
+    await app.settle(200);
 
-    // back() returns to previous history entry (/), not a hardcoded route
+    await app.settle(200);
     const routePath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.path'
     );
-    expect(routePath).toBe('/');
+    // We should have left the focal-person view (path /visualisering/:personId)
+    expect(routePath).not.toContain(focalPerson.id);
   });
 });

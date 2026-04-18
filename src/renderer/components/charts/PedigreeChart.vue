@@ -35,43 +35,78 @@
           @focus="focusedBoxId = box.person.id"
           @blur="focusedBoxId = null"
         >
+          <!-- Box background -->
           <rect
             :x="box.x" :y="box.y" :width="box.w" :height="box.h"
-            rx="4"
+            rx="6"
             :fill="boxFill(box)"
-            :stroke="box.isFocal ? chartTokens.focalStroke : chartTokens.boxStroke"
+            :stroke="boxStroke(box)"
             stroke-width="1"
           />
+          <!-- Sex indicator bar (3px wide) -->
           <rect
             :x="box.x" :y="box.y"
-            width="4" :height="box.h"
-            rx="2"
-            :fill="sexColor(box.person.sex)"
+            width="3" :height="box.h"
+            rx="1.5"
+            :fill="sexBg(box.person.sex)"
+          />
+          <!-- Portrait area -->
+          <rect
+            :x="box.x + BOX_PAD_X_LEFT" :y="box.y + BOX_PAD_Y"
+            :width="PORTRAIT_W" :height="PORTRAIT_H"
+            rx="3"
+            :fill="portraitBg(box)"
+          />
+          <image
+            v-if="box.person.photoUrl"
+            :href="box.person.photoUrl"
+            :x="box.x + BOX_PAD_X_LEFT" :y="box.y + BOX_PAD_Y"
+            :width="PORTRAIT_W" :height="PORTRAIT_H"
+            preserveAspectRatio="xMidYMid slice"
           />
           <text
-            :x="box.x + 12" :y="box.y + 17"
-            font-size="12" font-weight="600"
+            v-else
+            :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W / 2"
+            :y="box.y + BOX_PAD_Y + PORTRAIT_H / 2"
+            text-anchor="middle"
+            dominant-baseline="central"
+            font-size="11"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="box.isFocal ? chartTokens.textFocal : chartTokens.text"
-          ><tspan
-              v-for="(part, pi) in truncateNameParts(chartNameParts(box.person.givenName, box.person.surname, box.person.preferredName), 20)"
-              :key="pi"
-              :text-decoration="part.underline ? 'underline' : undefined"
-            >{{ part.text }}</tspan></text>
+            :fill="portraitTextColor()"
+          >{{ initials(box) }}</text>
+          <!-- Name lines -->
           <text
-            v-if="box.person.birthDate"
-            :x="box.x + 12" :y="box.y + 30"
+            font-size="12"
+            font-weight="600"
+            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+            :fill="nameColor(box)"
+          >
+            <tspan
+              v-for="(line, li) in wrappedName(box)"
+              :key="li"
+              :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
+              :y="nameStartY(box) + li * 16"
+            >{{ line }}</tspan>
+          </text>
+          <!-- Birth line -->
+          <text
+            v-if="box.person.birthDate || box.person.birthPlace"
+            :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
+            :y="birthY(box)"
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="box.isFocal ? chartTokens.textFocalSub : chartTokens.textSub"
-          >* {{ box.person.birthDate }}</text>
+            :fill="dateColor(box)"
+          >* {{ [box.person.birthDate, box.person.birthPlace].filter(Boolean).join(' ') }}</text>
+          <!-- Death line -->
           <text
-            v-if="box.person.deathDate"
-            :x="box.x + 12" :y="box.y + 43"
+            v-if="box.person.deathDate || box.person.deathPlace"
+            :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
+            :y="deathY(box)"
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="box.isFocal ? chartTokens.textFocalSub : chartTokens.textSub"
-          >† {{ box.person.deathDate }}</text>
+            :fill="dateColor(box)"
+          >† {{ [box.person.deathDate, box.person.deathPlace].filter(Boolean).join(' ') }}</text>
+          <!-- Add button (hovered) -->
           <g
             v-if="!readonly && hoveredPersonId === box.person.id"
             class="add-btn"
@@ -193,11 +228,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computePedigreeLayout, BOX_W, BOX_H, H_GAP } from '../../utils/chart-layout';
+import { computePedigreeLayout, BOX_W, BOX_H, H_GAP, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
+import { wrapName } from '../../utils/chart-layout/measure';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chart-layout';
-import { chartNameParts, truncateNameParts } from '../../utils/nameUtils';
+import { formatFullName } from '../../utils/nameUtils';
+import { useChartColors } from '../../composables/useChartColors';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
 
@@ -275,7 +312,7 @@ const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
 const layout = computed(() => {
-  if (!tree.value) return { boxes: [], lines: [], svgWidth: 995, svgHeight: 1024, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
+  if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 995, svgHeight: 1024, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
   return computePedigreeLayout(tree.value, collapsed.value, props.selectedPersonId);
 });
 
@@ -314,32 +351,77 @@ async function handleCollapseButton(btn: CollapseButton) {
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-pedigree');
 
-const SEX_COLORS: Record<string, string> = { M: '#7eb8f7', F: '#f7a5c0', U: '#ccc' };
-function sexColor(sex: string): string { return SEX_COLORS[sex] ?? '#ccc'; }
+const colors = useChartColors(true);
 
-const chartTokens = computed(() => {
-  const s = getComputedStyle(document.documentElement);
-  const g = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback;
-  return {
-    boxBg: g('--chart-box-bg', 'white'),
-    boxDeceased: g('--chart-box-deceased', '#f8f8f8'),
-    boxFocal: g('--chart-box-focal', '#2c3e50'),
-    boxStroke: g('--chart-box-stroke', '#ddd'),
-    focalStroke: g('--chart-focal-stroke', '#1a2a3a'),
-    text: g('--chart-text', '#333'),
-    textSub: g('--chart-text-sub', '#888'),
-    textFocal: g('--chart-text-focal', 'white'),
-    textFocalSub: g('--chart-text-focal-sub', 'rgba(255,255,255,0.65)'),
-    line: g('--chart-line', '#ccc'),
-    placeholderStroke: g('--chart-placeholder-stroke', '#94a3b8'),
-    placeholderText: g('--chart-placeholder-text', '#94a3b8'),
-  };
-});
+// Backward-compat alias so template references to chartTokens still work during transition
+const chartTokens = computed(() => ({
+  line: colors.value.line,
+  placeholderStroke: colors.value.placeholderStroke,
+  placeholderText: colors.value.placeholderText,
+}));
+
+function sexBg(sex: string): string {
+  if (sex === 'M') return colors.value.sexMBg;
+  if (sex === 'F') return colors.value.sexFBg;
+  return colors.value.sexUBg;
+}
 
 function boxFill(box: BoxLayout): string {
-  if (box.isFocal) return chartTokens.value.boxFocal;
-  if (!box.person.living) return chartTokens.value.boxDeceased;
-  return chartTokens.value.boxBg;
+  if (box.isFocal) return colors.value.boxFocal;
+  if (!box.person.living) return colors.value.boxDeceased;
+  return colors.value.boxBg;
+}
+
+function boxStroke(box: BoxLayout): string {
+  return box.isFocal ? colors.value.focalStroke : colors.value.boxStroke;
+}
+
+function nameColor(box: BoxLayout): string {
+  return box.isFocal ? colors.value.textFocal : colors.value.text;
+}
+
+function dateColor(box: BoxLayout): string {
+  return box.isFocal ? colors.value.textFocalSub : colors.value.textSub;
+}
+
+function portraitBg(box: BoxLayout): string {
+  return sexBg(box.person.sex);
+}
+
+function portraitTextColor(): string {
+  return '#ffffff';
+}
+
+function wrappedName(box: BoxLayout): string[] {
+  const full = formatFullName({
+    given_name: box.person.givenName,
+    surname: box.person.surname,
+    preferred_name: box.person.preferredName,
+    nickname: box.person.nickname,
+  });
+  return wrapName(full, TEXT_AREA_W, 12);
+}
+
+function initials(box: BoxLayout): string {
+  const given = box.person.preferredName ?? box.person.givenName ?? '';
+  const sur = box.person.surname ?? '';
+  const g = given.trim()[0] ?? '';
+  const s = sur.trim()[0] ?? '';
+  return (g + s).toUpperCase() || '?';
+}
+
+function nameStartY(box: BoxLayout): number {
+  return box.y + BOX_PAD_Y + 12; // 12px font-size
+}
+
+function birthY(box: BoxLayout): number {
+  const lines = wrappedName(box);
+  return nameStartY(box) + lines.length * 16 + 10;
+}
+
+function deathY(box: BoxLayout): number {
+  const hasBirth = !!(box.person.birthDate || box.person.birthPlace);
+  return birthY(box) + (hasBirth ? 14 : 0);
 }
 
 function getPopoverPosition(box: BoxLayout): { x: number; y: number } {

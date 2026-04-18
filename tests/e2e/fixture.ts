@@ -138,7 +138,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       setTimeout(poll, 250);
     };
 
-    // Give Vite a head start before polling (6 instances compile simultaneously)
+    // Give Vite a head start before polling (11 instances compile simultaneously).
     setTimeout(poll, 3000);
 
     proc.on('error', () => { clearTimeout(timeout); resolve(false); });
