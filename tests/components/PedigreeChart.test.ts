@@ -17,6 +17,7 @@ describe('PedigreeChart', () => {
       },
       events: { forPerson: vi.fn().mockResolvedValue([]) },
       relationships: { getForPerson: vi.fn().mockResolvedValue([]) },
+      media: { forEntity: vi.fn().mockResolvedValue([]) },
     };
   });
 
@@ -57,7 +58,7 @@ describe('PedigreeChart', () => {
   });
 
   it('emits navigate when a non-focal box is clicked', async () => {
-    (window as unknown as { api: { persons: { get: ReturnType<typeof vi.fn>; getNames: ReturnType<typeof vi.fn> }; events: { forPerson: ReturnType<typeof vi.fn> }; relationships: { getForPerson: ReturnType<typeof vi.fn> } } }).api = {
+    (window as unknown as { api: unknown }).api = {
       persons: {
         get: vi.fn().mockImplementation((id: unknown) =>
           Promise.resolve({ id, sex: 'M', living: true })
@@ -73,6 +74,7 @@ describe('PedigreeChart', () => {
           return Promise.resolve([]);
         }),
       },
+      media: { forEntity: vi.fn().mockResolvedValue([]) },
     };
 
     const wrapper = mount(PedigreeChart, {

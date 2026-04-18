@@ -10,6 +10,9 @@ export interface PersonNode {
   living: boolean;
   birthDate: string | null;  // ISO date string e.g. "1850-03-15" or partial "1850"
   deathDate: string | null;
+  birthPlace: string | null;   // place name from birth event
+  deathPlace: string | null;   // place name from death event
+  photoUrl: string | null;     // file_ref from first media link (sort_order 0)
 }
 
 export interface BoxLayout {
@@ -78,6 +81,7 @@ export interface TreePerson {
 export interface ChartLayout {
   boxes: BoxLayout[];
   lines: Line[];
+  paths: string[];  // curved connector SVG path "d" attributes
   svgWidth: number;
   svgHeight: number;
   /** Minimum Y coordinate for the viewBox (negative when placeholders extend above boxes). */

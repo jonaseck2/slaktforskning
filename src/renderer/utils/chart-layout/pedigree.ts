@@ -322,7 +322,7 @@ export function computePedigreeLayout(
   const lineSet = new Set(lines.map(l => `${l.x1},${l.y1},${l.x2},${l.y2}`));
   const uniquePlaceholderLines = placeholderLines.filter(l => !lineSet.has(`${l.x1},${l.y1},${l.x2},${l.y2}`));
 
-  return { boxes, lines, svgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
+  return { boxes, lines, paths: [], svgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: uniquePlaceholderLines };
 }
 
 /** Find a TreePerson by ID in the graph (cycle-safe). */

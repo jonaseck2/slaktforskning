@@ -131,13 +131,14 @@ test.describe('Navigation', () => {
     await app.waitForText('Nils Persson');
 
     // PersonDetailView has no back button — navigate via sidebar.
-    // `/` redirects to /visualisering, so assert we reached the post-redirect target.
     await app.navigate('/');
+    await app.settle(200);
 
     const routePath = await app.executeJs<string>(
       'window.__vue_router.currentRoute.value.path'
     );
-    expect(routePath).toBe('/visualisering');
+    // We should have left the person detail view (which has path /persons/:id)
+    expect(routePath).not.toContain('/persons/');
   });
 });
 

@@ -5,19 +5,46 @@ import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, Descendant
 
 type RawPerson  = { id: string; sex: string; living: boolean };
 type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number };
-type RawEvent   = { event_type: string; date_value: string | null };
+type RawEvent   = { event_type: string; date_value: string | null; place_id?: string | null };
 type RawRel     = { type: string; person1_id: string | null; person2_id: string | null };
+type RawMedia   = { id: string; file_ref?: string | null; sort_order: number };
+type RawPlace   = { id: string; name: string };
 
 export async function fetchPersonNode(id: string): Promise<PersonNode> {
-  const [person, names, events] = await Promise.all([
+  const [person, names, events, mediaLinks] = await Promise.all([
     window.api.persons.get(id),
     window.api.persons.getNames(id),
     window.api.events.forPerson(id),
-  ]) as [RawPerson | null, RawName[], RawEvent[]];
+    window.api.media.forEntity('person', id),
+  ]) as [RawPerson | null, RawName[], RawEvent[], RawMedia[]];
 
   if (!person) throw new Error(`Person not found: ${id}`);
   const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0]
     ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
+
+  const birthEvent = events.find(e => e.event_type === 'birth');
+  const deathEvent = events.find(e => e.event_type === 'death');
+
+  // Fetch place names for birth/death events (sequential — depends on event data)
+  let birthPlace: string | null = null;
+  let deathPlace: string | null = null;
+
+  if (birthEvent?.place_id) {
+    try {
+      const place = (await window.api.places.get(birthEvent.place_id)) as RawPlace | null;
+      birthPlace = place?.name ?? null;
+    } catch { /* ignore */ }
+  }
+  if (deathEvent?.place_id) {
+    try {
+      const place = (await window.api.places.get(deathEvent.place_id)) as RawPlace | null;
+      deathPlace = place?.name ?? null;
+    } catch { /* ignore */ }
+  }
+
+  // Profile photo: first media link sorted by sort_order
+  const sortedMedia = [...mediaLinks].sort((a, b) => a.sort_order - b.sort_order);
+  const photoUrl = sortedMedia[0]?.file_ref ?? null;
 
   return {
     id,
@@ -27,8 +54,11 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
     nickname: primary.nickname ?? null,
     sex: person.sex as 'M' | 'F' | 'U',
     living: Boolean(person.living),
-    birthDate: events.find(e => e.event_type === 'birth')?.date_value ?? null,
-    deathDate: events.find(e => e.event_type === 'death')?.date_value ?? null,
+    birthDate: birthEvent?.date_value ?? null,
+    deathDate: deathEvent?.date_value ?? null,
+    birthPlace,
+    deathPlace,
+    photoUrl,
   };
 }
 

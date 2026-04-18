@@ -862,5 +862,5 @@ export function computeHourglassLayout(
   // Merge explicitly-tracked outline lines into placeholderLines
   placeholderLines.push(...outlineLines);
 
-  return { boxes, lines, svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
+  return { boxes, lines, paths: [], svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
 }
