@@ -51,12 +51,14 @@
           @load="onImageLoad"
         />
         <FaceTagOverlay
+          v-if="imgNaturalWidth > 0 && imgNaturalHeight > 0"
           :regions="enrichedRegions"
           :image-width="imgNaturalWidth"
           :image-height="imgNaturalHeight"
           :draw-mode="drawMode"
           :highlighted-id="highlightedRegionId"
           @region-drawn="rect => emit('regionDrawn', rect)"
+          @region-updated="(id, rect) => emit('regionUpdated', id, rect)"
           @region-clicked="id => emit('regionClicked', id)"
           @region-hovered="id => emit('regionHovered', id)"
         />
@@ -143,6 +145,7 @@ const emit = defineEmits<{
   close: [];
   'update:currentIndex': [index: number];
   regionDrawn: [rect: { x: number; y: number; width: number; height: number }];
+  regionUpdated: [id: string, rect: { x: number; y: number; width: number; height: number }];
   regionClicked: [id: string];
   regionHovered: [id: string | null];
 }>();

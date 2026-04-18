@@ -20,6 +20,10 @@
 1. **[2026-04-17] `setsid` doesn't exist on macOS**
    Do instead: don't try to detach Electron from terminal. Ask the user to run it.
 
+## Build & Performance
+1. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from main process Vite build**
+   Do instead: keep the `externalize-gazetteers` plugin in `vite.main.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized. They load at runtime via Node.js `require()`.
+
 ## Domain Behavior Guardrails
 1. **[2026-04-17] Component tests break when removing UI elements (checkbox toggles etc.)**
    Do instead: update component tests in the same commit when changing component structure.

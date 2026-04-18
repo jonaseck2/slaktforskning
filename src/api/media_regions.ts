@@ -40,6 +40,10 @@ export function getRegionsForPerson(db: Database, personId: string): (MediaRegio
 export function updateMediaRegion(db: Database, id: string, data: {
   person_id?: string | null;
   label?: string | null;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
 }): MediaRegion | null {
   const existing = queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id]);
   if (!existing) return null;
@@ -55,6 +59,10 @@ export function updateMediaRegion(db: Database, id: string, data: {
     updates.push('label = ?');
     params.push(data.label ?? null);
   }
+  if ('x' in data) { updates.push('x = ?'); params.push(data.x); }
+  if ('y' in data) { updates.push('y = ?'); params.push(data.y); }
+  if ('width' in data) { updates.push('width = ?'); params.push(data.width); }
+  if ('height' in data) { updates.push('height = ?'); params.push(data.height); }
 
   if (updates.length === 0) return existing;
 

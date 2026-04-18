@@ -192,6 +192,7 @@ const api = {
     getForMedia: (mediaId: string) => ipcRenderer.invoke('mediaRegions:getForMedia', mediaId),
     getForPerson: (personId: string) => ipcRenderer.invoke('mediaRegions:getForPerson', personId),
     update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('mediaRegions:update', id, data)),
+    updateGeometry: (id: string, data: Record<string, number>) => ipcRenderer.invoke('mediaRegions:update', id, data),
     delete: mutating((id: string) => ipcRenderer.invoke('mediaRegions:delete', id)),
   },
   export: {

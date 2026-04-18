@@ -265,11 +265,17 @@ async function load() {
 
       if (link.entity_type === 'person') {
         try {
-          const p = await window.api.persons.get(link.entity_id) as { sex?: string; given_name?: string; surname?: string } | null;
+          const p = await window.api.persons.get(link.entity_id) as { sex?: string } | null;
           if (p) {
             sex = (p.sex as 'M' | 'F' | 'U') || 'U';
-            givenName = p.given_name || '';
-            surname = p.surname || '';
+          }
+          const names = await window.api.persons.getNames(link.entity_id) as Array<{
+            given_name?: string; surname?: string; sort_order: number;
+          }>;
+          if (names.length > 0) {
+            const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+            givenName = primary.given_name || '';
+            surname = primary.surname || '';
           }
         } catch { /* ignore */ }
       }
@@ -309,11 +315,17 @@ async function load() {
       if (r.person_id) {
         try {
           personName = await resolvePersonDisplayName(r.person_id);
-          const p = await window.api.persons.get(r.person_id) as { sex?: string; given_name?: string; surname?: string } | null;
+          const p = await window.api.persons.get(r.person_id) as { sex?: string } | null;
           if (p) {
             personSex = (p.sex as 'M' | 'F' | 'U') || 'U';
-            personGivenName = p.given_name || '';
-            personSurname = p.surname || '';
+          }
+          const names = await window.api.persons.getNames(r.person_id) as Array<{
+            given_name?: string; surname?: string; sort_order: number;
+          }>;
+          if (names.length > 0) {
+            const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+            personGivenName = primary.given_name || '';
+            personSurname = primary.surname || '';
           }
         } catch { /* ignore */ }
       }
@@ -376,6 +388,8 @@ async function assignPersonToRegion(regionId: string, personId: string) {
 }
 
 watch(() => props.mediaId, load, { immediate: true });
+
+defineExpose({ reload: load });
 </script>
 
 <style scoped>

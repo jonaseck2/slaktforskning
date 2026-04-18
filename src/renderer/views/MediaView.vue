@@ -12,6 +12,7 @@
       @close="closeViewer"
       @update:current-index="onViewerIndexChange"
       @region-drawn="onRegionDrawn"
+      @region-updated="onRegionUpdated"
       @region-clicked="(id: string) => highlightedRegionId = id"
       @region-hovered="(id: string | null) => highlightedRegionId = id"
     />
@@ -160,6 +161,7 @@
     ></div>
     <div class="media-panel-container" :style="{ width: panelWidth + 'px' }">
       <MediaPanel
+        ref="panelRef"
         :media-id="selectedMediaId"
         :draw-mode="drawMode"
         :highlighted-region-id="highlightedRegionId"
@@ -244,6 +246,7 @@ const viewerIndex = ref(0);
 const drawMode = ref(false);
 const highlightedRegionId = ref<string | null>(null);
 const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
+const panelRef = ref<InstanceType<typeof MediaPanel> | null>(null);
 const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
@@ -365,6 +368,12 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
     width: rect.width, height: rect.height,
   });
   viewerRef.value?.reloadRegions();
+  panelRef.value?.reload();
+}
+
+async function onRegionUpdated(id: string, rect: { x: number; y: number; width: number; height: number }) {
+  // Use updateGeometry (non-mutating) to avoid triggering quality checks
+  await window.api.mediaRegions.updateGeometry(id, rect);
 }
 
 async function attachFile() {
