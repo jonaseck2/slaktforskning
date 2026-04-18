@@ -5,7 +5,20 @@ function normalize(name: string): string {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
-    .replace(/\s*(församling|socken|kommun|stad|härad|län)$/i, '');
+    // Swedish
+    .replace(/\s*(församling|socken|kommun|stad|härad|län|distrikt|pastorat)$/i, '')
+    // Danish
+    .replace(/\s*(sogn|kirkedistrikt|kommune|amt|herred)$/i, '')
+    // Norwegian
+    .replace(/\s*(fylke|prestegjeld|sokn)$/i, '')
+    // Finnish
+    .replace(/\s*(kunta|kaupunki|maakunta|seurakunta)$/i, '')
+    // Icelandic
+    .replace(/\s*(sýsla|hreppur|sveitarfélag|sókn)$/i, '')
+    // English / North American
+    .replace(/\s*(county|parish|township|borough|province|state)$/i, '')
+    // Common prefixes
+    .replace(/^(county of|province of|state of)\s+/i, '');
 }
 
 function fuzzyEqual(a: string, b: string): boolean {
