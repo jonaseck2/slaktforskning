@@ -103,6 +103,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       ...process.env,
       SLAKTFORSKNING_DB: dbPath,
       SLAKTFORSKNING_UI_PORT: String(port),
+      SLAKTFORSKNING_NO_FOCUS: '1',
     },
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: !isWindows,

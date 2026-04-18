@@ -2,11 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { normalizeForImport } from '../../src/import/gedcom/normalize';
 
-// Helper to find a top-level node by tag
-function findTop(nodes: ReturnType<typeof parseGedcom>, tag: string) {
-  return nodes.find(n => n.tag === tag);
-}
-
 // Helper to find a direct child by tag
 function child(node: ReturnType<typeof parseGedcom>[0], tag: string) {
   return node.children.find(c => c.tag === tag);

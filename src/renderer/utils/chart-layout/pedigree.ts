@@ -164,7 +164,7 @@ export function computePedigreeLayout(
         const selCY = selBox.y + BOX_H / 2;
 
         // Helper: find first Y that doesn't overlap any existing box at exact X
-        function findClearYSameCol(x: number, startY: number, direction: 1 | -1): number {
+        function _findClearYSameCol(x: number, startY: number, direction: 1 | -1): number {
           let y = startY;
           const overlaps = () => boxes.some(b =>
             b.x === x && y < b.y + b.h + V_GAP && y + BOX_H + V_GAP > b.y
@@ -241,7 +241,7 @@ export function computePedigreeLayout(
   const svgWidth = Math.max(PAD + G * BOX_W + (G - 1) * H_GAP + PAD + 20, maxBoxRight + PAD);
   const svgHeight = Math.max(PAD + numLeaves * ROW_H - (numLeaves > 1 ? V_GAP : 0) + PAD, maxBoxBottom + PAD);
   const viewBoxMinY = Math.min(0, minBoxTop - PAD);
-  const viewBoxMinX = Math.min(0, minBoxLeft - PAD);
+  const _viewBoxMinX = Math.min(0, minBoxLeft - PAD);
 
   // Adjust height if viewBoxMinY is negative
   const finalHeight = viewBoxMinY < 0 ? svgHeight + (-viewBoxMinY) : svgHeight;

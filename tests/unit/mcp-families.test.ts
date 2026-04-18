@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { addChildWorkflow, addRelationshipWorkflow } from '../../src/mcp/tools/prod/families';
 import * as personApi from '../../src/api/persons';
 import * as relationshipApi from '../../src/api/relationships';
-import * as eventApi from '../../src/api/events';
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;

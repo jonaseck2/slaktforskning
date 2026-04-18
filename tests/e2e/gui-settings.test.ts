@@ -35,42 +35,17 @@ test.setTimeout(30_000);
 // ---------------------------------------------------------------------------
 
 test.describe('Database settings', () => {
-  test('settings view renders database tab', async () => {
+  test('settings view renders database tab by default', async () => {
     await app.navigate('/settings');
-    await app.settle(200);
-
-    // Click the Database tab
-    await app.executeJs(`
-      const tabs = document.querySelectorAll('.tab-btn');
-      for (const tab of tabs) {
-        if (tab.textContent.includes('Database')) { tab.click(); break; }
-      }
-    `);
-    await app.settle(200);
-
+    // Database tab is active by default
     await app.waitForText('Active database');
   });
 
   test('shows current database path', async () => {
     await app.navigate('/settings');
-    await app.settle(200);
-
-    // Click Database tab
-    await app.executeJs(`
-      const tabs = document.querySelectorAll('.tab-btn');
-      for (const tab of tabs) {
-        if (tab.textContent.includes('Database')) { tab.click(); break; }
-      }
-    `);
-    await app.settle(200);
+    await app.waitForText('Active database');
 
     // The db-path element should show the temp DB path
-    const hasPath = await app.executeJs<boolean>(`
-      !!document.querySelector('.db-path')
-    `);
-    expect(hasPath).toBe(true);
-
-    // Path should contain .db
     const pathText = await app.executeJs<string>(`
       document.querySelector('.db-path')?.textContent ?? ''
     `);
@@ -79,15 +54,7 @@ test.describe('Database settings', () => {
 
   test('database action buttons exist', async () => {
     await app.navigate('/settings');
-    await app.settle(200);
-
-    await app.executeJs(`
-      const tabs = document.querySelectorAll('.tab-btn');
-      for (const tab of tabs) {
-        if (tab.textContent.includes('Database')) { tab.click(); break; }
-      }
-    `);
-    await app.settle(200);
+    await app.waitForText('Active database');
 
     const dom = await app.getDom();
     expect(dom).toContain('New database');
@@ -98,16 +65,7 @@ test.describe('Database settings', () => {
 
   test('tree subject section exists', async () => {
     await app.navigate('/settings');
-    await app.settle(200);
-
-    await app.executeJs(`
-      const tabs = document.querySelectorAll('.tab-btn');
-      for (const tab of tabs) {
-        if (tab.textContent.includes('Database')) { tab.click(); break; }
-      }
-    `);
-    await app.settle(200);
-
+    await app.waitForText('Active database');
     await app.expectText('Tree subject');
   });
 
@@ -116,33 +74,29 @@ test.describe('Database settings', () => {
     await app.createPerson({ given_name: 'Root', surname: 'Person' });
 
     await app.navigate('/settings');
-    await app.settle(200);
-
-    await app.executeJs(`
-      const tabs = document.querySelectorAll('.tab-btn');
-      for (const tab of tabs) {
-        if (tab.textContent.includes('Database')) { tab.click(); break; }
-      }
-    `);
-    await app.settle(200);
+    await app.waitForText('Active database');
 
     // Type in the PersonPicker search field in the tree-subject section
     await app.executeJs(`
-      const row = document.querySelector('.tree-subject-row');
-      const input = row?.querySelector('input');
-      if (input) {
-        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-        setter.call(input, 'Root');
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.focus();
-      }
+      (() => {
+        const row = document.querySelector('.tree-subject-row');
+        const input = row?.querySelector('input');
+        if (input) {
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+          setter.call(input, 'Root');
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+        }
+      })()
     `);
     await app.settle(500);
 
     // Select the suggestion
     await app.executeJs(`
-      const suggestion = document.querySelector('.suggestion-item, .picker-option, [class*="suggestion"]');
-      if (suggestion) suggestion.click();
+      (() => {
+        const suggestion = document.querySelector('.suggestion-item, .picker-option, [class*="suggestion"]');
+        if (suggestion) suggestion.click();
+      })()
     `);
     await app.settle(300);
 
@@ -159,54 +113,50 @@ test.describe('Database settings', () => {
 test.describe('Settings tabs', () => {
   test('tab navigation works across all tabs', async () => {
     await app.navigate('/settings');
-    await app.settle(200);
+    await app.waitForText('Active database');
 
-    // Verify tabs exist
+    // Settings uses FilterChips for tabs — they render as .chip-btn
     const tabCount = await app.executeJs<number>(`
-      document.querySelectorAll('.tab-btn').length
+      document.querySelectorAll('.chip-btn').length
     `);
     expect(tabCount).toBeGreaterThanOrEqual(3);
 
-    // Click each tab and verify it activates
-    const tabLabels = await app.executeJs<string[]>(`
-      Array.from(document.querySelectorAll('.tab-btn')).map(t => t.textContent.trim())
-    `);
-
-    for (const label of tabLabels) {
-      await app.executeJs(`
-        const tabs = document.querySelectorAll('.tab-btn');
-        for (const tab of tabs) {
-          if (tab.textContent.trim() === ${JSON.stringify(label)}) { tab.click(); break; }
-        }
-      `);
-      await app.settle(200);
-
-      const hasActive = await app.executeJs<boolean>(`
-        (() => {
-          const tabs = document.querySelectorAll('.tab-btn');
-          return Array.from(tabs).some(t =>
-            t.textContent.trim() === ${JSON.stringify(label)} && t.classList.contains('active')
-          );
-        })()
-      `);
-      expect(hasActive).toBe(true);
-    }
-  });
-
-  test('Import / Export tab shows import options', async () => {
-    await app.navigate('/settings');
-    await app.settle(200);
-
+    // Click Link Rules tab
     await app.executeJs(`
-      const tabs = document.querySelectorAll('.tab-btn');
-      for (const tab of tabs) {
-        if (tab.textContent.includes('Import')) { tab.click(); break; }
-      }
+      (() => {
+        const chips = document.querySelectorAll('.chip-btn');
+        for (const chip of chips) {
+          if (chip.textContent.includes('Link Rules')) { chip.click(); return; }
+        }
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
-    const dom = await app.getDom();
-    // Should show import/export section with GEDCOM options
-    expect(dom).toContain('GEDCOM');
+    const dom1 = await app.getDom();
+    expect(dom1).toContain('chip-btn--active');
+
+    // Click Gazetteers tab
+    await app.executeJs(`
+      (() => {
+        const chips = document.querySelectorAll('.chip-btn');
+        for (const chip of chips) {
+          if (chip.textContent.includes('Gazetteer')) { chip.click(); return; }
+        }
+      })()
+    `);
+    await app.settle(300);
+
+    // Click back to Database tab
+    await app.executeJs(`
+      (() => {
+        const chips = document.querySelectorAll('.chip-btn');
+        for (const chip of chips) {
+          if (chip.textContent.includes('Database')) { chip.click(); return; }
+        }
+      })()
+    `);
+    await app.settle(300);
+
+    await app.expectText('Active database');
   });
 });

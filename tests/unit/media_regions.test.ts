@@ -158,7 +158,7 @@ describe('cascade and SET NULL behavior', () => {
   it('sets person_id to NULL when person is deleted', () => {
     const m = createMedia(db, { title: 'photo.jpg' });
     const p = createPerson(db, { given_name: 'Anna' });
-    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
 
     deletePerson(db, p.id);
 

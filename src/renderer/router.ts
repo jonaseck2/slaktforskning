@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import PersonsView from './views/PersonsView.vue';
 import PersonDetailView from './views/PersonDetailView.vue';
 import RelationshipsView from './views/RelationshipsView.vue';
 import RelationshipDetailView from './views/RelationshipDetailView.vue';

@@ -33,13 +33,17 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 let activeWindow: BrowserWindow | null = null;
 
 function createWindow(): BrowserWindow {
+  const noFocus = !!process.env.SLAKTFORSKNING_NO_FOCUS;
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: !noFocus,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  if (noFocus) win.showInactive();
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

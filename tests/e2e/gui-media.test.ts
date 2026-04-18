@@ -60,6 +60,8 @@ test.describe('Media CRUD', () => {
   });
 
   test('media list shows seeded items', async () => {
+    // Navigate away and back to ensure fresh data load
+    await app.navigate('/');
     await app.navigate('/media');
     await app.waitForText('Family Photo');
     await app.expectText('Church Record');
@@ -77,50 +79,59 @@ test.describe('Media CRUD', () => {
     await app.navigate('/media');
     await app.waitForText('Family Photo');
 
-    // Click "List" view button (AppButton inside .view-toggle)
+    // Click "List" view button
     await app.executeJs(`
-      const btns = document.querySelectorAll('.view-toggle .app-btn');
-      for (const btn of btns) {
-        if (btn.textContent.trim() === 'List') { btn.click(); break; }
-      }
+      (() => {
+        const btns = document.querySelectorAll('.view-toggle button');
+        for (const btn of btns) {
+          if (btn.textContent.trim() === 'List') { btn.click(); return; }
+        }
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
     // List view should show a table
-    const hasList = await app.executeJs<boolean>(`
-      !!document.querySelector('.media-table')
-    `);
-    expect(hasList).toBe(true);
+    const dom1 = await app.getDom();
+    expect(dom1).toContain('media-table');
 
     // Switch back to gallery
     await app.executeJs(`
-      const btns = document.querySelectorAll('.view-toggle .app-btn');
-      for (const btn of btns) {
-        if (btn.textContent.trim() === 'Gallery') { btn.click(); break; }
-      }
+      (() => {
+        const btns = document.querySelectorAll('.view-toggle button');
+        for (const btn of btns) {
+          if (btn.textContent.trim() === 'Gallery') { btn.click(); return; }
+        }
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
-    const hasGallery = await app.executeJs<boolean>(`
-      !!document.querySelector('.gallery-grid')
-    `);
-    expect(hasGallery).toBe(true);
+    const dom2 = await app.getDom();
+    expect(dom2).toContain('gallery-grid');
   });
 
   test('search filters media items', async () => {
+    await app.navigate('/');
     await app.navigate('/media');
     await app.waitForText('Family Photo');
 
+    // Use waitAndFill which waits for the element to appear before filling
     await app.waitAndFill('.gallery-search', 'Church');
     await app.settle(500);
 
     const dom = await app.getDom();
     expect(dom).toContain('Church Record');
-    // Family Photo should be filtered out
-    expect(dom).not.toContain('Family Photo');
+    // Family Photo should be filtered out — check only in the main content area
+    const mainContent = await app.executeJs<boolean>(`
+      (() => {
+        const cards = document.querySelectorAll('.gallery-card');
+        return Array.from(cards).some(c => c.textContent.includes('Family Photo'));
+      })()
+    `);
+    expect(mainContent).toBe(false);
   });
 
   test('search shows all when cleared', async () => {
+    await app.navigate('/');
     await app.navigate('/media');
     await app.waitForText('Family Photo');
 
@@ -134,34 +145,53 @@ test.describe('Media CRUD', () => {
   });
 
   test('inline edit title in list view', async () => {
+    await app.navigate('/');
     await app.navigate('/media');
     await app.waitForText('Family Photo');
 
     // Switch to list view
     await app.executeJs(`
-      const btns = document.querySelectorAll('.view-toggle .app-btn');
-      for (const btn of btns) {
-        if (btn.textContent.trim() === 'List') { btn.click(); break; }
-      }
+      (() => {
+        const btns = document.querySelectorAll('.view-toggle button');
+        for (const btn of btns) {
+          if (btn.textContent.trim() === 'List') { btn.click(); return; }
+        }
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
-    // Edit the title of the first media item
+    // The inline edit uses :value + @blur save pattern.
+    // Set the native value and then blur to trigger the save handler.
     await app.executeJs(`
-      const input = document.querySelector('.media-table .inline-edit');
-      if (input) {
-        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-        setter.call(input, 'Updated Photo Title');
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        input.blur();
-      }
+      new Promise(resolve => {
+        const input = document.querySelector('.media-table .inline-edit');
+        if (input) {
+          input.focus();
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+          setter.call(input, 'Updated Photo Title');
+          // Blur triggers the save (the @blur handler compares new vs old value)
+          input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+        }
+        setTimeout(resolve, 200);
+      })
     `);
     await app.settle(500);
 
     // Reload to verify persistence
     await app.navigate('/');
     await app.navigate('/media');
+
+    // Switch back to list view to see the title
+    await app.executeJs(`
+      (() => {
+        const btns = document.querySelectorAll('.view-toggle button');
+        for (const btn of btns) {
+          if (btn.textContent.trim() === 'List') { btn.click(); return; }
+        }
+      })()
+    `);
+    await app.settle(300);
+
     await app.waitForText('Updated Photo Title');
   });
 
@@ -174,15 +204,17 @@ test.describe('Media CRUD', () => {
 
     // Override confirm and click delete
     await app.executeJs(`
-      window.confirm = () => true;
-      const cards = document.querySelectorAll('.gallery-card');
-      for (const card of cards) {
-        if (card.textContent.includes('To Be Deleted')) {
-          const delBtn = card.querySelector('.card-delete');
-          if (delBtn) delBtn.click();
-          break;
+      (() => {
+        window.confirm = () => true;
+        const cards = document.querySelectorAll('.gallery-card');
+        for (const card of cards) {
+          if (card.textContent.includes('To Be Deleted')) {
+            const delBtn = card.querySelector('.card-delete');
+            if (delBtn) delBtn.click();
+            return;
+          }
         }
-      }
+      })()
     `);
     await app.settle(500);
 

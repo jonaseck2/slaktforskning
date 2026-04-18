@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Database } from 'node-sqlite3-wasm';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship } from '../../src/api/relationships';

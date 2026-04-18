@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createPerson, getPersonNames } from '../../src/api/persons';
+import { createPerson } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { createPlace } from '../../src/api/places';
@@ -34,7 +34,7 @@ describe('getPersonSummary', () => {
     addEventParticipant(db, { event_id: birthEvent.id, person_id: person.id, role: 'primary' });
 
     const spouse = createPerson(db, { given_name: 'Anna', surname: 'Svensson', sex: 'F' });
-    const rel = createRelationship(db, { type: 'couple', person1_id: person.id, person2_id: spouse.id });
+    createRelationship(db, { type: 'couple', person1_id: person.id, person2_id: spouse.id });
 
     const source = createSource(db, { title: 'Church Records' });
     createCitation(db, { source_id: source.id, person_id: person.id, page: 'p. 42' });
@@ -85,7 +85,7 @@ describe('getFamilyUnit', () => {
     const mother = createPerson(db, { given_name: 'Maria', surname: 'Eriksdotter', sex: 'F' });
     const couple = createRelationship(db, { type: 'couple', person1_id: father.id, person2_id: mother.id });
 
-    const marriageEvent = createEvent(db, { event_type: 'marriage', relationship_id: couple.id, date_original: '1870' });
+    createEvent(db, { event_type: 'marriage', relationship_id: couple.id, date_original: '1870' });
 
     const child = createPerson(db, { given_name: 'Johan', surname: 'Persson', sex: 'M' });
     createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: child.id });

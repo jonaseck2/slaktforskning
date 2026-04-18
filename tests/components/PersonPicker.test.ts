@@ -152,7 +152,7 @@ describe('PersonPicker', () => {
   });
 
   it('loads person name when modelValue is set externally', async () => {
-    const wrapper = mountPicker({ modelValue: 'p1' });
+    const _wrapper = mountPicker({ modelValue: 'p1' });
     await flushPromises();
 
     expect((window as any).api.persons.getNames).toHaveBeenCalledWith('p1');

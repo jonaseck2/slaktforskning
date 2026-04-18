@@ -272,7 +272,6 @@ const PERSON_LIST_BASE_QUERY = `
     AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
 `;
 
-const PERSON_LIST_QUERY = `${PERSON_LIST_BASE_QUERY} ORDER BY pn.surname, pn.given_name`;
 
 export function listPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
   // Pass 1: sort + paginate with only name data — no birth/death subqueries.

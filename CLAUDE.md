@@ -38,6 +38,14 @@ Släktforskning is a cross-platform desktop genealogy app built with Electron + 
 
 ```
 src/
+├── gazetteer-build/              # Shared utilities for gazetteer build scripts
+│   ├── geo.ts                    # Coordinate rounding, centroid, averaging
+│   ├── sparql.ts                 # Wikidata SPARQL fetch, retry, sleep
+│   ├── geonames.ts               # GeoNames TSV parsing, dedup
+│   ├── wikidata.ts               # WKT parsing, alias generation
+│   ├── tree.ts                   # Tree node counting, walking, stats
+│   ├── io.ts                     # File write helper, DATA_DIR constant
+│   └── index.ts                  # Barrel re-export
 ├── api/                          # Pure TypeScript business logic — NO Electron imports
 │   ├── types.ts                  # Domain types (Person, PersonName, Relationship, etc.)
 │   ├── schema.ts                 # SQLite DDL (CREATE TABLE IF NOT EXISTS)

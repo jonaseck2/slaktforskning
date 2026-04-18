@@ -153,7 +153,7 @@ describe('PlacePicker', () => {
   });
 
   it('loads place path when modelValue is set', async () => {
-    const wrapper = mountPicker({ modelValue: 'pl1' });
+    const _wrapper = mountPicker({ modelValue: 'pl1' });
     await flushPromises();
 
     expect((window as any).api.places.getPath).toHaveBeenCalledWith('pl1');

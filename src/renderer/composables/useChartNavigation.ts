@@ -104,7 +104,7 @@ export function useChartNavigation(options: ChartNavigationOptions) {
     speak(text);
   }
 
-  function narrateDescendantNode(node: PersonNode, label: string): void {
+  function narrateDescendantNode(node: PersonNode, _label: string): void {
     speak(t('screenReader.chartChild', { name: personName(node), summary: personSummary(node) }));
   }
 

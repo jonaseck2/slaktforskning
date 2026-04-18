@@ -357,13 +357,6 @@ export function getResearchGaps(db: Database, personId: string): ResearchGaps | 
 
   // Check for parents
   const rels = getRelationshipsOfPerson(db, personId);
-  const hasParents = rels.some(r => {
-    if (r.type !== 'parent_child') return false;
-    // Person is the child if they're person2 (convention) or person1
-    // We consider them a child if the other person is in a parent role
-    return r.person2_id === personId || r.person1_id === personId;
-  });
-  // More precise: person must be the child, not the parent
   const isChild = rels.some(r => r.type === 'parent_child' && r.person2_id === personId);
 
   // Find unsourced events (no citations)
