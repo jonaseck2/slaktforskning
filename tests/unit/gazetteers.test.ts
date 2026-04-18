@@ -5,8 +5,8 @@ import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 16 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(16);
+  it('loads all 23 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(23);
   });
 
   const expectedIds = [
@@ -15,6 +15,9 @@ describe('bundled gazetteers', () => {
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
+    'dk-sogne-boundaries', 'no-kommuner-boundaries', 'fi-kunnat-boundaries',
+    'is-sveitarfelog-boundaries', 'us-counties-boundaries', 'ca-divisions-boundaries',
+    'world-boundaries',
   ];
 
   for (const id of expectedIds) {
@@ -48,6 +51,27 @@ describe('bundled gazetteers', () => {
     const ca = gazetteers.find(g => g.id === 'ca-provinces')!;
     expect(ca.root.children!.length).toBe(13);
   });
+});
+
+describe('boundary gazetteers', () => {
+  const gazetteers = getAllGazetteers();
+  const boundaryIds = [
+    'sv-sockenstad-boundaries',
+    'dk-sogne-boundaries', 'no-kommuner-boundaries', 'fi-kunnat-boundaries',
+    'is-sveitarfelog-boundaries', 'us-counties-boundaries', 'ca-divisions-boundaries',
+    'world-boundaries',
+  ];
+
+  for (const id of boundaryIds) {
+    it(`${id} has kind=boundary and nodes with geometry`, () => {
+      const gaz = gazetteers.find(g => g.id === id);
+      expect(gaz).toBeDefined();
+      expect((gaz as any).kind).toBe('boundary');
+      const firstChild = gaz!.root.children![0];
+      expect(firstChild.geometry).toBeDefined();
+      expect(['Polygon', 'MultiPolygon']).toContain(firstChild.geometry!.type);
+    });
+  }
 });
 
 describe('cross-country place resolution', () => {
