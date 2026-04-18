@@ -175,7 +175,9 @@ import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useToast } from '../composables/useToast';
+import { useFocusStore } from '../stores/focus';
 const toast = useToast();
+const focusStore = useFocusStore();
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -259,6 +261,15 @@ async function load() {
     total.value = result.total;
     offset.value = PAGE_SIZE;
     loadThumbnails(items.value);
+    // Auto-select: focus person's first media, or first item
+    if (!selectedMediaId.value && items.value.length > 0) {
+      let picked: string | null = null;
+      if (focusStore.personId) {
+        const personMedia = await window.api.media.forEntity('person', focusStore.personId) as Array<{ id: string }>;
+        if (personMedia.length > 0) picked = personMedia[0].id;
+      }
+      selectedMediaId.value = picked ?? items.value[0].id;
+    }
   } catch (err) {
     console.error('[MediaView] load failed:', err);
   } finally {
@@ -365,6 +376,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  padding: var(--space-lg);
 }
 .panel-drag-handle {
   width: 6px;
