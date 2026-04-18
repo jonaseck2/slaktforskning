@@ -7,7 +7,7 @@ description: Build, extend, and debug gazetteers for place resolution. Use when 
 
 ## Overview
 
-The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 16 bundled gazetteers cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, and ~244 countries globally.
+The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 23 bundled gazetteers (15 point + 8 boundary) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, and ~244 countries globally.
 
 ## Architecture
 
@@ -56,7 +56,9 @@ interface GazetteerNode {
 
 When adding a new country, add its admin suffixes here too.
 
-## Bundled Gazetteers (16)
+## Bundled Gazetteers (23)
+
+### Point Gazetteers (15)
 
 | ID | Name | Source | Nodes | Size |
 |----|------|--------|-------|------|
@@ -65,7 +67,6 @@ When adding a new country, add its admin suffixes here too.
 | `sv-orter` | Swedish Populated Places | GeoNames | ~27,429 | 4.4 MB |
 | `sv-gardar` | Swedish Farms | GeoNames | ~15,204 | 2.4 MB |
 | `sv-kyrkor` | Swedish Churches | GeoNames | ~3,631 | 623 KB |
-| `sv-sockenstad-boundaries` | Swedish Parish Boundaries | Lantmäteriet | ~2,474 | 3.5 MB |
 | `dk-sogne` | Danish Parishes | Wikidata | ~2,706 | 712 KB |
 | `dk-sogne-dawa` | Danish Parishes (DAWA) | DAWA API | ~2,097 | 367 KB |
 | `no-kommuner` | Norwegian Municipalities | GeoNames | ~13,395 | 2.2 MB |
@@ -76,6 +77,19 @@ When adding a new country, add its admin suffixes here too.
 | `ca-provinces` | Canadian Provinces/Territories | GeoNames | ~11,854 | 2.1 MB |
 | `world-countries` | World Countries | GeoNames | ~244 | 45 KB |
 | `world-admin1` | World States & Provinces | GeoNames | ~2,754 | 452 KB |
+
+### Boundary Gazetteers (8)
+
+| ID | Name | Source | Nodes | Size |
+|----|------|--------|-------|------|
+| `sv-sockenstad-boundaries` | Swedish Parish Boundaries | Lantmäteriet | ~2,474 | 3.5 MB |
+| `fi-kunnat-boundaries` | Finnish Municipalities — Boundaries | Statistics Finland WFS | 308 | 167 KB |
+| `world-boundaries` | World Countries — Boundaries | Natural Earth 110m | 177 | 213 KB |
+| `us-counties-boundaries` | US Counties — Boundaries | Census Bureau 20m | 3,222 | 1.4 MB |
+| `dk-sogne-boundaries` | Danish Parishes — Boundaries | ok-dk/dagi | 2,148 | 1.5 MB |
+| `is-sveitarfelog-boundaries` | Icelandic Municipalities — Boundaries | LMI WFS | 64 | 3.7 MB |
+| `no-kommuner-boundaries` | Norwegian Municipalities — Boundaries | Kartverket | 357 | 474 KB |
+| `ca-divisions-boundaries` | Canadian Census Divisions — Boundaries | Statistics Canada | 293 | 637 KB |
 
 ## Build Scripts
 
@@ -95,6 +109,13 @@ Each country/source has its own build script in `scripts/`:
 | `build-us-places-all.ts` | GeoNames US.zip | Parse TSV, all 50 states + DC, pop >= 500 | us-all-states |
 | `build-ca-places.ts` | GeoNames CA.zip | Parse TSV, all 13 provinces/territories | ca-provinces |
 | `build-world.ts` | GeoNames countryInfo + cities15000 + admin1 | Parse 3 files, population-weighted centroids | world-countries, world-admin1 |
+| `build-fi-boundaries.ts` | Statistics Finland WFS | Fetch GeoJSON, round coords | fi-kunnat-boundaries |
+| `build-world-boundaries.ts` | Natural Earth 110m | ogr2ogr SHP→GeoJSON | world-boundaries |
+| `build-us-boundaries.ts` | Census Bureau 20m | ogr2ogr SHP→GeoJSON | us-counties-boundaries |
+| `build-dk-boundaries.ts` | ok-dk/dagi GitHub | Fetch GeoJSON, round coords | dk-sogne-boundaries |
+| `build-is-boundaries.ts` | LMI WFS | Fetch GeoJSON, round coords | is-sveitarfelog-boundaries |
+| `build-no-boundaries.ts` | Kartverket/Geonorge | ogr2ogr reproject+simplify | no-kommuner-boundaries |
+| `build-ca-boundaries.ts` | Statistics Canada | ogr2ogr reproject+simplify | ca-divisions-boundaries |
 
 ## Adding a New Country Gazetteer
 

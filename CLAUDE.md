@@ -63,7 +63,7 @@ src/
 │       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
 │       ├── resolver.ts            # resolvePlace() — match place strings against gazetteer trees
 │       ├── index.ts               # loadGazetteers(), getAllGazetteers()
-│       └── data/                    # 16 bundled gazetteers (~31 MB)
+│       └── data/                    # 23 bundled gazetteers (~40 MB) — 15 point + 8 boundary
 │           ├── sv-socknar.json      # Swedish socknar (Wikidata)
 │           ├── sv-forsamlingar.json # Swedish församlingar (Wikidata)
 │           ├── sv-orter.json        # Swedish orter (GeoNames)
@@ -72,14 +72,21 @@ src/
 │           ├── sv-sockenstad-boundaries.json # Swedish parish boundaries (Lantmäteriet)
 │           ├── dk-sogne.json        # Danish sogne (Wikidata)
 │           ├── dk-sogne-dawa.json   # Danish sogne (DAWA API)
+│           ├── dk-sogne-boundaries.json # Danish parish boundaries (ok-dk/dagi)
 │           ├── no-kommuner.json     # Norwegian kommuner (GeoNames)
+│           ├── no-kommuner-boundaries.json # Norwegian municipality boundaries (Kartverket)
 │           ├── fi-kunnat.json       # Finnish kunnat (GeoNames)
+│           ├── fi-kunnat-boundaries.json # Finnish municipality boundaries (Statistics Finland)
 │           ├── is-sveitarfelog.json  # Icelandic sveitarfélög (GeoNames)
+│           ├── is-sveitarfelog-boundaries.json # Icelandic municipality boundaries (LMI WFS)
 │           ├── us-immigration-states.json # US immigration states (GeoNames)
 │           ├── us-all-states.json   # Full US gazetteer, all 50 states + DC (GeoNames)
+│           ├── us-counties-boundaries.json # US county boundaries (Census Bureau)
 │           ├── ca-provinces.json    # Canadian provinces/territories (GeoNames)
+│           ├── ca-divisions-boundaries.json # Canadian census division boundaries (Statistics Canada)
 │           ├── world-countries.json # ~244 countries (GeoNames)
-│           └── world-admin1.json    # ~2,754 admin1 divisions (GeoNames)
+│           ├── world-admin1.json    # ~2,754 admin1 divisions (GeoNames)
+│           └── world-boundaries.json # World country boundaries (Natural Earth)
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
@@ -707,7 +714,7 @@ npm run make           # Build distributable installers
 npx tsx src/mcp/server.ts  # Run MCP server standalone
 npx tsx scripts/build-sv-parishes.ts   # Rebuild Swedish parish gazetteer (Wikidata)
 npx tsx scripts/build-world.ts         # Rebuild world gazetteers (GeoNames)
-# See scripts/build-*.ts and scripts/fetch-*.ts for all 11 gazetteer build scripts
+# See scripts/build-*.ts and scripts/fetch-*.ts for all 19 gazetteer build scripts
 ```
 
 ### In the Dev Container
