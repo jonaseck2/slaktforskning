@@ -153,6 +153,51 @@
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* ─── Export scope ──────────────────────────────────────────────────────────
+ * Apply this class to any container whose contents will be printed, PDF-exported,
+ * or otherwise captured as a static artifact. It pins every theme- and appearance-
+ * varying color token to hardcoded neutral values, so descendants render identically
+ * regardless of html.dark / html.high-contrast / html.theme-* / base theme. */
+.export-scope {
+  --surface-bg:            #ffffff;
+  --surface:               #ffffff;
+  --surface-hover:         #f5f5f5;
+  --surface-border:        #d0d0d0;
+  --surface-border-subtle: #e8e8e8;
+
+  --text-primary:   #111111;
+  --text-secondary: #444444;
+  --text-muted:     #666666;
+
+  --accent:       #222222;
+  --accent-hover: #111111;
+  --accent-text:  #ffffff;
+
+  /* Re-resolve `color` and `background` inside the scope so descendants
+   * inherit values derived from the pinned tokens above, not from body. */
+  color: var(--text-primary);
+  background: var(--surface);
+
+  /* Legacy aliases that some components still read directly. */
+  --color-bg:            var(--surface-bg);
+  --color-bg-muted:      var(--surface-hover);
+  --color-bg-subtle:     var(--surface-border-subtle);
+  --color-bg-table-head: var(--surface-hover);
+  --color-border:        var(--surface-border);
+  --color-border-chip:   var(--surface-border);
+  --color-border-input:  var(--surface-border);
+  --color-row-hover:     var(--surface-hover);
+  --color-text:          var(--text-primary);
+  --color-text-faint:    var(--text-muted);
+  --color-text-muted:    var(--text-muted);
+  --color-text-subtle:   var(--text-muted);
+  --color-primary:       var(--accent);
+  --color-primary-hover: var(--accent-hover);
+  --color-link:          #0645ad;
+  --color-event-badge-bg:   var(--surface-hover);
+  --color-event-badge-text: var(--text-primary);
+}
+
 /* ─── Chart colors ──────────────────────────────────────────────────────── */
 :root {
   --chart-box-bg:       #ffffff;

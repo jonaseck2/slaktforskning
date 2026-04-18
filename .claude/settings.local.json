@@ -40,6 +40,7 @@
       "Bash(kill:*)",
       "Bash(source:*)",
       "mcp__slaktforskning__*",
+      "mcp__slaktforskning-dev__*",
       "Skill(*)",
       "Bash(bash:*)",
       "Bash(open:*)",

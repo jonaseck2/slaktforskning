@@ -116,6 +116,15 @@ Any change to color tokens in `tokens.css` or `shared.css` is guarded by `tests/
 
 The math lives in `src/renderer/utils/wcag.ts` and is independently tested by `tests/unit/wcag.test.ts` (W3C reference values for luminance, contrast, and thresholds). Run `npx vitest run tests/unit/wcag*` after any color-token edit — failure messages print the exact ratio and the threshold it needs to clear.
 
+### Design-token tests — export colour invariance
+
+Exports (PDF, SVG, print) must render identically regardless of current theme/appearance. Two tests guard this:
+
+- `tests/unit/exportColorInvariance.test.ts` — proves the pure path stays pure. Feeds fixed data into `generatePedigreeWallChart` / `generateDescendantWallChart` under every theme × appearance combo (with magenta sentinel values set on `:root`) and asserts the output SVG is byte-identical and contains no sentinel. Also pins `useChartColors(false)` to return the `EXPORT_COLORS` constant by reference under every mode.
+- `tests/components/exportTextColorInvariance.test.ts` — proves the DOM path stays scoped. Inlines `tokens.css` + `shared.css` (with `@media print { … }` unwrapped to simulate print media), wraps representative text elements in `.export-scope`, toggles `html` classes across all theme × appearance combos, and asserts `getComputedStyle(el).color` is identical everywhere. Includes a sanity test that bare elements outside the scope *do* drift, so the invariance test can't silently pass on a broken measurement.
+
+Run both after any edit to `tokens.css`, `shared.css`, `wall-charts.ts`, or `useChartColors.ts`.
+
 ## Component Tests
 
 Component tests live in `tests/components/` and test Vue components with Happy DOM (no real browser). Use for components with significant interaction logic.
@@ -360,10 +369,31 @@ await app.settle(300); // Must settle before navigating
 
 #### 8. Port allocation
 
-Each E2E file needs a unique port. Current assignments: 19242–19250. Check with:
+Each E2E file needs a unique port. Current assignments: 19242–19251. Check with:
 ```bash
 grep 'UI_PORT = ' tests/e2e/gui-*.test.ts
 ```
+
+Port conflicts (two files sharing a port) cause "Vue did not initialize in time" on the second suite — deterministic, but looks like flakiness.
+
+#### 8a. Route `/` redirects to `/visualisering`
+
+There is **no standalone PersonsView route.** `router.ts` maps `/` → `/visualisering`. PersonsView renders embedded inside VisualizationView only when `viewMode === 'list'`.
+
+To make the persons list visible on `/`, set view mode in `beforeAll`:
+```typescript
+await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
+```
+
+View-mode localStorage keys (both default to non-list):
+- VisualizationView: `persons-view-mode` → `'tree'` (default) or `'list'`
+- PlacesView: `slaktforskning-places-view` → `'map'` (default) or `'list'`
+
+Assertions after `navigate('/')` should not expect `currentRoute.value.path === '/'` — the redirect resolves to `/visualisering`.
+
+#### 8b. No back buttons on detail views
+
+PersonDetailView, PlaceDetailView, and RelationshipDetailView have **no back button**. The only back button lives in VisualizationView's `.viz-tab-bar` (`<AppButton variant="ghost" size="sm">←</AppButton>`). To leave a detail view, navigate via the sidebar: `await app.navigate('/relationships')`.
 
 #### 9. Clicking buttons by text content
 
