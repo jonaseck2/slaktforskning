@@ -68,7 +68,7 @@ export default {
   },
   persons: {
     title: 'Personer',
-    addPerson: 'Lägg till person',
+    addPerson: 'Person',
     emptyState: 'Inga personer ännu.',
     givenName: 'Förnamn (fullständigt)',
     givenNameHint: 'Markera tilltalsnamn med * eller ! efter det, t.ex. Eva Linda* Marie',

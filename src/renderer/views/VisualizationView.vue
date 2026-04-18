@@ -4,6 +4,7 @@
     <div class="viz-chart-area">
       <div class="header">
         <h2>{{ $t('nav.familyTree') }}</h2>
+        <AppButton variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
       </div>
       <!-- Tab bar -->
       <div v-if="focalPerson" class="viz-tab-bar">
@@ -105,6 +106,9 @@
         />
       </div>
     </template>
+
+    <!-- Add Person Modal -->
+    <AddPersonModal v-if="showAddPerson" @close="showAddPerson = false" @saved="onPersonAdded" />
   </div>
 </template>
 
@@ -125,6 +129,7 @@ import HourglassChart from '../components/charts/HourglassChart.vue';
 import DescendantChart from '../components/charts/DescendantChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
+import AddPersonModal from '../components/AddPersonModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
@@ -144,6 +149,14 @@ const tts = inject<{ speak: (text: string, locale?: string) => void }>('tts');
 
 const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
+
+// Add person modal
+const showAddPerson = ref(false);
+
+function onPersonAdded(person: { id: string }) {
+  showAddPerson.value = false;
+  router.push('/visualisering/' + person.id);
+}
 const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
 const chartKey = ref(0);
