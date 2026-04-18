@@ -250,7 +250,7 @@ interface ChildPlace {
 }
 
 const props = defineProps<{ placeId: string | null }>();
-const emit = defineEmits<{ 'select-place': [id: string]; 'close': [] }>();
+const emit = defineEmits<{ 'select-place': [id: string]; 'close': []; 'place-updated': [id: string] }>();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
@@ -330,6 +330,7 @@ async function saveField(field: string, value: unknown) {
   if (!props.placeId || !place.value) return;
   await window.api.places.update(props.placeId, { [field]: value });
   (place.value as Record<string, unknown>)[field] = value;
+  emit('place-updated', props.placeId);
 }
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {
@@ -345,6 +346,7 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   }
   await window.api.places.update(props.placeId, updates);
   await load(props.placeId);
+  emit('place-updated', props.placeId);
 }
 </script>
 
