@@ -3,10 +3,11 @@
     <input
       ref="inputEl"
       type="text"
-      :value="modelValue"
+      :value="displayValue"
       :class="inputClass"
       autocomplete="off"
       @input="onInput"
+      @focus="editing = true"
       @blur="onBlur"
       @keydown="onKeydown"
     />
@@ -26,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { searchGazetteer } from '../../api/place-gazetteers/resolver';
 
@@ -54,15 +55,23 @@ const showSuggestions = ref(false);
 const highlightIndex = ref(-1);
 let debounceTimer: ReturnType<typeof setTimeout>;
 let accepting = false;
+let editing = ref(false);
+let localValue = ref(props.modelValue);
+
+// Show local value while editing, prop value otherwise
+const displayValue = computed(() => editing.value ? localValue.value : props.modelValue);
+
+// Sync from prop when not editing (e.g. after accept completes)
+watch(() => props.modelValue, (v) => { if (!editing.value) localValue.value = v; });
 
 function onInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value;
-  emit('update:modelValue', val);
+  localValue.value = (e.target as HTMLInputElement).value;
+  emit('update:modelValue', localValue.value);
   clearTimeout(debounceTimer);
-  if (val.length < 2) { suggestions.value = []; showSuggestions.value = false; return; }
+  if (localValue.value.length < 2) { suggestions.value = []; showSuggestions.value = false; return; }
   debounceTimer = setTimeout(async () => {
     if (!ready.value) await ensureLoaded();
-    const hits = searchGazetteer(val, getGazetteers(), 8);
+    const hits = searchGazetteer(localValue.value, getGazetteers(), 8);
     const seen = new Set<string>();
     const results: GazetteerSuggestion[] = [];
     for (const hit of hits) {
@@ -84,14 +93,15 @@ function onInput(e: Event) {
 function onBlur() {
   setTimeout(() => {
     if (accepting) return;
+    editing.value = false;
     showSuggestions.value = false;
-    emit('save', props.modelValue);
+    emit('save', localValue.value);
   }, 200);
 }
 
 function onKeydown(e: KeyboardEvent) {
   if (!showSuggestions.value || suggestions.value.length === 0) {
-    if (e.key === 'Enter') { e.preventDefault(); emit('save', props.modelValue); }
+    if (e.key === 'Enter') { e.preventDefault(); editing.value = false; emit('save', localValue.value); }
     return;
   }
   if (e.key === 'ArrowDown') {
@@ -111,7 +121,9 @@ function onKeydown(e: KeyboardEvent) {
 function accept(sug: GazetteerSuggestion) {
   accepting = true;
   showSuggestions.value = false;
+  editing.value = false;
   const newName = [...sug.matchedPath].reverse().join(', ');
+  localValue.value = newName;
   emit('update:modelValue', newName);
   emit('accept', sug);
   setTimeout(() => { accepting = false; }, 50);
