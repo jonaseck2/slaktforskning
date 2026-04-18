@@ -18,6 +18,7 @@ export default {
     gazetteers: 'Gazetteers',
   },
   settings: {
+    title: 'Settings',
     appearance: 'Appearance',
     light: 'Light',
     lightMode: 'Light mode',
@@ -34,6 +35,9 @@ export default {
     off: 'Off',
     narrate: 'Narrate',
     screenReaderMode: 'Screen',
+    theme: 'Theme',
+    themes: { forest: 'Forest', nordic: 'Nordic', twilight: 'Twilight' },
+    tabs: { appearance: 'Appearance', database: 'Database', importExport: 'Import / Export', linkRules: 'Link Rules', gazetteers: 'Gazetteers' },
   },
   common: {
     cancel: 'Cancel',
