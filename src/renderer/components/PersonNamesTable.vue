@@ -14,8 +14,7 @@
       <div class="name-content">
         <span class="name-full">
           <span v-if="name.name_prefix" class="name-prefix">{{ name.name_prefix }} </span>
-          <strong><PersonName :given-name="name.given_name" :preferred-name="name.preferred_name ?? null" :nickname="name.nickname ?? null" /></strong>
-          <span class="name-surname"> {{ name.surname }}</span>
+          <strong><PersonName :given-name="name.given_name" :preferred-name="name.preferred_name ?? null" :nickname="name.nickname ?? null" /></strong>{{ ' ' }}<span class="name-surname">{{ name.surname }}</span>
           <span v-if="name.name_suffix" class="name-suffix"> {{ name.name_suffix }}</span>
           <span v-if="name.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span>
           <span v-if="name.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
