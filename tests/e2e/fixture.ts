@@ -4,11 +4,11 @@
  * Each gui-*.test.ts file imports these to start its own Electron instance
  * on a dedicated port, enabling parallel test execution.
  */
-import { expect } from '@playwright/test';
 import { spawn, execFileSync, ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import { expect } from '@playwright/test';
 
 export const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 

@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson, deletePerson } from '../../src/api/persons';
 import {
   createResearchTask,
@@ -9,6 +8,7 @@ import {
   updateResearchTask,
   deleteResearchTask,
 } from '../../src/api/research_tasks';
+import { createTestDb } from './helpers';
 
 let db: any;
 

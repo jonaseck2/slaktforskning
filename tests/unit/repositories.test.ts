@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createSource } from '../../src/api/sources';
 import {
   createRepository,
@@ -11,6 +10,7 @@ import {
   unlinkSourceRepository,
   getRepositoriesForSource,
 } from '../../src/api/repositories';
+import { createTestDb } from './helpers';
 
 let db: any;
 

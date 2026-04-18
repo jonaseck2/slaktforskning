@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { findOrCreateSwedishPlace } from '../../src/gedcom/swedishPlace';
 import { listPlaces } from '../../src/api/places';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });

@@ -22,11 +22,11 @@
 
 import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
+import { findOrCreatePlace } from '../../api/places';
+import { getDbSetting, setDbSetting } from '../../api/db_settings';
 import { detectGedcomVersion } from './detect';
 import type { GedcomVersion } from './detect';
 import { normalizeForImport } from './normalize';
-import { findOrCreatePlace } from '../../api/places';
-import { getDbSetting, setDbSetting } from '../../api/db_settings';
 import { resolvePlaceFn as genneyResolvePlaceFn } from './profiles/genney';
 import type { ImportContext } from './import-types';
 import {

@@ -1,6 +1,6 @@
-import type { WrapHandlerFn } from './wrap-handler';
 import * as sources from '../../api/sources';
 import * as uw from '../../api/undo_wrappers';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerSourceHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
   // Sources (undo-wrapped)

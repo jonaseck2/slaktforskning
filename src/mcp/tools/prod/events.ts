@@ -6,8 +6,8 @@ import * as relationshipApi from '../../../api/relationships';
 import * as placeApi from '../../../api/places';
 import * as sourceApi from '../../../api/sources';
 import * as reportData from '../../../api/report_data';
-import type { ToolContext } from './types';
 import type { Citation, GenealogyEvent } from '../../../api/types';
+import type { ToolContext } from './types';
 import { findOrCreateSource } from './persons';
 
 export interface RecordEventArgs {

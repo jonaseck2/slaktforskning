@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import {
@@ -14,6 +13,7 @@ import {
   removeMediaLink,
   reorderMediaLinks,
 } from '../../src/api/media';
+import { createTestDb } from './helpers';
 
 let db: any;
 

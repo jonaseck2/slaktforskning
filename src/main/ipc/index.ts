@@ -1,6 +1,6 @@
-import { wrapHandler } from './wrap-handler';
 import { getDatabase, getCurrentDatabasePath, switchDatabase } from '../database';
 import { loadSettings } from '../settings';
+import { wrapHandler } from './wrap-handler';
 import { registerPersonHandlers } from './persons';
 import { registerRelationshipHandlers } from './relationships';
 import { registerEventHandlers } from './events';

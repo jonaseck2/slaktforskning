@@ -6,14 +6,14 @@
       <div class="header-right">
         <div v-if="!loading && items.length > 0" class="view-toggle">
           <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
-          <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.tableView') }}</AppButton>
+          <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
         </div>
         <AppButton variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
       </div>
     </div>
 
     <p v-if="!loading && items.length > 0" class="count-label">
-      {{ items.length }} / {{ total }} {{ $t('media.title').toLowerCase() }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
+      {{ $t('media.showingOf', { shown: items.length, total }) }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
     </p>
 
     <!-- Search filter -->

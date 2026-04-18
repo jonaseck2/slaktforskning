@@ -1,5 +1,5 @@
-import type { WrapHandlerFn } from './wrap-handler';
 import * as gazetteers from '../../api/gazetteers';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerGazetteerHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,

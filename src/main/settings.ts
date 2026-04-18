@@ -1,6 +1,6 @@
-import { app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { app } from 'electron';
 
 export interface AppSettings {
   lastDatabase?: string;

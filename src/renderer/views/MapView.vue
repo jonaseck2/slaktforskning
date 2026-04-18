@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { LMarker, LPopup, LGeoJson } from '@vue-leaflet/vue-leaflet';
 import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
@@ -151,14 +151,34 @@ watch(selectedPlaceId, async (id) => {
   }
 });
 
-// Invalidate map when panel opens/closes
+// Invalidate map when panel opens/closes or resizes
 watch(panelOpen, () => {
   nextTick(() => {
     baseMapRef.value?.invalidateSize();
   });
 });
+watch(panelWidth, () => {
+  baseMapRef.value?.invalidateSize();
+});
+
+// ResizeObserver to catch any container size changes (window resize, layout shifts)
+let resizeObserver: ResizeObserver | null = null;
+onMounted(() => {
+  resizeObserver = new ResizeObserver(() => {
+    baseMapRef.value?.invalidateSize();
+  });
+});
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = null;
+});
 
 function onMapReady() {
+  // Observe the map's container so invalidateSize fires on any layout change
+  const container = baseMapRef.value?.getLeafletObject()?.getContainer();
+  if (container && resizeObserver) {
+    resizeObserver.observe(container);
+  }
   // Invalidate after flex layout settles (panel may already be open)
   setTimeout(() => {
     baseMapRef.value?.invalidateSize();

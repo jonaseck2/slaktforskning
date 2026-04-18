@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { recordEventWorkflow } from '../../src/mcp/tools/prod/events';
 import * as persons from '../../src/api/persons';
 import * as events from '../../src/api/events';
 import * as relationships from '../../src/api/relationships';
 import * as places from '../../src/api/places';
 import * as sources from '../../src/api/sources';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 

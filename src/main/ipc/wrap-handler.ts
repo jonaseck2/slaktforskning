@@ -1,6 +1,6 @@
-import { ipcMain, app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ipcMain, app } from 'electron';
 
 export type WrapHandlerFn = (channel: string, handler: (...args: unknown[]) => unknown) => void;
 

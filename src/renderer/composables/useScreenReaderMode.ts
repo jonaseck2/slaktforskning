@@ -3,10 +3,10 @@ import type { ComputedRef, Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { resolveNarration } from '../directives/narrate';
+import { narratePageEntry } from '../utils/screenReaderNarration';
 import { HotkeyRegistry } from './useHotkeyRegistry';
 import type { Hotkey } from './useHotkeyRegistry';
 import { useTTS } from './useTTS';
-import { narratePageEntry } from '../utils/screenReaderNarration';
 
 // ---------------------------------------------------------------------------
 // Types

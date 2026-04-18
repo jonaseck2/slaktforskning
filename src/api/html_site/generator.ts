@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, queryOne } from '../db';
+import type { PersonName, GenealogyEvent, Citation, Place, Source } from '../types';
 import { getSiteCSS } from './style';
 import {
   indexPage,
@@ -27,7 +28,6 @@ import {
   type PlacePageData,
   type SourcePageData,
 } from './templates';
-import type { PersonName, GenealogyEvent, Citation, Place, Source } from '../types';
 
 export interface HtmlSiteOptions {
   /** Exclude persons marked as living. Default: false */

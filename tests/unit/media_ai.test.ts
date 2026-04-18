@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { createTestDb } from './helpers';
-import { createMedia, addMediaLink } from '../../src/api/media';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import type { Database } from 'node-sqlite3-wasm';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { getUntaggedMedia, getMediaForPersonContext, getMediaFileBase64 } from '../../src/api/media_ai';
-import type { Database } from 'node-sqlite3-wasm';
+import { createMedia, addMediaLink } from '../../src/api/media';
+import { createTestDb } from './helpers';
 
 let db: Database;
 beforeEach(() => { db = createTestDb(); });

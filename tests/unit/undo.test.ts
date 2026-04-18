@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Database } from 'node-sqlite3-wasm';
-import { createTestDb } from './helpers';
 import { UndoManager } from '../../src/api/undo';
 import * as persons from '../../src/api/persons';
 import * as relationships from '../../src/api/relationships';
@@ -16,6 +15,7 @@ import {
   createCitationUndo, updateCitationUndo, deleteCitationUndo,
 } from '../../src/api/undo_wrappers';
 import { undoManager } from '../../src/api/undo';
+import { createTestDb } from './helpers';
 
 // ---- UndoManager unit tests ----
 

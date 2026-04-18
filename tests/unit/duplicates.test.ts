@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Database } from 'node-sqlite3-wasm';
-import { createTestDb } from './helpers';
 import { findDuplicates, mergePersons } from '../../src/api/duplicates';
 import { createPerson, addPersonName, getPersonNames, getPerson, addPersonIdentifier, getPersonIdentifiers } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -8,6 +7,7 @@ import { addEventParticipant, getEventParticipants, createRelationship, getRelat
 import { createSource, createCitation, getCitationsForPerson } from '../../src/api/sources';
 import { createGroup, addGroupMember, getGroupsForPerson } from '../../src/api/groups';
 import { createResearchTask, getResearchTasksForPerson } from '../../src/api/research_tasks';
+import { createTestDb } from './helpers';
 
 let db: Database;
 beforeEach(() => { db = createTestDb(); });

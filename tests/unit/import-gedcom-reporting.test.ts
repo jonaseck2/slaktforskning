@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { createTestDb } from './helpers';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { getDbSetting, setDbSetting, deleteDbSetting } from '../../src/api/db_settings';
+import { createTestDb } from './helpers';
 
 const LDS_GED = `
 0 HEAD

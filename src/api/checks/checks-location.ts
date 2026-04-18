@@ -1,9 +1,9 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
-import type { CheckResult } from './check-utils';
-import { haversineKm } from './check-utils';
 import { resolvePlace } from '../place-gazetteers/resolver';
 import type { Gazetteer } from '../place-gazetteers/types';
+import type { CheckResult } from './check-utils';
+import { haversineKm } from './check-utils';
 
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   // Find events for same person on same exact date with place lat/lon

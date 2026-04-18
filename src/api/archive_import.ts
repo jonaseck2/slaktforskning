@@ -1,7 +1,7 @@
-import type { Database } from 'node-sqlite3-wasm';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import type { Database } from 'node-sqlite3-wasm';
 import { unzipSync } from 'fflate';
 import { readGedcomFile, parseGedcom, importGedcom } from '../gedcom';
 import type { ImportOptions, ValidationReport } from '../import/gedcom';

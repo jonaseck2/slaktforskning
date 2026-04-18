@@ -1,10 +1,10 @@
-import { dialog, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { WrapHandlerFn } from './wrap-handler';
+import { dialog, shell } from 'electron';
 import * as media from '../../api/media';
 import { getMediaTimeline } from '../../api/media_timeline';
 import * as mediaRegions from '../../api/media_regions';
+import type { WrapHandlerFn } from './wrap-handler';
 
 /** Derive the media folder name from the database filename: `foo.db` → `foo-media` */
 export function mediaFolderName(dbPath: string): string {

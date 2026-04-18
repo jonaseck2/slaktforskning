@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
+import type { Database } from 'node-sqlite3-wasm';
 import { createMedia, deleteMedia } from '../../src/api/media';
 import { createPerson, deletePerson } from '../../src/api/persons';
 import {
@@ -9,7 +9,7 @@ import {
   updateMediaRegion,
   deleteMediaRegion,
 } from '../../src/api/media_regions';
-import type { Database } from 'node-sqlite3-wasm';
+import { createTestDb } from './helpers';
 
 let db: Database;
 

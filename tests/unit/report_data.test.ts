@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson, getPersonNames } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
@@ -15,6 +14,7 @@ import {
   getResearchGaps,
   getTimeline,
 } from '../../src/api/report_data';
+import { createTestDb } from './helpers';
 
 let db: any;
 

@@ -5,8 +5,8 @@ import * as relationshipApi from '../../../api/relationships';
 import * as eventApi from '../../../api/events';
 import * as placeApi from '../../../api/places';
 import * as reportData from '../../../api/report_data';
-import type { ToolContext } from './types';
 import type { Citation, GenealogyEvent, Relationship } from '../../../api/types';
+import type { ToolContext } from './types';
 import { _createPersonCore, type CreatePersonArgs } from './persons';
 
 export interface AddChildArgs {

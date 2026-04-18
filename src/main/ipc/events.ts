@@ -1,6 +1,6 @@
-import type { WrapHandlerFn } from './wrap-handler';
 import * as events from '../../api/events';
 import * as uw from '../../api/undo_wrappers';
+import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerEventHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
   // Events (undo-wrapped)

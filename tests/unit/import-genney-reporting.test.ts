@@ -5,11 +5,11 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
+import type { Database } from 'node-sqlite3-wasm';
 import { transformGenney, GenneyTables } from '../../src/import/genney/transform';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
-import type { Database } from 'node-sqlite3-wasm';
+import { createTestDb } from './helpers';
 
 function emptyTables(): GenneyTables {
   return {

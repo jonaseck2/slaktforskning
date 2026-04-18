@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import { createGroup, addGroupMember } from '../../src/api/groups';
 import { createResearchTask } from '../../src/api/research_tasks';
@@ -7,6 +6,7 @@ import { createRelationship } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { setDbSetting } from '../../src/api/db_settings';
+import { createTestDb } from './helpers';
 
 describe('GEDCOM export — ExportReport', () => {
   it('reports excluded Research Tasks', () => {

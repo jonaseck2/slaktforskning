@@ -18,12 +18,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
-import { Unzip, UnzipInflate } from 'fflate';
 import { spawn, spawnSync } from 'child_process';
 import { Worker } from 'worker_threads';
+import { Unzip, UnzipInflate } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
-import { transformGenney, type GenneyTables, type ImportSummary } from './transform';
 import { getDbSetting, setDbSetting } from '../../api/db_settings';
+import { transformGenney, type GenneyTables, type ImportSummary } from './transform';
 // parseNdJson is used inside PARSE_WORKER_CODE (eval worker), not imported directly
 
 // Parses NDJSON off the main thread using an eval worker (no build changes needed).

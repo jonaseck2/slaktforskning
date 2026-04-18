@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import {
   createPlace, getPlace, listPlaces, searchPlaces,
   updatePlace, deletePlace, findOrCreatePlace, getPersonsForPlace,
@@ -7,6 +6,7 @@ import {
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
+import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });

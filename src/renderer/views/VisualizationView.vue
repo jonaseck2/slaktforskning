@@ -7,7 +7,7 @@
         <div class="header-right">
           <div class="view-toggle">
             <AppButton :variant="viewMode === 'tree' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('tree')">{{ $t('visualization.tab.tree') }}</AppButton>
-            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('list')">{{ $t('places.listView') }}</AppButton>
+            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('list')">{{ $t('visualization.listView') }}</AppButton>
           </div>
           <AppButton variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
         </div>

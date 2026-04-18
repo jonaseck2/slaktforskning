@@ -1,10 +1,10 @@
-import { app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { app } from 'electron';
 import { Database } from 'node-sqlite3-wasm';
 import { initializeSchema } from '../api/schema';
-import { loadSettings, saveSettings } from './settings';
 import { undoManager } from '../api/undo';
+import { loadSettings, saveSettings } from './settings';
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
