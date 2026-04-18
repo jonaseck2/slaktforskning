@@ -31,7 +31,7 @@
             v-for="p in filteredPlaces"
             :key="p.id"
             :lat-lng="[p.displayLat, p.displayLon]"
-            :options="p.resolved ? { opacity: 0.65 } : {}"
+            :icon="pinIcon(p.id === selectedPlaceId, !!p.resolved)"
             @click="selectPlace(p.id)"
           >
             <LPopup>
@@ -76,6 +76,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { LMarker, LPopup, LGeoJson } from '@vue-leaflet/vue-leaflet';
+import L from 'leaflet';
 import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
@@ -97,6 +98,38 @@ interface DisplayPlace extends PlaceRow {
   displayLat: number;
   displayLon: number;
   resolved?: PlaceResolveResult;
+}
+
+// Pin icons — CSS-only triangle markers (no images, lightweight DOM)
+const PIN_COLOR = '#4a90d9';
+const PIN_COLOR_SELECTED = '#2a6ab9';
+const PIN_COLOR_RESOLVED = '#7ab0e9';
+
+function makePinIcon(selected: boolean, resolved: boolean) {
+  const color = selected ? PIN_COLOR_SELECTED : resolved ? PIN_COLOR_RESOLVED : PIN_COLOR;
+  const size = selected ? 14 : 11;
+  return L.divIcon({
+    className: '',
+    iconSize: [size * 2, size * 2 + 6],
+    iconAnchor: [size, size * 2 + 6],
+    popupAnchor: [0, -(size * 2 + 4)],
+    html: `<svg width="${size * 2}" height="${size * 2 + 6}" viewBox="0 0 ${size * 2} ${size * 2 + 6}">
+      <circle cx="${size}" cy="${size}" r="${size - 1}" fill="${color}" fill-opacity="${resolved ? 0.5 : 0.85}" stroke="#fff" stroke-width="0.5"/>
+      <polygon points="${size - 4},${size + 4} ${size},${size * 2 + 6} ${size + 4},${size + 4}" fill="${color}" fill-opacity="${resolved ? 0.5 : 0.85}"/>
+    </svg>`,
+  });
+}
+
+// Cache icons to avoid re-creating per render
+const iconCache = new Map<string, L.DivIcon>();
+function pinIcon(selected: boolean, resolved: boolean): L.DivIcon {
+  const key = `${selected ? 's' : 'n'}${resolved ? 'r' : 'n'}`;
+  let icon = iconCache.get(key);
+  if (!icon) {
+    icon = makePinIcon(selected, resolved);
+    iconCache.set(key, icon);
+  }
+  return icon;
 }
 
 // Module-level cache so data survives navigation (component remounts)
@@ -157,20 +190,31 @@ watch(panelOpen, () => {
     baseMapRef.value?.invalidateSize();
   });
 });
+let panelResizeTimer: ReturnType<typeof setTimeout> | null = null;
 watch(panelWidth, () => {
-  baseMapRef.value?.invalidateSize();
+  if (panelResizeTimer) clearTimeout(panelResizeTimer);
+  panelResizeTimer = setTimeout(() => {
+    baseMapRef.value?.invalidateSize();
+  }, 50);
 });
 
 // ResizeObserver to catch any container size changes (window resize, layout shifts)
+// Debounce to avoid feedback loops during zoom animations
 let resizeObserver: ResizeObserver | null = null;
+let resizeTimer: ReturnType<typeof setTimeout> | null = null;
 onMounted(() => {
   resizeObserver = new ResizeObserver(() => {
-    baseMapRef.value?.invalidateSize();
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      baseMapRef.value?.invalidateSize();
+    }, 150);
   });
 });
 onUnmounted(() => {
   resizeObserver?.disconnect();
   resizeObserver = null;
+  if (resizeTimer) clearTimeout(resizeTimer);
+  if (panelResizeTimer) clearTimeout(panelResizeTimer);
 });
 
 function onMapReady() {
@@ -187,27 +231,24 @@ function onMapReady() {
   }, 200);
 }
 
-/** Build a full comma-separated path (leaf, parent, grandparent, …) using loaded places. */
-function buildPlacePath(place: PlaceRow): string {
-  const byId = new Map(places.value.map(p => [p.id, p]));
-  const parts: string[] = [place.name];
-  let cur = place.parent_place_id;
-  while (cur) {
-    const parent = byId.get(cur);
-    if (!parent) break;
-    parts.push(parent.name);
-    cur = parent.parent_place_id;
-  }
-  return parts.join(', ');
-}
-
 const allDisplayPlaces = computed<DisplayPlace[]>(() => {
+  // Build parent lookup once for the entire computed pass
+  const byId = new Map(places.value.map(p => [p.id, p]));
   const result: DisplayPlace[] = [];
   for (const p of places.value) {
     if (p.latitude != null && p.longitude != null) {
       result.push({ ...p, displayLat: p.latitude, displayLon: p.longitude });
     } else if (resolverReady.value) {
-      const resolved = resolve(buildPlacePath(p));
+      // Build path by walking parents
+      const parts: string[] = [p.name];
+      let cur = p.parent_place_id;
+      while (cur) {
+        const parent = byId.get(cur);
+        if (!parent) break;
+        parts.push(parent.name);
+        cur = parent.parent_place_id;
+      }
+      const resolved = resolve(parts.join(', '));
       if (resolved) {
         result.push({ ...p, displayLat: resolved.lat, displayLon: resolved.lon, resolved });
       }

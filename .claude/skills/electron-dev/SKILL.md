@@ -68,96 +68,15 @@ These run inside the Electron main process with direct access to the app's state
 
 **When to use:** Navigation, screenshots, reading app state, triggering IPC calls, checking data.
 
-#### Chrome DevTools MCP (`chrome-devtools-mcp`) — complementary
-
-**Setup:** The user launches the app with CDP enabled via `scripts/dev-debug.sh`:
-```bash
-./scripts/dev-debug.sh              # CDP port 9222, UI server port 19241
-./scripts/dev-debug.sh 9223 19242   # Custom ports for parallel instances
-```
-This sets `SLAKTFORSKNING_CDP_PORT` which the main process reads at startup to call `app.commandLine.appendSwitch('remote-debugging-port', port)` — a documented Electron API for enabling Chrome DevTools Protocol.
-
-**Important:** The user must run this from their **own terminal** — Electron GUI apps need macOS window server access and cannot be launched from Claude Code's background shell. Use `./scripts/verify-cdp.sh` or `curl -s http://127.0.0.1:9222/json/version` to confirm the connection before using CDP tools.
-
-**Parallel subagent support:** Each instance uses a different CDP port + UI server port pair.
-
-Connects via the browser debug protocol. Use for things the native tools can't do well.
-
-| Tool | Best for |
-|------|----------|
-| `take_snapshot` | A11y tree with uid's (richer than raw DOM) |
-| `fill(uid, value)` | Fill inputs — properly triggers Vue v-model reactivity |
-| `click(uid)` | Click by a11y uid (more reliable than CSS selectors for dynamic content) |
-| `fill_form(elements)` | Fill multiple form fields at once |
-| `list_console_messages` | Read console errors without switching windows |
-| `performance_start_trace` / `stop` / `analyze_insight` | CPU profiling without code instrumentation |
-| `list_pages` / `select_page` | Switch between Electron windows |
-| `press_key(uid, key)` | Simulate keyboard input |
-
-**When to use:** Filling form inputs (native `ui_execute_js` doesn't trigger Vue reactivity reliably), a11y auditing, performance tracing, reading console errors.
-
-**Workflow: take snapshot → interact → screenshot**
-```
-1. take_snapshot          → get a11y tree with uid's
-2. fill(uid, value)       → fill an input
-3. click(uid)             → click a button
-4. ui_screenshot          → visual verification (native, captures full window)
-```
-
-**Tips:**
-- Always `take_snapshot` before `click`/`fill` to get fresh uid's
-- Use `list_pages` + `select_page` if the snapshot shows the wrong page (e.g. DevTools instead of app)
-- Mix native and Chrome DevTools tools freely — use `ui_navigate` for routing, `fill` for inputs, `ui_screenshot` for verification
-
-### Post-Implementation Verification with chrome-devtools-mcp
-
-After implementing a feature, use `chrome-devtools-mcp` to verify correctness before committing:
-
-**Check for console errors:**
-```
-list_console_messages()   → look for errors or warnings from your new code
-```
-
-**Accessibility audit:**
-```
-take_snapshot()           → inspect the a11y tree for your new elements
-                           → check ARIA roles, labels, focus order
-```
-
-**Performance check (if the feature does heavy work):**
-```
-performance_start_trace() → trigger the expensive operation
-performance_stop_trace()  → stop recording
-performance_analyze_insight() → identify hot functions and call stacks
-```
-
-This catches issues that unit tests miss: unhandled promise rejections, missing ARIA labels, and CPU spikes from N+1 queries in the renderer.
-
 ### UI Verification Workflow
 
 **Before committing UI changes, verify they work in the running app:**
 
-1. **Ask the user** to launch the app with CDP: `./scripts/dev-debug.sh`
-2. **Verify CDP is active:** `./scripts/verify-cdp.sh` (or `curl -s http://127.0.0.1:9222/json/version`)
-3. **Use Chrome DevTools MCP** to interact with the app:
-   ```
-   list_pages()              → find the app page
-   select_page(pageId)       → select it
-   take_snapshot()            → get the accessibility tree
-   navigate_page(url)         → navigate within the app
-   take_screenshot()          → capture the current state
-   click(uid)                → click elements
-   fill(uid, value)          → fill form inputs
-   ```
-4. **Verify the change visually and functionally** before committing
+1. Ask the user to launch the app: `npm start`
+2. Use the native MCP tools (`mcp__slaktforskning__ui_*`) to interact
+3. Ask the user for visual confirmation if native tools are unavailable
 
-**Important macOS limitation:** Electron GUI apps cannot be launched from Claude Code's background shell — they need window server access. Always ask the user to run `./scripts/dev-debug.sh` from their own terminal. Use `./scripts/verify-cdp.sh` to confirm the connection works before attempting Chrome DevTools MCP commands.
-
-**Parallel instances:** Each subagent can have its own instance with unique ports:
-```
-Terminal 1: ./scripts/dev-debug.sh 9222 19241
-Terminal 2: ./scripts/dev-debug.sh 9223 19242
-```
+**IMPORTANT: Never use Chrome DevTools MCP (`chrome-devtools-mcp`) for screenshots or UI verification.** It opens a separate blank browser and cannot capture the Electron app window. Always use native MCP tools or ask the user to verify visually.
 
 **Never `pkill -f Electron`** — this kills ALL Electron apps including the user's main instance. Instead, kill only the specific PID you started.
 

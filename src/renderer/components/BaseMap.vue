@@ -4,8 +4,16 @@
       ref="mapRef"
       :zoom="initialZoom"
       :center="initialCenter"
-      :use-global-leaflet="false"
-      :options="{ zoomControl: false, scrollWheelZoom: props.scrollWheelZoom }"
+      :use-global-leaflet="true"
+      :options="{
+        zoomControl: false,
+        scrollWheelZoom: props.scrollWheelZoom,
+        preferCanvas: true,
+        zoomSnap: 0.5,
+        zoomDelta: 0.5,
+        wheelDebounceTime: 80,
+        wheelPxPerZoomLevel: 120,
+      }"
       @ready="onMapReady"
     >
       <LTileLayer
@@ -34,6 +42,10 @@ import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ZoomControls from './ZoomControls.vue';
+
+// Expose Leaflet globally so vue-leaflet skips its async dynamic import
+// (prevents "Uncaught (in promise) undefined" race condition)
+(window as Record<string, unknown>).L = L;
 
 // Fix default marker icons for Vite bundler
 delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;

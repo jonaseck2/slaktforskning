@@ -175,7 +175,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.97.4 | Fix: add explicit space between given name and surname in PersonNamesTable | — |
 | v0.97.5 | Fix: parallelize panel relationship loading to prevent scroll lock | — |
 | v0.97.6 | Fix: separate media selection from lightbox, make lightbox view-only | — |
-| v0.99.1 | feat: FaceTagOverlay component for region rendering and drawing; fix ca-provinces test count (5→13) | — |
+| v0.99.1 | Inline media viewer with zoom/pan, filmstrip navigation, face tag drawing | [spec](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md), [plan](plans/2026-04-18-media-viewer-face-tagging.md) |
+| v0.99.2 | Fix: map performance — canvas rendering, smooth zoom, SVG pin markers | — |
 ---
 
 ## Research
@@ -276,9 +277,10 @@ Add link rules for MyHeritage, Geni, and other genealogy platforms. These are be
 #### Onboarding & Welcome Screen [backlog]
 First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder. Depends on design system being in place first.
 
-#### Media Viewer & Face Tagging [planned]
-Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigation, zoom/pan controls, face tag drawing on the canvas. All API, IPC, MCP tools, i18n strings, and tests already exist (v0.64.0, v0.67.0) — only the Vue UI is missing.
+#### Media Viewer & Face Tagging [done]
+Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigation, zoom/pan controls, face tag drawing on the canvas.
 - Spec: [docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md)
+- Plan: [plans/2026-04-18-media-viewer-face-tagging.md](plans/2026-04-18-media-viewer-face-tagging.md)
 
 #### Media Viewer — Future Extensions [backlog]
 - AI-assisted face detection (suggest regions automatically)
