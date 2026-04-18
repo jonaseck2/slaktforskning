@@ -167,7 +167,13 @@ The host view's header provides the toggle buttons for both modes.
 
 ## Colors and Typography
 
-**Never use hardcoded hex values.** Use design tokens from `src/renderer/styles/tokens.css`. Three themes (Forest, Nordic, Twilight) define all token values. Dark and high-contrast modes override tokens in `shared.css`.
+**Never use hardcoded hex values.** Use design tokens from `src/renderer/styles/tokens.css`. Three themes (Forest, Nordic, Twilight) define all token values. Dark and high-contrast modes override tokens in `shared.css` **per theme** — `html.dark.theme-forest`, `html.high-contrast.theme-nordic`, etc. Each theme × appearance combination has its own palette.
+
+**Contrast is enforced by tests.** Any token change must pass `tests/unit/wcagContrast.test.ts`:
+- High-contrast mode palettes target **WCAG 2.1 AAA** (≥7:1 body / ≥4.5:1 large / ≥3:1 non-text UI)
+- Light + dark palettes target **WCAG 2.1 AA** (≥4.5:1 body / ≥3:1 large / ≥3:1 non-text UI)
+
+Run `npx vitest run tests/unit/wcagContrast.test.ts` after any color token change. Failure messages include the exact ratio and the threshold needed — adjust the token until the pair clears. Math utility: `src/renderer/utils/wcag.ts`.
 
 Key token categories:
 ```css
