@@ -229,9 +229,10 @@ describe('computePedigreeLayout', () => {
     expect(p0.y).toBeLessThan(p1.y);
   });
 
-  it('generates connector lines when at least one parent exists', () => {
-    const { lines } = computePedigreeLayout(pedigree3(p('f'), [p('p0'), null]));
-    expect(lines.length).toBeGreaterThan(0);
+  it('generates connector paths when at least one parent exists', () => {
+    const { lines, paths } = computePedigreeLayout(pedigree3(p('f'), [p('p0'), null]));
+    expect(paths.length).toBeGreaterThan(0);
+    expect(lines.length).toBe(0);
   });
 
   it('returns 7 boxes for a full 3-generation tree', () => {
@@ -261,6 +262,85 @@ describe('computePedigreeLayout', () => {
     const nodes = new Map<number, PersonNode>();
     for (let k = 1; k < 32; k++) nodes.set(k, p(`n${k}`));
     expect(computePedigreeLayout({ nodes, generations: 5 }).boxes).toHaveLength(31);
+  });
+});
+
+describe('computePedigreeLayout — dynamic heights and curved paths', () => {
+  it('sizes each box via measureBoxHeight (multi-line name grows the box)', () => {
+    const focal: PersonNode = {
+      id: 'f',
+      givenName: 'Aaaaaaaaa Bbbbbbbb Ccccccc Ddddddd',
+      surname: 'Eeeeeeeeeee Ffffffffff',
+      preferredName: null, nickname: null,
+      sex: 'M', living: true,
+      birthDate: '1985', deathDate: null,
+      birthPlace: 'Some Very Long Place Name', deathPlace: null,
+      photoUrl: null,
+    };
+    const tree: PedigreeTree = { nodes: new Map([[1, focal]]), generations: 1 };
+    const layout = computePedigreeLayout(tree);
+    expect(layout.boxes).toHaveLength(1);
+    expect(layout.boxes[0].h).toBeGreaterThan(MIN_BOX_H);
+  });
+
+  it('single-row person has h === MIN_BOX_H', () => {
+    const focal: PersonNode = {
+      id: 'f', givenName: 'Jo', surname: 'Doe',
+      preferredName: null, nickname: null,
+      sex: 'M', living: true,
+      birthDate: null, deathDate: null, birthPlace: null, deathPlace: null, photoUrl: null,
+    };
+    const tree: PedigreeTree = { nodes: new Map([[1, focal]]), generations: 1 };
+    const layout = computePedigreeLayout(tree);
+    expect(layout.boxes[0].h).toBe(MIN_BOX_H);
+  });
+
+  it('emits curved SVG paths instead of straight lines', () => {
+    const focal: PersonNode = {
+      id: 'f', givenName: 'C', surname: 'Child',
+      preferredName: null, nickname: null,
+      sex: 'U', living: true,
+      birthDate: null, deathDate: null, birthPlace: null, deathPlace: null, photoUrl: null,
+    };
+    const dad: PersonNode = { ...focal, id: 'd', givenName: 'D', surname: 'Dad', sex: 'M' };
+    const mom: PersonNode = { ...focal, id: 'm', givenName: 'M', surname: 'Mom', sex: 'F' };
+    const tree: PedigreeTree = {
+      nodes: new Map([[1, focal], [2, dad], [3, mom]]),
+      generations: 2,
+    };
+    const layout = computePedigreeLayout(tree);
+    expect(layout.paths.length).toBeGreaterThanOrEqual(2);
+    expect(layout.lines.length).toBe(0);
+    for (const d of layout.paths) {
+      expect(d).toMatch(/^M |^D:M /);
+      if (d.startsWith('M ')) expect(d).toContain('Q ');
+    }
+  });
+
+  it('sibling rows stack without overlap using each box\'s own h', () => {
+    const focal: PersonNode = {
+      id: 'f', givenName: 'Short', surname: 'Name', preferredName: null, nickname: null,
+      sex: 'U', living: true, birthDate: null, deathDate: null, birthPlace: null, deathPlace: null, photoUrl: null,
+    };
+    const longDad: PersonNode = {
+      id: 'd', sex: 'M', living: false,
+      givenName: 'Aaaaaaaaa Bbbbbbbb Ccccccc Ddddddd Eeeeeeee', surname: 'Ffffffff Gggggggg',
+      preferredName: null, nickname: null,
+      birthDate: '1940', deathDate: '2010', birthPlace: 'Very Very Long Place', deathPlace: 'Another Place',
+      photoUrl: null,
+    };
+    const mom: PersonNode = { ...focal, id: 'm', givenName: 'M', surname: 'Mom', sex: 'F' };
+    const tree: PedigreeTree = {
+      nodes: new Map([[1, focal], [2, longDad], [3, mom]]),
+      generations: 2,
+    };
+    const layout = computePedigreeLayout(tree);
+    const sorted = [...layout.boxes].sort((a, b) => a.y - b.y);
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].x === sorted[i - 1].x) {
+        expect(sorted[i].y).toBeGreaterThanOrEqual(sorted[i - 1].y + sorted[i - 1].h);
+      }
+    }
   });
 });
 
