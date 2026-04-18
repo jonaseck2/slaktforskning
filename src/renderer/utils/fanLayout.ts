@@ -18,7 +18,8 @@ export interface FanSegment {
   fill: string;
   textX: number;
   textY: number;
-  textAngle: number;       // tangential rotation for straight text
+  textAngle: number;        // tangential rotation (gen 1-4 straight mode)
+  textAngleRadial: number;  // radial rotation (gen 5+): text reads outward along radius
   midAngle: number;        // segment midpoint angle in degrees
   sweepDeg: number;        // angular width of this segment
   isEmpty: boolean;
@@ -28,10 +29,12 @@ export interface FanSegment {
 export interface FanLayoutOptions {
   arcSpan?: ArcSpan;   // default 180
   maxGen?: number;      // default 6, range 1-8
+  fillFn?: (ahnNum: number, gen: number, isEmpty: boolean, person: PersonNode | null) => string;
 }
 
-// Ring depths — wider than circle chart because fan has more angular space
-const RING_DEPTHS = [50, 55, 60, 55, 50, 48, 42, 36, 30];
+// Ring depths. Gens 5-8 are deep to accommodate radially-rotated text
+// (four stacked lines read outward along the radius).
+const RING_DEPTHS = [50, 55, 60, 55, 48, 68, 58, 52, 48];
 // Gap between rings
 const RING_GAP = 2;
 
@@ -103,37 +106,6 @@ export function fanViewBox(arcSpan: ArcSpan, maxGen: number): { width: number; h
   return { width, height, cx, cy };
 }
 
-const BRANCH_BASE: readonly string[] = [
-  '#6a9cc0', // paternal grandfather (slate blue)
-  '#6aaa78', // paternal grandmother (sage green)
-  '#c07848', // maternal grandfather (terracotta)
-  '#a078b0', // maternal grandmother (dusty mauve)
-];
-
-function lightenHex(hex: string, amount: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const lr = Math.min(255, Math.round(r + (255 - r) * amount));
-  const lg = Math.min(255, Math.round(g + (255 - g) * amount));
-  const lb = Math.min(255, Math.round(b + (255 - b) * amount));
-  return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
-}
-
-function computeFill(ahnNum: number, gen: number, isEmpty: boolean): string {
-  let base: string;
-  if (gen === 0) {
-    base = '#2c3e50';
-  } else if (gen === 1) {
-    base = ahnNum === 2 ? '#5888b0' : '#b07860';
-  } else {
-    const rootAhn = ahnNum >> (gen - 2);
-    const branchIdx = rootAhn - 4;
-    base = lightenHex(BRANCH_BASE[branchIdx] ?? '#cccccc', (gen - 2) * 0.07);
-  }
-  return isEmpty ? lightenHex(base, 0.55) : base;
-}
-
 function toRad(deg: number): number { return (deg * Math.PI) / 180; }
 function fmt(n: number): string { return n.toFixed(3); }
 
@@ -175,14 +147,8 @@ function buildFocalPath(cx: number, cy: number, r: number, arcSpan: ArcSpan): st
   const halfSpan = arcSpan / 2;
   const startDeg = -90 - halfSpan;
   const endDeg = -90 + halfSpan;
-  // Actually for the focal, we want it to bulge downward (toward the viewer).
-  // The arc from startDeg to endDeg goes upward (toward ancestors).
-  // The focal "cap" should be a semicircle on the bottom side.
-  // We draw: line from inner arc start to inner arc end (straight across),
-  // then arc below back to start.
   const [x1, y1] = arcXY(cx, cy, r, startDeg);
   const [x2, y2] = arcXY(cx, cy, r, endDeg);
-  // Draw the lower semicircle: from endDeg, arc through bottom back to startDeg
   const lowerStartDeg = endDeg;
   const lowerEndDeg = startDeg + 360;
   const lowerSweep = lowerEndDeg - lowerStartDeg;
@@ -195,9 +161,16 @@ function buildFocalPath(cx: number, cy: number, r: number, arcSpan: ArcSpan): st
   ].join(' ');
 }
 
+function defaultFill(_ahnNum: number, gen: number, isEmpty: boolean): string {
+  if (isEmpty) return '#e0e0e0';
+  if (gen === 0) return '#2c3e50';
+  return '#999';
+}
+
 export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions = {}): FanSegment[] {
   const arcSpan: ArcSpan = options.arcSpan ?? 180;
   const maxGen = Math.max(1, Math.min(options.maxGen ?? 6, 8));
+  const fillFn = options.fillFn ?? defaultFill;
   const rings = computeRings(maxGen);
   const { cx, cy } = fanViewBox(arcSpan, maxGen);
 
@@ -207,7 +180,6 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
   // This places the focal person at the bottom and ancestors fan upward.
   const halfSpan = arcSpan / 2;
   const arcStart = -90 - halfSpan; // e.g. -180 for 180° span
-  const arcEnd = -90 + halfSpan;   // e.g. 0 for 180° span
 
   for (let gen = 0; gen <= maxGen; gen++) {
     const count = Math.pow(2, gen);
@@ -225,7 +197,7 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
       const isEmpty = person === null;
       const isFocal = gen === 0;
 
-      const fill = computeFill(ahnNum, gen, isEmpty);
+      const fill = fillFn(ahnNum, gen, isEmpty, person);
 
       let pathD = '';
       let focalPathD = '';
@@ -239,28 +211,32 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
       const rMid = (rInner + rOuter) / 2;
       const [textX, textY] = arcXY(cx, cy, rMid, midDeg);
 
-      // Text angle: tangential to the arc, flipped so text is always readable
+      // Tangential text angle (gen 1-4 straight mode): text runs along the arc tangent.
       const tangentialBase = midDeg + 90;
       const normT = ((tangentialBase % 360) + 360) % 360;
-      const flip = normT > 90 && normT <= 270;
-      const textAngle = tangentialBase + (flip ? 180 : 0);
+      const flipT = normT > 90 && normT <= 270;
+      const textAngle = tangentialBase + (flipT ? 180 : 0);
+
+      // Radial text angle (gen 5+): text reads outward along the radius.
+      // dy offsets shift tangentially (perpendicular to reading direction),
+      // allowing multiple lines to stack within the arc width.
+      const normR = ((midDeg % 360) + 360) % 360;
+      const flipR = normR > 90 && normR <= 270;
+      const textAngleRadial = midDeg + (flipR ? 180 : 0);
 
       // Text paths for curved text along arcs
-      const textStartDeg = startDeg;
-      const textEndDeg = endDeg;
       const largeArcMid = sweepDeg > 180 ? 1 : 0;
-      // Determine if text should read left-to-right along the arc
       const inUpperHalf = Math.sin(toRad(midDeg)) < 0;
 
       function arcPath(r: number): string {
-        const [p1x, p1y] = arcXY(cx, cy, r, textStartDeg);
-        const [p2x, p2y] = arcXY(cx, cy, r, textEndDeg);
+        const [p1x, p1y] = arcXY(cx, cy, r, startDeg);
+        const [p2x, p2y] = arcXY(cx, cy, r, endDeg);
         return inUpperHalf
           ? `M ${fmt(p1x)},${fmt(p1y)} A ${fmt(r)},${fmt(r)} 0 ${largeArcMid},1 ${fmt(p2x)},${fmt(p2y)}`
           : `M ${fmt(p2x)},${fmt(p2y)} A ${fmt(r)},${fmt(r)} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
       }
 
-      // 4 text lines stacked radially: given (outer), surname, birth, death (inner)
+      // Arc radii for 4 text lines: given (outward), surname (mid), birth, death (inward).
       const rGiven   = inUpperHalf ? rMid + 8  : rMid - 8;
       const rSurname = inUpperHalf ? rMid - 2  : rMid + 2;
       const rBirth   = inUpperHalf ? rMid - 12 : rMid + 12;
@@ -274,14 +250,11 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
       segments.push({
         ahnNum, generation: gen, person, pathD, focalPathD,
         textPathGivenD, textPathD, textPathBirthD, textPathDeathD,
-        fill, textX, textY, textAngle, midAngle: midDeg, sweepDeg,
+        fill, textX, textY, textAngle, textAngleRadial, midAngle: midDeg, sweepDeg,
         isEmpty, isFocal,
       });
     }
   }
-
-  // suppress unused variable warning for arcEnd
-  void arcEnd;
 
   return segments;
 }

@@ -1,11 +1,11 @@
-// tests/unit/circleColors.test.ts
+// tests/unit/fanColors.test.ts
 import { describe, it, expect } from 'vitest';
 import {
   hexToRgb, rgbToHex, lighten, darken, rotateHue,
   branchBaseColors, branchFill, sexFill, segmentGradientStops,
   printFill, focalFill,
   type ThemeColors,
-} from '../../src/renderer/utils/circleColors';
+} from '../../src/renderer/utils/fanColors';
 
 describe('hexToRgb', () => {
   it('parses #ff8040', () => {

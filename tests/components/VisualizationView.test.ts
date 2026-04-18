@@ -9,8 +9,8 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
 }));
 
-vi.mock('../../src/renderer/components/charts/CircleChart.vue', () => ({
-  default: { template: '<div class="stub-circle" />', props: ['personId'], emits: ['navigate'] },
+vi.mock('../../src/renderer/components/charts/FanChart.vue', () => ({
+  default: { template: '<div class="stub-fan" />', props: ['personId'], emits: ['navigate'] },
 }));
 vi.mock('../../src/renderer/components/charts/PedigreeChart.vue', () => ({
   default: { template: '<div class="stub-pedigree" />', props: ['personId'], emits: ['navigate'] },
@@ -72,11 +72,11 @@ describe('VisualizationView', () => {
 
   // ── Tab chip accessibility ──────────────────────────────────────────────────
 
-  it('renders 6 tab chips in the FilterChips bar', async () => {
+  it('renders 5 tab chips in the FilterChips bar', async () => {
     const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     const chips = wrapper.findAll('.chip-btn');
-    expect(chips).toHaveLength(6);
+    expect(chips).toHaveLength(5);
   });
 
   it('active tab chip has the active class, others do not', async () => {

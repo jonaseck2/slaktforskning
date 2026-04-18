@@ -11,16 +11,23 @@
         <p class="ab-meta">{{ $t('reports.exported') }} {{ exportDate }}</p>
       </section>
 
-      <!-- 2. Circle chart (static SVG) -->
+      <!-- 2. Fan chart (static SVG) -->
       <section class="ab-chart-page">
-        <CircleChartSvg
+        <FanChartSvg
           :segments="segments"
           :focal-segment="focalSeg"
-          :curved-text="circleCurvedText ?? true"
-          :view-box-size="circleSvgSize"
+          :focal-cx="fanViewBoxInfo.cx"
+          :focal-cy="fanViewBoxInfo.cy"
+          :vb-width="fanViewBoxInfo.width"
+          :vb-height="fanViewBoxInfo.height"
+          :curved-text="fanCurvedText ?? true"
           font-family="Georgia, serif"
           link-base="#person-"
           :stroke-width="0.5"
+          stroke-color="#999"
+          :no-gradients="true"
+          empty-pattern-stroke="rgba(0,0,0,0.08)"
+          focal-shadow-color="rgba(0,0,0,0.15)"
           width="100%"
           class="ab-svg"
         />
@@ -163,11 +170,13 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  computeCircleLayout,
-  circleSvgSizeForGenerations,
-  type CircleSegment,
-} from '../../utils/circleLayout';
-import CircleChartSvg from '../charts/CircleChartSvg.vue';
+  computeFanLayout,
+  fanViewBox,
+  type FanSegment,
+  type ArcSpan,
+} from '../../utils/fanLayout';
+import { printFill } from '../../utils/fanColors';
+import FanChartSvg from '../charts/FanChartSvg.vue';
 import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
 import type { PersonNode } from '../../utils/chart-layout';
 import { formatFullName } from '../../utils/nameUtils';
@@ -256,18 +265,25 @@ interface GenGroup {
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
-const props = defineProps<{ personId: string; circleGenerations?: number; circleCurvedText?: boolean }>();
+const props = defineProps<{
+  personId: string;
+  fanGenerations?: number;
+  fanArcSpan?: ArcSpan;
+  fanCurvedText?: boolean;
+}>();
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const loading = ref(false);
 const error = ref<string | null>(null);
 const allData = ref<AncestorEntry[]>([]);
-const segments = ref<CircleSegment[]>([]);
+const segments = ref<FanSegment[]>([]);
 const exportDate = new Date().toLocaleDateString('sv-SE');
 
 // ── SVG derived ────────────────────────────────────────────────────────────────
 const focalSeg = computed(() => segments.value.find(s => s.isFocal) ?? null);
-const circleSvgSize = computed(() => circleSvgSizeForGenerations(props.circleGenerations ?? 6));
+const fanViewBoxInfo = computed(() =>
+  fanViewBox(props.fanArcSpan ?? 360, props.fanGenerations ?? 6),
+);
 
 // ── Display helpers ────────────────────────────────────────────────────────────
 function displayName(p: PersonNode): string {
@@ -467,9 +483,12 @@ async function load() {
     // Fetch BFS ancestor tree + 6-gen pedigree tree for SVG in parallel.
     // fetchPedigreeTree needs generations=7 to populate gen 6 (ahnNums 64–127);
     // the depth counter starts at 1, so generations=N yields gen 0..(N-1) in the chart.
+    const gens = props.fanGenerations ?? 6;
+    const arc: ArcSpan = props.fanArcSpan ?? 360;
+
     const [ancestorResult, pedigreeTree] = await Promise.all([
       fetchAllAncestors(props.personId),
-      fetchPedigreeTree(props.personId, (props.circleGenerations ?? 6) + 1),
+      fetchPedigreeTree(props.personId, gens + 1),
     ]);
 
     const { ancestors } = ancestorResult;
@@ -477,8 +496,12 @@ async function load() {
     // Build ancestor ID set (used for link eligibility)
     const ancestorIds = new Set<string>(Array.from(ancestors.values()).map(p => p.id));
 
-    // Compute SVG segments from the 6-gen pedigree tree
-    segments.value = computeCircleLayout(pedigreeTree, props.circleGenerations ?? 6);
+    // Compute SVG segments from the pedigree tree
+    segments.value = computeFanLayout(pedigreeTree, {
+      arcSpan: arc,
+      maxGen: gens,
+      fillFn: (_ahn, gen, isEmpty) => printFill(gen, isEmpty),
+    });
 
     // Fetch full details for all ancestors in parallel
     const entries = await Promise.all(
@@ -506,7 +529,11 @@ async function load() {
   }
 }
 
-watch(() => props.personId, load, { immediate: true });
+watch(
+  () => [props.personId, props.fanGenerations, props.fanArcSpan],
+  load,
+  { immediate: true },
+);
 
 // Intercept anchor clicks in preview — scroll to target instead of letting the
 // hash router navigate away. In print context there are no click events so

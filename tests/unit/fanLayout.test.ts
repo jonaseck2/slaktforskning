@@ -1,6 +1,7 @@
 // tests/unit/fanLayout.test.ts
 import { describe, it, expect } from 'vitest';
 import { computeFanLayout, fanViewBox, fanOuterRadius, type ArcSpan } from '../../src/renderer/utils/fanLayout';
+import { branchBaseColors, branchFill } from '../../src/renderer/utils/fanColors';
 import type { PersonNode, PedigreeTree } from '../../src/renderer/utils/chart-layout/types';
 
 // PedigreeTree is { nodes: Map<number, PersonNode>; generations: number; hasMoreAncestors?: Set<number> }
@@ -103,18 +104,35 @@ describe('computeFanLayout', () => {
     expect(focal.focalPathD.length).toBeGreaterThan(0);
   });
 
-  it('branch colors match circle chart: ahn 4 = paternal grandfather blue', () => {
-    const segs = computeFanLayout(makeTree(7));
-    expect(segs.find(s => s.ahnNum === 4)!.fill).toBe('#6a9cc0');
+  it('default fill fallback: non-empty non-focal = #999, empty = #e0e0e0', () => {
+    const treeOnlyFocal: PedigreeTree = { nodes: new Map([[1, makeNode('1')]]), generations: 7 };
+    const segs = computeFanLayout(treeOnlyFocal, { maxGen: 6 });
+    const nonFocal = segs.filter(s => !s.isFocal);
+    expect(nonFocal.every(s => s.fill === '#e0e0e0')).toBe(true);
+
+    const filled = computeFanLayout(makeTree(7), { maxGen: 6 });
+    expect(filled.find(s => s.ahnNum === 2)!.fill).toBe('#999');
+    expect(filled.find(s => s.isFocal)!.fill).toBe('#2c3e50');
   });
 
-  it('branch colors: ahn 5 = paternal grandmother green', () => {
-    const segs = computeFanLayout(makeTree(7));
-    expect(segs.find(s => s.ahnNum === 5)!.fill).toBe('#6aaa78');
+  it('fillFn is called and its return value is used as fill', () => {
+    const branches = branchBaseColors('#2d5a27');
+    const segs = computeFanLayout(makeTree(7), {
+      maxGen: 6,
+      fillFn: (ahnNum, gen, isEmpty) => branchFill(ahnNum, gen, isEmpty, branches, false),
+    });
+    const father = segs.find(s => s.ahnNum === 2)!;
+    expect(father.fill).toBe(branches[0]);
+    const mother = segs.find(s => s.ahnNum === 3)!;
+    expect(mother.fill).toBe(branches[2]);
   });
 
-  it('deeper generations of same branch are lighter', () => {
-    const segs = computeFanLayout(makeTree(127));
+  it('deeper generations with branchFill produce lighter fills in light mode', () => {
+    const branches = branchBaseColors('#2d5a27');
+    const segs = computeFanLayout(makeTree(127), {
+      maxGen: 6,
+      fillFn: (ahnNum, gen, isEmpty) => branchFill(ahnNum, gen, isEmpty, branches, false),
+    });
     const r4  = parseInt(segs.find(s => s.ahnNum === 4)!.fill.slice(1, 3), 16);
     const r8  = parseInt(segs.find(s => s.ahnNum === 8)!.fill.slice(1, 3), 16);
     const r16 = parseInt(segs.find(s => s.ahnNum === 16)!.fill.slice(1, 3), 16);
@@ -130,6 +148,32 @@ describe('computeFanLayout', () => {
     expect(parent.textPathGivenD).toContain('M ');
     expect(parent.textPathBirthD).toContain('M ');
     expect(parent.textPathDeathD).toContain('M ');
+  });
+
+  it('exposes both tangential (textAngle) and radial (textAngleRadial) rotations', () => {
+    const segs = computeFanLayout(makeTree(127), { arcSpan: 360, maxGen: 6 });
+    for (const seg of segs) {
+      expect(Number.isFinite(seg.textAngle)).toBe(true);
+      expect(Number.isFinite(seg.textAngleRadial)).toBe(true);
+    }
+    // The two angles are 90° apart before the readability flip
+    const sample = segs.find(s => s.ahnNum === 8)!;
+    const diff = Math.abs(((sample.textAngle - sample.textAngleRadial) % 180 + 180) % 180 - 90);
+    expect(diff).toBeLessThan(0.5);
+  });
+
+  it('gen 5+ rings are deep enough for radial text (≥46px)', () => {
+    const segs = computeFanLayout(makeTree(1), { maxGen: 8 });
+    // radial depth = outer ring radius jump. We probe it indirectly via viewBox growth.
+    const r5 = fanOuterRadius(5) - fanOuterRadius(4);
+    const r6 = fanOuterRadius(6) - fanOuterRadius(5);
+    const r7 = fanOuterRadius(7) - fanOuterRadius(6);
+    const r8 = fanOuterRadius(8) - fanOuterRadius(7);
+    expect(r5).toBeGreaterThanOrEqual(46);
+    expect(r6).toBeGreaterThanOrEqual(46);
+    expect(r7).toBeGreaterThanOrEqual(46);
+    expect(r8).toBeGreaterThanOrEqual(46);
+    void segs;
   });
 
   it('clamps maxGen to 8', () => {

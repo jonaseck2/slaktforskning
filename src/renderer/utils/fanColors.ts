@@ -1,7 +1,8 @@
-// src/renderer/utils/circleColors.ts
-// Pure color computation for circle chart segments. No DOM dependencies.
+// src/renderer/utils/fanColors.ts
+// Pure color computation for fan chart segments (branch, sex, high-contrast,
+// print). No DOM dependencies.
 
-export type CircleColorMode = 'branch' | 'sex';
+export type FanColorMode = 'branch' | 'sex';
 
 export interface ThemeColors {
   accent: string;       // --accent
