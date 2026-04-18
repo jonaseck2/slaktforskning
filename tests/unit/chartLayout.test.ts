@@ -2,13 +2,14 @@ import { describe, it, expect } from 'vitest';
 import {
   computePedigreeLayout,
   computeHourglassLayout,
+  computeDescendantLayout,
   computeTimelineLayout,
   eventSymbol,
   BOX_W,
   BOX_H,
   MIN_BOX_H,
 } from '../../src/renderer/utils/chart-layout';
-import type { PersonNode, PedigreeTree, TreePerson } from '../../src/renderer/utils/chart-layout';
+import type { PersonNode, PedigreeTree, TreePerson, DescendantNode } from '../../src/renderer/utils/chart-layout';
 import { computeFootprint, ancestorFootprint } from '../../src/renderer/utils/chart-layout/hourglass';
 import { V_GAP } from '../../src/renderer/utils/chart-layout/constants';
 
@@ -1348,5 +1349,76 @@ describe('hourglass outline overlap detection', () => {
     const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 'sib1');
     const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: ph.childPersonId + ph.role }, x: ph.x, y: ph.y, w: BOX_W, h: BOX_H }))];
     assertNoOverlaps(allBoxes as any);
+  });
+});
+
+describe('computeDescendantLayout — dynamic heights and curved paths', () => {
+  it('sizes each box via measureBoxHeight', () => {
+    const root: DescendantNode = {
+      person: {
+        id: 'f',
+        givenName: 'Aaaaa Bbbbb Ccccc Ddddd Eeeee',
+        surname: 'Fffff Ggggg',
+        preferredName: null, nickname: null,
+        sex: 'M', living: true,
+        birthDate: '1940', deathDate: '2010',
+        birthPlace: 'Very Long Place', deathPlace: 'Another Place',
+        photoUrl: null,
+      },
+      children: [],
+    };
+    const layout = computeDescendantLayout(root, 1);
+    expect(layout.boxes[0].h).toBeGreaterThan(MIN_BOX_H);
+  });
+
+  it('spaces generation rows by the max height in each row', () => {
+    const tall: PersonNode = {
+      id: 'c1', sex: 'M', living: true,
+      givenName: 'Aaaaa Bbbbb Ccccc Ddddd Eeeee', surname: 'Fffff Ggggg',
+      preferredName: null, nickname: null,
+      birthDate: '1980', deathDate: null,
+      birthPlace: 'Very Long Place', deathPlace: null, photoUrl: null,
+    };
+    const short: PersonNode = { ...tall, id: 'c2', givenName: 'S', surname: 'S', birthDate: null, birthPlace: null };
+    const root: DescendantNode = {
+      person: { ...short, id: 'f' },
+      children: [
+        { person: tall, children: [] },
+        { person: short, children: [] },
+      ],
+    };
+    const layout = computeDescendantLayout(root, 2);
+    // Both children should have the same Y (same row) and row 2's Y should be at or
+    // below row 1 bottom + GEN_GAP (using tall's actual height).
+    const children = layout.boxes.filter(b => b.person.id !== 'f');
+    expect(children[0].y).toBe(children[1].y);
+    const focal = layout.boxes.find(b => b.person.id === 'f')!;
+    expect(children[0].y).toBeGreaterThanOrEqual(focal.y + focal.h);
+  });
+
+  it('emits curved SVG paths instead of lines', () => {
+    const root: DescendantNode = {
+      person: {
+        id: 'f', sex: 'U', living: true,
+        givenName: 'F', surname: 'F',
+        preferredName: null, nickname: null,
+        birthDate: null, deathDate: null, birthPlace: null, deathPlace: null, photoUrl: null,
+      },
+      children: [
+        {
+          person: {
+            id: 'c', sex: 'U', living: true,
+            givenName: 'C', surname: 'C',
+            preferredName: null, nickname: null,
+            birthDate: null, deathDate: null, birthPlace: null, deathPlace: null, photoUrl: null,
+          },
+          children: [],
+        },
+      ],
+    };
+    const layout = computeDescendantLayout(root, 2);
+    expect(layout.paths.length).toBeGreaterThan(0);
+    expect(layout.lines.length).toBe(0);
+    for (const d of layout.paths) expect(d).toMatch(/^M |^D:M /);
   });
 });
