@@ -36,7 +36,8 @@ export interface Gazetteer {
   description?: string;
   source?: GazetteerSource;
   root: GazetteerNode;
-  kind?: 'point' | 'boundary';
+  kind?: 'point' | 'boundary' | 'language';
+  translations?: Record<string, Record<string, string[]>>;
 }
 
 export interface PlaceResolveResult {
