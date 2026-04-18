@@ -42,7 +42,7 @@ function openExternal(url: string) {
 
 <style scoped>
 .source-link {
-  color: var(--link-color, #4a9eff);
+  color: var(--color-link);
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;

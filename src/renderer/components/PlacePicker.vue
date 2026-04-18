@@ -225,7 +225,7 @@ function onBlur() {
 
 <style scoped>
 .place-picker { position: relative; width: 100%; box-sizing: border-box; }
-.place-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+.place-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; }
 .dropdown {
   position: absolute;
   top: 100%;
@@ -256,24 +256,24 @@ function onBlur() {
 }
 .place-subtitle {
   font-size: var(--font-xs);
-  color: #999;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 .dropdown-item:hover { background: var(--color-row-hover); }
 .dropdown-item.highlighted { background: var(--color-row-hover); }
 .place-type {
   font-size: var(--font-xs);
-  color: #999;
+  color: var(--text-muted);
 }
 .gazetteer-badge {
   font-size: var(--font-xs);
-  color: #065f46;
-  background: #d1fae5;
+  color: var(--success-text);
+  background: var(--success-bg);
   padding: 1px 5px;
   border-radius: 3px;
   font-weight: 500;
 }
-.create-new { color: #1d4ed8; font-style: italic; }
+.create-new { color: var(--accent); font-style: italic; }
 .sr-only {
   position: absolute;
   width: 1px;
