@@ -5,7 +5,9 @@ export default {
   },
   nav: {
     visualization: 'Visualisation',
+    familyTree: 'Family Tree',
     persons: 'Persons',
+    people: 'People',
     relationships: 'Relationships',
     sources: 'Sources',
     importExport: 'Import / Export',
@@ -16,6 +18,11 @@ export default {
     linkRules: 'Link Rules',
     map: 'Map',
     gazetteers: 'Gazetteers',
+    quality: 'Quality',
+    researchTasks: 'Research Tasks',
+    research: 'RESEARCH',
+    organize: 'ORGANIZE',
+    review: 'REVIEW',
   },
   settings: {
     title: 'Settings',
