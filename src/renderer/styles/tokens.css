@@ -15,11 +15,11 @@
   --sidebar-border:      #2e4a2e;
 
   /* Surface */
-  --surface-bg:           #eae5dc;
-  --surface:              #faf8f5;
-  --surface-hover:        #f0ebe2;
-  --surface-border:       #d4cec4;
-  --surface-border-subtle: #e4ded4;
+  --surface-bg:           #e8f0e8;
+  --surface:              #ffffff;
+  --surface-hover:        #f0f6f0;
+  --surface-border:       #c0d4c0;
+  --surface-border-subtle: #e0ece0;
 
   /* Text */
   --text-primary:   #1a2e1a;
