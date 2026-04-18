@@ -27,22 +27,7 @@
           :show-fit="true"
           @ready="onMapReady"
         >
-          <LMarker
-            v-for="p in filteredPlaces"
-            :key="p.id"
-            :lat-lng="[p.displayLat, p.displayLon]"
-            :icon="pinIcon(p.id === selectedPlaceId, !!p.resolved)"
-            @click="selectPlace(p.id)"
-          >
-            <LPopup>
-              <a href="#" class="popup-link" @click.prevent="selectPlace(p.id)">{{ p.name }}</a>
-              <div v-if="p.place_type" class="popup-type">{{ $t('placeTypes.' + p.place_type) }}</div>
-              <div v-if="p.resolved" class="popup-resolved">
-                <span :class="'match-' + p.resolved.matchQuality">{{ $t('gazetteers.match.' + p.resolved.matchQuality) }}</span>
-                <span class="match-path">{{ p.resolved.matchedPath.join(' > ') }}</span>
-              </div>
-            </LPopup>
-          </LMarker>
+          <!-- Markers managed imperatively via canvasMarkers for performance -->
           <LGeoJson
             v-if="boundaryGeojson"
             :key="selectedPlaceId"
@@ -76,7 +61,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { LMarker, LPopup, LGeoJson } from '@vue-leaflet/vue-leaflet';
+import { LGeoJson } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
 import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
@@ -84,7 +69,10 @@ import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { usePanelResize } from '../composables/usePanelResize';
+import { useI18n } from 'vue-i18n';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
+
+const { t } = useI18n();
 
 interface PlaceRow {
   id: string;
@@ -101,36 +89,88 @@ interface DisplayPlace extends PlaceRow {
   resolved?: PlaceResolveResult;
 }
 
-// Pin icons — CSS-only triangle markers (no images, lightweight DOM)
+// Canvas-rendered circle markers — one L.circleMarker per place, no DOM per pin
 const PIN_COLOR = '#4a90d9';
 const PIN_COLOR_SELECTED = '#2a6ab9';
 const PIN_COLOR_RESOLVED = '#7ab0e9';
 
-function makePinIcon(selected: boolean, resolved: boolean) {
-  const color = selected ? PIN_COLOR_SELECTED : resolved ? PIN_COLOR_RESOLVED : PIN_COLOR;
-  const size = selected ? 14 : 11;
-  return L.divIcon({
-    className: '',
-    iconSize: [size * 2, size * 2 + 6],
-    iconAnchor: [size, size * 2 + 6],
-    popupAnchor: [0, -(size * 2 + 4)],
-    html: `<svg width="${size * 2}" height="${size * 2 + 6}" viewBox="0 0 ${size * 2} ${size * 2 + 6}">
-      <circle cx="${size}" cy="${size}" r="${size - 1}" fill="${color}" fill-opacity="${resolved ? 0.5 : 0.85}" stroke="#fff" stroke-width="0.5"/>
-      <polygon points="${size - 4},${size + 4} ${size},${size * 2 + 6} ${size + 4},${size + 4}" fill="${color}" fill-opacity="${resolved ? 0.5 : 0.85}"/>
-    </svg>`,
-  });
+const markerLayer = L.layerGroup();
+const markerMap = new Map<string, L.CircleMarker>();
+let popup: L.Popup | null = null;
+
+function markerStyle(selected: boolean, resolved: boolean): L.CircleMarkerOptions {
+  return {
+    radius: selected ? 8 : 6,
+    fillColor: selected ? PIN_COLOR_SELECTED : resolved ? PIN_COLOR_RESOLVED : PIN_COLOR,
+    fillOpacity: resolved ? 0.5 : 0.85,
+    color: '#fff',
+    weight: selected ? 2 : 1,
+    bubblingMouseEvents: false,
+  };
 }
 
-// Cache icons to avoid re-creating per render
-const iconCache = new Map<string, L.DivIcon>();
-function pinIcon(selected: boolean, resolved: boolean): L.DivIcon {
-  const key = `${selected ? 's' : 'n'}${resolved ? 'r' : 'n'}`;
-  let icon = iconCache.get(key);
-  if (!icon) {
-    icon = makePinIcon(selected, resolved);
-    iconCache.set(key, icon);
+function syncMarkers() {
+  const map = baseMapRef.value?.getLeafletObject();
+  if (!map) return;
+
+  const currentIds = new Set(filteredPlaces.value.map(p => p.id));
+  const selId = selectedPlaceId.value;
+
+  // Remove markers no longer in filteredPlaces
+  for (const [id, marker] of markerMap) {
+    if (!currentIds.has(id)) {
+      markerLayer.removeLayer(marker);
+      markerMap.delete(id);
+    }
   }
-  return icon;
+
+  // Add or update markers
+  for (const p of filteredPlaces.value) {
+    const selected = p.id === selId;
+    const resolved = !!p.resolved;
+    const existing = markerMap.get(p.id);
+    if (existing) {
+      existing.setLatLng([p.displayLat, p.displayLon]);
+      existing.setStyle(markerStyle(selected, resolved));
+      existing.setRadius(selected ? 8 : 6);
+    } else {
+      const m = L.circleMarker([p.displayLat, p.displayLon], markerStyle(selected, resolved));
+      m.on('click', () => selectPlace(p.id));
+      markerLayer.addLayer(m);
+      markerMap.set(p.id, m);
+    }
+  }
+}
+
+function showPopup(id: string) {
+  const map = baseMapRef.value?.getLeafletObject();
+  const marker = markerMap.get(id);
+  const place = filteredPlaces.value.find(p => p.id === id);
+  if (!map || !marker || !place) return;
+
+  if (popup) map.closePopup(popup);
+
+  let html = `<a href="#" class="popup-link" data-place-id="${place.id}">${place.name}</a>`;
+  if (place.place_type) {
+    html += `<div class="popup-type">${t('placeTypes.' + place.place_type)}</div>`;
+  }
+  if (place.resolved) {
+    const qClass = 'match-' + place.resolved.matchQuality;
+    html += `<div class="popup-resolved"><span class="${qClass}">${t('gazetteers.match.' + place.resolved.matchQuality)}</span>`;
+    html += `<span class="match-path">${place.resolved.matchedPath.join(' &gt; ')}</span></div>`;
+  }
+
+  popup = L.popup({ offset: [0, -8] })
+    .setLatLng(marker.getLatLng())
+    .setContent(html)
+    .openOn(map);
+
+  // Handle popup link click
+  const popupEl = popup.getElement();
+  popupEl?.querySelector('.popup-link')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    selectPlace(id);
+  });
 }
 
 // Module-level cache so data survives navigation (component remounts)
@@ -216,11 +256,19 @@ onUnmounted(() => {
   resizeObserver = null;
   if (resizeTimer) clearTimeout(resizeTimer);
   if (panelResizeTimer) clearTimeout(panelResizeTimer);
+  markerLayer.clearLayers();
+  markerMap.clear();
 });
 
 function onMapReady() {
+  const map = baseMapRef.value?.getLeafletObject();
+  // Add canvas marker layer
+  if (map) {
+    markerLayer.addTo(map);
+    syncMarkers();
+  }
   // Observe the map's container so invalidateSize fires on any layout change
-  const container = baseMapRef.value?.getLeafletObject()?.getContainer();
+  const container = map?.getContainer();
   if (container && resizeObserver) {
     resizeObserver.observe(container);
   }
@@ -278,7 +326,13 @@ function fitBounds() {
 }
 
 watch(filteredPlaces, () => {
+  syncMarkers();
   if (mapInitialized.value && baseMapRef.value?.getLeafletObject()) fitBounds();
+});
+
+watch(selectedPlaceId, (id) => {
+  syncMarkers();
+  if (id) showPopup(id);
 });
 
 async function refreshPlace(id: string) {

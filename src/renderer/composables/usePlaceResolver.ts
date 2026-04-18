@@ -75,5 +75,19 @@ export function usePlaceResolver() {
     return gazetteersRef;
   }
 
-  return { ready, ensureLoaded, resolve, resolveBoundary, invalidate, getGazetteers };
+  function resolveCoordinates(
+    place: { latitude: number | null; longitude: number | null },
+    placePath: string
+  ): { lat: number; lon: number; resolved: boolean } | null {
+    if (place.latitude != null && place.longitude != null) {
+      return { lat: place.latitude, lon: place.longitude, resolved: false };
+    }
+    const result = resolve(placePath);
+    if (result) {
+      return { lat: result.lat, lon: result.lon, resolved: true };
+    }
+    return null;
+  }
+
+  return { ready, ensureLoaded, resolve, resolveCoordinates, resolveBoundary, invalidate, getGazetteers };
 }

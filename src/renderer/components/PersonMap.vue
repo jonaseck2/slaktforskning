@@ -67,12 +67,11 @@ interface Marker {
   placeName: string;
   placeId: string;
   resolved?: boolean;
-  matchQuality?: string;
 }
 
 const props = defineProps<{ personId: string }>();
 
-const { ready: resolverReady, ensureLoaded, resolve: resolvePlace } = usePlaceResolver();
+const { ensureLoaded, resolveCoordinates } = usePlaceResolver();
 
 const markers = ref<Marker[]>([]);
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
@@ -118,34 +117,23 @@ async function load() {
       place = (await window.api.places.get(ev.place_id!)) as PlaceRow | null;
       placeCache.set(ev.place_id!, place);
     }
-    if (place && place.latitude != null && place.longitude != null) {
+    if (!place) continue;
+    let fullPath = pathCache.get(place.id);
+    if (fullPath === undefined) {
+      fullPath = (await window.api.places.getPath(place.id)) as string;
+      pathCache.set(place.id, fullPath);
+    }
+    const coords = resolveCoordinates(place, fullPath);
+    if (coords) {
       result.push({
-        lat: place.latitude,
-        lon: place.longitude,
+        lat: coords.lat,
+        lon: coords.lon,
         eventType: ev.event_type,
         date: ev.date_original || ev.date_value,
         placeName: place.name,
         placeId: place.id,
+        resolved: coords.resolved,
       });
-    } else if (place && resolverReady.value) {
-      let fullPath = pathCache.get(place.id);
-      if (fullPath === undefined) {
-        fullPath = (await window.api.places.getPath(place.id)) as string;
-        pathCache.set(place.id, fullPath);
-      }
-      const resolved = resolvePlace(fullPath);
-      if (resolved) {
-        result.push({
-          lat: resolved.lat,
-          lon: resolved.lon,
-          eventType: ev.event_type,
-          date: ev.date_original || ev.date_value,
-          placeName: place.name,
-          placeId: place.id,
-          resolved: true,
-          matchQuality: resolved.matchQuality,
-        });
-      }
     }
   }
 
