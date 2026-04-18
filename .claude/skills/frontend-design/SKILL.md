@@ -187,6 +187,19 @@ Key token categories:
 /* Shadows */     --shadow-sm, --shadow-md, --shadow-lg
 ```
 
+### Reactive theme/appearance updates in charts
+
+Theme (forest / nordic / twilight) and appearance (light / dark / high-contrast) are applied by toggling classes on `document.documentElement` — see `setTheme` / `setAppearance` in `App.vue`. CSS-var-driven properties (`color: var(--text-primary)`) update automatically via the cascade, but anything that reads theme tokens through JS (e.g. `:fill="nameColor(box)"` where `nameColor` pulls from a cached color object) will **not** re-render on the class change unless it depends on a reactive signal.
+
+The signal lives in [`src/renderer/composables/useThemeSignal.ts`](../../../src/renderer/composables/useThemeSignal.ts): a module-level `themeVersion` ref incremented by a `MutationObserver` on `document.documentElement`'s `class` attribute. Two consumers already wire it up:
+
+- `useChartColors(true)` reads `themeVersion.value` inside its `computed`, so any chart using it (Pedigree, Hourglass, Descendant, and future charts) re-renders on theme change automatically.
+- `useFanThemeColors()` wraps the pure Fan helpers (`readThemeColors`, `isDarkMode`, `isHighContrast` from `utils/fanColors.ts`) in the same pattern.
+
+**Rule for new charts:** never call `getComputedStyle(document.documentElement)` or `readThemeColors()` directly inside a `computed`. Go through one of the two composables — they handle both the DOM read and the reactivity. `useChartColors(false)` deliberately does **not** depend on the signal, so exports stay invariant.
+
+Regression test: `tests/components/themeSignal.test.ts`.
+
 ### Export and print surfaces
 
 Anything that gets captured as a static artefact (PDF via `window.api.print.exportPdf()`, SVG via wall-chart generators, a PNG screenshot) **must not pick up the current theme or appearance**. Users have repeatedly been burned by dark / high-contrast / theme overrides leaking into saved files.
