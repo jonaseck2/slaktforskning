@@ -20,21 +20,14 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { weightedCentroid } from '../src/gazetteer-build/geo';
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
 
 const COUNTRY_INFO_FILE = '/tmp/countryInfo.txt';
 const ADMIN1_FILE = '/tmp/admin1CodesASCII.txt';
 const CITIES_FILE = '/tmp/geonames_cities/cities15000.txt';
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
 
 interface CountryInfo {
   iso2: string;
@@ -58,32 +51,8 @@ interface CityRow {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-function round6(n: number): number {
-  return Math.round(n * 1_000_000) / 1_000_000;
-}
-
-/**
- * Compute a population-weighted centroid from city data.
- * Falls back to simple mean if total population is 0.
- */
-function weightedCentroid(cities: CityRow[]): { lat: number; lon: number } | null {
-  if (cities.length === 0) return null;
-
-  const totalPop = cities.reduce((s, c) => s + c.population, 0);
-
-  if (totalPop === 0) {
-    // Simple mean fallback
-    const lat = cities.reduce((s, c) => s + c.lat, 0) / cities.length;
-    const lon = cities.reduce((s, c) => s + c.lon, 0) / cities.length;
-    return { lat: round6(lat), lon: round6(lon) };
-  }
-
-  let lat = 0, lon = 0;
-  for (const c of cities) {
-    lat += c.lat * c.population;
-    lon += c.lon * c.population;
-  }
-  return { lat: round6(lat / totalPop), lon: round6(lon / totalPop) };
+function cityWeightedCentroid(cities: CityRow[]): { lat: number; lon: number } | null {
+  return weightedCentroid(cities.map(c => ({ lat: c.lat, lon: c.lon, weight: c.population })));
 }
 
 // ── Parsers ─────────────────────────────────────────────────────────
@@ -172,7 +141,7 @@ function buildWorldCountries(
     a[1].name.localeCompare(b[1].name, 'en')
   )) {
     const cities = citiesByCountry.get(country.iso2) || [];
-    const centroid = weightedCentroid(cities);
+    const centroid = cityWeightedCentroid(cities);
     // Skip countries with no city data for coordinates
     if (!centroid) continue;
 
@@ -203,7 +172,7 @@ function buildWorldAdmin1(
     a[1].name.localeCompare(b[1].name, 'en')
   )) {
     const countryCities = citiesByCountry.get(country.iso2) || [];
-    const countryCentroid = weightedCentroid(countryCities);
+    const countryCentroid = cityWeightedCentroid(countryCities);
     if (!countryCentroid) continue;
 
     const aliases: string[] = [country.iso2];
@@ -215,7 +184,7 @@ function buildWorldAdmin1(
 
     for (const admin1 of admin1List.sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
       const admin1Cities = citiesByAdmin1.get(admin1.admin1Code) || [];
-      const admin1Centroid = weightedCentroid(admin1Cities);
+      const admin1Centroid = cityWeightedCentroid(admin1Cities);
       if (!admin1Centroid) continue;
 
       children.push({

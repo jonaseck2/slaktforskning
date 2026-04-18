@@ -449,4 +449,53 @@ export class AppDriver {
       `window.api.places.create(${JSON.stringify(data)})`
     );
   }
+
+  async createResearchTask(data: {
+    task: string;
+    person_id?: string;
+    priority?: number;
+    status?: string;
+    notes?: string;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.researchTasks.create(${JSON.stringify(data)})`
+    );
+  }
+
+  async createMedia(data: {
+    title: string;
+    file_ref?: string;
+    format?: string;
+    notes?: string;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.media.create(${JSON.stringify(data)})`
+    );
+  }
+
+  async addMediaLink(data: {
+    media_id: string;
+    entity_type: string;
+    entity_id: string;
+    sort_order?: number;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.media.addLink(${JSON.stringify(data)})`
+    );
+  }
+
+  async createGroup(data: {
+    name: string;
+    notes?: string;
+  }): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.groups.create(${JSON.stringify(data)})`
+    );
+  }
+
+  async addGroupMember(groupId: string, personId: string): Promise<{ id: string }> {
+    return this.executeJs<{ id: string }>(
+      `window.api.groups.addMember(${JSON.stringify(groupId)}, ${JSON.stringify(personId)})`
+    );
+  }
 }

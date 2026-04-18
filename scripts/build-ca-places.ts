@@ -14,6 +14,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { round6, avgCoordinates } from '../src/gazetteer-build/geo';
+import { dedup } from '../src/gazetteer-build/geonames';
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
 const GEONAMES_FILE = '/tmp/geonames_ca/CA.txt';
@@ -28,23 +31,10 @@ interface GeoNameRow {
   admin2: string; // census division code
 }
 
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
-}
-
 // Maps: admin1 code → province name (populated from ADM1 rows)
 const ADMIN1_NAMES: Record<string, string> = {};
 // Maps: "admin1.admin2" → census division name (populated from ADM2 rows)
 const ADMIN2_NAMES: Record<string, string> = {};
-
-function round6(n: number): number {
-  return Math.round(n * 1000000) / 1000000;
-}
 
 function parseGeoNamesFile(filePath: string): GeoNameRow[] {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -104,18 +94,6 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
     divisions.get(divKey)!.push(r);
   }
 
-  // Deduplicate by lowercase name within each census division
-  function dedup(arr: GeoNameRow[]): GeoNameRow[] {
-    const byName = new Map<string, GeoNameRow>();
-    for (const r of arr) {
-      const key = r.name.toLowerCase();
-      if (!byName.has(key)) {
-        byName.set(key, r);
-      }
-    }
-    return Array.from(byName.values());
-  }
-
   const provinceNodes: GazetteerNode[] = [];
 
   for (const [admin1Code, divisions] of [...provinces.entries()].sort((a, b) => {
@@ -163,28 +141,26 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
 
       if (placeNodes.length === 0) continue;
 
-      const avgLat = placeNodes.reduce((s, p) => s + p.lat, 0) / placeNodes.length;
-      const avgLon = placeNodes.reduce((s, p) => s + p.lon, 0) / placeNodes.length;
+      const divCoords = avgCoordinates(placeNodes);
 
       divisionNodes.push({
         name: divName,
         type: 'division',
-        lat: round6(avgLat),
-        lon: round6(avgLon),
+        lat: divCoords.lat,
+        lon: divCoords.lon,
         children: placeNodes,
       });
     }
 
     if (divisionNodes.length === 0) continue;
 
-    const avgLat = divisionNodes.reduce((s, n) => s + n.lat, 0) / divisionNodes.length;
-    const avgLon = divisionNodes.reduce((s, n) => s + n.lon, 0) / divisionNodes.length;
+    const provCoords = avgCoordinates(divisionNodes);
 
     provinceNodes.push({
       name: provinceName,
       type: 'province',
-      lat: round6(avgLat),
-      lon: round6(avgLon),
+      lat: provCoords.lat,
+      lon: provCoords.lon,
       children: divisionNodes,
     });
   }

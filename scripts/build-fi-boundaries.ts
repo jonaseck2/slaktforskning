@@ -40,6 +40,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode, GazetteerGeometry } from '../src/api/place-gazetteers/types';
+import { computeCentroid, round4 } from '../src/gazetteer-build/geo';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -59,21 +61,6 @@ interface GeoJSONFeature {
 interface GeoJSONCollection {
   type: 'FeatureCollection';
   features: GeoJSONFeature[];
-}
-
-interface GazetteerGeometry {
-  type: 'Polygon' | 'MultiPolygon';
-  coordinates: number[][][] | number[][][][];
-}
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  geometry?: GazetteerGeometry;
-  children?: GazetteerNode[];
 }
 
 interface Gazetteer {
@@ -118,24 +105,9 @@ function roundCoords(geom: GazetteerGeometry, precision = 4): GazetteerGeometry 
   }
 }
 
-function computeCentroid(geom: GazetteerGeometry): [number, number] {
-  let sumLat = 0, sumLon = 0, count = 0;
-  const coords = geom.type === 'Polygon'
-    ? [geom.coordinates as number[][][]]
-    : geom.coordinates as number[][][][];
-
-  for (const polygon of coords) {
-    const ring = polygon[0]; // exterior ring only
-    for (const [lon, lat] of ring) {
-      sumLon += lon;
-      sumLat += lat;
-      count++;
-    }
-  }
-  return [
-    Math.round((sumLat / count) * 10000) / 10000,
-    Math.round((sumLon / count) * 10000) / 10000,
-  ];
+function computeCentroidRound4(geom: GazetteerGeometry): [number, number] {
+  const [lat, lon] = computeCentroid(geom);
+  return [round4(lat), round4(lon)];
 }
 
 function mergeGeometries(features: GeoJSONFeature[]): GazetteerGeometry {
@@ -197,7 +169,7 @@ async function main() {
     const props = features[0].properties;
     const rawGeometry = mergeGeometries(features);
     const geometry = roundCoords(rawGeometry, 4);
-    const [lat, lon] = computeCentroid(geometry);
+    const [lat, lon] = computeCentroidRound4(geometry);
 
     const node: GazetteerNode = {
       name: props.nimi,

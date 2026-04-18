@@ -14,6 +14,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { GazetteerNode } from '../src/api/place-gazetteers/types';
+import { round6, avgCoordinates } from '../src/gazetteer-build/geo';
+import { dedup } from '../src/gazetteer-build/geonames';
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
 const GEONAMES_FILE = '/tmp/geonames_fi/FI.txt';
@@ -28,15 +31,6 @@ interface GeoNameRow {
   admin1: string; // region code
   admin2: string; // sub-region code
   admin3: string; // municipality code
-}
-
-interface GazetteerNode {
-  name: string;
-  type: string;
-  aliases?: string[];
-  lat: number;
-  lon: number;
-  children?: GazetteerNode[];
 }
 
 // Finnish ADM1 names — some GeoNames entries use English names, so we hardcode Finnish names
@@ -136,10 +130,6 @@ function parseGeoNamesFile(filePath: string): GeoNameRow[] {
   return rows;
 }
 
-function round6(n: number): number {
-  return Math.round(n * 1000000) / 1000000;
-}
-
 function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
   // Group by admin1 (region) → admin3 (municipality) → places
   // We skip admin2 (sub-region/seutukunta) as it's less relevant for genealogy
@@ -152,18 +142,6 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
     const munKey = `${r.admin1}.${r.admin3}`;
     if (!muns.has(munKey)) muns.set(munKey, []);
     muns.get(munKey)!.push(r);
-  }
-
-  // Deduplicate by lowercase name within each municipality
-  function dedup(arr: GeoNameRow[]): GeoNameRow[] {
-    const byName = new Map<string, GeoNameRow>();
-    for (const r of arr) {
-      const key = r.name.toLowerCase();
-      if (!byName.has(key)) {
-        byName.set(key, r);
-      }
-    }
-    return Array.from(byName.values());
   }
 
   const regionNodes: GazetteerNode[] = [];
@@ -198,14 +176,13 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
       if (placeNodes.length === 0) continue;
 
-      const avgLat = placeNodes.reduce((s, p) => s + p.lat, 0) / placeNodes.length;
-      const avgLon = placeNodes.reduce((s, p) => s + p.lon, 0) / placeNodes.length;
+      const munCoords = avgCoordinates(placeNodes);
 
       const munNode: GazetteerNode = {
         name: munInfo.fi,
         type: 'municipality',
-        lat: round6(avgLat),
-        lon: round6(avgLon),
+        lat: munCoords.lat,
+        lon: munCoords.lon,
         children: placeNodes,
       };
 
@@ -219,14 +196,13 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
     if (munNodes.length === 0) continue;
 
-    const avgLat = munNodes.reduce((s, n) => s + n.lat, 0) / munNodes.length;
-    const avgLon = munNodes.reduce((s, n) => s + n.lon, 0) / munNodes.length;
+    const regionCoords = avgCoordinates(munNodes);
 
     const regionNode: GazetteerNode = {
       name: regionInfo.fi,
       type: 'region',
-      lat: round6(avgLat),
-      lon: round6(avgLon),
+      lat: regionCoords.lat,
+      lon: regionCoords.lon,
       children: munNodes,
     };
 
