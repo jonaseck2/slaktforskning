@@ -18,6 +18,7 @@ export default {
     gazetteers: 'Ortsregister',
   },
   settings: {
+    title: 'Inställningar',
     appearance: 'Utseende',
     light: 'Ljust',
     lightMode: 'Ljust läge',
@@ -34,6 +35,9 @@ export default {
     off: 'Av',
     narrate: 'Berätta',
     screenReaderMode: 'Skärm',
+    theme: 'Tema',
+    themes: { forest: 'Skog', nordic: 'Nordisk', twilight: 'Skymning' },
+    tabs: { appearance: 'Utseende', database: 'Databas', importExport: 'Import / Export', linkRules: 'Länkregler', gazetteers: 'Ortsregister' },
   },
   common: {
     cancel: 'Avbryt',
