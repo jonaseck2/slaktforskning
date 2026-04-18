@@ -1,9 +1,9 @@
 import type { Database } from 'node-sqlite3-wasm';
-import type { Gazetteer, GazetteerNode, GazetteerSource, GazetteerInfo } from './place-gazetteers/types';
+import { countNodes } from '../gazetteer-build/tree';
+import type { Gazetteer, GazetteerSource, GazetteerInfo } from './place-gazetteers/types';
 import { getAllGazetteers } from './place-gazetteers/index';
 import { getDbSetting, setDbSetting } from './db_settings';
 import { queryOne, queryAll, runSql } from './db';
-import { countNodes } from '../gazetteer-build/tree';
 
 const MAX_JSON_BYTES = 50 * 1024 * 1024; // 50 MB
 

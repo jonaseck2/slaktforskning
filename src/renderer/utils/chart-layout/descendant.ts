@@ -2,7 +2,7 @@
 // Focal at top, descendants fan out downward. Supports outline injection.
 
 import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
-import { BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
+import { BOX_W, BOX_H, V_GAP, GEN_GAP, PAD } from './constants';
 import { buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
 
 /**
@@ -281,7 +281,7 @@ export function computeDescendantLayout(
   const maxBoxRight = boxes.length > 0 ? Math.max(...boxes.map(b => b.x + b.w)) : BOX_W;
   const maxBoxBottom = boxes.length > 0 ? Math.max(...boxes.map(b => b.y + b.h)) : BOX_H;
   const minBoxTop = boxes.length > 0 ? Math.min(...boxes.map(b => b.y)) : 0;
-  const minBoxLeft = boxes.length > 0 ? Math.min(...boxes.map(b => b.x)) : 0;
+  const _minBoxLeft = boxes.length > 0 ? Math.min(...boxes.map(b => b.x)) : 0;
 
   const svgWidth = Math.max(rootCX + rightExt + PAD, maxBoxRight + PAD);
   const viewBoxMinY = Math.min(0, minBoxTop - PAD);

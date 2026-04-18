@@ -424,7 +424,7 @@ describe('MEDIA_FILE_MISSING', () => {
   });
 
   it('does not fire for media without file_ref', () => {
-    const m = createMedia(db, { title: 'Photo without ref' });
+    createMedia(db, { title: 'Photo without ref' });
     const results = runAllChecks(db);
     const hit = results.filter(r => r.code === 'MEDIA_FILE_MISSING');
     expect(hit).toHaveLength(0);
@@ -433,7 +433,7 @@ describe('MEDIA_FILE_MISSING', () => {
 
 describe('ORPHANED_SOURCE', () => {
   it('fires for a source with no citations', () => {
-    const s = createSource(db, { title: 'Kyrkobok' });
+    createSource(db, { title: 'Kyrkobok' });
     const results = runAllChecks(db);
     const hit = results.filter(r => r.code === 'ORPHANED_SOURCE');
     expect(hit).toHaveLength(1);

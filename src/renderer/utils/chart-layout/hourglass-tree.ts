@@ -1,7 +1,7 @@
 // Tree builders: converts various tree formats → TreePerson graph
 // and injects outline placeholders for the selected person.
 
-import type { PersonNode, HourglassTree, DescendantNode, TreePerson, PedigreeTree } from './types';
+import type { HourglassTree, DescendantNode, TreePerson, PedigreeTree } from './types';
 
 const PLACEHOLDER_PREFIX = '__ph_';
 

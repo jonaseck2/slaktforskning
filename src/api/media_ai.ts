@@ -3,7 +3,6 @@ import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { Media } from './types';
 import { queryOne, queryAll } from './db';
-import type { MediaRegion } from './media_regions';
 
 export interface MediaFileBase64Result {
   base64: string;

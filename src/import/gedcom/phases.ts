@@ -20,8 +20,6 @@
 
 import { existsSync } from 'fs';
 import { basename } from 'path';
-import type { Database } from 'node-sqlite3-wasm';
-import type { GedcomNode } from '../../gedcom/parser';
 import type { Relationship, RelationshipType, EventParticipantRole } from '../../api/types';
 import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
 import { createRelationship, updateRelationship, addEventParticipant, getRelationshipsOfPerson } from '../../api/relationships';

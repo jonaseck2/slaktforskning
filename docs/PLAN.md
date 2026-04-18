@@ -186,6 +186,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.103.1 | Fix: fast continuous map zoom, canvas markers, citation query optimization | — |
 | v0.103.2 | Fix: map popup badge styles, boundary query accuracy, gazetteer UI improvements | — |
 | v0.103.3 | Fix: gazetteer test lookup now uses language translations (e.g. Kanada → Canada) | — |
+| v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage (4.9% → 91%) | [spec](superpowers/specs/2026-04-18-gazetteer-build-extraction-design.md) |
 ---
 
 ## Research

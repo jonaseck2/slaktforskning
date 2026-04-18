@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createPerson, addPersonName } from '../../src/api/persons';
+import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createRelationship } from '../../src/api/relationships';

@@ -65,12 +65,12 @@ describe('UndoManager', () => {
   });
 
   it('new push clears redo stack', () => {
-    let val = 0;
-    mgr.push({ label: 'a', undo: () => { val = 0; }, redo: () => { val = 1; } });
+    let _val = 0;
+    mgr.push({ label: 'a', undo: () => { _val = 0; }, redo: () => { _val = 1; } });
     mgr.undo();
     expect(mgr.canRedo()).toBe(true);
 
-    mgr.push({ label: 'b', undo: () => { val = 10; }, redo: () => { val = 20; } });
+    mgr.push({ label: 'b', undo: () => { _val = 10; }, redo: () => { _val = 20; } });
     expect(mgr.canRedo()).toBe(false);
   });
 
@@ -168,7 +168,7 @@ describe('Undo wrappers', () => {
     });
 
     it('redo createPerson re-creates a person', () => {
-      const person = createPersonUndo(db, { given_name: 'Test', surname: 'Person' });
+      createPersonUndo(db, { given_name: 'Test', surname: 'Person' });
       undoManager.undo();
       undoManager.redo();
       // A new person was created (different ID since we can't restore the original with the simple wrapper)
@@ -335,7 +335,7 @@ describe('Undo wrappers', () => {
 
     it('undo deleteSource restores source + citations', () => {
       const src = sources.createSource(db, { title: 'My Source' });
-      const cit = sources.createCitation(db, { source_id: src.id, page: 'p.42' });
+      sources.createCitation(db, { source_id: src.id, page: 'p.42' });
 
       undoManager.clear();
       deleteSourceUndo(db, src.id);
@@ -447,7 +447,7 @@ describe('Undo wrappers', () => {
     });
 
     it('redo createSource re-creates a source', () => {
-      const src = createSourceUndo(db, { title: 'Redo Test' });
+      createSourceUndo(db, { title: 'Redo Test' });
       undoManager.undo();
       undoManager.redo();
       const all = sources.listSources(db);

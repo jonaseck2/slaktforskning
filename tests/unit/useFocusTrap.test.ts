@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
+import { useFocusTrap } from '../../src/renderer/composables/useFocusTrap';
 
 // Capture lifecycle hook callbacks so tests can trigger them manually
 let mountedCb: (() => void) | null = null;
@@ -13,9 +15,6 @@ vi.mock('vue', async (importOriginal) => {
     onUnmounted: vi.fn((cb: () => void) => { unmountedCb = cb; }),
   };
 });
-
-import { ref } from 'vue';
-import { useFocusTrap } from '../../src/renderer/composables/useFocusTrap';
 
 function makeButton(disabled = false): HTMLButtonElement {
   const btn = document.createElement('button');

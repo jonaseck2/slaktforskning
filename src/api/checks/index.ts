@@ -1,10 +1,9 @@
 import type { Database } from 'node-sqlite3-wasm';
+import { loadGazetteers, getAllGazetteers } from '../place-gazetteers';
+import type { GazetteerConfig } from '../place-gazetteers/types';
+import { getImportedGazetteers } from '../gazetteers';
+import { getDbSetting } from '../db_settings';
 import type { CheckResult } from './check-utils';
-
-// Re-export public types
-export type { CheckResult, CheckSeverity } from './check-utils';
-
-// Import all check functions from category modules
 import {
   checkBirthAfterDeath,
   checkEventAfterDeath,
@@ -43,10 +42,9 @@ import {
   checkMediaFileMissing,
   checkGazetteerMatchQuality,
 } from './checks-location';
-import { loadGazetteers, getAllGazetteers } from '../place-gazetteers';
-import { getImportedGazetteers } from '../gazetteers';
-import { getDbSetting } from '../db_settings';
-import type { GazetteerConfig } from '../place-gazetteers/types';
+
+// Re-export public types
+export type { CheckResult, CheckSeverity } from './check-utils';
 
 // ---------------------------------------------------------------------------
 // Public API

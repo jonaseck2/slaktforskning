@@ -13,16 +13,6 @@ import type { GedcomVersion } from './detect';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function cloneNode(node: GedcomNode): GedcomNode {
-  return {
-    level: node.level,
-    xref: node.xref,
-    tag: node.tag,
-    value: node.value,
-    children: node.children.map(cloneNode),
-  };
-}
-
 function getChildren(node: GedcomNode, tag: string): GedcomNode[] {
   return node.children.filter(c => c.tag === tag);
 }

@@ -16,7 +16,6 @@ import { importGedcom, previewGedcomImport } from '../../src/import/gedcom';
 import { listPersons, getPersonNames } from '../../src/api/persons';
 import { listRelationships } from '../../src/api/relationships';
 import { getEventsForPerson } from '../../src/api/events';
-import { listPlaces } from '../../src/api/places';
 import { createTestDb } from './helpers';
 
 const FIXTURES = path.resolve(__dirname, '../fixtures/gedcom');
@@ -101,7 +100,6 @@ describe('empty_fields.ged', () => {
     expect(persons.length).toBe(4);
 
     // Person with NAME // should exist but have empty name parts
-    const emptyName = persons.find(p => !p.given_name && !p.surname);
     // At least one person should have no given_name and no surname
     const hasEmptyNames = persons.some(p => !p.given_name && !p.surname);
     expect(hasEmptyNames).toBe(true);

@@ -27,17 +27,6 @@ function findPersonInTree(node: TreePerson, id: string, visited = new Set<string
   return null;
 }
 
-function findParentOf(root: TreePerson, childId: string, visited = new Set<string>()): TreePerson | null {
-  if (visited.has(root.person.id)) return null;
-  visited.add(root.person.id);
-  for (const c of root.children) {
-    if (c.person.id === childId) return root;
-    const found = findParentOf(c, childId, visited);
-    if (found) return found;
-  }
-  return null;
-}
-
 /** Deep-clone a TreePerson graph so layout mutations don't affect the source. */
 function cloneTree(node: TreePerson, visited = new Map<string, TreePerson>()): TreePerson {
   if (visited.has(node.person.id)) return visited.get(node.person.id)!;
@@ -102,23 +91,6 @@ export function ancestorFootprint(node: TreePerson): Footprint {
   };
 }
 
-/** Compute the full subtree width needed including cross-row outline placeholders. */
-function fullFootprintWidth(node: TreePerson): number {
-  const fp = computeFootprint(node);
-  let w = fp.left + fp.right;
-  // Parent/child placeholder outlines are centered — may be wider than spouse extent
-  for (const arr of [
-    node.parents.filter(p => p.isPlaceholder),
-    node.children.filter(c => c.isPlaceholder),
-  ]) {
-    if (arr.length > 0) {
-      const groupW = arr.length * BOX_W + (arr.length - 1) * V_GAP;
-      w = Math.max(w, groupW);
-    }
-  }
-  return w;
-}
-
 // ── Main layout ──────────────────────────────────────────────────────────────
 
 export function computeHourglassLayout(
@@ -134,7 +106,7 @@ export function computeHourglassLayout(
   // ── 2. Placement helpers (used by placeSpouses) ────────────────────────────
 
   /** Whether spouses go left (true for female). */
-  function spousesGoLeft(node: TreePerson): boolean {
+  function _spousesGoLeft(node: TreePerson): boolean {
     return node.person.sex === 'F';
   }
 
@@ -518,7 +490,6 @@ export function computeHourglassLayout(
   function placeOutlineGroup(nodes: TreePerson[], ownerCX: number, ownerY: number, dir: 'up' | 'down'): void {
     if (nodes.length === 0) return;
     const targetY = dir === 'down' ? ownerY + BOX_H + GEN_GAP : ownerY - BOX_H - GEN_GAP;
-    const forkY = dir === 'down' ? ownerY + BOX_H + GEN_GAP / 2 : ownerY - GEN_GAP / 2;
     const n = nodes.length;
     const groupW = n * BOX_W + (n - 1) * V_GAP;
 

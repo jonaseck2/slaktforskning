@@ -108,59 +108,55 @@ test.describe('Quality checks with data', () => {
     await app.navigate('/quality');
     await app.waitForText('error', 15000);
 
-    // Count initial rows
-    const initialCount = await app.executeJs<number>(`
-      document.querySelectorAll('.quality-table .clickable-row').length
-    `);
-    expect(initialCount).toBeGreaterThan(0);
-
     // Click the ignore button (✕) on the first row
     await app.executeJs(`
-      const btn = document.querySelector('.quality-table .clickable-row .btn-delete');
-      if (btn) btn.click();
+      (() => {
+        const btn = document.querySelector('.quality-table .clickable-row .btn-delete');
+        if (btn) btn.click();
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
-    // The row should now have the ignored class
-    const hasIgnored = await app.executeJs<boolean>(`
+    // Switch to "Ignored" filter to verify the item was ignored
+    await app.executeJs(`
+      (() => {
+        const chips = document.querySelectorAll('.chip-btn');
+        for (const chip of chips) {
+          if (chip.textContent.includes('Ignored')) { chip.click(); return; }
+        }
+      })()
+    `);
+    await app.settle(300);
+
+    // Should show at least one ignored result
+    const hasIgnoredRow = await app.executeJs<boolean>(`
       !!document.querySelector('.quality-table .row-ignored')
     `);
-    // Either it's still visible (with opacity) or filtered out
-    // Switch to "Ignored" filter to verify
-    await app.executeJs(`
-      const chips = document.querySelectorAll('.chip-btn');
-      for (const chip of chips) {
-        if (chip.textContent.includes('Ignored')) {
-          chip.click();
-          break;
-        }
-      }
-    `);
-    await app.settle(200);
+    expect(hasIgnoredRow).toBe(true);
 
-    const dom = await app.getDom();
-    // Should show at least one ignored result
-    expect(dom).toContain('row-ignored');
-
-    // Restore: click the same button (now shows "Restore")
+    // Restore: click the ignore/restore button on the ignored row
     await app.executeJs(`
-      const btn = document.querySelector('.quality-table .row-ignored .btn-delete');
-      if (btn) btn.click();
+      (() => {
+        const btn = document.querySelector('.quality-table .row-ignored .btn-delete');
+        if (btn) btn.click();
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
     // Switch back to "All" filter
     await app.executeJs(`
-      const chips = document.querySelectorAll('.chip-btn');
-      chips[0]?.click();
+      (() => {
+        const chip = document.querySelector('.chip-btn');
+        if (chip) chip.click();
+      })()
     `);
-    await app.settle(200);
+    await app.settle(300);
 
-    // All rows should be non-ignored now
-    const noIgnored = await app.executeJs<boolean>(`
-      !document.querySelector('.quality-table .row-ignored')
+    // All rows should be non-ignored now (check actual elements, not raw HTML which includes CSS)
+    const stillIgnored = await app.executeJs<boolean>(`
+      !!document.querySelector('.quality-table .row-ignored')
     `);
-    expect(noIgnored).toBe(true);
+    expect(stillIgnored).toBe(false);
   });
 
   test('severity badges are rendered', async () => {

@@ -11,7 +11,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
-import { queryAll, queryOne } from '../db';
+import { queryAll } from '../db';
 import type { PersonName, GenealogyEvent, Citation, Place, Source } from '../types';
 import { getSiteCSS } from './style';
 import {
