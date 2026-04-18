@@ -389,6 +389,15 @@ async function deleteRegion(regionId: string) {
 async function assignPersonToRegion(regionId: string, personId: string) {
   editingTagId.value = null;
   await window.api.mediaRegions.update(regionId, { person_id: personId });
+  // Also ensure the person is linked to this media
+  if (props.mediaId && !linkedPersons.value.some(lp => lp.entityId === personId)) {
+    await window.api.media.addLink({
+      media_id: props.mediaId,
+      entity_type: 'person',
+      entity_id: personId,
+    });
+    emit('link-changed');
+  }
   emit('region-deleted'); // triggers viewer reload too
   if (props.mediaId) await load();
 }

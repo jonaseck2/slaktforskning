@@ -15,7 +15,7 @@
       />
       <div class="field-grid">
         <label>{{ $t('places.name') }}
-          <PlaceNameInput v-model="editName" @save="save({ name: $event })" @accept="onAcceptSuggestion" />
+          <PlacePicker :model-value="placeId" @select="onNamePlaceSelected" />
         </label>
         <label>{{ $t('places.type') }}
           <select v-model="editType" @change="save({ place_type: editType || null })">
@@ -136,7 +136,6 @@ import AppButton from '../components/ui/AppButton.vue';
 import SectionHeader from '../components/ui/SectionHeader.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
-import PlaceNameInput from '../components/PlaceNameInput.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 
@@ -162,9 +161,12 @@ const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve: resolvePlace, invalidate: invalidateResolver } = usePlaceResolver();
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-notes');
 
-async function onAcceptSuggestion() {
-  // editName is already updated by PlaceNameInput via v-model
-  await save({ name: editName.value });
+async function onNamePlaceSelected(selected: { id: string; name: string }) {
+  if (selected.id === placeId) return; // selected self, no change
+  // User picked a different place — update THIS place's name to match the selected path
+  const path = (await window.api.places.getPath(selected.id)) as string;
+  const newName = path || selected.name;
+  await save({ name: newName });
   nextTick(() => fitMapBounds());
 }
 
