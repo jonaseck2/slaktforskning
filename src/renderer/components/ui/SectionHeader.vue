@@ -8,7 +8,7 @@
     <span class="spacer" />
     <AppButton
       v-if="actionLabel"
-      variant="secondary"
+      variant="soft"
       size="sm"
       @click.stop="$emit('action')"
     >

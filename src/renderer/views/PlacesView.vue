@@ -4,10 +4,10 @@
       <h2>{{ $t('places.title') }}</h2>
       <div class="header-right">
         <div class="view-toggle">
-          <AppButton :variant="viewMode === 'list' ? 'primary' : 'secondary'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
-          <AppButton :variant="viewMode === 'map' ? 'primary' : 'secondary'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
+          <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
+          <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
         </div>
-        <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('places.addTitle') }}</AppButton>
+        <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
       </div>
     </div>
 

@@ -3,7 +3,7 @@
   <div class="media-main">
     <div class="header">
       <h2>{{ $t('media.title') }}</h2>
-      <AppButton variant="primary" @click="attachFile"><span aria-hidden="true">+ </span>{{ $t('media.attach') }}</AppButton>
+      <AppButton variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
     </div>
 
     <p v-if="!loading && items.length > 0" class="count-label">

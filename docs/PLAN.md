@@ -157,6 +157,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.94.0 | Design System Overhaul: 3 color themes (Forest/Nordic/Twilight), 9 UI primitives, MediaPanel, SettingsView, sidebar restructured (Research/Organize/Review), all views/panels/modals use design tokens | [spec](docs/superpowers/specs/2026-04-17-design-system-spec.md) [plan](plans/archive/2026-04-17-design-system-overhaul.md) |
 | v0.94.8 | Fix: map initial zoom race condition, loading/empty states, cached places across navigation; panel close button and quality dismiss button refinements | — |
 | v0.95.0 | Detail view UX: relationships above events, collapsible sections (panels only), back button in sidebar, section counts, living status checkbox, remove per-view back buttons | — |
+| v0.95.1 | UI consistency: soft buttons everywhere, shared PersonDetailsSection, panel counts always visible, delete buttons softened, quality ignore → ✕ | — |
 ---
 
 ## Research

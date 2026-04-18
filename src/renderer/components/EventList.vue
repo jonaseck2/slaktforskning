@@ -2,7 +2,7 @@
   <div class="event-list">
     <div v-if="!props.hideHeader" class="section-header">
       <h4>{{ $t('events.title') }} <span v-if="events.length" class="section-count">({{ events.length }})</span></h4>
-      <button v-if="!props.readonly" type="button" class="btn-add" @click="showForm = true"><span aria-hidden="true">+ </span>{{ $t('events.addEvent') }}</button>
+      <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="showForm = true">+ {{ $t('events.addEvent') }}</AppButton>
     </div>
     <div v-if="events.length === 0" class="empty-hint">{{ $t('events.noEvents') }}</div>
     <table v-else class="data-table events-table">
@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import AppButton from './ui/AppButton.vue';
 import EventForm from './EventForm.vue';
 import CitationForm from './CitationForm.vue';
 import { useToast } from '../composables/useToast';
@@ -205,7 +206,8 @@ defineExpose({ reload: load, openAddForm, count: computed(() => events.value.len
 }
 .section-header h4 {
   margin: 0;
-  font-size: var(--font-md);
+  font-size: var(--font-base);
+  font-weight: var(--font-weight-bold);
 }
 .section-count {
   font-weight: var(--font-weight-normal);

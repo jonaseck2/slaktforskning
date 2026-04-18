@@ -24,7 +24,8 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-            <AppButton v-if="showTreeBtn" variant="primary" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
+            <AppButton v-if="showTreeBtn" variant="soft" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
+            <span class="panel-name-spacer" />
             <button class="btn-sm btn-delete" @click="emit('close')" :title="$t('common.close')">✕</button>
           </div>
           <div class="panel-lifelines">
@@ -44,27 +45,7 @@
       <div class="panel-section">
         <SectionHeader :title="'Person'" :collapsed="!sections.person" :action-label="$t('common.edit')" @toggle="toggleSection('person')" @action="$router.push('/persons/' + personId)" />
         <div v-if="sections.person" class="panel-section-body">
-          <div class="compact-form">
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('persons.sex') }}</label>
-              <select class="compact-control" :value="person.sex" @change="updateSex(($event.target as HTMLSelectElement).value as 'M' | 'F' | 'U')">
-                <option value="M">{{ $t('sex.M') }}</option>
-                <option value="F">{{ $t('sex.F') }}</option>
-                <option value="U">{{ $t('sex.U') }}</option>
-              </select>
-            </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('personPanel.status') }}</label>
-              <select class="compact-control" :value="person.living ? 'true' : 'false'" @change="updateLiving(($event.target as HTMLSelectElement).value === 'true')">
-                <option value="true">{{ $t('personDetail.statusLiving') }}</option>
-                <option value="false">{{ $t('personDetail.statusDeceased') }}</option>
-              </select>
-            </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('panel.notes') }}</label>
-              <PersonNotesSection :person-id="personId!" :rows="2" class="compact-control" />
-            </div>
-          </div>
+          <PersonDetailsSection :person-id="personId!" :sex="person.sex" :living="person.living" @updated="onDetailUpdated" />
         </div>
       </div>
 
@@ -79,7 +60,7 @@
 
       <!-- Händelser section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :person-id="personId" hide-header />
         </div>
@@ -95,7 +76,7 @@
 
       <!-- Identifiers section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('identifiers.title')" :collapsed="!sections.identifiers" :action-label="'+ ' + $t('identifiers.add')" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
+        <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" :action-label="'+ ' + $t('identifiers.add')" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
         <div v-if="sections.identifiers" class="panel-section-body">
           <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
         </div>
@@ -103,7 +84,7 @@
 
       <!-- Relationer section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personDetail.relationships')" :collapsed="!sections.relationships" @toggle="toggleSection('relationships')" />
+        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" :action-label="'+ ' + $t('relationships.addRelationship')" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
         <div v-if="sections.relationships" class="panel-section-body">
           <PersonRelationshipsSection ref="relSectionRef" :person-id="personId!" />
         </div>
@@ -128,7 +109,7 @@
 
       <!-- Media section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('media.title')" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
+        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
           <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
         </div>
@@ -153,7 +134,7 @@
 
       <!-- Quality section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('quality.nav')" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
+        <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
         <div v-if="sections.quality" class="panel-section-body">
           <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
@@ -208,7 +189,7 @@ import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
-import PersonNotesSection from './PersonNotesSection.vue';
+import PersonDetailsSection from './PersonDetailsSection.vue';
 import PersonTimeline from './PersonTimeline.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
@@ -241,6 +222,11 @@ const {
   loadNames,
   loadGroups,
   loadResearchTasks,
+  eventCount,
+  relationshipCount,
+  identifierCount,
+  mediaCount,
+  checkCount,
 } = usePersonPanelData(personIdRef);
 
 // ── Section state (composable) ──────────────────────────────────────────────
@@ -304,17 +290,10 @@ function handleCheckFix(action: string) {
 
 // ── Person field updates ────────────────────────────────────────────────────
 
-async function updateSex(value: 'M' | 'F' | 'U') {
-  if (!props.personId || !person.value) return;
-  await window.api.persons.update(props.personId, { sex: value });
-  person.value.sex = value;
-  emit('person-changed');
-}
-
-async function updateLiving(value: boolean) {
-  if (!props.personId || !person.value) return;
-  await window.api.persons.update(props.personId, { living: value });
-  person.value.living = value;
+function onDetailUpdated(field: string, value: unknown) {
+  if (!person.value) return;
+  if (field === 'sex') person.value.sex = value as string;
+  if (field === 'living') person.value.living = value as boolean;
   emit('person-changed');
 }
 
@@ -429,8 +408,10 @@ onMounted(() => {
   gap: var(--space-xs);
   margin-bottom: var(--space-xs);
 }
-.panel-name {
+.panel-name-spacer {
   flex: 1;
+}
+.panel-name {
   min-width: 0;
   font-size: var(--font-base);
   font-weight: var(--font-weight-bold);
@@ -464,40 +445,6 @@ onMounted(() => {
 .panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }
 
 /* Compact form */
-.compact-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-.compact-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.compact-label {
-  font-size: var(--font-xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.4px;
-}
-.compact-control {
-  font-size: var(--font-xs);
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-primary);
-  width: 100%;
-  box-sizing: border-box;
-  font-family: inherit;
-  resize: vertical;
-}
-.compact-control:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
 /* Groups */
 .panel-group-picker-wrap {
   padding: var(--space-xs) 0;

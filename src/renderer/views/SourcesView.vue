@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('sources.title') }}</h2>
-      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('sources.addSource') }}</AppButton>
+      <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('sources.addSource') }}</AppButton>
     </div>
     <p v-if="sourceList.length > 0" class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
     <AppEmptyState v-if="sourceList.length === 0" icon="📚" :title="$t('sources.emptyState')" />

@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>{{ $t('groups.title') }}</h2>
-      <AppButton variant="primary" @click="showAddForm = true"><span aria-hidden="true">+ </span>{{ $t('groups.addGroup') }}</AppButton>
+      <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('groups.addGroup') }}</AppButton>
     </div>
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
     <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('groups.emptyState')" />

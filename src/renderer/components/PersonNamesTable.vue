@@ -23,7 +23,6 @@
       </div>
       <div class="name-meta">
         <span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span>
-        <span v-if="name.preferred_name" class="preferred-hint">{{ $t('personDetail.preferred') }}: {{ name.preferred_name }}</span>
         <span v-if="name.sort_order === 0" class="primary-star" title="Primary name">★</span>
         <button
           v-if="name.sort_order !== 0"

@@ -28,9 +28,10 @@
           <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
           <td class="actions-cell">
             <button
-              :class="['btn-sm', isIgnored(r) ? 'btn-unignore' : 'btn-ignore']"
+              class="btn-sm btn-delete"
+              :title="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
               @click.stop="toggleIgnore(r)"
-            >{{ isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore') }}</button>
+            >✕</button>
           </td>
         </tr>
       </tbody>
@@ -144,7 +145,5 @@ watch(() => props.personId, load, { immediate: true });
 .badge-notice  { background: #bfdbfe; color: #1e3a8a; }
 .row-ignored { opacity: 0.5; }
 .ignored-text { color: #9ca3af; }
-.btn-ignore   { background: #e2e8f0; color: #4a5568; }
-.btn-unignore { background: #c6f6d5; color: #276749; }
 .btn-fix { background: #dbeafe; color: #1e40af; }
 </style>
