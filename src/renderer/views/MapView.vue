@@ -276,7 +276,6 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--surface-border-subtle);
 }
 .map-search {
   padding: 6px 10px;
@@ -294,13 +293,12 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   position: relative;
-  overflow: hidden;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
-/* Remove BaseMap's own border/radius — the chart area handles layout */
+/* Remove BaseMap's own border/radius — the sheet handles the outer shape */
 .map-chart-area :deep(.base-map-container) {
-  border: none;
-  border-radius: 0;
+  border: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-md);
   height: 100%;
 }
 
