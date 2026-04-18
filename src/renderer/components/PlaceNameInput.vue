@@ -53,6 +53,7 @@ const suggestions = ref<GazetteerSuggestion[]>([]);
 const showSuggestions = ref(false);
 const highlightIndex = ref(-1);
 let debounceTimer: ReturnType<typeof setTimeout>;
+let accepting = false;
 
 function onInput(e: Event) {
   const val = (e.target as HTMLInputElement).value;
@@ -82,11 +83,10 @@ function onInput(e: Event) {
 
 function onBlur() {
   setTimeout(() => {
-    if (!showSuggestions.value) {
-      emit('save', props.modelValue);
-    }
+    if (accepting) return;
     showSuggestions.value = false;
-  }, 150);
+    emit('save', props.modelValue);
+  }, 200);
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -109,10 +109,12 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function accept(sug: GazetteerSuggestion) {
+  accepting = true;
   showSuggestions.value = false;
   const newName = [...sug.matchedPath].reverse().join(', ');
   emit('update:modelValue', newName);
   emit('accept', sug);
+  setTimeout(() => { accepting = false; }, 50);
 }
 </script>
 
