@@ -75,3 +75,31 @@ export function checkCircularPlaceHierarchy(db: Database): CheckResult[] {
 
   return results;
 }
+
+export function checkPlaceCoordinatesInvalid(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; name: string; latitude: number; longitude: number }>(db, `
+    SELECT id, name, latitude, longitude FROM places
+    WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+  `);
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const outOfRange = r.latitude < -90 || r.latitude > 90 || r.longitude < -180 || r.longitude > 180;
+    const nullIsland = r.latitude === 0 && r.longitude === 0;
+    if (!outOfRange && !nullIsland) continue;
+    const reason = outOfRange ? 'utanför giltigt intervall' : 'null-island (0, 0)';
+    results.push({
+      code: 'PLACE_COORDINATES_INVALID',
+      severity: 'warning' as CheckSeverity,
+      message: `Platsen "${r.name}" har ogiltiga koordinater (${r.latitude}, ${r.longitude}) — ${reason}`,
+      messageParams: {
+        name: r.name,
+        lat: r.latitude,
+        lon: r.longitude,
+        reason,
+      },
+      personIds: [],
+      placeIds: [r.id],
+    });
+  }
+  return results;
+}

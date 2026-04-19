@@ -63,3 +63,31 @@ describe('CIRCULAR_PLACE_HIERARCHY', () => {
     expect(results.filter(r => r.code === 'CIRCULAR_PLACE_HIERARCHY')).toHaveLength(0);
   });
 });
+
+describe('PLACE_COORDINATES_INVALID', () => {
+  it('fires when latitude is out of range', () => {
+    const pl = createPlace(db, { name: 'Mars', latitude: 200, longitude: 10 });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PLACE_COORDINATES_INVALID' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+  });
+
+  it('fires for null-island (0, 0)', () => {
+    const pl = createPlace(db, { name: 'NullIsland', latitude: 0, longitude: 0 });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PLACE_COORDINATES_INVALID' && r.placeIds?.includes(pl.id))).toHaveLength(1);
+  });
+
+  it('does not fire for valid coordinates', () => {
+    const pl = createPlace(db, { name: 'Stockholm', latitude: 59.3, longitude: 18.1 });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PLACE_COORDINATES_INVALID' && r.placeIds?.includes(pl.id))).toHaveLength(0);
+  });
+
+  it('does not fire for missing coordinates', () => {
+    const pl = createPlace(db, { name: 'NoCoords' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PLACE_COORDINATES_INVALID' && r.placeIds?.includes(pl.id))).toHaveLength(0);
+  });
+});
