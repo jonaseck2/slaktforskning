@@ -55,7 +55,13 @@
           </label>
           <label>
             {{ $t('common.notes') }}
-            <textarea v-model="form.notes" rows="2" />
+            <textarea
+              ref="notesRef"
+              v-model="form.notes"
+              rows="2"
+              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+              @mouseup="persistNotesHeight"
+            />
           </label>
           <div class="modal-actions">
             <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
@@ -79,6 +85,8 @@ import type { RelRow } from '../components/RelationshipsTable.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('relationship-add-notes');
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 

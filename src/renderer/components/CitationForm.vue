@@ -26,12 +26,26 @@
 
         <label>
           {{ $t('citations.transcription') }}
-          <textarea v-model="form.transcription" rows="3" :placeholder="$t('citations.transcriptionPlaceholder')" />
+          <textarea
+            ref="transRef"
+            v-model="form.transcription"
+            rows="3"
+            :placeholder="$t('citations.transcriptionPlaceholder')"
+            :style="transStoredHeight ? { height: transStoredHeight + 'px' } : undefined"
+            @mouseup="persistTransHeight"
+          />
         </label>
 
         <label>
           {{ $t('citations.notes') }}
-          <textarea v-model="form.notes" rows="2" :placeholder="$t('citations.notesPlaceholder')" />
+          <textarea
+            ref="notesRef"
+            v-model="form.notes"
+            rows="2"
+            :placeholder="$t('citations.notesPlaceholder')"
+            :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+            @mouseup="persistNotesHeight"
+          />
         </label>
 
         <label>
@@ -55,6 +69,10 @@ import AppButton from './ui/AppButton.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
+
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('citation-form-notes');
+const { textareaRef: transRef, storedHeight: transStoredHeight, persistHeight: persistTransHeight } = useTextareaHeight('citation-form-transcription');
 
 interface SourceRow {
   id: string;

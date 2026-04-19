@@ -67,11 +67,23 @@
               </label>
               <label>
                 {{ $t('researchTasks.notes') }}
-                <textarea v-model="editForm.notes" rows="2" />
+                <textarea
+                  ref="notesRef"
+                  v-model="editForm.notes"
+                  rows="2"
+                  :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+                  @mouseup="persistNotesHeight"
+                />
               </label>
               <label>
                 {{ $t('researchTasks.result') }}
-                <textarea v-model="editForm.result" rows="2" />
+                <textarea
+                  ref="resultRef"
+                  v-model="editForm.result"
+                  rows="2"
+                  :style="resultStoredHeight ? { height: resultStoredHeight + 'px' } : undefined"
+                  @mouseup="persistResultHeight"
+                />
               </label>
               <div class="expanded-row-inline">
                 <label>
@@ -111,6 +123,10 @@ import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
 import PersonPicker from './PersonPicker.vue';
 import { narrateTaskRow } from '../utils/screenReaderNarration';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
+
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('research-task-edit-notes');
+const { textareaRef: resultRef, storedHeight: resultStoredHeight, persistHeight: persistResultHeight } = useTextareaHeight('research-task-edit-result');
 
 export interface ResearchTaskRow {
   id: string;

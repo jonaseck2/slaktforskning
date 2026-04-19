@@ -121,8 +121,22 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
   const target = findPerson(root, selectedPersonId);
   if (!target) return;
 
-  const hasFather = target.parents.some(p => !p.isPlaceholder && p.person.sex === 'M');
-  const hasMother = target.parents.some(p => !p.isPlaceholder && p.person.sex === 'F');
+  const realParents = target.parents.filter(p => !p.isPlaceholder);
+  let hasFather = realParents.some(p => p.person.sex === 'M');
+  let hasMother = realParents.some(p => p.person.sex === 'F');
+
+  // When sex is 'U' we can't map a real parent to a father/mother slot. Rather
+  // than showing a phantom placeholder alongside a known-but-unsexed parent,
+  // treat each such parent as filling the next empty slot. A person has at
+  // most two biological parents, so two real parents always fill both slots.
+  if (realParents.length >= 2) {
+    hasFather = true;
+    hasMother = true;
+  } else if (realParents.length === 1 && !hasFather && !hasMother) {
+    hasFather = true;
+    hasMother = true;
+  }
+
   if (!hasFather) target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
   if (!hasMother) target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
 

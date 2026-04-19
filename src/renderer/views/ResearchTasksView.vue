@@ -48,7 +48,13 @@
           </label>
           <label>
             {{ $t('researchTasks.notes') }}
-            <textarea v-model="addForm.notes" rows="2" />
+            <textarea
+              ref="notesRef"
+              v-model="addForm.notes"
+              rows="2"
+              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+              @mouseup="persistNotesHeight"
+            />
           </label>
           <div class="modal-actions">
             <AppButton variant="secondary" @click="showAddModal = false">{{ $t('common.cancel') }}</AppButton>
@@ -68,6 +74,9 @@ import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
+
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('research-task-add-notes');
 
 const { t } = useI18n();
 

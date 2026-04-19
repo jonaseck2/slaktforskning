@@ -30,7 +30,14 @@
 
         <label>
           {{ $t('events.description') }}
-          <textarea v-model="form.description" rows="2" :placeholder="$t('events.descriptionPlaceholder')" />
+          <textarea
+            ref="descRef"
+            v-model="form.description"
+            rows="2"
+            :placeholder="$t('events.descriptionPlaceholder')"
+            :style="descStoredHeight ? { height: descStoredHeight + 'px' } : undefined"
+            @mouseup="persistDescHeight"
+          />
         </label>
 
         <label v-if="CAUSE_APPLICABLE_TYPES.includes(form.event_type)">
@@ -91,6 +98,9 @@ import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../con
 import type { EventTypeValue } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
+
+const { textareaRef: descRef, storedHeight: descStoredHeight, persistHeight: persistDescHeight } = useTextareaHeight('event-form-description');
 
 const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death'];
 

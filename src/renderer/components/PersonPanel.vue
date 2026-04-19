@@ -68,7 +68,7 @@
 
       <!-- Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personTimeline.title')" :collapsed="!sections.timeline" @toggle="toggleSection('timeline')" />
+        <SectionHeader :title="$t('personTimeline.title')" :count="eventCount" :collapsed="!sections.timeline" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('timeline')" @action="triggerAddEvent" />
         <div v-if="sections.timeline" class="panel-section-body">
           <PersonTimeline :person-id="personId!" />
         </div>
@@ -76,7 +76,7 @@
 
       <!-- Life Map section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('map.personMap')" :collapsed="!sections.map" @toggle="toggleSection('map')" />
+        <SectionHeader :title="$t('map.personMap')" :count="mapPointCount" :collapsed="!sections.map" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('map')" @action="triggerAddEvent" />
         <div v-if="sections.map" class="panel-section-body">
           <PersonMap :person-id="personId!" />
         </div>
@@ -125,7 +125,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="person" :entity-id="personId!" />
         </div>
@@ -181,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, onMounted } from 'vue';
+import { ref, toRef, onMounted, nextTick } from 'vue';
 import AddResearchTaskModal from './AddResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -232,6 +232,7 @@ const {
   loadGroups,
   loadResearchTasks,
   eventCount,
+  mapPointCount,
   relationshipCount,
   identifierCount,
   mediaCount,
@@ -249,6 +250,20 @@ const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> 
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
+
+// ── Cross-section add actions ───────────────────────────────────────────────
+
+async function triggerAddEvent() {
+  if (!sections.events) toggleSection('events');
+  await nextTick();
+  eventListRef.value?.openAddForm();
+}
+
+async function triggerAttachMedia() {
+  if (!sections.media) toggleSection('media');
+  await nextTick();
+  mediaSectionRef.value?.attach();
+}
 
 // ── Add relative modal ──────────────────────────────────────────────────────
 

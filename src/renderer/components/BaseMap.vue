@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onBeforeUnmount } from 'vue';
 import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -142,9 +142,9 @@ function fitBounds(latLngs?: [number, number][]) {
     const map = mapRef.value?.leafletObject;
     if (!map || !latLngs || latLngs.length === 0) return;
     if (latLngs.length === 1) {
-      map.setView(latLngs[0], 10);
+      map.setView(latLngs[0], 10, { animate: false });
     } else {
-      map.fitBounds(latLngs, { padding: [30, 30] });
+      map.fitBounds(latLngs, { padding: [30, 30], animate: false });
     }
   });
 }
@@ -156,6 +156,20 @@ function invalidateSize() {
 function getLeafletObject() {
   return mapRef.value?.leafletObject;
 }
+
+// Cancel any in-flight zoom animation before the DOM unmounts, otherwise
+// Leaflet's queued transitionend handler fires on a destroyed _mapPane.
+onBeforeUnmount(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const map = mapRef.value?.leafletObject as any;
+  if (!map) return;
+  try {
+    if (map._animatingZoom) map._onZoomTransitionEnd?.();
+    map.stop?.();
+  } catch {
+    // ignore — cleanup only
+  }
+});
 
 defineExpose({ fitBounds, invalidateSize, getLeafletObject });
 </script>

@@ -84,6 +84,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
 
   // Counts for collapsed sections (loaded independently of child components)
   const eventCount = ref(0);
+  const mapPointCount = ref(0);
   const relationshipCount = ref(0);
   const identifierCount = ref(0);
   const mediaCount = ref(0);
@@ -134,6 +135,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     if (personId.value !== id) return;
 
     eventCount.value = events.length;
+    mapPointCount.value = events.filter(e => e.place_id).length;
 
     person.value = {
       id: raw.id,
@@ -170,6 +172,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     groups.value = [];
     researchTasks.value = [];
     eventCount.value = 0;
+    mapPointCount.value = 0;
     relationshipCount.value = 0;
     identifierCount.value = 0;
     mediaCount.value = 0;
@@ -188,6 +191,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     loadGroups,
     loadResearchTasks,
     eventCount,
+    mapPointCount,
     relationshipCount,
     identifierCount,
     mediaCount,
