@@ -895,7 +895,9 @@ npx skills add browserbase/skills -y -g
 
 ### Execution default
 
-After `writing-plans` finishes, **always invoke `superpowers:subagent-driven-development` immediately** — never present the execution-approach choice to the user.
+**Plan-driven work → worktree + subagents.** After `writing-plans` finishes, create a git worktree (`superpowers:using-git-worktrees`) and then invoke `superpowers:subagent-driven-development`. Do not present the execution-approach choice to the user. Plans are by definition multi-task work that benefits from isolation and fresh-context subagents.
+
+**Small fixes → main is fine.** One-off typo fixes, i18n tweaks, single-file bug fixes, or any change that doesn't warrant a plan file can be done directly on `main` without a worktree.
 
 ## Conventions
 

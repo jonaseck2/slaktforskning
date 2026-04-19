@@ -39,7 +39,10 @@ If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, co
 - **NEVER skip hooks** (no `--no-verify`)
 - **Run lint and tests BEFORE committing** — `npm run lint && npm test`. Never commit first and test after. If lint or tests fail, fix them before committing.
 - **Verify UI changes in the running app BEFORE committing** — if the change involves Vue components, modals, or visual behavior, confirm it works via the UI server (`curl -s http://127.0.0.1:19241/status`) or Chrome DevTools MCP. Take a screenshot (`POST /screenshot`) and verify visually. Never commit UI changes based solely on unit tests passing — they don't cover the rendering stack. See the `/electron-dev` skill for the full verification workflow.
-- **Always merge to main** — merge completed work directly to `main` without asking which branch or option. No feature branches unless explicitly requested.
+- **Branch strategy depends on scope:**
+  - **Small fixes** (typo, i18n tweak, single-file bug fix, anything without a plan file) → commit directly to `main`.
+  - **Plan-driven work** (anything with a `docs/plans/*.md` file, multi-task features, refactors) → work in a git worktree and merge back to `main` when done. See `superpowers:using-git-worktrees`.
+  - No long-lived feature branches. Worktrees exist only for the duration of the plan.
 - Do not commit files that contain secrets (.env, credentials). Warn the user if such files are staged.
 - **Review `git status` carefully** — if unexpected files appear (build artifacts, generated files not in `.gitignore`), flag them to the user before committing rather than silently including them.
 
