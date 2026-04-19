@@ -221,7 +221,7 @@ export function registerUtilityHandlers(
   });
 
   // Wall chart SVG export
-  wrapHandler('wallChart:saveSvg', async (svgContent: unknown) => {
+  wrapHandler('chart:saveSvg', async (svgContent: unknown) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
 
@@ -237,7 +237,7 @@ export function registerUtilityHandlers(
   });
 
   // Wall chart tiled PDF export — receives array of SVG page strings
-  wrapHandler('wallChart:saveTiledPdf', async (pages: unknown) => {
+  wrapHandler('chart:saveTiledPdf', async (pages: unknown) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
 
