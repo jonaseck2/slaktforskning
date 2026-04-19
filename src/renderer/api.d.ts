@@ -54,7 +54,13 @@ declare global {
         listPage: (limit: number, offset: number) => Promise<PersonWithNames[]>;
         update: (id: string, data: Partial<Pick<Person, 'sex' | 'living' | 'notes'>>) => Promise<Person | null>;
         delete: (id: string) => Promise<boolean>;
-        search: (query: string) => Promise<PersonWithNames[]>;
+        search: (query: string, relateeId?: string | null) => Promise<(PersonWithNames & {
+          preferred_name: string | null;
+          nickname: string | null;
+          relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
+          birth_year: string | null;
+          death_year: string | null;
+        })[]>;
         searchWithDetails: (query: string) => Promise<PersonWithNames[]>;
         addName: (
           personId: string,
