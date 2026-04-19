@@ -665,7 +665,7 @@ export default {
   reports: {
     nav: 'Rapporter',
     title: 'Rapporter',
-    tabAncestor: 'Stamtavla',
+    tabAncestor: 'Antavla',
     tabFamily: 'Familjeblad',
     tabIndividual: 'Personsammanfattning',
     rootPerson: 'Utgångsperson',

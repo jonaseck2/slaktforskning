@@ -11,7 +11,7 @@
       @update:model-value="activeTab = $event as typeof activeTab"
     />
 
-    <!-- Ancestor Chart Tab -->
+    <!-- Ancestor Sheet Tab -->
     <div v-if="activeTab === 'ancestor'" class="tab-content">
       <div class="tab-header">
         <div class="controls"></div>
@@ -22,7 +22,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="ancestorRootId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AncestorChartReport :root-person-id="ancestorRootId" :generations="ancestorGenerations" />
+          <AncestorSheetReport :root-person-id="ancestorRootId" :generations="ancestorGenerations" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -411,7 +411,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
-import AncestorChartReport from '../components/reports/AncestorChartReport.vue';
+import AncestorSheetReport from '../components/reports/AncestorSheetReport.vue';
 import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
