@@ -157,6 +157,7 @@
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-bold:   600;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 /* ─── Shape (theme-invariant) ────────────────────────────────────────────── */
