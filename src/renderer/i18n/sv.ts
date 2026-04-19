@@ -3,6 +3,15 @@ export default {
     title: 'Släktforskning',
     search: 'Sök\u2026',
   },
+  picker: {
+    relation: {
+      parent: 'förälder',
+      child: 'barn',
+      partner: 'partner',
+      sibling: 'syskon',
+      godparent: 'fadder',
+    },
+  },
   nav: {
     visualization: 'Visualisering',
     familyTree: 'Släktträd',
