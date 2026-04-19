@@ -944,6 +944,8 @@ export default {
     missingCount: '{count} saknas',
     profile: 'Profil',
     profileAlt: 'Profilbild',
+    setAsProfile: 'Sätt som profilbild',
+    currentProfile: 'Nuvarande profilbild',
     moveUp: 'Flytta upp',
     moveDown: 'Flytta ner',
     gallery: 'Galleri',
