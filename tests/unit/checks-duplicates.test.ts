@@ -5,6 +5,7 @@ import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createPlace } from '../../src/api/places';
 import { createMedia, addMediaLink } from '../../src/api/media';
+import { createSource } from '../../src/api/sources';
 import { createTestDb } from './helpers';
 import { queryRun } from '../../src/api/db';
 import { v4 as uuidv4 } from 'uuid';
@@ -100,5 +101,34 @@ describe('DUPLICATE_MEDIA', () => {
     addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
     const results = runAllChecks(db);
     expect(results.filter(r => r.code === 'DUPLICATE_MEDIA')).toHaveLength(0);
+  });
+});
+
+describe('DUPLICATE_SOURCE', () => {
+  it('fires for two sources with the same URL', () => {
+    const a = createSource(db, { title: 'A', url: 'https://example.org/book' });
+    const b = createSource(db, { title: 'B', url: 'https://example.org/book' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
+    expect(hit).toHaveLength(1);
+    expect(new Set(hit[0].sourceIds)).toEqual(new Set([a.id, b.id]));
+  });
+
+  it('fires for two sources with the same (title, author, publication_info)', () => {
+    const a = createSource(db, { title: 'Bygdebok', author: 'Svensson', publication_info: '1932' });
+    const b = createSource(db, { title: 'Bygdebok', author: 'Svensson', publication_info: '1932' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
+    expect(hit).toHaveLength(1);
+    expect(new Set(hit[0].sourceIds)).toEqual(new Set([a.id, b.id]));
+  });
+
+  it('deduplicates when a group matches both url and metadata', () => {
+    const a = createSource(db, { title: 'Same', author: 'Same', publication_info: 'Same', url: 'https://x.org' });
+    const b = createSource(db, { title: 'Same', author: 'Same', publication_info: 'Same', url: 'https://x.org' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
+    expect(hit).toHaveLength(1);
+    expect(new Set(hit[0].sourceIds)).toEqual(new Set([a.id, b.id]));
   });
 });
