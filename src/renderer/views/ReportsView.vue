@@ -531,7 +531,7 @@ function onTitleInput(event: Event) {
 
 async function exportWallSvg() {
   if (!currentSvg.value) return;
-  await (window.api as any).wallChart.saveSvg(currentSvg.value);
+  await (window.api as any).chart.saveSvg(currentSvg.value);
 }
 
 async function exportWallPdf() {
@@ -542,10 +542,10 @@ async function exportWallPdf() {
   const H = Math.round(paper.height * MM_TO_PX);
   const tiles = computeTileViewBoxes(W, H);
   if (tiles.length === 1) {
-    await (window.api as any).wallChart.saveTiledPdf([currentSvg.value]);
+    await (window.api as any).chart.saveTiledPdf([currentSvg.value]);
   } else {
     const pages = tiles.map(tile => generateTileSvg(currentSvg.value!, tile));
-    await (window.api as any).wallChart.saveTiledPdf(pages);
+    await (window.api as any).chart.saveTiledPdf(pages);
   }
 }
 
