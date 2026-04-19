@@ -619,6 +619,7 @@ export default {
       PLACE_MATCH_WRONG_LEVEL: 'Place matched at wrong level: {name} matched {matchedPath}',
       ORPHANED_SOURCE: 'Source "{title}" has no citations',
       TEXT_CONTROL_CHARS: 'Text field contains control characters',
+      MULTIPLE_BIRTH_NAMES: 'Person has {count} birth names recorded (at most one expected)',
     },
   },
   duplicates: {
