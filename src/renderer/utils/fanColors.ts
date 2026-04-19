@@ -2,7 +2,7 @@
 // Pure color computation for fan chart segments (branch, sex, high-contrast,
 // print). No DOM dependencies.
 
-export type FanColorMode = 'branch' | 'sex';
+export type FanColorMode = 'branch' | 'sex' | 'bw';
 
 export interface ThemeColors {
   accent: string;       // --accent

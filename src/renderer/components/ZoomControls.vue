@@ -1,5 +1,5 @@
 <template>
-  <div class="zoom-controls-bar">
+  <div class="zoom-controls-bar" :class="{ 'is-overlay': overlay }">
     <slot></slot>
     <span v-if="$slots.default" class="zoom-sep">|</span>
     <button class="zoom-btn" :disabled="zoom <= 0.2" :aria-label="$t('a11y.zoomOut')" @click="$emit('zoomOut')">−</button>
@@ -14,6 +14,7 @@
 defineProps<{
   zoom: number;
   showFit?: boolean;
+  overlay?: boolean;
 }>();
 
 defineEmits<{
@@ -37,6 +38,12 @@ defineEmits<{
   padding: 3px 5px;
   box-shadow: var(--shadow-md);
   z-index: 1000;
+}
+.zoom-controls-bar.is-overlay {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 5;
 }
 .zoom-btn {
   background: none;

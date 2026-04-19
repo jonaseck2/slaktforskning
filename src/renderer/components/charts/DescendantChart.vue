@@ -168,17 +168,12 @@
         </template>
       </svg>
     </div>
-    <div v-if="!readonly" class="zoom-controls">
-      <span class="zoom-label">Gens:</span>
-      <button class="zoom-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
-      <span class="zoom-level">{{ genTarget }}</span>
-      <button class="zoom-btn" @click="incrGens">+</button>
-      <span class="zoom-sep">|</span>
-      <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
-      <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
-      <button class="zoom-btn" @click="zoomOut">&#x2212;</button>
-      <button class="zoom-btn" @click="resetZoom" title="Reset zoom">&#x21BA;</button>
-    </div>
+    <ZoomControls v-if="!readonly" overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+      <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+      <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-extra-value">{{ genTarget }}</span>
+      <button class="zoom-extra-btn" @click="incrGens">+</button>
+    </ZoomControls>
 
     <ChartTooltip ref="tooltipRef" />
 
@@ -207,6 +202,8 @@ import { formatFullName } from '../../utils/nameUtils';
 import { useChartColors } from '../../composables/useChartColors';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
+import ZoomControls from '../ZoomControls.vue';
+import { descendantGenerations } from '../../composables/useChartGenerations';
 
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
@@ -219,7 +216,13 @@ const loadingMore = ref(false);
 const tree = ref<DescendantNode | null>(null);
 const collapsed = ref(new Set<string>());
 const maxGens = ref(6);
-const genTarget = ref(3);
+const genTarget = descendantGenerations;
+
+watch(genTarget, (n) => {
+  if (!tree.value) return;
+  if (n > maxGens.value) { maxGens.value = n; load(); }
+  else applyGenerationDepth(n);
+});
 
 const hoveredPersonId = ref<string | null>(null);
 
@@ -472,46 +475,4 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
 
-.zoom-controls {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.93);
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 3px 5px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-.zoom-btn {
-  background: none;
-  border: none;
-  padding: 2px 7px;
-  cursor: pointer;
-  font-size: var(--font-base);
-  border-radius: 3px;
-  color: #555;
-  line-height: 1.4;
-}
-.zoom-btn:hover:not(:disabled) { background: var(--color-bg-muted); }
-.zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.zoom-label {
-  padding: 0 2px 0 4px;
-  font-size: var(--font-xs);
-  color: #666;
-}
-.zoom-sep {
-  padding: 0 4px;
-  color: #bbb;
-  font-size: var(--font-xs);
-}
-.zoom-level {
-  padding: 0 4px;
-  font-size: var(--font-xs);
-  color: #666;
-  min-width: 38px;
-  text-align: center;
-}
 </style>

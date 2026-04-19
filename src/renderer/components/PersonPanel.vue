@@ -25,8 +25,6 @@
               />
             </div>
             <AppButton v-if="showTreeBtn" variant="soft" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
-            <span class="panel-name-spacer" />
-            <button class="btn-sm btn-delete" @click="emit('close')" :title="$t('common.close')">✕</button>
           </div>
           <div class="panel-lifelines">
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
@@ -125,7 +123,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="person" :entity-id="personId!" />
         </div>

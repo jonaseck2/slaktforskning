@@ -559,6 +559,13 @@ export default {
     colSeverity: 'Severity',
     colIssue: 'Issue',
     colPersons: 'Person(s)',
+    colEntity: 'Entity',
+    entityType: {
+      person: 'Person',
+      place: 'Place',
+      media: 'Media',
+      source: 'Source',
+    },
     severity: {
       error: 'Error',
       warning: 'Warning',
@@ -676,6 +683,7 @@ export default {
     tabPlaceHistory: 'Place History',
     tabFamilyNarrative: 'Family Narrative',
     tabPedigreeChart: 'Pedigree Chart',
+    tabHourglassChart: 'Hourglass Chart',
     tabDescendantChart: 'Descendant Chart',
     tabFanChart: 'Fan Chart',
     tabTimeline: 'Timeline',

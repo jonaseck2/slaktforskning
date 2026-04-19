@@ -12,7 +12,6 @@
           <div class="panel-name-row">
             <div class="panel-name">{{ place.name }}</div>
             <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
-            <button class="btn-sm btn-delete" @click="emit('close')" :title="$t('common.close')">✕</button>
           </div>
           <router-link :to="'/places/' + placeId" class="panel-view-full">{{ $t('placePanel.viewFull') }}</router-link>
         </div>
@@ -130,9 +129,17 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="place" :entity-id="placeId!" />
+        </div>
+      </div>
+
+      <!-- Quality section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
+        <div v-if="sections.quality" class="panel-section-body">
+          <PlaceChecksSection ref="checksSectionRef" :place-id="placeId!" />
         </div>
       </div>
 
@@ -223,13 +230,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import EventList from './EventList.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
+import PlaceChecksSection from './PlaceChecksSection.vue';
 import CitationForm from './CitationForm.vue';
 import type { ComponentPublicInstance } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
@@ -275,7 +283,15 @@ const { sections, toggleSection } = usePlacePanelSections();
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 const citationsSectionRef = ref<InstanceType<typeof PlaceCitationsSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
+const checksSectionRef = ref<InstanceType<typeof PlaceChecksSection> | null>(null);
+const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const showCitationForm = ref(false);
+
+async function triggerAttachMedia() {
+  if (!sections.media) toggleSection('media');
+  await nextTick();
+  mediaSectionRef.value?.attach();
+}
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('place');
 

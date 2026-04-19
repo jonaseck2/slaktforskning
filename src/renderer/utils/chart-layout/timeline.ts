@@ -49,8 +49,18 @@ export function computeTimelineLayout(
     maxYear = Math.max(...years, currentYear) + 5;
   }
 
-  minYear = Math.floor(minYear / 10) * 10;
-  maxYear = Math.ceil(maxYear / 10) * 10;
+  // Pick tick step so labels don't overlap at the current width. Candidates step
+  // through nice year intervals; choose the smallest whose on-screen spacing is
+  // >= MIN_TICK_PX for the current pixel-per-year scale.
+  const MIN_TICK_PX = 48;
+  const TICK_STEPS = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
+  const rawChartW = Math.max(1, (containerWidth && containerWidth > 400 ? containerWidth : TL_DEFAULT_W) - TL_LEFT_MARGIN - TL_RIGHT_MARGIN);
+  const span = Math.max(1, maxYear - minYear);
+  const pxPerYear = rawChartW / span;
+  const tickStep = TICK_STEPS.find(s => s * pxPerYear >= MIN_TICK_PX) ?? 1000;
+
+  minYear = Math.floor(minYear / tickStep) * tickStep;
+  maxYear = Math.ceil(maxYear / tickStep) * tickStep;
 
   const sorted = [...entries].sort((a, b) => {
     const ay = yearFromDate(a.person.birthDate) ?? Infinity;
@@ -101,7 +111,7 @@ export function computeTimelineLayout(
   });
 
   const ticks: TickMark[] = [];
-  for (let y = minYear; y <= maxYear; y += 10) {
+  for (let y = minYear; y <= maxYear; y += tickStep) {
     ticks.push({ x: xOfYear(y), year: y });
   }
 

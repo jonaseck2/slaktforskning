@@ -559,6 +559,13 @@ export default {
     colSeverity: 'Allvarlighet',
     colIssue: 'Problem',
     colPersons: 'Person(er)',
+    colEntity: 'Gäller',
+    entityType: {
+      person: 'Person',
+      place: 'Plats',
+      media: 'Media',
+      source: 'Källa',
+    },
     severity: {
       error: 'Fel',
       warning: 'Varning',
@@ -676,6 +683,7 @@ export default {
     tabPlaceHistory: 'Platshistorik',
     tabFamilyNarrative: 'Familjeberättelse',
     tabPedigreeChart: 'Stamtavla',
+    tabHourglassChart: 'Timglas',
     tabDescendantChart: 'Efterkommande',
     tabFanChart: 'Solfjäder',
     tabTimeline: 'Tidslinje',
