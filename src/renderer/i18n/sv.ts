@@ -624,6 +624,7 @@ export default {
       MULTIPLE_BIRTH_NAMES: 'Person har {count} födelsenamn registrerade (högst ett förväntas)',
       PARTIAL_NAME: 'Namn är ofullständigt (saknar förnamn eller efternamn)',
       LIVING_OVER_120: 'Person är markerad som levande men skulle vara {age} år gammal',
+      PLACE_COORDINATES_INVALID: 'Platsen "{name}" har ogiltiga koordinater ({lat}, {lon}) — {reason}',
     },
   },
   duplicates: {
