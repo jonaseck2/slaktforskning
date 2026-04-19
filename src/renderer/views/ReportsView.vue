@@ -174,7 +174,19 @@
     <!-- Pedigree Chart Tab -->
     <div v-if="activeTab === 'pedigreeChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls"></div>
+        <div class="controls">
+          <ChartExportControls
+            :paper-size="chartPaperSize"
+            :orientation="chartOrientation"
+            :color-mode="chartColorMode"
+            :tile-count="chartTileCount"
+            @update:paper-size="chartPaperSize = $event"
+            @update:orientation="chartOrientation = $event"
+            @update:color-mode="chartColorMode = $event"
+            @save-svg="saveChartSvg"
+            @save-pdf="saveChartPdf"
+          />
+        </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
@@ -182,7 +194,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <PedigreeChartReport :person-id="chartPersonId" />
+          <PedigreeChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -191,7 +203,19 @@
     <!-- Hourglass Chart Tab -->
     <div v-if="activeTab === 'hourglassChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls"></div>
+        <div class="controls">
+          <ChartExportControls
+            :paper-size="chartPaperSize"
+            :orientation="chartOrientation"
+            :color-mode="chartColorMode"
+            :tile-count="chartTileCount"
+            @update:paper-size="chartPaperSize = $event"
+            @update:orientation="chartOrientation = $event"
+            @update:color-mode="chartColorMode = $event"
+            @save-svg="saveChartSvg"
+            @save-pdf="saveChartPdf"
+          />
+        </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
@@ -199,7 +223,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <HourglassChartReport :person-id="chartPersonId" />
+          <HourglassChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -208,7 +232,19 @@
     <!-- Descendant Chart Tab -->
     <div v-if="activeTab === 'descendantChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls"></div>
+        <div class="controls">
+          <ChartExportControls
+            :paper-size="chartPaperSize"
+            :orientation="chartOrientation"
+            :color-mode="chartColorMode"
+            :tile-count="chartTileCount"
+            @update:paper-size="chartPaperSize = $event"
+            @update:orientation="chartOrientation = $event"
+            @update:color-mode="chartColorMode = $event"
+            @save-svg="saveChartSvg"
+            @save-pdf="saveChartPdf"
+          />
+        </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
@@ -216,7 +252,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <DescendantChartReport :person-id="chartPersonId" />
+          <DescendantChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -226,14 +262,17 @@
     <div v-if="activeTab === 'fanChart'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <label>
-            {{ $t('chart.export.colorMode') }}
-            <select v-model="fanColorMode">
-              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
-              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
-              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
-            </select>
-          </label>
+          <ChartExportControls
+            :paper-size="chartPaperSize"
+            :orientation="chartOrientation"
+            :color-mode="chartColorMode"
+            :tile-count="chartTileCount"
+            @update:paper-size="chartPaperSize = $event"
+            @update:orientation="chartOrientation = $event"
+            @update:color-mode="chartColorMode = $event"
+            @save-svg="saveChartSvg"
+            @save-pdf="saveChartPdf"
+          />
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -246,7 +285,7 @@
             :person-id="chartPersonId"
             :generations="fanGenerations"
             :arc-span="fanArcSpan"
-            :color-mode="fanColorMode"
+            :color-mode="fanRenderColorMode"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -342,6 +381,7 @@ import FanChartReport from '../components/reports/FanChartReport.vue';
 import type { ArcSpan } from '../utils/fanLayout';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
 import ZoomControls from '../components/ZoomControls.vue';
+import ChartExportControls from '../components/ChartExportControls.vue';
 import {
   pedigreeGenerations,
   hourglassGenerations,
@@ -349,6 +389,16 @@ import {
   timelineGenerations,
   fanGenerations,
 } from '../composables/useChartGenerations';
+import {
+  getPaperDimensions,
+  computeTileViewBoxes,
+  generateTileSvg,
+  MM_TO_PX,
+  type PaperSize,
+  type Orientation,
+  type ColorMode,
+} from '../../api/chart-export';
+import { buildExportSvgString, wrapWithTitle } from '../composables/useChartExport';
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -387,6 +437,64 @@ const fanArcSpan = ref<ArcSpan>(360);
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
+
+// --- Chart export controls (shared across the 4 chart tabs) ---
+const chartPaperSize = ref<PaperSize>('A2');
+const chartOrientation = ref<Orientation>('landscape');
+const chartColorMode = ref<ColorMode>('themed');
+
+const chartTileCount = computed(() => {
+  const dims = getPaperDimensions({ paperSize: chartPaperSize.value, orientation: chartOrientation.value });
+  const W = Math.round(dims.width * MM_TO_PX);
+  const H = Math.round(dims.height * MM_TO_PX);
+  const tiles = computeTileViewBoxes(W, H);
+  if (tiles.length <= 1) return null;
+  const rows = Math.max(...tiles.map(t => t.row)) + 1;
+  const cols = Math.max(...tiles.map(t => t.col)) + 1;
+  return { count: tiles.length, rows, cols };
+});
+
+// Fan rendering takes 'branch' | 'sex' | 'bw'; map from the shared ColorMode.
+const fanRenderColorMode = computed<'branch' | 'sex' | 'bw'>(() => {
+  if (chartColorMode.value === 'sex-colored') return 'sex';
+  if (chartColorMode.value === 'bw') return 'bw';
+  return 'branch';
+});
+
+async function chartExportTitle(): Promise<string> {
+  const tab = activeTab.value;
+  let label = '';
+  if (tab === 'pedigreeChart') label = t('reports.tabPedigreeChart');
+  else if (tab === 'hourglassChart') label = t('reports.tabHourglassChart');
+  else if (tab === 'descendantChart') label = t('reports.tabDescendantChart');
+  else if (tab === 'fanChart') label = t('reports.tabFanChart');
+  else label = '';
+  const name = await getPersonName(focusStore.personId);
+  return `${label} \u2014 ${name}`;
+}
+
+function getChartSvg(): SVGElement | null {
+  return previewContainer.value?.querySelector('svg') ?? null;
+}
+
+async function saveChartSvg() {
+  const svg = getChartSvg();
+  if (!svg) return;
+  const titled = wrapWithTitle(buildExportSvgString(svg), await chartExportTitle());
+  await (window.api as unknown as { chart: { saveSvg: (s: string) => Promise<void> } }).chart.saveSvg(titled);
+}
+
+async function saveChartPdf() {
+  const svg = getChartSvg();
+  if (!svg) return;
+  const titled = wrapWithTitle(buildExportSvgString(svg), await chartExportTitle());
+  const dims = getPaperDimensions({ paperSize: chartPaperSize.value, orientation: chartOrientation.value });
+  const W = Math.round(dims.width * MM_TO_PX);
+  const H = Math.round(dims.height * MM_TO_PX);
+  const tiles = computeTileViewBoxes(W, H);
+  const pages = tiles.length === 1 ? [titled] : tiles.map(tv => generateTileSvg(titled, tv));
+  await (window.api as unknown as { chart: { saveTiledPdf: (p: string[]) => Promise<void> } }).chart.saveTiledPdf(pages);
+}
 
 // --- Zoom ---
 // Natural preview width in px (A4 at 96dpi ≈ 794px).

@@ -5,7 +5,6 @@
       <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
       <svg
         v-else
-        ref="svgRootRef"
         :width="layout.svgWidth * zoom"
         :height="layout.svgHeight * zoom"
         :viewBox="`0 ${layout.viewBoxMinY ?? 0} ${layout.svgWidth} ${layout.svgHeight}`"
@@ -174,17 +173,6 @@
       <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
       <span class="zoom-extra-value">{{ genTarget }}</span>
       <button class="zoom-extra-btn" @click="incrGens">+</button>
-      <ChartExportControls
-        :paper-size="exporter.paperSize.value"
-        :orientation="exporter.orientation.value"
-        :color-mode="exporter.colorMode.value"
-        :tile-count="exporter.tileCount.value"
-        @update:paper-size="(v) => exporter.paperSize.value = v"
-        @update:orientation="(v) => exporter.orientation.value = v"
-        @update:color-mode="(v) => exporter.colorMode.value = v"
-        @save-svg="exporter.saveSvg"
-        @save-pdf="exporter.savePdf"
-      />
     </ZoomControls>
 
     <ChartTooltip ref="tooltipRef" />
@@ -211,22 +199,17 @@ import { fetchDescendantTree, loadChildrenForNode } from '../../utils/chartData'
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, DescendantNode, PlaceholderBox } from '../../utils/chart-layout';
 import { formatFullName } from '../../utils/nameUtils';
-import { useChartColors } from '../../composables/useChartColors';
+import { useChartColors, applyColorMode } from '../../composables/useChartColors';
+import type { ColorMode } from '../../../api/chart-export';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
-import ChartExportControls from '../ChartExportControls.vue';
 import { descendantGenerations } from '../../composables/useChartGenerations';
-import { useChartExport } from '../../composables/useChartExport';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
 
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null }>();
+const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
@@ -235,36 +218,6 @@ const tree = ref<DescendantNode | null>(null);
 const collapsed = ref(new Set<string>());
 const maxGens = ref(6);
 const genTarget = descendantGenerations;
-
-// Export plumbing
-const svgRootRef = ref<SVGElement | null>(null);
-
-const focalName = ref<string>('?');
-watch(() => props.personId, async (id) => {
-  if (!id) { focalName.value = '?'; return; }
-  try {
-    const names = await (window.api as any).persons.getNames(id);
-    if (names?.[0]) {
-      const n = names[0];
-      focalName.value = [n.preferred_name ?? n.given_name, n.surname].filter(Boolean).join(' ') || '?';
-    }
-  } catch { focalName.value = '?'; }
-}, { immediate: true });
-
-const exportTitle = computed(() =>
-  `${t('reports.tabDescendantChart')} \u2014 ${focalName.value}`
-);
-
-const exporter = useChartExport({
-  svgRef: svgRootRef,
-  title: exportTitle,
-  defaultPaperSize: 'A2',
-  defaultOrientation: 'landscape',
-  defaultColorMode: 'themed',
-});
-// exporter.colorMode controls the ChartExportControls UI.
-// Applying it to rendering (bw / sex-colored) is deferred to a follow-up plan.
-// Current rendering always uses 'themed' (existing behavior).
 
 watch(genTarget, (n) => {
   if (!tree.value) return;
@@ -349,7 +302,8 @@ async function handleCollapseButton(btn: CollapseButton) {
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-descendant');
 
-const colors = useChartColors(true);
+const baseColors = useChartColors(true);
+const colors = computed(() => applyColorMode(baseColors.value, props.colorMode ?? 'themed'));
 
 const chartTokens = computed(() => ({
   line: colors.value.line,
@@ -365,6 +319,7 @@ function sexBg(sex: string): string {
 
 function boxFill(box: BoxLayout): string {
   if (box.isFocal) return colors.value.boxFocal;
+  if ((props.colorMode ?? 'themed') === 'sex-colored') return sexBg(box.person.sex);
   if (!box.person.living) return colors.value.boxDeceased;
   return colors.value.boxBg;
 }
