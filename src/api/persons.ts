@@ -84,7 +84,19 @@ export function deletePerson(db: Database, id: string): boolean {
   return runSqlChanges(db, `DELETE FROM persons WHERE id = ?`, [id]) > 0;
 }
 
-export function searchPersons(db: Database, query: string): (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[] {
+export function searchPersons(
+  db: Database,
+  query: string,
+  relateeId?: string | null,
+): (Person & {
+  given_name: string;
+  surname: string;
+  preferred_name: string | null;
+  nickname: string | null;
+  relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
+  birth_year: string | null;
+  death_year: string | null;
+})[] {
   // Split query into tokens so "Linda Ahnstedt" matches "Eva Linda* Marie f. Ahnstedt"
   const tokens = query.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return [];
@@ -103,18 +115,67 @@ export function searchPersons(db: Database, query: string): (Person & { given_na
   const firstToken = `${tokens[0]}%`;
   const relevanceParams = [firstToken, firstToken];
 
-  return queryAll<Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
-    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname
+  const relatee = relateeId ?? null;
+
+  return queryAll<Person & {
+    given_name: string;
+    surname: string;
+    preferred_name: string | null;
+    nickname: string | null;
+    relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
+    birth_year: string | null;
+    death_year: string | null;
+  }>(db, `
+    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname,
+      (SELECT
+          CASE
+            WHEN r.type = 'parent_child' AND r.person1_id = p.id THEN 'parent'
+            WHEN r.type = 'parent_child' AND r.person2_id = p.id THEN 'child'
+            WHEN r.type = 'couple'       THEN 'partner'
+            WHEN r.type = 'sibling'      THEN 'sibling'
+            WHEN r.type = 'godparent'    THEN 'godparent'
+            ELSE NULL
+          END
+         FROM relationships r
+         WHERE ? IS NOT NULL
+           AND (
+             (r.person1_id = p.id AND r.person2_id = ?)
+             OR (r.person2_id = p.id AND r.person1_id = ?)
+           )
+           AND r.type IN ('parent_child','couple','sibling','godparent')
+         ORDER BY r.created_at
+         LIMIT 1
+      ) AS relation_role,
+      (SELECT SUBSTR(e.date_value, 1, 4)
+         FROM events e
+         JOIN event_participants ep ON ep.event_id = e.id
+         WHERE ep.person_id = p.id
+           AND ep.role = 'primary'
+           AND e.event_type = 'birth'
+           AND e.date_value IS NOT NULL AND e.date_value <> ''
+         ORDER BY e.date_value
+         LIMIT 1
+      ) AS birth_year,
+      (SELECT SUBSTR(e.date_value, 1, 4)
+         FROM events e
+         JOIN event_participants ep ON ep.event_id = e.id
+         WHERE ep.person_id = p.id
+           AND ep.role = 'primary'
+           AND e.event_type = 'death'
+           AND e.date_value IS NOT NULL AND e.date_value <> ''
+         ORDER BY e.date_value
+         LIMIT 1
+      ) AS death_year
     FROM persons p
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
     WHERE ${tokenClauses}
     ORDER BY
-      CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 0 ELSE 1 END,
+      CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 1 ELSE 2 END,
       pn.surname, pn.given_name
     LIMIT 20
-  `, [...tokenParams, ...relevanceParams]);
+  `, [relatee, relatee, relatee, ...tokenParams, ...relevanceParams]);
 }
 
 export function addPersonName(
