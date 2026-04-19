@@ -22,3 +22,19 @@ describe('ORPHANED_SOURCE (relocated)', () => {
     expect(results.filter(r => r.code === 'ORPHANED_SOURCE' && r.sourceIds?.includes(s.id))).toHaveLength(0);
   });
 });
+
+describe('SOURCE_MISSING_TITLE', () => {
+  it('fires when title is empty string', () => {
+    const s = createSource(db, { title: '' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'SOURCE_MISSING_TITLE' && r.sourceIds?.includes(s.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+  });
+
+  it('does not fire when title has content', () => {
+    const s = createSource(db, { title: 'Proper title' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'SOURCE_MISSING_TITLE' && r.sourceIds?.includes(s.id))).toHaveLength(0);
+  });
+});
