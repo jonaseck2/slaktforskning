@@ -26,7 +26,14 @@ export interface CreatePersonWithEventArgs {
   living?: boolean;
   notes?: string;
   event?: PersonEventInput;
-  citation?: { source_id: string; page?: string };
+  citation?: {
+    source_id: string;
+    page?: string;
+    confidence?: number;
+    transcription?: string;
+    notes?: string;
+    date_accessed?: string;
+  };
 }
 
 export interface CreatePersonWithEventResult {
@@ -77,7 +84,10 @@ function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithE
         event_id: event.id,
         person_id: person.id,
         page: args.citation.page ?? '',
-        confidence: 2,
+        confidence: args.citation.confidence ?? 2,
+        transcription: args.citation.transcription ?? '',
+        notes: args.citation.notes ?? '',
+        date_accessed: args.citation.date_accessed ?? '',
       });
     }
   }
