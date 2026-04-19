@@ -224,14 +224,14 @@ Each ref persists to its own `chart-gens-{type}` localStorage key. Charts import
 
 ### Export and print surfaces
 
-Anything that gets captured as a static artefact (PDF via `window.api.print.exportPdf()`, SVG via wall-chart generators, a PNG screenshot) **must not pick up the current theme or appearance**. Users have repeatedly been burned by dark / high-contrast / theme overrides leaking into saved files.
+Anything that gets captured as a static artefact (PDF via `window.api.print.exportPdf()`, SVG via chart export, a PNG screenshot) **must not pick up the current theme or appearance**. Users have repeatedly been burned by dark / high-contrast / theme overrides leaking into saved files.
 
 Two separate mechanisms cover the two classes of export:
 
 1. **On-screen content that gets PDF-exported** (Reports, anything hit by `printToPDF`): wrap the content in `.export-scope` (defined in `tokens.css`). The class pins `--text-primary`, `--text-secondary`, `--text-muted`, `--accent*`, `--surface*`, and legacy `--color-*` aliases to hardcoded neutrals, and re-asserts `color` + `background` on the scope itself so descendants inherit values resolved from the pinned tokens (not from `body`, which is still themed). `ReportsView` wears it on its root — any new export surface should do the same.
-2. **Pure-SVG generators** (`src/api/wall-charts.ts`): never read `getComputedStyle`, `document`, or `window`. Colours come from the `options` argument (`colorMode`, optional caller-supplied `themeColors`) or hardcoded fallbacks. The export composable [`useChartColors(false)`](../../../src/renderer/composables/useChartColors.ts) returns the `EXPORT_COLORS` constant for the same reason — use it for any chart component rendered into an export path.
+2. **Live-SVG chart export** (`useChartExport` + `ChartExportControls`): serializes the live chart DOM via `XMLSerializer`. Color invariance comes from `useChartColors(false)` returning `EXPORT_COLORS` — a hardcoded constant — so the rendered SVG never reads CSS variables from the themed document. Use `useChartColors(false)` in any chart component that is rendered into an export path.
 
-Regression tests guard both: `tests/unit/exportColorInvariance.test.ts` for the pure path, `tests/components/exportTextColorInvariance.test.ts` for the scoped DOM path. Touching `tokens.css`, `shared.css`, `wall-charts.ts`, or `useChartColors.ts`? Run both before committing.
+Regression test: `tests/components/exportTextColorInvariance.test.ts` for the scoped DOM path. Touching `tokens.css`, `shared.css`, or `useChartColors.ts`? Run it before committing.
 
 ### Shared CSS classes
 
