@@ -23,3 +23,55 @@ export function checkOrphanedPlace(db: Database): CheckResult[] {
     placeIds: [r.id],
   }));
 }
+
+export function checkCircularPlaceHierarchy(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; parent_place_id: string | null; name: string }>(db,
+    'SELECT id, parent_place_id, name FROM places'
+  );
+  const parentOf = new Map<string, string | null>();
+  const nameOf = new Map<string, string>();
+  for (const r of rows) {
+    parentOf.set(r.id, r.parent_place_id);
+    nameOf.set(r.id, r.name);
+  }
+
+  const results: CheckResult[] = [];
+  const cleared = new Set<string>();          // known acyclic
+  const reportedCycles = new Set<string>();   // canonical cycle fingerprints
+
+  for (const start of parentOf.keys()) {
+    if (cleared.has(start)) continue;
+    const path: string[] = [];
+    const onPath = new Set<string>();
+    let current: string | null = start;
+    while (current) {
+      if (cleared.has(current)) break;
+      if (onPath.has(current)) {
+        // Cycle: slice the path from the revisit point
+        const cycleStart = path.indexOf(current);
+        const cycleNodes = path.slice(cycleStart);
+        const key = [...cycleNodes].sort().join(',');
+        if (!reportedCycles.has(key)) {
+          reportedCycles.add(key);
+          results.push({
+            code: 'CIRCULAR_PLACE_HIERARCHY',
+            severity: 'error' as CheckSeverity,
+            message: `Platshierarkin innehåller en cykel: ${cycleNodes.map(id => nameOf.get(id) ?? id).join(' → ')}`,
+            messageParams: { chain: cycleNodes.map(id => nameOf.get(id) ?? id).join(' → ') },
+            personIds: [],
+            placeIds: cycleNodes,
+          });
+        }
+        break;
+      }
+      onPath.add(current);
+      path.push(current);
+      current = parentOf.get(current) ?? null;
+    }
+    if (!current || cleared.has(current)) {
+      for (const id of path) cleared.add(id);
+    }
+  }
+
+  return results;
+}

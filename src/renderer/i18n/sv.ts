@@ -619,6 +619,7 @@ export default {
       PLACE_MATCH_WRONG_LEVEL: 'Plats matchad på fel nivå: {name} matchade {matchedPath}',
       ORPHANED_SOURCE: 'Källa "{title}" har inga källhänvisningar',
       ORPHANED_PLACE: 'Platsen "{name}" används inte någonstans',
+      CIRCULAR_PLACE_HIERARCHY: 'Platshierarkin innehåller en cykel: {chain}',
       TEXT_CONTROL_CHARS: 'Textfält innehåller kontrolltecken',
       MULTIPLE_BIRTH_NAMES: 'Person har {count} födelsenamn registrerade (högst ett förväntas)',
       PARTIAL_NAME: 'Namn är ofullständigt (saknar förnamn eller efternamn)',

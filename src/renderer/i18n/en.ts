@@ -619,6 +619,7 @@ export default {
       PLACE_MATCH_WRONG_LEVEL: 'Place matched at wrong level: {name} matched {matchedPath}',
       ORPHANED_SOURCE: 'Source "{title}" has no citations',
       ORPHANED_PLACE: 'Place "{name}" is not used anywhere',
+      CIRCULAR_PLACE_HIERARCHY: 'Place hierarchy contains a cycle: {chain}',
       TEXT_CONTROL_CHARS: 'Text field contains control characters',
       MULTIPLE_BIRTH_NAMES: 'Person has {count} birth names recorded (at most one expected)',
       PARTIAL_NAME: 'Name is incomplete (missing given name or surname)',
