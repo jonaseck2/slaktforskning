@@ -594,7 +594,7 @@ export interface LifeMapData {
 
 declare const window: Window & {
   api: {
-    events: { getForPerson: (personId: string) => Promise<Array<Record<string, unknown>>> };
+    events: { forPerson: (personId: string) => Promise<Array<Record<string, unknown>>> };
     places: { get: (id: string) => Promise<Record<string, unknown> | null> };
   };
 };
@@ -610,7 +610,7 @@ export function useLifeMap(personId: Ref<string | null>) {
     }
     loading.value = true;
     try {
-      const events = await window.api.events.getForPerson(personId.value);
+      const events = await window.api.events.forPerson(personId.value);
       const geocoded: LifeMapEvent[] = [];
       for (const e of events) {
         const placeId = e.place_id as string | null;
@@ -657,7 +657,7 @@ import { ref, nextTick } from 'vue';
 import { useLifeMap } from '../../src/renderer/composables/useLifeMap';
 
 const mockApi = {
-  events: { getForPerson: vi.fn() },
+  events: { forPerson: vi.fn() },
   places: { get: vi.fn() },
 };
 // @ts-expect-error test shim
@@ -665,12 +665,12 @@ globalThis.window = { api: mockApi } as never;
 
 describe('useLifeMap', () => {
   beforeEach(() => {
-    mockApi.events.getForPerson.mockReset();
+    mockApi.events.forPerson.mockReset();
     mockApi.places.get.mockReset();
   });
 
   it('returns geocoded events sorted chronologically', async () => {
-    mockApi.events.getForPerson.mockResolvedValue([
+    mockApi.events.forPerson.mockResolvedValue([
       { id: 'e1', event_type: 'birth', date_value: '1850-01-01', place_id: 'p1' },
       { id: 'e2', event_type: 'death', date_value: '1920-01-01', place_id: 'p2' },
     ]);
@@ -691,7 +691,7 @@ describe('useLifeMap', () => {
   });
 
   it('skips events without place_id or without lat/lon', async () => {
-    mockApi.events.getForPerson.mockResolvedValue([
+    mockApi.events.forPerson.mockResolvedValue([
       { id: 'e1', event_type: 'birth', date_value: '1850-01-01', place_id: null },
       { id: 'e2', event_type: 'death', date_value: '1920-01-01', place_id: 'p2' },
     ]);
@@ -752,8 +752,8 @@ export interface MediaEntityRef {
 
 declare const window: Window & {
   api: {
-    media: { getForEntity: (entityType: string, entityId: string) => Promise<Array<Record<string, unknown>>> };
-    events: { getForPerson?: (personId: string) => Promise<Array<Record<string, unknown>>> };
+    media: { forEntity: (entityType: string, entityId: string) => Promise<Array<Record<string, unknown>>> };
+    events: { forPerson?: (personId: string) => Promise<Array<Record<string, unknown>>> };
   };
 };
 
@@ -768,7 +768,7 @@ export function useMediaChronological(entityRef: Ref<MediaEntityRef | null>) {
     }
     loading.value = true;
     try {
-      const media = await window.api.media.getForEntity(
+      const media = await window.api.media.forEntity(
         entityRef.value.entityType,
         entityRef.value.entityId,
       );
@@ -809,15 +809,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { useMediaChronological } from '../../src/renderer/composables/useMediaChronological';
 
-const mockApi = { media: { getForEntity: vi.fn() } };
+const mockApi = { media: { forEntity: vi.fn() } };
 // @ts-expect-error test shim
 globalThis.window = { api: mockApi } as never;
 
 describe('useMediaChronological', () => {
-  beforeEach(() => { mockApi.media.getForEntity.mockReset(); });
+  beforeEach(() => { mockApi.media.forEntity.mockReset(); });
 
   it('sorts by sort_order ascending', async () => {
-    mockApi.media.getForEntity.mockResolvedValue([
+    mockApi.media.forEntity.mockResolvedValue([
       { id: 'm2', title: 'Second', sort_order: 1 },
       { id: 'm1', title: 'First', sort_order: 0 },
     ]);
@@ -3387,9 +3387,9 @@ beforeEach(() => {
         }),
       },
       db: { getSetting: vi.fn().mockResolvedValue('Jonas Ahnstedt') },
-      events: { getForPerson: vi.fn().mockResolvedValue([]) },
+      events: { forPerson: vi.fn().mockResolvedValue([]) },
       places: { get: vi.fn().mockResolvedValue(null) },
-      media: { getForEntity: vi.fn().mockResolvedValue([]) },
+      media: { forEntity: vi.fn().mockResolvedValue([]) },
     },
   } as never;
 });
