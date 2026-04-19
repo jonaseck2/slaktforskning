@@ -5,6 +5,7 @@ import type { WrapHandlerFn } from './wrap-handler';
 export function registerPersonHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
   // Persons (undo-wrapped)
   wrapHandler('persons:create', (data) => uw.createPersonUndo(getDb(), data as Parameters<typeof persons.createPerson>[1]));
+  wrapHandler('persons:createWithEvent', (data) => uw.createPersonWithEventUndo(getDb(), data as Parameters<typeof uw.createPersonWithEventUndo>[1]));
   wrapHandler('persons:get', (id) => persons.getPerson(getDb(), id as string));
   wrapHandler('persons:list', () => persons.listPersons(getDb()));
   wrapHandler('persons:update', (id, data) => uw.updatePersonUndo(getDb(), id as string, data as Parameters<typeof persons.updatePerson>[2]));

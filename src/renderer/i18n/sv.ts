@@ -54,7 +54,7 @@ export default {
     screenReaderMode: 'Skärm',
     theme: 'Tema',
     themes: { forest: 'Skog', nordic: 'Nordisk', twilight: 'Skymning' },
-    tabs: { appearance: 'Utseende', database: 'Databas', importExport: 'Import / Export', linkRules: 'Länkregler', gazetteers: 'Ortsregister' },
+    tabs: { appearance: 'Utseende', database: 'Databas', defaults: 'Standardval', importExport: 'Import / Export', linkRules: 'Länkregler', gazetteers: 'Ortsregister' },
   },
   common: {
     cancel: 'Avbryt',
@@ -423,6 +423,7 @@ export default {
   placePanel: {
     noPlaceSelected: 'Klicka på en markör på kartan',
     viewFull: 'Visa alla detaljer',
+    addPerson: 'Lägg till person',
   },
   visualization: {
     listView: 'Lista',
@@ -1245,5 +1246,14 @@ export default {
     deleteCitation: 'Ta bort hänvisning',
     undone: 'Ångrat: {action}',
     redone: 'Omgjort: {action}',
+  },
+  addPerson: {
+    eventSection: 'Lägg till händelse (valfritt)',
+  },
+  defaults: {
+    title: 'Standardval',
+    eventsSection: 'Händelser',
+    smartEventType: 'Föreslå händelsetyp utifrån befintliga händelser',
+    smartEventTypeHint: 'När aktiverat väljs nästa saknade typ i ordningen: födelse → död → yrke → bostad. När avstängt väljs alltid födelse.',
   },
 };

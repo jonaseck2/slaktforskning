@@ -2,7 +2,7 @@
   <div class="event-list">
     <div v-if="!props.hideHeader" class="section-header">
       <h4>{{ $t('events.title') }} <span v-if="events.length" class="section-count">({{ events.length }})</span></h4>
-      <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="showForm = true">+ {{ $t('events.event') }}</AppButton>
+      <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="openAddForm()">+ {{ $t('events.event') }}</AppButton>
     </div>
     <div v-if="events.length === 0" class="empty-hint">{{ $t('empty.events') }}</div>
     <table v-else class="data-table events-table">
@@ -79,6 +79,7 @@ import AppButton from './ui/AppButton.vue';
 import EventForm from './EventForm.vue';
 import CitationForm from './CitationForm.vue';
 import { useToast } from '../composables/useToast';
+import { suggestNextEventType } from '../utils/eventDefaults';
 
 interface EventRow {
   id: string;
@@ -110,6 +111,22 @@ const events = ref<EventRow[]>([]);
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
 const citingEventId = ref<string | null>(null);
+const smartDefaultsEnabled = ref(true);
+
+async function loadSmartDefaultsSetting() {
+  if (!window.api) return;
+  try {
+    const raw = (await window.api.db.getSetting('event_defaults_config')) as string | null;
+    if (raw) {
+      const parsed = JSON.parse(raw) as { smartDefaults?: boolean };
+      smartDefaultsEnabled.value = parsed.smartDefaults !== false;
+    } else {
+      smartDefaultsEnabled.value = true;
+    }
+  } catch {
+    smartDefaultsEnabled.value = true;
+  }
+}
 
 function openCiteModal(event: { id: string }) {
   citingEventId.value = event.id;
@@ -182,7 +199,7 @@ function onSaved() {
 
 watch(
   () => props.personId ?? props.relationshipId ?? props.placeId,
-  () => load(),
+  async () => { await loadSmartDefaultsSetting(); await load(); },
   { immediate: true }
 );
 
@@ -190,7 +207,14 @@ const defaultEventType = ref('');
 
 function openAddForm(eventType?: string) {
   editingEvent.value = null;
-  defaultEventType.value = eventType || '';
+  if (eventType) {
+    defaultEventType.value = eventType;
+  } else if (props.personId) {
+    const existing = events.value.map(e => e.event_type);
+    defaultEventType.value = suggestNextEventType(existing, smartDefaultsEnabled.value);
+  } else {
+    defaultEventType.value = '';
+  }
   showForm.value = true;
 }
 

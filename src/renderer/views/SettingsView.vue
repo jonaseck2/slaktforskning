@@ -8,6 +8,7 @@
 
     <div class="settings-content">
       <DatabaseView v-if="activeTab === 'database'" />
+      <DefaultsView v-else-if="activeTab === 'defaults'" />
       <LinkRulesView v-else-if="activeTab === 'link-rules'" />
       <GazetteersView v-else-if="activeTab === 'gazetteers'" />
     </div>
@@ -19,6 +20,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import FilterChips from '../components/ui/FilterChips.vue';
 import DatabaseView from './DatabaseView.vue';
+import DefaultsView from './DefaultsView.vue';
 import LinkRulesView from './LinkRulesView.vue';
 import GazetteersView from './GazetteersView.vue';
 
@@ -28,6 +30,7 @@ const activeTab = ref('database');
 
 const tabOptions = computed(() => [
   { value: 'database', label: t('settings.tabs.database') },
+  { value: 'defaults', label: t('settings.tabs.defaults') },
   { value: 'link-rules', label: t('settings.tabs.linkRules') },
   { value: 'gazetteers', label: t('settings.tabs.gazetteers') },
 ]);
