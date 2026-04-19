@@ -13,7 +13,7 @@
     <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
 
     <!-- Task list -->
-    <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('researchTasks.noTasks')" />
+    <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('empty.researchTasks')" />
     <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->

@@ -9,7 +9,7 @@
 
     <section class="db-section">
       <h3>{{ $t('database.recent') }}</h3>
-      <div v-if="recent.length === 0" class="db-no-recent">{{ $t('database.noRecent') }}</div>
+      <div v-if="recent.length === 0" class="db-no-recent">{{ $t('empty.recentDatabases') }}</div>
       <table v-else class="db-recent-table">
         <tbody>
           <tr

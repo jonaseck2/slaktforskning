@@ -16,7 +16,7 @@
       </div>
 
       <AppLoadingState v-if="loading" />
-      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('map.empty')" />
+      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places')" />
 
       <div v-else class="map-content">
         <BaseMap

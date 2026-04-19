@@ -96,7 +96,7 @@
           </tr>
         </tbody>
       </table>
-      <p v-else class="empty-hint">{{ $t('linkRules.noRules') }}</p>
+      <p v-else class="empty-hint">{{ $t('empty.linkRules') }}</p>
     </div>
 
     <!-- Test field -->

@@ -5,7 +5,7 @@
       <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('sources.addSource') }}</AppButton>
     </div>
     <p v-if="sourceList.length > 0" class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
-    <AppEmptyState v-if="sourceList.length === 0" icon="📚" :title="$t('sources.emptyState')" />
+    <AppEmptyState v-if="sourceList.length === 0" icon="📚" :title="$t('empty.sources')" />
     <table v-else class="data-table">
       <thead>
         <tr>

@@ -5,7 +5,7 @@
       <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('groups.addGroup') }}</AppButton>
     </div>
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
-    <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('groups.emptyState')" />
+    <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('empty.groups')" />
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
     <!-- Add Group Modal -->
