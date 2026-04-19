@@ -27,10 +27,11 @@
         :aria-selected="idx === highlightIndex"
         class="picker-option"
         :class="{ highlighted: idx === highlightIndex }"
-        v-narrate="[person.given_name, person.surname].filter(Boolean).join(' ')"
+        v-narrate="narratePerson(person)"
         @mousedown.prevent="select(person)"
       >
         <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" :nickname="person.nickname" /></span>
+        <span v-if="formatHint(person)" class="picker-hint">{{ formatHint(person) }}</span>
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
     </ul>
@@ -43,6 +44,7 @@
 <script setup lang="ts">
 import { ref, watch, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { getDefaultPersonId } from '../composables/useDefaultPerson';
 
 const pickerId = 'person-picker-' + Math.random().toString(36).slice(2, 8);
 import PersonName from './PersonName.vue';
@@ -57,6 +59,9 @@ interface PersonResult {
   preferred_name: string | null;
   nickname: string | null;
   sex: string;
+  relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
+  birth_year: string | null;
+  death_year: string | null;
 }
 
 const props = defineProps<{
@@ -74,6 +79,8 @@ const results = ref<PersonResult[]>([]);
 const open = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
 const highlightIndex = ref(-1);
+const defaultPersonId = ref<string | null>(null);
+getDefaultPersonId().then(id => { defaultPersonId.value = id; });
 
 // Reset highlight when results change
 watch(results, () => { highlightIndex.value = -1; });
@@ -102,7 +109,7 @@ async function search(query: string) {
     results.value = [];
     return;
   }
-  results.value = (await window.api.persons.search(query)) as PersonResult[];
+  results.value = (await window.api.persons.search(query, defaultPersonId.value)) as PersonResult[];
 }
 
 function onInput(e: Event) {
@@ -151,6 +158,27 @@ function onBlur() {
   setTimeout(() => {
     open.value = false;
   }, 200);
+}
+
+function formatDateRange(b: string | null, d: string | null): string {
+  if (!b && !d) return '';
+  const left = b ? `*${b}` : '';
+  const right = d ? `†${d}` : '';
+  return `(${left}–${right})`;
+}
+
+function formatHint(p: PersonResult): string {
+  const parts: string[] = [];
+  if (p.relation_role) parts.push(t(`picker.relation.${p.relation_role}`));
+  const dateStr = formatDateRange(p.birth_year, p.death_year);
+  if (dateStr) parts.push(dateStr);
+  return parts.join(' ');
+}
+
+function narratePerson(p: PersonResult): string {
+  const name = [p.given_name, p.surname].filter(Boolean).join(' ');
+  const hint = formatHint(p);
+  return hint ? `${name}, ${hint}` : name;
 }
 </script>
 
@@ -212,6 +240,17 @@ function onBlur() {
 }
 .picker-name {
   font-size: var(--font-base);
+}
+.picker-hint {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .picker-sex {
   font-size: var(--font-xs);
