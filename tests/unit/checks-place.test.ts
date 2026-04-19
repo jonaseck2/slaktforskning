@@ -91,3 +91,25 @@ describe('PLACE_COORDINATES_INVALID', () => {
     expect(results.filter(r => r.code === 'PLACE_COORDINATES_INVALID' && r.placeIds?.includes(pl.id))).toHaveLength(0);
   });
 });
+
+describe('PLACE_DATES_INVERTED', () => {
+  it('fires when date_from is after date_to', () => {
+    const pl = createPlace(db, { name: 'Bakvänd', date_from: '1900-01-01', date_to: '1850-01-01' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PLACE_DATES_INVERTED' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('error');
+  });
+
+  it('does not fire when only one date is set', () => {
+    const pl = createPlace(db, { name: 'Bara från', date_from: '1900-01-01' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PLACE_DATES_INVERTED' && r.placeIds?.includes(pl.id))).toHaveLength(0);
+  });
+
+  it('does not fire when dates are in order', () => {
+    const pl = createPlace(db, { name: 'OK', date_from: '1850-01-01', date_to: '1900-01-01' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PLACE_DATES_INVERTED' && r.placeIds?.includes(pl.id))).toHaveLength(0);
+  });
+});

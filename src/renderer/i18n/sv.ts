@@ -625,6 +625,7 @@ export default {
       PARTIAL_NAME: 'Namn är ofullständigt (saknar förnamn eller efternamn)',
       LIVING_OVER_120: 'Person är markerad som levande men skulle vara {age} år gammal',
       PLACE_COORDINATES_INVALID: 'Platsen "{name}" har ogiltiga koordinater ({lat}, {lon}) — {reason}',
+      PLACE_DATES_INVERTED: 'Platsen "{name}" har omvänt datumintervall ({dateFrom} → {dateTo})',
     },
   },
   duplicates: {

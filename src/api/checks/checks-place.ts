@@ -103,3 +103,18 @@ export function checkPlaceCoordinatesInvalid(db: Database): CheckResult[] {
   }
   return results;
 }
+
+export function checkPlaceDatesInverted(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; name: string; date_from: string; date_to: string }>(db, `
+    SELECT id, name, date_from, date_to FROM places
+    WHERE date_from IS NOT NULL AND date_to IS NOT NULL AND date_from > date_to
+  `);
+  return rows.map(r => ({
+    code: 'PLACE_DATES_INVERTED',
+    severity: 'error' as CheckSeverity,
+    message: `Platsen "${r.name}" har omvänt datumintervall (${r.date_from} → ${r.date_to})`,
+    messageParams: { name: r.name, dateFrom: r.date_from, dateTo: r.date_to },
+    personIds: [],
+    placeIds: [r.id],
+  }));
+}
