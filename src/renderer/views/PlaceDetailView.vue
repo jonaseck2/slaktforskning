@@ -70,8 +70,7 @@
           :title="$t('common.monospacedTooltip')"
           @click="toggleNotesMonospaced"
         >
-          <span class="mono-glyph">&lt;/&gt;</span>
-          <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+          <span class="mono-toggle-t" :class="{ 'is-mono': !notesMonospaced }">iWi</span>
         </AppButton>
       </div>
       <textarea
@@ -307,11 +306,6 @@ textarea { resize: vertical; width: 100%; box-sizing: border-box; }
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-}
-.mono-glyph {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  opacity: 0.85;
 }
 textarea.notes-mono {
   font-family: var(--font-mono);

@@ -43,8 +43,7 @@
               :title="$t('common.monospacedTooltip')"
               @click="toggleNotesMonospaced"
             >
-              <span class="mono-glyph">&lt;/&gt;</span>
-              <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+              <span class="mono-toggle-t" :class="{ 'is-mono': !notesMonospaced }">iWi</span>
             </AppButton>
           </div>
           <textarea
@@ -73,7 +72,7 @@
         />
         <div v-if="sections.persons" class="panel-section-body">
           <div v-if="showPersonPicker" class="picker-wrap">
-            <PersonPicker :model-value="null" :placeholder="$t('addRelated.searchPlaceholder')" @select="linkPerson" />
+            <PersonPicker :model-value="null" :relatee-id="linkedPersons[0]?.entityId" :placeholder="$t('addRelated.searchPlaceholder')" @select="linkPerson" />
             <AppButton variant="ghost" size="sm" @click="showPersonPicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
           <div v-if="linkedPersons.length === 0 && !showPersonPicker" class="empty-hint">{{ $t('empty.persons') }}</div>
@@ -147,7 +146,7 @@
           >
             <template v-if="editingTagId === r.id">
               <div class="face-tag-assign">
-                <PersonPicker :model-value="null" :placeholder="$t('media.viewer.assignPerson')" @select="(person: { id: string }) => assignPersonToRegion(r.id, person.id)" />
+                <PersonPicker :model-value="null" :relatee-id="linkedPersons[0]?.entityId" :placeholder="$t('media.viewer.assignPerson')" @select="(person: { id: string }) => assignPersonToRegion(r.id, person.id)" />
               </div>
             </template>
             <template v-else>
@@ -726,11 +725,6 @@ defineExpose({ reload: load, expandFaceTags });
   display: flex;
   justify-content: flex-end;
   margin-bottom: var(--space-xs);
-}
-.mono-glyph {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  opacity: 0.85;
 }
 .notes-textarea.notes-mono {
   font-family: var(--font-mono);

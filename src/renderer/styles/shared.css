@@ -281,6 +281,11 @@
   color: var(--text-primary);
   background: var(--surface);
 }
+.modal form textarea {
+  width: 100%;
+  max-width: 100%;
+  resize: vertical;
+}
 .modal form input[type='text']:focus,
 .modal form input[type='url']:focus,
 .modal form input[type='number']:focus,
@@ -1003,6 +1008,12 @@ html.screen-reader h1:focus {
 .notes-mono {
   font-family: var(--font-mono);
 }
-.toggle-label-mono {
+.mono-toggle-t {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: var(--font-md);
+  line-height: 1;
+}
+.mono-toggle-t.is-mono {
   font-family: var(--font-mono);
 }

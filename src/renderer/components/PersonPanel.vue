@@ -60,7 +60,7 @@
 
       <!-- Händelser section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="triggerAddEvent" />
         <div v-if="sections.events" class="panel-section-body">
           <EventList ref="eventListRef" :person-id="personId" hide-header />
         </div>

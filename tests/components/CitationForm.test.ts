@@ -13,20 +13,31 @@ describe('CitationForm', () => {
       citations: { create: mockCitationsCreate },
       sources: {
         list: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Test Source' }]),
+        search: vi.fn().mockResolvedValue([{ id: 'src-1', title: 'Test Source' }]),
+        get: vi.fn().mockResolvedValue({ id: 'src-1', title: 'Test Source' }),
+        create: vi.fn().mockResolvedValue({ id: 'src-1', title: 'Test Source' }),
       },
     };
   });
 
   it('passes relationship_id when relationshipId prop is provided', async () => {
     const wrapper = mount(CitationForm, {
-      global: { plugins: [i18n] },
+      global: {
+        plugins: [i18n],
+        stubs: {
+          SourcePicker: {
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
+            template: `<input class="stub-source-picker" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />`,
+          },
+          SimpleDateInput: true,
+        },
+      },
       props: { relationshipId: 'rel-123' },
     });
     await flushPromises();
 
-    // Select the source from the dropdown
-    await wrapper.find('select').setValue('src-1');
-
+    await wrapper.find('.stub-source-picker').setValue('src-1');
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 

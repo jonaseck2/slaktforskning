@@ -67,6 +67,7 @@ interface PersonResult {
 const props = defineProps<{
   modelValue: string | null;
   placeholder?: string;
+  relateeId?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -109,7 +110,8 @@ async function search(query: string) {
     results.value = [];
     return;
   }
-  results.value = (await window.api.persons.search(query, defaultPersonId.value)) as PersonResult[];
+  const anchor = props.relateeId !== undefined ? props.relateeId : defaultPersonId.value;
+  results.value = (await window.api.persons.search(query, anchor)) as PersonResult[];
 }
 
 function onInput(e: Event) {

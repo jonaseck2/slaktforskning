@@ -24,8 +24,7 @@
         :title="$t('common.monospacedTooltip')"
         @click="toggle"
       >
-        <span class="mono-glyph">&lt;/&gt;</span>
-        <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+        <span class="mono-toggle-t" :class="{ 'is-mono': !monospaced }">iWi</span>
       </AppButton>
     </div>
     <PersonNotesSection :person-id="personId" :monospaced="monospaced" />
@@ -118,12 +117,6 @@ async function updateLiving(checked: boolean) {
   font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-secondary);
-}
-
-.mono-glyph {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  opacity: 0.85;
 }
 
 :deep(textarea) {

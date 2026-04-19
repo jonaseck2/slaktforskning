@@ -26,7 +26,9 @@ export function useTextareaHeight(key: string) {
     if (textareaRef.value) {
       const h = textareaRef.value.offsetHeight;
       if (h > 0) {
-        localStorage.setItem(storageKey, String(h));
+        const value = String(h);
+        localStorage.setItem(storageKey, value);
+        storedHeight.value = value;
       }
     }
   }

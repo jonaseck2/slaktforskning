@@ -46,6 +46,28 @@
             class="ymd-day"
             @input="onDayInput($event)"
           />
+          <span class="date-picker-wrap">
+            <button
+              type="button"
+              class="date-picker-btn"
+              :aria-label="$t('dateInput.pickDate')"
+              :title="$t('dateInput.pickDate')"
+              @click="openPicker(nativeStartRef)"
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="1.2" d="M2.5 3.5h11v10h-11zM2.5 6.5h11M5 2v3M11 2v3" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <input
+              ref="nativeStartRef"
+              type="date"
+              class="date-picker-native"
+              :value="isoDate(year, month, day)"
+              tabindex="-1"
+              aria-hidden="true"
+              @change="onNativePick($event, false)"
+            />
+          </span>
         </div>
       </template>
       <template v-if="dateType === 'between'">
@@ -86,6 +108,28 @@
             class="ymd-day"
             @input="onDayEndInput($event)"
           />
+          <span class="date-picker-wrap">
+            <button
+              type="button"
+              class="date-picker-btn"
+              :aria-label="$t('dateInput.pickDate')"
+              :title="$t('dateInput.pickDate')"
+              @click="openPicker(nativeEndRef)"
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="1.2" d="M2.5 3.5h11v10h-11zM2.5 6.5h11M5 2v3M11 2v3" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <input
+              ref="nativeEndRef"
+              type="date"
+              class="date-picker-native"
+              :value="isoDate(yearEnd, monthEnd, dayEnd)"
+              tabindex="-1"
+              aria-hidden="true"
+              @change="onNativePick($event, true)"
+            />
+          </span>
         </div>
       </template>
     </div>
@@ -131,6 +175,37 @@ const dayRef = ref<HTMLInputElement | null>(null);
 const yearEndRef = ref<HTMLInputElement | null>(null);
 const monthEndRef = ref<HTMLInputElement | null>(null);
 const dayEndRef = ref<HTMLInputElement | null>(null);
+const nativeStartRef = ref<HTMLInputElement | null>(null);
+const nativeEndRef = ref<HTMLInputElement | null>(null);
+
+function isoDate(y: string, m: string, d: string): string {
+  if (y.length === 4 && m.length === 2 && d.length === 2) return `${y}-${m}-${d}`;
+  return '';
+}
+
+function openPicker(el: HTMLInputElement | null) {
+  if (!el) return;
+  if (typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === 'function') {
+    (el as HTMLInputElement & { showPicker: () => void }).showPicker();
+  } else {
+    el.focus();
+    el.click();
+  }
+}
+
+function onNativePick(e: Event, isEnd: boolean) {
+  const val = (e.target as HTMLInputElement).value;
+  if (!val) return;
+  const parts = val.split('-');
+  if (parts.length !== 3) return;
+  const [y, m, d] = parts;
+  if (isEnd) {
+    emit('update:dateValueEnd', buildDate(y, m, d));
+  } else {
+    emit('update:dateValue', buildDate(y, m, d));
+    if (props.dateType === 'unknown') emit('update:dateType', 'exact');
+  }
+}
 
 // Parse dateValue (YYYY-MM-DD or partial) into parts
 function parseParts(dateStr: string): { y: string; m: string; d: string } {
@@ -240,8 +315,8 @@ function updateDateOriginal(e: Event) {
   align-items: center;
   gap: 2px;
 }
-.ymd-year {
-  width: 56px;
+.date-input .ymd-year {
+  width: 4.5em;
   padding: 5px 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -249,9 +324,9 @@ function updateDateOriginal(e: Event) {
   text-align: center;
   font-family: inherit;
 }
-.ymd-month,
-.ymd-day {
-  width: 36px;
+.date-input .ymd-month,
+.date-input .ymd-day {
+  width: 3em;
   padding: 5px 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -263,6 +338,42 @@ function updateDateOriginal(e: Event) {
   color: #999;
   font-size: var(--font-sm);
   user-select: none;
+}
+.date-picker-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+}
+.date-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+.date-picker-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.date-picker-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.date-picker-native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
 }
 .date-sep {
   color: #666;

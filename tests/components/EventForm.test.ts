@@ -14,7 +14,7 @@ const editingEvent = {
   description: '',
 };
 
-describe('EventForm source section', () => {
+describe('EventForm citation section', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (window as unknown as { api: unknown }).api = {
@@ -32,24 +32,24 @@ describe('EventForm source section', () => {
     };
   });
 
-  it('shows source section when creating a new event', async () => {
+  it('shows citation section when creating a new event', async () => {
     const wrapper = mount(EventForm, {
       global: { plugins: [i18n] },
       props: { personId: 'p1' },
     });
     await flushPromises();
 
-    expect(wrapper.find('.source-section').exists()).toBe(true);
+    expect(wrapper.find('.citation-section').exists()).toBe(true);
   });
 
-  it('shows source section when editing an existing event', async () => {
+  it('shows citation section when editing an existing event', async () => {
     const wrapper = mount(EventForm, {
       global: { plugins: [i18n] },
       props: { personId: 'p1', editingEvent },
     });
     await flushPromises();
 
-    expect(wrapper.find('.source-section').exists()).toBe(true);
+    expect(wrapper.find('.citation-section').exists()).toBe(true);
   });
 
   it('creates a citation linked to the event when source is provided', async () => {

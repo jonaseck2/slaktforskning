@@ -1,41 +1,13 @@
 <template>
-  <div v-if="rels.length === 0" class="empty-hint">{{ $t('empty.relationships') }}</div>
-  <table v-else class="data-table">
-    <tbody>
-      <tr
-        v-for="rel in rels"
-        :key="rel.id"
-        class="clickable-row"
-        tabindex="0"
-        role="button"
-        :aria-label="$t('a11y.editItem', { item: rel.otherName })"
-        @click="router.push('/relationships/' + rel.id)"
-        @keydown.enter="router.push('/relationships/' + rel.id)"
-        @keydown.space.prevent="router.push('/relationships/' + rel.id)"
-      >
-        <td><span class="type-badge">{{ rel.typeLabel }}</span></td>
-        <td class="person-cell">
-          <AppAvatar v-if="rel.otherId" :given-name="rel.otherGivenName" :surname="rel.otherSurname" :sex="rel.otherSex" size="sm" />
-          <router-link v-if="rel.otherId" :to="'/persons/' + rel.otherId" class="person-link" @click.stop>
-            {{ rel.otherName }}
-          </router-link>
-          <span v-else>{{ rel.otherName }}</span>
-        </td>
-        <td>{{ rel.subtypeLabel || '—' }}</td>
-        <td class="actions-cell">
-          <button class="btn-sm btn-delete" @click.stop="remove(rel.id)">✕</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div v-if="rows.length === 0" class="empty-hint">{{ $t('empty.relationships') }}</div>
+  <RelationshipsList v-else :rows="rows" @delete="remove" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
 import { formatFullName } from '../utils/nameUtils';
-import AppAvatar from './ui/AppAvatar.vue';
 
 interface PersonRelRow {
   id: string;
@@ -47,6 +19,8 @@ interface PersonRelRow {
   otherName: string;
   otherGivenName: string;
   otherSurname: string;
+  otherPreferredName: string | null;
+  otherNickname: string | null;
   otherSex: 'M' | 'F' | 'U';
   typeLabel: string;
   subtypeLabel: string;
@@ -56,7 +30,6 @@ const props = defineProps<{ personId: string }>();
 const emit = defineEmits<{ deleted: [] }>();
 
 const { t } = useI18n();
-const router = useRouter();
 const rels = ref<PersonRelRow[]>([]);
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
@@ -80,6 +53,8 @@ async function load() {
     let otherName = t('common.unknown');
     let otherGivenName = '';
     let otherSurname = '';
+    let otherPreferredName: string | null = null;
+    let otherNickname: string | null = null;
     let otherSex: 'M' | 'F' | 'U' = 'U';
     if (otherId) {
       try {
@@ -94,6 +69,8 @@ async function load() {
           const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
           otherGivenName = primary.given_name || '';
           otherSurname = primary.surname || '';
+          otherPreferredName = primary.preferred_name;
+          otherNickname = primary.nickname;
           otherName = formatFullName(primary) || t('common.unknown');
         }
       } catch { /* ignore */ }
@@ -114,6 +91,8 @@ async function load() {
       otherName,
       otherGivenName,
       otherSurname,
+      otherPreferredName,
+      otherNickname,
       otherSex,
       typeLabel,
       subtypeLabel: getSubtypeLabel(r.type, r.subtype),
@@ -121,6 +100,25 @@ async function load() {
   }));
   rels.value = enriched;
 }
+
+const rows = computed<RelationshipListRow[]>(() =>
+  rels.value.map(r => ({
+    id: r.id,
+    typeLabel: r.typeLabel,
+    subtypeLabel: r.subtypeLabel || null,
+    persons: [
+      {
+        id: r.otherId,
+        givenName: r.otherGivenName,
+        surname: r.otherSurname,
+        preferredName: r.otherPreferredName,
+        nickname: r.otherNickname,
+        sex: r.otherSex,
+      },
+    ],
+    ariaLabel: t('a11y.editItem', { item: r.otherName }),
+  }))
+);
 
 async function remove(id: string) {
   await window.api.relationships.delete(id);
@@ -132,12 +130,3 @@ defineExpose({ reload: load, count: computed(() => rels.value.length) });
 
 watch(() => props.personId, load, { immediate: true });
 </script>
-
-<style scoped>
-.type-badge {
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-}
-.person-cell { display: flex; align-items: center; gap: var(--space-xs); }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
-</style>

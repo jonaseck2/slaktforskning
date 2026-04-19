@@ -401,14 +401,16 @@ async function openViewerById(mediaId: string) {
 
 async function onRegionDrawn(rect: { x: number; y: number; width: number; height: number }) {
   if (!selectedMediaId.value) return;
-  // If media is linked to exactly one person, auto-assign them to the tag
+  // Auto-assign the first linked person (by sort_order) who doesn't already have a face tag
   let personId: string | undefined;
   try {
-    const links = await window.api.media.linksForMedia(selectedMediaId.value) as Array<{ entity_type: string; entity_id: string }>;
-    const personLinks = links.filter(l => l.entity_type === 'person');
-    if (personLinks.length === 1) {
-      personId = personLinks[0].entity_id;
-    }
+    const [links, existingRegions] = await Promise.all([
+      window.api.media.linksForMedia(selectedMediaId.value) as Promise<Array<{ entity_type: string; entity_id: string }>>,
+      window.api.mediaRegions.getForMedia(selectedMediaId.value) as Promise<Array<{ person_id: string | null }>>,
+    ]);
+    const tagged = new Set(existingRegions.map(r => r.person_id).filter((id): id is string => !!id));
+    const firstFree = links.find(l => l.entity_type === 'person' && !tagged.has(l.entity_id));
+    if (firstFree) personId = firstFree.entity_id;
   } catch { /* ignore */ }
   await window.api.mediaRegions.create({
     media_id: selectedMediaId.value,
