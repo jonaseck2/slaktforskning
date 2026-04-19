@@ -217,6 +217,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.127.0 | feat(persons): add person from place panel — atomic person+event+citation workflow, EventFormBody extraction, smart event-type ladder, Settings → Defaults tab | [archive](plans/archive/2026-04-19-add-person-from-place-panel.md) |
 | v0.127.1 | Rename the text-list ancestor report tab "Ancestor Chart" → "Ancestor Sheet" (it's a list, not a chart); SV label "Stamtavla" → "Antavla" to disambiguate from the Ancestor Book tab (both used to read "Stamtavla"); `AncestorChartReport.vue` → `AncestorSheetReport.vue` | — |
 | v0.127.2 | Revert cross-platform build scripts and DMG maker (v0.105.0 `270bf21`) — `make:mac`/`make:win`/`make:linux` npm scripts and `@electron-forge/maker-dmg` broke something while trying to build Windows on Mac; restore original single `make` script, single-platform MakerZIP, and pre-DMG `forge.config.ts` maker list | — |
+| v0.128.0 | Wall Chart rolled into live charts — paper/orientation/color/SVG/PDF export moved to each chart's ZoomControls overlay; `wall-charts.ts` deleted, replaced by `chart-export.ts` utilities + `ChartExportControls` component + `useChartExport` composable; IPC renamed `wallChart:*` → `chart:*`; Wall Chart report tab removed from ReportsView | [archive](plans/archive/2026-04-19-wall-chart-rollup.md) |
 ---
 
 ## Research

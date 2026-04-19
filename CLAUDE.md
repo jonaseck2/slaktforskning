@@ -62,7 +62,7 @@ src/
 │   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context, tagging status
 │   ├── media_regions.ts          # Media region (face/area tagging) CRUD
 │   ├── gazetteers.ts             # Gazetteer import/export/delete CRUD (per-database blob storage)
-│   ├── wall-charts.ts            # Wall chart SVG generation (pedigree/descendant, paper sizes, tiling)
+│   ├── chart-export.ts           # Paper-size + SVG tiling utilities for chart export
 │   ├── source-linker.ts          # Text-to-link engine: linkify(), resolveRules()
 │   ├── link-rules/               # Default link rule sets
 │   │   ├── sv.ts                  # Swedish rules (ArkivDigital, Riksarkivet, SVAR, DDB, etc.)
@@ -162,7 +162,6 @@ src/
 │   │   │   └── index.ts              # Barrel re-exports
 │   │   ├── narration.ts            # Natural-language narration builders for TTS
 │   │   ├── screenReaderNarration.ts # Narration builders for screen reader mode
-│   │   └── wallChartData.ts      # Fetch tree data for wall chart SVG generation
 │   └── constants/
 │       └── eventTypes.ts         # GEDCOM event types, date types, confidence levels, etc.
 └── mcp/
@@ -585,13 +584,14 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
 | `EntityMediaSection` | `entityType: string`, `entityId: string` | — | Generic media section for any entity type (person, place, event, etc.). Replaces the hardcoded person-only pattern in PersonMediaSection. Used by PlacePanel. |
-| `WallChartReport` | `personId: string`, `options: WallChartOptions` | `svgGenerated(svg)`, `tilesChanged(tiles \| null)` | Self-loading inline wall chart renderer used by `ReportsView` wallChart tab. Debounced 400ms regeneration with stale-fetch guard. |
+| `ChartExportControls` | `chartSvgRef: Ref<SVGSVGElement \| null>`, `personName?: string`, `chartType: string` | — | Paper-size, orientation, and color-mode controls embedded in each chart's `ZoomControls` overlay. Calls `useChartExport` to save SVG or tiled PDF via `window.api.chart.*`. |
 
 **Composables:**
 | Composable | Purpose |
 |-----------|---------|
 | `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
 | `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
+| `useChartExport` | Chart export logic: paper-size list, orientation toggle, color-mode cycle, `saveSvg()` and `saveTiledPdf()` calls via `window.api.chart.*`. Used by `ChartExportControls`. |
 
 **Pinia Stores:**
 | Store | Purpose |
