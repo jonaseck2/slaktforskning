@@ -636,6 +636,7 @@ export default {
       DUPLICATE_IDENTIFIER: '{count} persons share identifier {type}:{value}',
       DUPLICATE_PLACE: '{count} places share name "{name}" under the same parent',
       DUPLICATE_MEDIA: '{count} media files share file path "{fileRef}"',
+      DUPLICATE_SOURCE: '{count} sources match {label}',
     },
   },
   duplicates: {

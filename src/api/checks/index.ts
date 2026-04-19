@@ -46,7 +46,7 @@ import {
 } from './checks-location';
 import { checkMediaFileMissing, checkOrphanedMedia, checkMediaRegionOutOfBounds, checkPhotoAfterSubjectDeath, checkPhotoBeforeSubjectBirth } from './checks-media';
 import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
-import { checkPossibleDuplicatePerson, checkDuplicateIdentifier, checkDuplicatePlace, checkDuplicateMedia } from './checks-duplicates';
+import { checkPossibleDuplicatePerson, checkDuplicateIdentifier, checkDuplicatePlace, checkDuplicateMedia, checkDuplicateSource } from './checks-duplicates';
 
 // Re-export public types
 export type { CheckResult, CheckSeverity } from './check-utils';
@@ -146,6 +146,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkDuplicateIdentifier',     fn: (db) => checkDuplicateIdentifier(db) },
     { name: 'checkDuplicatePlace',          fn: (db) => checkDuplicatePlace(db) },
     { name: 'checkDuplicateMedia',          fn: (db) => checkDuplicateMedia(db) },
+    { name: 'checkDuplicateSource',         fn: (db) => checkDuplicateSource(db) },
   ];
 }
 

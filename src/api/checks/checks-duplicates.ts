@@ -108,3 +108,67 @@ export function checkDuplicateMedia(db: Database): CheckResult[] {
   }
   return results;
 }
+
+export function checkDuplicateSource(db: Database): CheckResult[] {
+  // Pass 1: same URL
+  const urlRows = queryAll<{ id: string; url: string }>(db, `
+    SELECT id, url FROM sources
+    WHERE url IS NOT NULL AND url != ''
+      AND url IN (
+        SELECT url FROM sources
+        WHERE url IS NOT NULL AND url != ''
+        GROUP BY url
+        HAVING COUNT(*) > 1
+      )
+    ORDER BY url
+  `);
+  const urlGroups = new Map<string, string[]>();
+  for (const r of urlRows) {
+    if (!urlGroups.has(r.url)) urlGroups.set(r.url, []);
+    urlGroups.get(r.url)!.push(r.id);
+  }
+
+  // Pass 2: same (title, author, publication_info), all non-empty
+  const metaRows = queryAll<{ id: string; title: string; author: string; publication_info: string }>(db, `
+    SELECT id, title, author, publication_info FROM sources
+    WHERE title IS NOT NULL AND title != ''
+      AND author IS NOT NULL AND author != ''
+      AND publication_info IS NOT NULL AND publication_info != ''
+      AND (title, author, publication_info) IN (
+        SELECT title, author, publication_info FROM sources
+        WHERE title IS NOT NULL AND title != ''
+          AND author IS NOT NULL AND author != ''
+          AND publication_info IS NOT NULL AND publication_info != ''
+        GROUP BY title, author, publication_info
+        HAVING COUNT(*) > 1
+      )
+    ORDER BY title, author, publication_info
+  `);
+  const metaGroups = new Map<string, string[]>();
+  for (const r of metaRows) {
+    const key = `${r.title}\u0000${r.author}\u0000${r.publication_info}`;
+    if (!metaGroups.has(key)) metaGroups.set(key, []);
+    metaGroups.get(key)!.push(r.id);
+  }
+
+  // Merge: dedupe by the set of sourceIds so a group that appears in both passes
+  // shows up only once.
+  const seen = new Set<string>();
+  const results: CheckResult[] = [];
+  function emit(sourceIds: string[], label: string) {
+    const key = [...sourceIds].sort().join(',');
+    if (seen.has(key)) return;
+    seen.add(key);
+    results.push({
+      code: 'DUPLICATE_SOURCE',
+      severity: 'notice' as CheckSeverity,
+      message: `${sourceIds.length} källor matchar ${label}`,
+      messageParams: { count: sourceIds.length, label },
+      personIds: [],
+      sourceIds,
+    });
+  }
+  for (const ids of urlGroups.values()) emit(ids, 'samma URL');
+  for (const ids of metaGroups.values()) emit(ids, 'samma titel, författare och utgivning');
+  return results;
+}
