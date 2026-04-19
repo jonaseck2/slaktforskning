@@ -46,6 +46,7 @@ import {
 } from './checks-location';
 import { checkMediaFileMissing, checkOrphanedMedia, checkMediaRegionOutOfBounds, checkPhotoAfterSubjectDeath, checkPhotoBeforeSubjectBirth } from './checks-media';
 import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
+import { checkPossibleDuplicatePerson } from './checks-duplicates';
 
 // Re-export public types
 export type { CheckResult, CheckSeverity } from './check-utils';
@@ -139,6 +140,9 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkCircularPlaceHierarchy', fn: (db) => checkCircularPlaceHierarchy(db) },
     { name: 'checkPlaceCoordinatesInvalid', fn: (db) => checkPlaceCoordinatesInvalid(db) },
     { name: 'checkPlaceDatesInverted',    fn: (db) => checkPlaceDatesInverted(db) },
+
+    // H. Duplicates
+    { name: 'checkPossibleDuplicatePerson', fn: (db) => checkPossibleDuplicatePerson(db) },
   ];
 }
 

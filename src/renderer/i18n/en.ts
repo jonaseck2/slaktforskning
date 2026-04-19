@@ -632,6 +632,7 @@ export default {
       LIVING_OVER_120: 'Person is marked as living but would be {age} years old',
       PLACE_COORDINATES_INVALID: 'Place "{name}" has invalid coordinates ({lat}, {lon}) — {reason}',
       PLACE_DATES_INVERTED: 'Place "{name}" has inverted date range ({dateFrom} → {dateTo})',
+      POSSIBLE_DUPLICATE_PERSON: 'Possible duplicate persons (score {score})',
     },
   },
   duplicates: {
