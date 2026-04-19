@@ -127,7 +127,12 @@ const FIX_ACTIONS: Record<string, string> = {
   UNRELATED_PERSON: 'add-father',
 };
 
+function isDuplicateCode(code: string): boolean {
+  return code === 'POSSIBLE_DUPLICATE_PERSON' || code.startsWith('DUPLICATE_');
+}
+
 function hasNavigation(r: QualityResult): boolean {
+  if (isDuplicateCode(r.code)) return false;
   return (
     (r.placeIds?.length ?? 0) > 0 ||
     (r.mediaIds?.length ?? 0) > 0 ||
