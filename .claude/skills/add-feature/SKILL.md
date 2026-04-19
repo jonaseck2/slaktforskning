@@ -7,6 +7,16 @@ description: Add a new feature, entity type, or field to the Släktforskning cod
 
 This codebase has a strict layered architecture. Every data feature touches all layers in order. Skipping a layer means the feature is unreachable from either the UI or MCP agents.
 
+## Execution mode
+
+Any feature backed by a plan file (`docs/plans/*.md`) runs in a **git worktree** with **subagent-driven execution**. Don't work plan-driven features on `main`.
+
+1. After `writing-plans` writes the plan, invoke `superpowers:using-git-worktrees` to spin up an isolated worktree.
+2. Then invoke `superpowers:subagent-driven-development` to execute the plan task-by-task with fresh-context subagents + two-stage review.
+3. When the plan is fully implemented, merge the worktree back to `main` (`superpowers:finishing-a-development-branch`).
+
+Small fixes without a plan (typo, i18n tweak, single-file bug fix) can still be done directly on `main` — see the `commit` skill's branch-strategy rule.
+
 ## The Checklist
 
 Follow this order. Each step builds on the previous.
