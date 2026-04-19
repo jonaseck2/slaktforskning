@@ -38,6 +38,7 @@ import {
   checkTextControlChars,
   checkMultipleBirthNames,
   checkPartialName,
+  checkLivingOver120,
 } from './checks-quality';
 import {
   checkSimultaneousDistantLocations,
@@ -119,6 +120,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkUnsourcedLifeEvent(death)', fn: (db) => checkUnsourcedLifeEvent(db, 'death') },
     { name: 'checkMultipleBirthNames',    fn: (db) => checkMultipleBirthNames(db) },
     { name: 'checkPartialName',           fn: (db) => checkPartialName(db) },
+    { name: 'checkLivingOver120',         fn: (db) => checkLivingOver120(db) },
 
     // G. Data Validation
     { name: 'checkInvalidDates',          fn: (db) => checkInvalidDates(db) },
