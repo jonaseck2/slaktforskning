@@ -252,3 +252,20 @@ export function checkTextControlChars(db: Database): CheckResult[] {
 
   return results;
 }
+
+export function checkMultipleBirthNames(db: Database): CheckResult[] {
+  const rows = queryAll<{ person_id: string; cnt: number }>(db, `
+    SELECT person_id, COUNT(*) AS cnt
+    FROM person_names
+    WHERE name_type = 'birth'
+    GROUP BY person_id
+    HAVING COUNT(*) > 1
+  `);
+  return rows.map(r => ({
+    code: 'MULTIPLE_BIRTH_NAMES',
+    severity: 'warning' as CheckSeverity,
+    message: `Person har ${r.cnt} födelsenamn registrerade (högst ett förväntas)`,
+    messageParams: { count: r.cnt },
+    personIds: [r.person_id],
+  }));
+}

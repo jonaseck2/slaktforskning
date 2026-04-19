@@ -696,3 +696,23 @@ describe('INVALID_DATE edge cases', () => {
     expect(hit[0].message).toContain('slutdatum');
   });
 });
+
+describe('MULTIPLE_BIRTH_NAMES', () => {
+  it('fires when a person has two name_type=birth entries', () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', name_type: 'birth' });
+    addPersonName(db, p.id, { given_name: 'Anna Maria', surname: 'Eriksson', name_type: 'birth' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MULTIPLE_BIRTH_NAMES' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+  });
+
+  it('does not fire when person has one birth name and one married name', () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', name_type: 'birth' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Svensson', name_type: 'married' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'MULTIPLE_BIRTH_NAMES')).toHaveLength(0);
+  });
+});
