@@ -157,10 +157,11 @@ function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?
 
   for (const check of getAllCheckFunctions()) {
     if (opts?.skipGlobal && check.global) continue;
+    console.log(`[checks] ${check.name}: starting`);
     const start = Date.now();
     const res = check.fn(db, dbDir);
     const ms = Date.now() - start;
-    console.log(`[checks] ${check.name}: ${ms}ms → ${res.length} result(s)`);
+    console.log(`[checks] ${check.name}: done in ${ms}ms → ${res.length} result(s)`);
     results.push(...res);
   }
 
