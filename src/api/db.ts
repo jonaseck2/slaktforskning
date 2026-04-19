@@ -27,6 +27,9 @@ export function runSql(db: Database, sql: string, params: unknown[] = []): void 
   finally { (stmt as unknown as Finalizable).finalize(); }
 }
 
+/** Alias for runSql — used by tests and places where "queryRun" reads more naturally. */
+export const queryRun = runSql;
+
 export function runSqlChanges(db: Database, sql: string, params: unknown[] = []): number {
   const stmt = db.prepare(sql);
   try { return (stmt.run(params) as { changes: number }).changes; }

@@ -150,25 +150,6 @@ export function checkUnrelatedPerson(db: Database): CheckResult[] {
   }));
 }
 
-export function checkOrphanedSource(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; title: string }>(db, `
-    SELECT s.id, s.title
-    FROM sources s
-    WHERE NOT EXISTS (
-      SELECT 1 FROM citations c WHERE c.source_id = s.id
-    )
-  `);
-
-  return rows.map(r => ({
-    code: 'ORPHANED_SOURCE',
-    severity: 'notice' as CheckSeverity,
-    message: `Källa "${r.title || '(utan titel)'}" har inga källhänvisningar`,
-    messageParams: { title: r.title || '' },
-    personIds: [],
-    sourceIds: [r.id],
-  }));
-}
-
 export function checkTextControlChars(db: Database): CheckResult[] {
   const results: CheckResult[] = [];
   // Regex: control chars U+0000–U+001F except tab (09), newline (0A), CR (0D)
@@ -250,5 +231,78 @@ export function checkTextControlChars(db: Database): CheckResult[] {
     }
   }
 
+  return results;
+}
+
+export function checkMultipleBirthNames(db: Database): CheckResult[] {
+  const rows = queryAll<{ person_id: string; cnt: number }>(db, `
+    SELECT person_id, COUNT(*) AS cnt
+    FROM person_names
+    WHERE name_type = 'birth'
+    GROUP BY person_id
+    HAVING COUNT(*) > 1
+  `);
+  return rows.map(r => ({
+    code: 'MULTIPLE_BIRTH_NAMES',
+    severity: 'warning' as CheckSeverity,
+    message: `Person har ${r.cnt} födelsenamn registrerade (högst ett förväntas)`,
+    messageParams: { count: r.cnt },
+    personIds: [r.person_id],
+  }));
+}
+
+export function checkLivingOver120(db: Database): CheckResult[] {
+  const currentYear = new Date().getFullYear();
+  const rows = queryAll<{ person_id: string; date_value: string }>(db, `
+    SELECT ep.person_id, e.date_value
+    FROM persons p
+    JOIN event_participants ep ON ep.person_id = p.id
+    JOIN events e ON e.id = ep.event_id
+      AND e.event_type = 'birth'
+      AND e.date_value IS NOT NULL
+      AND e.date_type IN ('exact', 'calculated')
+    WHERE p.living = 1
+  `);
+  const results: CheckResult[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    if (seen.has(r.person_id)) continue;
+    const year = parseInt(r.date_value.substring(0, 4), 10);
+    if (isNaN(year)) continue;
+    const age = currentYear - year;
+    if (age > 120) {
+      seen.add(r.person_id);
+      results.push({
+        code: 'LIVING_OVER_120',
+        severity: 'warning' as CheckSeverity,
+        message: `Person är markerad som levande men skulle vara ${age} år gammal`,
+        messageParams: { age },
+        personIds: [r.person_id],
+      });
+    }
+  }
+  return results;
+}
+
+export function checkPartialName(db: Database): CheckResult[] {
+  const rows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+    SELECT person_id, given_name, surname FROM person_names
+  `);
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const hasGiven = !!r.given_name && r.given_name.trim() !== '';
+    const hasSurname = !!r.surname && r.surname.trim() !== '';
+    if (hasGiven !== hasSurname) {
+      results.push({
+        code: 'PARTIAL_NAME',
+        severity: 'notice' as CheckSeverity,
+        message: hasGiven
+          ? 'Person saknar efternamn'
+          : 'Person saknar förnamn',
+        messageParams: {},
+        personIds: [r.person_id],
+      });
+    }
+  }
   return results;
 }

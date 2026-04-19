@@ -34,14 +34,19 @@ import {
   checkUnsourcedLifeEvent,
   checkInvalidDates,
   checkUnrelatedPerson,
-  checkOrphanedSource,
   checkTextControlChars,
+  checkMultipleBirthNames,
+  checkPartialName,
+  checkLivingOver120,
 } from './checks-quality';
+import { checkOrphanedSource, checkSourceMissingTitle, checkOrphanedRepository } from './checks-source';
 import {
   checkSimultaneousDistantLocations,
-  checkMediaFileMissing,
   checkGazetteerMatchQuality,
 } from './checks-location';
+import { checkMediaFileMissing, checkOrphanedMedia, checkMediaRegionOutOfBounds, checkPhotoAfterSubjectDeath, checkPhotoBeforeSubjectBirth } from './checks-media';
+import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
+import { checkPossibleDuplicatePerson, checkDuplicateIdentifier, checkDuplicatePlace, checkDuplicateMedia, checkDuplicateSource } from './checks-duplicates';
 
 // Re-export public types
 export type { CheckResult, CheckSeverity } from './check-utils';
@@ -115,13 +120,33 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkNotLivingWithoutDeathEvent', fn: (db) => checkNotLivingWithoutDeathEvent(db) },
     { name: 'checkUnsourcedLifeEvent(birth)', fn: (db) => checkUnsourcedLifeEvent(db, 'birth') },
     { name: 'checkUnsourcedLifeEvent(death)', fn: (db) => checkUnsourcedLifeEvent(db, 'death') },
+    { name: 'checkMultipleBirthNames',    fn: (db) => checkMultipleBirthNames(db) },
+    { name: 'checkPartialName',           fn: (db) => checkPartialName(db) },
+    { name: 'checkLivingOver120',         fn: (db) => checkLivingOver120(db) },
 
     // G. Data Validation
     { name: 'checkInvalidDates',          fn: (db) => checkInvalidDates(db) },
     { name: 'checkUnrelatedPerson',       fn: (db) => checkUnrelatedPerson(db) },
     { name: 'checkMediaFileMissing',      global: true, fn: (db, dbDir) => checkMediaFileMissing(db, dbDir) },
+    { name: 'checkOrphanedMedia',         fn: (db) => checkOrphanedMedia(db) },
+    { name: 'checkMediaRegionOutOfBounds', fn: (db) => checkMediaRegionOutOfBounds(db) },
+    { name: 'checkPhotoAfterSubjectDeath', fn: (db) => checkPhotoAfterSubjectDeath(db) },
+    { name: 'checkPhotoBeforeSubjectBirth', fn: (db) => checkPhotoBeforeSubjectBirth(db) },
     { name: 'checkOrphanedSource',        fn: (db) => checkOrphanedSource(db) },
+    { name: 'checkSourceMissingTitle',    fn: (db) => checkSourceMissingTitle(db) },
+    { name: 'checkOrphanedRepository',    fn: (db) => checkOrphanedRepository(db) },
     { name: 'checkTextControlChars',      fn: (db) => checkTextControlChars(db) },
+    { name: 'checkOrphanedPlace',         fn: (db) => checkOrphanedPlace(db) },
+    { name: 'checkCircularPlaceHierarchy', fn: (db) => checkCircularPlaceHierarchy(db) },
+    { name: 'checkPlaceCoordinatesInvalid', fn: (db) => checkPlaceCoordinatesInvalid(db) },
+    { name: 'checkPlaceDatesInverted',    fn: (db) => checkPlaceDatesInverted(db) },
+
+    // H. Duplicates
+    { name: 'checkPossibleDuplicatePerson', fn: (db) => checkPossibleDuplicatePerson(db) },
+    { name: 'checkDuplicateIdentifier',     fn: (db) => checkDuplicateIdentifier(db) },
+    { name: 'checkDuplicatePlace',          fn: (db) => checkDuplicatePlace(db) },
+    { name: 'checkDuplicateMedia',          fn: (db) => checkDuplicateMedia(db) },
+    { name: 'checkDuplicateSource',         fn: (db) => checkDuplicateSource(db) },
   ];
 }
 
