@@ -1011,7 +1011,7 @@ export default {
     linkPerson: '+ Person',
     linkPlace: '+ Plats',
     linkEvent: '+ Händelse',
-    faceTags: 'Ansiktsmärken',
+    faceTags: 'Ansiktsmarkeringar',
     noFaceTags: 'Inga ansiktsmärken ännu.',
     untitled: 'Namnlös',
   },
