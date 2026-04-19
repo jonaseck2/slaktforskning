@@ -78,9 +78,9 @@
       <div class="tab-header">
         <div class="controls">
           <label>
-            {{ $t('wallChart.colorMode') }}
+            {{ $t('chart.export.colorMode') }}
             <select v-model="fanColorMode">
-              <option value="bw">{{ $t('wallChart.blackWhite') }}</option>
+              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
               <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
               <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
             </select>
@@ -227,9 +227,9 @@
       <div class="tab-header">
         <div class="controls">
           <label>
-            {{ $t('wallChart.colorMode') }}
+            {{ $t('chart.export.colorMode') }}
             <select v-model="fanColorMode">
-              <option value="bw">{{ $t('wallChart.blackWhite') }}</option>
+              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
               <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
               <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
             </select>
