@@ -616,6 +616,7 @@ export default {
       ORPHANED_MEDIA: 'Mediafil "{title}" saknar kopplingar',
       MEDIA_REGION_OUT_OF_BOUNDS: 'Mediaregion ligger utanför bilden ({x}, {y} + {width}×{height})',
       PHOTO_AFTER_SUBJECT_DEATH: 'Bilden är daterad ({eventDate}) efter den taggade personens död ({deathDate})',
+      PHOTO_BEFORE_SUBJECT_BIRTH: 'Bilden är daterad ({eventDate}) före den taggade personens födelse ({birthDate})',
       PLACE_MATCH_AMBIGUOUS: 'Tvetydig platsmatchning: {name} — matchade {matchedPath}',
       PLACE_MATCH_PARTIAL: 'Delvis platsmatchning: {name} — omatchade komponenter: {unmatched}',
       PLACE_MATCH_NONE: 'Plats utan koordinater: {name}',

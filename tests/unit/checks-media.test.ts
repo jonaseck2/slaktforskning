@@ -110,3 +110,35 @@ describe('PHOTO_AFTER_SUBJECT_DEATH', () => {
     expect(results.filter(r => r.code === 'PHOTO_AFTER_SUBJECT_DEATH')).toHaveLength(0);
   });
 });
+
+describe('PHOTO_BEFORE_SUBJECT_BIRTH', () => {
+  it('fires when a tagged person was born after the linked event date', () => {
+    const p = createPerson(db, {});
+    const birth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1950-01-01' });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+
+    const m = createMedia(db, { title: 'Old photo' });
+    const event = createEvent(db, { event_type: 'portrait', date_type: 'exact', date_value: '1900-01-01' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'event', entity_id: event.id });
+    createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PHOTO_BEFORE_SUBJECT_BIRTH' && r.mediaIds?.includes(m.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+  });
+
+  it('does not fire when event date is after birth', () => {
+    const p = createPerson(db, {});
+    const birth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1950-01-01' });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+
+    const m = createMedia(db, { title: 'Photo' });
+    const event = createEvent(db, { event_type: 'portrait', date_type: 'exact', date_value: '1960-01-01' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'event', entity_id: event.id });
+    createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PHOTO_BEFORE_SUBJECT_BIRTH')).toHaveLength(0);
+  });
+});

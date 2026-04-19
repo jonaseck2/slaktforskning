@@ -90,3 +90,42 @@ export function checkPhotoAfterSubjectDeath(db: Database): CheckResult[] {
   }
   return results;
 }
+
+export function checkPhotoBeforeSubjectBirth(db: Database): CheckResult[] {
+  const rows = queryAll<{
+    media_id: string; person_id: string; event_date: string; birth_date: string;
+  }>(db, `
+    SELECT mr.media_id, mr.person_id,
+           e.date_value AS event_date,
+           be.date_value AS birth_date
+    FROM media_regions mr
+    JOIN media_links ml
+      ON ml.media_id = mr.media_id AND ml.entity_type = 'event'
+    JOIN events e
+      ON e.id = ml.entity_id
+      AND e.date_value IS NOT NULL
+      AND e.date_type IN ('exact', 'calculated')
+    JOIN event_participants bep
+      ON bep.person_id = mr.person_id
+    JOIN events be
+      ON be.id = bep.event_id
+      AND be.event_type = 'birth'
+      AND be.date_value IS NOT NULL
+      AND be.date_type IN ('exact', 'calculated')
+    WHERE mr.person_id IS NOT NULL
+  `);
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    if (dateDefinitelyAfter(r.birth_date, r.event_date)) {
+      results.push({
+        code: 'PHOTO_BEFORE_SUBJECT_BIRTH',
+        severity: 'warning' as CheckSeverity,
+        message: `Bilden är daterad (${r.event_date}) före den taggade personens födelse (${r.birth_date})`,
+        messageParams: { eventDate: r.event_date, birthDate: r.birth_date },
+        personIds: [r.person_id],
+        mediaIds: [r.media_id],
+      });
+    }
+  }
+  return results;
+}
