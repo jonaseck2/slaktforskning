@@ -270,90 +270,6 @@
       </div>
     </div>
 
-    <!-- Wall Chart Tab -->
-    <div v-if="activeTab === 'wallChart'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls wall-chart-controls">
-          <label class="control-narrow">
-            {{ $t('wallChart.chartType') }}
-            <select v-model="wallOptions.chartType">
-              <option value="pedigree">{{ $t('wallChart.pedigree') }}</option>
-              <option value="descendant">{{ $t('wallChart.descendant') }}</option>
-            </select>
-          </label>
-          <label class="control-narrow">
-            {{ $t('wallChart.paperSize') }}
-            <select v-model="wallOptions.paperSize">
-              <option v-for="size in paperSizeOptions" :key="size.value" :value="size.value">{{ size.label }}</option>
-            </select>
-          </label>
-          <label v-if="wallOptions.paperSize === 'custom'" class="control-narrow">
-            {{ $t('wallChart.widthMm') }}
-            <input type="number" v-model.number="wallOptions.customWidth" min="100" max="2000" />
-          </label>
-          <label v-if="wallOptions.paperSize === 'custom'" class="control-narrow">
-            {{ $t('wallChart.heightMm') }}
-            <input type="number" v-model.number="wallOptions.customHeight" min="100" max="2000" />
-          </label>
-          <label class="control-narrow">
-            {{ $t('wallChart.orientation') }}
-            <select v-model="wallOptions.orientation">
-              <option value="portrait">{{ $t('wallChart.portrait') }}</option>
-              <option value="landscape">{{ $t('wallChart.landscape') }}</option>
-            </select>
-          </label>
-          <label class="control-narrow">
-            {{ $t('reports.generations') }}: {{ wallOptions.generations }}
-            <input type="range" v-model.number="wallOptions.generations" :min="genMin" :max="genMax" />
-          </label>
-          <label class="control-narrow">
-            {{ $t('wallChart.fontSize') }}
-            <select v-model="wallOptions.fontSize">
-              <option value="small">{{ $t('wallChart.fontSmall') }}</option>
-              <option value="medium">{{ $t('wallChart.fontMedium') }}</option>
-              <option value="large">{{ $t('wallChart.fontLarge') }}</option>
-            </select>
-          </label>
-          <label class="control-narrow">
-            {{ $t('wallChart.colorMode') }}
-            <select v-model="wallOptions.colorMode">
-              <option value="themed">{{ $t('wallChart.themed') }}</option>
-              <option value="bw">{{ $t('wallChart.blackWhite') }}</option>
-              <option value="sex-colored">{{ $t('wallChart.sexColored') }}</option>
-            </select>
-          </label>
-          <fieldset class="content-fieldset">
-            <legend>{{ $t('wallChart.content') }}</legend>
-            <label class="checkbox-label"><input type="checkbox" v-model="wallOptions.showDates" /> {{ $t('wallChart.showDates') }}</label>
-            <label class="checkbox-label"><input type="checkbox" v-model="wallOptions.showPlaces" /> {{ $t('wallChart.showPlaces') }}</label>
-            <label class="checkbox-label"><input type="checkbox" v-model="wallOptions.showPhotos" /> {{ $t('wallChart.showPhotos') }}</label>
-          </fieldset>
-          <label class="control-wide">
-            {{ $t('wallChart.chartTitle') }}
-            <input type="text" :value="wallOptions.title" @input="onTitleInput" />
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId || !currentSvg" @click="exportWallSvg">{{ $t('wallChart.exportSvg') }}</AppButton>
-          <AppButton variant="primary" size="sm" :disabled="!chartPersonId || !currentSvg" @click="exportWallPdf">{{ $t('wallChart.exportTiledPdf') }}</AppButton>
-        </div>
-      </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="chartPersonId" class="print-preview wall-chart-preview" :style="{ zoom: effectiveZoom, width: paperWidthMm, height: paperHeightMm }">
-          <WallChartReport
-            :person-id="chartPersonId"
-            :options="wallOptions"
-            @svg-generated="onWallSvgGenerated"
-            @tiles-changed="onWallTilesChanged"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-      <div v-if="wallTileInfo" class="tile-info-hint">
-        {{ $t('wallChart.tilesNeeded', { count: wallTileInfo.count, cols: wallTileInfo.cols, rows: wallTileInfo.rows }) }}
-      </div>
-    </div>
-
     <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
       <template v-if="activeTab === 'ancestor'">
         <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
@@ -425,15 +341,6 @@ import DescendantChartReport from '../components/reports/DescendantChartReport.v
 import FanChartReport from '../components/reports/FanChartReport.vue';
 import type { ArcSpan } from '../utils/fanLayout';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
-import WallChartReport from '../components/reports/WallChartReport.vue';
-import {
-  computeTileViewBoxes,
-  generateTileSvg,
-  getPaperDimensions,
-  type WallChartOptions,
-  type FontSizePreset,
-  type ColorMode,
-} from '../../api/wall-charts';
 import ZoomControls from '../components/ZoomControls.vue';
 import {
   pedigreeGenerations,
@@ -450,7 +357,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline' | 'wallChart'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -465,7 +372,6 @@ const tabs = computed(() => [
   { id: 'descendantChart', label: t('reports.tabDescendantChart') },
   { id: 'fanChart', label: t('reports.tabFanChart') },
   { id: 'timeline', label: t('reports.tabTimeline') },
-  { id: 'wallChart', label: t('wallChart.tabWallChart') },
 ]);
 
 const ancestorRootId = computed(() => focusStore.personId);
@@ -482,83 +388,11 @@ const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 
-// --- Wall chart state ---
-const wallOptions = reactive<WallChartOptions>({
-  chartType: 'pedigree',
-  paperSize: 'A2',
-  customWidth: 420,
-  customHeight: 594,
-  orientation: 'landscape',
-  generations: 4,
-  showDates: true,
-  showPlaces: true,
-  showPhotos: false,
-  fontSize: 'medium' as FontSizePreset,
-  colorMode: 'sex-colored' as ColorMode,
-  title: '',
-});
-const currentSvg = ref<string | null>(null);
-const wallTileInfo = ref<{ count: number; rows: number; cols: number } | null>(null);
-const titleIsAutoGenerated = ref(true);
-
-const paperSizeOptions = computed(() => [
-  { value: 'A4', label: 'A4 (210 \u00d7 297 mm)' },
-  { value: 'A3', label: 'A3 (297 \u00d7 420 mm)' },
-  { value: 'A2', label: 'A2 (420 \u00d7 594 mm)' },
-  { value: 'A1', label: 'A1 (594 \u00d7 841 mm)' },
-  { value: 'A0', label: 'A0 (841 \u00d7 1189 mm)' },
-  { value: 'custom', label: t('wallChart.custom') },
-]);
-
-const genMin = computed(() => wallOptions.chartType === 'pedigree' ? 3 : 2);
-const genMax = computed(() => wallOptions.chartType === 'pedigree' ? 12 : 8);
-
-const wallPaperDims = computed(() => getPaperDimensions(wallOptions));
-const paperWidthMm  = computed(() => `${wallPaperDims.value.width}mm`);
-const paperHeightMm = computed(() => `${wallPaperDims.value.height}mm`);
-
-function onWallSvgGenerated(svg: string) {
-  currentSvg.value = svg;
-}
-function onWallTilesChanged(tiles: { count: number; rows: number; cols: number } | null) {
-  wallTileInfo.value = tiles;
-}
-function onTitleInput(event: Event) {
-  const target = event.target as HTMLInputElement;
-  wallOptions.title = target.value;
-  titleIsAutoGenerated.value = false;
-}
-
-async function exportWallSvg() {
-  if (!currentSvg.value) return;
-  await (window.api as any).chart.saveSvg(currentSvg.value);
-}
-
-async function exportWallPdf() {
-  if (!currentSvg.value) return;
-  const paper = wallPaperDims.value;
-  const MM_TO_PX = 3.7795275591;
-  const W = Math.round(paper.width * MM_TO_PX);
-  const H = Math.round(paper.height * MM_TO_PX);
-  const tiles = computeTileViewBoxes(W, H);
-  if (tiles.length === 1) {
-    await (window.api as any).chart.saveTiledPdf([currentSvg.value]);
-  } else {
-    const pages = tiles.map(tile => generateTileSvg(currentSvg.value!, tile));
-    await (window.api as any).chart.saveTiledPdf(pages);
-  }
-}
-
 // --- Zoom ---
 // Natural preview width in px (A4 at 96dpi ≈ 794px).
 // The .print-preview has width: 210mm which Chromium renders as ~794px.
 const A4_NATURAL_WIDTH = 794;
-const naturalWidth = computed(() => {
-  if (activeTab.value === 'wallChart') {
-    return Math.round(wallPaperDims.value.width * 3.7795275591);
-  }
-  return A4_NATURAL_WIDTH;
-});
+const naturalWidth = computed(() => A4_NATURAL_WIDTH);
 const previewContainer = ref<HTMLElement | null>(null);
 const fitZoom = ref(1.0);
 const userZoomDelta = ref(0.0); // offset from fit zoom in 0.1 steps
@@ -610,11 +444,6 @@ watch(biographyPersonId, triggerLoading);
 watch(placeHistoryPlaceId, triggerLoading);
 watch(familyNarrativeRelId, triggerLoading);
 watch(chartPersonId, triggerLoading);
-watch(() => focusStore.personName, (name) => {
-  if (name && titleIsAutoGenerated.value) {
-    wallOptions.title = t('reports.pedigreeTitle', { name });
-  }
-});
 
 onUnmounted(() => { if (ro) ro.disconnect(); });
 
@@ -653,11 +482,6 @@ onMounted(async () => {
   }
   coupleRelationships.value = options;
 
-  // Default wall chart title from focal person
-  if (focusStore.personId && focusStore.personName) {
-    wallOptions.title = t('reports.pedigreeTitle', { name: focusStore.personName });
-  }
-
   // Default to first couple relationship involving the focus person
   if (focusStore.personId) {
     const focusCouple = couples.find(r => r.person1_id === focusStore.personId || r.person2_id === focusStore.personId);
@@ -678,7 +502,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=biography)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline', 'wallChart'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
@@ -759,40 +583,5 @@ async function exportPdf() {
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }
 
-/* Wall chart-specific controls — denser layout than other report tabs */
-.wall-chart-controls .control-narrow { min-width: 140px; }
-.wall-chart-controls .control-wide   { min-width: 240px; flex: 1 1 240px; }
-.wall-chart-controls .content-fieldset {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  margin: 0;
-}
-.wall-chart-controls .content-fieldset legend {
-  font-size: var(--font-xs);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-secondary);
-  padding: 0 4px;
-}
-.wall-chart-controls .checkbox-label {
-  flex-direction: row !important;
-  align-items: center;
-  gap: var(--space-sm) !important;
-  font-weight: normal !important;
-  min-width: 0 !important;
-}
-.wall-chart-preview {
-  /* Override the fixed A4 width from .print-preview — width is set inline */
-  padding: 0 !important;
-  min-height: 0 !important;
-}
-.tile-info-hint {
-  text-align: center;
-  margin-top: var(--space-xs);
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-}
+
 </style>
