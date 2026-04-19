@@ -120,10 +120,9 @@ The math lives in `src/renderer/utils/wcag.ts` and is independently tested by `t
 
 Exports (PDF, SVG, print) must render identically regardless of current theme/appearance. Two tests guard this:
 
-- `tests/unit/exportColorInvariance.test.ts` — proves the pure path stays pure. Feeds fixed data into `generatePedigreeWallChart` / `generateDescendantWallChart` under every theme × appearance combo (with magenta sentinel values set on `:root`) and asserts the output SVG is byte-identical and contains no sentinel. Also pins `useChartColors(false)` to return the `EXPORT_COLORS` constant by reference under every mode.
 - `tests/components/exportTextColorInvariance.test.ts` — proves the DOM path stays scoped. Inlines `tokens.css` + `shared.css` (with `@media print { … }` unwrapped to simulate print media), wraps representative text elements in `.export-scope`, toggles `html` classes across all theme × appearance combos, and asserts `getComputedStyle(el).color` is identical everywhere. Includes a sanity test that bare elements outside the scope *do* drift, so the invariance test can't silently pass on a broken measurement.
 
-Run both after any edit to `tokens.css`, `shared.css`, `wall-charts.ts`, or `useChartColors.ts`.
+Run after any edit to `tokens.css`, `shared.css`, or `useChartColors.ts`.
 
 ## Component Tests
 
