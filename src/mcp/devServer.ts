@@ -23,6 +23,16 @@ async function main() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+
+  const shutdown = () => {
+    try { db.close(); } catch { /* ignore */ }
+    process.exit(0);
+  };
+  process.stdin.on('end', shutdown);
+  process.stdin.on('close', shutdown);
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+  process.on('SIGHUP', shutdown);
 }
 
 main().catch(console.error);
