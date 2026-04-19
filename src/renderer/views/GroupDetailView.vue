@@ -50,7 +50,7 @@
       <AppButton variant="secondary" size="sm" @click="showAddMember = false; newMemberId = null">{{ $t('common.cancel') }}</AppButton>
     </div>
 
-    <div v-if="members.length === 0" class="empty-hint">{{ $t('groups.noGroups') }}</div>
+    <div v-if="members.length === 0" class="empty-hint">{{ $t('empty.persons') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>
