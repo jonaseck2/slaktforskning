@@ -634,6 +634,7 @@ export default {
       PLACE_DATES_INVERTED: 'Platsen "{name}" har omvänt datumintervall ({dateFrom} → {dateTo})',
       POSSIBLE_DUPLICATE_PERSON: 'Möjliga dubblettpersoner (poäng {score})',
       DUPLICATE_IDENTIFIER: '{count} personer delar identifierare {type}:{value}',
+      DUPLICATE_PLACE: '{count} platser delar namn "{name}" under samma förälder',
     },
   },
   duplicates: {

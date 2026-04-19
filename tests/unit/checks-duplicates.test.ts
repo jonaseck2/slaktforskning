@@ -3,6 +3,7 @@ import { runAllChecks } from '../../src/api/checks';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
+import { createPlace } from '../../src/api/places';
 import { createTestDb } from './helpers';
 import { queryRun } from '../../src/api/db';
 import { v4 as uuidv4 } from 'uuid';
@@ -53,5 +54,26 @@ describe('DUPLICATE_IDENTIFIER', () => {
     queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p2.id, 'familysearch', 'B']);
     const results = runAllChecks(db);
     expect(results.filter(r => r.code === 'DUPLICATE_IDENTIFIER')).toHaveLength(0);
+  });
+});
+
+describe('DUPLICATE_PLACE', () => {
+  it('fires for two places with the same normalized_name and same parent', () => {
+    const country = createPlace(db, { name: 'Sverige' });
+    const a = createPlace(db, { name: 'Stockholm', parent_place_id: country.id });
+    const b = createPlace(db, { name: 'Stockholm', parent_place_id: country.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DUPLICATE_PLACE');
+    expect(hit).toHaveLength(1);
+    expect(new Set(hit[0].placeIds)).toEqual(new Set([a.id, b.id]));
+  });
+
+  it('does not fire for same name under different parents', () => {
+    const p1 = createPlace(db, { name: 'Sverige' });
+    const p2 = createPlace(db, { name: 'Norge' });
+    createPlace(db, { name: 'Strömstad', parent_place_id: p1.id });
+    createPlace(db, { name: 'Strömstad', parent_place_id: p2.id });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'DUPLICATE_PLACE')).toHaveLength(0);
   });
 });

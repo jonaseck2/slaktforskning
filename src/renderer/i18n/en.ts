@@ -634,6 +634,7 @@ export default {
       PLACE_DATES_INVERTED: 'Place "{name}" has inverted date range ({dateFrom} → {dateTo})',
       POSSIBLE_DUPLICATE_PERSON: 'Possible duplicate persons (score {score})',
       DUPLICATE_IDENTIFIER: '{count} persons share identifier {type}:{value}',
+      DUPLICATE_PLACE: '{count} places share name "{name}" under the same parent',
     },
   },
   duplicates: {
