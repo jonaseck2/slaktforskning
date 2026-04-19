@@ -622,6 +622,7 @@ export default {
       PLACE_MATCH_NONE: 'Plats utan koordinater: {name}',
       PLACE_MATCH_WRONG_LEVEL: 'Plats matchad på fel nivå: {name} matchade {matchedPath}',
       ORPHANED_SOURCE: 'Källa "{title}" har inga källhänvisningar',
+      SOURCE_MISSING_TITLE: 'Källa saknar titel',
       ORPHANED_PLACE: 'Platsen "{name}" används inte någonstans',
       CIRCULAR_PLACE_HIERARCHY: 'Platshierarkin innehåller en cykel: {chain}',
       TEXT_CONTROL_CHARS: 'Textfält innehåller kontrolltecken',

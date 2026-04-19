@@ -39,7 +39,7 @@ import {
   checkPartialName,
   checkLivingOver120,
 } from './checks-quality';
-import { checkOrphanedSource } from './checks-source';
+import { checkOrphanedSource, checkSourceMissingTitle } from './checks-source';
 import {
   checkSimultaneousDistantLocations,
   checkGazetteerMatchQuality,
@@ -132,6 +132,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkPhotoAfterSubjectDeath', fn: (db) => checkPhotoAfterSubjectDeath(db) },
     { name: 'checkPhotoBeforeSubjectBirth', fn: (db) => checkPhotoBeforeSubjectBirth(db) },
     { name: 'checkOrphanedSource',        fn: (db) => checkOrphanedSource(db) },
+    { name: 'checkSourceMissingTitle',    fn: (db) => checkSourceMissingTitle(db) },
     { name: 'checkTextControlChars',      fn: (db) => checkTextControlChars(db) },
     { name: 'checkOrphanedPlace',         fn: (db) => checkOrphanedPlace(db) },
     { name: 'checkCircularPlaceHierarchy', fn: (db) => checkCircularPlaceHierarchy(db) },

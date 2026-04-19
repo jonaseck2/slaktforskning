@@ -20,3 +20,17 @@ export function checkOrphanedSource(db: Database): CheckResult[] {
     sourceIds: [r.id],
   }));
 }
+
+export function checkSourceMissingTitle(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string }>(db, `
+    SELECT id FROM sources WHERE title IS NULL OR title = ''
+  `);
+  return rows.map(r => ({
+    code: 'SOURCE_MISSING_TITLE',
+    severity: 'warning' as CheckSeverity,
+    message: 'Källa saknar titel',
+    messageParams: {},
+    personIds: [],
+    sourceIds: [r.id],
+  }));
+}
