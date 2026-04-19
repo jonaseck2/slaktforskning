@@ -42,18 +42,31 @@
             </option>
           </select>
         </label>
-        <label>
-          {{ $t('common.notes') }}
+        <div class="notes-block">
+          <div class="notes-heading-row">
+            <span class="notes-heading-label">{{ $t('common.notes') }}</span>
+            <AppButton
+              variant="soft"
+              size="sm"
+              :aria-pressed="notesMonospaced"
+              :title="$t('common.monospacedTooltip')"
+              @click="toggleNotesMonospaced"
+            >
+              <span class="mono-glyph">&lt;/&gt;</span>
+              <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+            </AppButton>
+          </div>
           <textarea
             ref="notesRef"
             v-model="notesText"
             rows="2"
+            :class="{ 'notes-mono': notesMonospaced }"
             :placeholder="$t('relationshipDetail.notesPlaceholder')"
             :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
             @blur="persistNotesHeight(); saveNotes()"
             @mouseup="persistNotesHeight"
           />
-        </label>
+        </div>
       </div>
     </section>
 
@@ -112,6 +125,7 @@ import { fullNameParts, resolvePersonDisplayName } from '../utils/nameUtils';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
+import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { narrateRelationship, narrationLabelsFromI18n } from '../utils/narration';
 
 interface RelData {
@@ -134,6 +148,7 @@ const { speak, stop } = useTTS();
 const relationship = ref<RelData | null>(null);
 const notesText = ref('');
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('relationship-notes');
+const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('relationship');
 const person1Label = computed(() => {
   const type = relationship.value?.type;
   if (type === 'parent_child') return t('relTypes.parent');
@@ -285,5 +300,29 @@ onBeforeRouteLeave(() => { stop(); });
   color: var(--text-muted);
   padding: 40px;
   text-align: center;
+}
+.notes-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.notes-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.notes-heading-label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.mono-glyph {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  opacity: 0.85;
+}
+textarea.notes-mono {
+  font-family: var(--font-mono);
 }
 </style>
