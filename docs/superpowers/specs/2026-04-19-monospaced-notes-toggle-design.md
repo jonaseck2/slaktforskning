@@ -15,7 +15,7 @@ Applies to the five "strong-fit" notes locations (long-form, imported free text 
 2. **Relationship notes** — `RelationshipDetailView.vue`.
 3. **Place notes** — `PlaceDetailView.vue` and `PlacePanel.vue`.
 4. **Group notes** — `GroupDetailView.vue`.
-5. **Media notes** — `MediaView.vue` and `MediaPanel.vue`.
+5. **Media notes** — `MediaPanel.vue`. (MediaView uses single-line `<input type="text">` cells in a table, not a notes textarea, so it is excluded.)
 
 **Out of scope:**
 - Small 2-row fields (citation notes, research-task notes, event description) — rarely contain tables, adding toggles clutters the UI.
@@ -165,10 +165,9 @@ Add to both `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts` under `commo
 - `src/renderer/views/PlaceDetailView.vue` (add toggle to existing `<h4>` row, class on textarea)
 - `src/renderer/components/PlacePanel.vue` (add toggle to notes section label row, class on textarea)
 - `src/renderer/views/GroupDetailView.vue` (add heading row + toggle, class on textarea)
-- `src/renderer/views/MediaView.vue` (add toggle near media notes heading, class on textarea)
 - `src/renderer/components/MediaPanel.vue` (add toggle in notes section, class on textarea)
 
-**Total:** 1 new composable + 1 new CSS token + 2 CSS classes + 2 i18n keys × 2 locales + 9 file edits across 5 entity types.
+**Total:** 1 new composable + 1 new CSS token + 2 CSS classes + 2 i18n keys × 2 locales + 7 file edits across 5 entity types.
 
 ## Testing
 
