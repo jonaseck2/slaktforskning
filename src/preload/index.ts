@@ -16,6 +16,7 @@ function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...a
 const api = {
   persons: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('persons:create', data)),
+    createWithEvent: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('persons:createWithEvent', data)),
     get: (id: string) => ipcRenderer.invoke('persons:get', id),
     list: () => ipcRenderer.invoke('persons:list'),
     update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:update', id, data)),
