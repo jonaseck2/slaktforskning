@@ -14,7 +14,7 @@
       <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
       <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
       <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" />
-      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('places.noMatchingFilter')" />
+      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
       <table v-else class="data-table">
         <thead>
           <tr>

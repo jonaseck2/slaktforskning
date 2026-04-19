@@ -16,7 +16,7 @@
 
       <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
 
-      <AppEmptyState v-if="filteredResults.length === 0" icon="✅" :title="$t('quality.noResults')" />
+      <AppEmptyState v-if="filteredResults.length === 0" icon="✅" :title="$t('empty.qualityIssues') + ' ' + $t('empty.withFilter')" />
 
       <table v-else class="data-table quality-table">
         <colgroup>
