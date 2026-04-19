@@ -583,6 +583,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
 | `EntityMediaSection` | `entityType: string`, `entityId: string` | — | Generic media section for any entity type (person, place, event, etc.). Replaces the hardcoded person-only pattern in PersonMediaSection. Used by PlacePanel. |
+| `WallChartReport` | `personId: string`, `options: WallChartOptions` | `svgGenerated(svg)`, `tilesChanged(tiles \| null)` | Self-loading inline wall chart renderer used by `ReportsView` wallChart tab. Debounced 400ms regeneration with stale-fetch guard. |
 
 **Composables:**
 | Composable | Purpose |

@@ -32,9 +32,6 @@
           ]"
           @update:model-value="setTab($event as TabName)"
         />
-        <AppButton variant="ghost" size="sm" @click="showWallChartModal = true" :disabled="!personId">
-          {{ $t('wallChart.tabWallChart') }}
-        </AppButton>
       </div>
 
       <!-- Empty state -->
@@ -113,15 +110,6 @@
 
     <!-- Add Person Modal -->
     <AddPersonModal v-if="showAddPerson" @close="showAddPerson = false" @saved="onPersonAdded" />
-
-    <!-- Wall Chart Modal -->
-    <WallChartModal
-      v-if="showWallChartModal && personId"
-      :person-id="personId"
-      :person-name="focusStore.personName ?? ''"
-      :initial-chart-type="activeTab === 'descendants' ? 'descendant' : 'pedigree'"
-      @close="showWallChartModal = false"
-    />
   </div>
 </template>
 
@@ -143,7 +131,6 @@ import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import AddPersonModal from '../components/AddPersonModal.vue';
 import PersonsView from './PersonsView.vue';
-import WallChartModal from '../components/reports/WallChartModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
@@ -176,9 +163,6 @@ function setViewMode(mode: ViewMode) {
 
 // Add person modal
 const showAddPerson = ref(false);
-
-// Wall chart modal
-const showWallChartModal = ref(false);
 
 function onPersonAdded(person: { id: string }) {
   showAddPerson.value = false;
