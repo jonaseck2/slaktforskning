@@ -186,7 +186,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('places.hierarchy')" :count="childPlaces.length" :collapsed="!sections.children" @toggle="toggleSection('children')" />
         <div v-if="sections.children" class="panel-section-body">
-          <div v-if="ancestors.length === 0 && childPlaces.length === 0" class="panel-empty-section">—</div>
+          <div v-if="ancestors.length === 0 && childPlaces.length === 0" class="empty-hint">{{ $t('empty.places') }}</div>
           <template v-else>
             <!-- Ancestors (outermost first) -->
             <ul v-if="ancestors.length > 0" class="hierarchy-list">
@@ -440,7 +440,6 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   padding: 0 var(--space-lg);
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
-.panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }
 
 /* Compact form */
 .compact-form {
