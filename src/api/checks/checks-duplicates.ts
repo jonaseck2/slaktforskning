@@ -44,3 +44,35 @@ export function checkDuplicateIdentifier(db: Database): CheckResult[] {
   }
   return results;
 }
+
+export function checkDuplicatePlace(db: Database): CheckResult[] {
+  const rows = queryAll<{ normalized_name: string; parent_place_id: string | null; id: string; name: string }>(db, `
+    SELECT normalized_name, parent_place_id, id, name
+    FROM places
+    WHERE (normalized_name, COALESCE(parent_place_id, '')) IN (
+      SELECT normalized_name, COALESCE(parent_place_id, '')
+      FROM places
+      GROUP BY normalized_name, COALESCE(parent_place_id, '')
+      HAVING COUNT(*) > 1
+    )
+    ORDER BY normalized_name
+  `);
+  const groups = new Map<string, { name: string; placeIds: string[] }>();
+  for (const r of rows) {
+    const key = `${r.normalized_name}:${r.parent_place_id ?? ''}`;
+    if (!groups.has(key)) groups.set(key, { name: r.name, placeIds: [] });
+    groups.get(key)!.placeIds.push(r.id);
+  }
+  const results: CheckResult[] = [];
+  for (const g of groups.values()) {
+    results.push({
+      code: 'DUPLICATE_PLACE',
+      severity: 'notice' as CheckSeverity,
+      message: `${g.placeIds.length} platser delar namn "${g.name}" under samma förälder`,
+      messageParams: { count: g.placeIds.length, name: g.name },
+      personIds: [],
+      placeIds: g.placeIds,
+    });
+  }
+  return results;
+}
