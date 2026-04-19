@@ -616,6 +616,7 @@ export default {
       ORPHANED_MEDIA: 'Media file "{title}" has no links',
       MEDIA_REGION_OUT_OF_BOUNDS: 'Media region falls outside the image ({x}, {y} + {width}×{height})',
       PHOTO_AFTER_SUBJECT_DEATH: 'Photo is dated ({eventDate}) after the tagged person\'s death ({deathDate})',
+      PHOTO_BEFORE_SUBJECT_BIRTH: 'Photo is dated ({eventDate}) before the tagged person\'s birth ({birthDate})',
       PLACE_MATCH_AMBIGUOUS: 'Ambiguous place match: {name} — matched {matchedPath}',
       PLACE_MATCH_PARTIAL: 'Partial place match: {name} — unmatched: {unmatched}',
       PLACE_MATCH_NONE: 'Place without coordinates: {name}',
