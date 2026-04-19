@@ -143,8 +143,9 @@
                 class="star-btn"
                 :class="{ 'is-profile': regionIsProfile[r.id] }"
                 :title="regionIsProfile[r.id] ? $t('media.currentProfile') : $t('media.setAsProfile')"
+                :aria-label="regionIsProfile[r.id] ? $t('media.currentProfile') : $t('media.setAsProfile')"
                 :disabled="!!regionIsProfile[r.id]"
-                @click="setProfileForRegion(r)"
+                @click.stop="setProfileForRegion(r)"
               >{{ regionIsProfile[r.id] ? '★' : '☆' }}</button>
             </template>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
@@ -259,16 +260,16 @@ async function resolveEntityLabel(entityType: string, entityId: string): Promise
 }
 
 async function computeRegionProfileState() {
-  if (!props.mediaId) {
+  const mediaId = props.mediaId;
+  if (!mediaId) {
     regionIsProfile.value = {};
     return;
   }
-  const newState: Record<string, boolean> = {};
-  for (const r of regions.value) {
-    if (!r.person_id) continue;
-    newState[r.id] = await isMediaPersonProfile(r.person_id, props.mediaId);
-  }
-  regionIsProfile.value = newState;
+  const tagged = regions.value.filter(r => r.person_id);
+  const results = await Promise.all(
+    tagged.map(r => isMediaPersonProfile(r.person_id!, mediaId).then(v => [r.id, v] as const))
+  );
+  regionIsProfile.value = Object.fromEntries(results);
 }
 
 async function load() {

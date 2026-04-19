@@ -23,6 +23,7 @@
               class="star-btn"
               :class="{ 'is-profile': idx === 0 }"
               :title="idx === 0 ? $t('media.currentProfile') : $t('media.setAsProfile')"
+              :aria-label="idx === 0 ? $t('media.currentProfile') : $t('media.setAsProfile')"
               :disabled="idx === 0"
               @click.stop="setAsProfile(idx)"
             >{{ idx === 0 ? '★' : '☆' }}</button>
