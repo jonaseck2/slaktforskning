@@ -98,9 +98,16 @@
 
       <!-- Persons section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('persons.title')" :count="personCount" :collapsed="!sections.persons" @toggle="toggleSection('persons')" />
+        <SectionHeader
+          :title="$t('persons.title')"
+          :count="personCount"
+          :collapsed="!sections.persons"
+          :action-label="'+ ' + $t('placePanel.addPerson')"
+          @toggle="toggleSection('persons')"
+          @action="showAddPersonForm = true"
+        />
         <div v-if="sections.persons" class="panel-section-body">
-          <PlacePersonsSection :place-id="placeId!" />
+          <PlacePersonsSection ref="personsSectionRef" :place-id="placeId!" />
         </div>
       </div>
 
@@ -219,12 +226,21 @@
       @close="showCitationForm = false"
       @saved="showCitationForm = false; citationsSectionRef?.reload(); load(placeId)"
     />
+
+    <!-- Add person modal -->
+    <AddPersonModal
+      v-if="showAddPersonForm && placeId"
+      :prefill-place-id="placeId"
+      @close="showAddPersonForm = false"
+      @saved="onPersonSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import EventList from './EventList.vue';
+import AddPersonModal from './AddPersonModal.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
@@ -275,7 +291,9 @@ const { sections, toggleSection } = usePlacePanelSections();
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 const citationsSectionRef = ref<InstanceType<typeof PlaceCitationsSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
+const personsSectionRef = ref<InstanceType<typeof PlacePersonsSection> | null>(null);
 const showCitationForm = ref(false);
+const showAddPersonForm = ref(false);
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('place');
 
@@ -346,6 +364,12 @@ async function saveField(field: string, value: unknown) {
   await window.api.places.update(props.placeId, { [field]: value });
   (place.value as Record<string, unknown>)[field] = value;
   emit('place-updated', props.placeId);
+}
+
+async function onPersonSaved() {
+  showAddPersonForm.value = false;
+  personsSectionRef.value?.reload();
+  await load(props.placeId);
 }
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {
