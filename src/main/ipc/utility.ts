@@ -8,6 +8,7 @@ import * as checks from '../../api/checks';
 import * as duplicates from '../../api/duplicates';
 import * as reportData from '../../api/report_data';
 import * as persons from '../../api/persons';
+import { queryAll } from '../../api/db';
 import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../../api/csv_export';
 import type { CsvOptions } from '../../api/csv_export';
 import { generateHtmlSite } from '../../api/html_site/generator';
@@ -115,11 +116,50 @@ export function registerUtilityHandlers(
     const t1 = Date.now();
     const nameMap = persons.getPersonDisplayNames(db, allIds);
     console.log(`[checks] getPersonDisplayNames: ${Date.now() - t1}ms`);
-    return capped.map(r => ({ ...r, personNames: r.personIds.map(id => nameMap.get(id) ?? '') }));
+
+    const allPlaceIds = [...new Set(capped.flatMap(r => r.placeIds ?? []))];
+    const placeNameMap = new Map<string, string>();
+    if (allPlaceIds.length > 0) {
+      const ph = allPlaceIds.map(() => '?').join(',');
+      const rows = queryAll<{ id: string; name: string }>(db, `SELECT id, name FROM places WHERE id IN (${ph})`, allPlaceIds);
+      for (const r of rows) placeNameMap.set(r.id, r.name);
+    }
+
+    const allMediaIds = [...new Set(capped.flatMap(r => r.mediaIds ?? []))];
+    const mediaTitleMap = new Map<string, string>();
+    if (allMediaIds.length > 0) {
+      const ph = allMediaIds.map(() => '?').join(',');
+      const rows = queryAll<{ id: string; title: string | null; file_ref: string | null }>(db, `SELECT id, title, file_ref FROM media WHERE id IN (${ph})`, allMediaIds);
+      for (const r of rows) mediaTitleMap.set(r.id, r.title || r.file_ref || '');
+    }
+
+    const allSourceIds = [...new Set(capped.flatMap(r => r.sourceIds ?? []))];
+    const sourceTitleMap = new Map<string, string>();
+    if (allSourceIds.length > 0) {
+      const ph = allSourceIds.map(() => '?').join(',');
+      const rows = queryAll<{ id: string; title: string | null }>(db, `SELECT id, title FROM sources WHERE id IN (${ph})`, allSourceIds);
+      for (const r of rows) sourceTitleMap.set(r.id, r.title || '');
+    }
+
+    return capped.map(r => ({
+      ...r,
+      personNames: r.personIds.map(id => nameMap.get(id) ?? ''),
+      placeNames: r.placeIds?.map(id => placeNameMap.get(id) ?? '') ?? [],
+      mediaTitles: r.mediaIds?.map(id => mediaTitleMap.get(id) ?? '') ?? [],
+      sourceTitles: r.sourceIds?.map(id => sourceTitleMap.get(id) ?? '') ?? [],
+    }));
   });
   wrapHandler('checks:forPerson', (personId) => {
     const dbDir = path.dirname(getCurrentDatabasePath());
     return checks.runChecksForPerson(getDb(), personId as string, dbDir);
+  });
+  wrapHandler('checks:forPlace', (placeId) => {
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    return checks.runChecksForPlace(getDb(), placeId as string, dbDir);
+  });
+  wrapHandler('checks:forMedia', (mediaId) => {
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    return checks.runChecksForMedia(getDb(), mediaId as string, dbDir);
   });
 
   // HTML Site Export

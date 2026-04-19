@@ -420,7 +420,9 @@ describe('MEDIA_FILE_MISSING', () => {
     const results = runAllChecks(db);
     const hit = results.filter(r => r.code === 'MEDIA_FILE_MISSING');
     expect(hit).toHaveLength(1);
-    expect(hit[0].personIds).toContain(p.id);
+    expect(hit[0].mediaIds).toContain(m.id);
+    // Media-file-missing is a media-scoped issue, not a person-scoped one.
+    expect(hit[0].personIds).toEqual([]);
   });
 
   it('does not fire for media without file_ref', () => {

@@ -9,6 +9,7 @@ export interface PlacePanelSections {
   citations: boolean;
   media: boolean;
   mediaTimeline: boolean;
+  quality: boolean;
 }
 
 const STORAGE_PREFIX = 'map-panel-section-';
@@ -27,6 +28,7 @@ const SECTION_DEFAULTS: Record<keyof PlacePanelSections, boolean> = {
   citations: false,
   media: false,
   mediaTimeline: false,
+  quality: false,
 };
 
 export function usePlacePanelSections() {

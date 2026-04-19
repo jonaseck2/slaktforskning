@@ -25,9 +25,9 @@
           :model-value="activeTab"
           :options="[
             { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
-            { value: 'fan',         label: $t('visualization.tab.fan') },
             { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
             { value: 'descendants', label: $t('visualization.tab.descendants') },
+            { value: 'fan',         label: $t('visualization.tab.fan') },
             { value: 'timeline',    label: $t('visualization.tab.timeline') },
           ]"
           @update:model-value="setTab($event as TabName)"
@@ -56,11 +56,6 @@
           @navigate="navigateTo"
           @reload="reloadChart"
         />
-        <FanChart
-          v-if="activeTab === 'fan'"
-          :person-id="personId"
-          @navigate="navigateTo"
-        />
         <HourglassChart
           v-if="activeTab === 'hourglass'"
           ref="hourglassChartRef"
@@ -78,6 +73,11 @@
           :selected-person-id="selectedPersonId"
           @navigate="navigateTo"
           @reload="reloadChart"
+        />
+        <FanChart
+          v-if="activeTab === 'fan'"
+          :person-id="personId"
+          @navigate="navigateTo"
         />
         <TimelineChart
           v-if="activeTab === 'timeline'"
@@ -188,8 +188,8 @@ const chartBoxes = computed<BoxLayout[]>(() => {
   return [];
 });
 
-type TabName = 'pedigree' | 'fan' | 'hourglass' | 'descendants' | 'timeline';
-const VALID_TABS: readonly TabName[] = ['pedigree', 'fan', 'hourglass', 'descendants', 'timeline'];
+type TabName = 'pedigree' | 'hourglass' | 'descendants' | 'fan' | 'timeline';
+const VALID_TABS: readonly TabName[] = ['pedigree', 'hourglass', 'descendants', 'fan', 'timeline'];
 const stored = localStorage.getItem('viz-tab');
 const initialTab: TabName = stored && (VALID_TABS as readonly string[]).includes(stored) ? (stored as TabName) : 'hourglass';
 const activeTab = ref<TabName>(initialTab);

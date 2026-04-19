@@ -743,11 +743,15 @@ describe('computeTimelineLayout', () => {
     expect(bars[1].person.id).toBe('young');
   });
 
-  it('generates decade tick marks', () => {
+  it('generates evenly spaced tick marks', () => {
     const entries = [{ person: p('f', { birthDate: '1950' }), isFocal: true }];
     const { ticks } = computeTimelineLayout(entries, 2000);
-    expect(ticks.length).toBeGreaterThan(0);
-    ticks.forEach(t => expect(t.year % 10).toBe(0));
+    expect(ticks.length).toBeGreaterThan(1);
+    // Step is chosen dynamically from {1,2,5,10,25,50,100,…} based on width; all
+    // ticks must be multiples of the first interval.
+    const step = ticks[1].year - ticks[0].year;
+    expect(step).toBeGreaterThan(0);
+    ticks.forEach(t => expect(t.year % step).toBe(0));
   });
 
   it('includes a todayX value', () => {

@@ -11,6 +11,11 @@ export interface QualityResult {
   eventIds?: string[];
   relationshipIds?: string[];
   placeIds?: string[];
+  placeNames?: string[];
+  mediaIds?: string[];
+  mediaTitles?: string[];
+  sourceIds?: string[];
+  sourceTitles?: string[];
   resolvedLat?: number;
   resolvedLon?: number;
   matchedPath?: string;

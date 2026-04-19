@@ -2,7 +2,7 @@
   <div class="event-list">
     <div v-if="!props.hideHeader" class="section-header">
       <h4>{{ $t('events.title') }} <span v-if="events.length" class="section-count">({{ events.length }})</span></h4>
-      <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="showForm = true">+ {{ $t('events.addEvent') }}</AppButton>
+      <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="showForm = true">+ {{ $t('events.event') }}</AppButton>
     </div>
     <div v-if="events.length === 0" class="empty-hint">{{ $t('empty.events') }}</div>
     <table v-else class="data-table events-table">
