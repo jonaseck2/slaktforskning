@@ -4,28 +4,26 @@ import AddRelatedPersonModal from '../../src/renderer/components/AddRelatedPerso
 import { i18n } from './setup';
 
 describe('AddRelatedPersonModal', () => {
-  const mockPersonsCreate = vi.fn();
+  const mockPersonsCreateWithEvent = vi.fn();
   const mockRelationshipsCreate = vi.fn();
   const mockSourcesList = vi.fn();
-  const mockEventsCreate = vi.fn();
-  const mockEventParticipantsAdd = vi.fn();
-  const mockCitationsCreate = vi.fn();
+  const mockDbGetSetting = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockPersonsCreate.mockResolvedValue({ id: 'new-person-id' });
+    mockPersonsCreateWithEvent.mockResolvedValue({
+      person: { id: 'new-person-id', sex: 'U', living: true },
+      event: null,
+      citation: null,
+    });
     mockRelationshipsCreate.mockResolvedValue({ id: 'rel-id' });
     mockSourcesList.mockResolvedValue([]);
-    mockEventsCreate.mockResolvedValue({ id: 'new-event-id' });
-    mockEventParticipantsAdd.mockResolvedValue({ id: 'ep-id' });
-    mockCitationsCreate.mockResolvedValue({ id: 'cit-id' });
+    mockDbGetSetting.mockResolvedValue(null);
     (window as unknown as { api: unknown }).api = {
-      persons: { create: mockPersonsCreate },
+      persons: { createWithEvent: mockPersonsCreateWithEvent },
       relationships: { create: mockRelationshipsCreate },
       sources: { list: mockSourcesList },
-      events: { create: mockEventsCreate },
-      eventParticipants: { add: mockEventParticipantsAdd },
-      citations: { create: mockCitationsCreate },
+      db: { getSetting: mockDbGetSetting },
     };
   });
 
@@ -58,10 +56,12 @@ describe('AddRelatedPersonModal', () => {
 
   it('shows subtype select in all modes', () => {
     const fatherWrapper = mountModal('father');
-    expect(fatherWrapper.findAll('select')).toHaveLength(2); // sex + parent_child subtype
+    // sex + parent_child subtype are always present (EventFormBody adds more but those
+    // are for the event section, not the relationship subtype)
+    expect(fatherWrapper.findAll('select').length).toBeGreaterThanOrEqual(2);
 
     const spouseWrapper = mountModal('spouse');
-    expect(spouseWrapper.findAll('select')).toHaveLength(2); // sex + couple subtype
+    expect(spouseWrapper.findAll('select').length).toBeGreaterThanOrEqual(2);
   });
 
   it('creates parent_child with new person as parent for father mode', async () => {
@@ -70,7 +70,7 @@ describe('AddRelatedPersonModal', () => {
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
-    expect(mockPersonsCreate).toHaveBeenCalledWith(
+    expect(mockPersonsCreateWithEvent).toHaveBeenCalledWith(
       expect.objectContaining({ given_name: 'Lars', sex: 'M' }),
     );
     expect(mockRelationshipsCreate).toHaveBeenCalledWith(
@@ -88,7 +88,7 @@ describe('AddRelatedPersonModal', () => {
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
-    expect(mockPersonsCreate).toHaveBeenCalledWith(
+    expect(mockPersonsCreateWithEvent).toHaveBeenCalledWith(
       expect.objectContaining({ given_name: 'Anna', sex: 'F' }),
     );
     expect(mockRelationshipsCreate).toHaveBeenCalledWith(
@@ -164,50 +164,53 @@ describe('AddRelatedPersonModal', () => {
     expect(surnameInput.element.value).toBe('Andersson');
   });
 
-  it('creates birth event when birth date is provided', async () => {
+  it('submits event payload when event section is open', async () => {
     const wrapper = mountModal('father');
     await wrapper.find('input[type="text"]').setValue('Gustaf');
-    // Find birth date input inside details
-    const dateInput = wrapper.find('input[type="date"]');
-    await dateInput.setValue('1912-02-24');
+
+    // Open the event details section
+    const details = wrapper.find('details.event-section');
+    (details.element as HTMLDetailsElement).open = true;
+    await details.trigger('toggle');
+    await flushPromises();
+
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
-    expect(mockEventsCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event_type: 'birth',
-        date_value: '1912-02-24',
-      }),
-    );
-    expect(mockEventParticipantsAdd).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event_id: 'new-event-id',
-        person_id: 'new-person-id',
-        role: 'primary',
-      }),
-    );
+    expect(mockPersonsCreateWithEvent).toHaveBeenCalledTimes(1);
+    const payload = mockPersonsCreateWithEvent.mock.calls[0][0];
+    expect(payload.given_name).toBe('Gustaf');
+    expect(payload.event).toBeDefined();
+    expect(payload.event.event_type).toBe('birth');
   });
 
-  it('skips birth event when no birth fields filled', async () => {
+  it('omits event payload when event section is closed', async () => {
     const wrapper = mountModal('father');
     await wrapper.find('input[type="text"]').setValue('Gustaf');
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
-    expect(mockEventsCreate).not.toHaveBeenCalled();
-    expect(mockEventParticipantsAdd).not.toHaveBeenCalled();
+    expect(mockPersonsCreateWithEvent).toHaveBeenCalledTimes(1);
+    const payload = mockPersonsCreateWithEvent.mock.calls[0][0];
+    expect(payload.event).toBeUndefined();
+    expect(payload.citation).toBeUndefined();
   });
 
-  it('does not create citation when source checkbox is unchecked', async () => {
+  it('omits citation when no source is selected', async () => {
     const wrapper = mountModal('father');
     await wrapper.find('input[type="text"]').setValue('Gustaf');
-    const dateInput = wrapper.find('input[type="date"]');
-    await dateInput.setValue('1912-02-24');
+
+    // Open the event details section (no source selected)
+    const details = wrapper.find('details.event-section');
+    (details.element as HTMLDetailsElement).open = true;
+    await details.trigger('toggle');
+    await flushPromises();
+
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
-    // Birth event created but no citation
-    expect(mockEventsCreate).toHaveBeenCalled();
-    expect(mockCitationsCreate).not.toHaveBeenCalled();
+    const payload = mockPersonsCreateWithEvent.mock.calls[0][0];
+    expect(payload.event).toBeDefined();
+    expect(payload.citation).toBeUndefined();
   });
 });
