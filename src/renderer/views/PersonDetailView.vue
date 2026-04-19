@@ -48,7 +48,7 @@
         :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })"
         @action="showNameForm = true"
       />
-      <div v-if="names.length === 0" class="empty-hint">{{ $t('personDetail.noNames') }}</div>
+      <div v-if="names.length === 0" class="empty-hint">{{ $t('empty.names') }}</div>
       <PersonNamesTable v-else :names="names" @edit="openEditName" @delete="removeName" />
     </section>
 
@@ -114,7 +114,7 @@
           @cancel="showGroupPicker = false"
         />
       </div>
-      <div v-if="personGroups.length === 0 && !showGroupPicker" class="empty-hint">{{ $t('groups.noGroups') }}</div>
+      <div v-if="personGroups.length === 0 && !showGroupPicker" class="empty-hint">{{ $t('empty.groups') }}</div>
       <GroupsTable v-else-if="personGroups.length > 0" :groups="personGroups" @remove="removeFromGroup" />
     </section>
 
@@ -147,7 +147,7 @@
         :action-label="'+ ' + $t('researchTasks.addTask')"
         @action="showAddTaskModal = true"
       />
-      <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('researchTasks.noTasks') }}</div>
+      <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('empty.researchTasks') }}</div>
       <ResearchTasksTable v-else :tasks="personTasks" @updated="loadPersonTasks" />
     </section>
 
