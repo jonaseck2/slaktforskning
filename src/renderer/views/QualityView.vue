@@ -18,90 +18,18 @@
 
       <AppEmptyState v-if="filteredResults.length === 0" icon="✅" :title="$t('empty.qualityIssues') + ' ' + $t('empty.withFilter')" />
 
-      <table v-else class="data-table quality-table">
-        <colgroup>
-          <col style="width: 120px">
-          <col style="width: 28%">
-          <col>
-          <col style="width: 1%">
-        </colgroup>
-        <thead>
-          <tr>
-            <th>{{ $t('quality.colSeverity') }}</th>
-            <th>{{ $t('quality.colPersons') }}</th>
-            <th>{{ $t('quality.colIssue') }}</th>
-            <th class="actions-th"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(r, i) in visibleResults"
-            :key="resultKey(r) + ':' + i"
-            v-narrate="() => narrateQualityRow({
-              severity: r.severity,
-              message: checkMessage(r),
-            }, t)"
-            :class="['clickable-row', { 'row-ignored': isIgnored(r) }]"
-            tabindex="0"
-            role="button"
-            :aria-label="$t('a11y.editItem', { item: r.personNames?.[0] || $t('common.unknown') })"
-            @click="navigateTo(r)"
-            @keydown.enter="navigateTo(r)"
-            @keydown.space.prevent="navigateTo(r)"
-            @keydown.down.prevent="focusNextRow($event)"
-            @keydown.up.prevent="focusPrevRow($event)"
-          >
-            <td>
-              <AppBadge :variant="severityVariant(r.severity)">
-                {{ $t('quality.severity.' + r.severity) }}
-              </AppBadge>
-            </td>
-            <td class="persons-cell">
-              <template v-for="(name, i) in r.personNames" :key="r.personIds[i]">
-                <a
-                  class="person-link"
-                  @click.stop="router.push('/persons/' + r.personIds[i])"
-                >{{ name || $t('common.unknown') }}</a><span v-if="i < r.personNames.length - 1"> · </span>
-              </template>
-            </td>
-            <td class="message-cell">{{ checkMessage(r) }}</td>
-            <td class="actions-td">
-              <template v-if="isPlaceMatch(r) && !isIgnored(r)">
-                <AppButton
-                  v-if="r.resolvedLat != null"
-                  variant="ghost"
-                  size="sm"
-                  class="btn-confirm"
-                  @click.stop="confirmMatch(r)"
-                  :title="$t('quality.confirmMatch')"
-                >{{ $t('quality.confirm') }}</AppButton>
-                <AppButton
-                  variant="ghost"
-                  size="sm"
-                  class="btn-reject"
-                  @click.stop="rejectMatch(r)"
-                  :title="$t('quality.rejectMatch')"
-                >{{ $t('quality.reject') }}</AppButton>
-                <router-link
-                  v-if="r.placeIds?.[0]"
-                  :to="'/places/' + r.placeIds[0]"
-                  class="btn-sm btn-view"
-                  @click.stop
-                >{{ $t('quality.viewPlace') }}</router-link>
-              </template>
-              <button
-                class="btn-sm btn-delete"
-                :title="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
-                @click.stop="toggleIgnore(r)"
-              >✕</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div ref="sentinel" class="scroll-sentinel"></div>
-      <p v-if="visibleResults.length < filteredResults.length" class="count-label">
-        {{ visibleResults.length }} / {{ filteredResults.length }}
-      </p>
+      <template v-else>
+        <QualityIssuesTable
+          :issues="visibleResults"
+          :clickable-when="hasNavigation"
+          show-entity
+          @row-click="navigateTo"
+        />
+        <div ref="sentinel" class="scroll-sentinel"></div>
+        <p v-if="visibleResults.length < filteredResults.length" class="count-label">
+          {{ visibleResults.length }} / {{ filteredResults.length }}
+        </p>
+      </template>
     </template>
   </div>
 </template>
@@ -111,12 +39,11 @@ import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
-import { narrateQualityRow } from '../utils/screenReaderNarration';
-import AppButton from '../components/ui/AppButton.vue';
-import AppBadge from '../components/ui/AppBadge.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
+import QualityIssuesTable from '../components/QualityIssuesTable.vue';
+import { isIgnored } from '../utils/qualityIgnore';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 
@@ -131,33 +58,6 @@ const activeFilter = ref<'all' | 'error' | 'warning' | 'notice' | 'ignored'>('al
 const PAGE_SIZE = 100;
 const visibleCount = ref(PAGE_SIZE);
 const sentinel = ref<HTMLElement | null>(null);
-
-// --- Ignored checks (persisted in localStorage) ---
-const STORAGE_KEY = 'quality:ignored';
-
-function ignoreKey(r: QualityResult): string {
-  return `${r.code}:${[...r.personIds].sort().join(',')}`;
-}
-
-const ignoredKeys = ref<Set<string>>(
-  new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as string[])
-);
-
-function isIgnored(r: QualityResult): boolean {
-  return ignoredKeys.value.has(ignoreKey(r));
-}
-
-function toggleIgnore(r: QualityResult) {
-  const key = ignoreKey(r);
-  if (ignoredKeys.value.has(key)) {
-    ignoredKeys.value.delete(key);
-  } else {
-    ignoredKeys.value.add(key);
-  }
-  // Re-assign to trigger reactivity on the Set
-  ignoredKeys.value = new Set(ignoredKeys.value);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...ignoredKeys.value]));
-}
 
 // --- Counts ---
 const errorCount = computed(() =>
@@ -197,10 +97,8 @@ const filteredResults = computed(() => {
 
 const visibleResults = computed(() => filteredResults.value.slice(0, visibleCount.value));
 
-// Reset visible count when filter changes
 watch(activeFilter, () => { visibleCount.value = PAGE_SIZE; });
 
-// Infinite scroll
 let observer: IntersectionObserver | null = null;
 watch(sentinel, (el) => {
   if (observer) { observer.disconnect(); observer = null; }
@@ -216,38 +114,7 @@ watch(sentinel, (el) => {
   observer.observe(el);
 });
 
-// --- Helpers ---
-function severityVariant(severity: string): 'severity-high' | 'severity-medium' | 'severity-low' {
-  if (severity === 'error') return 'severity-high';
-  if (severity === 'warning') return 'severity-medium';
-  return 'severity-low';
-}
-
-function resultKey(r: QualityResult): string {
-  return ignoreKey(r);
-}
-
-function checkMessage(r: QualityResult): string {
-  const key = 'quality.checks.' + r.code;
-  const params = { ...r.messageParams };
-  if (params.eventType) {
-    const etKey = 'eventTypes.' + params.eventType;
-    const etTranslated = t(etKey);
-    params.eventType = etTranslated !== etKey ? etTranslated : params.eventType as string;
-  }
-  const translated = t(key, params);
-  return translated !== key ? translated : r.message;
-}
-
-function focusNextRow(e: KeyboardEvent): void {
-  const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
-  if (row?.matches('tr[tabindex]')) row.focus();
-}
-function focusPrevRow(e: KeyboardEvent): void {
-  const row = (e.target as HTMLElement).previousElementSibling as HTMLElement | null;
-  if (row?.matches('tr[tabindex]')) row.focus();
-}
-
+// --- Row navigation ---
 const FIX_ACTIONS: Record<string, string> = {
   NO_BIRTH_EVENT: 'add-birth-event',
   UNSOURCED_BIRTH: 'add-birth-event',
@@ -260,54 +127,32 @@ const FIX_ACTIONS: Record<string, string> = {
   UNRELATED_PERSON: 'add-father',
 };
 
+function hasNavigation(r: QualityResult): boolean {
+  return (
+    (r.placeIds?.length ?? 0) > 0 ||
+    (r.mediaIds?.length ?? 0) > 0 ||
+    (r.sourceIds?.length ?? 0) > 0 ||
+    r.personIds.length > 0
+  );
+}
+
 function navigateTo(r: QualityResult) {
-  if (r.personIds.length > 0) {
-    const action = FIX_ACTIONS[r.code];
-    const query = action ? { action } : undefined;
-    router.push({ path: '/persons/' + r.personIds[0], query });
+  if (r.placeIds && r.placeIds.length > 0) {
+    router.push('/places/' + r.placeIds[0]);
+    return;
   }
-}
-
-// --- Place match helpers ---
-const PLACE_MATCH_CODES = new Set([
-  'PLACE_MATCH_AMBIGUOUS', 'PLACE_MATCH_PARTIAL',
-  'PLACE_MATCH_NONE', 'PLACE_MATCH_WRONG_LEVEL',
-]);
-
-function isPlaceMatch(r: QualityResult): boolean {
-  return PLACE_MATCH_CODES.has(r.code);
-}
-
-async function confirmMatch(r: QualityResult) {
-  if (!r.placeIds?.[0] || r.resolvedLat == null || r.resolvedLon == null) return;
-  try {
-    await window.api.places.update(r.placeIds[0], {
-      latitude: r.resolvedLat,
-      longitude: r.resolvedLon,
-    });
-    toast.success(t('quality.matchConfirmed'));
-    await runChecks();
-  } catch (err) {
-    console.error('[QualityView] confirmMatch failed:', err);
-    toast.error(t('errors.saveFailed'));
+  if (r.mediaIds && r.mediaIds.length > 0) {
+    router.push({ path: '/media', query: { open: r.mediaIds[0] } });
+    return;
   }
-}
-
-async function rejectMatch(r: QualityResult) {
-  if (!r.placeIds?.[0]) return;
-  try {
-    const raw = await window.api.db.getSetting('gazetteer_rejections') as string | null;
-    const rejections: string[] = raw ? JSON.parse(raw) : [];
-    if (!rejections.includes(r.placeIds[0])) {
-      rejections.push(r.placeIds[0]);
-    }
-    await window.api.db.setSetting('gazetteer_rejections', JSON.stringify(rejections));
-    toast.success(t('quality.matchRejected'));
-    await runChecks();
-  } catch (err) {
-    console.error('[QualityView] rejectMatch failed:', err);
-    toast.error(t('errors.saveFailed'));
+  if (r.sourceIds && r.sourceIds.length > 0) {
+    router.push('/sources/' + r.sourceIds[0]);
+    return;
   }
+  if (r.personIds.length === 0) return;
+  const action = FIX_ACTIONS[r.code];
+  const query = action ? { action } : undefined;
+  router.push({ path: '/persons/' + r.personIds[0], query });
 }
 
 // --- Data loading ---
@@ -318,7 +163,6 @@ async function runChecks() {
   qualityStore.running = true;
   try {
     const raw = (await window.api.checks.runAll()) as QualityResult[];
-    // Ignore stale results from a cancelled/superseded run
     if (myRunId !== checksRunId) return;
     qualityStore.setResults(raw);
     visibleCount.value = PAGE_SIZE;
@@ -331,7 +175,6 @@ async function runChecks() {
 }
 
 onMounted(() => {
-  // Show cached results immediately; always re-run on first mount
   runChecks();
   loadedVersion = dataVersionStore.version;
 
@@ -349,38 +192,3 @@ onActivated(() => {
   }
 });
 </script>
-
-<style scoped>
-/* Unique to QualityView */
-.quality-table { table-layout: fixed; width: 100%; }
-
-.row-ignored { opacity: 0.5; }
-.row-ignored:hover { opacity: 0.7; }
-.message-cell { font-size: var(--font-sm); }
-.persons-cell { font-size: var(--font-sm); }
-.actions-th, .actions-td { text-align: right; }
-
-.btn-confirm {
-  color: var(--success-text);
-}
-.btn-reject {
-  color: var(--error-text);
-}
-.btn-view {
-  color: var(--accent);
-  border-color: var(--accent);
-  text-decoration: none;
-  display: inline-block;
-  padding: 2px 8px;
-  border: 1px solid;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-xs);
-}
-.btn-view:hover {
-  background: var(--surface-hover);
-}
-.actions-td {
-  white-space: nowrap;
-  vertical-align: middle;
-}
-</style>

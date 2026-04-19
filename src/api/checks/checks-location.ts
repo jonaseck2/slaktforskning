@@ -68,21 +68,16 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
 
   if (places.length === 0) return [];
 
-  // Bulk-load all person→place associations in one query (avoids N+1)
+  // Only check places that are actually referenced by at least one event
+  // (an unused place with a dubious name isn't worth flagging).
   const placeIds = places.map(p => p.id);
   const placeholders = placeIds.map(() => '?').join(',');
-  const personPlaceRows = queryAll<{ place_id: string; person_id: string }>(db, `
-    SELECT DISTINCT e.place_id, ep.person_id
-    FROM event_participants ep
-    JOIN events e ON e.id = ep.event_id
+  const usedRows = queryAll<{ place_id: string }>(db, `
+    SELECT DISTINCT e.place_id
+    FROM events e
     WHERE e.place_id IN (${placeholders})
   `, placeIds);
-  const personsByPlace = new Map<string, string[]>();
-  for (const row of personPlaceRows) {
-    const arr = personsByPlace.get(row.place_id);
-    if (arr) arr.push(row.person_id);
-    else personsByPlace.set(row.place_id, [row.person_id]);
-  }
+  const placesInUse = new Set(usedRows.map(r => r.place_id));
 
   // Bulk-load all place hierarchy data for path building (avoids N+1 getPlacePath)
   const allPlaceRows = queryAll<{ id: string; name: string; parent_place_id: string | null }>(db,
@@ -106,8 +101,7 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
   const cache = new Map<string, ReturnType<typeof resolvePlace>>();
 
   for (const place of places) {
-    const personIds = personsByPlace.get(place.id);
-    if (!personIds || personIds.length === 0) continue;
+    if (!placesInUse.has(place.id)) continue;
 
     // Build full place path from in-memory map
     const fullPath = buildPlacePath(place.id);
@@ -124,7 +118,7 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
         severity: 'notice',
         message: `Platsen "${place.name}" kunde inte matchas mot något ortregister`,
         messageParams: { placeName: place.name },
-        personIds,
+        personIds: [],
         placeIds: [place.id],
       });
       continue;
@@ -143,7 +137,7 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
         severity: 'warning',
         message: `Platsen "${place.name}" verkar matcha en specifik ort (${resolved.matchedPath.join(', ')}) snarare än det angivna området`,
         messageParams: { placeName: place.name, matchedPath: resolved.matchedPath.join(', ') },
-        personIds,
+        personIds: [],
         placeIds: [place.id],
         resolvedLat: resolved.lat,
         resolvedLon: resolved.lon,
@@ -155,7 +149,7 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
         severity: 'warning',
         message: `Platsen "${place.name}" är tvetydig — flera möjliga platser hittades`,
         messageParams: { placeName: place.name },
-        personIds,
+        personIds: [],
         placeIds: [place.id],
         resolvedLat: resolved.lat,
         resolvedLon: resolved.lon,
@@ -167,7 +161,7 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
         severity: 'notice',
         message: `Platsen "${place.name}" matchades delvis (ej matchade delar: ${resolved.unmatchedComponents.join(', ')})`,
         messageParams: { placeName: place.name, unmatched: resolved.unmatchedComponents.join(', ') },
-        personIds,
+        personIds: [],
         placeIds: [place.id],
         resolvedLat: resolved.lat,
         resolvedLon: resolved.lon,
@@ -188,27 +182,12 @@ export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResul
     WHERE is_missing = 1 AND file_ref IS NOT NULL AND file_ref != ''
   `);
 
-  if (rows.length === 0) return [];
-
-  // Bulk-load all person links for missing media (avoids N+1)
-  const mediaIds = rows.map(r => r.id);
-  const placeholders = mediaIds.map(() => '?').join(',');
-  const linkRows = queryAll<{ media_id: string; entity_id: string }>(db, `
-    SELECT media_id, entity_id FROM media_links
-    WHERE media_id IN (${placeholders}) AND entity_type = 'person'
-  `, mediaIds);
-  const personsByMedia = new Map<string, string[]>();
-  for (const link of linkRows) {
-    const arr = personsByMedia.get(link.media_id);
-    if (arr) arr.push(link.entity_id);
-    else personsByMedia.set(link.media_id, [link.entity_id]);
-  }
-
   return rows.map(row => ({
     code: 'MEDIA_FILE_MISSING' as const,
     severity: 'warning' as const,
     message: `Mediafil saknas: ${row.file_ref}`,
     messageParams: { filePath: row.file_ref },
-    personIds: personsByMedia.get(row.id) ?? [],
+    personIds: [],
+    mediaIds: [row.id],
   }));
 }

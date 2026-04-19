@@ -165,6 +165,7 @@ export function checkOrphanedSource(db: Database): CheckResult[] {
     message: `Källa "${r.title || '(utan titel)'}" har inga källhänvisningar`,
     messageParams: { title: r.title || '' },
     personIds: [],
+    sourceIds: [r.id],
   }));
 }
 
@@ -244,6 +245,7 @@ export function checkTextControlChars(db: Database): CheckResult[] {
         message: `Källtitel "${r.title}" innehåller kontrolltecken`,
         messageParams: { title: r.title },
         personIds: [],
+        sourceIds: [r.id],
       });
     }
   }

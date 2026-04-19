@@ -12,6 +12,8 @@ export interface CheckResult {
   eventIds?: string[];
   relationshipIds?: string[];
   placeIds?: string[];
+  mediaIds?: string[];
+  sourceIds?: string[];
   resolvedLat?: number;
   resolvedLon?: number;
   matchedPath?: string;

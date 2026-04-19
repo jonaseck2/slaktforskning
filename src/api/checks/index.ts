@@ -153,3 +153,15 @@ export function runChecksForPerson(db: Database, personId: string, dbDir?: strin
   return runAllCheckFunctions(db, dbDir, { skipGlobal: true })
     .filter(r => r.personIds.includes(personId));
 }
+
+export function runChecksForPlace(db: Database, placeId: string, dbDir?: string): CheckResult[] {
+  // Include global checks — gazetteer match quality is the main place-scoped signal.
+  return runAllCheckFunctions(db, dbDir)
+    .filter(r => r.placeIds?.includes(placeId));
+}
+
+export function runChecksForMedia(db: Database, mediaId: string, dbDir?: string): CheckResult[] {
+  // Include global checks — media file existence is the main media-scoped signal.
+  return runAllCheckFunctions(db, dbDir)
+    .filter(r => r.mediaIds?.includes(mediaId));
+}

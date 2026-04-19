@@ -90,7 +90,7 @@ describe('checkGazetteerMatchQuality', () => {
     expect(hit[0].matchedPath).toBeDefined();
   });
 
-  it('populates personIds from event_participants', () => {
+  it('does not populate personIds — place-match issues are place-scoped', () => {
     const place = createPlace(db, { name: 'Xyzzy, Nowhere' });
     const person1 = createPerson(db, {});
     const person2 = createPerson(db, {});
@@ -100,8 +100,7 @@ describe('checkGazetteerMatchQuality', () => {
     const results = checkGazetteerMatchQuality(db, [testGazetteer]);
     const hit = results.filter(r => r.placeIds?.includes(place.id));
     expect(hit).toHaveLength(1);
-    expect(hit[0].personIds).toContain(person1.id);
-    expect(hit[0].personIds).toContain(person2.id);
+    expect(hit[0].personIds).toEqual([]);
   });
 
   it('skips places not linked to any event', () => {
@@ -110,14 +109,13 @@ describe('checkGazetteerMatchQuality', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('skips places not linked to any event participant', () => {
+  it('checks places referenced by an event even if the event has no participants', () => {
     const place = createPlace(db, { name: 'Xyzzy, Nowhere' });
-    // event uses the place but has no participants
+    // event uses the place but has no participants — still a used place
     createEvent(db, { event_type: 'birth', place_id: place.id });
     const results = checkGazetteerMatchQuality(db, [testGazetteer]);
-    // place is linked to an event, but no person => skipped
     const hit = results.filter(r => r.placeIds?.includes(place.id));
-    expect(hit).toHaveLength(0);
+    expect(hit).toHaveLength(1);
   });
 
   it('populates placeIds and resolvedLat/Lon for PLACE_MATCH_NONE results', () => {
