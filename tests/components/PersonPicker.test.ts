@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import PersonPicker from '../../src/renderer/components/PersonPicker.vue';
+import { resetDefaultPersonId } from '../../src/renderer/composables/useDefaultPerson';
 import { i18n } from './setup';
 
 const people = [
-  { id: 'p1', given_name: 'Anders', surname: 'Nilsson', preferred_name: null, nickname: null, sex: 'M' },
-  { id: 'p2', given_name: 'Anna', surname: 'Svensson', preferred_name: null, nickname: null, sex: 'F' },
+  { id: 'p1', given_name: 'Anders', surname: 'Nilsson', preferred_name: null, nickname: null, sex: 'M', relation_role: null, birth_year: null, death_year: null },
+  { id: 'p2', given_name: 'Anna', surname: 'Svensson', preferred_name: null, nickname: null, sex: 'F', relation_role: null, birth_year: null, death_year: null },
 ];
 
 function mountPicker(props: Partial<{ modelValue: string | null; placeholder: string }> = {}) {
@@ -22,10 +23,14 @@ describe('PersonPicker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    resetDefaultPersonId();
     (window as unknown as { api: unknown }).api = {
       persons: {
         search: vi.fn().mockResolvedValue(people),
         getNames: vi.fn().mockResolvedValue([{ given_name: 'Anders', surname: 'Nilsson', preferred_name: null }]),
+      },
+      db: {
+        getSetting: vi.fn().mockResolvedValue(null),
       },
     };
   });
@@ -56,7 +61,7 @@ describe('PersonPicker', () => {
     vi.advanceTimersByTime(150);
     await flushPromises();
 
-    expect((window as any).api.persons.search).toHaveBeenCalledWith('And');
+    expect((window as any).api.persons.search).toHaveBeenCalledWith('And', null);
     expect(wrapper.findAll('[role="option"]')).toHaveLength(2);
   });
 
