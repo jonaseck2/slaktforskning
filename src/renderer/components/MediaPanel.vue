@@ -36,11 +36,14 @@
         />
         <div v-if="sections.notes" class="panel-section-body">
           <textarea
+            ref="notesRef"
             v-model="notesDraft"
             class="notes-textarea"
             :placeholder="$t('media.notesPlaceholder')"
             rows="3"
-            @blur="saveNotes"
+            :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+            @blur="persistNotesHeight(); saveNotes()"
+            @mouseup="persistNotesHeight"
           ></textarea>
         </div>
       </div>
@@ -165,6 +168,7 @@ import SectionHeader from './ui/SectionHeader.vue';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
 
 declare const window: Window & {
@@ -228,6 +232,7 @@ const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
 const editingTagId = ref<string | null>(null);
 const notesDraft = ref('');
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('media-panel-notes');
 
 const sections = reactive({
   notes: false,

@@ -472,11 +472,14 @@ export function computeHourglassLayout(
 
     // One curved elbow per parent: from child top → each parent's own bottom.
     // Using the parent's actual bottom (not the row max bottom) so connectors to
-    // shorter parents don't terminate below the parent box.
+    // shorter parents don't terminate below the parent box. A shared midY keeps
+    // all horizontal segments on the same line when parents have varying heights.
+    const parentRowBottom = ancestorRowY(depth + 1) + ancRowMaxH[depth + 1];
+    const sharedMidY = (nodeY + parentRowBottom) / 2;
     for (let i = 0; i < realParents.length; i++) {
       const pcx = parentCXs[i];
       const pBottom = ancestorRowY(depth + 1) + hOf(realParents[i]);
-      paths.push(curvedElbow(nodeCX, nodeY, pcx, pBottom, 'down'));
+      paths.push(curvedElbow(nodeCX, nodeY, pcx, pBottom, 'down', sharedMidY));
     }
   }
 
@@ -526,11 +529,14 @@ export function computeHourglassLayout(
       x += parentWidths[i] + V_GAP;
     }
 
-    // One curved elbow per parent: from focal top → each parent's own bottom.
+    // One curved elbow per parent: from focal top → each parent's own bottom,
+    // sharing the midY so all parents and siblings fork at the same horizontal.
+    const parentRowBottom = ancestorRowY(1) + ancRowMaxH[1];
+    const sharedMidY = (focalRowY + parentRowBottom) / 2;
     for (let i = 0; i < focalRealParents.length; i++) {
       const pcx = parentCXs[i];
       const pBottom = ancestorRowY(1) + hOf(focalRealParents[i]);
-      paths.push(curvedElbow(focalCX, focalRowY, pcx, pBottom, 'down'));
+      paths.push(curvedElbow(focalCX, focalRowY, pcx, pBottom, 'down', sharedMidY));
     }
   }
 
@@ -651,13 +657,14 @@ export function computeHourglassLayout(
       // Place sibling's real spouses (spacing already reserved via computeFootprint)
       placeSpouses(siblings[i], sibCX, focalRowY);
     }
-    // Connect siblings to parent row (parents already connect to focal; siblings need their own elbows up to parents)
+    // Connect siblings to parent row, sharing the midY with the focal→parent
+    // connectors so the horizontal fork aligns regardless of parent heights.
     if (A >= 1) {
       const parentRowBottom = ancestorRowY(1) + ancRowMaxH[1];
+      const sharedMidY = (focalRowY + parentRowBottom) / 2;
       for (let i = 0; i < siblings.length; i++) {
         const scx = siblingCXOf(i);
-        // Elbow: sibling top → parent row bottom (which parent is not meaningful — share focalCX as fork anchor via midpoint)
-        paths.push(curvedElbow(scx, focalRowY, focalCX, parentRowBottom, 'down'));
+        paths.push(curvedElbow(scx, focalRowY, focalCX, parentRowBottom, 'down', sharedMidY));
       }
     }
   }

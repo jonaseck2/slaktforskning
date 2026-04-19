@@ -4,7 +4,15 @@
     <form @submit.prevent="save">
       <label>
         {{ $t('researchTasks.task') }} *
-        <textarea v-model="form.task" rows="3" required autofocus />
+        <textarea
+          ref="taskRef"
+          v-model="form.task"
+          rows="3"
+          required
+          autofocus
+          :style="taskStoredHeight ? { height: taskStoredHeight + 'px' } : undefined"
+          @mouseup="persistTaskHeight"
+        />
       </label>
       <label>
         {{ $t('researchTasks.status') }}
@@ -23,7 +31,13 @@
       </label>
       <label>
         {{ $t('researchTasks.notes') }}
-        <textarea v-model="form.notes" rows="2" />
+        <textarea
+          ref="notesRef"
+          v-model="form.notes"
+          rows="2"
+          :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+          @mouseup="persistNotesHeight"
+        />
       </label>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
@@ -37,8 +51,12 @@
 import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 import BaseModal from './BaseModal.vue';
 import { RESEARCH_TASK_STATUS_VALUES } from '../constants/eventTypes';
+
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('research-task-modal-notes');
+const { textareaRef: taskRef, storedHeight: taskStoredHeight, persistHeight: persistTaskHeight } = useTextareaHeight('research-task-modal-task');
 
 const props = defineProps<{
   personId: string;

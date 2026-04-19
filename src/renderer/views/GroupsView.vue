@@ -18,7 +18,13 @@
           </label>
           <label>
             {{ $t('groups.notes') }}
-            <textarea v-model="form.notes" rows="2" />
+            <textarea
+              ref="notesRef"
+              v-model="form.notes"
+              rows="2"
+              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+              @mouseup="persistNotesHeight"
+            />
           </label>
           <div class="modal-actions">
             <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
@@ -36,7 +42,9 @@ import BaseModal from '../components/BaseModal.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useDataVersionStore } from '../stores/dataVersion';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 import GroupsTable from '../components/GroupsTable.vue';
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('group-add-notes');
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 

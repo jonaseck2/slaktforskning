@@ -105,10 +105,13 @@
         <h4>{{ $t('linkRules.testField') }}</h4>
       </div>
       <textarea
+        ref="testRef"
         v-model="testText"
         class="test-textarea"
         :placeholder="$t('linkRules.testPlaceholder')"
         rows="4"
+        :style="testStoredHeight ? { height: testStoredHeight + 'px' } : undefined"
+        @mouseup="persistTestHeight"
       ></textarea>
       <div v-if="testText" class="test-results">
         <span v-for="(seg, i) in testSegments" :key="i" class="test-segment">
@@ -194,7 +197,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
+
+const { textareaRef: testRef, storedHeight: testStoredHeight, persistHeight: persistTestHeight } = useTextareaHeight('link-rules-test');
 import { svRules } from '../../api/link-rules/sv';
 import { enRules } from '../../api/link-rules/en';
 import { deRules } from '../../api/link-rules/de';

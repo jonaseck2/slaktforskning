@@ -9,6 +9,11 @@ import { CURVE_R } from './constants';
  * - `"right"` (pedigree): horizontal-first elbow (goes right, then bends to target Y)
  * - `"down"` (hourglass/descendant): vertical-first elbow (goes down/up, then bends to target X)
  *
+ * `customMidY` (only honored for direction `"down"`) forces the horizontal
+ * segment to a specific Y. Used when several connectors share a junction — e.g.
+ * a child going up to multiple parents of varying heights — so all horizontals
+ * align even though each connector ends at its own parent's bottom.
+ *
  * Returns a straight line for same-axis connections.
  */
 export function curvedElbow(
@@ -17,6 +22,7 @@ export function curvedElbow(
   toX: number,
   toY: number,
   direction: 'right' | 'down',
+  customMidY?: number,
 ): string {
   const dx = toX - fromX;
   const dy = toY - fromY;
@@ -43,8 +49,13 @@ export function curvedElbow(
     // Same X — simple vertical line
     if (dx === 0) return `M ${fromX},${fromY} V ${toY}`;
 
-    const midY = (fromY + toY) / 2;
-    const r = Math.min(CURVE_R, Math.abs(dx) / 2, Math.abs(midY - fromY));
+    const midY = customMidY ?? (fromY + toY) / 2;
+    const r = Math.min(
+      CURVE_R,
+      Math.abs(dx) / 2,
+      Math.abs(midY - fromY),
+      Math.abs(midY - toY),
+    );
     const signX = dx > 0 ? 1 : -1;
     const signY = dy > 0 ? 1 : -1;
 

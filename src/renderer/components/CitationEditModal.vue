@@ -16,11 +16,25 @@
         </label>
         <label>
           {{ $t('citations.transcription') }}
-          <textarea v-model="form.transcription" rows="3" :placeholder="$t('citations.transcriptionPlaceholder')" />
+          <textarea
+            ref="transRef"
+            v-model="form.transcription"
+            rows="3"
+            :placeholder="$t('citations.transcriptionPlaceholder')"
+            :style="transStoredHeight ? { height: transStoredHeight + 'px' } : undefined"
+            @mouseup="persistTransHeight"
+          />
         </label>
         <label>
           {{ $t('citations.notes') }}
-          <textarea v-model="form.notes" rows="2" :placeholder="$t('citations.notesPlaceholder')" />
+          <textarea
+            ref="notesRef"
+            v-model="form.notes"
+            rows="2"
+            :placeholder="$t('citations.notesPlaceholder')"
+            :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+            @mouseup="persistNotesHeight"
+          />
         </label>
         <label>
           {{ $t('citations.dateAccessed') }}
@@ -38,6 +52,10 @@
 import { reactive } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
+import { useTextareaHeight } from '../composables/useTextareaHeight';
+
+const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('citation-edit-notes');
+const { textareaRef: transRef, storedHeight: transStoredHeight, persistHeight: persistTransHeight } = useTextareaHeight('citation-edit-transcription');
 
 const props = defineProps<{
   citation: {
