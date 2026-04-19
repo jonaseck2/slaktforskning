@@ -2,48 +2,11 @@
   <BaseModal @close="$emit('close')" title-id="modal-title-event">
       <h3 id="modal-title-event">{{ editingEvent ? $t('events.editEvent') : $t('events.addEventTitle') }}</h3>
       <form @submit.prevent="save">
-        <label>
-          {{ $t('events.eventType') }}
-          <select v-model="form.event_type" required>
-            <option value="" disabled>{{ $t('events.selectType') }}</option>
-            <optgroup v-if="commonTypes.length > 0" :label="$t('events.commonTypes')">
-              <option v-for="et in commonTypes" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
-            </optgroup>
-            <optgroup :label="commonTypes.length > 0 ? $t('events.allTypes') : undefined">
-              <option v-for="et in otherTypes" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
-            </optgroup>
-          </select>
-        </label>
-
-        <label>{{ $t('events.date') }}</label>
-        <DateInput
-          v-model:dateType="form.date_type"
-          v-model:dateValue="form.date_value"
-          v-model:dateValueEnd="form.date_value_end"
-          v-model:dateOriginal="form.date_original"
+        <EventFormBody
+          v-model:event="form"
+          v-model:citation="citationForm"
+          :context="relationshipId ? 'relationship' : 'person'"
         />
-
-        <label>
-          {{ $t('events.place') }}
-          <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
-        </label>
-
-        <label>
-          {{ $t('events.description') }}
-          <textarea
-            ref="descRef"
-            v-model="form.description"
-            rows="2"
-            :placeholder="$t('events.descriptionPlaceholder')"
-            :style="descStoredHeight ? { height: descStoredHeight + 'px' } : undefined"
-            @mouseup="persistDescHeight"
-          />
-        </label>
-
-        <label v-if="CAUSE_APPLICABLE_TYPES.includes(form.event_type)">
-          {{ $t('events.cause') }}
-          <input v-model="form.cause" type="text" :placeholder="$t('events.causePlaceholder')" />
-        </label>
 
         <!-- Citations section when editing -->
         <div v-if="editingEvent" class="citations-section">
@@ -54,52 +17,6 @@
             <span v-if="cit.page" class="citation-page">{{ cit.page }}</span>
             <AppButton variant="ghost" size="sm" @click="deleteCitation(cit.id)">✕</AppButton>
           </div>
-        </div>
-
-        <!-- Citation section — New or Copy-from-existing -->
-        <div class="citation-section">
-          <div class="citation-section-header">{{ $t('citations.title') }}</div>
-
-          <div class="entry-mode-toggle">
-            <button
-              type="button"
-              :class="['toggle-btn', { active: citationMode === 'new' }]"
-              @click="setCitationMode('new')"
-            >
-              {{ $t('citations.newCitation') }}
-            </button>
-            <button
-              type="button"
-              :class="['toggle-btn', { active: citationMode === 'copy' }]"
-              @click="setCitationMode('copy')"
-            >
-              {{ $t('citations.copyFrom') }}
-            </button>
-          </div>
-
-          <template v-if="citationMode === 'copy'">
-            <label>
-              {{ $t('citations.copyFromSource') }}
-              <SourcePicker
-                :model-value="copyFromSourceId"
-                @update:model-value="onCopySourceChange"
-              />
-            </label>
-            <label v-if="copyFromSourceId && copyCitationOptions.length > 0">
-              {{ $t('citations.selectToCopy') }}
-              <select
-                :value="selectedCopyCitationId"
-                @change="copyFromCitation(($event.target as HTMLSelectElement).value)"
-              >
-                <option value="">{{ $t('citations.selectToCopy') }}</option>
-                <option v-for="c in copyCitationOptions" :key="c.id" :value="c.id">
-                  {{ c.page || '—' }}{{ c.date_accessed ? ' (' + c.date_accessed + ')' : '' }}
-                </option>
-              </select>
-            </label>
-          </template>
-
-          <CitationFields :model="citationForm" />
         </div>
 
         <div class="modal-actions">
@@ -125,25 +42,13 @@ import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 import AppButton from './ui/AppButton.vue';
-import DateInput from './DateInput.vue';
-import PlacePicker from './PlacePicker.vue';
-import SourcePicker from './SourcePicker.vue';
-import CitationFields from './CitationFields.vue';
+import EventFormBody from './EventFormBody.vue';
 import type { CitationFieldsModel } from './CitationFields.vue';
-import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 import type { EventTypeValue } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';
-import { useTextareaHeight } from '../composables/useTextareaHeight';
-
-const { textareaRef: descRef, storedHeight: descStoredHeight, persistHeight: persistDescHeight } = useTextareaHeight('event-form-description');
 
 const CAUSE_APPLICABLE_TYPES: readonly EventTypeValue[] = ['death'];
-
-// Most commonly used event types — shown first with a separator
-const COMMON_EVENT_TYPES: readonly EventTypeValue[] = [
-  'birth', 'baptism', 'death', 'burial', 'marriage', 'residence', 'census', 'emigration', 'immigration',
-];
 
 interface EventData {
   id: string;
@@ -183,19 +88,6 @@ const sourceSession = useSourceSession();
 const editing = computed(() => !!props.editingEvent);
 const addedCount = ref(0);
 
-const unsortedEventTypes = props.relationshipId ? RELATIONSHIP_EVENT_TYPE_VALUES : PERSON_EVENT_TYPE_VALUES;
-
-// Split into common (top) and other (bottom) groups
-const commonTypes = computed(() =>
-  COMMON_EVENT_TYPES.filter(et => (unsortedEventTypes as readonly string[]).includes(et))
-);
-const otherTypes = computed(() =>
-  [...unsortedEventTypes]
-    .filter(et => !COMMON_EVENT_TYPES.includes(et) && et !== 'other')
-    .sort((a, b) => t('eventTypes.' + a).localeCompare(t('eventTypes.' + b), undefined, { sensitivity: 'base' }))
-    .concat(['other'] as typeof unsortedEventTypes[number][])
-);
-
 const form = reactive({
   event_type: props.editingEvent?.event_type ?? props.defaultEventType ?? '',
   date_type: props.editingEvent?.date_type ?? 'exact',
@@ -216,51 +108,6 @@ const citationForm = reactive<CitationFieldsModel>({
   date_accessed: new Date().toISOString().slice(0, 10),
 });
 const existingCitations = ref<CitationRow[]>([]);
-
-// Copy-from-existing state
-const citationMode = ref<'new' | 'copy'>('new');
-const copyFromSourceId = ref<string | null>(null);
-const selectedCopyCitationId = ref<string>('');
-interface CopyCitationOption {
-  id: string;
-  page: string | null;
-  date_accessed: string | null;
-  confidence: number;
-  transcription: string | null;
-  notes: string | null;
-  source_id: string;
-}
-const copyCitationOptions = ref<CopyCitationOption[]>([]);
-
-function setCitationMode(mode: 'new' | 'copy') {
-  citationMode.value = mode;
-  if (mode === 'new') {
-    copyFromSourceId.value = null;
-    selectedCopyCitationId.value = '';
-    copyCitationOptions.value = [];
-  }
-}
-
-async function onCopySourceChange(sourceId: string | null) {
-  copyFromSourceId.value = sourceId;
-  selectedCopyCitationId.value = '';
-  copyCitationOptions.value = [];
-  if (!sourceId || !window.api) return;
-  copyCitationOptions.value = (await window.api.citations.forSource(sourceId)) as CopyCitationOption[];
-}
-
-function copyFromCitation(id: string) {
-  selectedCopyCitationId.value = id;
-  if (!id) return;
-  const c = copyCitationOptions.value.find(x => x.id === id);
-  if (!c) return;
-  citationForm.source_id = c.source_id;
-  citationForm.page = c.page ?? '';
-  citationForm.confidence = c.confidence ?? 0;
-  citationForm.transcription = c.transcription ?? '';
-  citationForm.notes = c.notes ?? '';
-  if (c.date_accessed) citationForm.date_accessed = c.date_accessed;
-}
 
 onMounted(async () => {
   if (!window.api) return;
@@ -370,7 +217,7 @@ async function saveAndAnother() {
     form.date_original = '';
     form.description = '';
     form.cause = '';
-    // Keep: form.place_id, citationForm.source_id, citationForm.page
+    // Keep: form.place_id, citationForm state
     existingCitations.value = [];
     addedCount.value++;
   }
@@ -378,51 +225,6 @@ async function saveAndAnother() {
 </script>
 
 <style scoped>
-.citation-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border-top: 1px solid var(--surface-border-subtle);
-  padding-top: 12px;
-}
-.citation-section > label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-.citation-section-header {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.4px;
-}
-.entry-mode-toggle {
-  display: flex;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-.toggle-btn {
-  flex: 1;
-  padding: 6px 12px;
-  background: var(--surface);
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
-  font-family: inherit;
-}
-.toggle-btn:hover:not(.active) {
-  background: var(--surface-hover);
-}
-.toggle-btn.active {
-  background: var(--accent);
-  color: var(--accent-text);
-}
 .citations-section {
   border-top: 1px solid var(--surface-border-subtle);
   padding-top: 8px;
