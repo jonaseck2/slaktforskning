@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runAllChecks } from '../../src/api/checks';
-import { createPerson, addPersonName } from '../../src/api/persons';
+import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createPlace } from '../../src/api/places';
