@@ -614,6 +614,7 @@ export default {
       UNRELATED_PERSON: 'Person has no registered relationships',
       MEDIA_FILE_MISSING: 'Media file missing: {filePath}',
       ORPHANED_MEDIA: 'Media file "{title}" has no links',
+      MEDIA_REGION_OUT_OF_BOUNDS: 'Media region falls outside the image ({x}, {y} + {width}×{height})',
       PLACE_MATCH_AMBIGUOUS: 'Ambiguous place match: {name} — matched {matchedPath}',
       PLACE_MATCH_PARTIAL: 'Partial place match: {name} — unmatched: {unmatched}',
       PLACE_MATCH_NONE: 'Place without coordinates: {name}',

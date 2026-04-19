@@ -33,3 +33,20 @@ export function checkOrphanedMedia(db: Database): CheckResult[] {
     mediaIds: [r.id],
   }));
 }
+
+export function checkMediaRegionOutOfBounds(db: Database): CheckResult[] {
+  const rows = queryAll<{
+    id: string; media_id: string; x: number; y: number; width: number; height: number;
+  }>(db, `
+    SELECT id, media_id, x, y, width, height FROM media_regions
+    WHERE x < 0 OR y < 0 OR (x + width) > 1 OR (y + height) > 1
+  `);
+  return rows.map(r => ({
+    code: 'MEDIA_REGION_OUT_OF_BOUNDS',
+    severity: 'warning' as CheckSeverity,
+    message: `Mediaregion ligger utanför bilden (${r.x.toFixed(2)}, ${r.y.toFixed(2)} + ${r.width.toFixed(2)}×${r.height.toFixed(2)})`,
+    messageParams: { x: r.x, y: r.y, width: r.width, height: r.height },
+    personIds: [],
+    mediaIds: [r.media_id],
+  }));
+}

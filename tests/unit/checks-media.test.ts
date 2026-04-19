@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { runAllChecks } from '../../src/api/checks';
 import { queryRun } from '../../src/api/db';
 import { createMedia, addMediaLink } from '../../src/api/media';
+import { createMediaRegion } from '../../src/api/media_regions';
 import { createPerson } from '../../src/api/persons';
 import { createTestDb } from './helpers';
 
@@ -33,5 +34,29 @@ describe('ORPHANED_MEDIA', () => {
     addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
     const results = runAllChecks(db);
     expect(results.filter(r => r.code === 'ORPHANED_MEDIA' && r.mediaIds?.includes(m.id))).toHaveLength(0);
+  });
+});
+
+describe('MEDIA_REGION_OUT_OF_BOUNDS', () => {
+  it('fires when a region extends past the right edge', () => {
+    const m = createMedia(db, { title: 'Photo' });
+    const p = createPerson(db, {});
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
+    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.8, y: 0.1, width: 0.5, height: 0.2 });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'MEDIA_REGION_OUT_OF_BOUNDS' && r.mediaIds?.includes(m.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+    // sanity: region id is referenced so future UI can navigate
+    void region;
+  });
+
+  it('does not fire for a region fully inside the unit square', () => {
+    const m = createMedia(db, { title: 'Photo' });
+    const p = createPerson(db, {});
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
+    createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'MEDIA_REGION_OUT_OF_BOUNDS' && r.mediaIds?.includes(m.id))).toHaveLength(0);
   });
 });
