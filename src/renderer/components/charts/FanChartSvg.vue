@@ -6,6 +6,7 @@
      radial text so names read outward along the radius. -->
 <template>
   <svg
+    ref="rootRef"
     :viewBox="`0 0 ${vbWidth} ${vbHeight}`"
     :width="width"
     :height="height"
@@ -156,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import type { FanSegment } from '../../utils/fanLayout';
 import { fullNameParts } from '../../utils/nameUtils';
 import { segmentGradientStops } from '../../utils/fanColors';
@@ -193,6 +194,9 @@ const props = withDefaults(defineProps<Props>(), {
   textColor: 'white',
   dateColor: 'rgba(255,255,255,0.75)',
 });
+
+const rootRef = ref<SVGElement | null>(null);
+defineExpose({ rootRef });
 
 const emit = defineEmits<{
   navigate: [id: string];
