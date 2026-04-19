@@ -53,7 +53,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" :action-label="'+ ' + $t('personDetail.addName')" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
-          <div v-if="names.length === 0" class="panel-empty-section">—</div>
+          <div v-if="names.length === 0" class="empty-hint">{{ $t('empty.names') }}</div>
           <PersonNamesTable v-else :names="names" @edit="openNameForm" @delete="deleteName" />
         </div>
       </div>
@@ -110,7 +110,7 @@
               @cancel="showGroupPicker = false"
             />
           </div>
-          <div v-if="groups.length === 0" class="panel-empty-section">—</div>
+          <div v-if="groups.length === 0" class="empty-hint">{{ $t('empty.groups') }}</div>
           <GroupsTable v-else :groups="groups" @remove="removeFromGroup" />
         </div>
       </div>
@@ -135,7 +135,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.addTask')" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
-          <div v-if="researchTasks.length === 0" class="panel-empty-section">—</div>
+          <div v-if="researchTasks.length === 0" class="empty-hint">{{ $t('empty.researchTasks') }}</div>
           <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
         </div>
       </div>
@@ -466,7 +466,6 @@ onMounted(() => {
   padding: 0 var(--space-lg);
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
-.panel-empty-section { padding: var(--space-xs) 0; color: var(--text-muted); font-size: var(--font-xs); }
 
 /* Compact form */
 /* Groups */
