@@ -18,6 +18,7 @@ window.api.persons.deleteName(id)                 // → boolean
 window.api.persons.addIdentifier(personId, data)  // → PersonIdentifier
 window.api.persons.getIdentifiers(personId)       // → PersonIdentifier[]
 window.api.persons.deleteIdentifier(id)           // → boolean
+window.api.persons.createWithEvent(data)          // → { person: Person, event: GenealogyEvent | null, citation: Citation | null }
 
 window.api.relationships.create(data)              // → Relationship
 window.api.relationships.get(id)                   // → Relationship | null
@@ -132,6 +133,7 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `persons:addIdentifier` | `persons.addPersonIdentifier(db, personId, data)` |
 | `persons:getIdentifiers` | `persons.getPersonIdentifiers(db, personId)` |
 | `persons:deleteIdentifier` | `persons.deletePersonIdentifier(db, id)` |
+| `persons:createWithEvent` | `persons.createPersonWithEvent(db, data)` → `{ person, event, citation }` — atomic transaction; rolls back on any error |
 | `relationships:create` | `relationships.createRelationship(db, data)` |
 | `relationships:get` | `relationships.getRelationship(db, id)` |
 | `relationships:list` | `relationships.listRelationships(db)` |

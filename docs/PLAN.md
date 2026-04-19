@@ -212,6 +212,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.122.1 | chore(workflow): plan-driven work runs in worktree + subagents; small fixes stay on main. Updates CLAUDE.md Execution default, commit skill branch-strategy rule, and add-feature skill. | [plan](plans/2026-04-19-add-person-from-place-panel.md) |
 | v0.123.0 | Monospaced notes toggle (Person/Relationship/Place/Group/Media notes) | [archive](plans/archive/2026-04-19-monospaced-notes-toggle.md) |
 | v0.124.0 | EventForm Citation section (full citation inline + new/copy-from toggle), reusable `CitationFields` + `SimpleDateInput`, DateInput calendar-icon native-picker, modal textarea vertical-only resize, em-based YMD widths | — |
+| v0.125.0 | feat(persons): add person from place panel — atomic person+event+citation workflow, EventFormBody extraction, smart event-type ladder, Settings → Defaults tab | [archive](plans/archive/2026-04-19-add-person-from-place-panel.md) |
 ---
 
 ## Research
