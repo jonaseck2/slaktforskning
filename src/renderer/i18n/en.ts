@@ -74,7 +74,6 @@ export default {
     view: 'View',
     all: 'All',
     close: 'Close',
-    monospaced: 'Monospaced',
     monospacedTooltip: 'Show notes in monospaced font for ASCII tables and aligned text',
   },
   persons: {
@@ -232,6 +231,10 @@ export default {
     notesPlaceholder: 'Optional notes\u2026',
     dateAccessed: 'Date Accessed',
     confirmDelete: 'Delete this citation?',
+    newCitation: 'New citation',
+    copyFrom: 'Copy from existing',
+    copyFromSource: 'Copy from source',
+    selectToCopy: 'Select citation to copy\u2026',
   },
   dateInput: {
     to: 'to',
@@ -239,6 +242,7 @@ export default {
     year: 'YYYY',
     month: 'MM',
     day: 'DD',
+    pickDate: 'Pick date',
   },
   datePrefix: {
     about: 'abt. ',

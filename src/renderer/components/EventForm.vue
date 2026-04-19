@@ -56,16 +56,50 @@
           </div>
         </div>
 
-        <!-- Source — always visible, not behind a checkbox -->
-        <div class="source-section">
-          <label>
-            {{ $t('citations.source') }}
-            <SourcePicker v-model="sourceForm.source_id" />
-          </label>
-          <label>
-            {{ $t('citations.pageLocation') }}
-            <input v-model="sourceForm.page" type="text" :placeholder="$t('citations.pagePlaceholder')" />
-          </label>
+        <!-- Citation section — New or Copy-from-existing -->
+        <div class="citation-section">
+          <div class="citation-section-header">{{ $t('citations.title') }}</div>
+
+          <div class="entry-mode-toggle">
+            <button
+              type="button"
+              :class="['toggle-btn', { active: citationMode === 'new' }]"
+              @click="setCitationMode('new')"
+            >
+              {{ $t('citations.newCitation') }}
+            </button>
+            <button
+              type="button"
+              :class="['toggle-btn', { active: citationMode === 'copy' }]"
+              @click="setCitationMode('copy')"
+            >
+              {{ $t('citations.copyFrom') }}
+            </button>
+          </div>
+
+          <template v-if="citationMode === 'copy'">
+            <label>
+              {{ $t('citations.copyFromSource') }}
+              <SourcePicker
+                :model-value="copyFromSourceId"
+                @update:model-value="onCopySourceChange"
+              />
+            </label>
+            <label v-if="copyFromSourceId && copyCitationOptions.length > 0">
+              {{ $t('citations.selectToCopy') }}
+              <select
+                :value="selectedCopyCitationId"
+                @change="copyFromCitation(($event.target as HTMLSelectElement).value)"
+              >
+                <option value="">{{ $t('citations.selectToCopy') }}</option>
+                <option v-for="c in copyCitationOptions" :key="c.id" :value="c.id">
+                  {{ c.page || '—' }}{{ c.date_accessed ? ' (' + c.date_accessed + ')' : '' }}
+                </option>
+              </select>
+            </label>
+          </template>
+
+          <CitationFields :model="citationForm" />
         </div>
 
         <div class="modal-actions">
@@ -94,6 +128,8 @@ import AppButton from './ui/AppButton.vue';
 import DateInput from './DateInput.vue';
 import PlacePicker from './PlacePicker.vue';
 import SourcePicker from './SourcePicker.vue';
+import CitationFields from './CitationFields.vue';
+import type { CitationFieldsModel } from './CitationFields.vue';
 import { PERSON_EVENT_TYPE_VALUES, RELATIONSHIP_EVENT_TYPE_VALUES } from '../constants/eventTypes';
 import type { EventTypeValue } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
@@ -171,13 +207,66 @@ const form = reactive({
   cause: props.editingEvent?.cause ?? '',
 });
 
-const sourceForm = reactive({ source_id: null as string | null, page: '' });
+const citationForm = reactive<CitationFieldsModel>({
+  source_id: null,
+  page: '',
+  confidence: 0,
+  transcription: '',
+  notes: '',
+  date_accessed: new Date().toISOString().slice(0, 10),
+});
 const existingCitations = ref<CitationRow[]>([]);
+
+// Copy-from-existing state
+const citationMode = ref<'new' | 'copy'>('new');
+const copyFromSourceId = ref<string | null>(null);
+const selectedCopyCitationId = ref<string>('');
+interface CopyCitationOption {
+  id: string;
+  page: string | null;
+  date_accessed: string | null;
+  confidence: number;
+  transcription: string | null;
+  notes: string | null;
+  source_id: string;
+}
+const copyCitationOptions = ref<CopyCitationOption[]>([]);
+
+function setCitationMode(mode: 'new' | 'copy') {
+  citationMode.value = mode;
+  if (mode === 'new') {
+    copyFromSourceId.value = null;
+    selectedCopyCitationId.value = '';
+    copyCitationOptions.value = [];
+  }
+}
+
+async function onCopySourceChange(sourceId: string | null) {
+  copyFromSourceId.value = sourceId;
+  selectedCopyCitationId.value = '';
+  copyCitationOptions.value = [];
+  if (!sourceId || !window.api) return;
+  copyCitationOptions.value = (await window.api.citations.forSource(sourceId)) as CopyCitationOption[];
+}
+
+function copyFromCitation(id: string) {
+  selectedCopyCitationId.value = id;
+  if (!id) return;
+  const c = copyCitationOptions.value.find(x => x.id === id);
+  if (!c) return;
+  citationForm.source_id = c.source_id;
+  citationForm.page = c.page ?? '';
+  citationForm.confidence = c.confidence ?? 0;
+  citationForm.transcription = c.transcription ?? '';
+  citationForm.notes = c.notes ?? '';
+  if (c.date_accessed) citationForm.date_accessed = c.date_accessed;
+}
 
 onMounted(async () => {
   if (!window.api) return;
   if (sourceSession.lastSourceId) {
-    sourceForm.source_id = sourceSession.lastSourceId;
+    citationForm.source_id = sourceSession.lastSourceId;
+    if (sourceSession.lastPage) citationForm.page = sourceSession.lastPage;
   }
   if (props.editingEvent) {
     await loadCitations();
@@ -240,16 +329,19 @@ async function doSave(): Promise<boolean> {
       }
     }
 
-    if (sourceForm.source_id && eventId) {
+    if (citationForm.source_id && eventId) {
       const citData: Record<string, unknown> = {
-        source_id: sourceForm.source_id,
-        page: sourceForm.page,
-        confidence: 2,
+        source_id: citationForm.source_id,
+        page: citationForm.page,
+        confidence: citationForm.confidence,
+        transcription: citationForm.transcription,
+        notes: citationForm.notes,
+        date_accessed: citationForm.date_accessed,
         event_id: eventId,
       };
       if (props.personId) citData.person_id = props.personId;
       await window.api.citations.create(citData);
-      sourceSession.setLastUsed(sourceForm.source_id, sourceForm.page);
+      sourceSession.setLastUsed(citationForm.source_id, citationForm.page);
     }
 
     return true;
@@ -278,7 +370,7 @@ async function saveAndAnother() {
     form.date_original = '';
     form.description = '';
     form.cause = '';
-    // Keep: form.place_id, sourceForm.source_id, sourceForm.page
+    // Keep: form.place_id, citationForm.source_id, citationForm.page
     existingCitations.value = [];
     addedCount.value++;
   }
@@ -286,9 +378,50 @@ async function saveAndAnother() {
 </script>
 
 <style scoped>
-.source-section {
+.citation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   border-top: 1px solid var(--surface-border-subtle);
-  padding-top: 8px;
+  padding-top: 12px;
+}
+.citation-section > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.citation-section-header {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+}
+.entry-mode-toggle {
+  display: flex;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.toggle-btn {
+  flex: 1;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  font-family: inherit;
+}
+.toggle-btn:hover:not(.active) {
+  background: var(--surface-hover);
+}
+.toggle-btn.active {
+  background: var(--accent);
+  color: var(--accent-text);
 }
 .citations-section {
   border-top: 1px solid var(--surface-border-subtle);

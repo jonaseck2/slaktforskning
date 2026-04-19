@@ -32,8 +32,10 @@ export function listRelationships(db: Database): Relationship[] {
 type RelWithNames = Relationship & {
   person1_given_name: string; person1_surname: string;
   person1_preferred_name: string | null; person1_nickname: string | null;
+  person1_sex: 'M' | 'F' | 'U' | null;
   person2_given_name: string; person2_surname: string;
   person2_preferred_name: string | null; person2_nickname: string | null;
+  person2_sex: 'M' | 'F' | 'U' | null;
 };
 
 export function countRelationships(db: Database): number {
@@ -47,11 +49,15 @@ export function listRelationshipsPage(db: Database, limit: number, offset: numbe
       COALESCE(pn1.surname, '') as person1_surname,
       pn1.preferred_name as person1_preferred_name,
       pn1.nickname as person1_nickname,
+      p1.sex as person1_sex,
       COALESCE(pn2.given_name, '') as person2_given_name,
       COALESCE(pn2.surname, '') as person2_surname,
       pn2.preferred_name as person2_preferred_name,
-      pn2.nickname as person2_nickname
+      pn2.nickname as person2_nickname,
+      p2.sex as person2_sex
     FROM relationships r
+    LEFT JOIN persons p1 ON p1.id = r.person1_id
+    LEFT JOIN persons p2 ON p2.id = r.person2_id
     LEFT JOIN person_names pn1 ON pn1.person_id = r.person1_id
       AND pn1.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person1_id)
     LEFT JOIN person_names pn2 ON pn2.person_id = r.person2_id

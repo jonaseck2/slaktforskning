@@ -2,56 +2,7 @@
   <BaseModal @close="$emit('close')" title-id="modal-title-citation">
       <h3 id="modal-title-citation">{{ $t('citations.addTitle') }}</h3>
       <form @submit.prevent="save">
-        <label>
-          {{ $t('citations.source') }}
-          <select v-model="form.source_id" required>
-            <option value="" disabled>{{ $t('citations.selectSource') }}</option>
-            <option v-for="src in sources" :key="src.id" :value="src.id">{{ src.title }}</option>
-          </select>
-        </label>
-
-        <label>
-          {{ $t('citations.pageLocation') }}
-          <input v-model="form.page" type="text" :placeholder="$t('citations.pagePlaceholder')" />
-        </label>
-
-        <label>
-          {{ $t('citations.confidence') }}
-          <select v-model.number="form.confidence">
-            <option v-for="val in CONFIDENCE_LEVEL_VALUES" :key="val" :value="val">
-              {{ val }} — {{ $t('confidenceLevels.' + val) }}
-            </option>
-          </select>
-        </label>
-
-        <label>
-          {{ $t('citations.transcription') }}
-          <textarea
-            ref="transRef"
-            v-model="form.transcription"
-            rows="3"
-            :placeholder="$t('citations.transcriptionPlaceholder')"
-            :style="transStoredHeight ? { height: transStoredHeight + 'px' } : undefined"
-            @mouseup="persistTransHeight"
-          />
-        </label>
-
-        <label>
-          {{ $t('citations.notes') }}
-          <textarea
-            ref="notesRef"
-            v-model="form.notes"
-            rows="2"
-            :placeholder="$t('citations.notesPlaceholder')"
-            :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
-            @mouseup="persistNotesHeight"
-          />
-        </label>
-
-        <label>
-          {{ $t('citations.dateAccessed') }}
-          <input v-model="form.date_accessed" type="date" />
-        </label>
+        <CitationFields :model="form" />
 
         <div class="modal-actions">
           <AppButton variant="secondary" @click="$emit('close')">{{ $t('common.cancel') }}</AppButton>
@@ -62,22 +13,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 import AppButton from './ui/AppButton.vue';
-import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
+import CitationFields from './CitationFields.vue';
+import type { CitationFieldsModel } from './CitationFields.vue';
 import { useToast } from '../composables/useToast';
 import { useSourceSession } from '../stores/sourceSession';
-import { useTextareaHeight } from '../composables/useTextareaHeight';
-
-const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('citation-form-notes');
-const { textareaRef: transRef, storedHeight: transStoredHeight, persistHeight: persistTransHeight } = useTextareaHeight('citation-form-transcription');
-
-interface SourceRow {
-  id: string;
-  title: string;
-}
 
 const props = defineProps<{
   sourceId?: string;
@@ -95,10 +38,9 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const toast = useToast();
 const sourceSession = useSourceSession();
-const sources = ref<SourceRow[]>([]);
 
-const form = reactive({
-  source_id: props.sourceId ?? '',
+const form = reactive<CitationFieldsModel>({
+  source_id: props.sourceId ?? null,
   page: '',
   confidence: 0,
   transcription: '',
@@ -106,9 +48,7 @@ const form = reactive({
   date_accessed: new Date().toISOString().slice(0, 10),
 });
 
-onMounted(async () => {
-  if (!window.api) return;
-  sources.value = (await window.api.sources.list()) as SourceRow[];
+onMounted(() => {
   if (!props.sourceId && sourceSession.lastSourceId) {
     form.source_id = sourceSession.lastSourceId;
   }
@@ -131,9 +71,7 @@ async function save() {
     if (props.placeId) data.place_id = props.placeId;
 
     await window.api.citations.create(data);
-    if (form.source_id) {
-      sourceSession.setLastUsed(form.source_id, form.page);
-    }
+    sourceSession.setLastUsed(form.source_id, form.page);
     emit('saved');
     emit('close');
   } catch (err) {
@@ -142,6 +80,3 @@ async function save() {
   }
 }
 </script>
-
-<style scoped>
-</style>

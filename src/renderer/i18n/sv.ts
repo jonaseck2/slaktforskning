@@ -74,7 +74,6 @@ export default {
     view: 'Visa',
     all: 'Alla',
     close: 'Stäng',
-    monospaced: 'Fast bredd',
     monospacedTooltip: 'Visa anteckningar med fast bredd för ASCII-tabeller och justerad text',
   },
   persons: {
@@ -232,6 +231,10 @@ export default {
     notesPlaceholder: 'Valfria anteckningar\u2026',
     dateAccessed: 'Åtkomstdatum',
     confirmDelete: 'Ta bort hänvisningen?',
+    newCitation: 'Ny hänvisning',
+    copyFrom: 'Kopiera från befintlig',
+    copyFromSource: 'Kopiera från källa',
+    selectToCopy: 'Välj hänvisning att kopiera\u2026',
   },
   dateInput: {
     to: 'till',
@@ -239,6 +242,7 @@ export default {
     year: 'ÅÅÅÅ',
     month: 'MM',
     day: 'DD',
+    pickDate: 'Välj datum',
   },
   datePrefix: {
     about: 'ca ',
