@@ -42,24 +42,14 @@
             <input type="checkbox" v-model="form.living" />{{ $t('persons.living') }}
           </label>
 
-          <!-- Birth fields -->
-          <details class="birth-section">
-            <summary>{{ $t('eventTypes.birth') }}</summary>
-            <label>{{ $t('addRelated.birthDate') }}
-              <input v-model="birthForm.date_value" type="date" />
-            </label>
-            <label>{{ $t('addRelated.originalDate') }}
-              <input v-model="birthForm.date_original" type="text" :placeholder="$t('addRelated.originalDate')" />
-            </label>
-            <label>{{ $t('addRelated.birthPlace') }}
-              <PlacePicker v-model="birthForm.place_id" />
-            </label>
-            <label>{{ $t('citations.source') }}
-              <SourcePicker v-model="birthSourceForm.source_id" />
-            </label>
-            <label>{{ $t('addRelated.page') }}
-              <input v-model="birthSourceForm.page" type="text" :placeholder="$t('addRelated.page')" />
-            </label>
+          <!-- Event fields -->
+          <details class="event-section" :open="eventSectionOpen" @toggle="onEventToggle">
+            <summary>{{ $t('events.addEvent') }}</summary>
+            <EventFormBody
+              v-model:event="eventForm"
+              v-model:citation="citationForm"
+              context="person"
+            />
           </details>
         </template>
 
@@ -92,11 +82,14 @@ import BaseModal from './BaseModal.vue';
 import AppButton from './ui/AppButton.vue';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import PersonPicker from './PersonPicker.vue';
-import PlacePicker from './PlacePicker.vue';
-import SourcePicker from './SourcePicker.vue';
+import EventFormBody from './EventFormBody.vue';
+import type { CitationFieldsModel } from './CitationFields.vue';
 import { useToast } from '../composables/useToast';
-import { useBirthEventCreation } from '../composables/useBirthEventCreation';
 import { useSourceSession } from '../stores/sourceSession';
+
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
 
 const props = defineProps<{
   personId: string;
@@ -112,7 +105,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
-const { createBirthEvent } = useBirthEventCreation();
 const sourceSession = useSourceSession();
 
 const title = computed(() => {
@@ -151,17 +143,35 @@ const form = reactive({
   subtype: props.mode === 'spouse' ? 'unknown' : 'biological',
 });
 
-// Birth form state
-const birthForm = reactive({
+// Event + citation form state
+const eventSectionOpen = ref(false);
+const eventForm = reactive({
+  event_type: 'birth',
+  date_type: 'exact',
   date_value: '',
+  date_value_end: '',
   date_original: '',
   place_id: null as string | null,
+  description: '',
+  cause: '',
 });
-const birthSourceForm = reactive({ source_id: null as string | null, page: '' });
+const citationForm = reactive<CitationFieldsModel>({
+  source_id: null,
+  page: '',
+  confidence: 2,
+  transcription: '',
+  notes: '',
+  date_accessed: new Date().toISOString().slice(0, 10),
+});
+
+function onEventToggle(e: Event) {
+  eventSectionOpen.value = (e.target as HTMLDetailsElement).open;
+}
 
 onMounted(async () => {
   if (sourceSession.lastSourceId) {
-    birthSourceForm.source_id = sourceSession.lastSourceId;
+    citationForm.source_id = sourceSession.lastSourceId;
+    if (sourceSession.lastPage) citationForm.page = sourceSession.lastPage;
   }
 });
 
@@ -173,25 +183,40 @@ async function save() {
       if (!existingPersonId.value) return;
       targetPersonId = existingPersonId.value;
     } else {
-      const newPerson = (await window.api.persons.create({
+      const payload: Record<string, unknown> = {
         given_name: form.given_name,
         surname: form.surname,
         sex: form.sex,
         living: form.living,
-      })) as { id: string };
-      targetPersonId = newPerson.id;
+      };
 
-      // Create birth event if any birth data was provided
-      await createBirthEvent(targetPersonId, {
-        date_value: birthForm.date_value || undefined,
-        date_original: birthForm.date_original || undefined,
-        place_id: birthForm.place_id,
-        source_id: birthSourceForm.source_id || undefined,
-        page: birthSourceForm.page || undefined,
-      });
-      if (birthSourceForm.source_id) {
-        sourceSession.setLastUsed(birthSourceForm.source_id, birthSourceForm.page);
+      if (eventSectionOpen.value && eventForm.event_type) {
+        payload.event = {
+          event_type: eventForm.event_type,
+          date_type: eventForm.date_type,
+          date_value: eventForm.date_value || null,
+          date_value_end: eventForm.date_type === 'between' ? (eventForm.date_value_end || null) : null,
+          date_original: eventForm.date_original,
+          place_id: eventForm.place_id,
+          place_name: null,
+          description: eventForm.description,
+          cause: eventForm.event_type === 'death' ? (eventForm.cause || null) : null,
+        };
+        if (citationForm.source_id) {
+          payload.citation = {
+            source_id: citationForm.source_id,
+            page: citationForm.page,
+            confidence: citationForm.confidence,
+            transcription: citationForm.transcription,
+            notes: citationForm.notes,
+            date_accessed: citationForm.date_accessed,
+          };
+          sourceSession.setLastUsed(citationForm.source_id, citationForm.page);
+        }
       }
+
+      const result = (await window.api.persons.createWithEvent(payload)) as { person: { id: string } };
+      targetPersonId = result.person.id;
     }
 
     const relData: Record<string, unknown> = {};
@@ -252,20 +277,19 @@ async function save() {
   color: var(--color-text);
 }
 .toggle-btn.active { background: var(--color-primary); color: white; }
-.birth-section {
+.event-section {
   border: 1px solid var(--surface-border);
   border-radius: 6px;
   padding: 8px 12px;
   margin-top: 4px;
 }
-.birth-section summary {
+.event-section > summary {
   cursor: pointer;
   font-weight: 600;
   font-size: var(--font-sm);
   color: var(--color-text);
 }
-.birth-section > label,
-.birth-section > .checkbox-label {
+.event-section[open] > :not(summary) {
   margin-top: 8px;
 }
 </style>
