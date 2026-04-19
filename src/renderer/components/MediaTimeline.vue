@@ -1,6 +1,6 @@
 <template>
   <div class="media-timeline">
-    <div v-if="items.length === 0" class="empty-hint">{{ $t('mediaTimeline.empty') }}</div>
+    <div v-if="items.length === 0" class="empty-hint">{{ $t('empty.media') }}</div>
     <div v-else class="timeline-scroll" role="list" :aria-label="$t('mediaTimeline.title')">
       <!-- Year markers + thumbnails -->
       <div class="timeline-track">
