@@ -73,6 +73,7 @@ import BaseModal from '../BaseModal.vue';
 import PersonPicker from '../PersonPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
+import { resetDefaultPersonId } from '../../composables/useDefaultPerson';
 import { useRouter } from 'vue-router';
 
 declare const window: Window & {
@@ -123,6 +124,7 @@ async function setTreeSubjectFromImport(personId: string | null) {
   manualTreeSubjectId.value = personId;
   if (personId) {
     await window.api.db.setSetting('default_person_id', personId);
+    resetDefaultPersonId();
     resolvedTreeSubjectId.value = personId;
     try {
       const names = await window.api.persons.getNames(personId) as { given_name?: string; surname?: string }[];

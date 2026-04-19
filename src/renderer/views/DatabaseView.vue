@@ -58,6 +58,7 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
+import { resetDefaultPersonId } from '../composables/useDefaultPerson';
 
 const { t } = useI18n();
 
@@ -81,20 +82,24 @@ async function setTreeSubject(personId: string | null) {
   treeSubjectId.value = personId;
   if (personId) {
     await window.api.db.setSetting('default_person_id', personId);
+    resetDefaultPersonId();
   } else {
     await window.api.db.deleteSetting('default_person_id');
+    resetDefaultPersonId();
   }
 }
 
 async function clearTreeSubject() {
   treeSubjectId.value = null;
   await window.api.db.deleteSetting('default_person_id');
+  resetDefaultPersonId();
   statusMsg.value = t('database.treeSubjectCleared');
   setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function openPath(p: string) {
   const result = await window.api.db.switchTo(p);
+  resetDefaultPersonId();
   statusMsg.value = t('database.switchedTo', { name: result.name });
   setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
@@ -102,6 +107,7 @@ async function openPath(p: string) {
 async function createNew() {
   const result = await window.api.db.createNew();
   if (!('canceled' in result)) {
+    resetDefaultPersonId();
     statusMsg.value = t('database.switchedTo', { name: result.name });
     setTimeout(() => { statusMsg.value = ''; }, 3000);
   }
