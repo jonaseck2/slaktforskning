@@ -1687,6 +1687,9 @@ git commit -m "feat(reports): add MediaChronological primitive"
 
 ## Phase 3: Evolved reports (rename + rewrite)
 
+> **Media URL convention (learned during Phase 2):** Local media files are NOT served via a `media-file://` URL. The dev origin blocks `file://`. Use `window.api.media.readAsDataUrl(mediaId)` to get a base64 `data:` URL. The `MediaChronological` primitive (Task 13) already handles this internally — just pass `MediaDisplayItem[]` with `id` fields. For cover/profile images in reports that aren't handled by the primitive, use a `ref<string | null>` loaded via `watch` + `readAsDataUrl`. See examples inline below.
+
+
 Each task in Phase 3 takes an existing report, renames it, and rewrites it using the new primitives. The rename happens via `git mv` to preserve history, then the file is rewritten. `ReportsView.vue` import statements are updated in the same commit to keep the build green.
 
 ### Task 14: Evolve Biography → A Life
@@ -1841,11 +1844,13 @@ const yearsSubtitle = computed(() => {
   return `${b ?? '?'}–${d ?? ''}`;
 });
 
-const profileImageUrl = computed(() => {
-  const first = mediaCh.items.value[0];
-  if (!first || !first.fileRef) return null;
-  return `media-file://${encodeURIComponent(first.fileRef)}`;
-});
+const profileImageUrl = ref<string | null>(null);
+
+// Load profile image as data URL when first media changes.
+watch(() => mediaCh.items.value[0]?.id, async (firstId) => {
+  if (!firstId) { profileImageUrl.value = null; return; }
+  profileImageUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 
 const lifeMapPoints = computed(() =>
   lifeMap.data.value.events.map(e => ({
@@ -2097,10 +2102,11 @@ const coupleTitle = computed(() => {
   return [data.value.spouse1?.name, data.value.spouse2?.name].filter(Boolean).join(' + ');
 });
 const marriageYearSubtitle = computed(() => data.value?.marriageYear ? String(data.value.marriageYear) : '');
-const coverImageUrl = computed(() => {
-  const first = mediaCh.items.value[0];
-  return first?.fileRef ? `media-file://${encodeURIComponent(first.fileRef)}` : null;
-});
+const coverImageUrl = ref<string | null>(null);
+watch(() => mediaCh.items.value[0]?.id, async (firstId) => {
+  if (!firstId) { coverImageUrl.value = null; return; }
+  coverImageUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 
 function spouseProps(p: any) {
   return {
@@ -2110,7 +2116,7 @@ function spouseProps(p: any) {
     birthYear: p.birthYear,
     deathYear: p.deathYear,
     keyPlace: p.keyPlace,
-    portraitUrl: p.profileImage ? `media-file://${encodeURIComponent(p.profileImage)}` : null,
+    portraitUrl: null,  // Spouse/child portraits loaded separately via window.api.media.readAsDataUrl if needed.
   };
 }
 
@@ -2572,7 +2578,7 @@ Single-sheet, no cover, no page breaks within. Layout uses CSS grid to arrange p
 
     <div class="op-photos">
       <div v-for="(m, i) in photoGrid" :key="m.id" class="grid-photo" :class="'pos-' + i">
-        <img :src="'media-file://' + encodeURIComponent(m.fileRef!)" alt="" />
+        <img v-if="photoGridUrls[m.id]" :src="photoGridUrls[m.id]" alt="" />
       </div>
     </div>
 
@@ -2623,10 +2629,11 @@ const yearsLabel = computed(() => {
   if (!data.value.birthYear && !data.value.deathYear) return '';
   return `${data.value.birthYear ?? '?'}–${data.value.deathYear ?? ''}`;
 });
-const portraitUrl = computed(() => {
-  const first = mediaCh.items.value[0];
-  return first?.fileRef ? `media-file://${encodeURIComponent(first.fileRef)}` : null;
-});
+const portraitUrl = ref<string | null>(null);
+watch(() => mediaCh.items.value[0]?.id, async (firstId) => {
+  if (!firstId) { portraitUrl.value = null; return; }
+  portraitUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 const photoGrid = computed(() => mediaCh.items.value.slice(1, 5));
 const birthPlace = computed(() => data.value?.events?.find((e: any) => e.event_type === 'birth')?.place_name || null);
 const bioSnippet = computed(() => {
@@ -2942,10 +2949,11 @@ const displayItems = computed(() => items.value.map(i => ({
   contextLine: null,
 })));
 
-const firstImageUrl = computed(() => {
-  const first = displayItems.value[0];
-  return first?.fileRef ? `media-file://${encodeURIComponent(first.fileRef)}` : null;
-});
+const firstImageUrl = ref<string | null>(null);
+watch(() => displayItems.value[0]?.id, async (firstId) => {
+  if (!firstId) { firstImageUrl.value = null; return; }
+  firstImageUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 
 const albumTitle = computed(() => {
   // Basic title, can be overridden by a prop in future
