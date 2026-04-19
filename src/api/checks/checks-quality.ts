@@ -270,6 +270,39 @@ export function checkMultipleBirthNames(db: Database): CheckResult[] {
   }));
 }
 
+export function checkLivingOver120(db: Database): CheckResult[] {
+  const currentYear = new Date().getFullYear();
+  const rows = queryAll<{ person_id: string; date_value: string }>(db, `
+    SELECT ep.person_id, e.date_value
+    FROM persons p
+    JOIN event_participants ep ON ep.person_id = p.id
+    JOIN events e ON e.id = ep.event_id
+      AND e.event_type = 'birth'
+      AND e.date_value IS NOT NULL
+      AND e.date_type IN ('exact', 'calculated')
+    WHERE p.living = 1
+  `);
+  const results: CheckResult[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    if (seen.has(r.person_id)) continue;
+    const year = parseInt(r.date_value.substring(0, 4), 10);
+    if (isNaN(year)) continue;
+    const age = currentYear - year;
+    if (age > 120) {
+      seen.add(r.person_id);
+      results.push({
+        code: 'LIVING_OVER_120',
+        severity: 'warning' as CheckSeverity,
+        message: `Person är markerad som levande men skulle vara ${age} år gammal`,
+        messageParams: { age },
+        personIds: [r.person_id],
+      });
+    }
+  }
+  return results;
+}
+
 export function checkPartialName(db: Database): CheckResult[] {
   const rows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT person_id, given_name, surname FROM person_names

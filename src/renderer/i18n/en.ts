@@ -621,6 +621,7 @@ export default {
       TEXT_CONTROL_CHARS: 'Text field contains control characters',
       MULTIPLE_BIRTH_NAMES: 'Person has {count} birth names recorded (at most one expected)',
       PARTIAL_NAME: 'Name is incomplete (missing given name or surname)',
+      LIVING_OVER_120: 'Person is marked as living but would be {age} years old',
     },
   },
   duplicates: {

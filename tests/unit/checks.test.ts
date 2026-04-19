@@ -740,3 +740,28 @@ describe('PARTIAL_NAME', () => {
     expect(results.filter(r => r.code === 'PARTIAL_NAME' && r.personIds.includes(p.id))).toHaveLength(0);
   });
 });
+
+describe('LIVING_OVER_120', () => {
+  it('fires when a living person was born more than 120 years ago', () => {
+    const ancientYear = new Date().getFullYear() - 121;
+    const { person } = personWithBirth(db, `${ancientYear}-01-01`, { living: true });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'LIVING_OVER_120' && r.personIds.includes(person.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+  });
+
+  it('does not fire when living person is within 120 years', () => {
+    const recentYear = new Date().getFullYear() - 50;
+    const { person } = personWithBirth(db, `${recentYear}-01-01`, { living: true });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'LIVING_OVER_120' && r.personIds.includes(person.id))).toHaveLength(0);
+  });
+
+  it('does not fire when person is not living', () => {
+    const ancientYear = new Date().getFullYear() - 130;
+    const { person } = personWithBirth(db, `${ancientYear}-01-01`, { living: false });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'LIVING_OVER_120' && r.personIds.includes(person.id))).toHaveLength(0);
+  });
+});
