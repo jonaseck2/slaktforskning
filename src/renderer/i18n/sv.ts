@@ -56,6 +56,21 @@ export default {
     themes: { forest: 'Skog', nordic: 'Nordisk', twilight: 'Skymning' },
     tabs: { appearance: 'Utseende', database: 'Databas', defaults: 'Standardval', importExport: 'Import / Export', linkRules: 'Länkregler', gazetteers: 'Ortsregister' },
   },
+  chart: {
+    export: {
+      paperSize: 'Papper',
+      orientation: 'Orientering',
+      portrait: 'St\u00e5ende',
+      landscape: 'Liggande',
+      colorMode: 'F\u00e4rg',
+      themed: 'Tema',
+      blackWhite: 'S/V',
+      sexColored: 'K\u00f6n',
+      saveSvg: 'Spara SVG',
+      saveTiledPdf: 'Spara PDF',
+      tilesNeeded: '{count} sidor ({cols}\u00d7{rows})',
+    },
+  },
   common: {
     cancel: 'Avbryt',
     delete: 'Ta bort',

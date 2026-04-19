@@ -56,6 +56,21 @@ export default {
     themes: { forest: 'Forest', nordic: 'Nordic', twilight: 'Twilight' },
     tabs: { appearance: 'Appearance', database: 'Database', defaults: 'Defaults', importExport: 'Import / Export', linkRules: 'Link Rules', gazetteers: 'Gazetteers' },
   },
+  chart: {
+    export: {
+      paperSize: 'Paper',
+      orientation: 'Orientation',
+      portrait: 'Portrait',
+      landscape: 'Landscape',
+      colorMode: 'Color',
+      themed: 'Themed',
+      blackWhite: 'B&W',
+      sexColored: 'Sex',
+      saveSvg: 'Save SVG',
+      saveTiledPdf: 'Save PDF',
+      tilesNeeded: '{count} tiles ({cols}\u00d7{rows})',
+    },
+  },
   common: {
     cancel: 'Cancel',
     delete: 'Delete',
