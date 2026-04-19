@@ -76,17 +76,20 @@ export function checkPhotoAfterSubjectDeath(db: Database): CheckResult[] {
     WHERE mr.person_id IS NOT NULL
   `);
   const results: CheckResult[] = [];
+  const seen = new Set<string>();
   for (const r of rows) {
-    if (dateDefinitelyAfter(r.event_date, r.death_date)) {
-      results.push({
-        code: 'PHOTO_AFTER_SUBJECT_DEATH',
-        severity: 'warning' as CheckSeverity,
-        message: `Bilden är daterad (${r.event_date}) efter den taggade personens död (${r.death_date})`,
-        messageParams: { eventDate: r.event_date, deathDate: r.death_date },
-        personIds: [r.person_id],
-        mediaIds: [r.media_id],
-      });
-    }
+    if (!dateDefinitelyAfter(r.event_date, r.death_date)) continue;
+    const key = `${r.media_id}:${r.person_id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    results.push({
+      code: 'PHOTO_AFTER_SUBJECT_DEATH',
+      severity: 'warning' as CheckSeverity,
+      message: `Bilden är daterad (${r.event_date}) efter den taggade personens död (${r.death_date})`,
+      messageParams: { eventDate: r.event_date, deathDate: r.death_date },
+      personIds: [r.person_id],
+      mediaIds: [r.media_id],
+    });
   }
   return results;
 }
@@ -115,17 +118,20 @@ export function checkPhotoBeforeSubjectBirth(db: Database): CheckResult[] {
     WHERE mr.person_id IS NOT NULL
   `);
   const results: CheckResult[] = [];
+  const seen = new Set<string>();
   for (const r of rows) {
-    if (dateDefinitelyAfter(r.birth_date, r.event_date)) {
-      results.push({
-        code: 'PHOTO_BEFORE_SUBJECT_BIRTH',
-        severity: 'warning' as CheckSeverity,
-        message: `Bilden är daterad (${r.event_date}) före den taggade personens födelse (${r.birth_date})`,
-        messageParams: { eventDate: r.event_date, birthDate: r.birth_date },
-        personIds: [r.person_id],
-        mediaIds: [r.media_id],
-      });
-    }
+    if (!dateDefinitelyAfter(r.birth_date, r.event_date)) continue;
+    const key = `${r.media_id}:${r.person_id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    results.push({
+      code: 'PHOTO_BEFORE_SUBJECT_BIRTH',
+      severity: 'warning' as CheckSeverity,
+      message: `Bilden är daterad (${r.event_date}) före den taggade personens födelse (${r.birth_date})`,
+      messageParams: { eventDate: r.event_date, birthDate: r.birth_date },
+      personIds: [r.person_id],
+      mediaIds: [r.media_id],
+    });
   }
   return results;
 }
