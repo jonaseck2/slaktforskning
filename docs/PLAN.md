@@ -221,6 +221,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.128.1 | fix(mcp): shut down cleanly on stdin EOF, release DB lock | — |
 | v0.129.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
 | v0.129.1 | chore(checks): log each check's "starting" before it runs and "done in Nms" after — makes which check is slow visible in the console during long imports | — |
+| v0.129.2 | perf(checks, duplicates): replace correlated `NOT EXISTS` subqueries with bulk queries + `Set`/`Map` joins in JS — `checkOrphanedPlace` went from O(places × refs) to O(places + refs); `findDuplicates` went from O(N²) nested subqueries to three bulk queries joined by `person_id`. Noticeable speedup during long imports and quality-check runs on large DBs. | — |
 ---
 
 ## Research
