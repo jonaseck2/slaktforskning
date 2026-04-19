@@ -10,7 +10,7 @@
 
 **Spec reference:** [docs/superpowers/specs/2026-04-19-keepsake-reports-redesign.md](../superpowers/specs/2026-04-19-keepsake-reports-redesign.md)
 
-**Target version:** v0.128.0 (single minor bump at end of implementation).
+**Target version:** v0.130.0 (single minor bump at end of implementation).
 
 ---
 
@@ -3087,7 +3087,7 @@ Replace the current flat `FilterChips` with two `FilterChips` rows (or a two-sec
 
 Tab list:
 - Keepsake reports: `alife`, `amarriage`, `placeChronicle`, `yourAncestors`, `onePage`, `familyInYear`, `photoAlbum`
-- Framable prints: `pedigreePrint`, `fanChart`, `descendantChart`, `hourglassChart`, `timeline`, `wallChart`
+- Framable prints: `pedigreePrint`, `fanChart`, `descendantChart`, `hourglassChart`, `timeline`
 
 ```vue
 <div class="tab-groups">
@@ -3128,7 +3128,6 @@ const framableTabs = computed(() => [
   { value: 'descendantChart', label: t('visualization.descendants') },
   { value: 'hourglassChart', label: t('visualization.hourglass') },
   { value: 'timeline', label: t('visualization.timeline') },
-  { value: 'wallChart', label: t('wallChart.title') },
 ]);
 ```
 
@@ -3534,7 +3533,7 @@ git commit -m "test(e2e): smoke-test all seven keepsake reports"
 Prepend:
 
 ```markdown
-## v0.128.0 — keepsake reports redesign
+## v0.130.0 — keepsake reports redesign
 
 ### New reports
 - **A Life** (evolves Biography) — life map, timeline, family, events, notes, photos, sources appendix.
@@ -3564,7 +3563,7 @@ Prepend:
 Update `package.json`:
 
 ```json
-  "version": "0.128.0",
+  "version": "0.130.0",
 ```
 
 - [ ] **Step 3: Update CLAUDE.md reports section**
@@ -3590,7 +3589,7 @@ git mv docs/superpowers/specs/2026-04-19-keepsake-reports-redesign.md docs/super
 
 ```bash
 git add -A
-git commit -m "release: v0.128.0 — keepsake reports redesign"
+git commit -m "release: v0.130.0 — keepsake reports redesign"
 ```
 
 - [ ] **Step 7: Verify a full test run and launch**
