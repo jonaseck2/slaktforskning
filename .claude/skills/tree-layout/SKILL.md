@@ -12,10 +12,11 @@ Every tree chart layout follows this pipeline:
 1. **Clone** - deep-clone input tree (Vue computed re-runs on same ref)
 2. **Inject** - add outline placeholders for the selected person (`injectOutlines`)
 3. **Collapse** - prune collapsed branches (preserve placeholders)
-4. **Measure** - compute bounding footprint for every person
-5. **Place** - position all boxes using measurements
-6. **Connect** - draw connector lines between placed boxes
-7. **Finalize** - SVG dimensions, shift, collapse buttons, extract placeholders
+4. **Measure heights** - pre-compute per-box `h` via `measureBoxHeight(person)` into a `heightOf: Map<string, number>`; `hOf(node)` accessor
+5. **Measure footprint** - horizontal bounding extents per person (see Footprint section)
+6. **Place** - position all boxes using both measurements
+7. **Connect** - emit curved `<path>` strings via `curvedElbow()` into `paths: string[]` (solid); dashed placeholder connectors prefixed `"D:"`
+8. **Finalize** - SVG dimensions, shift, collapse buttons, extract placeholders
 
 ## Placeholder Handling — Critical Rule
 
@@ -29,6 +30,31 @@ Functions that must skip placeholders:
 - `placeAncestors` / `placeDescendants` — only recurse into real parents/children
 
 **Exception:** `computeFootprint` DOES include placeholder spouse width. This reserves room in `ancestorWidth` so the outline fits between adjacent ancestors. The room reservation flows through spacing but the outline itself is placed by Pass 4.
+
+## Measurement: Box Height (vertical)
+
+Each person box has a dynamic height driven by its name wrap + optional birth/death lines. Boxes are never pushed with a fixed height.
+
+```typescript
+// In every layout, right after injectOutlines + collapse pruning:
+const heightOf = new Map<string, number>();
+function measureAll(node: TreePerson, visited = new Set<string>()): void {
+  if (visited.has(node.person.id)) return;
+  visited.add(node.person.id);
+  heightOf.set(node.person.id, node.isPlaceholder ? MIN_BOX_H : measureBoxHeight(node.person));
+  for (const p of node.parents) measureAll(p, visited);
+  for (const c of node.children) measureAll(c, visited);
+  for (const s of node.spouses) measureAll(s, visited);
+}
+measureAll(root);
+const hOf = (node: TreePerson) => heightOf.get(node.person.id) ?? MIN_BOX_H;
+```
+
+Then every `boxes.push({ ..., w: BOX_W, h: hOf(node) })` — never `h: MIN_BOX_H` unless it's a placeholder. `measureBoxHeight` lives in `chart-layout/measure.ts` and uses the Canvas `measureText` API via `wrapName(name, TEXT_AREA_W, 12)`.
+
+**Row Y spacing depends on chart type:**
+- **Pedigree (leaves along Y):** per-leaf running cumulative cursor — `cursorY += hOf(leaf) + V_GAP` — leafCY set from that. Internal `cy` averages parent centers as before.
+- **Descendant + Hourglass (rows by generation):** per-row max height array. `rowMaxH[d] = Math.max(MIN_BOX_H, ...hOf(all nodes at depth d))`, then cumulative `rowTopY[d] = rowTopY[d-1] + rowMaxH[d-1] + GEN_GAP`. Hourglass needs two arrays — `ancestorRowTopY[]` going up and `descendantRowTopY[]` going down, with the focal row height = `max(ancRowMaxH[0], descRowMaxH[0], hOf(root), spouses..., siblings...)`.
 
 ## Measurement: Footprint
 
@@ -82,12 +108,59 @@ function placeOutlineGroup(nodes, ownerCX, ownerY, direction):
 
 Spouse outlines use `findClearX` — starts at ideal position, scans outward in the direction determined by the selected person's sex.
 
-## Line Routing
+## Connector Routing — curved paths
 
-Lines drawn AFTER all boxes are placed:
-1. **Parent-child**: vertical fork (node -> forkY -> horizontal span -> vertical drops)
-2. **Spouse**: horizontal line between facing edges
-3. **Outline**: same geometry, tracked in `outlineLines[]` array, rendered dashed
+As of v0.114.0 connectors are SVG `<path>` elements with Q-bezier elbows, not straight `<line>` segments. Every layout emits path `d` strings into `ChartLayout.paths: string[]`; `lines` is always `[]`.
+
+```typescript
+import { curvedElbow } from './connectors';
+
+// Pedigree: child right edge → parent left edge
+paths.push(curvedElbow(childRightX, childCY, parentLeftX, parentCY, 'right'));
+
+// Descendant / hourglass: parent bottom → child top
+paths.push(curvedElbow(parentCX, parentBottomY, childCX, childTopY, 'down'));
+```
+
+`curvedElbow(fromX, fromY, toX, toY, 'right' | 'down')` returns a single valid SVG `d` string — one curve per edge. Collinear endpoints collapse to `M … H …` or `M … V …` (still a valid path). No more three-segment fork/horizontal/vertical patterns.
+
+**Dashed placeholder convention.** Solid connectors between real boxes start with `M `; dashed connectors from a real box to an outline placeholder are prefixed with `"D:"` before being appended to the same `paths` array:
+
+```typescript
+for (const d of placeholderPaths) paths.push('D:' + d);
+```
+
+The Vue components (`PedigreeChart.vue`, `DescendantChart.vue`, `HourglassChart.vue`) split them at render time with two computeds:
+
+```typescript
+const solidPaths  = computed(() => layout.value.paths.filter(d => !d.startsWith('D:')));
+const dashedPaths = computed(() => layout.value.paths.filter(d => d.startsWith('D:')).map(d => d.slice(2)));
+```
+
+`placeholderLines: Line[]` is retained in the return type for backwards compatibility but is always `[]`.
+
+## Chart box rendering (Vue side)
+
+Each chart component renders per-box with dynamic `h`:
+
+```vue
+<g v-for="box in layout.boxes" filter="url(#chart-shadow)" ...>
+  <rect :x="box.x" :y="box.y" :width="box.w" :height="box.h" rx="6" ... />
+  <!-- sex bar (3px), portrait (34×44), wrapped name, birth/death lines ... -->
+</g>
+```
+
+All three charts wrap the box group in `filter="url(#chart-shadow)"`, with the filter defined once at the top of the `<svg>`:
+
+```vue
+<defs>
+  <filter id="chart-shadow" x="-3%" y="-6%" width="106%" height="116%">
+    <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.06" />
+  </filter>
+</defs>
+```
+
+Portrait photos: `PersonNode.photoUrl` is a `data:image/...` URL resolved by `chartData.fetchPersonNode` via `window.api.media.readAsDataUrl(mediaId)`. SVG `<image href>` cannot load raw filesystem paths from the renderer origin — always route through `readAsDataUrl`. `chartData.ts` caches resolved URLs per media id for the session so shared photos only pay the IPC cost once.
 
 ## Invariants
 
@@ -104,5 +177,8 @@ Lines drawn AFTER all boxes are placed:
 - `src/renderer/utils/chart-layout/hourglass-tree.ts` - TreePerson builders + `injectOutlines()`
 - `src/renderer/utils/chart-layout/pedigree.ts` - pedigree layout
 - `src/renderer/utils/chart-layout/descendant.ts` - descendant layout
-- `src/renderer/utils/chart-layout/types.ts` - TreePerson, BoxLayout, ChartLayout, etc.
-- `src/renderer/utils/chart-layout/constants.ts` - BOX_W, BOX_H, V_GAP, H_GAP, GEN_GAP, PAD
+- `src/renderer/utils/chart-layout/measure.ts` - `wrapName()`, `measureBoxHeight()` — Canvas-backed text measurement for dynamic box heights
+- `src/renderer/utils/chart-layout/connectors.ts` - `curvedElbow()` — SVG path builder for Q-bezier elbow connectors
+- `src/renderer/utils/chart-layout/types.ts` - TreePerson, BoxLayout, ChartLayout (with `paths: string[]`), etc.
+- `src/renderer/utils/chart-layout/constants.ts` - BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD, PORTRAIT_W/H, BOX_PAD_Y, CURVE_R, TEXT_AREA_W (no `BOX_H` — heights are per-node)
+- `src/renderer/utils/chartData.ts` - `fetchPersonNode()` with photo data-URL resolution + session cache
