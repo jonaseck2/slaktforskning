@@ -27,6 +27,24 @@
         </div>
       </div>
 
+      <!-- Notes -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('common.notes')"
+          :collapsed="!sections.notes"
+          @toggle="toggleSection('notes')"
+        />
+        <div v-if="sections.notes" class="panel-section-body">
+          <textarea
+            v-model="notesDraft"
+            class="notes-textarea"
+            :placeholder="$t('media.notesPlaceholder')"
+            rows="3"
+            @blur="saveNotes"
+          ></textarea>
+        </div>
+      </div>
+
       <!-- Linked Persons -->
       <div class="panel-section">
         <SectionHeader
@@ -120,6 +138,14 @@
               <AppAvatar v-if="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
               <div v-else class="face-tag-unknown">?</div>
               <span class="face-tag-name face-tag-clickable" @click="editingTagId = r.id">{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
+              <button
+                v-if="r.person_id"
+                class="star-btn"
+                :class="{ 'is-profile': regionIsProfile[r.id] }"
+                :title="regionIsProfile[r.id] ? $t('media.currentProfile') : $t('media.setAsProfile')"
+                :disabled="!!regionIsProfile[r.id]"
+                @click="setProfileForRegion(r)"
+              >{{ regionIsProfile[r.id] ? '★' : '☆' }}</button>
             </template>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
           </div>
@@ -138,6 +164,7 @@ import SectionHeader from './ui/SectionHeader.vue';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
+import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -195,11 +222,14 @@ const linkedPersons = ref<LinkedEntity[]>([]);
 const linkedPlaces = ref<LinkedEntity[]>([]);
 const linkedEvents = ref<LinkedEntity[]>([]);
 const regions = ref<RegionData[]>([]);
+const regionIsProfile = ref<Record<string, boolean>>({});
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
 const editingTagId = ref<string | null>(null);
+const notesDraft = ref('');
 
 const sections = reactive({
+  notes: false,
   persons: true,
   places: true,
   events: false,
@@ -228,14 +258,29 @@ async function resolveEntityLabel(entityType: string, entityId: string): Promise
   return entityType + ':' + entityId;
 }
 
+async function computeRegionProfileState() {
+  if (!props.mediaId) {
+    regionIsProfile.value = {};
+    return;
+  }
+  const newState: Record<string, boolean> = {};
+  for (const r of regions.value) {
+    if (!r.person_id) continue;
+    newState[r.id] = await isMediaPersonProfile(r.person_id, props.mediaId);
+  }
+  regionIsProfile.value = newState;
+}
+
 async function load() {
   if (!props.mediaId) {
     media.value = null;
     thumbnailSrc.value = null;
+    notesDraft.value = '';
     linkedPersons.value = [];
     linkedPlaces.value = [];
     linkedEvents.value = [];
     regions.value = [];
+    regionIsProfile.value = {};
     return;
   }
 
@@ -243,6 +288,8 @@ async function load() {
   try {
     const m = await window.api.media.get(props.mediaId) as MediaData | null;
     media.value = m;
+    notesDraft.value = m?.notes ?? '';
+    if (m?.notes) sections.notes = true;
 
     if (m && m.format && IMAGE_FORMATS.has(m.format.toLowerCase())) {
       const url = await window.api.media.readAsDataUrl(props.mediaId) as string | null;
@@ -345,9 +392,18 @@ async function load() {
       });
     }
     regions.value = enrichedRegions;
+    await computeRegionProfileState();
   } finally {
     loading.value = false;
   }
+}
+
+async function saveNotes() {
+  if (!props.mediaId || !media.value) return;
+  const next = notesDraft.value;
+  if (next === (media.value.notes ?? '')) return;
+  await window.api.media.update(props.mediaId, { notes: next });
+  media.value.notes = next;
 }
 
 async function unlinkEntity(linkId: string) {
@@ -400,6 +456,14 @@ async function assignPersonToRegion(regionId: string, personId: string) {
   }
   emit('region-deleted'); // triggers viewer reload too
   if (props.mediaId) await load();
+}
+
+async function setProfileForRegion(r: RegionData) {
+  if (!props.mediaId || !r.person_id) return;
+  if (regionIsProfile.value[r.id]) return; // already profile
+  await setMediaAsPersonProfile(r.person_id, props.mediaId);
+  await computeRegionProfileState();
+  emit('link-changed');
 }
 
 watch(() => props.mediaId, load, { immediate: true });
@@ -602,5 +666,44 @@ defineExpose({ reload: load, expandFaceTags });
 .face-tag-assign {
   flex: 1;
   min-width: 0;
+}
+
+.star-btn {
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0 3px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1;
+  margin-left: auto;
+}
+.star-btn:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--surface-border);
+}
+.star-btn.is-profile {
+  color: var(--accent);
+  cursor: default;
+}
+.star-btn:disabled {
+  cursor: default;
+}
+
+.notes-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  resize: vertical;
+}
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 </style>
