@@ -55,6 +55,8 @@ export default {
     theme: 'Tema',
     themes: { forest: 'Skog', nordic: 'Nordisk', twilight: 'Skymning' },
     tabs: { appearance: 'Utseende', database: 'Databas', defaults: 'Standardval', importExport: 'Import / Export', linkRules: 'Länkregler', gazetteers: 'Ortsregister' },
+    researcherName: 'Släktforskarens namn',
+    researcherNamePlaceholder: 'Ditt namn, som det visas i rapportens attribution',
   },
   chart: {
     export: {
