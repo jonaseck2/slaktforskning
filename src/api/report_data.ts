@@ -539,7 +539,9 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
             ORDER BY e2.date_value DESC LIMIT 1) AS place_name,
            EXISTS(SELECT 1 FROM any_event a WHERE a.pid = p.id AND a.any_year = ?) AS has_event_in_year
     FROM persons p
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = 0
+    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
+      SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
+    )
     LEFT JOIN birth b ON b.pid = p.id
     LEFT JOIN death d ON d.pid = p.id
   `, [year, year]);
@@ -593,9 +595,10 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
   const groupedPersonIds = new Set<string>();
 
   for (const c of coupleRows) {
-    if (!c.person1_id || !c.person2_id) continue;
-    const p1 = personById.get(c.person1_id);
-    const p2 = personById.get(c.person2_id);
+    // Only skip if BOTH sides are null — a half-couple (one known partner) is still valid
+    if (!c.person1_id && !c.person2_id) continue;
+    const p1 = c.person1_id ? personById.get(c.person1_id) : undefined;
+    const p2 = c.person2_id ? personById.get(c.person2_id) : undefined;
     if (!p1 && !p2) continue;
     const parents: AliveInYearPerson[] = [];
     if (p1) { parents.push(p1); groupedPersonIds.add(p1.id); }

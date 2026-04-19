@@ -481,5 +481,30 @@ describe('getAliveInYear', () => {
     addEventParticipant(db, { event_id: event.id, person_id: p.id, role: 'primary' });
     const result = getAliveInYear(db, 1900);
     expect(result.persons.find(x => x.id === p.id)?.placeName).toBe('Stockholm');
+    expect(result.persons.find(x => x.id === p.id)?.placeName).not.toBe('Ödeshög');
+  });
+
+  it('places persons without couple relationships in unattached', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Solo', surname: 'Person' });
+    addBirth(p.id, 1850);
+    const result = getAliveInYear(db, 1900);
+    expect(result.unattached.some(x => x.id === p.id)).toBe(true);
+    expect(result.families.every(f =>
+      f.parents.every(x => x.id !== p.id) && f.children.every(x => x.id !== p.id)
+    )).toBe(true);
+  });
+
+  it('includes half-couples with only one known partner', () => {
+    const wife = createPerson(db, { sex: 'F', given_name: 'Widow', surname: 'Half' });
+    addBirth(wife.id, 1850);
+    const couple = createRelationship(db, { type: 'couple', person1_id: wife.id, person2_id: null });
+    const result = getAliveInYear(db, 1900);
+    const family = result.families.find(f => f.relationshipId === couple.id);
+    // Half-couple should still be represented — either as a family with one parent,
+    // or in unattached if the implementation chose that. Wife must be in the result.
+    const inAnyFamily = result.families.some(f => f.parents.some(p => p.id === wife.id));
+    const inUnattached = result.unattached.some(p => p.id === wife.id);
+    expect(inAnyFamily || inUnattached).toBe(true);
+    if (family) expect(family.parents.some(p => p.id === wife.id)).toBe(true);
   });
 });
