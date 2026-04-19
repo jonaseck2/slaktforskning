@@ -56,6 +56,7 @@ export function registerUtilityHandlers(
   wrapHandler('reports:placeHistory', (placeId) => reportData.getPlaceHistory(getDb(), placeId as string));
   wrapHandler('reports:researchGaps', (personId) => reportData.getResearchGaps(getDb(), personId as string));
   wrapHandler('reports:timeline', (personId) => reportData.getTimeline(getDb(), personId as string));
+  wrapHandler('reports:aliveInYear', (year) => reportData.getAliveInYear(getDb(), year as number));
 
   // Duplicates & Merge
   wrapHandler('duplicates:find', (limit) => duplicates.findDuplicates(getDb(), limit as number | undefined));
