@@ -1,56 +1,52 @@
 <template>
-  <span class="zoom-extra-sep">|</span>
+  <div class="chart-export-controls">
+    <label class="field">
+      <span class="field-label">{{ $t('chart.export.paperSize') }}</span>
+      <select :value="paperSize" @change="onPaperChange">
+        <option value="A4">A4</option>
+        <option value="A3">A3</option>
+        <option value="A2">A2</option>
+        <option value="A1">A1</option>
+        <option value="A0">A0</option>
+      </select>
+    </label>
 
-  <span class="zoom-extra-label">{{ $t('chart.export.paperSize') }}</span>
-  <select
-    class="zoom-extra-select"
-    :value="paperSize"
-    :aria-label="$t('chart.export.paperSize')"
-    @change="onPaperChange"
-  >
-    <option value="A4">A4</option>
-    <option value="A3">A3</option>
-    <option value="A2">A2</option>
-    <option value="A1">A1</option>
-    <option value="A0">A0</option>
-  </select>
+    <label class="field">
+      <span class="field-label">{{ $t('chart.export.orientation') }}</span>
+      <select :value="orientation" @change="onOrientationChange">
+        <option value="portrait">{{ $t('chart.export.portrait') }}</option>
+        <option value="landscape">{{ $t('chart.export.landscape') }}</option>
+      </select>
+    </label>
 
-  <button
-    class="zoom-extra-btn"
-    :aria-label="`${$t('chart.export.orientation')}: ${orientation === 'portrait' ? $t('chart.export.portrait') : $t('chart.export.landscape')}`"
-    @click="toggleOrientation"
-  >
-    {{ orientation === 'portrait' ? $t('chart.export.portrait') : $t('chart.export.landscape') }}
-  </button>
+    <label class="field">
+      <span class="field-label">{{ $t('chart.export.colorMode') }}</span>
+      <select :value="colorMode" @change="onColorChange">
+        <option value="themed">{{ $t('chart.export.themed') }}</option>
+        <option value="sex-colored">{{ $t('chart.export.sexColored') }}</option>
+        <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
+      </select>
+    </label>
 
-  <button
-    class="zoom-extra-btn"
-    :aria-label="`${$t('chart.export.colorMode')}: ${colorModeLabel}`"
-    @click="cycleColorMode"
-  >
-    {{ colorModeLabel }}
-  </button>
-
-  <span class="zoom-extra-sep">|</span>
-
-  <button class="zoom-extra-btn" :aria-label="$t('chart.export.saveSvg')" @click="$emit('saveSvg')">
-    {{ $t('chart.export.saveSvg') }}
-  </button>
-  <button class="zoom-extra-btn" :aria-label="$t('chart.export.saveTiledPdf')" @click="$emit('savePdf')">
-    {{ $t('chart.export.saveTiledPdf') }}
-  </button>
-
-  <span v-if="tileCount" class="zoom-extra-label tile-hint">
-    {{ $t('chart.export.tilesNeeded', { count: tileCount.count, cols: tileCount.cols, rows: tileCount.rows }) }}
-  </span>
+    <div class="actions">
+      <AppButton variant="secondary" size="sm" @click="$emit('saveSvg')">
+        {{ $t('chart.export.saveSvg') }}
+      </AppButton>
+      <AppButton variant="secondary" size="sm" @click="$emit('savePdf')">
+        {{ $t('chart.export.saveTiledPdf') }}
+      </AppButton>
+      <span v-if="tileCount" class="tile-hint">
+        {{ $t('chart.export.tilesNeeded', { count: tileCount.count, cols: tileCount.cols, rows: tileCount.rows }) }}
+      </span>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
 import type { PaperSize, Orientation, ColorMode } from '../../api/chart-export';
+import AppButton from './ui/AppButton.vue';
 
-const props = defineProps<{
+defineProps<{
   paperSize: PaperSize;
   orientation: Orientation;
   colorMode: ColorMode;
@@ -65,37 +61,48 @@ const emit = defineEmits<{
   savePdf: [];
 }>();
 
-const { t } = useI18n();
-
 function onPaperChange(e: Event) {
   emit('update:paperSize', (e.target as HTMLSelectElement).value as PaperSize);
 }
-function toggleOrientation() {
-  emit('update:orientation', props.orientation === 'portrait' ? 'landscape' : 'portrait');
+function onOrientationChange(e: Event) {
+  emit('update:orientation', (e.target as HTMLSelectElement).value as Orientation);
 }
-function cycleColorMode() {
-  const order: ColorMode[] = ['themed', 'sex-colored', 'bw'];
-  const idx = order.indexOf(props.colorMode);
-  emit('update:colorMode', order[(idx + 1) % order.length]);
+function onColorChange(e: Event) {
+  emit('update:colorMode', (e.target as HTMLSelectElement).value as ColorMode);
 }
-const colorModeLabel = computed(() => {
-  if (props.colorMode === 'themed') return t('chart.export.themed');
-  if (props.colorMode === 'sex-colored') return t('chart.export.sexColored');
-  return t('chart.export.blackWhite');
-});
 </script>
 
 <style scoped>
-.zoom-extra-select {
-  background: transparent;
-  color: inherit;
+.chart-export-controls {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  min-width: 120px;
+}
+.field select {
+  padding: 6px 8px;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
-  padding: 2px 4px;
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
+  font-family: inherit;
+}
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
 }
 .tile-hint {
-  opacity: 0.7;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
   font-style: italic;
 }
 </style>

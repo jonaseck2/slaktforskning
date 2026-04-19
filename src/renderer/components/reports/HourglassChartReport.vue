@@ -1,12 +1,13 @@
 <template>
   <div class="chart-report">
-    <HourglassChart :person-id="personId" :readonly="true" />
+    <HourglassChart :person-id="personId" :readonly="true" :color-mode="colorMode" />
   </div>
 </template>
 
 <script setup lang="ts">
 import HourglassChart from '../charts/HourglassChart.vue';
-defineProps<{ personId: string }>();
+import type { ColorMode } from '../../../api/chart-export';
+defineProps<{ personId: string; colorMode?: ColorMode }>();
 </script>
 
 <style scoped>

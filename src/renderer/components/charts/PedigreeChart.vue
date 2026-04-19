@@ -5,7 +5,6 @@
       <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
       <svg
         v-else
-        ref="svgRootRef"
         :width="layout.svgWidth * zoom"
         :height="layout.svgHeight * zoom"
         :viewBox="`0 ${layout.viewBoxMinY} ${layout.svgWidth} ${layout.svgHeight}`"
@@ -183,17 +182,6 @@
       <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
       <span class="zoom-extra-value">{{ genTarget }}</span>
       <button class="zoom-extra-btn" @click="incrGens">+</button>
-      <ChartExportControls
-        :paper-size="exporter.paperSize.value"
-        :orientation="exporter.orientation.value"
-        :color-mode="exporter.colorMode.value"
-        :tile-count="exporter.tileCount.value"
-        @update:paper-size="(v) => exporter.paperSize.value = v"
-        @update:orientation="(v) => exporter.orientation.value = v"
-        @update:color-mode="(v) => exporter.colorMode.value = v"
-        @save-svg="exporter.saveSvg"
-        @save-pdf="exporter.savePdf"
-      />
     </ZoomControls>
 
     <ChartTooltip ref="tooltipRef" />
@@ -220,18 +208,17 @@ import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chart-layout';
 import { formatFullName } from '../../utils/nameUtils';
-import { useChartColors } from '../../composables/useChartColors';
+import { useChartColors, applyColorMode } from '../../composables/useChartColors';
+import type { ColorMode } from '../../../api/chart-export';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
-import ChartExportControls from '../ChartExportControls.vue';
 import { pedigreeGenerations } from '../../composables/useChartGenerations';
-import { useChartExport } from '../../composables/useChartExport';
 
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null }>();
+const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
 
 const loading = ref(true);
@@ -240,32 +227,6 @@ const tree = ref<PedigreeTree | null>(null);
 const collapsed = ref(new Set<string>());
 const genTarget = pedigreeGenerations;
 const loadedGens = ref(5);
-
-// Export plumbing
-const svgRootRef = ref<SVGElement | null>(null);
-
-const focalName = computed(() => {
-  const tr = tree.value;
-  if (!tr || !props.personId) return '?';
-  const focal = Array.from(tr.nodes.values()).find(p => p.id === props.personId);
-  if (!focal) return '?';
-  return [focal.preferredName ?? focal.givenName, focal.surname].filter(Boolean).join(' ') || '?';
-});
-
-const exportTitle = computed(() =>
-  `${t('reports.tabPedigreeChart')} \u2014 ${focalName.value}`
-);
-
-const exporter = useChartExport({
-  svgRef: svgRootRef,
-  title: exportTitle,
-  defaultPaperSize: 'A2',
-  defaultOrientation: 'landscape',
-  defaultColorMode: 'themed',
-});
-// exporter.colorMode controls the ChartExportControls UI.
-// Applying it to rendering (bw / sex-colored) is deferred to a follow-up plan.
-// Current rendering always uses 'themed' (existing behavior).
 
 watch(genTarget, (n) => {
   if (!tree.value) return;
@@ -405,7 +366,8 @@ async function handleCollapseButton(btn: CollapseButton) {
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-pedigree');
 
-const colors = useChartColors(true);
+const baseColors = useChartColors(true);
+const colors = computed(() => applyColorMode(baseColors.value, props.colorMode ?? 'themed'));
 
 // Backward-compat alias so template references to chartTokens still work during transition
 const chartTokens = computed(() => ({
@@ -422,6 +384,7 @@ function sexBg(sex: string): string {
 
 function boxFill(box: BoxLayout): string {
   if (box.isFocal) return colors.value.boxFocal;
+  if ((props.colorMode ?? 'themed') === 'sex-colored') return sexBg(box.person.sex);
   if (!box.person.living) return colors.value.boxDeceased;
   return colors.value.boxBg;
 }

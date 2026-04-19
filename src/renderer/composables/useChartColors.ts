@@ -2,6 +2,7 @@
 // Returns CSS custom property values when themed, or hardcoded neutral palette for export.
 
 import { computed } from 'vue';
+import type { ColorMode } from '../../api/chart-export';
 import { useThemeSignal } from './useThemeSignal';
 
 export interface ChartColors {
@@ -64,6 +65,42 @@ export const EXPORT_COLORS: ChartColors = {
   placeholderStroke: '#94a3b8',
   placeholderText: '#94a3b8',
 };
+
+/** Grayscale palette for black-and-white export. */
+export const BW_COLORS: ChartColors = {
+  surface: '#ffffff',
+  surfaceBorder: '#000000',
+  textPrimary: '#000000',
+  textMuted: '#555555',
+  accent: '#222222',
+  accentHover: '#111111',
+  accentText: '#ffffff',
+  connector: '#000000',
+  sexMBg: '#cccccc',
+  sexFBg: '#cccccc',
+  sexUBg: '#cccccc',
+  sexMText: '#000000',
+  sexFText: '#000000',
+  sexUText: '#000000',
+  boxBg: '#ffffff',
+  boxDeceased: '#f0f0f0',
+  boxFocal: '#222222',
+  boxStroke: '#000000',
+  focalStroke: '#000000',
+  text: '#000000',
+  textSub: '#555555',
+  textFocal: '#ffffff',
+  textFocalSub: 'rgba(255,255,255,0.75)',
+  line: '#000000',
+  placeholderStroke: '#666666',
+  placeholderText: '#666666',
+};
+
+/** Apply a chart export color mode on top of a base palette. */
+export function applyColorMode(base: ChartColors, mode: ColorMode): ChartColors {
+  if (mode === 'bw') return BW_COLORS;
+  return base;
+}
 
 function readCssVar(style: CSSStyleDeclaration, name: string, fallback: string): string {
   return style.getPropertyValue(name).trim() || fallback;

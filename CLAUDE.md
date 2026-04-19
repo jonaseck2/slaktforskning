@@ -584,14 +584,14 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
 | `EntityMediaSection` | `entityType: string`, `entityId: string` | — | Generic media section for any entity type (person, place, event, etc.). Replaces the hardcoded person-only pattern in PersonMediaSection. Used by PlacePanel. |
-| `ChartExportControls` | `chartSvgRef: Ref<SVGSVGElement \| null>`, `personName?: string`, `chartType: string` | — | Paper-size, orientation, and color-mode controls embedded in each chart's `ZoomControls` overlay. Calls `useChartExport` to save SVG or tiled PDF via `window.api.chart.*`. |
+| `ChartExportControls` | `paperSize`, `orientation`, `colorMode`, `tileCount: {count,rows,cols}\|null` | `update:paperSize`, `update:orientation`, `update:colorMode`, `saveSvg`, `savePdf` | Paper-size, orientation, color-mode, and Save SVG / Save tiled PDF controls. Used in the 4 chart tab headers in `ReportsView` (pedigree/hourglass/descendant/fan). Pure presentational component; parent owns state and handlers. |
 
 **Composables:**
 | Composable | Purpose |
 |-----------|---------|
 | `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
 | `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
-| `useChartExport` | Chart export logic: paper-size list, orientation toggle, color-mode cycle, `saveSvg()` and `saveTiledPdf()` calls via `window.api.chart.*`. Used by `ChartExportControls`. |
+| `useChartExport` | SVG export helpers (`buildExportSvgString`, `wrapWithTitle`). Used by `ReportsView` chart tabs to serialize the rendered chart SVG before calling `window.api.chart.saveSvg` / `saveTiledPdf`. |
 
 **Pinia Stores:**
 | Store | Purpose |

@@ -5,7 +5,6 @@
       <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
       <FanChartSvg
         v-else
-        ref="fanSvgRef"
         :segments="layout"
         :focal-segment="focalSegment"
         :focal-cx="viewBoxInfo.cx"
@@ -40,17 +39,10 @@
       <button class="zoom-extra-btn" @click="decrGens" :disabled="selectedGens <= 1">−</button>
       <span class="zoom-extra-value">{{ selectedGens }}</span>
       <button class="zoom-extra-btn" @click="incrGens" :disabled="selectedGens >= 8">+</button>
-      <ChartExportControls
-        :paper-size="exporter.paperSize.value"
-        :orientation="exporter.orientation.value"
-        :color-mode="fanToExport(colorMode)"
-        :tile-count="exporter.tileCount.value"
-        @update:paper-size="(v) => exporter.paperSize.value = v"
-        @update:orientation="(v) => exporter.orientation.value = v"
-        @update:color-mode="(v) => colorMode = exportToFan(v)"
-        @save-svg="exporter.saveSvg"
-        @save-pdf="exporter.savePdf"
-      />
+      <span class="zoom-extra-sep">|</span>
+      <button class="zoom-extra-btn" :title="$t('chart.export.colorMode')" @click="cycleColorMode">
+        {{ colorModeLabel }}
+      </button>
     </ZoomControls>
   </div>
 </template>
@@ -70,21 +62,7 @@ import { useFanThemeColors } from '../../composables/useFanThemeColors';
 import FanChartSvg from './FanChartSvg.vue';
 import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
-import ChartExportControls from '../ChartExportControls.vue';
 import { fanGenerations } from '../../composables/useChartGenerations';
-import { useChartExport } from '../../composables/useChartExport';
-import type { ColorMode as ExportColorMode } from '../../../api/chart-export';
-
-function fanToExport(m: FanColorMode): ExportColorMode {
-  if (m === 'branch') return 'themed';
-  if (m === 'sex') return 'sex-colored';
-  return 'bw';
-}
-function exportToFan(m: ExportColorMode): FanColorMode {
-  if (m === 'themed') return 'branch';
-  if (m === 'sex-colored') return 'sex';
-  return 'bw';
-}
 
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
@@ -113,27 +91,15 @@ const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1,
 watch(selectedArc, (v) => localStorage.setItem('fan-arc-span', String(v)));
 watch(colorMode, (v) => localStorage.setItem('fan-color-mode', v));
 
-// SVG ref plumbing: FanChartSvg exposes rootRef via defineExpose
-const fanSvgRef = ref<{ rootRef: SVGElement | null } | null>(null);
-const svgRootRef = computed<SVGElement | null>(() => fanSvgRef.value?.rootRef ?? null);
-
-const focalName = computed(() => {
-  const tr = tree.value;
-  if (!tr || !props.personId) return '?';
-  const focal = Array.from(tr.nodes.values()).find(p => p.id === props.personId);
-  if (!focal) return '?';
-  return [focal.preferredName ?? focal.givenName, focal.surname].filter(Boolean).join(' ') || '?';
-});
-
-const exportTitle = computed(() =>
-  `${t('reports.tabFanChart')} \u2014 ${focalName.value}`
-);
-
-const exporter = useChartExport({
-  svgRef: svgRootRef,
-  title: exportTitle,
-  defaultPaperSize: 'A2',
-  defaultOrientation: 'landscape',
+function cycleColorMode() {
+  const order: FanColorMode[] = ['branch', 'sex', 'bw'];
+  const idx = order.indexOf(colorMode.value);
+  colorMode.value = order[(idx + 1) % order.length];
+}
+const colorModeLabel = computed(() => {
+  if (colorMode.value === 'branch') return t('chart.export.themed');
+  if (colorMode.value === 'sex') return t('chart.export.sexColored');
+  return t('chart.export.blackWhite');
 });
 
 const chartTheme = useFanThemeColors();

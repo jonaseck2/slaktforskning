@@ -1,12 +1,13 @@
 <template>
   <div class="chart-report">
-    <PedigreeChart :person-id="personId" :readonly="true" />
+    <PedigreeChart :person-id="personId" :readonly="true" :color-mode="colorMode" />
   </div>
 </template>
 
 <script setup lang="ts">
 import PedigreeChart from '../charts/PedigreeChart.vue';
-defineProps<{ personId: string }>();
+import type { ColorMode } from '../../../api/chart-export';
+defineProps<{ personId: string; colorMode?: ColorMode }>();
 </script>
 
 <style scoped>
