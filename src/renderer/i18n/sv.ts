@@ -635,6 +635,7 @@ export default {
       POSSIBLE_DUPLICATE_PERSON: 'Möjliga dubblettpersoner (poäng {score})',
       DUPLICATE_IDENTIFIER: '{count} personer delar identifierare {type}:{value}',
       DUPLICATE_PLACE: '{count} platser delar namn "{name}" under samma förälder',
+      DUPLICATE_MEDIA: '{count} mediafiler delar filväg "{fileRef}"',
     },
   },
   duplicates: {

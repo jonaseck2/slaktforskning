@@ -4,6 +4,7 @@ import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
 import { createPlace } from '../../src/api/places';
+import { createMedia, addMediaLink } from '../../src/api/media';
 import { createTestDb } from './helpers';
 import { queryRun } from '../../src/api/db';
 import { v4 as uuidv4 } from 'uuid';
@@ -75,5 +76,29 @@ describe('DUPLICATE_PLACE', () => {
     createPlace(db, { name: 'Strömstad', parent_place_id: p2.id });
     const results = runAllChecks(db);
     expect(results.filter(r => r.code === 'DUPLICATE_PLACE')).toHaveLength(0);
+  });
+});
+
+describe('DUPLICATE_MEDIA', () => {
+  it('fires for two media rows with the same file_ref', () => {
+    const p = createPerson(db, {});
+    const a = createMedia(db, { title: 'Foo', file_ref: '/photos/p.jpg' });
+    const b = createMedia(db, { title: 'Bar', file_ref: '/photos/p.jpg' });
+    addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
+    addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'DUPLICATE_MEDIA');
+    expect(hit).toHaveLength(1);
+    expect(new Set(hit[0].mediaIds)).toEqual(new Set([a.id, b.id]));
+  });
+
+  it('does not fire for empty file_ref', () => {
+    const p = createPerson(db, {});
+    const a = createMedia(db, { title: 'Foo' });
+    const b = createMedia(db, { title: 'Bar' });
+    addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
+    addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'DUPLICATE_MEDIA')).toHaveLength(0);
   });
 });
