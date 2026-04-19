@@ -69,6 +69,7 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['tests/unit/**/*.test.ts'],
+          exclude: ['tests/unit/components/**/*.test.ts'],
           environment: 'node',
         },
       },
@@ -76,7 +77,10 @@ export default defineConfig({
         plugins: [vue()],
         test: {
           name: 'components',
-          include: ['tests/components/**/*.test.ts'],
+          include: [
+            'tests/components/**/*.test.ts',
+            'tests/unit/components/**/*.test.ts',
+          ],
           environment: 'happy-dom',
           setupFiles: ['./tests/components/vitestSetup.ts'],
         },
