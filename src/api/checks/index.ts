@@ -45,7 +45,7 @@ import {
   checkMediaFileMissing,
   checkGazetteerMatchQuality,
 } from './checks-location';
-import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid } from './checks-place';
+import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
 
 // Re-export public types
 export type { CheckResult, CheckSeverity } from './check-utils';
@@ -132,6 +132,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkOrphanedPlace',         fn: (db) => checkOrphanedPlace(db) },
     { name: 'checkCircularPlaceHierarchy', fn: (db) => checkCircularPlaceHierarchy(db) },
     { name: 'checkPlaceCoordinatesInvalid', fn: (db) => checkPlaceCoordinatesInvalid(db) },
+    { name: 'checkPlaceDatesInverted',    fn: (db) => checkPlaceDatesInverted(db) },
   ];
 }
 
