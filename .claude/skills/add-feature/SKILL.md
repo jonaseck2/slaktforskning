@@ -482,7 +482,16 @@ Use `superpowers:subagent-driven-development` to dispatch these with two-stage r
 
 Use the `/test` skill to run and write tests. Then commit with `/commit`.
 
-**Archive completed artifacts:**
-- Move finished plans from `docs/plans/` to `docs/plans/archive/`
-- Move finished design specs from `docs/superpowers/specs/` to `docs/superpowers/specs/archive/`
-- Update `docs/PLAN.md` pointers to archived paths and mark roadmap entries as `[done]`
+### Release-commit archival checklist
+
+**Every release commit (`release: vX.Y.Z — …`) MUST do the following in the same commit, not a follow-up:**
+
+1. `git mv docs/plans/YYYY-MM-DD-<topic>.md docs/plans/archive/` — the plan file itself, not just the spec
+2. `git mv docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md docs/superpowers/specs/archive/` — if a design spec exists
+3. Update `docs/PLAN.md` Done table: point to BOTH the archived plan and archived spec, not just one:
+   `| vX.Y.Z | description | [spec](...) · [plan](...) |`
+4. Bump `package.json` version
+
+**When writing plan files, the final task must explicitly include `git mv` lines for both the plan and the spec.** The common failure mode is archiving only the spec and leaving the plan file in `docs/plans/`. Reviewers should check `ls docs/plans/` after every release and flag any lingering feature plans.
+
+If the plan is executed by a subagent via a direct-commit flow (not `/commit`), the final-task `git add` line must list the archived plan path explicitly — subagents follow plans literally and will not archive unless told to.
