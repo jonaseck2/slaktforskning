@@ -109,7 +109,11 @@ export function buildHourglassTree(tree: HourglassTree): TreePerson {
 
 /**
  * Inject outline placeholders for the selected person.
- * Always injects: father, mother, child, spouse. No conditions.
+ *
+ * Father/mother placeholders are only injected when no real parent of that sex
+ * is already linked — a person has at most one father and one mother, so there
+ * is no "add another" slot when both are known. Child and spouse placeholders
+ * are always injected (multiple children and spouses are valid).
  *
  * Mutates the tree in place (caller should clone if needed).
  */
@@ -117,13 +121,12 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
   const target = findPerson(root, selectedPersonId);
   if (!target) return;
 
-  // Father outline
-  target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
-  // Mother outline
-  target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
-  // Child outline
+  const hasFather = target.parents.some(p => !p.isPlaceholder && p.person.sex === 'M');
+  const hasMother = target.parents.some(p => !p.isPlaceholder && p.person.sex === 'F');
+  if (!hasFather) target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
+  if (!hasMother) target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
+
   target.children.push(makePlaceholder('child', selectedPersonId));
-  // Spouse outline (right for male, left for female)
   if (target.person.sex === 'F') {
     target.spouses.unshift(makePlaceholder('spouse', selectedPersonId, 'M'));
   } else {

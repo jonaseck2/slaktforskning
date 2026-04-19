@@ -189,24 +189,26 @@ export function computeDescendantLayout(
         for (let i = 0; i < unplacedSpouses.length; i++) {
           const sp = unplacedSpouses[i];
           const sh = hOf(sp);
+          const spY = selCY - sh / 2;
           let spX = selIsFemale
             ? selBox.x - BOX_W - V_GAP - i * (BOX_W + V_GAP)
             : selBox.x + BOX_W + V_GAP + i * (BOX_W + V_GAP);
-          spX = findClearXRect(spX, selBox.y, selIsFemale ? -1 : 1, sh);
-          boxes.push({ person: sp.person, isFocal: false, x: spX, y: selBox.y, w: BOX_W, h: sh });
-          const spCY = selBox.y + sh / 2;
-          // Horizontal curve selected ↔ spouse (dashed)
+          spX = findClearXRect(spX, spY, selIsFemale ? -1 : 1, sh);
+          boxes.push({ person: sp.person, isFocal: false, x: spX, y: spY, w: BOX_W, h: sh });
+          // Horizontal curve selected ↔ spouse (dashed) — both at selCY
           const fromX = selIsFemale ? spX + BOX_W : selBox.x + BOX_W;
           const toX = selIsFemale ? selBox.x : spX;
-          placeholderPaths.push(
-            curvedElbow(fromX, selIsFemale ? spCY : selCY, toX, selIsFemale ? selCY : spCY, 'right'),
-          );
+          placeholderPaths.push(curvedElbow(fromX, selCY, toX, selCY, 'right'));
         }
 
         const unplacedParents = selNode.parents.filter(p => !placedIds.has(p.person.id));
         if (unplacedParents.length > 0) {
           const parentRowMax = Math.max(...unplacedParents.map(p => hOf(p)), MIN_BOX_H);
-          const parentY = selBox.y - parentRowMax - GEN_GAP;
+          // When the selected box is taller than the parent outlines, offset the
+          // parent row up so it sits above the selected's notional normal-height
+          // top rather than its actual top.
+          const heightOffset = Math.max(0, (selBox.h - parentRowMax) / 2);
+          const parentY = selBox.y - parentRowMax - GEN_GAP - heightOffset;
 
           const n = unplacedParents.length;
           const groupW = n * BOX_W + (n - 1) * V_GAP;

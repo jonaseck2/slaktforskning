@@ -30,7 +30,7 @@
           <!-- Markers managed imperatively via canvasMarkers for performance -->
           <LGeoJson
             v-if="boundaryGeojson"
-            :key="selectedPlaceId"
+            :key="selectedPlaceId + '-' + themeVersion"
             :geojson="boundaryGeojson"
             :options-style="boundaryStyle"
           />
@@ -69,6 +69,7 @@ import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { usePanelResize } from '../composables/usePanelResize';
+import { useThemeSignal } from '../composables/useThemeSignal';
 import { useI18n } from 'vue-i18n';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
 
@@ -89,19 +90,26 @@ interface DisplayPlace extends PlaceRow {
   resolved?: PlaceResolveResult;
 }
 
-// Canvas-rendered circle markers — one L.circleMarker per place, no DOM per pin
-const PIN_COLOR = '#4a90d9';
-const PIN_COLOR_SELECTED = '#2a6ab9';
-const PIN_COLOR_RESOLVED = '#7ab0e9';
+// Canvas-rendered circle markers — one L.circleMarker per place, no DOM per pin.
+// Colors are read from CSS tokens so pins follow the active theme.
+const themeVersion = useThemeSignal();
+
+function readPinColors() {
+  const s = getComputedStyle(document.documentElement);
+  const accent = s.getPropertyValue('--accent').trim() || '#4a90d9';
+  const accentHover = s.getPropertyValue('--accent-hover').trim() || '#2a6ab9';
+  return { accent, accentHover };
+}
 
 const markerLayer = L.layerGroup();
 const markerMap = new Map<string, L.CircleMarker>();
 let popup: L.Popup | null = null;
 
 function markerStyle(selected: boolean, resolved: boolean): L.CircleMarkerOptions {
+  const { accent, accentHover } = readPinColors();
   return {
     radius: selected ? 8 : 6,
-    fillColor: selected ? PIN_COLOR_SELECTED : resolved ? PIN_COLOR_RESOLVED : PIN_COLOR,
+    fillColor: selected ? accentHover : accent,
     fillOpacity: resolved ? 0.5 : 0.85,
     color: '#fff',
     weight: selected ? 2 : 1,
@@ -186,7 +194,12 @@ const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary, invalidate
 
 // Boundary overlay
 const boundaryGeojson = ref<Record<string, unknown> | null>(null);
-const boundaryStyle = () => ({ color: '#4a90d9', weight: 2, fill: false, interactive: false });
+const boundaryStyle = () => ({
+  color: readPinColors().accent,
+  weight: 2,
+  fill: false,
+  interactive: false,
+});
 
 // Panel state
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
@@ -244,6 +257,13 @@ watch(panelWidth, () => {
   panelResizeTimer = setTimeout(() => {
     baseMapRef.value?.invalidateSize();
   }, 50);
+});
+
+// Re-style existing markers when theme/appearance changes. Leaflet's canvas
+// renderer bakes colors into the marker at creation, so we must imperatively
+// re-read the CSS tokens and call setStyle on each marker.
+watch(themeVersion, () => {
+  syncMarkers();
 });
 
 // ResizeObserver to catch any container size changes (window resize, layout shifts)

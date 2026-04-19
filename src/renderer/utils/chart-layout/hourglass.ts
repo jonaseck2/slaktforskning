@@ -470,10 +470,13 @@ export function computeHourglassLayout(
       x += parentWidths[i] + V_GAP;
     }
 
-    const parentRowBottom = ancestorRowY(depth + 1) + ancRowMaxH[depth + 1];
-    // One curved elbow per parent: from child top → parent bottom (direction: 'down')
-    for (const pcx of parentCXs) {
-      paths.push(curvedElbow(nodeCX, nodeY, pcx, parentRowBottom, 'down'));
+    // One curved elbow per parent: from child top → each parent's own bottom.
+    // Using the parent's actual bottom (not the row max bottom) so connectors to
+    // shorter parents don't terminate below the parent box.
+    for (let i = 0; i < realParents.length; i++) {
+      const pcx = parentCXs[i];
+      const pBottom = ancestorRowY(depth + 1) + hOf(realParents[i]);
+      paths.push(curvedElbow(nodeCX, nodeY, pcx, pBottom, 'down'));
     }
   }
 
@@ -523,20 +526,32 @@ export function computeHourglassLayout(
       x += parentWidths[i] + V_GAP;
     }
 
-    const parentRowBottom = ancestorRowY(1) + ancRowMaxH[1];
-    // One curved elbow per parent: from focal top → parent bottom
-    for (const pcx of parentCXs) {
-      paths.push(curvedElbow(focalCX, focalRowY, pcx, parentRowBottom, 'down'));
+    // One curved elbow per parent: from focal top → each parent's own bottom.
+    for (let i = 0; i < focalRealParents.length; i++) {
+      const pcx = parentCXs[i];
+      const pBottom = ancestorRowY(1) + hOf(focalRealParents[i]);
+      paths.push(curvedElbow(focalCX, focalRowY, pcx, pBottom, 'down'));
     }
   }
 
-  /** Place a group of outline nodes (parents above or children below) with collision avoidance. */
-  function placeOutlineGroup(nodes: TreePerson[], ownerCX: number, ownerY: number, ownerH: number, dir: 'up' | 'down'): void {
+  /** Place a group of outline nodes (parents above or children below) with collision avoidance.
+   *  `rowTopHint` / `rowMaxHHint` force alignment to an existing row (so placeholders sit at
+   *  the same Y as real boxes in that row). When unset, falls back to owner-relative placement.
+   */
+  function placeOutlineGroup(
+    nodes: TreePerson[],
+    ownerCX: number,
+    ownerY: number,
+    ownerH: number,
+    dir: 'up' | 'down',
+    rowTopHint?: number,
+    rowMaxHHint?: number,
+  ): void {
     if (nodes.length === 0) return;
     const n = nodes.length;
-    // Row height for this outline group is the tallest outline node.
-    const rowH = nodes.reduce((m, nd) => Math.max(m, hOf(nd)), MIN_BOX_H);
-    const targetY = dir === 'down' ? ownerY + ownerH + GEN_GAP : ownerY - rowH - GEN_GAP;
+    const placeholderMaxH = nodes.reduce((m, nd) => Math.max(m, hOf(nd)), MIN_BOX_H);
+    const rowH = rowMaxHHint ?? placeholderMaxH;
+    const targetY = rowTopHint ?? (dir === 'down' ? ownerY + ownerH + GEN_GAP : ownerY - rowH - GEN_GAP);
     const groupW = n * BOX_W + (n - 1) * V_GAP;
 
     // Try centered on owner first, then shift to avoid overlaps
@@ -718,12 +733,43 @@ export function computeHourglassLayout(
           }
         }
 
-        // Cross-direction outlines with collision avoidance
+        // Look up which known row the selected box is in so placeholder parents
+        // and children snap to the same Y as the adjacent real row (otherwise
+        // they would float at a selBox-relative Y that doesn't match the row).
+        let rowAboveTop: number | undefined;
+        let rowAboveMaxH: number | undefined;
+        let rowBelowTop: number | undefined;
+        let rowBelowMaxH: number | undefined;
+
+        const yMatches = (a: number, b: number) => Math.abs(a - b) < 0.5;
+
+        if (yMatches(selBox.y, focalRowY)) {
+          if (A >= 1) { rowAboveTop = ancestorRowTopY[1]; rowAboveMaxH = ancRowMaxH[1]; }
+          if (D >= 1) { rowBelowTop = descendantRowTopY[1]; rowBelowMaxH = descRowMaxH[1]; }
+        } else {
+          for (let d = 1; d <= A; d++) {
+            if (yMatches(selBox.y, ancestorRowTopY[d])) {
+              if (d < A) { rowAboveTop = ancestorRowTopY[d + 1]; rowAboveMaxH = ancRowMaxH[d + 1]; }
+              if (d === 1) { rowBelowTop = focalRowY; rowBelowMaxH = focalRowH; }
+              else { rowBelowTop = ancestorRowTopY[d - 1]; rowBelowMaxH = ancRowMaxH[d - 1]; }
+              break;
+            }
+          }
+          for (let d = 1; d <= D; d++) {
+            if (yMatches(selBox.y, descendantRowTopY[d])) {
+              if (d === 1) { rowAboveTop = focalRowY; rowAboveMaxH = focalRowH; }
+              else { rowAboveTop = descendantRowTopY[d - 1]; rowAboveMaxH = descRowMaxH[d - 1]; }
+              if (d < D) { rowBelowTop = descendantRowTopY[d + 1]; rowBelowMaxH = descRowMaxH[d + 1]; }
+              break;
+            }
+          }
+        }
+
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
-        placeOutlineGroup(unplacedChildren, selCX, selBox.y, selBox.h, 'down');
+        placeOutlineGroup(unplacedChildren, selCX, selBox.y, selBox.h, 'down', rowBelowTop, rowBelowMaxH);
 
         const unplacedParents = selNode.parents.filter(par => !placedIds.has(par.person.id));
-        placeOutlineGroup(unplacedParents, selCX, selBox.y, selBox.h, 'up');
+        placeOutlineGroup(unplacedParents, selCX, selBox.y, selBox.h, 'up', rowAboveTop, rowAboveMaxH);
       }
     }
   }

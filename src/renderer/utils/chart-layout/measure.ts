@@ -80,12 +80,16 @@ export function truncateToWidth(text: string, maxWidth: number, fontSize: number
 }
 
 /**
- * Compute the dynamic height for a person box based on name length and dates.
+ * Compute the dynamic height for a person box based on name length.
+ *
+ * Height is driven entirely by name wrapping. Date lines are always reserved
+ * (birth + death) so that a person missing one date doesn't produce a shorter
+ * box than a peer — row connectors would otherwise land below the short box.
  *
  * Layout:
  * - BOX_PAD_Y at top
  * - Each name line: 16px (12px font + 4px gap)
- * - Each date/place line (birth, death): 14px (10px font + 4px gap)
+ * - 2 reserved date lines: 14px each
  * - BOX_PAD_Y at bottom
  *
  * Returns at least MIN_BOX_H.
@@ -99,12 +103,8 @@ export function measureBoxHeight(node: PersonNode): number {
   });
 
   const nameLines = fullName ? wrapName(fullName, TEXT_AREA_W, 12) : [];
-  const numNameLines = Math.max(1, nameLines.length); // at least 1 line even for blank
+  const numNameLines = Math.max(1, nameLines.length);
 
-  const hasBirth = !!(node.birthDate || node.birthPlace);
-  const hasDeath = !!(node.deathDate || node.deathPlace);
-  const numDateLines = (hasBirth ? 1 : 0) + (hasDeath ? 1 : 0);
-
-  const textBlockH = numNameLines * 16 + numDateLines * 14 + 2 * BOX_PAD_Y;
+  const textBlockH = numNameLines * 16 + 2 * 14 + 2 * BOX_PAD_Y;
   return Math.max(MIN_BOX_H, textBlockH);
 }
