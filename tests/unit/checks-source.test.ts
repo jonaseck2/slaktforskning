@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { runAllChecks } from '../../src/api/checks';
 import { createSource, createCitation } from '../../src/api/sources';
 import { createEvent } from '../../src/api/events';
+import { createRepository, linkSourceRepository } from '../../src/api/repositories';
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
@@ -36,5 +37,23 @@ describe('SOURCE_MISSING_TITLE', () => {
     const s = createSource(db, { title: 'Proper title' });
     const results = runAllChecks(db);
     expect(results.filter(r => r.code === 'SOURCE_MISSING_TITLE' && r.sourceIds?.includes(s.id))).toHaveLength(0);
+  });
+});
+
+describe('ORPHANED_REPOSITORY', () => {
+  it('fires for a repository that no source references', () => {
+    const r = createRepository(db, { name: 'Tyst arkiv' });
+    const results = runAllChecks(db);
+    const hit = results.filter(h => h.code === 'ORPHANED_REPOSITORY' && h.messageParams?.repositoryId === r.id);
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('notice');
+  });
+
+  it('does not fire when the repository is linked to a source', () => {
+    const repo = createRepository(db, { name: 'Använt arkiv' });
+    const src = createSource(db, { title: 'Bok' });
+    linkSourceRepository(db, src.id, repo.id);
+    const results = runAllChecks(db);
+    expect(results.filter(h => h.code === 'ORPHANED_REPOSITORY' && h.messageParams?.repositoryId === repo.id)).toHaveLength(0);
   });
 });

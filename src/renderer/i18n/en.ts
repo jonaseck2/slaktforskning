@@ -623,6 +623,7 @@ export default {
       PLACE_MATCH_WRONG_LEVEL: 'Place matched at wrong level: {name} matched {matchedPath}',
       ORPHANED_SOURCE: 'Source "{title}" has no citations',
       SOURCE_MISSING_TITLE: 'Source has no title',
+      ORPHANED_REPOSITORY: 'Repository "{name}" is not linked to any source',
       ORPHANED_PLACE: 'Place "{name}" is not used anywhere',
       CIRCULAR_PLACE_HIERARCHY: 'Place hierarchy contains a cycle: {chain}',
       TEXT_CONTROL_CHARS: 'Text field contains control characters',

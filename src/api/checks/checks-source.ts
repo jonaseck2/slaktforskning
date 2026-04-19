@@ -34,3 +34,20 @@ export function checkSourceMissingTitle(db: Database): CheckResult[] {
     sourceIds: [r.id],
   }));
 }
+
+export function checkOrphanedRepository(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; name: string }>(db, `
+    SELECT r.id, r.name
+    FROM repositories r
+    WHERE NOT EXISTS (
+      SELECT 1 FROM source_repositories sr WHERE sr.repository_id = r.id
+    )
+  `);
+  return rows.map(r => ({
+    code: 'ORPHANED_REPOSITORY',
+    severity: 'notice' as CheckSeverity,
+    message: `Arkivet "${r.name}" är inte kopplat till någon källa`,
+    messageParams: { name: r.name, repositoryId: r.id },
+    personIds: [],
+  }));
+}
