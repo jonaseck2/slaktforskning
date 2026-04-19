@@ -54,7 +54,7 @@ export default {
     screenReaderMode: 'Screen',
     theme: 'Theme',
     themes: { forest: 'Forest', nordic: 'Nordic', twilight: 'Twilight' },
-    tabs: { appearance: 'Appearance', database: 'Database', importExport: 'Import / Export', linkRules: 'Link Rules', gazetteers: 'Gazetteers' },
+    tabs: { appearance: 'Appearance', database: 'Database', defaults: 'Defaults', importExport: 'Import / Export', linkRules: 'Link Rules', gazetteers: 'Gazetteers' },
   },
   common: {
     cancel: 'Cancel',
@@ -423,6 +423,7 @@ export default {
   placePanel: {
     noPlaceSelected: 'Click a pin on the map',
     viewFull: 'View full details',
+    addPerson: 'Add person',
   },
   visualization: {
     listView: 'List',
@@ -1258,5 +1259,14 @@ export default {
     deleteCitation: 'Delete citation',
     undone: 'Undone: {action}',
     redone: 'Redone: {action}',
+  },
+  addPerson: {
+    eventSection: 'Add event (optional)',
+  },
+  defaults: {
+    title: 'Defaults',
+    eventsSection: 'Events',
+    smartEventType: 'Suggest event type based on existing events',
+    smartEventTypeHint: 'When enabled, picks the next missing type in the order: birth → death → occupation → residence. When off, always defaults to birth.',
   },
 };
