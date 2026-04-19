@@ -34,12 +34,12 @@ import {
   checkUnsourcedLifeEvent,
   checkInvalidDates,
   checkUnrelatedPerson,
-  checkOrphanedSource,
   checkTextControlChars,
   checkMultipleBirthNames,
   checkPartialName,
   checkLivingOver120,
 } from './checks-quality';
+import { checkOrphanedSource } from './checks-source';
 import {
   checkSimultaneousDistantLocations,
   checkGazetteerMatchQuality,

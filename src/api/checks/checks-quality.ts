@@ -150,25 +150,6 @@ export function checkUnrelatedPerson(db: Database): CheckResult[] {
   }));
 }
 
-export function checkOrphanedSource(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; title: string }>(db, `
-    SELECT s.id, s.title
-    FROM sources s
-    WHERE NOT EXISTS (
-      SELECT 1 FROM citations c WHERE c.source_id = s.id
-    )
-  `);
-
-  return rows.map(r => ({
-    code: 'ORPHANED_SOURCE',
-    severity: 'notice' as CheckSeverity,
-    message: `Källa "${r.title || '(utan titel)'}" har inga källhänvisningar`,
-    messageParams: { title: r.title || '' },
-    personIds: [],
-    sourceIds: [r.id],
-  }));
-}
-
 export function checkTextControlChars(db: Database): CheckResult[] {
   const results: CheckResult[] = [];
   // Regex: control chars U+0000–U+001F except tab (09), newline (0A), CR (0D)
