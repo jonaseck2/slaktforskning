@@ -169,6 +169,11 @@
       </svg>
     </div>
     <div v-if="!readonly" class="zoom-controls">
+      <span class="zoom-label">Gens:</span>
+      <button class="zoom-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-level">{{ genTarget }}</span>
+      <button class="zoom-btn" @click="incrGens">+</button>
+      <span class="zoom-sep">|</span>
       <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" @click="zoomOut">−</button>
@@ -211,6 +216,8 @@ const loading = ref(true);
 const loadingMore = ref(false);
 const tree = ref<TreePerson | null>(null);
 const collapsed = ref(new Set<string>());
+const genTarget = ref(3);
+const loadedGens = ref(3);
 
 const hoveredPersonId = ref<string | null>(null);
 
@@ -238,6 +245,43 @@ function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParen
   if (next.has(key)) next.delete(key);
   else next.add(key);
   collapsed.value = next;
+}
+
+function applyGenerationDepth(n: number) {
+  if (!tree.value) return;
+  const next = new Set<string>();
+  for (const k of collapsed.value) {
+    if (k.endsWith(':up') || k.endsWith(':down')) continue;
+    next.add(k);
+  }
+  function walk(node: TreePerson, depth: number, dir: 'up' | 'down', seen: Set<string>) {
+    if (seen.has(node.person.id)) return;
+    seen.add(node.person.id);
+    if (depth >= n) {
+      next.add(`${node.person.id}:${dir}`);
+      return;
+    }
+    const children = dir === 'up' ? node.parents : node.children;
+    for (const c of children) walk(c, depth + 1, dir, seen);
+  }
+  for (const p of tree.value.parents) walk(p, 1, 'up', new Set());
+  for (const c of tree.value.children) walk(c, 1, 'down', new Set());
+  collapsed.value = next;
+}
+
+function decrGens() {
+  if (genTarget.value <= 1) return;
+  genTarget.value--;
+  applyGenerationDepth(genTarget.value);
+}
+
+function incrGens() {
+  genTarget.value++;
+  if (genTarget.value > loadedGens.value) {
+    load();
+  } else {
+    applyGenerationDepth(genTarget.value);
+  }
 }
 
 async function handleCollapseButton(btn: CollapseButton) {
@@ -363,21 +407,11 @@ async function load() {
   if (!props.personId) return;
   loading.value = true;
   try {
-    tree.value = await fetchHourglassTreePerson(props.personId);
-    // Default: collapse ancestors beyond 2 levels (great-grandparents+).
-    const defaultCollapsed = new Set<string>();
-    if (tree.value) {
-      function collapseDeepAncestors(node: TreePerson, depth: number, visited = new Set<string>()) {
-        if (visited.has(node.person.id)) return;
-        visited.add(node.person.id);
-        if (depth >= 2 && node.parents.length > 0) {
-          defaultCollapsed.add(`${node.person.id}:up`);
-        }
-        for (const p of node.parents) collapseDeepAncestors(p, depth + 1, visited);
-      }
-      for (const p of tree.value.parents) collapseDeepAncestors(p, 1);
-    }
-    collapsed.value = defaultCollapsed;
+    const gens = Math.max(3, genTarget.value);
+    tree.value = await fetchHourglassTreePerson(props.personId, gens, gens);
+    loadedGens.value = gens;
+    collapsed.value = new Set();
+    applyGenerationDepth(genTarget.value);
   } finally {
     loading.value = false;
   }
@@ -456,7 +490,18 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   color: #555;
   line-height: 1.4;
 }
-.zoom-btn:hover { background: var(--color-bg-muted); }
+.zoom-btn:hover:not(:disabled) { background: var(--color-bg-muted); }
+.zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.zoom-label {
+  padding: 0 2px 0 4px;
+  font-size: var(--font-xs);
+  color: #666;
+}
+.zoom-sep {
+  padding: 0 4px;
+  color: #bbb;
+  font-size: var(--font-xs);
+}
 .zoom-level {
   padding: 0 4px;
   font-size: var(--font-xs);

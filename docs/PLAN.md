@@ -201,6 +201,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.114.0 | Finish chart visual overhaul: photos render (data URLs), curved elbow connectors, dynamic box heights so long names + places fit | [archive](plans/archive/2026-04-18-chart-visual-overhaul-fixes.md) |
 | v0.114.1 | Update tree-layout skill: dynamic heights (`measureBoxHeight`), curved paths (`curvedElbow`), `D:` dashed convention, photo data URLs | — |
 | v0.115.0 | Chart box polish: fix birth/death line double-padding so text stays inside the box; vertically center portraits in dynamic-height boxes; truncate overflowing birth/death lines with ellipsis (`truncateToWidth`); drop hover `+` add button (outline placeholders remain); match person detail profile thumbnail to chart portrait (rectangular, 5px radius) | — |
+| v0.116.0 | Pedigree / hourglass / descendant charts get a fan-style `− N +` generations stepper in the zoom controls; rebuilds the `collapsed` set on decrement (hides past depth N) and auto-refetches deeper (`fetchPedigreeTree` / `fetchHourglassTreePerson` / `fetchDescendantTree`) on increment past the loaded depth. Uppper cap removed so users can grow the tree to any depth the DB has. Pedigree uses `:right`, hourglass `:up`/`:down`, descendant `:down` to match each layout's collapse keys. | — |
 ---
 
 ## Research
