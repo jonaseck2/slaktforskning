@@ -173,21 +173,3 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
 
   return results;
 }
-
-export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResult[] {
-  // Use the is_missing flag set during import instead of calling existsSync per file.
-  // This avoids thousands of synchronous filesystem checks that block the event loop.
-  const rows = queryAll<{ id: string; file_ref: string }>(db, `
-    SELECT id, file_ref FROM media
-    WHERE is_missing = 1 AND file_ref IS NOT NULL AND file_ref != ''
-  `);
-
-  return rows.map(row => ({
-    code: 'MEDIA_FILE_MISSING' as const,
-    severity: 'warning' as const,
-    message: `Mediafil saknas: ${row.file_ref}`,
-    messageParams: { filePath: row.file_ref },
-    personIds: [],
-    mediaIds: [row.id],
-  }));
-}

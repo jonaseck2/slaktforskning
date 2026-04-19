@@ -42,9 +42,9 @@ import {
 } from './checks-quality';
 import {
   checkSimultaneousDistantLocations,
-  checkMediaFileMissing,
   checkGazetteerMatchQuality,
 } from './checks-location';
+import { checkMediaFileMissing } from './checks-media';
 import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
 
 // Re-export public types
