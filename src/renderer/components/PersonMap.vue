@@ -35,7 +35,7 @@
       </LCircleMarker>
     </BaseMap>
   </div>
-  <div v-else class="empty-hint">{{ $t('map.empty') }}</div>
+  <div v-else class="empty-hint">{{ $t('empty.places') }}</div>
 </template>
 
 <script setup lang="ts">
