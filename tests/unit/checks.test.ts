@@ -716,3 +716,27 @@ describe('MULTIPLE_BIRTH_NAMES', () => {
     expect(results.filter(r => r.code === 'MULTIPLE_BIRTH_NAMES')).toHaveLength(0);
   });
 });
+
+describe('PARTIAL_NAME', () => {
+  it('fires when a person has only given_name', () => {
+    const p = createPerson(db, { given_name: 'Solo' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PARTIAL_NAME' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('notice');
+  });
+
+  it('fires when a person has only surname', () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: '', surname: 'Nilsson', name_type: 'birth' });
+    const results = runAllChecks(db);
+    const hit = results.filter(r => r.code === 'PARTIAL_NAME' && r.personIds.includes(p.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('does not fire when both names present', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Eriksson' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'PARTIAL_NAME' && r.personIds.includes(p.id))).toHaveLength(0);
+  });
+});

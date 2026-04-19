@@ -269,3 +269,26 @@ export function checkMultipleBirthNames(db: Database): CheckResult[] {
     personIds: [r.person_id],
   }));
 }
+
+export function checkPartialName(db: Database): CheckResult[] {
+  const rows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+    SELECT person_id, given_name, surname FROM person_names
+  `);
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const hasGiven = !!r.given_name && r.given_name.trim() !== '';
+    const hasSurname = !!r.surname && r.surname.trim() !== '';
+    if (hasGiven !== hasSurname) {
+      results.push({
+        code: 'PARTIAL_NAME',
+        severity: 'notice' as CheckSeverity,
+        message: hasGiven
+          ? 'Person saknar efternamn'
+          : 'Person saknar förnamn',
+        messageParams: {},
+        personIds: [r.person_id],
+      });
+    }
+  }
+  return results;
+}
