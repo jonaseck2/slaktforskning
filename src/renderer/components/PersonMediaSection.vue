@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(m, idx) in media" :key="m.link_id" class="clickable-row" @click="openLightbox(idx)">
+        <tr v-for="(m, idx) in media" :key="m.link_id" class="clickable-row" @click="openMedia(m.id)">
           <td class="td-shrink thumb-cell">
             <img v-if="thumbnails[m.id]" :src="thumbnails[m.id]" class="row-thumb" :alt="mediaDisplayName(m.title, m.file_ref, '')" />
             <span v-else-if="isImage(m.format)" class="row-thumb-placeholder"></span>
@@ -31,21 +31,12 @@
         </tr>
       </tbody>
     </table>
-
-    <MediaLightbox
-      :media-items="media"
-      :current-index="lightboxIndex"
-      :visible="lightboxVisible"
-      @close="lightboxVisible = false"
-      @update:current-index="lightboxIndex = $event"
-      @link-changed="load"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import MediaLightbox from './MediaLightbox.vue';
+import { useRouter } from 'vue-router';
 import { mediaDisplayName } from '../utils/mediaUtils';
 
 declare const window: Window & {
@@ -68,10 +59,9 @@ export interface MediaItem {
 const props = defineProps<{ personId: string }>();
 const emit = defineEmits<{ profileChanged: [] }>();
 
+const router = useRouter();
 const media = ref<MediaItem[]>([]);
 const thumbnails = ref<Record<string, string>>({});
-const lightboxVisible = ref(false);
-const lightboxIndex = ref(0);
 
 defineExpose({ attach, reload: load, count: computed(() => media.value.length) });
 
@@ -95,9 +85,8 @@ async function loadThumbnails() {
   }
 }
 
-function openLightbox(idx: number) {
-  lightboxIndex.value = idx;
-  lightboxVisible.value = true;
+function openMedia(id: string) {
+  router.push({ path: '/media', query: { open: id } });
 }
 
 async function attach() {

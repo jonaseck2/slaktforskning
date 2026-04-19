@@ -20,7 +20,6 @@
           :focal-cy="fanViewBoxInfo.cy"
           :vb-width="fanViewBoxInfo.width"
           :vb-height="fanViewBoxInfo.height"
-          :curved-text="fanCurvedText ?? true"
           font-family="Georgia, serif"
           link-base="#person-"
           :stroke-width="0.5"
@@ -269,7 +268,6 @@ const props = defineProps<{
   personId: string;
   fanGenerations?: number;
   fanArcSpan?: ArcSpan;
-  fanCurvedText?: boolean;
 }>();
 
 // ── State ──────────────────────────────────────────────────────────────────────

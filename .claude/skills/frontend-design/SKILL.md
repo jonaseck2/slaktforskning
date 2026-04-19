@@ -180,6 +180,7 @@ Key token categories:
 /* Surface */     --surface-bg, --surface, --surface-hover, --surface-border, --surface-border-subtle
 /* Text */        --text-primary, --text-secondary, --text-muted
 /* Accent */      --accent, --accent-hover, --accent-text
+/* Fan branches */--fan-branch-1..4 (per theme; read by readThemeColors() in fanColors.ts)
 /* Semantic */    --error-bg/text, --warning-bg/text, --success-bg/text, --info-bg/text
 /* Spacing */     --space-xs(4) --space-sm(8) --space-md(12) --space-lg(16) --space-xl(24)
 /* Typography */  --font-xs(11) --font-sm(13) --font-base(14) --font-md(15) --font-lg(16)

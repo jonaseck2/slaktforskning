@@ -439,10 +439,9 @@ export default {
       focal: 'Focal Person',
       children: 'Children',
     },
-    curvedText: 'Curved text',
     fanColorMode: 'Color mode',
     fanColorBranch: 'Branch',
-    fanColorSex: 'Sex',
+    fanColorSex: 'Gender',
     fan: {
       arc: 'Arc',
       generations: 'Generations',
@@ -949,13 +948,7 @@ export default {
     moveDown: 'Move down',
     gallery: 'Gallery',
     lightbox: {
-      prev: 'Previous',
-      next: 'Next',
-      close: 'Close',
       linkedEntities: 'Linked entities',
-      linkTo: 'Link to',
-      unlink: 'Unlink',
-      openExternal: 'Open in app',
       open: 'View fullscreen',
     },
     viewer: {

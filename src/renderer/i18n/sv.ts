@@ -439,7 +439,6 @@ export default {
       focal: 'Fokusperson',
       children: 'Barn',
     },
-    curvedText: 'Böjd text',
     fan: {
       arc: 'Båge',
       generations: 'Generationer',
@@ -949,13 +948,7 @@ export default {
     moveDown: 'Flytta ner',
     gallery: 'Galleri',
     lightbox: {
-      prev: 'Föregående',
-      next: 'Nästa',
-      close: 'Stäng',
       linkedEntities: 'Länkade poster',
-      linkTo: 'Länka till',
-      unlink: 'Ta bort länk',
-      openExternal: 'Öppna i app',
       open: 'Visa i helskärm',
     },
     viewer: {

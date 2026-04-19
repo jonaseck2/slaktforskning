@@ -30,6 +30,12 @@
   --accent:       #2d5a27;
   --accent-hover: #1e4a1a;
   --accent-text:  #e0f0dc;
+
+  /* Fan-chart branch palette — seasons of the forest */
+  --fan-branch-1: #2d5a27;  /* pine (accent) */
+  --fan-branch-2: #26455a;  /* lake-at-dusk */
+  --fan-branch-3: #54275a;  /* heather-plum */
+  --fan-branch-4: #5a3e27;  /* bark-russet */
 }
 
 /* ─── Nordic theme ────────────────────────────────────────────────────────── */
@@ -58,6 +64,12 @@
   --accent:       #1d4ed8;
   --accent-hover: #1e40af;
   --accent-text:  #ffffff;
+
+  /* Fan-chart branch palette — muted winter fjord */
+  --fan-branch-1: #27455a;  /* deep-fjord */
+  --fan-branch-2: #275a5a;  /* glacier-teal */
+  --fan-branch-3: #3a4d6a;  /* storm-steel */
+  --fan-branch-4: #3d3a5a;  /* dusk-indigo */
 }
 
 /* ─── Twilight theme ──────────────────────────────────────────────────────── */
@@ -86,6 +98,12 @@
   --accent:       #6c5ce7;
   --accent-hover: #5a4bd1;
   --accent-text:  #ffffff;
+
+  /* Fan-chart branch palette — muted nightfall */
+  --fan-branch-1: #272d5a;  /* midnight-indigo */
+  --fan-branch-2: #3d2f5a;  /* dusk-violet */
+  --fan-branch-3: #4a275a;  /* amethyst */
+  --fan-branch-4: #5a275a;  /* orchid-plum */
 }
 
 /* ─── Semantic colors (theme-invariant) ──────────────────────────────────── */

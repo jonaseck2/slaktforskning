@@ -625,6 +625,7 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 /* Accent */      --accent, --accent-hover, --accent-text
 /* Semantic */    --error-bg/text, --warning-bg/text, --success-bg/text, --info-bg/text
 /* Sex badges */  --sex-m-bg/text, --sex-f-bg/text, --sex-u-bg/text
+/* Fan branches */--fan-branch-1, --fan-branch-2, --fan-branch-3, --fan-branch-4 (per-theme, read by readThemeColors())
 /* Spacing */     --space-xs(4) --space-sm(8) --space-md(12) --space-lg(16) --space-xl(24) --space-2xl(32)
 /* Typography */  --font-xs(11) --font-sm(13) --font-base(14) --font-md(15) --font-lg(16)
 /* Shape */       --radius-sm(4) --radius-md(6) --radius-lg(10) --radius-full(9999)

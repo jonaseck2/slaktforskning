@@ -12,7 +12,7 @@
           :class="{ 'approximate': item.dateType === 'about', 'range': item.dateType === 'between' }"
           role="listitem"
           :title="tooltipText(item)"
-          @click="openLightbox(item)"
+          @click="openMedia(item)"
         >
           <div class="timeline-year">{{ displayYear(item) }}</div>
           <div class="timeline-thumb-wrap">
@@ -40,7 +40,7 @@
             class="timeline-card undated"
             role="listitem"
             :title="mediaDisplayName(item.media.title, item.media.file_ref, '')"
-            @click="openLightbox(item)"
+            @click="openMedia(item)"
           >
             <div class="timeline-thumb-wrap">
               <img
@@ -58,48 +58,12 @@
       </div>
     </div>
 
-    <!-- Lightbox -->
-    <div v-if="lightboxItem" class="modal-overlay" @mousedown.self="lightboxItem = null">
-      <div class="lightbox-modal">
-        <div class="lightbox-header">
-          <h3>{{ mediaDisplayName(lightboxItem.media.title, lightboxItem.media.file_ref) }}</h3>
-          <button class="btn-cancel" @click="lightboxItem = null">&times;</button>
-        </div>
-        <div class="lightbox-body">
-          <img
-            v-if="lightboxDataUrl"
-            :src="lightboxDataUrl"
-            class="lightbox-image"
-            :alt="mediaDisplayName(lightboxItem.media.title, lightboxItem.media.file_ref, '')"
-          />
-          <div v-else class="lightbox-no-image">
-            {{ lightboxItem.media.format?.toUpperCase() || '?' }}
-          </div>
-        </div>
-        <div class="lightbox-info">
-          <div v-if="lightboxItem.eventType" class="lightbox-detail">
-            <strong>{{ $t('events.eventType') }}:</strong> {{ lightboxItem.eventType }}
-          </div>
-          <div v-if="lightboxItem.date" class="lightbox-detail">
-            <strong>{{ $t('events.date') }}:</strong> {{ displayDate(lightboxItem) }}
-          </div>
-          <div v-if="lightboxItem.placeName" class="lightbox-detail">
-            <strong>{{ $t('events.place') }}:</strong> {{ lightboxItem.placeName }}
-          </div>
-          <div v-if="lightboxItem.eventDescription" class="lightbox-detail">
-            <strong>{{ $t('events.description') }}:</strong> {{ lightboxItem.eventDescription }}
-          </div>
-        </div>
-        <div class="lightbox-actions">
-          <button v-if="lightboxItem.media.file_ref" class="btn-add" @click="openFile(lightboxItem.media.id)">{{ $t('media.open') }}</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { mediaDisplayName } from '../utils/mediaUtils';
 
 interface TimelineMedia {
@@ -127,10 +91,9 @@ const props = defineProps<{
   entityId: string;
 }>();
 
+const router = useRouter();
 const items = ref<TimelineItem[]>([]);
 const thumbnails = ref<Record<string, string>>({});
-const lightboxItem = ref<TimelineItem | null>(null);
-const lightboxDataUrl = ref<string | null>(null);
 
 const datedItems = computed(() => items.value.filter(i => i.date));
 const undatedItems = computed(() => items.value.filter(i => !i.date));
@@ -189,17 +152,8 @@ function tooltipText(item: TimelineItem): string {
   return parts.join(' - ');
 }
 
-async function openLightbox(item: TimelineItem) {
-  lightboxItem.value = item;
-  if (item.media.file_ref && isImage(item.media.format)) {
-    lightboxDataUrl.value = await window.api.media.readAsDataUrl(item.media.id) as string | null;
-  } else {
-    lightboxDataUrl.value = null;
-  }
-}
-
-async function openFile(id: string) {
-  await window.api.media.openFile(id);
+function openMedia(item: TimelineItem) {
+  router.push({ path: '/media', query: { open: item.media.id } });
 }
 
 watch(() => props.entityId, load, { immediate: true });
@@ -322,71 +276,5 @@ watch(() => props.entityId, load, { immediate: true });
 
 .timeline-card.undated .timeline-thumb-wrap {
   opacity: 0.7;
-}
-
-/* Lightbox */
-.lightbox-modal {
-  background: var(--color-bg, #fff);
-  border-radius: 8px;
-  max-width: 600px;
-  width: 90vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-}
-
-.lightbox-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border, #eee);
-}
-
-.lightbox-header h3 {
-  margin: 0;
-  font-size: var(--font-md, 15px);
-}
-
-.lightbox-body {
-  padding: 16px;
-  display: flex;
-  justify-content: center;
-}
-
-.lightbox-image {
-  max-width: 100%;
-  max-height: 60vh;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-.lightbox-no-image {
-  width: 200px;
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-muted, #f5f5f5);
-  border-radius: 4px;
-  color: var(--color-text-faint, #bbb);
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.lightbox-info {
-  padding: 0 16px 12px;
-}
-
-.lightbox-detail {
-  font-size: var(--font-sm, 13px);
-  margin-bottom: 4px;
-  color: var(--color-text, #333);
-}
-
-.lightbox-actions {
-  padding: 8px 16px 16px;
-  display: flex;
-  gap: 8px;
 }
 </style>

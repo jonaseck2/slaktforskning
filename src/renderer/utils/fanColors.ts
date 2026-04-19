@@ -10,6 +10,7 @@ export interface ThemeColors {
   sexM: string;         // --sex-m-bg  (light mode) or darkened variant
   sexF: string;         // --sex-f-bg
   sexU: string;         // --sex-u-bg
+  branches: [string, string, string, string];  // --fan-branch-1..4 (falls back to accent hue rotation)
 }
 
 /** Parse "#rrggbb" to [r, g, b]. */
@@ -135,10 +136,8 @@ export function sexFill(
 ): string {
   const sexBaseMap: Record<string, string> = { M: theme.sexM, F: theme.sexF, U: theme.sexU };
   let base = sexBaseMap[sex] ?? theme.sexU;
-  // In light mode the sex token colors are very pale — darken them for chart fill
-  if (!isDark) base = darken(base, 0.35);
-  // Lighten slightly per generation for depth
-  base = isDark ? darken(base, gen * 0.03) : lighten(base, gen * 0.04);
+  // Per-generation depth: slight lighten outward so rings remain distinguishable
+  base = isDark ? darken(base, gen * 0.03) : lighten(base, gen * 0.06);
   if (isEmpty) base = isDark ? lighten(base, 0.2) : lighten(base, 0.5);
   return base;
 }
@@ -181,12 +180,21 @@ export function printFill(gen: number, isEmpty: boolean): string {
 export function readThemeColors(): ThemeColors {
   const style = getComputedStyle(document.documentElement);
   const get = (prop: string) => style.getPropertyValue(prop).trim();
+  const accent = get('--accent') || '#2d5a27';
+  const b1 = get('--fan-branch-1');
+  const b2 = get('--fan-branch-2');
+  const b3 = get('--fan-branch-3');
+  const b4 = get('--fan-branch-4');
+  const branches: [string, string, string, string] = (b1 && b2 && b3 && b4)
+    ? [b1, b2, b3, b4]
+    : branchBaseColors(accent);
   return {
-    accent: get('--accent') || '#2d5a27',
+    accent,
     sidebarBg: get('--sidebar-bg') || '#1a2e1a',
-    sexM: get('--sex-m-bg') || '#e0eaf2',
-    sexF: get('--sex-f-bg') || '#f5e8ee',
-    sexU: get('--sex-u-bg') || '#e8e8e8',
+    sexM: get('--sex-m-text') || '#3a5a7a',
+    sexF: get('--sex-f-text') || '#8a5068',
+    sexU: get('--sex-u-text') || '#666666',
+    branches,
   };
 }
 

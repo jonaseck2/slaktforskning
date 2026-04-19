@@ -9,7 +9,6 @@
       :focal-cy="viewBoxInfo.cy"
       :vb-width="viewBoxInfo.width"
       :vb-height="viewBoxInfo.height"
-      :curved-text="curvedText ?? true"
       width="100%"
       stroke-color="#999"
       :no-gradients="true"
@@ -34,7 +33,6 @@ const props = defineProps<{
   personId: string;
   generations?: number;
   arcSpan?: ArcSpan;
-  curvedText?: boolean;
 }>();
 
 const loading = ref(true);

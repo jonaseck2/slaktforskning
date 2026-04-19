@@ -22,6 +22,8 @@ export interface FanSegment {
   textAngleRadial: number;  // radial rotation (gen 5+): text reads outward along radius
   midAngle: number;        // segment midpoint angle in degrees
   sweepDeg: number;        // angular width of this segment
+  rInner: number;          // inner ring radius (for width measurement)
+  rOuter: number;          // outer ring radius (for width measurement)
   isEmpty: boolean;
   isFocal: boolean;
 }
@@ -34,7 +36,9 @@ export interface FanLayoutOptions {
 
 // Ring depths. Gens 5-8 are deep to accommodate radially-rotated text
 // (four stacked lines read outward along the radius).
-const RING_DEPTHS = [50, 55, 60, 55, 48, 68, 58, 52, 48];
+// Gens 7-8 are near-double-depth so they can fit a 2-line label (full name +
+// date range) instead of the 4-line stack used by gen 5-6.
+const RING_DEPTHS = [50, 55, 60, 55, 48, 68, 58, 94, 94];
 // Gap between rings
 const RING_GAP = 2;
 
@@ -211,7 +215,8 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
       const rMid = (rInner + rOuter) / 2;
       const [textX, textY] = arcXY(cx, cy, rMid, midDeg);
 
-      // Tangential text angle (gen 1-4 straight mode): text runs along the arc tangent.
+      // Tangential flip: used below to choose arc traversal direction so names
+      // never read upside-down.
       const tangentialBase = midDeg + 90;
       const normT = ((tangentialBase % 360) + 360) % 360;
       const flipT = normT > 90 && normT <= 270;
@@ -224,9 +229,11 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
       const flipR = normR > 90 && normR <= 270;
       const textAngleRadial = midDeg + (flipR ? 180 : 0);
 
-      // Text paths for curved text along arcs
+      // Text paths for curved text along arcs (gen 1-4). Using flipT rather
+      // than sin(midDeg) < 0 avoids misclassifying the boundary case midDeg=0
+      // (e.g. the mother in 360° gen 1 at exactly 3 o'clock).
       const largeArcMid = sweepDeg > 180 ? 1 : 0;
-      const inUpperHalf = Math.sin(toRad(midDeg)) < 0;
+      const inUpperHalf = !flipT;
 
       function arcPath(r: number): string {
         const [p1x, p1y] = arcXY(cx, cy, r, startDeg);
@@ -236,11 +243,25 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
           : `M ${fmt(p2x)},${fmt(p2y)} A ${fmt(r)},${fmt(r)} 0 ${largeArcMid},0 ${fmt(p1x)},${fmt(p1y)}`;
       }
 
-      // Arc radii for 4 text lines: given (outward), surname (mid), birth, death (inward).
-      const rGiven   = inUpperHalf ? rMid + 8  : rMid - 8;
-      const rSurname = inUpperHalf ? rMid - 2  : rMid + 2;
-      const rBirth   = inUpperHalf ? rMid - 12 : rMid + 12;
-      const rDeath   = inUpperHalf ? rMid - 21 : rMid + 21;
+      // Arc radii for text lines: given (outward), surname, birth, death (inward).
+      // Only the lines that will actually render are counted, so 2/3/4-line blocks
+      // stay vertically centered in the segment. Upper-half segments add; lower-half
+      // flip via `sign` because their text reads with "up" toward the inner edge.
+      const sign = inUpperHalf ? 1 : -1;
+      const lines: Array<'given' | 'surname' | 'birth' | 'death'> = [];
+      if (person?.preferredName ?? person?.givenName) lines.push('given');
+      if (person?.surname) lines.push('surname');
+      if (person?.birthDate) lines.push('birth');
+      if (person?.deathDate) lines.push('death');
+      const lineGap = 10;
+      const posOf: Partial<Record<'given' | 'surname' | 'birth' | 'death', number>> = {};
+      lines.forEach((key, i) => {
+        posOf[key] = ((lines.length - 1) / 2 - i) * lineGap;
+      });
+      const rGiven   = rMid + sign * (posOf.given   ?? 0);
+      const rSurname = rMid + sign * (posOf.surname ?? 0);
+      const rBirth   = rMid + sign * (posOf.birth   ?? 0);
+      const rDeath   = rMid + sign * (posOf.death   ?? 0);
 
       const textPathGivenD = isFocal ? '' : arcPath(rGiven);
       const textPathD      = isFocal ? '' : arcPath(rSurname);
@@ -251,6 +272,7 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
         ahnNum, generation: gen, person, pathD, focalPathD,
         textPathGivenD, textPathD, textPathBirthD, textPathDeathD,
         fill, textX, textY, textAngle, textAngleRadial, midAngle: midDeg, sweepDeg,
+        rInner, rOuter,
         isEmpty, isFocal,
       });
     }
