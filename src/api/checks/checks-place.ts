@@ -3,17 +3,31 @@ import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
 
 export function checkOrphanedPlace(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; name: string }>(db, `
-    SELECT p.id, p.name
-    FROM places p
-    WHERE NOT EXISTS (SELECT 1 FROM events e WHERE e.place_id = p.id)
-      AND NOT EXISTS (SELECT 1 FROM citations c WHERE c.place_id = p.id)
-      AND NOT EXISTS (SELECT 1 FROM places p2 WHERE p2.parent_place_id = p.id)
-      AND NOT EXISTS (
-        SELECT 1 FROM media_links ml
-        WHERE ml.entity_type = 'place' AND ml.entity_id = p.id
-      )
-  `);
+  // Four bulk set-membership queries instead of four correlated NOT EXISTS
+  // subqueries (which went O(places × references) on large DBs).
+  const places = queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
+  const usedByEvents = new Set(
+    queryAll<{ id: string }>(db, 'SELECT DISTINCT place_id AS id FROM events WHERE place_id IS NOT NULL').map(r => r.id),
+  );
+  const usedByCitations = new Set(
+    queryAll<{ id: string }>(db, 'SELECT DISTINCT place_id AS id FROM citations WHERE place_id IS NOT NULL').map(r => r.id),
+  );
+  const usedByChildPlaces = new Set(
+    queryAll<{ id: string }>(db, 'SELECT DISTINCT parent_place_id AS id FROM places WHERE parent_place_id IS NOT NULL').map(r => r.id),
+  );
+  const usedByMedia = new Set(
+    queryAll<{ id: string }>(
+      db,
+      "SELECT DISTINCT entity_id AS id FROM media_links WHERE entity_type = 'place'",
+    ).map(r => r.id),
+  );
+  const rows = places.filter(
+    p =>
+      !usedByEvents.has(p.id) &&
+      !usedByCitations.has(p.id) &&
+      !usedByChildPlaces.has(p.id) &&
+      !usedByMedia.has(p.id),
+  );
   return rows.map(r => ({
     code: 'ORPHANED_PLACE',
     severity: 'notice' as CheckSeverity,

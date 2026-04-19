@@ -19,29 +19,49 @@ export interface DuplicateCandidate {
  * 2. Within each group, compare given names and birth dates
  */
 export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] {
-  // Load all persons with their primary name and birth date
-  const persons = queryAll<{
-    id: string;
-    given_name: string;
-    surname: string;
-    birth_date: string | null;
-    sex: string;
-  }>(db, `
-    SELECT p.id, p.sex,
-           COALESCE(pn.given_name, '') AS given_name,
-           COALESCE(pn.surname, '') AS surname,
-           (
-             SELECT e.date_value
-             FROM event_participants ep
-             JOIN events e ON e.id = ep.event_id AND e.event_type = 'birth'
-             WHERE ep.person_id = p.id AND e.date_value IS NOT NULL
-             LIMIT 1
-           ) AS birth_date
-    FROM persons p
-    LEFT JOIN person_names pn
-      ON pn.person_id = p.id
-      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+  // Load persons, primary names, and birth dates in bulk — the old correlated
+  // subquery version was O(N²) on large DBs. Join in JS with Maps.
+  const personRows = queryAll<{ id: string; sex: string }>(db, 'SELECT id, sex FROM persons');
+
+  const nameRows = queryAll<{
+    person_id: string;
+    given_name: string | null;
+    surname: string | null;
+    sort_order: number;
+  }>(db, 'SELECT person_id, given_name, surname, sort_order FROM person_names');
+  const primaryName = new Map<string, { given_name: string; surname: string; sort_order: number }>();
+  for (const r of nameRows) {
+    const existing = primaryName.get(r.person_id);
+    if (!existing || r.sort_order < existing.sort_order) {
+      primaryName.set(r.person_id, {
+        given_name: r.given_name ?? '',
+        surname: r.surname ?? '',
+        sort_order: r.sort_order,
+      });
+    }
+  }
+
+  const birthRows = queryAll<{ person_id: string; date_value: string }>(db, `
+    SELECT ep.person_id, e.date_value
+    FROM event_participants ep
+    JOIN events e ON e.id = ep.event_id
+    WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
   `);
+  const birthDate = new Map<string, string>();
+  for (const r of birthRows) {
+    if (!birthDate.has(r.person_id)) birthDate.set(r.person_id, r.date_value);
+  }
+
+  const persons = personRows.map(p => {
+    const n = primaryName.get(p.id);
+    return {
+      id: p.id,
+      sex: p.sex,
+      given_name: n?.given_name ?? '',
+      surname: n?.surname ?? '',
+      birth_date: birthDate.get(p.id) ?? null,
+    };
+  });
 
   // Group by normalized surname
   const byNormalizedSurname = new Map<string, typeof persons>();
