@@ -17,3 +17,19 @@ export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResul
     mediaIds: [row.id],
   }));
 }
+
+export function checkOrphanedMedia(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; title: string | null }>(db, `
+    SELECT m.id, m.title
+    FROM media m
+    WHERE NOT EXISTS (SELECT 1 FROM media_links ml WHERE ml.media_id = m.id)
+  `);
+  return rows.map(r => ({
+    code: 'ORPHANED_MEDIA',
+    severity: 'notice' as CheckSeverity,
+    message: `Mediafil "${r.title || '(utan titel)'}" saknar kopplingar`,
+    messageParams: { title: r.title || '' },
+    personIds: [],
+    mediaIds: [r.id],
+  }));
+}
