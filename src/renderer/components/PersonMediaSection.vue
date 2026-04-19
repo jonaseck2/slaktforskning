@@ -19,7 +19,13 @@
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
           <td class="td-shrink order-cell">
-            <span v-if="idx === 0" class="profile-badge">{{ $t('media.profile') }}</span>
+            <button
+              class="star-btn"
+              :class="{ 'is-profile': idx === 0 }"
+              :title="idx === 0 ? $t('media.currentProfile') : $t('media.setAsProfile')"
+              :disabled="idx === 0"
+              @click.stop="setAsProfile(idx)"
+            >{{ idx === 0 ? '★' : '☆' }}</button>
             <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')">&#9650;</button>
             <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')">&#9660;</button>
           </td>
@@ -125,6 +131,14 @@ function moveDown(idx: number) {
   reorder(items);
 }
 
+function setAsProfile(idx: number) {
+  if (idx === 0) return;
+  const items = [...media.value];
+  const [picked] = items.splice(idx, 1);
+  items.unshift(picked);
+  reorder(items);
+}
+
 watch(() => props.personId, load, { immediate: true });
 </script>
 
@@ -143,14 +157,26 @@ watch(() => props.personId, load, { immediate: true });
 }
 .btn-order:hover:not(:disabled) { color: var(--text-primary); border-color: var(--surface-border); }
 .btn-order:disabled { opacity: 0.3; cursor: default; }
-.profile-badge {
-  display: inline-block;
-  font-size: var(--font-xs, 11px);
-  background: var(--info-bg);
-  color: var(--info-text);
-  padding: 1px 6px;
-  border-radius: 3px;
-  margin-bottom: 2px;
+.star-btn {
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0 3px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1;
+  vertical-align: middle;
+}
+.star-btn:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--surface-border);
+}
+.star-btn.is-profile {
+  color: var(--accent);
+  cursor: default;
+}
+.star-btn:disabled {
+  cursor: default;
 }
 
 .thumb-cell {
