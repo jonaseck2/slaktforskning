@@ -169,12 +169,11 @@
       </svg>
     </div>
     <div v-if="!readonly" class="zoom-controls">
-      <label class="gens-selector">
-        <span class="gens-label">Gens</span>
-        <select v-model.number="maxGens" class="gens-select">
-          <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
-        </select>
-      </label>
+      <span class="zoom-label">Gens:</span>
+      <button class="zoom-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-level">{{ genTarget }}</span>
+      <button class="zoom-btn" @click="incrGens">+</button>
+      <span class="zoom-sep">|</span>
       <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" @click="zoomOut">&#x2212;</button>
@@ -219,7 +218,8 @@ const loading = ref(true);
 const loadingMore = ref(false);
 const tree = ref<DescendantNode | null>(null);
 const collapsed = ref(new Set<string>());
-const maxGens = ref(4);
+const maxGens = ref(6);
+const genTarget = ref(3);
 
 const hoveredPersonId = ref<string | null>(null);
 
@@ -247,6 +247,39 @@ function toggle(personId: string) {
   if (next.has(key)) next.delete(key);
   else next.add(key);
   collapsed.value = next;
+}
+
+function applyGenerationDepth(n: number) {
+  if (!tree.value) return;
+  const next = new Set<string>();
+  for (const k of collapsed.value) if (!k.endsWith(':down')) next.add(k);
+  function walk(node: DescendantNode, depth: number, seen: Set<string>) {
+    if (seen.has(node.person.id)) return;
+    seen.add(node.person.id);
+    if (depth >= n) {
+      next.add(`${node.person.id}:down`);
+      return;
+    }
+    for (const c of node.children) walk(c, depth + 1, seen);
+  }
+  for (const c of tree.value.children) walk(c, 1, new Set());
+  collapsed.value = next;
+}
+
+function decrGens() {
+  if (genTarget.value <= 1) return;
+  genTarget.value--;
+  applyGenerationDepth(genTarget.value);
+}
+
+function incrGens() {
+  genTarget.value++;
+  if (genTarget.value > maxGens.value) {
+    maxGens.value = genTarget.value;
+    load();
+  } else {
+    applyGenerationDepth(genTarget.value);
+  }
 }
 
 async function handleCollapseButton(btn: CollapseButton) {
@@ -383,6 +416,7 @@ async function load() {
   try {
     tree.value = await fetchDescendantTree(props.personId, 0, maxGens.value);
     collapsed.value = new Set<string>();
+    applyGenerationDepth(genTarget.value);
   } finally {
     loading.value = false;
   }
@@ -399,7 +433,6 @@ function centerOnFocal() {
 }
 
 watch(() => props.personId, load);
-watch(maxGens, load);
 onMounted(() => {
   load();
 });
@@ -462,33 +495,23 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   color: #555;
   line-height: 1.4;
 }
-.zoom-btn:hover { background: var(--color-bg-muted); }
+.zoom-btn:hover:not(:disabled) { background: var(--color-bg-muted); }
+.zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.zoom-label {
+  padding: 0 2px 0 4px;
+  font-size: var(--font-xs);
+  color: #666;
+}
+.zoom-sep {
+  padding: 0 4px;
+  color: #bbb;
+  font-size: var(--font-xs);
+}
 .zoom-level {
   padding: 0 4px;
   font-size: var(--font-xs);
   color: #666;
   min-width: 38px;
   text-align: center;
-}
-
-.gens-selector {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  margin-right: 6px;
-  padding-right: 6px;
-  border-right: 1px solid #ddd;
-}
-.gens-label {
-  font-size: var(--font-xs);
-  color: #666;
-}
-.gens-select {
-  font-size: var(--font-xs);
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  padding: 1px 2px;
-  background: white;
-  cursor: pointer;
 }
 </style>
