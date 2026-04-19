@@ -200,6 +200,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.112.0 | Unified fan/circle chart: fan subsumes the 360° circle; adds theming, branch/sex/high-contrast fills, curved-text toggle, radial gen 5+ text, deeper gen 5-8 rings; circle chart removed from viz tabs and reports; ReportsView + AncestorBookReport expose arc-span + generations + curved-text; `circleColors`/`useCircleThemeColors` renamed to `fanColors`/`useFanThemeColors` | — |
 | v0.114.0 | Finish chart visual overhaul: photos render (data URLs), curved elbow connectors, dynamic box heights so long names + places fit | [archive](plans/archive/2026-04-18-chart-visual-overhaul-fixes.md) |
 | v0.114.1 | Update tree-layout skill: dynamic heights (`measureBoxHeight`), curved paths (`curvedElbow`), `D:` dashed convention, photo data URLs | — |
+| v0.115.0 | Chart box polish: fix birth/death line double-padding so text stays inside the box; vertically center portraits in dynamic-height boxes; truncate overflowing birth/death lines with ellipsis (`truncateToWidth`); drop hover `+` add button (outline placeholders remain); match person detail profile thumbnail to chart portrait (rectangular, 5px radius) | — |
 ---
 
 ## Research

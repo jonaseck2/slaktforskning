@@ -53,7 +53,7 @@
           />
           <!-- Portrait area -->
           <rect
-            :x="box.x + BOX_PAD_X_LEFT" :y="box.y + BOX_PAD_Y"
+            :x="box.x + BOX_PAD_X_LEFT" :y="portraitY(box)"
             :width="PORTRAIT_W" :height="PORTRAIT_H"
             rx="3"
             :fill="portraitBg(box)"
@@ -61,14 +61,14 @@
           <image
             v-if="box.person.photoUrl"
             :href="box.person.photoUrl"
-            :x="box.x + BOX_PAD_X_LEFT" :y="box.y + BOX_PAD_Y"
+            :x="box.x + BOX_PAD_X_LEFT" :y="portraitY(box)"
             :width="PORTRAIT_W" :height="PORTRAIT_H"
             preserveAspectRatio="xMidYMid slice"
           />
           <text
             v-else
             :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W / 2"
-            :y="box.y + BOX_PAD_Y + PORTRAIT_H / 2"
+            :y="portraitY(box) + PORTRAIT_H / 2"
             text-anchor="middle"
             dominant-baseline="central"
             font-size="11"
@@ -97,7 +97,7 @@
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="dateColor(box)"
-          >* {{ [box.person.birthDate, box.person.birthPlace].filter(Boolean).join(' ') }}</text>
+          >{{ birthText(box) }}</text>
           <!-- Death line -->
           <text
             v-if="box.person.deathDate || box.person.deathPlace"
@@ -106,31 +106,7 @@
             font-size="10"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="dateColor(box)"
-          >† {{ [box.person.deathDate, box.person.deathPlace].filter(Boolean).join(' ') }}</text>
-          <!-- Add button (hovered) -->
-          <g
-            v-if="!readonly && hoveredPersonId === box.person.id"
-            class="add-btn"
-            style="cursor: pointer;"
-            @click.stop="openAddPopover(box)"
-          >
-            <circle
-              :cx="box.x + box.w - 9" :cy="box.y + box.h - 9"
-              r="8"
-              fill="white"
-              stroke="#2c3e50"
-              stroke-width="1.5"
-              stroke-dasharray="3 2.5"
-            />
-            <text
-              :x="box.x + box.w - 9" :y="box.y + box.h - 9"
-              font-size="13"
-              text-anchor="middle"
-              dominant-baseline="central"
-              fill="#2c3e50"
-              style="pointer-events: none; user-select: none;"
-            >+</text>
-          </g>
+          >{{ deathText(box) }}</text>
         </g>
         <template v-if="!readonly">
           <g
@@ -207,20 +183,6 @@
 
     <ChartTooltip ref="tooltipRef" />
 
-    <!-- Add popover -->
-    <div
-      v-if="!readonly && addPopover"
-      class="add-popover"
-      :style="{ left: addPopover.x + 'px', top: addPopover.y + 'px' }"
-      @click.stop
-      @mousedown.stop
-    >
-      <button @click="startAddRelative('father')">{{ $t('personDetail.addFather') }}</button>
-      <button @click="startAddRelative('mother')">{{ $t('personDetail.addMother') }}</button>
-      <button @click="startAddRelative('spouse')">{{ $t('personDetail.addSpouse') }}</button>
-      <button @click="startAddRelative('child')">{{ $t('personDetail.addChild') }}</button>
-    </div>
-
     <!-- Add related person modal -->
     <AddRelatedPersonModal
       v-if="showAddRelative && addRelativePersonId"
@@ -235,10 +197,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeDescendantLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
-import { wrapName } from '../../utils/chart-layout/measure';
+import { wrapName, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchDescendantTree, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, DescendantNode, PlaceholderBox } from '../../utils/chart-layout';
@@ -259,11 +221,8 @@ const tree = ref<DescendantNode | null>(null);
 const collapsed = ref(new Set<string>());
 const maxGens = ref(4);
 
-// Hover state for add button
 const hoveredPersonId = ref<string | null>(null);
 
-// Add popover state
-const addPopover = ref<{ personId: string; x: number; y: number } | null>(null);
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
 const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('child');
@@ -356,6 +315,18 @@ function wrappedName(box: BoxLayout): string[] {
   return wrapName(full, TEXT_AREA_W, 12);
 }
 
+function birthText(box: BoxLayout): string {
+  const parts = [box.person.birthDate, box.person.birthPlace].filter(Boolean).join(' ');
+  if (!parts) return '';
+  return truncateToWidth('* ' + parts, TEXT_AREA_W, 10);
+}
+
+function deathText(box: BoxLayout): string {
+  const parts = [box.person.deathDate, box.person.deathPlace].filter(Boolean).join(' ');
+  if (!parts) return '';
+  return truncateToWidth('† ' + parts, TEXT_AREA_W, 10);
+}
+
 function initials(box: BoxLayout): string {
   const given = box.person.preferredName ?? box.person.givenName ?? '';
   const sur = box.person.surname ?? '';
@@ -368,28 +339,18 @@ function nameStartY(box: BoxLayout): number {
   return box.y + BOX_PAD_Y + 12;
 }
 
+function portraitY(box: BoxLayout): number {
+  return box.y + (box.h - PORTRAIT_H) / 2;
+}
+
 function birthY(box: BoxLayout): number {
   const lines = wrappedName(box);
-  return nameStartY(box) + lines.length * 16 + 10;
+  return box.y + BOX_PAD_Y + lines.length * 16 + 10;
 }
 
 function deathY(box: BoxLayout): number {
   const hasBirth = !!(box.person.birthDate || box.person.birthPlace);
   return birthY(box) + (hasBirth ? 14 : 0);
-}
-
-function getPopoverPosition(box: BoxLayout): { x: number; y: number } {
-  const svgEl = scrollRef.value?.querySelector('svg');
-  if (!svgEl) return { x: 0, y: 0 };
-  const rect = svgEl.getBoundingClientRect();
-  const x = rect.left + (box.x + box.w - 9) * zoom.value;
-  const y = rect.top + (box.y + box.h - 9) * zoom.value;
-  return { x, y };
-}
-
-function openAddPopover(box: BoxLayout) {
-  const pos = getPopoverPosition(box);
-  addPopover.value = { personId: box.person.id, x: pos.x, y: pos.y };
 }
 
 function placeholderLabel(role: string): string {
@@ -400,14 +361,6 @@ function placeholderLabel(role: string): string {
     child: t('personDetail.addChild'),
   };
   return labels[role] ?? role;
-}
-
-function startAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
-  if (!addPopover.value) return;
-  addRelativePersonId.value = addPopover.value.personId;
-  addRelativeMode.value = mode;
-  addPopover.value = null;
-  showAddRelative.value = true;
 }
 
 function startAddFromPlaceholder(ph: PlaceholderBox) {
@@ -422,10 +375,6 @@ function startAddFromPlaceholder(ph: PlaceholderBox) {
 function onRelativeSaved() {
   showAddRelative.value = false;
   emit('reload');
-}
-
-function onDocumentMousedown() {
-  addPopover.value = null;
 }
 
 async function load() {
@@ -453,10 +402,6 @@ watch(() => props.personId, load);
 watch(maxGens, load);
 onMounted(() => {
   load();
-  document.addEventListener('mousedown', onDocumentMousedown);
-});
-onUnmounted(() => {
-  document.removeEventListener('mousedown', onDocumentMousedown);
 });
 
 defineExpose({ boxes: computed(() => layout.value.boxes) });
@@ -489,37 +434,10 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .collapse-btn { cursor: pointer; }
 .collapse-btn:hover circle { opacity: 0.7; }
 
-.add-btn { cursor: pointer; }
-.add-btn:hover circle { opacity: 0.8; }
-
 .ghost-box { cursor: pointer; }
 .ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }
 .ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
-
-.add-popover {
-  position: fixed;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  padding: 6px;
-  display: flex;
-  gap: 4px;
-  z-index: 1000;
-  transform: translateX(-50%);
-}
-.add-popover button {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 11px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.add-popover button:hover { opacity: 0.9; }
 
 .zoom-controls {
   position: absolute;
