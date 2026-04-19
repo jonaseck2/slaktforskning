@@ -3,12 +3,19 @@ import {
   getPaperDimensions,
   computeTileViewBoxes,
   generateTileSvg,
+  MM_TO_PX,
   type PaperSize,
   type Orientation,
   type ColorMode,
 } from '../../api/chart-export';
 
-const MM_TO_PX = 3.7795275591;
+interface ChartApi {
+  saveSvg: (svg: string) => Promise<void>;
+  saveTiledPdf: (pages: string[]) => Promise<void>;
+}
+function chartApi(): ChartApi {
+  return (window.api as { chart: ChartApi }).chart;
+}
 
 export function buildExportSvgString(el: SVGElement): string {
   const clone = el.cloneNode(true) as SVGElement;
@@ -65,7 +72,7 @@ export function useChartExport(opts: UseChartExportOptions) {
     if (!opts.svgRef.value) return;
     const raw = buildExportSvgString(opts.svgRef.value);
     const titled = wrapWithTitle(raw, opts.title.value);
-    await (window.api as { chart: { saveSvg: (s: string) => Promise<void> } }).chart.saveSvg(titled);
+    await chartApi().saveSvg(titled);
   }
 
   async function savePdf() {
@@ -78,7 +85,7 @@ export function useChartExport(opts: UseChartExportOptions) {
     const pages = tiles.length === 1
       ? [titled]
       : tiles.map(t => generateTileSvg(titled, t));
-    await (window.api as { chart: { saveTiledPdf: (p: string[]) => Promise<void> } }).chart.saveTiledPdf(pages);
+    await chartApi().saveTiledPdf(pages);
   }
 
   return {
