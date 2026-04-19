@@ -69,12 +69,25 @@
               />
             </div>
             <div class="compact-field">
-              <label class="compact-label">{{ $t('panel.notes') }}</label>
+              <div class="notes-heading-row">
+                <label class="compact-label">{{ $t('panel.notes') }}</label>
+                <AppButton
+                  variant="soft"
+                  size="sm"
+                  :aria-pressed="notesMonospaced"
+                  :title="$t('common.monospacedTooltip')"
+                  @click="toggleNotesMonospaced"
+                >
+                  <span class="mono-glyph">&lt;/&gt;</span>
+                  <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+                </AppButton>
+              </div>
               <textarea
                 ref="notesRef"
                 class="compact-control"
                 rows="2"
                 :value="place.notes ?? ''"
+                :class="{ 'notes-mono': notesMonospaced }"
                 :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
                 @blur="persistNotesHeight(); saveField('notes', ($event.target as HTMLTextAreaElement).value || null)"
                 @mouseup="persistNotesHeight"
@@ -221,8 +234,10 @@ import PlacePicker from './PlacePicker.vue';
 import CitationForm from './CitationForm.vue';
 import type { ComponentPublicInstance } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
+import AppButton from './ui/AppButton.vue';
 import { usePlacePanelSections } from '../composables/usePlacePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
+import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 
 declare const window: Window & {
@@ -263,6 +278,7 @@ const citationsSectionRef = ref<InstanceType<typeof PlaceCitationsSection> | nul
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
 const showCitationForm = ref(false);
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
+const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('place');
 
 // ── Data ────────────────────────────────────────────────────────────────────
 
@@ -484,5 +500,20 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+.notes-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.mono-glyph {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  opacity: 0.85;
+}
+textarea.compact-control.notes-mono {
+  font-family: var(--font-mono);
 }
 </style>
