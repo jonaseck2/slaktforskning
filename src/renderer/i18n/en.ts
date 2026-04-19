@@ -665,7 +665,7 @@ export default {
   reports: {
     nav: 'Reports',
     title: 'Reports',
-    tabAncestor: 'Ancestor Chart',
+    tabAncestor: 'Ancestor Sheet',
     tabFamily: 'Family Group Sheet',
     tabIndividual: 'Individual Summary',
     rootPerson: 'Root person',

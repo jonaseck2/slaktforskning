@@ -89,7 +89,7 @@ async function load() {
   try {
     tree.value = (await fetchPedigreeTree(props.rootPersonId, props.generations)) as PedigreeTree;
   } catch (err) {
-    console.error('[AncestorChartReport] load failed:', err);
+    console.error('[AncestorSheetReport] load failed:', err);
     toast.error(t('errors.loadFailed'));
   } finally {
     loading.value = false;
