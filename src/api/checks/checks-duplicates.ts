@@ -13,3 +13,34 @@ export function checkPossibleDuplicatePerson(db: Database): CheckResult[] {
     personIds: [c.person1_id, c.person2_id],
   }));
 }
+
+export function checkDuplicateIdentifier(db: Database): CheckResult[] {
+  const rows = queryAll<{ identifier_type: string; identifier_value: string; person_id: string }>(db, `
+    SELECT identifier_type, identifier_value, person_id
+    FROM person_identifiers
+    WHERE (identifier_type, identifier_value) IN (
+      SELECT identifier_type, identifier_value
+      FROM person_identifiers
+      GROUP BY identifier_type, identifier_value
+      HAVING COUNT(*) > 1
+    )
+    ORDER BY identifier_type, identifier_value
+  `);
+  const groups = new Map<string, { type: string; value: string; personIds: string[] }>();
+  for (const r of rows) {
+    const key = `${r.identifier_type}:${r.identifier_value}`;
+    if (!groups.has(key)) groups.set(key, { type: r.identifier_type, value: r.identifier_value, personIds: [] });
+    groups.get(key)!.personIds.push(r.person_id);
+  }
+  const results: CheckResult[] = [];
+  for (const g of groups.values()) {
+    results.push({
+      code: 'DUPLICATE_IDENTIFIER',
+      severity: 'warning' as CheckSeverity,
+      message: `${g.personIds.length} personer delar identifierare ${g.type}:${g.value}`,
+      messageParams: { count: g.personIds.length, type: g.type, value: g.value },
+      personIds: g.personIds,
+    });
+  }
+  return results;
+}

@@ -633,6 +633,7 @@ export default {
       PLACE_COORDINATES_INVALID: 'Platsen "{name}" har ogiltiga koordinater ({lat}, {lon}) — {reason}',
       PLACE_DATES_INVERTED: 'Platsen "{name}" har omvänt datumintervall ({dateFrom} → {dateTo})',
       POSSIBLE_DUPLICATE_PERSON: 'Möjliga dubblettpersoner (poäng {score})',
+      DUPLICATE_IDENTIFIER: '{count} personer delar identifierare {type}:{value}',
     },
   },
   duplicates: {
