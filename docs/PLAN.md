@@ -216,6 +216,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.126.0 | Quality checks extended to places, media, sources: (1) `CheckResult` now carries `placeIds`/`mediaIds`/`sourceIds` in addition to `personIds`; orphaned-source and control-char checks populate `sourceIds`, media-missing checks populate `mediaIds`; gazetteer-match-quality is now truly place-scoped — `personIds` dropped (persons were incidental), and unused places are skipped entirely. (2) New `runChecksForPlace` / `runChecksForMedia` api functions and `checks:forPlace` / `checks:forMedia` IPC channels; the `checks:runAll` handler enriches results with `placeNames`, `mediaTitles`, `sourceTitles` in bulk queries (avoids N+1). (3) New reusable `QualityIssuesTable` component handles the severity/ignore/row-click table with an optional `show-entity` column that shows a colored entity-type badge (person / place / media / source, using the fan-branch palette). (4) New `qualityIgnore.ts` utility — module-level `ignoredKeys` ref backed by localStorage, keyed by code + sorted ids across all entity types; shared between `QualityView` and the per-entity sections. (5) `PersonChecksSection` slims from 117 → 60 lines; new `PlaceChecksSection` and `MediaChecksSection` sibling wrappers (21 lines each) embed the shared table. `QualityView` slims from 266 → ~157 lines. (6) PlacePanel gains a Quality section (`usePlacePanelSections` adds the `quality` key). (7) Minor UI: VisualizationView fan tab moves to after Descendants; `+ Add Event` → `+ Event` label. | — |
 | v0.127.0 | feat(persons): add person from place panel — atomic person+event+citation workflow, EventFormBody extraction, smart event-type ladder, Settings → Defaults tab | [archive](plans/archive/2026-04-19-add-person-from-place-panel.md) |
 | v0.127.1 | Rename the text-list ancestor report tab "Ancestor Chart" → "Ancestor Sheet" (it's a list, not a chart); SV label "Stamtavla" → "Antavla" to disambiguate from the Ancestor Book tab (both used to read "Stamtavla"); `AncestorChartReport.vue` → `AncestorSheetReport.vue` | — |
+| v0.128.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
 ---
 
 ## Research
@@ -331,6 +332,9 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 
 #### Duplicate Merge Side-by-Side UI [backlog]
 Side-by-side person comparison view for duplicate detection. Show conflicting data with merge controls. API has `findDuplicates` and `mergePersons` — needs a visual comparison UI.
+
+#### Unified compare-and-merge UI for duplicates (v2) [backlog]
+Extend `MergePersonsModal` pattern to places, media, and sources. Make the compare UI the landing target for all `DUPLICATE_*` quality rows. Consider a `/duplicates` route aggregating all duplicate types.
 
 ---
 
