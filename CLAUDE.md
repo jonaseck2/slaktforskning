@@ -563,7 +563,8 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 |-----------|-------|-------|-------------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
 | `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Separate YYYY-MM-DD text inputs with auto-advance (4-digit year → month, 2-digit month → day). Shows end date only when type is "between". Preserves original source text. |
-| `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Uses DateInput. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
+| `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Composes `EventFormBody` for fields. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
+| `EventFormBody` | `v-model:event`, `v-model:citation`, `context: 'person'\|'relationship'`, `personId?: string`, `suggestedEventType?: string` | — | Controlled event + citation fields (no submit logic). Embeds `CitationFields`. Used by `EventForm`, `AddPersonModal`, and `AddRelatedPersonModal`. |
 | `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `readonly?: boolean`, `hideHeader?: boolean`, `showPersons?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. `showPersons` adds a participant names column (used in PlacePanel). Uses `watch` for reactive reloading on prop changes. |
 | `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
 | `ConfirmModal` | `visible`, `title`, `message` | `confirm`, `cancel` | Accessible delete confirmation modal |
@@ -578,7 +579,8 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 | `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
 | `LinkedText` | `text: string` | — | Auto-links structured references in text. Loads `link_rules_config` from db settings on mount and applies `resolveRules()` to filter by enabled locales. Renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
-| `AddRelatedPersonModal` | `personId: string`, `mode: 'father'\|'mother'\|'spouse'\|'child'`, `personSex?`, `personSurname?` | `close`, `saved` | Combined person + relationship + birth event creation. Auto-infers sex (father→M, mother→F, spouse→opposite). Pre-fills surname for child mode. Optional birth date/place/source fields in collapsible `<details>`. Uses `useBirthEventCreation` composable. |
+| `AddPersonModal` | `prefillPlaceId?: string`, `prefillSurname?: string` | `close`, `saved(person)` | Add person modal with optional place and surname pre-fill. Embeds `EventFormBody` for an optional first event (type suggested by `suggestNextEventType`). Submits via `window.api.persons.createWithEvent` for atomic person + event + citation in a single transaction. |
+| `AddRelatedPersonModal` | `personId: string`, `mode: 'father'\|'mother'\|'spouse'\|'child'`, `personSex?`, `personSurname?` | `close`, `saved` | Combined person + relationship + event creation. Auto-infers sex (father→M, mother→F, spouse→opposite). Pre-fills surname for child mode. Embeds `EventFormBody` for optional event + citation (replaces the old bespoke birth panel). Submits via `window.api.persons.createWithEvent`. |
 | `PlacePanel` | `placeId: string\|null` | `close` | Collapsible side panel showing full place details when a map pin is clicked. 8 sections: info, events, persons, media, citations, child places, notes, coordinates. Mirrors PersonPanel pattern. Used by MapView. |
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
@@ -588,7 +590,6 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 **Composables:**
 | Composable | Purpose |
 |-----------|---------|
-| `useBirthEventCreation` | Creates birth event + event_participant + optional citation in one call. Used by AddRelatedPersonModal and PersonsView. |
 | `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
 | `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
 
@@ -816,7 +817,7 @@ Entry point: `npx tsx src/mcp/devServer.ts`
 
 ### Per-database settings
 
-`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
+`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import), `event_defaults_config` (JSON `{ smartDefaults: boolean }`, default `true` — controls smart event-type suggestions via `suggestNextEventType` in EventList "+ Add Event" and AddPersonModal's embedded event section; configurable in Settings → Defaults tab). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
 
 **Gazetteer tools** (prod server): `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
 
