@@ -8,7 +8,7 @@
       {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>
     <FilterChips v-if="relationships.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
-    <AppEmptyState v-if="relationships.length === 0 && !loading" icon="🔗" :title="$t('relationships.emptyState')" />
+    <AppEmptyState v-if="relationships.length === 0 && !loading" icon="🔗" :title="$t('empty.relationships')" />
     <AppEmptyState v-else-if="filteredRelationships.length === 0 && !loading" icon="🔗" :title="$t('relationships.noMatchingFilter')" />
     <RelationshipsTable
       v-else
