@@ -500,9 +500,9 @@ onBeforeRouteLeave(() => { stop(); });
 }
 .profile-thumbnail {
   width: 56px;
-  height: 56px;
+  height: 72px;
   object-fit: cover;
-  border-radius: var(--radius-full, 50%);
+  border-radius: 5px;
   border: 1px solid var(--surface-border);
   flex-shrink: 0;
 }

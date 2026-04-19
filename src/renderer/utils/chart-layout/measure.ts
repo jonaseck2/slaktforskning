@@ -55,6 +55,31 @@ export function wrapName(name: string, maxWidth: number, fontSize: number): stri
 }
 
 /**
+ * Truncate a single-line string to fit within `maxWidth` pixels at the given
+ * `fontSize`, appending an ellipsis if truncated. Returns the original string
+ * if it already fits.
+ */
+export function truncateToWidth(text: string, maxWidth: number, fontSize: number): string {
+  if (!text) return '';
+  const ctx = getCtx();
+  const measureWidth = (s: string): number => {
+    if (!ctx) return s.length * fontSize * 0.6;
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+    return ctx.measureText(s).width;
+  };
+  if (measureWidth(text) <= maxWidth) return text;
+  const ellipsis = '…';
+  let lo = 0;
+  let hi = text.length;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (measureWidth(text.slice(0, mid) + ellipsis) <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  return text.slice(0, lo).trimEnd() + ellipsis;
+}
+
+/**
  * Compute the dynamic height for a person box based on name length and dates.
  *
  * Layout:
