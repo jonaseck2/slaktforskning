@@ -35,10 +35,23 @@
           @toggle="toggleSection('notes')"
         />
         <div v-if="sections.notes" class="panel-section-body">
+          <div class="notes-toggle-row">
+            <AppButton
+              variant="soft"
+              size="sm"
+              :aria-pressed="notesMonospaced"
+              :title="$t('common.monospacedTooltip')"
+              @click="toggleNotesMonospaced"
+            >
+              <span class="mono-glyph">&lt;/&gt;</span>
+              <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+            </AppButton>
+          </div>
           <textarea
             ref="notesRef"
             v-model="notesDraft"
             class="notes-textarea"
+            :class="{ 'notes-mono': notesMonospaced }"
             :placeholder="$t('media.notesPlaceholder')"
             rows="3"
             :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
@@ -169,6 +182,7 @@ import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
+import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
 
 declare const window: Window & {
@@ -233,6 +247,7 @@ const showPlacePicker = ref(false);
 const editingTagId = ref<string | null>(null);
 const notesDraft = ref('');
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('media-panel-notes');
+const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('media');
 
 const sections = reactive({
   notes: false,
@@ -711,5 +726,19 @@ defineExpose({ reload: load, expandFaceTags });
 .notes-textarea:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.notes-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-xs);
+}
+.mono-glyph {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  opacity: 0.85;
+}
+.notes-textarea.notes-mono {
+  font-family: var(--font-mono);
 }
 </style>

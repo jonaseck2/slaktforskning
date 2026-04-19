@@ -74,6 +74,8 @@ export default {
     view: 'Visa',
     all: 'Alla',
     close: 'Stäng',
+    monospaced: 'Fast bredd',
+    monospacedTooltip: 'Visa anteckningar med fast bredd för ASCII-tabeller och justerad text',
   },
   persons: {
     title: 'Personer',

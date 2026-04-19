@@ -74,6 +74,8 @@ export default {
     view: 'View',
     all: 'All',
     close: 'Close',
+    monospaced: 'Monospaced',
+    monospacedTooltip: 'Show notes in monospaced font for ASCII tables and aligned text',
   },
   persons: {
     title: 'People',
