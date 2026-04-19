@@ -19,3 +19,19 @@ describe('MEDIA_FILE_MISSING (relocated)', () => {
     expect(results.filter(r => r.code === 'MEDIA_FILE_MISSING' && r.mediaIds?.includes(m.id))).toHaveLength(1);
   });
 });
+
+describe('ORPHANED_MEDIA', () => {
+  it('fires for media with no links', () => {
+    const m = createMedia(db, { title: 'Lonely photo' });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'ORPHANED_MEDIA' && r.mediaIds?.includes(m.id))).toHaveLength(1);
+  });
+
+  it('does not fire for media linked to a person', () => {
+    const m = createMedia(db, { title: 'Linked photo' });
+    const p = createPerson(db, {});
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
+    const results = runAllChecks(db);
+    expect(results.filter(r => r.code === 'ORPHANED_MEDIA' && r.mediaIds?.includes(m.id))).toHaveLength(0);
+  });
+});

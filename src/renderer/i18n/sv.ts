@@ -613,6 +613,7 @@ export default {
       INVALID_DATE: 'Ogiltigt datum: {date} — {reason}',
       UNRELATED_PERSON: 'Person har inga registrerade relationer',
       MEDIA_FILE_MISSING: 'Mediafil saknas: {filePath}',
+      ORPHANED_MEDIA: 'Mediafil "{title}" saknar kopplingar',
       PLACE_MATCH_AMBIGUOUS: 'Tvetydig platsmatchning: {name} — matchade {matchedPath}',
       PLACE_MATCH_PARTIAL: 'Delvis platsmatchning: {name} — omatchade komponenter: {unmatched}',
       PLACE_MATCH_NONE: 'Plats utan koordinater: {name}',
