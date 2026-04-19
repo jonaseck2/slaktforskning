@@ -651,19 +651,29 @@ export async function loadChildrenForNodeTP(
   return updateNode(root);
 }
 
-export async function fetchTimelineEntries(focalId: string): Promise<TimelineEntry[]> {
-  const rawRels = (await window.api.relationships.getForPerson(focalId)) as RawRel[];
+export async function fetchTimelineEntries(focalId: string, generations = 1): Promise<TimelineEntry[]> {
+  const included = new Set<string>([focalId]);
+  let frontier = new Set<string>([focalId]);
 
-  const relatedIds = new Set<string>();
-  rawRels.forEach(r => {
-    if (r.person1_id && r.person1_id !== focalId) relatedIds.add(r.person1_id);
-    if (r.person2_id && r.person2_id !== focalId) relatedIds.add(r.person2_id);
-  });
-
-  const allIds = [focalId, ...relatedIds];
+  for (let g = 1; g <= generations; g++) {
+    const next = new Set<string>();
+    await Promise.all([...frontier].map(async (id) => {
+      const rels = (await window.api.relationships.getForPerson(id)) as RawRel[];
+      for (const r of rels) {
+        if (r.type !== 'parent_child' && r.type !== 'couple') continue;
+        const other = r.person1_id === id ? r.person2_id : r.person2_id === id ? r.person1_id : null;
+        if (other && !included.has(other)) {
+          included.add(other);
+          next.add(other);
+        }
+      }
+    }));
+    if (next.size === 0) break;
+    frontier = next;
+  }
 
   const results = await Promise.all(
-    allIds.map(async (id) => {
+    [...included].map(async (id) => {
       try {
         const [node, events] = await Promise.all([
           fetchPersonNode(id),

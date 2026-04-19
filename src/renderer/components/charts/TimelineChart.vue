@@ -174,6 +174,11 @@
       <div v-else-if="!loading" class="chart-empty">—</div>
     </div>
     <div v-if="!readonly" class="zoom-controls">
+      <span class="zoom-label">Gens:</span>
+      <button class="zoom-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-level">{{ genTarget }}</span>
+      <button class="zoom-btn" @click="incrGens">+</button>
+      <span class="zoom-sep">|</span>
       <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
       <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       <button class="zoom-btn" @click="zoomOut">−</button>
@@ -206,6 +211,7 @@ const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 8
 const hoveredId = ref<string | null>(null);
 const containerWidth = ref(800);
 const outerRef = ref<HTMLElement | null>(null);
+const genTarget = ref(1);
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-timeline');
 
@@ -283,11 +289,22 @@ async function load() {
   if (!props.personId) return;
   loading.value = true;
   try {
-    cachedEntries.value = await fetchTimelineEntries(props.personId);
+    cachedEntries.value = await fetchTimelineEntries(props.personId, genTarget.value);
     layout.value = computeTimelineLayout(cachedEntries.value, new Date().getFullYear(), containerWidth.value);
   } finally {
     loading.value = false;
   }
+}
+
+function decrGens() {
+  if (genTarget.value <= 1) return;
+  genTarget.value--;
+  load();
+}
+
+function incrGens() {
+  genTarget.value++;
+  load();
 }
 
 // Re-layout when container resizes — uses cached entries, no API call
@@ -377,7 +394,18 @@ onMounted(load);
   color: var(--text-secondary);
   line-height: 1.4;
 }
-.zoom-btn:hover { background: var(--surface-hover); }
+.zoom-btn:hover:not(:disabled) { background: var(--surface-hover); }
+.zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.zoom-label {
+  padding: 0 2px 0 4px;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+.zoom-sep {
+  padding: 0 4px;
+  color: var(--surface-border);
+  font-size: var(--font-xs);
+}
 .zoom-level {
   padding: 0 4px;
   font-size: var(--font-xs);
