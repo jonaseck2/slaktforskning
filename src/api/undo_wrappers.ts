@@ -9,6 +9,7 @@ import * as persons from './persons';
 import * as relationships from './relationships';
 import * as events from './events';
 import * as sources from './sources';
+import { createPersonWithEventWorkflow, type CreatePersonWithEventArgs, type CreatePersonWithEventResult } from './persons_workflows';
 import { queryOne, runSql } from './db';
 import { undoManager } from './undo';
 
@@ -117,6 +118,27 @@ export function deletePersonUndo(
     redo: () => { persons.deletePerson(db, id); },
   });
   return true;
+}
+
+export function createPersonWithEventUndo(
+  db: Database,
+  args: CreatePersonWithEventArgs,
+): CreatePersonWithEventResult {
+  const result = createPersonWithEventWorkflow(db, args);
+  const personId = result.person.id;
+  const eventId = result.event?.id ?? null;
+  const citationId = result.citation?.id ?? null;
+  const snapshot = JSON.parse(JSON.stringify(args)) as CreatePersonWithEventArgs;
+  undoManager.push({
+    label: 'undo.createPersonWithEvent',
+    undo: () => {
+      if (citationId) sources.deleteCitation(db, citationId);
+      if (eventId) events.deleteEvent(db, eventId);
+      persons.deletePerson(db, personId);
+    },
+    redo: () => { createPersonWithEventWorkflow(db, snapshot); },
+  });
+  return result;
 }
 
 // ---- PersonName ----
