@@ -104,18 +104,29 @@
       </div>
     </div>
 
-    <!-- Person Biography Tab -->
-    <div v-if="activeTab === 'biography'" class="tab-content">
+    <!-- A Life Tab -->
+    <div v-if="activeTab === 'alife'" class="tab-content">
       <div class="tab-header">
-        <div class="controls"></div>
+        <div class="controls">
+          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowNotes" /> {{ $t('reports.alife.biography') }}</label>
+        </div>
         <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!biographyPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!biographyPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="primary" size="sm" :disabled="!aLifePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!aLifePersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
-        <div v-if="biographyPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <PersonBiography :person-id="biographyPersonId" />
+        <div v-if="aLifePersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <ALifeReport
+            :person-id="aLifePersonId"
+            :show-photos="aLifeShowPhotos"
+            :show-documents="aLifeShowDocuments"
+            :show-sources="aLifeShowSources"
+            :show-notes="aLifeShowNotes"
+          />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -332,7 +343,7 @@ import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
-import PersonBiography from '../components/reports/PersonBiography.vue';
+import ALifeReport from '../components/reports/ALifeReport.vue';
 import PlaceHistory from '../components/reports/PlaceHistory.vue';
 import FamilyNarrative from '../components/reports/FamilyNarrative.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
@@ -357,14 +368,14 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'alife' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
   { id: 'individual', label: t('reports.tabIndividual') },
   { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
-  { id: 'biography', label: t('reports.tabBiography') },
+  { id: 'alife', label: t('reports.alife.title') },
   { id: 'placeHistory', label: t('reports.tabPlaceHistory') },
   { id: 'familyNarrative', label: t('reports.tabFamilyNarrative') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
@@ -380,7 +391,11 @@ const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
 const individualPersonId = computed(() => focusStore.personId);
 const ancestorBookPersonId = computed(() => focusStore.personId);
-const biographyPersonId = computed(() => focusStore.personId);
+const aLifePersonId = computed(() => focusStore.personId);
+const aLifeShowPhotos = ref(true);
+const aLifeShowDocuments = ref(false);
+const aLifeShowSources = ref(false);
+const aLifeShowNotes = ref(true);
 const placeHistoryPlaceId = ref('');
 const familyNarrativeRelId = ref('');
 const fanArcSpan = ref<ArcSpan>(360);
@@ -440,7 +455,7 @@ watch(activeTab, triggerLoading);
 watch(ancestorRootId, triggerLoading);
 watch(individualPersonId, triggerLoading);
 watch(ancestorBookPersonId, triggerLoading);
-watch(biographyPersonId, triggerLoading);
+watch(aLifePersonId, triggerLoading);
 watch(placeHistoryPlaceId, triggerLoading);
 watch(familyNarrativeRelId, triggerLoading);
 watch(chartPersonId, triggerLoading);
@@ -500,9 +515,9 @@ onMounted(async () => {
     } catch { /* ignore */ }
   }
 
-  // Read query params for deep linking (e.g. /reports?tab=biography)
+  // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'alife', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
@@ -555,6 +570,15 @@ async function exportPdf() {
   padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: var(--radius-sm); font-size: var(--font-base); font-family: inherit;
 }
 .print-actions { display: flex; gap: var(--space-sm); align-items: center; }
+.controls .toggle-label {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  font-weight: normal;
+  color: var(--text-primary);
+  cursor: pointer;
+}
 
 /* Preview area: grey background with scrollable paper preview */
 .preview-area {
