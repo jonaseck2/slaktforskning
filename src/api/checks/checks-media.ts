@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
+import { dateDefinitelyAfter } from './check-utils';
 
 export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResult[] {
   const rows = queryAll<{ id: string; file_ref: string }>(db, `
@@ -49,4 +50,43 @@ export function checkMediaRegionOutOfBounds(db: Database): CheckResult[] {
     personIds: [],
     mediaIds: [r.media_id],
   }));
+}
+
+export function checkPhotoAfterSubjectDeath(db: Database): CheckResult[] {
+  const rows = queryAll<{
+    media_id: string; person_id: string; event_date: string; death_date: string;
+  }>(db, `
+    SELECT mr.media_id, mr.person_id,
+           e.date_value AS event_date,
+           de.date_value AS death_date
+    FROM media_regions mr
+    JOIN media_links ml
+      ON ml.media_id = mr.media_id AND ml.entity_type = 'event'
+    JOIN events e
+      ON e.id = ml.entity_id
+      AND e.date_value IS NOT NULL
+      AND e.date_type IN ('exact', 'calculated')
+    JOIN event_participants dep
+      ON dep.person_id = mr.person_id
+    JOIN events de
+      ON de.id = dep.event_id
+      AND de.event_type = 'death'
+      AND de.date_value IS NOT NULL
+      AND de.date_type IN ('exact', 'calculated')
+    WHERE mr.person_id IS NOT NULL
+  `);
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    if (dateDefinitelyAfter(r.event_date, r.death_date)) {
+      results.push({
+        code: 'PHOTO_AFTER_SUBJECT_DEATH',
+        severity: 'warning' as CheckSeverity,
+        message: `Bilden är daterad (${r.event_date}) efter den taggade personens död (${r.death_date})`,
+        messageParams: { eventDate: r.event_date, deathDate: r.death_date },
+        personIds: [r.person_id],
+        mediaIds: [r.media_id],
+      });
+    }
+  }
+  return results;
 }

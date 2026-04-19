@@ -44,7 +44,7 @@ import {
   checkSimultaneousDistantLocations,
   checkGazetteerMatchQuality,
 } from './checks-location';
-import { checkMediaFileMissing, checkOrphanedMedia, checkMediaRegionOutOfBounds } from './checks-media';
+import { checkMediaFileMissing, checkOrphanedMedia, checkMediaRegionOutOfBounds, checkPhotoAfterSubjectDeath } from './checks-media';
 import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
 
 // Re-export public types
@@ -129,6 +129,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkMediaFileMissing',      global: true, fn: (db, dbDir) => checkMediaFileMissing(db, dbDir) },
     { name: 'checkOrphanedMedia',         fn: (db) => checkOrphanedMedia(db) },
     { name: 'checkMediaRegionOutOfBounds', fn: (db) => checkMediaRegionOutOfBounds(db) },
+    { name: 'checkPhotoAfterSubjectDeath', fn: (db) => checkPhotoAfterSubjectDeath(db) },
     { name: 'checkOrphanedSource',        fn: (db) => checkOrphanedSource(db) },
     { name: 'checkTextControlChars',      fn: (db) => checkTextControlChars(db) },
     { name: 'checkOrphanedPlace',         fn: (db) => checkOrphanedPlace(db) },
