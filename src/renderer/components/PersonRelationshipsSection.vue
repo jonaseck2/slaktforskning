@@ -1,5 +1,5 @@
 <template>
-  <div v-if="rels.length === 0" class="empty-hint">{{ $t('personDetail.noRelationships') }}</div>
+  <div v-if="rels.length === 0" class="empty-hint">{{ $t('empty.relationships') }}</div>
   <table v-else class="data-table">
     <tbody>
       <tr

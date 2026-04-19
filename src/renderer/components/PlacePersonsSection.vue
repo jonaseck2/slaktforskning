@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="persons.length === 0" class="empty-hint">{{ $t('places.noPersons') }}</div>
+    <div v-if="persons.length === 0" class="empty-hint">{{ $t('empty.persons') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>

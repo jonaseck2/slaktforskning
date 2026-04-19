@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="media.length === 0" class="empty-hint">{{ $t('media.noMedia') }}</div>
+    <div v-if="media.length === 0" class="empty-hint">{{ $t('empty.media') }}</div>
     <table v-else class="data-table">
       <thead>
         <tr>

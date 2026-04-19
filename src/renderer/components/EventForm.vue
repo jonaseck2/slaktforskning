@@ -48,7 +48,7 @@
         <!-- Citations section when editing -->
         <div v-if="editingEvent" class="citations-section">
           <div class="citations-label">{{ $t('citations.title') }}</div>
-          <div v-if="existingCitations.length === 0" class="citations-empty">{{ $t('citations.none') }}</div>
+          <div v-if="existingCitations.length === 0" class="citations-empty">{{ $t('empty.citations') }}</div>
           <div v-for="cit in existingCitations" :key="cit.id" class="citation-row">
             <span class="citation-source">{{ cit.sourceTitle }}</span>
             <span v-if="cit.page" class="citation-page">{{ cit.page }}</span>
