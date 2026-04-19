@@ -233,12 +233,10 @@ const api = {
     onPerformed: (cb: (data: { type: string; label: string }) => void) =>
       ipcRenderer.on('undo:performed', (_e, data: { type: string; label: string }) => cb(data)),
   },
+  onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
   chart: {
     saveSvg: (svgContent: string) => ipcRenderer.invoke('chart:saveSvg', svgContent),
     saveTiledPdf: (pages: string[]) => ipcRenderer.invoke('chart:saveTiledPdf', pages),
-  },
-  onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
-  chart: {
     onGetVisiblePersons: (callback: () => unknown) => {
       ipcRenderer.on('chart:getVisiblePersons', (_event, replyChannel) => {
         const result = callback();
