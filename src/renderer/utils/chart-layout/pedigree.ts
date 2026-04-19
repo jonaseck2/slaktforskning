@@ -205,7 +205,8 @@ export function computePedigreeLayout(
         const unplacedChildren = selNode.children.filter(c => !placedIds.has(c.person.id));
         if (unplacedChildren.length > 0) {
           const childX = selBox.x - BOX_W - H_GAP;
-          let nextY = findClearYRect(childX, selBox.y, 1, MIN_BOX_H);
+          const firstChH = hOf(unplacedChildren[0]);
+          let nextY = findClearYRect(childX, selCY - firstChH / 2, 1, firstChH);
           for (const ch of unplacedChildren) {
             const chH = hOf(ch);
             const childY = nextY;
