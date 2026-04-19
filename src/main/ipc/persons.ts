@@ -9,7 +9,9 @@ export function registerPersonHandlers(getDb: () => ReturnType<typeof import('..
   wrapHandler('persons:list', () => persons.listPersons(getDb()));
   wrapHandler('persons:update', (id, data) => uw.updatePersonUndo(getDb(), id as string, data as Parameters<typeof persons.updatePerson>[2]));
   wrapHandler('persons:delete', (id) => uw.deletePersonUndo(getDb(), id as string));
-  wrapHandler('persons:search', (query) => persons.searchPersons(getDb(), query as string));
+  wrapHandler('persons:search', (query, relateeId) =>
+    persons.searchPersons(getDb(), query as string, (relateeId as string | null | undefined) ?? null)
+  );
   wrapHandler('persons:addName', (personId, data) => uw.addPersonNameUndo(getDb(), personId as string, data as Parameters<typeof persons.addPersonName>[2]));
   wrapHandler('persons:getNames', (personId) => persons.getPersonNames(getDb(), personId as string));
   wrapHandler('persons:updateName', (id, data) => uw.updatePersonNameUndo(getDb(), id as string, data as Parameters<typeof persons.updatePersonName>[2]));
