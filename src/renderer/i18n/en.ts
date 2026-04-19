@@ -944,6 +944,8 @@ export default {
     missingCount: '{count} missing',
     profile: 'Profile',
     profileAlt: 'Profile picture',
+    setAsProfile: 'Set as profile picture',
+    currentProfile: 'Current profile picture',
     moveUp: 'Move up',
     moveDown: 'Move down',
     gallery: 'Gallery',
