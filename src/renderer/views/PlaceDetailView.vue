@@ -61,8 +61,28 @@
     </section>
 
     <section class="detail-section" aria-labelledby="section-place-notes">
-      <h4 id="section-place-notes" tabindex="0" :data-narrate="editNotes ? t('screenReader.sectionNotes', { content: editNotes }) : t('screenReader.sectionNotesEmpty')">{{ $t('common.notes') }}</h4>
-      <textarea ref="notesRef" v-model="editNotes" rows="3" :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined" @blur="persistNotesHeight(); save({ notes: editNotes })" @mouseup="persistNotesHeight" />
+      <div class="notes-heading-row">
+        <h4 id="section-place-notes" tabindex="0" :data-narrate="editNotes ? t('screenReader.sectionNotes', { content: editNotes }) : t('screenReader.sectionNotesEmpty')">{{ $t('common.notes') }}</h4>
+        <AppButton
+          variant="soft"
+          size="sm"
+          :aria-pressed="notesMonospaced"
+          :title="$t('common.monospacedTooltip')"
+          @click="toggleNotesMonospaced"
+        >
+          <span class="mono-glyph">&lt;/&gt;</span>
+          <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+        </AppButton>
+      </div>
+      <textarea
+        ref="notesRef"
+        v-model="editNotes"
+        rows="3"
+        :class="{ 'notes-mono': notesMonospaced }"
+        :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+        @blur="persistNotesHeight(); save({ notes: editNotes })"
+        @mouseup="persistNotesHeight"
+      />
     </section>
 
     <!-- Gazetteer Match Section -->
@@ -138,6 +158,7 @@ import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
+import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id: string | null; latitude: number | null; longitude: number | null; notes: string; street: string | null; postal_code: string | null; city: string | null; country: string | null; }
 
@@ -160,6 +181,7 @@ const editCountry = ref('');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const { ready: resolverReady, ensureLoaded, resolve: resolvePlace, invalidate: invalidateResolver } = usePlaceResolver();
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-notes');
+const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('place');
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {
   if (selected.id === placeId) return;
@@ -280,4 +302,18 @@ textarea { resize: vertical; width: 100%; box-sizing: border-box; }
 .match-path { color: var(--text-primary); margin-bottom: 4px; }
 .unmatched { color: var(--text-muted); font-size: var(--font-xs); margin-bottom: 4px; }
 .resolved-coords { color: var(--text-secondary); font-size: var(--font-xs); font-family: monospace; }
+.notes-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.mono-glyph {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  opacity: 0.85;
+}
+textarea.notes-mono {
+  font-family: var(--font-mono);
+}
 </style>

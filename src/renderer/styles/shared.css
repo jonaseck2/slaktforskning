@@ -998,3 +998,11 @@ html.screen-reader h1:focus {
   html.dark .modal,
   html.dark .data-table th { background: initial; }
 }
+
+/* Monospaced notes toggle — see docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md */
+.notes-mono {
+  font-family: var(--font-mono);
+}
+.toggle-label-mono {
+  font-family: var(--font-mono);
+}

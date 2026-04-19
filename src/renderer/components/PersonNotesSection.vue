@@ -3,6 +3,7 @@
     ref="textareaRef"
     :value="notes"
     :rows="rows ?? 3"
+    :class="{ 'notes-mono': monospaced }"
     :placeholder="$t('personDetail.notesPlaceholder')"
     :style="storedHeight ? { height: storedHeight + 'px' } : undefined"
     @blur="onBlur(($event.target as HTMLTextAreaElement).value)"
@@ -23,7 +24,7 @@ declare const window: Window & {
 const { t } = useI18n();
 const toast = useToast();
 
-const props = defineProps<{ personId: string; rows?: number }>();
+const props = defineProps<{ personId: string; rows?: number; monospaced?: boolean }>();
 
 const notes = ref('');
 const { textareaRef, storedHeight, persistHeight } = useTextareaHeight('person-notes');

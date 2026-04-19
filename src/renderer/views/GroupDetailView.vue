@@ -7,16 +7,32 @@
       @blur="saveName"
     />
 
-    <textarea
-      ref="notesRef"
-      class="group-notes-input"
-      v-model="editNotes"
-      rows="2"
-      :placeholder="$t('groups.notes')"
-      :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
-      @blur="persistNotesHeight(); saveNotes()"
-      @mouseup="persistNotesHeight"
-    />
+    <div class="notes-block">
+      <div class="notes-heading-row">
+        <span class="notes-heading-label">{{ $t('common.notes') }}</span>
+        <AppButton
+          variant="soft"
+          size="sm"
+          :aria-pressed="notesMonospaced"
+          :title="$t('common.monospacedTooltip')"
+          @click="toggleNotesMonospaced"
+        >
+          <span class="mono-glyph">&lt;/&gt;</span>
+          <span class="toggle-label-mono">{{ $t('common.monospaced') }}</span>
+        </AppButton>
+      </div>
+      <textarea
+        ref="notesRef"
+        class="group-notes-input"
+        :class="{ 'notes-mono': notesMonospaced }"
+        v-model="editNotes"
+        rows="2"
+        :placeholder="$t('groups.notes')"
+        :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+        @blur="persistNotesHeight(); saveNotes()"
+        @mouseup="persistNotesHeight"
+      />
+    </div>
 
     <!-- Members -->
     <SectionHeader
@@ -83,6 +99,7 @@ import SectionHeader from '../components/ui/SectionHeader.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
+import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 
 interface Group { id: string; name: string; notes: string; }
 interface MemberRow {
@@ -106,6 +123,7 @@ const members = ref<MemberRow[]>([]);
 const showAddMember = ref(false);
 const newMemberId = ref<string | null>(null);
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('group-notes');
+const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('group');
 
 function goToPerson(m: MemberRow) {
   const name = fullNameParts(m.given_name ?? null, m.surname ?? null, m.preferred_name ?? null, m.nickname ?? null).map(p => p.text).join('');
@@ -201,8 +219,32 @@ onMounted(load);
   font-size: var(--font-base);
   font-family: inherit;
   resize: vertical;
-  margin-bottom: 24px;
   box-sizing: border-box;
+}
+.notes-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: 24px;
+}
+.notes-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.notes-heading-label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.mono-glyph {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  opacity: 0.85;
+}
+.group-notes-input.notes-mono {
+  font-family: var(--font-mono);
 }
 .add-member-row {
   display: flex;
