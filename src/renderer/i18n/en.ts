@@ -55,6 +55,8 @@ export default {
     theme: 'Theme',
     themes: { forest: 'Forest', nordic: 'Nordic', twilight: 'Twilight' },
     tabs: { appearance: 'Appearance', database: 'Database', defaults: 'Defaults', importExport: 'Import / Export', linkRules: 'Link Rules', gazetteers: 'Gazetteers' },
+    researcherName: 'Researcher name',
+    researcherNamePlaceholder: 'Your name, as it appears in report attribution',
   },
   chart: {
     export: {
