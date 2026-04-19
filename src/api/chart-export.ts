@@ -21,7 +21,7 @@ export const PAPER_SIZES: Record<string, { width: number; height: number }> = {
   A0: { width: 841, height: 1189 },
 };
 
-const MM_TO_PX = 3.7795275591; // 1mm = 3.78px at 96dpi
+export const MM_TO_PX = 3.7795275591; // 1mm = 3.78px at 96dpi
 
 /** Get effective paper dimensions in mm, accounting for orientation. */
 export function getPaperDimensions(cfg: PaperConfig): { width: number; height: number } {
