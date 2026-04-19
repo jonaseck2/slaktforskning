@@ -89,7 +89,6 @@
             :person-id="ancestorBookPersonId"
             :fan-generations="fanGenerations"
             :fan-arc-span="fanArcSpan"
-            :fan-curved-text="fanCurvedText"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
@@ -212,7 +211,6 @@
             :person-id="chartPersonId"
             :generations="fanGenerations"
             :arc-span="fanArcSpan"
-            :curved-text="fanCurvedText"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -341,8 +339,6 @@
         <button class="zoom-extra-btn" :disabled="fanGenerations <= 1" @click="fanGenerations--">−</button>
         <span class="zoom-extra-value">{{ fanGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="fanGenerations >= 8" @click="fanGenerations++">+</button>
-        <span class="zoom-extra-sep">|</span>
-        <button class="zoom-extra-btn" :class="{ active: fanCurvedText }" @click="fanCurvedText = !fanCurvedText" :title="$t('visualization.curvedText')">⌒</button>
       </template>
     </ZoomControls>
 
@@ -414,7 +410,6 @@ const placeHistoryPlaceId = ref('');
 const familyNarrativeRelId = ref('');
 const fanGenerations = ref(6);
 const fanArcSpan = ref<ArcSpan>(360);
-const fanCurvedText = ref(true);
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 

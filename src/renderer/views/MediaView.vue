@@ -4,7 +4,7 @@
     <MediaViewer
       v-if="viewerMode"
       ref="viewerRef"
-      :media-items="filteredItems"
+      :media-items="viewerItems"
       :initial-index="viewerIndex"
       :thumbnails="thumbnails"
       :draw-mode="drawMode"
@@ -179,6 +179,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import MediaViewer from '../components/MediaViewer.vue';
 import MediaPanel from '../components/MediaPanel.vue';
@@ -200,6 +201,8 @@ const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'
 const PAGE_SIZE = 100;
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 
 type ViewMode = 'gallery' | 'table';
 const viewMode = ref<ViewMode>(
@@ -243,6 +246,8 @@ const searchQuery = ref('');
 const thumbnails = ref<Record<string, string>>({});
 const viewerMode = ref(false);
 const viewerIndex = ref(0);
+const deepLinkItems = ref<MediaItem[] | null>(null);
+const viewerItems = computed<MediaItem[]>(() => deepLinkItems.value ?? filteredItems.value);
 const drawMode = ref(false);
 const highlightedRegionId = ref<string | null>(null);
 const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
@@ -343,6 +348,7 @@ function selectMedia(id: string) {
 }
 
 function openViewer(idx: number) {
+  deepLinkItems.value = null;
   viewerIndex.value = idx;
   const item = filteredItems.value[idx];
   if (item) selectedMediaId.value = item.id;
@@ -351,13 +357,46 @@ function openViewer(idx: number) {
 
 function onViewerIndexChange(idx: number) {
   viewerIndex.value = idx;
-  const item = filteredItems.value[idx];
+  const item = viewerItems.value[idx];
   if (item) selectedMediaId.value = item.id;
 }
 
 function closeViewer() {
   viewerMode.value = false;
   drawMode.value = false;
+  deepLinkItems.value = null;
+  if (route.query.open) {
+    router.replace({ path: '/media', query: {} });
+  }
+}
+
+async function openViewerById(mediaId: string) {
+  const idx = items.value.findIndex(i => i.id === mediaId);
+  if (idx >= 0) {
+    openViewer(idx);
+    return;
+  }
+  const media = await window.api.media.get(mediaId) as MediaItem | null;
+  if (!media) return;
+  const normalized: MediaItem = {
+    id: media.id,
+    title: media.title,
+    file_ref: media.file_ref,
+    format: media.format,
+    notes: media.notes ?? '',
+    is_printable: (media as MediaItem).is_printable ?? false,
+    is_missing: (media as MediaItem).is_missing ?? 0,
+    created_at: (media as MediaItem).created_at ?? '',
+    linkCount: (media as MediaItem).linkCount ?? 0,
+  };
+  if (isImageFormat(normalized.format) && !thumbnails.value[normalized.id]) {
+    const url = await window.api.media.readAsDataUrl(normalized.id) as string | null;
+    if (url) thumbnails.value[normalized.id] = url;
+  }
+  deepLinkItems.value = [normalized];
+  viewerIndex.value = 0;
+  selectedMediaId.value = normalized.id;
+  viewerMode.value = true;
 }
 
 async function onRegionDrawn(rect: { x: number; y: number; width: number; height: number }) {
@@ -418,7 +457,18 @@ watch(sentinel, (el) => {
   observer.observe(el);
 });
 
-onMounted(load);
+onMounted(async () => {
+  await load();
+  const openId = route.query.open;
+  if (typeof openId === 'string' && openId) {
+    await openViewerById(openId);
+  }
+});
+watch(() => route.query.open, async (openId) => {
+  if (typeof openId === 'string' && openId) {
+    await openViewerById(openId);
+  }
+});
 onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 

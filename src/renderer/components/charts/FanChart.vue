@@ -11,7 +11,6 @@
         :focal-cy="viewBoxInfo.cy"
         :vb-width="viewBoxInfo.width"
         :vb-height="viewBoxInfo.height"
-        :curved-text="curvedText"
         :width="svgDisplayWidth"
         :height="svgDisplayHeight"
         :stroke-color="chartTheme.dark ? 'rgba(255,255,255,0.15)' : 'white'"
@@ -43,13 +42,6 @@
       <span class="zoom-sep">|</span>
       <button
         class="zoom-btn"
-        :class="{ active: curvedText }"
-        @click="curvedText = !curvedText"
-        title="Böj text längs bågen"
-      >⌒</button>
-      <span class="zoom-sep">|</span>
-      <button
-        class="zoom-btn"
         :class="{ active: colorMode === 'sex' }"
         @click="toggleColorMode"
         :title="$t('visualization.fanColorMode')"
@@ -71,7 +63,7 @@ import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { PedigreeTree, PersonNode } from '../../utils/chart-layout';
 import {
-  branchBaseColors, branchFill, sexFill, highContrastBranchFill,
+  branchFill, sexFill, highContrastBranchFill,
   type FanColorMode,
 } from '../../utils/fanColors';
 import { useFanThemeColors } from '../../composables/useFanThemeColors';
@@ -91,7 +83,6 @@ const selectedGens = ref(6);
 const selectedArc = ref<ArcSpan>(
   (parseInt(localStorage.getItem('fan-arc-span') ?? '') || 180) as ArcSpan
 );
-const curvedText = ref(localStorage.getItem('fan-curved-text') === '1');
 const colorMode = ref<FanColorMode>(
   (localStorage.getItem('fan-color-mode') as FanColorMode) || 'branch',
 );
@@ -104,7 +95,6 @@ const arcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-fan');
 
 watch(selectedArc, (v) => localStorage.setItem('fan-arc-span', String(v)));
-watch(curvedText, (v) => localStorage.setItem('fan-curved-text', v ? '1' : '0'));
 watch(colorMode, (v) => localStorage.setItem('fan-color-mode', v));
 
 function toggleColorMode() {
@@ -117,13 +107,13 @@ const layout = computed<FanSegment[]>(() => {
   if (!tree.value) return [];
   const isDark = chartTheme.value.dark;
   const theme = chartTheme.value.theme;
-  const branches = branchBaseColors(theme.accent);
+  const branches = theme.branches;
   const mode = colorMode.value;
   const hc = chartTheme.value.highContrast;
 
   const fillFn = (ahnNum: number, gen: number, isEmpty: boolean, person: PersonNode | null) => {
     if (hc) return highContrastBranchFill(ahnNum, gen, isEmpty, branches);
-    if (mode === 'sex' && person) return sexFill(person.sex, gen, isEmpty, theme, isDark);
+    if (mode === 'sex') return sexFill(person?.sex ?? 'U', gen, isEmpty, theme, isDark);
     return branchFill(ahnNum, gen, isEmpty, branches, isDark);
   };
 
