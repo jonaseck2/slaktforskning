@@ -76,3 +76,35 @@ export function checkDuplicatePlace(db: Database): CheckResult[] {
   }
   return results;
 }
+
+export function checkDuplicateMedia(db: Database): CheckResult[] {
+  const rows = queryAll<{ file_ref: string; id: string; title: string | null }>(db, `
+    SELECT file_ref, id, title
+    FROM media
+    WHERE file_ref IS NOT NULL AND file_ref != ''
+      AND file_ref IN (
+        SELECT file_ref FROM media
+        WHERE file_ref IS NOT NULL AND file_ref != ''
+        GROUP BY file_ref
+        HAVING COUNT(*) > 1
+      )
+    ORDER BY file_ref
+  `);
+  const groups = new Map<string, { fileRef: string; mediaIds: string[] }>();
+  for (const r of rows) {
+    if (!groups.has(r.file_ref)) groups.set(r.file_ref, { fileRef: r.file_ref, mediaIds: [] });
+    groups.get(r.file_ref)!.mediaIds.push(r.id);
+  }
+  const results: CheckResult[] = [];
+  for (const g of groups.values()) {
+    results.push({
+      code: 'DUPLICATE_MEDIA',
+      severity: 'notice' as CheckSeverity,
+      message: `${g.mediaIds.length} mediafiler delar filväg "${g.fileRef}"`,
+      messageParams: { count: g.mediaIds.length, fileRef: g.fileRef },
+      personIds: [],
+      mediaIds: g.mediaIds,
+    });
+  }
+  return results;
+}

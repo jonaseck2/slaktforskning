@@ -635,6 +635,7 @@ export default {
       POSSIBLE_DUPLICATE_PERSON: 'Possible duplicate persons (score {score})',
       DUPLICATE_IDENTIFIER: '{count} persons share identifier {type}:{value}',
       DUPLICATE_PLACE: '{count} places share name "{name}" under the same parent',
+      DUPLICATE_MEDIA: '{count} media files share file path "{fileRef}"',
     },
   },
   duplicates: {
