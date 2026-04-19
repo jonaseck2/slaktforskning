@@ -13,10 +13,10 @@
         :vb-height="viewBoxInfo.height"
         :width="svgDisplayWidth"
         :height="svgDisplayHeight"
-        :stroke-color="chartTheme.dark ? 'rgba(255,255,255,0.15)' : 'white'"
-        :empty-pattern-stroke="chartTheme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'"
-        :focal-shadow-color="chartTheme.dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)'"
-        :no-gradients="chartTheme.highContrast"
+        :stroke-color="colorMode === 'bw' ? '#999' : (chartTheme.dark ? 'rgba(255,255,255,0.15)' : 'white')"
+        :empty-pattern-stroke="colorMode === 'bw' ? 'rgba(0,0,0,0.08)' : (chartTheme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)')"
+        :focal-shadow-color="colorMode === 'bw' ? 'rgba(0,0,0,0.15)' : (chartTheme.dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)')"
+        :no-gradients="chartTheme.highContrast || colorMode === 'bw'"
         @navigate="$emit('navigate', $event)"
         @personenter="(p, e) => tooltipRef?.show(p, e.clientX, e.clientY)"
         @personmove="(e) => tooltipRef?.move(e.clientX, e.clientY)"
@@ -25,33 +25,28 @@
     </div>
 
     <ChartTooltip ref="tooltipRef" />
-    <div class="zoom-controls">
-      <span class="zoom-label">{{ $t('visualization.fan.arc') }}:</span>
+    <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+      <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
       <button
         v-for="span in arcOptions"
         :key="span"
-        class="zoom-btn"
+        class="zoom-extra-btn"
         :class="{ active: selectedArc === span }"
         @click="selectedArc = span"
       >{{ span }}°</button>
-      <span class="zoom-sep">|</span>
-      <span class="zoom-label">{{ $t('visualization.fan.generations') }}:</span>
-      <button class="zoom-btn" @click="decrGens" :disabled="selectedGens <= 1">−</button>
-      <span class="zoom-level">{{ selectedGens }}</span>
-      <button class="zoom-btn" @click="incrGens" :disabled="selectedGens >= 8">+</button>
-      <span class="zoom-sep">|</span>
+      <span class="zoom-extra-sep">|</span>
+      <span class="zoom-extra-label">{{ $t('visualization.fan.generations') }}</span>
+      <button class="zoom-extra-btn" @click="decrGens" :disabled="selectedGens <= 1">−</button>
+      <span class="zoom-extra-value">{{ selectedGens }}</span>
+      <button class="zoom-extra-btn" @click="incrGens" :disabled="selectedGens >= 8">+</button>
+      <span class="zoom-extra-sep">|</span>
       <button
-        class="zoom-btn"
-        :class="{ active: colorMode === 'sex' }"
+        class="zoom-extra-btn"
+        :class="{ active: colorMode !== 'branch' }"
         @click="toggleColorMode"
         :title="$t('visualization.fanColorMode')"
-      >{{ colorMode === 'branch' ? $t('visualization.fanColorBranch') : $t('visualization.fanColorSex') }}</button>
-      <span class="zoom-sep">|</span>
-      <button class="zoom-btn" @click="zoomIn" title="Zoom in">+</button>
-      <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
-      <button class="zoom-btn" @click="zoomOut">−</button>
-      <button class="zoom-btn" @click="resetZoom" title="Reset zoom">↺</button>
-    </div>
+      >{{ colorModeLabel(colorMode) }}</button>
+    </ZoomControls>
   </div>
 </template>
 
@@ -63,23 +58,25 @@ import { fetchPedigreeTree } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { PedigreeTree, PersonNode } from '../../utils/chart-layout';
 import {
-  branchFill, sexFill, highContrastBranchFill,
+  branchFill, sexFill, printFill, highContrastBranchFill,
   type FanColorMode,
 } from '../../utils/fanColors';
 import { useFanThemeColors } from '../../composables/useFanThemeColors';
 import FanChartSvg from './FanChartSvg.vue';
 import ChartTooltip from './ChartTooltip.vue';
+import ZoomControls from '../ZoomControls.vue';
+import { fanGenerations } from '../../composables/useChartGenerations';
 
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
-useI18n();
+const { t } = useI18n();
 
 const props = defineProps<{ personId: string | undefined }>();
 defineEmits<{ navigate: [id: string] }>();
 
 const loading = ref(true);
 const tree = ref<PedigreeTree | null>(null);
-const selectedGens = ref(6);
+const selectedGens = fanGenerations;
 const selectedArc = ref<ArcSpan>(
   (parseInt(localStorage.getItem('fan-arc-span') ?? '') || 180) as ArcSpan
 );
@@ -98,7 +95,14 @@ watch(selectedArc, (v) => localStorage.setItem('fan-arc-span', String(v)));
 watch(colorMode, (v) => localStorage.setItem('fan-color-mode', v));
 
 function toggleColorMode() {
-  colorMode.value = colorMode.value === 'branch' ? 'sex' : 'branch';
+  const next: Record<FanColorMode, FanColorMode> = { branch: 'sex', sex: 'bw', bw: 'branch' };
+  colorMode.value = next[colorMode.value];
+}
+
+function colorModeLabel(m: FanColorMode): string {
+  if (m === 'branch') return t('visualization.fanColorBranch');
+  if (m === 'sex') return t('visualization.fanColorSex');
+  return t('wallChart.blackWhite');
 }
 
 const chartTheme = useFanThemeColors();
@@ -113,6 +117,7 @@ const layout = computed<FanSegment[]>(() => {
 
   const fillFn = (ahnNum: number, gen: number, isEmpty: boolean, person: PersonNode | null) => {
     if (hc) return highContrastBranchFill(ahnNum, gen, isEmpty, branches);
+    if (mode === 'bw') return printFill(gen, isEmpty);
     if (mode === 'sex') return sexFill(person?.sex ?? 'U', gen, isEmpty, theme, isDark);
     return branchFill(ahnNum, gen, isEmpty, branches, isDark);
   };
@@ -199,40 +204,4 @@ onMounted(load);
 
 .fan-seg.clickable { cursor: pointer; }
 .fan-seg.clickable:hover path { opacity: 0.85; }
-
-.zoom-controls {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.93);
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 3px 5px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  flex-wrap: wrap;
-}
-.zoom-btn {
-  background: none;
-  border: none;
-  padding: 2px 7px;
-  cursor: pointer;
-  font-size: var(--font-base);
-  border-radius: 3px;
-  color: #555;
-  line-height: 1.4;
-}
-.zoom-btn:hover { background: var(--color-bg-muted); }
-.zoom-btn.active { background: #e0eaf5; color: #2060a0; }
-.zoom-level {
-  padding: 0 4px;
-  font-size: var(--font-xs);
-  color: #666;
-  min-width: 24px;
-  text-align: center;
-}
-.zoom-sep { color: #ccc; padding: 0 3px; }
-.zoom-label { font-size: 11px; color: #888; padding: 0 4px 0 2px; }
 </style>

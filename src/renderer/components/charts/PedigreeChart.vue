@@ -177,17 +177,12 @@
         </template>
       </svg>
     </div>
-    <div v-if="!readonly" class="zoom-controls">
-      <span class="zoom-label">Gens:</span>
-      <button class="zoom-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
-      <span class="zoom-level">{{ genTarget }}</span>
-      <button class="zoom-btn" @click="incrGens">+</button>
-      <span class="zoom-sep">|</span>
-      <button class="zoom-btn" :aria-label="$t('a11y.zoomIn')" @click="zoomIn">+</button>
-      <span class="zoom-level" aria-live="polite">{{ Math.round(zoom * 100) }}%</span>
-      <button class="zoom-btn" :aria-label="$t('a11y.zoomOut')" @click="zoomOut">−</button>
-      <button class="zoom-btn" :aria-label="$t('a11y.resetZoom')" @click="resetZoom">↺</button>
-    </div>
+    <ZoomControls v-if="!readonly" overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+      <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+      <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-extra-value">{{ genTarget }}</span>
+      <button class="zoom-extra-btn" @click="incrGens">+</button>
+    </ZoomControls>
 
     <ChartTooltip ref="tooltipRef" />
 
@@ -216,6 +211,8 @@ import { formatFullName } from '../../utils/nameUtils';
 import { useChartColors } from '../../composables/useChartColors';
 import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
+import ZoomControls from '../ZoomControls.vue';
+import { pedigreeGenerations } from '../../composables/useChartGenerations';
 
 const { t } = useI18n();
 const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
@@ -227,8 +224,14 @@ const loading = ref(true);
 const loadingMore = ref(false);
 const tree = ref<PedigreeTree | null>(null);
 const collapsed = ref(new Set<string>());
-const genTarget = ref(4);
+const genTarget = pedigreeGenerations;
 const loadedGens = ref(5);
+
+watch(genTarget, (n) => {
+  if (!tree.value) return;
+  if (n > loadedGens.value) load();
+  else applyGenerationDepth(n);
+});
 
 // Hover state for ⊕ button
 const hoveredPersonId = ref<string | null>(null);
@@ -534,49 +537,6 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 }
 .collapse-btn { cursor: pointer; }
 .collapse-btn:hover circle { opacity: 0.7; }
-
-.zoom-controls {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.93);
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 3px 5px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-.zoom-btn {
-  background: none;
-  border: none;
-  padding: 2px 7px;
-  cursor: pointer;
-  font-size: var(--font-base);
-  border-radius: 3px;
-  color: #555;
-  line-height: 1.4;
-}
-.zoom-btn:hover:not(:disabled) { background: var(--color-bg-muted); }
-.zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.zoom-label {
-  padding: 0 2px 0 4px;
-  font-size: var(--font-xs);
-  color: #666;
-}
-.zoom-sep {
-  padding: 0 4px;
-  color: #bbb;
-  font-size: var(--font-xs);
-}
-.zoom-level {
-  padding: 0 4px;
-  font-size: var(--font-xs);
-  color: #666;
-  min-width: 38px;
-  text-align: center;
-}
 
 .ghost-box { cursor: pointer; }
 .ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }

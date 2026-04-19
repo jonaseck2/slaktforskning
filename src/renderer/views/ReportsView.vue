@@ -77,6 +77,14 @@
     <div v-if="activeTab === 'ancestorBook'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
+          <label>
+            {{ $t('wallChart.colorMode') }}
+            <select v-model="fanColorMode">
+              <option value="bw">{{ $t('wallChart.blackWhite') }}</option>
+              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
+              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
+            </select>
+          </label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -89,6 +97,7 @@
             :person-id="ancestorBookPersonId"
             :fan-generations="fanGenerations"
             :fan-arc-span="fanArcSpan"
+            :color-mode="fanColorMode"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
@@ -179,6 +188,23 @@
       </div>
     </div>
 
+    <!-- Hourglass Chart Tab -->
+    <div v-if="activeTab === 'hourglassChart'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls"></div>
+        <div class="print-actions">
+          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <HourglassChartReport :person-id="chartPersonId" />
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+      </div>
+    </div>
+
     <!-- Descendant Chart Tab -->
     <div v-if="activeTab === 'descendantChart'" class="tab-content">
       <div class="tab-header">
@@ -199,7 +225,16 @@
     <!-- Fan Chart Tab -->
     <div v-if="activeTab === 'fanChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls"></div>
+        <div class="controls">
+          <label>
+            {{ $t('wallChart.colorMode') }}
+            <select v-model="fanColorMode">
+              <option value="bw">{{ $t('wallChart.blackWhite') }}</option>
+              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
+              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
+            </select>
+          </label>
+        </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
@@ -211,6 +246,7 @@
             :person-id="chartPersonId"
             :generations="fanGenerations"
             :arc-span="fanArcSpan"
+            :color-mode="fanColorMode"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -340,6 +376,30 @@
         <span class="zoom-extra-value">{{ fanGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="fanGenerations >= 8" @click="fanGenerations++">+</button>
       </template>
+      <template v-if="activeTab === 'pedigreeChart'">
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="pedigreeGenerations <= 1" @click="pedigreeGenerations--">−</button>
+        <span class="zoom-extra-value">{{ pedigreeGenerations }}</span>
+        <button class="zoom-extra-btn" @click="pedigreeGenerations++">+</button>
+      </template>
+      <template v-if="activeTab === 'hourglassChart'">
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="hourglassGenerations <= 1" @click="hourglassGenerations--">−</button>
+        <span class="zoom-extra-value">{{ hourglassGenerations }}</span>
+        <button class="zoom-extra-btn" @click="hourglassGenerations++">+</button>
+      </template>
+      <template v-if="activeTab === 'descendantChart'">
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="descendantGenerations <= 1" @click="descendantGenerations--">−</button>
+        <span class="zoom-extra-value">{{ descendantGenerations }}</span>
+        <button class="zoom-extra-btn" @click="descendantGenerations++">+</button>
+      </template>
+      <template v-if="activeTab === 'timeline'">
+        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :disabled="timelineGenerations <= 1" @click="timelineGenerations--">−</button>
+        <span class="zoom-extra-value">{{ timelineGenerations }}</span>
+        <button class="zoom-extra-btn" @click="timelineGenerations++">+</button>
+      </template>
     </ZoomControls>
 
   </div>
@@ -360,6 +420,7 @@ import PersonBiography from '../components/reports/PersonBiography.vue';
 import PlaceHistory from '../components/reports/PlaceHistory.vue';
 import FamilyNarrative from '../components/reports/FamilyNarrative.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
+import HourglassChartReport from '../components/reports/HourglassChartReport.vue';
 import DescendantChartReport from '../components/reports/DescendantChartReport.vue';
 import FanChartReport from '../components/reports/FanChartReport.vue';
 import type { ArcSpan } from '../utils/fanLayout';
@@ -374,6 +435,13 @@ import {
   type ColorMode,
 } from '../../api/wall-charts';
 import ZoomControls from '../components/ZoomControls.vue';
+import {
+  pedigreeGenerations,
+  hourglassGenerations,
+  descendantGenerations,
+  timelineGenerations,
+  fanGenerations,
+} from '../composables/useChartGenerations';
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -382,7 +450,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'descendantChart' | 'fanChart' | 'timeline' | 'wallChart'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'biography' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline' | 'wallChart'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -393,6 +461,7 @@ const tabs = computed(() => [
   { id: 'placeHistory', label: t('reports.tabPlaceHistory') },
   { id: 'familyNarrative', label: t('reports.tabFamilyNarrative') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
+  { id: 'hourglassChart', label: t('reports.tabHourglassChart') },
   { id: 'descendantChart', label: t('reports.tabDescendantChart') },
   { id: 'fanChart', label: t('reports.tabFanChart') },
   { id: 'timeline', label: t('reports.tabTimeline') },
@@ -408,9 +477,9 @@ const ancestorBookPersonId = computed(() => focusStore.personId);
 const biographyPersonId = computed(() => focusStore.personId);
 const placeHistoryPlaceId = ref('');
 const familyNarrativeRelId = ref('');
-const fanGenerations = ref(6);
 const fanArcSpan = ref<ArcSpan>(360);
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
+const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
 const allPlaces = ref<Array<{ id: string; name: string }>>([]);
 
 // --- Wall chart state ---
@@ -609,7 +678,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=biography)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'descendantChart', 'fanChart', 'timeline', 'wallChart'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'biography', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline', 'wallChart'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }

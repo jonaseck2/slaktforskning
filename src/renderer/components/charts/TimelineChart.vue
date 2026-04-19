@@ -173,17 +173,12 @@
       </template>
       <div v-else-if="!loading" class="chart-empty">—</div>
     </div>
-    <div v-if="!readonly" class="zoom-controls">
-      <span class="zoom-label">Gens:</span>
-      <button class="zoom-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
-      <span class="zoom-level">{{ genTarget }}</span>
-      <button class="zoom-btn" @click="incrGens">+</button>
-      <span class="zoom-sep">|</span>
-      <button class="zoom-btn" @click="zoomIn" title="Zoom in (Ctrl+scroll)">+</button>
-      <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
-      <button class="zoom-btn" @click="zoomOut">−</button>
-      <button class="zoom-btn" @click="resetZoom" title="Reset zoom">↺</button>
-    </div>
+    <ZoomControls v-if="!readonly" overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+      <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
+      <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-extra-value">{{ genTarget }}</span>
+      <button class="zoom-extra-btn" @click="incrGens">+</button>
+    </ZoomControls>
   </div>
 </template>
 
@@ -196,6 +191,8 @@ import { useChartZoom } from '../../utils/useChartZoom';
 import type { TimelineLayout, TimelineEntry, BarLayout, PersonNode } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import { yearFromDate } from '../../utils/chart-layout/utils';
+import ZoomControls from '../ZoomControls.vue';
+import { timelineGenerations } from '../../composables/useChartGenerations';
 
 useI18n();
 
@@ -211,7 +208,8 @@ const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 8
 const hoveredId = ref<string | null>(null);
 const containerWidth = ref(800);
 const outerRef = ref<HTMLElement | null>(null);
-const genTarget = ref(1);
+const genTarget = timelineGenerations;
+watch(genTarget, () => load());
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-timeline');
 
@@ -371,52 +369,8 @@ onMounted(load);
   pointer-events: none;
 }
 
-.zoom-controls {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  padding: 3px 5px;
-  box-shadow: var(--shadow-sm);
-}
-.zoom-btn {
-  background: none;
-  border: none;
-  padding: 2px 7px;
-  cursor: pointer;
-  font-size: var(--font-base);
-  border-radius: 3px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-.zoom-btn:hover:not(:disabled) { background: var(--surface-hover); }
-.zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.zoom-label {
-  padding: 0 2px 0 4px;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-}
-.zoom-sep {
-  padding: 0 4px;
-  color: var(--surface-border);
-  font-size: var(--font-xs);
-}
-.zoom-level {
-  padding: 0 4px;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  min-width: 38px;
-  text-align: center;
-}
-
-/* Print: clean output, no zoom, no animations */
+/* Print: clean output, no animations */
 @media print {
-  .zoom-controls { display: none; }
   .living-pulse { display: none; }
   .timeline-svg { background: #fff !important; }
   .tl-tooltip-fo { display: none; }

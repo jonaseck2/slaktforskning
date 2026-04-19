@@ -23,10 +23,10 @@
           font-family="Georgia, serif"
           link-base="#person-"
           :stroke-width="0.5"
-          stroke-color="#999"
-          :no-gradients="true"
-          empty-pattern-stroke="rgba(0,0,0,0.08)"
-          focal-shadow-color="rgba(0,0,0,0.15)"
+          :stroke-color="isBw ? '#999' : 'white'"
+          :no-gradients="isBw"
+          :empty-pattern-stroke="isBw ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.15)'"
+          :focal-shadow-color="isBw ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.3)'"
           width="100%"
           class="ab-svg"
         />
@@ -174,8 +174,11 @@ import {
   type FanSegment,
   type ArcSpan,
 } from '../../utils/fanLayout';
-import { printFill } from '../../utils/fanColors';
+import { branchFill, sexFill, printFill } from '../../utils/fanColors';
+import { useFanThemeColors } from '../../composables/useFanThemeColors';
 import FanChartSvg from '../charts/FanChartSvg.vue';
+
+type ColorMode = 'branch' | 'sex' | 'bw';
 import { fetchAllAncestors, fetchPedigreeTree } from '../../utils/chartData';
 import type { PersonNode } from '../../utils/chart-layout';
 import { formatFullName } from '../../utils/nameUtils';
@@ -268,7 +271,12 @@ const props = defineProps<{
   personId: string;
   fanGenerations?: number;
   fanArcSpan?: ArcSpan;
+  colorMode?: ColorMode;
 }>();
+
+const mode = computed<ColorMode>(() => props.colorMode ?? 'bw');
+const isBw = computed(() => mode.value === 'bw');
+const chartTheme = useFanThemeColors();
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const loading = ref(false);
@@ -495,10 +503,16 @@ async function load() {
     const ancestorIds = new Set<string>(Array.from(ancestors.values()).map(p => p.id));
 
     // Compute SVG segments from the pedigree tree
+    const m = mode.value;
+    const { theme, dark } = chartTheme.value;
     segments.value = computeFanLayout(pedigreeTree, {
       arcSpan: arc,
       maxGen: gens,
-      fillFn: (_ahn, gen, isEmpty) => printFill(gen, isEmpty),
+      fillFn: (ahn, gen, isEmpty, person) => {
+        if (m === 'bw') return printFill(gen, isEmpty);
+        if (m === 'sex') return sexFill(person?.sex ?? 'U', gen, isEmpty, theme, dark);
+        return branchFill(ahn, gen, isEmpty, theme.branches, dark);
+      },
     });
 
     // Fetch full details for all ancestors in parallel
@@ -528,7 +542,7 @@ async function load() {
 }
 
 watch(
-  () => [props.personId, props.fanGenerations, props.fanArcSpan],
+  () => [props.personId, props.fanGenerations, props.fanArcSpan, props.colorMode],
   load,
   { immediate: true },
 );

@@ -14,7 +14,6 @@
     <template v-else-if="media">
       <!-- Header: thumbnail + title -->
       <div class="panel-header">
-        <button class="panel-close-btn" @click="emit('close')" :title="$t('common.close')">&#10005;</button>
         <div class="media-thumbnail">
           <img v-if="thumbnailSrc" :src="thumbnailSrc" :alt="media.title || ''" class="media-thumb-img" />
           <div v-else class="media-placeholder">
@@ -167,18 +166,32 @@
           </div>
         </div>
       </div>
+
+      <!-- Quality -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('quality.nav')"
+          :count="checkCount"
+          :collapsed="!sections.quality"
+          @toggle="toggleSection('quality')"
+        />
+        <div v-if="sections.quality" class="panel-section-body">
+          <MediaChecksSection ref="checksSectionRef" :media-id="mediaId!" />
+        </div>
+      </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import AppLoadingState from './ui/AppLoadingState.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
+import MediaChecksSection from './MediaChecksSection.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
@@ -241,6 +254,8 @@ const linkedPlaces = ref<LinkedEntity[]>([]);
 const linkedEvents = ref<LinkedEntity[]>([]);
 const regions = ref<RegionData[]>([]);
 const regionIsProfile = ref<Record<string, boolean>>({});
+const checksSectionRef = ref<InstanceType<typeof MediaChecksSection> | null>(null);
+const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
 const editingTagId = ref<string | null>(null);
@@ -254,6 +269,7 @@ const sections = reactive({
   places: true,
   events: false,
   faceTags: false,
+  quality: false,
 });
 
 function toggleSection(key: keyof typeof sections) {

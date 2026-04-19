@@ -201,6 +201,27 @@ The signal lives in [`src/renderer/composables/useThemeSignal.ts`](../../../src/
 
 Regression test: `tests/components/themeSignal.test.ts`.
 
+### Chart zoom controls and shared settings
+
+All interactive charts use the shared [`ZoomControls`](../../../src/renderer/components/ZoomControls.vue) component. Two positioning modes:
+- default (`position: fixed`) — floating bar at bottom-right of viewport. Used by `ReportsView` as its global paper-zoom bar.
+- `overlay` — `position: absolute` inside a `position: relative` chart container. Used by Pedigree/Hourglass/Descendant/Timeline/Fan as their in-chart bars.
+
+Chart-specific extras (Gens, Arc, Color mode) slot into `ZoomControls` using the shared `zoom-extra-label`, `zoom-extra-btn`, `zoom-extra-value`, `zoom-extra-sep` classes — defined once in `ZoomControls.vue`, styled via theme tokens.
+
+Charts hide their overlay when `readonly=true` (report wrappers pass this). Inside a report preview only `ReportsView`'s bottom bar drives state — we don't want competing bars.
+
+**Per-chart-type settings reused between viz and reports** live as module-level refs in [`useChartGenerations.ts`](../../../src/renderer/composables/useChartGenerations.ts):
+
+```ts
+export const pedigreeGenerations = ref(load('pedigree'));
+// ...hourglass, descendant, timeline, fan
+```
+
+Each ref persists to its own `chart-gens-{type}` localStorage key. Charts import the ref and use it directly (in place of a local `ref(N)` for `genTarget`); `ReportsView` imports the same refs and renders generation +/− controls in the bottom bar. Any instance's update propagates to all mounted consumers and survives reload. Non-timeline/fan charts add a `watch(genTarget)` that re-runs `applyGenerationDepth`/`load` so external mutations trigger the same behaviour as the chart's own buttons.
+
+**Unified color mode.** `FanColorMode = 'branch' | 'sex' | 'bw'` in `fanColors.ts`. Both the interactive `FanChart` cycle button and the `ReportsView` / `AncestorBookReport` dropdowns speak the same enum. `bw` uses `printFill` (greyscale + no gradients + print-style strokes) in both contexts.
+
 ### Export and print surfaces
 
 Anything that gets captured as a static artefact (PDF via `window.api.print.exportPdf()`, SVG via wall-chart generators, a PNG screenshot) **must not pick up the current theme or appearance**. Users have repeatedly been burned by dark / high-contrast / theme overrides leaking into saved files.
