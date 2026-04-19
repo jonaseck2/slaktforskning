@@ -218,6 +218,8 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.127.1 | Rename the text-list ancestor report tab "Ancestor Chart" → "Ancestor Sheet" (it's a list, not a chart); SV label "Stamtavla" → "Antavla" to disambiguate from the Ancestor Book tab (both used to read "Stamtavla"); `AncestorChartReport.vue` → `AncestorSheetReport.vue` | — |
 | v0.127.2 | Revert cross-platform build scripts and DMG maker (v0.105.0 `270bf21`) — `make:mac`/`make:win`/`make:linux` npm scripts and `@electron-forge/maker-dmg` broke something while trying to build Windows on Mac; restore original single `make` script, single-platform MakerZIP, and pre-DMG `forge.config.ts` maker list | — |
 | v0.128.0 | Wall Chart rolled into live charts — paper/orientation/color/SVG/PDF export moved to each chart's ZoomControls overlay; `wall-charts.ts` deleted, replaced by `chart-export.ts` utilities + `ChartExportControls` component + `useChartExport` composable; IPC renamed `wallChart:*` → `chart:*`; Wall Chart report tab removed from ReportsView | [archive](plans/archive/2026-04-19-wall-chart-rollup.md) |
+| v0.128.1 | fix(mcp): shut down cleanly on stdin EOF, release DB lock | — |
+| v0.129.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
 ---
 
 ## Research
@@ -338,6 +340,9 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 
 #### Duplicate Merge Side-by-Side UI [backlog]
 Side-by-side person comparison view for duplicate detection. Show conflicting data with merge controls. API has `findDuplicates` and `mergePersons` — needs a visual comparison UI.
+
+#### Unified compare-and-merge UI for duplicates (v2) [backlog]
+Extend `MergePersonsModal` pattern to places, media, and sources. Make the compare UI the landing target for all `DUPLICATE_*` quality rows. Consider a `/duplicates` route aggregating all duplicate types.
 
 ---
 

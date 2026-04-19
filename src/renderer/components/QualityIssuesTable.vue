@@ -30,7 +30,16 @@
             <span v-if="entityType(r)" :class="['entity-type-badge', 'type-' + entityType(r)]">
               {{ $t('quality.entityType.' + entityType(r)) }}
             </span>
-            <span class="entity-name">{{ entityLabel(r) }}</span>
+            <template v-if="isDuplicateCode(r.code)">
+              <router-link
+                v-for="(id, idx) in primaryIds(r)"
+                :key="id"
+                class="entity-name entity-link"
+                :to="entityRoute(r, id)"
+                @click.stop
+              >{{ primaryLabel(r, idx) }}</router-link>
+            </template>
+            <span v-else class="entity-name">{{ entityLabel(r) }}</span>
           </td>
           <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
           <td class="actions-cell">
@@ -117,6 +126,38 @@ function entityLabel(r: QualityIssue): string {
   if (names.length === 1) return names[0];
   return `${names[0]} +${names.length - 1}`;
 }
+
+function isDuplicateCode(code: string): boolean {
+  return code === 'POSSIBLE_DUPLICATE_PERSON' || code.startsWith('DUPLICATE_');
+}
+
+function primaryIds(r: QualityIssue): string[] {
+  const t = entityType(r);
+  if (t === 'place') return r.placeIds ?? [];
+  if (t === 'media') return r.mediaIds ?? [];
+  if (t === 'source') return r.sourceIds ?? [];
+  if (t === 'person') return r.personIds ?? [];
+  return [];
+}
+
+function primaryLabel(r: QualityIssue, idx: number): string {
+  const t = entityType(r);
+  const arr =
+    t === 'place' ? r.placeNames :
+    t === 'media' ? r.mediaTitles :
+    t === 'source' ? r.sourceTitles :
+    r.personNames;
+  const name = arr?.[idx];
+  return name && name.trim() !== '' ? name : `#${idx + 1}`;
+}
+
+function entityRoute(r: QualityIssue, id: string): { path: string; query?: Record<string, string> } {
+  const t = entityType(r);
+  if (t === 'place') return { path: '/places/' + id };
+  if (t === 'media') return { path: '/media', query: { open: id } };
+  if (t === 'source') return { path: '/sources/' + id };
+  return { path: '/persons/' + id };
+}
 </script>
 
 <style scoped>
@@ -137,6 +178,8 @@ function entityLabel(r: QualityIssue): string {
 .ignored-text { color: #9ca3af; }
 .entity-col { font-size: var(--font-sm); max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .entity-name { margin-left: var(--space-xs); }
+.entity-link { color: var(--accent); text-decoration: underline; }
+.entity-link + .entity-link { margin-left: var(--space-sm); }
 .entity-type-badge {
   display: inline-block;
   font-size: var(--font-xs);
