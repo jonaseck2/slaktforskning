@@ -1,25 +1,35 @@
 <template>
   <div :class="['app-avatar', `app-avatar--${size}`]" :style="avatarStyle">
-    <img v-if="src" :src="src" :alt="initials" class="app-avatar__img" />
+    <img v-if="effectiveSrc" :src="effectiveSrc" :alt="initials" class="app-avatar__img" />
     <span v-else>{{ initials }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
+import { usePersonProfilePic } from '../../composables/usePersonProfilePic';
 
 const props = withDefaults(defineProps<{
+  personId?: string | null;
   givenName?: string;
   surname?: string;
   sex?: 'M' | 'F' | 'U';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   src?: string | null;
 }>(), {
+  personId: null,
   givenName: '',
   surname: '',
   sex: 'U',
   size: 'md',
   src: null,
+});
+
+const { src: storeSrc } = usePersonProfilePic(toRef(props, 'personId'));
+
+const effectiveSrc = computed<string | null>(() => {
+  if (props.src) return props.src;
+  return storeSrc.value;
 });
 
 const initials = computed(() => {
@@ -32,7 +42,7 @@ const initials = computed(() => {
 });
 
 const avatarStyle = computed(() => {
-  if (props.src) return {};
+  if (effectiveSrc.value) return {};
   const map: Record<string, { background: string; color: string }> = {
     F: { background: 'var(--sex-f-bg)', color: 'var(--sex-f-text)' },
     M: { background: 'var(--sex-m-bg)', color: 'var(--sex-m-text)' },
