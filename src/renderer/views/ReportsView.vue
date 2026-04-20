@@ -185,6 +185,47 @@
       </div>
     </div>
 
+    <!-- Family in Year X Tab -->
+    <div v-if="activeTab === 'familyInYear'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls">
+          <label>
+            {{ $t('reports.familyInYear.year') }}
+            <input
+              type="number"
+              v-model.number="familyInYearYear"
+              :min="1"
+              :max="9999"
+              step="1"
+              required
+            />
+          </label>
+          <label>
+            {{ $t('reports.familyInYear.scope') }}
+            <select v-model="familyInYearScope">
+              <option value="all">{{ $t('reports.familyInYear.scopeAll') }}</option>
+              <option value="ancestors" disabled>{{ $t('reports.familyInYear.scopeAncestors') }}</option>
+              <option value="descendants" disabled>{{ $t('reports.familyInYear.scopeDescendants') }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="print-actions">
+          <AppButton variant="primary" size="sm" :disabled="!familyInYearYear" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!familyInYearYear" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="familyInYearYear" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <FamilyInYearReport
+            :year="familyInYearYear"
+            :scope="familyInYearScope"
+            :scope-person-id="familyInYearPersonId"
+          />
+        </div>
+        <div v-else class="empty-hint">{{ $t('reports.familyInYear.year') }}</div>
+      </div>
+    </div>
+
     <!-- Place Chronicle Tab -->
     <div v-if="activeTab === 'placeChronicle'" class="tab-content">
       <div class="tab-header">
@@ -418,6 +459,7 @@ import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
 import LifeOnOnePageReport from '../components/reports/LifeOnOnePageReport.vue';
+import FamilyInYearReport from '../components/reports/FamilyInYearReport.vue';
 import PlaceChronicleReport from '../components/reports/PlaceChronicleReport.vue';
 import AMarriageReport from '../components/reports/AMarriageReport.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
@@ -442,7 +484,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -451,6 +493,7 @@ const tabs = computed(() => [
   { id: 'yourAncestors', label: t('reports.yourAncestors.tabTitle') },
   { id: 'alife', label: t('reports.alife.title') },
   { id: 'onePage', label: t('reports.onePage.title') },
+  { id: 'familyInYear', label: t('reports.familyInYear.tabTitle') },
   { id: 'placeChronicle', label: t('reports.placeChronicle.title') },
   { id: 'amarriage', label: t('reports.amarriage.title') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
@@ -479,6 +522,9 @@ const aLifeShowSources = ref(false);
 const aLifeShowNotes = ref(true);
 const onePagePersonId = computed(() => focusStore.personId);
 const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
+const familyInYearYear = ref<number>(new Date().getFullYear() - 100);
+const familyInYearScope = ref<'all' | 'ancestors' | 'descendants'>('all');
+const familyInYearPersonId = computed(() => focusStore.personId);
 const placeChroniclePlaceId = ref('');
 const placeChronicleShowBoundary = ref(true);
 const placeChronicleShowChildPlaces = ref(false);
@@ -548,6 +594,8 @@ watch(individualPersonId, triggerLoading);
 watch(yourAncestorsPersonId, triggerLoading);
 watch(aLifePersonId, triggerLoading);
 watch(onePagePersonId, triggerLoading);
+watch(familyInYearYear, triggerLoading);
+watch(familyInYearScope, triggerLoading);
 watch(placeChroniclePlaceId, triggerLoading);
 watch(aMarriageRelId, triggerLoading);
 watch(chartPersonId, triggerLoading);
@@ -609,7 +657,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'yourAncestors', 'alife', 'onePage', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'yourAncestors', 'alife', 'onePage', 'familyInYear', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }

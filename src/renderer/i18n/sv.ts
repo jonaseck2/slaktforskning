@@ -769,6 +769,7 @@ export default {
       placeChronicle: 'Kunde inte ladda platskrönika.',
       amarriage: 'Kunde inte ladda Ett äktenskap-rapport.',
       alife: 'Kunde inte ladda Ett liv-rapport.',
+      familyInYear: 'Kunde inte ladda Familjen år-rapporten.',
     },
     alife: {
       title: 'Ett liv',
@@ -802,6 +803,18 @@ export default {
       events: 'Händelser på platsen',
       description: 'Beskrivning',
       childPlaces: 'Relaterade platser',
+    },
+    familyInYear: {
+      tabTitle: 'Familjen år X',
+      title: 'Din familj år {year}',
+      subtitle: 'En ögonblicksbild',
+      year: 'År',
+      scope: 'Omfång',
+      scopeAll: 'Alla personer',
+      scopeAncestors: 'Anor till… (kommer snart)',
+      scopeDescendants: 'Ättlingar till… (kommer snart)',
+      families: 'Familjer',
+      individuals: 'Individer',
     },
     common: {
       compiledBy: 'Sammanställt av {name}',

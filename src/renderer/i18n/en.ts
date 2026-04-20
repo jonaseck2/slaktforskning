@@ -769,6 +769,7 @@ export default {
       placeChronicle: 'Could not load place chronicle.',
       amarriage: 'Could not load A Marriage report.',
       alife: 'Could not load A Life report.',
+      familyInYear: 'Could not load Family in Year report.',
     },
     alife: {
       title: 'A Life',
@@ -802,6 +803,18 @@ export default {
       events: 'Events at this place',
       description: 'Description',
       childPlaces: 'Related places',
+    },
+    familyInYear: {
+      tabTitle: 'Family in Year X',
+      title: 'Your Family in {year}',
+      subtitle: 'A snapshot',
+      year: 'Year',
+      scope: 'Scope',
+      scopeAll: 'All persons',
+      scopeAncestors: 'Ancestors of… (coming soon)',
+      scopeDescendants: 'Descendants of… (coming soon)',
+      families: 'Families',
+      individuals: 'Individuals',
     },
     common: {
       compiledBy: 'Compiled by {name}',
