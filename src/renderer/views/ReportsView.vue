@@ -226,6 +226,69 @@
       </div>
     </div>
 
+    <!-- Photo Album Tab -->
+    <div v-if="activeTab === 'photoAlbum'" class="tab-content">
+      <div class="tab-header">
+        <div class="controls">
+          <label>
+            {{ $t('reports.photoAlbum.subject') }}
+            <select v-model="photoAlbumSubjectType">
+              <option value="person">{{ $t('reports.photoAlbum.subjectPerson') }}</option>
+              <option value="relationship">{{ $t('reports.photoAlbum.subjectRelationship') }}</option>
+              <option value="place">{{ $t('reports.photoAlbum.subjectPlace') }}</option>
+              <option value="all">{{ $t('reports.photoAlbum.subjectAll') }}</option>
+            </select>
+          </label>
+          <label v-if="photoAlbumSubjectType === 'relationship'">
+            {{ $t('reports.couple') }}
+            <select v-model="photoAlbumRelId">
+              <option value="" disabled>{{ $t('reports.selectCouple') }}</option>
+              <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">
+                {{ rel.label }}
+              </option>
+            </select>
+          </label>
+          <label v-if="photoAlbumSubjectType === 'place'">
+            {{ $t('reports.place') }}
+            <select v-model="photoAlbumPlaceId">
+              <option value="" disabled>{{ $t('reports.selectPlace') }}</option>
+              <option v-for="p in allPlaces" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('reports.photoAlbum.perPage') }}
+            <select v-model.number="photoAlbumPerPage">
+              <option :value="1">1</option>
+              <option :value="2">2</option>
+              <option :value="4">4</option>
+            </select>
+          </label>
+          <label class="toggle-label"><input type="checkbox" v-model="photoAlbumShowCaptions" /> {{ $t('reports.photoAlbum.showCaptions') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="photoAlbumShowIndex" /> {{ $t('reports.photoAlbum.showIndex') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="photoAlbumIncludeDocuments" /> {{ $t('reports.photoAlbum.includeDocuments') }}</label>
+        </div>
+        <div class="print-actions">
+          <AppButton variant="primary" size="sm" :disabled="!photoAlbumCanRender" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!photoAlbumCanRender" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+        </div>
+      </div>
+      <div ref="previewContainer" class="preview-area">
+        <div v-if="photoAlbumCanRender" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <PhotoAlbumReport
+            :subject-type="photoAlbumSubjectType"
+            :subject-id="photoAlbumSubjectId"
+            :per-page="photoAlbumPerPage"
+            :show-captions="photoAlbumShowCaptions"
+            :show-index="photoAlbumShowIndex"
+            :include-documents="photoAlbumIncludeDocuments"
+          />
+        </div>
+        <div v-else-if="photoAlbumSubjectType === 'person'" class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        <div v-else-if="photoAlbumSubjectType === 'relationship'" class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
+        <div v-else-if="photoAlbumSubjectType === 'place'" class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
+      </div>
+    </div>
+
     <!-- Place Chronicle Tab -->
     <div v-if="activeTab === 'placeChronicle'" class="tab-content">
       <div class="tab-header">
@@ -460,6 +523,7 @@ import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
 import LifeOnOnePageReport from '../components/reports/LifeOnOnePageReport.vue';
 import FamilyInYearReport from '../components/reports/FamilyInYearReport.vue';
+import PhotoAlbumReport from '../components/reports/PhotoAlbumReport.vue';
 import PlaceChronicleReport from '../components/reports/PlaceChronicleReport.vue';
 import AMarriageReport from '../components/reports/AMarriageReport.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
@@ -484,7 +548,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -494,6 +558,7 @@ const tabs = computed(() => [
   { id: 'alife', label: t('reports.alife.title') },
   { id: 'onePage', label: t('reports.onePage.title') },
   { id: 'familyInYear', label: t('reports.familyInYear.tabTitle') },
+  { id: 'photoAlbum', label: t('reports.photoAlbum.tabTitle') },
   { id: 'placeChronicle', label: t('reports.placeChronicle.title') },
   { id: 'amarriage', label: t('reports.amarriage.title') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
@@ -525,6 +590,24 @@ const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
 const familyInYearYear = ref<number>(new Date().getFullYear() - 100);
 const familyInYearScope = ref<'all' | 'ancestors' | 'descendants'>('all');
 const familyInYearPersonId = computed(() => focusStore.personId);
+const photoAlbumSubjectType = ref<'person' | 'relationship' | 'place' | 'all'>('person');
+const photoAlbumPersonId = computed(() => focusStore.personId);
+const photoAlbumRelId = ref('');
+const photoAlbumPlaceId = ref('');
+const photoAlbumPerPage = ref<1 | 2 | 4>(1);
+const photoAlbumShowCaptions = ref(true);
+const photoAlbumShowIndex = ref(false);
+const photoAlbumIncludeDocuments = ref(false);
+const photoAlbumSubjectId = computed<string | null>(() => {
+  if (photoAlbumSubjectType.value === 'person') return photoAlbumPersonId.value;
+  if (photoAlbumSubjectType.value === 'relationship') return photoAlbumRelId.value || null;
+  if (photoAlbumSubjectType.value === 'place') return photoAlbumPlaceId.value || null;
+  return null;
+});
+const photoAlbumCanRender = computed(() => {
+  if (photoAlbumSubjectType.value === 'all') return true;
+  return !!photoAlbumSubjectId.value;
+});
 const placeChroniclePlaceId = ref('');
 const placeChronicleShowBoundary = ref(true);
 const placeChronicleShowChildPlaces = ref(false);
@@ -596,6 +679,8 @@ watch(aLifePersonId, triggerLoading);
 watch(onePagePersonId, triggerLoading);
 watch(familyInYearYear, triggerLoading);
 watch(familyInYearScope, triggerLoading);
+watch(photoAlbumSubjectType, triggerLoading);
+watch(photoAlbumSubjectId, triggerLoading);
 watch(placeChroniclePlaceId, triggerLoading);
 watch(aMarriageRelId, triggerLoading);
 watch(chartPersonId, triggerLoading);
@@ -657,7 +742,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'yourAncestors', 'alife', 'onePage', 'familyInYear', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
