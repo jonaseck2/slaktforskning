@@ -267,9 +267,10 @@ Narrative-first Reports view for non-genealogist family members. Seven keepsake 
 - Spec: [plans/2026-04-19-keepsake-reports-redesign-design.md](plans/2026-04-19-keepsake-reports-redesign-design.md)
 - Plan: [plans/2026-04-19-keepsake-reports-redesign.md](plans/2026-04-19-keepsake-reports-redesign.md)
 
-#### Gazetteer IPC Refactor [planned]
-Stop Vite from OOMing on CI (Windows/macOS both crash at ~2 GB heap during the renderer build). Split `src/api/place-gazetteers/index.ts` into `bundled.ts` (main-only, holds the 25 static JSON imports) + `merge.ts` (pure, renderer-safe `loadGazetteers`). Renderer fetches bundled gazetteers via a new `gazetteers:getBundled` IPC channel. Resolver stays synchronous (hot path in MapView / PlacePicker).
+#### Gazetteer IPC Refactor [done]
+Stopped Vite from OOMing on CI (Windows/macOS both crashed at ~2 GB heap during the renderer build). Split `src/api/place-gazetteers/index.ts` into `bundled.ts` (main-only, holds the 25 static JSON imports) + `merge.ts` (pure, renderer-safe `loadGazetteers`). Renderer fetches bundled gazetteers via a new `gazetteers:getBundled` IPC channel. Resolver stays synchronous (hot path in MapView / PlacePicker). Renderer bundle shrank from ~40 MB to 1.3 MB; `npm run make -- --platform darwin` now produces a zip artifact locally.
 - Spec: [plans/2026-04-20-gazetteer-ipc-refactor-design.md](plans/2026-04-20-gazetteer-ipc-refactor-design.md)
+- Plan: [plans/2026-04-20-gazetteer-ipc-refactor.md](plans/2026-04-20-gazetteer-ipc-refactor.md)
 
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
