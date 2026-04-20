@@ -778,6 +778,13 @@ export default {
       events: 'Händelser',
       biography: 'Biografi',
     },
+    onePage: {
+      title: 'Ett liv på en sida',
+      keyDates: 'Viktiga datum',
+      orientation: 'Orientering',
+      portrait: 'Stående',
+      landscape: 'Liggande',
+    },
     amarriage: {
       title: 'Ett äktenskap',
       lifeMap: 'Livskarta',
