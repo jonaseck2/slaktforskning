@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -35,6 +36,7 @@ jobs:
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
