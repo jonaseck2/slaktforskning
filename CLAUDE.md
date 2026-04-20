@@ -545,7 +545,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 
 | Component | Props | Description |
 |-----------|-------|-------------|
-| `AppAvatar` | `name?: string`, `sex?: string`, `size?: 'sm'\|'md'\|'lg'` | Person avatar circle with sex-colored background and initials |
+| `AppAvatar` | `personId?: string`, `givenName?: string`, `surname?: string`, `sex?: 'M'\|'F'\|'U'`, `size?: 'sm'\|'md'\|'lg'\|'xl'`, `src?: string` | Person avatar. When `personId` is set, auto-loads the cropped profile picture via `useProfilePicStore` (first media link's first region tagged to this person, or full-image center square if no region). Explicit `src` overrides the store. Falls back to sex-colored initials when no photo exists. |
 | `AppBadge` | `variant?: 'info'\|'success'\|'warning'\|'error'` | Semantic badge pill using design tokens |
 | `AppButton` | `variant?: 'primary'\|'ghost'\|'danger'`, `size?: 'sm'\|'md'`, `disabled?` | Button with variant/size system |
 | `AppEmptyState` | `icon?: string`, `message: string` | Empty state placeholder with centered icon + text |
@@ -590,11 +590,13 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
 | `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
 | `useChartExport` | SVG export helpers (`buildExportSvgString`, `wrapWithTitle`). Used by `ReportsView` chart tabs to serialize the rendered chart SVG before calling `window.api.chart.saveSvg` / `saveTiledPdf`. |
+| `usePersonProfilePic` | Reactive `{ src, loading }` for a person's cropped profile picture. Wraps `useProfilePicStore`. Used automatically by `AppAvatar` when `personId` is set. |
 
 **Pinia Stores:**
 | Store | Purpose |
 |-------|---------|
 | `sourceSession` | Remembers last-used source ID and page for citation pre-fill across forms. Session-only (resets on app restart). |
+| `profilePic` | Per-person cached cropped profile picture data URLs. Dedupes `readAsDataUrl` calls across rows (3 people in 1 photo = 1 fetch). Invalidated on region/link mutations. |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
