@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 Composition API, TypeScript, existing `window.api.media.*` IPC.
 
-**Spec:** `docs/superpowers/specs/2026-04-19-set-profile-from-face-tag-design.md`
+**Spec:** `docs/plans/2026-04-19-set-profile-from-face-tag-design.md`
 
 ---
 
@@ -387,17 +387,17 @@ In `docs/PLAN.md`, find the Done roadmap table. Add a new row at the top of the 
 If the repo convention is to reference the design spec, use:
 
 ```
-| v0.120.0 | feat(media): set profile picture from face-tag star or media-row star | [spec](docs/superpowers/specs/2026-04-19-set-profile-from-face-tag-design.md) |
+| v0.120.0 | feat(media): set profile picture from face-tag star or media-row star | [spec](docs/plans/2026-04-19-set-profile-from-face-tag-design.md) |
 ```
 
 (Check the surrounding table rows and match the style used for other small features.)
 
 - [ ] **Step 3: Archive the spec**
 
-Per CLAUDE.md convention (fully implemented specs go to `docs/superpowers/specs/archive/`):
+Per CLAUDE.md convention (fully implemented specs go to `docs/plans/archive/`):
 
 ```bash
-git mv docs/superpowers/specs/2026-04-19-set-profile-from-face-tag-design.md docs/superpowers/specs/archive/2026-04-19-set-profile-from-face-tag-design.md
+git mv docs/plans/2026-04-19-set-profile-from-face-tag-design.md docs/plans/archive/2026-04-19-set-profile-from-face-tag-design.md
 ```
 
 Update the `docs/PLAN.md` spec link to point to the archived path.
@@ -405,7 +405,7 @@ Update the `docs/PLAN.md` spec link to point to the archived path.
 - [ ] **Step 4: Final commit**
 
 ```bash
-git add package.json docs/PLAN.md docs/superpowers/specs/
+git add package.json docs/PLAN.md docs/plans/
 git commit -m "release: v0.120.0 — set profile picture from face tag / media row"
 ```
 

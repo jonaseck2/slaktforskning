@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 (Composition API, `<script setup>`), TypeScript, Vitest for unit tests, Playwright for E2E, node-sqlite3-wasm, Leaflet/OSM (already in use for maps), Electron IPC.
 
-**Spec reference:** [docs/superpowers/specs/2026-04-19-keepsake-reports-redesign.md](../superpowers/specs/2026-04-19-keepsake-reports-redesign.md)
+**Spec reference:** [docs/plans/2026-04-19-keepsake-reports-redesign-design.md](../plans/2026-04-19-keepsake-reports-redesign-design.md)
 
 **Target version:** v0.130.0 (single minor bump at end of implementation).
 
@@ -3590,7 +3590,7 @@ Add a done-milestone entry pointing to the archived plan path (this file, once m
 
 ```bash
 git mv docs/plans/2026-04-19-keepsake-reports-redesign.md docs/plans/archive/2026-04-19-keepsake-reports-redesign.md
-git mv docs/superpowers/specs/2026-04-19-keepsake-reports-redesign.md docs/superpowers/specs/archive/2026-04-19-keepsake-reports-redesign.md
+git mv docs/plans/2026-04-19-keepsake-reports-redesign-design.md docs/plans/archive/2026-04-19-keepsake-reports-redesign.md
 ```
 
 - [ ] **Step 6: Final commit**

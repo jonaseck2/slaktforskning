@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-15-hourglass-layout-rework-design.md`
+**Spec:** `docs/plans/2026-04-15-hourglass-layout-rework-design.md`
 
 ---
 

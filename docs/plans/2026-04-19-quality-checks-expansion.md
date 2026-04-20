@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript · node-sqlite3-wasm · Vitest · Vue 3 Composition API.
 
-**Spec:** [docs/superpowers/specs/2026-04-19-quality-checks-expansion-design.md](../superpowers/specs/2026-04-19-quality-checks-expansion-design.md)
+**Spec:** [docs/plans/2026-04-19-quality-checks-expansion-design.md](../plans/2026-04-19-quality-checks-expansion-design.md)
 
 ---
 
@@ -1902,7 +1902,7 @@ git commit -m "feat(ui): per-entity links for duplicate quality rows"
 - [ ] **Step 3: Update roadmap** — in `docs/PLAN.md`, append under the "Done" section:
 
 ```markdown
-- **Quality checks expansion** — 18 new checks (persons, places, media, sources, cross-entity duplicates). Spec: [docs/superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md](superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md)
+- **Quality checks expansion** — 18 new checks (persons, places, media, sources, cross-entity duplicates). Spec: [docs/plans/archive/2026-04-19-quality-checks-expansion-design.md](plans/archive/2026-04-19-quality-checks-expansion-design.md)
 ```
 
 Also add to the Roadmap section (not yet done):
@@ -1911,7 +1911,7 @@ Also add to the Roadmap section (not yet done):
 - **Unified compare-and-merge UI for duplicates (v2)** — extend `MergePersonsModal` pattern to places, media, and sources. Make the compare UI the landing target for all `DUPLICATE_*` quality rows. Consider a `/duplicates` route aggregating all duplicate types.
 ```
 
-- [ ] **Step 4: Archive the spec** — `mv docs/superpowers/specs/2026-04-19-quality-checks-expansion-design.md docs/superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md` and update the link above to the archived path.
+- [ ] **Step 4: Archive the spec** — `mv docs/plans/2026-04-19-quality-checks-expansion-design.md docs/plans/archive/2026-04-19-quality-checks-expansion-design.md` and update the link above to the archived path.
 
 - [ ] **Step 5: Bump version** — edit `package.json` to bump the minor version (x.Y.0). This is a feature-complete release.
 

@@ -132,26 +132,38 @@
       </div>
     </div>
 
-    <!-- Place History Tab -->
-    <div v-if="activeTab === 'placeHistory'" class="tab-content">
+    <!-- Place Chronicle Tab -->
+    <div v-if="activeTab === 'placeChronicle'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
           <label>
             {{ $t('reports.place') }}
-            <select v-model="placeHistoryPlaceId">
+            <select v-model="placeChroniclePlaceId">
               <option value="" disabled>{{ $t('reports.selectPlace') }}</option>
               <option v-for="p in allPlaces" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
           </label>
+          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowBoundary" /> {{ $t('reports.placeChronicle.map') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowChildPlaces" /> {{ $t('reports.placeChronicle.childPlaces') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowNotes" /> {{ $t('reports.placeChronicle.description') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowSources" /> {{ $t('reports.common.sources') }}</label>
         </div>
         <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!placeHistoryPlaceId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!placeHistoryPlaceId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="primary" size="sm" :disabled="!placeChroniclePlaceId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!placeChroniclePlaceId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
-        <div v-if="placeHistoryPlaceId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <PlaceHistory :place-id="placeHistoryPlaceId" />
+        <div v-if="placeChroniclePlaceId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <PlaceChronicleReport
+            :place-id="placeChroniclePlaceId"
+            :show-boundary="placeChronicleShowBoundary"
+            :show-child-places="placeChronicleShowChildPlaces"
+            :show-photos="placeChronicleShowPhotos"
+            :show-notes="placeChronicleShowNotes"
+            :show-sources="placeChronicleShowSources"
+          />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
       </div>
@@ -352,7 +364,7 @@ import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
-import PlaceHistory from '../components/reports/PlaceHistory.vue';
+import PlaceChronicleReport from '../components/reports/PlaceChronicleReport.vue';
 import AMarriageReport from '../components/reports/AMarriageReport.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
 import HourglassChartReport from '../components/reports/HourglassChartReport.vue';
@@ -376,7 +388,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'alife' | 'placeHistory' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'alife' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -384,7 +396,7 @@ const tabs = computed(() => [
   { id: 'individual', label: t('reports.tabIndividual') },
   { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
   { id: 'alife', label: t('reports.alife.title') },
-  { id: 'placeHistory', label: t('reports.tabPlaceHistory') },
+  { id: 'placeChronicle', label: t('reports.placeChronicle.title') },
   { id: 'amarriage', label: t('reports.amarriage.title') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
   { id: 'hourglassChart', label: t('reports.tabHourglassChart') },
@@ -404,7 +416,12 @@ const aLifeShowPhotos = ref(true);
 const aLifeShowDocuments = ref(false);
 const aLifeShowSources = ref(false);
 const aLifeShowNotes = ref(true);
-const placeHistoryPlaceId = ref('');
+const placeChroniclePlaceId = ref('');
+const placeChronicleShowBoundary = ref(true);
+const placeChronicleShowChildPlaces = ref(false);
+const placeChronicleShowPhotos = ref(true);
+const placeChronicleShowNotes = ref(true);
+const placeChronicleShowSources = ref(false);
 const aMarriageRelId = ref('');
 const aMarriageShowPhotos = ref(true);
 const aMarriageShowNotes = ref(true);
@@ -467,7 +484,7 @@ watch(ancestorRootId, triggerLoading);
 watch(individualPersonId, triggerLoading);
 watch(ancestorBookPersonId, triggerLoading);
 watch(aLifePersonId, triggerLoading);
-watch(placeHistoryPlaceId, triggerLoading);
+watch(placeChroniclePlaceId, triggerLoading);
 watch(aMarriageRelId, triggerLoading);
 watch(chartPersonId, triggerLoading);
 
@@ -521,19 +538,19 @@ onMounted(async () => {
       const events = await window.api.events.forPerson(focusStore.personId) as Array<{ event_type: string; place_id: string | null }>;
       const birth = events.find(e => e.event_type === 'birth' && e.place_id);
       if (birth?.place_id && places.some(p => p.id === birth.place_id)) {
-        placeHistoryPlaceId.value = birth.place_id;
+        placeChroniclePlaceId.value = birth.place_id;
       }
     } catch { /* ignore */ }
   }
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'alife', 'placeHistory', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'alife', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
   if (route.query.placeId) {
-    placeHistoryPlaceId.value = route.query.placeId as string;
+    placeChroniclePlaceId.value = route.query.placeId as string;
   }
   if (route.query.relationshipId) {
     aMarriageRelId.value = route.query.relationshipId as string;

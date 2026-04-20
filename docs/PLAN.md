@@ -143,7 +143,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.88.0 | feat(mcp-dev): chart MCP tools — `chart_list_persons`, `chart_select_person`, `chart_focus_person`, `chart_get_layout`, `chart_screenshot_person` wrapping chart HTTP bridge endpoints | — |
 | v0.89.0 | feat(mcp-dev): seed and inspect MCP tools — `seed_person`, `seed_family`, `clear_test_data`, `db_stats`, `app_status`; `/status` endpoint in ui-server; 10 unit tests for seed workflow | — |
 | v0.89.1 | test: E2E test for dev MCP server initialize handshake | — |
-| v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/superpowers/specs/archive/2026-04-15-mcp-overhaul-design.md) |
+| v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/plans/archive/2026-04-15-mcp-overhaul-design.md) |
 | v0.90.1 | Fix: startup and quality check CPU contention on large databases | [archive](plans/archive/2026-04-16-startup-perf-fix.md) |
 | v0.90.2 | QualityView infinite scroll pagination (100 results at a time) | — |
 | v0.91.0 | UX improvements: multi-token search, SourcePicker autocomplete, DateInput YYYY-MM-DD fields with auto-advance, modal redesign (no click-outside close, action verb buttons), EventForm source always visible with Save & Next keeping place/source, gazetteer auto-init, scroll zoom disabled on maps, name surname pre-fill, GEDCOM UTF-8 auto-detection, stable file dialog paths | — |
@@ -154,7 +154,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.92.2 | Fix: QualityView → PersonDetailView action routing uses watch on person ref for reliable modal opening | — |
 | v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
 | v0.93.1 | Fix: quality fix actions work end-to-end — modal stays open (no router.replace remount), event type pre-filled (birth/death), electron-dev skill updated with CDP verification workflow | — |
-| v0.94.0 | Design System Overhaul: 3 color themes (Forest/Nordic/Twilight), 9 UI primitives, MediaPanel, SettingsView, sidebar restructured (Research/Organize/Review), all views/panels/modals use design tokens | [spec](docs/superpowers/specs/2026-04-17-design-system-spec.md) [plan](plans/archive/2026-04-17-design-system-overhaul.md) |
+| v0.94.0 | Design System Overhaul: 3 color themes (Forest/Nordic/Twilight), 9 UI primitives, MediaPanel, SettingsView, sidebar restructured (Research/Organize/Review), all views/panels/modals use design tokens | [spec](docs/plans/2026-04-17-design-system-spec.md) [plan](plans/archive/2026-04-17-design-system-overhaul.md) |
 | v0.94.8 | Fix: map initial zoom race condition, loading/empty states, cached places across navigation; panel close button and quality dismiss button refinements | — |
 | v0.95.0 | Detail view UX: relationships above events, collapsible sections (panels only), back button in sidebar, section counts, living status checkbox, remove per-view back buttons | — |
 | v0.95.1 | UI consistency: soft buttons everywhere, shared PersonDetailsSection, panel counts always visible, delete buttons softened, quality ignore → ✕ | — |
@@ -175,40 +175,40 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.97.4 | Fix: add explicit space between given name and surname in PersonNamesTable | — |
 | v0.97.5 | Fix: parallelize panel relationship loading to prevent scroll lock | — |
 | v0.97.6 | Fix: separate media selection from lightbox, make lightbox view-only | — |
-| v0.99.1 | Inline media viewer with zoom/pan, filmstrip navigation, face tag drawing | [spec](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md), [plan](plans/2026-04-18-media-viewer-face-tagging.md) |
+| v0.99.1 | Inline media viewer with zoom/pan, filmstrip navigation, face tag drawing | [spec](docs/plans/2026-04-18-media-viewer-face-tagging-design.md), [plan](plans/2026-04-18-media-viewer-face-tagging.md) |
 | v0.99.2 | Fix: map performance — canvas rendering, smooth zoom, SVG pin markers | — |
 | v0.100.0 | Face tag region move/resize, Vite build optimization (externalize gazetteers) | — |
 | v0.101.0 | Language gazetteer build script (lang-sv-geonames): Swedish translations for 133 countries + 1014 admin1 divisions | — |
 | v0.102.0 | Language gazetteer build script (lang-sv-wikidata): Swedish translations for Nordic administrative divisions (DK/NO/FI/IS) via Wikidata SPARQL | — |
 | v0.102.1 | Fix: face tag drag/resize reliability, auto-assign person, search relevance | — |
 | v0.102.2 | Fix: smooth map scroll zoom with CSS transform, add admin1 place type | — |
-| v0.103.0 | Shared place coordinate resolution with gazetteer fallback, Life Map in PersonPanel | [spec](superpowers/specs/2026-04-18-shared-place-coordinate-resolution-design.md) |
+| v0.103.0 | Shared place coordinate resolution with gazetteer fallback, Life Map in PersonPanel | [spec](plans/2026-04-18-shared-place-coordinate-resolution-design.md) |
 | v0.103.1 | Fix: fast continuous map zoom, canvas markers, citation query optimization | — |
 | v0.103.2 | Fix: map popup badge styles, boundary query accuracy, gazetteer UI improvements | — |
 | v0.103.3 | Fix: gazetteer test lookup now uses language translations (e.g. Kanada → Canada) | — |
-| v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage (4.9% → 91%) | [spec](superpowers/specs/2026-04-18-gazetteer-build-extraction-design.md) |
+| v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage (4.9% → 91%) | [spec](plans/2026-04-18-gazetteer-build-extraction-design.md) |
 | v0.104.1 | Docs: comprehensive test skill rewrite with 10 E2E pitfall patterns, quality test fix | — |
 | v0.105.0 | Cross-platform build scripts + DMG maker for macOS | — |
-| v0.106.0 | Open source publishing: governance files, plans, spec | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
+| v0.106.0 | Open source publishing: governance files, plans, spec | [spec](plans/2026-04-18-open-source-publishing-design.md) |
 | v0.107.0 | Open source infra (templates, CI/CD), link rules expansion (de/da/no), circle+fan charts, name display | [archive](plans/archive/2026-04-18-link-rules-expansion.md), [archive](plans/archive/2026-04-18-circle-chart-visual-update.md), [archive](plans/archive/2026-04-18-fan-chart.md), [archive](plans/archive/2026-04-15-name-display-strategy.md) |
 | v0.108.0 | Per-theme dark mode with tinted surfaces (Forest/Nordic/Twilight) | [archive](plans/archive/2026-04-18-dark-mode-theme-refinement.md) |
 | v0.109.0 | Wall chart generation UI (SVG/tiled PDF export, A4-A0 paper sizes) | [archive](plans/archive/2026-04-18-wall-chart-generation-ui.md) |
 | v0.110.0 | Timeline chart visual overhaul: event markers, tooltips, responsive width, theme-aware colors | [archive](plans/archive/2026-04-18-timeline-chart-visual-update.md) |
 | v0.111.0 | Chart visual overhaul: measurement/connectors modules, WCAG contrast, box redesign for pedigree/hourglass/descendant | [archive](plans/archive/2026-04-18-chart-visual-overhaul.md) |
 | v0.111.1 | WCAG math unit tests (parseHex/luminance/contrast/thresholds); e2e viz back-button test hardening | — |
-| v0.111.2 | Skill docs: WCAG contrast enforcement in a11y/frontend-design/test skills; export color-invariance tests | [spec](superpowers/specs/2026-04-18-export-color-invariance-tests-design.md) |
+| v0.111.2 | Skill docs: WCAG contrast enforcement in a11y/frontend-design/test skills; export color-invariance tests | [spec](plans/2026-04-18-export-color-invariance-tests-design.md) |
 | v0.112.0 | Unified fan/circle chart: fan subsumes the 360° circle; adds theming, branch/sex/high-contrast fills, curved-text toggle, radial gen 5+ text, deeper gen 5-8 rings; circle chart removed from viz tabs and reports; ReportsView + AncestorBookReport expose arc-span + generations + curved-text; `circleColors`/`useCircleThemeColors` renamed to `fanColors`/`useFanThemeColors` | — |
 | v0.114.0 | Finish chart visual overhaul: photos render (data URLs), curved elbow connectors, dynamic box heights so long names + places fit | [archive](plans/archive/2026-04-18-chart-visual-overhaul-fixes.md) |
 | v0.114.1 | Update tree-layout skill: dynamic heights (`measureBoxHeight`), curved paths (`curvedElbow`), `D:` dashed convention, photo data URLs | — |
 | v0.115.0 | Chart box polish: fix birth/death line double-padding so text stays inside the box; vertically center portraits in dynamic-height boxes; truncate overflowing birth/death lines with ellipsis (`truncateToWidth`); drop hover `+` add button (outline placeholders remain); match person detail profile thumbnail to chart portrait (rectangular, 5px radius) | — |
 | v0.116.0 | Pedigree / hourglass / descendant charts get a fan-style `− N +` generations stepper in the zoom controls; rebuilds the `collapsed` set on decrement (hides past depth N) and auto-refetches deeper (`fetchPedigreeTree` / `fetchHourglassTreePerson` / `fetchDescendantTree`) on increment past the loaded depth. Uppper cap removed so users can grow the tree to any depth the DB has. Pedigree uses `:right`, hourglass `:up`/`:down`, descendant `:down` to match each layout's collapse keys. | — |
-| v0.117.0 | Wall chart as inline report tab: removed from VisualizationView, replaced modal with inline preview matching other report tabs (paper-shaped preview, per-tab natural width, Export SVG/Tiled PDF buttons); new `WallChartReport` prop-driven component with debounce + stale-fetch guard; title auto-syncs to focal person until user edits | [spec](superpowers/specs/archive/2026-04-19-wall-chart-as-inline-report-design.md), [archive](plans/archive/2026-04-19-wall-chart-as-inline-report.md) |
+| v0.117.0 | Wall chart as inline report tab: removed from VisualizationView, replaced modal with inline preview matching other report tabs (paper-shaped preview, per-tab natural width, Export SVG/Tiled PDF buttons); new `WallChartReport` prop-driven component with debounce + stale-fetch guard; title auto-syncs to focal person until user edits | [spec](plans/archive/2026-04-19-wall-chart-as-inline-report-design.md), [archive](plans/archive/2026-04-19-wall-chart-as-inline-report.md) |
 | v0.118.0 | Timeline chart gets the same fan-style `− N +` generations stepper; each increment extends BFS over `parent_child` + `couple` edges by one hop in `fetchTimelineEntries(focalId, generations)` (default 1 preserves prior behavior); each change triggers a reload. No upper cap. | — |
 | v0.119.3 | Fan chart + media polish: (1) theme-aware branch palettes — new `--fan-branch-1..4` tokens per theme so Nordic gets a muted fjord palette and Twilight gets a muted nightfall palette matching Forest's earthy tone; `readThemeColors()` reads the tokens with hue-rotation fallback; (2) curved text is now always-on for gen 1-4 — `curvedText` toggle and i18n key removed; gen 5-6 gets 4-line radial stack with word-wrapped names (spillover between given/surname rows); gen 7-8 rings are near-double-depth (`RING_DEPTHS = [..., 94, 94]`) showing a compact 2-line label (full name + date range); `FanSegment` exposes `rInner`/`rOuter` for width-aware wrapping; (3) media lightbox removed — `MediaLightbox.vue` deleted, `MediaTimeline`/`PersonMediaSection`/`EntityMediaSection` deep-link to `/media?open=ID` via router, `MediaView` resolves the query param and opens its `MediaViewer` with the target item only; (4) English "Sex" → "Gender" label in fan color-mode switch. | — |
 | v0.119.6 | Chart + map polish: (1) descendant spouse placed at `selCY - sh/2` so the connector sits horizontally between selected and spouse centers; descendant parent outline row offsets up by `(selBox.h - parentRowMax)/2` when the selected box is taller so parents sit above the selected's notional top; (2) pedigree first-child Y centers on `selCY - firstChH/2` instead of `selBox.y` so children align to the selected-box middle; (3) `injectOutlines` suppresses the father/mother placeholder when a real parent of that sex already exists (a person has at most one of each); child and spouse outlines still always injected; (4) `measureBoxHeight` always reserves 2 date lines regardless of whether birth/death data exists so short boxes don't misalign row connectors; (5) hourglass parent connectors now terminate at each parent's actual bottom (`hOf(parent)`) instead of the row max bottom, so connectors to shorter parents don't visually overshoot; (6) Map pins and boundary overlay now follow theme — `MapView` reads `--accent` / `--accent-hover` via `useThemeSignal` + `getComputedStyle`, re-styles existing `L.circleMarker` instances on theme change (canvas renderer bakes colors in), and keys the `LGeoJson` boundary on `themeVersion` so it remounts. | — |
-| v0.120.0 | feat(media): set profile picture from face-tag star or media-row star | [spec](superpowers/specs/archive/2026-04-19-set-profile-from-face-tag-design.md) · [plan](plans/archive/2026-04-19-set-profile-from-face-tag.md) |
+| v0.120.0 | feat(media): set profile picture from face-tag star or media-row star | [spec](plans/archive/2026-04-19-set-profile-from-face-tag-design.md) · [plan](plans/archive/2026-04-19-set-profile-from-face-tag.md) |
 | v0.121.0 | UI polish: (1) MediaPanel gets a collapsible Notes section with blur-to-save textarea; (2) every resizable textarea across the app (notes, transcriptions, descriptions, task, result, link-rules test field) now persists its user-resized height to localStorage via the existing `useTextareaHeight` composable; (3) PersonPanel Timeline and Life Map section headers show event/map-point counts and a `+ Event` action; Media Timeline header gets an `+ Attach` action — all use `nextTick` to open the underlying section before triggering the action on the child component; (4) Hourglass parent-fork connectors share a `customMidY` so focal→parents, sibling→parents, and child→parents horizontals align even when parent rows have varying heights; `curvedElbow` grows an optional `customMidY` arg (honored only for `'down'` direction) with radius clamped to both half-dx and midY-to-endpoints distances; (5) `injectOutlines` now treats each real parent as filling the next empty father/mother slot when sex is 'U', so a known-but-unsexed parent doesn't also get a phantom placeholder next to it. | — |
-| v0.122.0 | feat(picker): relation + dates hint in PersonPicker — role label (parent/child/partner/sibling/godparent) to the tree's default person + (*YYYY–†YYYY) pulled from primary-role birth/death events | [spec](superpowers/specs/archive/2026-04-19-person-picker-relation-hint-design.md) · [plan](plans/archive/2026-04-19-person-picker-relation-hint.md) |
+| v0.122.0 | feat(picker): relation + dates hint in PersonPicker — role label (parent/child/partner/sibling/godparent) to the tree's default person + (*YYYY–†YYYY) pulled from primary-role birth/death events | [spec](plans/archive/2026-04-19-person-picker-relation-hint-design.md) · [plan](plans/archive/2026-04-19-person-picker-relation-hint.md) |
 | v0.122.1 | chore(workflow): plan-driven work runs in worktree + subagents; small fixes stay on main. Updates CLAUDE.md Execution default, commit skill branch-strategy rule, and add-feature skill. | [plan](plans/2026-04-19-add-person-from-place-panel.md) |
 | v0.123.0 | Monospaced notes toggle (Person/Relationship/Place/Group/Media notes) | [archive](plans/archive/2026-04-19-monospaced-notes-toggle.md) |
 | v0.124.0 | EventForm Citation section (full citation inline + new/copy-from toggle), reusable `CitationFields` + `SimpleDateInput`, DateInput calendar-icon native-picker, modal textarea vertical-only resize, em-based YMD widths | — |
@@ -219,7 +219,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.127.2 | Revert cross-platform build scripts and DMG maker (v0.105.0 `270bf21`) — `make:mac`/`make:win`/`make:linux` npm scripts and `@electron-forge/maker-dmg` broke something while trying to build Windows on Mac; restore original single `make` script, single-platform MakerZIP, and pre-DMG `forge.config.ts` maker list | — |
 | v0.128.0 | Wall Chart rolled into live charts — paper/orientation/color/SVG/PDF export moved to each chart's ZoomControls overlay; `wall-charts.ts` deleted, replaced by `chart-export.ts` utilities + `ChartExportControls` component + `useChartExport` composable; IPC renamed `wallChart:*` → `chart:*`; Wall Chart report tab removed from ReportsView | [archive](plans/archive/2026-04-19-wall-chart-rollup.md) |
 | v0.128.1 | fix(mcp): shut down cleanly on stdin EOF, release DB lock | — |
-| v0.129.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](superpowers/specs/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
+| v0.129.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](plans/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
 ---
 
 ## Research
@@ -243,16 +243,16 @@ Refactor hourglass chart layout to support outline placeholders as first-class n
 
 #### Hourglass Layout Rework [done]
 Complete rewrite of hourglass layout: clone → inject outlines → measure (computeFootprint) → 4-pass placement (ancestors, descendants, focal, outlines) → line routing → finalize. Collision avoidance for outline placeholders.
-- Spec: `docs/superpowers/specs/archive/2026-04-15-hourglass-layout-rework-design.md`
+- Spec: `docs/plans/archive/2026-04-15-hourglass-layout-rework-design.md`
 - Plan: `.claude/plans/2026-04-15-hourglass-layout-rework.md`
 
 #### Gazetteer Quality Checks + Media Editor [done]
 Gazetteer match quality checks (PLACE_MATCH_AMBIGUOUS/PARTIAL/NONE/WRONG_LEVEL), confirm/reject match in QualityView, and MediaView table mode with inline editing.
-- Spec: `docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md`
+- Spec: `docs/plans/archive/2026-04-15-gazetteer-quality-media-editor-design.md`
 
 #### MCP Server Overhaul [done]
 Prod/dev server split. 34 workflow tools in prod (persons, families, events, sources, places, research, media, data). 15 dev tools (UI automation, chart inspection, seed, inspect). Factory pattern via createProdServer/createDevServer.
-- Spec: `docs/superpowers/specs/archive/2026-04-15-mcp-overhaul-design.md`
+- Spec: `docs/plans/archive/2026-04-15-mcp-overhaul-design.md`
 
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion. Precondition: hourglass outline bugs fixed first.
@@ -260,7 +260,7 @@ Extract duplicated logic from pedigree, descendant, and hourglass layouts into `
 
 #### Keepsake Reports Redesign [planned]
 Narrative-first Reports view for non-genealogist family members. Seven keepsake reports (A Life, A Marriage, Place Chronicle, Your Ancestors, Life on One Page, Family in Year X, Photo Album) plus six framable chart prints. Drops Individual Summary, Family Group Sheet. Repurposes Ancestor Sheet as Pedigree Print. Six shared print-safe primitives, one new `getAliveInYear` API, two composables, `researcher_name` db_setting for attribution. Deterministic — reports render what the genealogist authored.
-- Spec: [superpowers/specs/2026-04-19-keepsake-reports-redesign.md](superpowers/specs/2026-04-19-keepsake-reports-redesign.md)
+- Spec: [plans/2026-04-19-keepsake-reports-redesign-design.md](plans/2026-04-19-keepsake-reports-redesign-design.md)
 - Plan: [plans/2026-04-19-keepsake-reports-redesign.md](plans/2026-04-19-keepsake-reports-redesign.md)
 
 #### Workflow Analysis [research]
@@ -272,22 +272,22 @@ Define primary user objectives, map to current click counts, identify highest-fr
 
 #### Place Gazetteers [done]
 Render-time place resolution using bundled hierarchical gazetteers. Swedish parishes as first dataset. Resolver in `src/api/place-gazetteers/`, composable `usePlaceResolver`, integrated into MapView, PersonMap, PlaceDetailView. GazetteersView settings page. Auto-enabled on Genney import.
-- Spec: `docs/superpowers/specs/archive/2026-04-11-place-gazetteers-design.md`
+- Spec: `docs/plans/archive/2026-04-11-place-gazetteers-design.md`
 - Plan: `.claude/plans/2026-04-11-place-gazetteers.md`
 
 #### Gazetteer Import/Export [done]
 Per-database gazetteer storage with import/export for humans (UI) and agents (MCP). `gazetteers` table stores JSON blobs. GazetteersView gains Import (.json/.json.gz), Export, Delete buttons. 7 MCP tools: `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`.
-- Spec: `docs/superpowers/specs/archive/2026-04-13-gazetteer-import-export-design.md`
+- Spec: `docs/plans/archive/2026-04-13-gazetteer-import-export-design.md`
 - Plan: [plans/archive/2026-04-13-gazetteer-import-export.md](plans/archive/2026-04-13-gazetteer-import-export.md)
 
 #### Boundary Gazetteer Overlay [done]
 New "boundary" gazetteer kind carrying polygon geometry. Click a map pin to see the place's geographic extent as an outline overlay. Extends Gazetteer type with `kind` and GazetteerNode with `geometry`. Lazy-loaded via `resolveBoundary()` in composable.
-- Spec: `docs/superpowers/specs/archive/2026-04-13-boundary-gazetteer-design.md`
+- Spec: `docs/plans/archive/2026-04-13-boundary-gazetteer-design.md`
 - Plan: [plans/archive/2026-04-13-boundary-gazetteer-overlay.md](plans/archive/2026-04-13-boundary-gazetteer-overlay.md)
 
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
-- Spec: `docs/superpowers/specs/2026-04-13-chart-layout-alignment-design.md`
+- Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`
 - Plan: `docs/plans/2026-04-13-chart-layout-alignment.md` (on branch)
 
 #### Expanded Gazetteer Coverage [done]
@@ -295,7 +295,7 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 
 #### Language Gazetteers [done]
 Multilingual place name translation layer. Two Swedish language gazetteers inject translated aliases into point/boundary gazetteers at load time so "Danmark" resolves to Denmark, "Brasilien" to Brazil, etc. `lang-sv-geonames` covers 133 countries + 1014 admin1 divisions (GeoNames, CC BY 4.0); `lang-sv-wikidata` covers 304 Nordic administrative divisions (Wikidata, CC0). New `'language'` gazetteer kind extends the `Gazetteer` type.
-- Spec: `docs/superpowers/specs/archive/2026-04-18-language-gazetteers-design.md`
+- Spec: `docs/plans/archive/2026-04-18-language-gazetteers-design.md`
 
 #### Place Gazetteers — Future Extensions [backlog]
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
@@ -312,7 +312,7 @@ Multilingual place name translation layer. Two Swedish language gazetteers injec
 #### Media Detail/Editor Rework [done]
 Table-based MediaView with gallery/table toggle, inline editing for title and notes, format badges. Persisted view mode to localStorage.
 - Plan: [plans/archive/2026-04-15-media-editor-rework.md](plans/archive/2026-04-15-media-editor-rework.md)
-- Spec: [docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md](docs/superpowers/specs/archive/2026-04-15-gazetteer-quality-media-editor-design.md)
+- Spec: [docs/plans/archive/2026-04-15-gazetteer-quality-media-editor-design.md](docs/plans/archive/2026-04-15-gazetteer-quality-media-editor-design.md)
 
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
@@ -324,7 +324,7 @@ First-run experience: welcome screen, getting started guidance, empty tree with 
 
 #### Media Viewer & Face Tagging [done]
 Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigation, zoom/pan controls, face tag drawing on the canvas.
-- Spec: [docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md](docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md)
+- Spec: [docs/plans/2026-04-18-media-viewer-face-tagging-design.md](docs/plans/2026-04-18-media-viewer-face-tagging-design.md)
 - Plan: [plans/archive/2026-04-18-media-viewer-face-tagging.md](plans/archive/2026-04-18-media-viewer-face-tagging.md)
 
 #### Media Viewer — Future Extensions [backlog]
@@ -335,7 +335,7 @@ Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigatio
 
 #### Open Source Publishing [in progress]
 CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign, GitHub Actions badges.
-- Spec: [docs/superpowers/specs/2026-04-18-open-source-publishing-design.md](docs/superpowers/specs/2026-04-18-open-source-publishing-design.md)
+- Spec: [docs/plans/2026-04-18-open-source-publishing-design.md](docs/plans/2026-04-18-open-source-publishing-design.md)
 - Plan: [plans/2026-04-18-open-source-publishing.md](plans/2026-04-18-open-source-publishing.md)
 
 #### Duplicate Merge Side-by-Side UI [backlog]

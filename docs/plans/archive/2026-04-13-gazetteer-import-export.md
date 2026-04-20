@@ -8,7 +8,7 @@
 
 **Tech Stack:** SQLite (node-sqlite3-wasm), TypeScript, Vue 3, MCP SDK (zod schemas)
 
-**Spec:** `docs/superpowers/specs/2026-04-13-gazetteer-import-export-design.md`
+**Spec:** `docs/plans/2026-04-13-gazetteer-import-export-design.md`
 
 ---
 

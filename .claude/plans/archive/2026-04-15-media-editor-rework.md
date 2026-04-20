@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vue 3, SQLite, MCP (zod schemas).
 
-**Spec:** `docs/superpowers/specs/2026-04-15-gazetteer-quality-media-editor-design.md` (Feature 3)
+**Spec:** `docs/plans/2026-04-15-gazetteer-quality-media-editor-design.md` (Feature 3)
 
 ---
 

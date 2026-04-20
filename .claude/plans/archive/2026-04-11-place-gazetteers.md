@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vitest, Vue 3 + Leaflet, existing db_settings infrastructure
 
-**Spec:** `docs/superpowers/specs/2026-04-11-place-gazetteers-design.md`
+**Spec:** `docs/plans/2026-04-11-place-gazetteers-design.md`
 
 ---
 
