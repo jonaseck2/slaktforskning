@@ -3,7 +3,9 @@ import { z } from 'zod';
 import * as placeApi from '../../../api/places';
 import * as reportData from '../../../api/report_data';
 import { getDbSetting } from '../../../api/db_settings';
-import { loadGazetteers, getImportedGazetteers } from '../../../api/place-gazetteers/index';
+import { loadGazetteers } from '../../../api/place-gazetteers';
+import { getImportedGazetteers } from '../../../api/gazetteers';
+import { getAllGazetteers } from '../../../api/place-gazetteers/bundled';
 import { resolvePlace } from '../../../api/place-gazetteers/resolver';
 import type { GazetteerConfig } from '../../../api/place-gazetteers/types';
 import type { ToolContext } from './types';
@@ -60,7 +62,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       ? JSON.parse(raw) as GazetteerConfig
       : { enabledGazetteers: [] };
     const imported = getImportedGazetteers(db);
-    const gazetteers = loadGazetteers(config, imported);
+    const gazetteers = loadGazetteers(config, getAllGazetteers(), imported);
     const result = resolvePlace(args.name, gazetteers);
     if (!result) {
       return { content: [{ type: 'text', text: 'No match found' }] };

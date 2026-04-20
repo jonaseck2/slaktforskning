@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getAllGazetteers, loadGazetteers } from '../../src/api/place-gazetteers';
+import { loadGazetteers } from '../../src/api/place-gazetteers';
+import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
 
@@ -95,7 +96,7 @@ describe('cross-country place resolution', () => {
   const allEnabled: GazetteerConfig = {
     enabledGazetteers: getAllGazetteers().map(g => g.id),
   };
-  const gazetteers = loadGazetteers(allEnabled);
+  const gazetteers = loadGazetteers(allEnabled, getAllGazetteers());
 
   it('resolves a Danish parish', () => {
     const result = resolvePlace('Roskilde, Danmark', gazetteers);

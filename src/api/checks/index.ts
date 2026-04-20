@@ -1,5 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
-import { loadGazetteers, getAllGazetteers } from '../place-gazetteers';
+import { loadGazetteers } from '../place-gazetteers';
+import { getAllGazetteers } from '../place-gazetteers/bundled';
 import type { GazetteerConfig } from '../place-gazetteers/types';
 import { getImportedGazetteers } from '../gazetteers';
 import { getDbSetting } from '../db_settings';
@@ -107,7 +108,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
         ? JSON.parse(configJson)
         : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
       const imported = getImportedGazetteers(db);
-      const gazetteers = loadGazetteers(gazConfig, imported);
+      const gazetteers = loadGazetteers(gazConfig, getAllGazetteers(), imported);
       const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
       const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
       const raw = checkGazetteerMatchQuality(db, gazetteers);
