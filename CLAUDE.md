@@ -433,6 +433,7 @@ getAncestorTree(db, personId, generations=4) → AncestorNode | null  // Nested 
 getPlaceHistory(db, placeId) → PlaceHistory | null         // All events at a place with participants
 getResearchGaps(db, personId) → ResearchGaps | null        // Missing birth/death/parents, unsourced events
 getTimeline(db, personId) → TimelineEntry[] | null         // Person + family events chronologically
+getAliveInYear(db, year) → { year, persons: AlivePerson[] }  // Everyone alive in target year with computed age + living flag
 ```
 
 ---
@@ -592,6 +593,40 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
 | `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
 | `useChartExport` | Chart export logic: paper-size list, orientation toggle, color-mode cycle, `saveSvg()` and `saveTiledPdf()` calls via `window.api.chart.*`. Used by `ChartExportControls`. |
+| `useLifeMap` | Resolves a person's life events into map coordinates via gazetteers. Returns ordered waypoints (birth → marriages → death) with latitude/longitude. Used by `LifeMap` primitive + A Life / A Marriage / Life on One Page reports. |
+| `useMediaChronological` | Loads media items sorted by the first dated event each is attached to, falling back to created_at. Returns items with optional caption context (person, event type, date, place). Used by `MediaChronological` primitive + Photo Album / A Life / A Marriage / Place Chronicle reports. |
+
+**Reports (`src/renderer/components/reports/`):**
+
+Seven keepsake reports + six framable chart prints, arranged into two tab groups in `ReportsView`. All reports read what the genealogist authored — no inferred prose.
+
+| Report | File | Subject | Description |
+|--------|------|---------|-------------|
+| **A Life** | `ALifeReport.vue` | person | Life map, visual timeline, family, events, notes, photos, sources appendix |
+| **A Marriage** | `AMarriageReport.vue` | relationship | Dual life map, shared timeline, couple, children grid, narrative, photos |
+| **Place Chronicle** | `PlaceChronicleReport.vue` | place | Boundary map, persons, events, description, photos, child places |
+| **Your Ancestors** | `YourAncestorsReport.vue` | person | Fan chart cover, full-page fan, per-ancestor pages with ahnentafel, surname index |
+| **Life on One Page** | `LifeOnOnePageReport.vue` | person | Framable single-sheet: portrait, map, key dates, photo grid, notes snippet |
+| **Family in Year X** | `FamilyInYearReport.vue` | year | Snapshot of everyone alive in a target year with family units (uses `getAliveInYear`) |
+| **Photo Album** | `PhotoAlbumReport.vue` | person/relationship/place/all | Chronological media gallery with captions |
+| Pedigree Print | `PedigreeChartReport.vue` | person | Framable pedigree chart |
+| Hourglass Print | `HourglassChartReport.vue` | person | Framable hourglass chart |
+| Descendant Print | `DescendantChartReport.vue` | person | Framable descendant chart |
+| Fan Chart Print | `FanChartReport.vue` | person | Framable fan chart |
+| Timeline Print | `TimelineChartReport.vue` | person | Framable timeline chart |
+
+**Report primitives (`src/renderer/components/reports/primitives/`):**
+
+Six shared print-safe components used across multiple reports. All use `--report-*` design tokens for consistent typography and layout.
+
+| Primitive | Props | Description |
+|-----------|-------|-------------|
+| `ReportCover` | `title: string`, `subtitle?: string`, `subject?: string`, `researcherName?: string`, `date?: string` | Full-page report cover with accent band, title block, and compiled-by attribution |
+| `PersonMiniCard` | `person: PersonSummary`, `redactLiving?: boolean` | Compact portrait + name + dates card for grids (children, ancestors, family snapshots). When `redactLiving` and person is living: decade-only date, no portrait, no notes |
+| `TimelineBar` | `events: TimelineEntry[]`, `start?: number`, `end?: number` | Horizontal visual timeline with event markers scaled by year |
+| `LifeMap` | `personId: string` (or `personIds: string[]`) | Leaflet map of life waypoints via `useLifeMap`. Used by A Life, A Marriage, Life on One Page |
+| `PlaceBoundaryMap` | `placeId: string` | Leaflet map showing boundary polygon + pin for a place. Used by Place Chronicle |
+| `MediaChronological` | `personId?`/`relationshipId?`/`placeId?`/`all?: boolean`, `layout?: 'grid'\|'gallery'` | Chronologically ordered media gallery via `useMediaChronological`. Used by Photo Album, A Life, A Marriage, Place Chronicle |
 
 **Pinia Stores:**
 | Store | Purpose |
@@ -631,6 +666,7 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 /* Typography */  --font-xs(11) --font-sm(13) --font-base(14) --font-md(15) --font-lg(16)
 /* Shape */       --radius-sm(4) --radius-md(6) --radius-lg(10) --radius-full(9999)
 /* Shadows */     --shadow-sm, --shadow-md, --shadow-lg
+/* Reports */     --report-serif-stack, --report-prose-leading, --report-page-max-width, --report-cover-accent-height
 ```
 
 Each view's `<style scoped>` keeps **only** classes unique to that view (badges, layout specific to that view, etc.).
@@ -817,7 +853,7 @@ Entry point: `npx tsx src/mcp/devServer.ts`
 
 ### Per-database settings
 
-`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import), `event_defaults_config` (JSON `{ smartDefaults: boolean }`, default `true` — controls smart event-type suggestions via `suggestNextEventType` in EventList "+ Add Event" and AddPersonModal's embedded event section; configurable in Settings → Defaults tab). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
+`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import), `event_defaults_config` (JSON `{ smartDefaults: boolean }`, default `true` — controls smart event-type suggestions via `suggestNextEventType` in EventList "+ Add Event" and AddPersonModal's embedded event section; configurable in Settings → Defaults tab), `researcher_name` (string — genealogist's name used as "Compiled by …" attribution on report covers; configurable in Settings). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
 
 **Gazetteer tools** (prod server): `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
 

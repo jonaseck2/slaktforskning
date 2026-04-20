@@ -220,6 +220,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.128.0 | Wall Chart rolled into live charts — paper/orientation/color/SVG/PDF export moved to each chart's ZoomControls overlay; `wall-charts.ts` deleted, replaced by `chart-export.ts` utilities + `ChartExportControls` component + `useChartExport` composable; IPC renamed `wallChart:*` → `chart:*`; Wall Chart report tab removed from ReportsView | [archive](plans/archive/2026-04-19-wall-chart-rollup.md) |
 | v0.128.1 | fix(mcp): shut down cleanly on stdin EOF, release DB lock | — |
 | v0.129.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](plans/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
+| v0.131.0 | Keepsake reports redesign: 7 keepsake reports + 6 framable prints, 6 primitives, 2 composables, `getAliveInYear` API, privacy filter, `researcher_name` attribution | [spec](plans/archive/2026-04-19-keepsake-reports-redesign-design.md), [archive](plans/archive/2026-04-19-keepsake-reports-redesign.md) |
 ---
 
 ## Research
@@ -257,11 +258,6 @@ Prod/dev server split. 34 workflow tools in prod (persons, families, events, sou
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion. Precondition: hourglass outline bugs fixed first.
 - Plan: [plans/2026-04-13-chart-layout-shared-refactor.md](plans/2026-04-13-chart-layout-shared-refactor.md)
-
-#### Keepsake Reports Redesign [planned]
-Narrative-first Reports view for non-genealogist family members. Seven keepsake reports (A Life, A Marriage, Place Chronicle, Your Ancestors, Life on One Page, Family in Year X, Photo Album) plus six framable chart prints. Drops Individual Summary, Family Group Sheet. Repurposes Ancestor Sheet as Pedigree Print. Six shared print-safe primitives, one new `getAliveInYear` API, two composables, `researcher_name` db_setting for attribution. Deterministic — reports render what the genealogist authored.
-- Spec: [plans/2026-04-19-keepsake-reports-redesign-design.md](plans/2026-04-19-keepsake-reports-redesign-design.md)
-- Plan: [plans/2026-04-19-keepsake-reports-redesign.md](plans/2026-04-19-keepsake-reports-redesign.md)
 
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
