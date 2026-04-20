@@ -32,6 +32,8 @@ export function registerMediaHandlers(
   wrapHandler('media:addLink', (data) => media.addMediaLink(getDb(), data as Parameters<typeof media.addMediaLink>[1]));
   wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDb(), linkId as string));
   wrapHandler('media:reorder', (linkIds) => media.reorderMediaLinks(getDb(), linkIds as string[]));
+  wrapHandler('media:profilePicRef', (personId) => media.getPersonProfilePicRef(getDb(), personId as string));
+  wrapHandler('media:profilePicRefs', (personIds) => media.getPersonProfilePicRefs(getDb(), personIds as string[]));
 
   wrapHandler('media:getTimeline', (entityType, entityId) =>
     getMediaTimeline(getDb(), entityType as 'person' | 'place', entityId as string)
