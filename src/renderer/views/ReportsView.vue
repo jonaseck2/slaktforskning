@@ -73,34 +73,59 @@
       </div>
     </div>
 
-    <!-- Ancestor Book Tab -->
-    <div v-if="activeTab === 'ancestorBook'" class="tab-content">
+    <!-- Your Ancestors Tab -->
+    <div v-if="activeTab === 'yourAncestors'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
           <label>
+            {{ $t('reports.generations') }}
+            <input
+              type="range"
+              min="4"
+              max="10"
+              step="1"
+              v-model.number="yourAncestorsGenerations"
+            />
+            <span class="range-value">{{ yourAncestorsGenerations }}</span>
+          </label>
+          <label>
             {{ $t('chart.export.colorMode') }}
-            <select v-model="fanColorMode">
-              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
+            <select v-model="yourAncestorsColorMode">
+              <option value="themed">{{ $t('reports.yourAncestors.colorThemed') }}</option>
               <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
               <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
+              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
             </select>
           </label>
+          <label>
+            {{ $t('reports.yourAncestors.density') }}
+            <select v-model="yourAncestorsDensity">
+              <option value="one">{{ $t('reports.yourAncestors.densityOne') }}</option>
+              <option value="two">{{ $t('reports.yourAncestors.densityTwo') }}</option>
+            </select>
+          </label>
+          <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowEvents" /> {{ $t('reports.alife.events') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowExtraPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowSources" /> {{ $t('reports.common.sources') }}</label>
         </div>
         <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!ancestorBookPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!ancestorBookPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="primary" size="sm" :disabled="!yourAncestorsPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!yourAncestorsPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
-        <div v-if="ancestorBookPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AncestorBookReport
-            :person-id="ancestorBookPersonId"
-            :fan-generations="fanGenerations"
-            :fan-arc-span="fanArcSpan"
-            :color-mode="fanColorMode"
+        <div v-if="yourAncestorsPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <YourAncestorsReport
+            :person-id="yourAncestorsPersonId"
+            :generations="yourAncestorsGenerations"
+            :color-mode="yourAncestorsColorMode"
+            :density="yourAncestorsDensity"
+            :show-events="yourAncestorsShowEvents"
+            :show-extra-photos="yourAncestorsShowExtraPhotos"
+            :show-sources="yourAncestorsShowSources"
           />
         </div>
-        <div v-else class="empty-hint">{{ $t('reports.ancestorBook.noPersonSelected') }}</div>
+        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
     </div>
 
@@ -308,7 +333,7 @@
         <span class="zoom-extra-value">{{ ancestorGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="ancestorGenerations >= 5" @click="ancestorGenerations++">+</button>
       </template>
-      <template v-if="activeTab === 'ancestorBook' || activeTab === 'fanChart'">
+      <template v-if="activeTab === 'fanChart'">
         <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
         <button
           v-for="span in fanArcOptions"
@@ -362,7 +387,7 @@ import AncestorSheetReport from '../components/reports/AncestorSheetReport.vue';
 import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
-import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
+import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
 import PlaceChronicleReport from '../components/reports/PlaceChronicleReport.vue';
 import AMarriageReport from '../components/reports/AMarriageReport.vue';
@@ -388,13 +413,13 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'alife' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'yourAncestors' | 'alife' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
   { id: 'individual', label: t('reports.tabIndividual') },
-  { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
+  { id: 'yourAncestors', label: t('reports.yourAncestors.tabTitle') },
   { id: 'alife', label: t('reports.alife.title') },
   { id: 'placeChronicle', label: t('reports.placeChronicle.title') },
   { id: 'amarriage', label: t('reports.amarriage.title') },
@@ -410,7 +435,13 @@ const ancestorGenerations = ref(4);
 const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
 const individualPersonId = computed(() => focusStore.personId);
-const ancestorBookPersonId = computed(() => focusStore.personId);
+const yourAncestorsPersonId = computed(() => focusStore.personId);
+const yourAncestorsGenerations = ref(4);
+const yourAncestorsColorMode = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
+const yourAncestorsDensity = ref<'one' | 'two'>('one');
+const yourAncestorsShowEvents = ref(true);
+const yourAncestorsShowExtraPhotos = ref(false);
+const yourAncestorsShowSources = ref(false);
 const aLifePersonId = computed(() => focusStore.personId);
 const aLifeShowPhotos = ref(true);
 const aLifeShowDocuments = ref(false);
@@ -482,7 +513,7 @@ const chartPersonId = computed(() => focusStore.personId);
 watch(activeTab, triggerLoading);
 watch(ancestorRootId, triggerLoading);
 watch(individualPersonId, triggerLoading);
-watch(ancestorBookPersonId, triggerLoading);
+watch(yourAncestorsPersonId, triggerLoading);
 watch(aLifePersonId, triggerLoading);
 watch(placeChroniclePlaceId, triggerLoading);
 watch(aMarriageRelId, triggerLoading);
@@ -545,7 +576,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'alife', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'yourAncestors', 'alife', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }

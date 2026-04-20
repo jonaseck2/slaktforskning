@@ -67,7 +67,7 @@ const printableItems = computed(() => {
 
 // Load images as data URLs via IPC. The renderer's file:// protocol is blocked from
 // the http://localhost dev origin, so we go through window.api.media.readAsDataUrl —
-// matching MediaPanel.vue, EntityMediaSection.vue, and AncestorBookReport.vue.
+// matching MediaPanel.vue and EntityMediaSection.vue.
 const imageUrls = reactive<Record<string, string | null>>({});
 
 async function loadUrls(): Promise<void> {
