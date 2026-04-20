@@ -3,17 +3,11 @@
     <div class="detail-header">
       <div class="header-row">
         <AppAvatar
-          v-if="!profilePicUrl"
+          :person-id="person.id"
           :given-name="primaryNameData?.given_name ?? ''"
           :surname="primaryNameData?.surname ?? ''"
           :sex="(person.sex as 'M' | 'F' | 'U')"
           size="xl"
-        />
-        <img
-          v-else
-          :src="profilePicUrl"
-          class="profile-thumbnail"
-          :alt="$t('media.profileAlt')"
         />
         <div class="header-info">
           <h2>{{ primaryName }}</h2>
@@ -129,7 +123,7 @@
         :data-narrate="t('screenReader.sectionMedia', { count: mediaSectionRef?.count ?? 0, summary: '' })"
         @action="mediaSectionRef?.attach()"
       />
-      <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" @profile-changed="loadProfilePic" />
+      <PersonMediaSection ref="mediaSectionRef" :person-id="person.id" />
     </section>
 
     <!-- Media Timeline Section -->
@@ -261,7 +255,6 @@ const { speak, stop } = useTTS();
 const person = ref<PersonData | null>(null);
 const names = ref<NameRow[]>([]);
 const primaryName = ref('');
-const profilePicUrl = ref<string | null>(null);
 const showNameForm = ref(false);
 const showEditNameForm = ref(false);
 const editingName = ref<NameRow | null>(null);
@@ -347,7 +340,6 @@ async function load() {
     await Promise.all([
       loadPersonTasks(),
       loadPersonGroups(),
-      loadProfilePic(),
     ]);
     await autoNarrate(eventsData);
   } catch (err) {
@@ -378,16 +370,6 @@ async function autoNarrate(eventsData?: Array<{ event_type: string; date_value: 
 
   const text = narratePerson({ name, birthDate, birthPlace, deathDate, deathPlace }, narrationLabelsFromI18n(t));
   speak(text, locale.value);
-}
-
-async function loadProfilePic() {
-  if (!person.value) { profilePicUrl.value = null; return; }
-  const mediaItems = await window.api.media.forEntity('person', person.value.id) as Array<{ id: string }>;
-  if (mediaItems.length > 0) {
-    profilePicUrl.value = await window.api.media.readAsDataUrl(mediaItems[0].id) as string | null;
-  } else {
-    profilePicUrl.value = null;
-  }
 }
 
 function openEditName(name: NameRow) {
@@ -497,14 +479,6 @@ onBeforeRouteLeave(() => { stop(); });
   gap: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--surface-border-subtle);
-}
-.profile-thumbnail {
-  width: 56px;
-  height: 72px;
-  object-fit: cover;
-  border-radius: 5px;
-  border: 1px solid var(--surface-border);
-  flex-shrink: 0;
 }
 .header-info {
   flex: 1;

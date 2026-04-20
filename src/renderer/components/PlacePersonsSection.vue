@@ -12,7 +12,7 @@
       <tbody>
         <tr v-for="p in persons" :key="p.id" class="clickable-row" @click="$router.push('/persons/' + p.id)">
           <td class="person-cell">
-            <AppAvatar :given-name="p.given_name" :surname="p.surname" :sex="p.sex" size="sm" />
+            <AppAvatar :person-id="p.id" :given-name="p.given_name" :surname="p.surname" :sex="p.sex" size="sm" />
             <router-link :to="'/persons/' + p.id" class="person-link" @click.stop>
               {{ [p.given_name, p.surname].filter(Boolean).join(' ') || '—' }}
             </router-link>

@@ -72,7 +72,7 @@
         >
           <td>
             <span class="person-link" style="display: inline-flex; align-items: center; gap: 6px;">
-              <AppAvatar :given-name="m.given_name ?? ''" :surname="m.surname ?? ''" :sex="(m.sex as 'M' | 'F' | 'U')" size="sm" />
+              <AppAvatar :person-id="m.person_id" :given-name="m.given_name ?? ''" :surname="m.surname ?? ''" :sex="(m.sex as 'M' | 'F' | 'U')" size="sm" />
               <PersonName :given-name="m.given_name" :surname="m.surname" :preferred-name="m.preferred_name" :nickname="m.nickname" />
             </span>
           </td>

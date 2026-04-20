@@ -24,6 +24,7 @@
             <div v-for="(p, i) in row.persons" :key="i" class="person-chip">
               <AppAvatar
                 v-if="p.id || p.givenName || p.surname"
+                :person-id="p.id"
                 :given-name="p.givenName"
                 :surname="p.surname"
                 :sex="p.sex ?? 'U'"
