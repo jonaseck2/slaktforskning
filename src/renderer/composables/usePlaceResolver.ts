@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { resolvePlace, resolveBoundary as resolveBoundaryFn, type BoundaryHint } from '../../api/place-gazetteers/resolver';
-import { loadGazetteers, getAllGazetteers } from '../../api/place-gazetteers/index';
+import { loadGazetteers } from '../../api/place-gazetteers/merge';
 import type { Gazetteer, GazetteerConfig, PlaceResolveResult, BoundaryResolveResult } from '../../api/place-gazetteers/types';
 
 declare const window: Window & {
@@ -19,21 +19,32 @@ export function usePlaceResolver() {
 
   async function ensureLoaded() {
     if (configLoaded) { ready.value = true; return; }
-    const raw = (await window.api.db.getSetting('gazetteer_config')) as string | null;
-    let config: GazetteerConfig;
-    if (raw) {
-      config = JSON.parse(raw) as GazetteerConfig;
-    } else {
-      // Default: enable all bundled gazetteers on new databases
-      const bundledIds = getAllGazetteers().map(g => g.id);
-      config = { enabledGazetteers: bundledIds };
-      // Persist so it stays consistent with GazetteersView
-      await window.api.db.setSetting('gazetteer_config', JSON.stringify(config));
+    try {
+      const raw = (await window.api.db.getSetting('gazetteer_config')) as string | null;
+      // console.time('[usePlaceResolver] getBundled+getImported');
+      const [bundled, imported] = await Promise.all([
+        window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
+        window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
+      ]);
+      // console.timeEnd('[usePlaceResolver] getBundled+getImported');
+
+      let config: GazetteerConfig;
+      if (raw) {
+        config = JSON.parse(raw) as GazetteerConfig;
+      } else {
+        // Default: enable all bundled gazetteers on new databases
+        config = { enabledGazetteers: bundled.map(g => g.id) };
+        await window.api.db.setSetting('gazetteer_config', JSON.stringify(config));
+      }
+      gazetteersRef = loadGazetteers(config, bundled, imported);
+      configLoaded = true;
+      ready.value = true;
+    } catch (err) {
+      console.error('[usePlaceResolver] ensureLoaded failed:', err);
+      gazetteersRef = [];
+      configLoaded = false;
+      ready.value = false;
     }
-    const imported = (await window.api.gazetteers.getImported()) as Gazetteer[];
-    gazetteersRef = loadGazetteers(config, imported);
-    configLoaded = true;
-    ready.value = true;
   }
 
   function resolve(placeName: string): PlaceResolveResult | null {
@@ -47,10 +58,18 @@ export function usePlaceResolver() {
 
   async function ensureBoundaryLoaded() {
     if (boundaryLoaded) return;
-    const imported = (await window.api.gazetteers.getImported()) as Gazetteer[];
-    const all = [...getAllGazetteers(), ...imported];
-    boundaryGazetteersRef = all.filter(g => g.kind === 'boundary');
-    boundaryLoaded = true;
+    try {
+      const [bundled, imported] = await Promise.all([
+        window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
+        window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
+      ]);
+      boundaryGazetteersRef = [...bundled, ...imported].filter(g => g.kind === 'boundary');
+      boundaryLoaded = true;
+    } catch (err) {
+      console.error('[usePlaceResolver] ensureBoundaryLoaded failed:', err);
+      boundaryGazetteersRef = [];
+      boundaryLoaded = false;
+    }
   }
 
   async function resolveBoundary(placeName: string, hint?: BoundaryHint): Promise<BoundaryResolveResult | null> {
