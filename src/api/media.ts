@@ -115,6 +115,36 @@ export function reorderMediaLinks(db: Database, linkIds: string[]): void {
   stmt.finalize();
 }
 
+export interface ProfilePicRef {
+  mediaId: string;
+  region: { x: number; y: number; width: number; height: number } | null;
+}
+
+export function getPersonProfilePicRef(db: Database, personId: string): ProfilePicRef | null {
+  const link = queryOne<{ media_id: string }>(db, `
+    SELECT media_id FROM media_links
+    WHERE entity_type = 'person' AND entity_id = ?
+    ORDER BY sort_order, created_at
+    LIMIT 1
+  `, [personId]);
+  if (!link) return null;
+  const region = queryOne<{ x: number; y: number; width: number; height: number }>(db, `
+    SELECT x, y, width, height FROM media_regions
+    WHERE media_id = ? AND person_id = ?
+    ORDER BY created_at
+    LIMIT 1
+  `, [link.media_id, personId]);
+  return { mediaId: link.media_id, region: region ?? null };
+}
+
+export function getPersonProfilePicRefs(db: Database, personIds: string[]): Record<string, ProfilePicRef | null> {
+  const result: Record<string, ProfilePicRef | null> = {};
+  for (const id of personIds) {
+    result[id] = getPersonProfilePicRef(db, id);
+  }
+  return result;
+}
+
 export function getLinksForMedia(db: Database, mediaId: string): MediaLink[] {
   return queryAll<MediaLink>(db, 'SELECT * FROM media_links WHERE media_id = ? ORDER BY entity_type, sort_order', [mediaId]);
 }

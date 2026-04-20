@@ -12,7 +12,10 @@ import {
   getMediaForEntity,
   removeMediaLink,
   reorderMediaLinks,
+  getPersonProfilePicRef,
+  getPersonProfilePicRefs,
 } from '../../src/api/media';
+import { createMediaRegion } from '../../src/api/media_regions';
 import { createTestDb } from './helpers';
 
 let db: any;
@@ -243,5 +246,74 @@ describe('media links', () => {
     createMedia(db, { title: 'A' });
     createMedia(db, { title: 'B' });
     expect(countMedia(db)).toBe(2);
+  });
+});
+
+describe('getPersonProfilePicRef', () => {
+  it('returns null when person has no media', () => {
+    const person = createPerson(db, { given_name: 'A', surname: 'B' });
+    const ref = getPersonProfilePicRef(db, person.id);
+    expect(ref).toBeNull();
+  });
+
+  it('returns { mediaId, region: null } when media has no region for this person', () => {
+    const person = createPerson(db, { given_name: 'A', surname: 'B' });
+    const m = createMedia(db, { title: 'Pic' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: person.id });
+    const ref = getPersonProfilePicRef(db, person.id);
+    expect(ref).toEqual({ mediaId: m.id, region: null });
+  });
+
+  it('returns { mediaId, region } when media has a region tagged to this person', () => {
+    const person = createPerson(db, { given_name: 'A', surname: 'B' });
+    const m = createMedia(db, { title: 'Pic' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: person.id });
+    createMediaRegion(db, { media_id: m.id, person_id: person.id, x: 0.1, y: 0.2, width: 0.3, height: 0.4 });
+    const ref = getPersonProfilePicRef(db, person.id);
+    expect(ref).not.toBeNull();
+    expect(ref!.mediaId).toBe(m.id);
+    expect(ref!.region).toEqual({ x: 0.1, y: 0.2, width: 0.3, height: 0.4 });
+  });
+
+  it('picks the FIRST media by sort_order', () => {
+    const person = createPerson(db, { given_name: 'A', surname: 'B' });
+    const m1 = createMedia(db, { title: 'First' });
+    const m2 = createMedia(db, { title: 'Second' });
+    addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id, sort_order: 1 });
+    addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id, sort_order: 0 });
+    const ref = getPersonProfilePicRef(db, person.id);
+    expect(ref!.mediaId).toBe(m1.id);
+  });
+
+  it('ignores regions on that media tagged to OTHER persons', () => {
+    const p1 = createPerson(db, { given_name: 'A', surname: 'B' });
+    const p2 = createPerson(db, { given_name: 'C', surname: 'D' });
+    const m = createMedia(db, { title: 'Group' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p1.id });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p2.id });
+    createMediaRegion(db, { media_id: m.id, person_id: p2.id, x: 0.5, y: 0.5, width: 0.1, height: 0.1 });
+    const ref = getPersonProfilePicRef(db, p1.id);
+    expect(ref).toEqual({ mediaId: m.id, region: null });
+  });
+});
+
+describe('getPersonProfilePicRefs (batch)', () => {
+  it('returns a map keyed by personId, including nulls for missing', () => {
+    const p1 = createPerson(db, { given_name: 'A', surname: 'B' });
+    const p2 = createPerson(db, { given_name: 'C', surname: 'D' });
+    const p3 = createPerson(db, { given_name: 'E', surname: 'F' });
+    const m = createMedia(db, { title: 'Pic' });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p1.id });
+    createMediaRegion(db, { media_id: m.id, person_id: p1.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p2.id });
+    const map = getPersonProfilePicRefs(db, [p1.id, p2.id, p3.id]);
+    expect(map[p1.id]).toEqual({ mediaId: m.id, region: { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } });
+    expect(map[p2.id]).toEqual({ mediaId: m.id, region: null });
+    expect(map[p3.id]).toBeNull();
+  });
+
+  it('returns empty object for empty input', () => {
+    const map = getPersonProfilePicRefs(db, []);
+    expect(map).toEqual({});
   });
 });
