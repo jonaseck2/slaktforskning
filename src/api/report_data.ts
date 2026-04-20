@@ -462,6 +462,7 @@ export interface AliveInYearPerson {
   given_name: string | null;
   surname: string | null;
   sex: 'M' | 'F' | 'U';
+  living: boolean;
   birthYear: number | null;
   deathYear: number | null;
   age: number | null;
@@ -498,6 +499,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
   const rows = queryAll<{
     id: string;
     sex: 'M' | 'F' | 'U';
+    living: number;
     given_name: string | null;
     surname: string | null;
     birth_year: number | null;
@@ -526,7 +528,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
       JOIN event_participants ep ON ep.event_id = e.id
       WHERE e.date_value IS NOT NULL
     )
-    SELECT p.id, p.sex,
+    SELECT p.id, p.sex, p.living,
            pn.given_name, pn.surname,
            b.birth_year, d.death_year,
            (SELECT pl.name FROM events e2
@@ -564,6 +566,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
       alive.push({
         id: r.id,
         sex: r.sex,
+        living: !!r.living,
         given_name: r.given_name,
         surname: r.surname,
         birthYear: r.birth_year,

@@ -47,6 +47,7 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ReportCover from './primitives/ReportCover.vue';
 import PersonMiniCard from './primitives/PersonMiniCard.vue';
+import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 
 interface AliveInYearPerson {
@@ -54,6 +55,7 @@ interface AliveInYearPerson {
   given_name: string | null;
   surname: string | null;
   sex: 'M' | 'F' | 'U';
+  living: boolean;
   birthYear: number | null;
   deathYear: number | null;
   age: number | null;
@@ -77,9 +79,11 @@ const props = withDefaults(defineProps<{
   year: number;
   scope?: 'all' | 'ancestors' | 'descendants';
   scopePersonId?: string | null;
+  redactLiving?: boolean;
 }>(), {
   scope: 'all',
   scopePersonId: null,
+  redactLiving: false,
 });
 
 const { t } = useI18n();
@@ -104,12 +108,21 @@ function allPeopleInFamily(f: AliveInYearFamily): AliveInYearPerson[] {
 }
 
 function cardProps(p: AliveInYearPerson) {
+  const r = redactPerson(
+    {
+      id: p.id,
+      living: p.living,
+      birthYear: p.birthYear,
+      deathYear: p.deathYear,
+    },
+    { redactLiving: props.redactLiving === true },
+  );
   return {
     givenName: p.given_name,
     surname: p.surname,
     sex: p.sex,
-    birthYear: p.birthYear,
-    deathYear: p.deathYear,
+    birthYear: r.birthYear ?? null,
+    deathYear: r.deathYear ?? null,
     keyPlace: p.placeName,
   };
 }

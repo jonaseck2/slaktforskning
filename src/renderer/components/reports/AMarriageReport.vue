@@ -137,6 +137,7 @@ import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChr
 import { useLifeMap } from '../../composables/useLifeMap';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullName } from '../../utils/nameUtils';
+import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
@@ -144,10 +145,12 @@ const props = withDefaults(defineProps<{
   showPhotos?: boolean;
   showNotes?: boolean;
   showSources?: boolean;
+  redactLiving?: boolean;
 }>(), {
   showPhotos: true,
   showNotes: true,
   showSources: false,
+  redactLiving: false,
 });
 
 const { t } = useI18n();
@@ -283,10 +286,28 @@ const spouse2NameParts = computed(() =>
 const spouse1Sex = computed<'M' | 'F' | 'U'>(() => toSex(data.value?.person1?.person.sex));
 const spouse2Sex = computed<'M' | 'F' | 'U'>(() => toSex(data.value?.person2?.person.sex));
 
-const spouse1BirthYear = computed(() => extractYear(data.value?.person1?.birth_event?.date_value ?? null));
-const spouse1DeathYear = computed(() => extractYear(data.value?.person1?.death_event?.date_value ?? null));
-const spouse2BirthYear = computed(() => extractYear(data.value?.person2?.birth_event?.date_value ?? null));
-const spouse2DeathYear = computed(() => extractYear(data.value?.person2?.death_event?.date_value ?? null));
+function redactedSpouseYears(
+  member: FamilyMember | null,
+): { birthYear: number | null; deathYear: number | null } {
+  if (!member) return { birthYear: null, deathYear: null };
+  const rawBirth = extractYear(member.birth_event?.date_value ?? null);
+  const rawDeath = extractYear(member.death_event?.date_value ?? null);
+  const r = redactPerson(
+    {
+      id: member.person.id,
+      living: member.person.living,
+      birthYear: rawBirth,
+      deathYear: rawDeath,
+    },
+    { redactLiving: props.redactLiving === true },
+  );
+  return { birthYear: r.birthYear ?? null, deathYear: r.deathYear ?? null };
+}
+
+const spouse1BirthYear = computed(() => redactedSpouseYears(data.value?.person1 ?? null).birthYear);
+const spouse1DeathYear = computed(() => redactedSpouseYears(data.value?.person1 ?? null).deathYear);
+const spouse2BirthYear = computed(() => redactedSpouseYears(data.value?.person2 ?? null).birthYear);
+const spouse2DeathYear = computed(() => redactedSpouseYears(data.value?.person2 ?? null).deathYear);
 
 const spouse1BirthPlace = computed(() => data.value?.person1?.birth_event?.place_name ?? null);
 const spouse2BirthPlace = computed(() => data.value?.person2?.birth_event?.place_name ?? null);
@@ -381,13 +402,24 @@ const childCards = computed(() => {
   if (!data.value) return [];
   return data.value.children.map(c => {
     const parts = primaryNameParts(c.names);
+    const rawBirth = extractYear(c.birth_event?.date_value ?? null);
+    const rawDeath = extractYear(c.death_event?.date_value ?? null);
+    const r = redactPerson(
+      {
+        id: c.person.id,
+        living: c.person.living,
+        birthYear: rawBirth,
+        deathYear: rawDeath,
+      },
+      { redactLiving: props.redactLiving === true },
+    );
     return {
       id: c.person.id,
       given: parts.given,
       surname: parts.surname,
       sex: toSex(c.person.sex),
-      birthYear: extractYear(c.birth_event?.date_value ?? null),
-      deathYear: extractYear(c.death_event?.date_value ?? null),
+      birthYear: r.birthYear ?? null,
+      deathYear: r.deathYear ?? null,
       birthPlace: c.birth_event?.place_name ?? null,
     };
   });
@@ -424,17 +456,23 @@ function toDisplayItem(m: {
   };
 }
 
-const photoItems = computed<MediaDisplayItem[]>(() =>
-  relMediaItems.value.filter(m => isImageItem(m.fileRef, m.format)).map(toDisplayItem),
-);
+const suppressPhotos = computed(() => {
+  if (props.redactLiving !== true) return false;
+  return !!(data.value?.person1?.person.living || data.value?.person2?.person.living);
+});
+
+const photoItems = computed<MediaDisplayItem[]>(() => {
+  if (suppressPhotos.value) return [];
+  return relMediaItems.value.filter(m => isImageItem(m.fileRef, m.format)).map(toDisplayItem);
+});
 
 const uniqueSources = computed(() => sources.value);
 
 // --- Hero image: first relationship-linked media ---
 watch(
-  () => relMediaItems.value[0]?.id ?? null,
-  async (id) => {
-    if (!id) {
+  () => [relMediaItems.value[0]?.id ?? null, suppressPhotos.value] as const,
+  async ([id, suppress]) => {
+    if (!id || suppress) {
       profileImageUrl.value = null;
       return;
     }

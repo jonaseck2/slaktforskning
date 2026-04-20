@@ -835,6 +835,7 @@ export default {
       sources: 'Sources',
       documents: 'Documents',
       photos: 'Photos',
+      redactLiving: 'Redact living persons',
     },
   },
   researchTasks: {

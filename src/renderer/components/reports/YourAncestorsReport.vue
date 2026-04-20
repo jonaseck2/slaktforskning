@@ -101,6 +101,7 @@ import ReportCover from './primitives/ReportCover.vue';
 import PersonMiniCard from './primitives/PersonMiniCard.vue';
 import FanChartReport from './FanChartReport.vue';
 import { formatFullName } from '../../utils/nameUtils';
+import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
@@ -111,6 +112,7 @@ const props = withDefaults(defineProps<{
   showEvents?: boolean;
   showExtraPhotos?: boolean;
   showSources?: boolean;
+  redactLiving?: boolean;
 }>(), {
   generations: 4,
   colorMode: 'themed',
@@ -118,6 +120,7 @@ const props = withDefaults(defineProps<{
   showEvents: true,
   showExtraPhotos: false,
   showSources: false,
+  redactLiving: false,
 });
 
 const { t } = useI18n();
@@ -282,7 +285,7 @@ const rootPrimaryName = computed(() => {
 });
 
 // --- Flatten ancestor tree to ordered list by ahnentafel (excluding root) ---
-function flattenAncestorTree(root: AncestorNode | null): AncestorListItem[] {
+function flattenAncestorTree(root: AncestorNode | null, redactLiving: boolean): AncestorListItem[] {
   if (!root) return [];
   const out: AncestorListItem[] = [];
   function walk(node: AncestorNode | null, ahnentafel: number) {
@@ -300,6 +303,18 @@ function flattenAncestorTree(root: AncestorNode | null): AncestorListItem[] {
       if (node.death_event) {
         events.push({ ...node.death_event, date_display: formatDateDisplay(node.death_event) });
       }
+      const rawBirth = extractYear(node.birth_event?.date_value ?? null);
+      const rawDeath = extractYear(node.death_event?.date_value ?? null);
+      const redacted = redactPerson(
+        {
+          id: node.person.id,
+          living: node.person.living,
+          birthYear: rawBirth,
+          deathYear: rawDeath,
+          notes: node.person.notes,
+        },
+        { redactLiving },
+      );
       out.push({
         ancestorKey: `${ahnentafel}-${node.person.id}`,
         ahnentafel,
@@ -307,10 +322,10 @@ function flattenAncestorTree(root: AncestorNode | null): AncestorListItem[] {
         givenName: parts.given,
         surname: parts.surname,
         sex: toSex(node.person.sex),
-        birthYear: extractYear(node.birth_event?.date_value ?? null),
-        deathYear: extractYear(node.death_event?.date_value ?? null),
+        birthYear: redacted.birthYear ?? null,
+        deathYear: redacted.deathYear ?? null,
         keyPlace,
-        notesParagraphs: splitParagraphs(node.person.notes),
+        notesParagraphs: splitParagraphs(redacted.notes),
         events,
       });
     }
@@ -321,7 +336,9 @@ function flattenAncestorTree(root: AncestorNode | null): AncestorListItem[] {
   return out.sort((a, b) => a.ahnentafel - b.ahnentafel);
 }
 
-const ancestorList = computed<AncestorListItem[]>(() => flattenAncestorTree(tree.value));
+const ancestorList = computed<AncestorListItem[]>(() =>
+  flattenAncestorTree(tree.value, props.redactLiving === true),
+);
 
 // --- Surname groups ---
 const surnameGroups = computed<SurnameGroup[]>(() => {
