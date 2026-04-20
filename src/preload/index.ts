@@ -157,6 +157,7 @@ const api = {
     placeHistory: (placeId: string) => ipcRenderer.invoke('reports:placeHistory', placeId),
     researchGaps: (personId: string) => ipcRenderer.invoke('reports:researchGaps', personId),
     timeline: (personId: string) => ipcRenderer.invoke('reports:timeline', personId),
+    aliveInYear: (year: number) => ipcRenderer.invoke('reports:aliveInYear', year),
   },
   duplicates: {
     find: (limit?: number) => ipcRenderer.invoke('duplicates:find', limit),

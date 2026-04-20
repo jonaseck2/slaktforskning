@@ -170,6 +170,12 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Report typography */
+  --report-serif-stack: Georgia, 'Times New Roman', 'Liberation Serif', serif;
+  --report-prose-leading: 1.65;
+  --report-page-max-width: 800px;
+  --report-cover-accent-height: 4px;
 }
 
 /* ─── Export scope ──────────────────────────────────────────────────────────

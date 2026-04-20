@@ -454,3 +454,172 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
 
   return entries;
 }
+
+// ── getAliveInYear ──
+
+export interface AliveInYearPerson {
+  id: string;
+  given_name: string | null;
+  surname: string | null;
+  sex: 'M' | 'F' | 'U';
+  living: boolean;
+  birthYear: number | null;
+  deathYear: number | null;
+  age: number | null;
+  placeName: string | null;
+}
+
+export interface AliveInYearFamily {
+  relationshipId: string;
+  parents: AliveInYearPerson[];
+  children: AliveInYearPerson[];
+}
+
+export interface AliveInYearResult {
+  year: number;
+  persons: AliveInYearPerson[];
+  families: AliveInYearFamily[];
+  unattached: AliveInYearPerson[];
+}
+
+const MAX_LIFESPAN = 110;
+
+/**
+ * Returns all persons who were likely alive in a given year, grouped by
+ * family unit (couple relationships). Inclusion rules:
+ *   - known birth + death bracketing year → include
+ *   - birth only (before year) and not > MAX_LIFESPAN ago → include
+ *   - death only (after year) and not > MAX_LIFESPAN in the future → include
+ *   - no birth/death but has any event in the target year → include
+ *   - otherwise → exclude
+ * placeName is the name of the place from the most recent event at or before
+ * the target year that has a place_id.
+ */
+export function getAliveInYear(db: Database, year: number): AliveInYearResult {
+  const rows = queryAll<{
+    id: string;
+    sex: 'M' | 'F' | 'U';
+    living: number;
+    given_name: string | null;
+    surname: string | null;
+    birth_year: number | null;
+    death_year: number | null;
+    place_name: string | null;
+    has_event_in_year: number;
+  }>(db, `
+    WITH birth AS (
+      SELECT ep.person_id AS pid,
+             CAST(substr(e.date_value, 1, 4) AS INTEGER) AS birth_year
+      FROM events e
+      JOIN event_participants ep ON ep.event_id = e.id
+      WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
+    ),
+    death AS (
+      SELECT ep.person_id AS pid,
+             CAST(substr(e.date_value, 1, 4) AS INTEGER) AS death_year
+      FROM events e
+      JOIN event_participants ep ON ep.event_id = e.id
+      WHERE e.event_type = 'death' AND e.date_value IS NOT NULL
+    ),
+    any_event AS (
+      SELECT ep.person_id AS pid,
+             CAST(substr(e.date_value, 1, 4) AS INTEGER) AS any_year
+      FROM events e
+      JOIN event_participants ep ON ep.event_id = e.id
+      WHERE e.date_value IS NOT NULL
+    )
+    SELECT p.id, p.sex, p.living,
+           pn.given_name, pn.surname,
+           b.birth_year, d.death_year,
+           (SELECT pl.name FROM events e2
+            JOIN event_participants ep2 ON ep2.event_id = e2.id
+            LEFT JOIN places pl ON pl.id = e2.place_id
+            WHERE ep2.person_id = p.id
+              AND e2.date_value IS NOT NULL
+              AND CAST(substr(e2.date_value, 1, 4) AS INTEGER) <= ?
+              AND pl.name IS NOT NULL
+            ORDER BY e2.date_value DESC LIMIT 1) AS place_name,
+           EXISTS(SELECT 1 FROM any_event a WHERE a.pid = p.id AND a.any_year = ?) AS has_event_in_year
+    FROM persons p
+    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
+      SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
+    )
+    LEFT JOIN birth b ON b.pid = p.id
+    LEFT JOIN death d ON d.pid = p.id
+  `, [year, year]);
+
+  const alive: AliveInYearPerson[] = [];
+  for (const r of rows) {
+    const notBornYet = r.birth_year != null && r.birth_year > year;
+    const diedAlready = r.death_year != null && r.death_year < year;
+    const tooOldNoBirth = r.birth_year == null && r.death_year != null && (r.death_year - year) > MAX_LIFESPAN;
+    const tooOldNoDeath = r.death_year == null && r.birth_year != null && (year - r.birth_year) > MAX_LIFESPAN;
+
+    let include = false;
+    if (notBornYet || diedAlready) include = false;
+    else if (r.birth_year != null && r.death_year != null) include = true;
+    else if (r.birth_year != null) include = !tooOldNoDeath;
+    else if (r.death_year != null) include = !tooOldNoBirth;
+    else include = !!r.has_event_in_year;
+
+    if (include) {
+      alive.push({
+        id: r.id,
+        sex: r.sex,
+        living: !!r.living,
+        given_name: r.given_name,
+        surname: r.surname,
+        birthYear: r.birth_year,
+        deathYear: r.death_year,
+        age: r.birth_year != null ? year - r.birth_year : null,
+        placeName: r.place_name,
+      });
+    }
+  }
+
+  const coupleRows = queryAll<{ id: string; person1_id: string | null; person2_id: string | null }>(db,
+    `SELECT id, person1_id, person2_id FROM relationships WHERE type = 'couple'`
+  );
+
+  const parentChildRows = queryAll<{ parent_id: string | null; child_id: string | null }>(db,
+    `SELECT person1_id AS parent_id, person2_id AS child_id
+     FROM relationships WHERE type = 'parent_child'`
+  );
+
+  const childrenByParent = new Map<string, string[]>();
+  for (const r of parentChildRows) {
+    if (!r.parent_id || !r.child_id) continue;
+    if (!childrenByParent.has(r.parent_id)) childrenByParent.set(r.parent_id, []);
+    childrenByParent.get(r.parent_id)!.push(r.child_id);
+  }
+
+  const personById = new Map(alive.map(p => [p.id, p]));
+  const families: AliveInYearFamily[] = [];
+  const groupedPersonIds = new Set<string>();
+
+  for (const c of coupleRows) {
+    // Only skip if BOTH sides are null — a half-couple (one known partner) is still valid
+    if (!c.person1_id && !c.person2_id) continue;
+    const p1 = c.person1_id ? personById.get(c.person1_id) : undefined;
+    const p2 = c.person2_id ? personById.get(c.person2_id) : undefined;
+    if (!p1 && !p2) continue;
+    const parents: AliveInYearPerson[] = [];
+    if (p1) { parents.push(p1); groupedPersonIds.add(p1.id); }
+    if (p2) { parents.push(p2); groupedPersonIds.add(p2.id); }
+
+    const childIds = new Set<string>();
+    if (c.person1_id) (childrenByParent.get(c.person1_id) || []).forEach(x => childIds.add(x));
+    if (c.person2_id) (childrenByParent.get(c.person2_id) || []).forEach(x => childIds.add(x));
+    const children: AliveInYearPerson[] = [];
+    for (const cid of childIds) {
+      const child = personById.get(cid);
+      if (child) { children.push(child); groupedPersonIds.add(child.id); }
+    }
+
+    families.push({ relationshipId: c.id, parents, children });
+  }
+
+  const unattached = alive.filter(p => !groupedPersonIds.has(p.id));
+
+  return { year, persons: alive, families, unattached };
+}

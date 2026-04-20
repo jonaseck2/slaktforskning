@@ -5,7 +5,7 @@
         <h2>{{ $t('relationshipDetail.title') }}</h2>
         <AppBadge variant="event">{{ $t('relTypes.' + relationship.type) }}</AppBadge>
         <AppBadge v-if="relationship.subtype" variant="status">{{ $t((relationship.type === 'couple' ? 'coupleSubtypes.' : 'parentChildSubtypes.') + relationship.subtype) }}</AppBadge>
-        <AppButton v-if="relationship.type === 'couple'" variant="ghost" size="sm" @click="$router.push('/reports?tab=familyNarrative&relationshipId=' + relationship.id)">{{ $t('reports.tabFamilyNarrative') }} →</AppButton>
+        <AppButton v-if="relationship.type === 'couple'" variant="ghost" size="sm" @click="$router.push('/reports?tab=amarriage&relationshipId=' + relationship.id)">{{ $t('reports.amarriage.title') }} →</AppButton>
       </div>
     </div>
 
