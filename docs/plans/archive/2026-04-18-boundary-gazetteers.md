@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript build scripts (`npx tsx`), ogr2ogr (GDAL) for shapefile conversion, direct GeoJSON download/WFS for others. Existing Gazetteer JSON format with `geometry` fields.
 
-**Spec:** `docs/superpowers/specs/2026-04-18-boundary-gazetteers-design.md`
+**Spec:** `docs/plans/2026-04-18-boundary-gazetteers-design.md`
 
 ---
 

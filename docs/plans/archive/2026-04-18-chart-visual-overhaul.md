@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3, TypeScript, SVG, Canvas measureText API
 
-**Spec:** [docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md](../../docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md)
+**Spec:** [docs/plans/2026-04-18-chart-visual-overhaul-design.md](../../docs/plans/2026-04-18-chart-visual-overhaul-design.md)
 
 ---
 

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, node-sqlite3-wasm, Vue 3 Composition API, vue-i18n.
 
-**Spec:** `docs/superpowers/specs/2026-04-19-person-picker-relation-hint-design.md`
+**Spec:** `docs/plans/2026-04-19-person-picker-relation-hint-design.md`
 
 ---
 
@@ -677,7 +677,7 @@ git commit -m "feat(picker): add relation + dates hint to PersonPicker dropdown"
 **Files:**
 - Modify: `package.json`
 - Modify: `docs/PLAN.md`
-- Move: `docs/superpowers/specs/2026-04-19-person-picker-relation-hint-design.md` → `docs/superpowers/specs/archive/`
+- Move: `docs/plans/2026-04-19-person-picker-relation-hint-design.md` → `docs/plans/archive/`
 
 - [ ] **Step 1: Bump version**
 
@@ -698,13 +698,13 @@ to:
 In `docs/PLAN.md`, find the Done roadmap table (around the `v0.120.0` row). Add a new row directly below it:
 
 ```
-| v0.121.0 | feat(picker): relation + dates hint in PersonPicker — role label (parent/child/partner/sibling/godparent) to the tree's default person + (*YYYY–†YYYY) pulled from primary-role birth/death events | [spec](docs/superpowers/specs/archive/2026-04-19-person-picker-relation-hint-design.md) |
+| v0.121.0 | feat(picker): relation + dates hint in PersonPicker — role label (parent/child/partner/sibling/godparent) to the tree's default person + (*YYYY–†YYYY) pulled from primary-role birth/death events | [spec](docs/plans/archive/2026-04-19-person-picker-relation-hint-design.md) |
 ```
 
 - [ ] **Step 3: Archive the spec**
 
 ```bash
-git mv docs/superpowers/specs/2026-04-19-person-picker-relation-hint-design.md docs/superpowers/specs/archive/2026-04-19-person-picker-relation-hint-design.md
+git mv docs/plans/2026-04-19-person-picker-relation-hint-design.md docs/plans/archive/2026-04-19-person-picker-relation-hint-design.md
 ```
 
 - [ ] **Step 4: Run unit suite + lint one more time**
@@ -715,7 +715,7 @@ Expected: all tests pass, zero lint errors.
 - [ ] **Step 5: Final commit**
 
 ```bash
-git add package.json docs/PLAN.md docs/superpowers/specs/
+git add package.json docs/PLAN.md docs/plans/
 git commit -m "release: v0.121.0 — PersonPicker relation + dates hint"
 ```
 
@@ -729,5 +729,5 @@ At the end, the engineer should confirm:
 - [ ] `npx tsc --noEmit` — no new type errors
 - [ ] `npm run lint` — zero errors
 - [ ] `package.json` version is `0.121.0`
-- [ ] Spec lives at `docs/superpowers/specs/archive/2026-04-19-person-picker-relation-hint-design.md`
+- [ ] Spec lives at `docs/plans/archive/2026-04-19-person-picker-relation-hint-design.md`
 - [ ] `docs/PLAN.md` has the v0.121.0 row with the archived spec link

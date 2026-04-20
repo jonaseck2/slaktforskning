@@ -487,11 +487,33 @@ async function saveChartSvg() {
 async function saveChartPdf() {
   const svg = getChartSvg();
   if (!svg) return;
-  const titled = wrapWithTitle(buildExportSvgString(svg), await chartExportTitle());
   const dims = getPaperDimensions({ paperSize: chartPaperSize.value, orientation: chartOrientation.value });
-  const W = Math.round(dims.width * MM_TO_PX);
-  const H = Math.round(dims.height * MM_TO_PX);
-  const tiles = computeTileViewBoxes(W, H);
+  const paperW = Math.round(dims.width * MM_TO_PX);
+  const paperH = Math.round(dims.height * MM_TO_PX);
+
+  // Scale the chart to fit the chosen paper size before tiling. Without this,
+  // the tiler only walks the (0,0)→(paperW,paperH) region of the chart's
+  // coordinate space, so any content beyond the paper rectangle (or above
+  // viewBoxMinY) is dropped from the export.
+  const clone = svg.cloneNode(true) as SVGElement;
+  if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const vbParts = (clone.getAttribute('viewBox') ?? '').trim().split(/\s+/).map(Number);
+  const [vbX, vbY, vbW, vbH] = vbParts.length === 4 && vbParts.every(n => Number.isFinite(n))
+    ? vbParts
+    : [0, 0, Number(clone.getAttribute('width')) || paperW, Number(clone.getAttribute('height')) || paperH];
+  const scale = Math.min(paperW / vbW, paperH / vbH);
+  const tx = (paperW - vbW * scale) / 2 - vbX * scale;
+  const ty = (paperH - vbH * scale) / 2 - vbY * scale;
+  const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  wrapper.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`);
+  while (clone.firstChild) wrapper.appendChild(clone.firstChild);
+  clone.appendChild(wrapper);
+  clone.setAttribute('viewBox', `0 0 ${paperW} ${paperH}`);
+  clone.setAttribute('width', String(paperW));
+  clone.setAttribute('height', String(paperH));
+
+  const titled = wrapWithTitle(new XMLSerializer().serializeToString(clone), await chartExportTitle());
+  const tiles = computeTileViewBoxes(paperW, paperH);
   const pages = tiles.length === 1 ? [titled] : tiles.map(tv => generateTileSvg(titled, tv));
   await (window.api as unknown as { chart: { saveTiledPdf: (p: string[]) => Promise<void> } }).chart.saveTiledPdf(pages);
 }
@@ -686,7 +708,7 @@ async function exportPdf() {
   flex-shrink: 0;
 }
 @media print {
-  .view-header, .tab-bar, .tab-header, .zoom-controls-bar { display: none !important; }
+  .view-header, .filter-chips-bar, .tab-header, .zoom-controls-bar { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }

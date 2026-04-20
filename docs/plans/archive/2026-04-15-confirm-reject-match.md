@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vue 3, existing IPC + db_settings APIs.
 
-**Spec:** `docs/superpowers/specs/2026-04-15-gazetteer-quality-media-editor-design.md` (Feature 2)
+**Spec:** `docs/plans/2026-04-15-gazetteer-quality-media-editor-design.md` (Feature 2)
 
 **Prerequisite:** Gazetteer Match Quality Checks plan must be implemented first (Task 2 populates `placeIds`, `resolvedLat`, `resolvedLon` on CheckResult).
 

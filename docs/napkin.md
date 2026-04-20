@@ -83,8 +83,11 @@
 
 ## User Directives
 
-1. **[2026-04-03] Brainstorm outputs go in `docs/plans/brainstorm/YYYY-MM-DD-topic/`**
-   Do instead: copy valuable brainstorm HTML files (mockups, comparisons — not waiting screens) there. Link the plan file to its brainstorm dir and vice versa. No "superpowers" in user-visible paths.
+1. **[2026-04-19] All plan and spec files go under `docs/plans/` — never `docs/superpowers/` or `.claude/plans/`**
+   Do instead: design specs → `docs/plans/YYYY-MM-DD-topic-design.md` (with `-design` suffix). Implementation plans → `docs/plans/YYYY-MM-DD-topic.md` (no suffix). Archived (completed) → `docs/plans/archive/` with the same filename. The superpowers skills default to `docs/superpowers/specs/` — override those defaults every time. No `superpowers/` in user-visible paths. No `.claude/plans/` either.
+
+2. **[2026-04-03] Brainstorm outputs go in `docs/plans/brainstorm/YYYY-MM-DD-topic/`**
+   Do instead: copy valuable brainstorm HTML files (mockups, comparisons — not waiting screens) there. Link the plan file to its brainstorm dir and vice versa.
 
 2. **[2026-04-03] Use `.claude/agents/` templates when dispatching implementer subagents**
    Do instead: match each task layer to its template (api-implementer, test-writer, ipc-mcp-wirer, vue-ui-builder, doc-syncer). Inject task-specific details rather than writing prompts from scratch.

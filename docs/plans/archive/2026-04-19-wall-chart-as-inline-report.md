@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 (Composition API, `<script setup>`), TypeScript, Vitest, Electron Forge + Vite. SVG generation lives in `src/api/wall-charts.ts` (unchanged).
 
-**Spec:** `docs/superpowers/specs/2026-04-19-wall-chart-as-inline-report-design.md`
+**Spec:** `docs/plans/2026-04-19-wall-chart-as-inline-report-design.md`
 
 ---
 
