@@ -17,7 +17,9 @@
    Do instead: filter with `grep "^src/"` to find actual source errors.
 
 ## Shell & Command Reliability
-1. **[2026-04-17] `setsid` doesn't exist on macOS**
+1. **[2026-04-20] Never use `cd /path/to/.worktrees/... && git <cmd>` from the controller**
+   Do instead: always use `git -C /abs/path/to/worktree <cmd>` — single git command, matches `Bash(git:*)` allowlist, no permission-prompt friction. Compound `cd && git` forms trigger repeated approval prompts and are forbidden.
+2. **[2026-04-17] `setsid` doesn't exist on macOS**
    Do instead: don't try to detach Electron from terminal. Ask the user to run it.
 
 ## Build & Performance

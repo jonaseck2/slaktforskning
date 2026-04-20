@@ -157,6 +157,7 @@ const api = {
     placeHistory: (placeId: string) => ipcRenderer.invoke('reports:placeHistory', placeId),
     researchGaps: (personId: string) => ipcRenderer.invoke('reports:researchGaps', personId),
     timeline: (personId: string) => ipcRenderer.invoke('reports:timeline', personId),
+    aliveInYear: (year: number) => ipcRenderer.invoke('reports:aliveInYear', year),
   },
   duplicates: {
     find: (limit?: number) => ipcRenderer.invoke('duplicates:find', limit),
@@ -224,6 +225,7 @@ const api = {
     delete: mutating((id: string) => ipcRenderer.invoke('gazetteers:delete', id)),
     getImported: () => ipcRenderer.invoke('gazetteers:getImported'),
     getSchema: () => ipcRenderer.invoke('gazetteers:getSchema'),
+    getBundled: () => ipcRenderer.invoke('gazetteers:getBundled'),
   },
   undo: {
     undo: () => ipcRenderer.invoke('undo:undo'),

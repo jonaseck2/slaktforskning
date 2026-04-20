@@ -56,6 +56,7 @@ export function registerUtilityHandlers(
   wrapHandler('reports:placeHistory', (placeId) => reportData.getPlaceHistory(getDb(), placeId as string));
   wrapHandler('reports:researchGaps', (personId) => reportData.getResearchGaps(getDb(), personId as string));
   wrapHandler('reports:timeline', (personId) => reportData.getTimeline(getDb(), personId as string));
+  wrapHandler('reports:aliveInYear', (year) => reportData.getAliveInYear(getDb(), year as number));
 
   // Duplicates & Merge
   wrapHandler('duplicates:find', (limit) => duplicates.findDuplicates(getDb(), limit as number | undefined));
@@ -255,7 +256,10 @@ export function registerUtilityHandlers(
 
     for (const svgPage of svgPages) {
       const hidden = new BW({ show: false, width: 794, height: 1123, webPreferences: { offscreen: true } });
-      const html = `<!DOCTYPE html><html><body style="margin:0;padding:0">${svgPage}</body></html>`;
+      // `svg { display: block }` eliminates the inline baseline descent that
+      // otherwise pushes the SVG a few pixels past the A4 page and forces
+      // Chromium to emit a blank trailing page.
+      const html = `<!DOCTYPE html><html><head><style>html,body{margin:0;padding:0}svg{display:block}</style></head><body>${svgPage}</body></html>`;
       await hidden.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
       const pdf = await hidden.webContents.printToPDF({
         pageSize: 'A4',

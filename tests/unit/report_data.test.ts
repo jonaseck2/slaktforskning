@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
-import { createPlace } from '../../src/api/places';
+import { createPlace, findOrCreatePlace } from '../../src/api/places';
 import { createSource, createCitation } from '../../src/api/sources';
 import { createGroup, addGroupMember } from '../../src/api/groups';
 import { createResearchTask } from '../../src/api/research_tasks';
@@ -13,6 +13,7 @@ import {
   getPlaceHistory,
   getResearchGaps,
   getTimeline,
+  getAliveInYear,
 } from '../../src/api/report_data';
 import { createTestDb } from './helpers';
 
@@ -374,5 +375,149 @@ describe('getTimeline', () => {
 
     expect(timeline![2].event.date_value).toBe('1870-03-20');
     expect(timeline![2].relationship_label).toBe('child');
+  });
+});
+
+describe('getAliveInYear', () => {
+  function addBirth(personId: string, year: number, placeName?: string) {
+    const placeId = placeName ? findOrCreatePlace(db, placeName).id : undefined;
+    const event = createEvent(db, {
+      event_type: 'birth',
+      date_type: 'exact',
+      date_value: `${year}-01-01`,
+      place_id: placeId,
+    });
+    addEventParticipant(db, { event_id: event.id, person_id: personId, role: 'primary' });
+  }
+  function addDeath(personId: string, year: number) {
+    const event = createEvent(db, {
+      event_type: 'death',
+      date_type: 'exact',
+      date_value: `${year}-12-31`,
+    });
+    addEventParticipant(db, { event_id: event.id, person_id: personId, role: 'primary' });
+  }
+
+  it('returns persons with known birth and death bracketing the target year', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Andersson' });
+    addBirth(p.id, 1850);
+    addDeath(p.id, 1920);
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.some(x => x.id === p.id)).toBe(true);
+    expect(result.persons.find(x => x.id === p.id)?.age).toBe(50);
+  });
+
+  it('excludes persons born after the target year', () => {
+    const p = createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Svensson' });
+    addBirth(p.id, 1920);
+    addDeath(p.id, 1990);
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.some(x => x.id === p.id)).toBe(false);
+  });
+
+  it('excludes persons who died before the target year', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Johan', surname: 'Nilsson' });
+    addBirth(p.id, 1800);
+    addDeath(p.id, 1890);
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.some(x => x.id === p.id)).toBe(false);
+  });
+
+  it('includes persons with birth but no death if birth is before target year', () => {
+    const p = createPerson(db, { sex: 'F', given_name: 'Kristina', surname: 'Larsson' });
+    addBirth(p.id, 1850);
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.some(x => x.id === p.id)).toBe(true);
+  });
+
+  it('excludes persons with only death if death is after 110 years from target year', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Sven', surname: 'Eriksson' });
+    addDeath(p.id, 2050);
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.some(x => x.id === p.id)).toBe(false);
+  });
+
+  it('includes persons with neither birth nor death if they have events in target year', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Olof', surname: 'Persson' });
+    const event = createEvent(db, {
+      event_type: 'census',
+      date_type: 'exact',
+      date_value: '1900-06-15',
+    });
+    addEventParticipant(db, { event_id: event.id, person_id: p.id, role: 'primary' });
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.some(x => x.id === p.id)).toBe(true);
+  });
+
+  it('groups persons by family unit (couple relationships)', () => {
+    const husband = createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Andersson' });
+    const wife = createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Andersson' });
+    const child = createPerson(db, { sex: 'F', given_name: 'Maja', surname: 'Andersson' });
+    addBirth(husband.id, 1850);
+    addBirth(wife.id, 1855);
+    addBirth(child.id, 1880);
+
+    const couple = createRelationship(db, { type: 'couple', person1_id: husband.id, person2_id: wife.id });
+    createRelationship(db, { type: 'parent_child', person1_id: husband.id, person2_id: child.id });
+    createRelationship(db, { type: 'parent_child', person1_id: wife.id, person2_id: child.id });
+
+    const result = getAliveInYear(db, 1900);
+    const family = result.families.find(f => f.relationshipId === couple.id);
+    expect(family).toBeDefined();
+    expect(family?.parents.map(p => p.id).sort()).toEqual([husband.id, wife.id].sort());
+    expect(family?.children.map(c => c.id)).toContain(child.id);
+  });
+
+  it('returns place name from latest pre-target-year event with a place', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Lars', surname: 'Gustafsson' });
+    addBirth(p.id, 1850, 'Ödeshög');
+    const place = findOrCreatePlace(db, 'Stockholm');
+    const event = createEvent(db, {
+      event_type: 'residence',
+      date_type: 'exact',
+      date_value: '1895-01-01',
+      place_id: place.id,
+    });
+    addEventParticipant(db, { event_id: event.id, person_id: p.id, role: 'primary' });
+    const result = getAliveInYear(db, 1900);
+    expect(result.persons.find(x => x.id === p.id)?.placeName).toBe('Stockholm');
+    expect(result.persons.find(x => x.id === p.id)?.placeName).not.toBe('Ödeshög');
+  });
+
+  it('places persons without couple relationships in unattached', () => {
+    const p = createPerson(db, { sex: 'M', given_name: 'Solo', surname: 'Person' });
+    addBirth(p.id, 1850);
+    const result = getAliveInYear(db, 1900);
+    expect(result.unattached.some(x => x.id === p.id)).toBe(true);
+    expect(result.families.every(f =>
+      f.parents.every(x => x.id !== p.id) && f.children.every(x => x.id !== p.id)
+    )).toBe(true);
+  });
+
+  it('includes half-couples with only one known partner', () => {
+    const wife = createPerson(db, { sex: 'F', given_name: 'Widow', surname: 'Half' });
+    addBirth(wife.id, 1850);
+    const couple = createRelationship(db, { type: 'couple', person1_id: wife.id, person2_id: null });
+    const result = getAliveInYear(db, 1900);
+    const family = result.families.find(f => f.relationshipId === couple.id);
+    // Half-couple should still be represented — either as a family with one parent,
+    // or in unattached if the implementation chose that. Wife must be in the result.
+    const inAnyFamily = result.families.some(f => f.parents.some(p => p.id === wife.id));
+    const inUnattached = result.unattached.some(p => p.id === wife.id);
+    expect(inAnyFamily || inUnattached).toBe(true);
+    if (family) expect(family.parents.some(p => p.id === wife.id)).toBe(true);
+  });
+
+  it('exposes the living flag per person', () => {
+    const livingP = createPerson(db, { sex: 'F', given_name: 'Alive', surname: 'Now', living: true });
+    addBirth(livingP.id, 1985);
+    const deceasedP = createPerson(db, { sex: 'M', given_name: 'Passed', surname: 'Away', living: false });
+    addBirth(deceasedP.id, 1940);
+    addDeath(deceasedP.id, 2010);
+    const result = getAliveInYear(db, 2000);
+    const alive = result.persons.find(x => x.id === livingP.id);
+    const deceased = result.persons.find(x => x.id === deceasedP.id);
+    expect(alive?.living).toBe(true);
+    expect(deceased?.living).toBe(false);
   });
 });
