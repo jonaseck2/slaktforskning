@@ -1,6 +1,6 @@
 <template>
   <div :class="['app-avatar', `app-avatar--${size}`]" :style="avatarStyle">
-    <img v-if="effectiveSrc" :src="effectiveSrc" :alt="initials" class="app-avatar__img" />
+    <img v-if="effectiveSrc" :src="effectiveSrc" :alt="altText" class="app-avatar__img" />
     <span v-else>{{ initials }}</span>
   </div>
 </template>
@@ -39,6 +39,11 @@ const initials = computed(() => {
   if (g) return g.slice(0, 2).toUpperCase();
   if (s) return s.slice(0, 2).toUpperCase();
   return '?';
+});
+
+const altText = computed(() => {
+  const full = [props.givenName, props.surname].map(p => p.trim()).filter(Boolean).join(' ');
+  return full || initials.value;
 });
 
 const avatarStyle = computed(() => {
