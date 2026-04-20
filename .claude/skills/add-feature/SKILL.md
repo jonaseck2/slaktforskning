@@ -439,7 +439,7 @@ Every new UI feature should be evaluated against the number of user actions (cli
 **Unit tests alone do not verify UI changes.** They don't cover modal lifecycle, Vue Router behavior, or visual correctness. Before committing, verify in the running app.
 
 ### Setup
-Ask the user to run `./scripts/dev-debug.sh` from their terminal (cannot be launched from Claude Code's shell on macOS — needs window server access). Verify with:
+Ask the user to run `./.devcontainer/dev-debug.sh` from their terminal (cannot be launched from Claude Code's shell on macOS — needs window server access). Verify with:
 ```bash
 curl -s http://127.0.0.1:19241/status   # UI server running?
 ```

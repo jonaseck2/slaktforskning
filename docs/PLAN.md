@@ -229,6 +229,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.131.0 | Keepsake reports redesign: 7 keepsake reports + 6 framable prints, 6 primitives, 2 composables, `getAliveInYear` API, privacy filter, `researcher_name` attribution | [spec](plans/archive/2026-04-19-keepsake-reports-redesign-design.md), [archive](plans/archive/2026-04-19-keepsake-reports-redesign.md) |
 | v0.131.1 | fix: set executableName so MakerDeb/MakerRpm find the Linux binary | — |
 | v0.132.0 | Cropped face-tag profile pictures on all AppAvatars: `getPersonProfilePicRef` resolver, `profilePic` Pinia store with canvas crop + `ensureBatch`-scoped dedup + generation counter, `usePersonProfilePic` composable, `:person-id` wired into PersonsView/PersonPanel/GroupDetailView/PlacePersonsSection/RelationshipsList/MediaPanel/PersonDetailView | [archive](plans/archive/2026-04-20-avatar-profile-pic-crop.md) |
+| v0.132.1 | fix(devcontainer): move dev-debug.sh + verify-cdp.sh to .devcontainer/, add ensure-native-binaries call, forward CLAUDE_CODE_OAUTH_TOKEN for Max subscription auth | — |
 
 ## Research
 
