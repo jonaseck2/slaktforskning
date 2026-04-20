@@ -52,9 +52,9 @@ Vue component errors and `console.error` from renderer show up in the DevTools c
 
 ### UI Interaction Tools
 
-Two MCP tool sets are available for interacting with the running app. **Prefer native tools, fall back to Chrome DevTools.**
+Two MCP tool sets are available for interacting with the running app.
 
-#### Native MCP tools (`mcp__slaktforskning__ui_*`) — preferred
+#### Native MCP tools (`mcp__slaktforskning-dev__ui_*`) — preferred for app state
 
 These run inside the Electron main process with direct access to the app's state, database, and IPC.
 
@@ -62,21 +62,30 @@ These run inside the Electron main process with direct access to the app's state
 |------|---------|
 | `ui_navigate(path)` | Vue Router navigation (handles hash-based routes correctly) |
 | `ui_screenshot` | Capture full Electron window |
-| `ui_get_dom` | Get DOM as the app sees it |
+| `ui_get_dom` | Get DOM as the app sees it (may miss SVG children — use chrome-devtools for those) |
 | `ui_click(selector)` | Click via CSS selector |
-| `ui_execute_js(code)` | Run JS with access to `window.api` (can call IPC directly) |
 
 **When to use:** Navigation, screenshots, reading app state, triggering IPC calls, checking data.
+
+#### Chrome DevTools MCP — for deep DOM/SVG inspection
+
+Chrome DevTools MCP attaches via CDP and is the right tool for introspecting SVG innards (viewBox, `getBoundingClientRect()`, `elementFromPoint()`, computed path geometry) that the native `ui_get_dom` doesn't surface.
+
+**Requires launching Electron with CDP enabled:**
+```bash
+./scripts/dev-debug.sh          # CDP on 9222, UI on 19241
+```
+
+**Plugin must be configured to attach to that port**, not spawn its own browser. The plugin manifest lives at `~/.claude/plugins/cache/claude-plugins-official/chrome-devtools-mcp/latest/.claude-plugin/plugin.json` and its `args` must include `["chrome-devtools-mcp@latest", "--browserUrl", "http://127.0.0.1:9222"]`. Verify with `mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_pages` — it should list a `localhost:5173` page. If it shows `about:blank`, the plugin is running its own browser (config not applied — restart Claude after editing plugin.json).
 
 ### UI Verification Workflow
 
 **Before committing UI changes, verify they work in the running app:**
 
-1. Ask the user to launch the app: `npm start`
-2. Use the native MCP tools (`mcp__slaktforskning__ui_*`) to interact
-3. Ask the user for visual confirmation if native tools are unavailable
-
-**IMPORTANT: Never use Chrome DevTools MCP (`chrome-devtools-mcp`) for screenshots or UI verification.** It opens a separate blank browser and cannot capture the Electron app window. Always use native MCP tools or ask the user to verify visually.
+1. Ask the user to launch the app: `npm start` (or `./scripts/dev-debug.sh` if you need CDP access)
+2. Use native `mcp__slaktforskning-dev__ui_*` for navigation, screenshots, IPC
+3. Use `mcp__plugin_chrome-devtools-mcp_*` for SVG/DOM introspection via `evaluate_script`
+4. Ask the user for visual confirmation if tools are unavailable
 
 **Never `pkill -f Electron`** — this kills ALL Electron apps including the user's main instance. Instead, kill only the specific PID you started.
 

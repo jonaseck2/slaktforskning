@@ -9,6 +9,7 @@
       :focal-cy="viewBoxInfo.cy"
       :vb-width="viewBoxInfo.width"
       :vb-height="viewBoxInfo.height"
+      :arc-span="arcSpan ?? 360"
       width="100%"
       :stroke-color="isBw ? '#999' : 'white'"
       :no-gradients="isBw"

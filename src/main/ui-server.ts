@@ -150,6 +150,17 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
       } else if (method === 'POST' && url === '/chart/screenshot') {
         json(res, 501, { error: 'not yet implemented' });
 
+      } else if (method === 'POST' && url === '/export_pdf') {
+        const body = await readBody(req) as { path: string };
+        const pdfData = await win.webContents.printToPDF({
+          printBackground: false,
+          pageSize: 'A4',
+          margins: { marginType: 'printableArea' },
+        });
+        const fs = await import('node:fs');
+        fs.writeFileSync(body.path, pdfData);
+        json(res, 200, { ok: true, path: body.path, bytes: pdfData.length });
+
       } else if (method === 'GET' && url === '/status') {
         const result = await win.webContents.executeJavaScript(
           `({ route: window.__vue_router ? window.__vue_router.currentRoute.value.fullPath : null, windowWidth: window.innerWidth, windowHeight: window.innerHeight })`

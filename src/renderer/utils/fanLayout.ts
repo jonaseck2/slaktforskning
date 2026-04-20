@@ -34,19 +34,30 @@ export interface FanLayoutOptions {
   fillFn?: (ahnNum: number, gen: number, isEmpty: boolean, person: PersonNode | null) => string;
 }
 
-// Ring depths. Gens 5-8 are deep to accommodate radially-rotated text
-// (four stacked lines read outward along the radius).
-// Gens 7-8 are near-double-depth so they can fit a 2-line label (full name +
-// date range) instead of the 4-line stack used by gen 5-6.
-const RING_DEPTHS = [50, 55, 60, 55, 48, 68, 58, 94, 94];
+// Ring depths, keyed by arc span. Wide arcs (360°) need more radial room
+// because fonts are larger and gens 5-6 render 4 stacked lines; narrow arcs
+// (180°) shrink fonts and collapse gens 5-6 to 2-line compact mode, so the
+// tall rings at 360° become wasted whitespace at 180°. Values interpolate
+// linearly between 180° and 360°.
+const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 85, 72, 94, 125];
+const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 60, 52, 60, 72];
 // Gap between rings
 const RING_GAP = 2;
 
-function computeRings(maxGen: number): Array<{ rInner: number; rOuter: number }> {
+function ringDepths(arcSpan: number): number[] {
+  const t = Math.max(0, Math.min(1, (arcSpan - 180) / 180));
+  return RING_DEPTHS_WIDE.map((wide, i) => {
+    const narrow = RING_DEPTHS_NARROW[i] ?? wide;
+    return narrow + (wide - narrow) * t;
+  });
+}
+
+function computeRings(maxGen: number, arcSpan: number = 360): Array<{ rInner: number; rOuter: number }> {
+  const depths = ringDepths(arcSpan);
   const rings: Array<{ rInner: number; rOuter: number }> = [];
   let r = 0;
   for (let g = 0; g <= maxGen; g++) {
-    const depth = RING_DEPTHS[g] ?? 28;
+    const depth = depths[g] ?? 28;
     rings.push({ rInner: r, rOuter: r + depth });
     r += depth + RING_GAP;
   }
@@ -54,8 +65,8 @@ function computeRings(maxGen: number): Array<{ rInner: number; rOuter: number }>
 }
 
 /** Returns the outer radius for a given number of generations. */
-export function fanOuterRadius(maxGen: number): number {
-  const rings = computeRings(maxGen);
+export function fanOuterRadius(maxGen: number, arcSpan: number = 360): number {
+  const rings = computeRings(maxGen, arcSpan);
   return rings[Math.min(maxGen, rings.length - 1)].rOuter;
 }
 
@@ -65,7 +76,7 @@ export function fanOuterRadius(maxGen: number): number {
  * Returns { width, height, cx, cy } where (cx, cy) is the focal center point.
  */
 export function fanViewBox(arcSpan: ArcSpan, maxGen: number): { width: number; height: number; cx: number; cy: number } {
-  const outerR = fanOuterRadius(maxGen);
+  const outerR = fanOuterRadius(maxGen, arcSpan);
   const pad = 16;
 
   if (arcSpan === 360) {
@@ -99,7 +110,7 @@ export function fanViewBox(arcSpan: ArcSpan, maxGen: number): { width: number; h
   }
 
   // Focal circle protrudes below center
-  const focalR = RING_DEPTHS[0];
+  const focalR = ringDepths(arcSpan)[0];
   maxY = Math.max(maxY, focalR);
 
   const width = (maxX - minX) + pad * 2;
@@ -142,27 +153,12 @@ function buildArcPath(cx: number, cy: number, rInner: number, rOuter: number, st
   ].join(' ');
 }
 
-function buildFocalPath(cx: number, cy: number, r: number, arcSpan: ArcSpan): string {
-  if (arcSpan === 360) {
-    // Full circle — rendered as <circle> in SVG, but provide path fallback
-    return '';
-  }
-  // Half-circle (or partial) at bottom: flat edge at top, arc below
-  const halfSpan = arcSpan / 2;
-  const startDeg = -90 - halfSpan;
-  const endDeg = -90 + halfSpan;
-  const [x1, y1] = arcXY(cx, cy, r, startDeg);
-  const [x2, y2] = arcXY(cx, cy, r, endDeg);
-  const lowerStartDeg = endDeg;
-  const lowerEndDeg = startDeg + 360;
-  const lowerSweep = lowerEndDeg - lowerStartDeg;
-  const lowerLarge = lowerSweep > 180 ? 1 : 0;
-  return [
-    `M ${fmt(x1)},${fmt(y1)}`,
-    `A ${fmt(r)},${fmt(r)} 0 ${lowerLarge},1 ${fmt(x2)},${fmt(y2)}`,
-    `A ${fmt(r)},${fmt(r)} 0 0,1 ${fmt(x1)},${fmt(y1)}`,
-    'Z',
-  ].join(' ');
+function buildFocalPath(_cx: number, _cy: number, _r: number, _arcSpan: ArcSpan): string {
+  // Always empty — the template uses <circle cx cy r> for every arc span.
+  // An SVG arc path from two non-diametric points has two valid circles
+  // (on either side of the chord) and flag choices can silently pick the
+  // wrong one; <circle> has no such ambiguity.
+  return '';
 }
 
 function defaultFill(_ahnNum: number, gen: number, isEmpty: boolean): string {
@@ -175,7 +171,7 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
   const arcSpan: ArcSpan = options.arcSpan ?? 180;
   const maxGen = Math.max(1, Math.min(options.maxGen ?? 6, 8));
   const fillFn = options.fillFn ?? defaultFill;
-  const rings = computeRings(maxGen);
+  const rings = computeRings(maxGen, arcSpan);
   const { cx, cy } = fanViewBox(arcSpan, maxGen);
 
   const segments: FanSegment[] = [];

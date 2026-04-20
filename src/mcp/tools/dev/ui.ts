@@ -82,4 +82,15 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
       return { content: [{ type: 'text' as const, text: html }] };
     }
   );
+
+  server.tool(
+    'ui_export_pdf',
+    'Export the current Electron window to a PDF file via Chromium printToPDF (A4, printable margins). Use when diagnosing print-layout issues — the same code path as the in-app PDF button.',
+    { path: z.string().describe('Absolute filesystem path where the PDF will be written') },
+    async ({ path }) => {
+      const result = await uiPost(uiBase, '/export_pdf', { path }) as { ok?: boolean; error?: string; path?: string; bytes?: number };
+      if (result.error) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: `Wrote PDF: ${result.path} (${result.bytes} bytes)` }] };
+    }
+  );
 }

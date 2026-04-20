@@ -514,7 +514,19 @@ async function saveChartPdf() {
 
   const titled = wrapWithTitle(new XMLSerializer().serializeToString(clone), await chartExportTitle());
   const tiles = computeTileViewBoxes(paperW, paperH);
-  const pages = tiles.length === 1 ? [titled] : tiles.map(tv => generateTileSvg(titled, tv));
+  // Chart bounds in paper coordinate space (post-scale, post-center).
+  const chartL = tx + vbX * scale;
+  const chartR = tx + (vbX + vbW) * scale;
+  const chartT = ty + vbY * scale;
+  const chartB = ty + (vbY + vbH) * scale;
+  // Drop tiles whose viewBox doesn't overlap the scaled chart — no point
+  // emitting blank A4 pages that just pad the assembled poster.
+  const nonEmpty = tiles.filter(t =>
+    t.x + t.width > chartL && t.x < chartR && t.y + t.height > chartT && t.y < chartB,
+  );
+  const pages = tiles.length === 1
+    ? [titled]
+    : nonEmpty.map(tv => generateTileSvg(titled, tv));
   await (window.api as unknown as { chart: { saveTiledPdf: (p: string[]) => Promise<void> } }).chart.saveTiledPdf(pages);
 }
 
