@@ -45,6 +45,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import { useProfilePicStore } from '../stores/profilePic';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -69,6 +70,7 @@ const emit = defineEmits<{ profileChanged: [] }>();
 const router = useRouter();
 const media = ref<MediaItem[]>([]);
 const thumbnails = ref<Record<string, string>>({});
+const profilePicStore = useProfilePicStore();
 
 defineExpose({ attach, reload: load, count: computed(() => media.value.length) });
 
@@ -99,6 +101,7 @@ function openMedia(id: string) {
 async function attach() {
   const result = await window.api.media.attach({ entityType: 'person', entityId: props.personId });
   if (!(result as { canceled: boolean }).canceled) {
+    profilePicStore.invalidatePerson(props.personId);
     await load();
     emit('profileChanged');
   }
@@ -108,6 +111,7 @@ async function attach() {
 
 async function unlink(linkId: string) {
   await window.api.media.removeLink(linkId);
+  profilePicStore.invalidatePerson(props.personId);
   await load();
   emit('profileChanged');
 }
@@ -115,6 +119,7 @@ async function unlink(linkId: string) {
 async function reorder(newOrder: MediaItem[]) {
   media.value = newOrder;
   await window.api.media.reorder(newOrder.map(m => m.link_id));
+  profilePicStore.invalidatePerson(props.personId);
   emit('profileChanged');
 }
 

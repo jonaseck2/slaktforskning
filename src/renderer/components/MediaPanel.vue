@@ -196,6 +196,7 @@ import { resolvePersonDisplayName } from '../utils/nameUtils';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
+import { useProfilePicStore } from '../stores/profilePic';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -261,6 +262,7 @@ const showPlacePicker = ref(false);
 const editingTagId = ref<string | null>(null);
 const notesDraft = ref('');
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('media-panel-notes');
+const profilePicStore = useProfilePicStore();
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('media');
 
 const sections = reactive({
@@ -443,7 +445,10 @@ async function saveNotes() {
 }
 
 async function unlinkEntity(linkId: string) {
+  const lp = linkedPersons.value.find(x => x.linkId === linkId);
+  const personId = lp?.entityId ?? null;
   await window.api.media.removeLink(linkId);
+  if (personId) profilePicStore.invalidatePerson(personId);
   emit('link-changed');
   if (props.mediaId) await load();
 }
@@ -455,6 +460,7 @@ async function linkPerson(person: { id: string }) {
     entity_type: 'person',
     entity_id: person.id,
   });
+  profilePicStore.invalidatePerson(person.id);
   showPersonPicker.value = false;
   emit('link-changed');
   await load();
@@ -473,7 +479,10 @@ async function linkPlace(place: { id: string }) {
 }
 
 async function deleteRegion(regionId: string) {
+  const r = regions.value.find(rr => rr.id === regionId);
+  const personId = r?.person_id ?? null;
   await window.api.mediaRegions.delete(regionId);
+  if (personId) profilePicStore.invalidatePerson(personId);
   emit('region-deleted');
   if (props.mediaId) await load();
 }
@@ -481,6 +490,7 @@ async function deleteRegion(regionId: string) {
 async function assignPersonToRegion(regionId: string, personId: string) {
   editingTagId.value = null;
   await window.api.mediaRegions.update(regionId, { person_id: personId });
+  profilePicStore.invalidatePerson(personId);
   // Also ensure the person is linked to this media
   if (props.mediaId && !linkedPersons.value.some(lp => lp.entityId === personId)) {
     await window.api.media.addLink({
