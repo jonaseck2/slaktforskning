@@ -66,6 +66,28 @@ cd /abs/path/to/worktree && git add -A && git commit -m "summary" && git status
 
 **Scope:** this rule is for the **controller** running verification, staging, or commit commands from the main-repo cwd. Subagents dispatched INTO a worktree already have their cwd set there; they use normal `git add / git commit` without `-C`.
 
+## Merging a long-running feature branch back to main
+
+Long-running worktrees (multi-task plans taking hours/days) collide with whatever landed on main in the meantime. Expect conflicts on a predictable set of files; resolve them with these defaults:
+
+**`package.json` + `package-lock.json` (version conflict):** Main probably has one or more patch bumps; the feature has a minor bump set when the release task ran. Take the feature's minor bump IF it's still higher than main. If main has overshot (e.g. main released v0.131.x while the feature targeted v0.131.0), bump the feature again to the next unused minor (v0.132.0). Never take main's version — that drops the feature's release semantics.
+
+**`docs/PLAN.md` Implementation Status table:** Append the feature's row(s) AFTER main's rows. Never replace. If the feature row references an archived plan + spec, make sure the `plans/archive/...` paths exist after the merge.
+
+**`docs/PLAN.md` Roadmap section:** Remove the feature's `[planned]` or `[in progress]` entry — it's now Done and covered by the Implementation Status row. Keep any parallel-work `[done]` entries that landed on main.
+
+**`CLAUDE.md`:** Usually both branches added rows to shared-component / composable tables. Keep main's updated descriptions for entries both branches modified (main is newer), and append the feature's net-new rows.
+
+**`CHANGELOG.md`:** If the feature wrote a release entry, take it verbatim (only the feature knows the release's full scope).
+
+**Archived plan/spec paths (`docs/plans/` ↔ `docs/plans/archive/`):** If main consolidated/archived the same files the feature archived, treat the feature's archive path as the tiebreaker — the feature's completion is what moved the file to archive.
+
+**Modify/delete conflicts on archived plans under `.claude/plans/` or `docs/superpowers/specs/`:** Accept main's deletion. The consolidation commit on main is authoritative.
+
+**Fixture/test spec-path comments (`// Spec: docs/plans/...`):** Prefer the `plans/archive/...` path if both the plan and spec are archived.
+
+Run `npm test` and `npm run lint` on the merged index before completing the merge commit. If either fails, resolve before `git commit --no-edit`.
+
 ## Rules
 
 - **NEVER use `git add <specific files>`** — always `git add -A`
