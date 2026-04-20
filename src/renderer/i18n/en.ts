@@ -778,6 +778,13 @@ export default {
       events: 'Events',
       biography: 'Biography',
     },
+    onePage: {
+      title: 'Life on One Page',
+      keyDates: 'Key dates',
+      orientation: 'Orientation',
+      portrait: 'Portrait',
+      landscape: 'Landscape',
+    },
     amarriage: {
       title: 'A Marriage',
       lifeMap: 'Life Map',
