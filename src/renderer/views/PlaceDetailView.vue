@@ -3,7 +3,7 @@
     <div class="detail-header">
       <h2>{{ place.name }}</h2>
       <AppBadge v-if="place.place_type" variant="event">{{ $t('placeTypes.' + place.place_type) }}</AppBadge>
-      <AppButton variant="ghost" size="sm" @click="$router.push('/reports?tab=placeHistory&placeId=' + place.id)">{{ $t('reports.tabPlaceHistory') }} →</AppButton>
+      <AppButton variant="ghost" size="sm" @click="$router.push('/reports?tab=placeChronicle&placeId=' + place.id)">{{ $t('reports.placeChronicle.title') }} →</AppButton>
     </div>
 
     <section class="detail-section" aria-labelledby="section-place-details">

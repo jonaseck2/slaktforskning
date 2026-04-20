@@ -224,6 +224,11 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.129.2 | perf(checks, duplicates): replace correlated `NOT EXISTS` subqueries with bulk queries + `Set`/`Map` joins in JS — `checkOrphanedPlace` went from O(places × refs) to O(places + refs); `findDuplicates` went from O(N²) nested subqueries to three bulk queries joined by `person_id`. Noticeable speedup during long imports and quality-check runs on large DBs. | — |
 | v0.130.0 | Chart export controls moved from chart views to ReportsView tab headers — `ChartExportControls` now lives in the `.controls` row of each of the 4 chart tabs (pedigree/hourglass/descendant/fan) next to Print/Export PDF; removed from `PedigreeChart` / `HourglassChart` / `DescendantChart` / `FanChart` (FanChart keeps its own cycling color-mode button in the zoom overlay). `useChartExport` composable slimmed to `buildExportSvgString` + `wrapWithTitle` helpers; ReportsView does the DOM query + serialization directly. Pedigree/Hourglass/Descendants now honor all three color modes: `themed` (existing), `sex-colored` (box fill driven by sex token), `bw` (new `BW_COLORS` grayscale palette via `applyColorMode`). Fan tab drops its bespoke color-mode dropdown; shared `chartColorMode` maps to fan's `branch`/`sex`/`bw` rendering. | — |
 | v0.130.1 | chore(docs): consolidate all plans + design specs under `docs/plans/` — `docs/superpowers/` and `.claude/plans/` removed (~30 files moved, 1 dupe dropped, 4 implemented specs archived); `-design.md` suffix convention documented in CLAUDE.md, commit skill, add-feature skill, napkin, and memory to override `superpowers:brainstorming`'s default path. Minor UI polish: fan chart name/date font sizes reduced for gen 2-8; `.tab-bar` → `.filter-chips-bar` in ReportsView print CSS. | — |
+| v0.130.2 | fix(fan-chart): focal circle rendering + gen 7/8 ring depth at narrow arcs | — |
+| v0.130.3 | fix(reports): drop blank pages from tiled chart PDF export — ReportsView now uses the tight `getBBox()` of rendered content (not the looser SVG viewBox) for scale/centering and requires ≥10% tile overlap before emitting a page, so pedigree placeholder padding no longer pulls phantom outer tiles onto the poster. utility.ts wraps each tile SVG with `svg{display:block}` + `html,body{margin:0}` so Chromium's inline baseline descent can't push content past A4 and append a blank trailing page per tile. Also documents the `git -C <worktree>` rule (no `cd && git` compounds) in the commit skill + napkin, with matching `settings.local.json` permission pattern. | — |
+| v0.131.0 | Keepsake reports redesign: 7 keepsake reports + 6 framable prints, 6 primitives, 2 composables, `getAliveInYear` API, privacy filter, `researcher_name` attribution | [spec](plans/archive/2026-04-19-keepsake-reports-redesign-design.md), [archive](plans/archive/2026-04-19-keepsake-reports-redesign.md) |
+| v0.131.1 | fix: set executableName so MakerDeb/MakerRpm find the Linux binary | — |
+| v0.132.0 | Cropped face-tag profile pictures on all AppAvatars: `getPersonProfilePicRef` resolver, `profilePic` Pinia store with canvas crop + `ensureBatch`-scoped dedup + generation counter, `usePersonProfilePic` composable, `:person-id` wired into PersonsView/PersonPanel/GroupDetailView/PlacePersonsSection/RelationshipsList/MediaPanel/PersonDetailView | [archive](plans/archive/2026-04-20-avatar-profile-pic-crop.md) |
 
 ## Research
 
@@ -260,14 +265,11 @@ Prod/dev server split. 34 workflow tools in prod (persons, families, events, sou
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion. Precondition: hourglass outline bugs fixed first.
 - Plan: [plans/2026-04-13-chart-layout-shared-refactor.md](plans/2026-04-13-chart-layout-shared-refactor.md)
 
-#### Keepsake Reports Redesign [planned]
-Narrative-first Reports view for non-genealogist family members. Seven keepsake reports (A Life, A Marriage, Place Chronicle, Your Ancestors, Life on One Page, Family in Year X, Photo Album) plus six framable chart prints. Drops Individual Summary, Family Group Sheet. Repurposes Ancestor Sheet as Pedigree Print. Six shared print-safe primitives, one new `getAliveInYear` API, two composables, `researcher_name` db_setting for attribution. Deterministic — reports render what the genealogist authored.
-- Spec: [plans/2026-04-19-keepsake-reports-redesign-design.md](plans/2026-04-19-keepsake-reports-redesign-design.md)
-- Plan: [plans/2026-04-19-keepsake-reports-redesign.md](plans/2026-04-19-keepsake-reports-redesign.md)
-
-#### Gazetteer IPC Refactor [planned]
-Stop Vite from OOMing on CI (Windows/macOS both crash at ~2 GB heap during the renderer build). Split `src/api/place-gazetteers/index.ts` into `bundled.ts` (main-only, holds the 25 static JSON imports) + `merge.ts` (pure, renderer-safe `loadGazetteers`). Renderer fetches bundled gazetteers via a new `gazetteers:getBundled` IPC channel. Resolver stays synchronous (hot path in MapView / PlacePicker).
+#### Gazetteer IPC Refactor [done]
+Stopped Vite from OOMing on CI (Windows/macOS both crashed at ~2 GB heap during the renderer build). Split `src/api/place-gazetteers/index.ts` into `bundled.ts` (main-only, holds the 25 static JSON imports) + `merge.ts` (pure, renderer-safe `loadGazetteers`). Renderer fetches bundled gazetteers via a new `gazetteers:getBundled` IPC channel. Resolver stays synchronous (hot path in MapView / PlacePicker). Renderer bundle shrank from ~40 MB to 1.3 MB; `npm run make -- --platform darwin` now produces a zip artifact locally.
 - Spec: [plans/2026-04-20-gazetteer-ipc-refactor-design.md](plans/2026-04-20-gazetteer-ipc-refactor-design.md)
+- Plan: [plans/2026-04-20-gazetteer-ipc-refactor.md](plans/2026-04-20-gazetteer-ipc-refactor.md)
+
 
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*

@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { countNodes } from '../gazetteer-build/tree';
 import type { Gazetteer, GazetteerSource, GazetteerInfo } from './place-gazetteers/types';
-import { getAllGazetteers } from './place-gazetteers/index';
+import { getAllGazetteers } from './place-gazetteers/bundled';
 import { getDbSetting, setDbSetting } from './db_settings';
 import { queryOne, queryAll, runSql } from './db';
 

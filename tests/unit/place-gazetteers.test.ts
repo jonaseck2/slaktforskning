@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolvePlace, resolveBoundary } from '../../src/api/place-gazetteers/resolver';
-import { loadGazetteers, getAllGazetteers } from '../../src/api/place-gazetteers/index';
+import { loadGazetteers } from '../../src/api/place-gazetteers/merge';
+import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import type { Gazetteer, GazetteerConfig } from '../../src/api/place-gazetteers/types';
 
 const svGazetteer: Gazetteer = {
@@ -304,7 +305,7 @@ const langSvGeonames: Gazetteer = {
 describe('language gazetteer merge', () => {
   it('injects translations as aliases so resolver matches Swedish names', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config, [worldGazetteer, langSvGeonames]);
+    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langSvGeonames]);
 
     // Only point/boundary gazetteers returned, not language ones
     expect(gazetteers).toHaveLength(1);
@@ -320,7 +321,7 @@ describe('language gazetteer merge', () => {
 
   it('resolves path-keyed translations (Germany > Bavaria -> Bayern)', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config, [worldGazetteer, langSvGeonames]);
+    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langSvGeonames]);
 
     const result = resolvePlace('Bayern, Tyskland', gazetteers);
     expect(result).not.toBeNull();
@@ -338,7 +339,7 @@ describe('language gazetteer merge', () => {
       },
     };
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config, [worldGazetteer, langWithExisting]);
+    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langWithExisting]);
     const dk = gazetteers[0].root.children!.find(c => c.name === 'Denmark')!;
     // Should not have duplicate 'DK'
     expect(dk.aliases!.filter(a => a === 'DK')).toHaveLength(1);
@@ -347,13 +348,13 @@ describe('language gazetteer merge', () => {
   it('skips translations targeting a gazetteer that is not enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['lang-sv-geonames'] };
     // Only language gaz enabled, no target — should return empty
-    const gazetteers = loadGazetteers(config, [worldGazetteer, langSvGeonames]);
+    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langSvGeonames]);
     expect(gazetteers).toHaveLength(0);
   });
 
   it('without language gazetteer, Swedish names do not resolve', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries'] };
-    const gazetteers = loadGazetteers(config, [worldGazetteer]);
+    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer]);
     const result = resolvePlace('Danmark', gazetteers);
     expect(result).toBeNull();
   });
@@ -362,13 +363,13 @@ describe('language gazetteer merge', () => {
 describe('loadGazetteers', () => {
   it('returns empty array when no gazetteers enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: [] };
-    const result = loadGazetteers(config);
+    const result = loadGazetteers(config, getAllGazetteers());
     expect(result).toEqual([]);
   });
 
   it('returns sv-socknar when enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar'] };
-    const result = loadGazetteers(config);
+    const result = loadGazetteers(config, getAllGazetteers());
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('sv-socknar');
     expect(result[0].root.name).toBe('Sverige');
@@ -377,7 +378,7 @@ describe('loadGazetteers', () => {
 
   it('returns both Swedish gazetteers when both enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar', 'sv-forsamlingar'] };
-    const result = loadGazetteers(config);
+    const result = loadGazetteers(config, getAllGazetteers());
     expect(result).toHaveLength(2);
     expect(result.map(g => g.id).sort()).toEqual(['sv-forsamlingar', 'sv-socknar']);
   });
@@ -393,7 +394,7 @@ describe('loadGazetteers', () => {
 describe('language gazetteer integration', () => {
   it('resolves "Danmark" when lang-sv-geonames is enabled with world-countries', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Danmark', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Denmark');
@@ -402,7 +403,7 @@ describe('language gazetteer integration', () => {
 
   it('resolves "Brasilien" when lang-sv-geonames is enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Brasilien', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Brazil');
@@ -410,7 +411,7 @@ describe('language gazetteer integration', () => {
 
   it('resolves "São Paulo, Brasilien" as exact match with world-admin1', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-admin1', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('São Paulo, Brasilien', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Brazil');
@@ -419,7 +420,7 @@ describe('language gazetteer integration', () => {
 
   it('does not resolve "Danmark" without language gazetteer', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['world-countries'] };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Danmark', gazetteers);
     expect(result).toBeNull();
   });
@@ -432,7 +433,7 @@ describe('hierarchy-aware matching', () => {
     const config: GazetteerConfig = {
       enabledGazetteers: ['ca-provinces', 'world-admin1', 'lang-sv-geonames'],
     };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Dirleton, East Lothian, Skottland', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Scotland');
@@ -444,7 +445,7 @@ describe('hierarchy-aware matching', () => {
     const config: GazetteerConfig = {
       enabledGazetteers: ['ca-provinces', 'world-admin1', 'lang-sv-geonames'],
     };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Dirleton', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchQuality).toBe('exact');
@@ -457,7 +458,7 @@ describe('hierarchy-aware matching', () => {
     const config: GazetteerConfig = {
       enabledGazetteers: ['us-all-states', 'world-admin1', 'lang-sv-geonames'],
     };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Tulliochie, Pennington, Skottland', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Scotland');
@@ -469,7 +470,7 @@ describe('hierarchy-aware matching', () => {
     const config: GazetteerConfig = {
       enabledGazetteers: ['ca-provinces', 'us-all-states', 'world-countries', 'lang-sv-geonames'],
     };
-    const gazetteers = loadGazetteers(config);
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('Hudson Bay, Long Island, USA', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('United States');

@@ -302,7 +302,7 @@ Minimal, print-first. Photos carry the personality; layout stays restrained so t
 
 ## Versioning
 
-Single minor bump when complete: **`v0.128.0 — keepsake reports redesign`**.
+Single minor bump when complete: **`v0.130.0 — keepsake reports redesign`**. (v0.128.0 was taken by the wall chart rollup; v0.129.0 by quality checks expansion.)
 
 No version bump during partial rollout. This is feature-sized work — one bump at the end when the full set ships. `CHANGELOG.md` entry lists new reports, removed reports, and migration notes for anyone who had integrations against the dropped components.
 

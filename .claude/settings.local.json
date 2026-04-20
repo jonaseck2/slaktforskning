@@ -53,6 +53,7 @@
       "Bash(xattr:*)",
       "Bash(xxd:*)",
       "Bash(cd /Users/jonasahnstedt/git/slaktforskning/.worktrees/* && git *)",
+      "Bash(cd /Users/jonasahnstedt/git/slaktforskning/.worktrees/*:*)",
       "mcp__claude_ai_Gmail__gmail_get_profile",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__*",
       "mcp__slaktforskning__*",
