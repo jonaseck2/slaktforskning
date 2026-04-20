@@ -8,9 +8,9 @@
 
 ## Execution & Validation (Highest Priority)
 1. **[2026-04-17] Never commit UI changes without verifying they work in the running app**
-   Do instead: ask the user to run `./scripts/dev-debug.sh`, verify CDP with `./scripts/verify-cdp.sh`, then use Chrome DevTools MCP to interact and screenshot before committing.
+   Do instead: ask the user to run `./.devcontainer/dev-debug.sh`, verify CDP with `./.devcontainer/verify-cdp.sh`, then use Chrome DevTools MCP to interact and screenshot before committing.
 2. **[2026-04-17] Cannot launch Electron GUI from Claude Code's background shell on macOS**
-   Do instead: ask the user to launch the app from their terminal. Use `./scripts/verify-cdp.sh` to confirm CDP is active before using Chrome DevTools MCP. Never `pkill -f Electron` — it kills the user's app too.
+   Do instead: ask the user to launch the app from their terminal. Use `./.devcontainer/verify-cdp.sh` to confirm CDP is active before using Chrome DevTools MCP. Never `pkill -f Electron` — it kills the user's app too.
 3. **[2026-04-17] Adding `const` vars inside handler scope can shadow outer declarations**
    Do instead: check for existing same-name `const` later in the function before adding new ones (e.g. `dbDir` in media.ts).
 4. **[2026-04-12] `npx tsc --noEmit` errors are all in node_modules**

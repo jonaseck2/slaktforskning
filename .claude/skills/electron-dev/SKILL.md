@@ -73,7 +73,7 @@ Chrome DevTools MCP attaches via CDP and is the right tool for introspecting SVG
 
 **Requires launching Electron with CDP enabled:**
 ```bash
-./scripts/dev-debug.sh          # CDP on 9222, UI on 19241
+./.devcontainer/dev-debug.sh          # CDP on 9222, UI on 19241
 ```
 
 **Plugin must be configured to attach to that port**, not spawn its own browser. The plugin manifest lives at `~/.claude/plugins/cache/claude-plugins-official/chrome-devtools-mcp/latest/.claude-plugin/plugin.json` and its `args` must include `["chrome-devtools-mcp@latest", "--browserUrl", "http://127.0.0.1:9222"]`. Verify with `mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_pages` — it should list a `localhost:5173` page. If it shows `about:blank`, the plugin is running its own browser (config not applied — restart Claude after editing plugin.json).
@@ -82,7 +82,7 @@ Chrome DevTools MCP attaches via CDP and is the right tool for introspecting SVG
 
 **Before committing UI changes, verify they work in the running app:**
 
-1. Ask the user to launch the app: `npm start` (or `./scripts/dev-debug.sh` if you need CDP access)
+1. Ask the user to launch the app: `npm start` (or `./.devcontainer/dev-debug.sh` if you need CDP access)
 2. Use native `mcp__slaktforskning-dev__ui_*` for navigation, screenshots, IPC
 3. Use `mcp__plugin_chrome-devtools-mcp_*` for SVG/DOM introspection via `evaluate_script`
 4. Ask the user for visual confirmation if tools are unavailable

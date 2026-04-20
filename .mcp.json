@@ -6,7 +6,7 @@
         "tsx",
         "src/mcp/server.ts"
       ],
-      "cwd": "/Users/jonasahnstedt/git/slaktforskning"
+      "cwd": "."
     },
     "slaktforskning-dev": {
       "command": "npx",
@@ -14,7 +14,7 @@
         "tsx",
         "src/mcp/devServer.ts"
       ],
-      "cwd": "/Users/jonasahnstedt/git/slaktforskning"
+      "cwd": "."
     }
   }
 }

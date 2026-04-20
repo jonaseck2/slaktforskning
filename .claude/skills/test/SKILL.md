@@ -451,12 +451,12 @@ await app.executeJs(`
 
 Ask the user to launch the app with debugging enabled:
 ```bash
-./scripts/dev-debug.sh   # CDP port 9222, UI server port 19241
+./.devcontainer/dev-debug.sh   # CDP port 9222, UI server port 19241
 ```
 
 Verify the connection:
 ```bash
-./scripts/verify-cdp.sh                              # check CDP
+./.devcontainer/verify-cdp.sh                              # check CDP
 curl -s http://127.0.0.1:19241/status                # check UI server
 ```
 

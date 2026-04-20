@@ -761,8 +761,8 @@ A standalone screen reader mode (third Read Aloud option alongside Off and Narra
 
 ```bash
 npm start              # Launch Electron app in dev mode (Vite HMR)
-./scripts/dev-debug.sh # Launch with Chrome DevTools Protocol (CDP port 9222)
-./scripts/dev-debug.sh 9223 19242  # Custom ports for parallel instances
+./.devcontainer/dev-debug.sh # Launch with Chrome DevTools Protocol (CDP port 9222)
+./.devcontainer/dev-debug.sh 9223 19242  # Custom ports for parallel instances
 npm run lint           # Run ESLint (must pass with 0 errors before committing)
 npm test               # Run unit tests (Vitest, 1159 tests)
 npm test -- --coverage # Run with coverage report (80% threshold on src/api/)

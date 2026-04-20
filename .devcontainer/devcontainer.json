@@ -8,12 +8,14 @@
     "source=claude-credentials,target=/home/node/.claude,type=volume"
   ],
 
-  "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/check-claude-skills.sh || true",
+  "remoteUser": "node",
+  "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium",
   "postStartCommand": "bash .devcontainer/xvfb-start.sh",
 
   // Environment variable so E2E tests know to use a temp DB path
   "remoteEnv": {
-    "DISPLAY": ":99"
+    "DISPLAY": ":99",
+    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
   },
 
   "customizations": {

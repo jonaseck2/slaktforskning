@@ -2,7 +2,7 @@
 # Verify that Chrome DevTools Protocol is working after launching with dev-debug.sh.
 # Run this in a SEPARATE terminal while the app is running.
 #
-# Usage: ./scripts/verify-cdp.sh [port]
+# Usage: .devcontainer/verify-cdp.sh [port]
 
 CDP_PORT="${1:-9222}"
 
@@ -14,7 +14,7 @@ if [ -z "$VERSION" ]; then
   echo "FAIL: CDP not responding on port $CDP_PORT"
   echo ""
   echo "Make sure the app is running with CDP enabled:"
-  echo "  ./scripts/dev-debug.sh $CDP_PORT"
+  echo "  .devcontainer/dev-debug.sh $CDP_PORT"
   exit 1
 fi
 

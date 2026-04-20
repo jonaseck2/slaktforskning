@@ -13,4 +13,6 @@ else
   echo "Xvfb started on :99"
 fi
 
-export DISPLAY=:99
+# Forward to XQuartz on the macOS host (must be running with network clients allowed).
+# Xvfb on :99 stays up for E2E tests regardless.
+export DISPLAY=host.docker.internal:0
