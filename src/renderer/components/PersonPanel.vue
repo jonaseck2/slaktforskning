@@ -9,6 +9,7 @@
       <!-- Header -->
       <div class="panel-header">
         <AppAvatar
+          :person-id="personId"
           :given-name="primaryName?.given_name ?? ''"
           :surname="primaryName?.surname ?? ''"
           :sex="person.sex"

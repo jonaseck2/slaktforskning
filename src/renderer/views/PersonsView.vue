@@ -92,7 +92,7 @@
           >
             <td>
               <div class="name-cell">
-                <AppAvatar :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
+                <AppAvatar :person-id="person.id" :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
                 <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
                   <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
                 </router-link>

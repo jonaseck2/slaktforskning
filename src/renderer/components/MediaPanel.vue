@@ -76,7 +76,7 @@
           </div>
           <div v-if="linkedPersons.length === 0 && !showPersonPicker" class="empty-hint">{{ $t('empty.persons') }}</div>
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
-            <AppAvatar :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
+            <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
             <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
@@ -149,7 +149,7 @@
               </div>
             </template>
             <template v-else>
-              <AppAvatar v-if="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
+              <AppAvatar v-if="r.person_id" :person-id="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
               <div v-else class="face-tag-unknown">?</div>
               <span class="face-tag-name face-tag-clickable" @click="editingTagId = r.id">{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
               <button
