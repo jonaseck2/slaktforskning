@@ -28,6 +28,8 @@
 | `.github/workflows/claude.yml` | Claude issue triage and PR review |
 | `README.md` | Redesigned for open-source audience |
 | `package.json` | Add repository + homepage fields |
+| `.devcontainer/Dockerfile` | Patch any missing system libs so builds + E2E run in-container |
+| `.devcontainer/xvfb-start.sh` | Ensure Xvfb auto-starts so Playwright picks up `DISPLAY=:99` |
 | `docs/PLAN.md` | Implementation status entry |
 
 ---
@@ -647,7 +649,89 @@ git add -A && git commit -m "chore: add .env to .gitignore"
 
 ---
 
-### Task 12: Version bump + PLAN.md entry
+### Task 12: Fix devcontainer builds and E2E tests
+
+**Goal:** Ensure `npm run package` and `npx playwright test` work inside the repo's VS Code Dev Container so contributors can build and run the full test matrix without a local macOS/Windows environment. The devcontainer already installs Xvfb and Electron system libraries (see [.devcontainer/Dockerfile](.devcontainer/Dockerfile)) and the `postStartCommand` launches Xvfb on `:99` — this task verifies that pipeline end-to-end and patches whatever is currently broken. Keeps devcontainer in parity with the Ubuntu CI runner in Task 6, so CI failures can be reproduced locally.
+
+**Files:**
+- Modify (as needed): `.devcontainer/Dockerfile`
+- Modify (as needed): `.devcontainer/devcontainer.json`
+- Modify (as needed): `.devcontainer/xvfb-start.sh`
+- Modify (as needed): `.devcontainer/ensure-native-binaries.sh`
+- Modify: `CONTRIBUTING.md` (document the supported flows)
+- Modify (as needed): `CLAUDE.md` (update the "In the Dev Container" block if commands change)
+
+- [ ] **Step 1: Rebuild the container and verify baseline**
+
+"Dev Containers: Rebuild Container" in VS Code (or `devcontainer up --workspace-folder .`). Wait for `postCreateCommand` (`npm install && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/check-claude-skills.sh || true`) and `postStartCommand` (`bash .devcontainer/xvfb-start.sh`) to finish.
+
+Verify inside the container:
+- `node --version` → 22.x
+- `echo $DISPLAY` → `:99`
+- `pgrep -x Xvfb` → non-empty
+- `ls node_modules/node-sqlite3-wasm/dist/` includes the Linux WASM binary
+
+- [ ] **Step 2: Verify lint + unit tests**
+
+```bash
+npm run lint
+npm test
+```
+
+Both must pass with zero errors. If native modules complain about architecture mismatch, `ensure-native-binaries` should have handled it — re-run `ensure-native-binaries` manually and re-check.
+
+- [ ] **Step 3: Verify Linux build**
+
+```bash
+npm run package
+```
+
+Expected: a Linux distributable under `out/make/**`. If it fails with missing `.so` libraries, add the relevant `lib*` package to the `apt-get install` list in [.devcontainer/Dockerfile](.devcontainer/Dockerfile) and rebuild. Common Electron/Forge suspects: `libxss1`, `libgconf-2-4`, `fuse` (for AppImage), `rpm`, `dpkg`, `fakeroot`.
+
+- [ ] **Step 4: Verify E2E tests with Xvfb**
+
+```bash
+npx playwright test
+```
+
+Both Playwright tests (app launch + MCP server handshake) must pass. If Electron fails to start:
+- Confirm `DISPLAY=:99` is exported in the shell (`echo $DISPLAY`)
+- Confirm `Xvfb :99` is still running (`pgrep -x Xvfb`)
+- Inspect `~/.npm/_logs/` and any `electron-*.log` for the underlying error
+- If a Chromium runtime lib is missing, add it to the Dockerfile
+
+- [ ] **Step 5: Document the devcontainer flow in CONTRIBUTING.md**
+
+Add a section to `CONTRIBUTING.md` (created in Task 3):
+
+```markdown
+## Using the Dev Container
+
+The repo includes a VS Code Dev Container with Node 22, Electron system dependencies, Xvfb, and a headless JRE (for Genney imports).
+
+Open the project in VS Code with the "Dev Containers" extension and choose "Reopen in Container". Once built:
+
+- `npm test` — unit tests
+- `npm run lint` — linting
+- `npx playwright test` — E2E tests (Xvfb auto-starts on container launch via `postStartCommand`; `DISPLAY=:99` is set in `remoteEnv`)
+- `npm run package` — build a Linux distributable under `out/make/`
+
+`npm start` (interactive dev mode) does not work in the devcontainer — there is no physical display. Use your host machine for interactive UI development.
+```
+
+- [ ] **Step 6: Sync CLAUDE.md if commands changed**
+
+If Step 3 or 4 required new Dockerfile packages or new scripts, update the "In the Dev Container" block in `CLAUDE.md` so agents running inside the container see the current instructions.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add -A && git commit -m "fix(devcontainer): verify builds and E2E tests work with Xvfb"
+```
+
+---
+
+### Task 13: Version bump + PLAN.md entry
 
 **Files:**
 - Modify: `package.json` (version bump)
@@ -675,11 +759,11 @@ Add GitHub Actions: CI (lint/test/e2e), auto-release, Claude maintainer.
 Add issue and PR templates. Redesign README with badges."
 ```
 
-**Note:** If tasks 1-11 were committed individually, this task is just the version bump + PLAN.md update. If using subagent-driven-development where all tasks are batched, this is the final commit that ties everything together.
+**Note:** If tasks 1-12 were committed individually, this task is just the version bump + PLAN.md update. If using subagent-driven-development where all tasks are batched, this is the final commit that ties everything together.
 
 ---
 
-### Task 13: Verify and configure GitHub
+### Task 14: Verify and configure GitHub
 
 **Files:** None (manual GitHub configuration)
 
