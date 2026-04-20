@@ -11,16 +11,10 @@
         :researcher-name="researcherName"
       />
 
-      <!-- Life Map -->
-      <section v-if="lifeMapPoints.length > 0" class="report-section">
-        <h2 class="section-heading">{{ $t('reports.alife.lifeMap') }}</h2>
-        <LifeMap :points="lifeMapPoints" :height="400" draw-path />
-      </section>
-
       <!-- Timeline -->
       <section v-if="timelineItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.alife.timeline') }}</h2>
-        <TimelineBar :items="timelineItems" />
+        <TimelineBar :items="timelineItems" anchor-base="#event-" />
       </section>
 
       <!-- Family -->
@@ -53,13 +47,19 @@
       <section v-if="chronologicalEvents.length > 0" class="report-section prose-section">
         <h2 class="section-heading">{{ $t('reports.alife.events') }}</h2>
         <ul class="event-list">
-          <li v-for="ev in chronologicalEvents" :key="ev.id">
+          <li v-for="ev in chronologicalEvents" :key="ev.id" :id="'event-' + ev.id">
             <strong>{{ eventTypeLabel(ev.event_type) }}</strong>
             <span v-if="ev.date_display">, {{ ev.date_display }}</span>
             <span v-if="ev.place_name">, {{ ev.place_name }}</span>
             <span v-if="ev.description">. {{ ev.description }}</span>
           </li>
         </ul>
+      </section>
+
+      <!-- Life Map -->
+      <section v-if="lifeMapPoints.length > 0" class="report-section">
+        <h2 class="section-heading">{{ $t('reports.alife.lifeMap') }}</h2>
+        <LifeMap :points="lifeMapPoints" :height="400" draw-path />
       </section>
 
       <!-- Biography (notes) -->

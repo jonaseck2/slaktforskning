@@ -18,7 +18,13 @@
     />
     <template v-else>
     <div class="header">
-      <h2>{{ $t('media.title') }}</h2>
+      <div class="header-left">
+        <h2>{{ $t('media.title') }}</h2>
+        <div v-if="personFilterId && personName" class="person-filter-badge">
+          {{ $t('media.filter.person', { name: personName }) }}
+          <button class="filter-clear" @click="router.push({ path: '/media' })" :title="$t('common.clearFilter')">×</button>
+        </div>
+      </div>
       <div class="header-right">
         <div v-if="!loading && items.length > 0" class="view-toggle">
           <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
@@ -258,6 +264,12 @@ const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 
+const personFilterId = computed(() => {
+  const v = route.query.person;
+  return typeof v === 'string' && v ? v : null;
+});
+const personName = ref('');
+
 const missingCount = computed(() => items.value.filter(i => i.is_missing).length);
 
 const filteredItems = computed(() => {
@@ -280,19 +292,36 @@ function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string |
 async function load() {
   loading.value = true;
   try {
-    const result = await window.api.media.listPage(PAGE_SIZE, 0) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
-    items.value = mapPageItems(result.items);
-    total.value = result.total;
-    offset.value = PAGE_SIZE;
-    loadThumbnails(items.value);
-    // Auto-select: focus person's first media, or first item
-    if (!selectedMediaId.value && items.value.length > 0) {
-      let picked: string | null = null;
-      if (focusStore.personId) {
-        const personMedia = await window.api.media.forEntity('person', focusStore.personId) as Array<{ id: string }>;
-        if (personMedia.length > 0) picked = personMedia[0].id;
+    if (personFilterId.value) {
+      const [rawMedia, names] = await Promise.all([
+        window.api.media.forEntity('person', personFilterId.value) as Promise<Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; created_at: string }>>,
+        window.api.persons.getNames(personFilterId.value) as Promise<Array<{ given_name: string; surname: string }>>,
+      ]);
+      const n = names[0];
+      personName.value = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+      items.value = rawMedia.map(r => ({ ...r, notes: r.notes ?? '', is_missing: 0, linkCount: 0 }));
+      total.value = items.value.length;
+      offset.value = items.value.length;
+      loadThumbnails(items.value);
+      if (!selectedMediaId.value && items.value.length > 0) {
+        selectedMediaId.value = items.value[0].id;
       }
-      selectedMediaId.value = picked ?? items.value[0].id;
+    } else {
+      personName.value = '';
+      const result = await window.api.media.listPage(PAGE_SIZE, 0) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
+      items.value = mapPageItems(result.items);
+      total.value = result.total;
+      offset.value = PAGE_SIZE;
+      loadThumbnails(items.value);
+      // Auto-select: focus person's first media, or first item
+      if (!selectedMediaId.value && items.value.length > 0) {
+        let picked: string | null = null;
+        if (focusStore.personId) {
+          const personMedia = await window.api.media.forEntity('person', focusStore.personId) as Array<{ id: string }>;
+          if (personMedia.length > 0) picked = personMedia[0].id;
+        }
+        selectedMediaId.value = picked ?? items.value[0].id;
+      }
     }
   } catch (err) {
     console.error('[MediaView] load failed:', err);
@@ -368,7 +397,9 @@ function closeViewer() {
   drawMode.value = false;
   deepLinkItems.value = null;
   if (route.query.open) {
-    router.replace({ path: '/media', query: {} });
+    const query: Record<string, string> = {};
+    if (route.query.person) query.person = route.query.person as string;
+    router.replace({ path: '/media', query });
   }
 }
 
@@ -403,6 +434,7 @@ async function openViewerById(mediaId: string) {
 
 async function onRegionDrawn(rect: { x: number; y: number; width: number; height: number }) {
   if (!selectedMediaId.value) return;
+  drawMode.value = false; // release pointer events immediately — don't block during async ops
   // Auto-assign the first linked person (by sort_order) who doesn't already have a face tag
   let personId: string | undefined;
   try {
@@ -421,7 +453,6 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
     ...(personId ? { person_id: personId } : {}),
   });
   if (personId) profilePicStore.invalidatePerson(personId);
-  drawMode.value = false; // exit draw mode after creating a tag
   viewerRef.value?.reloadRegions();
   panelRef.value?.reload();
   panelRef.value?.expandFaceTags();
@@ -478,6 +509,15 @@ watch(() => route.query.open, async (openId) => {
     await openViewerById(openId);
   }
 });
+watch(personFilterId, async () => {
+  items.value = [];
+  total.value = 0;
+  offset.value = 0;
+  selectedMediaId.value = null;
+  viewerMode.value = false;
+  deepLinkItems.value = null;
+  await load();
+});
 onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
@@ -510,6 +550,30 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   min-width: 200px;
   max-width: 1040px;
 }
+
+.person-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-sm);
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-full);
+  font-size: var(--font-sm);
+  color: var(--accent);
+}
+.filter-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.7;
+}
+.filter-clear:hover { opacity: 1; }
 
 .gallery-filter {
   margin-bottom: 12px;
@@ -669,6 +733,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   padding: 1px 5px;
 }
 
+.header-left { display: flex; align-items: center; gap: var(--space-sm); }
 .header-right { display: flex; align-items: center; gap: 8px; }
 .view-toggle { display: flex; gap: 2px; }
 

@@ -21,12 +21,13 @@
       </section>
 
       <!-- Full-page fan chart -->
-      <section class="report-section fan-chart-page">
+      <section id="fan-chart-section" class="report-section fan-chart-page">
         <FanChartReport
           :person-id="personId"
           :generations="generations"
           :arc-span="270"
           :color-mode="fanColorMode"
+          anchor-base="#ancestor-"
         />
       </section>
 
@@ -34,6 +35,7 @@
       <section
         v-for="ancestor in ancestorList"
         :key="ancestor.ancestorKey"
+        :id="'ancestor-' + ancestor.ahnentafel"
         class="report-section ancestor-page"
         :class="{ 'half-page': density === 'two' }"
       >
@@ -46,6 +48,7 @@
             :death-year="ancestor.deathYear"
             :key-place="ancestor.keyPlace"
             :ahnentafel="ancestor.ahnentafel"
+            fan-chart-href="#fan-chart-section"
           />
         </div>
         <div v-if="ancestor.notesParagraphs.length > 0" class="prose-section">
@@ -75,7 +78,9 @@
         <ul class="surname-list">
           <li v-for="group in surnameGroups" :key="group.surname">
             <strong>{{ group.surname }}:</strong>
-            {{ group.ahnentafels.join(', ') }}
+            <template v-for="(num, i) in group.ahnentafels" :key="num">
+              <a :href="'#ancestor-' + num" class="report-link">{{ num }}</a><span v-if="i < group.ahnentafels.length - 1">, </span>
+            </template>
           </li>
         </ul>
       </section>
@@ -496,4 +501,21 @@ watch(
   font-size: var(--font-sm);
 }
 .muted { color: var(--text-muted); }
+
+.report-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--surface-border-subtle);
+  transition: border-color 0.15s, color 0.15s;
+}
+.report-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+@media print {
+  .report-link {
+    border-bottom: none;
+  }
+}
 </style>

@@ -47,13 +47,13 @@
     <g
       v-for="seg in nonFocalSegments"
       :key="seg.ahnNum"
-      :class="['fan-seg', { clickable: !seg.isEmpty && !linkBase }]"
+      :class="['fan-seg', { clickable: !seg.isEmpty && !linkBase, linked: !seg.isEmpty && !!linkBase && !!seg.person }]"
       @click="!seg.isEmpty && !linkBase && seg.person && emit('navigate', seg.person.id)"
       @mouseenter="(e: MouseEvent) => !linkBase && seg.person && emit('personenter', seg.person!, e)"
       @mousemove="(e: MouseEvent) => !linkBase && seg.person && emit('personmove', e)"
       @mouseleave="!linkBase && seg.person && emit('personleave')"
     >
-      <a v-if="linkBase && seg.person" :href="`${linkBase}${seg.person.id}`">
+      <a v-if="linkBase && seg.person" :href="segHref(seg)">
         <title>{{ tooltipLabel(seg) }}</title>
         <path :d="seg.pathD" :fill="segFill(seg)" :stroke="strokeColor" :stroke-width="strokeWidth" stroke-linejoin="round" class="seg-path" />
         <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#fan-empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
@@ -110,13 +110,13 @@
     <!-- Focal person -->
     <g
       v-if="focalSegment"
-      :class="['fan-seg', { clickable: focalSegment.person && !linkBase }]"
+      :class="['fan-seg', { clickable: focalSegment.person && !linkBase, linked: !!linkBase && !!focalSegment.person }]"
       @click="focalSegment.person && !linkBase && emit('navigate', focalSegment.person!.id)"
       @mouseenter="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personenter', focalSegment!.person!, e)"
       @mousemove="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personmove', e)"
       @mouseleave="!linkBase && focalSegment!.person && emit('personleave')"
     >
-      <a v-if="linkBase && focalSegment.person" :href="`${linkBase}${focalSegment.person.id}`">
+      <a v-if="linkBase && focalSegment.person" :href="segHref(focalSegment)">
         <title>{{ tooltipLabel(focalSegment) }}</title>
         <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
       </a>
@@ -169,6 +169,7 @@ interface Props {
   arcSpan?: number;          // 180–360, used to scale text + switch layout density
   fontFamily?: string;
   linkBase?: string | null;
+  linkByAhnentafel?: boolean;
   strokeWidth?: number;
   width?: number | string;
   height?: number | string;
@@ -184,6 +185,7 @@ const props = withDefaults(defineProps<Props>(), {
   arcSpan: 360,
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   linkBase: null,
+  linkByAhnentafel: false,
   strokeWidth: 1.5,
   strokeColor: 'white',
   emptyPatternStroke: 'rgba(0,0,0,0.15)',
@@ -204,6 +206,11 @@ const emit = defineEmits<{
 }>();
 
 const nonFocalSegments = computed(() => props.segments.filter(s => !s.isFocal));
+
+function segHref(seg: FanSegment): string {
+  const id = props.linkByAhnentafel ? String(seg.ahnNum) : (seg.person?.id ?? '');
+  return `${props.linkBase}${id}`;
+}
 
 function segFill(seg: FanSegment): string {
   if (props.noGradients || seg.isEmpty) return seg.fill;
@@ -438,8 +445,10 @@ function lineDy(seg: FanSegment): { given: string; surname: string; birth: strin
 .fan-seg .seg-path {
   transition: filter 0.15s ease;
 }
-.fan-seg.clickable:hover .seg-path {
+.fan-seg.clickable:hover .seg-path,
+.fan-seg.linked a:hover .seg-path {
   filter: brightness(1.12);
 }
 .fan-seg.clickable { cursor: pointer; }
+.fan-seg.linked a { cursor: pointer; }
 </style>

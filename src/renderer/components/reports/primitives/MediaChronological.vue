@@ -16,10 +16,26 @@
           :alt="item.title || ''"
           loading="lazy"
         />
+        <div v-if="imageUrls[item.id] && faceTags[item.id]?.length" class="face-tag-overlay">
+          <RouterLink
+            v-for="tag in faceTags[item.id]"
+            :key="tag.personId"
+            :to="'/persons/' + tag.personId"
+            class="face-box"
+            :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
+          >
+            <span class="face-hover-label">{{ tag.name }}</span>
+          </RouterLink>
+        </div>
       </div>
       <div v-if="showCaptions" class="media-caption">
-        <div v-if="item.title" class="caption-title">{{ item.title }}</div>
         <div v-if="item.contextLine" class="caption-context">{{ item.contextLine }}</div>
+        <div v-if="faceTags[item.id]?.length" class="caption-faces">
+          <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
+          <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
+            <RouterLink :to="'/persons/' + tag.personId" class="face-link">{{ tag.name }}</RouterLink><span v-if="i < faceTags[item.id].length - 1">, </span>
+          </template>
+        </div>
         <div v-if="item.notes" class="caption-notes">{{ item.notes }}</div>
         <div v-if="item.inferredDateISO" class="caption-date">{{ formatDate(item.inferredDateISO) }}</div>
       </div>
@@ -29,6 +45,8 @@
 
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
+import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 export interface MediaDisplayItem {
   id: string;
@@ -38,6 +56,33 @@ export interface MediaDisplayItem {
   format: string | null;
   inferredDateISO: string | null;
   contextLine?: string | null;
+}
+
+interface Region {
+  id: string;
+  media_id: string;
+  person_id: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label: string | null;
+}
+
+interface RawName {
+  given_name: string | null;
+  surname: string | null;
+  preferred_name: string | null;
+  sort_order: number;
+}
+
+interface FaceTag {
+  personId: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 const props = withDefaults(defineProps<{
@@ -51,8 +96,14 @@ const props = withDefaults(defineProps<{
   includeDocuments: false,
 });
 
+const { t } = useI18n();
+
 declare const window: Window & {
-  api: { media: { readAsDataUrl: (id: string) => Promise<string | null> } };
+  api: {
+    media: { readAsDataUrl: (id: string) => Promise<string | null> };
+    mediaRegions: { getForMedia: (mediaId: string) => Promise<Region[]> };
+    persons: { getNames: (personId: string) => Promise<RawName[]> };
+  };
 };
 
 const printableItems = computed(() => {
@@ -72,7 +123,6 @@ const imageUrls = reactive<Record<string, string | null>>({});
 
 async function loadUrls(): Promise<void> {
   const ids = printableItems.value.map(i => i.id);
-  // Drop cached entries for items no longer visible
   for (const cached of Object.keys(imageUrls)) {
     if (!ids.includes(cached)) delete imageUrls[cached];
   }
@@ -88,7 +138,44 @@ async function loadUrls(): Promise<void> {
   );
 }
 
-watch(printableItems, loadUrls, { immediate: true });
+// Face tags: regions sorted left-to-right with resolved person names.
+const faceTags = reactive<Record<string, FaceTag[]>>({});
+
+async function loadFaceTags(): Promise<void> {
+  if (!props.showCaptions) return;
+  const ids = printableItems.value.map(i => i.id);
+  for (const cached of Object.keys(faceTags)) {
+    if (!ids.includes(cached)) delete faceTags[cached];
+  }
+  await Promise.all(ids.map(async (mediaId) => {
+    if (faceTags[mediaId] !== undefined) return;
+    try {
+      const regions = await window.api.mediaRegions.getForMedia(mediaId);
+      const tagged = regions.filter(r => r.person_id).sort((a, b) => a.x - b.x);
+      if (!tagged.length) { faceTags[mediaId] = []; return; }
+
+      const tags = await Promise.all(tagged.map(async r => {
+        try {
+          const names = await window.api.persons.getNames(r.person_id!);
+          const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+          const name = [primary?.preferred_name || primary?.given_name, primary?.surname]
+            .filter(Boolean).join(' ') || r.label || '';
+          return name ? { personId: r.person_id!, name, x: r.x, y: r.y, width: r.width, height: r.height } : null;
+        } catch {
+          return null;
+        }
+      }));
+
+      faceTags[mediaId] = tags.filter((t): t is FaceTag => t !== null);
+    } catch {
+      faceTags[mediaId] = [];
+    }
+  }));
+}
+
+watch(printableItems, async () => {
+  await Promise.all([loadUrls(), loadFaceTags()]);
+}, { immediate: true });
 
 function formatDate(iso: string): string {
   return iso.slice(0, 10);
@@ -101,9 +188,75 @@ function formatDate(iso: string): string {
 .media-chronological.per-page-2 { grid-template-columns: repeat(2, 1fr); }
 .media-chronological.per-page-4 { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
 .media-item { break-inside: avoid; }
-.media-image img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
-.media-caption { margin-top: var(--space-sm); font-size: var(--font-sm); }
+.media-image { position: relative; }
+.media-image img { max-width: 100%; height: auto; border-radius: var(--radius-sm); display: block; }
+
+.face-tag-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.face-box {
+  position: absolute;
+  border: 1.5px solid transparent;
+  border-radius: 2px;
+  pointer-events: auto;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.face-box:hover {
+  border-color: rgba(74, 158, 255, 0.8);
+}
+.face-hover-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 4px 3px;
+  text-align: center;
+  font-size: 10px;
+  font-style: normal;
+  color: white;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.face-box:hover .face-hover-label { opacity: 1; }
+
+@media print {
+  .face-tag-overlay { display: none; }
+}
+.media-caption { margin-top: var(--space-sm); font-size: var(--font-sm); font-style: italic; }
 .caption-title { font-weight: 600; }
 .caption-context { color: var(--text-secondary); font-style: italic; }
 .caption-date { color: var(--text-muted); }
+
+.caption-faces {
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+.faces-prefix {
+  margin-right: 3px;
+  font-style: italic;
+}
+.face-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--surface-border-subtle);
+  transition: color 0.15s, border-color 0.15s;
+}
+.face-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+@media print {
+  .face-link { border-bottom: none; }
+}
 </style>

@@ -10,7 +10,8 @@
       <div class="name">{{ fullName }}</div>
       <div v-if="yearsLabel" class="years">{{ yearsLabel }}</div>
       <div v-if="keyPlace" class="place">{{ keyPlace }}</div>
-      <div v-if="ahnentafel" class="ahnentafel">#{{ ahnentafel }}</div>
+      <a v-if="ahnentafel && fanChartHref" :href="fanChartHref" class="ahnentafel ahnentafel-link">#{{ ahnentafel }}</a>
+      <div v-else-if="ahnentafel" class="ahnentafel">#{{ ahnentafel }}</div>
     </div>
   </div>
 </template>
@@ -27,6 +28,7 @@ const props = defineProps<{
   keyPlace?: string | null;
   portraitUrl?: string | null;
   ahnentafel?: number | null;
+  fanChartHref?: string | null;
 }>();
 
 const fullName = computed(() =>
@@ -70,4 +72,15 @@ const yearsLabel = computed(() => {
 .sex-U .portrait { background: var(--sex-u-bg); color: var(--sex-u-text); }
 .name { font-weight: 600; }
 .years, .place, .ahnentafel { font-size: var(--font-sm); color: var(--text-secondary); }
+.ahnentafel-link {
+  text-decoration: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ahnentafel-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
 </style>
