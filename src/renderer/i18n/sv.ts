@@ -716,7 +716,6 @@ export default {
     zoomFit: 'Anpassa',
     tabAncestorBook: 'Stamtavla',
     tabPlaceHistory: 'Platshistorik',
-    tabFamilyNarrative: 'Familjeberättelse',
     tabPedigreeChart: 'Stamtavla',
     tabHourglassChart: 'Timglas',
     tabDescendantChart: 'Efterkommande',
@@ -764,7 +763,7 @@ export default {
       ancestorBook: 'Kunde inte ladda stamtavlan.',
       familyGroupSheet: 'Kunde inte ladda familjeblad.',
       placeHistory: 'Kunde inte ladda platshistorik.',
-      familyNarrative: 'Kunde inte ladda familjeberättelse.',
+      amarriage: 'Kunde inte ladda Ett äktenskap-rapport.',
       alife: 'Kunde inte ladda Ett liv-rapport.',
     },
     alife: {
@@ -774,6 +773,16 @@ export default {
       family: 'Familj',
       events: 'Händelser',
       biography: 'Biografi',
+    },
+    amarriage: {
+      title: 'Ett äktenskap',
+      lifeMap: 'Livskarta',
+      sharedTimeline: 'Gemensam tidslinje',
+      theCouple: 'Paret',
+      events: 'Händelser',
+      narrative: 'Berättelse',
+      mapSpouse1: 'Första partnerns livskarta',
+      mapSpouse2: 'Andra partnerns livskarta',
     },
     common: {
       compiledBy: 'Sammanställt av {name}',
