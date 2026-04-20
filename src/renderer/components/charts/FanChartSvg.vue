@@ -80,10 +80,8 @@
         </text>
       </template>
 
-      <!-- Radial text gen 5-6: up to 4 lines (name line 1, name line 2, birth, death) read outward.
-           Names are word-wrapped across the two name rows so long surnames spill into row 1
-           or long given names spill into row 2 instead of clipping the segment. -->
-      <template v-else-if="seg.person && (seg.generation === 5 || seg.generation === 6)">
+      <!-- Radial text gen 5-6 (wide arc): up to 4 lines (name line 1, name line 2, birth, death) read outward. -->
+      <template v-else-if="seg.person && (seg.generation === 5 || seg.generation === 6) && !isCompactGen(seg.generation)">
         <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
           <text v-if="nameLine1(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).given" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ nameLine1(seg) }}</text>
           <text v-if="nameLine2(seg)" :x="seg.textX" :y="seg.textY" :dy="lineDy(seg).surname" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ nameLine2(seg) }}</text>
@@ -92,8 +90,16 @@
         </g>
       </template>
 
-      <!-- Radial text gen 7+: 2 compact lines (full name + date range) — gen 7 ring is double-depth so a longer line fits. -->
-      <template v-else-if="seg.person && seg.generation >= 7">
+      <!-- Radial text gen 8: single line (full name + year range) — segments are too
+           narrow tangentially for any stack, so everything sits on one radial baseline. -->
+      <template v-else-if="seg.person && seg.generation >= 8">
+        <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
+          <text :x="seg.textX" :y="seg.textY" dy="0" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fullNameLabel(seg) }}<tspan v-if="yearRangeLabel(seg)" :font-size="dateFontSize(seg.generation)" font-weight="400" :fill="dateColor"> {{ yearRangeLabel(seg) }}</tspan></text>
+        </g>
+      </template>
+
+      <!-- Radial text gen 5+ (narrow arc) and gen 7 (all arcs): 2 compact lines (full name + date range). -->
+      <template v-else-if="seg.person && (seg.generation === 7 || (seg.generation >= 5 && isCompactGen(seg.generation)))">
         <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
           <text :x="seg.textX" :y="seg.textY" :dy="twoLineDy(seg.generation).name" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fullNameLabel(seg) }}</text>
           <text v-if="dateRangeLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="twoLineDy(seg.generation).date" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">{{ dateRangeLabel(seg) }}</text>
@@ -112,20 +118,10 @@
     >
       <a v-if="linkBase && focalSegment.person" :href="`${linkBase}${focalSegment.person.id}`">
         <title>{{ tooltipLabel(focalSegment) }}</title>
-        <template v-if="focalSegment.focalPathD">
-          <path :d="focalSegment.focalPathD" :fill="focalSegment.fill" :stroke="strokeColor" :stroke-width="strokeWidth" filter="url(#fan-focal-shadow)" />
-        </template>
-        <template v-else>
-          <circle :cx="focalCx" :cy="focalCy" r="50" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
-        </template>
+        <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
       </a>
       <template v-else>
-        <template v-if="focalSegment.focalPathD">
-          <path :d="focalSegment.focalPathD" :fill="focalSegment.fill" :stroke="strokeColor" :stroke-width="strokeWidth" filter="url(#fan-focal-shadow)" />
-        </template>
-        <template v-else>
-          <circle :cx="focalCx" :cy="focalCy" r="50" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
-        </template>
+        <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
         <title v-if="focalSegment.person && !linkBase">{{ tooltipLabel(focalSegment) }}</title>
       </template>
 
@@ -170,6 +166,7 @@ interface Props {
   focalCy: number;
   vbWidth: number;
   vbHeight: number;
+  arcSpan?: number;          // 180–360, used to scale text + switch layout density
   fontFamily?: string;
   linkBase?: string | null;
   strokeWidth?: number;
@@ -184,6 +181,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  arcSpan: 360,
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   linkBase: null,
   strokeWidth: 1.5,
@@ -348,11 +346,26 @@ function dateRangeLabel(seg: FanSegment): string {
   return parts.join(' ');
 }
 
-// Tangential dy offsets for the gen 7+ 2-line layout. Tighter for gen 8 since
-// its segment is angularly half the size of gen 7.
+// Gen 8 date range: "* YYYY † YYYY" (year-only to fit on one radial baseline).
+// Rendered as a <tspan> next to the name so the dates can use the smaller
+// date font/colour, matching how gens 5-7 separate name and date styling.
+function yearRangeLabel(seg: FanSegment): string {
+  const by = (seg.person?.birthDate ?? '').slice(0, 4);
+  const dy = (seg.person?.deathDate ?? '').slice(0, 4);
+  if (!by && !dy) return '';
+  const range: string[] = [];
+  if (by) range.push(`* ${by}`);
+  if (dy) range.push(`\u2020 ${dy}`);
+  return range.join(' ');
+}
+
+// Tangential dy offsets for the 2-line radial layout. Gen 5-6 (compact narrow-arc
+// mode) and gen 7 each get their own gap based on how much tangential room the
+// segment has — gen 7 segments are half as wide as gen 6 so the gap is tighter.
 function twoLineDy(gen: number): { name: string; date: string } {
-  if (gen >= 8) return { name: '-2', date: '2.5' };
-  return { name: '-3', date: '3.5' };
+  if (gen === 7) return { name: '-2', date: '2.2' };
+  // gen 5-6 compact mode (narrow arc): moderate gap
+  return { name: '-3', date: '3' };
 }
 
 function tooltipLabel(seg: FanSegment): string {
@@ -365,14 +378,38 @@ function tooltipLabel(seg: FanSegment): string {
   return name + birth + death;
 }
 
+// Font sizes are linearly interpolated between the narrow-arc target (180°) and
+// the wide-arc baseline (360°). 360° matches the previously-tuned sizes; 180°
+// shrinks gen 3+ to fit inside much narrower tangential slots.
+const NAME_WIDE: Record<number, number>   = { 1: 11, 2: 10,  3: 9,   4: 8.5, 5: 7.5, 6: 6,   7: 5,   8: 4.5 };
+const NAME_NARROW: Record<number, number> = { 1: 11, 2: 10,  3: 7.5, 4: 6.5, 5: 6,   6: 5,   7: 4.5, 8: 4   };
+const DATE_WIDE: Record<number, number>   = { 1: 9,  2: 8,   3: 7.5, 4: 7,   5: 6.5, 6: 5.5, 7: 4.5, 8: 4   };
+const DATE_NARROW: Record<number, number> = { 1: 9,  2: 7.5, 3: 6.5, 4: 5.5, 5: 5,   6: 4.5, 7: 4,   8: 3.6 };
+
+// t=0 at 180°, t=1 at 360°.
+const arcT = computed(() => Math.max(0, Math.min(1, (props.arcSpan - 180) / 180)));
+
 function nameFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 11, 2: 9.5, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4.5, 8: 4 };
-  return sizes[gen] ?? 4;
+  const wide = NAME_WIDE[gen] ?? 4.5;
+  const narrow = NAME_NARROW[gen] ?? 4;
+  return narrow + (wide - narrow) * arcT.value;
 }
 
 function dateFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 9, 2: 7.5, 3: 6.5, 4: 6, 5: 5, 6: 4.5, 7: 4, 8: 3.6 };
-  return sizes[gen] ?? 3.6;
+  const wide = DATE_WIDE[gen] ?? 4;
+  const narrow = DATE_NARROW[gen] ?? 3.6;
+  return narrow + (wide - narrow) * arcT.value;
+}
+
+// When the arc is narrow, gen 5-6 switch to a compact 2-line radial layout
+// (full name + date range) — same shape as gen 7+ — so there's more tangential
+// room per line and short names don't share a cramped 4-row stack.
+// Thresholds are per-gen: gen 5 has double the sweep of gen 6 at the same arc,
+// so it can stay in the 4-line layout down to 240° before arcs get too narrow.
+function isCompactGen(gen: number): boolean {
+  if (gen === 5) return props.arcSpan < 240;
+  if (gen === 6) return props.arcSpan < 300;
+  return false;
 }
 
 // Per-generation dy offsets for radial/straight text stacking.

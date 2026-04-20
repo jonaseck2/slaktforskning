@@ -11,6 +11,7 @@
         :focal-cy="viewBoxInfo.cy"
         :vb-width="viewBoxInfo.width"
         :vb-height="viewBoxInfo.height"
+        :arc-span="selectedArc"
         :width="svgDisplayWidth"
         :height="svgDisplayHeight"
         :stroke-color="colorMode === 'bw' ? '#999' : (chartTheme.dark ? 'rgba(255,255,255,0.15)' : 'white')"

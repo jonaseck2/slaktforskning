@@ -97,11 +97,11 @@ describe('computeFanLayout', () => {
     }
   });
 
-  it('focal pathD is empty, focalPathD is non-empty for 180° arc', () => {
+  it('focal pathD and focalPathD are empty — <circle> handles focal rendering', () => {
     const segs = computeFanLayout(makeTree(1), { arcSpan: 180 });
     const focal = segs.find(s => s.isFocal)!;
     expect(focal.pathD).toBe('');
-    expect(focal.focalPathD.length).toBeGreaterThan(0);
+    expect(focal.focalPathD).toBe('');
   });
 
   it('default fill fallback: non-empty non-focal = #999, empty = #e0e0e0', () => {
