@@ -11,23 +11,6 @@
       @update:model-value="activeTab = $event as typeof activeTab"
     />
 
-    <!-- Ancestor Sheet Tab -->
-    <div v-if="activeTab === 'ancestor'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls"></div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!ancestorRootId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!ancestorRootId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-        </div>
-      </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="ancestorRootId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AncestorSheetReport :root-person-id="ancestorRootId" :generations="ancestorGenerations" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
-
     <!-- Family Group Sheet Tab -->
     <div v-if="activeTab === 'family'" class="tab-content">
       <div class="tab-header">
@@ -359,8 +342,8 @@
       </div>
     </div>
 
-    <!-- Pedigree Chart Tab -->
-    <div v-if="activeTab === 'pedigreeChart'" class="tab-content">
+    <!-- Pedigree Print Tab -->
+    <div v-if="activeTab === 'pedigreePrint'" class="tab-content">
       <div class="tab-header">
         <div class="controls"></div>
         <div class="print-actions">
@@ -459,12 +442,6 @@
     </div>
 
     <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
-      <template v-if="activeTab === 'ancestor'">
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="ancestorGenerations <= 3" @click="ancestorGenerations--">−</button>
-        <span class="zoom-extra-value">{{ ancestorGenerations }}</span>
-        <button class="zoom-extra-btn" :disabled="ancestorGenerations >= 5" @click="ancestorGenerations++">+</button>
-      </template>
       <template v-if="activeTab === 'fanChart'">
         <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
         <button
@@ -480,7 +457,7 @@
         <span class="zoom-extra-value">{{ fanGenerations }}</span>
         <button class="zoom-extra-btn" :disabled="fanGenerations >= 8" @click="fanGenerations++">+</button>
       </template>
-      <template v-if="activeTab === 'pedigreeChart'">
+      <template v-if="activeTab === 'pedigreePrint'">
         <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
         <button class="zoom-extra-btn" :disabled="pedigreeGenerations <= 1" @click="pedigreeGenerations--">−</button>
         <span class="zoom-extra-value">{{ pedigreeGenerations }}</span>
@@ -515,7 +492,6 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
-import AncestorSheetReport from '../components/reports/AncestorSheetReport.vue';
 import { useFocusStore } from '../stores/focus';
 import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
 import IndividualSummary from '../components/reports/IndividualSummary.vue';
@@ -548,10 +524,9 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
 const reportLoading = ref(false);
 const tabs = computed(() => [
-  { id: 'ancestor', label: t('reports.tabAncestor') },
   { id: 'family', label: t('reports.tabFamily') },
   { id: 'individual', label: t('reports.tabIndividual') },
   { id: 'yourAncestors', label: t('reports.yourAncestors.tabTitle') },
@@ -561,15 +536,13 @@ const tabs = computed(() => [
   { id: 'photoAlbum', label: t('reports.photoAlbum.tabTitle') },
   { id: 'placeChronicle', label: t('reports.placeChronicle.title') },
   { id: 'amarriage', label: t('reports.amarriage.title') },
-  { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
+  { id: 'pedigreePrint', label: t('reports.pedigreePrint.title') },
   { id: 'hourglassChart', label: t('reports.tabHourglassChart') },
   { id: 'descendantChart', label: t('reports.tabDescendantChart') },
   { id: 'fanChart', label: t('reports.tabFanChart') },
   { id: 'timeline', label: t('reports.tabTimeline') },
 ]);
 
-const ancestorRootId = computed(() => focusStore.personId);
-const ancestorGenerations = ref(4);
 const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
 const individualPersonId = computed(() => focusStore.personId);
@@ -672,7 +645,6 @@ function triggerLoading() {
 const chartPersonId = computed(() => focusStore.personId);
 
 watch(activeTab, triggerLoading);
-watch(ancestorRootId, triggerLoading);
 watch(individualPersonId, triggerLoading);
 watch(yourAncestorsPersonId, triggerLoading);
 watch(aLifePersonId, triggerLoading);
@@ -742,7 +714,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['family', 'individual', 'yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage', 'pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
