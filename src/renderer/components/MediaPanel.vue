@@ -489,8 +489,12 @@ async function deleteRegion(regionId: string) {
 
 async function assignPersonToRegion(regionId: string, personId: string) {
   editingTagId.value = null;
+  const prevPersonId = regions.value.find(r => r.id === regionId)?.person_id ?? null;
   await window.api.mediaRegions.update(regionId, { person_id: personId });
   profilePicStore.invalidatePerson(personId);
+  if (prevPersonId && prevPersonId !== personId) {
+    profilePicStore.invalidatePerson(prevPersonId);
+  }
   // Also ensure the person is linked to this media
   if (props.mediaId && !linkedPersons.value.some(lp => lp.entityId === personId)) {
     await window.api.media.addLink({

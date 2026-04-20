@@ -96,6 +96,9 @@ window.api.media.delete(id)                              // → boolean
 window.api.media.forEntity(entityType, entityId)         // → (Media & { link_id, link_type })[]
 window.api.media.addLink(data)                           // → MediaLink
 window.api.media.removeLink(linkId)                      // → boolean
+window.api.media.reorder(linkIds)                        // → void
+window.api.media.profilePicRef(personId)                 // → { mediaId, region } | null
+window.api.media.profilePicRefs(personIds)               // → Record<personId, { mediaId, region } | null>
 
 window.api.gazetteers.list()                              // → GazetteerInfo[]
 window.api.gazetteers.import(json)                        // → { id, name, locale, nodeCount }
@@ -201,6 +204,9 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `media:forEntity` | `media.getMediaForEntity(db, entityType, entityId)` |
 | `media:addLink` | `media.addMediaLink(db, data)` |
 | `media:removeLink` | `media.removeMediaLink(db, linkId)` |
+| `media:reorder` | `media.reorderMediaLinks(db, linkIds)` |
+| `media:profilePicRef` | `media.getPersonProfilePicRef(db, personId)` |
+| `media:profilePicRefs` | `media.getPersonProfilePicRefs(db, personIds)` |
 | `gazetteers:list` | `gazetteers.listGazetteers(db)` |
 | `gazetteers:import` | `gazetteers.importGazetteer(db, json)` |
 | `gazetteers:export` | `gazetteers.exportGazetteer(db, id)` |

@@ -18,47 +18,48 @@ interface MediaRef { mediaId: string; region: RegionFrac | null }
 const EMPTY: ProfilePicEntry = { status: 'idle', src: null };
 
 export const useProfilePicStore = defineStore('profilePic', () => {
-  // Per-person entries. Reactive map — consumers can read entries.value[personId].
+  // Per-person entries. Reactive map — consumers read entries.value[personId].
   const entries = ref<Record<string, ProfilePicEntry>>({});
 
-  // In-flight promises to dedupe concurrent ensureLoaded calls.
+  // Per-person in-flight promise (dedupes concurrent ensureLoaded calls).
   const inFlight = new Map<string, Promise<void>>();
 
-  // Cache of raw media data URLs so 3 people in one photo share one readAsDataUrl.
-  const mediaUrlCache = new Map<string, Promise<string | null>>();
+  // Per-person generation counter. Bumped on invalidate; pending async work
+  // compares its captured generation to the current one before writing, so
+  // a stale in-flight resolve can't overwrite a cleared entry.
+  const generations = new Map<string, number>();
 
   function get(personId: string): ProfilePicEntry {
     return entries.value[personId] ?? EMPTY;
   }
 
-  function set(personId: string, entry: ProfilePicEntry) {
+  function setEntry(personId: string, gen: number, entry: ProfilePicEntry): boolean {
+    if ((generations.get(personId) ?? 0) !== gen) return false;
     entries.value = { ...entries.value, [personId]: entry };
+    return true;
   }
 
-  async function loadMediaUrl(mediaId: string): Promise<string | null> {
-    let p = mediaUrlCache.get(mediaId);
-    if (!p) {
-      p = window.api.media.readAsDataUrl(mediaId) as Promise<string | null>;
-      mediaUrlCache.set(mediaId, p);
-    }
-    return p;
-  }
-
-  async function resolveOne(personId: string, mediaRef: MediaRef | null): Promise<void> {
-    if (!mediaRef) {
-      set(personId, { status: 'none', src: null });
+  async function resolveOne(
+    personId: string,
+    gen: number,
+    mediaRef: MediaRef | null,
+    urlPromise: Promise<string | null> | null,
+  ): Promise<void> {
+    if (!mediaRef || !urlPromise) {
+      setEntry(personId, gen, { status: 'none', src: null });
       return;
     }
     try {
-      const url = await loadMediaUrl(mediaRef.mediaId);
+      const url = await urlPromise;
+      if ((generations.get(personId) ?? 0) !== gen) return;
       if (!url) {
-        set(personId, { status: 'none', src: null });
+        setEntry(personId, gen, { status: 'none', src: null });
         return;
       }
       const cropped = await cropImageToDataUrl(url, mediaRef.region);
-      set(personId, { status: 'ready', src: cropped });
+      setEntry(personId, gen, { status: 'ready', src: cropped });
     } catch {
-      set(personId, { status: 'error', src: null });
+      setEntry(personId, gen, { status: 'error', src: null });
     }
   }
 
@@ -69,11 +70,15 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     }
     const existing = inFlight.get(personId);
     if (existing) return existing;
-    set(personId, { status: 'loading', src: null });
+    const gen = generations.get(personId) ?? 0;
+    entries.value = { ...entries.value, [personId]: { status: 'loading', src: null } };
     const p = (async () => {
       try {
         const mediaRef = await window.api.media.profilePicRef(personId) as MediaRef | null;
-        await resolveOne(personId, mediaRef);
+        const urlPromise = mediaRef
+          ? (window.api.media.readAsDataUrl(mediaRef.mediaId) as Promise<string | null>)
+          : null;
+        await resolveOne(personId, gen, mediaRef, urlPromise);
       } finally {
         inFlight.delete(personId);
       }
@@ -82,29 +87,56 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     return p;
   }
 
+  // Loads profile pics for many persons in one shot. Dedupes by mediaId WITHIN
+  // this batch (3 people in 1 photo share one readAsDataUrl call), but does not
+  // persist a media-url cache across batches — that would leak full-image
+  // data URLs (~5 MB each) without eviction.
   async function ensureBatch(personIds: string[]): Promise<void> {
     const toFetch = personIds.filter(id => {
       const e = entries.value[id];
       return !e || e.status === 'idle';
     });
     if (toFetch.length === 0) return;
-    for (const id of toFetch) set(id, { status: 'loading', src: null });
+    const perPersonGen = new Map<string, number>();
+    for (const id of toFetch) {
+      perPersonGen.set(id, generations.get(id) ?? 0);
+      entries.value = { ...entries.value, [id]: { status: 'loading', src: null } };
+    }
     const refs = await window.api.media.profilePicRefs(toFetch) as Record<string, MediaRef | null>;
-    await Promise.all(toFetch.map(id => resolveOne(id, refs[id] ?? null)));
+
+    // Dedup mediaId fetches within this batch only.
+    const urlByMediaId = new Map<string, Promise<string | null>>();
+    function urlFor(mediaId: string): Promise<string | null> {
+      let p = urlByMediaId.get(mediaId);
+      if (!p) {
+        p = window.api.media.readAsDataUrl(mediaId) as Promise<string | null>;
+        urlByMediaId.set(mediaId, p);
+      }
+      return p;
+    }
+
+    await Promise.all(toFetch.map(id => {
+      const mediaRef = refs[id] ?? null;
+      const gen = perPersonGen.get(id) ?? 0;
+      const urlPromise = mediaRef ? urlFor(mediaRef.mediaId) : null;
+      return resolveOne(id, gen, mediaRef, urlPromise);
+    }));
   }
 
   function invalidatePerson(personId: string) {
+    generations.set(personId, (generations.get(personId) ?? 0) + 1);
     const copy = { ...entries.value };
     delete copy[personId];
     entries.value = copy;
     inFlight.delete(personId);
-    // Don't clear mediaUrlCache — the raw image didn't change, only the link/region did.
   }
 
   function invalidateAll() {
+    for (const id of Object.keys(entries.value)) {
+      generations.set(id, (generations.get(id) ?? 0) + 1);
+    }
     entries.value = {};
     inFlight.clear();
-    mediaUrlCache.clear();
   }
 
   return {
