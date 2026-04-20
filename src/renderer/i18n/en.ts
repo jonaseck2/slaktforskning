@@ -700,6 +700,10 @@ export default {
   reports: {
     nav: 'Reports',
     title: 'Reports',
+    groups: {
+      keepsake: 'Keepsake reports',
+      framablePrints: 'Framable prints',
+    },
     rootPerson: 'Root person',
     person: 'Person',
     couple: 'Couple / Family',

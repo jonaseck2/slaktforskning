@@ -5,11 +5,24 @@
       <span v-if="reportLoading" class="running-hint">{{ $t('reports.loadingReport') }}</span>
     </div>
 
-    <FilterChips
-      :model-value="activeTab"
-      :options="tabs.map(t => ({ value: t.id, label: t.label }))"
-      @update:model-value="activeTab = $event as typeof activeTab"
-    />
+    <div class="tab-groups">
+      <div class="tab-group">
+        <h3 class="tab-group-label">{{ $t('reports.groups.keepsake') }}</h3>
+        <FilterChips
+          :model-value="activeTab"
+          :options="keepsakeTabs"
+          @update:model-value="activeTab = $event as typeof activeTab"
+        />
+      </div>
+      <div class="tab-group">
+        <h3 class="tab-group-label">{{ $t('reports.groups.framablePrints') }}</h3>
+        <FilterChips
+          :model-value="activeTab"
+          :options="framableTabs"
+          @update:model-value="activeTab = $event as typeof activeTab"
+        />
+      </div>
+    </div>
 
     <!-- Your Ancestors Tab -->
     <div v-if="activeTab === 'yourAncestors'" class="tab-content">
@@ -479,19 +492,21 @@ const focusStore = useFocusStore();
 
 const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
 const reportLoading = ref(false);
-const tabs = computed(() => [
-  { id: 'yourAncestors', label: t('reports.yourAncestors.tabTitle') },
-  { id: 'alife', label: t('reports.alife.title') },
-  { id: 'onePage', label: t('reports.onePage.title') },
-  { id: 'familyInYear', label: t('reports.familyInYear.tabTitle') },
-  { id: 'photoAlbum', label: t('reports.photoAlbum.tabTitle') },
-  { id: 'placeChronicle', label: t('reports.placeChronicle.title') },
-  { id: 'amarriage', label: t('reports.amarriage.title') },
-  { id: 'pedigreePrint', label: t('reports.pedigreePrint.title') },
-  { id: 'hourglassChart', label: t('reports.tabHourglassChart') },
-  { id: 'descendantChart', label: t('reports.tabDescendantChart') },
-  { id: 'fanChart', label: t('reports.tabFanChart') },
-  { id: 'timeline', label: t('reports.tabTimeline') },
+const keepsakeTabs = computed(() => [
+  { value: 'alife', label: t('reports.alife.title') },
+  { value: 'amarriage', label: t('reports.amarriage.title') },
+  { value: 'placeChronicle', label: t('reports.placeChronicle.title') },
+  { value: 'yourAncestors', label: t('reports.yourAncestors.tabTitle') },
+  { value: 'onePage', label: t('reports.onePage.title') },
+  { value: 'familyInYear', label: t('reports.familyInYear.tabTitle') },
+  { value: 'photoAlbum', label: t('reports.photoAlbum.tabTitle') },
+]);
+const framableTabs = computed(() => [
+  { value: 'pedigreePrint', label: t('reports.pedigreePrint.title') },
+  { value: 'fanChart', label: t('reports.tabFanChart') },
+  { value: 'descendantChart', label: t('reports.tabDescendantChart') },
+  { value: 'hourglassChart', label: t('reports.tabHourglassChart') },
+  { value: 'timeline', label: t('reports.tabTimeline') },
 ]);
 
 const coupleRelationships = ref<RelationshipOption[]>([]);
@@ -696,6 +711,14 @@ async function exportPdf() {
   margin-bottom: var(--space-lg);
 }
 .view-header h2 { margin: 0; }
+.tab-groups { display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-md); }
+.tab-group-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 .tab-content { display: flex; flex-direction: column; gap: var(--space-md); }
 
 .tab-header {

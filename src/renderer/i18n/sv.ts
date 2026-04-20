@@ -700,6 +700,10 @@ export default {
   reports: {
     nav: 'Rapporter',
     title: 'Rapporter',
+    groups: {
+      keepsake: 'Minnesrapporter',
+      framablePrints: 'Inramningsbara diagram',
+    },
     rootPerson: 'Utgångsperson',
     person: 'Person',
     couple: 'Par / Familj',
