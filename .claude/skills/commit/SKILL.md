@@ -67,9 +67,11 @@ The bumped version becomes the canonical version — use it in the Implementatio
 
 ## Plan + Roadmap sync
 
+**Path convention (overrides superpowers defaults):** All plans and design specs in this repo live under `docs/plans/` — never `docs/superpowers/specs/` or `.claude/plans/`. Design spec → `-design.md` suffix; implementation plan → no suffix; both archive to `docs/plans/archive/` when done. If a commit contains files under `docs/superpowers/` or `.claude/plans/`, that's a bug — move them before committing.
+
 **Every version-bumped commit must have a matching row in `docs/PLAN.md` Implementation Status.** This includes small fixes without a plan file — they still get a one-line entry: `| v0.69.1 | Fix: cause field restricted to death events | — |`
 
-If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/` or `.claude/plans/`:
+If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
 - Update `docs/PLAN.md` accordingly
 - Include these doc updates in the same commit

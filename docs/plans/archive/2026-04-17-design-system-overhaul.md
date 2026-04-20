@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 Composition API, CSS custom properties, localStorage for theme persistence.
 
-**Spec:** docs/superpowers/specs/2026-04-17-design-system-spec.md
+**Spec:** docs/plans/2026-04-17-design-system-spec.md
 
 ---
 

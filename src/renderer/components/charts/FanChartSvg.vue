@@ -67,16 +67,16 @@
       <!-- Curved text (gen 1-4) -->
       <template v-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
         <text v-if="givenLabel(seg)" text-anchor="middle" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">
-          <textPath :href="`#ftpg-${seg.ahnNum}`" startOffset="50%">{{ givenLabel(seg) }}</textPath>
+          <textPath :href="`#ftpg-${seg.ahnNum}`" startOffset="50%">{{ fitCurved(givenLabel(seg), seg, nameFontSize(seg.generation)) }}</textPath>
         </text>
         <text text-anchor="middle" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">
-          <textPath :href="`#ftp-${seg.ahnNum}`" startOffset="50%">{{ surnameLabel(seg) }}</textPath>
+          <textPath :href="`#ftp-${seg.ahnNum}`" startOffset="50%">{{ fitCurved(surnameLabel(seg), seg, nameFontSize(seg.generation)) }}</textPath>
         </text>
         <text v-if="birthLabel(seg)" text-anchor="middle" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">
-          <textPath :href="`#ftpb-${seg.ahnNum}`" startOffset="50%">{{ birthLabel(seg) }}</textPath>
+          <textPath :href="`#ftpb-${seg.ahnNum}`" startOffset="50%">{{ fitCurved(birthLabel(seg), seg, dateFontSize(seg.generation)) }}</textPath>
         </text>
         <text v-if="deathLabel(seg)" text-anchor="middle" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">
-          <textPath :href="`#ftpd-${seg.ahnNum}`" startOffset="50%">{{ deathLabel(seg) }}</textPath>
+          <textPath :href="`#ftpd-${seg.ahnNum}`" startOffset="50%">{{ fitCurved(deathLabel(seg), seg, dateFontSize(seg.generation)) }}</textPath>
         </text>
       </template>
 
@@ -327,6 +327,17 @@ function measureTextWidth(text: string, fontSize: number): number {
 function nameLine1(seg: FanSegment): string { return wrappedNameLines(seg)[0]; }
 function nameLine2(seg: FanSegment): string { return wrappedNameLines(seg)[1]; }
 
+// Truncate a curved-text label to the arc length it has available. Uses the
+// segment's mid-radius arc as a proxy — it's within a few px of the actual
+// per-line radii, which is close enough for fit-checks.
+function fitCurved(text: string, seg: FanSegment, fontSize: number): string {
+  if (!text) return '';
+  const rMid = (seg.rInner + seg.rOuter) / 2;
+  const arcLen = rMid * (seg.sweepDeg * Math.PI / 180) - 4; // small margin
+  if (arcLen <= 0) return '';
+  return truncateToWidth(text, arcLen, fontSize);
+}
+
 function dateRangeLabel(seg: FanSegment): string {
   const b = seg.person?.birthDate ?? '';
   const d = seg.person?.deathDate ?? '';
@@ -355,13 +366,13 @@ function tooltipLabel(seg: FanSegment): string {
 }
 
 function nameFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 11, 2: 10, 3: 9, 4: 8.5, 5: 7.5, 6: 6, 7: 5, 8: 4.5 };
-  return sizes[gen] ?? 4.5;
+  const sizes: Record<number, number> = { 1: 11, 2: 9.5, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4.5, 8: 4 };
+  return sizes[gen] ?? 4;
 }
 
 function dateFontSize(gen: number): number {
-  const sizes: Record<number, number> = { 1: 9, 2: 8, 3: 7.5, 4: 7, 5: 6.5, 6: 5.5, 7: 4.5, 8: 4 };
-  return sizes[gen] ?? 4;
+  const sizes: Record<number, number> = { 1: 9, 2: 7.5, 3: 6.5, 4: 6, 5: 5, 6: 4.5, 7: 4, 8: 3.6 };
+  return sizes[gen] ?? 3.6;
 }
 
 // Per-generation dy offsets for radial/straight text stacking.

@@ -1373,7 +1373,7 @@ src/
 
 Add row:
 ```
-| v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage | [spec](superpowers/specs/2026-04-18-gazetteer-build-extraction-design.md) |
+| v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage | [spec](plans/2026-04-18-gazetteer-build-extraction-design.md) |
 ```
 
 - [ ] **Step 6: Bump version to 0.104.0 in package.json**

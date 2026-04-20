@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 Composition API, ARIA attributes, Web Speech API (speechSynthesis), vue-i18n
 
-**Spec:** `docs/superpowers/specs/2026-04-08-accessibility-tts-design.md`
+**Spec:** `docs/plans/2026-04-08-accessibility-tts-design.md`
 
 ---
 

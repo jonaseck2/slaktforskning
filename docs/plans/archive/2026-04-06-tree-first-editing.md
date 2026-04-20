@@ -6,7 +6,7 @@
 
 **Architecture:** `PersonPanel.vue` is extended in place (no view/edit toggle, no tabs). Each section is a collapsible accordion (state in localStorage). New sections reuse existing components: `EventList`, `CitationForm`, `GroupPicker`, `AddRelatedPersonModal`. The ⊕ button is rendered as an SVG overlay on PedigreeChart and HourglassChart nodes; the popover is a positioned HTML element (not SVG).
 
-**Design spec:** `docs/superpowers/specs/2026-04-06-tree-first-editing-design.md`
+**Design spec:** `docs/plans/2026-04-06-tree-first-editing-design.md`
 
 ---
 

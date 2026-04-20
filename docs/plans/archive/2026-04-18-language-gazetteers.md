@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, GeoNames data, Wikidata SPARQL, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-18-language-gazetteers-design.md`
+**Spec:** `docs/plans/2026-04-18-language-gazetteers-design.md`
 
 ---
 
@@ -1010,11 +1010,11 @@ Add a done entry for language gazetteers with a pointer to the spec and plan fil
 
 - [ ] **Step 4: Archive the design spec**
 
-Move `docs/superpowers/specs/2026-04-18-language-gazetteers-design.md` to `docs/superpowers/specs/archive/`.
+Move `docs/plans/2026-04-18-language-gazetteers-design.md` to `docs/plans/archive/`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add CLAUDE.md docs/PLAN.md docs/superpowers/specs/
+git add CLAUDE.md docs/PLAN.md docs/plans/
 git commit -m "docs: add language gazetteers to CLAUDE.md and PLAN.md"
 ```

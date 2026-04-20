@@ -8,7 +8,7 @@
 
 **Tech Stack:** MCP SDK (`@modelcontextprotocol/sdk`), Zod schemas, node-sqlite3-wasm, Electron IPC for chart bridge
 
-**Spec:** `docs/superpowers/specs/2026-04-15-mcp-overhaul-design.md`
+**Spec:** `docs/plans/2026-04-15-mcp-overhaul-design.md`
 
 ---
 

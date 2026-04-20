@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 Composition API, vue-i18n, TypeScript. No new components, no new CSS classes — `.empty-hint` already exists in `shared.css`.
 
-**Spec:** [docs/superpowers/specs/2026-04-19-empty-entity-states-design.md](../superpowers/specs/2026-04-19-empty-entity-states-design.md)
+**Spec:** [docs/plans/2026-04-19-empty-entity-states-design.md](../plans/2026-04-19-empty-entity-states-design.md)
 
 ---
 
@@ -587,10 +587,10 @@ git commit -m "release: vX.Y.Z — unified empty-state i18n"
 
 If there is a `CHANGELOG.md`, add an entry. If not, skip.
 
-Update `docs/PLAN.md` if the roadmap has a pointer to the spec — mark it done and move the spec to `docs/superpowers/specs/archive/` per CLAUDE.md archival convention.
+Update `docs/PLAN.md` if the roadmap has a pointer to the spec — mark it done and move the spec to `docs/plans/archive/` per CLAUDE.md archival convention.
 
 ```bash
-git mv docs/superpowers/specs/2026-04-19-empty-entity-states-design.md docs/superpowers/specs/archive/
+git mv docs/plans/2026-04-19-empty-entity-states-design.md docs/plans/archive/
 git mv docs/plans/2026-04-19-empty-entity-states.md docs/plans/archive/
 git add docs/PLAN.md 2>/dev/null || true
 git commit -m "docs: archive empty-states spec and plan"
