@@ -86,5 +86,12 @@ export default defineConfig({
       timeout: 60000,
       retries: 1,
     },
+    {
+      // Reports view: smoke-test all seven keepsake tabs render a preview
+      name: 'gui-reports',
+      testMatch: 'gui-reports.test.ts',
+      timeout: 120000,
+      retries: 1,
+    },
   ],
 });

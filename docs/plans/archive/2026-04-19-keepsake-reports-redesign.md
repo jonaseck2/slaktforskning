@@ -1,6 +1,6 @@
 # Keepsake Reports Redesign Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Rebuild the Reports view around a single audience — family members of the genealogist — with seven keepsake reports (four evolved, three new) plus six framable chart prints, dropping two redundant reports.
 
@@ -8,9 +8,9 @@
 
 **Tech Stack:** Vue 3 (Composition API, `<script setup>`), TypeScript, Vitest for unit tests, Playwright for E2E, node-sqlite3-wasm, Leaflet/OSM (already in use for maps), Electron IPC.
 
-**Spec reference:** [docs/plans/2026-04-19-keepsake-reports-redesign-design.md](../plans/2026-04-19-keepsake-reports-redesign-design.md)
+**Spec reference:** [2026-04-19-keepsake-reports-redesign-design.md](2026-04-19-keepsake-reports-redesign-design.md)
 
-**Target version:** v0.128.0 (single minor bump at end of implementation).
+**Target version:** v0.131.0 (main advanced to v0.130.x while this feature was in a worktree, so bump goes to v0.131.0).
 
 ---
 
@@ -24,7 +24,7 @@ Foundation work is backend/API/composables/design tokens — nothing visible to 
 - Create section in: `src/api/report_data.ts`
 - Test: `tests/unit/report_data.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append these tests to `tests/unit/report_data.test.ts`:
 
@@ -151,7 +151,7 @@ describe('getAliveInYear', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/report_data.test.ts
@@ -159,7 +159,7 @@ npx vitest run tests/unit/report_data.test.ts
 
 Expected: FAIL — `getAliveInYear` is not exported from `src/api/report_data`.
 
-- [ ] **Step 3: Implement the function**
+- [x] **Step 3: Implement the function**
 
 Add to `src/api/report_data.ts`:
 
@@ -313,7 +313,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npx vitest run tests/unit/report_data.test.ts
@@ -321,7 +321,7 @@ npx vitest run tests/unit/report_data.test.ts
 
 Expected: PASS (all existing tests + the 8 new ones).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/report_data.ts tests/unit/report_data.test.ts
@@ -336,7 +336,7 @@ git commit -m "feat(api): add getAliveInYear for Family-in-Year-X report"
 - Modify: `src/main/ipc/utility.ts`
 - Modify: `src/preload/index.ts`
 
-- [ ] **Step 1: Add IPC handler**
+- [x] **Step 1: Add IPC handler**
 
 In `src/main/ipc/utility.ts`, find the block of `reports:*` handlers (around lines 53–58) and append:
 
@@ -344,7 +344,7 @@ In `src/main/ipc/utility.ts`, find the block of `reports:*` handlers (around lin
   wrapHandler('reports:aliveInYear', (year) => reportData.getAliveInYear(getDb(), year as number));
 ```
 
-- [ ] **Step 2: Expose in preload**
+- [x] **Step 2: Expose in preload**
 
 In `src/preload/index.ts`, find the `reports:` object (around line 153) and add inside it:
 
@@ -352,11 +352,11 @@ In `src/preload/index.ts`, find the `reports:` object (around line 153) and add 
     aliveInYear: (year: number) => ipcRenderer.invoke('reports:aliveInYear', year),
 ```
 
-- [ ] **Step 3: Update window.api type declarations**
+- [x] **Step 3: Update window.api type declarations**
 
 Check `src/renderer` for `window.api` type augmentations (search for `reports.personSummary` in `.d.ts` or component type blocks) and add `aliveInYear: (year: number) => Promise<AliveInYearResult>` to the same shape.
 
-- [ ] **Step 4: Run lint + tests**
+- [x] **Step 4: Run lint + tests**
 
 ```bash
 npm run lint && npm test
@@ -364,7 +364,7 @@ npm run lint && npm test
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/ipc/utility.ts src/preload/index.ts
@@ -378,7 +378,7 @@ git commit -m "feat(ipc): expose reports:aliveInYear"
 **Files:**
 - Modify: `src/renderer/styles/tokens.css`
 
-- [ ] **Step 1: Add report-specific tokens**
+- [x] **Step 1: Add report-specific tokens**
 
 Append to `:root` in `src/renderer/styles/tokens.css`:
 
@@ -390,7 +390,7 @@ Append to `:root` in `src/renderer/styles/tokens.css`:
   --report-cover-accent-height: 4px;
 ```
 
-- [ ] **Step 2: Run lint + tests**
+- [x] **Step 2: Run lint + tests**
 
 ```bash
 npm run lint && npm test
@@ -398,7 +398,7 @@ npm run lint && npm test
 
 Expected: PASS (WCAG tests should still pass — these tokens don't introduce colors).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/styles/tokens.css
@@ -414,11 +414,11 @@ git commit -m "style(tokens): add report-specific typography tokens"
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Locate the Database tab section**
+- [x] **Step 1: Locate the Database tab section**
 
 In `src/renderer/views/SettingsView.vue`, find the Database tab content block. It likely contains the existing default-person-id picker.
 
-- [ ] **Step 2: Add researcher_name input**
+- [x] **Step 2: Add researcher_name input**
 
 Add a new labeled input inside the Database tab (or a new "Reports" subsection within Settings if the Database tab is crowded). Use the existing `window.api.db.getSetting` / `setSetting` pattern:
 
@@ -456,7 +456,7 @@ async function onResearcherNameInput(value: string) {
 onMounted(loadResearcherName);
 ```
 
-- [ ] **Step 3: Add i18n keys**
+- [x] **Step 3: Add i18n keys**
 
 In `src/renderer/i18n/en.ts`:
 
@@ -478,7 +478,7 @@ In `src/renderer/i18n/sv.ts`:
   }
 ```
 
-- [ ] **Step 4: Test manually**
+- [x] **Step 4: Test manually**
 
 ```bash
 npm start
@@ -486,7 +486,7 @@ npm start
 
 Navigate to Settings → Database, enter a name, close the app, re-open, verify name persists.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/views/SettingsView.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -501,7 +501,7 @@ git commit -m "feat(settings): add researcher_name for report attribution"
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add shared report keys (en)**
+- [x] **Step 1: Add shared report keys (en)**
 
 In `src/renderer/i18n/en.ts`, extend the `reports:` block:
 
@@ -529,7 +529,7 @@ In `src/renderer/i18n/en.ts`, extend the `reports:` block:
   }
 ```
 
-- [ ] **Step 2: Add shared report keys (sv)**
+- [x] **Step 2: Add shared report keys (sv)**
 
 In `src/renderer/i18n/sv.ts`:
 
@@ -556,7 +556,7 @@ In `src/renderer/i18n/sv.ts`:
   }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/i18n/en.ts src/renderer/i18n/sv.ts
@@ -571,7 +571,7 @@ git commit -m "i18n: add reports.common.* shared keys"
 - Create: `src/renderer/composables/useLifeMap.ts`
 - Test: `tests/unit/useLifeMap.test.ts`
 
-- [ ] **Step 1: Write the composable**
+- [x] **Step 1: Write the composable**
 
 ```typescript
 // src/renderer/composables/useLifeMap.ts
@@ -594,7 +594,7 @@ export interface LifeMapData {
 
 declare const window: Window & {
   api: {
-    events: { getForPerson: (personId: string) => Promise<Array<Record<string, unknown>>> };
+    events: { forPerson: (personId: string) => Promise<Array<Record<string, unknown>>> };
     places: { get: (id: string) => Promise<Record<string, unknown> | null> };
   };
 };
@@ -610,7 +610,7 @@ export function useLifeMap(personId: Ref<string | null>) {
     }
     loading.value = true;
     try {
-      const events = await window.api.events.getForPerson(personId.value);
+      const events = await window.api.events.forPerson(personId.value);
       const geocoded: LifeMapEvent[] = [];
       for (const e of events) {
         const placeId = e.place_id as string | null;
@@ -648,7 +648,7 @@ export function useLifeMap(personId: Ref<string | null>) {
 }
 ```
 
-- [ ] **Step 2: Write a basic smoke test**
+- [x] **Step 2: Write a basic smoke test**
 
 ```typescript
 // tests/unit/useLifeMap.test.ts
@@ -657,7 +657,7 @@ import { ref, nextTick } from 'vue';
 import { useLifeMap } from '../../src/renderer/composables/useLifeMap';
 
 const mockApi = {
-  events: { getForPerson: vi.fn() },
+  events: { forPerson: vi.fn() },
   places: { get: vi.fn() },
 };
 // @ts-expect-error test shim
@@ -665,12 +665,12 @@ globalThis.window = { api: mockApi } as never;
 
 describe('useLifeMap', () => {
   beforeEach(() => {
-    mockApi.events.getForPerson.mockReset();
+    mockApi.events.forPerson.mockReset();
     mockApi.places.get.mockReset();
   });
 
   it('returns geocoded events sorted chronologically', async () => {
-    mockApi.events.getForPerson.mockResolvedValue([
+    mockApi.events.forPerson.mockResolvedValue([
       { id: 'e1', event_type: 'birth', date_value: '1850-01-01', place_id: 'p1' },
       { id: 'e2', event_type: 'death', date_value: '1920-01-01', place_id: 'p2' },
     ]);
@@ -691,7 +691,7 @@ describe('useLifeMap', () => {
   });
 
   it('skips events without place_id or without lat/lon', async () => {
-    mockApi.events.getForPerson.mockResolvedValue([
+    mockApi.events.forPerson.mockResolvedValue([
       { id: 'e1', event_type: 'birth', date_value: '1850-01-01', place_id: null },
       { id: 'e2', event_type: 'death', date_value: '1920-01-01', place_id: 'p2' },
     ]);
@@ -705,7 +705,7 @@ describe('useLifeMap', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/useLifeMap.test.ts
@@ -713,7 +713,7 @@ npx vitest run tests/unit/useLifeMap.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/composables/useLifeMap.ts tests/unit/useLifeMap.test.ts
@@ -728,7 +728,7 @@ git commit -m "feat(composables): add useLifeMap for chronological geocoded even
 - Create: `src/renderer/composables/useMediaChronological.ts`
 - Test: `tests/unit/useMediaChronological.test.ts`
 
-- [ ] **Step 1: Write the composable**
+- [x] **Step 1: Write the composable**
 
 ```typescript
 // src/renderer/composables/useMediaChronological.ts
@@ -752,8 +752,8 @@ export interface MediaEntityRef {
 
 declare const window: Window & {
   api: {
-    media: { getForEntity: (entityType: string, entityId: string) => Promise<Array<Record<string, unknown>>> };
-    events: { getForPerson?: (personId: string) => Promise<Array<Record<string, unknown>>> };
+    media: { forEntity: (entityType: string, entityId: string) => Promise<Array<Record<string, unknown>>> };
+    events: { forPerson?: (personId: string) => Promise<Array<Record<string, unknown>>> };
   };
 };
 
@@ -768,7 +768,7 @@ export function useMediaChronological(entityRef: Ref<MediaEntityRef | null>) {
     }
     loading.value = true;
     try {
-      const media = await window.api.media.getForEntity(
+      const media = await window.api.media.forEntity(
         entityRef.value.entityType,
         entityRef.value.entityId,
       );
@@ -801,7 +801,7 @@ export function useMediaChronological(entityRef: Ref<MediaEntityRef | null>) {
 }
 ```
 
-- [ ] **Step 2: Write smoke test**
+- [x] **Step 2: Write smoke test**
 
 ```typescript
 // tests/unit/useMediaChronological.test.ts
@@ -809,15 +809,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { useMediaChronological } from '../../src/renderer/composables/useMediaChronological';
 
-const mockApi = { media: { getForEntity: vi.fn() } };
+const mockApi = { media: { forEntity: vi.fn() } };
 // @ts-expect-error test shim
 globalThis.window = { api: mockApi } as never;
 
 describe('useMediaChronological', () => {
-  beforeEach(() => { mockApi.media.getForEntity.mockReset(); });
+  beforeEach(() => { mockApi.media.forEntity.mockReset(); });
 
   it('sorts by sort_order ascending', async () => {
-    mockApi.media.getForEntity.mockResolvedValue([
+    mockApi.media.forEntity.mockResolvedValue([
       { id: 'm2', title: 'Second', sort_order: 1 },
       { id: 'm1', title: 'First', sort_order: 0 },
     ]);
@@ -830,7 +830,7 @@ describe('useMediaChronological', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/useMediaChronological.test.ts
@@ -838,7 +838,7 @@ npx vitest run tests/unit/useMediaChronological.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/composables/useMediaChronological.ts tests/unit/useMediaChronological.test.ts
@@ -857,7 +857,7 @@ Six shared print-safe components under `src/renderer/components/reports/primitiv
 - Create: `src/renderer/components/reports/primitives/ReportCover.vue`
 - Test: `tests/unit/components/reports/ReportCover.test.ts`
 
-- [ ] **Step 1: Create the component**
+- [x] **Step 1: Create the component**
 
 ```vue
 <!-- src/renderer/components/reports/primitives/ReportCover.vue -->
@@ -926,7 +926,7 @@ const formattedDate = computed(() => {
 </style>
 ```
 
-- [ ] **Step 2: Write component smoke test**
+- [x] **Step 2: Write component smoke test**
 
 ```typescript
 // tests/unit/components/reports/ReportCover.test.ts
@@ -974,7 +974,7 @@ describe('ReportCover', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/ReportCover.test.ts
@@ -982,7 +982,7 @@ npx vitest run tests/unit/components/reports/ReportCover.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/reports/primitives/ReportCover.vue tests/unit/components/reports/ReportCover.test.ts
@@ -997,7 +997,7 @@ git commit -m "feat(reports): add ReportCover primitive"
 - Create: `src/renderer/components/reports/primitives/PersonMiniCard.vue`
 - Test: `tests/unit/components/reports/PersonMiniCard.test.ts`
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 ```vue
 <!-- src/renderer/components/reports/primitives/PersonMiniCard.vue -->
@@ -1076,7 +1076,7 @@ const yearsLabel = computed(() => {
 </style>
 ```
 
-- [ ] **Step 2: Write smoke test**
+- [x] **Step 2: Write smoke test**
 
 ```typescript
 // tests/unit/components/reports/PersonMiniCard.test.ts
@@ -1112,7 +1112,7 @@ describe('PersonMiniCard', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/PersonMiniCard.test.ts
@@ -1120,7 +1120,7 @@ npx vitest run tests/unit/components/reports/PersonMiniCard.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/reports/primitives/PersonMiniCard.vue tests/unit/components/reports/PersonMiniCard.test.ts
@@ -1135,7 +1135,7 @@ git commit -m "feat(reports): add PersonMiniCard primitive"
 - Create: `src/renderer/components/reports/primitives/TimelineBar.vue`
 - Test: `tests/unit/components/reports/TimelineBar.test.ts`
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 ```vue
 <!-- src/renderer/components/reports/primitives/TimelineBar.vue -->
@@ -1232,7 +1232,7 @@ const positioned = computed(() => {
 </style>
 ```
 
-- [ ] **Step 2: Write smoke test**
+- [x] **Step 2: Write smoke test**
 
 ```typescript
 // tests/unit/components/reports/TimelineBar.test.ts
@@ -1275,7 +1275,7 @@ describe('TimelineBar', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/TimelineBar.test.ts
@@ -1283,7 +1283,7 @@ npx vitest run tests/unit/components/reports/TimelineBar.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/reports/primitives/TimelineBar.vue tests/unit/components/reports/TimelineBar.test.ts
@@ -1298,7 +1298,7 @@ git commit -m "feat(reports): add TimelineBar primitive"
 - Create: `src/renderer/components/reports/primitives/LifeMap.vue`
 - Test: `tests/unit/components/reports/LifeMap.test.ts`
 
-- [ ] **Step 1: Study existing Leaflet usage**
+- [x] **Step 1: Study existing Leaflet usage**
 
 Run once to locate existing map components for reference:
 
@@ -1307,7 +1307,7 @@ Run once to locate existing map components for reference:
 
 Use Grep to search for `leaflet` in `.vue` files under `src/renderer` and read the first match to understand the Leaflet/OSM setup pattern used in the app.
 
-- [ ] **Step 2: Create component**
+- [x] **Step 2: Create component**
 
 ```vue
 <!-- src/renderer/components/reports/primitives/LifeMap.vue -->
@@ -1375,7 +1375,7 @@ onBeforeUnmount(() => { if (map) map.remove(); });
 </style>
 ```
 
-- [ ] **Step 3: Write a non-DOM smoke test**
+- [x] **Step 3: Write a non-DOM smoke test**
 
 Map rendering requires a browser; for unit tests assert the component mounts without error with no points.
 
@@ -1393,7 +1393,7 @@ describe('LifeMap', () => {
 });
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/LifeMap.test.ts
@@ -1401,7 +1401,7 @@ npx vitest run tests/unit/components/reports/LifeMap.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/reports/primitives/LifeMap.vue tests/unit/components/reports/LifeMap.test.ts
@@ -1416,7 +1416,7 @@ git commit -m "feat(reports): add LifeMap primitive"
 - Create: `src/renderer/components/reports/primitives/PlaceBoundaryMap.vue`
 - Test: `tests/unit/components/reports/PlaceBoundaryMap.test.ts`
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 Model this on the existing MapView/PlacePanel boundary rendering. Accept these props:
 - `placeId: string` — the focal place
@@ -1503,7 +1503,7 @@ declare const window: Window & { api: { places: { get: (id: string) => Promise<R
 </style>
 ```
 
-- [ ] **Step 2: Write smoke test**
+- [x] **Step 2: Write smoke test**
 
 ```typescript
 // tests/unit/components/reports/PlaceBoundaryMap.test.ts
@@ -1519,7 +1519,7 @@ describe('PlaceBoundaryMap', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/PlaceBoundaryMap.test.ts
@@ -1527,7 +1527,7 @@ npx vitest run tests/unit/components/reports/PlaceBoundaryMap.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/reports/primitives/PlaceBoundaryMap.vue tests/unit/components/reports/PlaceBoundaryMap.test.ts
@@ -1542,7 +1542,7 @@ git commit -m "feat(reports): add PlaceBoundaryMap primitive"
 - Create: `src/renderer/components/reports/primitives/MediaChronological.vue`
 - Test: `tests/unit/components/reports/MediaChronological.test.ts`
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 ```vue
 <!-- src/renderer/components/reports/primitives/MediaChronological.vue -->
@@ -1627,7 +1627,7 @@ function formatDate(iso: string): string {
 </style>
 ```
 
-- [ ] **Step 2: Write smoke test**
+- [x] **Step 2: Write smoke test**
 
 ```typescript
 // tests/unit/components/reports/MediaChronological.test.ts
@@ -1668,7 +1668,7 @@ describe('MediaChronological', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/MediaChronological.test.ts
@@ -1676,7 +1676,7 @@ npx vitest run tests/unit/components/reports/MediaChronological.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/reports/primitives/MediaChronological.vue tests/unit/components/reports/MediaChronological.test.ts
@@ -1686,6 +1686,9 @@ git commit -m "feat(reports): add MediaChronological primitive"
 ---
 
 ## Phase 3: Evolved reports (rename + rewrite)
+
+> **Media URL convention (learned during Phase 2):** Local media files are NOT served via a `media-file://` URL. The dev origin blocks `file://`. Use `window.api.media.readAsDataUrl(mediaId)` to get a base64 `data:` URL. The `MediaChronological` primitive (Task 13) already handles this internally — just pass `MediaDisplayItem[]` with `id` fields. For cover/profile images in reports that aren't handled by the primitive, use a `ref<string | null>` loaded via `watch` + `readAsDataUrl`. See examples inline below.
+
 
 Each task in Phase 3 takes an existing report, renames it, and rewrites it using the new primitives. The rename happens via `git mv` to preserve history, then the file is rewritten. `ReportsView.vue` import statements are updated in the same commit to keep the build green.
 
@@ -1697,13 +1700,13 @@ Each task in Phase 3 takes an existing report, renames it, and rewrites it using
 - Modify: `src/renderer/i18n/en.ts`
 - Modify: `src/renderer/i18n/sv.ts`
 
-- [ ] **Step 1: Rename file preserving history**
+- [x] **Step 1: Rename file preserving history**
 
 ```bash
 git mv src/renderer/components/reports/PersonBiography.vue src/renderer/components/reports/ALifeReport.vue
 ```
 
-- [ ] **Step 2: Rewrite the component**
+- [x] **Step 2: Rewrite the component**
 
 Replace the file contents with the implementation below. The component uses `getPersonSummary` for data, plus `useLifeMap`, `useMediaChronological`, `ReportCover`, `TimelineBar`, `LifeMap`, `MediaChronological`.
 
@@ -1841,11 +1844,13 @@ const yearsSubtitle = computed(() => {
   return `${b ?? '?'}–${d ?? ''}`;
 });
 
-const profileImageUrl = computed(() => {
-  const first = mediaCh.items.value[0];
-  if (!first || !first.fileRef) return null;
-  return `media-file://${encodeURIComponent(first.fileRef)}`;
-});
+const profileImageUrl = ref<string | null>(null);
+
+// Load profile image as data URL when first media changes.
+watch(() => mediaCh.items.value[0]?.id, async (firstId) => {
+  if (!firstId) { profileImageUrl.value = null; return; }
+  profileImageUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 
 const lifeMapPoints = computed(() =>
   lifeMap.data.value.events.map(e => ({
@@ -1905,7 +1910,7 @@ function eventDateLabel(e: any): string {
 </style>
 ```
 
-- [ ] **Step 3: Update ReportsView.vue imports and tab label**
+- [x] **Step 3: Update ReportsView.vue imports and tab label**
 
 In `src/renderer/views/ReportsView.vue`:
 1. Change the import from `PersonBiography` to `ALifeReport`:
@@ -1917,7 +1922,7 @@ import ALifeReport from '../components/reports/ALifeReport.vue';
 4. Rename the `biographyPersonId` ref to `aLifePersonId` throughout.
 5. Pass new option props: `:show-photos="showPhotos"` etc., where `showPhotos` etc. are new refs bound to toggles in the tab-header controls.
 
-- [ ] **Step 4: Rename i18n keys**
+- [x] **Step 4: Rename i18n keys**
 
 In `src/renderer/i18n/en.ts`, under `reports:`:
 
@@ -1947,7 +1952,7 @@ In `src/renderer/i18n/sv.ts`:
   },
 ```
 
-- [ ] **Step 5: Run lint + tests + manual smoke**
+- [x] **Step 5: Run lint + tests + manual smoke**
 
 ```bash
 npm run lint && npm test
@@ -1956,7 +1961,7 @@ npm start
 
 Navigate to Reports → A Life, pick a person with events + notes + photos, verify preview renders with cover, life map, timeline, family, events, biography prose, photos, sources toggle.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -1972,13 +1977,13 @@ git commit -m "feat(reports): evolve Biography into A Life with new primitives"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: `src/renderer/i18n/en.ts`, `src/renderer/i18n/sv.ts`
 
-- [ ] **Step 1: Rename file**
+- [x] **Step 1: Rename file**
 
 ```bash
 git mv src/renderer/components/reports/FamilyNarrative.vue src/renderer/components/reports/AMarriageReport.vue
 ```
 
-- [ ] **Step 2: Rewrite component**
+- [x] **Step 2: Rewrite component**
 
 The new `AMarriageReport.vue` takes a `relationshipId` prop. Structure:
 1. `ReportCover` with `{husband} + {wife}` title and marriage year subtitle, hero image = first linked media of the relationship.
@@ -2097,10 +2102,11 @@ const coupleTitle = computed(() => {
   return [data.value.spouse1?.name, data.value.spouse2?.name].filter(Boolean).join(' + ');
 });
 const marriageYearSubtitle = computed(() => data.value?.marriageYear ? String(data.value.marriageYear) : '');
-const coverImageUrl = computed(() => {
-  const first = mediaCh.items.value[0];
-  return first?.fileRef ? `media-file://${encodeURIComponent(first.fileRef)}` : null;
-});
+const coverImageUrl = ref<string | null>(null);
+watch(() => mediaCh.items.value[0]?.id, async (firstId) => {
+  if (!firstId) { coverImageUrl.value = null; return; }
+  coverImageUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 
 function spouseProps(p: any) {
   return {
@@ -2110,7 +2116,7 @@ function spouseProps(p: any) {
     birthYear: p.birthYear,
     deathYear: p.deathYear,
     keyPlace: p.keyPlace,
-    portraitUrl: p.profileImage ? `media-file://${encodeURIComponent(p.profileImage)}` : null,
+    portraitUrl: null,  // Spouse/child portraits loaded separately via window.api.media.readAsDataUrl if needed.
   };
 }
 
@@ -2153,15 +2159,15 @@ const mediaItems = computed(() => mediaCh.items.value.map(i => ({
 </style>
 ```
 
-- [ ] **Step 3: Update ReportsView.vue**
+- [x] **Step 3: Update ReportsView.vue**
 
 In `ReportsView.vue`, rename the `familyNarrative` tab to `amarriage`, rename the component import + usage, and add content toggle controls `showPhotos`/`showNotes`/`showSources`.
 
-- [ ] **Step 4: Update i18n**
+- [x] **Step 4: Update i18n**
 
 Add `reports.amarriage.*` keys (title, lifeMap, sharedTimeline, theCouple, events, narrative, mapSpouse1, mapSpouse2) in both `en.ts` and `sv.ts`. Remove any FamilyNarrative-specific keys that are no longer referenced.
 
-- [ ] **Step 5: Run lint + tests + manual smoke**
+- [x] **Step 5: Run lint + tests + manual smoke**
 
 ```bash
 npm run lint && npm test
@@ -2170,7 +2176,7 @@ npm start
 
 Verify: pick a couple, preview shows dual maps, timeline, couple, children, events, narrative prose, photos.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -2186,13 +2192,13 @@ git commit -m "feat(reports): evolve Family Narrative into A Marriage"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Rename file**
+- [x] **Step 1: Rename file**
 
 ```bash
 git mv src/renderer/components/reports/PlaceHistory.vue src/renderer/components/reports/PlaceChronicleReport.vue
 ```
 
-- [ ] **Step 2: Rewrite component**
+- [x] **Step 2: Rewrite component**
 
 Uses `window.api.reports.placeHistory(placeId)` for data. Sections:
 1. `ReportCover` — place name + type + date range.
@@ -2319,11 +2325,11 @@ const mediaItems = computed(() => mediaCh.items.value.map(i => ({ ...i, contextL
 </style>
 ```
 
-- [ ] **Step 3: Update ReportsView.vue + i18n**
+- [x] **Step 3: Update ReportsView.vue + i18n**
 
 Rename `placeHistory` tab to `placeChronicle`; update component import/usage; add i18n keys `reports.placeChronicle.{title,map,persons,events,description,childPlaces}`.
 
-- [ ] **Step 4: Lint + tests + manual**
+- [x] **Step 4: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
@@ -2332,7 +2338,7 @@ npm start
 
 Pick a Swedish parish place with boundary, verify map shows boundary overlay and person pins.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2348,13 +2354,13 @@ git commit -m "feat(reports): evolve Place History into Place Chronicle"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Rename file**
+- [x] **Step 1: Rename file**
 
 ```bash
 git mv src/renderer/components/reports/AncestorBookReport.vue src/renderer/components/reports/YourAncestorsReport.vue
 ```
 
-- [ ] **Step 2: Rewrite component**
+- [x] **Step 2: Rewrite component**
 
 Sections:
 1. `ReportCover` — title "N Generations of Ancestors of X", hero = fan chart SVG snapshot or primary photo.
@@ -2504,15 +2510,15 @@ const surnamesGrouped = computed(() => {
 </style>
 ```
 
-- [ ] **Step 3: Update ReportsView.vue**
+- [x] **Step 3: Update ReportsView.vue**
 
 Rename `ancestorBook` tab to `yourAncestors`. Add density dropdown (`one`/`two`), generations slider (4–10), color mode select, event/photo toggles.
 
-- [ ] **Step 4: Update i18n**
+- [x] **Step 4: Update i18n**
 
 Keys: `reports.yourAncestors.title` (with `{generations, name}` interpolation), `.subtitle`, `.introduction`, `.surnameIndex`.
 
-- [ ] **Step 5: Lint + tests + manual**
+- [x] **Step 5: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
@@ -2521,7 +2527,7 @@ npm start
 
 Pick a root person with 4+ generations of ancestors, verify cover, fan chart, per-ancestor pages, surname index.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -2539,7 +2545,7 @@ git commit -m "feat(reports): evolve Ancestor Book into Your Ancestors"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 Single-sheet, no cover, no page breaks within. Layout uses CSS grid to arrange panels.
 
@@ -2572,7 +2578,7 @@ Single-sheet, no cover, no page breaks within. Layout uses CSS grid to arrange p
 
     <div class="op-photos">
       <div v-for="(m, i) in photoGrid" :key="m.id" class="grid-photo" :class="'pos-' + i">
-        <img :src="'media-file://' + encodeURIComponent(m.fileRef!)" alt="" />
+        <img v-if="photoGridUrls[m.id]" :src="photoGridUrls[m.id]" alt="" />
       </div>
     </div>
 
@@ -2623,10 +2629,11 @@ const yearsLabel = computed(() => {
   if (!data.value.birthYear && !data.value.deathYear) return '';
   return `${data.value.birthYear ?? '?'}–${data.value.deathYear ?? ''}`;
 });
-const portraitUrl = computed(() => {
-  const first = mediaCh.items.value[0];
-  return first?.fileRef ? `media-file://${encodeURIComponent(first.fileRef)}` : null;
-});
+const portraitUrl = ref<string | null>(null);
+watch(() => mediaCh.items.value[0]?.id, async (firstId) => {
+  if (!firstId) { portraitUrl.value = null; return; }
+  portraitUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 const photoGrid = computed(() => mediaCh.items.value.slice(1, 5));
 const birthPlace = computed(() => data.value?.events?.find((e: any) => e.event_type === 'birth')?.place_name || null);
 const bioSnippet = computed(() => {
@@ -2686,11 +2693,11 @@ const formattedDate = computed(() =>
 </style>
 ```
 
-- [ ] **Step 2: Add tab in ReportsView.vue + i18n keys**
+- [x] **Step 2: Add tab in ReportsView.vue + i18n keys**
 
 Tab id `onePage`. i18n: `reports.onePage.{title, keyDates}`.
 
-- [ ] **Step 3: Lint + tests + manual**
+- [x] **Step 3: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
@@ -2699,7 +2706,7 @@ npm start
 
 Pick a person, verify single-page layout, test both portrait/landscape.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -2715,7 +2722,7 @@ git commit -m "feat(reports): add Life on One Page report"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 Uses `window.api.reports.aliveInYear(year)` from Task 2.
 
@@ -2824,22 +2831,22 @@ function pinCardProps(p: any) {
 
 Note: `personPins` requires lat/lon from a place join. `getAliveInYear` currently returns `placeName` only. If maps are important at ship time, extend `getAliveInYear` to return `placeLat`/`placeLon` from the `places` table join. For v1 the map section can be hidden if no pins geocode.
 
-- [ ] **Step 2: Extend getAliveInYear to include place coordinates (optional improvement)**
+- [x] **Step 2: Extend getAliveInYear to include place coordinates (optional improvement)**
 
 Update the SQL in `src/api/report_data.ts` `getAliveInYear` to also join on `places.latitude` and `places.longitude` and return these fields in each person row. Update types accordingly.
 
-- [ ] **Step 3: Add tab + i18n**
+- [x] **Step 3: Add tab + i18n**
 
 Tab id `familyInYear`. Year input + scope select. i18n: `reports.familyInYear.{title, subtitle, map, families, individuals}`.
 
-- [ ] **Step 4: Lint + tests + manual**
+- [x] **Step 4: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
 npm start
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2855,7 +2862,7 @@ git commit -m "feat(reports): add Family in Year X report"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Create component**
+- [x] **Step 1: Create component**
 
 ```vue
 <!-- src/renderer/components/reports/PhotoAlbumReport.vue -->
@@ -2942,10 +2949,11 @@ const displayItems = computed(() => items.value.map(i => ({
   contextLine: null,
 })));
 
-const firstImageUrl = computed(() => {
-  const first = displayItems.value[0];
-  return first?.fileRef ? `media-file://${encodeURIComponent(first.fileRef)}` : null;
-});
+const firstImageUrl = ref<string | null>(null);
+watch(() => displayItems.value[0]?.id, async (firstId) => {
+  if (!firstId) { firstImageUrl.value = null; return; }
+  firstImageUrl.value = await (window.api as any).media.readAsDataUrl(firstId);
+}, { immediate: true });
 
 const albumTitle = computed(() => {
   // Basic title, can be overridden by a prop in future
@@ -2963,18 +2971,18 @@ const albumSubtitle = computed(() => {
 </style>
 ```
 
-- [ ] **Step 2: Add tab + i18n**
+- [x] **Step 2: Add tab + i18n**
 
 Tab id `photoAlbum`. Subject-type dropdown + subject picker (person/family/place/all) + per-page radio (1/2/4) + captions toggle + index toggle + documents toggle. i18n: `reports.photoAlbum.{title, index}`.
 
-- [ ] **Step 3: Lint + tests + manual**
+- [x] **Step 3: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
 npm start
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -2992,13 +3000,13 @@ git commit -m "feat(reports): add Photo Album report"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Rename file**
+- [x] **Step 1: Rename file**
 
 ```bash
 git mv src/renderer/components/reports/AncestorSheetReport.vue src/renderer/components/reports/PedigreePrintReport.vue
 ```
 
-- [ ] **Step 2: Rewrite as a clean pedigree chart (not a table)**
+- [x] **Step 2: Rewrite as a clean pedigree chart (not a table)**
 
 The existing `AncestorSheetReport` is a tabular ancestor sheet. Replace its implementation with a clean framable pedigree chart — re-use the chart layout from `src/renderer/utils/chart-layout/pedigree.ts` and render an SVG similar to `PedigreeChartReport.vue` but with a fixed paper size frame (A3/A4 selectable), no interactive chrome, clean typography, and no table.
 
@@ -3010,7 +3018,7 @@ Plan: **delete `AncestorSheetReport.vue` after confirming `PedigreeChartReport.v
 git rm src/renderer/components/reports/AncestorSheetReport.vue
 ```
 
-- [ ] **Step 3: Update ReportsView.vue**
+- [x] **Step 3: Update ReportsView.vue**
 
 Move the `ancestor` tab (which used `AncestorSheetReport`) to either:
 - Redirect to using `PedigreeChartReport` with a new tab label "Pedigree Print", OR
@@ -3018,11 +3026,11 @@ Move the `ancestor` tab (which used `AncestorSheetReport`) to either:
 
 Check current `ReportsView.vue` tabs. If `pedigreeChart` already exists and renders `PedigreeChartReport`, drop the `ancestor` tab. If not, rename `ancestor` to `pedigreePrint` and swap the component.
 
-- [ ] **Step 4: Update i18n**
+- [x] **Step 4: Update i18n**
 
 Remove `reports.ancestor*` keys that referred to the Ancestor Sheet tabular format. Ensure `reports.pedigreePrint.title` exists with English "Pedigree Print" and Swedish "Antavla" (framed chart sense, distinct from the list-style "Ancestor Sheet" which is retired).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -3039,17 +3047,17 @@ git commit -m "refactor(reports): repurpose Ancestor Sheet as Pedigree Print (fr
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Remove imports from ReportsView.vue**
+- [x] **Step 1: Remove imports from ReportsView.vue**
 
 Open `src/renderer/views/ReportsView.vue`, remove the `IndividualSummary` and `FamilyGroupSheet` imports and remove the `individual` and `family` tabs, their ref state (`individualPersonId`, `familyRelationshipId`), and their conditional render blocks.
 
-- [ ] **Step 2: Delete the component files**
+- [x] **Step 2: Delete the component files**
 
 ```bash
 git rm src/renderer/components/reports/IndividualSummary.vue src/renderer/components/reports/FamilyGroupSheet.vue
 ```
 
-- [ ] **Step 3: Remove i18n keys**
+- [x] **Step 3: Remove i18n keys**
 
 In `en.ts` and `sv.ts`, remove the `reports.individual.*` and `reports.familyGroupSheet.*` (or equivalent) keys. Run a grep to confirm no leftover references.
 
@@ -3058,7 +3066,7 @@ In `en.ts` and `sv.ts`, remove the `reports.individual.*` and `reports.familyGro
 
 (Use Grep tool with pattern `reports\.individual\.|reports\.familyGroupSheet\.` under `src/renderer`.)
 
-- [ ] **Step 4: Lint + tests**
+- [x] **Step 4: Lint + tests**
 
 ```bash
 npm run lint && npm test
@@ -3066,7 +3074,7 @@ npm run lint && npm test
 
 Expected: PASS. No orphaned imports.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -3081,13 +3089,13 @@ git commit -m "refactor(reports): remove IndividualSummary and FamilyGroupSheet"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: i18n
 
-- [ ] **Step 1: Restructure the tab list**
+- [x] **Step 1: Restructure the tab list**
 
 Replace the current flat `FilterChips` with two `FilterChips` rows (or a two-section chip bar). Keep one `activeTab` state.
 
 Tab list:
 - Keepsake reports: `alife`, `amarriage`, `placeChronicle`, `yourAncestors`, `onePage`, `familyInYear`, `photoAlbum`
-- Framable prints: `pedigreePrint`, `fanChart`, `descendantChart`, `hourglassChart`, `timeline`, `wallChart`
+- Framable prints: `pedigreePrint`, `fanChart`, `descendantChart`, `hourglassChart`, `timeline`
 
 ```vue
 <div class="tab-groups">
@@ -3128,11 +3136,10 @@ const framableTabs = computed(() => [
   { value: 'descendantChart', label: t('visualization.descendants') },
   { value: 'hourglassChart', label: t('visualization.hourglass') },
   { value: 'timeline', label: t('visualization.timeline') },
-  { value: 'wallChart', label: t('wallChart.title') },
 ]);
 ```
 
-- [ ] **Step 2: Add i18n keys**
+- [x] **Step 2: Add i18n keys**
 
 ```typescript
 // en.ts
@@ -3151,7 +3158,7 @@ reports: {
 }
 ```
 
-- [ ] **Step 3: Style tab groups**
+- [x] **Step 3: Style tab groups**
 
 Add scoped CSS in ReportsView:
 
@@ -3160,7 +3167,7 @@ Add scoped CSS in ReportsView:
 .tab-group-label { font-size: var(--font-sm); color: var(--text-muted); margin: 0 0 var(--space-xs); text-transform: uppercase; letter-spacing: 0.5px; }
 ```
 
-- [ ] **Step 4: Lint + tests + manual**
+- [x] **Step 4: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
@@ -3169,7 +3176,7 @@ npm start
 
 Verify both groups render with correct chips, selecting a chip in either group updates `activeTab`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -3193,7 +3200,7 @@ git commit -m "feat(reports): split tabs into Keepsake and Framable groups"
 - Modify: `src/renderer/views/ReportsView.vue`
 - Modify: `src/renderer/i18n/en.ts`, `src/renderer/i18n/sv.ts`
 
-- [ ] **Step 1: Create the helper with tests**
+- [x] **Step 1: Create the helper with tests**
 
 ```typescript
 // src/renderer/utils/reportPrivacy.ts
@@ -3281,7 +3288,7 @@ describe('redactPerson', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 npx vitest run tests/unit/reportPrivacy.test.ts
@@ -3289,7 +3296,7 @@ npx vitest run tests/unit/reportPrivacy.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 3: Wire into the five reports that render person data**
+- [x] **Step 3: Wire into the five reports that render person data**
 
 In each of ALifeReport, AMarriageReport, YourAncestorsReport, LifeOnOnePageReport, FamilyInYearReport:
 
@@ -3308,11 +3315,11 @@ data.value.children = raw.children.map((c: any) => redactPerson(c, { redactLivin
 data.value.parents = raw.parents.map((p: any) => redactPerson(p, { redactLiving: props.redactLiving === true }));
 ```
 
-- [ ] **Step 4: Add toggle to ReportsView for affected tabs**
+- [x] **Step 4: Add toggle to ReportsView for affected tabs**
 
 Add a `redactLiving` ref to ReportsView, a checkbox in the controls bar of the five reports (alife, amarriage, yourAncestors, onePage, familyInYear), labelled via `$t('reports.common.redactLiving')`. Pass it as `:redact-living="redactLiving"` to each report component.
 
-- [ ] **Step 5: Add i18n key**
+- [x] **Step 5: Add i18n key**
 
 ```typescript
 // en.ts under reports.common
@@ -3321,7 +3328,7 @@ redactLiving: 'Redact living persons',
 redactLiving: 'Dölj uppgifter om levande personer',
 ```
 
-- [ ] **Step 6: Lint + tests + manual**
+- [x] **Step 6: Lint + tests + manual**
 
 ```bash
 npm run lint && npm test
@@ -3330,7 +3337,7 @@ npm start
 
 Manually verify: mark a person as `living=true`, toggle "Redact living persons" on in a report, confirm birth year is shown as decade and notes/portrait are hidden.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -3350,7 +3357,7 @@ git commit -m "feat(reports): add privacy filtering for living persons"
 - Create: `tests/unit/components/reports/FamilyInYearReport.test.ts`
 - Create: `tests/unit/components/reports/PhotoAlbumReport.test.ts`
 
-- [ ] **Step 1: Write one smoke test per report**
+- [x] **Step 1: Write one smoke test per report**
 
 Each smoke test:
 1. Mock `window.api.reports.*`, `window.api.media.*`, `window.api.events.*`, `window.api.places.*`, `window.api.db.getSetting` with realistic seeded data.
@@ -3388,9 +3395,9 @@ beforeEach(() => {
         }),
       },
       db: { getSetting: vi.fn().mockResolvedValue('Jonas Ahnstedt') },
-      events: { getForPerson: vi.fn().mockResolvedValue([]) },
+      events: { forPerson: vi.fn().mockResolvedValue([]) },
       places: { get: vi.fn().mockResolvedValue(null) },
-      media: { getForEntity: vi.fn().mockResolvedValue([]) },
+      media: { forEntity: vi.fn().mockResolvedValue([]) },
     },
   } as never;
 });
@@ -3423,7 +3430,7 @@ Repeat this pattern for each of the other six report components. For each, ensur
 - Section with no data → hidden.
 - Cover rendered with researcher attribution.
 
-- [ ] **Step 2: Run all tests**
+- [x] **Step 2: Run all tests**
 
 ```bash
 npx vitest run tests/unit/components/reports/
@@ -3431,7 +3438,7 @@ npx vitest run tests/unit/components/reports/
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/components/reports/*.test.ts
@@ -3445,7 +3452,7 @@ git commit -m "test(reports): add smoke tests for all seven reports"
 **Files:**
 - Modify: `tests/e2e/app.test.ts`
 
-- [ ] **Step 1: Seed test data and exercise each report**
+- [x] **Step 1: Seed test data and exercise each report**
 
 Extend the existing E2E test file with a new test block that:
 1. Launches the app with a temp DB.
@@ -3503,7 +3510,7 @@ test.describe('Reports view smoke', () => {
 
 Note: the exact subject-selection UI per tab depends on the controls implemented in earlier tasks. Use `page.locator` helpers and the real DOM from the implemented ReportsView. If the Export PDF flow opens a native save dialog, use Playwright's dialog handler or call the IPC export function directly via `page.evaluate`.
 
-- [ ] **Step 2: Run E2E tests**
+- [x] **Step 2: Run E2E tests**
 
 ```bash
 source .devcontainer/xvfb-start.sh  # if running in devcontainer
@@ -3512,7 +3519,7 @@ npx playwright test tests/e2e/app.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/e2e/app.test.ts
@@ -3529,12 +3536,12 @@ git commit -m "test(e2e): smoke-test all seven keepsake reports"
 - Modify: `CLAUDE.md` (reports section)
 - Modify: `docs/PLAN.md`
 
-- [ ] **Step 1: Update CHANGELOG.md**
+- [x] **Step 1: Update CHANGELOG.md**
 
 Prepend:
 
 ```markdown
-## v0.128.0 — keepsake reports redesign
+## v0.131.0 — keepsake reports redesign
 
 ### New reports
 - **A Life** (evolves Biography) — life map, timeline, family, events, notes, photos, sources appendix.
@@ -3559,19 +3566,19 @@ Prepend:
 - Six new print-safe shared primitives under `src/renderer/components/reports/primitives/`.
 ```
 
-- [ ] **Step 2: Bump version**
+- [x] **Step 2: Bump version**
 
 Update `package.json`:
 
 ```json
-  "version": "0.128.0",
+  "version": "0.131.0",
 ```
 
-- [ ] **Step 3: Update CLAUDE.md reports section**
+- [x] **Step 3: Update CLAUDE.md reports section**
 
 In the Vue Component Patterns → Shared Components section (or Reports section if one exists), add entries for the new primitives and reports. Remove entries for the dropped components. Update the route table if `/reports` details changed.
 
-- [ ] **Step 4: Update docs/PLAN.md roadmap**
+- [x] **Step 4: Update docs/PLAN.md roadmap**
 
 Add a done-milestone entry pointing to the archived plan path (this file, once moved):
 
@@ -3579,21 +3586,21 @@ Add a done-milestone entry pointing to the archived plan path (this file, once m
 - [x] Keepsake reports redesign ([plan archive](plans/archive/2026-04-19-keepsake-reports-redesign.md)) — 7 keepsake reports + 6 framable prints, deterministic rendering of researcher-authored data.
 ```
 
-- [ ] **Step 5: Archive the plan**
+- [x] **Step 5: Archive the plan**
 
 ```bash
 git mv docs/plans/2026-04-19-keepsake-reports-redesign.md docs/plans/archive/2026-04-19-keepsake-reports-redesign.md
 git mv docs/plans/2026-04-19-keepsake-reports-redesign-design.md docs/plans/archive/2026-04-19-keepsake-reports-redesign.md
 ```
 
-- [ ] **Step 6: Final commit**
+- [x] **Step 6: Final commit**
 
 ```bash
 git add -A
-git commit -m "release: v0.128.0 — keepsake reports redesign"
+git commit -m "release: v0.131.0 — keepsake reports redesign"
 ```
 
-- [ ] **Step 7: Verify a full test run and launch**
+- [x] **Step 7: Verify a full test run and launch**
 
 ```bash
 npm run lint && npm test && npx playwright test

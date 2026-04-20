@@ -39,6 +39,17 @@
       </div>
     </section>
 
+    <section class="db-section">
+      <h3>{{ $t('settings.researcherName') }}</h3>
+      <input
+        type="text"
+        class="researcher-name-input"
+        :value="researcherName"
+        :placeholder="$t('settings.researcherNamePlaceholder')"
+        @input="onResearcherNameInput(($event.target as HTMLInputElement).value)"
+      />
+    </section>
+
     <section class="db-section db-actions">
       <button @click="createNew">{{ $t('database.createNew') }}</button>
       <button @click="openExisting">{{ $t('database.openOther') }}</button>
@@ -69,6 +80,7 @@ const recent = ref<DbEntry[]>([]);
 const statusMsg = ref('');
 const backupStatus = ref('');
 const treeSubjectId = ref<string | null>(null);
+const researcherName = ref<string>('');
 
 async function load() {
   current.value = await window.api.db.getCurrent();
@@ -76,6 +88,17 @@ async function load() {
   // Exclude the currently active path from the recent list
   recent.value = all.filter(e => e.path !== current.value?.path);
   treeSubjectId.value = await window.api.db.getSetting('default_person_id') as string | null;
+  researcherName.value = (await window.api.db.getSetting('researcher_name') as string | null) || '';
+}
+
+async function onResearcherNameInput(value: string) {
+  researcherName.value = value;
+  const trimmed = value.trim();
+  if (trimmed) {
+    await window.api.db.setSetting('researcher_name', trimmed);
+  } else {
+    await window.api.db.deleteSetting('researcher_name');
+  }
 }
 
 async function setTreeSubject(personId: string | null) {
@@ -244,6 +267,23 @@ h2 {
 
 .tree-subject-row .btn-sm {
   flex-shrink: 0;
+}
+
+.researcher-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-base);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.researcher-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .db-status {
