@@ -31,6 +31,41 @@ EOF
 
 If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, compose one from the staged changes.
 
+## Working in a worktree (controller-side git) — STRICT
+
+**REQUIRED:** `git -C /absolute/path/to/worktree <cmd>` — a single git command, covered by the `Bash(git:*)` allowlist, zero permission prompts.
+
+**FORBIDDEN:** `cd /path/to/.worktrees/... && git <cmd>` and any other `cd`-compound form targeting a worktree. These trigger permission prompts on every variation (flags, subcommand, extra piping) and repeatedly interrupt the user. Don't use them under any circumstance.
+
+```bash
+# REQUIRED — single command, no permission friction
+git -C /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x log --oneline -5
+git -C /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x status
+git -C /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x show HEAD --stat
+git -C /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x add -A
+git -C /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x commit -m "..."
+
+# FORBIDDEN — do NOT use. These trigger permission prompts and break the user's flow.
+cd /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x && git log --oneline -5
+cd /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x && git commit -m "..."
+```
+
+**Chained operations:** run each as a separate `git -C ...` call — never chain with `&&`:
+
+```bash
+# REQUIRED
+git -C /abs/path/to/worktree add -A
+git -C /abs/path/to/worktree commit -m "summary"
+git -C /abs/path/to/worktree status
+
+# FORBIDDEN
+cd /abs/path/to/worktree && git add -A && git commit -m "summary" && git status
+```
+
+**Why this is strict:** the user explicitly flagged the `cd`-compound pattern as a workflow blocker — every compound variation needs its own permission approval, and the resulting prompt spam breaks concentration. `git -C` eliminates the need for `cd` entirely.
+
+**Scope:** this rule is for the **controller** running verification, staging, or commit commands from the main-repo cwd. Subagents dispatched INTO a worktree already have their cwd set there; they use normal `git add / git commit` without `-C`.
+
 ## Rules
 
 - **NEVER use `git add <specific files>`** — always `git add -A`
