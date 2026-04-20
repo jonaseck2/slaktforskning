@@ -700,7 +700,6 @@ export default {
   reports: {
     nav: 'Reports',
     title: 'Reports',
-    tabAncestor: 'Ancestor Sheet',
     tabFamily: 'Family Group Sheet',
     tabIndividual: 'Individual Summary',
     rootPerson: 'Root person',
@@ -734,17 +733,8 @@ export default {
       colorThemed: 'Themed',
     },
     loadingReport: 'Loading report\u2026',
-    pedigreeTitle: 'Pedigree for {name}',
-    pedigreeSubtitle: 'Pedigree',
-    exported: 'Exported',
-    ahnentafel: 'Ahnentafel',
-    generationLabel: 'Generation {num}',
-    generationLabels: {
-      1: 'Root person',
-      2: 'Parents',
-      3: 'Grandparents',
-      4: 'Great-grandparents',
-      5: 'Great-great-grandparents',
+    pedigreePrint: {
+      title: 'Pedigree Print',
     },
     familyGroupSheet: 'Family Group Sheet',
     noRelationships: 'No relationships recorded.',

@@ -700,7 +700,6 @@ export default {
   reports: {
     nav: 'Rapporter',
     title: 'Rapporter',
-    tabAncestor: 'Antavla',
     tabFamily: 'Familjeblad',
     tabIndividual: 'Personsammanfattning',
     rootPerson: 'Utgångsperson',
@@ -734,17 +733,8 @@ export default {
       colorThemed: 'Tema',
     },
     loadingReport: 'Laddar rapport\u2026',
-    pedigreeTitle: 'Stamtavla för {name}',
-    pedigreeSubtitle: 'Stamtavla',
-    exported: 'Exporterad',
-    ahnentafel: 'Ahnentavla',
-    generationLabel: 'Generation {num}',
-    generationLabels: {
-      1: 'Utgångsperson',
-      2: 'Föräldrar',
-      3: 'Mor-/farföräldrar',
-      4: 'Mor-/farmorföräldrar',
-      5: 'Ur-mor-/farföräldrar',
+    pedigreePrint: {
+      title: 'Antavla',
     },
     familyGroupSheet: 'Familjeblad',
     noRelationships: 'Inga relationer registrerade.',
