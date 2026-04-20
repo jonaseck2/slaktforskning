@@ -104,7 +104,7 @@
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
-import { getAllGazetteers, loadGazetteers } from '../../api/place-gazetteers/index';
+import { loadGazetteers } from '../../api/place-gazetteers/merge';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
 import type { GazetteerConfig, Gazetteer, GazetteerInfo } from '../../api/place-gazetteers/types';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
@@ -188,8 +188,8 @@ const results = computed(() => {
     .filter((r): r is { gaz: Gazetteer; result: NonNullable<ReturnType<typeof resolvePlace>> } => r.result !== null);
 });
 
-function buildEnabledGazetteers(cfg: GazetteerConfig, imported: Gazetteer[]): Gazetteer[] {
-  return loadGazetteers(cfg, imported);
+function buildEnabledGazetteers(cfg: GazetteerConfig, bundled: Gazetteer[], imported: Gazetteer[]): Gazetteer[] {
+  return loadGazetteers(cfg, bundled, imported);
 }
 
 async function loadAll() {
@@ -211,15 +211,21 @@ async function loadAll() {
   }
 
   // Load full Gazetteer objects for test lookup
-  const imported = await window.api.gazetteers.getImported() as Gazetteer[];
-  enabledGazetteerObjects.value = buildEnabledGazetteers(config.value, imported);
+  const [bundled, imported] = await Promise.all([
+    window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
+    window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
+  ]);
+  enabledGazetteerObjects.value = buildEnabledGazetteers(config.value, bundled, imported);
 }
 
 async function saveConfig() {
   await window.api.db.setSetting('gazetteer_config', JSON.stringify(config.value));
   // Reload enabled gazetteers for test lookup
-  const imported = await window.api.gazetteers.getImported() as Gazetteer[];
-  enabledGazetteerObjects.value = buildEnabledGazetteers(config.value, imported);
+  const [bundled, imported] = await Promise.all([
+    window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
+    window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
+  ]);
+  enabledGazetteerObjects.value = buildEnabledGazetteers(config.value, bundled, imported);
   invalidatePlaceResolver();
 }
 
