@@ -157,26 +157,34 @@
       </div>
     </div>
 
-    <!-- Family Narrative Tab -->
-    <div v-if="activeTab === 'familyNarrative'" class="tab-content">
+    <!-- A Marriage Tab -->
+    <div v-if="activeTab === 'amarriage'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
           <label>
             {{ $t('reports.couple') }}
-            <select v-model="familyNarrativeRelId">
+            <select v-model="aMarriageRelId">
               <option value="" disabled>{{ $t('reports.selectCouple') }}</option>
               <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">{{ rel.label }}</option>
             </select>
           </label>
+          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
         </div>
         <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!familyNarrativeRelId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!familyNarrativeRelId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="primary" size="sm" :disabled="!aMarriageRelId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!aMarriageRelId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
-        <div v-if="familyNarrativeRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <FamilyNarrative :relationship-id="familyNarrativeRelId" />
+        <div v-if="aMarriageRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <AMarriageReport
+            :relationship-id="aMarriageRelId"
+            :show-photos="aMarriageShowPhotos"
+            :show-notes="aMarriageShowNotes"
+            :show-sources="aMarriageShowSources"
+          />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
       </div>
@@ -345,7 +353,7 @@ import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import AncestorBookReport from '../components/reports/AncestorBookReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
 import PlaceHistory from '../components/reports/PlaceHistory.vue';
-import FamilyNarrative from '../components/reports/FamilyNarrative.vue';
+import AMarriageReport from '../components/reports/AMarriageReport.vue';
 import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
 import HourglassChartReport from '../components/reports/HourglassChartReport.vue';
 import DescendantChartReport from '../components/reports/DescendantChartReport.vue';
@@ -368,7 +376,7 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'alife' | 'placeHistory' | 'familyNarrative' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
+const activeTab = ref<'ancestor' | 'family' | 'individual' | 'ancestorBook' | 'alife' | 'placeHistory' | 'amarriage' | 'pedigreeChart' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('ancestor');
 const reportLoading = ref(false);
 const tabs = computed(() => [
   { id: 'ancestor', label: t('reports.tabAncestor') },
@@ -377,7 +385,7 @@ const tabs = computed(() => [
   { id: 'ancestorBook', label: t('reports.tabAncestorBook') },
   { id: 'alife', label: t('reports.alife.title') },
   { id: 'placeHistory', label: t('reports.tabPlaceHistory') },
-  { id: 'familyNarrative', label: t('reports.tabFamilyNarrative') },
+  { id: 'amarriage', label: t('reports.amarriage.title') },
   { id: 'pedigreeChart', label: t('reports.tabPedigreeChart') },
   { id: 'hourglassChart', label: t('reports.tabHourglassChart') },
   { id: 'descendantChart', label: t('reports.tabDescendantChart') },
@@ -397,7 +405,10 @@ const aLifeShowDocuments = ref(false);
 const aLifeShowSources = ref(false);
 const aLifeShowNotes = ref(true);
 const placeHistoryPlaceId = ref('');
-const familyNarrativeRelId = ref('');
+const aMarriageRelId = ref('');
+const aMarriageShowPhotos = ref(true);
+const aMarriageShowNotes = ref(true);
+const aMarriageShowSources = ref(false);
 const fanArcSpan = ref<ArcSpan>(360);
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
@@ -457,7 +468,7 @@ watch(individualPersonId, triggerLoading);
 watch(ancestorBookPersonId, triggerLoading);
 watch(aLifePersonId, triggerLoading);
 watch(placeHistoryPlaceId, triggerLoading);
-watch(familyNarrativeRelId, triggerLoading);
+watch(aMarriageRelId, triggerLoading);
 watch(chartPersonId, triggerLoading);
 
 onUnmounted(() => { if (ro) ro.disconnect(); });
@@ -502,7 +513,7 @@ onMounted(async () => {
     const focusCouple = couples.find(r => r.person1_id === focusStore.personId || r.person2_id === focusStore.personId);
     if (focusCouple) {
       familyRelationshipId.value = focusCouple.id;
-      familyNarrativeRelId.value = focusCouple.id;
+      aMarriageRelId.value = focusCouple.id;
     }
 
     // Default place to birth place of focus person
@@ -517,7 +528,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'alife', 'placeHistory', 'familyNarrative', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['ancestor', 'family', 'individual', 'ancestorBook', 'alife', 'placeHistory', 'amarriage', 'pedigreeChart', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
@@ -525,7 +536,7 @@ onMounted(async () => {
     placeHistoryPlaceId.value = route.query.placeId as string;
   }
   if (route.query.relationshipId) {
-    familyNarrativeRelId.value = route.query.relationshipId as string;
+    aMarriageRelId.value = route.query.relationshipId as string;
   }
 });
 

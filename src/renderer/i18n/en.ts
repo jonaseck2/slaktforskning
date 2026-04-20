@@ -716,7 +716,6 @@ export default {
     zoomFit: 'Fit',
     tabAncestorBook: 'Ancestor Book',
     tabPlaceHistory: 'Place History',
-    tabFamilyNarrative: 'Family Narrative',
     tabPedigreeChart: 'Pedigree Chart',
     tabHourglassChart: 'Hourglass Chart',
     tabDescendantChart: 'Descendant Chart',
@@ -764,7 +763,7 @@ export default {
       ancestorBook: 'Could not load ancestor book.',
       familyGroupSheet: 'Could not load family group sheet.',
       placeHistory: 'Could not load place history.',
-      familyNarrative: 'Could not load family narrative.',
+      amarriage: 'Could not load A Marriage report.',
       alife: 'Could not load A Life report.',
     },
     alife: {
@@ -774,6 +773,16 @@ export default {
       family: 'Family',
       events: 'Events',
       biography: 'Biography',
+    },
+    amarriage: {
+      title: 'A Marriage',
+      lifeMap: 'Life Map',
+      sharedTimeline: 'Shared Timeline',
+      theCouple: 'The Couple',
+      events: 'Events',
+      narrative: 'Narrative',
+      mapSpouse1: 'First partner life map',
+      mapSpouse2: 'Second partner life map',
     },
     common: {
       compiledBy: 'Compiled by {name}',
