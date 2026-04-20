@@ -222,6 +222,7 @@ const api = {
     delete: mutating((id: string) => ipcRenderer.invoke('gazetteers:delete', id)),
     getImported: () => ipcRenderer.invoke('gazetteers:getImported'),
     getSchema: () => ipcRenderer.invoke('gazetteers:getSchema'),
+    getBundled: () => ipcRenderer.invoke('gazetteers:getBundled'),
   },
   undo: {
     undo: () => ipcRenderer.invoke('undo:undo'),
