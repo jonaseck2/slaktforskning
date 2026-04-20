@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, SQLite (node-sqlite3-wasm), existing check + gazetteer APIs.
 
-**Spec:** `docs/superpowers/specs/2026-04-15-gazetteer-quality-media-editor-design.md` (Feature 1)
+**Spec:** `docs/plans/2026-04-15-gazetteer-quality-media-editor-design.md` (Feature 1)
 
 ---
 

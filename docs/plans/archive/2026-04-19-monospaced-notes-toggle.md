@@ -10,7 +10,7 @@
 
 **Scope note (vs. spec):** `MediaView.vue` is dropped from scope because its per-row notes cell is a single-line `<input type="text">` in a data table, not a notes textarea with a heading — the toggle pattern does not apply. The media entity type is still covered via `MediaPanel.vue`. Spec will be updated in Task 11 to reflect this.
 
-**Spec:** [docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md](../superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md)
+**Spec:** [docs/plans/2026-04-19-monospaced-notes-toggle-design.md](../plans/2026-04-19-monospaced-notes-toggle-design.md)
 
 ---
 
@@ -73,7 +73,7 @@ Add the `--font-mono` token to that `:root` block, so it becomes:
 Append to the end of `src/renderer/styles/shared.css`:
 
 ```css
-/* Monospaced notes toggle — see docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md */
+/* Monospaced notes toggle — see docs/plans/2026-04-19-monospaced-notes-toggle-design.md */
 .notes-mono {
   font-family: var(--font-mono);
 }
@@ -1088,7 +1088,7 @@ git commit -m "feat(media): add monospaced notes toggle to media panel"
 ## Task 11: Update spec, bump version, update docs
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md` (update media scope)
+- Modify: `docs/plans/2026-04-19-monospaced-notes-toggle-design.md` (update media scope)
 - Modify: `package.json` (minor version bump)
 - Modify: `docs/PLAN.md` (add/mark the feature done)
 
@@ -1114,7 +1114,7 @@ Find `"version": "x.y.z"` and bump the minor digit by 1 (feature addition). E.g.
 
 - [ ] **Step 3: Update `docs/PLAN.md`**
 
-Add a `[done]` roadmap entry with a pointer to the spec. Look for how other completed entries are formatted — match that style exactly. Entry should include the date (2026-04-19), a one-line summary, and a link to `docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md`.
+Add a `[done]` roadmap entry with a pointer to the spec. Look for how other completed entries are formatted — match that style exactly. Entry should include the date (2026-04-19), a one-line summary, and a link to `docs/plans/2026-04-19-monospaced-notes-toggle-design.md`.
 
 - [ ] **Step 4: Run full test suite + lint + typecheck**
 
@@ -1128,7 +1128,7 @@ Expected: all tests pass (including new `useMonospacedNotes` tests), 0 lint erro
 - [ ] **Step 5: Commit**
 
 ```bash
-git add docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md package.json docs/PLAN.md
+git add docs/plans/2026-04-19-monospaced-notes-toggle-design.md package.json docs/PLAN.md
 git commit -m "feat: monospaced notes toggle + docs + version bump to x.y.z"
 ```
 
@@ -1139,23 +1139,23 @@ git commit -m "feat: monospaced notes toggle + docs + version bump to x.y.z"
 ## Task 12: Archive the spec
 
 **Files:**
-- Move: `docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md` -> `docs/superpowers/specs/archive/2026-04-19-monospaced-notes-toggle-design.md`
+- Move: `docs/plans/2026-04-19-monospaced-notes-toggle-design.md` -> `docs/plans/archive/2026-04-19-monospaced-notes-toggle-design.md`
 - Modify: `docs/PLAN.md` (update link to archived path)
 
 - [ ] **Step 1: Move the spec to archive**
 
 ```bash
-git mv docs/superpowers/specs/2026-04-19-monospaced-notes-toggle-design.md docs/superpowers/specs/archive/2026-04-19-monospaced-notes-toggle-design.md
+git mv docs/plans/2026-04-19-monospaced-notes-toggle-design.md docs/plans/archive/2026-04-19-monospaced-notes-toggle-design.md
 ```
 
 - [ ] **Step 2: Update the link in `docs/PLAN.md`**
 
-Change the pointer from `docs/superpowers/specs/2026-04-19-...` to `docs/superpowers/specs/archive/2026-04-19-...`.
+Change the pointer from `docs/plans/2026-04-19-...` to `docs/plans/archive/2026-04-19-...`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add docs/superpowers/specs/archive/2026-04-19-monospaced-notes-toggle-design.md docs/PLAN.md
+git add docs/plans/archive/2026-04-19-monospaced-notes-toggle-design.md docs/PLAN.md
 # (the git mv already staged the deletion)
 git commit -m "docs: archive monospaced notes toggle spec"
 ```

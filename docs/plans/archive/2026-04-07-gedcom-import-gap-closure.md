@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, node-sqlite3-wasm, Vue 3 Composition API, Electron IPC, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-07-gedcom-import-gap-closure-design.md`
+**Spec:** `docs/plans/2026-04-07-gedcom-import-gap-closure-design.md`
 
 **Parallelism:** Must run after Holger Import (`2026-04-06-holger-import.md`) — both modify `src/import/gedcom/import-core.ts`.
 Can run in parallel with Test Coverage Tasks 1, 2, 3, 5 (`2026-04-07-import-export-test-coverage.md`).

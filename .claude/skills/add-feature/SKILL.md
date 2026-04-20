@@ -497,7 +497,7 @@ Use the `/test` skill to run and write tests. Then commit with `/commit`.
 **Every release commit (`release: vX.Y.Z — …`) MUST do the following in the same commit, not a follow-up:**
 
 1. `git mv docs/plans/YYYY-MM-DD-<topic>.md docs/plans/archive/` — the plan file itself, not just the spec
-2. `git mv docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md docs/superpowers/specs/archive/` — if a design spec exists
+2. `git mv docs/plans/YYYY-MM-DD-<topic>-design.md docs/plans/archive/` — if a design spec exists
 3. Update `docs/PLAN.md` Done table: point to BOTH the archived plan and archived spec, not just one:
    `| vX.Y.Z | description | [spec](...) · [plan](...) |`
 4. Bump `package.json` version

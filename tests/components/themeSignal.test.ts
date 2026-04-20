@@ -1,5 +1,5 @@
 // Reactive theme/appearance signal for chart components.
-// Spec: docs/superpowers/specs/2026-04-19-reactive-theme-signal-design.md
+// Spec: docs/plans/2026-04-19-reactive-theme-signal-design.md
 //
 // When the user toggles theme (forest/nordic/twilight) or appearance
 // (light/dark/high-contrast), chart color composables must invalidate so

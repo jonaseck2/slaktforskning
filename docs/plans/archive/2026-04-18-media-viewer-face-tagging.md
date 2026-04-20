@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 (Composition API), CSS transforms for zoom/pan, existing SQLite media_regions CRUD via IPC.
 
-**Spec:** `docs/superpowers/specs/2026-04-18-media-viewer-face-tagging-design.md`
+**Spec:** `docs/plans/2026-04-18-media-viewer-face-tagging-design.md`
 
 ---
 

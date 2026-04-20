@@ -8,7 +8,7 @@
 
 **Tech Stack:** GitHub Actions, anthropics/claude-code-action, Electron Forge makers
 
-**Spec:** [docs/superpowers/specs/2026-04-18-open-source-publishing-design.md](docs/superpowers/specs/2026-04-18-open-source-publishing-design.md)
+**Spec:** [docs/plans/2026-04-18-open-source-publishing-design.md](docs/plans/2026-04-18-open-source-publishing-design.md)
 
 ---
 
@@ -662,7 +662,7 @@ This is a feature (minor bump). Bump from current version to the next minor in `
 Add to the Implementation Status table:
 
 ```
-| vX.Y.0 | Open source publishing: CI/CD, releases, Claude triage, README redesign | [spec](superpowers/specs/2026-04-18-open-source-publishing-design.md) |
+| vX.Y.0 | Open source publishing: CI/CD, releases, Claude triage, README redesign | [spec](plans/2026-04-18-open-source-publishing-design.md) |
 ```
 
 - [ ] **Step 3: Commit**

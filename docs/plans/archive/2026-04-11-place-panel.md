@@ -8,7 +8,7 @@
 
 **Tech Stack:** Vue 3 Composition API, TypeScript, SQLite, Electron IPC
 
-**Spec:** `docs/superpowers/specs/2026-04-11-place-panel-design.md`
+**Spec:** `docs/plans/2026-04-11-place-panel-design.md`
 
 ---
 

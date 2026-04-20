@@ -14,7 +14,7 @@ This plan wires those three pieces in, per chart (pedigree → descendant → ho
 
 **Tech Stack:** TypeScript, Vue 3 `<script setup>`, SVG, Canvas `measureText` (for name wrap measurement), Vitest.
 
-**Spec:** [docs/superpowers/specs/2026-04-18-chart-visual-overhaul-design.md](../superpowers/specs/2026-04-18-chart-visual-overhaul-design.md)
+**Spec:** [docs/plans/2026-04-18-chart-visual-overhaul-design.md](../plans/2026-04-18-chart-visual-overhaul-design.md)
 
 **Brainstorm mocks:** [.superpowers/brainstorm/56955-1776537664/content/full-tree-v2.html](../../.superpowers/brainstorm/56955-1776537664/content/full-tree-v2.html)
 

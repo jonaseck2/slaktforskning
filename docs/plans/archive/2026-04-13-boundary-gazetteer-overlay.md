@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vue 3, Leaflet (via @vue-leaflet/vue-leaflet), Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-13-boundary-gazetteer-design.md`
+**Spec:** `docs/plans/2026-04-13-boundary-gazetteer-design.md`
 
 ---
 
