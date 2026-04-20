@@ -21,12 +21,10 @@ export function usePlaceResolver() {
     if (configLoaded) { ready.value = true; return; }
     try {
       const raw = (await window.api.db.getSetting('gazetteer_config')) as string | null;
-      // console.time('[usePlaceResolver] getBundled+getImported');
       const [bundled, imported] = await Promise.all([
         window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
         window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
       ]);
-      // console.timeEnd('[usePlaceResolver] getBundled+getImported');
 
       let config: GazetteerConfig;
       if (raw) {
