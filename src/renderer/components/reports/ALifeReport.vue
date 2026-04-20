@@ -479,4 +479,3 @@ watch(() => props.personId, load, { immediate: true });
   font-size: var(--font-sm);
 }
 </style>
-</content>
