@@ -491,19 +491,25 @@ async function saveChartPdf() {
   const paperW = Math.round(dims.width * MM_TO_PX);
   const paperH = Math.round(dims.height * MM_TO_PX);
 
-  // Scale the chart to fit the chosen paper size before tiling. Without this,
-  // the tiler only walks the (0,0)→(paperW,paperH) region of the chart's
-  // coordinate space, so any content beyond the paper rectangle (or above
-  // viewBoxMinY) is dropped from the export.
+  // Use the tight bounding box of rendered content for scale and filter, not the
+  // SVG viewBox. Chart layouts (pedigree especially) reserve grid space for
+  // placeholder slots that don't render in readonly exports, so the viewBox is
+  // wider/taller than actual content — that phantom padding drags outer tiles
+  // onto the page as leading/trailing blanks.
+  const bbox = (svg as SVGGraphicsElement).getBBox();
+  const vbParts = (svg.getAttribute('viewBox') ?? '').trim().split(/\s+/).map(Number);
+  const vbFallback = vbParts.length === 4 && vbParts.every(n => Number.isFinite(n))
+    ? { x: vbParts[0], y: vbParts[1], w: vbParts[2], h: vbParts[3] }
+    : { x: 0, y: 0, w: Number(svg.getAttribute('width')) || paperW, h: Number(svg.getAttribute('height')) || paperH };
+  const content = bbox.width > 0 && bbox.height > 0
+    ? { x: bbox.x, y: bbox.y, w: bbox.width, h: bbox.height }
+    : vbFallback;
+
   const clone = svg.cloneNode(true) as SVGElement;
   if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-  const vbParts = (clone.getAttribute('viewBox') ?? '').trim().split(/\s+/).map(Number);
-  const [vbX, vbY, vbW, vbH] = vbParts.length === 4 && vbParts.every(n => Number.isFinite(n))
-    ? vbParts
-    : [0, 0, Number(clone.getAttribute('width')) || paperW, Number(clone.getAttribute('height')) || paperH];
-  const scale = Math.min(paperW / vbW, paperH / vbH);
-  const tx = (paperW - vbW * scale) / 2 - vbX * scale;
-  const ty = (paperH - vbH * scale) / 2 - vbY * scale;
+  const scale = Math.min(paperW / content.w, paperH / content.h);
+  const tx = (paperW - content.w * scale) / 2 - content.x * scale;
+  const ty = (paperH - content.h * scale) / 2 - content.y * scale;
   const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   wrapper.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`);
   while (clone.firstChild) wrapper.appendChild(clone.firstChild);
@@ -515,15 +521,20 @@ async function saveChartPdf() {
   const titled = wrapWithTitle(new XMLSerializer().serializeToString(clone), await chartExportTitle());
   const tiles = computeTileViewBoxes(paperW, paperH);
   // Chart bounds in paper coordinate space (post-scale, post-center).
-  const chartL = tx + vbX * scale;
-  const chartR = tx + (vbX + vbW) * scale;
-  const chartT = ty + vbY * scale;
-  const chartB = ty + (vbY + vbH) * scale;
-  // Drop tiles whose viewBox doesn't overlap the scaled chart — no point
-  // emitting blank A4 pages that just pad the assembled poster.
-  const nonEmpty = tiles.filter(t =>
-    t.x + t.width > chartL && t.x < chartR && t.y + t.height > chartT && t.y < chartB,
-  );
+  const chartL = tx + content.x * scale;
+  const chartR = tx + (content.x + content.w) * scale;
+  const chartT = ty + content.y * scale;
+  const chartB = ty + (content.y + content.h) * scale;
+  // Drop tiles whose viewBox doesn't meaningfully overlap the scaled chart —
+  // a tile that only clips a thin sliver of chart content still renders as a
+  // near-blank page, so require at least 10% of the tile in each dimension
+  // before we emit it.
+  const MIN_OVERLAP = 0.1;
+  const nonEmpty = tiles.filter(t => {
+    const ow = Math.max(0, Math.min(t.x + t.width, chartR) - Math.max(t.x, chartL));
+    const oh = Math.max(0, Math.min(t.y + t.height, chartB) - Math.max(t.y, chartT));
+    return ow > t.width * MIN_OVERLAP && oh > t.height * MIN_OVERLAP;
+  });
   const pages = tiles.length === 1
     ? [titled]
     : nonEmpty.map(tv => generateTileSvg(titled, tv));
