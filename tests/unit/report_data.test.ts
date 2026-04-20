@@ -507,4 +507,17 @@ describe('getAliveInYear', () => {
     expect(inAnyFamily || inUnattached).toBe(true);
     if (family) expect(family.parents.some(p => p.id === wife.id)).toBe(true);
   });
+
+  it('exposes the living flag per person', () => {
+    const livingP = createPerson(db, { sex: 'F', given_name: 'Alive', surname: 'Now', living: true });
+    addBirth(livingP.id, 1985);
+    const deceasedP = createPerson(db, { sex: 'M', given_name: 'Passed', surname: 'Away', living: false });
+    addBirth(deceasedP.id, 1940);
+    addDeath(deceasedP.id, 2010);
+    const result = getAliveInYear(db, 2000);
+    const alive = result.persons.find(x => x.id === livingP.id);
+    const deceased = result.persons.find(x => x.id === deceasedP.id);
+    expect(alive?.living).toBe(true);
+    expect(deceased?.living).toBe(false);
+  });
 });
