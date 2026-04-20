@@ -1,3 +1,5 @@
+import { useProfilePicStore } from '../stores/profilePic';
+
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
@@ -13,6 +15,7 @@ export async function setMediaAsPersonProfile(personId: string, mediaId: string)
   if (!target) return;
   const reordered = [target.link_id, ...links.filter(l => l.id !== mediaId).map(l => l.link_id)];
   await window.api.media.reorder(reordered);
+  useProfilePicStore().invalidatePerson(personId);
 }
 
 export async function isMediaPersonProfile(personId: string, mediaId: string): Promise<boolean> {

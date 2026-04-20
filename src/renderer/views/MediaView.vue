@@ -190,8 +190,10 @@ import { mediaDisplayName } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useToast } from '../composables/useToast';
 import { useFocusStore } from '../stores/focus';
+import { useProfilePicStore } from '../stores/profilePic';
 const toast = useToast();
 const focusStore = useFocusStore();
+const profilePicStore = useProfilePicStore();
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -418,6 +420,7 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
     width: rect.width, height: rect.height,
     ...(personId ? { person_id: personId } : {}),
   });
+  if (personId) profilePicStore.invalidatePerson(personId);
   drawMode.value = false; // exit draw mode after creating a tag
   viewerRef.value?.reloadRegions();
   panelRef.value?.reload();
@@ -425,8 +428,12 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
 }
 
 async function onRegionUpdated(id: string, rect: { x: number; y: number; width: number; height: number }) {
-  // Use updateGeometry (non-mutating) to avoid triggering quality checks
   await window.api.mediaRegions.updateGeometry(id, rect);
+  if (selectedMediaId.value) {
+    const regs = await window.api.mediaRegions.getForMedia(selectedMediaId.value) as Array<{ id: string; person_id: string | null }>;
+    const r = regs.find(rr => rr.id === id);
+    if (r?.person_id) profilePicStore.invalidatePerson(r.person_id);
+  }
   viewerRef.value?.reloadRegions();
 }
 
