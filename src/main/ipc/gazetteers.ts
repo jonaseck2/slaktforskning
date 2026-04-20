@@ -1,4 +1,5 @@
 import * as gazetteers from '../../api/gazetteers';
+import { getAllGazetteers } from '../../api/place-gazetteers/bundled';
 import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerGazetteerHandlers(
@@ -11,4 +12,5 @@ export function registerGazetteerHandlers(
   wrapHandler('gazetteers:delete', (id) => gazetteers.deleteGazetteer(getDb(), id as string));
   wrapHandler('gazetteers:getImported', () => gazetteers.getImportedGazetteers(getDb()));
   wrapHandler('gazetteers:getSchema', () => gazetteers.getGazetteerSchema());
+  wrapHandler('gazetteers:getBundled', () => getAllGazetteers());
 }
