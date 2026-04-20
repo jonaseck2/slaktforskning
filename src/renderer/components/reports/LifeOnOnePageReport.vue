@@ -66,13 +66,16 @@ import LifeMap, { type LifeMapPathPoint } from './primitives/LifeMap.vue';
 import { useLifeMap } from '../../composables/useLifeMap';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullName } from '../../utils/nameUtils';
+import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
   personId: string;
   orientation?: 'portrait' | 'landscape';
+  redactLiving?: boolean;
 }>(), {
   orientation: 'portrait',
+  redactLiving: false,
 });
 
 const { t, locale } = useI18n();
@@ -169,14 +172,38 @@ const deathEvent = computed<RawEvent | null>(() =>
   data.value?.events.find(e => e.event_type === 'death') ?? null,
 );
 
-const birthYear = computed(() => extractYear(birthEvent.value?.date_value ?? null));
+const rawBirthYear = computed(() => extractYear(birthEvent.value?.date_value ?? null));
 const deathYear = computed(() => extractYear(deathEvent.value?.date_value ?? null));
 const birthPlace = computed(() => birthEvent.value?.place_name ?? null);
 const deathPlace = computed(() => deathEvent.value?.place_name ?? null);
 
+const focalDisplay = computed(() => {
+  const person = data.value?.person;
+  if (!person) return null;
+  return redactPerson(
+    {
+      id: person.id,
+      living: person.living,
+      birthYear: rawBirthYear.value,
+      deathYear: deathYear.value,
+      notes: person.notes,
+    },
+    { redactLiving: props.redactLiving === true },
+  );
+});
+
+const birthYear = computed(() => focalDisplay.value?.birthYear ?? null);
+
+const suppressPhotos = computed(() =>
+  props.redactLiving === true && data.value?.person?.living === true,
+);
+
 const yearsLabel = computed(() => {
   if (birthYear.value == null && deathYear.value == null) return '';
-  return `${birthYear.value ?? '?'}\u2013${deathYear.value ?? ''}`;
+  const b = birthYear.value != null
+    ? (focalDisplay.value?.living && props.redactLiving ? `${birthYear.value}s` : String(birthYear.value))
+    : '?';
+  return `${b}\u2013${deathYear.value ?? ''}`;
 });
 
 interface MarriageEntry {
@@ -252,10 +279,13 @@ const lifeMapPoints = computed<LifeMapPathPoint[]>(() =>
   })),
 );
 
-const photoGrid = computed(() => mediaItems.value.slice(1, 5));
+const photoGrid = computed(() => {
+  if (suppressPhotos.value) return [];
+  return mediaItems.value.slice(1, 5);
+});
 
 const bioSnippet = computed(() => {
-  const notes = data.value?.person?.notes ?? '';
+  const notes = focalDisplay.value?.notes ?? '';
   if (!notes) return '';
   const firstPara = notes.split(/\n\s*\n/)[0]?.trim() ?? '';
   if (!firstPara) return '';
@@ -268,9 +298,9 @@ const formattedDate = computed(() =>
 
 // --- Portrait: first linked media as data URL ---
 watch(
-  () => mediaItems.value[0]?.id ?? null,
-  async (id) => {
-    if (!id) {
+  () => [mediaItems.value[0]?.id ?? null, suppressPhotos.value] as const,
+  async ([id, suppress]) => {
+    if (!id || suppress) {
       portraitUrl.value = null;
       return;
     }

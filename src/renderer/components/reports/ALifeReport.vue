@@ -104,6 +104,7 @@ import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChr
 import { useLifeMap } from '../../composables/useLifeMap';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullName } from '../../utils/nameUtils';
+import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
@@ -112,11 +113,13 @@ const props = withDefaults(defineProps<{
   showDocuments?: boolean;
   showSources?: boolean;
   showNotes?: boolean;
+  redactLiving?: boolean;
 }>(), {
   showPhotos: true,
   showDocuments: false,
   showSources: false,
   showNotes: true,
+  redactLiving: false,
 });
 
 const { t } = useI18n();
@@ -202,7 +205,7 @@ function extractYear(dateValue: string | null): number | null {
   return m ? parseInt(m[0], 10) : null;
 }
 
-const birthYear = computed<number | null>(() => {
+const rawBirthYear = computed<number | null>(() => {
   const ev = data.value?.events.find(e => e.event_type === 'birth');
   return extractYear(ev?.date_value ?? null);
 });
@@ -211,9 +214,31 @@ const deathYear = computed<number | null>(() => {
   return extractYear(ev?.date_value ?? null);
 });
 
+// Privacy-redacted view of the focal person.
+const focalDisplay = computed(() => {
+  const person = data.value?.person;
+  if (!person) return null;
+  return redactPerson(
+    {
+      id: person.id,
+      living: person.living,
+      birthYear: rawBirthYear.value,
+      deathYear: deathYear.value,
+      notes: person.notes,
+      portraitUrl: null as string | null,
+    },
+    { redactLiving: props.redactLiving === true },
+  );
+});
+
+const birthYear = computed(() => focalDisplay.value?.birthYear ?? null);
+
 const yearsSubtitle = computed(() => {
   if (birthYear.value == null && deathYear.value == null) return '';
-  return `${birthYear.value ?? '?'}\u2013${deathYear.value ?? ''}`;
+  const b = birthYear.value != null
+    ? (focalDisplay.value?.living && props.redactLiving ? `${birthYear.value}s` : String(birthYear.value))
+    : '?';
+  return `${b}\u2013${deathYear.value ?? ''}`;
 });
 
 interface PersonRef { id: string; name: string; }
@@ -304,10 +329,15 @@ const lifeMapPoints = computed<LifeMapPathPoint[]>(() => {
 });
 
 const notesParagraphs = computed(() => {
-  const notes = data.value?.person?.notes;
+  const notes = focalDisplay.value?.notes;
   if (!notes) return [];
   return notes.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 });
+
+// When redactLiving is on and the focal person is living, suppress photos.
+const suppressPhotos = computed(() =>
+  props.redactLiving === true && data.value?.person?.living === true,
+);
 
 function toDisplayItem(m: { id: string; title: string | null; notes: string | null; fileRef: string | null; format: string | null; inferredDateISO: string | null }): MediaDisplayItem {
   return {
@@ -328,6 +358,7 @@ function isImageItem(fileRef: string | null, format: string | null): boolean {
 }
 
 const photoItems = computed<MediaDisplayItem[]>(() => {
+  if (suppressPhotos.value) return [];
   return mediaItems.value
     .filter(m => isImageItem(m.fileRef, m.format))
     .map(toDisplayItem);
@@ -352,9 +383,9 @@ const uniqueSources = computed(() => {
 });
 
 watch(
-  () => mediaItems.value[0]?.id ?? null,
-  async (id) => {
-    if (!id) {
+  () => [mediaItems.value[0]?.id ?? null, suppressPhotos.value] as const,
+  async ([id, suppress]) => {
+    if (!id || suppress) {
       profileImageUrl.value = null;
       return;
     }

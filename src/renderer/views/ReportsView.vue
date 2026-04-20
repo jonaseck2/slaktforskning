@@ -58,6 +58,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowEvents" /> {{ $t('reports.alife.events') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowExtraPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!yourAncestorsPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -74,6 +75,7 @@
             :show-events="yourAncestorsShowEvents"
             :show-extra-photos="yourAncestorsShowExtraPhotos"
             :show-sources="yourAncestorsShowSources"
+            :redact-living="redactLiving"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -88,6 +90,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowNotes" /> {{ $t('reports.alife.biography') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!aLifePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -102,6 +105,7 @@
             :show-documents="aLifeShowDocuments"
             :show-sources="aLifeShowSources"
             :show-notes="aLifeShowNotes"
+            :redact-living="redactLiving"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -119,6 +123,7 @@
               <option value="landscape">{{ $t('reports.onePage.landscape') }}</option>
             </select>
           </label>
+          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!onePagePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -130,6 +135,7 @@
           <LifeOnOnePageReport
             :person-id="onePagePersonId"
             :orientation="onePageOrientation"
+            :redact-living="redactLiving"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -159,6 +165,7 @@
               <option value="descendants" disabled>{{ $t('reports.familyInYear.scopeDescendants') }}</option>
             </select>
           </label>
+          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!familyInYearYear" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -171,6 +178,7 @@
             :year="familyInYearYear"
             :scope="familyInYearScope"
             :scope-person-id="familyInYearPersonId"
+            :redact-living="redactLiving"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.familyInYear.year') }}</div>
@@ -291,6 +299,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!aMarriageRelId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -304,6 +313,7 @@
             :show-photos="aMarriageShowPhotos"
             :show-notes="aMarriageShowNotes"
             :show-sources="aMarriageShowSources"
+            :redact-living="redactLiving"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
@@ -555,6 +565,9 @@ const aMarriageRelId = ref('');
 const aMarriageShowPhotos = ref(true);
 const aMarriageShowNotes = ref(true);
 const aMarriageShowSources = ref(false);
+// Shared privacy toggle for the 5 keepsake reports (alife, amarriage,
+// yourAncestors, onePage, familyInYear).
+const redactLiving = ref(false);
 const fanArcSpan = ref<ArcSpan>(360);
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');

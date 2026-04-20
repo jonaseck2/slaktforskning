@@ -835,6 +835,7 @@ export default {
       sources: 'Källor',
       documents: 'Dokument',
       photos: 'Foton',
+      redactLiving: 'Dölj uppgifter om levande personer',
     },
   },
   researchTasks: {
