@@ -11,51 +11,6 @@
       @update:model-value="activeTab = $event as typeof activeTab"
     />
 
-    <!-- Family Group Sheet Tab -->
-    <div v-if="activeTab === 'family'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls">
-          <label>
-            {{ $t('reports.couple') }}
-            <select v-model="familyRelationshipId">
-              <option value="" disabled>{{ $t('reports.selectCouple') }}</option>
-              <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">
-                {{ rel.label }}
-              </option>
-            </select>
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!familyRelationshipId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!familyRelationshipId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-        </div>
-      </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="familyRelationshipId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <FamilyGroupSheet :relationship-id="familyRelationshipId" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
-      </div>
-    </div>
-
-    <!-- Individual Summary Tab -->
-    <div v-if="activeTab === 'individual'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls">
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!individualPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!individualPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-        </div>
-      </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="individualPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <IndividualSummary :person-id="individualPersonId" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
-
     <!-- Your Ancestors Tab -->
     <div v-if="activeTab === 'yourAncestors'" class="tab-content">
       <div class="tab-header">
@@ -493,8 +448,6 @@ import { useRoute } from 'vue-router';
 import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import { useFocusStore } from '../stores/focus';
-import FamilyGroupSheet from '../components/reports/FamilyGroupSheet.vue';
-import IndividualSummary from '../components/reports/IndividualSummary.vue';
 import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
 import LifeOnOnePageReport from '../components/reports/LifeOnOnePageReport.vue';
@@ -524,11 +477,9 @@ const route = useRoute();
 
 const focusStore = useFocusStore();
 
-const activeTab = ref<'family' | 'individual' | 'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
+const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
 const reportLoading = ref(false);
 const tabs = computed(() => [
-  { id: 'family', label: t('reports.tabFamily') },
-  { id: 'individual', label: t('reports.tabIndividual') },
   { id: 'yourAncestors', label: t('reports.yourAncestors.tabTitle') },
   { id: 'alife', label: t('reports.alife.title') },
   { id: 'onePage', label: t('reports.onePage.title') },
@@ -543,9 +494,7 @@ const tabs = computed(() => [
   { id: 'timeline', label: t('reports.tabTimeline') },
 ]);
 
-const familyRelationshipId = ref('');
 const coupleRelationships = ref<RelationshipOption[]>([]);
-const individualPersonId = computed(() => focusStore.personId);
 const yourAncestorsPersonId = computed(() => focusStore.personId);
 const yourAncestorsGenerations = ref(4);
 const yourAncestorsColorMode = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
@@ -645,7 +594,6 @@ function triggerLoading() {
 const chartPersonId = computed(() => focusStore.personId);
 
 watch(activeTab, triggerLoading);
-watch(individualPersonId, triggerLoading);
 watch(yourAncestorsPersonId, triggerLoading);
 watch(aLifePersonId, triggerLoading);
 watch(onePagePersonId, triggerLoading);
@@ -698,7 +646,6 @@ onMounted(async () => {
   if (focusStore.personId) {
     const focusCouple = couples.find(r => r.person1_id === focusStore.personId || r.person2_id === focusStore.personId);
     if (focusCouple) {
-      familyRelationshipId.value = focusCouple.id;
       aMarriageRelId.value = focusCouple.id;
     }
 
@@ -714,7 +661,7 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['family', 'individual', 'yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage', 'pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = ['yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage', 'pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
   if (tabParam && validTabs.includes(tabParam)) {
     activeTab.value = tabParam as typeof activeTab.value;
   }
