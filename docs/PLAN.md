@@ -339,6 +339,10 @@ Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigatio
 - Face tag suggestions based on other tagged photos
 - Crop/rotate/edit image tools
 
+#### Cropped Face-Tag Profile Pictures [planned]
+Show each person's starred face tag as a cropped square profile picture on every `AppAvatar` in the app (PersonsView, PersonPanel, GroupDetailView, etc.). Renderer-only: Pinia store + canvas crop from the existing starred media region. No new media blobs.
+- Plan: [plans/2026-04-20-avatar-profile-pic-crop.md](plans/2026-04-20-avatar-profile-pic-crop.md)
+
 #### Open Source Publishing [in progress]
 CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign, GitHub Actions badges.
 - Spec: [docs/plans/2026-04-18-open-source-publishing-design.md](docs/plans/2026-04-18-open-source-publishing-design.md)
