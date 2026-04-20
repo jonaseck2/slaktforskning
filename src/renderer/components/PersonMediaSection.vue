@@ -95,7 +95,7 @@ async function loadThumbnails() {
 }
 
 function openMedia(id: string) {
-  router.push({ path: '/media', query: { open: id } });
+  router.push({ path: '/media', query: { open: id, person: props.personId } });
 }
 
 async function attach() {

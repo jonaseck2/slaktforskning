@@ -92,6 +92,7 @@ export default {
     all: 'Alla',
     close: 'Stäng',
     monospacedTooltip: 'Visa anteckningar med fast bredd för ASCII-tabeller och justerad text',
+    clearFilter: 'Rensa filter',
   },
   persons: {
     title: 'Personer',
@@ -833,6 +834,7 @@ export default {
       married: 'Gift',
       age: 'ålder {n}',
       sources: 'Källor',
+      fromLeft: 'Från vänster:',
       documents: 'Dokument',
       photos: 'Foton',
       redactLiving: 'Dölj uppgifter om levande personer',
@@ -1057,6 +1059,7 @@ export default {
     },
     filter: {
       search: 'Sök media',
+      person: '{name}s media',
     },
     galleryView: 'Galleri',
     listView: 'Lista',

@@ -92,6 +92,7 @@ export default {
     all: 'All',
     close: 'Close',
     monospacedTooltip: 'Show notes in monospaced font for ASCII tables and aligned text',
+    clearFilter: 'Clear filter',
   },
   persons: {
     title: 'People',
@@ -833,6 +834,7 @@ export default {
       married: 'Married',
       age: 'age {n}',
       sources: 'Sources',
+      fromLeft: 'From left:',
       documents: 'Documents',
       photos: 'Photos',
       redactLiving: 'Redact living persons',
@@ -1057,6 +1059,7 @@ export default {
     },
     filter: {
       search: 'Search media',
+      person: '{name}\'s media',
     },
     galleryView: 'Gallery',
     listView: 'List',

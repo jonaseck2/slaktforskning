@@ -17,6 +17,8 @@
       :focal-shadow-color="isBw ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.3)'"
       text-color="white"
       date-color="rgba(255,255,255,0.75)"
+      :link-base="anchorBase ?? null"
+      :link-by-ahnentafel="!!anchorBase"
     />
     <div v-else-if="loading" class="empty-hint">{{ $t('common.loading') }}</div>
   </div>
@@ -38,6 +40,7 @@ const props = defineProps<{
   generations?: number;
   arcSpan?: ArcSpan;
   colorMode?: ColorMode;
+  anchorBase?: string;
 }>();
 
 const loading = ref(true);

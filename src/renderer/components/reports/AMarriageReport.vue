@@ -41,7 +41,7 @@
       <!-- Shared Timeline -->
       <section v-if="sharedTimeline.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.amarriage.sharedTimeline') }}</h2>
-        <TimelineBar :items="sharedTimeline" />
+        <TimelineBar :items="sharedTimeline" anchor-base="#event-" />
       </section>
 
       <!-- The Couple -->
@@ -90,7 +90,7 @@
       <section v-if="allEvents.length > 0" class="report-section prose-section">
         <h2 class="section-heading">{{ $t('reports.amarriage.events') }}</h2>
         <ul class="event-list">
-          <li v-for="ev in allEvents" :key="ev.id">
+          <li v-for="ev in allEvents" :key="ev.id" :id="'event-' + ev.id">
             <strong>{{ eventTypeLabel(ev.event_type) }}</strong>
             <span v-if="ev.personLabel" class="muted"> — {{ ev.personLabel }}</span>
             <span v-if="ev.date_display">, {{ ev.date_display }}</span>
@@ -98,6 +98,16 @@
             <span v-if="ev.description">. {{ ev.description }}</span>
           </li>
         </ul>
+        <div v-if="hasAnyLifeMapPoints" class="events-map dual-map-grid">
+          <div v-if="spouse1LifeMapPoints.length > 0" class="dual-map-cell">
+            <div class="dual-map-label">{{ spouse1Name }}</div>
+            <LifeMap :points="spouse1LifeMapPoints" :height="220" draw-path path-color="#2c5aa0" />
+          </div>
+          <div v-if="spouse2LifeMapPoints.length > 0" class="dual-map-cell">
+            <div class="dual-map-label">{{ spouse2Name }}</div>
+            <LifeMap :points="spouse2LifeMapPoints" :height="220" draw-path path-color="#8a2d2d" />
+          </div>
+        </div>
       </section>
 
       <!-- Narrative (notes) -->
@@ -621,6 +631,7 @@ watch(() => props.showSources, async (enabled) => {
   padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--surface-border-subtle);
 }
+.events-map { margin-top: var(--space-xl); }
 
 .citation-list {
   padding-left: var(--space-lg);
