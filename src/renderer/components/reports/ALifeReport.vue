@@ -57,10 +57,13 @@
       </section>
 
       <!-- Life Map -->
-      <section v-if="props.showLifeMap && lifeMapPoints.length > 0" class="report-section">
-        <h2 class="section-heading">{{ $t('reports.alife.lifeMap') }}</h2>
-        <LifeMap :points="lifeMapPoints" :height="400" draw-path />
-      </section>
+      <PersonLifeMap
+        v-if="props.showLifeMap"
+        :person-id="props.personId"
+        :heading="$t('reports.alife.lifeMap')"
+        :height="400"
+        draw-path
+      />
 
       <!-- Biography (notes) -->
       <section v-if="props.showNotes && notesParagraphs.length > 0" class="report-section prose-section">
@@ -98,10 +101,9 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ReportCover from './primitives/ReportCover.vue';
-import LifeMap, { type LifeMapPathPoint } from './primitives/LifeMap.vue';
+import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import TimelineBar, { type TimelineItem } from './primitives/TimelineBar.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
-import { useLifeMap } from '../../composables/useLifeMap';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
@@ -181,11 +183,10 @@ interface PersonSummary {
 const loading = ref(false);
 const error = ref<string | null>(null);
 const data = ref<PersonSummary | null>(null);
+const childBirthItems = ref<TimelineItem[]>([]);
 const researcherName = ref<string | null>(null);
 const profileImageUrl = ref<string | null>(null);
 
-const personIdRef = computed(() => props.personId || null);
-const { data: lifeMapData } = useLifeMap(personIdRef);
 const mediaEntityRef = computed<MediaEntityRef | null>(() =>
   props.personId ? { entityType: 'person', entityId: props.personId } : null,
 );
@@ -340,24 +341,17 @@ const timelineItems = computed<TimelineItem[]>(() => {
   for (const ev of data.value.events) {
     const year = extractYear(ev.date_value);
     if (year == null) continue;
-    items.push({
-      id: ev.id,
-      year,
-      eventType: ev.event_type,
-      label: eventTypeLabel(ev.event_type),
-    });
+    const place = ev.place_name;
+    const label = place
+      ? `${eventTypeLabel(ev.event_type)} · ${place}`
+      : eventTypeLabel(ev.event_type);
+    items.push({ id: ev.id, year, eventType: ev.event_type, label });
+  }
+  for (const item of childBirthItems.value) {
+    items.push(item);
   }
   items.sort((a, b) => a.year - b.year);
   return items;
-});
-
-const lifeMapPoints = computed<LifeMapPathPoint[]>(() => {
-  return lifeMapData.value.events.map(e => ({
-    lat: e.lat,
-    lon: e.lon,
-    label: e.placeName,
-    year: extractYear(e.dateISO),
-  }));
 });
 
 const notesParagraphs = computed(() => {
@@ -433,11 +427,13 @@ watch(
 async function load() {
   if (!props.personId) {
     data.value = null;
+    childBirthItems.value = [];
     return;
   }
   loading.value = true;
   error.value = null;
   data.value = null;
+  childBirthItems.value = [];
   try {
     const [summary, researcher] = await Promise.all([
       window.api.reports.personSummary(props.personId) as Promise<PersonSummary | null>,
@@ -449,6 +445,35 @@ async function load() {
     }
     data.value = summary;
     researcherName.value = researcher || null;
+
+    // Fetch birth/adoption events for each child to show on this person's timeline
+    const childRels = summary.relationships.filter(
+      (r: RawRelSummary) => r.type === 'parent_child' && r.person1_id === props.personId && !!r.other_person_id,
+    );
+    if (childRels.length > 0) {
+      type ChildEvent = { id: string; event_type: string; date_value: string | null; place_name: string | null };
+      const childEventArrays = await Promise.all(
+        childRels.map((r: RawRelSummary) =>
+          (window.api.events.forPerson(r.other_person_id!) as Promise<ChildEvent[]>).catch(() => [] as ChildEvent[]),
+        ),
+      );
+      const items: TimelineItem[] = [];
+      for (let i = 0; i < childRels.length; i++) {
+        const r = childRels[i];
+        const childName = personNameFrom(r.other_person_names);
+        const events = childEventArrays[i];
+        const birthEv = events.find(e => e.event_type === 'birth' || e.event_type === 'foster_placement');
+        if (!birthEv) continue;
+        const year = extractYear(birthEv.date_value);
+        if (year == null) continue;
+        const place = birthEv.place_name;
+        const typeLabel = eventTypeLabel(birthEv.event_type);
+        const namePart = childName || t('common.unknown');
+        const label = place ? `${typeLabel}: ${namePart} · ${place}` : `${typeLabel}: ${namePart}`;
+        items.push({ id: birthEv.id, year, eventType: birthEv.event_type, label });
+      }
+      childBirthItems.value = items;
+    }
   } catch (err) {
     console.error('[ALifeReport] load failed:', err);
     toast.error(t('errors.loadFailed'));

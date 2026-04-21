@@ -1,10 +1,11 @@
 <template>
   <div class="chart-outer">
+    <div v-if="loading && tree" class="chart-reload-indicator" aria-live="polite">{{ $t('common.loading') }}</div>
     <div :class="['chart-scroll', { panning: isPanning }]" ref="scrollRef" @wheel="onWheel"
          @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp">
-      <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
+      <div v-if="loading && !tree" class="chart-loading">{{ $t('common.loading') }}</div>
       <svg
-        v-else
+        v-if="tree"
         :width="layout.svgWidth * zoom"
         :height="layout.svgHeight * zoom"
         :viewBox="`0 ${layout.viewBoxMinY ?? 0} ${layout.svgWidth} ${layout.svgHeight}`"
@@ -468,6 +469,20 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   cursor: grabbing;
 }
 .chart-loading { color: #999; padding: 40px; text-align: center; }
+.chart-reload-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
+}
 .person-box.clickable { cursor: pointer; }
 .person-box.clickable:hover rect:first-child { opacity: 0.9; }
 .collapse-btn { cursor: pointer; }

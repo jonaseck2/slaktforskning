@@ -1,33 +1,35 @@
 <template>
   <div class="chart-outer" ref="outerRef">
+    <div v-if="loading && layout.bars.length > 0" class="chart-reload-indicator" aria-live="polite">{{ $t('common.loading') }}</div>
     <div class="chart-scroll" ref="scrollRef" @wheel="onWheel">
-      <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
-      <template v-else-if="layout.bars.length > 0">
+      <div v-if="loading && layout.bars.length === 0" class="chart-loading">{{ $t('common.loading') }}</div>
+      <template v-if="layout.bars.length > 0">
         <svg
           :width="layout.svgWidth * zoom"
           :height="layout.svgHeight * zoom"
           :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
           class="timeline-svg"
+          :style="{ background: tlColors.surface }"
           data-testid="timeline-svg"
           @mouseleave="hoveredId = null"
         >
           <defs>
-            <!-- Gradient definitions for bar fills -->
+            <!-- Gradient definitions for bar fills — stop-color bound as hex so SVG export works -->
             <linearGradient id="tl-grad-m" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--tl-bar-m)" stop-opacity="1" />
-              <stop offset="100%" stop-color="var(--tl-bar-m)" stop-opacity="0.7" />
+              <stop offset="0%" :stop-color="tlColors.barM" stop-opacity="1" />
+              <stop offset="100%" :stop-color="tlColors.barM" stop-opacity="0.7" />
             </linearGradient>
             <linearGradient id="tl-grad-f" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--tl-bar-f)" stop-opacity="1" />
-              <stop offset="100%" stop-color="var(--tl-bar-f)" stop-opacity="0.7" />
+              <stop offset="0%" :stop-color="tlColors.barF" stop-opacity="1" />
+              <stop offset="100%" :stop-color="tlColors.barF" stop-opacity="0.7" />
             </linearGradient>
             <linearGradient id="tl-grad-u" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--tl-bar-u)" stop-opacity="1" />
-              <stop offset="100%" stop-color="var(--tl-bar-u)" stop-opacity="0.7" />
+              <stop offset="0%" :stop-color="tlColors.barU" stop-opacity="1" />
+              <stop offset="100%" :stop-color="tlColors.barU" stop-opacity="0.7" />
             </linearGradient>
             <linearGradient id="tl-grad-focal" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--tl-bar-focal)" stop-opacity="1" />
-              <stop offset="100%" stop-color="var(--tl-bar-focal)" stop-opacity="0.7" />
+              <stop offset="0%" :stop-color="tlColors.barFocal" stop-opacity="1" />
+              <stop offset="100%" :stop-color="tlColors.barFocal" stop-opacity="0.7" />
             </linearGradient>
           </defs>
 
@@ -37,14 +39,14 @@
               v-for="tick in layout.ticks" :key="'grid-' + tick.year"
               :x1="tick.x" :y1="TOP"
               :x2="tick.x" :y2="layout.axisY"
-              stroke="var(--tl-grid)" stroke-width="1"
+              :stroke="tlColors.grid" stroke-width="1"
             />
             <!-- Century markers: thicker line -->
             <line
               v-for="tick in centuryTicks" :key="'century-' + tick.year"
               :x1="tick.x" :y1="TOP"
               :x2="tick.x" :y2="layout.axisY"
-              stroke="var(--tl-axis)" stroke-width="1.5"
+              :stroke="tlColors.axis" stroke-width="1.5"
             />
           </g>
 
@@ -52,7 +54,7 @@
           <line
             :x1="LEFT" :y1="layout.axisY"
             :x2="layout.svgWidth - RIGHT" :y2="layout.axisY"
-            stroke="var(--tl-axis)" stroke-width="1"
+            :stroke="tlColors.axis" stroke-width="1"
           />
 
           <!-- Tick labels at top -->
@@ -61,6 +63,7 @@
               v-for="tick in layout.ticks" :key="'label-' + tick.year"
               :x="tick.x" :y="TOP - 4"
               class="tick-label" text-anchor="middle"
+              :fill="tlColors.tick"
             >{{ tick.year }}</text>
           </g>
 
@@ -68,11 +71,12 @@
           <line
             :x1="layout.todayX" :y1="TOP - 14"
             :x2="layout.todayX" :y2="layout.axisY"
-            stroke="var(--tl-today)" stroke-width="1.5" stroke-dasharray="4 3"
+            :stroke="tlColors.today" stroke-width="1.5" stroke-dasharray="4 3"
           />
           <text
             :x="layout.todayX" :y="TOP - 18"
             class="today-label" text-anchor="middle"
+            :fill="tlColors.today"
           >{{ $t('visualization.today') }}</text>
 
           <!-- Person bars -->
@@ -91,6 +95,8 @@
               :x="LEFT - 8" :y="bar.y + bar.h / 2"
               class="row-label" :class="{ 'focal-label': bar.isFocal }"
               text-anchor="end" dominant-baseline="middle"
+              :fill="bar.isFocal ? tlColors.textFocal : tlColors.text"
+              :font-weight="bar.isFocal ? '700' : undefined"
             ><tspan
                 v-for="(part, pi) in truncateNameParts(fullNameParts(bar.person.givenName, bar.person.surname, bar.person.preferredName, bar.person.nickname), 22)"
                 :key="pi"
@@ -114,6 +120,7 @@
               v-if="bar.hasNoDate"
               :x="LEFT + 4" :y="bar.y + bar.h / 2"
               class="no-date-label" dominant-baseline="middle"
+              :fill="tlColors.textMuted"
             >?</text>
 
             <!-- Living arrow (animated pulse) -->
@@ -133,6 +140,7 @@
               v-if="!bar.hasNoDate && birthYear(bar)"
               :x="bar.x - 3" :y="bar.y + bar.h + 12"
               class="year-label" text-anchor="end"
+              :fill="tlColors.tick"
             >{{ birthYear(bar) }}</text>
 
             <!-- Death year label at bar end -->
@@ -140,6 +148,7 @@
               v-if="!bar.hasNoDate && deathYear(bar)"
               :x="bar.x + bar.w + 3" :y="bar.y + bar.h + 12"
               class="year-label" text-anchor="start"
+              :fill="tlColors.tick"
             >{{ deathYear(bar) }}</text>
 
             <!-- Event markers (symbols above bars) -->
@@ -150,6 +159,7 @@
                 class="marker-symbol"
                 text-anchor="middle"
                 dominant-baseline="auto"
+                :fill="tlColors.marker"
               >{{ marker.symbol }}</text>
             </g>
           </g>
@@ -193,11 +203,53 @@ import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import { yearFromDate } from '../../utils/chart-layout/utils';
 import ZoomControls from '../ZoomControls.vue';
 import { timelineGenerations } from '../../composables/useChartGenerations';
+import { useThemeSignal } from '../../composables/useThemeSignal';
+import type { ColorMode } from '../../../api/chart-export';
 
 useI18n();
 
-const props = defineProps<{ personId: string | undefined; readonly?: boolean }>();
+const props = defineProps<{ personId: string | undefined; readonly?: boolean; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
+
+const themeVersion = useThemeSignal();
+const tlColors = computed(() => {
+  void themeVersion.value;
+  const mode = props.colorMode ?? 'themed';
+  if (mode === 'bw') {
+    return {
+      surface:    '#ffffff',
+      barM:       '#aaaaaa',
+      barF:       '#aaaaaa',
+      barU:       '#aaaaaa',
+      barFocal:   '#444444',
+      grid:       '#e0e0e0',
+      axis:       '#888888',
+      today:      '#000000',
+      text:       '#333333',
+      textFocal:  '#000000',
+      tick:       '#888888',
+      textMuted:  '#aaaaaa',
+      marker:     '#333333',
+    };
+  }
+  const s = getComputedStyle(document.documentElement);
+  const g = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback;
+  return {
+    surface:    g('--surface-bg',     '#ffffff'),
+    barM:       g('--tl-bar-m',       '#7eb8f7'),
+    barF:       g('--tl-bar-f',       '#f7a5c0'),
+    barU:       g('--tl-bar-u',       '#bbbbbb'),
+    barFocal:   g('--accent',         '#2c3e50'),
+    grid:       g('--tl-grid',        '#f0f0f0'),
+    axis:       g('--tl-axis',        '#dddddd'),
+    today:      g('--tl-today',       '#ef4444'),
+    text:       g('--text-secondary', '#555555'),
+    textFocal:  g('--text-primary',   '#111111'),
+    tick:       g('--text-muted',     '#888888'),
+    textMuted:  g('--text-muted',     '#888888'),
+    marker:     g('--text-primary',   '#333333'),
+  };
+});
 
 const LEFT = 164;
 const RIGHT = 30;
@@ -330,6 +382,20 @@ onMounted(load);
   overflow: auto;
 }
 .chart-loading { color: var(--text-muted); padding: 40px; text-align: center; }
+.chart-reload-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
+}
 .chart-empty { color: var(--text-muted); padding: 40px; text-align: center; }
 
 .timeline-svg { background: var(--surface); }
@@ -341,14 +407,12 @@ onMounted(load);
 
 .tl-bar { transition: filter 0.15s ease; }
 
-.row-label { fill: var(--tl-text); font-size: var(--font-sm); font-family: inherit; }
-.focal-label { font-weight: 700; fill: var(--text-primary); }
-.tick-label { fill: var(--tl-tick); font-size: var(--font-xs); font-family: inherit; }
-.today-label { fill: var(--tl-today); font-size: var(--font-xs); font-family: inherit; font-weight: 600; }
-.no-date-label { fill: var(--text-muted); font-size: var(--font-base); font-family: inherit; }
-.year-label { fill: var(--tl-tick); font-size: 9px; font-family: inherit; }
-
-.marker-symbol { fill: var(--tl-marker); font-size: 10px; font-family: inherit; }
+.row-label { font-size: var(--font-sm); font-family: inherit; }
+.tick-label { font-size: var(--font-xs); font-family: inherit; }
+.today-label { font-size: var(--font-xs); font-family: inherit; font-weight: 600; }
+.no-date-label { font-size: var(--font-base); font-family: inherit; }
+.year-label { font-size: 9px; font-family: inherit; }
+.marker-symbol { font-size: 10px; font-family: inherit; }
 
 .tl-tooltip {
   background: var(--tl-tooltip-bg);
@@ -369,14 +433,11 @@ onMounted(load);
   pointer-events: none;
 }
 
-/* Print: clean output, no animations */
+/* Print: hide interactive elements, no animations */
 @media print {
   .living-pulse { display: none; }
   .timeline-svg { background: #fff !important; }
   .tl-tooltip-fo { display: none; }
   .tl-bar { opacity: 1 !important; }
-  .row-label { fill: #333 !important; }
-  .tick-label { fill: #999 !important; }
-  .marker-symbol { fill: #333 !important; }
 }
 </style>

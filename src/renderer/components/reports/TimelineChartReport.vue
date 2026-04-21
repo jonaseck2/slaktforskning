@@ -1,12 +1,13 @@
 <template>
   <div class="chart-report">
-    <TimelineChart :person-id="personId" :readonly="true" />
+    <TimelineChart :person-id="personId" :readonly="true" :color-mode="colorMode" />
   </div>
 </template>
 
 <script setup lang="ts">
 import TimelineChart from '../charts/TimelineChart.vue';
-defineProps<{ personId: string }>();
+import type { ColorMode } from '../../../api/chart-export';
+defineProps<{ personId: string; colorMode?: ColorMode }>();
 </script>
 
 <style scoped>

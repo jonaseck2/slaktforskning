@@ -1,10 +1,11 @@
 <!-- src/renderer/components/charts/FanChart.vue -->
 <template>
   <div class="chart-outer" ref="outerRef">
+    <div v-if="loading && tree" class="chart-reload-indicator" aria-live="polite">{{ $t('common.loading') }}</div>
     <div class="chart-scroll" ref="scrollRef" @wheel="onWheel">
-      <div v-if="loading" class="chart-loading">{{ $t('common.loading') }}</div>
+      <div v-if="loading && !tree" class="chart-loading">{{ $t('common.loading') }}</div>
       <FanChartSvg
-        v-else
+        v-if="tree"
         :segments="layout"
         :focal-segment="focalSegment"
         :focal-cx="viewBoxInfo.cx"
@@ -199,6 +200,20 @@ onMounted(load);
 }
 .chart-scroll > svg { flex-shrink: 0; }
 .chart-loading { color: #999; padding: 40px; text-align: center; }
+.chart-reload-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
+}
 
 .fan-seg.clickable { cursor: pointer; }
 .fan-seg.clickable:hover path { opacity: 0.85; }

@@ -58,6 +58,7 @@
         </div>
         <div class="toggles-row">
           <label><input type="checkbox" v-model="yourAncestorsShowEvents" /> {{ $t('reports.alife.events') }}</label>
+          <label><input type="checkbox" v-model="yourAncestorsShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
           <label><input type="checkbox" v-model="yourAncestorsShowExtraPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label><input type="checkbox" v-model="yourAncestorsShowSources" /> {{ $t('reports.common.sources') }}</label>
           <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
@@ -75,6 +76,7 @@
             :color-mode="yourAncestorsColorMode"
             :density="yourAncestorsDensity"
             :show-events="yourAncestorsShowEvents"
+            :show-life-map="yourAncestorsShowLifeMap"
             :show-extra-photos="yourAncestorsShowExtraPhotos"
             :show-sources="yourAncestorsShowSources"
             :redact-living="redactLiving"
@@ -381,7 +383,7 @@
     <!-- Hourglass Chart Tab -->
     <div v-if="activeTab === 'hourglassChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <ChartExportControls
             :paper-size="chartPaperSize"
             :orientation="chartOrientation"
@@ -415,7 +417,7 @@
     <!-- Descendant Chart Tab -->
     <div v-if="activeTab === 'descendantChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <ChartExportControls
             :paper-size="chartPaperSize"
             :orientation="chartOrientation"
@@ -449,7 +451,7 @@
     <!-- Fan Chart Tab -->
     <div v-if="activeTab === 'fanChart'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <label>
             {{ $t('chart.export.colorMode') }}
             <select v-model="fanColorMode">
@@ -498,7 +500,17 @@
     <!-- Timeline Tab -->
     <div v-if="activeTab === 'timeline'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
+          <ChartExportControls
+            :paper-size="chartPaperSize"
+            :orientation="chartOrientation"
+            :color-mode="chartColorMode"
+            :tile-count="chartTileCount"
+            @update:paper-size="chartPaperSize = $event"
+            @update:orientation="chartOrientation = $event"
+            @update:color-mode="chartColorMode = $event"
+            @save-pdf="saveChartPdf"
+          />
           <label>
             {{ $t('reports.generations') }}
             <input type="range" min="1" max="10" step="1" v-model.number="timelineGenerations" />
@@ -513,7 +525,7 @@
       </div>
       <div ref="previewContainer" class="preview-area">
         <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <TimelineChartReport :person-id="chartPersonId" />
+          <TimelineChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
       </div>
@@ -596,6 +608,7 @@ const yourAncestorsGenerations = ref(4);
 const yourAncestorsColorMode = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
 const yourAncestorsDensity = ref<'one' | 'two'>('one');
 const yourAncestorsShowEvents = ref(true);
+const yourAncestorsShowLifeMap = ref(true);
 const yourAncestorsShowExtraPhotos = ref(false);
 const yourAncestorsShowSources = ref(false);
 const aLifePersonId = computed(() => focusStore.personId);
@@ -914,7 +927,10 @@ function exportPdfFilename(): string {
 }
 
 async function exportPdf() {
-  const landscape = ['hourglassChart', 'descendantChart'].includes(activeTab.value);
+  const chartTabs = ['pedigreePrint', 'hourglassChart', 'descendantChart'];
+  const landscape = chartTabs.includes(activeTab.value)
+    ? chartOrientation.value === 'landscape'
+    : false;
   await window.api.print.exportPdf(exportPdfFilename(), landscape);
 }
 
@@ -945,21 +961,19 @@ async function exportPdf() {
 
 .tab-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: var(--space-lg);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-sm);
   background: var(--surface);
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-lg);
 }
-.controls { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: center; }
-.controls label {
+.controls-row { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: flex-end; }
+.controls-row label {
   display: flex; flex-direction: column; gap: var(--space-xs);
-  font-size: var(--font-sm); font-weight: var(--font-weight-bold); color: var(--text-secondary); min-width: 200px;
+  font-size: var(--font-sm); font-weight: var(--font-weight-bold); color: var(--text-secondary);
 }
-.controls select {
+.controls-row select {
   padding: 6px 8px;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
@@ -968,11 +982,11 @@ async function exportPdf() {
   background: var(--surface-bg);
   color: var(--text-primary);
 }
-.controls select:focus {
+.controls-row select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-.controls input[type='number'] {
+.controls-row input[type='number'] {
   padding: 6px 8px;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
@@ -982,27 +996,23 @@ async function exportPdf() {
   color: var(--text-primary);
   width: 100px;
 }
-.controls input[type='number']:focus {
+.controls-row input[type='number']:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-.controls input[type='range'] {
+.controls-row input[type='range'] {
   accent-color: var(--accent);
   width: 120px;
   cursor: pointer;
 }
-.print-actions { display: flex; gap: var(--space-sm); align-items: center; }
+.toggles-row { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: center; }
+.toggles-row label {
+  display: flex; flex-direction: row; align-items: center; gap: var(--space-xs);
+  font-size: var(--font-sm); color: var(--text-primary); cursor: pointer; font-weight: normal;
+}
+.print-actions { display: flex; gap: var(--space-sm); align-items: center; justify-content: flex-end; }
 .range-value { font-size: var(--font-sm); color: var(--text-muted); min-width: 20px; }
 .arc-buttons { display: flex; gap: var(--space-xs); flex-wrap: wrap; }
-.controls .toggle-label {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-xs);
-  min-width: 0;
-  font-weight: normal;
-  color: var(--text-primary);
-  cursor: pointer;
-}
 
 /* Preview area: grey background with scrollable paper preview */
 .preview-area {

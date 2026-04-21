@@ -10,12 +10,12 @@
         :title="item.label"
       >
         <a v-if="anchorBase" :href="anchorBase + item.id" class="marker-inner marker-link">
-          <span class="marker-label">{{ item.label }}</span>
+          <span class="marker-label" :style="item.labelAdjustPx ? { transform: `translateX(${item.labelAdjustPx}px)` } : undefined">{{ item.label }}</span>
           <span class="marker-stem" aria-hidden="true"></span>
           <span class="marker-dot" aria-hidden="true"></span>
         </a>
         <template v-else>
-          <span class="marker-label">{{ item.label }}</span>
+          <span class="marker-label" :style="item.labelAdjustPx ? { transform: `translateX(${item.labelAdjustPx}px)` } : undefined">{{ item.label }}</span>
           <span class="marker-stem" aria-hidden="true"></span>
           <span class="marker-dot" aria-hidden="true"></span>
         </template>
@@ -76,6 +76,7 @@ const positioned = computed(() => {
     ...item,
     leftPct: Math.max(0, Math.min(100, ((item.year - yearMin.value) / span) * 100)),
     row: 0,
+    labelAdjustPx: 0,
   }));
 
   // Greedy row assignment: process left-to-right, put each item in the first
@@ -101,6 +102,12 @@ const positioned = computed(() => {
       item.row = rowRightEdges.length;
       rowRightEdges.push(centerPx + halfW);
     }
+
+    // Shift label to prevent overflow at left/right edges
+    const labelLeft = centerPx - halfW;
+    const labelRight = centerPx + halfW;
+    if (labelLeft < 0) item.labelAdjustPx = -labelLeft;
+    else if (labelRight > CONTAINER_W) item.labelAdjustPx = CONTAINER_W - labelRight;
   }
 
   return sorted;
@@ -163,6 +170,11 @@ const trackHeight = computed(() =>
   color: var(--text-secondary);
   margin-bottom: 2px;
   line-height: 1;
+  background: var(--surface-bg, white);
+  padding: 0 3px;
+  border-radius: 2px;
+  position: relative;
+  z-index: 2;
 }
 .marker-stem {
   width: 1px;
