@@ -233,6 +233,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.133.0 | Reports: route persistence on restart; media captions with relation context (father/mother/spouse/child) in A Life, A Marriage, Place Chronicle, Photo Album; reports UI theming (export-scope scoped to print-preview, themed tab-header, range inputs); framable prints tab/control overhaul (fan chart yourAncestors-style controls, generations sliders, SVG button in print-actions, tab reorder) | — |
 | v0.133.1 | Fix: MediaChronological test i18n setup + mediaRegions mock; reports controls layout polish; remove redundant .chart-outer height override in TimelineChartReport | — |
 | v0.134.0 | PersonLifeMap primitive; per-ancestor life maps in YourAncestors (toggle); useLifeMap gazetteer fallback resolution with place + path caching; Timeline chart export (ChartExportControls + hex-bound SVG colors); controls-row fix on hourglass/descendant/fan tabs | — |
+| v0.135.0 | ReportPanel: all print-configuration controls moved from `.tab-header` blocks into a right-side panel (PersonPanel/PlacePanel pattern). `useReportConfigStore` Pinia store owns all config state. Subject pickers (PersonPicker/PlacePicker/couple select) replace focusStore implicit selection. ZoomControls stays in preview pane. | [spec](plans/archive/2026-04-21-report-panel-design.md), [plan](plans/archive/2026-04-21-report-panel.md) |
 
 ## Research
 
@@ -271,8 +272,8 @@ Extract duplicated logic from pedigree, descendant, and hourglass layouts into `
 
 #### Gazetteer IPC Refactor [done]
 Stopped Vite from OOMing on CI (Windows/macOS both crashed at ~2 GB heap during the renderer build). Split `src/api/place-gazetteers/index.ts` into `bundled.ts` (main-only, holds the 25 static JSON imports) + `merge.ts` (pure, renderer-safe `loadGazetteers`). Renderer fetches bundled gazetteers via a new `gazetteers:getBundled` IPC channel. Resolver stays synchronous (hot path in MapView / PlacePicker). Renderer bundle shrank from ~40 MB to 1.3 MB; `npm run make -- --platform darwin` now produces a zip artifact locally.
-- Spec: [plans/2026-04-20-gazetteer-ipc-refactor-design.md](plans/2026-04-20-gazetteer-ipc-refactor-design.md)
-- Plan: [plans/2026-04-20-gazetteer-ipc-refactor.md](plans/2026-04-20-gazetteer-ipc-refactor.md)
+- Spec: [plans/archive/2026-04-20-gazetteer-ipc-refactor-design.md](plans/archive/2026-04-20-gazetteer-ipc-refactor-design.md)
+- Plan: [plans/archive/2026-04-20-gazetteer-ipc-refactor.md](plans/archive/2026-04-20-gazetteer-ipc-refactor.md)
 
 
 #### Workflow Analysis [research]
