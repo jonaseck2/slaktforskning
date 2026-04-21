@@ -461,6 +461,7 @@ export default {
     },
     fan: {
       arc: 'Båge',
+      colorMode: 'Grensfärg',
       generations: 'Generationer',
     },
     fanColorMode: 'Färgläge',
