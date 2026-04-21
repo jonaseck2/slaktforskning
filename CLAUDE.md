@@ -179,7 +179,7 @@ tests/
     └── app.test.ts               # App launch smoke test + MCP server connectivity
 
 docs/
-├── PLAN.md                       # Vision, implementation status, roadmap
+├── PLAN.md                       # Active roadmap (active/planned/backlog only)
 ├── DATA_MODEL.md                 # Schema design, GEDCOM compatibility
 ├── MCP.md                        # MCP server tools and UI bridge reference
 ├── IPC_REFERENCE.md              # Complete window.api surface + IPC channel mapping
@@ -893,7 +893,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 |------|----------|---------|
 | `README.md` | Humans | Quick start, features, project structure |
 | `CLAUDE.md` | Agents | This file. Complete architecture reference |
-| `docs/PLAN.md` | Both | Vision, implementation status, roadmap |
+| `docs/PLAN.md` | Both | Active roadmap — active/planned/backlog milestones only |
 | `docs/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility (also bundled in `/data-modeling` skill) |
 | `docs/MCP.md` | Both | MCP server tools (also bundled in `/mcp-dev` skill) |
 | `docs/IPC_REFERENCE.md` | Agents | Complete `window.api` surface + IPC channel mapping |
