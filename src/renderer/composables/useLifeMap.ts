@@ -26,12 +26,12 @@ export function useLifeMap(personId: Ref<string | null>) {
     }
     loading.value = true;
     try {
-      const events = (await window.api.events.forPerson(personId.value)) as Array<Record<string, unknown>>;
+      const events = (await (window as unknown as { api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> }).api.events.forPerson(personId.value)) as Array<Record<string, unknown>>;
       const geocoded: LifeMapEvent[] = [];
       for (const e of events) {
         const placeId = e.place_id as string | null;
         if (!placeId) continue;
-        const place = (await window.api.places.get(placeId)) as Record<string, unknown> | null;
+        const place = (await (window as unknown as { api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> }).api.places.get(placeId)) as Record<string, unknown> | null;
         if (!place || place.latitude == null || place.longitude == null) continue;
         geocoded.push({
           id: e.id as string,
@@ -55,6 +55,8 @@ export function useLifeMap(personId: Ref<string | null>) {
         : null;
 
       data.value = { events: geocoded, bounds };
+    } catch (err) {
+      console.error('[useLifeMap] load failed:', err);
     } finally {
       loading.value = false;
     }

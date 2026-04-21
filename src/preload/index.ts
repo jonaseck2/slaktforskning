@@ -208,7 +208,7 @@ const api = {
   },
   print: {
     print: () => ipcRenderer.invoke('print:print'),
-    exportPdf: (path?: string) => ipcRenderer.invoke('print:exportPdf', path),
+    exportPdf: (defaultPath?: string, landscape?: boolean) => ipcRenderer.invoke('print:exportPdf', defaultPath, landscape),
   },
   csv: {
     export: (entityType: string, options?: { delimiter?: string; encoding?: string }) =>

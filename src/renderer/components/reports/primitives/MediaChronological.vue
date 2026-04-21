@@ -17,15 +17,15 @@
           loading="lazy"
         />
         <div v-if="imageUrls[item.id] && faceTags[item.id]?.length" class="face-tag-overlay">
-          <RouterLink
+          <a
             v-for="tag in faceTags[item.id]"
             :key="tag.personId"
-            :to="'/persons/' + tag.personId"
+            :href="'#person-' + tag.personId"
             class="face-box"
             :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
           >
             <span class="face-hover-label">{{ tag.name }}</span>
-          </RouterLink>
+          </a>
         </div>
       </div>
       <div v-if="showCaptions" class="media-caption">
@@ -33,7 +33,7 @@
         <div v-if="faceTags[item.id]?.length" class="caption-faces">
           <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
           <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
-            <RouterLink :to="'/persons/' + tag.personId" class="face-link">{{ tag.name }}</RouterLink><span v-if="i < faceTags[item.id].length - 1">, </span>
+            <a :href="'#person-' + tag.personId" class="face-link">{{ tag.name }}</a><span v-if="i < faceTags[item.id].length - 1">, </span>
           </template>
         </div>
         <div v-if="item.notes" class="caption-notes">{{ item.notes }}</div>
@@ -45,7 +45,6 @@
 
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
-import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
 export interface MediaDisplayItem {
@@ -188,7 +187,7 @@ function formatDate(iso: string): string {
 .media-chronological.per-page-2 { grid-template-columns: repeat(2, 1fr); }
 .media-chronological.per-page-4 { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
 .media-item { break-inside: avoid; }
-.media-image { position: relative; }
+.media-image { position: relative; width: fit-content; max-width: 100%; line-height: 0; }
 .media-image img { max-width: 100%; height: auto; border-radius: var(--radius-sm); display: block; }
 
 .face-tag-overlay {

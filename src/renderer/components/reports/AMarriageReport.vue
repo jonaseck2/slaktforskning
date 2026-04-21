@@ -12,7 +12,7 @@
       />
 
       <!-- Dual Life Map -->
-      <section v-if="hasAnyLifeMapPoints" class="report-section">
+      <section v-if="props.showLifeMap && hasAnyLifeMapPoints" class="report-section">
         <h2 class="section-heading">{{ $t('reports.amarriage.lifeMap') }}</h2>
         <div class="dual-map-grid">
           <div v-if="spouse1LifeMapPoints.length > 0" class="dual-map-cell">
@@ -48,24 +48,28 @@
       <section v-if="data.person1 || data.person2" class="report-section">
         <h2 class="section-heading">{{ $t('reports.amarriage.theCouple') }}</h2>
         <div class="couple-grid">
-          <PersonMiniCard
-            v-if="data.person1"
-            :given-name="spouse1NameParts.given"
-            :surname="spouse1NameParts.surname"
-            :sex="spouse1Sex"
-            :birth-year="spouse1BirthYear"
-            :death-year="spouse1DeathYear"
-            :key-place="spouse1BirthPlace"
-          />
-          <PersonMiniCard
-            v-if="data.person2"
-            :given-name="spouse2NameParts.given"
-            :surname="spouse2NameParts.surname"
-            :sex="spouse2Sex"
-            :birth-year="spouse2BirthYear"
-            :death-year="spouse2DeathYear"
-            :key-place="spouse2BirthPlace"
-          />
+          <div v-if="data.person1" :id="'person-' + data.person1.person.id">
+            <PersonMiniCard
+              :person-id="data.person1.person.id"
+              :given-name="spouse1NameParts.given"
+              :surname="spouse1NameParts.surname"
+              :sex="spouse1Sex"
+              :birth-year="spouse1BirthYear"
+              :death-year="spouse1DeathYear"
+              :key-place="spouse1BirthPlace"
+            />
+          </div>
+          <div v-if="data.person2" :id="'person-' + data.person2.person.id">
+            <PersonMiniCard
+              :person-id="data.person2.person.id"
+              :given-name="spouse2NameParts.given"
+              :surname="spouse2NameParts.surname"
+              :sex="spouse2Sex"
+              :birth-year="spouse2BirthYear"
+              :death-year="spouse2DeathYear"
+              :key-place="spouse2BirthPlace"
+            />
+          </div>
         </div>
       </section>
 
@@ -73,16 +77,17 @@
       <section v-if="data.children.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('personPanel.children') }}</h2>
         <div class="children-grid">
-          <PersonMiniCard
-            v-for="child in childCards"
-            :key="child.id"
-            :given-name="child.given"
-            :surname="child.surname"
-            :sex="child.sex"
-            :birth-year="child.birthYear"
-            :death-year="child.deathYear"
-            :key-place="child.birthPlace"
-          />
+          <div v-for="child in childCards" :key="child.id" :id="'person-' + child.id">
+            <PersonMiniCard
+              :person-id="child.id"
+              :given-name="child.given"
+              :surname="child.surname"
+              :sex="child.sex"
+              :birth-year="child.birthYear"
+              :death-year="child.deathYear"
+              :key-place="child.birthPlace"
+            />
+          </div>
         </div>
       </section>
 
@@ -98,7 +103,7 @@
             <span v-if="ev.description">. {{ ev.description }}</span>
           </li>
         </ul>
-        <div v-if="hasAnyLifeMapPoints" class="events-map dual-map-grid">
+        <div v-if="props.showLifeMap && hasAnyLifeMapPoints" class="events-map dual-map-grid">
           <div v-if="spouse1LifeMapPoints.length > 0" class="dual-map-cell">
             <div class="dual-map-label">{{ spouse1Name }}</div>
             <LifeMap :points="spouse1LifeMapPoints" :height="220" draw-path path-color="#2c5aa0" />
@@ -152,11 +157,13 @@ import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
   relationshipId: string;
+  showLifeMap?: boolean;
   showPhotos?: boolean;
   showNotes?: boolean;
   showSources?: boolean;
   redactLiving?: boolean;
 }>(), {
+  showLifeMap: true,
   showPhotos: true,
   showNotes: true,
   showSources: false,
@@ -241,6 +248,21 @@ const relMediaEntityRef = computed<MediaEntityRef | null>(() =>
   props.relationshipId ? { entityType: 'relationship', entityId: props.relationshipId } : null,
 );
 const { items: relMediaItems } = useMediaChronological(relMediaEntityRef);
+
+// Media linked to each person — intersection = photos where both appear
+const person1MediaEntityRef = computed<MediaEntityRef | null>(() =>
+  data.value?.person1 ? { entityType: 'person', entityId: data.value.person1.person.id } : null,
+);
+const person2MediaEntityRef = computed<MediaEntityRef | null>(() =>
+  data.value?.person2 ? { entityType: 'person', entityId: data.value.person2.person.id } : null,
+);
+const { items: person1MediaItems } = useMediaChronological(person1MediaEntityRef);
+const { items: person2MediaItems } = useMediaChronological(person2MediaEntityRef);
+
+const sharedPersonMediaIds = computed(() => {
+  const p2Ids = new Set(person2MediaItems.value.map(m => m.id));
+  return new Set(person1MediaItems.value.filter(m => p2Ids.has(m.id)).map(m => m.id));
+});
 
 // --- Helpers ---
 
@@ -473,7 +495,15 @@ const suppressPhotos = computed(() => {
 
 const photoItems = computed<MediaDisplayItem[]>(() => {
   if (suppressPhotos.value) return [];
-  return relMediaItems.value.filter(m => isImageItem(m.fileRef, m.format)).map(toDisplayItem);
+  const seen = new Set<string>();
+  const merged = [
+    ...relMediaItems.value,
+    ...person1MediaItems.value.filter(m => sharedPersonMediaIds.value.has(m.id)),
+  ];
+  return merged
+    .filter(m => isImageItem(m.fileRef, m.format))
+    .filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; })
+    .map(toDisplayItem);
 });
 
 const uniqueSources = computed(() => sources.value);

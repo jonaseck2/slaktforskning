@@ -41,6 +41,7 @@
       >
         <div class="ancestor-header">
           <PersonMiniCard
+            :person-id="ancestor.id"
             :given-name="ancestor.givenName"
             :surname="ancestor.surname"
             :sex="ancestor.sex"
