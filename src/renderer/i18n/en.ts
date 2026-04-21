@@ -710,6 +710,10 @@ export default {
   reports: {
     nav: 'Reports',
     title: 'Reports',
+    panel: {
+      options: 'Options',
+      appearance: 'Appearance',
+    },
     groups: {
       keepsake: 'Keepsake reports',
       framablePrints: 'Framable prints',

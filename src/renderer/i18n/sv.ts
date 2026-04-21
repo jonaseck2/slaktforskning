@@ -710,6 +710,10 @@ export default {
   reports: {
     nav: 'Rapporter',
     title: 'Rapporter',
+    panel: {
+      options: 'Alternativ',
+      appearance: 'Utseende',
+    },
     groups: {
       keepsake: 'Minnesrapporter',
       framablePrints: 'Inramningsbara diagram',
