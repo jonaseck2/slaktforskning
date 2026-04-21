@@ -26,6 +26,8 @@
 
     <div class="reports-body">
 
+      <div class="preview-wrapper">
+
       <!-- Your Ancestors Tab -->
       <div v-if="activeTab === 'yourAncestors'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
@@ -204,7 +206,9 @@
         </div>
       </div>
 
-      <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
+      <ZoomControls :zoom="effectiveZoom" :show-fit="true" :overlay="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
+
+      </div><!-- .preview-wrapper -->
       <ReportPanel
         :active-tab="activeTab"
         :couple-relationships="coupleRelationships"
@@ -294,7 +298,7 @@ const chartTileCount = computed(() => {
 async function chartExportTitle(): Promise<string> {
   const tab = activeTab.value;
   let label = '';
-  if (tab === 'pedigreeChart') label = t('reports.tabPedigreeChart');
+  if (tab === 'pedigreePrint') label = t('reports.pedigreePrint.title');
   else if (tab === 'hourglassChart') label = t('reports.tabHourglassChart');
   else if (tab === 'descendantChart') label = t('reports.tabDescendantChart');
   else if (tab === 'fanChart') label = t('reports.tabFanChart');
@@ -467,7 +471,6 @@ onMounted(async () => {
     options.push({ id: r.id, label: `${name1} & ${name2}` });
   }
   coupleRelationships.value = options;
-  store.coupleRelationships = options;
 
   if (focusStore.personId) {
     const focusCouple = couples.find(r =>
@@ -551,6 +554,14 @@ async function exportPdf() {
   overflow: hidden;
   min-height: 0;
 }
+.preview-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
 .tab-content {
   flex: 1;
   overflow: hidden;
@@ -584,7 +595,7 @@ async function exportPdf() {
   min-height: 210mm;
 }
 @media print {
-  .view-header, .filter-chips-bar, .tab-groups, .tab-header, .zoom-controls-bar { display: none !important; }
+  .view-header, .filter-chips-bar, .tab-groups, .zoom-controls-bar, .report-panel { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }
