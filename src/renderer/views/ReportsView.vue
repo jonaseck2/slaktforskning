@@ -27,18 +27,7 @@
     <!-- Your Ancestors Tab -->
     <div v-if="activeTab === 'yourAncestors'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <label>
-            {{ $t('reports.generations') }}
-            <input
-              type="range"
-              min="4"
-              max="10"
-              step="1"
-              v-model.number="yourAncestorsGenerations"
-            />
-            <span class="range-value">{{ yourAncestorsGenerations }}</span>
-          </label>
+        <div class="controls-row">
           <label>
             {{ $t('chart.export.colorMode') }}
             <select v-model="yourAncestorsColorMode">
@@ -55,10 +44,23 @@
               <option value="two">{{ $t('reports.yourAncestors.densityTwo') }}</option>
             </select>
           </label>
-          <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowEvents" /> {{ $t('reports.alife.events') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowExtraPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="yourAncestorsShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
+          <label>
+            {{ $t('reports.generations') }}
+            <input
+              type="range"
+              min="4"
+              max="10"
+              step="1"
+              v-model.number="yourAncestorsGenerations"
+            />
+            <span class="range-value">{{ yourAncestorsGenerations }}</span>
+          </label>
+        </div>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="yourAncestorsShowEvents" /> {{ $t('reports.alife.events') }}</label>
+          <label><input type="checkbox" v-model="yourAncestorsShowExtraPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label><input type="checkbox" v-model="yourAncestorsShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!yourAncestorsPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -85,14 +87,14 @@
     <!-- A Life Tab -->
     <div v-if="activeTab === 'alife'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
-          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowNotes" /> {{ $t('reports.alife.biography') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="aLifeShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
+          <label><input type="checkbox" v-model="aLifeShowPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
+          <label><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label><input type="checkbox" v-model="aLifeShowNotes" /> {{ $t('reports.alife.biography') }}</label>
+          <label><input type="checkbox" v-model="aLifeShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
+          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!aLifePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -119,7 +121,7 @@
     <!-- Life on One Page Tab -->
     <div v-if="activeTab === 'onePage'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <label>
             {{ $t('reports.onePage.orientation') }}
             <select v-model="onePageOrientation">
@@ -127,8 +129,10 @@
               <option value="landscape">{{ $t('reports.onePage.landscape') }}</option>
             </select>
           </label>
-          <label class="toggle-label"><input type="checkbox" v-model="onePageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
+        </div>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="onePageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
+          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!onePagePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -151,7 +155,15 @@
     <!-- Family in Year X Tab -->
     <div v-if="activeTab === 'familyInYear'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
+          <label>
+            {{ $t('reports.familyInYear.scope') }}
+            <select v-model="familyInYearScope">
+              <option value="all">{{ $t('reports.familyInYear.scopeAll') }}</option>
+              <option value="ancestors" disabled>{{ $t('reports.familyInYear.scopeAncestors') }}</option>
+              <option value="descendants" disabled>{{ $t('reports.familyInYear.scopeDescendants') }}</option>
+            </select>
+          </label>
           <label>
             {{ $t('reports.familyInYear.year') }}
             <input
@@ -163,15 +175,9 @@
               required
             />
           </label>
-          <label>
-            {{ $t('reports.familyInYear.scope') }}
-            <select v-model="familyInYearScope">
-              <option value="all">{{ $t('reports.familyInYear.scopeAll') }}</option>
-              <option value="ancestors" disabled>{{ $t('reports.familyInYear.scopeAncestors') }}</option>
-              <option value="descendants" disabled>{{ $t('reports.familyInYear.scopeDescendants') }}</option>
-            </select>
-          </label>
-          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
+        </div>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!familyInYearYear" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -194,7 +200,7 @@
     <!-- Photo Album Tab -->
     <div v-if="activeTab === 'photoAlbum'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <label>
             {{ $t('reports.photoAlbum.subject') }}
             <select v-model="photoAlbumSubjectType">
@@ -228,9 +234,11 @@
               <option :value="4">4</option>
             </select>
           </label>
-          <label class="toggle-label"><input type="checkbox" v-model="photoAlbumShowCaptions" /> {{ $t('reports.photoAlbum.showCaptions') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="photoAlbumShowIndex" /> {{ $t('reports.photoAlbum.showIndex') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="photoAlbumIncludeDocuments" /> {{ $t('reports.photoAlbum.includeDocuments') }}</label>
+        </div>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="photoAlbumShowCaptions" /> {{ $t('reports.photoAlbum.showCaptions') }}</label>
+          <label><input type="checkbox" v-model="photoAlbumShowIndex" /> {{ $t('reports.photoAlbum.showIndex') }}</label>
+          <label><input type="checkbox" v-model="photoAlbumIncludeDocuments" /> {{ $t('reports.photoAlbum.includeDocuments') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!photoAlbumCanRender" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -257,7 +265,7 @@
     <!-- Place Chronicle Tab -->
     <div v-if="activeTab === 'placeChronicle'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <label>
             {{ $t('reports.place') }}
             <select v-model="placeChroniclePlaceId">
@@ -265,12 +273,14 @@
               <option v-for="p in allPlaces" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
           </label>
-          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowBoundary" /> {{ $t('reports.placeChronicle.map') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowChildPlaces" /> {{ $t('reports.placeChronicle.childPlaces') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowNotes" /> {{ $t('reports.placeChronicle.description') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
+        </div>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="placeChronicleShowBoundary" /> {{ $t('reports.placeChronicle.map') }}</label>
+          <label><input type="checkbox" v-model="placeChronicleShowChildPlaces" /> {{ $t('reports.placeChronicle.childPlaces') }}</label>
+          <label><input type="checkbox" v-model="placeChronicleShowPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label><input type="checkbox" v-model="placeChronicleShowNotes" /> {{ $t('reports.placeChronicle.description') }}</label>
+          <label><input type="checkbox" v-model="placeChronicleShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label><input type="checkbox" v-model="placeChronicleShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!placeChroniclePlaceId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -296,7 +306,7 @@
     <!-- A Marriage Tab -->
     <div v-if="activeTab === 'amarriage'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <label>
             {{ $t('reports.couple') }}
             <select v-model="aMarriageRelId">
@@ -304,12 +314,14 @@
               <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">{{ rel.label }}</option>
             </select>
           </label>
-          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
-          <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
+        </div>
+        <div class="toggles-row">
+          <label><input type="checkbox" v-model="aMarriageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
+          <label><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
+          <label><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
+          <label><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label><input type="checkbox" v-model="aMarriageShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
+          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!aMarriageRelId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -495,7 +507,7 @@
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartPdf">{{ $t('reports.exportPdf') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
         </div>
       </div>
