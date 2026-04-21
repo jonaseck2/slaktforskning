@@ -464,6 +464,7 @@ export default {
     fanColorSex: 'Gender',
     fan: {
       arc: 'Arc',
+      colorMode: 'Fan color',
       generations: 'Generations',
     },
     empty: 'Create a person to start visualizing.',

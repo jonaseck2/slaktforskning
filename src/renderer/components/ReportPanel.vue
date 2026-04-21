@@ -200,7 +200,7 @@
           </div>
           <template v-if="activeTab === 'fanChart'">
             <div class="panel-control">
-              <label class="panel-label">{{ $t('chart.export.colorMode') }}</label>
+              <label class="panel-label">{{ $t('visualization.fan.colorMode') }}</label>
               <select v-model="store.fanColorMode" class="panel-select">
                 <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
                 <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
@@ -209,7 +209,7 @@
             </div>
             <div class="panel-control">
               <span class="panel-label">{{ $t('visualization.fan.arc') }}</span>
-              <div class="panel-toggle-btns" style="flex-wrap: wrap; gap: 4px;">
+              <div class="panel-toggle-btns panel-toggle-btns--wrap">
                 <button v-for="span in fanArcOptions" :key="span" :class="{ active: store.fanArcSpan === span }" @click="store.fanArcSpan = (span as ArcSpan)">{{ span }}deg</button>
               </div>
             </div>
@@ -391,6 +391,10 @@ const subjectSectionTitle = computed(() => {
 .panel-label { font-size: var(--font-xs); color: var(--text-muted); margin-bottom: 2px; display: block; }
 .panel-control { display: flex; flex-direction: column; gap: 2px; }
 .panel-toggle-btns { display: flex; gap: var(--space-xs); }
+.panel-toggle-btns--wrap {
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
 .panel-toggle-btns button {
   flex: 1;
   padding: var(--space-xs) 0;
