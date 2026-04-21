@@ -30,7 +30,7 @@ Follow this order. Each step builds on the previous.
 7. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
 8. **Vue UI** — build component or extend view in `src/renderer/`
 9. **Verify** — `npm test && npx playwright test`; for UI features, also use the MCP verification loop (see below)
-10. **Docs** — update `README.md`, `CLAUDE.md`, `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/IPC_REFERENCE.md`, `docs/MCP.md`
+10. **Docs** — update `README.md`, `CLAUDE.md`, `CHANGELOG.md`, `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`, `docs/IPC_REFERENCE.md`, `docs/MCP.md`
 11. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
     - New entity type or schema column → `data-modeling` skill
     - New MCP tools → `mcp-dev` skill
@@ -407,7 +407,7 @@ If a component grows beyond ~300 lines, extract sections following the Person Se
 
 ### Minimizing data entry actions
 
-Every new UI feature should be evaluated against the number of user actions (clicks, selections, text entries) needed to accomplish a task. A usability analysis of this app (see `docs/plans/2026-04-10-usability-test-plan.md`) found that creating a fully-sourced 10-person family tree required ~792 actions. Six optimizations reduced this by ~50%.
+Every new UI feature should be evaluated against the number of user actions (clicks, selections, text entries) needed to accomplish a task. A usability analysis of this app (see `docs/plans/archive/2026-04-10-usability-test-plan.md`) found that creating a fully-sourced 10-person family tree required ~792 actions. Six optimizations reduced this by ~50%.
 
 **Principles — apply to any new feature:**
 
@@ -505,8 +505,7 @@ Use the `/test` skill to run and write tests. Then commit with `/commit`.
 
 1. `git mv docs/plans/YYYY-MM-DD-<topic>.md docs/plans/archive/` — the plan file itself, not just the spec
 2. `git mv docs/plans/YYYY-MM-DD-<topic>-design.md docs/plans/archive/` — if a design spec exists
-3. Update `docs/PLAN.md` Done table: point to BOTH the archived plan and archived spec, not just one:
-   `| vX.Y.Z | description | [spec](...) · [plan](...) |`
+3. Add a `## vX.Y.Z — description` entry to `CHANGELOG.md` with links to BOTH the archived plan and archived spec.
 4. Bump `package.json` version
 
 **When writing plan files, the final task must explicitly include `git mv` lines for both the plan and the spec.** The common failure mode is archiving only the spec and leaving the plan file in `docs/plans/`. Reviewers should check `ls docs/plans/` after every release and flag any lingering feature plans.

@@ -72,9 +72,9 @@ Long-running worktrees (multi-task plans taking hours/days) collide with whateve
 
 **`package.json` + `package-lock.json` (version conflict):** Main probably has one or more patch bumps; the feature has a minor bump set when the release task ran. Take the feature's minor bump IF it's still higher than main. If main has overshot (e.g. main released v0.131.x while the feature targeted v0.131.0), bump the feature again to the next unused minor (v0.132.0). Never take main's version — that drops the feature's release semantics.
 
-**`docs/PLAN.md` Implementation Status table:** Append the feature's row(s) AFTER main's rows. Never replace. If the feature row references an archived plan + spec, make sure the `plans/archive/...` paths exist after the merge.
+**`CHANGELOG.md`:** Take the feature's entry verbatim (only the feature knows the release's full scope). Place it after the `## Unreleased` header, before main's entries.
 
-**`docs/PLAN.md` Roadmap section:** Remove the feature's `[planned]` or `[in progress]` entry — it's now Done and covered by the Implementation Status row. Keep any parallel-work `[done]` entries that landed on main.
+**`docs/PLAN.md` Roadmap section:** Remove the feature's `[planned]` or `[in progress]` entry — it's now Done and recorded in CHANGELOG.md. Keep any parallel-work `[done]` entries that landed on main.
 
 **`CLAUDE.md`:** Usually both branches added rows to shared-component / composable tables. Keep main's updated descriptions for entries both branches modified (main is newer), and append the feature's net-new rows.
 
@@ -120,24 +120,26 @@ Steps:
 4. Update `"version"` in `package.json`.
 5. Include `package.json` in the same commit.
 
-The bumped version becomes the canonical version — use it in the Implementation Status entry in `docs/PLAN.md`.
+The bumped version becomes the canonical version — use it in the `CHANGELOG.md` entry.
 
 ## Plan + Roadmap sync
 
 **Path convention (overrides superpowers defaults):** All plans and design specs in this repo live under `docs/plans/` — never `docs/superpowers/specs/` or `.claude/plans/`. Design spec → `-design.md` suffix; implementation plan → no suffix; both archive to `docs/plans/archive/` when done. If a commit contains files under `docs/superpowers/` or `.claude/plans/`, that's a bug — move them before committing.
 
-**Every version-bumped commit must have a matching row in `docs/PLAN.md` Implementation Status.** This includes small fixes without a plan file — they still get a one-line entry: `| v0.69.1 | Fix: cause field restricted to death events | — |`
+**Every version-bumped commit must have an entry in `CHANGELOG.md`.** This includes small fixes — they still get a one-line entry under `## Unreleased`:
+```
+- fix: cause field restricted to death events
+```
 
 If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
-- Update `docs/PLAN.md` accordingly
+- Update `docs/PLAN.md` roadmap section accordingly
 - Include these doc updates in the same commit
 
 If the commit **fully completes** a milestone:
 - Move the plan file to `docs/plans/archive/` (mark all checkboxes done)
-- Add a row to the **Implementation Status** table in `docs/PLAN.md`:
-  `| vX.Y.Z | Short description | [archive](plans/archive/filename.md) |`
-- **Remove the milestone's heading and checkbox list from the Roadmap section** — the Implementation Status row is the permanent record; the Roadmap must only contain future work
+- Add a `## vX.Y.Z — short description` entry to `CHANGELOG.md`
+- **Remove the milestone's heading and checkbox list from the `docs/PLAN.md` Roadmap section** — the CHANGELOG entry is the permanent record; the Roadmap must only contain future work
 - Include all of the above in the same commit
 
 If the commit introduces a new plan file:
@@ -171,4 +173,4 @@ What was changed and why.
 - `path/to/file.ts` — what changed
 ```
 
-Add a `| Fix | Short description | [archive](...) |` row to `docs/PLAN.md` **Implementation Status**. No Roadmap entry is needed for fixes.
+Add a `- fix: short description` line to `CHANGELOG.md` under `## Unreleased`. No Roadmap entry is needed for fixes.

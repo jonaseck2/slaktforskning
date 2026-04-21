@@ -26,6 +26,16 @@
 
     <div class="reports-body">
 
+      <ReportPanel
+        :active-tab="activeTab"
+        :couple-relationships="coupleRelationships"
+        :tile-count-info="chartTileCount"
+        @print="printCurrent"
+        @export-pdf="exportPdf"
+        @save-svg="saveChartSvg"
+        @save-chart-pdf="saveChartPdf"
+      />
+
       <div class="preview-wrapper">
 
       <!-- Your Ancestors Tab -->
@@ -210,15 +220,6 @@
       <ZoomControls :zoom="effectiveZoom" :show-fit="true" :overlay="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
 
       </div><!-- .preview-wrapper -->
-      <ReportPanel
-        :active-tab="activeTab"
-        :couple-relationships="coupleRelationships"
-        :tile-count-info="chartTileCount"
-        @print="printCurrent"
-        @export-pdf="exportPdf"
-        @save-svg="saveChartSvg"
-        @save-chart-pdf="saveChartPdf"
-      />
     </div>
 
   </div>
@@ -554,6 +555,7 @@ async function exportPdf() {
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  gap: var(--space-xs);
 }
 .preview-wrapper {
   flex: 1;
@@ -562,6 +564,9 @@ async function exportPdf() {
   flex-direction: column;
   min-height: 0;
   position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 .tab-content {
   flex: 1;
