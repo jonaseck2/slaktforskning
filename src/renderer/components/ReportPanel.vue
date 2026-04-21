@@ -359,7 +359,8 @@ const subjectSectionTitle = computed(() => {
   width: 240px;
   flex-shrink: 0;
   background: var(--surface);
-  border-left: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -367,6 +368,7 @@ const subjectSectionTitle = computed(() => {
 .panel-header {
   padding: var(--space-md) var(--space-md) var(--space-sm);
   border-bottom: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-title { font-size: var(--font-md); font-weight: 600; color: var(--text-primary); }
 .panel-section { border-bottom: 1px solid var(--surface-border-subtle); }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.134.1 — fix ReportPanel layout order and preview styling
+
+- ReportPanel now renders before the preview wrapper so it appears to the left of the report preview
+- Preview wrapper gets `background`, `border-radius`, and `box-shadow` tokens for consistent sheet appearance
+- `.reports-body` gets a small gap between panel and preview
+
 ## v0.132.0 — cropped face-tag profile pictures on all avatars
 
 Every `AppAvatar` in the app now shows a person's starred face tag as a cropped square profile picture — no new media blobs, no extra storage. See [plans/archive/2026-04-20-avatar-profile-pic-crop.md](docs/plans/archive/2026-04-20-avatar-profile-pic-crop.md) for full plan.
