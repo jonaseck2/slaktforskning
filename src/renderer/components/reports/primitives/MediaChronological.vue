@@ -18,15 +18,23 @@
           loading="lazy"
         />
         <div v-if="imageUrls[item.id] && faceTags[item.id]?.length" class="face-tag-overlay">
-          <a
-            v-for="tag in faceTags[item.id]"
-            :key="tag.personId"
-            :href="'#person-' + tag.personId"
-            class="face-box"
-            :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
-          >
-            <span class="face-hover-label">{{ tag.name }}</span>
-          </a>
+          <template v-for="tag in faceTags[item.id]" :key="tag.personId">
+            <a
+              v-if="isLinked(tag.personId)"
+              :href="'#person-' + tag.personId"
+              class="face-box"
+              :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
+            >
+              <span class="face-hover-label">{{ tagLabel(tag) }}</span>
+            </a>
+            <div
+              v-else
+              class="face-box face-box--no-link"
+              :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
+            >
+              <span class="face-hover-label">{{ tagLabel(tag) }}</span>
+            </div>
+          </template>
         </div>
       </div>
       <div v-if="showCaptions" class="media-caption">
@@ -34,7 +42,9 @@
         <div v-if="faceTags[item.id]?.length" class="caption-faces">
           <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
           <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
-            <a :href="'#person-' + tag.personId" class="face-link">{{ tag.name }}</a><span v-if="i < faceTags[item.id].length - 1">, </span>
+            <a v-if="isLinked(tag.personId)" :href="'#person-' + tag.personId" class="face-link">{{ tagLabel(tag) }}</a>
+            <span v-else class="face-name">{{ tagLabel(tag) }}</span>
+            <span v-if="i < faceTags[item.id].length - 1">, </span>
           </template>
         </div>
         <div v-if="item.notes" class="caption-notes">{{ item.notes }}</div>
@@ -90,13 +100,29 @@ const props = withDefaults(defineProps<{
   showCaptions?: boolean;
   perPage?: 1 | 2 | 4;
   includeDocuments?: boolean;
+  /** personId → relation label (e.g. 'Father', 'Pappa'). Prefixes the name in captions/overlays. */
+  relations?: Record<string, string> | null;
+  /** Set of personIds that have anchors in the current report. Only these get <a> links. null = all linked. */
+  linkedPersonIds?: string[] | null;
 }>(), {
   showCaptions: true,
   perPage: 1,
   includeDocuments: false,
+  relations: null,
+  linkedPersonIds: null,
 });
 
 const { t } = useI18n();
+
+function isLinked(personId: string): boolean {
+  if (props.linkedPersonIds === null) return true;
+  return props.linkedPersonIds.includes(personId);
+}
+
+function tagLabel(tag: FaceTag): string {
+  const relation = props.relations?.[tag.personId];
+  return relation ? `${relation} ${tag.name}` : tag.name;
+}
 
 declare const window: Window & {
   api: {
@@ -142,7 +168,6 @@ async function loadUrls(): Promise<void> {
 const faceTags = reactive<Record<string, FaceTag[]>>({});
 
 async function loadFaceTags(): Promise<void> {
-  if (!props.showCaptions) return;
   const ids = printableItems.value.map(i => i.id);
   for (const cached of Object.keys(faceTags)) {
     if (!ids.includes(cached)) delete faceTags[cached];
@@ -228,6 +253,8 @@ function formatDate(iso: string): string {
   transition: opacity 0.15s;
 }
 .face-box:hover .face-hover-label { opacity: 1; }
+.face-box--no-link { cursor: default; }
+.face-box--no-link:hover { border-color: rgba(74, 158, 255, 0.4); }
 
 @media print {
   .face-tag-overlay { display: none; }
@@ -244,6 +271,9 @@ function formatDate(iso: string): string {
 .faces-prefix {
   margin-right: 3px;
   font-style: italic;
+}
+.face-name {
+  color: inherit;
 }
 .face-link {
   color: inherit;

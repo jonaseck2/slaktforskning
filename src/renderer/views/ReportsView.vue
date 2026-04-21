@@ -1,5 +1,5 @@
 <template>
-  <div class="reports-view export-scope">
+  <div class="reports-view">
     <div class="view-header">
       <h2>{{ $t('reports.title') }}</h2>
       <span v-if="reportLoading" class="running-hint">{{ $t('reports.loadingReport') }}</span>
@@ -91,6 +91,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowNotes" /> {{ $t('reports.alife.biography') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
@@ -107,6 +108,7 @@
             :show-documents="aLifeShowDocuments"
             :show-sources="aLifeShowSources"
             :show-notes="aLifeShowNotes"
+            :show-media-captions="aLifeShowMediaCaptions"
             :redact-living="redactLiving"
           />
         </div>
@@ -268,6 +270,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowNotes" /> {{ $t('reports.placeChronicle.description') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="placeChronicleShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!placeChroniclePlaceId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -283,6 +286,7 @@
             :show-photos="placeChronicleShowPhotos"
             :show-notes="placeChronicleShowNotes"
             :show-sources="placeChronicleShowSources"
+            :show-media-captions="placeChronicleShowMediaCaptions"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
@@ -304,6 +308,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
+          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
@@ -319,6 +324,7 @@
             :show-photos="aMarriageShowPhotos"
             :show-notes="aMarriageShowNotes"
             :show-sources="aMarriageShowSources"
+            :show-media-captions="aMarriageShowMediaCaptions"
             :redact-living="redactLiving"
           />
         </div>
@@ -338,7 +344,6 @@
             @update:paper-size="chartPaperSize = $event"
             @update:orientation="chartOrientation = $event"
             @update:color-mode="chartColorMode = $event"
-            @save-svg="saveChartSvg"
             @save-pdf="saveChartPdf"
           />
           <label>
@@ -350,6 +355,7 @@
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -372,7 +378,6 @@
             @update:paper-size="chartPaperSize = $event"
             @update:orientation="chartOrientation = $event"
             @update:color-mode="chartColorMode = $event"
-            @save-svg="saveChartSvg"
             @save-pdf="saveChartPdf"
           />
           <label>
@@ -384,6 +389,7 @@
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -406,7 +412,6 @@
             @update:paper-size="chartPaperSize = $event"
             @update:orientation="chartOrientation = $event"
             @update:color-mode="chartColorMode = $event"
-            @save-svg="saveChartSvg"
             @save-pdf="saveChartPdf"
           />
           <label>
@@ -418,6 +423,7 @@
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -461,6 +467,7 @@
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -489,6 +496,7 @@
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
         </div>
       </div>
       <div ref="previewContainer" class="preview-area">
@@ -584,6 +592,7 @@ const aLifeShowPhotos = ref(true);
 const aLifeShowDocuments = ref(false);
 const aLifeShowSources = ref(false);
 const aLifeShowNotes = ref(true);
+const aLifeShowMediaCaptions = ref(true);
 const onePagePersonId = computed(() => focusStore.personId);
 const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
 const onePageShowLifeMap = ref(true);
@@ -614,11 +623,13 @@ const placeChronicleShowChildPlaces = ref(false);
 const placeChronicleShowPhotos = ref(true);
 const placeChronicleShowNotes = ref(true);
 const placeChronicleShowSources = ref(false);
+const placeChronicleShowMediaCaptions = ref(true);
 const aMarriageRelId = ref('');
 const aMarriageShowLifeMap = ref(true);
 const aMarriageShowPhotos = ref(true);
 const aMarriageShowNotes = ref(true);
 const aMarriageShowSources = ref(false);
+const aMarriageShowMediaCaptions = ref(true);
 // Shared privacy toggle for the 5 keepsake reports (alife, amarriage,
 // yourAncestors, onePage, familyInYear).
 const redactLiving = ref(false);
@@ -926,6 +937,10 @@ async function exportPdf() {
   align-items: flex-end;
   gap: var(--space-lg);
   flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
 }
 .controls { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: center; }
 .controls label {
@@ -958,6 +973,11 @@ async function exportPdf() {
 .controls input[type='number']:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+.controls input[type='range'] {
+  accent-color: var(--accent);
+  width: 120px;
+  cursor: pointer;
 }
 .print-actions { display: flex; gap: var(--space-sm); align-items: center; }
 .range-value { font-size: var(--font-sm); color: var(--text-muted); min-width: 20px; }

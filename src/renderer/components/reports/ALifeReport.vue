@@ -71,13 +71,13 @@
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="true" :per-page="2" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Documents -->
       <section v-if="props.showDocuments && documentItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.documents') }}</h2>
-        <MediaChronological :items="documentItems" :show-captions="true" :per-page="4" :include-documents="true" />
+        <MediaChronological :items="documentItems" :show-captions="props.showMediaCaptions" :per-page="4" :include-documents="true" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Sources -->
@@ -115,6 +115,7 @@ const props = withDefaults(defineProps<{
   showSources?: boolean;
   showNotes?: boolean;
   redactLiving?: boolean;
+  showMediaCaptions?: boolean;
 }>(), {
   showLifeMap: true,
   showPhotos: true,
@@ -122,6 +123,7 @@ const props = withDefaults(defineProps<{
   showSources: false,
   showNotes: true,
   redactLiving: false,
+  showMediaCaptions: true,
 });
 
 const { t } = useI18n();
@@ -281,6 +283,34 @@ const children = computed<PersonRef[]>(() => {
 });
 
 const hasFamily = computed(() => parents.value.length + spouses.value.length + children.value.length > 0);
+
+const linkedPersonIds = computed<string[]>(() => [
+  ...parents.value.map(p => p.id),
+  ...spouses.value.map(s => s.id),
+  ...children.value.map(c => c.id),
+]);
+
+const personRelations = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {};
+  for (const r of data.value?.relationships ?? []) {
+    if (!r.other_person_id) continue;
+    const sex = r.other_person_sex;
+    if (r.type === 'parent_child' && r.person2_id === props.personId) {
+      map[r.other_person_id] = sex === 'M' ? t('reports.relations.father')
+        : sex === 'F' ? t('reports.relations.mother')
+        : t('reports.relations.parent');
+    } else if (r.type === 'parent_child' && r.person1_id === props.personId) {
+      map[r.other_person_id] = sex === 'M' ? t('reports.relations.son')
+        : sex === 'F' ? t('reports.relations.daughter')
+        : t('reports.relations.child');
+    } else if (r.type === 'couple') {
+      map[r.other_person_id] = sex === 'M' ? t('reports.relations.husband')
+        : sex === 'F' ? t('reports.relations.wife')
+        : t('reports.relations.spouse');
+    }
+  }
+  return map;
+});
 
 interface DisplayEvent extends RawEvent { date_display: string | null; }
 

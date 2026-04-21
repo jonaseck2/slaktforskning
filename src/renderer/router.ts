@@ -6,6 +6,8 @@ import SourcesView from './views/SourcesView.vue';
 import SourceDetailView from './views/SourceDetailView.vue';
 import SearchView from './views/SearchView.vue';
 
+const LAST_ROUTE_KEY = 'slaktforskning-last-route';
+
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
@@ -33,4 +35,8 @@ export const router = createRouter({
     { path: '/link-rules', redirect: '/settings' },
     { path: '/gazetteers', redirect: '/settings' },
   ],
+});
+
+router.afterEach((to) => {
+  localStorage.setItem(LAST_ROUTE_KEY, to.fullPath);
 });

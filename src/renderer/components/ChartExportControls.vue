@@ -29,9 +29,6 @@
     </label>
 
     <div class="actions">
-      <AppButton variant="secondary" size="sm" @click="$emit('saveSvg')">
-        {{ $t('chart.export.saveSvg') }}
-      </AppButton>
       <AppButton variant="secondary" size="sm" @click="$emit('savePdf')">
         {{ $t('chart.export.saveTiledPdf') }}
       </AppButton>
@@ -57,7 +54,6 @@ const emit = defineEmits<{
   'update:paperSize': [value: PaperSize];
   'update:orientation': [value: Orientation];
   'update:colorMode': [value: ColorMode];
-  saveSvg: [];
   savePdf: [];
 }>();
 

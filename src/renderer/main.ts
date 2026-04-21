@@ -14,6 +14,11 @@ app.use(i18n);
 app.directive('narrate', vNarrate);
 app.mount('#app');
 
+const lastRoute = localStorage.getItem('slaktforskning-last-route');
+if (lastRoute && lastRoute !== '/') {
+  router.replace(lastRoute).catch(() => router.replace('/'));
+}
+
 // Expose router and i18n for MCP ui_navigate tool and E2E locale switching
 (window as Window & { __vue_router: typeof router; __vue_i18n: typeof i18n }).__vue_router = router;
 (window as Window & { __vue_router: typeof router; __vue_i18n: typeof i18n }).__vue_i18n = i18n;

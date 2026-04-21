@@ -55,7 +55,7 @@
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="true" :per-page="2" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :per-page="2" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Child places -->
@@ -96,12 +96,14 @@ const props = withDefaults(defineProps<{
   showPhotos?: boolean;
   showNotes?: boolean;
   showSources?: boolean;
+  showMediaCaptions?: boolean;
 }>(), {
   showBoundary: true,
   showChildPlaces: false,
   showPhotos: true,
   showNotes: true,
   showSources: false,
+  showMediaCaptions: true,
 });
 
 const { t } = useI18n();
@@ -309,6 +311,8 @@ const notesParagraphs = computed(() => {
   if (!notes) return [];
   return notes.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 });
+
+const linkedPersonIds = computed<string[]>(() => personsLinked.value.map(p => p.person_id));
 
 function isImageItem(fileRef: string | null, format: string | null): boolean {
   if (!fileRef) return false;

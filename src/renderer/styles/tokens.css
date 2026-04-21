@@ -183,7 +183,8 @@
  * or otherwise captured as a static artifact. It pins every theme- and appearance-
  * varying color token to hardcoded neutral values, so descendants render identically
  * regardless of html.dark / html.high-contrast / html.theme-* / base theme. */
-.export-scope {
+.export-scope,
+.print-preview {
   --surface-bg:            #ffffff;
   --surface:               #ffffff;
   --surface-hover:         #f5f5f5;
