@@ -347,7 +347,7 @@
     <!-- Pedigree Print Tab -->
     <div v-if="activeTab === 'pedigreePrint'" class="tab-content">
       <div class="tab-header">
-        <div class="controls">
+        <div class="controls-row">
           <ChartExportControls
             :paper-size="chartPaperSize"
             :orientation="chartOrientation"
