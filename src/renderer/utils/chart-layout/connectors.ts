@@ -50,6 +50,9 @@ export function curvedElbow(
     if (dx === 0) return `M ${fromX},${fromY} V ${toY}`;
 
     const midY = customMidY ?? (fromY + toY) / 2;
+    // When the horizontal segment lands exactly at toY, emit a clean L-shape
+    // instead of letting r→0 produce degenerate quadratic arcs.
+    if (Math.abs(midY - toY) < 0.5) return `M ${fromX},${fromY} V ${midY} H ${toX}`;
     const r = Math.min(
       CURVE_R,
       Math.abs(dx) / 2,

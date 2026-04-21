@@ -7,6 +7,7 @@
     <div
       v-for="item in printableItems"
       :key="item.id"
+      :id="'media-' + item.id"
       class="media-item"
     >
       <div class="media-image">

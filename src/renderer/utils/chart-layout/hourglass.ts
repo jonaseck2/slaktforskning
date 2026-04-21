@@ -599,6 +599,11 @@ export function computeHourglassLayout(
     }
 
     // Connectors: one curved elbow per outline box, owner edge → outline box near edge.
+    // For upward connectors, share the same midY as the real parent connectors so
+    // placeholder and real connector horizontal segments sit on the same line.
+    const connectorMidY = (dir === 'up' && rowMaxHHint !== undefined)
+      ? (ownerY + targetY + rowMaxHHint) / 2
+      : undefined;
     for (let i = 0; i < n; i++) {
       const px = startX + i * (BOX_W + V_GAP);
       const pCX = px + BOX_W / 2;
@@ -606,7 +611,7 @@ export function computeHourglassLayout(
       if (dir === 'down') {
         placeholderPaths.push(curvedElbow(ownerCX, ownerY + ownerH, pCX, targetY, 'down'));
       } else {
-        placeholderPaths.push(curvedElbow(pCX, targetY + ph, ownerCX, ownerY, 'down'));
+        placeholderPaths.push(curvedElbow(pCX, targetY + ph, ownerCX, ownerY, 'down', connectorMidY));
       }
     }
   }
@@ -657,14 +662,16 @@ export function computeHourglassLayout(
       // Place sibling's real spouses (spacing already reserved via computeFootprint)
       placeSpouses(siblings[i], sibCX, focalRowY);
     }
-    // Connect siblings to parent row, sharing the midY with the focal→parent
-    // connectors so the horizontal fork aligns regardless of parent heights.
+    // Connect siblings to the parent-generation junction above the focal.
+    // All sibling connectors terminate at (focalCX, sharedMidY) — the same
+    // horizontal level used by real focal→parent connectors. curvedElbow
+    // emits a clean L-shape when customMidY === toY (no degenerate arcs).
     if (A >= 1) {
       const parentRowBottom = ancestorRowY(1) + ancRowMaxH[1];
       const sharedMidY = (focalRowY + parentRowBottom) / 2;
       for (let i = 0; i < siblings.length; i++) {
         const scx = siblingCXOf(i);
-        paths.push(curvedElbow(scx, focalRowY, focalCX, parentRowBottom, 'down', sharedMidY));
+        paths.push(curvedElbow(scx, focalRowY, focalCX, sharedMidY, 'down', sharedMidY));
       }
     }
   }

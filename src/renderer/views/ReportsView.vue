@@ -341,6 +341,11 @@
             @save-svg="saveChartSvg"
             @save-pdf="saveChartPdf"
           />
+          <label>
+            {{ $t('reports.generations') }}
+            <input type="range" min="2" max="10" step="1" v-model.number="pedigreeGenerations" />
+            <span class="range-value">{{ pedigreeGenerations }}</span>
+          </label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -370,6 +375,11 @@
             @save-svg="saveChartSvg"
             @save-pdf="saveChartPdf"
           />
+          <label>
+            {{ $t('reports.generations') }}
+            <input type="range" min="2" max="8" step="1" v-model.number="hourglassGenerations" />
+            <span class="range-value">{{ hourglassGenerations }}</span>
+          </label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -399,6 +409,11 @@
             @save-svg="saveChartSvg"
             @save-pdf="saveChartPdf"
           />
+          <label>
+            {{ $t('reports.generations') }}
+            <input type="range" min="2" max="8" step="1" v-model.number="descendantGenerations" />
+            <span class="range-value">{{ descendantGenerations }}</span>
+          </label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -417,17 +432,31 @@
     <div v-if="activeTab === 'fanChart'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
-          <ChartExportControls
-            :paper-size="chartPaperSize"
-            :orientation="chartOrientation"
-            :color-mode="chartColorMode"
-            :tile-count="chartTileCount"
-            @update:paper-size="chartPaperSize = $event"
-            @update:orientation="chartOrientation = $event"
-            @update:color-mode="chartColorMode = $event"
-            @save-svg="saveChartSvg"
-            @save-pdf="saveChartPdf"
-          />
+          <label>
+            {{ $t('chart.export.colorMode') }}
+            <select v-model="fanColorMode">
+              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
+              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
+              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
+            </select>
+          </label>
+          <label>
+            {{ $t('visualization.fan.arc') }}
+            <div class="arc-buttons">
+              <button
+                v-for="span in fanArcOptions"
+                :key="span"
+                class="chip"
+                :class="{ active: fanArcSpan === span }"
+                @click="fanArcSpan = span"
+              >{{ span }}°</button>
+            </div>
+          </label>
+          <label>
+            {{ $t('reports.generations') }}
+            <input type="range" min="3" max="8" step="1" v-model.number="fanGenerations" />
+            <span class="range-value">{{ fanGenerations }}</span>
+          </label>
         </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
@@ -440,7 +469,7 @@
             :person-id="chartPersonId"
             :generations="fanGenerations"
             :arc-span="fanArcSpan"
-            :color-mode="fanRenderColorMode"
+            :color-mode="fanColorMode"
           />
         </div>
         <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -450,7 +479,13 @@
     <!-- Timeline Tab -->
     <div v-if="activeTab === 'timeline'" class="tab-content">
       <div class="tab-header">
-        <div class="controls"></div>
+        <div class="controls">
+          <label>
+            {{ $t('reports.generations') }}
+            <input type="range" min="1" max="10" step="1" v-model.number="timelineGenerations" />
+            <span class="range-value">{{ timelineGenerations }}</span>
+          </label>
+        </div>
         <div class="print-actions">
           <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
           <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
@@ -464,47 +499,7 @@
       </div>
     </div>
 
-    <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
-      <template v-if="activeTab === 'fanChart'">
-        <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
-        <button
-          v-for="span in fanArcOptions"
-          :key="span"
-          class="zoom-extra-btn"
-          :class="{ active: fanArcSpan === span }"
-          @click="fanArcSpan = span"
-        >{{ span }}°</button>
-        <span class="zoom-extra-sep">|</span>
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="fanGenerations <= 1" @click="fanGenerations--">−</button>
-        <span class="zoom-extra-value">{{ fanGenerations }}</span>
-        <button class="zoom-extra-btn" :disabled="fanGenerations >= 8" @click="fanGenerations++">+</button>
-      </template>
-      <template v-if="activeTab === 'pedigreePrint'">
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="pedigreeGenerations <= 1" @click="pedigreeGenerations--">−</button>
-        <span class="zoom-extra-value">{{ pedigreeGenerations }}</span>
-        <button class="zoom-extra-btn" @click="pedigreeGenerations++">+</button>
-      </template>
-      <template v-if="activeTab === 'hourglassChart'">
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="hourglassGenerations <= 1" @click="hourglassGenerations--">−</button>
-        <span class="zoom-extra-value">{{ hourglassGenerations }}</span>
-        <button class="zoom-extra-btn" @click="hourglassGenerations++">+</button>
-      </template>
-      <template v-if="activeTab === 'descendantChart'">
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="descendantGenerations <= 1" @click="descendantGenerations--">−</button>
-        <span class="zoom-extra-value">{{ descendantGenerations }}</span>
-        <button class="zoom-extra-btn" @click="descendantGenerations++">+</button>
-      </template>
-      <template v-if="activeTab === 'timeline'">
-        <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-        <button class="zoom-extra-btn" :disabled="timelineGenerations <= 1" @click="timelineGenerations--">−</button>
-        <span class="zoom-extra-value">{{ timelineGenerations }}</span>
-        <button class="zoom-extra-btn" @click="timelineGenerations++">+</button>
-      </template>
-    </ZoomControls>
+    <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
 
   </div>
 </template>
@@ -568,10 +563,10 @@ const keepsakeTabs = computed(() => [
   { value: 'photoAlbum', label: t('reports.photoAlbum.tabTitle') },
 ]);
 const framableTabs = computed(() => [
-  { value: 'pedigreePrint', label: t('reports.pedigreePrint.title') },
-  { value: 'fanChart', label: t('reports.tabFanChart') },
   { value: 'descendantChart', label: t('reports.tabDescendantChart') },
   { value: 'hourglassChart', label: t('reports.tabHourglassChart') },
+  { value: 'pedigreePrint', label: t('reports.pedigreePrint.title') },
+  { value: 'fanChart', label: t('reports.tabFanChart') },
   { value: 'timeline', label: t('reports.tabTimeline') },
 ]);
 
@@ -713,25 +708,35 @@ async function saveChartPdf() {
   clone.setAttribute('height', String(paperH));
 
   const titled = wrapWithTitle(new XMLSerializer().serializeToString(clone), await chartExportTitle());
-  const tiles = computeTileViewBoxes(paperW, paperH);
   // Chart bounds in paper coordinate space (post-scale, post-center).
   const chartL = tx + content.x * scale;
   const chartR = tx + (content.x + content.w) * scale;
   const chartT = ty + content.y * scale;
   const chartB = ty + (content.y + content.h) * scale;
-  // Drop tiles whose viewBox doesn't meaningfully overlap the scaled chart —
-  // a tile that only clips a thin sliver of chart content still renders as a
-  // near-blank page, so require at least 10% of the tile in each dimension
-  // before we emit it.
-  const MIN_OVERLAP = 0.1;
-  const nonEmpty = tiles.filter(t => {
-    const ow = Math.max(0, Math.min(t.x + t.width, chartR) - Math.max(t.x, chartL));
-    const oh = Math.max(0, Math.min(t.y + t.height, chartB) - Math.max(t.y, chartT));
-    return ow > t.width * MIN_OVERLAP && oh > t.height * MIN_OVERLAP;
-  });
-  const pages = tiles.length === 1
-    ? [titled]
-    : nonEmpty.map(tv => generateTileSvg(titled, tv));
+  // Anchor tiles to the chart content bounds rather than the full paper origin.
+  // Paper-aligned tiling creates leading/trailing blank pages whenever the chart
+  // is smaller than the paper because centering leaves margin rows/columns that
+  // just barely pass any percentage-based overlap filter.
+  const A4_W_PX = Math.round(210 * MM_TO_PX);
+  const A4_H_PX = Math.round(297 * MM_TO_PX);
+  const TILE_OVERLAP = 20;
+  const tileStepW = A4_W_PX - TILE_OVERLAP * 2;
+  const tileStepH = A4_H_PX - TILE_OVERLAP * 2;
+  const tileCols = Math.max(1, Math.ceil((chartR - chartL) / tileStepW));
+  const tileRows = Math.max(1, Math.ceil((chartB - chartT) / tileStepH));
+  const contentTiles: Array<{ x: number; y: number; width: number; height: number; row: number; col: number }> = [];
+  for (let r = 0; r < tileRows; r++) {
+    for (let c = 0; c < tileCols; c++) {
+      contentTiles.push({
+        x: chartL + c * tileStepW - TILE_OVERLAP,
+        y: chartT + r * tileStepH - TILE_OVERLAP,
+        width: A4_W_PX,
+        height: A4_H_PX,
+        row: r, col: c,
+      });
+    }
+  }
+  const pages = contentTiles.map(tv => generateTileSvg(titled, tv));
   await (window.api as unknown as { chart: { saveTiledPdf: (p: string[]) => Promise<void> } }).chart.saveTiledPdf(pages);
 }
 
@@ -928,9 +933,35 @@ async function exportPdf() {
   font-size: var(--font-sm); font-weight: var(--font-weight-bold); color: var(--text-secondary); min-width: 200px;
 }
 .controls select {
-  padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: var(--radius-sm); font-size: var(--font-base); font-family: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+.controls select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.controls input[type='number'] {
+  padding: 6px 8px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  width: 100px;
+}
+.controls input[type='number']:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .print-actions { display: flex; gap: var(--space-sm); align-items: center; }
+.range-value { font-size: var(--font-sm); color: var(--text-muted); min-width: 20px; }
+.arc-buttons { display: flex; gap: var(--space-xs); flex-wrap: wrap; }
 .controls .toggle-label {
   flex-direction: row;
   align-items: center;
@@ -967,7 +998,7 @@ async function exportPdf() {
   min-height: 210mm;
 }
 @media print {
-  .view-header, .filter-chips-bar, .tab-header, .zoom-controls-bar { display: none !important; }
+  .view-header, .filter-chips-bar, .tab-groups, .tab-header, .zoom-controls-bar { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }
