@@ -86,6 +86,7 @@
     <div v-if="activeTab === 'alife'" class="tab-content">
       <div class="tab-header">
         <div class="controls">
+          <label class="toggle-label"><input type="checkbox" v-model="aLifeShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
@@ -101,6 +102,7 @@
         <div v-if="aLifePersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
           <ALifeReport
             :person-id="aLifePersonId"
+            :show-life-map="aLifeShowLifeMap"
             :show-photos="aLifeShowPhotos"
             :show-documents="aLifeShowDocuments"
             :show-sources="aLifeShowSources"
@@ -123,6 +125,7 @@
               <option value="landscape">{{ $t('reports.onePage.landscape') }}</option>
             </select>
           </label>
+          <label class="toggle-label"><input type="checkbox" v-model="onePageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
         </div>
         <div class="print-actions">
@@ -135,6 +138,7 @@
           <LifeOnOnePageReport
             :person-id="onePagePersonId"
             :orientation="onePageOrientation"
+            :show-life-map="onePageShowLifeMap"
             :redact-living="redactLiving"
           />
         </div>
@@ -296,6 +300,7 @@
               <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">{{ rel.label }}</option>
             </select>
           </label>
+          <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
           <label class="toggle-label"><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
@@ -310,6 +315,7 @@
         <div v-if="aMarriageRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
           <AMarriageReport
             :relationship-id="aMarriageRelId"
+            :show-life-map="aMarriageShowLifeMap"
             :show-photos="aMarriageShowPhotos"
             :show-notes="aMarriageShowNotes"
             :show-sources="aMarriageShowSources"
@@ -578,12 +584,14 @@ const yourAncestorsShowEvents = ref(true);
 const yourAncestorsShowExtraPhotos = ref(false);
 const yourAncestorsShowSources = ref(false);
 const aLifePersonId = computed(() => focusStore.personId);
+const aLifeShowLifeMap = ref(true);
 const aLifeShowPhotos = ref(true);
 const aLifeShowDocuments = ref(false);
 const aLifeShowSources = ref(false);
 const aLifeShowNotes = ref(true);
 const onePagePersonId = computed(() => focusStore.personId);
 const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
+const onePageShowLifeMap = ref(true);
 const familyInYearYear = ref<number>(new Date().getFullYear() - 100);
 const familyInYearScope = ref<'all' | 'ancestors' | 'descendants'>('all');
 const familyInYearPersonId = computed(() => focusStore.personId);
@@ -612,6 +620,7 @@ const placeChronicleShowPhotos = ref(true);
 const placeChronicleShowNotes = ref(true);
 const placeChronicleShowSources = ref(false);
 const aMarriageRelId = ref('');
+const aMarriageShowLifeMap = ref(true);
 const aMarriageShowPhotos = ref(true);
 const aMarriageShowNotes = ref(true);
 const aMarriageShowSources = ref(false);
@@ -858,8 +867,27 @@ async function printCurrent() {
   await window.api.print.print();
 }
 
+function exportPdfFilename(): string {
+  const names: Record<string, string> = {
+    yourAncestors: 'your-ancestors',
+    alife: 'a-life',
+    onePage: 'life-on-one-page',
+    familyInYear: 'family-in-a-year',
+    photoAlbum: 'photo-album',
+    placeChronicle: 'place-chronicle',
+    amarriage: 'a-couple',
+    pedigreePrint: 'pedigree-print',
+    fanChart: 'fan-chart-print',
+    descendantChart: 'descendant-print',
+    hourglassChart: 'hourglass-print',
+    timeline: 'timeline-print',
+  };
+  return (names[activeTab.value] ?? 'report') + '.pdf';
+}
+
 async function exportPdf() {
-  await window.api.print.exportPdf();
+  const landscape = ['hourglassChart', 'descendantChart'].includes(activeTab.value);
+  await window.api.print.exportPdf(exportPdfFilename(), landscape);
 }
 
 </script>

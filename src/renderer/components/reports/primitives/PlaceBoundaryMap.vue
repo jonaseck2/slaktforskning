@@ -41,6 +41,7 @@ const props = withDefaults(defineProps<{
 
 const mapEl = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
+const resolver = usePlaceResolver();
 
 async function renderMap() {
   if (!mapEl.value || !props.placeId) {
@@ -74,7 +75,6 @@ async function renderMap() {
 
   if (props.showBoundary) {
     try {
-      const resolver = usePlaceResolver();
       await resolver.ensureLoaded();
       const hint = (place.latitude != null && place.longitude != null)
         ? { lat: place.latitude, lon: place.longitude }

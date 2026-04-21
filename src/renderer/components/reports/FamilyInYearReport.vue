@@ -118,6 +118,7 @@ function cardProps(p: AliveInYearPerson) {
     { redactLiving: props.redactLiving === true },
   );
   return {
+    personId: p.id,
     givenName: p.given_name,
     surname: p.surname,
     sex: p.sex,

@@ -1,7 +1,7 @@
 <template>
   <div class="person-mini-card" :class="['sex-' + (sex || 'U')]">
-    <div v-if="portraitUrl" class="portrait">
-      <img :src="portraitUrl" :alt="fullName" />
+    <div v-if="resolvedPortrait" class="portrait">
+      <img :src="resolvedPortrait" :alt="fullName" />
     </div>
     <div v-else class="portrait portrait-placeholder" aria-hidden="true">
       {{ initials }}
@@ -17,9 +17,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps<{
+  personId?: string | null;
   givenName?: string | null;
   surname?: string | null;
   sex?: 'M' | 'F' | 'U';
@@ -30,6 +31,31 @@ const props = defineProps<{
   ahnentafel?: number | null;
   fanChartHref?: string | null;
 }>();
+
+declare const window: Window & {
+  api: {
+    media: {
+      forEntity: (type: string, id: string) => Promise<Array<{ id: string; format: string | null }>>;
+      readAsDataUrl: (id: string) => Promise<string | null>;
+    };
+  };
+};
+
+const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif']);
+const autoPortraitUrl = ref<string | null>(null);
+
+watch(() => props.personId, async (personId) => {
+  autoPortraitUrl.value = null;
+  if (!personId) return;
+  try {
+    const items = await window.api.media.forEntity('person', personId);
+    const first = items.find(m => m.format && IMAGE_FORMATS.has(m.format.toLowerCase()));
+    if (!first) return;
+    autoPortraitUrl.value = await window.api.media.readAsDataUrl(first.id);
+  } catch { /* ignore */ }
+}, { immediate: true });
+
+const resolvedPortrait = computed(() => props.portraitUrl ?? autoPortraitUrl.value);
 
 const fullName = computed(() =>
   [props.givenName, props.surname].filter(Boolean).join(' ') || '—'

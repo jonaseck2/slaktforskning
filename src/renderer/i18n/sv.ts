@@ -752,9 +752,9 @@ export default {
     loadFailed: {
       yourAncestors: 'Kunde inte ladda rapporten Dina förfäder.',
       placeChronicle: 'Kunde inte ladda platskrönika.',
-      amarriage: 'Kunde inte ladda Ett äktenskap-rapport.',
+      amarriage: 'Kunde inte ladda Ett par-rapport.',
       alife: 'Kunde inte ladda Ett liv-rapport.',
-      familyInYear: 'Kunde inte ladda Familjen år-rapporten.',
+      familyInYear: 'Kunde inte ladda Familjen ett år-rapporten.',
       photoAlbum: 'Kunde inte ladda Fotoalbum-rapporten.',
     },
     alife: {
@@ -773,7 +773,7 @@ export default {
       landscape: 'Liggande',
     },
     amarriage: {
-      title: 'Ett äktenskap',
+      title: 'Ett par',
       lifeMap: 'Livskarta',
       sharedTimeline: 'Gemensam tidslinje',
       theCouple: 'Paret',
@@ -791,7 +791,7 @@ export default {
       childPlaces: 'Relaterade platser',
     },
     familyInYear: {
-      tabTitle: 'Familjen år X',
+      tabTitle: 'Familjen ett år',
       title: 'Din familj år {year}',
       subtitle: 'En ögonblicksbild',
       year: 'År',
@@ -837,6 +837,7 @@ export default {
       fromLeft: 'Från vänster:',
       documents: 'Dokument',
       photos: 'Foton',
+      lifeMap: 'Livskarta',
       redactLiving: 'Dölj uppgifter om levande personer',
     },
   },

@@ -26,7 +26,7 @@
       <section v-if="personsLinked.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.placeChronicle.persons') }}</h2>
         <ul class="person-list">
-          <li v-for="p in personsLinked" :key="p.person_id">
+          <li v-for="p in personsLinked" :key="p.person_id" :id="'person-' + p.person_id">
             <strong>{{ p.name || $t('common.unknown') }}</strong>
             <span v-if="p.firstEventYear" class="muted"> ({{ p.firstEventYear }})</span>
           </li>

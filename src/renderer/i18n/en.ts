@@ -752,9 +752,9 @@ export default {
     loadFailed: {
       yourAncestors: 'Could not load Your Ancestors report.',
       placeChronicle: 'Could not load place chronicle.',
-      amarriage: 'Could not load A Marriage report.',
+      amarriage: 'Could not load A Couple report.',
       alife: 'Could not load A Life report.',
-      familyInYear: 'Could not load Family in Year report.',
+      familyInYear: 'Could not load Family in a Year report.',
       photoAlbum: 'Could not load Photo Album report.',
     },
     alife: {
@@ -773,7 +773,7 @@ export default {
       landscape: 'Landscape',
     },
     amarriage: {
-      title: 'A Marriage',
+      title: 'A Couple',
       lifeMap: 'Life Map',
       sharedTimeline: 'Shared Timeline',
       theCouple: 'The Couple',
@@ -791,7 +791,7 @@ export default {
       childPlaces: 'Related places',
     },
     familyInYear: {
-      tabTitle: 'Family in Year X',
+      tabTitle: 'Family in a Year',
       title: 'Your Family in {year}',
       subtitle: 'A snapshot',
       year: 'Year',
@@ -837,6 +837,7 @@ export default {
       fromLeft: 'From left:',
       documents: 'Documents',
       photos: 'Photos',
+      lifeMap: 'Life Map',
       redactLiving: 'Redact living persons',
     },
   },

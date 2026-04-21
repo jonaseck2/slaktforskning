@@ -24,21 +24,21 @@
         <div v-if="parents.length > 0" class="rel-group">
           <h3 class="rel-group-heading">{{ $t('reports.parents') }}</h3>
           <ul class="rel-list">
-            <li v-for="p in parents" :key="p.id">{{ p.name || $t('common.unknown') }}</li>
+            <li v-for="p in parents" :key="p.id" :id="'person-' + p.id">{{ p.name || $t('common.unknown') }}</li>
           </ul>
         </div>
 
         <div v-if="spouses.length > 0" class="rel-group">
           <h3 class="rel-group-heading">{{ $t('personPanel.partners') }}</h3>
           <ul class="rel-list">
-            <li v-for="s in spouses" :key="s.id">{{ s.name || $t('common.unknown') }}</li>
+            <li v-for="s in spouses" :key="s.id" :id="'person-' + s.id">{{ s.name || $t('common.unknown') }}</li>
           </ul>
         </div>
 
         <div v-if="children.length > 0" class="rel-group">
           <h3 class="rel-group-heading">{{ $t('personPanel.children') }}</h3>
           <ul class="rel-list">
-            <li v-for="c in children" :key="c.id">{{ c.name || $t('common.unknown') }}</li>
+            <li v-for="c in children" :key="c.id" :id="'person-' + c.id">{{ c.name || $t('common.unknown') }}</li>
           </ul>
         </div>
       </section>
@@ -57,7 +57,7 @@
       </section>
 
       <!-- Life Map -->
-      <section v-if="lifeMapPoints.length > 0" class="report-section">
+      <section v-if="props.showLifeMap && lifeMapPoints.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.alife.lifeMap') }}</h2>
         <LifeMap :points="lifeMapPoints" :height="400" draw-path />
       </section>
@@ -109,12 +109,14 @@ import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
   personId: string;
+  showLifeMap?: boolean;
   showPhotos?: boolean;
   showDocuments?: boolean;
   showSources?: boolean;
   showNotes?: boolean;
   redactLiving?: boolean;
 }>(), {
+  showLifeMap: true,
   showPhotos: true,
   showDocuments: false,
   showSources: false,

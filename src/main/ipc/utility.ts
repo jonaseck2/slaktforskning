@@ -197,23 +197,21 @@ export function registerUtilityHandlers(
     win.webContents.print({ silent: false, printBackground: false });
   });
 
-  wrapHandler('print:exportPdf', async (filePath?: unknown) => {
+  wrapHandler('print:exportPdf', async (defaultPathHint?: unknown, landscape?: unknown) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
 
-    let savePath = filePath as string | undefined;
-    if (!savePath) {
-      const result = await dialog.showSaveDialog(win, {
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-        defaultPath: 'export.pdf',
-      });
-      if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
-      savePath = result.filePath;
-    }
+    const result = await dialog.showSaveDialog(win, {
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      defaultPath: (defaultPathHint as string) || 'export.pdf',
+    });
+    if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
+    const savePath = result.filePath;
 
     const pdfData = await win.webContents.printToPDF({
       printBackground: false,
       pageSize: 'A4',
+      landscape: landscape === true,
       margins: { marginType: 'printableArea' },
     });
 

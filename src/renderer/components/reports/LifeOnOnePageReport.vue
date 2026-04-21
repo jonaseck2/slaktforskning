@@ -34,7 +34,7 @@
         </ul>
       </div>
 
-      <div v-if="lifeMapPoints.length > 0" class="op-map">
+      <div v-if="props.showLifeMap && lifeMapPoints.length > 0" class="op-map">
         <LifeMap :points="lifeMapPoints" :height="200" draw-path />
       </div>
 
@@ -72,9 +72,11 @@ import { useToast } from '../../composables/useToast';
 const props = withDefaults(defineProps<{
   personId: string;
   orientation?: 'portrait' | 'landscape';
+  showLifeMap?: boolean;
   redactLiving?: boolean;
 }>(), {
   orientation: 'portrait',
+  showLifeMap: true,
   redactLiving: false,
 });
 
