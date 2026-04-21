@@ -14,9 +14,6 @@ defineProps<{ personId: string }>();
   width: 100%;
   overflow: visible;
 }
-.chart-report :deep(.chart-outer) {
-  height: auto !important;
-}
 .chart-report :deep(.chart-scroll) {
   overflow: visible !important;
   height: auto !important;
