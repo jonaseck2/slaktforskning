@@ -230,6 +230,7 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 | v0.131.1 | fix: set executableName so MakerDeb/MakerRpm find the Linux binary | — |
 | v0.132.0 | Cropped face-tag profile pictures on all AppAvatars: `getPersonProfilePicRef` resolver, `profilePic` Pinia store with canvas crop + `ensureBatch`-scoped dedup + generation counter, `usePersonProfilePic` composable, `:person-id` wired into PersonsView/PersonPanel/GroupDetailView/PlacePersonsSection/RelationshipsList/MediaPanel/PersonDetailView | [archive](plans/archive/2026-04-20-avatar-profile-pic-crop.md) |
 | v0.132.1 | fix(devcontainer): move dev-debug.sh + verify-cdp.sh to .devcontainer/, add ensure-native-binaries call, forward CLAUDE_CODE_OAUTH_TOKEN for Max subscription auth | — |
+| v0.133.0 | Reports: route persistence on restart; media captions with relation context (father/mother/spouse/child) in A Life, A Marriage, Place Chronicle, Photo Album; reports UI theming (export-scope scoped to print-preview, themed tab-header, range inputs); framable prints tab/control overhaul (fan chart yourAncestors-style controls, generations sliders, SVG button in print-actions, tab reorder) | — |
 
 ## Research
 

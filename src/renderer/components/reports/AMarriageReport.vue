@@ -124,7 +124,7 @@
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="true" :per-page="2" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Sources -->
@@ -162,12 +162,14 @@ const props = withDefaults(defineProps<{
   showNotes?: boolean;
   showSources?: boolean;
   redactLiving?: boolean;
+  showMediaCaptions?: boolean;
 }>(), {
   showLifeMap: true,
   showPhotos: true,
   showNotes: true,
   showSources: false,
   redactLiving: false,
+  showMediaCaptions: true,
 });
 
 const { t } = useI18n();
@@ -461,6 +463,39 @@ const notesParagraphs = computed(() => {
   const notes = data.value?.relationship.notes;
   if (!notes) return [];
   return notes.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+});
+
+const linkedPersonIds = computed<string[]>(() => {
+  const ids: string[] = [];
+  if (data.value?.person1) ids.push(data.value.person1.person.id);
+  if (data.value?.person2) ids.push(data.value.person2.person.id);
+  for (const c of data.value?.children ?? []) ids.push(c.person.id);
+  return ids;
+});
+
+const personRelations = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {};
+  const p1 = data.value?.person1;
+  const p2 = data.value?.person2;
+  if (p1) {
+    const sex = p1.person.sex;
+    map[p1.person.id] = sex === 'M' ? t('reports.relations.husband')
+      : sex === 'F' ? t('reports.relations.wife')
+      : t('reports.relations.spouse');
+  }
+  if (p2) {
+    const sex = p2.person.sex;
+    map[p2.person.id] = sex === 'M' ? t('reports.relations.husband')
+      : sex === 'F' ? t('reports.relations.wife')
+      : t('reports.relations.spouse');
+  }
+  for (const c of data.value?.children ?? []) {
+    const sex = c.person.sex;
+    map[c.person.id] = sex === 'M' ? t('reports.relations.son')
+      : sex === 'F' ? t('reports.relations.daughter')
+      : t('reports.relations.child');
+  }
+  return map;
 });
 
 function isImageItem(fileRef: string | null, format: string | null): boolean {

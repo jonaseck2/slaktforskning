@@ -18,6 +18,7 @@
           :show-captions="props.showCaptions"
           :per-page="props.perPage"
           :include-documents="props.includeDocuments"
+          :linked-person-ids="[]"
         />
       </section>
 
