@@ -308,3 +308,114 @@ Part of Track C: `docs/plans/archive/2026-04-11-track-c-core-polish.md`.
 ### v0.67.0 — B5: Face/Region Tagging — MCP for AI
 Batch tagging tools: suggest_media_regions, get_persons_for_matching, get_media_tagging_status. 18 tests. **Track B complete. All four tracks from the competitor gap analysis are now done.**
 Part of Track B: `docs/plans/archive/2026-04-11-track-b-media-experience.md`.
+
+---
+
+## Implementation History (v0.68+)
+
+See [CHANGELOG.md](../../../CHANGELOG.md) for full narrative entries. Summary table:
+
+| Version | Feature |
+|---------|---------|
+| v0.68.0 | PlacePanel: map pin side panel, 8 collapsible sections, drag-resize, EntityMediaSection |
+| v0.69.0 | User feedback: hierarchy section, wedding/foster event types, couple subtypes, cause field |
+| v0.70.0 | Pedigree + hourglass chart outline placeholders for selected person |
+| v0.71.0 | Hourglass outline architecture: TreePerson data model, unconditional outline injection |
+| v0.72.0 | Pedigree and descendant charts: TreePerson data model, N-parent support, outline injection |
+| v0.73.0 | Tree subject (SUBM): import matching, SUBM export, DatabaseView picker |
+| v0.74.x | Fix: descendant chart outline placement and space reservation |
+| v0.75.0 | Boundary gazetteer overlay — click map pin to see parish polygon |
+| v0.76.0 | Bundled Swedish boundary gazetteer (Lantmäteriet, CC0) |
+| v0.77.0 | Place types (municipality/locality), map boundary overlay fixes |
+| v0.77.1–v0.78.4 | Hourglass layout rewrite: computeFootprint, 4-pass placement, collision avoidance |
+| v0.80.0 | QualityView: confirm/reject/view buttons for place match checks |
+| v0.81.0–v0.82.1 | updateMedia API, media table view, inline editing, prod/dev server split |
+| v0.83.0–v0.89.1 | MCP workflow tools: persons, events, sources, places, research, media, data mgmt; dev tools |
+| v0.90.0 | MCP overhaul: prod/dev split, 34 workflow tools, 15 dev tools |
+| v0.91.0–v0.93.1 | UX: multi-token search, SourcePicker, DateInput, CDP debugging, quality fix actions |
+| v0.94.0 | Design System Overhaul: 3 color themes, 9 UI primitives, sidebar restructure |
+| v0.95.0–v0.97.6 | Detail view UX: collapsible sections, three-sheet layout, unified views |
+| v0.99.x | Inline media viewer with zoom/pan, face tag drawing, map performance |
+| v0.100.0–v0.102.x | Face tag region move/resize, language gazetteers (GeoNames + Wikidata) |
+| v0.103.0–v0.103.3 | Shared place coordinate resolution, Life Map in PersonPanel |
+| v0.104.0–v0.105.0 | Gazetteer build extraction, cross-platform build scripts |
+| v0.106.0–v0.107.0 | Open source publishing infra, link rules expansion (de/da/no), fan chart |
+| v0.108.0–v0.110.0 | Per-theme dark mode, wall chart generation UI, timeline chart visual overhaul |
+| v0.111.0–v0.112.0 | Chart visual overhaul (WCAG contrast, curved connectors, dynamic heights), unified fan chart |
+| v0.114.0–v0.116.0 | Chart box polish, pedigree/hourglass/descendant generations stepper |
+| v0.117.0–v0.119.6 | Wall chart as inline report, fan chart theme-aware palettes, media lightbox removed |
+| v0.120.0–v0.121.0 | Set profile from face-tag star, UI polish (notes, textarea height, outline fixes) |
+| v0.122.0–v0.123.0 | PersonPicker relation hint, monospaced notes toggle |
+| v0.124.0–v0.126.0 | EventForm citation section, unified zoom controls, quality checks for places/media/sources |
+| v0.127.0–v0.128.1 | Add person from place panel, wall chart rolled into live charts, MCP clean shutdown |
+| v0.129.0–v0.129.2 | Quality checks expansion (18 new checks), performance (bulk queries) |
+| v0.130.0–v0.130.3 | Chart export controls to ReportsView, sex/bw color modes, tiled PDF fix |
+| v0.131.0–v0.131.1 | Keepsake reports redesign: 7 reports + 6 prints + 6 primitives + 2 composables |
+| v0.132.0–v0.132.1 | Cropped face-tag profile pictures on all AppAvatars |
+| v0.133.0–v0.134.0 | Reports route persistence, media captions, PersonLifeMap, timeline chart export |
+| v0.135.0 | ReportPanel: all print config controls in right-side panel, useReportConfigStore |
+
+---
+
+## Completed Milestones
+
+### Hourglass Outline Architecture
+Refactor hourglass chart layout to support outline placeholders as first-class nodes.
+- Plan: [2026-04-11-hourglass-outline-architecture.md](2026-04-11-hourglass-outline-architecture.md)
+
+### Hourglass Layout Rework
+Complete rewrite: clone → inject outlines → measure (computeFootprint) → 4-pass placement → line routing.
+- Spec: [2026-04-15-hourglass-layout-rework-design.md](2026-04-15-hourglass-layout-rework-design.md)
+
+### Gazetteer Quality Checks + Media Editor
+Gazetteer match quality checks, confirm/reject in QualityView, MediaView table mode.
+- Spec: [2026-04-15-gazetteer-quality-media-editor-design.md](2026-04-15-gazetteer-quality-media-editor-design.md)
+
+### MCP Server Overhaul
+Prod/dev server split. 34 workflow tools, 15 dev tools. Factory pattern.
+- Spec: [2026-04-15-mcp-overhaul-design.md](2026-04-15-mcp-overhaul-design.md)
+- Plan: [2026-04-15-mcp-overhaul.md](2026-04-15-mcp-overhaul.md)
+
+### Gazetteer IPC Refactor
+Split bundled gazetteers from renderer bundle to fix Vite OOM on CI. Renderer bundle: 40 MB → 1.3 MB.
+- Spec: [2026-04-20-gazetteer-ipc-refactor-design.md](2026-04-20-gazetteer-ipc-refactor-design.md)
+- Plan: [2026-04-20-gazetteer-ipc-refactor.md](2026-04-20-gazetteer-ipc-refactor.md)
+
+### Place Gazetteers
+Render-time place resolution using bundled hierarchical gazetteers. 25 gazetteers, ~40 MB.
+- Spec: [2026-04-11-place-gazetteers-design.md](2026-04-11-place-gazetteers-design.md)
+- Plan: [2026-04-11-place-gazetteers.md](2026-04-11-place-gazetteers.md)
+
+### Gazetteer Import/Export
+Per-database gazetteer storage. 7 MCP tools for import/export/manage.
+- Spec: [2026-04-13-gazetteer-import-export-design.md](2026-04-13-gazetteer-import-export-design.md)
+- Plan: [2026-04-13-gazetteer-import-export.md](2026-04-13-gazetteer-import-export.md)
+
+### Boundary Gazetteer Overlay
+New "boundary" gazetteer kind carrying polygon geometry. Click map pin to see parish extent.
+- Spec: [2026-04-13-boundary-gazetteer-design.md](2026-04-13-boundary-gazetteer-design.md)
+- Plan: [2026-04-13-boundary-gazetteer-overlay.md](2026-04-13-boundary-gazetteer-overlay.md)
+
+### Keepsake Reports Redesign
+7 keepsake reports + 6 framable prints, 6 primitives, 2 composables, privacy filter.
+- Spec: [2026-04-19-keepsake-reports-redesign-design.md](2026-04-19-keepsake-reports-redesign-design.md)
+- Plan: [2026-04-19-keepsake-reports-redesign.md](2026-04-19-keepsake-reports-redesign.md)
+
+### Media Viewer & Face Tagging
+Inline image viewer with zoom/pan, face tag drawing, lightbox removed.
+- Spec: [2026-04-18-media-viewer-face-tagging-design.md](2026-04-18-media-viewer-face-tagging-design.md)
+- Plan: [2026-04-18-media-viewer-face-tagging.md](2026-04-18-media-viewer-face-tagging.md)
+
+### Cropped Face-Tag Profile Pictures
+Starred face tag as cropped square profile picture on every AppAvatar. Pinia store + canvas crop.
+- Plan: [2026-04-20-avatar-profile-pic-crop.md](2026-04-20-avatar-profile-pic-crop.md)
+
+### ReportPanel
+All print-configuration controls moved from tab headers into a right-side panel. useReportConfigStore.
+- Spec: [2026-04-21-report-panel-design.md](2026-04-21-report-panel-design.md)
+- Plan: [2026-04-21-report-panel.md](2026-04-21-report-panel.md)
+
+### Open Source Publishing
+CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign.
+- Spec: [2026-04-18-open-source-publishing-design.md](2026-04-18-open-source-publishing-design.md)
+- Plan: [2026-04-18-open-source-publishing.md](2026-04-18-open-source-publishing.md)

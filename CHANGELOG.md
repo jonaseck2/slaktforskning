@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.132.0 — cropped face-tag profile pictures on all avatars
 
 Every `AppAvatar` in the app now shows a person's starred face tag as a cropped square profile picture — no new media blobs, no extra storage. See [plans/archive/2026-04-20-avatar-profile-pic-crop.md](docs/plans/archive/2026-04-20-avatar-profile-pic-crop.md) for full plan.

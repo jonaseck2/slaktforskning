@@ -1,6 +1,8 @@
 # Plan: Släktforskning
 
-Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MCP server for AI agent access. Full architecture reference: `CLAUDE.md`. Historical context: `docs/plans/archive/PLAN.md`.
+Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MCP server for AI agent access. Full architecture reference: `CLAUDE.md`.
+
+Version history: [CHANGELOG.md](../CHANGELOG.md). Full implementation history and completed milestones: [plans/archive/PLAN.md](plans/archive/PLAN.md).
 
 ---
 
@@ -16,352 +18,62 @@ Local-first desktop genealogy app (Electron + Vue 3 + SQLite) with a built-in MC
 
 ---
 
-## Implementation Status
-
-| Version | Feature | Archive |
-|---------|---------|---------|
-| v0.1.0 | Foundation: SQLite + API + Electron + MCP (14 tools) + tests | — |
-| v0.2.x | Data entry UI, global search, MCP UI tools, Swedish i18n | — |
-| v0.3.x | Relationships, GEDCOM-X names, person identifiers, detail UX | — |
-| v0.4.x | Places: API/IPC/MCP/UI, inline-edit polish | — |
-| v0.5.x | Visualization, citation badges, place addresses, tilltalsnamn | — |
-| v0.6.0 | GEDCOM 5.5.1 import/export | [archive](plans/archive/2026-04-03-gedcom.md) |
-| v0.6.2 | Genney import profile (Swedish places + patronymics) | [archive](plans/archive/2026-04-03-genney-import.md) |
-| v0.6.3 | Database switcher | [archive](plans/archive/2026-04-03-database-switcher.md) |
-| v0.6.4 | Extended GEDCOM roundtrip (lossless extension tags) | [archive](plans/archive/2026-04-03-gedcom-extended.md) |
-| v0.6.5 | Chart enhancements: depth, zoom/scroll, spouses | [archive](plans/archive/2026-04-03-chart-enhancements.md) |
-| v0.6.6 | Collapsible visualisation nodes | [archive](plans/archive/2026-04-03-collapsible-viz.md) |
-| v0.6.7 | Per-node descendant collapse | [archive](plans/archive/2026-04-03-descendant-collapse.md) |
-| v0.6.8 | Tilltalsnamn + smeknamn separation | [archive](plans/archive/2026-04-03-tilltalsnamn-and-smeknamn.md) |
-| v0.6.9 | Genney Derby import (Docker + DerbyExtractor.java) | [archive](plans/archive/2026-04-04-genney-derby-import.md) |
-| v0.7.0 | Genney full-fidelity: groups, repos, tasks, media, cause | — |
-| v0.7.1 | Docs/tests/skills sync, coverage to 88% | — |
-| v0.8.0 | MCP tools: groups, repos, tasks, media (30 tools) | [archive](plans/archive/2026-04-04-mcp-agent-workflow.md) |
-| v0.9.3 | Genney import crash fix: TODO.STATUS TypeError | [archive](plans/archive/2026-04-04-fix-genney-todo-status.md) |
-| v0.9.4 | Hourglass descendant overlap + auto-center focal | [archive](plans/archive/2026-04-04-hourglass-layout-overlap-fix.md) |
-| v0.10.0 | Viz as primary view: person panel, drag resize, icon sidebar | [archive](plans/archive/2026-04-04-viz-primary-view.md) |
-| v0.10.1 | Genney SEX/LIVING encoding fix | [archive](plans/archive/2026-04-04-genney-sex-living-mapping.md) |
-| v0.10.2 | Hourglass spouse side + pedigree compact vertical layout | [archive-1](plans/archive/2026-04-04-hourglass-female-focal-spouse-side.md) [archive-2](plans/archive/2026-04-04-pedigree-compact-vertical-layout.md) |
-| v0.11.0 | EVENT.cause UI + GEDCOM CAUS export | [archive](plans/archive/2026-04-04-event-cause.md) |
-| v0.12.0 | Tree Sanity Checks: 26 checks, QualityView, MCP tools | [archive](plans/archive/2026-04-04-sanity-checks.md) |
-| v0.13.0 | Printable Output: Ancestor Chart, Family Group Sheet, Summary | [archive](plans/archive/2026-04-04-printable-output.md) |
-| v0.14.0 | Polish: Escape closes modals + data backup/restore | [archive](plans/archive/2026-04-04-polish.md) |
-| v0.15.0 | Evidence Model: mention event, citation editing, Genney MENTION | [archive](plans/archive/2026-04-05-evidence-model-simplification.md) |
-| v0.16.0 | Research Tasks UI: list view, person section, sidebar badge | [archive](plans/archive/2026-04-04-research-tasks.md) |
-| v0.17.0 | Groups UI: list/detail views, GroupPicker, person section | [archive](plans/archive/2026-04-05-groups-ui-plan.md) |
-| v0.18.0 | Navigation focus persistence: Pinia store, sidebar indicator | [archive](plans/archive/2026-04-05-nav-focus-persistence.md) |
-| v0.19.0 | Circle chart: 360° ancestor view, 6 gens, branch colors | [archive](plans/archive/2026-04-05-circle-chart.md) |
-| v0.20.0 | Ancestor Book: SVG circle, ahnentafel list, person summaries | [archive](plans/archive/2026-04-05-ancestor-book.md) |
-| v0.20.7 | GEDCOM import: engagement/adoption types, CAUS, TITL, NOTE | [archive](plans/archive/2026-04-05-gedcom-import-completeness.md) |
-| v0.21.0 | Persons list: JOIN query, load-more pagination (100/page) | [archive](plans/archive/2026-04-05-persons-list-pagination.md) |
-| v0.22.0 | View caching: keep-alive + dataVersion reload guard | [archive](plans/archive/2026-04-05-view-caching.md) |
-| v0.22.3 | PersonsView infinite scroll + RelationshipsView N+1 fix | — |
-| v0.23.0 | QualityView: table layout, caching, ignore/unignore, names | — |
-| v0.24.0 | Media Attachments: schema, file copy, IPC, MediaView, i18n | [archive](plans/archive/2026-04-04-media.md) |
-| v0.24.2 | UX design system: all list views match QualityView pattern | [archive](plans/archive/2026-04-05-ux-design-system.md) |
-| v0.25.0 | GEDCOM media import/export: OBJE on INDI/FAM/events | [archive](plans/archive/2026-04-05-gedcom-media-import.md) |
-| v0.26.0 | Infinite chart expansion: lazy load-more per branch | [archive](plans/archive/2026-04-06-infinite-chart-expansion.md) |
-| v0.26.4–v0.30.1 | Tree-first editing: PersonPanel redesign + ⊕ hover buttons | [archive](plans/archive/2026-04-06-tree-first-editing.md) |
-| v0.32.0–v0.35.2 | GEDCOM full standard: 7.0 normalization, ValidationReport | [archive](plans/archive/2026-04-06-gedcom-full-support.md) |
-| v0.35.0 | Holger ElevateDB direct import (Python + Docker pipeline) | [archive](plans/archive/2026-04-06-holger-dbisam-import.md) |
-| v0.37.3 | Import/export data integrity: ExportReport, warnings | [archive](plans/archive/2026-04-07-import-export-data-integrity.md) |
-| v0.37.6 | Component extraction: 6 new components, ImportExportView slim | [archive](plans/archive/2026-04-07-component-extraction.md) |
-| v0.37.8 | Shared CircleChartSvg component | [archive](plans/archive/2026-04-05-circle-chart-svg-shared.md) |
-| v0.38.0 | GEDCOM 7.0 export: EXID, DATE PHRASE, format selector UI | [archive](plans/archive/2026-04-06-gedcom-70-export.md) |
-| v0.38.1 | Holger import: REMA/MISC→notes, defaultPersonId nav | [archive](plans/archive/2026-04-06-holger-import.md) |
-| v0.38.2 | GEDCOM gap closure: REPO, _GRP, _TODO, SUBM, db_settings | [archive](plans/archive/2026-04-07-gedcom-import-gap-closure.md) |
-| v0.38.3 | Import/export test coverage (Genney/Holger/GEDCOM) | [archive](plans/archive/2026-04-07-import-export-test-coverage.md) |
-| v0.38.4 | Genney media folder support + three-box import UI | [archive](plans/archive/2026-04-08-genney-media-folder.md) |
-| v0.39.0 | Evidence Analysis phases 1+2: assertions, conflicts, UI | [archive](plans/archive/2026-04-08-evidence-analysis.md) |
-| v0.39.1 | Evidence Analysis phase 3: unsourced filter, proof summaries | [archive](plans/archive/2026-04-08-evidence-analysis.md) |
-| v0.39.2 | Evidence Analysis phase 4: duplicate detection, merge persons | [archive](plans/archive/2026-04-08-evidence-analysis.md) |
-| v0.40.0 | Remove GPS/assertions — pivot to source-citation model | [archive](plans/archive/2026-04-08-remove-gps-assertions.md) |
-| v0.40.1 | Media ordering, profile picture, export aspect fix — sort_order on media_links, reorder UI, profile thumbnail in PersonDetailView, aspect-ratio fix in ancestor book report | [archive](plans/archive/2026-04-08-media-ordering-profile-picture.md) |
-| v0.44.0 | WCAG 2.1 AA accessibility + TTS: keyboard nav, ARIA roles, focus trapping, skip link, pedigree list view, read-aloud feature (2026-04-08) | [archive](plans/archive/2026-04-08-accessibility-tts.md) |
-| Fix | Windows: happy-dom localStorage broken in component tests | [archive](plans/archive/2026-04-08-windows-localstorage-fix.md) |
-| v0.41.3 | Windows E2E fixes: removed citations badges, search self-contained, correct i18n text, router history, localStorage cleanup, Docker path | [archive](plans/archive/2026-04-08-e2e-windows-fixes.md) |
-| v0.48.0 | Screen Reader Mode (WCAG 2.1 AAA + TTS) | [archive](plans/archive/2026-04-09-screen-reader-mode.md) |
-| Fix | macOS 26 Tahoe crash: Electron 41.2.0 + --no-incremental-marking | [archive](plans/archive/2026-04-08-macos26-electron-crash.md) |
-| v0.49.0 | Usability Optimization Suite: quick-add relatives with birth, inline birth, quick cite, source memory, tree ghost boxes, batch events — ~50% data entry reduction | [archive](plans/archive/2026-04-10-usability-optimizations.md) |
-| v0.51.0 | Source Linker: configurable auto-linking for genealogy references | [archive](plans/archive/2026-04-10-source-linker-implementation.md) |
-| v0.52.0 | C2: Person Timeline View — chronological events with gap detection | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
-| v0.53.0 | D1: MCP Report Generation Tools — 6 higher-level tools for AI narratives | [archive](plans/archive/2026-04-11-track-d-mcp-agent-story.md) |
-| v0.54.0 | B1: Media Viewer Redesign — gallery, lightbox, entity linking | [archive](plans/archive/2026-04-11-track-b-media-experience.md) |
-| v0.55.0 | A2: Export Content Options — branch filtering, living exclusion, content toggles | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
-| v0.56.0 | C3: Place Map Visualization — Leaflet/OpenStreetMap, life path, place maps | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
-| v0.57.0 | D2: MCP Media Tools for AI — base64, untagged discovery, person context | [archive](plans/archive/2026-04-11-track-d-mcp-agent-story.md) |
-| v0.58.0 | B2: Media-Bundled Portable Archive — GEDCOM + media .zip export/import | [archive](plans/archive/2026-04-11-track-b-media-experience.md) |
-| v0.59.0 | A1: Narrative Reports — person biography, place history, family narrative | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
-| v0.60.0 | A5: CSV Export — persons, events, sources, places with delimiter/BOM options | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
-| v0.61.0 | B3: Media Timeline — chronological media per person/place with lightbox | [archive](plans/archive/2026-04-11-track-b-media-experience.md) |
-| v0.62.0 | A3: Wall Charts — large-format pedigree/descendant SVG with tiled PDF | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
-| v0.63.0 | C1: Undo/Redo — command pattern, Cmd+Z/Shift+Z, grouped operations, 30 tests | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
-| v0.64.0 | B4: Face/Region Tagging — manual crop, link to person, MCP tools, 14 tests | [archive](plans/archive/2026-04-11-track-b-media-experience.md) |
-| Docs | D3: Claude Desktop Integration — 6 workflow guides, README MCP setup section | [archive](plans/archive/2026-04-11-track-d-mcp-agent-story.md) |
-| v0.65.0 | A4: Static HTML Site Export — browsable website, search, XSS-safe, 12 tests | [archive](plans/archive/2026-04-11-track-a-presentation-sharing.md) |
-| v0.66.0 | C4: GEDCOM Hardening — 8 edge case fixtures, date parser, import preview, 40 tests | [archive](plans/archive/2026-04-11-track-c-core-polish.md) |
-| v0.67.0 | B5: Face/Region Tagging MCP — batch suggest, person matching, tagging status | [archive](plans/archive/2026-04-11-track-b-media-experience.md) |
-| v0.68.0 | PlacePanel: map pin side panel with 8 collapsible sections, drag-resize, EntityMediaSection, getPersonsForPlace API | [archive](plans/archive/2026-04-11-place-panel.md) |
-| v0.69.0 | User feedback: hierarchy section, event types (wedding, foster placement), couple subtypes (särbo, relation), cause field restricted to death, media folder namespacing, media path resolution fix, EventList persons column | — |
-| v0.70.0 | Pedigree + hourglass chart: add-person outline placeholders for selected person, SVG click fix for MCP ui_click, viewBox clipping fix | — |
-| v0.71.0 | Hourglass outline architecture: TreePerson data model, buildHourglassTree() converter, unconditional outline injection, spouse placeholder support | [plan](plans/2026-04-11-hourglass-outline-architecture.md) |
-| v0.71.1 | Remove kyrkoarkiv/domstolsarkiv/generalmönsterrullor link rules, show citation notes in source detail, i18n additions | — |
-| v0.71.2 | Fix: hourglass outlines for all person types — spouse/child outlines for ancestors and descendants via post-layout pass | — |
-| v0.72.0 | Pedigree and descendant charts: TreePerson data model, N-parent support, outline injection for all 4 roles | — |
-| v0.72.1 | Fix: pedigree outline overlap — spouse/child outlines placed below existing boxes in same column | — |
-| v0.72.2 | Fix: pedigree outlines skip over occupied positions using findClearY; add sv-gardar/sv-kyrkor gazetteers | — |
-| v0.72.3 | Fix: findClearY uses full rectangle intersection to avoid cross-column overlap | — |
-| v0.72.4 | Fix: pedigree spouse outline placed directly below person, line from box edge not center | — |
-| v0.72.5 | Fix: pedigree spouse outline shifted right to avoid connector corridor overlap | — |
-| v0.72.6 | Fix: pedigree spouse outline uses leaf slot reservation for proper separation, tight V_GAP spacing | [archive](plans/archive/2026-04-12-pedigree-descendant-outlines.md) |
-| v0.73.0 | Tree subject (SUBM): import matching across all GEDCOM variants, SUBM export, DatabaseView picker, import report prompt for unmatched submitters | — |
-| v0.73.1 | Fix: ancestor book circle chart clips edges at reduced generations — use width="100%" and remove hardcoded max-width to match CircleChartReport scaling | — |
-| v0.73.2 | Place UX: gazetteer search in PlacePicker, BaseMap shared component, place_name JOIN in event queries, EventList place column | — |
-| v0.73.3 | Fix: PersonDetailView timeline/map reactivity on data version change | — |
-| v0.73.4 | Fix: descendant chart outline clipping — relocate parent/spouse outlines into tree for layout-driven spacing | — |
-| v0.74.1 | Fix: descendant chart outline placement — revert relocation, use post-layout gap-finding to keep outlines adjacent to selected person | — |
-| v0.74.2 | Fix: descendant chart outline space reservation — subtree extent widening pushes siblings apart for spouse/parent outlines, sex-aware left/right side | — |
-| v0.75.0 | Boundary gazetteer overlay — click map pin to see parish outline polygon | [archive](plans/archive/2026-04-13-boundary-gazetteer-overlay.md) |
-| v0.76.0 | Bundled Swedish boundary gazetteer (Lantmäteriet Socken och stad, CC0) with hint-based disambiguation | — |
-| v0.76.1 | Fix: place resolver now handles Swedish genitive and historical län names for correct hierarchy matching | — |
-| v0.77.0 | Place types (municipality, locality), map boundary overlay fixes, i18n corrections | — |
-| v0.77.1 | Refactor: add `computeFootprint` for hourglass layout measurement (Task 1 of layout rewrite) | — |
-| v0.77.2 | Refactor: hourglass spacing functions use `computeFootprint` — ancestorWidth, ancestorRelCX, descExtents, focal row extent (Task 2 of layout rewrite) | — |
-| v0.78.0 | Feat: hourglass placement passes 1-3 (ancestors, descendants, focal row) + Pass 4 outline placement with collision avoidance (Tasks 3 & 4 of layout rewrite) | — |
-| v0.78.1 | Fix: outline connectors rendered dashed, fork pattern matches normal connectors, spouse outline on correct side | — |
-| v0.78.3 | Fix: sibling/spouse real nodes always visible, outline spouse spacing between focal and sibling sections | — |
-| v0.78.4 | Fix: grandparent selection no longer clips ancestor tree — placeholders excluded from depth/spacing/placement recursion, outline spouse room reserved via computeFootprint | — |
-| v0.80.0 | QualityView: confirm/reject/view buttons for place match checks (PLACE_MATCH_AMBIGUOUS/PARTIAL/NONE/WRONG_LEVEL) | — |
-| v0.81.0 | Add updateMedia to API, IPC, preload, and MCP with 6 unit tests | — |
-| v0.82.0 | Media table view with inline title/notes editing, gallery/table toggle persisted to localStorage | — |
-| v0.82.1 | Refactor: prod server factory (`createProdServer`), shared prod types, UI tools removed from prod entry point | — |
-| v0.83.0 | feat(mcp): person workflow tools — `create_person` (with birth event + citation in one call), `search_persons`, `get_person_summary`, `update_person`, `delete_person`, `add_person_name`, `merge_persons`, `find_duplicates`; `findOrCreateSource` shared helper | — |
-| v0.84.0 | feat(mcp): event workflow tools — `record_event` (multi-participant, place findOrCreate, citation in one call), `get_timeline`, `update_event` (place string resolves to place_id) | — |
-| v0.85.0 | feat(mcp): source, place, research, media, and data-management workflow tools — `add_source`, `search_sources`, `cite`, `get_citations_for_person`, `add_place`, `search_places`, `get_place_history`, `resolve_place`, `get_research_gaps`, `add_research_task`, `update_research_task`, `run_checks`, `attach_media`, `tag_person_in_media`, `get_media_for_person_context`, `import_file`, `export_gedcom`, `get_current_database`, `switch_database` | — |
-| v0.86.0 | feat(mcp-dev): UI automation tools — `ui_screenshot`, `ui_navigate`, `ui_click`, `ui_fill`, `ui_get_dom`; `/fill` endpoint in ui-server | — |
-| v0.87.0 | feat(mcp-dev): chart inspection HTTP bridge — `/chart/persons`, `/chart/select`, `/chart/focus`, `/chart/layout` endpoints + `useChartBridge` composable wired into VisualizationView | — |
-| v0.88.0 | feat(mcp-dev): chart MCP tools — `chart_list_persons`, `chart_select_person`, `chart_focus_person`, `chart_get_layout`, `chart_screenshot_person` wrapping chart HTTP bridge endpoints | — |
-| v0.89.0 | feat(mcp-dev): seed and inspect MCP tools — `seed_person`, `seed_family`, `clear_test_data`, `db_stats`, `app_status`; `/status` endpoint in ui-server; 10 unit tests for seed workflow | — |
-| v0.89.1 | test: E2E test for dev MCP server initialize handshake | — |
-| v0.90.0 | feat: MCP overhaul — prod/dev split, 34 workflow tools, 15 dev tools, chart inspection | [spec](docs/plans/archive/2026-04-15-mcp-overhaul-design.md) |
-| v0.90.1 | Fix: startup and quality check CPU contention on large databases | [archive](plans/archive/2026-04-16-startup-perf-fix.md) |
-| v0.90.2 | QualityView infinite scroll pagination (100 results at a time) | — |
-| v0.91.0 | UX improvements: multi-token search, SourcePicker autocomplete, DateInput YYYY-MM-DD fields with auto-advance, modal redesign (no click-outside close, action verb buttons), EventForm source always visible with Save & Next keeping place/source, gazetteer auto-init, scroll zoom disabled on maps, name surname pre-fill, GEDCOM UTF-8 auto-detection, stable file dialog paths | — |
-| v0.91.1 | Fix: Add Person modal aligned with AddRelatedPersonModal pattern (select for sex, living checkbox, birth details), person changes (sex/living) propagate to visualization chart | — |
-| v0.91.2 | Fix: chart reloads on name changes, "Link" button for existing person mode, focus in tree updates sidebar, PlacePicker only creates leaf place | — |
-| v0.92.0 | Quality check fix actions: Fix button opens correct modal per check type, QualityView navigates with action param, PlacePicker sorts gazetteer results by specificity | — |
-| v0.92.1 | Fix: quality check rows clickable to trigger fix action | — |
-| v0.92.2 | Fix: QualityView → PersonDetailView action routing uses watch on person ref for reliable modal opening | — |
-| v0.93.0 | CDP debugging support (`SLAKTFORSKNING_CDP_PORT` env var, `scripts/dev-debug.sh`), archive 5 implemented design specs + media editor plan, add spec archiving convention | — |
-| v0.93.1 | Fix: quality fix actions work end-to-end — modal stays open (no router.replace remount), event type pre-filled (birth/death), electron-dev skill updated with CDP verification workflow | — |
-| v0.94.0 | Design System Overhaul: 3 color themes (Forest/Nordic/Twilight), 9 UI primitives, MediaPanel, SettingsView, sidebar restructured (Research/Organize/Review), all views/panels/modals use design tokens | [spec](docs/plans/2026-04-17-design-system-spec.md) [plan](plans/archive/2026-04-17-design-system-overhaul.md) |
-| v0.94.8 | Fix: map initial zoom race condition, loading/empty states, cached places across navigation; panel close button and quality dismiss button refinements | — |
-| v0.95.0 | Detail view UX: relationships above events, collapsible sections (panels only), back button in sidebar, section counts, living status checkbox, remove per-view back buttons | — |
-| v0.95.1 | UI consistency: soft buttons everywhere, shared PersonDetailsSection, panel counts always visible, delete buttons softened, quality ignore → ✕ | — |
-| v0.95.2 | Fix: map side panel auto-selects focus person's first place, falls back to first place in list | — |
-| v0.96.0 | Three-sheet layout: nav, main content, and side panel as separate elevated sheets on shared background | — |
-| v0.96.1 | Fix: Places map view moves header/buttons inside left sheet, matching Family Tree layout | — |
-| v0.96.2 | Fix: Media view auto-selects focus person's media or first item, left sheet padding | — |
-| v0.96.3 | Fix: PlacePanel section headers show counts (persons, events, citations, media) | — |
-| v0.96.4 | Fix: map zoom controls above attribution, map respects sheet rounded corners | — |
-| v0.96.5 | Fix: PlacePanel adds + Event and + Citation action buttons to section headers | — |
-| v0.96.6 | Fix: map inset with padding and rounded corners, zoom controls above attribution | — |
-| v0.96.7 | Fix: PlacePanel reorder — Address and Hierarchy moved below Media Timeline | — |
-| v0.96.8 | Fix: + Person button in Family Tree header, "Add Person" → "Person" in i18n | — |
-| v0.97.0 | Unified research views: People combines Tree/List (like Places), Media toggle moved to header, Family Tree nav merged into People | — |
-| v0.97.1 | Fix: chart area feathering — padding around charts, remove tab bar border | — |
-| v0.97.2 | Fix: remove redundant List view button from pedigree tab, shorten "+ Research Tasks" to "+ Task" | — |
-| v0.97.3 | Fix: consistent count labels (showingOf) and view toggle labels across Places, Media, People views | — |
-| v0.97.4 | Fix: add explicit space between given name and surname in PersonNamesTable | — |
-| v0.97.5 | Fix: parallelize panel relationship loading to prevent scroll lock | — |
-| v0.97.6 | Fix: separate media selection from lightbox, make lightbox view-only | — |
-| v0.99.1 | Inline media viewer with zoom/pan, filmstrip navigation, face tag drawing | [spec](docs/plans/2026-04-18-media-viewer-face-tagging-design.md), [plan](plans/2026-04-18-media-viewer-face-tagging.md) |
-| v0.99.2 | Fix: map performance — canvas rendering, smooth zoom, SVG pin markers | — |
-| v0.100.0 | Face tag region move/resize, Vite build optimization (externalize gazetteers) | — |
-| v0.101.0 | Language gazetteer build script (lang-sv-geonames): Swedish translations for 133 countries + 1014 admin1 divisions | — |
-| v0.102.0 | Language gazetteer build script (lang-sv-wikidata): Swedish translations for Nordic administrative divisions (DK/NO/FI/IS) via Wikidata SPARQL | — |
-| v0.102.1 | Fix: face tag drag/resize reliability, auto-assign person, search relevance | — |
-| v0.102.2 | Fix: smooth map scroll zoom with CSS transform, add admin1 place type | — |
-| v0.103.0 | Shared place coordinate resolution with gazetteer fallback, Life Map in PersonPanel | [spec](plans/archive/2026-04-18-shared-place-coordinate-resolution-design.md) |
-| v0.103.1 | Fix: fast continuous map zoom, canvas markers, citation query optimization | — |
-| v0.103.2 | Fix: map popup badge styles, boundary query accuracy, gazetteer UI improvements | — |
-| v0.103.3 | Fix: gazetteer test lookup now uses language translations (e.g. Kanada → Canada) | — |
-| v0.104.0 | Gazetteer build module extraction + gazetteers.ts test coverage (4.9% → 91%) | [spec](plans/archive/2026-04-18-gazetteer-build-extraction-design.md) |
-| v0.104.1 | Docs: comprehensive test skill rewrite with 10 E2E pitfall patterns, quality test fix | — |
-| v0.105.0 | Cross-platform build scripts + DMG maker for macOS | — |
-| v0.106.0 | Open source publishing: governance files, plans, spec | [spec](plans/2026-04-18-open-source-publishing-design.md) |
-| v0.107.0 | Open source infra (templates, CI/CD), link rules expansion (de/da/no), circle+fan charts, name display | [archive](plans/archive/2026-04-18-link-rules-expansion.md), [archive](plans/archive/2026-04-18-circle-chart-visual-update.md), [archive](plans/archive/2026-04-18-fan-chart.md), [archive](plans/archive/2026-04-15-name-display-strategy.md) |
-| v0.108.0 | Per-theme dark mode with tinted surfaces (Forest/Nordic/Twilight) | [archive](plans/archive/2026-04-18-dark-mode-theme-refinement.md) |
-| v0.109.0 | Wall chart generation UI (SVG/tiled PDF export, A4-A0 paper sizes) | [archive](plans/archive/2026-04-18-wall-chart-generation-ui.md) |
-| v0.110.0 | Timeline chart visual overhaul: event markers, tooltips, responsive width, theme-aware colors | [archive](plans/archive/2026-04-18-timeline-chart-visual-update.md) |
-| v0.111.0 | Chart visual overhaul: measurement/connectors modules, WCAG contrast, box redesign for pedigree/hourglass/descendant | [archive](plans/archive/2026-04-18-chart-visual-overhaul.md) |
-| v0.111.1 | WCAG math unit tests (parseHex/luminance/contrast/thresholds); e2e viz back-button test hardening | — |
-| v0.111.2 | Skill docs: WCAG contrast enforcement in a11y/frontend-design/test skills; export color-invariance tests | [spec](plans/2026-04-18-export-color-invariance-tests-design.md) |
-| v0.112.0 | Unified fan/circle chart: fan subsumes the 360° circle; adds theming, branch/sex/high-contrast fills, curved-text toggle, radial gen 5+ text, deeper gen 5-8 rings; circle chart removed from viz tabs and reports; ReportsView + AncestorBookReport expose arc-span + generations + curved-text; `circleColors`/`useCircleThemeColors` renamed to `fanColors`/`useFanThemeColors` | — |
-| v0.114.0 | Finish chart visual overhaul: photos render (data URLs), curved elbow connectors, dynamic box heights so long names + places fit | [archive](plans/archive/2026-04-18-chart-visual-overhaul-fixes.md) |
-| v0.114.1 | Update tree-layout skill: dynamic heights (`measureBoxHeight`), curved paths (`curvedElbow`), `D:` dashed convention, photo data URLs | — |
-| v0.115.0 | Chart box polish: fix birth/death line double-padding so text stays inside the box; vertically center portraits in dynamic-height boxes; truncate overflowing birth/death lines with ellipsis (`truncateToWidth`); drop hover `+` add button (outline placeholders remain); match person detail profile thumbnail to chart portrait (rectangular, 5px radius) | — |
-| v0.116.0 | Pedigree / hourglass / descendant charts get a fan-style `− N +` generations stepper in the zoom controls; rebuilds the `collapsed` set on decrement (hides past depth N) and auto-refetches deeper (`fetchPedigreeTree` / `fetchHourglassTreePerson` / `fetchDescendantTree`) on increment past the loaded depth. Uppper cap removed so users can grow the tree to any depth the DB has. Pedigree uses `:right`, hourglass `:up`/`:down`, descendant `:down` to match each layout's collapse keys. | — |
-| v0.117.0 | Wall chart as inline report tab: removed from VisualizationView, replaced modal with inline preview matching other report tabs (paper-shaped preview, per-tab natural width, Export SVG/Tiled PDF buttons); new `WallChartReport` prop-driven component with debounce + stale-fetch guard; title auto-syncs to focal person until user edits | [spec](plans/archive/2026-04-19-wall-chart-as-inline-report-design.md), [archive](plans/archive/2026-04-19-wall-chart-as-inline-report.md) |
-| v0.118.0 | Timeline chart gets the same fan-style `− N +` generations stepper; each increment extends BFS over `parent_child` + `couple` edges by one hop in `fetchTimelineEntries(focalId, generations)` (default 1 preserves prior behavior); each change triggers a reload. No upper cap. | — |
-| v0.119.3 | Fan chart + media polish: (1) theme-aware branch palettes — new `--fan-branch-1..4` tokens per theme so Nordic gets a muted fjord palette and Twilight gets a muted nightfall palette matching Forest's earthy tone; `readThemeColors()` reads the tokens with hue-rotation fallback; (2) curved text is now always-on for gen 1-4 — `curvedText` toggle and i18n key removed; gen 5-6 gets 4-line radial stack with word-wrapped names (spillover between given/surname rows); gen 7-8 rings are near-double-depth (`RING_DEPTHS = [..., 94, 94]`) showing a compact 2-line label (full name + date range); `FanSegment` exposes `rInner`/`rOuter` for width-aware wrapping; (3) media lightbox removed — `MediaLightbox.vue` deleted, `MediaTimeline`/`PersonMediaSection`/`EntityMediaSection` deep-link to `/media?open=ID` via router, `MediaView` resolves the query param and opens its `MediaViewer` with the target item only; (4) English "Sex" → "Gender" label in fan color-mode switch. | — |
-| v0.119.6 | Chart + map polish: (1) descendant spouse placed at `selCY - sh/2` so the connector sits horizontally between selected and spouse centers; descendant parent outline row offsets up by `(selBox.h - parentRowMax)/2` when the selected box is taller so parents sit above the selected's notional top; (2) pedigree first-child Y centers on `selCY - firstChH/2` instead of `selBox.y` so children align to the selected-box middle; (3) `injectOutlines` suppresses the father/mother placeholder when a real parent of that sex already exists (a person has at most one of each); child and spouse outlines still always injected; (4) `measureBoxHeight` always reserves 2 date lines regardless of whether birth/death data exists so short boxes don't misalign row connectors; (5) hourglass parent connectors now terminate at each parent's actual bottom (`hOf(parent)`) instead of the row max bottom, so connectors to shorter parents don't visually overshoot; (6) Map pins and boundary overlay now follow theme — `MapView` reads `--accent` / `--accent-hover` via `useThemeSignal` + `getComputedStyle`, re-styles existing `L.circleMarker` instances on theme change (canvas renderer bakes colors in), and keys the `LGeoJson` boundary on `themeVersion` so it remounts. | — |
-| v0.120.0 | feat(media): set profile picture from face-tag star or media-row star | [spec](plans/archive/2026-04-19-set-profile-from-face-tag-design.md) · [plan](plans/archive/2026-04-19-set-profile-from-face-tag.md) |
-| v0.121.0 | UI polish: (1) MediaPanel gets a collapsible Notes section with blur-to-save textarea; (2) every resizable textarea across the app (notes, transcriptions, descriptions, task, result, link-rules test field) now persists its user-resized height to localStorage via the existing `useTextareaHeight` composable; (3) PersonPanel Timeline and Life Map section headers show event/map-point counts and a `+ Event` action; Media Timeline header gets an `+ Attach` action — all use `nextTick` to open the underlying section before triggering the action on the child component; (4) Hourglass parent-fork connectors share a `customMidY` so focal→parents, sibling→parents, and child→parents horizontals align even when parent rows have varying heights; `curvedElbow` grows an optional `customMidY` arg (honored only for `'down'` direction) with radius clamped to both half-dx and midY-to-endpoints distances; (5) `injectOutlines` now treats each real parent as filling the next empty father/mother slot when sex is 'U', so a known-but-unsexed parent doesn't also get a phantom placeholder next to it. | — |
-| v0.122.0 | feat(picker): relation + dates hint in PersonPicker — role label (parent/child/partner/sibling/godparent) to the tree's default person + (*YYYY–†YYYY) pulled from primary-role birth/death events | [spec](plans/archive/2026-04-19-person-picker-relation-hint-design.md) · [plan](plans/archive/2026-04-19-person-picker-relation-hint.md) |
-| v0.122.1 | chore(workflow): plan-driven work runs in worktree + subagents; small fixes stay on main. Updates CLAUDE.md Execution default, commit skill branch-strategy rule, and add-feature skill. | [plan](plans/2026-04-19-add-person-from-place-panel.md) |
-| v0.123.0 | Monospaced notes toggle (Person/Relationship/Place/Group/Media notes) | [archive](plans/archive/2026-04-19-monospaced-notes-toggle.md) |
-| v0.124.0 | EventForm Citation section (full citation inline + new/copy-from toggle), reusable `CitationFields` + `SimpleDateInput`, DateInput calendar-icon native-picker, modal textarea vertical-only resize, em-based YMD widths | — |
-| v0.125.0 | Unify chart/export zoom controls: (1) shared `ZoomControls` with `overlay` variant replaces ad-hoc bars in all 5 interactive charts — same token-based styling, button order, print-hide behaviour; (2) new `useChartGenerations` composable exposes module-level refs (`pedigreeGenerations`, `hourglassGenerations`, `descendantGenerations`, `timelineGenerations`, `fanGenerations`) backed by `chart-gens-*` localStorage keys, so the Reports bottom bar and the charts share the same state and persist across sessions; non-timeline/fan charts add a `watch(genTarget)` that re-runs apply-or-load so external mutations trigger the same behaviour as the in-chart buttons; (3) `FanColorMode` widened to `'branch' \| 'sex' \| 'bw'` — both the interactive Fan cycle button and the `ReportsView` / `AncestorBookReport` dropdowns speak the same enum (bw → `printFill` + print-style strokes); (4) new Hourglass Chart report tab + `HourglassChartReport` wrapper; (5) Timeline tick step now scales with width (1/2/5/10/25/50/100/250/500/1000-year candidates picked so on-screen spacing ≥ 48 px) — no more overlapping labels at wide ranges or narrow previews; (6) close buttons removed from PersonPanel, PlacePanel, MediaPanel (they only closed the panel visually; parents still listen for `close` for future use). | — |
-| v0.126.0 | Quality checks extended to places, media, sources: (1) `CheckResult` now carries `placeIds`/`mediaIds`/`sourceIds` in addition to `personIds`; orphaned-source and control-char checks populate `sourceIds`, media-missing checks populate `mediaIds`; gazetteer-match-quality is now truly place-scoped — `personIds` dropped (persons were incidental), and unused places are skipped entirely. (2) New `runChecksForPlace` / `runChecksForMedia` api functions and `checks:forPlace` / `checks:forMedia` IPC channels; the `checks:runAll` handler enriches results with `placeNames`, `mediaTitles`, `sourceTitles` in bulk queries (avoids N+1). (3) New reusable `QualityIssuesTable` component handles the severity/ignore/row-click table with an optional `show-entity` column that shows a colored entity-type badge (person / place / media / source, using the fan-branch palette). (4) New `qualityIgnore.ts` utility — module-level `ignoredKeys` ref backed by localStorage, keyed by code + sorted ids across all entity types; shared between `QualityView` and the per-entity sections. (5) `PersonChecksSection` slims from 117 → 60 lines; new `PlaceChecksSection` and `MediaChecksSection` sibling wrappers (21 lines each) embed the shared table. `QualityView` slims from 266 → ~157 lines. (6) PlacePanel gains a Quality section (`usePlacePanelSections` adds the `quality` key). (7) Minor UI: VisualizationView fan tab moves to after Descendants; `+ Add Event` → `+ Event` label. | — |
-| v0.127.0 | feat(persons): add person from place panel — atomic person+event+citation workflow, EventFormBody extraction, smart event-type ladder, Settings → Defaults tab | [archive](plans/archive/2026-04-19-add-person-from-place-panel.md) |
-| v0.127.1 | Rename the text-list ancestor report tab "Ancestor Chart" → "Ancestor Sheet" (it's a list, not a chart); SV label "Stamtavla" → "Antavla" to disambiguate from the Ancestor Book tab (both used to read "Stamtavla"); `AncestorChartReport.vue` → `AncestorSheetReport.vue` | — |
-| v0.127.2 | Revert cross-platform build scripts and DMG maker (v0.105.0 `270bf21`) — `make:mac`/`make:win`/`make:linux` npm scripts and `@electron-forge/maker-dmg` broke something while trying to build Windows on Mac; restore original single `make` script, single-platform MakerZIP, and pre-DMG `forge.config.ts` maker list | — |
-| v0.128.0 | Wall Chart rolled into live charts — paper/orientation/color/SVG/PDF export moved to each chart's ZoomControls overlay; `wall-charts.ts` deleted, replaced by `chart-export.ts` utilities + `ChartExportControls` component + `useChartExport` composable; IPC renamed `wallChart:*` → `chart:*`; Wall Chart report tab removed from ReportsView | [archive](plans/archive/2026-04-19-wall-chart-rollup.md) |
-| v0.128.1 | fix(mcp): shut down cleanly on stdin EOF, release DB lock | — |
-| v0.129.0 | Quality checks expansion — 18 new checks (persons, places, media, sources, cross-entity duplicates) | [spec](plans/archive/2026-04-19-quality-checks-expansion-design.md), [archive](plans/archive/2026-04-19-quality-checks-expansion.md) |
-| v0.129.1 | chore(checks): log each check's "starting" before it runs and "done in Nms" after — makes which check is slow visible in the console during long imports | — |
-| v0.129.2 | perf(checks, duplicates): replace correlated `NOT EXISTS` subqueries with bulk queries + `Set`/`Map` joins in JS — `checkOrphanedPlace` went from O(places × refs) to O(places + refs); `findDuplicates` went from O(N²) nested subqueries to three bulk queries joined by `person_id`. Noticeable speedup during long imports and quality-check runs on large DBs. | — |
-| v0.130.0 | Chart export controls moved from chart views to ReportsView tab headers — `ChartExportControls` now lives in the `.controls` row of each of the 4 chart tabs (pedigree/hourglass/descendant/fan) next to Print/Export PDF; removed from `PedigreeChart` / `HourglassChart` / `DescendantChart` / `FanChart` (FanChart keeps its own cycling color-mode button in the zoom overlay). `useChartExport` composable slimmed to `buildExportSvgString` + `wrapWithTitle` helpers; ReportsView does the DOM query + serialization directly. Pedigree/Hourglass/Descendants now honor all three color modes: `themed` (existing), `sex-colored` (box fill driven by sex token), `bw` (new `BW_COLORS` grayscale palette via `applyColorMode`). Fan tab drops its bespoke color-mode dropdown; shared `chartColorMode` maps to fan's `branch`/`sex`/`bw` rendering. | — |
-| v0.130.1 | chore(docs): consolidate all plans + design specs under `docs/plans/` — `docs/superpowers/` and `.claude/plans/` removed (~30 files moved, 1 dupe dropped, 4 implemented specs archived); `-design.md` suffix convention documented in CLAUDE.md, commit skill, add-feature skill, napkin, and memory to override `superpowers:brainstorming`'s default path. Minor UI polish: fan chart name/date font sizes reduced for gen 2-8; `.tab-bar` → `.filter-chips-bar` in ReportsView print CSS. | — |
-| v0.130.2 | fix(fan-chart): focal circle rendering + gen 7/8 ring depth at narrow arcs | — |
-| v0.130.3 | fix(reports): drop blank pages from tiled chart PDF export — ReportsView now uses the tight `getBBox()` of rendered content (not the looser SVG viewBox) for scale/centering and requires ≥10% tile overlap before emitting a page, so pedigree placeholder padding no longer pulls phantom outer tiles onto the poster. utility.ts wraps each tile SVG with `svg{display:block}` + `html,body{margin:0}` so Chromium's inline baseline descent can't push content past A4 and append a blank trailing page per tile. Also documents the `git -C <worktree>` rule (no `cd && git` compounds) in the commit skill + napkin, with matching `settings.local.json` permission pattern. | — |
-| v0.131.0 | Keepsake reports redesign: 7 keepsake reports + 6 framable prints, 6 primitives, 2 composables, `getAliveInYear` API, privacy filter, `researcher_name` attribution | [spec](plans/archive/2026-04-19-keepsake-reports-redesign-design.md), [archive](plans/archive/2026-04-19-keepsake-reports-redesign.md) |
-| v0.131.1 | fix: set executableName so MakerDeb/MakerRpm find the Linux binary | — |
-| v0.132.0 | Cropped face-tag profile pictures on all AppAvatars: `getPersonProfilePicRef` resolver, `profilePic` Pinia store with canvas crop + `ensureBatch`-scoped dedup + generation counter, `usePersonProfilePic` composable, `:person-id` wired into PersonsView/PersonPanel/GroupDetailView/PlacePersonsSection/RelationshipsList/MediaPanel/PersonDetailView | [archive](plans/archive/2026-04-20-avatar-profile-pic-crop.md) |
-| v0.132.1 | fix(devcontainer): move dev-debug.sh + verify-cdp.sh to .devcontainer/, add ensure-native-binaries call, forward CLAUDE_CODE_OAUTH_TOKEN for Max subscription auth | — |
-| v0.133.0 | Reports: route persistence on restart; media captions with relation context (father/mother/spouse/child) in A Life, A Marriage, Place Chronicle, Photo Album; reports UI theming (export-scope scoped to print-preview, themed tab-header, range inputs); framable prints tab/control overhaul (fan chart yourAncestors-style controls, generations sliders, SVG button in print-actions, tab reorder) | — |
-| v0.133.1 | Fix: MediaChronological test i18n setup + mediaRegions mock; reports controls layout polish; remove redundant .chart-outer height override in TimelineChartReport | — |
-| v0.134.0 | PersonLifeMap primitive; per-ancestor life maps in YourAncestors (toggle); useLifeMap gazetteer fallback resolution with place + path caching; Timeline chart export (ChartExportControls + hex-bound SVG colors); controls-row fix on hourglass/descendant/fan tabs | — |
-| v0.135.0 | ReportPanel: all print-configuration controls moved from `.tab-header` blocks into a right-side panel (PersonPanel/PlacePanel pattern). `useReportConfigStore` Pinia store owns all config state. Subject pickers (PersonPicker/PlacePicker/couple select) replace focusStore implicit selection. ZoomControls stays in preview pane. | [spec](plans/archive/2026-04-21-report-panel-design.md), [plan](plans/archive/2026-04-21-report-panel.md) |
-
-## Research
-
-| Date | Topic | Location |
-|------|-------|----------|
-| 2026-04-17 | Competitor gap analysis v2 | [plans/2026-04-17-competitor-gap-analysis-v2.md](plans/2026-04-17-competitor-gap-analysis-v2.md) |
-| 2026-04-11 | Competitor gap analysis v1 | [plans/archive/2026-04-11-competitor-gap-analysis.md](plans/archive/2026-04-11-competitor-gap-analysis.md) |
-
----
-
 ## Roadmap
 
 Version numbers are not pre-assigned. When a milestone is committed, the version is bumped automatically: **new feature → minor bump**, **fix on existing feature → patch bump**.
 
-Fixes, investigations, and refactors archived in [plans/archive/PLAN.md](plans/archive/PLAN.md).
-
-#### Hourglass Outline Architecture [done]
-Refactor hourglass chart layout to support outline placeholders as first-class nodes. Replace ahnentafel-based layout with a general graph model where each person has N parents, M children, K spouses. Outline injection is unconditional for the selected person; layout treats outlines identically to real nodes; focal person never filters outlines.
-- Plan: [plans/archive/2026-04-11-hourglass-outline-architecture.md](plans/archive/2026-04-11-hourglass-outline-architecture.md)
-
-#### Hourglass Layout Rework [done]
-Complete rewrite of hourglass layout: clone → inject outlines → measure (computeFootprint) → 4-pass placement (ancestors, descendants, focal, outlines) → line routing → finalize. Collision avoidance for outline placeholders.
-- Spec: [plans/archive/2026-04-15-hourglass-layout-rework-design.md](plans/archive/2026-04-15-hourglass-layout-rework-design.md)
-
-#### Gazetteer Quality Checks + Media Editor [done]
-Gazetteer match quality checks (PLACE_MATCH_AMBIGUOUS/PARTIAL/NONE/WRONG_LEVEL), confirm/reject match in QualityView, and MediaView table mode with inline editing.
-- Spec: `docs/plans/archive/2026-04-15-gazetteer-quality-media-editor-design.md`
-
-#### MCP Server Overhaul [done]
-Prod/dev server split. 34 workflow tools in prod (persons, families, events, sources, places, research, media, data). 15 dev tools (UI automation, chart inspection, seed, inspect). Factory pattern via createProdServer/createDevServer.
-- Spec: `docs/plans/archive/2026-04-15-mcp-overhaul-design.md`
+#### Open Source Publishing [done]
+CI/CD, automated releases, Claude-powered issue triage, governance files, README/DEVELOPING/CONTRIBUTING redesign, GitHub Actions badges, dependabot, CODEOWNERS.
+- Spec: [plans/archive/2026-04-18-open-source-publishing-design.md](plans/archive/2026-04-18-open-source-publishing-design.md)
+- Plan: [plans/archive/2026-04-18-open-source-publishing.md](plans/archive/2026-04-18-open-source-publishing.md)
 
 #### Chart Layout Shared Utilities Refactor [planned]
-Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion. Precondition: hourglass outline bugs fixed first.
-- Plan: [plans/2026-04-13-chart-layout-shared-refactor.md](plans/2026-04-13-chart-layout-shared-refactor.md)
-
-#### Gazetteer IPC Refactor [done]
-Stopped Vite from OOMing on CI (Windows/macOS both crashed at ~2 GB heap during the renderer build). Split `src/api/place-gazetteers/index.ts` into `bundled.ts` (main-only, holds the 25 static JSON imports) + `merge.ts` (pure, renderer-safe `loadGazetteers`). Renderer fetches bundled gazetteers via a new `gazetteers:getBundled` IPC channel. Resolver stays synchronous (hot path in MapView / PlacePicker). Renderer bundle shrank from ~40 MB to 1.3 MB; `npm run make -- --platform darwin` now produces a zip artifact locally.
-- Spec: [plans/archive/2026-04-20-gazetteer-ipc-refactor-design.md](plans/archive/2026-04-20-gazetteer-ipc-refactor-design.md)
-- Plan: [plans/archive/2026-04-20-gazetteer-ipc-refactor.md](plans/archive/2026-04-20-gazetteer-ipc-refactor.md)
-
-
-#### Workflow Analysis [research]
-*High user-focus task — do this in a dedicated session with real usage data.*
-
-Define primary user objectives, map to current click counts, identify highest-friction paths, produce prioritized improvement backlog. Use `interview-synthesis` skill if user research data is available.
-
----
-
-#### Place Gazetteers [done]
-Render-time place resolution using bundled hierarchical gazetteers. Swedish parishes as first dataset. Resolver in `src/api/place-gazetteers/`, composable `usePlaceResolver`, integrated into MapView, PersonMap, PlaceDetailView. GazetteersView settings page. Auto-enabled on Genney import.
-- Spec: `docs/plans/archive/2026-04-11-place-gazetteers-design.md`
-- Plan: [plans/archive/2026-04-11-place-gazetteers.md](plans/archive/2026-04-11-place-gazetteers.md)
-
-#### Gazetteer Import/Export [done]
-Per-database gazetteer storage with import/export for humans (UI) and agents (MCP). `gazetteers` table stores JSON blobs. GazetteersView gains Import (.json/.json.gz), Export, Delete buttons. 7 MCP tools: `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`.
-- Spec: `docs/plans/archive/2026-04-13-gazetteer-import-export-design.md`
-- Plan: [plans/archive/2026-04-13-gazetteer-import-export.md](plans/archive/2026-04-13-gazetteer-import-export.md)
-
-#### Boundary Gazetteer Overlay [done]
-New "boundary" gazetteer kind carrying polygon geometry. Click a map pin to see the place's geographic extent as an outline overlay. Extends Gazetteer type with `kind` and GazetteerNode with `geometry`. Lazy-loaded via `resolveBoundary()` in composable.
-- Spec: `docs/plans/archive/2026-04-13-boundary-gazetteer-design.md`
-- Plan: [plans/archive/2026-04-13-boundary-gazetteer-overlay.md](plans/archive/2026-04-13-boundary-gazetteer-overlay.md)
+Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion.
 
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
 - Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`
 - Plan: `docs/plans/2026-04-13-chart-layout-alignment.md` (on branch)
 
-#### Expanded Gazetteer Coverage [done]
-23 bundled gazetteers (15 point + 8 boundary) covering Scandinavia (SE/DK/NO/FI/IS), North America (US full 50-state + immigration states, CA all 13 provinces/territories), and global (countries + admin1 divisions). ~40 MB total data. 19 build scripts sourcing from Wikidata, GeoNames, DAWA API, Lantmäteriet, Statistics Finland, Natural Earth, Census Bureau, ok-dk/dagi, LMI, Kartverket, and Statistics Canada. Boundary gazetteers provide polygon overlays for 7 countries plus the Swedish parish boundaries from Lantmäteriet.
+---
 
-#### Language Gazetteers [done]
-Multilingual place name translation layer. Two Swedish language gazetteers inject translated aliases into point/boundary gazetteers at load time so "Danmark" resolves to Denmark, "Brasilien" to Brazil, etc. `lang-sv-geonames` covers 133 countries + 1014 admin1 divisions (GeoNames, CC BY 4.0); `lang-sv-wikidata` covers 304 Nordic administrative divisions (Wikidata, CC0). New `'language'` gazetteer kind extends the `Gazetteer` type.
-- Spec: `docs/plans/archive/2026-04-18-language-gazetteers-design.md`
+#### User Feedback Batch (2026-04-15) [in-progress]
+- `name_change` name type added (schema, i18n, MCP)
+- Event type dropdowns sorted alphabetically by translation
+- Close confirmation dialog on last window (production only)
+- Media copy-on-attach verified working
+
+#### Workflow Analysis [research]
+*High user-focus task — do this in a dedicated session with real usage data.*
+Define primary user objectives, map to current click counts, identify highest-friction paths, produce prioritized improvement backlog.
+
+---
+
+#### App Naming [backlog]
+Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
+
+#### Onboarding & Welcome Screen [backlog]
+First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder.
 
 #### Place Gazetteers — Future Extensions [backlog]
 - Historical place name support (parishes that changed names/boundaries over time with date ranges)
 - Batch match quality report (how many places resolved, at what quality)
 
----
-
-#### User Feedback Batch (2026-04-15) — Quick Wins [in-progress]
-- `name_change` name type added (schema, i18n, MCP)
-- Event type dropdowns sorted alphabetically by translation
-- Close confirmation dialog on last window (production only)
-- Media copy-on-attach verified working (imported media paths may show as missing — expected)
-
-#### Media Detail/Editor Rework [done]
-Table-based MediaView with gallery/table toggle, inline editing for title and notes, format badges. Persisted view mode to localStorage.
-- Plan: [plans/archive/2026-04-15-media-editor-rework.md](plans/archive/2026-04-15-media-editor-rework.md)
-- Spec: [docs/plans/archive/2026-04-15-gazetteer-quality-media-editor-design.md](docs/plans/archive/2026-04-15-gazetteer-quality-media-editor-design.md)
-
-#### App Naming [backlog]
-Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
-
----
-
-#### Onboarding & Welcome Screen [backlog]
-First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder. Depends on design system being in place first.
-
-#### Media Viewer & Face Tagging [done]
-Inline image viewer replacing the modal lightbox. Bottom filmstrip for navigation, zoom/pan controls, face tag drawing on the canvas.
-- Spec: [docs/plans/2026-04-18-media-viewer-face-tagging-design.md](docs/plans/2026-04-18-media-viewer-face-tagging-design.md)
-- Plan: [plans/archive/2026-04-18-media-viewer-face-tagging.md](plans/archive/2026-04-18-media-viewer-face-tagging.md)
-
 #### Media Viewer — Future Extensions [backlog]
 - AI-assisted face detection (suggest regions automatically)
 - Resize/move existing face tag regions
 - Face tag suggestions based on other tagged photos
-- Crop/rotate/edit image tools
-
-#### Cropped Face-Tag Profile Pictures [done]
-Show each person's starred face tag as a cropped square profile picture on every `AppAvatar` in the app (PersonsView, PersonPanel, GroupDetailView, PlacePersonsSection, RelationshipsList, MediaPanel, PersonDetailView). Renderer-only: Pinia `profilePic` store + canvas crop from the starred media region. No new media blobs.
-- Plan: [plans/archive/2026-04-20-avatar-profile-pic-crop.md](plans/archive/2026-04-20-avatar-profile-pic-crop.md)
-
-#### Open Source Publishing [in progress]
-CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign, GitHub Actions badges.
-- Spec: [docs/plans/2026-04-18-open-source-publishing-design.md](docs/plans/2026-04-18-open-source-publishing-design.md)
-- Plan: [plans/2026-04-18-open-source-publishing.md](plans/2026-04-18-open-source-publishing.md)
 
 #### Duplicate Merge Side-by-Side UI [backlog]
-Side-by-side person comparison view for duplicate detection. Show conflicting data with merge controls. API has `findDuplicates` and `mergePersons` — needs a visual comparison UI.
+Side-by-side person comparison view for duplicate detection. API has `findDuplicates` and `mergePersons` — needs a visual comparison UI.
 
 #### Unified compare-and-merge UI for duplicates (v2) [backlog]
-Extend `MergePersonsModal` pattern to places, media, and sources. Make the compare UI the landing target for all `DUPLICATE_*` quality rows. Consider a `/duplicates` route aggregating all duplicate types.
+Extend `MergePersonsModal` pattern to places, media, and sources. Make the compare UI the landing target for all `DUPLICATE_*` quality rows. Consider a `/duplicates` route.
 
 ---
 
-*All four tracks from the 2026-04-11 competitor gap analysis are complete (A1-A5, B1-B5, C1-C4, D1-D3). Next focus: design system overhaul for polish and consistency.*
+## Research
 
+| Date | Topic | Location |
+|------|-------|----------|
+| 2026-04-11 | Competitor gap analysis v1 | [plans/archive/2026-04-11-competitor-gap-analysis.md](plans/archive/2026-04-11-competitor-gap-analysis.md) |

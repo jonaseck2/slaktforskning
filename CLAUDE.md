@@ -183,10 +183,10 @@ docs/
 ├── DATA_MODEL.md                 # Schema design, GEDCOM compatibility
 ├── MCP.md                        # MCP server tools and UI bridge reference
 ├── IPC_REFERENCE.md              # Complete window.api surface + IPC channel mapping
-├── napkin.md                     # Per-repo runbook (auto-curated)
 └── plans/                        # Implementation plans + design specs (active + archive/)
 
 .claude/
+├── napkin.md                     # Per-repo runbook (auto-curated)
 └── skills/                       # Claude skills (commit, test, electron-dev, etc.)
 
 .devcontainer/
@@ -897,7 +897,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `docs/DATA_MODEL.md` | Both | Schema design, GEDCOM compatibility (also bundled in `/data-modeling` skill) |
 | `docs/MCP.md` | Both | MCP server tools (also bundled in `/mcp-dev` skill) |
 | `docs/IPC_REFERENCE.md` | Agents | Complete `window.api` surface + IPC channel mapping |
-| `docs/napkin.md` | Agents | Per-repo runbook with recurring gotchas |
+| `.claude/napkin.md` | Agents | Per-repo runbook with recurring gotchas |
 
 ## Skills
 

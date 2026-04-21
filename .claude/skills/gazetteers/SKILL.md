@@ -14,10 +14,14 @@ The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordi
 ```
 Build scripts (scripts/)     →  JSON data files (src/api/place-gazetteers/data/)
                                        ↓
-Loader (index.ts)            →  BUNDLED_GAZETTEERS array
+bundled.ts                   →  BUNDLED_GAZETTEERS array + getAllGazetteers()
+                                       ↓ (main process only — never import from renderer)
+merge.ts                     →  loadGazetteers(config, bundled, imported?) → Gazetteer[]
                                        ↓
 Resolver (resolver.ts)       →  resolvePlace(query, gazetteers) → PlaceResolveResult
 ```
+
+**IPC split:** `bundled.ts` statically imports ~40 MB of JSON and must never be reachable from a renderer import chain (would OOM Vite). The renderer fetches bundled gazetteers via `window.api.gazetteers.getBundled()` (IPC channel `gazetteers:getBundled`). Main process and MCP code import `getAllGazetteers` from `./place-gazetteers/bundled` directly. `index.ts` is now a renderer-safe barrel re-exporting only `merge`, `resolver`, and `types`.
 
 ### Key Files
 
@@ -25,7 +29,9 @@ Resolver (resolver.ts)       →  resolvePlace(query, gazetteers) → PlaceResol
 |------|---------|
 | `src/api/place-gazetteers/types.ts` | `Gazetteer`, `GazetteerNode`, `PlaceResolveResult`, `BoundaryResolveResult` |
 | `src/api/place-gazetteers/resolver.ts` | `resolvePlace()`, `resolveBoundary()`, `searchGazetteer()`, `normalize()` |
-| `src/api/place-gazetteers/index.ts` | `getAllGazetteers()`, `loadGazetteers()`, bundled imports, historical alias enrichment, language gazetteer merge |
+| `src/api/place-gazetteers/bundled.ts` | `getAllGazetteers()`, 25 static JSON imports, `BUNDLED_GAZETTEERS` array, `enrichHistoricalAliases()` — **main/MCP only** |
+| `src/api/place-gazetteers/merge.ts` | `loadGazetteers(config, bundled, imported?)`, `mergeTranslations()`, `findNodeByPath()` — renderer-safe, no JSON imports |
+| `src/api/place-gazetteers/index.ts` | Renderer-safe barrel re-exporting `loadGazetteers` (merge), `resolvePlace`/`resolveBoundary`/`searchGazetteer` (resolver), and all types |
 | `src/api/gazetteers.ts` | Import/export/storage in SQLite, JSON schema validation |
 | `src/gazetteer-build/` | Shared build utilities: `geo.ts` (round6, computeCentroid, avgCoordinates, weightedCentroid), `geonames.ts` (TSV parsing, dedup), `wikidata.ts` (parseWktPoint, generateAliases), `sparql.ts` (sparqlFetch, sleep), `tree.ts` (countNodes, walkTree), `io.ts` (writeGazetteer, DATA_DIR) |
 | `tests/unit/gazetteers.test.ts` | Unit tests for loading and resolution |
@@ -125,9 +131,11 @@ Language gazetteers (`kind: "language"`) contain no coordinates — they inject 
 }
 ```
 
-**Merge rules:** Language gazetteers are separated in `loadGazetteers()`, their translations are injected as aliases into data gazetteers (deep-cloned to protect singletons), then only data gazetteers are returned.
+**Merge rules:** `loadGazetteers(config, bundled, imported?)` separates language gazetteers from the combined array, injects translations as aliases into deep-cloned data gazetteers (to protect bundled singletons), then returns only the data gazetteers. Imported gazetteers override bundled ones when IDs collide.
 
-**Adding a new language:** Create a build script per data source (e.g. `build-lang-da-geonames.ts`), register the output in `BUNDLED_GAZETTEERS`, update tests and docs. Keep sources separate for license clarity.
+**Calling `loadGazetteers`:** Main process and MCP code pass `getAllGazetteers()` as the second arg. Renderer code receives bundled via `window.api.gazetteers.getBundled()` (IPC) and passes it as the second arg. Never import `getAllGazetteers` from the renderer — it pulls in ~40 MB of JSON.
+
+**Adding a new language:** Create a build script per data source (e.g. `build-lang-da-geonames.ts`), register the output in `BUNDLED_GAZETTEERS` in `bundled.ts`, update tests and docs. Keep sources separate for license clarity.
 
 ## Build Scripts
 

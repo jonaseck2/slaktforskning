@@ -6,6 +6,9 @@ A local-first, cross-platform desktop app for genealogy research. Your family tr
 [![Release](https://github.com/jonaseck2/slaktforskning/actions/workflows/release.yml/badge.svg)](https://github.com/jonaseck2/slaktforskning/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+<!-- TODO: replace with a real screenshot -->
+<!-- ![Släktforskning screenshot](docs/screenshot.png) -->
+
 ---
 
 ## What is this?
@@ -16,7 +19,8 @@ Släktforskning is a desktop genealogy application built with Electron, Vue 3, a
 
 - **Local SQLite database** — no cloud, no account, full data ownership
 - **GEDCOM 5.5.1 & 7.0** import and export
-- **Family tree charts** — pedigree, hourglass, descendant, timeline
+- **Family tree charts** — pedigree, hourglass, descendant, fan, timeline
+- **Keepsake reports** — A Life, A Marriage, Place Chronicle, Your Ancestors, Photo Album, and more
 - **Place resolution** with 25 bundled gazetteers covering Scandinavia, North America, and the world
 - **Source citations** with confidence levels and verbatim transcriptions
 - **Built-in MCP server** — 34 tools for AI-powered genealogy research
@@ -26,8 +30,6 @@ Släktforskning is a desktop genealogy application built with Electron, Vue 3, a
 
 ## Installation
 
-### Download (recommended)
-
 Download the latest installer from the [Releases](https://github.com/jonaseck2/slaktforskning/releases) page:
 
 | Platform | Format |
@@ -36,18 +38,7 @@ Download the latest installer from the [Releases](https://github.com/jonaseck2/s
 | Windows | `.exe` (Squirrel installer) |
 | Linux | `.deb` / `.rpm` |
 
-> **Note:** Builds are currently unsigned. macOS will show a Gatekeeper warning on first launch — right-click the app and choose Open to bypass it. Windows may show a SmartScreen warning for the same reason.
-
-### Build from source
-
-```bash
-git clone https://github.com/jonaseck2/slaktforskning.git
-cd slaktforskning
-npm install
-npm start
-```
-
-Requires Node.js 22+.
+> **Note:** Builds are currently unsigned. macOS will show a Gatekeeper warning on first launch — right-click the app and choose Open to bypass it. Windows may show a SmartScreen warning.
 
 ## Getting Started
 
@@ -88,46 +79,25 @@ The server exposes 34 tools covering persons, families, events, sources, places,
 ## Development
 
 ```bash
-npm start              # Launch in dev mode (Vite HMR)
-npm test               # Unit tests (Vitest)
-npm run lint           # ESLint
-npx playwright test    # E2E tests (requires Xvfb on Linux)
-npm run make           # Build installers for current platform
-npm run make:mac       # macOS .dmg
-npm run make:win       # Windows .exe
-npm run make:linux     # Linux .deb + .rpm
+git clone https://github.com/jonaseck2/slaktforskning.git
+cd slaktforskning
+npm install
+npm start       # Launch in dev mode
+npm test        # Unit tests
+npm run lint    # ESLint
 ```
 
-### Project structure
-
-```
-src/
-├── api/         # Business logic — pure TypeScript, no Electron deps
-├── main/        # Electron main process (windows, database, IPC)
-├── preload/     # Context bridge (renderer <-> main)
-├── renderer/    # Vue 3 app (views, components, composables)
-└── mcp/         # MCP server for AI agent access
-tests/
-├── unit/        # Vitest tests for src/api/
-└── e2e/         # Playwright smoke tests
-```
-
-See [CLAUDE.md](CLAUDE.md) for the full architecture reference — it is the primary guide for understanding and extending this codebase.
-
-### Dev container
-
-A dev container is included for working on the project without a local setup. Unit tests, linting, and packaging all work inside the container. For E2E tests, start Xvfb first:
-
-```bash
-source .devcontainer/xvfb-start.sh
-npx playwright test
-```
+See [DEVELOPING.md](DEVELOPING.md) for the full developer guide — build commands, dev container, debugging, gazetteer scripts, and architecture overview.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding conventions, and PR guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for coding conventions, commit format, and PR guidelines.
 
 All contributors are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 

@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability in Släktforskning, please report it responsibly to help us protect all users.
 
-**Email:** jonas.ahnstedt@imeto.se
+**Email:** jonas.ahnstedt@imeto.com
 
 **Please include in your report:**
 - A clear description of the vulnerability
