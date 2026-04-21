@@ -24,525 +24,214 @@
       </div>
     </div>
 
-    <!-- Your Ancestors Tab -->
-    <div v-if="activeTab === 'yourAncestors'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('chart.export.colorMode') }}
-            <select v-model="yourAncestorsColorMode">
-              <option value="themed">{{ $t('reports.yourAncestors.colorThemed') }}</option>
-              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
-              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
-              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('reports.yourAncestors.density') }}
-            <select v-model="yourAncestorsDensity">
-              <option value="one">{{ $t('reports.yourAncestors.densityOne') }}</option>
-              <option value="two">{{ $t('reports.yourAncestors.densityTwo') }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('reports.generations') }}
-            <input
-              type="range"
-              min="4"
-              max="10"
-              step="1"
-              v-model.number="yourAncestorsGenerations"
+    <div class="reports-body">
+
+      <div class="preview-wrapper">
+
+      <!-- Your Ancestors Tab -->
+      <div v-if="activeTab === 'yourAncestors'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <YourAncestorsReport
+              :person-id="store.personId"
+              :generations="store.yourAncestorsGenerations"
+              :color-mode="store.yourAncestorsColorMode"
+              :density="store.yourAncestorsDensity"
+              :show-events="store.yourAncestorsShowEvents"
+              :show-life-map="store.yourAncestorsShowLifeMap"
+              :show-extra-photos="store.yourAncestorsShowExtraPhotos"
+              :show-sources="store.yourAncestorsShowSources"
+              :redact-living="store.redactLiving"
             />
-            <span class="range-value">{{ yourAncestorsGenerations }}</span>
-          </label>
-        </div>
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="yourAncestorsShowEvents" /> {{ $t('reports.alife.events') }}</label>
-          <label><input type="checkbox" v-model="yourAncestorsShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label><input type="checkbox" v-model="yourAncestorsShowExtraPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label><input type="checkbox" v-model="yourAncestorsShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!yourAncestorsPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!yourAncestorsPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="yourAncestorsPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <YourAncestorsReport
-            :person-id="yourAncestorsPersonId"
-            :generations="yourAncestorsGenerations"
-            :color-mode="yourAncestorsColorMode"
-            :density="yourAncestorsDensity"
-            :show-events="yourAncestorsShowEvents"
-            :show-life-map="yourAncestorsShowLifeMap"
-            :show-extra-photos="yourAncestorsShowExtraPhotos"
-            :show-sources="yourAncestorsShowSources"
-            :redact-living="redactLiving"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- A Life Tab -->
-    <div v-if="activeTab === 'alife'" class="tab-content">
-      <div class="tab-header">
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="aLifeShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label><input type="checkbox" v-model="aLifeShowPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label><input type="checkbox" v-model="aLifeShowDocuments" /> {{ $t('reports.common.documents') }}</label>
-          <label><input type="checkbox" v-model="aLifeShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label><input type="checkbox" v-model="aLifeShowNotes" /> {{ $t('reports.alife.biography') }}</label>
-          <label><input type="checkbox" v-model="aLifeShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
-          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!aLifePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!aLifePersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-        </div>
-      </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="aLifePersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <ALifeReport
-            :person-id="aLifePersonId"
-            :show-life-map="aLifeShowLifeMap"
-            :show-photos="aLifeShowPhotos"
-            :show-documents="aLifeShowDocuments"
-            :show-sources="aLifeShowSources"
-            :show-notes="aLifeShowNotes"
-            :show-media-captions="aLifeShowMediaCaptions"
-            :redact-living="redactLiving"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
-
-    <!-- Life on One Page Tab -->
-    <div v-if="activeTab === 'onePage'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('reports.onePage.orientation') }}
-            <select v-model="onePageOrientation">
-              <option value="portrait">{{ $t('reports.onePage.portrait') }}</option>
-              <option value="landscape">{{ $t('reports.onePage.landscape') }}</option>
-            </select>
-          </label>
-        </div>
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="onePageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!onePagePersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!onePagePersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-        </div>
-      </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="onePagePersonId" class="print-preview" :class="'preview-' + onePageOrientation" :style="{ zoom: effectiveZoom }">
-          <LifeOnOnePageReport
-            :person-id="onePagePersonId"
-            :orientation="onePageOrientation"
-            :show-life-map="onePageShowLifeMap"
-            :redact-living="redactLiving"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
-
-    <!-- Family in Year X Tab -->
-    <div v-if="activeTab === 'familyInYear'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('reports.familyInYear.scope') }}
-            <select v-model="familyInYearScope">
-              <option value="all">{{ $t('reports.familyInYear.scopeAll') }}</option>
-              <option value="ancestors" disabled>{{ $t('reports.familyInYear.scopeAncestors') }}</option>
-              <option value="descendants" disabled>{{ $t('reports.familyInYear.scopeDescendants') }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('reports.familyInYear.year') }}
-            <input
-              type="number"
-              v-model.number="familyInYearYear"
-              :min="1"
-              :max="9999"
-              step="1"
-              required
+      <!-- A Life Tab -->
+      <div v-if="activeTab === 'alife'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ALifeReport
+              :person-id="store.personId"
+              :show-life-map="store.aLifeShowLifeMap"
+              :show-photos="store.aLifeShowPhotos"
+              :show-documents="store.aLifeShowDocuments"
+              :show-sources="store.aLifeShowSources"
+              :show-notes="store.aLifeShowNotes"
+              :show-media-captions="store.aLifeShowMediaCaptions"
+              :redact-living="store.redactLiving"
             />
-          </label>
-        </div>
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!familyInYearYear" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!familyInYearYear" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="familyInYearYear" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <FamilyInYearReport
-            :year="familyInYearYear"
-            :scope="familyInYearScope"
-            :scope-person-id="familyInYearPersonId"
-            :redact-living="redactLiving"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.familyInYear.year') }}</div>
-      </div>
-    </div>
 
-    <!-- Photo Album Tab -->
-    <div v-if="activeTab === 'photoAlbum'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('reports.photoAlbum.subject') }}
-            <select v-model="photoAlbumSubjectType">
-              <option value="person">{{ $t('reports.photoAlbum.subjectPerson') }}</option>
-              <option value="relationship">{{ $t('reports.photoAlbum.subjectRelationship') }}</option>
-              <option value="place">{{ $t('reports.photoAlbum.subjectPlace') }}</option>
-              <option value="all">{{ $t('reports.photoAlbum.subjectAll') }}</option>
-            </select>
-          </label>
-          <label v-if="photoAlbumSubjectType === 'relationship'">
-            {{ $t('reports.couple') }}
-            <select v-model="photoAlbumRelId">
-              <option value="" disabled>{{ $t('reports.selectCouple') }}</option>
-              <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">
-                {{ rel.label }}
-              </option>
-            </select>
-          </label>
-          <label v-if="photoAlbumSubjectType === 'place'">
-            {{ $t('reports.place') }}
-            <select v-model="photoAlbumPlaceId">
-              <option value="" disabled>{{ $t('reports.selectPlace') }}</option>
-              <option v-for="p in allPlaces" :key="p.id" :value="p.id">{{ p.name }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('reports.photoAlbum.perPage') }}
-            <select v-model.number="photoAlbumPerPage">
-              <option :value="1">1</option>
-              <option :value="2">2</option>
-              <option :value="4">4</option>
-            </select>
-          </label>
-        </div>
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="photoAlbumShowCaptions" /> {{ $t('reports.photoAlbum.showCaptions') }}</label>
-          <label><input type="checkbox" v-model="photoAlbumShowIndex" /> {{ $t('reports.photoAlbum.showIndex') }}</label>
-          <label><input type="checkbox" v-model="photoAlbumIncludeDocuments" /> {{ $t('reports.photoAlbum.includeDocuments') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!photoAlbumCanRender" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!photoAlbumCanRender" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+      <!-- Life on One Page Tab -->
+      <div v-if="activeTab === 'onePage'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :class="'preview-' + store.onePageOrientation" :style="{ zoom: effectiveZoom }">
+            <LifeOnOnePageReport
+              :person-id="store.personId"
+              :orientation="store.onePageOrientation"
+              :show-life-map="store.onePageShowLifeMap"
+              :redact-living="store.redactLiving"
+            />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="photoAlbumCanRender" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <PhotoAlbumReport
-            :subject-type="photoAlbumSubjectType"
-            :subject-id="photoAlbumSubjectId"
-            :per-page="photoAlbumPerPage"
-            :show-captions="photoAlbumShowCaptions"
-            :show-index="photoAlbumShowIndex"
-            :include-documents="photoAlbumIncludeDocuments"
-          />
-        </div>
-        <div v-else-if="photoAlbumSubjectType === 'person'" class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-        <div v-else-if="photoAlbumSubjectType === 'relationship'" class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
-        <div v-else-if="photoAlbumSubjectType === 'place'" class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- Place Chronicle Tab -->
-    <div v-if="activeTab === 'placeChronicle'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('reports.place') }}
-            <select v-model="placeChroniclePlaceId">
-              <option value="" disabled>{{ $t('reports.selectPlace') }}</option>
-              <option v-for="p in allPlaces" :key="p.id" :value="p.id">{{ p.name }}</option>
-            </select>
-          </label>
-        </div>
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="placeChronicleShowBoundary" /> {{ $t('reports.placeChronicle.map') }}</label>
-          <label><input type="checkbox" v-model="placeChronicleShowChildPlaces" /> {{ $t('reports.placeChronicle.childPlaces') }}</label>
-          <label><input type="checkbox" v-model="placeChronicleShowPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label><input type="checkbox" v-model="placeChronicleShowNotes" /> {{ $t('reports.placeChronicle.description') }}</label>
-          <label><input type="checkbox" v-model="placeChronicleShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label><input type="checkbox" v-model="placeChronicleShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!placeChroniclePlaceId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!placeChroniclePlaceId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+      <!-- Family in Year X Tab -->
+      <div v-if="activeTab === 'familyInYear'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.familyInYearYear" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <FamilyInYearReport
+              :year="store.familyInYearYear"
+              :scope="store.familyInYearScope"
+              :scope-person-id="store.personId"
+              :redact-living="store.redactLiving"
+            />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.familyInYear.year') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="placeChroniclePlaceId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <PlaceChronicleReport
-            :place-id="placeChroniclePlaceId"
-            :show-boundary="placeChronicleShowBoundary"
-            :show-child-places="placeChronicleShowChildPlaces"
-            :show-photos="placeChronicleShowPhotos"
-            :show-notes="placeChronicleShowNotes"
-            :show-sources="placeChronicleShowSources"
-            :show-media-captions="placeChronicleShowMediaCaptions"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- A Marriage Tab -->
-    <div v-if="activeTab === 'amarriage'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('reports.couple') }}
-            <select v-model="aMarriageRelId">
-              <option value="" disabled>{{ $t('reports.selectCouple') }}</option>
-              <option v-for="rel in coupleRelationships" :key="rel.id" :value="rel.id">{{ rel.label }}</option>
-            </select>
-          </label>
-        </div>
-        <div class="toggles-row">
-          <label><input type="checkbox" v-model="aMarriageShowLifeMap" /> {{ $t('reports.common.lifeMap') }}</label>
-          <label><input type="checkbox" v-model="aMarriageShowPhotos" /> {{ $t('reports.common.photos') }}</label>
-          <label><input type="checkbox" v-model="aMarriageShowNotes" /> {{ $t('reports.amarriage.narrative') }}</label>
-          <label><input type="checkbox" v-model="aMarriageShowSources" /> {{ $t('reports.common.sources') }}</label>
-          <label><input type="checkbox" v-model="aMarriageShowMediaCaptions" /> {{ $t('reports.common.captions') }}</label>
-          <label><input type="checkbox" v-model="redactLiving" /> {{ $t('reports.common.redactLiving') }}</label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!aMarriageRelId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!aMarriageRelId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
+      <!-- Photo Album Tab -->
+      <div v-if="activeTab === 'photoAlbum'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.photoAlbumCanRender" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <PhotoAlbumReport
+              :subject-type="store.photoAlbumSubjectType"
+              :subject-id="store.photoAlbumSubjectId"
+              :per-page="store.photoAlbumPerPage"
+              :show-captions="store.photoAlbumShowCaptions"
+              :show-index="store.photoAlbumShowIndex"
+              :include-documents="store.photoAlbumIncludeDocuments"
+            />
+          </div>
+          <div v-else-if="store.photoAlbumSubjectType === 'person'" class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <div v-else-if="store.photoAlbumSubjectType === 'relationship'" class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
+          <div v-else-if="store.photoAlbumSubjectType === 'place'" class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="aMarriageRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <AMarriageReport
-            :relationship-id="aMarriageRelId"
-            :show-life-map="aMarriageShowLifeMap"
-            :show-photos="aMarriageShowPhotos"
-            :show-notes="aMarriageShowNotes"
-            :show-sources="aMarriageShowSources"
-            :show-media-captions="aMarriageShowMediaCaptions"
-            :redact-living="redactLiving"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- Pedigree Print Tab -->
-    <div v-if="activeTab === 'pedigreePrint'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <ChartExportControls
-            :paper-size="chartPaperSize"
-            :orientation="chartOrientation"
-            :color-mode="chartColorMode"
-            :tile-count="chartTileCount"
-            @update:paper-size="chartPaperSize = $event"
-            @update:orientation="chartOrientation = $event"
-            @update:color-mode="chartColorMode = $event"
-            @save-pdf="saveChartPdf"
-          />
-          <label>
-            {{ $t('reports.generations') }}
-            <input type="range" min="2" max="10" step="1" v-model.number="pedigreeGenerations" />
-            <span class="range-value">{{ pedigreeGenerations }}</span>
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
+      <!-- Place Chronicle Tab -->
+      <div v-if="activeTab === 'placeChronicle'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.placeChroniclePlaceId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <PlaceChronicleReport
+              :place-id="store.placeChroniclePlaceId"
+              :show-boundary="store.placeChronicleShowBoundary"
+              :show-child-places="store.placeChronicleShowChildPlaces"
+              :show-photos="store.placeChronicleShowPhotos"
+              :show-notes="store.placeChronicleShowNotes"
+              :show-sources="store.placeChronicleShowSources"
+              :show-media-captions="store.placeChronicleShowMediaCaptions"
+            />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <PedigreeChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- Hourglass Chart Tab -->
-    <div v-if="activeTab === 'hourglassChart'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <ChartExportControls
-            :paper-size="chartPaperSize"
-            :orientation="chartOrientation"
-            :color-mode="chartColorMode"
-            :tile-count="chartTileCount"
-            @update:paper-size="chartPaperSize = $event"
-            @update:orientation="chartOrientation = $event"
-            @update:color-mode="chartColorMode = $event"
-            @save-pdf="saveChartPdf"
-          />
-          <label>
-            {{ $t('reports.generations') }}
-            <input type="range" min="2" max="8" step="1" v-model.number="hourglassGenerations" />
-            <span class="range-value">{{ hourglassGenerations }}</span>
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
+      <!-- A Marriage Tab -->
+      <div v-if="activeTab === 'amarriage'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.aMarriageRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <AMarriageReport
+              :relationship-id="store.aMarriageRelId"
+              :show-life-map="store.aMarriageShowLifeMap"
+              :show-photos="store.aMarriageShowPhotos"
+              :show-notes="store.aMarriageShowNotes"
+              :show-sources="store.aMarriageShowSources"
+              :show-media-captions="store.aMarriageShowMediaCaptions"
+              :redact-living="store.redactLiving"
+            />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <HourglassChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- Descendant Chart Tab -->
-    <div v-if="activeTab === 'descendantChart'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <ChartExportControls
-            :paper-size="chartPaperSize"
-            :orientation="chartOrientation"
-            :color-mode="chartColorMode"
-            :tile-count="chartTileCount"
-            @update:paper-size="chartPaperSize = $event"
-            @update:orientation="chartOrientation = $event"
-            @update:color-mode="chartColorMode = $event"
-            @save-pdf="saveChartPdf"
-          />
-          <label>
-            {{ $t('reports.generations') }}
-            <input type="range" min="2" max="8" step="1" v-model.number="descendantGenerations" />
-            <span class="range-value">{{ descendantGenerations }}</span>
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
+      <!-- Pedigree Print Tab -->
+      <div v-if="activeTab === 'pedigreePrint'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <PedigreeChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <DescendantChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- Fan Chart Tab -->
-    <div v-if="activeTab === 'fanChart'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <label>
-            {{ $t('chart.export.colorMode') }}
-            <select v-model="fanColorMode">
-              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
-              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
-              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('visualization.fan.arc') }}
-            <div class="arc-buttons">
-              <button
-                v-for="span in fanArcOptions"
-                :key="span"
-                class="chip"
-                :class="{ active: fanArcSpan === span }"
-                @click="fanArcSpan = span"
-              >{{ span }}°</button>
-            </div>
-          </label>
-          <label>
-            {{ $t('reports.generations') }}
-            <input type="range" min="3" max="8" step="1" v-model.number="fanGenerations" />
-            <span class="range-value">{{ fanGenerations }}</span>
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="exportPdf">{{ $t('reports.exportPdf') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
+      <!-- Hourglass Chart Tab -->
+      <div v-if="activeTab === 'hourglassChart'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <HourglassChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <FanChartReport
-            :person-id="chartPersonId"
-            :generations="fanGenerations"
-            :arc-span="fanArcSpan"
-            :color-mode="fanColorMode"
-          />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
 
-    <!-- Timeline Tab -->
-    <div v-if="activeTab === 'timeline'" class="tab-content">
-      <div class="tab-header">
-        <div class="controls-row">
-          <ChartExportControls
-            :paper-size="chartPaperSize"
-            :orientation="chartOrientation"
-            :color-mode="chartColorMode"
-            :tile-count="chartTileCount"
-            @update:paper-size="chartPaperSize = $event"
-            @update:orientation="chartOrientation = $event"
-            @update:color-mode="chartColorMode = $event"
-            @save-pdf="saveChartPdf"
-          />
-          <label>
-            {{ $t('reports.generations') }}
-            <input type="range" min="1" max="10" step="1" v-model.number="timelineGenerations" />
-            <span class="range-value">{{ timelineGenerations }}</span>
-          </label>
-        </div>
-        <div class="print-actions">
-          <AppButton variant="primary" size="sm" :disabled="!chartPersonId" @click="printCurrent">{{ $t('reports.print') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartPdf">{{ $t('reports.exportPdf') }}</AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="!chartPersonId" @click="saveChartSvg">{{ $t('chart.export.saveSvg') }}</AppButton>
+      <!-- Descendant Chart Tab -->
+      <div v-if="activeTab === 'descendantChart'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <DescendantChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
         </div>
       </div>
-      <div ref="previewContainer" class="preview-area">
-        <div v-if="chartPersonId" class="print-preview" :style="{ zoom: effectiveZoom }">
-          <TimelineChartReport :person-id="chartPersonId" :color-mode="chartColorMode" />
-        </div>
-        <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-      </div>
-    </div>
 
-    <ZoomControls :zoom="effectiveZoom" :show-fit="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
+      <!-- Fan Chart Tab -->
+      <div v-if="activeTab === 'fanChart'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <FanChartReport
+              :person-id="store.personId"
+              :generations="fanGenerations"
+              :arc-span="store.fanArcSpan"
+              :color-mode="store.fanColorMode"
+            />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        </div>
+      </div>
+
+      <!-- Timeline Tab -->
+      <div v-if="activeTab === 'timeline'" class="tab-content">
+        <div ref="previewContainer" class="preview-area">
+          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <TimelineChartReport :person-id="store.personId" />
+          </div>
+          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+        </div>
+      </div>
+
+      <ZoomControls :zoom="effectiveZoom" :show-fit="true" :overlay="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
+
+      </div><!-- .preview-wrapper -->
+      <ReportPanel
+        :active-tab="activeTab"
+        :couple-relationships="coupleRelationships"
+        :tile-count-info="chartTileCount"
+        @print="printCurrent"
+        @export-pdf="exportPdf"
+        @save-svg="saveChartSvg"
+        @save-chart-pdf="saveChartPdf"
+      />
+    </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import AppButton from '../components/ui/AppButton.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import { useFocusStore } from '../stores/focus';
+import { useReportConfigStore } from '../stores/reportConfig';
+import ReportPanel from '../components/ReportPanel.vue';
 import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
 import LifeOnOnePageReport from '../components/reports/LifeOnOnePageReport.vue';
@@ -554,15 +243,9 @@ import PedigreeChartReport from '../components/reports/PedigreeChartReport.vue';
 import HourglassChartReport from '../components/reports/HourglassChartReport.vue';
 import DescendantChartReport from '../components/reports/DescendantChartReport.vue';
 import FanChartReport from '../components/reports/FanChartReport.vue';
-import type { ArcSpan } from '../utils/fanLayout';
 import TimelineChartReport from '../components/reports/TimelineChartReport.vue';
 import ZoomControls from '../components/ZoomControls.vue';
-import ChartExportControls from '../components/ChartExportControls.vue';
 import {
-  pedigreeGenerations,
-  hourglassGenerations,
-  descendantGenerations,
-  timelineGenerations,
   fanGenerations,
 } from '../composables/useChartGenerations';
 import {
@@ -570,9 +253,6 @@ import {
   computeTileViewBoxes,
   generateTileSvg,
   MM_TO_PX,
-  type PaperSize,
-  type Orientation,
-  type ColorMode,
 } from '../../api/chart-export';
 import { buildExportSvgString, wrapWithTitle } from '../composables/useChartExport';
 
@@ -582,6 +262,7 @@ const { t } = useI18n();
 const route = useRoute();
 
 const focusStore = useFocusStore();
+const store = useReportConfigStore();
 
 const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
 const reportLoading = ref(false);
@@ -603,73 +284,9 @@ const framableTabs = computed(() => [
 ]);
 
 const coupleRelationships = ref<RelationshipOption[]>([]);
-const yourAncestorsPersonId = computed(() => focusStore.personId);
-const yourAncestorsGenerations = ref(4);
-const yourAncestorsColorMode = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
-const yourAncestorsDensity = ref<'one' | 'two'>('one');
-const yourAncestorsShowEvents = ref(true);
-const yourAncestorsShowLifeMap = ref(true);
-const yourAncestorsShowExtraPhotos = ref(false);
-const yourAncestorsShowSources = ref(false);
-const aLifePersonId = computed(() => focusStore.personId);
-const aLifeShowLifeMap = ref(true);
-const aLifeShowPhotos = ref(true);
-const aLifeShowDocuments = ref(false);
-const aLifeShowSources = ref(false);
-const aLifeShowNotes = ref(true);
-const aLifeShowMediaCaptions = ref(true);
-const onePagePersonId = computed(() => focusStore.personId);
-const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
-const onePageShowLifeMap = ref(true);
-const familyInYearYear = ref<number>(new Date().getFullYear() - 100);
-const familyInYearScope = ref<'all' | 'ancestors' | 'descendants'>('all');
-const familyInYearPersonId = computed(() => focusStore.personId);
-const photoAlbumSubjectType = ref<'person' | 'relationship' | 'place' | 'all'>('person');
-const photoAlbumPersonId = computed(() => focusStore.personId);
-const photoAlbumRelId = ref('');
-const photoAlbumPlaceId = ref('');
-const photoAlbumPerPage = ref<1 | 2 | 4>(1);
-const photoAlbumShowCaptions = ref(true);
-const photoAlbumShowIndex = ref(false);
-const photoAlbumIncludeDocuments = ref(false);
-const photoAlbumSubjectId = computed<string | null>(() => {
-  if (photoAlbumSubjectType.value === 'person') return photoAlbumPersonId.value;
-  if (photoAlbumSubjectType.value === 'relationship') return photoAlbumRelId.value || null;
-  if (photoAlbumSubjectType.value === 'place') return photoAlbumPlaceId.value || null;
-  return null;
-});
-const photoAlbumCanRender = computed(() => {
-  if (photoAlbumSubjectType.value === 'all') return true;
-  return !!photoAlbumSubjectId.value;
-});
-const placeChroniclePlaceId = ref('');
-const placeChronicleShowBoundary = ref(true);
-const placeChronicleShowChildPlaces = ref(false);
-const placeChronicleShowPhotos = ref(true);
-const placeChronicleShowNotes = ref(true);
-const placeChronicleShowSources = ref(false);
-const placeChronicleShowMediaCaptions = ref(true);
-const aMarriageRelId = ref('');
-const aMarriageShowLifeMap = ref(true);
-const aMarriageShowPhotos = ref(true);
-const aMarriageShowNotes = ref(true);
-const aMarriageShowSources = ref(false);
-const aMarriageShowMediaCaptions = ref(true);
-// Shared privacy toggle for the 5 keepsake reports (alife, amarriage,
-// yourAncestors, onePage, familyInYear).
-const redactLiving = ref(false);
-const fanArcSpan = ref<ArcSpan>(360);
-const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
-const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
-const allPlaces = ref<Array<{ id: string; name: string }>>([]);
-
-// --- Chart export controls (shared across the 4 chart tabs) ---
-const chartPaperSize = ref<PaperSize>('A2');
-const chartOrientation = ref<Orientation>('landscape');
-const chartColorMode = ref<ColorMode>('themed');
 
 const chartTileCount = computed(() => {
-  const dims = getPaperDimensions({ paperSize: chartPaperSize.value, orientation: chartOrientation.value });
+  const dims = getPaperDimensions({ paperSize: store.chartPaperSize, orientation: store.chartOrientation });
   const W = Math.round(dims.width * MM_TO_PX);
   const H = Math.round(dims.height * MM_TO_PX);
   const tiles = computeTileViewBoxes(W, H);
@@ -679,17 +296,10 @@ const chartTileCount = computed(() => {
   return { count: tiles.length, rows, cols };
 });
 
-// Fan rendering takes 'branch' | 'sex' | 'bw'; map from the shared ColorMode.
-const fanRenderColorMode = computed<'branch' | 'sex' | 'bw'>(() => {
-  if (chartColorMode.value === 'sex-colored') return 'sex';
-  if (chartColorMode.value === 'bw') return 'bw';
-  return 'branch';
-});
-
 async function chartExportTitle(): Promise<string> {
   const tab = activeTab.value;
   let label = '';
-  if (tab === 'pedigreeChart') label = t('reports.tabPedigreeChart');
+  if (tab === 'pedigreePrint') label = t('reports.pedigreePrint.title');
   else if (tab === 'hourglassChart') label = t('reports.tabHourglassChart');
   else if (tab === 'descendantChart') label = t('reports.tabDescendantChart');
   else if (tab === 'fanChart') label = t('reports.tabFanChart');
@@ -712,7 +322,7 @@ async function saveChartSvg() {
 async function saveChartPdf() {
   const svg = getChartSvg();
   if (!svg) return;
-  const dims = getPaperDimensions({ paperSize: chartPaperSize.value, orientation: chartOrientation.value });
+  const dims = getPaperDimensions({ paperSize: store.chartPaperSize, orientation: store.chartOrientation });
   const paperW = Math.round(dims.width * MM_TO_PX);
   const paperH = Math.round(dims.height * MM_TO_PX);
 
@@ -822,19 +432,15 @@ function triggerLoading() {
   reportLoading.value = true;
   nextTick(() => setTimeout(() => { reportLoading.value = false; }, 800));
 }
-const chartPersonId = computed(() => focusStore.personId);
 
-watch(activeTab, triggerLoading);
-watch(yourAncestorsPersonId, triggerLoading);
-watch(aLifePersonId, triggerLoading);
-watch(onePagePersonId, triggerLoading);
-watch(familyInYearYear, triggerLoading);
-watch(familyInYearScope, triggerLoading);
-watch(photoAlbumSubjectType, triggerLoading);
-watch(photoAlbumSubjectId, triggerLoading);
-watch(placeChroniclePlaceId, triggerLoading);
-watch(aMarriageRelId, triggerLoading);
-watch(chartPersonId, triggerLoading);
+watch(activeTab,                           triggerLoading);
+watch(() => store.personId,                triggerLoading);
+watch(() => store.familyInYearYear,        triggerLoading);
+watch(() => store.familyInYearScope,       triggerLoading);
+watch(() => store.photoAlbumSubjectType,   triggerLoading);
+watch(() => store.photoAlbumSubjectId,     triggerLoading);
+watch(() => store.placeChroniclePlaceId,   triggerLoading);
+watch(() => store.aMarriageRelId,          triggerLoading);
 
 onUnmounted(() => { if (ro) ro.disconnect(); });
 
@@ -854,16 +460,10 @@ async function getPersonName(id: string | null): Promise<string> {
 
 onMounted(async () => {
   if (!window.api) return;
-  const [rels, places] = await Promise.all([
-    window.api.relationships.list() as Promise<Array<{
-      id: string; type: string;
-      person1_id: string | null;
-      person2_id: string | null;
-    }>>,
-    window.api.places.list() as Promise<Array<{ id: string; name: string }>>,
-  ]);
-  allPlaces.value = places.sort((a, b) => a.name.localeCompare(b.name));
 
+  const rels = await window.api.relationships.list() as Array<{
+    id: string; type: string; person1_id: string | null; person2_id: string | null;
+  }>;
   const couples = rels.filter(r => r.type === 'couple');
   const options: RelationshipOption[] = [];
   for (const r of couples) {
@@ -873,35 +473,29 @@ onMounted(async () => {
   }
   coupleRelationships.value = options;
 
-  // Default to first couple relationship involving the focus person
   if (focusStore.personId) {
-    const focusCouple = couples.find(r => r.person1_id === focusStore.personId || r.person2_id === focusStore.personId);
-    if (focusCouple) {
-      aMarriageRelId.value = focusCouple.id;
-    }
+    const focusCouple = couples.find(r =>
+      r.person1_id === focusStore.personId || r.person2_id === focusStore.personId
+    );
+    if (focusCouple) store.aMarriageRelId = focusCouple.id;
 
-    // Default place to birth place of focus person
     try {
       const events = await window.api.events.forPerson(focusStore.personId) as Array<{ event_type: string; place_id: string | null }>;
       const birth = events.find(e => e.event_type === 'birth' && e.place_id);
-      if (birth?.place_id && places.some(p => p.id === birth.place_id)) {
-        placeChroniclePlaceId.value = birth.place_id;
-      }
+      if (birth?.place_id) store.placeChroniclePlaceId = birth.place_id;
     } catch { /* ignore */ }
   }
 
+  // allPlaces loading removed — PlacePicker in ReportPanel handles place search.
+
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage', 'pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
-  if (tabParam && validTabs.includes(tabParam)) {
-    activeTab.value = tabParam as typeof activeTab.value;
-  }
-  if (route.query.placeId) {
-    placeChroniclePlaceId.value = route.query.placeId as string;
-  }
-  if (route.query.relationshipId) {
-    aMarriageRelId.value = route.query.relationshipId as string;
-  }
+  const validTabs = ['yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum',
+    'placeChronicle', 'amarriage', 'pedigreePrint', 'hourglassChart',
+    'descendantChart', 'fanChart', 'timeline'];
+  if (tabParam && validTabs.includes(tabParam)) activeTab.value = tabParam as typeof activeTab.value;
+  if (route.query.placeId)        store.placeChroniclePlaceId = route.query.placeId as string;
+  if (route.query.relationshipId) store.aMarriageRelId        = route.query.relationshipId as string;
 });
 
 async function printCurrent() {
@@ -928,9 +522,7 @@ function exportPdfFilename(): string {
 
 async function exportPdf() {
   const chartTabs = ['pedigreePrint', 'hourglassChart', 'descendantChart'];
-  const landscape = chartTabs.includes(activeTab.value)
-    ? chartOrientation.value === 'landscape'
-    : false;
+  const landscape = chartTabs.includes(activeTab.value) ? store.chartOrientation === 'landscape' : false;
   await window.api.print.exportPdf(exportPdfFilename(), landscape);
 }
 
@@ -957,63 +549,27 @@ async function exportPdf() {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.tab-content { display: flex; flex-direction: column; gap: var(--space-md); }
-
-.tab-header {
+.reports-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.preview-wrapper {
+  flex: 1;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-md) var(--space-lg);
+  min-height: 0;
+  position: relative;
 }
-.controls-row { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: flex-end; }
-.controls-row label {
-  display: flex; flex-direction: column; gap: var(--space-xs);
-  font-size: var(--font-sm); font-weight: var(--font-weight-bold); color: var(--text-secondary);
+.tab-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
-.controls-row select {
-  padding: 6px 8px;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-base);
-  font-family: inherit;
-  background: var(--surface-bg);
-  color: var(--text-primary);
-}
-.controls-row select:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-.controls-row input[type='number'] {
-  padding: 6px 8px;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-base);
-  font-family: inherit;
-  background: var(--surface-bg);
-  color: var(--text-primary);
-  width: 100px;
-}
-.controls-row input[type='number']:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-.controls-row input[type='range'] {
-  accent-color: var(--accent);
-  width: 120px;
-  cursor: pointer;
-}
-.toggles-row { display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: center; }
-.toggles-row label {
-  display: flex; flex-direction: row; align-items: center; gap: var(--space-xs);
-  font-size: var(--font-sm); color: var(--text-primary); cursor: pointer; font-weight: normal;
-}
-.print-actions { display: flex; gap: var(--space-sm); align-items: center; justify-content: flex-end; }
-.range-value { font-size: var(--font-sm); color: var(--text-muted); min-width: 20px; }
-.arc-buttons { display: flex; gap: var(--space-xs); flex-wrap: wrap; }
-
 /* Preview area: grey background with scrollable paper preview */
 .preview-area {
   position: relative;
@@ -1040,7 +596,7 @@ async function exportPdf() {
   min-height: 210mm;
 }
 @media print {
-  .view-header, .filter-chips-bar, .tab-groups, .tab-header, .zoom-controls-bar { display: none !important; }
+  .view-header, .filter-chips-bar, .tab-groups, .zoom-controls-bar, .report-panel { display: none !important; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }
