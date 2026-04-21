@@ -12,7 +12,8 @@ const mockApi = {
     readAsDataUrl: vi.fn(),
   },
   events: { forPerson: vi.fn() },
-  places: { get: vi.fn() },
+  places: { get: vi.fn(), getPath: vi.fn() },
+  gazetteers: { getBundled: vi.fn(), getImported: vi.fn() },
   db: { getSetting: vi.fn() },
 };
 
@@ -22,6 +23,9 @@ beforeEach(() => {
   mockApi.media.readAsDataUrl.mockResolvedValue(null);
   mockApi.events.forPerson.mockResolvedValue([]);
   mockApi.places.get.mockResolvedValue(null);
+  mockApi.places.getPath.mockResolvedValue('');
+  mockApi.gazetteers.getBundled.mockResolvedValue([]);
+  mockApi.gazetteers.getImported.mockResolvedValue([]);
   mockApi.db.getSetting.mockResolvedValue(null);
   (window as unknown as { api: unknown }).api = mockApi;
 });
@@ -57,7 +61,7 @@ describe('LifeOnOnePageReport', () => {
     });
 
     const wrapper = mount(LifeOnOnePageReport, {
-      props: { personId: 'p1' },
+      props: { personId: 'p1', showLifeMap: false },
       global: { plugins: [i18n] },
     });
     await flushPromises();

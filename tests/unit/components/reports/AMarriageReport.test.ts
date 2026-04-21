@@ -12,7 +12,8 @@ const mockApi = {
     readAsDataUrl: vi.fn(),
   },
   events: { forPerson: vi.fn() },
-  places: { get: vi.fn() },
+  places: { get: vi.fn(), getPath: vi.fn() },
+  gazetteers: { getBundled: vi.fn(), getImported: vi.fn() },
   db: { getSetting: vi.fn() },
   citations: {
     forPerson: vi.fn(),
@@ -28,6 +29,9 @@ beforeEach(() => {
   mockApi.media.readAsDataUrl.mockResolvedValue(null);
   mockApi.events.forPerson.mockResolvedValue([]);
   mockApi.places.get.mockResolvedValue(null);
+  mockApi.places.getPath.mockResolvedValue('');
+  mockApi.gazetteers.getBundled.mockResolvedValue([]);
+  mockApi.gazetteers.getImported.mockResolvedValue([]);
   mockApi.db.getSetting.mockResolvedValue(null);
   mockApi.citations.forPerson.mockResolvedValue([]);
   mockApi.citations.forRelationship.mockResolvedValue([]);
@@ -75,7 +79,7 @@ describe('AMarriageReport', () => {
     });
 
     const wrapper = mount(AMarriageReport, {
-      props: { relationshipId: 'r1', showSources: true, showPhotos: true },
+      props: { relationshipId: 'r1', showSources: true, showPhotos: true, showLifeMap: false },
       global: { plugins: [i18n] },
     });
     await flushPromises();

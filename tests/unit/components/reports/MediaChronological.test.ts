@@ -1,33 +1,32 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { createI18n } from 'vue-i18n';
 import MediaChronological from '../../../../src/renderer/components/reports/primitives/MediaChronological.vue';
-
-const i18n = createI18n({
-  legacy: false,
-  locale: 'en',
-  messages: { en: { reports: { common: { fromLeft: 'From left:' } } } },
-});
+import { i18n } from '../../../components/setup';
 
 const mockApi = {
   media: {
     readAsDataUrl: vi.fn(async (id: string) => `data:image/jpeg;base64,${id}`),
   },
   mediaRegions: {
-    getForMedia: vi.fn(async () => []),
+    getForMedia: vi.fn(async () => [] as unknown[]),
+  },
+  persons: {
+    getNames: vi.fn(async () => [] as unknown[]),
   },
 };
-// @ts-expect-error test shim
-globalThis.window = { api: mockApi } as never;
 
 const globalOpts = { plugins: [i18n] };
+const photoItem = { id: '1', title: 'Photo', notes: null, fileRef: '/a/b.jpg', format: 'image/jpeg', inferredDateISO: null };
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockApi.media.readAsDataUrl.mockResolvedValue(null);
+  mockApi.mediaRegions.getForMedia.mockResolvedValue([]);
+  mockApi.persons.getNames.mockResolvedValue([]);
+  (window as unknown as { api: unknown }).api = mockApi;
+});
 
 describe('MediaChronological', () => {
-  beforeEach(() => {
-    mockApi.media.readAsDataUrl.mockClear();
-    mockApi.mediaRegions.getForMedia.mockClear();
-  });
-
   it('filters out documents by default', () => {
     const wrapper = mount(MediaChronological, {
       global: globalOpts,
@@ -65,13 +64,14 @@ describe('MediaChronological', () => {
       global: globalOpts,
       props: {
         showCaptions: false,
-        items: [{ id: '1', title: 'Photo', notes: null, fileRef: '/a/b.jpg', format: 'image/jpeg', inferredDateISO: null }],
+        items: [photoItem],
       },
     });
     expect(wrapper.find('.media-caption').exists()).toBe(false);
   });
 
   it('loads image data URLs via window.api.media.readAsDataUrl', async () => {
+    mockApi.media.readAsDataUrl.mockResolvedValue('data:image/jpeg;base64,abc');
     const wrapper = mount(MediaChronological, {
       global: globalOpts,
       props: {
@@ -85,5 +85,67 @@ describe('MediaChronological', () => {
     const img = wrapper.find('img');
     expect(img.exists()).toBe(true);
     expect(img.attributes('src')).toBe('data:image/jpeg;base64,abc');
+  });
+
+  it('face tag in linkedPersonIds renders as anchor link with #person-ID href', async () => {
+    mockApi.mediaRegions.getForMedia.mockResolvedValue([
+      { id: 'reg1', media_id: '1', person_id: 'p42', x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: null },
+    ]);
+    mockApi.persons.getNames.mockResolvedValue([
+      { given_name: 'Maja', surname: 'Nilsson', preferred_name: null, sort_order: 0 },
+    ]);
+    mockApi.media.readAsDataUrl.mockResolvedValue('data:image/jpeg;base64,1');
+
+    const wrapper = mount(MediaChronological, {
+      global: globalOpts,
+      props: { items: [photoItem], linkedPersonIds: ['p42'] },
+    });
+    await flushPromises();
+
+    const faceLinks = wrapper.findAll('a.face-link');
+    expect(faceLinks.length).toBeGreaterThan(0);
+    for (const link of faceLinks) {
+      expect(link.attributes('href')).toBe('#person-p42');
+    }
+  });
+
+  it('face tag not in linkedPersonIds renders as span without a link', async () => {
+    mockApi.mediaRegions.getForMedia.mockResolvedValue([
+      { id: 'reg1', media_id: '1', person_id: 'p99', x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: null },
+    ]);
+    mockApi.persons.getNames.mockResolvedValue([
+      { given_name: 'Okänd', surname: null, preferred_name: null, sort_order: 0 },
+    ]);
+    mockApi.media.readAsDataUrl.mockResolvedValue('data:image/jpeg;base64,1');
+
+    const wrapper = mount(MediaChronological, {
+      global: globalOpts,
+      props: { items: [photoItem], linkedPersonIds: [] },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('a.face-link').exists()).toBe(false);
+    expect(wrapper.find('.face-name').exists()).toBe(true);
+  });
+
+  it('all generated anchor hrefs stay within the report (start with #)', async () => {
+    mockApi.mediaRegions.getForMedia.mockResolvedValue([
+      { id: 'reg1', media_id: '1', person_id: 'p1', x: 0, y: 0, width: 0.5, height: 0.5, label: null },
+    ]);
+    mockApi.persons.getNames.mockResolvedValue([
+      { given_name: 'Test', surname: null, preferred_name: null, sort_order: 0 },
+    ]);
+    mockApi.media.readAsDataUrl.mockResolvedValue('data:image/jpeg;base64,1');
+
+    const wrapper = mount(MediaChronological, {
+      global: globalOpts,
+      props: { items: [photoItem], linkedPersonIds: ['p1'] },
+    });
+    await flushPromises();
+
+    for (const link of wrapper.findAll('a[href]')) {
+      const href = link.attributes('href') ?? '';
+      expect(href.startsWith('#'), `External link found: ${href}`).toBe(true);
+    }
   });
 });

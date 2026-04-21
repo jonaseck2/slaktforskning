@@ -72,6 +72,12 @@
             </li>
           </ul>
         </div>
+        <PersonLifeMap
+          v-if="props.showLifeMap"
+          :person-id="ancestor.id"
+          :height="150"
+          draw-path
+        />
       </section>
 
       <!-- Surname index -->
@@ -106,6 +112,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ReportCover from './primitives/ReportCover.vue';
 import PersonMiniCard from './primitives/PersonMiniCard.vue';
+import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import FanChartReport from './FanChartReport.vue';
 import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
@@ -117,6 +124,7 @@ const props = withDefaults(defineProps<{
   colorMode?: 'bw' | 'branch' | 'sex' | 'themed';
   density?: 'one' | 'two';
   showEvents?: boolean;
+  showLifeMap?: boolean;
   showExtraPhotos?: boolean;
   showSources?: boolean;
   redactLiving?: boolean;
@@ -125,6 +133,7 @@ const props = withDefaults(defineProps<{
   colorMode: 'themed',
   density: 'one',
   showEvents: true,
+  showLifeMap: true,
   showExtraPhotos: false,
   showSources: false,
   redactLiving: false,

@@ -34,8 +34,8 @@
         </ul>
       </div>
 
-      <div v-if="props.showLifeMap && lifeMapPoints.length > 0" class="op-map">
-        <LifeMap :points="lifeMapPoints" :height="200" draw-path />
+      <div v-if="props.showLifeMap" class="op-map">
+        <PersonLifeMap :person-id="props.personId" :height="200" draw-path />
       </div>
 
       <div v-if="photoGrid.length > 0" class="op-photos">
@@ -62,8 +62,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import LifeMap, { type LifeMapPathPoint } from './primitives/LifeMap.vue';
-import { useLifeMap } from '../../composables/useLifeMap';
+import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
@@ -136,8 +135,6 @@ const portraitUrl = ref<string | null>(null);
 const photoGridUrls = reactive<Record<string, string>>({});
 
 // --- Composables ---
-const personIdRef = computed(() => props.personId || null);
-const { data: lifeMapData } = useLifeMap(personIdRef);
 const mediaEntityRef = computed<MediaEntityRef | null>(() =>
   props.personId ? { entityType: 'person', entityId: props.personId } : null,
 );
@@ -271,15 +268,6 @@ const otherKeyEvents = computed<OtherKeyEvent[]>(() => {
   // Cap at 4 to keep the single page tidy
   return out.slice(0, 4);
 });
-
-const lifeMapPoints = computed<LifeMapPathPoint[]>(() =>
-  lifeMapData.value.events.map(e => ({
-    lat: e.lat,
-    lon: e.lon,
-    label: e.placeName,
-    year: extractYear(e.dateISO),
-  })),
-);
 
 const photoGrid = computed(() => {
   if (suppressPhotos.value) return [];

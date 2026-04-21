@@ -4,7 +4,9 @@ import { useLifeMap } from '../../src/renderer/composables/useLifeMap';
 
 const mockApi = {
   events: { forPerson: vi.fn() },
-  places: { get: vi.fn() },
+  places: { get: vi.fn(), getPath: vi.fn() },
+  gazetteers: { getBundled: vi.fn(), getImported: vi.fn() },
+  db: { getSetting: vi.fn() },
 };
 // @ts-expect-error test shim
 globalThis.window = { api: mockApi } as never;
@@ -13,6 +15,11 @@ describe('useLifeMap', () => {
   beforeEach(() => {
     mockApi.events.forPerson.mockReset();
     mockApi.places.get.mockReset();
+    mockApi.places.getPath.mockReset();
+    mockApi.places.getPath.mockResolvedValue('');
+    mockApi.gazetteers.getBundled.mockResolvedValue([]);
+    mockApi.gazetteers.getImported.mockResolvedValue([]);
+    mockApi.db.getSetting.mockResolvedValue(null);
   });
 
   it('returns geocoded events sorted chronologically', async () => {
@@ -36,7 +43,7 @@ describe('useLifeMap', () => {
     expect(data.value.bounds).toEqual({ north: 2, south: 1, east: 2, west: 1 });
   });
 
-  it('skips events without place_id or without lat/lon', async () => {
+  it('skips events without place_id or without resolvable coordinates', async () => {
     mockApi.events.forPerson.mockResolvedValue([
       { id: 'e1', event_type: 'birth', date_value: '1850-01-01', place_id: null },
       { id: 'e2', event_type: 'death', date_value: '1920-01-01', place_id: 'p2' },

@@ -11,33 +11,6 @@
         :researcher-name="researcherName"
       />
 
-      <!-- Dual Life Map -->
-      <section v-if="props.showLifeMap && hasAnyLifeMapPoints" class="report-section">
-        <h2 class="section-heading">{{ $t('reports.amarriage.lifeMap') }}</h2>
-        <div class="dual-map-grid">
-          <div v-if="spouse1LifeMapPoints.length > 0" class="dual-map-cell">
-            <div class="dual-map-label">{{ spouse1Name }}</div>
-            <LifeMap
-              :points="spouse1LifeMapPoints"
-              :height="320"
-              draw-path
-              path-color="#2c5aa0"
-              :aria-label="$t('reports.amarriage.mapSpouse1')"
-            />
-          </div>
-          <div v-if="spouse2LifeMapPoints.length > 0" class="dual-map-cell">
-            <div class="dual-map-label">{{ spouse2Name }}</div>
-            <LifeMap
-              :points="spouse2LifeMapPoints"
-              :height="320"
-              draw-path
-              path-color="#8a2d2d"
-              :aria-label="$t('reports.amarriage.mapSpouse2')"
-            />
-          </div>
-        </div>
-      </section>
-
       <!-- Shared Timeline -->
       <section v-if="sharedTimeline.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.amarriage.sharedTimeline') }}</h2>
@@ -384,16 +357,25 @@ const sharedTimeline = computed<TimelineItem[]>(() => {
   for (const ev of data.value.relationship_events) {
     const year = extractYear(ev.date_value);
     if (year == null) continue;
-    items.push({ id: ev.id, year, eventType: ev.event_type, label: eventTypeLabel(ev.event_type) });
+    const place = ev.place_name;
+    const label = place
+      ? `${eventTypeLabel(ev.event_type)} · ${place}`
+      : eventTypeLabel(ev.event_type);
+    items.push({ id: ev.id, year, eventType: ev.event_type, label });
   }
   for (const child of data.value.children) {
     const year = extractYear(child.birth_event?.date_value ?? null);
     if (year == null) continue;
+    const place = child.birth_event?.place_name ?? null;
+    const childName = primaryName(child.names) || t('common.unknown');
+    const label = place
+      ? `${eventTypeLabel('birth')}: ${childName} · ${place}`
+      : `${eventTypeLabel('birth')}: ${childName}`;
     items.push({
       id: child.birth_event?.id ?? `child-${child.person.id}`,
       year,
       eventType: 'birth',
-      label: `${eventTypeLabel('birth')}: ${primaryName(child.names) || t('common.unknown')}`,
+      label,
     });
   }
   items.sort((a, b) => a.year - b.year);
