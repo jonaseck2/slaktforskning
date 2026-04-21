@@ -584,6 +584,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
 | `EntityMediaSection` | `entityType: string`, `entityId: string` | — | Generic media section for any entity type (person, place, event, etc.). Replaces the hardcoded person-only pattern in PersonMediaSection. Used by PlacePanel. |
 | `ChartExportControls` | `paperSize`, `orientation`, `colorMode`, `tileCount: {count,rows,cols}\|null` | `update:paperSize`, `update:orientation`, `update:colorMode`, `saveSvg`, `savePdf` | Paper-size, orientation, color-mode, and Save SVG / Save tiled PDF controls. Used in the 4 chart tab headers in `ReportsView` (pedigree/hourglass/descendant/fan). Pure presentational component; parent owns state and handlers. |
+| `ReportPanel` | `activeTab: string`, `coupleRelationships: RelationshipOption[]`, `tileCountInfo: {count,rows,cols}\|null` | `print`, `export-pdf`, `save-svg`, `save-chart-pdf` | Right-side print-configuration panel following the PersonPanel/PlacePanel pattern. Sections: Subject (person/couple/place picker), Options (checkboxes), Appearance (selects, ranges, orientation toggle). Print/Export buttons sticky at bottom. All config state lives in useReportConfigStore. Used in ReportsView alongside the report preview. |
 
 **Composables:**
 | Composable | Purpose |
@@ -632,6 +633,7 @@ Six shared print-safe components used across multiple reports. All use `--report
 |-------|---------|
 | `sourceSession` | Remembers last-used source ID and page for citation pre-fill across forms. Session-only (resets on app restart). |
 | `profilePic` | Per-person cached cropped profile picture data URLs. Dedupes `readAsDataUrl` calls across rows (3 people in 1 photo = 1 fetch). Invalidated on region/link mutations. |
+| `reportConfig` | All print-configuration state for reports: subject IDs (person/couple/place), per-report toggle flags, appearance settings, couple relationships list. Shared between ReportsView and ReportPanel. |
 
 **Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 

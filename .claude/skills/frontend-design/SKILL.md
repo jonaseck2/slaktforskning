@@ -286,7 +286,7 @@ Rules:
 
 ## Side Panel Design
 
-Side panels (PersonPanel, PlacePanel, MediaPanel) are self-contained sheet components:
+Side panels (PersonPanel, PlacePanel, MediaPanel, ReportPanel) are self-contained sheet components:
 
 ```css
 .panel {
@@ -310,12 +310,17 @@ Section order matters — put the most-used sections first:
 - **PersonPanel**: Person > Names > Events > Timeline > Identifiers > Relationships > Groups > Media > Media Timeline > Research Tasks > Quality
 - **PlacePanel**: Place Details > People > Events > Citations > Media > Media Timeline > Address > Hierarchy
 
+### ReportPanel data sourcing pattern
+
+ReportPanel differs from PersonPanel/PlacePanel/MediaPanel: it sources configuration from **useReportConfigStore** (Pinia) rather than fetching data from window.api. Changes in the panel immediately update the adjacent report preview without requiring scrolling. This real-time preview pattern works because all state (subject IDs, appearance settings, toggles) lives in a shared Pinia store that both the panel and the preview consume.
+
 ### Auto-select on load
 
 Paneled views should auto-select an item so the panel is never empty:
 - **Media**: select focus person's first media, fallback to first item
 - **Places/Map**: select focus person's first place, fallback to first place
 - **People/Tree**: panel shows the selected/focal person
+- **Reports**: ReportPanel always visible alongside the preview; no auto-select needed
 
 ---
 

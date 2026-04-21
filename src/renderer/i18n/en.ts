@@ -464,6 +464,7 @@ export default {
     fanColorSex: 'Gender',
     fan: {
       arc: 'Arc',
+      colorMode: 'Fan color',
       generations: 'Generations',
     },
     empty: 'Create a person to start visualizing.',
@@ -710,6 +711,10 @@ export default {
   reports: {
     nav: 'Reports',
     title: 'Reports',
+    panel: {
+      options: 'Options',
+      appearance: 'Appearance',
+    },
     groups: {
       keepsake: 'Keepsake reports',
       framablePrints: 'Framable prints',
