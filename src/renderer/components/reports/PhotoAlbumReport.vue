@@ -26,7 +26,7 @@
         <h2 class="section-heading">{{ $t('reports.photoAlbum.index') }}</h2>
         <ol class="index-list">
           <li v-for="item in displayItems" :key="item.id">
-            {{ item.title || $t('common.unknown') }}
+            <a :href="'#media-' + item.id" class="report-link">{{ item.title || $t('common.unknown') }}</a>
           </li>
         </ol>
       </section>
@@ -284,5 +284,18 @@ watch(
 }
 .index-list li {
   padding: 2px 0;
+}
+.report-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--surface-border-subtle);
+  transition: border-color 0.15s, color 0.15s;
+}
+.report-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+@media print {
+  .report-link { border-bottom: none; }
 }
 </style>

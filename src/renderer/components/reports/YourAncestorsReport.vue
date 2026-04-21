@@ -39,6 +39,7 @@
         class="report-section ancestor-page"
         :class="{ 'half-page': density === 'two' }"
       >
+        <span :id="'person-' + ancestor.id" class="person-anchor"></span>
         <div class="ancestor-header">
           <PersonMiniCard
             :person-id="ancestor.id"
@@ -460,6 +461,7 @@ watch(
   border-bottom: 1px dashed var(--surface-border-subtle);
 }
 .ancestor-header { margin-bottom: var(--space-md); }
+.person-anchor { display: block; height: 0; overflow: hidden; }
 
 .prose-section {
   font-family: var(--report-serif-stack);
