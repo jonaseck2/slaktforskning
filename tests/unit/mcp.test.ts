@@ -55,6 +55,17 @@ describe('persons', () => {
     expect(results[0].given_name).toBe('Anna');
   });
 
+  it('respects the limit parameter in search_persons', async () => {
+    for (let i = 1; i <= 5; i++) {
+      await call('create_person', { given_name: `Person${i}`, surname: 'Andersson' });
+    }
+    const limited = await call('search_persons', { query: 'Andersson', limit: 1 }) as any[];
+    expect(limited).toHaveLength(1);
+
+    const wider = await call('search_persons', { query: 'Andersson', limit: 100 }) as any[];
+    expect(wider.length).toBeGreaterThanOrEqual(limited.length);
+  });
+
   it('updates a person', async () => {
     const result = await call('create_person', { given_name: 'Anna', surname: 'Svensson', sex: 'U' }) as any;
     const updated = await call('update_person', { id: result.person.id, sex: 'F', notes: 'test note' }) as any;

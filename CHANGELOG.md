@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.136.0 — add optional limit parameter to search_persons MCP tool
+
+- feat: search_persons MCP tool now accepts an optional limit parameter (integer, 1–200, default 20)
+
 ## v0.135.2 — devcontainer and Claude workflow fixes
 
 - fix(devcontainer): xvfb-start.sh now exports DISPLAY=:99 (was host.docker.internal:0, broke E2E tests via `source`)

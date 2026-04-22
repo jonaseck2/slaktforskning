@@ -88,6 +88,7 @@ export function searchPersons(
   db: Database,
   query: string,
   relateeId?: string | null,
+  limit = 20,
 ): (Person & {
   given_name: string;
   surname: string;
@@ -174,8 +175,8 @@ export function searchPersons(
     ORDER BY
       CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 1 ELSE 2 END,
       pn.surname, pn.given_name
-    LIMIT 20
-  `, [relatee, relatee, relatee, ...tokenParams, ...relevanceParams]);
+    LIMIT ?
+  `, [relatee, relatee, relatee, ...tokenParams, ...relevanceParams, limit]);
 }
 
 export function addPersonName(
