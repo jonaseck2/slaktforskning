@@ -15,7 +15,8 @@
   // Environment variable so E2E tests know to use a temp DB path
   "remoteEnv": {
     "DISPLAY": ":99",
-    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
+    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
   },
 
   "customizations": {
