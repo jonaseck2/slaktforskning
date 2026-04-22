@@ -22,7 +22,12 @@ jobs:
         id: check
         run: |
           CURRENT=$(node -p "require('./package.json').version")
-          PREVIOUS=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            PREVIOUS=""
+          else
+            PREVIOUS=$(git show "${LAST_TAG}":package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          fi
           if [ "$CURRENT" != "$PREVIOUS" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "version=$CURRENT" >> $GITHUB_OUTPUT

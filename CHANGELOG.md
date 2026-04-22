@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## v0.135.1 — fix release workflow to compare against last tag
+
 - fix: resolve ESLint import/order warnings and remove unused type imports
+- fix: release workflow now compares package.json version against the last git tag rather than HEAD~1, so batched commits no longer skip the build
 
 ## v0.135.0 — ReportsView two-sheet paneled layout with drag resize
 
