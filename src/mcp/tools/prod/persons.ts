@@ -130,9 +130,10 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     description: 'Search persons by name',
     inputSchema: {
       query: z.string().describe('Search query — matches given name, surname, or notes'),
+      limit: z.number().int().min(1).max(200).optional().describe('Maximum number of results to return (default: 20, max: 200)'),
     },
   }, async (args) => {
-    const results = personApi.searchPersons(getDb(), args.query);
+    const results = personApi.searchPersons(getDb(), args.query, null, args.limit);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
