@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(ci): e2e smoke test timeout 30s → 90s; smoke-only on dep bump PRs, workers=2 for code PRs
+
 ## v0.136.0 — add optional limit parameter to search_persons MCP tool
 
 - feat: search_persons MCP tool now accepts an optional limit parameter (integer, 1–200, default 20)

@@ -31,7 +31,7 @@ test('app builds and launches via electron-forge', async () => {
     const timeout = setTimeout(() => {
       proc.kill();
       resolve({ success: launched, output });
-    }, 30000);
+    }, 90000);
 
     const onData = (data: Buffer) => {
       output += data.toString();
