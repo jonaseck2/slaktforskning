@@ -51,8 +51,10 @@ jobs:
             platform: darwin
           - os: windows-latest
             platform: win32
-          - os: ubuntu-latest
-            platform: linux
+          # Linux build disabled: rpmbuild 4.20 on ubuntu-latest incompatible with
+          # electron-installer-redhat spec template — re-enable when upstream fixes it
+          # - os: ubuntu-latest
+          #   platform: linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
