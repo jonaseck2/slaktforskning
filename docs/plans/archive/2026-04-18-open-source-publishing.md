@@ -773,10 +773,11 @@ Add issue and PR templates. Redesign README with badges."
 git push origin main
 ```
 
-- [ ] **Step 2: Add ANTHROPIC_API_KEY secret**
+- [ ] **Step 2: Add CLAUDE_CODE_OAUTH_TOKEN secret**
 
 Go to GitHub repo > Settings > Secrets and variables > Actions > New repository secret.
-Name: `ANTHROPIC_API_KEY`, Value: your Anthropic API key.
+Name: `CLAUDE_CODE_OAUTH_TOKEN`, Value: your Claude Max OAuth token (generate from claude.ai).
+Claude Max does not require a separate API key — use `claude_code_oauth_token` in the workflow.
 
 - [ ] **Step 3: Make repo public**
 

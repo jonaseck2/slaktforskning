@@ -9,7 +9,7 @@
   ],
 
   "remoteUser": "node",
-  "postCreateCommand": "npm install && ensure-native-binaries && npx playwright install chromium",
+  "postCreateCommand": "sudo chown -R node:node ~/.claude 2>/dev/null || true && npm install && ensure-native-binaries && npx playwright install chromium",
   "postStartCommand": "bash .devcontainer/xvfb-start.sh",
 
   // Environment variable so E2E tests know to use a temp DB path
