@@ -61,7 +61,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "fflate": "^0.8.2",
     "leaflet": "^1.9.4",
-    "node-sqlite3-wasm": "^0.8.55",
+    "node-sqlite3-wasm": "^0.8.56",
     "pdf-lib": "^1.17.1",
     "pinia": "^3.0.4",
     "uuid": "^13.0.0",
