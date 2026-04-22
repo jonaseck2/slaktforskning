@@ -3,6 +3,13 @@
 # Runs in postCreateCommand; no-ops gracefully if GIT_SIGNING_KEY is unset.
 set -e
 
+if [ -n "$GIT_AUTHOR_NAME" ]; then
+  git config --global user.name "$GIT_AUTHOR_NAME"
+fi
+if [ -n "$GIT_AUTHOR_EMAIL" ]; then
+  git config --global user.email "$GIT_AUTHOR_EMAIL"
+fi
+
 if [ -z "$GIT_SIGNING_KEY" ]; then
   echo "GIT_SIGNING_KEY not set — skipping commit signing setup"
   exit 0
