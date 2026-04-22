@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.136.3 — fix npm install and build pipeline
+
+- fix: downgrade @electron/fuses ^2.1.1 → ^1.8.0 to satisfy @electron-forge/plugin-fuses@7.x peer dep (Dependabot bump broke install)
+- fix: block Dependabot from re-bumping @electron/fuses past v1.x until forge adds v2 support
+- fix: comment out Linux RPM/DEB makers (rpmbuild 4.20 on Debian trixie incompatible with electron-installer-redhat spec template)
+
 ## v0.136.1 — reliable e2e CI
 
 - fix(ci): e2e smoke test timeout 30s → 90s; smoke-only on dep bump PRs, workers=2 for code PRs

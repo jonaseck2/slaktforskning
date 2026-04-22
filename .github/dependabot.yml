@@ -6,6 +6,10 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    ignore:
+      # @electron-forge/plugin-fuses@7.x requires @electron/fuses@^1.x — block major bumps until forge adds v2 support
+      - dependency-name: "@electron/fuses"
+        update-types: ["version-update:semver-major"]
     groups:
       electron:
         patterns:

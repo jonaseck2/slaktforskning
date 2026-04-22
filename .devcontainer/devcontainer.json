@@ -9,14 +9,14 @@
   ],
 
   "remoteUser": "node",
-  "postCreateCommand": "sudo chown -R node:node ~/.claude 2>/dev/null || true && npm install && ensure-native-binaries && npx playwright install chromium",
+  "postCreateCommand": "sudo chown -R node:node ~/.claude 2>/dev/null || true && npm install && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/setup-signing.sh",
   "postStartCommand": "bash .devcontainer/xvfb-start.sh",
 
-  // Environment variable so E2E tests know to use a temp DB path
   "remoteEnv": {
     "DISPLAY": ":99",
     "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}",
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}",
+    "GIT_SIGNING_KEY": "${localEnv:GIT_SIGNING_KEY}"
   },
 
   "customizations": {
