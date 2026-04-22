@@ -48,7 +48,7 @@
     "electron": "^41.2.2",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
-    "happy-dom": "^20.8.9",
+    "happy-dom": "^20.9.0",
     "playwright": "^1.59.1",
     "tsx": "^4.21.0",
     "typescript": "~4.5.4",
