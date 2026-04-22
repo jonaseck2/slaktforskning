@@ -39,6 +39,8 @@
     }
   },
 
-  // Forward the MCP server port if run as HTTP in future; 9229 for Node debugger
-  "forwardPorts": [9229]
+  // 9222 = Electron CDP (Chrome DevTools Protocol), connectable from host browser
+  // 19241 = UI bridge server (used by MCP dev tools and verify-cdp.sh)
+  // 9229 = Node.js debugger
+  "forwardPorts": [9222, 19241, 9229]
 }
