@@ -67,6 +67,67 @@ npx playwright test
 
 `npm start` does not work in the container (no display). Use `npm test` and `npm run make` instead.
 
+### Dev Container Secrets
+
+The container reads four environment variables from the host via `${localEnv:...}` in `devcontainer.json`. Set these in your shell profile (`.zshrc`, `.bashrc`, etc.) before opening the project in a dev container.
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `CLAUDE_CODE_OAUTH_TOKEN` | For agentic dev pipeline | Authenticates Claude Code (the AI agent) inside the container. Without it Claude Code will prompt for login on every container rebuild. |
+| `GITHUB_PERSONAL_ACCESS_TOKEN` | For GitHub MCP tools | Used by the GitHub MCP server to read/write issues, PRs, and code on your behalf. Needs `repo` + `read:org` scopes. |
+| `GIT_SIGNING_KEY` | For DCO-compliant commits | SSH private key used to cryptographically sign commits (shows "Verified" on GitHub). A `prepare-commit-msg` hook also adds `Signed-off-by:` automatically for the DCO trailer. |
+| `DISPLAY` | Set automatically | Points to the Xvfb virtual display (`:99`). Set by `postStartCommand`, not the host — listed here for completeness. |
+
+#### Setting up `CLAUDE_CODE_OAUTH_TOKEN`
+
+Run Claude Code on your host machine once to log in:
+
+```bash
+claude  # follow the OAuth flow; token is saved to ~/.claude/
+```
+
+Then export the token for the container:
+
+```bash
+# Find the token
+cat ~/.claude/credentials.json
+
+# Add to your shell profile
+export CLAUDE_CODE_OAUTH_TOKEN="your-token-here"
+```
+
+#### Setting up `GITHUB_PERSONAL_ACCESS_TOKEN`
+
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. Create a token with **Contents** (read/write), **Pull requests** (read/write), and **Issues** (read/write) permissions for this repository
+3. Add to your shell profile:
+
+```bash
+export GITHUB_PERSONAL_ACCESS_TOKEN="github_pat_..."
+```
+
+#### Setting up `GIT_SIGNING_KEY`
+
+Generate a dedicated SSH signing key (or reuse an existing Ed25519 key):
+
+```bash
+ssh-keygen -t ed25519 -C "git-signing" -f ~/.ssh/git_signing_key
+```
+
+Add the **public key** to GitHub → Settings → SSH and GPG keys → **Signing keys** (not authentication keys):
+
+```bash
+cat ~/.ssh/git_signing_key.pub  # paste this into GitHub
+```
+
+Export the **private key** for the container:
+
+```bash
+export GIT_SIGNING_KEY="$(cat ~/.ssh/git_signing_key)"
+```
+
+The `postCreateCommand` script ([.devcontainer/setup-signing.sh](.devcontainer/setup-signing.sh)) writes the key inside the container, configures SSH signing, and installs a global `prepare-commit-msg` hook that appends `Signed-off-by: Name <email>` to every commit automatically.
+
 ## Debugging
 
 Launch with Chrome DevTools Protocol for renderer inspection:
