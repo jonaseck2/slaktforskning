@@ -64,7 +64,7 @@ jobs:
       - run: npm run make -- --platform ${{ matrix.platform }}
       - uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.platform }}
+          name: Slaktforskning-${{ needs.check-version.outputs.version }}-${{ matrix.platform }}
           path: out/make/**/*
 
   release:
