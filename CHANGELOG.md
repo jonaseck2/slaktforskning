@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.135.2 — devcontainer and Claude workflow fixes
+
+- fix(devcontainer): xvfb-start.sh now exports DISPLAY=:99 (was host.docker.internal:0, broke E2E tests via `source`)
+- fix(devcontainer): postCreateCommand chowns ~/.claude to fix named-volume permissions blocking Claude Code session-env
+- fix(ci): claude.yml uses claude_code_oauth_token instead of anthropic_api_key (Claude Max compatibility)
+
 ## v0.135.1 — fix release workflow to compare against last tag
 
 - fix: resolve ESLint import/order warnings and remove unused type imports
