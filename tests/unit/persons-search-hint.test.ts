@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Database } from 'node-sqlite3-wasm';
-import { createTestDb } from './helpers';
+import { createEvent } from '../../src/api/events';
 import { createPerson, searchPersons } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
-import { createEvent } from '../../src/api/events';
+import { createTestDb } from './helpers';
 
 describe('searchPersons hint enrichment', () => {
   let db: Database;

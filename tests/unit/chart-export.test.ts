@@ -1,12 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-  PAPER_SIZES,
   getPaperDimensions,
   computeTileViewBoxes,
   generateTileSvg,
-  type PaperSize,
-  type Orientation,
-  type ColorMode,
 } from '../../src/api/chart-export';
 
 describe('getPaperDimensions', () => {
