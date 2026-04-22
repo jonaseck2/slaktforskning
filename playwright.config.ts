@@ -11,10 +11,10 @@ export default defineConfig({
   },
   projects: [
     {
-      // Fast smoke tests: app launch + MCP server handshake. No GUI.
+      // Smoke: app launch (90s cold build) + MCP handshake. No GUI.
       name: 'smoke',
       testMatch: 'app.test.ts',
-      timeout: 60000,
+      timeout: 120000,
     },
     {
       // Persons CRUD, Navigation, Search, Citation Badges, Add Related Person
