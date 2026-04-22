@@ -73,10 +73,23 @@ The container reads four environment variables from the host via `${localEnv:...
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
+| `GIT_AUTHOR_NAME` | For git identity | Your full name for commit authorship and `Signed-off-by` trailers. |
+| `GIT_AUTHOR_EMAIL` | For git identity | Your email for commit authorship and `Signed-off-by` trailers. |
 | `CLAUDE_CODE_OAUTH_TOKEN` | For agentic dev pipeline | Authenticates Claude Code (the AI agent) inside the container. Without it Claude Code will prompt for login on every container rebuild. |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | For GitHub MCP tools | Used by the GitHub MCP server to read/write issues, PRs, and code on your behalf. Needs `repo` + `read:org` scopes. |
 | `GIT_SIGNING_KEY` | For DCO-compliant commits | SSH private key used to cryptographically sign commits (shows "Verified" on GitHub). A `prepare-commit-msg` hook also adds `Signed-off-by:` automatically for the DCO trailer. |
 | `DISPLAY` | Set automatically | Points to the Xvfb virtual display (`:99`). Set by `postStartCommand`, not the host — listed here for completeness. |
+
+#### Setting up `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`
+
+Add to your shell profile:
+
+```bash
+export GIT_AUTHOR_NAME="Your Name"
+export GIT_AUTHOR_EMAIL="you@example.com"
+```
+
+The `postCreateCommand` script reads these on container creation and runs `git config --global user.name/email` so commits and the `Signed-off-by` hook work from the first commit without any manual setup.
 
 #### Setting up `CLAUDE_CODE_OAUTH_TOKEN`
 
