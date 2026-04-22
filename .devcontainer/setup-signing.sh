@@ -22,8 +22,9 @@ git config --global commit.gpgsign true
 mkdir -p ~/.config/git/hooks
 cat > ~/.config/git/hooks/prepare-commit-msg << 'EOF'
 #!/bin/sh
-NAME=$(git config --get user.name)
-EMAIL=$(git config --get user.email)
+NAME=$(git config --get user.name 2>/dev/null)
+EMAIL=$(git config --get user.email 2>/dev/null)
+[ -z "$NAME" ] || [ -z "$EMAIL" ] && exit 0
 SOB="Signed-off-by: $NAME <$EMAIL>"
 grep -qs "^$SOB" "$1" || git interpret-trailers --in-place --trailer "$SOB" "$1"
 EOF
