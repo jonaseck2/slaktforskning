@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: resolve ESLint import/order warnings and remove unused type imports
+
 ## v0.135.0 — ReportsView two-sheet paneled layout with drag resize
 
 - ReportsView now follows the standard paneled layout: left main sheet (flex 1) + draggable handle + right ReportPanel sheet, matching VisualizationView and MapView

@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { v4 as uuidv4 } from 'uuid';
 import { runAllChecks } from '../../src/api/checks';
-import { createPerson } from '../../src/api/persons';
+import { queryRun } from '../../src/api/db';
 import { createEvent } from '../../src/api/events';
-import { addEventParticipant } from '../../src/api/relationships';
-import { createPlace } from '../../src/api/places';
 import { createMedia, addMediaLink } from '../../src/api/media';
+import { createPerson } from '../../src/api/persons';
+import { createPlace } from '../../src/api/places';
+import { addEventParticipant } from '../../src/api/relationships';
 import { createSource } from '../../src/api/sources';
 import { createTestDb } from './helpers';
-import { queryRun } from '../../src/api/db';
-import { v4 as uuidv4 } from 'uuid';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });

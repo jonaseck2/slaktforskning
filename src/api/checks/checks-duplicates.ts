@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
-import type { CheckResult, CheckSeverity } from './check-utils';
 import { findDuplicates } from '../duplicates';
+import type { CheckResult, CheckSeverity } from './check-utils';
 
 export function checkPossibleDuplicatePerson(db: Database): CheckResult[] {
   const candidates = findDuplicates(db);
