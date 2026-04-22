@@ -13,6 +13,9 @@ permissions:
   issues: write
   pull-requests: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   claude:
     if: ${{ github.event.comment == null || github.event.comment.performed_via_github_app == null }}
