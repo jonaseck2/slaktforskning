@@ -37,18 +37,20 @@
           </template>
         </div>
       </div>
-      <div v-if="showCaptions" class="media-caption">
-        <div v-if="item.contextLine" class="caption-context">{{ item.contextLine }}</div>
-        <div v-if="faceTags[item.id]?.length" class="caption-faces">
-          <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
-          <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
-            <a v-if="isLinked(tag.personId)" :href="'#person-' + tag.personId" class="face-link">{{ tagLabel(tag) }}</a>
-            <span v-else class="face-name">{{ tagLabel(tag) }}</span>
-            <span v-if="i < faceTags[item.id].length - 1">, </span>
-          </template>
-        </div>
-        <div v-if="item.notes" class="caption-notes">{{ item.notes }}</div>
-        <div v-if="item.inferredDateISO" class="caption-date">{{ formatDate(item.inferredDateISO) }}</div>
+      <div v-if="showCaptions || showNotes" class="media-caption">
+        <template v-if="showCaptions">
+          <div v-if="item.contextLine" class="caption-context">{{ item.contextLine }}</div>
+          <div v-if="faceTags[item.id]?.length" class="caption-faces">
+            <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
+            <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
+              <a v-if="isLinked(tag.personId)" :href="'#person-' + tag.personId" class="face-link">{{ tagLabel(tag) }}</a>
+              <span v-else class="face-name">{{ tagLabel(tag) }}</span>
+              <span v-if="i < faceTags[item.id].length - 1">, </span>
+            </template>
+          </div>
+          <div v-if="item.inferredDateISO" class="caption-date">{{ formatDate(item.inferredDateISO) }}</div>
+        </template>
+        <div v-if="showNotes && item.notes" class="caption-notes">{{ item.notes }}</div>
       </div>
     </div>
   </div>
@@ -98,6 +100,7 @@ interface FaceTag {
 const props = withDefaults(defineProps<{
   items: MediaDisplayItem[];
   showCaptions?: boolean;
+  showNotes?: boolean;
   perPage?: 1 | 2 | 4;
   includeDocuments?: boolean;
   /** personId → relation label (e.g. 'Father', 'Pappa'). Prefixes the name in captions/overlays. */
@@ -106,6 +109,7 @@ const props = withDefaults(defineProps<{
   linkedPersonIds?: string[] | null;
 }>(), {
   showCaptions: true,
+  showNotes: true,
   perPage: 1,
   includeDocuments: false,
   relations: null,

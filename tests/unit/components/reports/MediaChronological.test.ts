@@ -59,11 +59,12 @@ describe('MediaChronological', () => {
     expect(wrapper.find('.media-chronological').exists()).toBe(false);
   });
 
-  it('hides captions when showCaptions false', () => {
+  it('hides captions when showCaptions and showNotes false', () => {
     const wrapper = mount(MediaChronological, {
       global: globalOpts,
       props: {
         showCaptions: false,
+        showNotes: false,
         items: [photoItem],
       },
     });

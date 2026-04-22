@@ -216,7 +216,7 @@ watch(() => route.path, () => {
   }
 });
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
-const PANELED_ROUTES = ['/visualisering', '/media', '/places'];
+const PANELED_ROUTES = ['/visualisering', '/media', '/places', '/reports'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);

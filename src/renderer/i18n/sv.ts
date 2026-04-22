@@ -831,6 +831,7 @@ export default {
       perPage: 'Foton per sida',
       includeDocuments: 'Inkludera dokument',
       showCaptions: 'Visa bildtexter',
+      showNotes: 'Bildanteckningar',
       showIndex: 'Visa förteckning',
     },
     common: {
@@ -854,6 +855,7 @@ export default {
       lifeMap: 'Livskarta',
       redactLiving: 'Dölj uppgifter om levande personer',
       captions: 'Bildtexter',
+      photoNotes: 'Bildanteckningar',
     },
     relations: {
       father: 'Pappa',

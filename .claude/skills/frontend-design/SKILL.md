@@ -29,72 +29,112 @@ The app uses a **three-sheet layout**: nav (sidebar), main content (left sheet),
 .content { /* white sheet */ background: var(--surface); border-radius: var(--radius-lg); padding: 24px; }
 ```
 
-### Paneled views
+### Paneled views — implementation checklist
 
-Views with a side panel (People/Tree, Places/Map, Media) use `content-paneled` class on the `.content` wrapper, which removes its background/padding/radius so the view can render its own sheets:
+Every time you build a paneled view, follow all steps in order. Missing any step produces the wrong layout.
 
+**Step 1 — Register the route** in `App.vue:219`:
+```typescript
+const PANELED_ROUTES = ['/visualisering', '/media', '/places', '/reports', '/my-new-route'];
+```
+- `PANELED_ROUTES` — prefix match (catches `/route/123` sub-paths too)
+- `PANELED_ROUTES_EXACT` — exact match only (use when sub-paths should NOT be paneled)
+
+This applies `.content-paneled` which removes outer padding/background so the view owns its own sheets:
 ```css
 .content-paneled { padding: 0; background: transparent; border-radius: 0; overflow: hidden; }
 ```
 
-The view then renders two sheets side by side:
+**Step 2 — View root**: flex row, fills the full content area, small gap between the two sheets:
+```css
+.my-view { display: flex; flex-direction: row; height: 100%; gap: var(--space-xs); }
+```
 
+**Step 3 — Left sheet** (main content area, fills remaining space):
+```css
+.left-sheet {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+```
+Content inside the left sheet must not touch its edges — add padding to inner elements:
+- Headers: `padding: var(--space-lg) var(--space-lg) 0`
+- Tab bars / toolbars: `padding: var(--space-xs) var(--space-lg)`
+- Content areas: `padding: var(--space-sm) var(--space-lg) var(--space-lg)`
+
+**Step 4 — Drag handle + resizable panel** (always RIGHT side, always resizable):
+
+Script setup:
+```typescript
+import { ref } from 'vue';
+import { usePanelResize } from '../composables/usePanelResize';
+
+const viewRef = ref<HTMLElement | null>(null);
+const { panelWidth, startResize } = usePanelResize({
+  storageKey: 'myview-panel-width',  // unique key per view — persisted in localStorage
+  defaultWidth: 300,
+  minWidth: 200,
+});
+```
+
+Template — drag handle between the sheets, wrapper on the right with dynamic width:
 ```html
-<div class="my-view">
-  <!-- Left sheet -->
-  <div class="left-sheet">
-    <div class="header">...</div>
-    <!-- content -->
-  </div>
-  <!-- Right sheet (panel) -->
-  <div class="panel-wrapper">
+<div class="my-view" ref="viewRef">
+  <div class="left-sheet">...</div>
+  <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, viewRef!)"></div>
+  <div class="panel-wrapper" :style="{ width: panelWidth + 'px' }">
     <MyPanel ... />
   </div>
 </div>
 ```
 
-Left sheet styling:
+Drag handle + wrapper CSS:
 ```css
-.left-sheet {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
+.panel-drag-handle {
+  width: 6px; flex-shrink: 0;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  position: relative;
+  transition: background 0.1s;
 }
+.panel-drag-handle:hover { background: var(--surface-border); }
+.panel-wrapper { flex-shrink: 0; height: 100%; }
 ```
 
-Panel wrapper has no background — the panel component itself (PersonPanel, PlacePanel, MediaPanel) owns its sheet look:
+**Step 5 — Panel component** (PersonPanel, PlacePanel, ReportPanel, etc.) must own its sheet look. The wrapper controls width; the component fills it:
 ```css
 .my-panel {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  font-size: var(--font-sm);   /* ← required, sets base font for all panel text */
 }
+.panel-header {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.panel-section {
+  padding: 0 var(--space-lg);          /* ← indents chevrons and content from edge */
+  border-bottom: 1px solid var(--surface-border-subtle);
+}
+.panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 ```
 
 ### Content feathering
-
-Content inside sheets must not touch the sheet edges. Add padding:
-- **Headers**: `padding: var(--space-lg) var(--space-lg) 0`
-- **Tab bars**: `padding: var(--space-xs) var(--space-lg)`
-- **Chart/map areas**: `padding: var(--space-sm) var(--space-lg) var(--space-lg)`
-- **Panel headers**: `padding: var(--space-lg)`
-- **Panel sections**: `padding: 0 var(--space-lg)`
 
 For maps specifically, the map container gets its own border-radius and border within the padded area:
 ```css
 .map-content { padding: var(--space-sm) var(--space-lg) var(--space-lg); }
 .base-map-container { border: 1px solid var(--surface-border-subtle); border-radius: var(--radius-md); }
 ```
-
-### When to use paneled layout
-
-Add the route to `PANELED_ROUTES` or `PANELED_ROUTES_EXACT` in `App.vue`:
-- `PANELED_ROUTES` — prefix match (e.g. `/visualisering` matches `/visualisering/123`)
-- `PANELED_ROUTES_EXACT` — exact match only (e.g. `/places` but not `/places/123`)
 
 ---
 
