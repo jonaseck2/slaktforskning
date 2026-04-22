@@ -55,7 +55,7 @@
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :per-page="2" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="2" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Child places -->
@@ -97,6 +97,7 @@ const props = withDefaults(defineProps<{
   showNotes?: boolean;
   showSources?: boolean;
   showMediaCaptions?: boolean;
+  showMediaNotes?: boolean;
 }>(), {
   showBoundary: true,
   showChildPlaces: false,
@@ -104,6 +105,7 @@ const props = withDefaults(defineProps<{
   showNotes: true,
   showSources: false,
   showMediaCaptions: true,
+  showMediaNotes: true,
 });
 
 const { t } = useI18n();

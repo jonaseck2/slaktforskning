@@ -76,6 +76,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowSources">       {{ $t('reports.common.sources') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowNotes">         {{ $t('reports.alife.biography') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowMediaCaptions"> {{ $t('reports.common.captions') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">           {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
@@ -85,6 +86,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowNotes">          {{ $t('reports.amarriage.narrative') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowSources">        {{ $t('reports.common.sources') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowMediaCaptions">  {{ $t('reports.common.captions') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowMediaNotes">     {{ $t('reports.common.photoNotes') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">                {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
@@ -95,6 +97,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowNotes">         {{ $t('reports.placeChronicle.description') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowSources">       {{ $t('reports.common.sources') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowMediaCaptions"> {{ $t('reports.common.captions') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
         </template>
 
         <template v-else-if="activeTab === 'yourAncestors'">
@@ -115,6 +118,7 @@
 
         <template v-else-if="activeTab === 'photoAlbum'">
           <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumShowCaptions">      {{ $t('reports.photoAlbum.showCaptions') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumShowNotes">          {{ $t('reports.photoAlbum.showNotes') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumShowIndex">          {{ $t('reports.photoAlbum.showIndex') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumIncludeDocuments">   {{ $t('reports.photoAlbum.includeDocuments') }}</label>
         </template>
@@ -350,30 +354,31 @@ const subjectSectionTitle = computed(() => {
   if (props.activeTab === 'amarriage')      return t('reports.couple');
   if (props.activeTab === 'placeChronicle') return t('reports.place');
   if (props.activeTab === 'familyInYear')   return t('reports.familyInYear.year');
-  return t('common.person');
+  return t('reports.person');
 });
 </script>
 
 <style scoped>
 .report-panel {
-  width: 240px;
-  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  font-size: var(--font-sm);
 }
 .panel-header {
-  padding: var(--space-md) var(--space-md) var(--space-sm);
+  padding: var(--space-lg) var(--space-lg) var(--space-sm);
   border-bottom: 1px solid var(--surface-border);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-title { font-size: var(--font-md); font-weight: 600; color: var(--text-primary); }
-.panel-section { border-bottom: 1px solid var(--surface-border-subtle); }
+.panel-section { border-bottom: 1px solid var(--surface-border-subtle); padding: 0 var(--space-lg); }
 .panel-section-body {
-  padding: var(--space-xs) var(--space-md) var(--space-sm);
+  padding: var(--space-xs) 0 var(--space-sm);
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -418,7 +423,7 @@ const subjectSectionTitle = computed(() => {
 .panel-tile-info { font-size: var(--font-xs); color: var(--text-muted); font-style: italic; margin: 0; }
 .panel-actions {
   margin-top: auto;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
   border-top: 1px solid var(--surface-border);
   display: flex;
   flex-direction: column;

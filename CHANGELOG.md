@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v0.135.0 — ReportsView two-sheet paneled layout with drag resize
+
+- ReportsView now follows the standard paneled layout: left main sheet (flex 1) + draggable handle + right ReportPanel sheet, matching VisualizationView and MapView
+- Added `/reports` to PANELED_ROUTES so the view renders its own sheets without outer padding
+- Drag handle (`usePanelResize`) allows resizing the ReportPanel; width persists in localStorage
+- ReportPanel matches PersonPanel styling: `width/height 100%`, `box-shadow`, `font-size var(--font-sm)`, section padding `0 var(--space-lg)`
+- Fixed i18n key `common.person` → `reports.person` in ReportPanel
+- Updated `frontend-design` skill with a 5-step paneled-view checklist to capture the complete pattern
+- Added paneled-view checklist entry to napkin runbook
+
 ## v0.134.1 — fix ReportPanel layout order and preview styling
 
 - ReportPanel now renders before the preview wrapper so it appears to the left of the report preview

@@ -16,6 +16,7 @@
         <MediaChronological
           :items="displayItems"
           :show-captions="props.showCaptions"
+          :show-notes="props.showNotes"
           :per-page="props.perPage"
           :include-documents="props.includeDocuments"
           :linked-person-ids="[]"
@@ -53,12 +54,14 @@ const props = withDefaults(defineProps<{
   subjectId?: string | null;
   perPage?: 1 | 2 | 4;
   showCaptions?: boolean;
+  showNotes?: boolean;
   showIndex?: boolean;
   includeDocuments?: boolean;
 }>(), {
   subjectId: null,
   perPage: 1,
   showCaptions: true,
+  showNotes: true,
   showIndex: false,
   includeDocuments: false,
 });

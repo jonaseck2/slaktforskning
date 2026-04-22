@@ -101,7 +101,10 @@
 
 ## UI Conventions
 
-1. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
+1. **[2026-04-22] Paneled views require 5 explicit steps — read the frontend-design skill**
+   Do instead: when building any view with a side panel, invoke `/frontend-design` first and follow the 5-step checklist. Steps that get missed without it: (1) add route to PANELED_ROUTES in App.vue, (2) view root is flex row height:100%, (3) left sheet gets flex:1 + shadow, (4) drag handle + usePanelResize composable between sheets with panel on RIGHT, (5) panel component needs width:100% height:100% font-size:var(--font-sm) and sections need padding:0 var(--space-lg).
+
+2. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
    Do instead: wrap import/export option cards in `<div class="io-groups"><div class="io-group">`.
 
 2. **[2026-04-08] Import/export text follows strict conventions**

@@ -20,6 +20,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const aLifeShowSources        = ref(false);
   const aLifeShowNotes          = ref(true);
   const aLifeShowMediaCaptions  = ref(true);
+  const aLifeShowMediaNotes     = ref(true);
 
   // Life on One Page
   const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
@@ -44,6 +45,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const photoAlbumPlaceId          = ref('');
   const photoAlbumPerPage          = ref<1 | 2 | 4>(1);
   const photoAlbumShowCaptions     = ref(true);
+  const photoAlbumShowNotes        = ref(true);
   const photoAlbumShowIndex        = ref(false);
   const photoAlbumIncludeDocuments = ref(false);
 
@@ -65,6 +67,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const placeChronicleShowNotes         = ref(true);
   const placeChronicleShowSources       = ref(false);
   const placeChronicleShowMediaCaptions = ref(true);
+  const placeChronicleShowMediaNotes    = ref(true);
 
   // A Marriage
   const aMarriageRelId             = ref('');
@@ -73,6 +76,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const aMarriageShowNotes         = ref(true);
   const aMarriageShowSources       = ref(false);
   const aMarriageShowMediaCaptions = ref(true);
+  const aMarriageShowMediaNotes    = ref(true);
 
   // Shared privacy toggle (keepsake reports)
   const redactLiving = ref(false);
@@ -92,19 +96,19 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   return {
     personId,
     aLifeShowLifeMap, aLifeShowPhotos, aLifeShowDocuments, aLifeShowSources,
-    aLifeShowNotes, aLifeShowMediaCaptions,
+    aLifeShowNotes, aLifeShowMediaCaptions, aLifeShowMediaNotes,
     onePageOrientation, onePageShowLifeMap,
     yourAncestorsGenerations, yourAncestorsColorMode, yourAncestorsDensity,
     yourAncestorsShowEvents, yourAncestorsShowLifeMap, yourAncestorsShowExtraPhotos, yourAncestorsShowSources,
     familyInYearYear, familyInYearScope,
     photoAlbumSubjectType, photoAlbumRelId, photoAlbumPlaceId, photoAlbumPerPage,
-    photoAlbumShowCaptions, photoAlbumShowIndex, photoAlbumIncludeDocuments,
+    photoAlbumShowCaptions, photoAlbumShowNotes, photoAlbumShowIndex, photoAlbumIncludeDocuments,
     photoAlbumSubjectId, photoAlbumCanRender,
     placeChroniclePlaceId, placeChronicleShowBoundary, placeChronicleShowChildPlaces,
     placeChronicleShowPhotos, placeChronicleShowNotes, placeChronicleShowSources,
-    placeChronicleShowMediaCaptions,
+    placeChronicleShowMediaCaptions, placeChronicleShowMediaNotes,
     aMarriageRelId, aMarriageShowLifeMap, aMarriageShowPhotos, aMarriageShowNotes,
-    aMarriageShowSources, aMarriageShowMediaCaptions,
+    aMarriageShowSources, aMarriageShowMediaCaptions, aMarriageShowMediaNotes,
     redactLiving,
     fanArcSpan, fanColorMode,
     chartPaperSize, chartOrientation, chartColorMode,

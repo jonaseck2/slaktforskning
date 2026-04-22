@@ -74,13 +74,13 @@
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Documents -->
       <section v-if="props.showDocuments && documentItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.documents') }}</h2>
-        <MediaChronological :items="documentItems" :show-captions="props.showMediaCaptions" :per-page="4" :include-documents="true" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="documentItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="4" :include-documents="true" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Sources -->
@@ -118,6 +118,7 @@ const props = withDefaults(defineProps<{
   showNotes?: boolean;
   redactLiving?: boolean;
   showMediaCaptions?: boolean;
+  showMediaNotes?: boolean;
 }>(), {
   showLifeMap: true,
   showPhotos: true,
@@ -126,6 +127,7 @@ const props = withDefaults(defineProps<{
   showNotes: true,
   redactLiving: false,
   showMediaCaptions: true,
+  showMediaNotes: true,
 });
 
 const { t } = useI18n();

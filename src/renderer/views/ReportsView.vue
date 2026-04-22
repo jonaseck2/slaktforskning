@@ -1,5 +1,7 @@
 <template>
-  <div class="reports-view">
+  <div class="reports-view" ref="reportsViewRef">
+
+    <div class="reports-main">
     <div class="view-header">
       <h2>{{ $t('reports.title') }}</h2>
       <span v-if="reportLoading" class="running-hint">{{ $t('reports.loadingReport') }}</span>
@@ -23,18 +25,6 @@
         />
       </div>
     </div>
-
-    <div class="reports-body">
-
-      <ReportPanel
-        :active-tab="activeTab"
-        :couple-relationships="coupleRelationships"
-        :tile-count-info="chartTileCount"
-        @print="printCurrent"
-        @export-pdf="exportPdf"
-        @save-svg="saveChartSvg"
-        @save-chart-pdf="saveChartPdf"
-      />
 
       <div class="preview-wrapper">
 
@@ -70,6 +60,7 @@
               :show-sources="store.aLifeShowSources"
               :show-notes="store.aLifeShowNotes"
               :show-media-captions="store.aLifeShowMediaCaptions"
+              :show-media-notes="store.aLifeShowMediaNotes"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -116,6 +107,7 @@
               :subject-id="store.photoAlbumSubjectId"
               :per-page="store.photoAlbumPerPage"
               :show-captions="store.photoAlbumShowCaptions"
+              :show-notes="store.photoAlbumShowNotes"
               :show-index="store.photoAlbumShowIndex"
               :include-documents="store.photoAlbumIncludeDocuments"
             />
@@ -138,6 +130,7 @@
               :show-notes="store.placeChronicleShowNotes"
               :show-sources="store.placeChronicleShowSources"
               :show-media-captions="store.placeChronicleShowMediaCaptions"
+              :show-media-notes="store.placeChronicleShowMediaNotes"
             />
           </div>
           <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
@@ -155,6 +148,7 @@
               :show-notes="store.aMarriageShowNotes"
               :show-sources="store.aMarriageShowSources"
               :show-media-captions="store.aMarriageShowMediaCaptions"
+              :show-media-notes="store.aMarriageShowMediaNotes"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -220,6 +214,19 @@
       <ZoomControls :zoom="effectiveZoom" :show-fit="true" :overlay="true" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom" />
 
       </div><!-- .preview-wrapper -->
+    </div><!-- .reports-main -->
+
+    <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, reportsViewRef!)"></div>
+    <div class="reports-panel" :style="{ width: panelWidth + 'px' }">
+      <ReportPanel
+        :active-tab="activeTab"
+        :couple-relationships="coupleRelationships"
+        :tile-count-info="chartTileCount"
+        @print="printCurrent"
+        @export-pdf="exportPdf"
+        @save-svg="saveChartSvg"
+        @save-chart-pdf="saveChartPdf"
+      />
     </div>
 
   </div>
@@ -232,6 +239,7 @@ import { useRoute } from 'vue-router';
 import FilterChips from '../components/ui/FilterChips.vue';
 import { useFocusStore } from '../stores/focus';
 import { useReportConfigStore } from '../stores/reportConfig';
+import { usePanelResize } from '../composables/usePanelResize';
 import ReportPanel from '../components/ReportPanel.vue';
 import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
@@ -266,6 +274,9 @@ const focusStore = useFocusStore();
 const store = useReportConfigStore();
 
 const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
+const reportsViewRef = ref<HTMLElement | null>(null);
+const { panelWidth, startResize } = usePanelResize({ storageKey: 'reports-panel-width', defaultWidth: 240, minWidth: 180 });
+
 const reportLoading = ref(false);
 const keepsakeTabs = computed(() => [
   { value: 'alife', label: t('reports.alife.title') },
@@ -532,30 +543,47 @@ async function exportPdf() {
 <style scoped>
 .reports-view {
   display: flex;
+  flex-direction: row;
+  height: 100%;
+  gap: var(--space-xs);
+}
+.panel-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.1s;
+}
+.panel-drag-handle:hover { background: var(--surface-border); }
+.reports-panel {
+  flex-shrink: 0;
+  height: 100%;
+}
+.reports-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  /* No max-width — uses full available width */
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
 }
 .view-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: var(--space-lg) var(--space-lg) 0;
   margin-bottom: var(--space-lg);
 }
 .view-header h2 { margin: 0; }
-.tab-groups { display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-md); }
+.tab-groups { display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-md); padding: 0 var(--space-lg); }
 .tab-group-label {
   font-size: var(--font-sm);
   color: var(--text-muted);
   margin: 0 0 var(--space-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-.reports-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-  gap: var(--space-xs);
 }
 .preview-wrapper {
   flex: 1;
@@ -564,9 +592,6 @@ async function exportPdf() {
   flex-direction: column;
   min-height: 0;
   position: relative;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
 }
 .tab-content {
   flex: 1;
@@ -575,12 +600,10 @@ async function exportPdf() {
   flex-direction: column;
   min-height: 0;
 }
-/* Preview area: grey background with scrollable paper preview */
+/* Preview area: scrollable paper preview on the sheet surface */
 .preview-area {
   position: relative;
-  background: var(--surface-bg);
   padding: var(--space-xl);
-  border-radius: var(--radius-sm);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -602,6 +625,7 @@ async function exportPdf() {
 }
 @media print {
   .view-header, .filter-chips-bar, .tab-groups, .zoom-controls-bar, .report-panel { display: none !important; }
+  .reports-main { background: none; box-shadow: none; border-radius: 0; padding: 0; }
   .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
   .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
 }

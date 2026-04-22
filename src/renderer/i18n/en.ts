@@ -831,6 +831,7 @@ export default {
       perPage: 'Photos per page',
       includeDocuments: 'Include documents',
       showCaptions: 'Show captions',
+      showNotes: 'Photo notes',
       showIndex: 'Show index',
     },
     common: {
@@ -854,6 +855,7 @@ export default {
       lifeMap: 'Life Map',
       redactLiving: 'Redact living persons',
       captions: 'Photo captions',
+      photoNotes: 'Photo notes',
     },
     relations: {
       father: 'Father',
