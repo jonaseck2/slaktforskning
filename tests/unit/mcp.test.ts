@@ -66,6 +66,27 @@ describe('persons', () => {
     expect(wider.length).toBeGreaterThanOrEqual(limited.length);
   });
 
+  it('filters search_persons by birth_year_min and birth_year_max', async () => {
+    await call('create_person', { given_name: 'Early', surname: 'Larsson', birth_date: '1800-01-01' });
+    await call('create_person', { given_name: 'Middle', surname: 'Larsson', birth_date: '1850-06-15' });
+    await call('create_person', { given_name: 'Late', surname: 'Larsson', birth_date: '1900-12-31' });
+
+    const all = await call('search_persons', { query: 'Larsson' }) as any[];
+    expect(all).toHaveLength(3);
+
+    const minOnly = await call('search_persons', { query: 'Larsson', birth_year_min: 1850 }) as any[];
+    expect(minOnly).toHaveLength(2);
+    expect(minOnly.map((p: any) => p.given_name).sort()).toEqual(['Late', 'Middle']);
+
+    const maxOnly = await call('search_persons', { query: 'Larsson', birth_year_max: 1850 }) as any[];
+    expect(maxOnly).toHaveLength(2);
+    expect(maxOnly.map((p: any) => p.given_name).sort()).toEqual(['Early', 'Middle']);
+
+    const range = await call('search_persons', { query: 'Larsson', birth_year_min: 1850, birth_year_max: 1850 }) as any[];
+    expect(range).toHaveLength(1);
+    expect(range[0].given_name).toBe('Middle');
+  });
+
   it('updates a person', async () => {
     const result = await call('create_person', { given_name: 'Anna', surname: 'Svensson', sex: 'U' }) as any;
     const updated = await call('update_person', { id: result.person.id, sex: 'F', notes: 'test note' }) as any;

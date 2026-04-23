@@ -89,6 +89,8 @@ export function searchPersons(
   query: string,
   relateeId?: string | null,
   limit = 20,
+  birth_year_min?: number | null,
+  birth_year_max?: number | null,
 ): (Person & {
   given_name: string;
   surname: string;
@@ -117,6 +119,31 @@ export function searchPersons(
   const relevanceParams = [firstToken, firstToken];
 
   const relatee = relateeId ?? null;
+
+  const birthYearClauses: string[] = [];
+  const birthYearParams: unknown[] = [];
+  const BIRTH_YEAR_SUBQ = `
+    SELECT CAST(SUBSTR(e.date_value, 1, 4) AS INTEGER)
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE ep.person_id = p.id
+      AND ep.role = 'primary'
+      AND e.event_type = 'birth'
+      AND e.date_value IS NOT NULL AND e.date_value <> ''
+    ORDER BY e.date_value
+    LIMIT 1
+  `;
+  if (birth_year_min != null) {
+    birthYearClauses.push(`(${BIRTH_YEAR_SUBQ}) >= ?`);
+    birthYearParams.push(birth_year_min);
+  }
+  if (birth_year_max != null) {
+    birthYearClauses.push(`(${BIRTH_YEAR_SUBQ}) <= ?`);
+    birthYearParams.push(birth_year_max);
+  }
+  const birthYearFilter = birthYearClauses.length > 0
+    ? ' AND ' + birthYearClauses.join(' AND ')
+    : '';
 
   return queryAll<Person & {
     given_name: string;
@@ -171,12 +198,12 @@ export function searchPersons(
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
-    WHERE ${tokenClauses}
+    WHERE ${tokenClauses}${birthYearFilter}
     ORDER BY
       CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 1 ELSE 2 END,
       pn.surname, pn.given_name
     LIMIT ?
-  `, [relatee, relatee, relatee, ...tokenParams, ...relevanceParams, limit]);
+  `, [relatee, relatee, relatee, ...tokenParams, ...birthYearParams, ...relevanceParams, limit]);
 }
 
 export function addPersonName(
