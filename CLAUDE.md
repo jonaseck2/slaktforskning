@@ -918,6 +918,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `/performance-profiling` | CPU saturation / slow operations | Profile, analyze, and fix performance bottlenecks |
 | `/a11y` | Adding/modifying interactive UI | ARIA patterns, keyboard nav, focus management, TTS |
 | `/tree-layout` | Building/modifying chart layouts | Measurement→placement→connection pipeline, footprint spacing, collision avoidance |
+| `/reports` | PDF/SVG export, print button, print CSS, chart orientation, fit-to-page | Print=PDF rule, hidden-window anti-pattern, chart-print CSS, orientation mapping, new tab checklist |
 
 ### Required Global Skills (`~/.claude/skills/`)
 

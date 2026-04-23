@@ -194,7 +194,7 @@ export function registerUtilityHandlers(
   wrapHandler('print:print', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return;
-    win.webContents.print({ silent: false, printBackground: false });
+    win.webContents.print({ silent: false, printBackground: true });
   });
 
   wrapHandler('print:exportPdf', async (defaultPathHint?: unknown, landscape?: unknown) => {
