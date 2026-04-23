@@ -61,6 +61,20 @@
 3. **[2026-04-12] Leaflet icon fix must happen at module level**
    Do instead: BaseMap.vue handles this centrally — don't duplicate in consuming components.
 
+## Chart PDF/SVG Export
+
+1. **[2026-04-24] Chart PDFs: use main window `exportPdf`, not a hidden BrowserWindow**
+   Do instead: call `window.api.print.exportPdf(filename, landscape)` — it renders the main window with print CSS, giving exactly what's shown in the preview. The hidden BrowserWindow approach (serialize SVG → temp file → load in hidden window → printToPDF) produces empty PDFs because CSS custom properties don't resolve in the isolated window.
+
+2. **[2026-04-24] SVG exports: never add titles/headings — preserve exactly the raw SVG**
+   Do instead: call `buildExportSvgString(svg)` only. Never `wrapWithTitle()` — it injects a `<text>` node that extends outside the viewBox and clips the chart content.
+
+3. **[2026-04-24] Chart print fit-to-page: add `chart-print` class + CSS, not width constraints**
+   Do instead: add `chart-print` class to the chart `.print-preview` div. In `@media print`: `.chart-print` → flex center, `height: 100vh`, `margin: 0`. `:deep(svg)` → `max-width: 100%; max-height: 100vh; width: auto; height: auto`. Landscape charts also need `preview-landscape` class for the correct mm width in the preview.
+
+4. **[2026-04-24] Chart orientation mapping: descendant + hourglass → landscape, rest → portrait**
+   Do instead: `const landscape = tab === 'descendantChart' || tab === 'hourglassChart'`. Timeline, pedigree, and fan chart are portrait. `preview-landscape` on the div only for landscape charts.
+
 ## Chart Architecture
 
 1. **[2026-04-11] Outline placeholders: inject unconditionally, layout treats them identically**

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.137.1 — print fixes and framable tab rename
+
+- fix: `printBackground: true` so chart colors appear when printing
+- fix: framable prints tab labels now match visualization chart names (Pedigree/Hourglass/Descendants/Fan Chart/Timeline), reuse `visualization.tab.*` i18n keys, ordered consistently
+- chore: add `/reports` skill covering PDF/SVG export, print CSS, orientation mapping
+
 ## v0.137.0 — ReportPanel, reworked ReportsView, PDF margin fix
 
 - feat: replace ChartExportControls with ReportPanel (print-config side panel following PersonPanel pattern)
