@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -51,10 +51,11 @@ jobs:
             platform: darwin
           - os: windows-latest
             platform: win32
-          # Linux build disabled: rpmbuild 4.20 on ubuntu-latest incompatible with
-          # electron-installer-redhat spec template — re-enable when upstream fixes it
-          # - os: ubuntu-latest
-          #   platform: linux
+          # ubuntu-22.04 pinned: ubuntu-latest ships rpmbuild 4.20 (Ubuntu 24.04) which is
+          # incompatible with electron-installer-redhat's spec template. Switch back to
+          # ubuntu-latest when electron-forge or electron-installer-redhat publishes a fix.
+          - os: ubuntu-22.04
+            platform: linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -66,11 +67,12 @@ jobs:
       - run: npm run make -- --platform ${{ matrix.platform }}
       - uses: actions/upload-artifact@v7
         with:
-          name: Slaktforskning-${{ needs.check-version.outputs.version }}-${{ matrix.platform }}
+          name: Slaktforskning-${{ needs.check-version.outputs.version }}-${{
+            matrix.platform }}
           path: out/make/**/*
 
   release:
-    needs: [check-version, build]
+    needs: [ check-version, build ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
