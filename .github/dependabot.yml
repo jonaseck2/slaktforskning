@@ -28,6 +28,24 @@ updates:
       # The Linux release job uses ubuntu-22.04 (rpmbuild 4.18) as a workaround.
       # Re-evaluate when electron-forge or electron-installer-redhat publishes a fix.
 
+      # eslint 9+ uses flat config (eslint.config.js) — a breaking format change.
+      # @typescript-eslint/* must stay in lockstep with eslint major.
+      # Batch all three together when ready to migrate.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript-eslint/eslint-plugin"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript-eslint/parser"
+        update-types: ["version-update:semver-major"]
+
+      # TypeScript 5→6 has breaking changes; upgrade needs dedicated testing.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
+      # uuid 14 may have breaking API changes; review separately.
+      - dependency-name: "uuid"
+        update-types: ["version-update:semver-major"]
+
     groups:
       electron:
         patterns:
@@ -48,3 +66,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    ignore:
+      # v3 has breaking changes; review release notes before upgrading.
+      - dependency-name: "softprops/action-gh-release"
+        update-types: ["version-update:semver-major"]
