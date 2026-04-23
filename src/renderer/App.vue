@@ -616,8 +616,9 @@ body {
 
 @media print {
   .sidebar { display: none !important; }
-  .app { display: block; height: auto; }
-  .content { padding: 0; height: auto; overflow: visible; }
+  .app { display: block; height: auto; padding: 0; gap: 0; background: none; }
+  .content, .content-paneled { padding: 0; height: auto; overflow: visible !important; background: none; border-radius: 0; }
+  body { background: none; }
 }
 
 

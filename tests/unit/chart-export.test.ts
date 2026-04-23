@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   getPaperDimensions,
-  computeTileViewBoxes,
-  generateTileSvg,
 } from '../../src/api/chart-export';
 
 describe('getPaperDimensions', () => {
@@ -26,33 +24,5 @@ describe('getPaperDimensions', () => {
       customHeight: 700,
     });
     expect(dims).toEqual({ width: 500, height: 700 });
-  });
-});
-
-describe('computeTileViewBoxes', () => {
-  it('returns a single tile when SVG fits on one A4 page', () => {
-    const tiles = computeTileViewBoxes(500, 700);
-    expect(tiles).toHaveLength(1);
-    expect(tiles[0].row).toBe(0);
-    expect(tiles[0].col).toBe(0);
-  });
-  it('produces a grid for oversize SVG', () => {
-    const tiles = computeTileViewBoxes(2000, 3000);
-    expect(tiles.length).toBeGreaterThan(1);
-    const cols = Math.max(...tiles.map(t => t.col)) + 1;
-    const rows = Math.max(...tiles.map(t => t.row)) + 1;
-    expect(cols * rows).toBe(tiles.length);
-  });
-});
-
-describe('generateTileSvg', () => {
-  it('wraps inner content in a new viewBox with crop marks', () => {
-    const fullSvg = '<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="100" height="100"/></svg>';
-    const tile = { x: 0, y: 0, width: 794, height: 1123, row: 0, col: 0 };
-    const out = generateTileSvg(fullSvg, tile);
-    expect(out).toContain('<svg');
-    expect(out).toContain('viewBox="0 0 794 1123"');
-    expect(out).toContain('<rect');
-    expect(out).toContain('stroke="#000"'); // crop marks
   });
 });

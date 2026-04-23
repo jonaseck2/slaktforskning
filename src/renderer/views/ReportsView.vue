@@ -159,7 +159,7 @@
       <!-- Pedigree Print Tab -->
       <div v-if="activeTab === 'pedigreePrint'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
-          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <div v-if="store.personId" class="print-preview chart-print" :style="{ zoom: effectiveZoom }">
             <PedigreeChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
           </div>
           <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -169,7 +169,7 @@
       <!-- Hourglass Chart Tab -->
       <div v-if="activeTab === 'hourglassChart'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
-          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <div v-if="store.personId" class="print-preview preview-landscape chart-print" :style="{ zoom: effectiveZoom }">
             <HourglassChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
           </div>
           <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -179,7 +179,7 @@
       <!-- Descendant Chart Tab -->
       <div v-if="activeTab === 'descendantChart'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
-          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <div v-if="store.personId" class="print-preview preview-landscape chart-print" :style="{ zoom: effectiveZoom }">
             <DescendantChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
           </div>
           <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -189,7 +189,7 @@
       <!-- Fan Chart Tab -->
       <div v-if="activeTab === 'fanChart'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
-          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <div v-if="store.personId" class="print-preview chart-print" :style="{ zoom: effectiveZoom }">
             <FanChartReport
               :person-id="store.personId"
               :generations="fanGenerations"
@@ -204,7 +204,7 @@
       <!-- Timeline Tab -->
       <div v-if="activeTab === 'timeline'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
-          <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+          <div v-if="store.personId" class="print-preview chart-print" :style="{ zoom: effectiveZoom }">
             <TimelineChartReport :person-id="store.personId" />
           </div>
           <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
@@ -221,7 +221,6 @@
       <ReportPanel
         :active-tab="activeTab"
         :couple-relationships="coupleRelationships"
-        :tile-count-info="chartTileCount"
         @print="printCurrent"
         @export-pdf="exportPdf"
         @save-svg="saveChartSvg"
@@ -257,13 +256,7 @@ import ZoomControls from '../components/ZoomControls.vue';
 import {
   fanGenerations,
 } from '../composables/useChartGenerations';
-import {
-  getPaperDimensions,
-  computeTileViewBoxes,
-  generateTileSvg,
-  MM_TO_PX,
-} from '../../api/chart-export';
-import { buildExportSvgString, wrapWithTitle } from '../composables/useChartExport';
+import { buildExportSvgString } from '../composables/useChartExport';
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -288,37 +281,26 @@ const keepsakeTabs = computed(() => [
   { value: 'photoAlbum', label: t('reports.photoAlbum.tabTitle') },
 ]);
 const framableTabs = computed(() => [
-  { value: 'descendantChart', label: t('reports.tabDescendantChart') },
-  { value: 'hourglassChart', label: t('reports.tabHourglassChart') },
-  { value: 'pedigreePrint', label: t('reports.pedigreePrint.title') },
-  { value: 'fanChart', label: t('reports.tabFanChart') },
-  { value: 'timeline', label: t('reports.tabTimeline') },
+  { value: 'pedigreePrint', label: t('visualization.tab.pedigree') },
+  { value: 'hourglassChart', label: t('visualization.tab.hourglass') },
+  { value: 'descendantChart', label: t('visualization.tab.descendants') },
+  { value: 'fanChart', label: t('visualization.tab.fan') },
+  { value: 'timeline', label: t('visualization.tab.timeline') },
 ]);
 
 const coupleRelationships = ref<RelationshipOption[]>([]);
 
-const chartTileCount = computed(() => {
-  const dims = getPaperDimensions({ paperSize: store.chartPaperSize, orientation: store.chartOrientation });
-  const W = Math.round(dims.width * MM_TO_PX);
-  const H = Math.round(dims.height * MM_TO_PX);
-  const tiles = computeTileViewBoxes(W, H);
-  if (tiles.length <= 1) return null;
-  const rows = Math.max(...tiles.map(t => t.row)) + 1;
-  const cols = Math.max(...tiles.map(t => t.col)) + 1;
-  return { count: tiles.length, rows, cols };
-});
-
-async function chartExportTitle(): Promise<string> {
-  const tab = activeTab.value;
-  let label = '';
-  if (tab === 'pedigreePrint') label = t('reports.pedigreePrint.title');
-  else if (tab === 'hourglassChart') label = t('reports.tabHourglassChart');
-  else if (tab === 'descendantChart') label = t('reports.tabDescendantChart');
-  else if (tab === 'fanChart') label = t('reports.tabFanChart');
-  else label = '';
-  const name = await getPersonName(focusStore.personId);
-  return `${label} \u2014 ${name}`;
+function chartExportName(): string {
+  const names: Record<string, string> = {
+    pedigreePrint:   'pedigree-chart',
+    hourglassChart:  'hourglass-chart',
+    descendantChart: 'descendant-chart',
+    fanChart:        'fan-chart',
+    timeline:        'timeline',
+  };
+  return names[activeTab.value] ?? 'chart';
 }
+
 
 function getChartSvg(): SVGElement | null {
   return previewContainer.value?.querySelector('svg') ?? null;
@@ -327,75 +309,14 @@ function getChartSvg(): SVGElement | null {
 async function saveChartSvg() {
   const svg = getChartSvg();
   if (!svg) return;
-  const titled = wrapWithTitle(buildExportSvgString(svg), await chartExportTitle());
-  await (window.api as unknown as { chart: { saveSvg: (s: string) => Promise<void> } }).chart.saveSvg(titled);
+  await (window.api as unknown as { chart: { saveSvg: (s: string, hint: string) => Promise<void> } })
+    .chart.saveSvg(buildExportSvgString(svg), chartExportName() + '.svg');
 }
 
 async function saveChartPdf() {
-  const svg = getChartSvg();
-  if (!svg) return;
-  const dims = getPaperDimensions({ paperSize: store.chartPaperSize, orientation: store.chartOrientation });
-  const paperW = Math.round(dims.width * MM_TO_PX);
-  const paperH = Math.round(dims.height * MM_TO_PX);
-
-  // Use the tight bounding box of rendered content for scale and filter, not the
-  // SVG viewBox. Chart layouts (pedigree especially) reserve grid space for
-  // placeholder slots that don't render in readonly exports, so the viewBox is
-  // wider/taller than actual content — that phantom padding drags outer tiles
-  // onto the page as leading/trailing blanks.
-  const bbox = (svg as SVGGraphicsElement).getBBox();
-  const vbParts = (svg.getAttribute('viewBox') ?? '').trim().split(/\s+/).map(Number);
-  const vbFallback = vbParts.length === 4 && vbParts.every(n => Number.isFinite(n))
-    ? { x: vbParts[0], y: vbParts[1], w: vbParts[2], h: vbParts[3] }
-    : { x: 0, y: 0, w: Number(svg.getAttribute('width')) || paperW, h: Number(svg.getAttribute('height')) || paperH };
-  const content = bbox.width > 0 && bbox.height > 0
-    ? { x: bbox.x, y: bbox.y, w: bbox.width, h: bbox.height }
-    : vbFallback;
-
-  const clone = svg.cloneNode(true) as SVGElement;
-  if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-  const scale = Math.min(paperW / content.w, paperH / content.h);
-  const tx = (paperW - content.w * scale) / 2 - content.x * scale;
-  const ty = (paperH - content.h * scale) / 2 - content.y * scale;
-  const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  wrapper.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`);
-  while (clone.firstChild) wrapper.appendChild(clone.firstChild);
-  clone.appendChild(wrapper);
-  clone.setAttribute('viewBox', `0 0 ${paperW} ${paperH}`);
-  clone.setAttribute('width', String(paperW));
-  clone.setAttribute('height', String(paperH));
-
-  const titled = wrapWithTitle(new XMLSerializer().serializeToString(clone), await chartExportTitle());
-  // Chart bounds in paper coordinate space (post-scale, post-center).
-  const chartL = tx + content.x * scale;
-  const chartR = tx + (content.x + content.w) * scale;
-  const chartT = ty + content.y * scale;
-  const chartB = ty + (content.y + content.h) * scale;
-  // Anchor tiles to the chart content bounds rather than the full paper origin.
-  // Paper-aligned tiling creates leading/trailing blank pages whenever the chart
-  // is smaller than the paper because centering leaves margin rows/columns that
-  // just barely pass any percentage-based overlap filter.
-  const A4_W_PX = Math.round(210 * MM_TO_PX);
-  const A4_H_PX = Math.round(297 * MM_TO_PX);
-  const TILE_OVERLAP = 20;
-  const tileStepW = A4_W_PX - TILE_OVERLAP * 2;
-  const tileStepH = A4_H_PX - TILE_OVERLAP * 2;
-  const tileCols = Math.max(1, Math.ceil((chartR - chartL) / tileStepW));
-  const tileRows = Math.max(1, Math.ceil((chartB - chartT) / tileStepH));
-  const contentTiles: Array<{ x: number; y: number; width: number; height: number; row: number; col: number }> = [];
-  for (let r = 0; r < tileRows; r++) {
-    for (let c = 0; c < tileCols; c++) {
-      contentTiles.push({
-        x: chartL + c * tileStepW - TILE_OVERLAP,
-        y: chartT + r * tileStepH - TILE_OVERLAP,
-        width: A4_W_PX,
-        height: A4_H_PX,
-        row: r, col: c,
-      });
-    }
-  }
-  const pages = contentTiles.map(tv => generateTileSvg(titled, tv));
-  await (window.api as unknown as { chart: { saveTiledPdf: (p: string[]) => Promise<void> } }).chart.saveTiledPdf(pages);
+  const tab = activeTab.value;
+  const landscape = tab === 'descendantChart' || tab === 'hourglassChart';
+  await window.api.print.exportPdf(chartExportName() + '.pdf', landscape);
 }
 
 // --- Zoom ---
@@ -533,9 +454,7 @@ function exportPdfFilename(): string {
 }
 
 async function exportPdf() {
-  const chartTabs = ['pedigreePrint', 'hourglassChart', 'descendantChart'];
-  const landscape = chartTabs.includes(activeTab.value) ? store.chartOrientation === 'landscape' : false;
-  await window.api.print.exportPdf(exportPdfFilename(), landscape);
+  await window.api.print.exportPdf(exportPdfFilename(), false);
 }
 
 </script>
@@ -615,7 +534,6 @@ async function exportPdf() {
   width: 210mm;
   min-height: 297mm;
   padding: 20mm;
-  box-shadow: var(--shadow-lg);
   transform-origin: top center;
   flex-shrink: 0;
 }
@@ -624,10 +542,19 @@ async function exportPdf() {
   min-height: 210mm;
 }
 @media print {
+  /* Collapse the side panel and drag handle so reports-main fills the full page width */
+  .reports-view { display: block; }
+  .reports-panel, .panel-drag-handle { display: none !important; }
   .view-header, .filter-chips-bar, .tab-groups, .zoom-controls-bar, .report-panel { display: none !important; }
-  .reports-main { background: none; box-shadow: none; border-radius: 0; padding: 0; }
-  .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; }
-  .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; }
+  .reports-main { display: block; overflow: visible; background: none; box-shadow: none; border-radius: 0; padding: 0; width: 100%; }
+  .preview-wrapper, .tab-content { display: block; overflow: visible; height: auto; }
+  .preview-area { background: none; padding: 0; min-height: auto; border-radius: 0; display: block; }
+  /* Explicit 170mm width (A4 210mm minus 2×20mm margins) + auto centering
+     avoids relying on padding for margins. The element is exactly the content
+     area, and margin:auto places it 20mm from each edge on an A4 page. */
+  .print-preview { zoom: 1 !important; box-shadow: none; min-height: auto; width: 170mm !important; margin: 20mm auto !important; padding: 0 !important; }
+  .chart-print { width: 100% !important; height: 100vh !important; margin: 0 !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; }
+  .chart-print :deep(svg) { max-width: 100% !important; max-height: 100vh !important; width: auto !important; height: auto !important; }
 }
 
 

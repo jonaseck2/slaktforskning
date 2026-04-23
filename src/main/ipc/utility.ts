@@ -209,10 +209,10 @@ export function registerUtilityHandlers(
     const savePath = result.filePath;
 
     const pdfData = await win.webContents.printToPDF({
-      printBackground: false,
+      printBackground: true,
       pageSize: 'A4',
       landscape: landscape === true,
-      margins: { marginType: 'printableArea' },
+      margins: { marginType: 'none' },
     });
 
     fs.writeFileSync(savePath, pdfData);
@@ -220,13 +220,13 @@ export function registerUtilityHandlers(
   });
 
   // Wall chart SVG export
-  wrapHandler('chart:saveSvg', async (svgContent: unknown) => {
+  wrapHandler('chart:saveSvg', async (svgContent: unknown, fileNameHint?: unknown) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
 
     const result = await dialog.showSaveDialog(win, {
       title: 'Save Wall Chart SVG',
-      defaultPath: 'wall-chart.svg',
+      defaultPath: (fileNameHint as string) || 'chart.svg',
       filters: [{ name: 'SVG', extensions: ['svg'] }],
     });
     if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
@@ -235,51 +235,47 @@ export function registerUtilityHandlers(
     return { success: true, path: result.filePath };
   });
 
-  // Wall chart tiled PDF export — receives array of SVG page strings
-  wrapHandler('chart:saveTiledPdf', async (pages: unknown) => {
+  // Chart PDF export — writes the serialized SVG to a temp .svg file and loads it directly
+  // in a hidden BrowserWindow. Loading as SVG (not HTML-wrapped) ensures Chromium uses its
+  // proper XML parser, avoiding self-closing-tag issues that the HTML5 parser introduces when
+  // XMLSerializer output is embedded as a string in an HTML document.
+  wrapHandler('chart:savePdf', async (svgContent: unknown, pxWidth: unknown, pxHeight: unknown, fileNameHint?: unknown) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
 
-    const svgPages = pages as string[];
     const result = await dialog.showSaveDialog(win, {
-      title: 'Save Wall Chart PDF',
-      defaultPath: 'wall-chart.pdf',
+      title: 'Save Chart PDF',
+      defaultPath: (fileNameHint as string) || 'chart.pdf',
       filters: [{ name: 'PDF', extensions: ['pdf'] }],
     });
     if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
 
-    // Use a hidden BrowserWindow to render each SVG page to PDF
+    const os = require('os');
     const { BrowserWindow: BW } = require('electron');
-    const pdfParts: Buffer[] = [];
 
-    for (const svgPage of svgPages) {
-      const hidden = new BW({ show: false, width: 794, height: 1123, webPreferences: { offscreen: true } });
-      // `svg { display: block }` eliminates the inline baseline descent that
-      // otherwise pushes the SVG a few pixels past the A4 page and forces
-      // Chromium to emit a blank trailing page.
-      const html = `<!DOCTYPE html><html><head><style>html,body{margin:0;padding:0}svg{display:block}</style></head><body>${svgPage}</body></html>`;
-      await hidden.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    const w = Math.round(pxWidth as number);
+    const h = Math.round(pxHeight as number);
+    const PX_TO_MICRONS = 25400 / 96;
+    const widthMicrons  = Math.round(w * PX_TO_MICRONS);
+    const heightMicrons = Math.round(h * PX_TO_MICRONS);
+
+    const tmpFile = path.join(os.tmpdir(), `slakt-chart-${Date.now()}.svg`);
+    fs.writeFileSync(tmpFile, svgContent as string, 'utf-8');
+
+    const hidden = new BW({ show: false, width: w, height: h, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+    try {
+      await hidden.loadFile(tmpFile);
       const pdf = await hidden.webContents.printToPDF({
-        pageSize: 'A4',
+        pageSize: { width: widthMicrons, height: heightMicrons },
         printBackground: true,
         margins: { marginType: 'none' },
       });
-      pdfParts.push(Buffer.from(pdf));
+      fs.writeFileSync(result.filePath, Buffer.from(pdf));
+      return { success: true, path: result.filePath };
+    } finally {
       hidden.destroy();
+      try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
     }
-
-    // Merge all PDF pages into a single file using pdf-lib
-    const { PDFDocument } = require('pdf-lib');
-    const merged = await PDFDocument.create();
-    for (const part of pdfParts) {
-      const src = await PDFDocument.load(part);
-      const [page] = await merged.copyPages(src, [0]);
-      merged.addPage(page);
-    }
-    const mergedBytes = await merged.save();
-    fs.writeFileSync(result.filePath, Buffer.from(mergedBytes));
-
-    return { success: true, path: result.filePath, pageCount: pdfParts.length };
   });
 
   // CSV Export
