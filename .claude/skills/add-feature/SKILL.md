@@ -438,13 +438,24 @@ Every new UI feature should be evaluated against the number of user actions (cli
 
 **Unit tests alone do not verify UI changes.** They don't cover modal lifecycle, Vue Router behavior, or visual correctness. Before committing, verify in the running app.
 
-### Setup
+### Headless / pipeline mode (no display, no interactive user)
+
+If you are running as a headless agent (Kubernetes pod, CI, no window server), skip the UI server approach entirely and use E2E tests:
+
+```bash
+npx playwright test --project=gui-xxx
+```
+
+Playwright runs headless and covers the full IPC → Vue rendering → UX stack. This is sufficient for pipeline verification. Do **not** try to launch `./.devcontainer/dev-debug.sh` or call `ui_screenshot` — neither will work without a display.
+
+### Interactive mode (local development with a running app)
+
 Ask the user to run `./.devcontainer/dev-debug.sh` from their terminal (cannot be launched from Claude Code's shell on macOS — needs window server access). Verify with:
 ```bash
 curl -s http://127.0.0.1:19241/status   # UI server running?
 ```
 
-### Verification loop via UI server
+### Verification loop via UI server (interactive only)
 ```bash
 # 1. Seed test data via MCP data tools (create_person, add_event, etc.)
 # 2. Navigate to the view

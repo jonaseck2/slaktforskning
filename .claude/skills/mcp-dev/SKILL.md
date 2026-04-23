@@ -75,6 +75,14 @@ During genealogy research, use the **prod server** (`src/mcp/server.ts`):
 
 **Always call `search_persons` (or the relevant search tool) before `create_person`.** Never blindly create a record that may already exist. This applies to all entity types — persons, places, sources, groups. Duplicates are expensive to clean up and confuse users.
 
+### Headless / pipeline mode
+
+If you are running as a headless agent (Kubernetes pod, CI, no window server, no `.mcp.json`):
+
+- **Skip all `ui_*` tools** — they require the Electron app to be running with a display. Calling them will fail or hang.
+- **Data tools work fine** — run the prod server standalone (`npx tsx src/mcp/server.ts`) with `SLAKTFORSKNING_DB=/path/to/db.db` and call data tools directly via stdin/stdout JSON-RPC.
+- **Use E2E tests for UI verification** — `npx playwright test` runs headless and covers the full IPC → Vue rendering stack. Prefer this over `ui_screenshot` for pipeline verification.
+
 ### Session Start Checklist
 
 At the start of any session where UI work or research will happen:
