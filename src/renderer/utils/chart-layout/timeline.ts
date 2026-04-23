@@ -5,7 +5,7 @@ import { yearFromDate } from './utils';
 
 const TL_LEFT_MARGIN = 164;
 const TL_RIGHT_MARGIN = 30;
-const TL_TOP_PAD = 20;
+const TL_TOP_PAD = 58;
 const TL_BAR_H = 22;
 const TL_ROW_H = 36;
 const TL_DEFAULT_W = 800;

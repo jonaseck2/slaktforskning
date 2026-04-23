@@ -11,7 +11,7 @@
           class="timeline-svg"
           :style="{ background: tlColors.surface }"
           data-testid="timeline-svg"
-          @mouseleave="hoveredId = null"
+          @mouseleave="hoveredId = null; hoveredMarker = null"
         >
           <defs>
             <!-- Gradient definitions for bar fills — stop-color bound as hex so SVG export works -->
@@ -33,48 +33,61 @@
             </linearGradient>
           </defs>
 
-          <!-- Grid lines (behind everything) -->
+          <!-- Grid lines (between the two axis lines) -->
           <g class="tl-grid">
             <line
               v-for="tick in layout.ticks" :key="'grid-' + tick.year"
-              :x1="tick.x" :y1="TOP"
+              :x1="tick.x" :y1="topAxisY"
               :x2="tick.x" :y2="layout.axisY"
               :stroke="tlColors.grid" stroke-width="1"
             />
             <!-- Century markers: thicker line -->
             <line
               v-for="tick in centuryTicks" :key="'century-' + tick.year"
-              :x1="tick.x" :y1="TOP"
+              :x1="tick.x" :y1="topAxisY"
               :x2="tick.x" :y2="layout.axisY"
               :stroke="tlColors.axis" stroke-width="1.5"
             />
           </g>
 
-          <!-- Axis line -->
+          <!-- Top axis line -->
+          <line
+            :x1="LEFT" :y1="topAxisY"
+            :x2="layout.svgWidth - RIGHT" :y2="topAxisY"
+            :stroke="tlColors.axis" stroke-width="1"
+          />
+
+          <!-- Bottom axis line -->
           <line
             :x1="LEFT" :y1="layout.axisY"
             :x2="layout.svgWidth - RIGHT" :y2="layout.axisY"
             :stroke="tlColors.axis" stroke-width="1"
           />
 
-          <!-- Tick labels at top -->
+          <!-- Tick labels: top (above top axis) and bottom (below bottom axis) -->
           <g class="tl-tick-labels">
             <text
-              v-for="tick in layout.ticks" :key="'label-' + tick.year"
-              :x="tick.x" :y="TOP - 4"
+              v-for="tick in layout.ticks" :key="'label-top-' + tick.year"
+              :x="tick.x" :y="topAxisY - 4"
+              class="tick-label" text-anchor="middle" dominant-baseline="auto"
+              :fill="tlColors.tick"
+            >{{ tick.year }}</text>
+            <text
+              v-for="tick in layout.ticks" :key="'label-bot-' + tick.year"
+              :x="tick.x" :y="layout.axisY + 14"
               class="tick-label" text-anchor="middle"
               :fill="tlColors.tick"
             >{{ tick.year }}</text>
           </g>
 
-          <!-- Today line -->
+          <!-- Today line (spans between the two axes) + label above top axis -->
           <line
-            :x1="layout.todayX" :y1="TOP - 14"
+            :x1="layout.todayX" :y1="topAxisY"
             :x2="layout.todayX" :y2="layout.axisY"
             :stroke="tlColors.today" stroke-width="1.5" stroke-dasharray="4 3"
           />
           <text
-            :x="layout.todayX" :y="TOP - 18"
+            :x="layout.todayX" :y="topAxisY - 18"
             class="today-label" text-anchor="middle"
             :fill="tlColors.today"
           >{{ $t('visualization.today') }}</text>
@@ -87,7 +100,7 @@
             :class="['timeline-row', { focal: bar.isFocal, hovered: hoveredId === bar.person.id }]"
             :style="{ cursor: readonly ? 'default' : undefined }"
             @click="!readonly && $emit('navigate', bar.person.id)"
-            @mouseenter="hoveredId = bar.person.id"
+            @mouseenter="hoveredId = bar.person.id; hoveredMarker = null"
             @mouseleave="hoveredId = null"
           >
             <!-- Person name (left side) -->
@@ -135,40 +148,30 @@
               </circle>
             </g>
 
-            <!-- Birth year label at bar start -->
-            <text
-              v-if="!bar.hasNoDate && birthYear(bar)"
-              :x="bar.x - 3" :y="bar.y + bar.h + 12"
-              class="year-label" text-anchor="end"
-              :fill="tlColors.tick"
-            >{{ birthYear(bar) }}</text>
-
-            <!-- Death year label at bar end -->
-            <text
-              v-if="!bar.hasNoDate && deathYear(bar)"
-              :x="bar.x + bar.w + 3" :y="bar.y + bar.h + 12"
-              class="year-label" text-anchor="start"
-              :fill="tlColors.tick"
-            >{{ deathYear(bar) }}</text>
-
-            <!-- Event markers (symbols above bars) -->
-            <g v-for="(marker, mi) in bar.markers" :key="mi" class="event-marker">
+            <!-- Event markers (symbols above bars, with year for birth/death) -->
+            <g
+              v-for="(marker, mi) in bar.markers" :key="mi"
+              class="event-marker"
+              style="cursor: default;"
+              @mouseenter="hoveredId = null; hoveredMarker = { bar, marker }"
+              @mouseleave="hoveredMarker = null; hoveredId = bar.person.id"
+            >
               <text
-                :x="marker.x"
+                :x="marker.eventType === 'birth' || marker.eventType === 'death' ? marker.x + 3 : marker.x"
                 :y="bar.y - 3"
                 class="marker-symbol"
-                text-anchor="middle"
+                :text-anchor="marker.eventType === 'birth' || marker.eventType === 'death' ? 'start' : 'middle'"
                 dominant-baseline="auto"
                 :fill="tlColors.marker"
-              >{{ marker.symbol }}</text>
+              >{{ marker.symbol }}{{ marker.eventType === 'birth' || marker.eventType === 'death' ? marker.year : '' }}</text>
             </g>
           </g>
 
-          <!-- Hover tooltip -->
+          <!-- Bar hover tooltip: person summary -->
           <foreignObject
             v-if="hoveredBar && !hoveredBar.hasNoDate"
             :x="tooltipX" :y="tooltipY"
-            width="220" height="80"
+            :width="tooltipWidth" height="80"
             class="tl-tooltip-fo"
             style="pointer-events: none;"
           >
@@ -177,6 +180,20 @@
               <div v-if="birthYear(hoveredBar)">{{ $t('visualization.timelineBorn') }}: {{ birthYear(hoveredBar) }}</div>
               <div v-if="deathYear(hoveredBar)">{{ $t('visualization.timelineDied') }}: {{ deathYear(hoveredBar) }}</div>
               <div v-if="age(hoveredBar)">{{ $t('visualization.timelineAge') }}: {{ age(hoveredBar) }}</div>
+            </div>
+          </foreignObject>
+
+          <!-- Marker hover tooltip: individual event -->
+          <foreignObject
+            v-if="hoveredMarker"
+            :x="markerTooltipX" :y="markerTooltipY"
+            :width="markerTooltipWidth" height="44"
+            class="tl-tooltip-fo"
+            style="pointer-events: none;"
+          >
+            <div xmlns="http://www.w3.org/1999/xhtml" class="tl-tooltip">
+              <strong>{{ hoveredMarker.marker.symbol }} {{ $t('eventTypes.' + hoveredMarker.marker.eventType, hoveredMarker.marker.eventType) }}</strong>
+              <div>{{ hoveredMarker.marker.year }} — {{ displayName(hoveredMarker.bar.person) }}</div>
             </div>
           </foreignObject>
         </svg>
@@ -198,7 +215,7 @@ import { useI18n } from 'vue-i18n';
 import { computeTimelineLayout } from '../../utils/chart-layout';
 import { fetchTimelineEntries } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
-import type { TimelineLayout, TimelineEntry, BarLayout, PersonNode } from '../../utils/chart-layout';
+import type { TimelineLayout, TimelineEntry, BarLayout, PersonNode, EventMarker } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import { yearFromDate } from '../../utils/chart-layout/utils';
 import ZoomControls from '../ZoomControls.vue';
@@ -217,7 +234,7 @@ const tlColors = computed(() => {
   const mode = props.colorMode ?? 'themed';
   if (mode === 'bw') {
     return {
-      surface:    '#ffffff',
+      surface: '#ffffff',
       barM:       '#aaaaaa',
       barF:       '#aaaaaa',
       barU:       '#aaaaaa',
@@ -235,7 +252,7 @@ const tlColors = computed(() => {
   const s = getComputedStyle(document.documentElement);
   const g = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback;
   return {
-    surface:    g('--surface-bg',     '#ffffff'),
+    surface:    g('--surface',         '#ffffff'),
     barM:       g('--tl-bar-m',       '#7eb8f7'),
     barF:       g('--tl-bar-f',       '#f7a5c0'),
     barU:       g('--tl-bar-u',       '#bbbbbb'),
@@ -253,11 +270,13 @@ const tlColors = computed(() => {
 
 const LEFT = 164;
 const RIGHT = 30;
-const TOP = 20;
+const TOP = 58;
+const topAxisY = TOP - 18; // = 40; top horizontal axis line, grid lines start here
 
 const loading = ref(true);
 const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 800, svgHeight: 100, axisY: 60 });
 const hoveredId = ref<string | null>(null);
+const hoveredMarker = ref<{ bar: BarLayout; marker: EventMarker } | null>(null);
 const containerWidth = ref(800);
 const outerRef = ref<HTMLElement | null>(null);
 const genTarget = timelineGenerations;
@@ -290,16 +309,41 @@ const centuryTicks = computed(() =>
   layout.value.ticks.filter(t => t.year % 100 === 0),
 );
 
+const tooltipWidth = computed(() => {
+  if (!hoveredBar.value) return 220;
+  const name = displayName(hoveredBar.value.person);
+  return Math.max(220, Math.ceil(name.length * 7.5) + 32);
+});
+
 const tooltipX = computed(() => {
   if (!hoveredBar.value) return 0;
   const bar = hoveredBar.value;
-  const x = bar.x + bar.w / 2 - 110;
-  return Math.max(LEFT, Math.min(x, layout.value.svgWidth - RIGHT - 220));
+  const w = tooltipWidth.value;
+  const x = bar.x + bar.w / 2 - w / 2;
+  return Math.max(LEFT, Math.min(x, layout.value.svgWidth - RIGHT - w));
 });
 
 const tooltipY = computed(() => {
   if (!hoveredBar.value) return 0;
   return hoveredBar.value.y + hoveredBar.value.h + 4;
+});
+
+const markerTooltipWidth = computed(() => {
+  if (!hoveredMarker.value) return 160;
+  const label = hoveredMarker.value.marker.eventType;
+  return Math.max(160, label.length * 8 + 80);
+});
+
+const markerTooltipX = computed(() => {
+  if (!hoveredMarker.value) return 0;
+  const w = markerTooltipWidth.value;
+  const x = hoveredMarker.value.marker.x - w / 2;
+  return Math.max(LEFT, Math.min(x, layout.value.svgWidth - RIGHT - w));
+});
+
+const markerTooltipY = computed(() => {
+  if (!hoveredMarker.value) return 0;
+  return hoveredMarker.value.bar.y + hoveredMarker.value.bar.h + 4;
 });
 
 function barGradient(bar: BarLayout): string {
@@ -411,8 +455,13 @@ onMounted(load);
 .tick-label { font-size: var(--font-xs); font-family: inherit; }
 .today-label { font-size: var(--font-xs); font-family: inherit; font-weight: 600; }
 .no-date-label { font-size: var(--font-base); font-family: inherit; }
-.year-label { font-size: 9px; font-family: inherit; }
-.marker-symbol { font-size: 10px; font-family: inherit; }
+.marker-symbol {
+  font-size: 10px;
+  font-family: inherit;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  paint-order: stroke fill;
+}
 
 .tl-tooltip {
   background: var(--tl-tooltip-bg);
@@ -427,6 +476,7 @@ onMounted(load);
 .tl-tooltip strong {
   display: block;
   margin-bottom: 2px;
+  white-space: nowrap;
 }
 
 .living-pulse circle {
