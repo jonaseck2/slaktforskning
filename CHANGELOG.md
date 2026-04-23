@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## v0.137.0 — ReportPanel, reworked ReportsView, PDF margin fix
+
+- feat: replace ChartExportControls with ReportPanel (print-config side panel following PersonPanel pattern)
+- feat: rework ReportsView layout — panel + preview split with drag handle
+- fix: keepsake PDF right margin no longer cropped (explicit `width: 170mm; margin: 20mm auto` instead of `width: 100%; padding: 20mm`)
+- fix: remove computeTileViewBoxes/generateTileSvg (replaced by hidden BrowserWindow PDF approach)
+- chore: document printToPDF viewport behaviour in electron-dev skill
+
 ## v0.136.5 — timeline chart improvements
 
 - fix: tick labels moved to below axis; mirrored top axis line with labels above

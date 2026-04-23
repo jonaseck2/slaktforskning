@@ -180,21 +180,6 @@
 
         <template v-else-if="isChartPrint">
           <div class="panel-control">
-            <label class="panel-label">{{ $t('chart.export.paperSize') }}</label>
-            <select v-model="store.chartPaperSize" class="panel-select">
-              <option value="A4">A4</option><option value="A3">A3</option>
-              <option value="A2">A2</option><option value="A1">A1</option>
-              <option value="Letter">Letter</option><option value="Tabloid">Tabloid</option>
-            </select>
-          </div>
-          <div class="panel-control">
-            <span class="panel-label">{{ $t('chart.export.orientation') }}</span>
-            <div class="panel-toggle-btns">
-              <button :class="{ active: store.chartOrientation === 'portrait' }"  @click="store.chartOrientation = 'portrait'">{{ $t('chart.export.portrait') }}</button>
-              <button :class="{ active: store.chartOrientation === 'landscape' }" @click="store.chartOrientation = 'landscape'">{{ $t('chart.export.landscape') }}</button>
-            </div>
-          </div>
-          <div class="panel-control">
             <label class="panel-label">{{ $t('chart.export.colorMode') }}</label>
             <select v-model="store.chartColorMode" class="panel-select">
               <option value="themed">{{ $t('reports.yourAncestors.colorThemed') }}</option>
@@ -246,9 +231,6 @@
               <input type="range" min="1" max="10" step="1" v-model.number="timelineGenerations" class="panel-range" />
             </div>
           </template>
-          <p v-if="tileCountInfo" class="panel-tile-info">
-            {{ $t('chart.export.tilesNeeded', { count: tileCountInfo.count, cols: tileCountInfo.cols, rows: tileCountInfo.rows }) }}
-          </p>
         </template>
 
       </div>
@@ -257,11 +239,11 @@
     <!-- Sticky print/export actions -->
     <div class="panel-actions">
       <AppButton variant="primary"    :disabled="!canPrint" @click="emit('print')"          class="panel-action-btn">{{ $t('reports.print') }}</AppButton>
-      <AppButton variant="secondary"  :disabled="!canPrint" @click="emit('export-pdf')"      class="panel-action-btn">{{ $t('reports.exportPdf') }}</AppButton>
       <template v-if="isChartPrint">
         <AppButton variant="secondary" :disabled="!canPrint" @click="emit('save-svg')"       class="panel-action-btn">{{ $t('chart.export.saveSvg') }}</AppButton>
-        <AppButton variant="secondary" :disabled="!canPrint" @click="emit('save-chart-pdf')" class="panel-action-btn">{{ $t('chart.export.saveTiledPdf') }}</AppButton>
+        <AppButton variant="secondary" :disabled="!canPrint" @click="emit('save-chart-pdf')" class="panel-action-btn">{{ $t('chart.export.savePdf') }}</AppButton>
       </template>
+      <AppButton v-else variant="secondary" :disabled="!canPrint" @click="emit('export-pdf')" class="panel-action-btn">{{ $t('reports.exportPdf') }}</AppButton>
     </div>
 
   </div>
@@ -284,13 +266,11 @@ import {
 } from '../composables/useChartGenerations';
 import type { ArcSpan } from '../utils/fanLayout';
 
-interface TileCount { count: number; rows: number; cols: number; }
 interface RelationshipOption { id: string; label: string; }
 
 const props = defineProps<{
   activeTab: string;
   coupleRelationships: RelationshipOption[];
-  tileCountInfo: TileCount | null;
 }>();
 
 const emit = defineEmits<{

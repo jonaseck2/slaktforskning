@@ -108,35 +108,49 @@ export function usePersonPanelData(personId: Ref<string | null>) {
   }
 
   async function loadPerson(id: string) {
-    const raw = (await window.api.persons.get(id)) as { id: string; sex: string; living: boolean } | null;
+    // Wave 1: fetch person, names, and events in parallel
+    const [raw, fetchedNames, events] = await Promise.all([
+      window.api.persons.get(id) as Promise<{ id: string; sex: string; living: boolean } | null>,
+      window.api.persons.getNames(id) as Promise<NameData[]>,
+      window.api.events.forPerson(id) as Promise<Array<{
+        event_type: string;
+        date_value: string | null;
+        date_original: string | null;
+        place_id: string | null;
+        place_address: string | null;
+      }>>,
+    ]);
     if (personId.value !== id) return;
     if (!raw) { person.value = null; return; }
-
-    await loadNames(id);
-    if (personId.value !== id) return;
-
-    // Get birth/death events with full date + place info
-    const events = (await window.api.events.forPerson(id)) as Array<{
-      event_type: string;
-      date_value: string | null;
-      date_original: string | null;
-      place_id: string | null;
-      place_address: string | null;
-    }>;
-    if (personId.value !== id) return;
 
     const birth = events.find(e => e.event_type === 'birth');
     const death = events.find(e => e.event_type === 'death');
 
-    const [birthLine, deathLine] = await Promise.all([
+    // Wave 2: date lines, groups, tasks, and counts all in parallel
+    const [birthLine, deathLine, grps, tasks, rels, ids, media, checks] = await Promise.all([
       buildDateLine(birth),
       buildDateLine(death),
+      window.api.groups.forPerson(id) as Promise<GroupData[]>,
+      window.api.researchTasks.forPerson(id) as Promise<ResearchTaskRow[]>,
+      window.api.relationships.getForPerson(id) as Promise<unknown[]>,
+      window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
+      window.api.media.forEntity('person', id) as Promise<unknown[]>,
+      (window.api.checks?.forPerson(id) ?? Promise.resolve([])) as Promise<unknown[]>,
     ]);
     if (personId.value !== id) return;
 
+    // Atomic update — all assignments are synchronous so Vue batches into one re-render
+    const sorted = [...fetchedNames].sort((a, b) => a.sort_order - b.sort_order);
+    names.value = sorted;
+    primaryName.value = sorted[0] ?? null;
     eventCount.value = events.length;
     mapPointCount.value = events.filter(e => e.place_id).length;
-
+    groups.value = grps;
+    researchTasks.value = tasks;
+    relationshipCount.value = rels.length;
+    identifierCount.value = ids.length;
+    mediaCount.value = media.length;
+    checkCount.value = checks.length;
     person.value = {
       id: raw.id,
       sex: raw.sex as 'M' | 'F' | 'U',
@@ -144,40 +158,24 @@ export function usePersonPanelData(personId: Ref<string | null>) {
       birthLine,
       deathLine,
     };
-
-    await Promise.all([loadGroups(id), loadResearchTasks(id), loadCounts(id)]);
-  }
-
-  async function loadCounts(id: string) {
-    try {
-      const [rels, ids, media, checks] = await Promise.all([
-        window.api.relationships.getForPerson(id) as Promise<unknown[]>,
-        window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
-        window.api.media.forEntity('person', id) as Promise<unknown[]>,
-        (window.api.checks?.forPerson(id) ?? Promise.resolve([])) as Promise<unknown[]>,
-      ]);
-      if (personId.value !== id) return;
-      relationshipCount.value = rels.length;
-      identifierCount.value = ids.length;
-      mediaCount.value = media.length;
-      checkCount.value = checks.length;
-    } catch {
-      // ignore — counts are non-critical
-    }
   }
 
   watch(personId, async (id) => {
-    person.value = null;
-    names.value = [];
-    groups.value = [];
-    researchTasks.value = [];
-    eventCount.value = 0;
-    mapPointCount.value = 0;
-    relationshipCount.value = 0;
-    identifierCount.value = 0;
-    mediaCount.value = 0;
-    checkCount.value = 0;
-    if (id) await loadPerson(id);
+    if (!id) {
+      person.value = null;
+      names.value = [];
+      groups.value = [];
+      researchTasks.value = [];
+      eventCount.value = 0;
+      mapPointCount.value = 0;
+      relationshipCount.value = 0;
+      identifierCount.value = 0;
+      mediaCount.value = 0;
+      checkCount.value = 0;
+      return;
+    }
+    // Keep stale data visible while loading — avoids panel collapse/expand DOM churn
+    await loadPerson(id);
   }, { immediate: true });
 
   return {

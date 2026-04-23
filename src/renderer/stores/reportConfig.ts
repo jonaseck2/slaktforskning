@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import type { PaperSize, Orientation, ColorMode } from '../../api/chart-export';
+import type { ColorMode } from '../../api/chart-export';
 import type { ArcSpan } from '../utils/fanLayout';
 import { useFocusStore } from './focus';
 
@@ -86,9 +86,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
 
   // Chart export: shared across chart-print tabs
-  const chartPaperSize   = ref<PaperSize>('A2');
-  const chartOrientation = ref<Orientation>('landscape');
-  const chartColorMode   = ref<ColorMode>('themed');
+  const chartColorMode = ref<ColorMode>('themed');
 
   // Couple relationships: populated by ReportsView.onMounted
   const coupleRelationships = ref<RelationshipOption[]>([]);
@@ -111,7 +109,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
     aMarriageShowSources, aMarriageShowMediaCaptions, aMarriageShowMediaNotes,
     redactLiving,
     fanArcSpan, fanColorMode,
-    chartPaperSize, chartOrientation, chartColorMode,
+    chartColorMode,
     coupleRelationships,
   };
 });

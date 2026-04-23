@@ -89,6 +89,37 @@ Chrome DevTools MCP attaches via CDP and is the right tool for introspecting SVG
 
 **Never `pkill -f Electron`** — this kills ALL Electron apps including the user's main instance. Instead, kill only the specific PID you started.
 
+### PDF export (`printToPDF`)
+
+**`marginType: 'none'` makes `width: 100%` = screen viewport, not page width.**
+With `marginType: 'none'`, Chromium renders at the full window viewport width (e.g. 1400px), not the A4 page width (794px). Any content or padding beyond the 794px mark is silently cropped. Symptoms: right margin missing, content appears off-centre.
+
+- **Don't do:** `width: 100%; padding: 20mm` — looks correct in preview but right padding falls off the PDF page.
+- **Do instead:** explicitly size the content area (`width: 170mm` for A4 with 20mm margins) and centre with `margin: 20mm auto`.
+
+**`marginType: 'custom'` unit ambiguity — don't use it.**
+The type definition says pixels, the Electron docs have said mm at various versions, and the runtime throws "margins must be less than or equal to pageSize" for values that look reasonable in points or mm. The default (`marginType: 'none'`) is fine; handle margins in CSS instead.
+
+**`@media print` in `<style scoped>` works correctly in `printToPDF`.**
+Vue's scoped `[data-v-xxx]` attribute selectors are present on the live DOM and Chromium respects them when printing. `!important` in scoped print rules wins over normal inline `:style` bindings (e.g. `zoom: effectiveZoom`).
+
+**Correct print CSS pattern for a report preview element:**
+```css
+@media print {
+  /* Size the content area explicitly; margin:auto centres it so the white
+     space on each side comes from centering, not from padding.
+     (width: 100% can resolve to the screen viewport width, not the page width.) */
+  .print-preview {
+    zoom: 1 !important;
+    width: 170mm !important;   /* A4 210mm – 2×20mm margins */
+    margin: 20mm auto !important;
+    padding: 0 !important;
+    box-shadow: none;
+    min-height: auto;
+  }
+}
+```
+
 ### Common issues
 
 **Wrong Electron binary (macOS binary in Linux container):**

@@ -60,17 +60,12 @@ export default {
   },
   chart: {
     export: {
-      paperSize: 'Paper',
-      orientation: 'Orientation',
-      portrait: 'Portrait',
-      landscape: 'Landscape',
       colorMode: 'Color',
       themed: 'Themed',
       blackWhite: 'B&W',
       sexColored: 'Sex',
       saveSvg: 'SVG',
-      saveTiledPdf: 'Save PDF',
-      tilesNeeded: '{count} tiles ({cols}\u00d7{rows})',
+      savePdf: 'PDF',
     },
   },
   common: {
