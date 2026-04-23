@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## v0.136.5 — timeline chart improvements
+
+- fix: tick labels moved to below axis; mirrored top axis line with labels above
+- fix: today label and line no longer clip at SVG top edge
+- fix: event markers no longer overlap year tick labels
+- fix: tooltip width adapts to long person names (no wrapping)
+- fix: tooltip height grows with number of events shown
+- fix: per-event marker tooltips (hover ★/†/♥/◆ for individual event info)
+- fix: birth/death year labels rendered inline with symbol, left-anchored with 3px nudge to clear adjacent icons
+- fix: grid lines clipping through marker text resolved with paint-order stroke knockout
+
 ## v0.136.3 — fix npm install and build pipeline
 
 - fix: downgrade @electron/fuses ^2.1.1 → ^1.8.0 to satisfy @electron-forge/plugin-fuses@7.x peer dep (Dependabot bump broke install)

@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.136.4",
+  "version": "0.136.5",
   "description": "A genealogy desktop application",
   "main": ".vite/build/index.js",
   "private": true,
@@ -62,7 +62,6 @@
     "fflate": "^0.8.2",
     "leaflet": "^1.9.4",
     "node-sqlite3-wasm": "^0.8.56",
-    "pdf-lib": "^1.17.1",
     "pinia": "^3.0.4",
     "uuid": "^13.0.0",
     "vue": "^3.5.30",
