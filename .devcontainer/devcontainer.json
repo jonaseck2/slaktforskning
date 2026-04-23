@@ -9,7 +9,7 @@
   ],
 
   "remoteUser": "node",
-  "postCreateCommand": "sudo chown -R node:node ~/.claude 2>/dev/null || true && npm install && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/setup-signing.sh",
+  "postCreateCommand": "sudo chown -R node:node ~/.claude 2>/dev/null || true && npm install --legacy-peer-deps && ensure-native-binaries && npx playwright install chromium && bash .devcontainer/setup-signing.sh",
   "postStartCommand": "bash .devcontainer/xvfb-start.sh",
 
   "remoteEnv": {
