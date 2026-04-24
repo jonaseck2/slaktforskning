@@ -1,9 +1,7 @@
 import { builtinModules } from 'node:module';
 import { copyFileSync, mkdirSync } from 'node:fs';
-import { resolve, relative } from 'node:path';
+import { resolve, basename } from 'node:path';
 import { defineConfig } from 'vite';
-
-const outputDir = resolve('.vite/build');
 
 export default defineConfig({
   build: {
@@ -19,7 +17,10 @@ export default defineConfig({
   plugins: [
     {
       // Same gazetteer externalization as vite.main.config.ts — the worker imports
-      // api/checks which transitively imports place-gazetteers/bundled.
+      // api/checks which transitively imports place-gazetteers/bundled. Must emit
+      // './gazetteers/<file>.json' so the resolved module path sits alongside
+      // db-worker.js inside app.asar at runtime. vite.main.config.ts owns the
+      // closeBundle that actually copies the JSON into .vite/build/gazetteers/.
       name: 'externalize-gazetteers',
       enforce: 'pre',
       resolveId(source, importer) {
@@ -27,11 +28,7 @@ export default defineConfig({
           const isGaz = /place-gazetteers\/data\//.test(source) ||
             (importer.includes('place-gazetteers') && source.startsWith('./data/'));
           if (isGaz) {
-            const importerDir = resolve(importer, '..');
-            const absJson = resolve(importerDir, source);
-            let rel = relative(outputDir, absJson);
-            if (!rel.startsWith('.')) rel = './' + rel;
-            return { id: rel, external: true };
+            return { id: './gazetteers/' + basename(source), external: true };
           }
         }
         return null;
