@@ -11,19 +11,18 @@
         v-if="polylinePoints.length > 1"
         :lat-lngs="polylinePoints"
         :color="'#6366f1'"
-        :weight="2"
-        :opacity="0.5"
-        :dash-array="'6, 8'"
+        :weight="3"
+        :opacity="0.6"
       />
       <LCircleMarker
         v-for="(m, idx) in markers"
         :key="idx"
         :lat-lng="[m.lat, m.lon]"
-        :radius="8"
-        :color="eventColor(m.eventType)"
+        :radius="6"
+        :color="'#fff'"
+        :weight="1.5"
         :fill-color="eventColor(m.eventType)"
-        :fill-opacity="m.resolved ? 0.4 : 0.8"
-        :dash-array="m.resolved ? '4, 4' : undefined"
+        :fill-opacity="m.resolved ? 0.5 : 0.85"
       >
         <LPopup>
           <strong>{{ $t('eventTypes.' + m.eventType) }}</strong>

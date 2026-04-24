@@ -70,16 +70,16 @@ function renderMap() {
   props.points.forEach((p, idx) => {
     const marker = L.circleMarker([p.lat, p.lon], {
       radius: 6,
-      color: p.color || props.pathColor,
+      color: '#fff',
       fillColor: p.color || props.pathColor,
-      fillOpacity: 0.8,
-      weight: 2,
+      fillOpacity: 0.85,
+      weight: 1.5,
     }).bindTooltip(`${idx + 1}. ${p.label}${p.year ? ` (${p.year})` : ''}`);
     marker.addTo(map!);
   });
 
   if (props.drawPath && latlngs.length > 1) {
-    L.polyline(latlngs, { color: props.pathColor, weight: 2, opacity: 0.7 }).addTo(map);
+    L.polyline(latlngs, { color: props.pathColor, weight: 3, opacity: 0.65 }).addTo(map);
   }
 
   if (latlngs.length === 1) {
