@@ -57,7 +57,11 @@
       "mcp__claude_ai_Gmail__gmail_get_profile",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__*",
       "mcp__slaktforskning__*",
-      "mcp__slaktforskning-dev__*"
+      "mcp__slaktforskning-dev__*",
+      "Read(//c/Users/linda/AppData/Roaming/slaktforskning/**)",
+      "Read(//c/Users/linda/AppData/Roaming/Slaktforskning/**)",
+      "Read(//c/Users/linda/AppData/Roaming//**)",
+      "Bash(gh run *)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude",
