@@ -1,9 +1,10 @@
 import { builtinModules } from 'node:module';
-import { copyFileSync, mkdirSync } from 'node:fs';
-import { resolve, relative } from 'node:path';
+import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { resolve, basename } from 'node:path';
 import { defineConfig } from 'vite';
 
-const outputDir = resolve('.vite/build');
+const gazetteerSrcDir = resolve('src/api/place-gazetteers/data');
+const gazetteerDestDir = resolve('.vite/build/gazetteers');
 
 export default defineConfig({
   build: {
@@ -19,10 +20,10 @@ export default defineConfig({
   plugins: [
     {
       // Externalize bundled gazetteer JSON (~40 MB) so Vite doesn't parse
-      // and bundle them into the main process entry point. The JSON files
-      // are loaded at runtime via Node.js require() instead. The resolveId
-      // hook rewrites the import path to be relative to the output directory
-      // so require() finds the original source files.
+      // and bundle them into the main process entry point. Imports are
+      // rewritten to ./gazetteers/<file>.json and the actual JSON files
+      // are copied into .vite/build/gazetteers/ at build time so they ship
+      // inside app.asar alongside index.js.
       name: 'externalize-gazetteers',
       enforce: 'pre',
       resolveId(source, importer) {
@@ -30,14 +31,18 @@ export default defineConfig({
           const isGaz = /place-gazetteers\/data\//.test(source) ||
             (importer.includes('place-gazetteers') && source.startsWith('./data/'));
           if (isGaz) {
-            const importerDir = resolve(importer, '..');
-            const absJson = resolve(importerDir, source);
-            let rel = relative(outputDir, absJson);
-            if (!rel.startsWith('.')) rel = './' + rel;
-            return { id: rel, external: true };
+            return { id: './gazetteers/' + basename(source), external: true };
           }
         }
         return null;
+      },
+      closeBundle() {
+        mkdirSync(gazetteerDestDir, { recursive: true });
+        for (const file of readdirSync(gazetteerSrcDir)) {
+          if (file.endsWith('.json')) {
+            copyFileSync(resolve(gazetteerSrcDir, file), resolve(gazetteerDestDir, file));
+          }
+        }
       },
     },
     {
