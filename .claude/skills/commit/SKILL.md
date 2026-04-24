@@ -10,11 +10,15 @@ When asked to commit, or when a commit is appropriate after completing work:
 1. **Always stage ALL files** — run `git add -A`. Never selectively stage files. There is no reason to test the whole app and then commit half of it.
 2. Run `git status` to review what will be committed.
 3. Run `git diff --cached --stat` to see a summary of changes.
-4. Compose a clear commit message:
+4. **Bump the version in `package.json`** — every commit that ships a fix or feature MUST bump it. No exceptions, no batching.
+   - Fix (bug, i18n, CSS, config) → patch bump (0.x.Y → 0.x.Y+1)
+   - Feature (new component, new API, new UI element) → minor bump (0.X.0 → 0.X+1.0)
+   - Then add a one-line entry under `## Unreleased` in `CHANGELOG.md`.
+5. Compose a clear commit message:
    - First line: concise summary (imperative mood, under 72 chars)
    - Blank line, then details if the change is non-trivial
    - End with: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
-5. Run `git commit` with the message via HEREDOC:
+6. Run `git commit` with the message via HEREDOC:
 
 ```bash
 git commit -m "$(cat <<'EOF'
@@ -27,7 +31,7 @@ EOF
 )"
 ```
 
-6. Verify with `git status` that the working tree is clean.
+7. Verify with `git status` that the working tree is clean.
 
 If `$ARGUMENTS` is provided, use it as the commit message summary. Otherwise, compose one from the staged changes.
 

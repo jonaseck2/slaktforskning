@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.137.3 — report link fixes
+
+- fix: report anchor links (#ancestor-N, #event-N, #media-N, #person-N) no longer trigger Vue Router warnings — hash-router was intercepting them as route navigations; replaced with @click.prevent + scrollIntoView
+- fix: fan chart segments in YourAncestorsReport now scroll to matching ancestor section on click
+- fix: remove external OpenStreetMap href from Leaflet attribution in report maps
 - fix: report map previews are now static (no pan/zoom/drag interaction)
 
 ## v0.137.1 — print fixes and framable tab rename
