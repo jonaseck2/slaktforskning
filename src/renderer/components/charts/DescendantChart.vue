@@ -28,6 +28,7 @@
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
+          v-memo="[box, props.colorMode, props.readonly]"
           :data-testid="'person-box-' + box.person.id"
           filter="url(#chart-shadow)"
           :class="['person-box', 'clickable']"
@@ -192,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeDescendantLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
 import { wrapName, truncateToWidth } from '../../utils/chart-layout/measure';
@@ -234,9 +235,21 @@ const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('child');
 const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
+// Deferred selectedPersonId for layout — same pattern as HourglassChart.
+const layoutSelectedId = ref<string | null>(props.selectedPersonId ?? null);
+let selectionRaf: number | null = null;
+watch(() => props.selectedPersonId, (id) => {
+  if (selectionRaf !== null) cancelAnimationFrame(selectionRaf);
+  selectionRaf = requestAnimationFrame(() => {
+    selectionRaf = null;
+    layoutSelectedId.value = id ?? null;
+  });
+});
+onUnmounted(() => { if (selectionRaf !== null) cancelAnimationFrame(selectionRaf); });
+
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 800, svgHeight: 400, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
-  return computeDescendantLayout(tree.value, maxGens.value, collapsed.value, props.selectedPersonId);
+  return computeDescendantLayout(tree.value, maxGens.value, collapsed.value, layoutSelectedId.value);
 });
 
 const solidPaths = computed(() =>

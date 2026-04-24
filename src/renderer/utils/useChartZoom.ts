@@ -69,30 +69,40 @@ export function useChartZoom(defaultZoom = 1, storageKey?: string) {
   function resetZoom() { zoom.value = defaultZoom; }
 
   // --- Drag-to-pan ---
+  // isPanning only becomes true once the mouse has moved, so a plain click
+  // never changes the cursor to "grabbing" (which felt like a lock to users).
   const isPanning = ref(false);
-  const panStart = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 };
+  const panStart = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0, pending: false };
 
   function onMouseDown(e: MouseEvent) {
     if (e.button !== 0) return;
     const scroller = scrollRef.value;
     if (!scroller) return;
-    isPanning.value = true;
     panStart.x = e.clientX;
     panStart.y = e.clientY;
     panStart.scrollLeft = scroller.scrollLeft;
     panStart.scrollTop  = scroller.scrollTop;
+    panStart.pending = true;
     e.preventDefault(); // prevent text-selection drag
   }
 
   function onMouseMove(e: MouseEvent) {
-    if (!isPanning.value) return;
+    if (!panStart.pending) return;
+    const dx = e.clientX - panStart.x;
+    const dy = e.clientY - panStart.y;
+    // Activate panning only after a real drag (not a micro-jitter from a click)
+    if (!isPanning.value && Math.hypot(dx, dy) < 4) return;
+    isPanning.value = true;
     const scroller = scrollRef.value;
     if (!scroller) return;
-    scroller.scrollLeft = panStart.scrollLeft - (e.clientX - panStart.x);
-    scroller.scrollTop  = panStart.scrollTop  - (e.clientY - panStart.y);
+    scroller.scrollLeft = panStart.scrollLeft - dx;
+    scroller.scrollTop  = panStart.scrollTop  - dy;
   }
 
-  function onMouseUp() { isPanning.value = false; }
+  function onMouseUp() {
+    isPanning.value = false;
+    panStart.pending = false;
+  }
 
   return { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp };
 }

@@ -7,6 +7,13 @@ import { MIN_BOX_H, BOX_PAD_Y, TEXT_AREA_W } from './constants';
 
 // Cache the canvas context to avoid recreating it on every call.
 let _ctx: CanvasRenderingContext2D | null = null;
+
+// Module-level cache so switching selectedPersonId doesn't remeasure unchanged nodes.
+// Key: formatted full name (the only input that drives box height).
+const _heightCache = new Map<string, number>();
+// Cache wrapName results by "name|maxWidth|fontSize" — same names always produce the same wraps.
+const _wrapCache = new Map<string, string[]>();
+
 function getCtx(): CanvasRenderingContext2D | null {
   if (_ctx) return _ctx;
   try {
@@ -27,6 +34,10 @@ function getCtx(): CanvasRenderingContext2D | null {
  */
 export function wrapName(name: string, maxWidth: number, fontSize: number): string[] {
   if (!name) return [];
+  const cacheKey = `${name}|${maxWidth}|${fontSize}`;
+  const cached = _wrapCache.get(cacheKey);
+  if (cached) return cached;
+
   const words = name.split(' ').filter(w => w.length > 0);
   if (words.length === 0) return [];
 
@@ -51,6 +62,7 @@ export function wrapName(name: string, maxWidth: number, fontSize: number): stri
     }
   }
   if (current) lines.push(current);
+  _wrapCache.set(cacheKey, lines);
   return lines;
 }
 
@@ -102,9 +114,13 @@ export function measureBoxHeight(node: PersonNode): number {
     nickname: node.nickname,
   });
 
+  if (_heightCache.has(fullName ?? '')) return _heightCache.get(fullName ?? '')!;
+
   const nameLines = fullName ? wrapName(fullName, TEXT_AREA_W, 12) : [];
   const numNameLines = Math.max(1, nameLines.length);
 
   const textBlockH = numNameLines * 16 + 2 * 14 + 2 * BOX_PAD_Y;
-  return Math.max(MIN_BOX_H, textBlockH);
+  const h = Math.max(MIN_BOX_H, textBlockH);
+  _heightCache.set(fullName ?? '', h);
+  return h;
 }

@@ -149,7 +149,7 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
 }
 
 /** Find a TreePerson by person ID anywhere in the tree (handles cycles). */
-function findPerson(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
+export function findPerson(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
   if (node.person.id === id) return node;
   if (visited.has(node.person.id)) return null;
   visited.add(node.person.id);

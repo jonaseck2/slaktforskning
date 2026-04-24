@@ -150,9 +150,19 @@ export function registerUtilityHandlers(
       sourceTitles: r.sourceIds?.map(id => sourceTitleMap.get(id) ?? '') ?? [],
     }));
   });
-  wrapHandler('checks:forPerson', (personId) => {
+  wrapHandler('checks:forPerson', async (personId) => {
+    // Run incrementally, yielding between each check so other IPC calls are not blocked.
+    const id = personId as string;
+    const db = getDb();
     const dbDir = path.dirname(getCurrentDatabasePath());
-    return checks.runChecksForPerson(getDb(), personId as string, dbDir);
+    const results: checks.CheckResult[] = [];
+    for (const check of checks.getAllCheckFunctions()) {
+      if (check.global) continue;
+      await new Promise<void>(resolve => setImmediate(resolve));
+      const res = check.fn(db, dbDir);
+      results.push(...res.filter(r => r.personIds.includes(id)));
+    }
+    return results;
   });
   wrapHandler('checks:forPlace', (placeId) => {
     const dbDir = path.dirname(getCurrentDatabasePath());
