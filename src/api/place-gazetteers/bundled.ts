@@ -22,6 +22,8 @@ import caProvinces from './data/ca-provinces.json';
 // Global
 import worldCountries from './data/world-countries.json';
 import worldAdmin1 from './data/world-admin1.json';
+// Historical
+import worldHistorical from './data/world-historical.json';
 // Language gazetteers
 import langSvGeonames from './data/lang-sv-geonames.json';
 import langSvWikidata from './data/lang-sv-wikidata.json';
@@ -82,6 +84,8 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   // Global
   worldCountries as Gazetteer,
   worldAdmin1 as Gazetteer,
+  // Historical
+  worldHistorical as Gazetteer,
   // Language gazetteers
   langSvGeonames as Gazetteer,
   langSvWikidata as Gazetteer,
