@@ -4,8 +4,8 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 30000,
   retries: 0,
-  // 10 workers = all projects run simultaneously on a 12-core machine.
-  workers: 10,
+  // Match CI parallelism (--workers=2) so local runs reflect the same constraints.
+  workers: 2,
   use: {
     trace: 'on-first-retry',
   },

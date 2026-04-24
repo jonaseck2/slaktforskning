@@ -2,8 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { dialog, shell } from 'electron';
 import * as media from '../../api/media';
-import { getMediaTimeline } from '../../api/media_timeline';
-import * as mediaRegions from '../../api/media_regions';
+import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
 /** Derive the media folder name from the database filename: `foo.db` → `foo-media` */
@@ -17,28 +16,32 @@ export function registerMediaHandlers(
   getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
-  // Media
-  wrapHandler('media:list', () => media.listMedia(getDb()));
-  wrapHandler('media:listPage', (limit, offset) => ({
-    items: media.listMediaPage(getDb(), limit as number, offset as number),
-    total: media.countMedia(getDb()),
-  }));
-  wrapHandler('media:get', (id) => media.getMedia(getDb(), id as string));
-  wrapHandler('media:create', (data) => media.createMedia(getDb(), data as Parameters<typeof media.createMedia>[1]));
-  wrapHandler('media:delete', (id) => media.deleteMedia(getDb(), id as string));
-  wrapHandler('media:update', (id, data) => media.updateMedia(getDb(), id as string, data as Parameters<typeof media.updateMedia>[2]));
-  wrapHandler('media:forEntity', (entityType, entityId) => media.getMediaForEntity(getDb(), entityType as Parameters<typeof media.getMediaForEntity>[1], entityId as string));
-  wrapHandler('media:linksForMedia', (mediaId) => media.getLinksForMedia(getDb(), mediaId as string));
-  wrapHandler('media:addLink', (data) => media.addMediaLink(getDb(), data as Parameters<typeof media.addMediaLink>[1]));
-  wrapHandler('media:removeLink', (linkId) => media.removeMediaLink(getDb(), linkId as string));
-  wrapHandler('media:reorder', (linkIds) => media.reorderMediaLinks(getDb(), linkIds as string[]));
-  wrapHandler('media:profilePicRef', (personId) => media.getPersonProfilePicRef(getDb(), personId as string));
-  wrapHandler('media:profilePicRefs', (personIds) => media.getPersonProfilePicRefs(getDb(), personIds as string[]));
+  // DB-only operations → worker
+  wrapHandler('media:list', () => callWorker('media:list'));
+  wrapHandler('media:listPage', (...args) => callWorker('media:listPage', ...args));
+  wrapHandler('media:get', (...args) => callWorker('media:get', ...args));
+  wrapHandler('media:create', (...args) => callWorker('media:create', ...args));
+  wrapHandler('media:delete', (...args) => callWorker('media:delete', ...args));
+  wrapHandler('media:update', (...args) => callWorker('media:update', ...args));
+  wrapHandler('media:forEntity', (...args) => callWorker('media:forEntity', ...args));
+  wrapHandler('media:linksForMedia', (...args) => callWorker('media:linksForMedia', ...args));
+  wrapHandler('media:addLink', (...args) => callWorker('media:addLink', ...args));
+  wrapHandler('media:removeLink', (...args) => callWorker('media:removeLink', ...args));
+  wrapHandler('media:reorder', (...args) => callWorker('media:reorder', ...args));
+  wrapHandler('media:profilePicRef', (...args) => callWorker('media:profilePicRef', ...args));
+  wrapHandler('media:profilePicRefs', (...args) => callWorker('media:profilePicRefs', ...args));
+  wrapHandler('media:getTimeline', (...args) => callWorker('media:getTimeline', ...args));
+  wrapHandler('media:getFilePath', (...args) => callWorker('media:getFilePath', ...args));
+  wrapHandler('media:readAsDataUrl', (...args) => callWorker('media:readAsDataUrl', ...args));
 
-  wrapHandler('media:getTimeline', (entityType, entityId) =>
-    getMediaTimeline(getDb(), entityType as 'person' | 'place', entityId as string)
-  );
+  // Media Regions → worker
+  wrapHandler('mediaRegions:create', (...args) => callWorker('mediaRegions:create', ...args));
+  wrapHandler('mediaRegions:getForMedia', (...args) => callWorker('mediaRegions:getForMedia', ...args));
+  wrapHandler('mediaRegions:getForPerson', (...args) => callWorker('mediaRegions:getForPerson', ...args));
+  wrapHandler('mediaRegions:update', (...args) => callWorker('mediaRegions:update', ...args));
+  wrapHandler('mediaRegions:delete', (...args) => callWorker('mediaRegions:delete', ...args));
 
+  // Electron-specific operations — stay on main thread
   wrapHandler('media:attach', async (data) => {
     const opts = data as { entityType?: string; entityId?: string } | undefined;
     const dbDir = path.dirname(getCurrentDatabasePath());
@@ -57,12 +60,10 @@ export function registerMediaHandlers(
 
     const filename = path.basename(srcPath);
     let destPath = path.join(mediaDir, filename);
-    // Avoid overwriting: append suffix if file already exists
     if (fs.existsSync(destPath)) {
       const ext = path.extname(filename);
       const base = path.basename(filename, ext);
-      const suffix = Date.now();
-      destPath = path.join(mediaDir, `${base}_${suffix}${ext}`);
+      destPath = path.join(mediaDir, `${base}_${Date.now()}${ext}`);
     }
     fs.copyFileSync(srcPath, destPath);
 
@@ -95,35 +96,4 @@ export function registerMediaHandlers(
     await shell.openPath(absPath);
     return { success: true };
   });
-
-  wrapHandler('media:getFilePath', (id) => {
-    const item = media.getMedia(getDb(), id as string);
-    if (!item || !item.file_ref) return null;
-    const dbDir = path.dirname(getCurrentDatabasePath());
-    const absPath = path.resolve(dbDir, item.file_ref);
-    return fs.existsSync(absPath) ? absPath : null;
-  });
-
-  wrapHandler('media:readAsDataUrl', (id) => {
-    const item = media.getMedia(getDb(), id as string);
-    if (!item || !item.file_ref) return null;
-    const dbDir = path.dirname(getCurrentDatabasePath());
-    const absPath = path.resolve(dbDir, item.file_ref);
-    if (!fs.existsSync(absPath)) return null;
-    const ext = path.extname(absPath).toLowerCase().slice(1);
-    const mimeMap: Record<string, string> = {
-      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-      gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
-    };
-    const mime = mimeMap[ext] ?? 'image/jpeg';
-    const dataStr = fs.readFileSync(absPath).toString('base64');
-    return `data:${mime};base64,${dataStr}`;
-  });
-
-  // Media Regions
-  wrapHandler('mediaRegions:create', (data) => mediaRegions.createMediaRegion(getDb(), data as Parameters<typeof mediaRegions.createMediaRegion>[1]));
-  wrapHandler('mediaRegions:getForMedia', (mediaId) => mediaRegions.getMediaRegions(getDb(), mediaId as string));
-  wrapHandler('mediaRegions:getForPerson', (personId) => mediaRegions.getRegionsForPerson(getDb(), personId as string));
-  wrapHandler('mediaRegions:update', (id, data) => mediaRegions.updateMediaRegion(getDb(), id as string, data as Parameters<typeof mediaRegions.updateMediaRegion>[2]));
-  wrapHandler('mediaRegions:delete', (id) => mediaRegions.deleteMediaRegion(getDb(), id as string));
 }

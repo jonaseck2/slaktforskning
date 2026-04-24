@@ -33,6 +33,11 @@ const config: ForgeConfig = {
           target: 'main',
         },
         {
+          entry: 'src/main/db-worker.ts',
+          config: 'vite.worker.config.ts',
+          target: 'main',
+        },
+        {
           entry: 'src/preload/index.ts',
           config: 'vite.preload.config.ts',
           target: 'preload',

@@ -1,18 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
-import { getDbSetting, setDbSetting, deleteDbSetting } from '../../api/db_settings';
-import { undoManager } from '../../api/undo';
+import { callWorker, switchWorkerDb } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
 export function registerDatabaseHandlers(
-  getDb: () => ReturnType<typeof import('../database').getDatabase>,
+  _getDb: unknown,
   getCurrentDatabasePath: () => string,
   switchDatabase: (dbPath: string) => void,
   loadSettings: () => { recentDatabases: string[] },
   wrapHandler: WrapHandlerFn,
 ) {
-  // Database switching
+  // Pure path/settings — no DB connection needed
   wrapHandler('db:getCurrent', () => {
     const dbPath = getCurrentDatabasePath();
     return { path: dbPath, name: path.basename(dbPath) };
@@ -25,15 +24,10 @@ export function registerDatabaseHandlers(
       .map(p => ({ path: p, name: path.basename(p) }));
   });
 
-  wrapHandler('db:getSetting', (key) => getDbSetting(getDb(), key as string));
-
-  wrapHandler('db:setSetting', (key, value) =>
-    setDbSetting(getDb(), key as string, value as string)
-  );
-
-  wrapHandler('db:deleteSetting', (key) =>
-    deleteDbSetting(getDb(), key as string)
-  );
+  // DB settings → worker
+  wrapHandler('db:getSetting', (...args) => callWorker('db:getSetting', ...args));
+  wrapHandler('db:setSetting', (...args) => callWorker('db:setSetting', ...args));
+  wrapHandler('db:deleteSetting', (...args) => callWorker('db:deleteSetting', ...args));
 
   wrapHandler('shell:open-external', (url) => {
     const urlStr = url as string;
@@ -43,6 +37,7 @@ export function registerDatabaseHandlers(
     return shell.openExternal(urlStr);
   });
 
+  // Database switching — update both main-thread path tracker and worker DB
   ipcMain.handle('db:createNew', async () => {
     const currentDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showSaveDialog({
@@ -52,12 +47,14 @@ export function registerDatabaseHandlers(
     });
     if (result.canceled || !result.filePath) return { canceled: true };
     switchDatabase(result.filePath);
+    await switchWorkerDb(result.filePath);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: result.filePath, name: path.basename(result.filePath) };
   });
 
   ipcMain.handle('db:switchTo', async (_e, dbPath: string) => {
     switchDatabase(dbPath);
+    await switchWorkerDb(dbPath);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: dbPath, name: path.basename(dbPath) };
   });
@@ -72,6 +69,7 @@ export function registerDatabaseHandlers(
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     switchDatabase(result.filePaths[0]);
+    await switchWorkerDb(result.filePaths[0]);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
   });
@@ -80,7 +78,6 @@ export function registerDatabaseHandlers(
   wrapHandler('backup:backup', async () => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
-
     const currentPath = getCurrentDatabasePath();
     const currentDir = path.dirname(currentPath);
     const backupName = path.basename(currentPath).replace('.db', '') + '-backup-' + new Date().toISOString().slice(0, 10) + '.db';
@@ -90,7 +87,6 @@ export function registerDatabaseHandlers(
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
     if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
-
     fs.copyFileSync(currentPath, result.filePath);
     return { success: true, path: result.filePath };
   });
@@ -98,7 +94,6 @@ export function registerDatabaseHandlers(
   wrapHandler('backup:restore', async () => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
-
     const currentDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showOpenDialog(win, {
       title: 'Välj säkerhetskopia',
@@ -107,25 +102,25 @@ export function registerDatabaseHandlers(
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { success: false, error: 'Cancelled' };
-
     const backupPath = result.filePaths[0];
     switchDatabase(backupPath);
+    await switchWorkerDb(backupPath);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { success: true, path: backupPath };
   });
 
-  // Undo / Redo
-  wrapHandler('undo:undo', () => {
-    const label = undoManager.undo();
+  // Undo — worker holds undoManager; main thread broadcasts the change notification
+  wrapHandler('undo:undo', async () => {
+    const label = await callWorker('undo:undo');
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('undo:changed'));
     return label;
   });
-  wrapHandler('undo:redo', () => {
-    const label = undoManager.redo();
+  wrapHandler('undo:redo', async () => {
+    const label = await callWorker('undo:redo');
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('undo:changed'));
     return label;
   });
-  wrapHandler('undo:state', () => undoManager.getState());
-  wrapHandler('undo:beginGroup', (label) => { undoManager.beginGroup(label as string); });
-  wrapHandler('undo:endGroup', () => { undoManager.endGroup(); });
+  wrapHandler('undo:state', () => callWorker('undo:state'));
+  wrapHandler('undo:beginGroup', (...args) => callWorker('undo:beginGroup', ...args));
+  wrapHandler('undo:endGroup', () => callWorker('undo:endGroup'));
 }

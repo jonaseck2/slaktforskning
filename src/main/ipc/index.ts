@@ -1,6 +1,7 @@
 import { getDatabase, getCurrentDatabasePath, switchDatabase } from '../database';
 import { loadSettings } from '../settings';
 import { wrapHandler } from './wrap-handler';
+import { startWorker } from './worker-client';
 import { registerPersonHandlers } from './persons';
 import { registerRelationshipHandlers } from './relationships';
 import { registerEventHandlers } from './events';
@@ -13,6 +14,10 @@ import { registerUtilityHandlers } from './utility';
 import { registerGazetteerHandlers } from './gazetteers';
 
 export function registerIpcHandlers(): void {
+  // Start the DB worker — fires and forgets; callWorker queues until worker signals ready
+  const dbPath = getCurrentDatabasePath();
+  startWorker(dbPath);
+
   const getDb = () => getDatabase();
 
   registerPersonHandlers(getDb, wrapHandler);

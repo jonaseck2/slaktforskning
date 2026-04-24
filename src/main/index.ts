@@ -1,9 +1,9 @@
 import path from 'node:path';
 import { app, BrowserWindow, dialog, Menu } from 'electron';
 import started from 'electron-squirrel-startup';
-import { undoManager } from '../api/undo';
 import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
+import { callWorker, terminateWorker } from './ipc/worker-client';
 import { startUiServer, stopUiServer } from './ui-server';
 
 // Suppress EPIPE errors (occur when stdout pipe closes, e.g. during E2E tests).
@@ -98,8 +98,8 @@ function buildMenu(): void {
         {
           label: 'Undo',
           accelerator: 'CmdOrCtrl+Z',
-          click: () => {
-            const label = undoManager.undo();
+          click: async () => {
+            const label = await callWorker('undo:undo') as string | null;
             if (label) {
               BrowserWindow.getAllWindows().forEach(w => {
                 w.webContents.send('undo:changed');
@@ -111,8 +111,8 @@ function buildMenu(): void {
         {
           label: 'Redo',
           accelerator: 'CmdOrCtrl+Shift+Z',
-          click: () => {
-            const label = undoManager.redo();
+          click: async () => {
+            const label = await callWorker('undo:redo') as string | null;
             if (label) {
               BrowserWindow.getAllWindows().forEach(w => {
                 w.webContents.send('undo:changed');
@@ -177,5 +177,6 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
   stopUiServer();
+  terminateWorker();
   closeDatabase();
 });

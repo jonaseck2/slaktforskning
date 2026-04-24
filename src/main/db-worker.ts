@@ -1,0 +1,387 @@
+/**
+ * DB Worker — runs in a Node.js Worker Thread, owns the SQLite connection.
+ * All DB-touching IPC channels are dispatched here so the Electron main thread
+ * is never blocked by SQLite.
+ */
+import { parentPort } from 'node:worker_threads';
+import * as nodePath from 'node:path';
+import * as nodeFs from 'node:fs';
+import { Database } from 'node-sqlite3-wasm';
+import { initializeSchema } from '../api/schema';
+import { undoManager } from '../api/undo';
+import * as uw from '../api/undo_wrappers';
+import * as persons from '../api/persons';
+import * as events from '../api/events';
+import * as relationships from '../api/relationships';
+import * as sources from '../api/sources';
+import * as places from '../api/places';
+import * as groups from '../api/groups';
+import * as repositories from '../api/repositories';
+import * as researchTasks from '../api/research_tasks';
+import * as reportData from '../api/report_data';
+import * as duplicates from '../api/duplicates';
+import * as checks from '../api/checks';
+import * as media from '../api/media';
+import { getMediaTimeline } from '../api/media_timeline';
+import * as mediaRegions from '../api/media_regions';
+import * as gazetteers from '../api/gazetteers';
+import { getDbSetting, setDbSetting, deleteDbSetting } from '../api/db_settings';
+import { queryAll } from '../api/db';
+
+if (!parentPort) throw new Error('db-worker must run in a worker thread');
+
+// ── DB state ──────────────────────────────────────────────────────────────────
+
+let db: Database | null = null;
+let dbPath: string | null = null;
+let importInProgress = false;
+
+function getDb(): Database {
+  if (!db) throw new Error('Worker DB not initialized');
+  return db;
+}
+
+function getDbDir(): string {
+  if (!dbPath) throw new Error('Worker DB path not set');
+  return nodePath.dirname(dbPath);
+}
+
+function openDb(filePath: string): void {
+  if (db) { try { db.close(); } catch { /* ignore */ } db = null; }
+  nodeFs.mkdirSync(nodePath.dirname(filePath), { recursive: true });
+  const lockPath = filePath + '.lock';
+  if (nodeFs.existsSync(lockPath) && nodeFs.statSync(lockPath).isDirectory()) {
+    nodeFs.rmSync(lockPath, { recursive: true });
+  }
+  const newDb = new Database(filePath);
+  newDb.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
+  initializeSchema(newDb);
+  db = newDb;
+  dbPath = filePath;
+}
+
+// ── Checks cancellation counter ───────────────────────────────────────────────
+
+let checksRunId = 0;
+
+// ── Dispatch table ────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handlers: Record<string, (...args: any[]) => unknown> = {
+
+  // Persons
+  'persons:create': (data) => uw.createPersonUndo(getDb(), data),
+  'persons:createWithEvent': (data) => uw.createPersonWithEventUndo(getDb(), data),
+  'persons:get': (id) => persons.getPerson(getDb(), id),
+  'persons:list': () => persons.listPersons(getDb()),
+  'persons:update': (id, data) => uw.updatePersonUndo(getDb(), id, data),
+  'persons:delete': (id) => uw.deletePersonUndo(getDb(), id),
+  'persons:search': (query, relateeId) => persons.searchPersons(getDb(), query, relateeId ?? null),
+  'persons:addName': (personId, data) => uw.addPersonNameUndo(getDb(), personId, data),
+  'persons:getNames': (personId) => persons.getPersonNames(getDb(), personId),
+  'persons:updateName': (id, data) => uw.updatePersonNameUndo(getDb(), id, data),
+  'persons:deleteName': (id) => uw.deletePersonNameUndo(getDb(), id),
+  'persons:addIdentifier': (personId, data) => persons.addPersonIdentifier(getDb(), personId, data),
+  'persons:getIdentifiers': (personId) => persons.getPersonIdentifiers(getDb(), personId),
+  'persons:deleteIdentifier': (id) => persons.deletePersonIdentifier(getDb(), id),
+  'persons:listPage': (limit, offset) => {
+    const d = getDb();
+    return { persons: persons.listPersonsPage(d, limit, offset), total: persons.countPersons(d) };
+  },
+  'persons:searchWithDetails': (query) => persons.searchPersonsWithDetails(getDb(), query),
+  'persons:listUnsourcedPage': (limit, offset) => {
+    const d = getDb();
+    return { persons: persons.listUnsourcedPersonsPage(d, limit, offset), total: persons.countUnsourcedPersons(d) };
+  },
+
+  // Events
+  'events:create': (data) => uw.createEventUndo(getDb(), data),
+  'events:get': (id) => events.getEvent(getDb(), id),
+  'events:forPerson': (personId) => events.getEventsForPerson(getDb(), personId),
+  'events:forRelationship': (relId) => events.getEventsForRelationship(getDb(), relId),
+  'events:update': (id, data) => uw.updateEventUndo(getDb(), id, data),
+  'events:delete': (id) => uw.deleteEventUndo(getDb(), id),
+  'events:forPlace': (placeId) => events.getEventsForPlace(getDb(), placeId),
+
+  // Relationships
+  'relationships:create': (data) => uw.createRelationshipUndo(getDb(), data),
+  'relationships:get': (id) => relationships.getRelationship(getDb(), id),
+  'relationships:list': () => relationships.listRelationships(getDb()),
+  'relationships:listPage': (limit, offset) => {
+    const d = getDb();
+    return { relationships: relationships.listRelationshipsPage(d, limit, offset), total: relationships.countRelationships(d) };
+  },
+  'relationships:update': (id, data) => uw.updateRelationshipUndo(getDb(), id, data),
+  'relationships:delete': (id) => uw.deleteRelationshipUndo(getDb(), id),
+  'relationships:getForPerson': (personId) => relationships.getRelationshipsOfPerson(getDb(), personId),
+  'relationships:search': (query) => relationships.searchRelationships(getDb(), query),
+  'eventParticipants:add': (data) => uw.addEventParticipantUndo(getDb(), data),
+  'eventParticipants:getForEvent': (eventId) => relationships.getEventParticipants(getDb(), eventId),
+  'eventParticipants:remove': (id) => uw.removeEventParticipantUndo(getDb(), id),
+
+  // Sources & Citations
+  'sources:create': (data) => uw.createSourceUndo(getDb(), data),
+  'sources:get': (id) => sources.getSource(getDb(), id),
+  'sources:list': () => sources.listSources(getDb()),
+  'sources:update': (id, data) => uw.updateSourceUndo(getDb(), id, data),
+  'sources:delete': (id) => uw.deleteSourceUndo(getDb(), id),
+  'sources:search': (query) => sources.searchSources(getDb(), query),
+  'citations:create': (data) => uw.createCitationUndo(getDb(), data),
+  'citations:get': (id) => sources.getCitation(getDb(), id),
+  'citations:forSource': (sourceId) => sources.getCitationsForSource(getDb(), sourceId),
+  'citations:forEvent': (eventId) => sources.getCitationsForEvent(getDb(), eventId),
+  'citations:forPerson': (personId) => sources.getCitationsForPerson(getDb(), personId),
+  'citations:forRelationship': (relId) => sources.getCitationsForRelationship(getDb(), relId),
+  'citations:forPlace': (placeId) => sources.getCitationsForPlace(getDb(), placeId),
+  'citations:delete': (id) => uw.deleteCitationUndo(getDb(), id),
+  'citations:update': (id, data) => uw.updateCitationUndo(getDb(), id, data),
+
+  // Places
+  'places:create': (data) => places.createPlace(getDb(), data),
+  'places:get': (id) => places.getPlace(getDb(), id),
+  'places:list': () => places.listPlaces(getDb()),
+  'places:search': (query) => places.searchPlaces(getDb(), query),
+  'places:update': (id, data) => places.updatePlace(getDb(), id, data),
+  'places:delete': (id) => places.deletePlace(getDb(), id),
+  'places:findOrCreate': (name) => places.findOrCreatePlace(getDb(), name),
+  'places:getPath': (id) => places.getPlacePath(getDb(), id),
+  'places:getPersons': (placeId) => places.getPersonsForPlace(getDb(), placeId),
+
+  // Gazetteers (DB-backed imported ones)
+  'gazetteers:list': () => gazetteers.listGazetteers(getDb()),
+  'gazetteers:import': (json) => gazetteers.importGazetteer(getDb(), json),
+  'gazetteers:export': (id) => gazetteers.exportGazetteer(getDb(), id),
+  'gazetteers:delete': (id) => gazetteers.deleteGazetteer(getDb(), id),
+  'gazetteers:getImported': () => gazetteers.getImportedGazetteers(getDb()),
+
+  // Media (DB + file operations)
+  'media:list': () => media.listMedia(getDb()),
+  'media:listPage': (limit, offset) => ({
+    items: media.listMediaPage(getDb(), limit, offset),
+    total: media.countMedia(getDb()),
+  }),
+  'media:get': (id) => media.getMedia(getDb(), id),
+  'media:create': (data) => media.createMedia(getDb(), data),
+  'media:delete': (id) => media.deleteMedia(getDb(), id),
+  'media:update': (id, data) => media.updateMedia(getDb(), id, data),
+  'media:forEntity': (entityType, entityId) => media.getMediaForEntity(getDb(), entityType, entityId),
+  'media:linksForMedia': (mediaId) => media.getLinksForMedia(getDb(), mediaId),
+  'media:addLink': (data) => media.addMediaLink(getDb(), data),
+  'media:removeLink': (linkId) => media.removeMediaLink(getDb(), linkId),
+  'media:reorder': (linkIds) => media.reorderMediaLinks(getDb(), linkIds),
+  'media:profilePicRef': (personId) => media.getPersonProfilePicRef(getDb(), personId),
+  'media:profilePicRefs': (personIds) => media.getPersonProfilePicRefs(getDb(), personIds),
+  'media:getTimeline': (entityType, entityId) => getMediaTimeline(getDb(), entityType, entityId),
+  'media:getFilePath': (id) => {
+    const item = media.getMedia(getDb(), id);
+    if (!item?.file_ref) return null;
+    const absPath = nodePath.resolve(getDbDir(), item.file_ref);
+    return nodeFs.existsSync(absPath) ? absPath : null;
+  },
+  'media:readAsDataUrl': (id) => {
+    const item = media.getMedia(getDb(), id);
+    if (!item?.file_ref) return null;
+    const absPath = nodePath.resolve(getDbDir(), item.file_ref);
+    if (!nodeFs.existsSync(absPath)) return null;
+    const ext = nodePath.extname(absPath).toLowerCase().slice(1);
+    const mimeMap: Record<string, string> = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
+    };
+    const mime = mimeMap[ext] ?? 'image/jpeg';
+    return `data:${mime};base64,${nodeFs.readFileSync(absPath).toString('base64')}`;
+  },
+
+  // Media Regions
+  'mediaRegions:create': (data) => mediaRegions.createMediaRegion(getDb(), data),
+  'mediaRegions:getForMedia': (mediaId) => mediaRegions.getMediaRegions(getDb(), mediaId),
+  'mediaRegions:getForPerson': (personId) => mediaRegions.getRegionsForPerson(getDb(), personId),
+  'mediaRegions:update': (id, data) => mediaRegions.updateMediaRegion(getDb(), id, data),
+  'mediaRegions:delete': (id) => mediaRegions.deleteMediaRegion(getDb(), id),
+
+  // DB settings
+  'db:getSetting': (key) => getDbSetting(getDb(), key),
+  'db:setSetting': (key, value) => setDbSetting(getDb(), key, value),
+  'db:deleteSetting': (key) => deleteDbSetting(getDb(), key),
+
+  // Undo (undoManager lives in this worker)
+  'undo:undo': () => undoManager.undo(),
+  'undo:redo': () => undoManager.redo(),
+  'undo:state': () => undoManager.getState(),
+  'undo:beginGroup': (label) => { undoManager.beginGroup(label); },
+  'undo:endGroup': () => { undoManager.endGroup(); },
+
+  // Groups
+  'groups:list': () => groups.listGroups(getDb()),
+  'groups:get': (id) => groups.getGroup(getDb(), id),
+  'groups:create': (data) => groups.createGroup(getDb(), data),
+  'groups:update': (id, data) => groups.updateGroup(getDb(), id, data),
+  'groups:delete': (id) => groups.deleteGroup(getDb(), id),
+  'groups:addMember': (groupId, personId) => groups.addGroupMember(getDb(), groupId, personId),
+  'groups:removeMember': (groupId, personId) => groups.removeGroupMember(getDb(), groupId, personId),
+  'groups:getMembers': (groupId) => groups.getGroupMembers(getDb(), groupId),
+  'groups:forPerson': (personId) => groups.getGroupsForPerson(getDb(), personId),
+
+  // Repositories
+  'repositories:list': () => repositories.listRepositories(getDb()),
+  'repositories:get': (id) => repositories.getRepository(getDb(), id),
+  'repositories:create': (data) => repositories.createRepository(getDb(), data),
+  'repositories:update': (id, data) => repositories.updateRepository(getDb(), id, data),
+  'repositories:delete': (id) => repositories.deleteRepository(getDb(), id),
+  'repositories:forSource': (sourceId) => repositories.getRepositoriesForSource(getDb(), sourceId),
+  'repositories:linkSource': (sourceId, repoId) => repositories.linkSourceRepository(getDb(), sourceId, repoId),
+  'repositories:unlinkSource': (sourceId, repoId) => repositories.unlinkSourceRepository(getDb(), sourceId, repoId),
+
+  // Research tasks
+  'researchTasks:list': () => researchTasks.listResearchTasks(getDb()),
+  'researchTasks:get': (id) => researchTasks.getResearchTask(getDb(), id),
+  'researchTasks:forPerson': (personId) => researchTasks.getResearchTasksForPerson(getDb(), personId),
+  'researchTasks:create': (data) => researchTasks.createResearchTask(getDb(), data),
+  'researchTasks:update': (id, data) => researchTasks.updateResearchTask(getDb(), id, data),
+  'researchTasks:delete': (id) => researchTasks.deleteResearchTask(getDb(), id),
+
+  // Reports
+  'reports:personSummary': (personId) => reportData.getPersonSummary(getDb(), personId),
+  'reports:familyUnit': (relId) => reportData.getFamilyUnit(getDb(), relId),
+  'reports:ancestorTree': (personId, generations) => reportData.getAncestorTree(getDb(), personId, generations),
+  'reports:placeHistory': (placeId) => reportData.getPlaceHistory(getDb(), placeId),
+  'reports:researchGaps': (personId) => reportData.getResearchGaps(getDb(), personId),
+  'reports:timeline': (personId) => reportData.getTimeline(getDb(), personId),
+  'reports:aliveInYear': (year) => reportData.getAliveInYear(getDb(), year),
+
+  // Duplicates
+  'duplicates:find': (limit) => duplicates.findDuplicates(getDb(), limit),
+  'duplicates:merge': (targetId, sourceId) => duplicates.mergePersons(getDb(), targetId, sourceId),
+
+  // Checks (async — yield between each check to stay responsive)
+  'checks:runAll': async () => {
+    if (importInProgress) {
+      console.log('[worker] checks:runAll skipped — import in progress');
+      return [];
+    }
+    const runId = ++checksRunId;
+    const d = getDb();
+    const dbDir = getDbDir();
+    const allChecks = checks.getAllCheckFunctions();
+    const results: checks.CheckResult[] = [];
+    const t0 = Date.now();
+    console.log(`[worker/checks] runAll #${runId} starting (${allChecks.length} checks)`);
+
+    for (const check of allChecks) {
+      if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return []; }
+      await new Promise<void>(resolve => setImmediate(resolve));
+      if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return []; }
+      const start = Date.now();
+      const res = check.fn(d, dbDir);
+      console.log(`[worker/checks] ${check.name}: ${Date.now() - start}ms → ${res.length}`);
+      results.push(...res);
+    }
+
+    if (runId !== checksRunId) return [];
+    console.log(`[worker/checks] runAll #${runId}: ${Date.now() - t0}ms → ${results.length} raw`);
+
+    const countByCode = new Map<string, number>();
+    const capped = results.filter(r => {
+      if (r.severity !== 'notice') return true;
+      const n = (countByCode.get(r.code) ?? 0) + 1;
+      countByCode.set(r.code, n);
+      return n <= 500;
+    });
+
+    const allIds = [...new Set(capped.flatMap(r => r.personIds))];
+    const nameMap = persons.getPersonDisplayNames(d, allIds);
+
+    const allPlaceIds = [...new Set(capped.flatMap(r => r.placeIds ?? []))];
+    const placeNameMap = new Map<string, string>();
+    if (allPlaceIds.length > 0) {
+      const ph = allPlaceIds.map(() => '?').join(',');
+      const rows = queryAll<{ id: string; name: string }>(d, `SELECT id, name FROM places WHERE id IN (${ph})`, allPlaceIds);
+      for (const r of rows) placeNameMap.set(r.id, r.name);
+    }
+
+    const allMediaIds = [...new Set(capped.flatMap(r => r.mediaIds ?? []))];
+    const mediaTitleMap = new Map<string, string>();
+    if (allMediaIds.length > 0) {
+      const ph = allMediaIds.map(() => '?').join(',');
+      const rows = queryAll<{ id: string; title: string | null; file_ref: string | null }>(d, `SELECT id, title, file_ref FROM media WHERE id IN (${ph})`, allMediaIds);
+      for (const r of rows) mediaTitleMap.set(r.id, r.title || r.file_ref || '');
+    }
+
+    const allSourceIds = [...new Set(capped.flatMap(r => r.sourceIds ?? []))];
+    const sourceTitleMap = new Map<string, string>();
+    if (allSourceIds.length > 0) {
+      const ph = allSourceIds.map(() => '?').join(',');
+      const rows = queryAll<{ id: string; title: string | null }>(d, `SELECT id, title FROM sources WHERE id IN (${ph})`, allSourceIds);
+      for (const r of rows) sourceTitleMap.set(r.id, r.title || '');
+    }
+
+    return capped.map(r => ({
+      ...r,
+      personNames: r.personIds.map(id => nameMap.get(id) ?? ''),
+      placeNames: r.placeIds?.map(id => placeNameMap.get(id) ?? '') ?? [],
+      mediaTitles: r.mediaIds?.map(id => mediaTitleMap.get(id) ?? '') ?? [],
+      sourceTitles: r.sourceIds?.map(id => sourceTitleMap.get(id) ?? '') ?? [],
+    }));
+  },
+
+  'checks:forPerson': async (personId) => {
+    const d = getDb();
+    const dbDir = getDbDir();
+    const results: checks.CheckResult[] = [];
+    for (const check of checks.getAllCheckFunctions()) {
+      if (check.global) continue;
+      await new Promise<void>(resolve => setImmediate(resolve));
+      const res = check.fn(d, dbDir);
+      results.push(...res.filter(r => r.personIds.includes(personId)));
+    }
+    return results;
+  },
+
+  'checks:forPlace': (placeId) => checks.runChecksForPlace(getDb(), placeId, getDbDir()),
+
+  'checks:forMedia': (mediaId) => checks.runChecksForMedia(getDb(), mediaId, getDbDir()),
+};
+
+/** Channel names handled in this worker — imported by the coverage test. */
+export const WORKER_CHANNELS: ReadonlySet<string> = new Set(Object.keys(handlers));
+
+// ── Message loop ──────────────────────────────────────────────────────────────
+
+type LifecycleMsg =
+  | { type: 'init'; dbPath: string }
+  | { type: 'db-switch'; dbPath: string }
+  | { type: 'import-start' }
+  | { type: 'import-end' };
+
+type CallMsg = { id: number; channel: string; args: unknown[] };
+
+parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
+  if ('type' in msg) {
+    if (msg.type === 'init') {
+      openDb(msg.dbPath);
+      parentPort!.postMessage({ type: 'ready' });
+    } else if (msg.type === 'db-switch') {
+      openDb(msg.dbPath);
+      undoManager.clear();
+      parentPort!.postMessage({ type: 'switched' });
+    } else if (msg.type === 'import-start') {
+      importInProgress = true;
+    } else if (msg.type === 'import-end') {
+      importInProgress = false;
+    }
+    return;
+  }
+
+  const { id, channel, args } = msg as CallMsg;
+  const handler = handlers[channel];
+  if (!handler) {
+    parentPort!.postMessage({ id, error: `No worker handler for channel: ${channel}` });
+    return;
+  }
+  try {
+    const result = await Promise.resolve(handler(...args));
+    parentPort!.postMessage({ id, result: result ?? null });
+  } catch (err) {
+    parentPort!.postMessage({ id, error: err instanceof Error ? err.message : String(err) });
+  }
+});
