@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: packaged app crashed on startup with "Cannot find module '../../src/api/place-gazetteers/data/sv-socknar.json'" — Vite's externalize-gazetteers plugin rewrote imports to a src/ path that isn't shipped inside app.asar; imports now point to ./gazetteers/<file>.json and the JSON files are copied into .vite/build/gazetteers/ at build time so they ship alongside index.js
+
 - fix: prevent quality checks race condition where App.vue badge load cancels QualityView's run and clears Pinia results; worker now returns null for cancelled runs, QualityView preserves cached results on cancellation
 
 - fix: unify map marker style across all map views — white stroke, consistent radius/opacity, solid polylines with reasonable weight
