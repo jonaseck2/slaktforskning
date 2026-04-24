@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -86,3 +87,18 @@ jobs:
           name: v${{ needs.check-version.outputs.version }}
           generate_release_notes: true
           files: artifacts/**/*
+
+  cleanup:
+    needs: [ release ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          ids=$(gh api "repos/$REPO/actions/artifacts" --paginate --jq '.artifacts[].id')
+          for id in $ids; do
+            echo "Deleting artifact $id"
+            gh api --method DELETE "repos/$REPO/actions/artifacts/$id"
+          done
