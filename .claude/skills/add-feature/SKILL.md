@@ -172,22 +172,38 @@ it('imports places into the database', () => {
 
 ### Adding a new IPC channel
 
-```typescript
-// src/main/ipc.ts — import the api module at the top, then:
-wrapHandler('things:create', (data) => things.createThing(getDatabase(), data as Parameters<typeof things.createThing>[1]));
-wrapHandler('things:delete', (id: string) => things.deleteThing(getDatabase(), id));
+All DB-touching channels run in the Worker Thread. New channels require **two** registrations:
 
-// src/preload/index.ts — add to the contextBridge api object:
+**1. Worker dispatch table** (`src/main/db-worker.ts`) — add to the `handlers` object:
+```typescript
+'things:create': (data) => things.createThing(getDb(), data as Parameters<typeof things.createThing>[1]),
+'things:delete': (id: string) => things.deleteThing(getDb(), id as string),
+```
+
+**2. IPC handler** (`src/main/ipc/<domain>.ts`) — delegate to worker:
+```typescript
+wrapHandler('things:create', (...args) => callWorker('things:create', ...args));
+wrapHandler('things:delete', (...args) => callWorker('things:delete', ...args));
+```
+
+**3. Preload** (`src/preload/index.ts`) — expose via contextBridge:
+```typescript
 things: {
   create: (data: unknown) => ipcRenderer.invoke('things:create', data),
   delete: (id: string) => ipcRenderer.invoke('things:delete', id),
 },
+```
 
-// Vue component — use it:
+**4. Vue component** — use it:
+```typescript
 await window.api.things.create({ name: 'test' });
 ```
 
 After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api` — components do not declare their own `window` type.
+
+**Electron-only channels** (dialog, shell, printToPDF, fs ops) stay on the main thread — register `wrapHandler` only, add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`.
+
+The coverage test (`npx vitest run tests/unit/ipc-worker-coverage.test.ts`) fails fast if any registered channel is missing from the worker dispatch table, catching misses at dev time rather than silently returning nothing at runtime.
 
 See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
 

@@ -32,7 +32,9 @@ Släktforskning is a cross-platform desktop genealogy app built with Electron + 
 
 ### Key Principle
 
-`src/api/` is the single source of truth for all business logic. It has **zero Electron dependencies**. Both the Electron IPC handlers (`src/main/ipc.ts`) and the MCP server (`src/mcp/server.ts`) call the same api/ functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
+`src/api/` is the single source of truth for all business logic. It has **zero Electron dependencies**. Both the Electron IPC handlers (`src/main/ipc/*.ts`) and the MCP server (`src/mcp/server.ts`) call the same api/ functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
+
+**Worker Thread:** All 130+ DB-touching IPC channels run in a dedicated Node.js Worker Thread (`src/main/db-worker.ts`). The Electron main thread handles only Electron-specific operations (dialog, shell, BrowserWindow, printToPDF, fs for import/export). This keeps the main thread unblocked and eliminates click stutter. Worker startup is fire-and-forget; calls are queued until the worker signals `ready`.
 
 ### File Map
 
@@ -107,7 +109,21 @@ src/
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
 │   ├── settings.ts               # Persistent settings (lastDatabase, recentDatabases) in userData/settings.json
-│   └── ipc.ts                    # IPC handlers bridging renderer ↔ api/
+│   ├── db-worker.ts              # Worker Thread: owns SQLite + UndoManager, 130+ channel dispatch table
+│   └── ipc/                      # IPC handlers — delegate DB channels to worker, keep Electron ops on main
+│       ├── index.ts              # registerIpcHandlers(): starts worker, registers all domain handlers
+│       ├── worker-client.ts      # startWorker/callWorker/switchWorkerDb — fire-and-forget with call queue
+│       ├── wrap-handler.ts       # wrapHandler() — ipcMain.handle() with logging
+│       ├── persons.ts            # persons:* → callWorker
+│       ├── relationships.ts      # relationships:* → callWorker
+│       ├── events.ts             # events:* → callWorker
+│       ├── sources.ts            # sources:* → callWorker
+│       ├── places.ts             # places:* → callWorker
+│       ├── database.ts           # db:*, undo:*, backup:* — mix of worker + main
+│       ├── media.ts              # media:* DB channels → worker; media:attach/openFile → main
+│       ├── utility.ts            # groups, repos, tasks, reports → worker; print/chart/csv → main
+│       ├── import.ts             # gedcom:*, archive:*, import:* — dialog + fs stay on main
+│       └── gazetteers.ts         # gazetteers DB channels → worker; getBundled/getSchema → main
 ├── preload/                      # contextBridge — exposes window.api
 │   └── index.ts                  # All IPC channels mapped to window.api.*
 ├── renderer/                     # Vue 3 application
@@ -442,9 +458,19 @@ getAliveInYear(db, year) → { year, persons: AlivePerson[] }  // Everyone alive
 
 ### How it works
 
-1. **Main process** (`src/main/ipc.ts`): `wrapHandler(channel, fn)` registers an `ipcMain.handle()` with logging
-2. **Preload** (`src/preload/index.ts`): Maps channels to `window.api.*` via `contextBridge`
-3. **Renderer**: Vue components call `window.api.persons.create(...)` etc.
+1. **Main process** (`src/main/ipc/*.ts`): `wrapHandler(channel, fn)` registers an `ipcMain.handle()` with logging
+2. **DB channels** → `callWorker(channel, ...args)` → Worker Thread dispatch table in `src/main/db-worker.ts`
+3. **Electron-only channels** (dialog, shell, fs, printToPDF) → handled directly on main thread
+4. **Preload** (`src/preload/index.ts`): Maps channels to `window.api.*` via `contextBridge`
+5. **Renderer**: Vue components call `window.api.persons.create(...)` etc.
+
+### Adding a new DB channel
+
+Two registrations required:
+- `src/main/ipc/<domain>.ts`: `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))`
+- `src/main/db-worker.ts`: `'foo:bar': (arg) => api.createFoo(getDb(), arg)` in the `handlers` object
+
+Run `npx vitest run tests/unit/ipc-worker-coverage.test.ts` — fails immediately if either registration is missing.
 
 ### window.api Surface + IPC Channel Mapping
 
@@ -879,8 +905,9 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 
 | File | Purpose |
 |------|---------|
-| `forge.config.ts` | Electron Forge config (packager, makers, Vite plugin) |
-| `vite.main.config.ts` | Main process build + WASM copy plugin (`closeBundle` hook) |
+| `forge.config.ts` | Electron Forge config — two main entries: `index.ts` + `db-worker.ts` |
+| `vite.main.config.ts` | Main process build + WASM copy plugin + gazetteer externalization |
+| `vite.worker.config.ts` | DB Worker build — same plugins as main (worker imports gazetteer code) |
 | `vite.preload.config.ts` | Preload build (`entryFileNames: 'preload.js'` — avoids collision) |
 | `vite.renderer.config.ts` | Renderer build (`root: src/renderer`, `outDir` resolves to project root) |
 | `vitest.config.mts` | Unit test config |
