@@ -76,9 +76,9 @@ This ensures "Dirleton, East Lothian, Skottland" matches Scotland (via language 
 
 The global name-depth map is cached across `resolvePlace` calls for the same gazetteer set.
 
-## Bundled Gazetteers (25)
+## Bundled Gazetteers (26)
 
-### Point Gazetteers (15)
+### Point Gazetteers (16)
 
 | ID | Name | Source | Nodes | Size |
 |----|------|--------|-------|------|
@@ -97,6 +97,7 @@ The global name-depth map is cached across `resolvePlace` calls for the same gaz
 | `ca-provinces` | Canadian Provinces/Territories | GeoNames | ~11,854 | 2.1 MB |
 | `world-countries` | World Countries | GeoNames | ~244 | 45 KB |
 | `world-admin1` | World States & Provinces | GeoNames | ~2,754 | 452 KB |
+| `world-historical` | World Historical States | Wikidata | ~1,393 | 350 KB |
 
 ### Boundary Gazetteers (8)
 
@@ -155,6 +156,8 @@ Each country/source has its own build script in `scripts/`:
 | `build-us-places-all.ts` | GeoNames US.zip | Parse TSV, all 50 states + DC, pop >= 500 | us-all-states |
 | `build-ca-places.ts` | GeoNames CA.zip | Parse TSV, all 13 provinces/territories | ca-provinces |
 | `build-world.ts` | GeoNames countryInfo + cities15000 + admin1 | Parse 3 files, population-weighted centroids | world-countries, world-admin1 |
+| `build-world-historical.ts` | Wikidata SPARQL (Q3024240, Q28171280, Q6256, Q7270, Q7275) | Two queries merged by QID dedup | world-historical |
+| `build-world-historical-boundaries.ts` | Wikidata P3896 + Wikimedia Maps API | No output — Wikidata has no polygon data for historical empires | — |
 | `build-fi-boundaries.ts` | Statistics Finland WFS | Fetch GeoJSON, round coords | fi-kunnat-boundaries |
 | `build-world-boundaries.ts` | Natural Earth 110m | ogr2ogr SHP→GeoJSON | world-boundaries |
 | `build-us-boundaries.ts` | Census Bureau 20m | ogr2ogr SHP→GeoJSON | us-counties-boundaries |
