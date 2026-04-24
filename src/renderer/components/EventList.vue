@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
 import EventForm from './EventForm.vue';
@@ -197,9 +197,12 @@ function onSaved() {
   load();
 }
 
+// Load smart defaults once — it's a global setting that never changes between person switches.
+onMounted(loadSmartDefaultsSetting);
+
 watch(
   () => props.personId ?? props.relationshipId ?? props.placeId,
-  async () => { await loadSmartDefaultsSetting(); await load(); },
+  load,
   { immediate: true }
 );
 

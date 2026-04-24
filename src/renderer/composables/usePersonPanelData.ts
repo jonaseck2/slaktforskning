@@ -123,11 +123,29 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     if (personId.value !== id) return;
     if (!raw) { person.value = null; return; }
 
+    // Update name and identity immediately — panel header shows the new person without
+    // waiting for the place lookups that build the birth/death lines.
+    const sorted = [...fetchedNames].sort((a, b) => a.sort_order - b.sort_order);
+    names.value = sorted;
+    primaryName.value = sorted[0] ?? null;
+    eventCount.value = events.length;
+    mapPointCount.value = events.filter(e => e.place_id).length;
+    person.value = {
+      id: raw.id,
+      sex: raw.sex as 'M' | 'F' | 'U',
+      living: raw.living,
+      birthLine: person.value?.id === raw.id ? (person.value.birthLine ?? null) : null,
+      deathLine: person.value?.id === raw.id ? (person.value.deathLine ?? null) : null,
+    };
+
     const birth = events.find(e => e.event_type === 'birth');
     const death = events.find(e => e.event_type === 'death');
 
-    // Wave 2: date lines, groups, tasks, and counts all in parallel
-    const [birthLine, deathLine, grps, tasks, rels, ids, media, checks] = await Promise.all([
+    // Wave 2: date lines, groups, tasks, and counts all in parallel.
+    // checks.forPerson is intentionally excluded — it runs ~30 SQL queries
+    // synchronously on the main thread and blocks all other IPC calls.
+    // PersonChecksSection loads checks independently when the section is open.
+    const [birthLine, deathLine, grps, tasks, rels, ids, media] = await Promise.all([
       buildDateLine(birth),
       buildDateLine(death),
       window.api.groups.forPerson(id) as Promise<GroupData[]>,
@@ -135,29 +153,18 @@ export function usePersonPanelData(personId: Ref<string | null>) {
       window.api.relationships.getForPerson(id) as Promise<unknown[]>,
       window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
       window.api.media.forEntity('person', id) as Promise<unknown[]>,
-      (window.api.checks?.forPerson(id) ?? Promise.resolve([])) as Promise<unknown[]>,
     ]);
     if (personId.value !== id) return;
 
-    // Atomic update — all assignments are synchronous so Vue batches into one re-render
-    const sorted = [...fetchedNames].sort((a, b) => a.sort_order - b.sort_order);
-    names.value = sorted;
-    primaryName.value = sorted[0] ?? null;
-    eventCount.value = events.length;
-    mapPointCount.value = events.filter(e => e.place_id).length;
     groups.value = grps;
     researchTasks.value = tasks;
     relationshipCount.value = rels.length;
     identifierCount.value = ids.length;
     mediaCount.value = media.length;
-    checkCount.value = checks.length;
-    person.value = {
-      id: raw.id,
-      sex: raw.sex as 'M' | 'F' | 'U',
-      living: raw.living,
-      birthLine,
-      deathLine,
-    };
+    // Patch only the lifelines so avatar/name don't flicker
+    if (person.value?.id === id) {
+      person.value = { ...person.value, birthLine, deathLine };
+    }
   }
 
   watch(personId, async (id) => {

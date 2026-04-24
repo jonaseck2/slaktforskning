@@ -106,22 +106,20 @@ async function load() {
   const events = (await window.api.events.forPerson(props.personId)) as EventRow[];
   const eventsWithPlaces = events.filter(e => e.place_id);
 
-  const placeCache = new Map<string, PlaceRow | null>();
-  const pathCache = new Map<string, string>();
-  const result: Marker[] = [];
+  // Fetch all unique places and their paths in parallel instead of a serial loop.
+  const uniquePlaceIds = [...new Set(eventsWithPlaces.map(e => e.place_id!))];
+  const [placeResults, pathResults] = await Promise.all([
+    Promise.all(uniquePlaceIds.map(id => window.api.places.get(id) as Promise<PlaceRow | null>)),
+    Promise.all(uniquePlaceIds.map(id => window.api.places.getPath(id) as Promise<string>)),
+  ]);
+  const placeById = new Map<string, PlaceRow | null>(uniquePlaceIds.map((id, i) => [id, placeResults[i]]));
+  const pathById = new Map<string, string>(uniquePlaceIds.map((id, i) => [id, pathResults[i]]));
 
+  const result: Marker[] = [];
   for (const ev of eventsWithPlaces) {
-    let place = placeCache.get(ev.place_id!);
-    if (place === undefined) {
-      place = (await window.api.places.get(ev.place_id!)) as PlaceRow | null;
-      placeCache.set(ev.place_id!, place);
-    }
+    const place = placeById.get(ev.place_id!);
     if (!place) continue;
-    let fullPath = pathCache.get(place.id);
-    if (fullPath === undefined) {
-      fullPath = (await window.api.places.getPath(place.id)) as string;
-      pathCache.set(place.id, fullPath);
-    }
+    const fullPath = pathById.get(place.id) ?? '';
     const coords = resolveCoordinates(place, fullPath);
     if (coords) {
       result.push({
