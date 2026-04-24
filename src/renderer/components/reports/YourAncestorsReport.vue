@@ -87,7 +87,7 @@
           <li v-for="group in surnameGroups" :key="group.surname">
             <strong>{{ group.surname }}:</strong>
             <template v-for="(num, i) in group.ahnentafels" :key="num">
-              <a :href="'#ancestor-' + num" class="report-link">{{ num }}</a><span v-if="i < group.ahnentafels.length - 1">, </span>
+              <a :href="'#ancestor-' + num" class="report-link" @click.prevent="scrollToId('ancestor-' + num)">{{ num }}</a><span v-if="i < group.ahnentafels.length - 1">, </span>
             </template>
           </li>
         </ul>
@@ -424,6 +424,10 @@ watch(
   load,
   { immediate: true },
 );
+
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 
 <style scoped>

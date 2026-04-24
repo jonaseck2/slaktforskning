@@ -53,7 +53,7 @@
       @mousemove="(e: MouseEvent) => !linkBase && seg.person && emit('personmove', e)"
       @mouseleave="!linkBase && seg.person && emit('personleave')"
     >
-      <a v-if="linkBase && seg.person" :href="segHref(seg)">
+      <a v-if="linkBase && seg.person" :href="segHref(seg)" @click.prevent="scrollToId(segHref(seg).replace(/^#/, ''))">
         <title>{{ tooltipLabel(seg) }}</title>
         <path :d="seg.pathD" :fill="segFill(seg)" :stroke="strokeColor" :stroke-width="strokeWidth" stroke-linejoin="round" class="seg-path" />
         <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#fan-empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
@@ -116,7 +116,7 @@
       @mousemove="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personmove', e)"
       @mouseleave="!linkBase && focalSegment!.person && emit('personleave')"
     >
-      <a v-if="linkBase && focalSegment.person" :href="segHref(focalSegment)">
+      <a v-if="linkBase && focalSegment.person" :href="segHref(focalSegment)" @click.prevent="scrollToId(segHref(focalSegment).replace(/^#/, ''))">
         <title>{{ tooltipLabel(focalSegment) }}</title>
         <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
       </a>
@@ -210,6 +210,10 @@ const nonFocalSegments = computed(() => props.segments.filter(s => !s.isFocal));
 function segHref(seg: FanSegment): string {
   const id = props.linkByAhnentafel ? String(seg.ahnNum) : (seg.person?.id ?? '');
   return `${props.linkBase}${id}`;
+}
+
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function segFill(seg: FanSegment): string {

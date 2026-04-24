@@ -10,7 +10,7 @@
       <div class="name">{{ fullName }}</div>
       <div v-if="yearsLabel" class="years">{{ yearsLabel }}</div>
       <div v-if="keyPlace" class="place">{{ keyPlace }}</div>
-      <a v-if="ahnentafel && fanChartHref" :href="fanChartHref" class="ahnentafel ahnentafel-link">#{{ ahnentafel }}</a>
+      <a v-if="ahnentafel && fanChartHref" :href="fanChartHref" class="ahnentafel ahnentafel-link" @click.prevent="scrollToId(fanChartHref!.replace(/^#/, ''))">#{{ ahnentafel }}</a>
       <div v-else-if="ahnentafel" class="ahnentafel">#{{ ahnentafel }}</div>
     </div>
   </div>
@@ -70,6 +70,10 @@ const yearsLabel = computed(() => {
   if (props.birthYear == null && props.deathYear == null) return null;
   return `${props.birthYear ?? '?'}–${props.deathYear ?? ''}`;
 });
+
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 
 <style scoped>

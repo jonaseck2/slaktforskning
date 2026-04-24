@@ -44,10 +44,15 @@ function renderMap() {
     attributionControl: true,
     preferCanvas: true,
     scrollWheelZoom: false,
+    dragging: false,
+    touchZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
   });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
 
   const latlngs = props.points.map(p => [p.lat, p.lon] as [number, number]);
@@ -85,6 +90,7 @@ onBeforeUnmount(() => { if (map) { map.remove(); map = null; } });
   overflow: hidden;
   border: 1px solid var(--surface-border);
   break-inside: avoid;
+  pointer-events: none;
 }
 .life-map-empty {
   background: var(--surface-bg);

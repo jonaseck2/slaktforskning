@@ -9,7 +9,7 @@
         :style="{ left: item.leftPct + '%', '--stem-h': stemPx(item.row) + 'px' }"
         :title="item.label"
       >
-        <a v-if="anchorBase" :href="anchorBase + item.id" class="marker-inner marker-link">
+        <a v-if="anchorBase" :href="anchorBase + item.id" class="marker-inner marker-link" @click.prevent="scrollToId((anchorBase + item.id).replace(/^#/, ''))">
           <span class="marker-label" :style="item.labelAdjustPx ? { transform: `translateX(${item.labelAdjustPx}px)` } : undefined">{{ item.label }}</span>
           <span class="marker-stem" aria-hidden="true"></span>
           <span class="marker-dot" aria-hidden="true"></span>
@@ -116,6 +116,10 @@ const positioned = computed(() => {
 const maxRow = computed(() =>
   positioned.value.reduce((m, i) => Math.max(m, i.row), 0)
 );
+
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 // Track height = tallest marker (label + gap + stem + dot) + a little breathing room
 const trackHeight = computed(() =>

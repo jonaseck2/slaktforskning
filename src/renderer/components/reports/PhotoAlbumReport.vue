@@ -28,7 +28,7 @@
         <h2 class="section-heading">{{ $t('reports.photoAlbum.index') }}</h2>
         <ol class="index-list">
           <li v-for="item in displayItems" :key="item.id">
-            <a :href="'#media-' + item.id" class="report-link">{{ item.title || $t('common.unknown') }}</a>
+            <a :href="'#media-' + item.id" class="report-link" @click.prevent="scrollToId('media-' + item.id)">{{ item.title || $t('common.unknown') }}</a>
           </li>
         </ol>
       </section>
@@ -260,6 +260,10 @@ watch(
   load,
   { immediate: true },
 );
+
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 
 <style scoped>
