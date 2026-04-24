@@ -7,8 +7,8 @@ import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 25 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(25);
+  it('loads all 26 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(26);
   });
 
   const dataIds = [
@@ -17,6 +17,7 @@ describe('bundled gazetteers', () => {
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
+    'world-historical',
     'dk-sogne-boundaries', 'no-kommuner-boundaries', 'fi-kunnat-boundaries',
     'is-sveitarfelog-boundaries', 'us-counties-boundaries', 'ca-divisions-boundaries',
     'world-boundaries',
@@ -64,6 +65,21 @@ describe('bundled gazetteers', () => {
   it('ca-provinces has 13 provinces and territories', () => {
     const ca = gazetteers.find(g => g.id === 'ca-provinces')!;
     expect(ca.root.children!.length).toBe(13);
+  });
+
+  it('world-historical has > 200 dissolved entities', () => {
+    const wh = gazetteers.find(g => g.id === 'world-historical')!;
+    expect(wh.root.children!.length).toBeGreaterThan(200);
+  });
+
+  it('world-historical resolves Soviet Union', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['world-historical'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Soviet Union', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedNode.name).toBe('Soviet Union');
   });
 });
 
