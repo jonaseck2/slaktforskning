@@ -23,6 +23,7 @@
               v-if="isLinked(tag.personId)"
               :href="'#person-' + tag.personId"
               class="face-box"
+              @click.prevent="scrollToId('person-' + tag.personId)"
               :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
             >
               <span class="face-hover-label">{{ tagLabel(tag) }}</span>
@@ -43,7 +44,7 @@
           <div v-if="faceTags[item.id]?.length" class="caption-faces">
             <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
             <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
-              <a v-if="isLinked(tag.personId)" :href="'#person-' + tag.personId" class="face-link">{{ tagLabel(tag) }}</a>
+              <a v-if="isLinked(tag.personId)" :href="'#person-' + tag.personId" class="face-link" @click.prevent="scrollToId('person-' + tag.personId)">{{ tagLabel(tag) }}</a>
               <span v-else class="face-name">{{ tagLabel(tag) }}</span>
               <span v-if="i < faceTags[item.id].length - 1">, </span>
             </template>
@@ -208,6 +209,10 @@ watch(printableItems, async () => {
 
 function formatDate(iso: string): string {
   return iso.slice(0, 10);
+}
+
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 

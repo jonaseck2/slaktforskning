@@ -55,10 +55,15 @@ async function renderMap() {
     attributionControl: true,
     preferCanvas: true,
     scrollWheelZoom: false,
+    dragging: false,
+    touchZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
   });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
 
   const place = (await window.api.places.get(props.placeId)) as PlaceRow | null;
@@ -120,5 +125,6 @@ onBeforeUnmount(() => { if (map) { map.remove(); map = null; } });
   border: 1px solid var(--surface-border);
   background: var(--surface-bg);
   break-inside: avoid;
+  pointer-events: none;
 }
 </style>
