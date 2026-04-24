@@ -18,14 +18,24 @@ Släktforskning is a desktop genealogy application built with Electron, Vue 3, a
 ## Features
 
 - **Local SQLite database** — no cloud, no account, full data ownership
-- **GEDCOM 5.5.1 & 7.0** import and export
+- **Import from** GEDCOM 5.5.1 / 7.0, Genney, and Holger; **export to** GEDCOM 5.5.1 / 7.0
 - **Family tree charts** — pedigree, hourglass, descendant, fan, timeline
-- **Keepsake reports** — A Life, A Marriage, Place Chronicle, Your Ancestors, Photo Album, and more
-- **Place resolution** with 25 bundled gazetteers covering Scandinavia, North America, and the world
+- **Keepsake reports** — A Life, A Marriage, Place Chronicle, Your Ancestors, Life on One Page, Family in Year X, Photo Album
+- **Places with interactive map** — pin life events, browse place history, view boundary polygons
+- **Place resolution** with 27 bundled gazetteers covering Scandinavia, North America, and the world
 - **Source citations** with confidence levels and verbatim transcriptions
+- **Source link rules** — auto-link references to ArkivDigital, Riksarkivet, FamilySearch, Ancestry, MyHeritage, and more
+- **Repositories** — track archives and link them to sources
+- **Media library** — attach photos and documents to persons, events, places; tag faces; auto-cropped profile pictures
+- **Research tasks** — prioritized to-do list with status tracking, per-person or global
+- **Groups** — organize persons into custom collections (e.g. emigrants, military service)
+- **Quality checks** — automated data validation with per-row fix actions
+- **Duplicate detection & merge** — find and combine duplicate persons
+- **Multi-database** — switch between separate family trees without restarting
 - **Built-in MCP server** — 34 tools for AI-powered genealogy research
 - **Multi-window** — open multiple windows for different parts of your tree
-- **Accessibility** — screen reader mode, high contrast theme, keyboard navigation, TTS
+- **Themes & appearance** — three color themes (Forest, Nordic, Twilight) × three modes (Light, Dark, High Contrast)
+- **Accessibility** — screen reader mode, WCAG AAA high-contrast, keyboard navigation, TTS
 - **Swedish and English** interface
 
 ## Installation
