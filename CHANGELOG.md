@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: report map previews are now static (no pan/zoom/drag interaction)
+
 ## v0.137.1 — print fixes and framable tab rename
 
 - fix: `printBackground: true` so chart colors appear when printing
