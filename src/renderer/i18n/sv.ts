@@ -848,6 +848,7 @@ export default {
       documents: 'Dokument',
       photos: 'Foton',
       lifeMap: 'Livskarta',
+      mapCaption: 'Kartförklaring',
       redactLiving: 'Dölj uppgifter om levande personer',
       captions: 'Bildtexter',
       photoNotes: 'Bildanteckningar',

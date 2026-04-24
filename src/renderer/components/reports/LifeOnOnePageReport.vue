@@ -35,7 +35,7 @@
       </div>
 
       <div v-if="props.showLifeMap" class="op-map">
-        <PersonLifeMap :person-id="props.personId" :height="200" draw-path />
+        <PersonLifeMap :person-id="props.personId" :height="200" draw-path :show-caption="props.showMapCaption" />
       </div>
 
       <div v-if="photoGrid.length > 0" class="op-photos">
@@ -72,10 +72,12 @@ const props = withDefaults(defineProps<{
   personId: string;
   orientation?: 'portrait' | 'landscape';
   showLifeMap?: boolean;
+  showMapCaption?: boolean;
   redactLiving?: boolean;
 }>(), {
   orientation: 'portrait',
   showLifeMap: true,
+  showMapCaption: true,
   redactLiving: false,
 });
 

@@ -1,6 +1,14 @@
 <template>
   <div v-if="points.length > 0" ref="mapEl" class="life-map" :style="{ height: height + 'px' }" role="img" :aria-label="ariaLabel"></div>
   <div v-else class="life-map life-map-empty" :style="{ height: height + 'px' }" role="img" :aria-label="ariaLabel"></div>
+  <ol v-if="points.length > 0 && showCaption" class="life-map-legend">
+    <li v-for="(p, idx) in points" :key="idx">
+      <span class="legend-dot" :style="{ background: p.color || pathColor }"></span>
+      <span class="legend-label">{{ p.eventType ? $t(`eventTypes.${p.eventType}`) : p.label }}</span>
+      <span class="legend-place" v-if="p.eventType"> — {{ p.label }}</span>
+      <span class="legend-year" v-if="p.year"> ({{ p.year }})</span>
+    </li>
+  </ol>
 </template>
 
 <script setup lang="ts">
@@ -14,6 +22,7 @@ export interface LifeMapPathPoint {
   label: string;
   year: number | null;
   color?: string;
+  eventType?: string;
 }
 
 const props = withDefaults(defineProps<{
@@ -22,11 +31,13 @@ const props = withDefaults(defineProps<{
   drawPath?: boolean;
   pathColor?: string;
   ariaLabel?: string;
+  showCaption?: boolean;
 }>(), {
   height: 300,
   drawPath: true,
   pathColor: '#2c5aa0',
   ariaLabel: 'Life map',
+  showCaption: true,
 });
 
 const mapEl = ref<HTMLDivElement | null>(null);
@@ -90,9 +101,35 @@ onBeforeUnmount(() => { if (map) { map.remove(); map = null; } });
   overflow: hidden;
   border: 1px solid var(--surface-border);
   break-inside: avoid;
-  pointer-events: none;
 }
 .life-map-empty {
   background: var(--surface-bg);
+}
+.life-map-legend {
+  list-style: decimal;
+  margin: var(--space-xs) 0 0 0;
+  padding: 0 0 0 var(--space-lg);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.life-map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.legend-place, .legend-year {
+  color: var(--text-secondary);
 }
 </style>

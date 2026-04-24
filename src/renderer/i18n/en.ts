@@ -848,6 +848,7 @@ export default {
       documents: 'Documents',
       photos: 'Photos',
       lifeMap: 'Life Map',
+      mapCaption: 'Map caption',
       redactLiving: 'Redact living persons',
       captions: 'Photo captions',
       photoNotes: 'Photo notes',

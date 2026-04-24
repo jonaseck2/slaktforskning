@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.138.0 — Your Ancestors photos + report option wiring tests
+
+- feat: Photos checkbox in Your Ancestors report now renders per-ancestor photo pages (was accepted as a prop but silently ignored)
+- feat: add Captions and Photo Notes checkboxes to Your Ancestors report (consistent with A Life, A Marriage, Place Chronicle)
+- feat: new PersonPhotoSection primitive — self-loading per-person photo section for report pages
+- feat: static analysis test suite (reportOptionWiring) catches prop/binding mismatches across all 12 report components
+
 ## v0.137.3 — report link fixes
 
 - fix: report anchor links (#ancestor-N, #event-N, #media-N, #person-N) no longer trigger Vue Router warnings — hash-router was intercepting them as route navigations; replaced with @click.prevent + scrollIntoView

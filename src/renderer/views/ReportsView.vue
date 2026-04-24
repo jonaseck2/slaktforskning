@@ -39,7 +39,10 @@
               :density="store.yourAncestorsDensity"
               :show-events="store.yourAncestorsShowEvents"
               :show-life-map="store.yourAncestorsShowLifeMap"
+              :show-map-caption="store.yourAncestorsShowMapCaption"
               :show-extra-photos="store.yourAncestorsShowExtraPhotos"
+              :show-media-captions="store.yourAncestorsShowMediaCaptions"
+              :show-media-notes="store.yourAncestorsShowMediaNotes"
               :show-sources="store.yourAncestorsShowSources"
               :redact-living="store.redactLiving"
             />
@@ -55,6 +58,7 @@
             <ALifeReport
               :person-id="store.personId"
               :show-life-map="store.aLifeShowLifeMap"
+              :show-map-caption="store.aLifeShowMapCaption"
               :show-photos="store.aLifeShowPhotos"
               :show-documents="store.aLifeShowDocuments"
               :show-sources="store.aLifeShowSources"
@@ -76,6 +80,7 @@
               :person-id="store.personId"
               :orientation="store.onePageOrientation"
               :show-life-map="store.onePageShowLifeMap"
+              :show-map-caption="store.onePageShowMapCaption"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -144,6 +149,7 @@
             <AMarriageReport
               :relationship-id="store.aMarriageRelId"
               :show-life-map="store.aMarriageShowLifeMap"
+              :show-map-caption="store.aMarriageShowMapCaption"
               :show-photos="store.aMarriageShowPhotos"
               :show-notes="store.aMarriageShowNotes"
               :show-sources="store.aMarriageShowSources"

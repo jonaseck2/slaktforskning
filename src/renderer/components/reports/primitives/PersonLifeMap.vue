@@ -7,6 +7,7 @@
       :draw-path="drawPath"
       :path-color="pathColor"
       :aria-label="ariaLabel"
+      :show-caption="showCaption"
     />
   </section>
 </template>
@@ -23,10 +24,12 @@ const props = withDefaults(defineProps<{
   drawPath?: boolean;
   pathColor?: string;
   ariaLabel?: string;
+  showCaption?: boolean;
 }>(), {
   height: 300,
   drawPath: true,
   pathColor: '#2c5aa0',
+  showCaption: true,
 });
 
 const personIdRef = computed(() => props.personId);
@@ -38,6 +41,7 @@ const points = computed<LifeMapPathPoint[]>(() =>
     lon: e.lon,
     label: e.placeName,
     year: e.dateISO ? extractYear(e.dateISO) : null,
+    eventType: e.eventType,
   })),
 );
 
