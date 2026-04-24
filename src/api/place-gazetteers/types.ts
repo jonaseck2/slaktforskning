@@ -18,6 +18,8 @@ export interface GazetteerNode {
   lon: number;
   children?: GazetteerNode[];
   geometry?: GazetteerGeometry;
+  startYear?: number;
+  endYear?: number;
 }
 
 export interface GazetteerSource {
