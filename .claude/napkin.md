@@ -42,8 +42,8 @@
 1. **[2026-04-24] New IPC channels need TWO registrations — wrapHandler + db-worker dispatch table**
    Do instead: add `'foo:bar': (arg) => api.fn(getDb(), arg)` to `handlers` in `src/main/db-worker.ts`, AND `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))` in the domain IPC file. Electron-only channels (dialog, shell, fs) go in wrapHandler only — add to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`. The coverage test catches misses immediately.
 
-2. **[2026-04-24] vite.worker.config.ts must replicate all plugins from vite.main.config.ts**
-   Do instead: keep `externalize-gazetteers` AND the WASM copy plugin in both `vite.main.config.ts` AND `vite.worker.config.ts`. The worker imports `api/checks` which pulls in gazetteer code. Missing plugin = 40 MB bundled into db-worker.js or WASM not found at runtime.
+2. **[2026-04-24] vite.worker.config.ts must replicate all plugins AND emit the same externalized paths as vite.main.config.ts**
+   Do instead: both configs' `externalize-gazetteers` plugin MUST return `./gazetteers/<file>.json` from `resolveId`. Don't recompute a relative path from the importer — that emits `../../src/api/place-gazetteers/data/...` which happens to work in dev (src/ lives next to .vite/build/) but fails in the packaged app because src/ is not shipped inside app.asar. Symptom: every view toasts "Could not load data" because `checks:runAll` throws when the worker requires a gazetteer JSON. vite.main.config.ts owns the `closeBundle` that copies JSONs into `.vite/build/gazetteers/`; the worker just has to point at the same destination. Keep the WASM copy plugin in both configs too.
 
 3. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
    Do instead: keep the `externalize-gazetteers` plugin in both `vite.main.config.ts` and `vite.worker.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized.
