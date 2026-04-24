@@ -39,8 +39,14 @@
 
 ## Build & Performance
 
-1. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
-   Do instead: keep the `externalize-gazetteers` plugin in `vite.main.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized.
+1. **[2026-04-24] New IPC channels need TWO registrations — wrapHandler + db-worker dispatch table**
+   Do instead: add `'foo:bar': (arg) => api.fn(getDb(), arg)` to `handlers` in `src/main/db-worker.ts`, AND `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))` in the domain IPC file. Electron-only channels (dialog, shell, fs) go in wrapHandler only — add to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`. The coverage test catches misses immediately.
+
+2. **[2026-04-24] vite.worker.config.ts must replicate all plugins from vite.main.config.ts**
+   Do instead: keep `externalize-gazetteers` AND the WASM copy plugin in both `vite.main.config.ts` AND `vite.worker.config.ts`. The worker imports `api/checks` which pulls in gazetteer code. Missing plugin = 40 MB bundled into db-worker.js or WASM not found at runtime.
+
+3. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
+   Do instead: keep the `externalize-gazetteers` plugin in both `vite.main.config.ts` and `vite.worker.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized.
 
 ## MCP Server
 

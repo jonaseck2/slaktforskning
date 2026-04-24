@@ -39,12 +39,17 @@ Look for:
 ## Debugging
 
 ### IPC debug logging
-All IPC handlers in `src/main/ipc.ts` use `wrapHandler()` which logs:
+All IPC handlers use `wrapHandler()` which logs:
 - `[IPC] channel [args]` — request received
 - `[IPC] channel → OK` — success
 - `[IPC] channel → ERROR` + stack — failure
 
 These print to the main process stdout (terminal where `npm start` runs).
+
+### DB Worker Thread
+All DB-touching IPC channels run in `src/main/db-worker.ts` (a Node.js Worker Thread). The main process never blocks on SQLite. If a DB channel returns `No worker handler for channel: foo:bar`, the channel is missing from the dispatch table in `db-worker.ts` — add it there.
+
+Worker startup is fire-and-forget: calls are queued until the worker signals `ready`. There is no delay to app launch, but the first few IPC calls (e.g. `persons:list` on startup) may be queued for ~100–200 ms while the worker initializes WASM.
 
 ### DevTools
 DevTools auto-open in dev mode (`src/main/index.ts` calls `win.webContents.openDevTools()`).
@@ -157,27 +162,44 @@ npm start
        ├─ Vite dev server (renderer) → localhost:5173
        ├─ Vite build (main) → .vite/build/index.js
        ├─ Vite build (preload) → .vite/build/preload.js
+       ├─ Vite build (worker) → .vite/build/db-worker.js
        └─ Electron
             ├─ Main process: .vite/build/index.js
             │    ├─ Creates BrowserWindow
-            │    ├─ Opens SQLite database
-            │    └─ Registers IPC handlers (ipc.ts)
+            │    ├─ Opens SQLite database (for import/export/media only)
+            │    ├─ Registers IPC handlers (src/main/ipc/*.ts)
+            │    └─ Spawns DB Worker Thread
+            ├─ DB Worker Thread: .vite/build/db-worker.js   ← all SQLite reads/writes
+            │    ├─ Owns the primary SQLite connection
+            │    ├─ Runs all 130+ DB-touching IPC channels
+            │    └─ Owns UndoManager
             ├─ Preload: .vite/build/preload.js
             │    └─ Exposes window.api via contextBridge
             └─ Renderer: localhost:5173
                  └─ Vue 3 app calling window.api.*
 ```
 
+**IPC call path:** `window.api.persons.list()` → preload `ipcRenderer.invoke('persons:list')` → main thread `wrapHandler` → `callWorker('persons:list')` → DB Worker `handlers['persons:list']` → SQLite → result back through the same chain.
+
+**Main-thread-only channels** (Electron-specific, cannot run in worker): dialog, shell, BrowserWindow, printToPDF, fs for import/export, `media:attach`, `media:openFile`, `gazetteers:getSchema`, `gazetteers:getBundled`.
+
 ## Config Files
 
 | File | Purpose |
 |------|---------|
-| `forge.config.ts` | Electron Forge config (packager, makers, Vite plugin) |
-| `vite.main.config.ts` | Main process Vite build + WASM copy plugin |
-| `vite.preload.config.ts` | Preload build (entryFileNames: 'preload.js') |
-| `vite.renderer.config.ts` | Renderer build (root: src/renderer, outDir to project .vite/) |
+| `forge.config.ts` | Electron Forge config — two main-process entries: `index.ts` + `db-worker.ts` |
+| `vite.main.config.ts` | Main process Vite build + WASM copy plugin + gazetteer externalization |
+| `vite.worker.config.ts` | DB worker Vite build — same plugins as main (worker also imports gazetteer code) |
+| `vite.preload.config.ts` | Preload build (`entryFileNames: 'preload.js'`) |
+| `vite.renderer.config.ts` | Renderer build (`root: src/renderer`, `outDir` resolves to project root) |
 | `.claude/launch.json` | Claude Code dev server config (port 5173) |
 
 ## Adding New IPC Channels
 
-See the "Adding a New IPC Channel" section in `CLAUDE.md` for the step-by-step pattern.
+**DB-touching channels** must be registered in two places:
+1. `src/main/ipc/<domain>.ts` — `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))`
+2. `src/main/db-worker.ts` — add `'foo:bar': (arg) => api.createFoo(getDb(), arg)` to the `handlers` dispatch table
+
+The unit test `tests/unit/ipc-worker-coverage.test.ts` will fail if you add a `wrapHandler` call without a matching worker handler (or without explicitly listing the channel in `MAIN_THREAD_ONLY_CHANNELS`).
+
+**Electron-only channels** (dialog, shell, fs): register in `wrapHandler` only — add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in the coverage test.
