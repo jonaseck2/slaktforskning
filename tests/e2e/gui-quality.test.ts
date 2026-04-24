@@ -76,16 +76,16 @@ test.describe('Quality checks with data', () => {
 
   test('quality view shows check results after seeding data', async () => {
     await app.navigate('/quality');
-    // Wait for auto-run to complete and show results
-    await app.waitForText('error', 15000);
+    // Wait for the summary line which only appears after checks complete (not CSS).
+    await app.waitForText('errors ·', 15000);
     const dom = await app.getDom();
-    // Should have at least some issues
-    expect(dom).toContain('quality-table');
+    // Should have at least some issues rendered in the table
+    expect(dom).toContain('severity-badge');
   });
 
   test('filter chips work', async () => {
     await app.navigate('/quality');
-    await app.waitForText('error', 15000);
+    await app.waitForText('errors ·', 15000);
 
     // Click the "Errors" filter chip
     await app.executeJs(`
@@ -101,37 +101,40 @@ test.describe('Quality checks with data', () => {
 
     // The table should still exist with filtered results
     const dom = await app.getDom();
-    expect(dom).toContain('quality-table');
+    expect(dom).toContain('severity-badge');
   });
 
   test('ignore and restore a check result', async () => {
     await app.navigate('/quality');
-    await app.waitForText('error', 15000);
+    await app.waitForText('errors ·', 15000);
 
     // Clear any leftover ignored state from previous retries
     await app.executeJs(`localStorage.removeItem('quality:ignored')`);
     await app.navigate('/');
     await app.navigate('/quality');
-    await app.waitForText('error', 15000);
+    // Wait for 'NoEvents' to appear — entity label for Test NoEvents person's NO_BIRTH_EVENT
+    // result. Only appears in rendered table cells, never in CSS.
+    await app.waitForText('NoEvents', 15000);
 
-    // Count rows before ignore
+    // Count ALL visible rows (not just clickable ones — clickability depends on Vue reactivity
+    // timing and is verified separately by the navigation test)
     const rowsBefore = await app.executeJs<number>(`
-      document.querySelectorAll('.quality-table .clickable-row').length
+      document.querySelectorAll('.data-table tbody tr').length
     `);
     expect(rowsBefore).toBeGreaterThan(0);
 
     // Click the ignore button (✕) on the first row
     await app.executeJs(`
       (() => {
-        const btn = document.querySelector('.quality-table .clickable-row .btn-delete');
+        const btn = document.querySelector('.data-table tbody tr .btn-delete');
         if (btn) btn.click();
       })()
     `);
     await app.settle(500);
 
-    // In "All" filter, ignored rows are hidden — count should decrease
+    // In "All" filter, ignored rows are hidden — row count should decrease
     const rowsAfterIgnore = await app.executeJs<number>(`
-      document.querySelectorAll('.quality-table .clickable-row').length
+      document.querySelectorAll('.data-table tbody tr').length
     `);
     expect(rowsAfterIgnore).toBe(rowsBefore - 1);
 
@@ -148,14 +151,14 @@ test.describe('Quality checks with data', () => {
 
     // Should show exactly 1 ignored row
     const ignoredRows = await app.executeJs<number>(`
-      document.querySelectorAll('.quality-table .row-ignored').length
+      document.querySelectorAll('.data-table .row-ignored').length
     `);
     expect(ignoredRows).toBe(1);
 
     // Restore: click the ✕ button on the ignored row
     await app.executeJs(`
       (() => {
-        const btn = document.querySelector('.quality-table .row-ignored .btn-delete');
+        const btn = document.querySelector('.data-table .row-ignored .btn-delete');
         if (btn) btn.click();
       })()
     `);
@@ -171,29 +174,29 @@ test.describe('Quality checks with data', () => {
     await app.settle(500);
 
     const rowsAfterRestore = await app.executeJs<number>(`
-      document.querySelectorAll('.quality-table .clickable-row').length
+      document.querySelectorAll('.data-table tbody tr').length
     `);
     expect(rowsAfterRestore).toBe(rowsBefore);
   });
 
   test('severity badges are rendered', async () => {
     await app.navigate('/quality');
-    await app.waitForText('error', 15000);
+    await app.waitForText('errors ·', 15000);
 
     const dom = await app.getDom();
-    // Should have severity badge classes
-    const hasSeverity = dom.includes('severity-high') ||
-      dom.includes('severity-medium') ||
-      dom.includes('severity-low');
+    // Should have severity badge classes (badge-error, badge-warning, badge-notice)
+    const hasSeverity = dom.includes('badge-error') ||
+      dom.includes('badge-warning') ||
+      dom.includes('badge-notice');
     expect(hasSeverity).toBe(true);
   });
 
   test('clicking a result row navigates to person detail', async () => {
     await app.navigate('/quality');
-    await app.waitForText('error', 15000);
+    await app.waitForText('errors ·', 15000);
 
     // Click the first result row
-    await app.click('.quality-table .clickable-row');
+    await app.click('.data-table .clickable-row');
     await app.settle(500);
 
     // Should navigate to a person detail view

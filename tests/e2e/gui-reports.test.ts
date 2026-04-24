@@ -183,7 +183,7 @@ test.describe('Reports view keepsake tabs', () => {
     await focusPerson(focalPersonId);
     await app.navigate('/reports');
     await app.settle(100);
-    await selectKeepsakeTab('A Marriage');
+    await selectKeepsakeTab('A Couple');
     await app.settle(300);
     // Pick the first couple in the dropdown
     await app.executeJs(`
@@ -242,7 +242,7 @@ test.describe('Reports view keepsake tabs', () => {
   test('familyInYear tab renders preview without subject (defaults year)', async () => {
     await app.navigate('/reports');
     await app.settle(100);
-    await selectKeepsakeTab('Family in Year');
+    await selectKeepsakeTab('Family in a Year');
     await app.settle(500);
     const dom = await app.getDom();
     // familyInYear has a default year (currentYear - 100), so preview always renders

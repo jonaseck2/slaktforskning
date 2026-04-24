@@ -268,16 +268,16 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     console.log(`[worker/checks] runAll #${runId} starting (${allChecks.length} checks)`);
 
     for (const check of allChecks) {
-      if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return []; }
+      if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return null; }
       await new Promise<void>(resolve => setImmediate(resolve));
-      if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return []; }
+      if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return null; }
       const start = Date.now();
       const res = check.fn(d, dbDir);
       console.log(`[worker/checks] ${check.name}: ${Date.now() - start}ms → ${res.length}`);
       results.push(...res);
     }
 
-    if (runId !== checksRunId) return [];
+    if (runId !== checksRunId) return null;
     console.log(`[worker/checks] runAll #${runId}: ${Date.now() - t0}ms → ${results.length} raw`);
 
     const countByCode = new Map<string, number>();

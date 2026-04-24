@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
@@ -44,7 +44,7 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import QualityIssuesTable from '../components/QualityIssuesTable.vue';
-import { isIgnored } from '../utils/qualityIgnore';
+import { isIgnored, resetIgnored } from '../utils/qualityIgnore';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 
@@ -229,13 +229,15 @@ function navigateTo(r: QualityResult) {
 
 // --- Data loading ---
 let checksRunId = 0;
+let isMounted = false;
 async function runChecks() {
-  if (!window.api) return;
+  if (!window.api || !isMounted) return;
   const myRunId = ++checksRunId;
   qualityStore.running = true;
   try {
-    const raw = (await window.api.checks.runAll()) as QualityResult[];
+    const raw = (await window.api.checks.runAll()) as QualityResult[] | null;
     if (myRunId !== checksRunId) return;
+    if (raw === null) { qualityStore.running = false; return; }
     qualityStore.setResults(raw);
     visibleCount.value = PAGE_SIZE;
   } catch (err) {
@@ -247,6 +249,8 @@ async function runChecks() {
 }
 
 onMounted(() => {
+  isMounted = true;
+  resetIgnored();
   runChecks();
   loadedVersion = dataVersionStore.version;
 
@@ -255,6 +259,10 @@ onMounted(() => {
     if (debounce) clearTimeout(debounce);
     debounce = setTimeout(runChecks, 800);
   });
+});
+
+onUnmounted(() => {
+  isMounted = false;
 });
 
 onActivated(() => {

@@ -291,7 +291,8 @@ async function loadResearchBadge() {
 async function loadQualityBadge() {
   if (!window.api?.checks) return;
   try {
-    const results = await window.api.checks.runAll();
+    const results = await window.api.checks.runAll() as Array<{ severity: string }> | null;
+    if (results === null) return;
     qualityErrorCount.value = results.filter(r => r.severity === 'error' || r.severity === 'warning').length;
   } catch { /* ignore */ }
 }

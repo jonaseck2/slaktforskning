@@ -33,13 +33,16 @@ test.setTimeout(30_000);
 
 test.describe('Visualization empty state', () => {
   test('shows empty state when no persons exist', async () => {
-    // Ensure tree mode so the viz empty state renders (list mode embeds PersonsView).
+    // Navigate away first so VisualizationView unmounts, then clear any stale focal-person
+    // from prior runs (shared Chromium profile) before navigating back.
+    await app.navigate('/sources');
     await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree'); localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
     await app.waitForText('Create a person to start visualizing');
   });
 
   test('empty state has data-testid attribute for reliable selection', async () => {
+    await app.navigate('/sources');
     await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree'); localStorage.removeItem('viz-focal-person')`);
     await app.navigate('/visualisering');
     const dom = await app.getDom();
