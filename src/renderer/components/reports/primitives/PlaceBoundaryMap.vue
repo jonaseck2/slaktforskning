@@ -73,7 +73,7 @@ async function renderMap() {
 
   if (place.latitude != null && place.longitude != null) {
     L.circleMarker([place.latitude, place.longitude], {
-      radius: 10, color: '#b33', fillColor: '#b33', fillOpacity: 0.6, weight: 2,
+      radius: 8, color: '#fff', fillColor: '#2c5aa0', fillOpacity: 0.85, weight: 1.5,
     }).addTo(map);
     bounds.extend([place.latitude, place.longitude]);
   }
@@ -88,7 +88,7 @@ async function renderMap() {
       if (resolved && resolved.geometry) {
         const feature = { type: 'Feature', properties: {}, geometry: resolved.geometry } as GeoJSON.Feature;
         const geoLayer = L.geoJSON(feature, {
-          style: { color: '#b33', weight: 1, fillOpacity: 0.1 },
+          style: { color: '#2c5aa0', weight: 2, fillOpacity: 0.08 },
           interactive: false,
         });
         geoLayer.addTo(map);
@@ -100,7 +100,7 @@ async function renderMap() {
 
   for (const pin of props.persons) {
     L.circleMarker([pin.lat, pin.lon], {
-      radius: 5, color: '#2c5aa0', fillColor: '#2c5aa0', fillOpacity: 0.8, weight: 2,
+      radius: 6, color: '#fff', fillColor: '#2c5aa0', fillOpacity: 0.85, weight: 1.5,
     }).bindTooltip(pin.label).addTo(map);
     bounds.extend([pin.lat, pin.lon]);
   }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: unify map marker style across all map views — white stroke, consistent radius/opacity, solid polylines with reasonable weight
+
 ## v0.139.0 — multilingual historical gazetteer
 
 - feat: add lang-world-historical language gazetteer — all-language translations (70K names) for ~1,391 historical political entities (Soviet Union, Ottoman Empire, etc.) via Wikidata batch label lookups; "Sovjetunionen", "Sowjetunion", "União Soviética" etc. now resolve correctly
