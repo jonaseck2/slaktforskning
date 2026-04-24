@@ -27,6 +27,7 @@ import worldHistorical from './data/world-historical.json';
 // Language gazetteers
 import langSvGeonames from './data/lang-sv-geonames.json';
 import langSvWikidata from './data/lang-sv-wikidata.json';
+import langWorldHistorical from './data/lang-world-historical.json';
 // Boundary gazetteers
 import dkSogneBoundaries from './data/dk-sogne-boundaries.json';
 import noKommunerBoundaries from './data/no-kommuner-boundaries.json';
@@ -89,6 +90,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   // Language gazetteers
   langSvGeonames as Gazetteer,
   langSvWikidata as Gazetteer,
+  langWorldHistorical as Gazetteer,
   // Boundary gazetteers
   dkSogneBoundaries as Gazetteer,
   noKommunerBoundaries as Gazetteer,

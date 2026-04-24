@@ -7,7 +7,7 @@ description: Build, extend, and debug gazetteers for place resolution. Use when 
 
 ## Overview
 
-The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 25 bundled gazetteers (15 point + 8 boundary + 2 language) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, and ~244 countries globally. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").
+The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 27 bundled gazetteers (16 point + 8 boundary + 3 language) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, ~244 countries globally, and ~1,393 historical states/empires. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").
 
 ## Architecture
 
@@ -112,7 +112,7 @@ The global name-depth map is cached across `resolvePlace` calls for the same gaz
 | `no-kommuner-boundaries` | Norwegian Municipalities — Boundaries | Kartverket | 357 | 474 KB |
 | `ca-divisions-boundaries` | Canadian Census Divisions — Boundaries | Statistics Canada | 293 | 637 KB |
 
-### Language Gazetteers (2)
+### Language Gazetteers (3)
 
 Language gazetteers (`kind: "language"`) contain no coordinates — they inject translated place names as aliases into point/boundary gazetteers at load time via `mergeTranslations()` in `index.ts`.
 
@@ -120,6 +120,7 @@ Language gazetteers (`kind: "language"`) contain no coordinates — they inject 
 |----|------|--------|-------------|---------|
 | `lang-sv-geonames` | Swedish (GeoNames) | GeoNames alternateNames | 133 countries + 1,014 admin1 | CC BY 4.0 |
 | `lang-sv-wikidata` | Swedish (Wikidata) | Wikidata SPARQL | 304 Nordic divisions | CC0 1.0 |
+| `lang-world-historical` | World Historical States — All Languages | Wikidata SPARQL | ~1,391 historical entities × all languages (~70K names) | CC0 1.0 |
 
 **Format:** `translations` field maps target gazetteer ID → path key → translated names array:
 ```json
@@ -167,6 +168,7 @@ Each country/source has its own build script in `scripts/`:
 | `build-ca-boundaries.ts` | Statistics Canada | ogr2ogr reproject+simplify | ca-divisions-boundaries |
 | `build-lang-sv-geonames.ts` | GeoNames alternateNamesV2 | Filter isolanguage=sv, match to world gazetteers | lang-sv-geonames |
 | `build-lang-sv-wikidata.ts` | Wikidata SPARQL | Swedish labels for Nordic admin divisions | lang-sv-wikidata |
+| `build-lang-world-historical.ts` | Wikidata SPARQL | Phase 1: QID fetch; Phase 2: batched label lookups (80 QIDs/batch) | lang-world-historical |
 
 ## Adding a New Country Gazetteer
 
