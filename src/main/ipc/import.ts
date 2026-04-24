@@ -13,6 +13,7 @@ import { importArchive } from '../../api/archive_import';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
+import { notifyWorkerImportStart, notifyWorkerImportEnd } from './worker-client';
 
 let importInProgress = false;
 
@@ -93,6 +94,7 @@ export function registerImportHandlers(
       selectedPath = result.filePaths[0];
     }
     importInProgress = true;
+    notifyWorkerImportStart();
     let tmpDir: string | null = null;
     try {
       let gedPath = selectedPath;
@@ -112,6 +114,7 @@ export function registerImportHandlers(
       return { imported: true, filePath: gedPath, report };
     } finally {
       importInProgress = false;
+      notifyWorkerImportEnd();
       if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
@@ -275,11 +278,13 @@ export function registerImportHandlers(
     const dbDir = path.dirname(dbPath);
     const mediaDir = path.join(dbDir, mediaFolderName(dbPath));
     importInProgress = true;
+    notifyWorkerImportStart();
     try {
       const report = importArchive(getDb(), archivePath, mediaDir);
       return { imported: true, filePath: archivePath, report };
     } finally {
       importInProgress = false;
+      notifyWorkerImportEnd();
     }
   });
 }

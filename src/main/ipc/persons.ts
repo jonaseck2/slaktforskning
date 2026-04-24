@@ -1,48 +1,22 @@
-import * as persons from '../../api/persons';
-import * as uw from '../../api/undo_wrappers';
+import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
-export function registerPersonHandlers(getDb: () => ReturnType<typeof import('../database').getDatabase>, wrapHandler: WrapHandlerFn) {
-  // Persons (undo-wrapped)
-  wrapHandler('persons:create', (data) => uw.createPersonUndo(getDb(), data as Parameters<typeof persons.createPerson>[1]));
-  wrapHandler('persons:createWithEvent', (data) => uw.createPersonWithEventUndo(getDb(), data as Parameters<typeof uw.createPersonWithEventUndo>[1]));
-  wrapHandler('persons:get', (id) => persons.getPerson(getDb(), id as string));
-  wrapHandler('persons:list', () => persons.listPersons(getDb()));
-  wrapHandler('persons:update', (id, data) => uw.updatePersonUndo(getDb(), id as string, data as Parameters<typeof persons.updatePerson>[2]));
-  wrapHandler('persons:delete', (id) => uw.deletePersonUndo(getDb(), id as string));
-  wrapHandler('persons:search', (query, relateeId) =>
-    persons.searchPersons(getDb(), query as string, (relateeId as string | null | undefined) ?? null)
-  );
-  wrapHandler('persons:addName', (personId, data) => uw.addPersonNameUndo(getDb(), personId as string, data as Parameters<typeof persons.addPersonName>[2]));
-  wrapHandler('persons:getNames', (personId) => persons.getPersonNames(getDb(), personId as string));
-  wrapHandler('persons:updateName', (id, data) => uw.updatePersonNameUndo(getDb(), id as string, data as Parameters<typeof persons.updatePersonName>[2]));
-  wrapHandler('persons:deleteName', (id: string) =>
-    uw.deletePersonNameUndo(getDb(), id)
-  );
-  wrapHandler('persons:addIdentifier', (personId, data) =>
-    persons.addPersonIdentifier(getDb(), personId as string, data as Parameters<typeof persons.addPersonIdentifier>[2])
-  );
-  wrapHandler('persons:getIdentifiers', (personId) =>
-    persons.getPersonIdentifiers(getDb(), personId as string)
-  );
-  wrapHandler('persons:deleteIdentifier', (id) =>
-    persons.deletePersonIdentifier(getDb(), id as string)
-  );
-  wrapHandler('persons:listPage', (limit, offset) => {
-    const db = getDb();
-    return {
-      persons: persons.listPersonsPage(db, limit as number, offset as number),
-      total: persons.countPersons(db),
-    };
-  });
-  wrapHandler('persons:searchWithDetails', (query) =>
-    persons.searchPersonsWithDetails(getDb(), query as string)
-  );
-  wrapHandler('persons:listUnsourcedPage', (limit, offset) => {
-    const db = getDb();
-    return {
-      persons: persons.listUnsourcedPersonsPage(db, limit as number, offset as number),
-      total: persons.countUnsourcedPersons(db),
-    };
-  });
+export function registerPersonHandlers(_getDb: unknown, wrapHandler: WrapHandlerFn) {
+  wrapHandler('persons:create', (...args) => callWorker('persons:create', ...args));
+  wrapHandler('persons:createWithEvent', (...args) => callWorker('persons:createWithEvent', ...args));
+  wrapHandler('persons:get', (...args) => callWorker('persons:get', ...args));
+  wrapHandler('persons:list', () => callWorker('persons:list'));
+  wrapHandler('persons:update', (...args) => callWorker('persons:update', ...args));
+  wrapHandler('persons:delete', (...args) => callWorker('persons:delete', ...args));
+  wrapHandler('persons:search', (...args) => callWorker('persons:search', ...args));
+  wrapHandler('persons:addName', (...args) => callWorker('persons:addName', ...args));
+  wrapHandler('persons:getNames', (...args) => callWorker('persons:getNames', ...args));
+  wrapHandler('persons:updateName', (...args) => callWorker('persons:updateName', ...args));
+  wrapHandler('persons:deleteName', (...args) => callWorker('persons:deleteName', ...args));
+  wrapHandler('persons:addIdentifier', (...args) => callWorker('persons:addIdentifier', ...args));
+  wrapHandler('persons:getIdentifiers', (...args) => callWorker('persons:getIdentifiers', ...args));
+  wrapHandler('persons:deleteIdentifier', (...args) => callWorker('persons:deleteIdentifier', ...args));
+  wrapHandler('persons:listPage', (...args) => callWorker('persons:listPage', ...args));
+  wrapHandler('persons:searchWithDetails', (...args) => callWorker('persons:searchWithDetails', ...args));
+  wrapHandler('persons:listUnsourcedPage', (...args) => callWorker('persons:listUnsourcedPage', ...args));
 }
