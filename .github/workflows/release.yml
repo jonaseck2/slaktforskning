@@ -90,6 +90,7 @@ jobs:
 
   cleanup:
     needs: [ release ]
+    if: always() && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - name: Delete old artifacts (keep 30 most recent)
