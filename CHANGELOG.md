@@ -3,6 +3,7 @@
 ## Unreleased
 
 - fix: unify map marker style across all map views — white stroke, consistent radius/opacity, solid polylines with reasonable weight
+- fix: restore hourglass chart outline connectors and collision-free placement broken by perf commit
 
 ## v0.139.0 — multilingual historical gazetteer
 

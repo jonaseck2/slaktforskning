@@ -7,8 +7,8 @@
       <svg
         v-if="tree"
         :width="layout.svgWidth * zoom"
-        :height="effectiveSvgHeight * zoom"
-        :viewBox="`0 ${effectiveViewBoxMinY} ${layout.svgWidth} ${effectiveSvgHeight}`"
+        :height="layout.svgHeight * zoom"
+        :viewBox="`0 ${layout.viewBoxMinY} ${layout.svgWidth} ${layout.svgHeight}`"
         data-testid="hourglass-svg"
       >
         <defs>
@@ -28,7 +28,7 @@
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
-          v-memo="[box, props.colorMode, props.readonly]"
+          v-memo="[box.x, box.y, box.w, box.h, box.isFocal, box.person.id, box.person.sex, box.person.living, box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname, box.person.birthDate, box.person.birthPlace, box.person.deathDate, box.person.deathPlace, box.person.photoUrl, props.colorMode, props.readonly]"
           :data-testid="'person-box-' + box.person.id"
           filter="url(#chart-shadow)"
           :class="['person-box', 'clickable']"
@@ -143,7 +143,7 @@
             vector-effect="non-scaling-stroke"
           />
           <g
-            v-for="ph in overlayPlaceholders"
+            v-for="ph in layout.placeholders"
             :key="'ph-' + (ph.key ?? ph.role + '-' + ph.childPersonId)"
             class="ghost-box"
             tabindex="0"
@@ -191,8 +191,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import { computeHourglassLayout, maxDescendantDepthTP, BOX_W, MIN_BOX_H, V_GAP, GEN_GAP, PAD, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W, findPerson } from '../../utils/chart-layout';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
 import { wrapName, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchHourglassTreePerson, loadAncestorGenerationTP, loadChildrenForNodeTP } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
@@ -229,79 +229,9 @@ const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
 const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
 
-// The base layout never recomputes on selection change — it only changes when tree
-// data or collapse state changes. Placeholder outlines for the selected person are
-// computed as a cheap overlay from existing box coordinates (no layout re-run).
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 1400, svgHeight: 688, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
-  return computeHourglassLayout(tree.value, collapsed.value);
-});
-
-// Cheap overlay: derive add-relative placeholder positions from the selected box.
-// O(tree walk + constant arithmetic) — does not re-run the layout algorithm.
-const overlayPlaceholders = computed<import('../../utils/chart-layout/types').PlaceholderBox[]>(() => {
-  const id = props.selectedPersonId;
-  if (!id || !tree.value) return [];
-  const selectedBox = layout.value.boxes.find(b => b.person.id === id);
-  if (!selectedBox) return [];
-
-  const target = findPerson(tree.value, id);
-  if (!target) return [];
-
-  const { x, y, w, h } = selectedBox;
-  const cx = x + w / 2;
-  const ph: import('../../utils/chart-layout/types').PlaceholderBox[] = [];
-
-  // Determine parent existence (same logic as injectOutlines)
-  const realParents = target.parents.filter(p => !p.isPlaceholder);
-  let hasFather = realParents.some(p => p.person.sex === 'M');
-  let hasMother = realParents.some(p => p.person.sex === 'F');
-  if (realParents.length >= 2 || (realParents.length === 1 && !hasFather && !hasMother)) {
-    hasFather = true;
-    hasMother = true;
-  }
-
-  // Use the actual parent row Y when parents already exist in the layout; otherwise estimate.
-  const parentBoxes = realParents.map(p => layout.value.boxes.find(b => b.person.id === p.person.id)).filter(Boolean) as import('../../utils/chart-layout/types').BoxLayout[];
-  const parentRowY = parentBoxes.length > 0
-    ? parentBoxes[0].y
-    : y - GEN_GAP - MIN_BOX_H;
-
-  if (!hasFather) ph.push({ type: 'placeholder', role: 'father', childPersonId: id, x: cx - V_GAP / 2 - BOX_W, y: parentRowY });
-  if (!hasMother) ph.push({ type: 'placeholder', role: 'mother', childPersonId: id, x: cx + V_GAP / 2, y: parentRowY });
-
-  // Child placeholder — beside existing children or centered below selected box
-  const childBoxes = target.children.filter(c => !c.isPlaceholder).map(c => layout.value.boxes.find(b => b.person.id === c.person.id)).filter(Boolean) as import('../../utils/chart-layout/types').BoxLayout[];
-  const childRowY = childBoxes.length > 0 ? childBoxes[0].y : y + h + GEN_GAP;
-  const rightmostChildEdge = childBoxes.reduce((r, b) => Math.max(r, b.x + b.w), 0);
-  const childX = rightmostChildEdge > 0 ? rightmostChildEdge + V_GAP : cx - BOX_W / 2;
-  ph.push({ type: 'placeholder', role: 'child', childPersonId: id, x: childX, y: childRowY });
-
-  // Spouse placeholder — beside existing spouses on the sex-determined side
-  const realSpouses = target.spouses.filter(s => !s.isPlaceholder);
-  const spouseBoxes = realSpouses.map(s => layout.value.boxes.find(b => b.person.id === s.person.id)).filter(Boolean) as import('../../utils/chart-layout/types').BoxLayout[];
-  if (target.person.sex === 'F') {
-    const leftEdge = spouseBoxes.length > 0 ? Math.min(...spouseBoxes.map(b => b.x)) : x;
-    ph.push({ type: 'placeholder', role: 'spouse', childPersonId: id, x: leftEdge - V_GAP - BOX_W, y });
-  } else {
-    const rightEdge = spouseBoxes.length > 0 ? Math.max(...spouseBoxes.map(b => b.x + b.w)) : x + w;
-    ph.push({ type: 'placeholder', role: 'spouse', childPersonId: id, x: rightEdge + V_GAP, y });
-  }
-
-  return ph;
-});
-
-// Expand viewBox to fit overlay placeholders that fall outside the base layout bounds.
-const effectiveViewBoxMinY = computed(() => {
-  const base = layout.value.viewBoxMinY ?? 0;
-  if (overlayPlaceholders.value.length === 0) return base;
-  return Math.min(base, ...overlayPlaceholders.value.map(ph => ph.y - PAD));
-});
-const effectiveSvgHeight = computed(() => {
-  const base = layout.value.svgHeight;
-  if (overlayPlaceholders.value.length === 0) return base;
-  const phMaxY = Math.max(...overlayPlaceholders.value.map(ph => ph.y + MIN_BOX_H + PAD));
-  return Math.max(base, phMaxY - effectiveViewBoxMinY.value);
+  return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId);
 });
 
 const solidPaths = computed(() =>
