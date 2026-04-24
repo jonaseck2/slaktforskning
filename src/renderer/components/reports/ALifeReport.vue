@@ -62,6 +62,7 @@
         :person-id="props.personId"
         :heading="$t('reports.alife.lifeMap')"
         :height="400"
+        :show-caption="props.showMapCaption"
         draw-path
       />
 
@@ -112,6 +113,7 @@ import { useToast } from '../../composables/useToast';
 const props = withDefaults(defineProps<{
   personId: string;
   showLifeMap?: boolean;
+  showMapCaption?: boolean;
   showPhotos?: boolean;
   showDocuments?: boolean;
   showSources?: boolean;
@@ -121,6 +123,7 @@ const props = withDefaults(defineProps<{
   showMediaNotes?: boolean;
 }>(), {
   showLifeMap: true,
+  showMapCaption: true,
   showPhotos: true,
   showDocuments: false,
   showSources: false,

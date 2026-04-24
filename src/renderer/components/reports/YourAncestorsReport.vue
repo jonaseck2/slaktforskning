@@ -76,7 +76,14 @@
           v-if="props.showLifeMap"
           :person-id="ancestor.id"
           :height="150"
+          :show-caption="props.showMapCaption"
           draw-path
+        />
+        <PersonPhotoSection
+          v-if="props.showExtraPhotos"
+          :person-id="ancestor.id"
+          :show-captions="props.showMediaCaptions"
+          :show-notes="props.showMediaNotes"
         />
       </section>
 
@@ -113,6 +120,7 @@ import { useI18n } from 'vue-i18n';
 import ReportCover from './primitives/ReportCover.vue';
 import PersonMiniCard from './primitives/PersonMiniCard.vue';
 import PersonLifeMap from './primitives/PersonLifeMap.vue';
+import PersonPhotoSection from './primitives/PersonPhotoSection.vue';
 import FanChartReport from './FanChartReport.vue';
 import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
@@ -125,7 +133,10 @@ const props = withDefaults(defineProps<{
   density?: 'one' | 'two';
   showEvents?: boolean;
   showLifeMap?: boolean;
+  showMapCaption?: boolean;
   showExtraPhotos?: boolean;
+  showMediaCaptions?: boolean;
+  showMediaNotes?: boolean;
   showSources?: boolean;
   redactLiving?: boolean;
 }>(), {
@@ -134,7 +145,10 @@ const props = withDefaults(defineProps<{
   density: 'one',
   showEvents: true,
   showLifeMap: true,
+  showMapCaption: true,
   showExtraPhotos: false,
+  showMediaCaptions: true,
+  showMediaNotes: true,
   showSources: false,
   redactLiving: false,
 });

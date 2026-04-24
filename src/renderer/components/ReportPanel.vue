@@ -71,6 +71,7 @@
 
         <template v-if="activeTab === 'alife'">
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowLifeMap">      {{ $t('reports.common.lifeMap') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowMapCaption" :disabled="!store.aLifeShowLifeMap"> {{ $t('reports.common.mapCaption') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowPhotos">        {{ $t('reports.common.photos') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowDocuments">     {{ $t('reports.common.documents') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowSources">       {{ $t('reports.common.sources') }}</label>
@@ -82,6 +83,7 @@
 
         <template v-else-if="activeTab === 'amarriage'">
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowLifeMap">       {{ $t('reports.common.lifeMap') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowMapCaption" :disabled="!store.aMarriageShowLifeMap"> {{ $t('reports.common.mapCaption') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowPhotos">         {{ $t('reports.common.photos') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowNotes">          {{ $t('reports.amarriage.narrative') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowSources">        {{ $t('reports.common.sources') }}</label>
@@ -101,15 +103,20 @@
         </template>
 
         <template v-else-if="activeTab === 'yourAncestors'">
-          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowEvents">       {{ $t('reports.alife.events') }}</label>
-          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowExtraPhotos">  {{ $t('reports.common.photos') }}</label>
-          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowSources">      {{ $t('reports.common.sources') }}</label>
-          <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">                  {{ $t('reports.common.redactLiving') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowEvents">         {{ $t('reports.alife.events') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowLifeMap">        {{ $t('reports.common.lifeMap') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowMapCaption" :disabled="!store.yourAncestorsShowLifeMap"> {{ $t('reports.common.mapCaption') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowExtraPhotos">    {{ $t('reports.common.photos') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowMediaCaptions"> {{ $t('reports.common.captions') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowSources">        {{ $t('reports.common.sources') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">                    {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
         <template v-else-if="activeTab === 'onePage'">
-          <label class="panel-checkbox"><input type="checkbox" v-model="store.onePageShowLifeMap"> {{ $t('reports.common.lifeMap') }}</label>
-          <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">       {{ $t('reports.common.redactLiving') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.onePageShowLifeMap">    {{ $t('reports.common.lifeMap') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.onePageShowMapCaption" :disabled="!store.onePageShowLifeMap"> {{ $t('reports.common.mapCaption') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">          {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
         <template v-else-if="activeTab === 'familyInYear'">

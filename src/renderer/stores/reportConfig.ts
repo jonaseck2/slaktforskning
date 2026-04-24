@@ -15,6 +15,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
 
   // A Life
   const aLifeShowLifeMap        = ref(true);
+  const aLifeShowMapCaption     = ref(true);
   const aLifeShowPhotos         = ref(true);
   const aLifeShowDocuments      = ref(false);
   const aLifeShowSources        = ref(false);
@@ -23,17 +24,21 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const aLifeShowMediaNotes     = ref(true);
 
   // Life on One Page
-  const onePageOrientation = ref<'portrait' | 'landscape'>('portrait');
-  const onePageShowLifeMap = ref(true);
+  const onePageOrientation    = ref<'portrait' | 'landscape'>('portrait');
+  const onePageShowLifeMap    = ref(true);
+  const onePageShowMapCaption = ref(true);
 
   // Your Ancestors
-  const yourAncestorsGenerations     = ref(4);
-  const yourAncestorsColorMode       = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
-  const yourAncestorsDensity         = ref<'one' | 'two'>('one');
-  const yourAncestorsShowEvents      = ref(true);
-  const yourAncestorsShowLifeMap     = ref(true);
-  const yourAncestorsShowExtraPhotos = ref(false);
-  const yourAncestorsShowSources     = ref(false);
+  const yourAncestorsGenerations          = ref(4);
+  const yourAncestorsColorMode            = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
+  const yourAncestorsDensity              = ref<'one' | 'two'>('one');
+  const yourAncestorsShowEvents           = ref(true);
+  const yourAncestorsShowLifeMap          = ref(true);
+  const yourAncestorsShowMapCaption       = ref(true);
+  const yourAncestorsShowExtraPhotos      = ref(false);
+  const yourAncestorsShowMediaCaptions    = ref(true);
+  const yourAncestorsShowMediaNotes       = ref(true);
+  const yourAncestorsShowSources          = ref(false);
 
   // Family in Year X
   const familyInYearYear  = ref<number>(new Date().getFullYear() - 100);
@@ -72,6 +77,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   // A Marriage
   const aMarriageRelId             = ref('');
   const aMarriageShowLifeMap       = ref(true);
+  const aMarriageShowMapCaption    = ref(true);
   const aMarriageShowPhotos        = ref(true);
   const aMarriageShowNotes         = ref(true);
   const aMarriageShowSources       = ref(false);
@@ -93,11 +99,12 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
 
   return {
     personId,
-    aLifeShowLifeMap, aLifeShowPhotos, aLifeShowDocuments, aLifeShowSources,
+    aLifeShowLifeMap, aLifeShowMapCaption, aLifeShowPhotos, aLifeShowDocuments, aLifeShowSources,
     aLifeShowNotes, aLifeShowMediaCaptions, aLifeShowMediaNotes,
-    onePageOrientation, onePageShowLifeMap,
+    onePageOrientation, onePageShowLifeMap, onePageShowMapCaption,
     yourAncestorsGenerations, yourAncestorsColorMode, yourAncestorsDensity,
-    yourAncestorsShowEvents, yourAncestorsShowLifeMap, yourAncestorsShowExtraPhotos, yourAncestorsShowSources,
+    yourAncestorsShowEvents, yourAncestorsShowLifeMap, yourAncestorsShowMapCaption, yourAncestorsShowExtraPhotos,
+    yourAncestorsShowMediaCaptions, yourAncestorsShowMediaNotes, yourAncestorsShowSources,
     familyInYearYear, familyInYearScope,
     photoAlbumSubjectType, photoAlbumRelId, photoAlbumPlaceId, photoAlbumPerPage,
     photoAlbumShowCaptions, photoAlbumShowNotes, photoAlbumShowIndex, photoAlbumIncludeDocuments,
@@ -105,7 +112,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
     placeChroniclePlaceId, placeChronicleShowBoundary, placeChronicleShowChildPlaces,
     placeChronicleShowPhotos, placeChronicleShowNotes, placeChronicleShowSources,
     placeChronicleShowMediaCaptions, placeChronicleShowMediaNotes,
-    aMarriageRelId, aMarriageShowLifeMap, aMarriageShowPhotos, aMarriageShowNotes,
+    aMarriageRelId, aMarriageShowLifeMap, aMarriageShowMapCaption, aMarriageShowPhotos, aMarriageShowNotes,
     aMarriageShowSources, aMarriageShowMediaCaptions, aMarriageShowMediaNotes,
     redactLiving,
     fanArcSpan, fanColorMode,

@@ -79,11 +79,11 @@
         <div v-if="props.showLifeMap && hasAnyLifeMapPoints" class="events-map dual-map-grid">
           <div v-if="spouse1LifeMapPoints.length > 0" class="dual-map-cell">
             <div class="dual-map-label">{{ spouse1Name }}</div>
-            <LifeMap :points="spouse1LifeMapPoints" :height="220" draw-path path-color="#2c5aa0" />
+            <LifeMap :points="spouse1LifeMapPoints" :height="220" draw-path path-color="#2c5aa0" :show-caption="props.showMapCaption" />
           </div>
           <div v-if="spouse2LifeMapPoints.length > 0" class="dual-map-cell">
             <div class="dual-map-label">{{ spouse2Name }}</div>
-            <LifeMap :points="spouse2LifeMapPoints" :height="220" draw-path path-color="#8a2d2d" />
+            <LifeMap :points="spouse2LifeMapPoints" :height="220" draw-path path-color="#8a2d2d" :show-caption="props.showMapCaption" />
           </div>
         </div>
       </section>
@@ -131,6 +131,7 @@ import { useToast } from '../../composables/useToast';
 const props = withDefaults(defineProps<{
   relationshipId: string;
   showLifeMap?: boolean;
+  showMapCaption?: boolean;
   showPhotos?: boolean;
   showNotes?: boolean;
   showSources?: boolean;
@@ -139,6 +140,7 @@ const props = withDefaults(defineProps<{
   showMediaNotes?: boolean;
 }>(), {
   showLifeMap: true,
+  showMapCaption: true,
   showPhotos: true,
   showNotes: true,
   showSources: false,
@@ -338,6 +340,7 @@ const spouse1LifeMapPoints = computed<LifeMapPathPoint[]>(() =>
     lon: e.lon,
     label: e.placeName,
     year: extractYear(e.dateISO),
+    eventType: e.eventType,
   })),
 );
 const spouse2LifeMapPoints = computed<LifeMapPathPoint[]>(() =>
@@ -346,6 +349,7 @@ const spouse2LifeMapPoints = computed<LifeMapPathPoint[]>(() =>
     lon: e.lon,
     label: e.placeName,
     year: extractYear(e.dateISO),
+    eventType: e.eventType,
   })),
 );
 const hasAnyLifeMapPoints = computed(() =>
