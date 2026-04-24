@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: prevent quality checks race condition where App.vue badge load cancels QualityView's run and clears Pinia results; worker now returns null for cancelled runs, QualityView preserves cached results on cancellation
+
 - fix: unify map marker style across all map views — white stroke, consistent radius/opacity, solid polylines with reasonable weight
 - fix: restore hourglass chart outline connectors and collision-free placement broken by perf commit
 

@@ -13,8 +13,10 @@ test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'a11y');
   await app.settle(150);
   await app.setLocale('en');
-  // Force VisualizationView into list mode so the embedded PersonsView renders on `/`.
+  // Set list mode in localStorage, then navigate away so VisualizationView unmounts.
+  // When a test navigates to '/', VisualizationView remounts fresh and reads 'list' from localStorage.
   await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
+  await app.navigate('/sources');
 });
 
 test.afterAll(async () => {
@@ -188,7 +190,8 @@ test('date input fields have aria-labels', async () => {
     await app.settle(200);
     const hasDateLabels = await app.executeJs<boolean>(`
       (() => {
-        const dateInputs = document.querySelectorAll('.date-input select, .date-input input');
+        // Exclude native date-picker inputs (aria-hidden="true") — they are implementation details.
+        const dateInputs = document.querySelectorAll('.date-input select, .date-input input:not([aria-hidden])');
         return dateInputs.length > 0 && Array.from(dateInputs).every(el => !!el.getAttribute('aria-label'));
       })()
     `);

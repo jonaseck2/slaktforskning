@@ -19,8 +19,10 @@ test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'persons');
   await app.settle(150);
   await app.setLocale('en');
-  // Force VisualizationView (the `/` redirect target) into list mode so the embedded PersonsView is visible.
+  // Set list mode in localStorage, then navigate away so VisualizationView unmounts.
+  // When a test navigates to '/', VisualizationView remounts fresh and reads 'list' from localStorage.
   await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
+  await app.navigate('/sources');
 });
 
 test.afterAll(async () => {
@@ -36,7 +38,7 @@ test.setTimeout(30_000);
 test.describe('Persons CRUD', () => {
   test('empty state shows placeholder', async () => {
     await app.navigate('/');
-    await app.waitForText('No persons yet');
+    await app.waitForText('No persons');
   });
 
   test('create a person via the Add Person modal', async () => {

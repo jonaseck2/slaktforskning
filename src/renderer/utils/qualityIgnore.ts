@@ -35,3 +35,7 @@ export function toggleIgnore(r: IgnorableIssue): void {
   ignoredKeys.value = next;
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
 }
+
+export function resetIgnored(): void {
+  ignoredKeys.value = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as string[]);
+}

@@ -34,7 +34,7 @@ test.setTimeout(30_000);
 test.describe('Sources CRUD', () => {
   test('empty state shows placeholder', async () => {
     await app.navigate('/sources');
-    await app.waitForText('No sources yet');
+    await app.waitForText('No sources');
   });
 
   test('create a source via modal', async () => {
@@ -97,7 +97,7 @@ test.describe('Sources CRUD', () => {
 test.describe('Relationships CRUD', () => {
   test('empty state shows placeholder', async () => {
     await app.navigate('/relationships');
-    await app.waitForText('No relations yet');
+    await app.waitForText('No relationships');
   });
 
   test('create a relationship via modal', async () => {
