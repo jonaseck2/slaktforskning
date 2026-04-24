@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.139.0 — multilingual historical gazetteer
+
+- feat: add lang-world-historical language gazetteer — all-language translations (70K names) for ~1,391 historical political entities (Soviet Union, Ottoman Empire, etc.) via Wikidata batch label lookups; "Sovjetunionen", "Sowjetunion", "União Soviética" etc. now resolve correctly
+
 ## v0.138.0 — Your Ancestors photos + report option wiring tests
 
 - feat: Photos checkbox in Your Ancestors report now renders per-ancestor photo pages (was accepted as a prop but silently ignored)

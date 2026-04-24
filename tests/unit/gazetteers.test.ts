@@ -7,8 +7,8 @@ import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 26 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(26);
+  it('loads all 27 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(27);
   });
 
   const dataIds = [
@@ -34,7 +34,7 @@ describe('bundled gazetteers', () => {
     });
   }
 
-  const langIds = ['lang-sv-geonames', 'lang-sv-wikidata'];
+  const langIds = ['lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical'];
 
   for (const id of langIds) {
     it(`includes language gazetteer ${id}`, () => {
@@ -80,6 +80,22 @@ describe('bundled gazetteers', () => {
     const result = resolvePlace('Soviet Union', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedNode.name).toBe('Soviet Union');
+  });
+
+  it('world-historical resolves "Sovjetunionen" via lang-world-historical', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['world-historical', 'lang-world-historical'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Sovjetunionen', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedNode.name).toBe('Soviet Union');
+  });
+
+  it('lang-world-historical has > 1000 entities with translations', () => {
+    const langGaz = gazetteers.find(g => g.id === 'lang-world-historical')!;
+    const whTranslations = langGaz.translations!['world-historical'];
+    expect(Object.keys(whTranslations).length).toBeGreaterThan(1000);
   });
 });
 

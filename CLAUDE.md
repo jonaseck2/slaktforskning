@@ -75,7 +75,7 @@ src/
 │       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
 │       ├── resolver.ts            # resolvePlace() — match place strings against gazetteer trees
 │       ├── index.ts               # loadGazetteers(), getAllGazetteers()
-│       └── data/                    # 26 bundled gazetteers (~40 MB) — 16 point + 8 boundary + 2 language
+│       └── data/                    # 27 bundled gazetteers (~42 MB) — 16 point + 8 boundary + 3 language
 │           ├── sv-socknar.json      # Swedish socknar (Wikidata)
 │           ├── sv-forsamlingar.json # Swedish församlingar (Wikidata)
 │           ├── sv-orter.json        # Swedish orter (GeoNames)
@@ -101,7 +101,8 @@ src/
 │           ├── world-historical.json # ~1,393 historical states/empires (Wikidata)
 │           ├── world-boundaries.json # World country boundaries (Natural Earth)
 │           ├── lang-sv-geonames.json  # Swedish place name translations (GeoNames)
-│           └── lang-sv-wikidata.json  # Swedish place name translations (Wikidata)
+│           ├── lang-sv-wikidata.json  # Swedish place name translations (Wikidata)
+│           └── lang-world-historical.json # All-language translations for historical states (Wikidata)
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
