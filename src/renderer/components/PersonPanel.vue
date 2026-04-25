@@ -159,9 +159,11 @@
     />
 
     <!-- Add research task modal -->
-    <AddResearchTaskModal
+    <ResearchTaskModal
       v-if="showTaskForm && personId"
+      mode="standalone"
       :person-id="personId"
+      @cancel="showTaskForm = false"
       @close="showTaskForm = false"
       @saved="onTaskSaved"
     />
@@ -181,7 +183,7 @@
 
 <script setup lang="ts">
 import { ref, toRef, onMounted, nextTick } from 'vue';
-import AddResearchTaskModal from './AddResearchTaskModal.vue';
+import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';

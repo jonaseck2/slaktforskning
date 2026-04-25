@@ -901,6 +901,8 @@ export default {
     notes: 'Notes',
     result: 'Result',
     addTask: 'Task',
+    newTask: 'New task',
+    editTask: 'Edit task',
     entity: 'Research task',
     statuses: {
       open: 'Open',

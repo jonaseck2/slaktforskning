@@ -901,6 +901,8 @@ export default {
     notes: 'Anteckningar',
     result: 'Resultat',
     addTask: 'Forskningsuppgift',
+    newTask: 'Ny uppgift',
+    editTask: 'Redigera uppgift',
     entity: 'Forskningsuppgift',
     statuses: {
       open: 'Öppen',
