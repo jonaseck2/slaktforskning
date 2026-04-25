@@ -1,3 +1,4 @@
+import lunr from 'lunr';
 import type { Snapshot } from '../api/html_site/snapshot';
 import type { GenealogyEvent, Media, MediaRegion, Place, Relationship, Source, Citation } from '../api/types';
 
@@ -21,6 +22,7 @@ interface Indices {
   mediaLinksByEntity: Map<string, (Media & { link_id: string; link_type: string | null; sort_order: number })[]>;
   regionsByMedia: Map<string, MediaRegion[]>;
   regionsByPerson: Map<string, MediaRegion[]>;
+  searchIndex: lunr.Index;
 }
 
 function buildIndices(s: Snapshot): Indices {
@@ -143,6 +145,16 @@ function buildIndices(s: Snapshot): Indices {
     }
   }
 
+  const searchIndex = lunr(function () {
+    this.ref('id');
+    this.field('given_name');
+    this.field('surname');
+    for (const p of s.persons) {
+      const name = namesByPerson.get(p.id)?.[0];
+      this.add({ id: p.id, given_name: name?.given_name ?? '', surname: name?.surname ?? '' });
+    }
+  });
+
   return {
     personById,
     namesByPerson,
@@ -162,6 +174,7 @@ function buildIndices(s: Snapshot): Indices {
     mediaLinksByEntity,
     regionsByMedia,
     regionsByPerson,
+    searchIndex,
   };
 }
 
@@ -190,11 +203,15 @@ export function installStaticApiWith(snapshot: Snapshot): void {
       return idx.idsByPerson.get(personId) ?? [];
     },
     async search(q: string) {
-      const ql = q.toLowerCase();
-      return personsWithNames.filter(p =>
-        (p.given_name && p.given_name.toLowerCase().includes(ql)) ||
-        (p.surname && p.surname.toLowerCase().includes(ql))
-      );
+      try {
+        const hits = idx.searchIndex.search(q + '*');
+        return hits
+          .map(h => personsWithNames.find(p => p.id === h.ref))
+          .filter((p): p is typeof personsWithNames[number] => p !== undefined);
+      } catch {
+        // lunr throws on empty or invalid query — fall back to full list
+        return [];
+      }
     },
     // No-op mutating methods (static site is read-only)
     async create() { return null; },
