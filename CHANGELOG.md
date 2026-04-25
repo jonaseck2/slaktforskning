@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.141.2 — AddResearchTaskModal uses PersonPicker
+
+- fix: AddResearchTaskModal now shows PersonPicker when no personId is pre-passed, matching ResearchTasksView inline modal
+
 ## v0.141.1 — chart route alignment, i18n cleanup, focal person defaults
 
 - fix: descendant and hourglass connector routes now share one horizontal segment height per generation (routes no longer vary with individual node height, eliminating the cluttered look)
