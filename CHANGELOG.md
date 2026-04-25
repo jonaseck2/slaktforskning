@@ -5,6 +5,7 @@
 - fix(timeline): render labels on top of stems; make axis line black
 - fix(media): refresh profile picture immediately after setting from face region; auto-create media link when only tagged via region
 - fix(website-export): static site now actually shows charts, maps, and media — switched to the main PersonsView/PlacesView/MediaView and rewrote static-api to match the real preload surface (forEntity, forPerson, listPage→items, profilePicRef, etc.)
+- fix(website-export): hide entity side panels in static mode — the chart/map area now uses the full width
 
 ## v0.146.0 — App-look website export
 
