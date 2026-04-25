@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.143.0 — modal redesign phase 2 — universal entity-panel modals
+
+- feat: every modal now uses the `BaseSubPanel` shell with `mode='standalone'|'subpanel'` for one consistent visual language across the app
+- feat: new modals — `LinkRuleModal`, `PersonIdentifierModal`, fold of add-related-person into `PersonModal`
+- feat: `MergePersonsModal`, `ConfirmModal`, and the 5 import sections (Archive, Gedcom Import/Export, Genney, Holger) refactored onto `BaseSubPanel`
+- feat: `BaseSubPanel` extended with `tone`, `icon`, `hideSave`, and `cancelLabel` props for informational and danger dialogs
+- feat: `CitationModal` now supports inline source picking via `SourcePicker` when no `sourceId` is preset (with `useSourceSession` pre-fill)
+- chore: removed legacy `EventForm`, `EventFormBody`, `CitationForm` components and their tests — fully replaced by `EventModal`/`CitationModal` standalone
+
 ## v0.142.2 — panel layout polish
 
 - fix: PlacePanel no longer reloads when switching list↔map — panel is now owned by PlacesView across both modes (MapView gets `noPanel` prop)
