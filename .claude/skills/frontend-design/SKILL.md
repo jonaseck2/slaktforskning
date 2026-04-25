@@ -59,12 +59,20 @@ This applies `.content-paneled` which removes outer padding/background so the vi
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  padding: var(--space-lg);              /* ← sheet owns the breathing room */
+}
+.left-sheet-content {
+  flex: 1; min-height: 0;
+  overflow-y: auto;                      /* ← only the body scrolls; header stays put */
 }
 ```
-Content inside the left sheet must not touch its edges — add padding to inner elements:
-- Headers: `padding: var(--space-lg) var(--space-lg) 0`
-- Tab bars / toolbars: `padding: var(--space-xs) var(--space-lg)`
-- Content areas: `padding: var(--space-sm) var(--space-lg) var(--space-lg)`
+**Layout contract — every list view follows it:**
+- Sheet has `display: flex; flex-direction: column; overflow: hidden; padding: var(--space-lg)`. The padding lives on the sheet, not on each child.
+- Header (`.header`), filter row (`<FilterChips>` direct, no wrapper), and the scrollable content wrapper (`<x>-list-content` with `flex: 1; min-height: 0; overflow-y: auto`) are direct children. No per-child padding overrides.
+- Spacing between header → filter row → body comes from the shared `.header { margin-bottom: 16px }` and `.count-label { margin: 0 0 8px }` defaults — do not redefine them in the view.
+- `<FilterChips>` is dropped in directly. **Never wrap it in another div** — the chip pill is the bar.
+
+Reference views: PersonsView, PlacesView, MediaView. Do not invent a new padding scheme.
 
 **Step 4 — Drag handle + resizable panel** (always RIGHT side, always resizable):
 
@@ -130,9 +138,8 @@ Drag handle + wrapper CSS:
 
 ### Content feathering
 
-For maps specifically, the map container gets its own border-radius and border within the padded area:
+For maps specifically, the map fills its content wrapper (no extra padding — the sheet already provides it) and gets its own border-radius and border:
 ```css
-.map-content { padding: var(--space-sm) var(--space-lg) var(--space-lg); }
 .base-map-container { border: 1px solid var(--surface-border-subtle); border-radius: var(--radius-md); }
 ```
 
