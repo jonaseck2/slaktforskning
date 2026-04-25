@@ -9,7 +9,7 @@ const REPORT_SLUGS = ['a-life', 'your-ancestors', 'life-on-one-page', 'photo-alb
 const PRINT_SLUGS = ['pedigree', 'hourglass', 'descendant', 'fan-chart', 'timeline'];
 
 export function registerWebsiteExportHandlers(): void {
-  wrapHandler('website:export', async (_event, opts: {
+  wrapHandler('website:export', async (opts: {
     siteTitle: string;
     focusPersonId: string | null;
     scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
