@@ -219,6 +219,7 @@ export default {
     allTypes: 'All',
   },
   citations: {
+    entity: 'Citation',
     title: 'Citations',
     addTitle: 'Add Citation',
     editTitle: 'Edit citation',
