@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.141.4 — nav reorganisation
+
+- fix: move Sources and Relationships to Review section, Reports to new Present section
+
 ## v0.141.3 — lint fix
 
 - fix: fix import order in ipc-worker-coverage test (vitest after node: imports)

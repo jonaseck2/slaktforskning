@@ -25,6 +25,7 @@ export default {
     research: 'FORSKNING',
     organize: 'ORGANISERA',
     review: 'GRANSKA',
+    present: 'PRESENTERA',
   },
   settings: {
     title: 'Inställningar',
