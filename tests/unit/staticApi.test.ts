@@ -144,3 +144,16 @@ describe('static-api media', () => {
     expect(result).toHaveLength(0);
   });
 });
+
+describe('static-api search', () => {
+  it('persons.search finds partial match via lunr', async () => {
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.persons.search('Ann') as Array<{ given_name: string }>;
+    expect(result.length).toBeGreaterThanOrEqual(1);
+    expect(result[0].given_name).toBe('Anna');
+  });
+
+  it('persons.search returns empty array for non-matching query', async () => {
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.persons.search('zzznomatch') as Array<unknown>;
+    expect(result).toHaveLength(0);
+  });
+});
