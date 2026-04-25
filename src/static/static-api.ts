@@ -2,7 +2,7 @@ import lunr from 'lunr';
 import type { Snapshot } from '../api/html_site/snapshot';
 import type { GenealogyEvent, Media, MediaRegion, Place, Relationship, Source, Citation } from '../api/types';
 
-// Indices built once from the snapshot for O(1) lookups
+// Builds rich indices once from the snapshot for O(1) lookups.
 interface Indices {
   personById: Map<string, Snapshot['persons'][number]>;
   namesByPerson: Map<string, Snapshot['personNames']>;
@@ -17,11 +17,16 @@ interface Indices {
   citationsByEvent: Map<string, Citation[]>;
   citationsByPlace: Map<string, Citation[]>;
   citationsByRelationship: Map<string, Citation[]>;
+  citationsBySource: Map<string, Citation[]>;
   relationshipsByPerson: Map<string, Relationship[]>;
   mediaById: Map<string, Media>;
   mediaLinksByEntity: Map<string, (Media & { link_id: string; link_type: string | null; sort_order: number })[]>;
+  mediaLinksByMedia: Map<string, { entity_type: string; entity_id: string }[]>;
+  mediaLinkCounts: Map<string, number>;
   regionsByMedia: Map<string, MediaRegion[]>;
   regionsByPerson: Map<string, MediaRegion[]>;
+  participantsByEvent: Map<string, Snapshot['eventParticipants']>;
+  participantsByPerson: Map<string, Snapshot['eventParticipants']>;
   searchIndex: lunr.Index;
 }
 
@@ -43,44 +48,48 @@ function buildIndices(s: Snapshot): Indices {
   }
 
   const placeById = new Map(s.places.map(p => [p.id, p]));
-
   const eventById = new Map(s.events.map(e => [e.id, e]));
 
-  // Build event lookups via eventParticipants for person join
   const eventsByPerson = new Map<string, GenealogyEvent[]>();
+  const participantsByEvent = new Map<string, Snapshot['eventParticipants']>();
+  const participantsByPerson = new Map<string, Snapshot['eventParticipants']>();
   for (const ep of s.eventParticipants) {
     const event = eventById.get(ep.event_id);
-    if (!event) continue;
-    const list = eventsByPerson.get(ep.person_id) ?? [];
-    list.push(event);
-    eventsByPerson.set(ep.person_id, list);
+    if (event) {
+      const list = eventsByPerson.get(ep.person_id) ?? [];
+      list.push(event);
+      eventsByPerson.set(ep.person_id, list);
+    }
+    const evList = participantsByEvent.get(ep.event_id) ?? [];
+    evList.push(ep);
+    participantsByEvent.set(ep.event_id, evList);
+    const peList = participantsByPerson.get(ep.person_id) ?? [];
+    peList.push(ep);
+    participantsByPerson.set(ep.person_id, peList);
   }
 
-  // Build event lookups by relationship_id
   const eventsByRelationship = new Map<string, GenealogyEvent[]>();
-  for (const e of s.events) {
-    if (!e.relationship_id) continue;
-    const list = eventsByRelationship.get(e.relationship_id) ?? [];
-    list.push(e);
-    eventsByRelationship.set(e.relationship_id, list);
-  }
-
-  // Build event lookups by place_id
   const eventsByPlace = new Map<string, GenealogyEvent[]>();
   for (const e of s.events) {
-    if (!e.place_id) continue;
-    const list = eventsByPlace.get(e.place_id) ?? [];
-    list.push(e);
-    eventsByPlace.set(e.place_id, list);
+    if (e.relationship_id) {
+      const list = eventsByRelationship.get(e.relationship_id) ?? [];
+      list.push(e);
+      eventsByRelationship.set(e.relationship_id, list);
+    }
+    if (e.place_id) {
+      const list = eventsByPlace.get(e.place_id) ?? [];
+      list.push(e);
+      eventsByPlace.set(e.place_id, list);
+    }
   }
 
   const sourceById = new Map(s.sources.map(src => [src.id, src]));
 
-  // Citation lookups by entity
   const citationsByPerson = new Map<string, Citation[]>();
   const citationsByEvent = new Map<string, Citation[]>();
   const citationsByPlace = new Map<string, Citation[]>();
   const citationsByRelationship = new Map<string, Citation[]>();
+  const citationsBySource = new Map<string, Citation[]>();
   for (const c of s.citations) {
     if (c.person_id) {
       const list = citationsByPerson.get(c.person_id) ?? [];
@@ -102,9 +111,11 @@ function buildIndices(s: Snapshot): Indices {
       list.push(c);
       citationsByRelationship.set(c.relationship_id, list);
     }
+    const srcList = citationsBySource.get(c.source_id) ?? [];
+    srcList.push(c);
+    citationsBySource.set(c.source_id, srcList);
   }
 
-  // Relationship lookups — person can be person1_id or person2_id
   const relationshipsByPerson = new Map<string, Relationship[]>();
   for (const r of s.relationships) {
     if (r.person1_id) {
@@ -121,8 +132,9 @@ function buildIndices(s: Snapshot): Indices {
 
   const mediaById = new Map(s.media.map(m => [m.id, m]));
 
-  // Media links by entity key `${entity_type}:${entity_id}`
   const mediaLinksByEntity = new Map<string, (Media & { link_id: string; link_type: string | null; sort_order: number })[]>();
+  const mediaLinksByMedia = new Map<string, { entity_type: string; entity_id: string }[]>();
+  const mediaLinkCounts = new Map<string, number>();
   for (const ml of s.mediaLinks) {
     const media = mediaById.get(ml.media_id);
     if (!media) continue;
@@ -130,6 +142,14 @@ function buildIndices(s: Snapshot): Indices {
     const list = mediaLinksByEntity.get(key) ?? [];
     list.push({ ...media, link_id: ml.id, link_type: ml.link_type ?? null, sort_order: ml.sort_order });
     mediaLinksByEntity.set(key, list);
+    const mlist = mediaLinksByMedia.get(ml.media_id) ?? [];
+    mlist.push({ entity_type: ml.entity_type, entity_id: ml.entity_id });
+    mediaLinksByMedia.set(ml.media_id, mlist);
+    mediaLinkCounts.set(ml.media_id, (mediaLinkCounts.get(ml.media_id) ?? 0) + 1);
+  }
+  // Sort by sort_order so the first link is the profile pic
+  for (const list of mediaLinksByEntity.values()) {
+    list.sort((a, b) => a.sort_order - b.sort_order);
   }
 
   const regionsByMedia = new Map<string, MediaRegion[]>();
@@ -156,26 +176,19 @@ function buildIndices(s: Snapshot): Indices {
   });
 
   return {
-    personById,
-    namesByPerson,
-    idsByPerson,
-    placeById,
-    eventById,
-    eventsByPerson,
-    eventsByRelationship,
-    eventsByPlace,
-    sourceById,
-    citationsByPerson,
-    citationsByEvent,
-    citationsByPlace,
-    citationsByRelationship,
-    relationshipsByPerson,
-    mediaById,
-    mediaLinksByEntity,
-    regionsByMedia,
-    regionsByPerson,
-    searchIndex,
+    personById, namesByPerson, idsByPerson, placeById, eventById,
+    eventsByPerson, eventsByRelationship, eventsByPlace,
+    sourceById, citationsByPerson, citationsByEvent, citationsByPlace, citationsByRelationship, citationsBySource,
+    relationshipsByPerson, mediaById, mediaLinksByEntity, mediaLinksByMedia, mediaLinkCounts,
+    regionsByMedia, regionsByPerson, participantsByEvent, participantsByPerson, searchIndex,
   };
+}
+
+// Resolve a media file to its exported URL — files are renamed to `${id}${ext}` on export.
+function mediaUrl(m: Media | undefined): string | null {
+  if (!m?.file_ref) return null;
+  const ext = m.file_ref.match(/\.[^./\\]+$/)?.[0] ?? '';
+  return `./media/full/${m.id}${ext}`;
 }
 
 export function installStaticApiWith(snapshot: Snapshot): void {
@@ -186,149 +199,252 @@ export function installStaticApiWith(snapshot: Snapshot): void {
     return { ...p, given_name: name?.given_name ?? '', surname: name?.surname ?? '' };
   });
 
-  const personsApi = {
-    async listPage(limit: number, offset: number) {
-      return { persons: personsWithNames.slice(offset, offset + limit), total: personsWithNames.length };
-    },
-    async list() {
-      return personsWithNames;
-    },
-    async get(id: string) {
-      return idx.personById.get(id) ?? null;
-    },
-    async getNames(personId: string) {
-      return idx.namesByPerson.get(personId) ?? [];
-    },
-    async getIdentifiers(personId: string) {
-      return idx.idsByPerson.get(personId) ?? [];
-    },
-    async search(q: string) {
+  const noop = async () => null;
+  const noopFalse = async () => false;
+  const noopVoid = async () => {};
+
+  const persons = {
+    list: async () => personsWithNames,
+    listPage: async (limit: number, offset: number) => ({
+      persons: personsWithNames.slice(offset, offset + limit),
+      total: personsWithNames.length,
+    }),
+    get: async (id: string) => idx.personById.get(id) ?? null,
+    getNames: async (id: string) => idx.namesByPerson.get(id) ?? [],
+    getIdentifiers: async (id: string) => idx.idsByPerson.get(id) ?? [],
+    search: async (q: string) => {
       try {
         const hits = idx.searchIndex.search(q + '*');
-        return hits
-          .map(h => personsWithNames.find(p => p.id === h.ref))
-          .filter((p): p is typeof personsWithNames[number] => p !== undefined);
-      } catch {
-        // lunr throws on empty or invalid query — fall back to full list
-        return [];
-      }
+        return hits.map(h => personsWithNames.find(p => p.id === h.ref)).filter(Boolean);
+      } catch { return []; }
     },
-    // No-op mutating methods (static site is read-only)
-    async create() { return null; },
-    async update() { return null; },
-    async delete() { return false; },
-    async addName() { return null; },
-    async deleteName() { return false; },
-    async createWithEvent() { return null; },
+    searchWithDetails: async (q: string) => {
+      try {
+        const hits = idx.searchIndex.search(q + '*');
+        return hits.map(h => personsWithNames.find(p => p.id === h.ref)).filter(Boolean);
+      } catch { return []; }
+    },
+    listUnsourcedPage: async () => ({ persons: [], total: 0 }),
+    create: noop, createWithEvent: noop, update: noop, delete: noopFalse,
+    addName: noop, updateName: noop, deleteName: noopFalse,
+    addIdentifier: noop, deleteIdentifier: noopFalse,
   };
 
-  const placesApi = {
-    async list() { return snapshot.places; },
-    async listPage(limit: number, offset: number) {
-      return { places: snapshot.places.slice(offset, offset + limit), total: snapshot.places.length };
-    },
-    async get(id: string) { return idx.placeById.get(id) ?? null; },
-    async search(q: string) {
+  const places = {
+    list: async () => snapshot.places,
+    get: async (id: string) => idx.placeById.get(id) ?? null,
+    search: async (q: string) => {
       const ql = q.toLowerCase();
       return snapshot.places.filter(p => p.name.toLowerCase().includes(ql));
     },
-    async getPersons(_placeId: string) { return []; },
-    async create() { return null; },
-    async update() { return null; },
-    async delete() { return false; },
-  };
-
-  const eventsApi = {
-    async get(id: string) { return idx.eventById.get(id) ?? null; },
-    async getEventsForPerson(personId: string) { return idx.eventsByPerson.get(personId) ?? []; },
-    async getEventsForRelationship(relationshipId: string) { return idx.eventsByRelationship.get(relationshipId) ?? []; },
-    async getEventsForPlace(placeId: string) { return idx.eventsByPlace.get(placeId) ?? []; },
-    async getParticipants(eventId: string) {
-      return snapshot.eventParticipants.filter(ep => ep.event_id === eventId);
+    getPath: async (id: string) => {
+      const path: Place[] = [];
+      let cur = idx.placeById.get(id);
+      while (cur) {
+        path.unshift(cur);
+        cur = cur.parent_place_id ? idx.placeById.get(cur.parent_place_id) : undefined;
+      }
+      return path;
     },
-    async create() { return null; },
-    async update() { return null; },
-    async delete() { return false; },
+    getPersons: async (placeId: string) => {
+      const events = idx.eventsByPlace.get(placeId) ?? [];
+      const out: { person_id: string; given_name: string; surname: string; event_type: string; event_date: string | null }[] = [];
+      for (const e of events) {
+        const parts = idx.participantsByEvent.get(e.id) ?? [];
+        for (const ep of parts) {
+          const name = idx.namesByPerson.get(ep.person_id)?.[0];
+          out.push({
+            person_id: ep.person_id,
+            given_name: name?.given_name ?? '',
+            surname: name?.surname ?? '',
+            event_type: e.event_type,
+            event_date: e.date_value,
+          });
+        }
+      }
+      return out;
+    },
+    findOrCreate: noop, create: noop, update: noop, delete: noopFalse,
   };
 
-  const sourcesApi = {
-    async get(id: string) { return idx.sourceById.get(id) ?? null; },
-    async list() { return snapshot.sources; },
-    async search(q: string) {
+  const events = {
+    get: async (id: string) => idx.eventById.get(id) ?? null,
+    forPerson: async (personId: string) => idx.eventsByPerson.get(personId) ?? [],
+    forRelationship: async (relationshipId: string) => idx.eventsByRelationship.get(relationshipId) ?? [],
+    forPlace: async (placeId: string) => idx.eventsByPlace.get(placeId) ?? [],
+    create: noop, update: noop, delete: noopFalse,
+  };
+
+  const eventParticipants = {
+    getForEvent: async (eventId: string) => idx.participantsByEvent.get(eventId) ?? [],
+    add: noop, remove: noopFalse,
+  };
+
+  const sources = {
+    list: async () => snapshot.sources,
+    get: async (id: string) => idx.sourceById.get(id) ?? null,
+    search: async (q: string) => {
       const ql = q.toLowerCase();
       return snapshot.sources.filter(s => s.title && s.title.toLowerCase().includes(ql));
     },
-    async create() { return null; },
-    async update() { return null; },
-    async delete() { return false; },
+    create: noop, update: noop, delete: noopFalse,
   };
 
-  const citationsApi = {
-    async getCitationsForPerson(personId: string) { return idx.citationsByPerson.get(personId) ?? []; },
-    async getCitationsForEvent(eventId: string) { return idx.citationsByEvent.get(eventId) ?? []; },
-    async getCitationsForPlace(placeId: string) { return idx.citationsByPlace.get(placeId) ?? []; },
-    async getCitationsForRelationship(relationshipId: string) { return idx.citationsByRelationship.get(relationshipId) ?? []; },
-    async create() { return null; },
-    async delete() { return false; },
+  const citations = {
+    get: async (id: string) => snapshot.citations.find(c => c.id === id) ?? null,
+    forSource: async (sourceId: string) => idx.citationsBySource.get(sourceId) ?? [],
+    forEvent: async (eventId: string) => idx.citationsByEvent.get(eventId) ?? [],
+    forPerson: async (personId: string) => idx.citationsByPerson.get(personId) ?? [],
+    forRelationship: async (relationshipId: string) => idx.citationsByRelationship.get(relationshipId) ?? [],
+    forPlace: async (placeId: string) => idx.citationsByPlace.get(placeId) ?? [],
+    create: noop, update: noop, delete: noopFalse,
   };
 
-  const relationshipsApi = {
-    async get(id: string) { return snapshot.relationships.find(r => r.id === id) ?? null; },
-    async getOfPerson(personId: string) { return idx.relationshipsByPerson.get(personId) ?? []; },
-    async list() { return snapshot.relationships; },
-    async create() { return null; },
-    async update() { return null; },
-    async delete() { return false; },
-    async addParticipant() { return null; },
-    async removeParticipant() { return false; },
+  const relationships = {
+    list: async () => snapshot.relationships,
+    listPage: async (limit: number, offset: number) => ({
+      relationships: snapshot.relationships.slice(offset, offset + limit),
+      total: snapshot.relationships.length,
+    }),
+    get: async (id: string) => snapshot.relationships.find(r => r.id === id) ?? null,
+    getForPerson: async (personId: string) => idx.relationshipsByPerson.get(personId) ?? [],
+    search: async () => [],
+    create: noop, update: noop, delete: noopFalse,
   };
 
-  const mediaApi = {
-    async get(id: string) { return idx.mediaById.get(id) ?? null; },
-    async list() { return snapshot.media; },
-    async listPage(limit: number, offset: number) {
-      return { media: snapshot.media.slice(offset, offset + limit), total: snapshot.media.length };
+  const groups = {
+    list: async () => [],
+    get: noop,
+    getMembers: async () => [],
+    forPerson: async () => [],
+    create: noop, update: noop, delete: noopFalse, addMember: noop, removeMember: noopFalse,
+  };
+
+  const repositories = {
+    list: async () => [],
+    get: noop,
+    forSource: async () => [],
+    create: noop, update: noop, delete: noopFalse, linkSource: noop, unlinkSource: noopFalse,
+  };
+
+  const researchTasks = {
+    list: async () => [],
+    get: noop,
+    forPerson: async () => [],
+    create: noop, update: noop, delete: noopFalse,
+  };
+
+  const reports = {
+    personSummary: noop,
+    familyUnit: noop,
+    ancestorTree: noop,
+    placeHistory: noop,
+    researchGaps: noop,
+    timeline: async () => [],
+    aliveInYear: async (year: number) => ({ year, persons: [] }),
+  };
+
+  const checks = {
+    runAll: async () => null,
+    forPerson: async () => [],
+    forPlace: async () => [],
+    forMedia: async () => [],
+  };
+
+  const media = {
+    list: async () => snapshot.media,
+    listPage: async (limit: number, offset: number) => ({
+      items: snapshot.media.slice(offset, offset + limit).map(m => ({
+        ...m,
+        is_missing: 0,
+        link_count: idx.mediaLinkCounts.get(m.id) ?? 0,
+      })),
+      total: snapshot.media.length,
+    }),
+    get: async (id: string) => idx.mediaById.get(id) ?? null,
+    forEntity: async (entityType: string, entityId: string) =>
+      idx.mediaLinksByEntity.get(`${entityType}:${entityId}`) ?? [],
+    linksForMedia: async (mediaId: string) => idx.mediaLinksByMedia.get(mediaId) ?? [],
+    readAsDataUrl: async (mediaId: string) => mediaUrl(idx.mediaById.get(mediaId)),
+    getFilePath: async (mediaId: string) => mediaUrl(idx.mediaById.get(mediaId)),
+    profilePicRef: async (personId: string) => {
+      // Use first media link for the person, sorted by sort_order
+      const links = idx.mediaLinksByEntity.get(`person:${personId}`);
+      if (!links || links.length === 0) return null;
+      const m = links[0];
+      const region = (idx.regionsByPerson.get(personId) ?? []).find(r => r.media_id === m.id);
+      return { mediaId: m.id, region: region ?? null, url: mediaUrl(m) };
     },
-    async getForEntity(entityType: string, entityId: string) {
-      return idx.mediaLinksByEntity.get(`${entityType}:${entityId}`) ?? [];
+    profilePicRefs: async (personIds: string[]) => {
+      const out: Record<string, unknown> = {};
+      for (const id of personIds) {
+        const links = idx.mediaLinksByEntity.get(`person:${id}`);
+        if (!links || links.length === 0) { out[id] = null; continue; }
+        const m = links[0];
+        const region = (idx.regionsByPerson.get(id) ?? []).find(r => r.media_id === m.id);
+        out[id] = { mediaId: m.id, region: region ?? null, url: mediaUrl(m) };
+      }
+      return out;
     },
-    async getRegions(mediaId: string) { return idx.regionsByMedia.get(mediaId) ?? []; },
-    async getRegionsForPerson(personId: string) { return idx.regionsByPerson.get(personId) ?? []; },
-    async readAsDataUrl(mediaId: string) {
-      const m = idx.mediaById.get(mediaId);
-      if (!m?.file_ref) return null;
-      return `./media/full/${m.file_ref}`;
-    },
-    async attach() { return null; },
-    async unlink() { return false; },
-    async reorder() {},
-    async delete() { return false; },
+    getTimeline: async () => [],
+    create: noop, update: noop, delete: noopFalse,
+    addLink: noop, removeLink: noopFalse, reorder: noopVoid, attach: noop, openFile: noopVoid,
+  };
+
+  const mediaRegions = {
+    getForMedia: async (mediaId: string) => idx.regionsByMedia.get(mediaId) ?? [],
+    getForPerson: async (personId: string) => idx.regionsByPerson.get(personId) ?? [],
+    create: noop, update: noop, updateGeometry: noop, delete: noopFalse,
+  };
+
+  const db = {
+    getSetting: async (key: string) => (snapshot.settings as Record<string, unknown>)[key] ?? null,
+    setSetting: noopVoid,
+    deleteSetting: noopVoid,
+    onSwitched: () => {},
+    getCurrent: async () => null,
+    getRecent: async () => [],
+    createNew: noop, openExisting: noop, switchTo: noop,
+  };
+
+  const undo = {
+    onPerformed: () => {},
+    onChanged: () => {},
+    undo: noopVoid, redo: noopVoid,
+    getState: async () => ({ canUndo: false, canRedo: false, undoLabel: null, redoLabel: null }),
+    beginGroup: noopVoid, endGroup: noopVoid,
+  };
+
+  const shell = { openExternal: noopVoid };
+  const exportApi = { openFolder: noopVoid };
+  const printApi = { print: noopVoid, exportPdf: noop };
+  const csv = { export: noop };
+  const backup = { backup: noop, restore: noop };
+  const gazetteers = {
+    list: async () => [], import: noop, export: noop, delete: noopFalse,
+    getImported: async () => [], getSchema: async () => null, getBundled: async () => [],
+  };
+  const duplicates = { find: async () => [], merge: noop };
+  const gedcom = { selectFile: noop, preview: noop, import: noop, export: noop };
+  const importApi = {
+    genneyCheckDocker: async () => false, genneySelectDerby: noop, genneySelectArchive: noop,
+    genneySelectMedia: noop, genneyDiscover: noop, genneyRun: noop, onProgress: () => {},
+    holgerSelectFile: noop, holgerSelectMedia: noop, holgerRun: noop, onHolgerProgress: () => {},
+  };
+  const archive = { export: noop, import: noop };
+  const website = { export: noop };
+  const chart = {
+    saveSvg: noop, savePdf: noop,
+    onGetVisiblePersons: () => {}, onSelectPerson: () => {},
+    onFocusPerson: () => {}, onGetLayout: () => {}, removeAllChartHandlers: () => {},
   };
 
   (globalThis as { api: unknown }).api = {
-    persons: personsApi,
-    places: placesApi,
-    events: eventsApi,
-    sources: sourcesApi,
-    citations: citationsApi,
-    relationships: relationshipsApi,
-    media: mediaApi,
-    db: {
-      async getSetting(key: string) {
-        return (snapshot.settings as Record<string, unknown>)[key] ?? null;
-      },
-      async setSetting() {},
-      async deleteSetting() {},
-      onSwitched() {},
-    },
-    undo: {
-      onPerformed() {},
-      onChanged() {},
-    },
-    onDataChanged() {},
-    checks: {
-      async runAll() { return null; },
-    },
+    persons, places, events, eventParticipants, sources, citations, relationships,
+    groups, repositories, researchTasks, reports, checks, media, mediaRegions,
+    db, undo, shell, export: exportApi, print: printApi, csv, backup, gazetteers,
+    duplicates, gedcom, import: importApi, archive, website, chart,
+    onDataChanged: () => {},
   };
 }
 
