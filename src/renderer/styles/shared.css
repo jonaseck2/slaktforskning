@@ -126,6 +126,33 @@
   border-bottom: 1px solid var(--surface-border-subtle);
   text-align: left;
 }
+
+/* Side-panel content must not push the panel wider than its column.
+   Flex items default to min-width:auto (= intrinsic content size), so a
+   long URL, name, or unbreakable string inside a section grows the column.
+   Setting min-width:0 on .panel-section + its body + linked-row pattern
+   lets them shrink. Tables also need table-layout:fixed + word-break so
+   long source titles wrap inside their cell rather than expanding the
+   table. .compact-control (input/select/textarea) gets max-width:100% so
+   long values don't overflow either. */
+.panel-section,
+.panel-section-body,
+.panel-section .linked-row,
+.panel-section .linked-row > * {
+  min-width: 0;
+}
+.panel-section .data-table { table-layout: fixed; }
+.panel-section .data-table th,
+.panel-section .data-table td {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.panel-section .compact-control,
+.panel-section .compact-form input,
+.panel-section .compact-form select,
+.panel-section .compact-form textarea {
+  max-width: 100%;
+}
 .data-table tr:last-child td {
   border-bottom: none;
 }
