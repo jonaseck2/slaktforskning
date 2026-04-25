@@ -25,22 +25,6 @@ export const router = createRouter({
       component: () => import('../renderer/views/MediaView.vue'),
     },
     {
-      path: '/reports',
-      component: () => import('./views/ReportsIndexView.vue'),
-    },
-    {
-      path: '/reports/:slug',
-      component: () => import('./views/ReportPageView.vue'),
-    },
-    {
-      path: '/prints',
-      component: () => import('./views/PrintsIndexView.vue'),
-    },
-    {
-      path: '/prints/:slug',
-      component: () => import('./views/PrintPageView.vue'),
-    },
-    {
       path: '/search',
       component: () => import('../renderer/views/SearchView.vue'),
     },

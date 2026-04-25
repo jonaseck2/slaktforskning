@@ -32,14 +32,6 @@
         <span class="nav-icon" aria-hidden="true">📷</span>
         <span class="nav-label">{{ $t('media.nav') }}</span>
       </router-link>
-      <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
-        <span class="nav-icon" aria-hidden="true">🖨️</span>
-        <span class="nav-label">{{ $t('reports.nav') }}</span>
-      </router-link>
-      <router-link to="/prints" class="nav-item" :aria-label="$t('nav.framablePrints')">
-        <span class="nav-icon" aria-hidden="true">🖼️</span>
-        <span class="nav-label">{{ $t('nav.framablePrints') }}</span>
-      </router-link>
       <div class="sidebar-spacer"></div>
       <div class="settings-section">
         <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="isSettingsOpen = !isSettingsOpen">
@@ -159,7 +151,7 @@ provide('tts', tts);
 provide('screenReader', screenReader);
 
 const CACHED_VIEWS = ['PersonsListView', 'PlacesListView'];
-const PANELED_ROUTES = ['/persons', '/places', '/media', '/reports', '/prints'];
+const PANELED_ROUTES = ['/persons', '/places', '/media'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 
 const searchQuery = ref('');
