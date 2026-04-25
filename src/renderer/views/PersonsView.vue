@@ -16,7 +16,7 @@
     <!-- Duplicates view -->
     <template v-if="filter === 'duplicates'">
       <AppLoadingState v-if="duplicatesLoading" :rows="5" />
-      <div v-else-if="duplicates.length === 0" class="empty">{{ $t('empty.duplicates') }}</div>
+      <AppEmptyState v-else-if="duplicates.length === 0" icon="✅" :title="$t('empty.duplicates')" />
       <table v-else class="data-table">
         <thead>
           <tr>
@@ -51,7 +51,7 @@
 
     <AppEmptyState
       v-else-if="persons.length === 0 && !loading"
-      icon="🌳"
+      icon="👤"
       :title="filter === 'unsourced' ? $t('persons.allSourced') : $t('empty.persons')"
       :description="filter === 'all' ? $t('persons.emptyHint') : ''"
       :action-label="filter === 'all' ? $t('persons.addPerson') : ''"

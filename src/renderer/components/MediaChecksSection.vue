@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import QualityIssuesTable, { type QualityIssue } from './QualityIssuesTable.vue';
 
 const props = defineProps<{ mediaId: string }>();
@@ -17,5 +17,13 @@ async function load() {
 
 defineExpose({ reload: load, count: computed(() => issues.value.length) });
 
-watch(() => props.mediaId, load, { immediate: true });
+let loadTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleLoad() {
+  if (loadTimer) clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => { load(); loadTimer = null; }, 1500);
+}
+
+watch(() => props.mediaId, scheduleLoad, { immediate: true });
+onUnmounted(() => { if (loadTimer) clearTimeout(loadTimer); });
 </script>

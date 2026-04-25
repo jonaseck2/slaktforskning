@@ -8,7 +8,7 @@
       {{ $t('relationships.showingOf', { shown: relationships.length, total }) }}
     </p>
     <FilterChips v-if="relationships.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
-    <AppEmptyState v-if="relationships.length === 0 && !loading" icon="🔗" :title="$t('empty.relationships')" />
+    <AppEmptyState v-if="relationships.length === 0 && !loading" icon="🔗" :title="$t('empty.relationships')" :description="$t('empty.relationshipsDesc')" :action-label="$t('empty.addRelationship')" @action="showAddForm = true" />
     <AppEmptyState v-else-if="filteredRelationships.length === 0 && !loading" icon="🔗" :title="$t('empty.relationships') + ' ' + $t('empty.withFilter')" />
     <RelationshipsTable
       v-else
@@ -19,7 +19,7 @@
 
     <!-- Add Relationship Modal -->
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-relationship">
-        <h3 id="modal-title-add-relationship">{{ $t('relationships.addRelationship') }}</h3>
+        <h3 id="modal-title-add-relationship">{{ $t('common.add') }} {{ $t('relationships.addRelationship') }}</h3>
         <form @submit.prevent="addRelationship">
           <label>
             {{ $t('common.type') }}

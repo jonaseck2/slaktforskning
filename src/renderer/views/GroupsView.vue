@@ -5,12 +5,12 @@
       <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('groups.addGroup') }}</AppButton>
     </div>
     <p v-if="groups.length > 0" class="count-label">{{ groups.length }} {{ $t('groups.title').toLowerCase() }}</p>
-    <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('empty.groups')" />
+    <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('empty.groups')" :description="$t('empty.groupsDesc')" :action-label="$t('empty.addGroup')" @action="showAddForm = true" />
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
     <!-- Add Group Modal -->
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-group">
-        <h3 id="modal-title-add-group">{{ $t('groups.addGroup') }}</h3>
+        <h3 id="modal-title-add-group">{{ $t('common.add') }} {{ $t('groups.addGroup') }}</h3>
         <form @submit.prevent="addGroup">
           <label>
             {{ $t('groups.name') }} *

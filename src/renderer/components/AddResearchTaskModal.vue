@@ -1,6 +1,6 @@
 <template>
   <BaseModal @close="$emit('close')" title-id="modal-title-research-task">
-    <h3 id="modal-title-research-task">{{ $t('researchTasks.addTask') }}</h3>
+    <h3 id="modal-title-research-task">{{ $t('common.add') }} {{ $t('researchTasks.addTask') }}</h3>
     <form @submit.prevent="save">
       <label>
         {{ $t('researchTasks.task') }} *
