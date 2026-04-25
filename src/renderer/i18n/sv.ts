@@ -176,6 +176,8 @@ export default {
     urlPlaceholder: 'https://\u2026',
     confirmDelete: 'Ta bort denna källa? Detta kan inte ångras.',
     createNew: 'Skapa "{name}"',
+    createNewSource: 'Skapa ny källa',
+    searchOrAdd: 'Sök eller lägg till källa…',
   },
   sourceDetail: {
     title: 'Källdetaljer',
@@ -198,6 +200,9 @@ export default {
   },
   events: {
     title: 'Händelser',
+    entity: 'Händelse',
+    newEvent: 'Ny händelse',
+    searchOrAdd: 'Sök eller lägg till händelse…',
     event: 'Händelse',
     addEvent: 'Skapa',
     date: 'Datum',
