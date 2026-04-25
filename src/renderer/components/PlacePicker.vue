@@ -119,11 +119,11 @@ function onInput() {
   if (query.value.length < 1) { results.value = []; gazetteerResults.value = []; return; }
   debounceTimer = setTimeout(async () => {
     const dbResults = (await window.api.places.search(query.value)) as PlaceRow[];
-    results.value = dbResults;
+    results.value = dbResults.slice(0, 5);
 
     // Search all enabled gazetteers for matching nodes at every level
     if (!gazetteerReady.value) await ensureGazetteersLoaded();
-    const hits = searchGazetteer(query.value, getGazetteers(), 15);
+    const hits = searchGazetteer(query.value, getGazetteers(), 5);
     // Deduplicate by name + type (e.g. "Jönköping" as county vs municipality vs locality are distinct)
     const seen = new Set<string>();
     const gazSuggestions: GazetteerSuggestion[] = [];

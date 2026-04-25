@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.142.1 — modal polish
+
+- fix: standalone BaseSubPanel simplified to plain modal with ep-host-row layout
+- fix: dropdowns (PlacePicker, EventModal source search) capped at 5 results, positioned absolute
+- fix: BaseModal accepts modalClass prop for panel-host layout
+- fix: "Open ›" label trimmed to "›" in PersonModal and EventModal section headers
+
 ## v0.142.0 — Modal redesign: PersonModal, EventModal, CitationModal, SourceModal
 
 - feat: unified entity modals — PersonModal, EventModal, CitationModal, SourceModal replace AddPersonModal, EventForm, CitationForm for keyboard-first entity entry with inline source citation flow

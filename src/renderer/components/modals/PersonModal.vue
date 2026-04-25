@@ -54,7 +54,7 @@
         </span>
         <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.event.fg }">{{ events.length }}</span>
       </div>
-      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.event.fg }">Open ›</span>
+      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.event.fg }">›</span>
     </div>
     <div class="ep-sec-content">
       <input
@@ -92,7 +92,7 @@
         </span>
         <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.relationship.fg }">{{ relationships.length }}</span>
       </div>
-      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.relationship.fg }">Open ›</span>
+      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.relationship.fg }">›</span>
     </div>
     <div class="ep-sec-content">
       <input class="ep-search-input" :placeholder="$t('relationships.searchOrAdd')" readonly />

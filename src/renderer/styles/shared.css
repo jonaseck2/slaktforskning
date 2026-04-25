@@ -1019,6 +1019,14 @@ html.screen-reader h1:focus {
 }
 
 /* ── Entity panel layout (modal redesign) ── */
+
+/* Standalone host: modal grows sideways when sub-panels are open */
+.modal--panel-host { width: auto; min-width: 450px; }
+/* Flex row inside standalone modal: main form + sub-panel cards to the right */
+.ep-host-row { display: flex; gap: 8px; align-items: flex-start; }
+/* Main form card inside standalone modal — fills standard 450px modal (450 - 24*2 = 402) */
+.ep-host-main { width: 402px; flex-shrink: 0; }
+
 .entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
 
 .entity-panel {
@@ -1084,6 +1092,7 @@ html.screen-reader h1:focus {
 .ep-entity-arrow { color: #cbd5e1; font-size: 14px; flex-shrink: 0; }
 
 /* Search bar in sections */
+.ep-search-wrap { position: relative; }
 .ep-search-input {
   width: 100%; border: 1.5px solid #e5e7eb; border-radius: 6px;
   padding: 6px 9px; margin-bottom: 6px; background: #f9fafb;
@@ -1094,11 +1103,12 @@ html.screen-reader h1:focus {
   box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
 }
 
-/* Dropdown results */
+/* Dropdown results — position:absolute so it overlays rather than pushing modal height */
 .ep-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
   border: 1px solid #e5e7eb; border-radius: 7px;
   background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-  overflow: hidden; margin-bottom: 6px;
+  max-height: 180px; overflow-y: auto;
 }
 .ep-dd-row {
   padding: 7px 11px; font-size: 12px; color: #374151; cursor: pointer;

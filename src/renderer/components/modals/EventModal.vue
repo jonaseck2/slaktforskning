@@ -76,7 +76,7 @@
         </span>
         <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.source.fg }">{{ citations.length }}</span>
       </div>
-      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.source.fg }">Open ›</span>
+      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.source.fg }">›</span>
     </div>
     <div class="ep-sec-content">
       <div class="ep-search-wrap">
@@ -234,9 +234,11 @@ function runSearch() {
     if (!window.api) return;
     try {
       if (sourceSearch.value.trim()) {
-        searchResults.value = (await window.api.sources.search(sourceSearch.value)) as SourceRow[];
+        const all = (await window.api.sources.search(sourceSearch.value)) as SourceRow[];
+        searchResults.value = all.slice(0, 5);
       } else {
-        searchResults.value = (await window.api.sources.list()) as SourceRow[];
+        const all = (await window.api.sources.list()) as SourceRow[];
+        searchResults.value = all.slice(0, 5);
       }
       showDropdown.value = true;
       highlightedIdx.value = 0;
@@ -247,7 +249,8 @@ function runSearch() {
 async function onSearchFocus() {
   if (!window.api) return;
   try {
-    searchResults.value = (await window.api.sources.list()) as SourceRow[];
+    const all = (await window.api.sources.list()) as SourceRow[];
+    searchResults.value = all.slice(0, 5);
     showDropdown.value = true;
     highlightedIdx.value = 0;
   } catch { /* ignore */ }
