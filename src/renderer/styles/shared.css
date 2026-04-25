@@ -1020,12 +1020,29 @@ html.screen-reader h1:focus {
 
 /* ── Entity panel layout (modal redesign) ── */
 
-/* Standalone host: modal grows sideways when sub-panels are open */
-.modal--panel-host { width: auto; min-width: 450px; }
-/* Flex row inside standalone modal: main form + sub-panel cards to the right */
-.ep-host-row { display: flex; gap: 8px; align-items: flex-start; }
-/* Main form card inside standalone modal — fills standard 450px modal (450 - 24*2 = 402) */
-.ep-host-main { width: 402px; flex-shrink: 0; }
+/*
+ * Standalone host: BaseModal renders <div.modal-overlay><div.modal>. When
+ * BaseSubPanel runs in standalone mode, the .modal wrapper is reduced to a
+ * transparent passthrough so the entity-panel card inside provides the only
+ * visual surface. Sub-panels then sit beside the main card in a flex row.
+ */
+.modal.modal--panel-host {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  border-radius: 0;
+}
+/* When the overlay hosts a panel-row modal, pin the row to the left of
+   the viewport and let it scroll horizontally if many sub-panels open. */
+.modal-overlay:has(.modal--panel-host) {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 32px 24px;
+  overflow: auto;
+}
 
 .entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
 
@@ -1039,24 +1056,36 @@ html.screen-reader h1:focus {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  width: 268px;
+  width: 320px;
 }
-.entity-panel--dim { opacity: 0.5; pointer-events: none; }
 
 .ep-header {
-  padding: 9px 14px;
+  padding: 10px 14px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-shrink: 0;
+  gap: 10px;
 }
-.ep-header-left { display: flex; flex-direction: column; gap: 3px; }
-.ep-label { font-size: 11px; font-weight: 700; }
-.ep-title { font-size: 13px; font-weight: 600; color: #111827; }
+.ep-header-left { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.ep-icon {
+  font-size: 18px; line-height: 1.1; flex-shrink: 0;
+  filter: saturate(1.1);
+}
+.ep-header-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ep-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.ep-title {
+  font-size: 14px; font-weight: 600; color: #111827;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .ep-close {
   font-size: 18px; color: #9ca3af; background: none; border: none;
   cursor: pointer; line-height: 1; padding: 0; flex-shrink: 0;
 }
+.ep-close:hover { color: #374151; }
 
 .ep-body { flex: 1; overflow-y: auto; }
 .ep-fields { padding: 10px 14px 8px; }

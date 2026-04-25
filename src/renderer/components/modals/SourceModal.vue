@@ -1,7 +1,6 @@
 <template>
   <BaseSubPanel
     entity-type="source"
-    :label="$t('sources.entity')"
     :title="form.title || $t('sources.newSource')"
     mode="subpanel"
     @cancel="$emit('cancel')"

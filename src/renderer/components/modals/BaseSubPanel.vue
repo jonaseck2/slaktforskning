@@ -1,22 +1,33 @@
 <template>
-  <!-- STANDALONE: plain white modal — entity panel card only for sub-panels -->
+  <!-- STANDALONE: BaseModal provides overlay + focus trap; the entity card itself is the visible surface -->
   <BaseModal
     v-if="mode === 'standalone'"
     :title-id="titleId"
-    :modal-class="hasSub ? 'modal--panel-host' : ''"
+    modal-class="modal--panel-host"
     @close="$emit('cancel')"
   >
-    <div class="ep-host-row">
-      <div class="ep-host-main">
-        <h3 :id="titleId">{{ title }}</h3>
-        <slot />
-        <div class="modal-actions">
+    <div class="entity-panel-wrap">
+      <div class="entity-panel">
+        <div class="ep-header" :style="headerStyle">
+          <div class="ep-header-left">
+            <span v-if="visual.icon" class="ep-icon" aria-hidden="true">{{ visual.icon }}</span>
+            <div class="ep-header-text">
+              <span v-if="resolvedLabel" class="ep-label" :style="{ color: visual.fg }">{{ resolvedLabel }}</span>
+              <div :id="titleId" class="ep-title">{{ title }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="ep-body">
+          <slot />
+        </div>
+        <div class="ep-footer">
           <button type="button" class="btn-cancel" @click="$emit('cancel')">
             {{ $t('common.cancel') }}
           </button>
           <button
             type="button"
-            :style="{ background: color.fg, color: '#fff', padding: '8px 16px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', fontWeight: 600 }"
+            class="btn-add"
+            :style="{ background: visual.fg, color: '#fff' }"
             @click="$emit('save')"
           >
             {{ saveLabel ?? $t('common.save') }}
@@ -27,19 +38,22 @@
     </div>
   </BaseModal>
 
-  <!-- SUBPANEL: entity-coloured card, no overlay, no dimming -->
+  <!-- SUBPANEL: floating card, no overlay; closes via × -->
   <div v-else class="entity-panel-wrap">
     <div class="entity-panel">
       <div class="ep-header" :style="headerStyle">
         <div class="ep-header-left">
-          <span class="ep-label" :style="{ color: color.fg }">{{ label }}</span>
-          <div class="ep-title">{{ title }}</div>
+          <span v-if="visual.icon" class="ep-icon" aria-hidden="true">{{ visual.icon }}</span>
+          <div class="ep-header-text">
+            <span v-if="resolvedLabel" class="ep-label" :style="{ color: visual.fg }">{{ resolvedLabel }}</span>
+            <div class="ep-title">{{ title }}</div>
+          </div>
         </div>
         <button
           class="ep-close"
           type="button"
-          @click="$emit('close')"
           :aria-label="$t('common.close')"
+          @click="$emit('close')"
         >×</button>
       </div>
       <div class="ep-body">
@@ -52,7 +66,7 @@
         <button
           type="button"
           class="btn-add"
-          :style="{ background: color.fg, color: '#fff' }"
+          :style="{ background: visual.fg, color: '#fff' }"
           @click="$emit('save')"
         >
           {{ saveLabel ?? $t('common.save') }}
@@ -65,19 +79,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseModal from '../BaseModal.vue';
-import { ENTITY_COLORS, type EntityType } from '../../constants/entityColors';
+import { ENTITY_VISUALS, type EntityType } from '../../constants/entityColors';
 
 const props = withDefaults(defineProps<{
   entityType: EntityType;
-  label: string;
+  /** Title text shown as the second line of the header (entity name / event type / etc.) */
   title: string;
+  /** Optional override for the small caps label above the title. Defaults to the entity's own labelKey. */
+  label?: string;
   mode?: 'standalone' | 'subpanel';
   saveLabel?: string;
-  hasSub?: boolean;
 }>(), {
   mode: 'standalone',
-  hasSub: false,
 });
 
 defineEmits<{
@@ -86,10 +101,19 @@ defineEmits<{
   close: [];
 }>();
 
-const color = computed(() => ENTITY_COLORS[props.entityType]);
+const { t, te } = useI18n();
+
+const visual = computed(() => ENTITY_VISUALS[props.entityType]);
 const titleId = computed(() => `${props.entityType}-panel-title`);
 const headerStyle = computed(() => ({
-  background: color.value.hd,
-  borderBottom: `1px solid ${color.value.border}`,
+  background: visual.value.hd,
+  borderBottom: `1px solid ${visual.value.border}`,
 }));
+
+const resolvedLabel = computed(() => {
+  if (props.label !== undefined) return props.label;
+  const key = visual.value.labelKey;
+  if (!key) return '';
+  return te(key) ? t(key) : '';
+});
 </script>
