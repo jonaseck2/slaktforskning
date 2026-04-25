@@ -422,7 +422,7 @@ function edgeCursor(edge: Edge): string {
   bottom: -18px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: rgba(74, 158, 255, 0.8);
   white-space: nowrap;
   pointer-events: none;

@@ -113,7 +113,57 @@ Drag handle + wrapper CSS:
 .panel-wrapper { flex-shrink: 0; height: 100%; }
 ```
 
-**Step 5 — Panel component** (PersonPanel, PlacePanel, ReportPanel, etc.) must own its sheet look. The wrapper controls width; the component fills it:
+**Step 5 — Panel component** (PersonPanel, PlacePanel, MediaPanel, ReportPanel, etc.) must own its sheet look. The wrapper controls width; the component fills it. **Every entity panel follows the same shell** — diverging means a future audit will route it back. Reference: PersonPanel / PlacePanel / SourcePanel / RelationshipPanel / GroupPanel / ResearchTaskPanel / MediaPanel.
+
+**Template shell:**
+```html
+<template>
+  <div class="my-panel">
+    <!-- Empty state when no entity selected -->
+    <div v-if="!entityId" class="panel-empty">{{ $t('panel.noEntitySelected') }}</div>
+
+    <template v-else-if="entity">
+      <!-- Header: title + badge + close button -->
+      <div class="panel-header">
+        <div class="panel-header-content">
+          <div class="panel-name-row">
+            <div class="panel-name">{{ entity.name }}</div>
+            <span v-if="entity.type" class="entity-type-badge">{{ entity.type }}</span>
+          </div>
+        </div>
+        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
+      </div>
+
+      <!-- Sections: each one is a SectionHeader + body, collapsible -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('section.foo')" :collapsed="!sections.foo" @toggle="toggleSection('foo')" />
+        <div v-if="sections.foo" class="panel-section-body">…</div>
+      </div>
+    </template>
+  </div>
+</template>
+```
+
+**Section state** — use the shared composable, never inline `localStorage` calls:
+```typescript
+import { usePanelSections } from '../composables/usePanelSections';
+
+const { sections, toggleSection } = usePanelSections(
+  'myentity-panel-section-',                            // unique storage prefix
+  { foo: true, bar: false, quality: false },            // editor defaults
+  { foo: true, bar: true, quality: false },             // (optional) static-export defaults — typically all-open
+);
+```
+Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MODE` (website export). When omitted, the editor defaults are used in both modes.
+
+**Section order convention** — apply this order so all panels feel the same:
+1. Main entity fields (compact form / read-only display)
+2. Linked entities (events, persons, places, citations, members, …) — most-relevant first
+3. Media — always present, just before quality
+4. Notes — if separate from main fields
+5. Quality — always last
+
+**Required CSS** (do not deviate):
 ```css
 .my-panel {
   width: 100%; height: 100%;
@@ -124,17 +174,59 @@ Drag handle + wrapper CSS:
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);   /* ← required, sets base font for all panel text */
 }
+
+/* Empty state */
+.panel-empty {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+/* Header: title row + close button. Padding lives on .panel-header-content,
+   not .panel-header, so the close button can stretch full height. */
 .panel-header {
-  padding: var(--space-lg);
-  border-bottom: 1px solid var(--surface-border);
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--surface-border-subtle);
+  flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
+.panel-header-content {
+  padding: var(--space-md) var(--space-lg);
+  flex: 1; min-width: 0;
+}
+.panel-close-btn {
+  background: none; border: none;
+  color: var(--text-muted);
+  font-size: var(--font-lg);
+  cursor: pointer;
+  padding: 0 var(--space-md);
+  align-self: stretch;
+}
+.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
+
+/* Sections — same horizontal padding as header */
 .panel-section {
-  padding: 0 var(--space-lg);          /* ← indents chevrons and content from edge */
+  padding: 0 var(--space-lg);
   border-bottom: 1px solid var(--surface-border-subtle);
+  flex-shrink: 0;
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 ```
+
+**Header variants** — when the entity has an avatar/thumbnail (PersonPanel, MediaPanel), put the avatar **outside** `.panel-header-content` as a sibling so the close button still stretches:
+```html
+<div class="panel-header">
+  <AppAvatar :person-id="…" size="lg" />
+  <div class="panel-header-content">…</div>
+  <button class="panel-close-btn" …>×</button>
+</div>
+```
+With `padding: var(--space-md) 0 var(--space-md) var(--space-lg)` on `.panel-header` so the avatar gets left-padding but the close button still hits the right edge. Use `margin: calc(var(--space-md) * -1) 0` on the close button to expand its hit area to the full header height.
+
+**Empty-state inside sections** — use `<SectionEmpty :message="$t('empty.foo')" />`, not inline divs.
 
 ### Content feathering
 

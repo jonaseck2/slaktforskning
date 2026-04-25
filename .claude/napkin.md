@@ -124,22 +124,25 @@
 1. **[2026-04-25] List-view padding goes on the sheet, never on each child**
    Do instead: every list-view sheet (PersonsView/PlacesView/MediaView/Groups/Tasks/Relations) has `display:flex; flex-direction:column; overflow:hidden; padding:var(--space-lg)`. The body wraps in a single `<x>-list-content` div with `flex:1; min-height:0; overflow-y:auto`. Header + FilterChips are direct children, no wrappers — `<FilterChips>` is the bar, never wrap it. Header→content gap comes from shared `.header { margin-bottom: 16px }` only — do not redefine. Never re-introduce per-child `padding: lg lg 0` on the header or `padding: 0 lg lg` on the content area.
 
-2. **[2026-04-25] Two-tier empty state system — AppEmptyState vs SectionEmpty**
+2. **[2026-04-25] All entity panels share one shell — `usePanelSections`, `.panel-header-content`, `.panel-close-btn`**
+   Do instead: every panel (Person/Place/Source/Relationship/Group/ResearchTask/Media/Report) follows the canonical shell from the `frontend-design` skill. Section state always uses `usePanelSections(prefix, defaults, staticDefaults?)` — never inline `localStorage` calls or `reactive({...})` with custom toggle functions. Header layout is `<div class="panel-header"> <div class="panel-header-content"> {title + badge} </div> <button class="panel-close-btn">×</button> </div>` so the close button can stretch full height; padding lives on `.panel-header-content` (`var(--space-md) var(--space-lg)`), NOT on `.panel-header`. Sections use `.panel-section { padding: 0 var(--space-lg); border-bottom: 1px solid var(--surface-border-subtle) }`. Never use `var(--space-md)` for section horizontal padding (was MediaPanel's outlier). Section order: main entity → linked entities → media → notes → quality (last).
+
+3. **[2026-04-25] Two-tier empty state system — AppEmptyState vs SectionEmpty**
    Do instead: full-view list empties (PersonsView, SourcesView, etc.) → `AppEmptyState` with icon + title + description + action button (200px min-height). Sub-section empties inside detail views/panels → `SectionEmpty` (one-line muted text + optional underlined action link). Never use raw `<div class="empty-hint">` — replace with `SectionEmpty`. Wire `actionLabel` only when a direct mechanism exists in the same component (`openAddForm()`, `attach()`) — omit when the parent SectionHeader already has the action button.
 
-3. **[2026-04-25] Empty state icons must match the nav bar icon for the same entity type**
+4. **[2026-04-25] Empty state icons must match the nav bar icon for the same entity type**
    Do instead: 👤 Persons, 🔗 Relationships, 📚 Sources, 📍 Places, 📷 Media, 🏷️ Groups, 🔬 ResearchTasks, ⚠️ Quality (all states — don't swap to ✅ on "no issues"), 🖨️ Reports, 🌳 Visualization/Tree (no nav icon), 🗺️ Map (no nav icon). Full-view list views get icon + description + action button; filtered/scoped empty states get icon + title only.
 
-4. **[2026-04-25] Map views: never replace the map with a full empty state**
+5. **[2026-04-25] Map views: never replace the map with a full empty state**
    Do instead: always render `BaseMap` when not loading. Show a small floating pill overlay (`position: absolute; top: var(--space-xl); left: 50%; transform: translateX(-50%); z-index: 10`) with the "No places" text and an optional `router-link` action. Apply `pointer-events: auto` to the overlay and `white-space: nowrap`.
 
-5. **[2026-04-22] Paneled views require 5 explicit steps — read the frontend-design skill**
+6. **[2026-04-22] Paneled views require 5 explicit steps — read the frontend-design skill**
    Do instead: when building any view with a side panel, invoke `/frontend-design` first and follow the 5-step checklist. Steps that get missed without it: (1) add route to PANELED_ROUTES in App.vue, (2) view root is flex row height:100%, (3) left sheet gets flex:1 + shadow, (4) drag handle + usePanelResize composable between sheets with panel on RIGHT, (5) panel component needs width:100% height:100% font-size:var(--font-sm) and sections need padding:0 var(--space-lg).
 
-6. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
+7. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
    Do instead: wrap import/export option cards in `<div class="io-groups"><div class="io-group">`.
 
-7. **[2026-04-08] Import/export text follows strict conventions**
+8. **[2026-04-08] Import/export text follows strict conventions**
    Do instead: tab names short ("Genney"), box headings prefix "Import"/"Export", descriptions one sentence third-person present ("Imports…"), no arrows, no ellipsis on buttons.
 
 ## User Directives

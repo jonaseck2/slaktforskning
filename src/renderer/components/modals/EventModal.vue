@@ -31,7 +31,7 @@
         <select
           v-if="showTypeDropdown"
           class="ep-input"
-          style="margin-top:4px"
+          :style="{ marginTop: 'var(--space-xs)' }"
           v-model="form.event_type"
           @change="showTypeDropdown = false"
         >
@@ -122,6 +122,7 @@
           type="button"
           class="btn-sm btn-delete"
           style="flex-shrink:0"
+          :aria-label="$t('common.remove')"
           @click.stop="deleteCitation(cit.id)"
         >✕</button>
       </div>

@@ -141,19 +141,19 @@ watch(() => `${props.entityType}:${props.entityId}`, () => load(), { immediate: 
   border: 1px solid transparent;
   cursor: pointer;
   padding: 0 3px;
-  font-size: 10px;
-  color: #888;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
   line-height: 1;
 }
-.btn-order:hover:not(:disabled) { color: #333; border-color: #ccc; }
+.btn-order:hover:not(:disabled) { color: var(--text-primary); border-color: var(--surface-border); }
 .btn-order:disabled { opacity: 0.3; cursor: default; }
 .profile-badge {
   display: inline-block;
-  font-size: var(--font-xs, 11px);
-  background: #e8f0fe;
-  color: #1a73e8;
+  font-size: var(--font-xs);
+  background: var(--info-bg);
+  color: var(--info-text);
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   margin-bottom: 2px;
 }
 .thumb-cell {
@@ -164,15 +164,15 @@ watch(() => `${props.entityType}:${props.entityId}`, () => load(), { immediate: 
   width: 36px;
   height: 36px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: block;
 }
 .row-thumb-placeholder {
   display: block;
   width: 36px;
   height: 36px;
-  background: #f0f0f0;
-  border-radius: 4px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-sm);
 }
 .row-thumb-icon {
   display: flex;
@@ -180,10 +180,10 @@ watch(() => `${props.entityType}:${props.entityId}`, () => load(), { immediate: 
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  font-size: 9px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
   font-weight: 700;
-  color: #999;
+  color: var(--text-muted);
 }
 </style>

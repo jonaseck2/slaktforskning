@@ -120,6 +120,7 @@ import LinkedPlacesSection from './LinkedPlacesSection.vue';
 import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { useToast } from '../composables/useToast';
+import { usePanelSections } from '../composables/usePanelSections';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -145,21 +146,10 @@ const toast = useToast();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
-const STORAGE_PREFIX = 'group-panel-section-';
-function loadBool(key: string, def: boolean): boolean {
-  const v = localStorage.getItem(STORAGE_PREFIX + key);
-  return v === null ? def : v === 'true';
-}
-const sections = reactive({
-  info: loadBool('info', true),
-  persons: loadBool('persons', true),
-  places: loadBool('places', true),
-  media: loadBool('media', true),
-});
-function toggleSection(key: keyof typeof sections) {
-  sections[key] = !sections[key];
-  localStorage.setItem(STORAGE_PREFIX + key, String(sections[key]));
-}
+const { sections, toggleSection } = usePanelSections(
+  'group-panel-section-',
+  { info: true, persons: true, places: true, media: true },
+);
 
 // ── State ───────────────────────────────────────────────────────────────────
 

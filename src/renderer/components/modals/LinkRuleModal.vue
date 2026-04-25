@@ -171,11 +171,11 @@ onMounted(() => {
   display: block;
   color: var(--error-text);
   font-size: var(--font-xs);
-  margin-top: 2px;
+  margin-top: var(--space-xs);
 }
 
 .ep-example-test {
-  padding: 4px 0 0;
+  padding: var(--space-xs) 0 0;
   font-size: var(--font-sm);
 }
 
@@ -191,7 +191,7 @@ onMounted(() => {
   font-family: monospace;
   font-size: var(--font-xs);
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: var(--space-xs);
   word-break: break-all;
 }
 </style>

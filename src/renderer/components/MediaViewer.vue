@@ -25,6 +25,7 @@
         v-if="mediaItems.length > 1"
         class="nav-arrow nav-prev"
         :disabled="currentIndex === 0"
+        :aria-label="$t('media.viewer.previousImage')"
         @click="goTo(currentIndex - 1)"
       >‹</button>
 
@@ -81,6 +82,7 @@
         v-if="mediaItems.length > 1"
         class="nav-arrow nav-next"
         :disabled="currentIndex === mediaItems.length - 1"
+        :aria-label="$t('media.viewer.nextImage')"
         @click="goTo(currentIndex + 1)"
       >›</button>
 

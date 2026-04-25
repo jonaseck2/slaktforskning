@@ -158,7 +158,7 @@ watch(() => props.personId, load, { immediate: true });
   border: 1px solid transparent;
   cursor: pointer;
   padding: 0 3px;
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   line-height: 1;
 }
@@ -169,7 +169,7 @@ watch(() => props.personId, load, { immediate: true });
   border: 1px solid transparent;
   cursor: pointer;
   padding: 0 3px;
-  font-size: 14px;
+  font-size: var(--font-base);
   color: var(--text-muted);
   line-height: 1;
   vertical-align: middle;
@@ -212,7 +212,7 @@ watch(() => props.personId, load, { immediate: true });
   height: 36px;
   background: var(--surface-bg);
   border-radius: 4px;
-  font-size: 9px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: var(--text-muted);
 }

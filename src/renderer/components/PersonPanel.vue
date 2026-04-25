@@ -38,11 +38,12 @@
             <AppButton variant="soft" size="sm" @click="openAddRelative('child')">+ {{ $t('personDetail.addChild') }}</AppButton>
           </div>
         </div>
+        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Person section -->
       <div class="panel-section">
-        <SectionHeader :title="'Person'" :collapsed="!sections.person" @toggle="toggleSection('person')" />
+        <SectionHeader :title="$t('panel.personSection')" :collapsed="!sections.person" @toggle="toggleSection('person')" />
         <div v-if="sections.person" class="panel-section-body">
           <PersonDetailsSection :person-id="personId!" :sex="person.sex" :living="person.living" :readonly="props.readonly" @updated="onDetailUpdated" />
         </div>
@@ -206,7 +207,7 @@ import AppButton from './ui/AppButton.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { usePersonPanelData, type NameData } from '../composables/usePersonPanelData';
-import { useSectionState } from '../composables/useSectionState';
+import { usePanelSections } from '../composables/usePanelSections';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -243,7 +244,28 @@ const {
 
 // ── Section state (composable) ──────────────────────────────────────────────
 
-const { sections, toggleSection } = useSectionState();
+const { sections, toggleSection } = usePanelSections(
+  'person-panel-section-',
+  {
+    person: false,
+    names: false,
+    events: true,
+    timeline: false,
+    map: false,
+    relationships: true,
+    groups: false,
+    research: false,
+    identifiers: false,
+    media: false,
+    mediaTimeline: false,
+    quality: false,
+  },
+  {
+    person: true, names: true, events: true, timeline: true, map: true,
+    relationships: true, groups: true, research: false, identifiers: true,
+    media: true, mediaTimeline: true, quality: false,
+  },
+);
 
 // ── Template refs ───────────────────────────────────────────────────────────
 
@@ -426,13 +448,24 @@ onMounted(() => {
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: var(--space-lg) var(--space-lg);
+  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-header-content {
   flex: 1;
   min-width: 0;
 }
+.panel-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--font-lg);
+  cursor: pointer;
+  padding: 0 var(--space-md);
+  align-self: stretch;
+  margin: calc(var(--space-md) * -1) 0;
+}
+.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 .panel-name-row {
   display: flex;
   align-items: center;

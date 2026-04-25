@@ -79,54 +79,54 @@ async function doMerge() {
 .merge-layout {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 .merge-side {
   flex: 1;
 }
 .merge-side h5 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--space-sm);
   font-size: var(--font-sm);
-  color: var(--color-text-subtle);
+  color: var(--text-muted);
 }
 .merge-arrow {
   font-size: 24px;
-  color: var(--color-text-subtle);
-  padding-top: 20px;
+  color: var(--text-muted);
+  padding-top: var(--space-lg);
 }
 .person-card {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-border);
 }
 .person-card.target {
-  background: var(--color-success-bg, #dcfce7);
-  border-color: #86efac;
+  background: var(--success-bg);
+  border-color: var(--success-text);
 }
 .person-card.source {
-  background: var(--color-danger-bg, #fee2e2);
-  border-color: #fca5a5;
+  background: var(--error-bg);
+  border-color: var(--error-text);
 }
 .person-meta {
   font-size: var(--font-xs);
-  color: var(--color-text-subtle);
-  margin-top: 2px;
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
 }
 .merge-explanation {
   font-size: var(--font-sm);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-md);
 }
 .merge-explanation ul {
-  margin: 4px 0;
-  padding-left: 20px;
+  margin: var(--space-xs) 0;
+  padding-left: var(--space-lg);
 }
 .merge-warning {
-  background: var(--color-warning-bg, #fef3c7);
-  color: var(--color-warning-badge, #92400e);
-  padding: 8px 12px;
-  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
   font-size: var(--font-xs);
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg);
 }
 </style>

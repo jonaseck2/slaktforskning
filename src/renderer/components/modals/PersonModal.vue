@@ -230,7 +230,7 @@
           <span class="ep-entity-arrow">›</span>
         </div>
       </div>
-      <div style="height:8px"></div>
+      <div class="ep-spacer"></div>
     </template>
 
     <!-- Sub-panels -->
@@ -569,13 +569,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.ep-spacer {
+  height: var(--space-sm);
+}
 .ep-event-inline {
-  padding: 0 12px 8px;
+  padding: 0 var(--space-md) var(--space-sm);
 }
 .ep-event-details {
   border: 1px solid var(--surface-border-subtle);
   border-radius: var(--radius-md);
-  padding: 8px 12px;
+  padding: var(--space-sm) var(--space-md);
 }
 .ep-event-summary {
   cursor: pointer;

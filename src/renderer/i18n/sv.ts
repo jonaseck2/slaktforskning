@@ -68,6 +68,7 @@ export default {
     add: 'Lägg till',
     cancel: 'Avbryt',
     delete: 'Ta bort',
+    remove: 'Ta bort',
     edit: 'Redigera',
     save: 'Spara',
     create: 'Skapa',
@@ -521,6 +522,7 @@ export default {
     relationships: 'Relationer',
     notes: 'Anteckningar',
     noNotes: 'Inga anteckningar',
+    personSection: 'Person',
   },
   placeTypes: {
     country: 'Land',
@@ -1163,6 +1165,8 @@ export default {
       drawTag: '+ Rita',
       drawDone: 'Klar',
       assignPerson: 'Tilldela person...',
+      previousImage: 'Föregående bild',
+      nextImage: 'Nästa bild',
     },
     filter: {
       search: 'Sök media',

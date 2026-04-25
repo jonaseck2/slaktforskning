@@ -556,10 +556,10 @@ onMounted(async () => {
 :deep(.match-partial),
 :deep(.match-ambiguous) {
   display: inline-block;
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 1px 6px;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   line-height: 1.4;
 }
 :deep(.match-exact) {

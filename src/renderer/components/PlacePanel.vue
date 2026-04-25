@@ -293,7 +293,7 @@ import CitationModal from './modals/CitationModal.vue';
 import type { ComponentPublicInstance } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
-import { usePlacePanelSections } from '../composables/usePlacePanelSections';
+import { usePanelSections } from '../composables/usePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
@@ -327,7 +327,17 @@ const emit = defineEmits<{ 'select-place': [id: string]; 'close': []; 'place-upd
 
 // ── Section state ───────────────────────────────────────────────────────────
 
-const { sections, toggleSection } = usePlacePanelSections();
+const { sections, toggleSection } = usePanelSections(
+  'place-panel-section-',
+  {
+    place: true, address: false, children: false, persons: true,
+    events: true, citations: false, media: false, mediaTimeline: false, quality: false,
+  },
+  {
+    place: true, address: true, children: true, persons: true,
+    events: true, citations: true, media: true, mediaTimeline: true, quality: false,
+  },
+);
 
 // ── Template refs ───────────────────────────────────────────────────────────
 
