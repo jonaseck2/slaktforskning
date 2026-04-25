@@ -128,7 +128,7 @@ const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonosp
 function goToPerson(m: MemberRow) {
   const name = fullNameParts(m.given_name ?? null, m.surname ?? null, m.preferred_name ?? null, m.nickname ?? null).map(p => p.text).join('');
   focusStore.set(m.person_id, name);
-  router.push('/persons/' + m.person_id);
+  router.push('/visualisering/' + m.person_id);
 }
 
 async function load() {

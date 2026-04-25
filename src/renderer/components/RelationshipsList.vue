@@ -33,7 +33,7 @@
               <span v-if="p.roleLabel" class="role-label">{{ p.roleLabel }}</span>
               <router-link
                 v-if="p.id && (p.givenName || p.surname)"
-                :to="'/persons/' + p.id"
+                :to="'/visualisering/' + p.id"
                 class="person-link"
                 @click.stop
               >

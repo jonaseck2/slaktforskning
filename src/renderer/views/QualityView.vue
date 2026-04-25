@@ -210,7 +210,7 @@ function hasNavigation(r: QualityResult): boolean {
 
 function navigateTo(r: QualityResult) {
   if (r.placeIds && r.placeIds.length > 0) {
-    router.push('/places/' + r.placeIds[0]);
+    router.push({ path: '/places', query: { place: r.placeIds[0] } });
     return;
   }
   if (r.mediaIds && r.mediaIds.length > 0) {
@@ -224,7 +224,7 @@ function navigateTo(r: QualityResult) {
   if (r.personIds.length === 0) return;
   const action = FIX_ACTIONS[r.code];
   const query = action ? { action } : undefined;
-  router.push({ path: '/persons/' + r.personIds[0], query });
+  router.push('/visualisering/' + r.personIds[0]);
 }
 
 // --- Data loading ---

@@ -17,7 +17,7 @@
       </form>
       <div v-if="focusStore.personId" class="focus-indicator">
         <span class="focus-label">{{ $t('nav.focusPerson') }}</span>
-        <router-link :to="'/persons/' + focusStore.personId" class="focus-name">
+        <router-link :to="'/visualisering/' + focusStore.personId" class="focus-name">
           {{ focusStore.personName }}
         </router-link>
       </div>
@@ -288,7 +288,7 @@ async function loadDefaultPerson() {
   try {
     const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
     if (defaultId && router.currentRoute.value.path === '/') {
-      router.push('/persons/' + defaultId);
+      router.push('/visualisering/' + defaultId);
     }
   } catch { /* ignore */ }
 }

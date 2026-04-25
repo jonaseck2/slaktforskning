@@ -33,7 +33,7 @@
           <td><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
           <td class="td-date">{{ formatDate(event) }}</td>
           <td class="td-place">
-            <router-link v-if="event.place_id" :to="'/places/' + event.place_id" class="person-link" @click.stop>{{ event.place_name || '—' }}</router-link>
+            <router-link v-if="event.place_id" :to="{ path: '/places', query: { place: event.place_id } }" class="person-link" @click.stop>{{ event.place_name || '—' }}</router-link>
           </td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
           <td v-if="!props.readonly" class="cite-cell">

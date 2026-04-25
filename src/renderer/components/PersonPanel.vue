@@ -42,7 +42,7 @@
 
       <!-- Person section -->
       <div class="panel-section">
-        <SectionHeader :title="'Person'" :collapsed="!sections.person" :action-label="$t('common.edit')" @toggle="toggleSection('person')" @action="$router.push('/persons/' + personId)" />
+        <SectionHeader :title="'Person'" :collapsed="!sections.person" @toggle="toggleSection('person')" />
         <div v-if="sections.person" class="panel-section-body">
           <PersonDetailsSection :person-id="personId!" :sex="person.sex" :living="person.living" @updated="onDetailUpdated" />
         </div>

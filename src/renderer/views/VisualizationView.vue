@@ -14,7 +14,7 @@
       </div>
 
       <!-- List mode: person list -->
-      <PersonsView v-if="viewMode === 'list'" embedded @person-added="onPersonAdded" />
+      <PersonsView v-if="viewMode === 'list'" embedded @person-added="onPersonAdded" @select="selectNode" />
 
       <!-- Tree mode: tab bar + chart -->
       <template v-if="viewMode === 'tree'">
@@ -81,13 +81,15 @@
           @navigate="navigateTo"
         />
       </div>
-      <!-- Reopen panel button when panel is closed -->
+      <!-- Reopen panel button when panel is closed (tree mode) -->
       <button v-if="!panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
       </template>
+      <!-- Reopen panel button when panel is closed (list mode) -->
+      <button v-if="viewMode === 'list' && !panelOpen" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
-    <!-- Drag handle + panel (right sheet, tree mode only) -->
-    <template v-if="panelOpen && viewMode === 'tree'">
+    <!-- Drag handle + panel (both tree and list modes) -->
+    <template v-if="panelOpen">
       <div
         class="panel-drag-handle"
         @mousedown="(e) => startResize(e, vizBodyRef!)"
