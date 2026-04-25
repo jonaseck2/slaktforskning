@@ -275,10 +275,20 @@ import BaseModal from '../components/BaseModal.vue';
 - Backend must use a `listPage(limit, offset)` query that JOINs all display data in one SQL statement — no per-row IPC calls (N+1 anti-pattern)
 - See `frontend-design` skill → "Data loading pattern" for the full IntersectionObserver template
 
-### Detail view pattern (PersonDetailView, SourceDetailView)
-- Load entity in `onMounted` via `useRoute().params.id`
-- Auto-save on blur/change for editable fields
-- Sections for related entities (events, names, citations) with embedded components
+### List View + Side Panel pattern (universal — there are no DetailView components)
+
+Every entity (persons, relationships, sources, places, groups, research tasks) follows this pattern. The `:id` route opens the same list view with the panel pre-selected — never a separate page.
+
+- **Left pane:** list/table/map/tree of entities with `selectedId` highlighted
+- **Drag handle:** `<div class="panel-drag-handle">` bound to `usePanelResize({ storageKey, maxWidthRatio })`
+- **Right pane:** `<EntityPanel :entity-id="selectedId" @close="closePanel" />` rendered when `panelOpen && selectedId`
+- **Reopen button:** small "▶" affordance shown when the panel is closed
+- **localStorage keys:** `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`, plus per-section `<entity>-section-<name>-open`
+- **Routing:** `/entity` shows the list; `/entity/:id` shows the same view with the panel pre-selected. Drive `selectId(id)` from `route.params.id` in both `onMounted` and `onActivated` (for `<keep-alive>` round-trips).
+- **Cross-entity navigation:** clicking a related entity inside a panel routes to that entity's list view (which auto-opens its panel) — never inline-edit across entity types.
+- **Editing:** all create/edit happens in modals (`<EntityModal mode="standalone">`) opened from inside the panel. Inline auto-save fields are limited; most edits go through the modal.
+
+Reference panels live at `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask}Panel.vue`.
 
 ### Shared components to reuse
 - `BaseModal` — modal shell with Escape key close. Click-outside does NOT close. **Always use this** — never write `div.modal-overlay > div.modal` directly. Import from `'../components/BaseModal.vue'`.
@@ -316,20 +326,20 @@ Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `error
 
 ### Person Section Component pattern
 
-**Every data section for a person is a self-contained, reusable component** shared between `PersonDetailView` (full editing view) and `PersonPanel` (side panel in VisualizationView). When adding a new per-person section, always make it a component — never inline it in just one view.
+**Every data section for a person is a self-contained, reusable component** used inside `PersonPanel` (the side panel hosted by `PersonsView`), and shared with any other view that needs the same section (e.g. `ResearchTasksTable` is used in both `PersonPanel` and `ResearchTasksView`). When adding a new per-person section, always make it a component — never inline it in just one view.
 
 #### Existing person section components
 
 | Component | Self-loading | Exposes | Used in |
 |-----------|-------------|---------|---------|
-| `PersonNamesTable` | No (parent passes `names`) | — | Detail, Panel |
-| `PersonNameModal` | No | — | Detail, Panel |
-| `EventList` | Yes (`personId` prop) | `openAddForm()` | Detail, Panel |
-| `ResearchTasksTable` | No (parent passes `tasks`) | — | Detail, Panel, ResearchTasksView |
-| `GroupsTable` | No (parent passes `groups`) | — | Detail, Panel, GroupsView |
-| `PersonIdentifiersSection` | Yes | `openAddForm()` | Detail, Panel |
-| `PersonMediaSection` | Yes | `attach()` | Detail, Panel |
-| `PersonChecksSection` | Yes | `reload()` | Detail, Panel |
+| `PersonNamesTable` | No (parent passes `names`) | — | PersonPanel |
+| `PersonNameModal` | No | — | PersonPanel |
+| `EventList` | Yes (`personId` / `relationshipId` / `placeId` prop) | `openAddForm()` | PersonPanel, RelationshipPanel, PlacePanel |
+| `ResearchTasksTable` | No (parent passes `tasks`) | — | PersonPanel, ResearchTasksView |
+| `GroupsTable` | No (parent passes `groups`) | — | PersonPanel, GroupsView |
+| `PersonIdentifiersSection` | Yes | `openAddForm()` | PersonPanel |
+| `PersonMediaSection` / `EntityMediaSection` | Yes | `attach()` | PersonPanel + every panel hosting media |
+| `PersonChecksSection` | Yes | `reload()` | PersonPanel |
 
 #### Self-loading section component template
 
@@ -371,10 +381,10 @@ Key rules:
 - Use `defineExpose` when the parent's header button must trigger an action inside the component (add form, file picker, etc.)
 - The parent keeps the `<section>` header with the `<h4>` and action `<button>`; the component renders only the table/content below
 
-#### Parent wiring (PersonDetailView style)
+#### Parent wiring (panel-section style)
 
 ```vue
-<section class="detail-section">
+<section class="panel-section">
   <div class="section-header">
     <h4>{{ $t('things.title') }}</h4>
     <button class="btn-add" @click="thingsSectionRef?.openAddForm()">+ {{ $t('things.add') }}</button>

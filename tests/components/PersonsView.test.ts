@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia } from 'pinia';
-import VisualizationView from '../../src/renderer/views/VisualizationView.vue';
+import PersonsView from '../../src/renderer/views/PersonsView.vue';
 import { i18n } from './setup';
 
 // Mutable route params so individual tests can vary personId
@@ -39,7 +39,7 @@ function findChip(wrapper: ReturnType<typeof mount>, label: string) {
   return wrapper.findAll('.chip-btn').find(b => b.text().trim() === label);
 }
 
-describe('VisualizationView', () => {
+describe('PersonsView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -57,13 +57,13 @@ describe('VisualizationView', () => {
   });
 
   it('renders the hourglass chart tab by default', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     expect(wrapper.find('.stub-hourglass').exists()).toBe(true);
   });
 
   it('switches to hourglass tab when clicked', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     const chip = findChip(wrapper, 'Hourglass');
     expect(chip).toBeDefined();
@@ -72,7 +72,7 @@ describe('VisualizationView', () => {
   });
 
   it('switches to timeline tab when clicked', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     const chip = findChip(wrapper, 'Timeline');
     expect(chip).toBeDefined();
@@ -83,7 +83,7 @@ describe('VisualizationView', () => {
   // ── Tab chip accessibility ──────────────────────────────────────────────────
 
   it('renders 5 tab chips in the FilterChips bar', async () => {
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
     const chips = wrapper.findAll('.chip-btn');
     expect(chips).toHaveLength(5);
@@ -91,7 +91,7 @@ describe('VisualizationView', () => {
 
   it('active tab chip has the active class, others do not', async () => {
     localStorage.clear(); // default tab is hourglass
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
 
     const hourglass = findChip(wrapper, 'Hourglass');
@@ -102,7 +102,7 @@ describe('VisualizationView', () => {
 
   it('active class updates when tab changes', async () => {
     localStorage.clear();
-    const wrapper = mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+    const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
 
     const pedigree = findChip(wrapper, 'Pedigree');
@@ -118,17 +118,17 @@ describe('VisualizationView', () => {
       routeParams.personId = undefined;
       (window as any).api.db.getSetting.mockResolvedValue('default-id');
 
-      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
-      expect(mockReplace).toHaveBeenCalledWith('/visualisering/default-id');
+      expect(mockReplace).toHaveBeenCalledWith('/persons/default-id');
     });
 
     it('falls back to persons.list when no route personId and no default_person_id', async () => {
       routeParams.personId = undefined;
       // db.getSetting returns null (default mock)
 
-      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
       expect(mockReplace).not.toHaveBeenCalled();
@@ -139,17 +139,17 @@ describe('VisualizationView', () => {
       (window as any).api.persons.get.mockResolvedValue(null);
       (window as any).api.db.getSetting.mockResolvedValue('default-id');
 
-      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
-      expect(mockReplace).toHaveBeenCalledWith('/visualisering/default-id');
+      expect(mockReplace).toHaveBeenCalledWith('/persons/default-id');
     });
 
     it('falls back to persons.list when route person not found and no default_person_id', async () => {
       (window as any).api.persons.get.mockResolvedValue(null);
       // db.getSetting returns null (default mock)
 
-      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
       expect(mockReplace).not.toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe('VisualizationView', () => {
 
     it('does not redirect when route person is found', async () => {
       // persons.get returns a person (default mock)
-      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
       expect(mockReplace).not.toHaveBeenCalled();
@@ -168,7 +168,7 @@ describe('VisualizationView', () => {
       (window as any).api.persons.get.mockResolvedValue(null);
       (window as any).api.db.getSetting.mockResolvedValue('test-id'); // same as routeParams.personId
 
-      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
       // Guard against infinite redirect loop: skip if defaultId === id

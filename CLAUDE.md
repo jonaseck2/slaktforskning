@@ -133,13 +133,14 @@ src/
 │   ├── styles/
 │   │   ├── tokens.css            # Design tokens: 3 color themes (Forest/Nordic/Twilight), spacing, typography, shapes
 │   │   └── shared.css            # Global design system: shared classes, dark/high-contrast overrides
-│   ├── views/
-│   │   ├── PersonsView.vue       # Person list + "Add Person" modal
-│   │   ├── PersonDetailView.vue  # Person detail: names, events, relationships, notes
-│   │   ├── RelationshipsView.vue # Relationship list + "Add Relationship" modal (with PersonPicker)
-│   │   ├── RelationshipDetailView.vue # Relationship detail: persons, type/subtype, events
-│   │   ├── SourcesView.vue       # Source list + "Add Source" modal
-│   │   ├── SourceDetailView.vue  # Source detail: editable fields, citations
+│   ├── views/                    # Each list/tree view hosts its own side panel — no DetailView components
+│   │   ├── PersonsView.vue       # Tree + list tabs + PersonPanel (replaces VisualizationView)
+│   │   ├── PersonsListTab.vue    # Person list table (used inside PersonsView's list tab)
+│   │   ├── RelationshipsView.vue # Relationship list + RelationshipPanel
+│   │   ├── SourcesView.vue       # Source list + SourcePanel
+│   │   ├── PlacesView.vue        # Map + list tabs + PlacePanel
+│   │   ├── GroupsView.vue        # Group list + GroupPanel
+│   │   ├── ResearchTasksView.vue # Task list + ResearchTaskPanel
 │   │   ├── SettingsView.vue      # Settings: theme, appearance, text size, language, database, import/export
 │   │   └── MediaView.vue         # Media library browser
 │   ├── components/
@@ -160,6 +161,12 @@ src/
 │   │   │   ├── SourceModal.vue, CitationModal.vue (inline SourcePicker when sourceId not preset)
 │   │   │   ├── ResearchTaskModal.vue, PersonNameModal.vue, PersonIdentifierModal.vue
 │   │   │   └── LinkRuleModal.vue
+│   │   ├── PersonPanel.vue       # Side panel for a person (hosted in PersonsView)
+│   │   ├── PlacePanel.vue        # Side panel for a place (hosted in PlacesView)
+│   │   ├── SourcePanel.vue       # Side panel for a source: editable fields, citations, repos, media
+│   │   ├── RelationshipPanel.vue # Side panel for a relationship: persons, type/subtype, events, citations, media
+│   │   ├── GroupPanel.vue        # Side panel for a group: name, notes, members
+│   │   ├── ResearchTaskPanel.vue # Side panel for a research task: editable fields + linked person
 │   │   ├── MediaPanel.vue        # Media linking workbench panel (attach media to entities)
 │   │   ├── PersonPicker.vue      # Searchable person dropdown (typeahead)
 │   │   ├── DateInput.vue         # YYYY-MM-DD date input with auto-advance
@@ -171,6 +178,7 @@ src/
 │   │   ├── useTTS.ts               # Text-to-speech via Web Speech API
 │   │   ├── useScreenReaderMode.ts  # Screen reader mode: focus narration, hotkeys, live regions
 │   │   ├── useChartNavigation.ts   # Arrow-key family tree navigation for charts
+│   │   ├── usePanelResize.ts       # Drag-resize side panels (per-view localStorage key)
 │   │   └── useHotkeyRegistry.ts    # Hotkey registration (global + view-scoped)
 │   ├── utils/
 │   │   ├── chart-layout/
@@ -221,29 +229,30 @@ docs/
 
 ### Routes
 
+Every entity-list view hosts its own resizable side panel. All `:id` routes navigate to the **list view with the panel pre-selected** — there are no separate detail-view components. Editing happens in modals opened from within the panel.
+
 | Path | Component | Description |
 |------|-----------|-------------|
-| `/` | `PersonsView` | Person list with "Add Person" modal |
-| `/persons/:id` | `PersonDetailView` | Person detail with names, events, relationships, notes |
-| `/relationships` | `RelationshipsView` | Relationship list + "Add Relationship" modal |
-| `/relationships/:id` | `RelationshipDetailView` | Relationship detail: persons, type/subtype, events |
-| `/sources` | `SourcesView` | Source list with "Add Source" modal |
-| `/sources/:id` | `SourceDetailView` | Source detail with editable fields, citations |
+| `/` | redirect | Redirects to `/persons` |
+| `/persons` | `PersonsView` | Tree + list tabs + PersonPanel |
+| `/persons/:personId` | `PersonsView` | Same view, panel opened to selected person |
+| `/relationships` | `RelationshipsView` | Relationship list + RelationshipPanel |
+| `/relationships/:id` | `RelationshipsView` | Same view, panel opened to selected relationship |
+| `/sources` | `SourcesView` | Source list + SourcePanel |
+| `/sources/:id` | `SourcesView` | Same view, panel opened to selected source |
+| `/places` | `PlacesView` | Map + list tabs + PlacePanel |
+| `/places/:id` | `PlacesView` | Same view, panel opened to selected place |
+| `/groups` | `GroupsView` | Group list + GroupPanel |
+| `/groups/:id` | `GroupsView` | Same view, panel opened to selected group |
+| `/research-tasks` | `ResearchTasksView` | Task list + ResearchTaskPanel |
+| `/research-tasks/:id` | `ResearchTasksView` | Same view, panel opened to selected task |
 | `/search` | `SearchView` | Global search across persons, relationships, sources |
-| `/places` | `PlacesView` | Place list with "Add Place" modal |
-| `/places/:id` | `PlaceDetailView` | Place detail: name, type, parent, lat/lon, child places |
-| `/visualisering` | `VisualizationView` | Family tree charts (pedigree, hourglass, descendant) |
 | `/settings` | `SettingsView` | Settings: theme, appearance, text size, language, database management, import/export |
-| `/quality` | `QualityView` | Data quality checks with per-row fix actions |
-| `/reports` | `ReportsView` | AI-generated narrative reports |
-| `/research-tasks` | `ResearchTasksView` | Research task list with inline editing |
-| `/groups` | `GroupsView` | Person group management |
-| `/groups/:id` | `GroupDetailView` | Group detail with member list |
+| `/quality` | `QualityView` | Data quality checks — row click navigates to entity panel with quality section expanded |
+| `/reports` | `ReportsView` | Print-ready reports + framable charts |
 | `/media` | `MediaView` | Media library browser |
-| `/database` | redirect | Redirects to `/settings` |
-| `/import-export` | redirect | Redirects to `/settings` |
-| `/link-rules` | redirect | Redirects to `/settings` |
-| `/gazetteers` | redirect | Redirects to `/settings` |
+| `/visualisering`, `/visualisering/:personId` | redirect | Redirect to `/persons`, `/persons/:personId` (legacy) |
+| `/database`, `/import-export`, `/link-rules`, `/gazetteers` | redirect | Redirect to `/settings` |
 | `/map` | redirect | Redirects to `/places` |
 
 Router uses `createWebHashHistory()` (required for Electron file:// protocol).
@@ -537,25 +546,26 @@ Always use `<BaseSubPanel>` from `src/renderer/components/modals/` — it handle
 
 For nested modal flows (e.g. picking a source from inside an event), set `mode="subpanel"` on the inner modal and render it inside the parent's `#subpanels` slot — they appear side-by-side instead of stacking.
 
-### List View Pattern
+### List View + Side Panel Pattern
 
-Used by PersonsView, RelationshipsView, SourcesView:
-- Header with title + "Add" button
-- Table with clickable rows → `router.push('/entity/:id')`
-- Delete button with `@click.stop` to prevent row click
-- "Add" modal dialog
+This is the universal pattern for every entity (persons, relationships, sources, places, groups, research tasks). There are **no DetailView components** — every list/tree view hosts its own resizable side panel, and `:id` routes pre-select the entity inside that view.
 
-### Detail View Pattern
+**Structure (every list view):**
+- Left pane: list/table/map/tree of entities with `selectedId` highlighted
+- Drag handle (`<div class="panel-drag-handle">`) bound to `usePanelResize({ storageKey, maxWidthRatio })`
+- Right pane: `<EntityPanel :entity-id="selectedId" @close="closePanel" />` rendered when `panelOpen && selectedId`
+- "▶" reopen button when panel is closed
+- `localStorage` keys: `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`
 
-Used by PersonDetailView, RelationshipDetailView, SourceDetailView:
-- Load entity on mount via `useRoute().params.id`
-- Auto-save on blur/change for editable fields
-- Embedded section components for related data (see Person Section Component pattern below)
-- "Back" link to list view
+**Routing:** `/entity` shows the list; `/entity/:id` shows the same view with the panel pre-selected. Use `route.params.id` in `onMounted` and `onActivated` to drive `selectId(id)`.
+
+**Cross-entity links:** Clicking a related entity inside a panel navigates to that entity's list view (which auto-opens its panel) — never inline-editing across entity types.
+
+**Editing:** All create/edit happens in modals (`<EntityModal mode="standalone">`) opened from inside the panel header or section action buttons. There are no auto-save fields scattered through the panel — most edits go through the modal.
 
 ### Person Section Component Pattern
 
-**Every per-person data section is a reusable component**, shared between `PersonDetailView` (full editing page) and `PersonPanel` (collapsible side panel in VisualizationView). **Never inline a section in just one view** — extract it as a component from the start.
+**Every per-person data section is a reusable component**, shared between `PersonsView` (when used in list mode) and `PersonPanel` (the side panel hosted in PersonsView). **Never inline a section in just one view** — extract it as a component from the start.
 
 Two flavours:
 
@@ -566,11 +576,11 @@ Two flavours:
 
 **Prop-driven** (`PersonNamesTable`, `ResearchTasksTable`, `GroupsTable`):
 - Parent fetches data and passes it as a prop; component emits `updated` / `remove` / `edit` / `delete` back up
-- Reusable across list views (e.g. `ResearchTasksTable` is used in `ResearchTasksView`, `PersonDetailView`, and `PersonPanel`)
+- Reusable across list views (e.g. `ResearchTasksTable` is used in `ResearchTasksView` and `PersonPanel`)
 
 Parent structure is always the same — the component renders only the table/content:
 ```vue
-<section class="detail-section">           <!-- PersonDetailView -->
+<section class="panel-section">
   <div class="section-header">
     <h4>{{ $t('things.title') }}</h4>
     <button class="btn-add" @click="ref?.openAddForm()">+ Add</button>
@@ -619,17 +629,23 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 | `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
 | `LinkedText` | `text: string` | — | Auto-links structured references in text. Loads `link_rules_config` from db settings on mount and applies `resolveRules()` to filter by enabled locales. Renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
-| `PlacePanel` | `placeId: string\|null` | `close` | Collapsible side panel showing full place details when a map pin is clicked. 8 sections: info, events, persons, media, citations, child places, notes, coordinates. Mirrors PersonPanel pattern. Used by MapView. |
+| `PersonPanel` | `personId: string\|null` | `close` | Side panel for a person — host: PersonsView. Collapsible sections (names, events, identifiers, relationships, groups, tasks, media, notes, checks). Edit through PersonModal opened from the header. |
+| `PlacePanel` | `placeId: string\|null` | `close` | Side panel for a place — host: PlacesView. 8 collapsible sections: info, events, persons, media, citations, child places, notes, coordinates. |
+| `SourcePanel` | `sourceId: string\|null` | `close` | Side panel for a source — host: SourcesView. Sections: source fields, citations (with inline CitationModal), repositories, media, quality. |
+| `RelationshipPanel` | `relationshipId: string\|null` | `close` | Side panel for a relationship — host: RelationshipsView. Sections: type/subtype, person1/person2 pickers, events (`EventList` with `relationshipId`), citations, media. |
+| `GroupPanel` | `groupId: string\|null` | `close` | Side panel for a group — host: GroupsView. Sections: name/notes, members (PersonPicker add + remove). |
+| `ResearchTaskPanel` | `taskId: string\|null` | `close` | Side panel for a research task — host: ResearchTasksView. Sections: task text, notes, result, status, priority, linked person. |
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
-| `EntityMediaSection` | `entityType: string`, `entityId: string` | — | Generic media section for any entity type (person, place, event, etc.). Replaces the hardcoded person-only pattern in PersonMediaSection. Used by PlacePanel. |
+| `EntityMediaSection` | `entityType: string`, `entityId: string` | — | Generic media section for any entity type (person, place, event, source, relationship). Used by every panel that hosts media. |
 | `ChartExportControls` | `paperSize`, `orientation`, `colorMode`, `tileCount: {count,rows,cols}\|null` | `update:paperSize`, `update:orientation`, `update:colorMode`, `saveSvg`, `savePdf` | Paper-size, orientation, color-mode, and Save SVG / Save tiled PDF controls. Used in the 4 chart tab headers in `ReportsView` (pedigree/hourglass/descendant/fan). Pure presentational component; parent owns state and handlers. |
 | `ReportPanel` | `activeTab: string`, `coupleRelationships: RelationshipOption[]`, `tileCountInfo: {count,rows,cols}\|null` | `print`, `export-pdf`, `save-svg`, `save-chart-pdf` | Right-side print-configuration panel following the PersonPanel/PlacePanel pattern. Sections: Subject (person/couple/place picker), Options (checkboxes), Appearance (selects, ranges, orientation toggle). Print/Export buttons sticky at bottom. All config state lives in useReportConfigStore. Used in ReportsView alongside the report preview. |
 
 **Composables:**
 | Composable | Purpose |
 |-----------|---------|
-| `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by MapView, PersonMap, PlaceDetailView. |
+| `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by PlacesView (map + PlacePanel) and PersonMap. |
+| `usePanelResize` | Drag-resize side panels. Each view passes a `storageKey` (e.g. `persons-panel-width`) and a `maxWidthRatio`. |
 | `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
 | `useChartExport` | SVG export helpers (`buildExportSvgString`, `wrapWithTitle`). Used by `ReportsView` chart tabs to serialize the rendered chart SVG before calling `window.api.chart.saveSvg` / `saveTiledPdf`. |
 | `usePersonProfilePic` | Reactive `{ src, loading }` for a person's cropped profile picture. Wraps `useProfilePicStore`. Used automatically by `AppAvatar` when `personId` is set. |
@@ -675,7 +691,7 @@ Six shared print-safe components used across multiple reports. All use `--report
 | `profilePic` | Per-person cached cropped profile picture data URLs. Dedupes `readAsDataUrl` calls across rows (3 people in 1 photo = 1 fetch). Invalidated on region/link mutations. |
 | `reportConfig` | All print-configuration state for reports: subject IDs (person/couple/place), per-report toggle flags, appearance settings, couple relationships list. Shared between ReportsView and ReportPanel. |
 
-**Person Section Component pattern:** Every per-person data section is a reusable component shared between `PersonDetailView` and `PersonPanel`. Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
+**Person Section Component pattern:** Every per-person data section is a reusable component used inside `PersonPanel` (the side panel hosted by `PersonsView`). Self-loading components (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`) use `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so they reload when the panel switches person. The parent owns the `<section>` header and action button; the component renders only the table/content. See the `add-feature` skill for the full pattern, templates, and wiring examples.
 
 ### UI Design System
 

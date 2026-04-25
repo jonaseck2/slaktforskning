@@ -104,6 +104,9 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
+
+defineOptions({ name: 'PlacesView' });
+
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
@@ -128,11 +131,15 @@ watch(viewMode, (v) => {
 });
 const activeTypeFilter = ref<string>('all');
 
-// If ?place= is in the URL, write to localStorage now (before MapView setup runs) so
+// If /places/:id or ?place= is in the URL, write to localStorage now (before MapView setup runs) so
 // MapView picks it up when it initializes its own selectedPlaceId from the same key.
+const paramId = route.params.id;
 const queryPlace = route.query.place;
-if (typeof queryPlace === 'string' && queryPlace) {
-  localStorage.setItem('map-selected-place', queryPlace);
+const initialPlaceId =
+  (typeof paramId === 'string' && paramId) ? paramId :
+  (typeof queryPlace === 'string' && queryPlace) ? queryPlace : null;
+if (initialPlaceId) {
+  localStorage.setItem('map-selected-place', initialPlaceId);
   localStorage.setItem('map-panel-open', 'true');
 }
 
@@ -205,6 +212,10 @@ async function deletePlace(id: string) {
   await load();
 }
 
+watch(() => route.params.id, (id) => {
+  if (typeof id === 'string' && id) selectPlace(id);
+});
+
 watch(() => route.query.place, (id) => {
   if (typeof id === 'string' && id) selectPlace(id);
 });
@@ -213,7 +224,9 @@ onMounted(async () => {
   if (route.query.view === 'map') viewMode.value = 'map';
   await load();
   loadedVersion = dataVersionStore.version;
-  // selectedPlaceId was pre-set from query in setup; just ensure panel is open
+  const id = route.params.id as string | undefined;
+  if (id) selectPlace(id);
+  // selectedPlaceId was pre-set from query/params in setup; just ensure panel is open
   if (selectedPlaceId.value) openPanel();
 });
 
@@ -222,6 +235,8 @@ onActivated(async () => {
     await load();
     loadedVersion = dataVersionStore.version;
   }
+  const id = route.params.id as string | undefined;
+  if (id) selectPlace(id);
 });
 </script>
 

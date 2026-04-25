@@ -104,7 +104,7 @@
         <p class="subm-name">{{ $t('importExport.submitterFound', { name: importReport.submitterName }) }}</p>
         <div v-if="resolvedTreeSubjectId" class="subm-matched">
           <span>{{ $t('importExport.submitterMatched') }}</span>
-          <router-link :to="'/visualisering/' + resolvedTreeSubjectId" class="person-link" @click="showImportReport = false">
+          <router-link :to="'/persons/' + resolvedTreeSubjectId" class="person-link" @click="showImportReport = false">
             {{ matchedPersonName || resolvedTreeSubjectId }}
           </router-link>
         </div>

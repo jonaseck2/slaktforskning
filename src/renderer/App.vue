@@ -4,7 +4,6 @@
     <nav class="sidebar" aria-label="Main navigation">
       <div class="sidebar-header">
         <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
-        <button v-if="canGoBack" class="btn-sidebar-back" :aria-label="$t('a11y.goBack')" @click="router.back()">←</button>
       </div>
       <form class="sidebar-search" @submit.prevent="submitSearch">
         <input
@@ -17,7 +16,7 @@
       </form>
       <div v-if="focusStore.personId" class="focus-indicator">
         <span class="focus-label">{{ $t('nav.focusPerson') }}</span>
-        <router-link :to="'/visualisering/' + focusStore.personId" class="focus-name">
+        <router-link :to="'/persons/' + focusStore.personId" class="focus-name">
           {{ focusStore.personName }}
         </router-link>
       </div>
@@ -149,9 +148,6 @@ import { useToast } from './composables/useToast';
 const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
-const navCount = ref(0);
-router.afterEach(() => { navCount.value++; });
-const canGoBack = computed(() => navCount.value > 0);
 const focusStore = useFocusStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
@@ -201,12 +197,12 @@ watch(() => route.path, () => {
   if (screenReader.isScreenReader.value) {
     const routeMap: Record<string, string> = {
       '/': 'persons',
+      '/persons': 'persons',
       '/relationships': 'relationships',
       '/sources': 'sources',
       '/places': 'places',
       '/map': 'map',
       '/research-tasks': 'tasks',
-      '/visualisering': 'visualization',
       '/groups': 'groups',
       '/media': 'media',
       '/reports': 'reports',
@@ -226,8 +222,8 @@ watch(() => route.path, () => {
     screenReader.announceRoute(name);
   }
 });
-const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
-const PANELED_ROUTES = ['/visualisering', '/media', '/places', '/reports', '/prints'];
+const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
+const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
@@ -298,7 +294,7 @@ async function loadDefaultPerson() {
   try {
     const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
     if (defaultId && router.currentRoute.value.path === '/') {
-      router.push('/visualisering/' + defaultId);
+      router.push('/persons/' + defaultId);
     }
   } catch { /* ignore */ }
 }
@@ -424,22 +420,6 @@ body {
   border-bottom: 1px solid var(--sidebar-border);
   margin-bottom: 8px;
   flex-shrink: 0;
-}
-
-.btn-sidebar-back {
-  background: none;
-  border: none;
-  color: var(--sidebar-text-muted);
-  cursor: pointer;
-  font-size: var(--font-md);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  line-height: 1;
-}
-
-.btn-sidebar-back:hover {
-  color: var(--sidebar-active-text);
-  background: var(--sidebar-active-bg);
 }
 
 .sidebar-title {

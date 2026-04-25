@@ -13,12 +13,13 @@
         v-for="g in groups"
         :key="g.id"
         class="clickable-row"
+        :class="{ 'selected-row': selectedId === g.id }"
         tabindex="0"
         role="button"
         :aria-label="$t('a11y.editItem', { item: g.name })"
-        @click="router.push('/groups/' + g.id)"
-        @keydown.enter="router.push('/groups/' + g.id)"
-        @keydown.space.prevent="router.push('/groups/' + g.id)"
+        @click="$emit('select', g.id)"
+        @keydown.enter="$emit('select', g.id)"
+        @keydown.space.prevent="$emit('select', g.id)"
       >
         <td class="td-name">{{ g.name }}</td>
         <td v-if="showMembers">{{ g.memberCount }}</td>
@@ -32,8 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-
 export interface GroupRow {
   id: string;
   name: string;
@@ -44,13 +43,13 @@ export interface GroupRow {
 withDefaults(defineProps<{
   groups: GroupRow[];
   showMembers?: boolean;
+  selectedId?: string | null;
 }>(), {
   showMembers: false,
+  selectedId: null,
 });
 
-defineEmits<{ remove: [id: string] }>();
-
-const router = useRouter();
+defineEmits<{ remove: [id: string]; select: [id: string] }>();
 </script>
 
 <style scoped>
@@ -64,4 +63,5 @@ const router = useRouter();
   white-space: nowrap;
 }
 .td-name { white-space: nowrap; }
+.selected-row { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 </style>

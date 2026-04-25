@@ -1,20 +1,38 @@
 <template>
-  <div class="research-tasks">
-    <div class="header">
-      <h2>{{ $t('nav.researchTasks') }}</h2>
-      <AppButton variant="soft" @click="showAddModal = true">+ {{ $t('researchTasks.addTask') }}</AppButton>
+  <div class="research-tasks-view" ref="tasksBodyRef">
+    <div class="tasks-list-sheet">
+      <div class="header">
+        <h2>{{ $t('nav.researchTasks') }}</h2>
+        <AppButton variant="soft" @click="showAddModal = true">+ {{ $t('researchTasks.addTask') }}</AppButton>
+      </div>
+
+      <p v-if="tasks.length > 0" class="count-label">
+        {{ $t('researchTasks.summary', { count: tasks.length, open: openCount }) }}
+      </p>
+
+      <!-- Status filter chips -->
+      <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
+
+      <!-- Task list -->
+      <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('empty.researchTasks')" :description="$t('empty.researchTasksDesc')" :action-label="$t('empty.addTask')" @action="showAddModal = true" />
+      <ResearchTasksTable
+        v-else
+        :tasks="filteredTasks"
+        :show-person="true"
+        :selected-id="selectedTaskId"
+        @updated="load"
+        @select="selectTask"
+      />
+
+      <button v-if="!panelOpen && selectedTaskId" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
-    <p v-if="tasks.length > 0" class="count-label">
-      {{ $t('researchTasks.summary', { count: tasks.length, open: openCount }) }}
-    </p>
-
-    <!-- Status filter chips -->
-    <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
-
-    <!-- Task list -->
-    <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('empty.researchTasks')" :description="$t('empty.researchTasksDesc')" :action-label="$t('empty.addTask')" @action="showAddModal = true" />
-    <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
+    <template v-if="panelOpen && selectedTaskId">
+      <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, tasksBodyRef!)"></div>
+      <div class="tasks-panel" :style="{ width: panelWidth + 'px' }">
+        <ResearchTaskPanel :task-id="selectedTaskId" @close="closePanel" @updated="load" />
+      </div>
+    </template>
 
     <!-- Add Task Modal -->
     <ResearchTaskModal
@@ -28,15 +46,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onActivated } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ResearchTaskModal from '../components/modals/ResearchTaskModal.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
+import ResearchTaskPanel from '../components/ResearchTaskPanel.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
+import { usePanelResize } from '../composables/usePanelResize';
+
+defineOptions({ name: 'ResearchTasksView' });
 
 const { t } = useI18n();
+const route = useRoute();
 
 interface ResearchTask {
   id: string;
@@ -74,6 +98,26 @@ const filteredTasks = computed(() => {
   return tasks.value.filter(t => t.status === activeFilter.value);
 });
 
+const tasksBodyRef = ref<HTMLElement | null>(null);
+const selectedTaskId = ref<string | null>(localStorage.getItem('tasks-selected-id'));
+const panelOpen = ref(localStorage.getItem('tasks-panel-open') !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: 'tasks-panel-width', maxWidthRatio: 0.5 });
+
+function selectTask(id: string) {
+  selectedTaskId.value = id;
+  localStorage.setItem('tasks-selected-id', id);
+  if (!panelOpen.value) openPanel();
+}
+function openPanel() {
+  panelOpen.value = true;
+  localStorage.setItem('tasks-panel-open', 'true');
+}
+function closePanel() {
+  panelOpen.value = false;
+  localStorage.setItem('tasks-panel-open', 'false');
+}
+
+
 async function load() {
   const raw = (await window.api.researchTasks.list()) as ResearchTask[];
   // Enrich with person names using getNames (persons.get returns no name fields)
@@ -92,11 +136,70 @@ async function load() {
   tasks.value = enriched;
 }
 
-async function onSaved() {
+async function onSaved(newTask?: { id: string }) {
   showAddModal.value = false;
   await load();
+  if (newTask?.id) selectTask(newTask.id);
 }
 
-onMounted(load);
+onMounted(async () => {
+  await load();
+  const id = route.params.id as string | undefined;
+  if (id) selectTask(id);
+  else if (selectedTaskId.value) openPanel();
+});
+
+onActivated(() => {
+  const id = route.params.id as string | undefined;
+  if (id) selectTask(id);
+});
 </script>
 
+<style scoped>
+.research-tasks-view {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  gap: var(--space-xs);
+}
+.tasks-list-sheet {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.tasks-panel {
+  flex-shrink: 0;
+  min-width: 200px;
+  max-width: 1040px;
+}
+.panel-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.panel-drag-handle:hover { background: var(--surface-border); }
+.panel-open-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+  line-height: 1;
+}
+.panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+</style>

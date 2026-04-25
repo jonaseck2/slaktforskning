@@ -1,6 +1,6 @@
 <template>
   <li>
-    <router-link v-if="person" :to="'/visualisering/' + person.id" class="person-link">
+    <router-link v-if="person" :to="'/persons/' + person.id" class="person-link">
       {{ ((person.givenName || '') + ' ' + (person.surname || '')).trim() || $t('common.unknown') }}
     </router-link>
     <span v-if="person?.birthDate || person?.deathDate" class="dates">

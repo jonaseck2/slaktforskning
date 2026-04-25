@@ -153,7 +153,7 @@ function activate(): void {
     { key: 's', action: () => _router?.push('/sources'), description: t('screenReader.hotkeySources') },
     { key: 'l', action: () => _router?.push('/places'), description: t('screenReader.hotkeyPlaces') },
     { key: 't', action: () => _router?.push('/research-tasks'), description: t('screenReader.hotkeyTasks') },
-    { key: 'v', action: () => _router?.push('/visualisering'), description: t('screenReader.hotkeyVisualization') },
+    { key: 'v', action: () => _router?.push('/persons'), description: t('screenReader.hotkeyPersonsV') },
     { key: 'q', action: () => _router?.push('/quality'), description: t('screenReader.hotkeyQuality') },
     { key: 'd', action: () => _router?.push('/database'), description: t('screenReader.hotkeyDatabase') },
     { key: '/', action: focusSearch, description: t('screenReader.hotkeySearch') },

@@ -167,6 +167,9 @@ export default {
     notesPlaceholder: 'Optional notes\u2026',
     citeRelationship: 'Cite Relationship',
   },
+  relationshipPanel: {
+    noRelationshipSelected: 'Click a relationship in the list',
+  },
   sources: {
     title: 'Sources',
     addSource: 'Source',
@@ -189,6 +192,23 @@ export default {
     createNew: 'Create "{name}"',
     createNewSource: 'Create new source',
     searchOrAdd: 'Search or add source…',
+    callNumber: 'Call Number',
+    abstract: 'Abstract',
+  },
+  groupPanel: {
+    noGroupSelected: 'Click a group in the list',
+  },
+  taskPanel: {
+    noTaskSelected: 'Click a task in the list',
+  },
+  sourcePanel: {
+    noSourceSelected: 'Click a source in the list',
+    repositories: 'Repositories',
+    addRepository: 'Repository',
+    repositoryName: 'Name',
+    selectRepository: '— Select repository —',
+    noRepositories: 'No repositories linked',
+    noChecks: 'No source-level checks',
   },
   sourceDetail: {
     title: 'Source Details',
@@ -918,6 +938,7 @@ export default {
     filterAll: 'All',
     selectPersonOptional: 'Select person (optional)',
     summary: '{count} research tasks · {open} active',
+    confirmDelete: 'Delete this task?',
   },
   groups: {
     title: 'Groups',
@@ -1212,11 +1233,11 @@ export default {
     // Hotkey help
     hotkeysAvailable: 'Available commands: {list}',
     hotkeyPersons: 'P persons',
+    hotkeyPersonsV: 'V persons',
     hotkeyRelationships: 'R relationships',
     hotkeySources: 'S sources',
     hotkeyPlaces: 'L places',
     hotkeyTasks: 'T research tasks',
-    hotkeyVisualization: 'V visualization',
     hotkeyQuality: 'Q quality checks',
     hotkeyDatabase: 'D database',
     hotkeySearch: 'slash or F search',

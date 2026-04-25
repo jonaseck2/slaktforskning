@@ -1,5 +1,5 @@
 <template>
-  <RelationshipsList :rows="rows" @delete="$emit('delete', $event)" />
+  <RelationshipsList :rows="rows" :selected-id="selectedId" @delete="$emit('delete', $event)" @select="$emit('select', $event)" />
 </template>
 
 <script setup lang="ts">
@@ -27,8 +27,8 @@ export interface RelRow {
   person2_sex: 'M' | 'F' | 'U' | null;
 }
 
-const props = defineProps<{ relationships: RelRow[] }>();
-defineEmits<{ delete: [id: string] }>();
+const props = defineProps<{ relationships: RelRow[]; selectedId?: string | null }>();
+defineEmits<{ delete: [id: string]; select: [id: string] }>();
 
 const { t } = useI18n();
 

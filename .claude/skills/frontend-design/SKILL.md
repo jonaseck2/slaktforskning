@@ -35,7 +35,7 @@ Every time you build a paneled view, follow all steps in order. Missing any step
 
 **Step 1 — Register the route** in `App.vue:219`:
 ```typescript
-const PANELED_ROUTES = ['/visualisering', '/media', '/places', '/reports', '/my-new-route'];
+const PANELED_ROUTES = ['/persons', '/relationships', '/sources', '/places', '/groups', '/research-tasks', '/media', '/reports', '/my-new-route'];
 ```
 - `PANELED_ROUTES` — prefix match (catches `/route/123` sub-paths too)
 - `PANELED_ROUTES_EXACT` — exact match only (use when sub-paths should NOT be paneled)
@@ -384,9 +384,8 @@ All create/edit forms open in a modal. **Always use `<BaseModal>`**. Click-outsi
 ### Reusable modals
 
 Extract modals into components when used in multiple views:
-- `AddPersonModal` — shared between PersonsView (list mode) and VisualizationView (tree mode)
-- `AddRelatedPersonModal` — used by PersonDetailView and PersonPanel
-- `EventForm`, `CitationForm`, `PersonNameFormModal` — used across detail views and panels
+- `PersonModal` — single modal for add and edit. With the `relatedTo` prop it also handles the legacy AddRelatedPersonModal flow (creates the relationship + parent_child link, infers sex, pre-fills surname). Used by PersonsView (both tree and list) and PersonPanel
+- `EventModal`, `CitationModal`, `PersonNameModal`, `SourceModal`, `RelationshipModal`, `GroupModal`, `ResearchTaskModal`, `PersonIdentifierModal` — all built on `BaseSubPanel`; opened from inside the matching side panel
 
 ---
 

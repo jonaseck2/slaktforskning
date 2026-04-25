@@ -1,5 +1,5 @@
 /**
- * E2E: Visualization view — empty state, person selection, tab switching, SVG rendering.
+ * E2E: Tree visualization in PersonsView — empty state, person selection, tab switching, SVG rendering.
  *
  * Runs on port 19245 with its own Electron instance, in parallel with other gui-* suites.
  */
@@ -33,18 +33,18 @@ test.setTimeout(30_000);
 
 test.describe('Visualization empty state', () => {
   test('shows empty state when no persons exist', async () => {
-    // Navigate away first so VisualizationView unmounts, then clear any stale focal-person
+    // Navigate away first so PersonsView unmounts, then clear any stale focal-person
     // from prior runs (shared Chromium profile) before navigating back.
     await app.navigate('/sources');
     await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree'); localStorage.removeItem('viz-focal-person')`);
-    await app.navigate('/visualisering');
+    await app.navigate('/persons');
     await app.waitForText('Create a person to start visualizing');
   });
 
   test('empty state has data-testid attribute for reliable selection', async () => {
     await app.navigate('/sources');
     await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree'); localStorage.removeItem('viz-focal-person')`);
-    await app.navigate('/visualisering');
+    await app.navigate('/persons');
     const dom = await app.getDom();
     expect(dom).toContain('viz-empty');
   });
@@ -94,20 +94,20 @@ test.describe('Visualization with persons', () => {
     });
   });
 
-  test('navigating to /visualisering/:id shows focal person name', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+  test('navigating to /persons/:id shows focal person name', async () => {
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
   });
 
   test('focal person name is shown in panel', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     const dom = await app.getDom();
     expect(dom).toContain('panel-name');
   });
 
   test('pedigree chart is active by default and renders SVG', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(80);
 
@@ -119,7 +119,7 @@ test.describe('Visualization with persons', () => {
   });
 
   test('switching to Hourglass tab renders SVG', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(80);
 
@@ -134,7 +134,7 @@ test.describe('Visualization with persons', () => {
   });
 
   test('switching to Timeline tab renders SVG', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(80);
 
@@ -149,7 +149,7 @@ test.describe('Visualization with persons', () => {
   });
 
   test('switching tabs updates active chip', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(50);
 
@@ -170,7 +170,7 @@ test.describe('Visualization with persons', () => {
   });
 
   test('Edit action navigates to person detail', async () => {
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(100);
 
@@ -189,7 +189,7 @@ test.describe('Visualization with persons', () => {
   test('back button exists in visualization tab bar', async () => {
     // Ensure tree mode so the viz tab bar (containing the back button) renders.
     await app.executeJs(`localStorage.setItem('persons-view-mode', 'tree')`);
-    await app.navigate(`/visualisering/${focalPerson.id}`);
+    await app.navigate(`/persons/${focalPerson.id}`);
     await app.waitForText('Maja');
     await app.settle(200);
 
