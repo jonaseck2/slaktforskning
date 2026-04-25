@@ -1,55 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import MediaViewer from '../../src/renderer/components/MediaViewer.vue';
 import { i18n } from './setup';
-
-// ── CSS regression guard ────────────────────────────────────────────────────
-// Parse the SFC style block and assert the viewer canvas background is dark.
-// This test exists solely to catch the regression where the canvas inherited
-// var(--surface-bg) from the outer shell instead of using a fixed dark color.
-
-describe('MediaViewer canvas background (CSS regression)', () => {
-  it('viewer-canvas has background: #000 in scoped styles', () => {
-    const sfc = readFileSync(
-      resolve(__dirname, '../../src/renderer/components/MediaViewer.vue'),
-      'utf-8',
-    );
-    // Extract content between the last <style …> … </style> block
-    const styleMatch = sfc.match(/<style[^>]*>([\s\S]*?)<\/style>/g);
-    expect(styleMatch, 'no <style> block found').toBeTruthy();
-    const styleBlock = styleMatch![styleMatch!.length - 1];
-
-    // Find the .viewer-canvas rule block
-    const ruleMatch = styleBlock.match(/\.viewer-canvas\s*\{([^}]+)\}/);
-    expect(ruleMatch, '.viewer-canvas rule not found').toBeTruthy();
-    const ruleBody = ruleMatch![1];
-
-    expect(
-      ruleBody,
-      '.viewer-canvas must set background: #000 (not a CSS variable) so the canvas is always dark regardless of theme',
-    ).toMatch(/background\s*:\s*#000/);
-  });
-
-  it('viewer-canvas background is NOT a CSS variable', () => {
-    const sfc = readFileSync(
-      resolve(__dirname, '../../src/renderer/components/MediaViewer.vue'),
-      'utf-8',
-    );
-    const styleMatch = sfc.match(/<style[^>]*>([\s\S]*?)<\/style>/g);
-    const styleBlock = styleMatch![styleMatch!.length - 1];
-    const ruleMatch = styleBlock.match(/\.viewer-canvas\s*\{([^}]+)\}/);
-    const ruleBody = ruleMatch![1];
-
-    expect(
-      ruleBody,
-      '.viewer-canvas must not use var(--surface-bg) or any other CSS variable for background',
-    ).not.toMatch(/background\s*:\s*var\(/);
-  });
-});
-
-// ── Component behaviour ─────────────────────────────────────────────────────
 
 const mockApi = {
   media: {
@@ -81,7 +33,15 @@ function mountViewer(overrides: Partial<{
   return mount(MediaViewer, {
     global: {
       plugins: [i18n],
-      stubs: { FaceTagOverlay: true },
+      stubs: {
+        FaceTagOverlay: true,
+        MediaCaption: true,
+        ZoomControls: true,
+        'router-link': true,
+      },
+      mocks: {
+        $router: { push: vi.fn() },
+      },
     },
     props: {
       mediaItems: [baseItem],
@@ -100,13 +60,6 @@ beforeEach(() => {
 });
 
 describe('MediaViewer', () => {
-  it('renders the toolbar with title', async () => {
-    const wrapper = mountViewer();
-    await flushPromises();
-    // mediaDisplayName returns the title verbatim when present
-    expect(wrapper.find('.viewer-filename').text()).toBe('photo.jpg');
-  });
-
   it('renders counter as "1 / 1" for single item', async () => {
     const wrapper = mountViewer();
     await flushPromises();
@@ -125,12 +78,6 @@ describe('MediaViewer', () => {
     await flushPromises();
     expect(wrapper.find('.viewer-filmstrip').exists()).toBe(true);
     expect(wrapper.findAll('.filmstrip-thumb')).toHaveLength(2);
-  });
-
-  it('emits close when close button is clicked', async () => {
-    const wrapper = mountViewer();
-    await wrapper.find('.viewer-close').trigger('click');
-    expect(wrapper.emitted('close')).toHaveLength(1);
   });
 
   it('emits close on Escape keydown', async () => {

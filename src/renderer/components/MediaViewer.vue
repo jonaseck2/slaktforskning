@@ -83,6 +83,15 @@
       />
     </div>
 
+    <!-- Caption preview (matches report look) -->
+    <div v-if="captionFaceTags.length > 0 || currentItem?.notes" class="viewer-caption-area">
+      <MediaCaption
+        :face-tags="captionFaceTags"
+        :notes="currentItem?.notes ?? null"
+        @person-click="onCaptionPersonClick"
+      />
+    </div>
+
     <!-- Filmstrip -->
     <div v-if="mediaItems.length > 1" class="viewer-filmstrip">
       <div
@@ -103,10 +112,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useImageZoom } from '../composables/useImageZoom';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import FaceTagOverlay from './FaceTagOverlay.vue';
 import ZoomControls from './ZoomControls.vue';
+import MediaCaption, { type CaptionFaceTag } from './MediaCaption.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -151,6 +162,7 @@ const emit = defineEmits<{
 }>();
 
 const { t: $t } = useI18n();
+const router = useRouter();
 
 const rootEl = ref<HTMLElement | null>(null);
 const canvasEl = ref<HTMLElement | null>(null);
@@ -180,6 +192,19 @@ const displayName = computed(() => {
   if (!item) return '';
   return mediaDisplayName(item.title, item.file_ref);
 });
+
+const captionFaceTags = computed<CaptionFaceTag[]>(() => {
+  return enrichedRegions.value
+    .filter(r => r.person_id && r.personName)
+    .sort((a, b) => a.x - b.x)
+    .map(r => ({ personId: r.person_id!, name: r.personName, x: r.x }));
+});
+
+function onCaptionPersonClick(personId: string, event: MouseEvent) {
+  event.preventDefault();
+  router.push('/persons/' + personId);
+  emit('close');
+}
 
 const isImage = computed(() => {
   const item = currentItem.value;
@@ -384,6 +409,17 @@ onMounted(() => {
   justify-content: center;
   cursor: default;
   background: var(--surface);
+}
+
+.viewer-caption-area {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-lg);
+  display: flex;
+  justify-content: center;
+}
+.viewer-caption-area :deep(.media-caption) {
+  max-width: 720px;
+  width: 100%;
 }
 
 .image-wrapper {
