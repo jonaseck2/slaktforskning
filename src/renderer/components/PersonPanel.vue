@@ -149,11 +149,12 @@
     </template>
 
     <!-- Name form modal -->
-    <PersonNameFormModal
+    <PersonNameModal
       v-if="showNameForm && personId"
       :person-id="personId"
-      :name="editingName"
+      :editing-name="editingName"
       :default-surname="primaryName?.surname ?? ''"
+      @cancel="cancelNameForm"
       @close="cancelNameForm"
       @saved="reloadNames(personId!)"
     />
@@ -188,7 +189,7 @@ import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
 import PersonNamesTable from './PersonNamesTable.vue';
-import PersonNameFormModal from './PersonNameFormModal.vue';
+import PersonNameModal from './modals/PersonNameModal.vue';
 import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';

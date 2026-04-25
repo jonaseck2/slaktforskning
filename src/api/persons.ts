@@ -230,7 +230,7 @@ export function getPersonNames(db: Database, personId: string): PersonName[] {
 export function updatePersonName(
   db: Database,
   id: string,
-  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname'>>
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'date_from' | 'date_to' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname'>>
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -244,6 +244,8 @@ export function updatePersonName(
   }
   if (data.surname !== undefined) { fields.push('surname = ?'); values.push(data.surname); }
   if (data.name_type !== undefined) { fields.push('name_type = ?'); values.push(data.name_type); }
+  if (data.date_from !== undefined) { fields.push('date_from = ?'); values.push(data.date_from); }
+  if (data.date_to !== undefined) { fields.push('date_to = ?'); values.push(data.date_to); }
   if (data.name_prefix !== undefined) { fields.push('name_prefix = ?'); values.push(data.name_prefix); }
   if (data.name_suffix !== undefined) { fields.push('name_suffix = ?'); values.push(data.name_suffix); }
   if (data.patronymic_base !== undefined) { fields.push('patronymic_base = ?'); values.push(data.patronymic_base); }

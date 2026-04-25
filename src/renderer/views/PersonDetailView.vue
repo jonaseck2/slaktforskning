@@ -177,12 +177,13 @@
       @saved="showAddRelated = false; relSectionRef?.reload()"
     />
 
-    <!-- Add Name Modal -->
-    <PersonNameFormModal
+    <!-- Add / Edit Name Modal -->
+    <PersonNameModal
       v-if="showNameForm || showEditNameForm"
       :person-id="personId"
-      :name="showEditNameForm ? editingName : null"
+      :editing-name="showEditNameForm ? editingName : null"
       :default-surname="names.length > 0 ? names[0].surname : ''"
+      @cancel="showNameForm = false; showEditNameForm = false"
       @close="showNameForm = false; showEditNameForm = false"
       @saved="load"
     />
@@ -204,7 +205,7 @@ import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
 import PersonNamesTable from '../components/PersonNamesTable.vue';
-import PersonNameFormModal from '../components/PersonNameFormModal.vue';
+import PersonNameModal from '../components/modals/PersonNameModal.vue';
 import PersonIdentifiersSection from '../components/PersonIdentifiersSection.vue';
 import PersonMediaSection from '../components/PersonMediaSection.vue';
 import MediaTimeline from '../components/MediaTimeline.vue';
