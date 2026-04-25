@@ -1,7 +1,7 @@
 <template>
   <div class="visualization-view" ref="vizBodyRef">
     <!-- Left sheet -->
-    <div class="viz-chart-area" :class="{ 'viz-list-mode': viewMode === 'list' }">
+    <div class="viz-chart-area">
       <div class="header">
         <h2>{{ $t('nav.people') }}</h2>
         <div class="header-right">
@@ -20,20 +20,19 @@
 
       <!-- Tree mode: tab bar + chart -->
       <template v-if="viewMode === 'tree'">
-      <!-- Tab bar -->
-      <div v-if="focalPerson" class="filter-chips-bar">
-        <FilterChips
-          :model-value="activeTab"
-          :options="[
-            { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
-            { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
-            { value: 'descendants', label: $t('visualization.tab.descendants') },
-            { value: 'fan',         label: $t('visualization.tab.fan') },
-            { value: 'timeline',    label: $t('visualization.tab.timeline') },
-          ]"
-          @update:model-value="setTab($event as TabName)"
-        />
-      </div>
+      <FilterChips
+        v-if="focalPerson"
+        class="viz-tabs"
+        :model-value="activeTab"
+        :options="[
+          { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
+          { value: 'hourglass',   label: $t('visualization.tab.hourglass') },
+          { value: 'descendants', label: $t('visualization.tab.descendants') },
+          { value: 'fan',         label: $t('visualization.tab.fan') },
+          { value: 'timeline',    label: $t('visualization.tab.timeline') },
+        ]"
+        @update:model-value="setTab($event as TabName)"
+      />
 
       <!-- Empty state -->
       <AppEmptyState v-if="noPersonsExist" icon="🌳" :title="$t('empty.persons')" :description="$t('empty.treeDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPerson')" data-testid="viz-empty" @action="showAddPerson = true" />
@@ -401,22 +400,6 @@ onActivated(load);
 /* Left sheet: header + tabs + chart */
 .header-right { display: flex; align-items: center; gap: 8px; }
 .view-toggle { display: flex; gap: 2px; }
-.viz-chart-area > .header {
-  padding: var(--space-lg) var(--space-lg) 0;
-  margin-bottom: var(--space-sm);
-}
-.viz-list-mode {
-  overflow: hidden;
-}
-.viz-list-mode > .header {
-  padding: var(--space-lg) var(--space-lg) 0;
-}
-.viz-list-content {
-  flex: 1;
-  min-height: 0;
-  padding: 0 var(--space-lg) var(--space-lg);
-  overflow-y: auto;
-}
 .viz-chart-area {
   flex: 1;
   min-width: 0;
@@ -427,21 +410,21 @@ onActivated(load);
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  padding: var(--space-lg);
+}
+.viz-list-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 .viz-chart-content {
   flex: 1;
   min-height: 0;
   position: relative;
   overflow: hidden;
-  padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
-
-/* Tab bar row: back button + FilterChips + optional toggle */
-.filter-chips-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-lg);
+.viz-tabs {
+  margin-bottom: var(--space-sm);
 }
 
 /* Panel reopen button */
