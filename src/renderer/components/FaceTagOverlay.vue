@@ -425,7 +425,6 @@ function edgeCursor(edge: Edge): string {
   font-size: 10px;
   color: rgba(74, 158, 255, 0.8);
   white-space: nowrap;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   pointer-events: none;
 }
 
