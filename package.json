@@ -7,7 +7,9 @@
   "private": true,
   "scripts": {
     "start": "electron-forge start",
+    "prepackage": "npm run build:static",
     "package": "electron-forge package",
+    "premake": "npm run build:static",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
