@@ -1047,6 +1047,7 @@ html.screen-reader h1:focus {
 .entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
 
 .entity-panel {
+  position: relative;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 6px 32px rgba(0,0,0,0.18);
@@ -1089,6 +1090,28 @@ html.screen-reader h1:focus {
 
 .ep-body { flex: 1; overflow-y: auto; }
 .ep-fields { padding: 10px 14px 8px; }
+
+.ep-header--draggable { cursor: grab; }
+.ep-header--draggable:active { cursor: grabbing; }
+body.modal-dragging * { cursor: grabbing !important; user-select: none !important; }
+body.modal-resizing * { cursor: nwse-resize !important; user-select: none !important; }
+
+.ep-resize-handle {
+  position: absolute; right: 0; bottom: 0;
+  width: 14px; height: 14px;
+  cursor: nwse-resize;
+  /* diagonal grip lines */
+  background: linear-gradient(
+    135deg,
+    transparent 30%, var(--surface-border) 30%, var(--surface-border) 40%,
+    transparent 40%, transparent 55%, var(--surface-border) 55%, var(--surface-border) 65%,
+    transparent 65%
+  );
+  border-radius: 0 0 var(--radius-lg) 0;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.ep-resize-handle:hover { opacity: 1; }
 
 .ep-footer {
   display: flex; justify-content: flex-end; gap: 6px;

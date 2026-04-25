@@ -6,9 +6,13 @@
     modal-class="modal--panel-host"
     @close="$emit('cancel')"
   >
-    <div class="entity-panel-wrap">
-      <div class="entity-panel">
-        <div class="ep-header" :style="headerStyle">
+    <div class="entity-panel-wrap" :style="wrapStyle">
+      <div ref="panelRef" class="entity-panel" :style="panelStyle">
+        <div
+          class="ep-header ep-header--draggable"
+          :style="headerStyle"
+          @mousedown="startDrag"
+        >
           <div class="ep-header-left">
             <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
             <div class="ep-header-text">
@@ -34,6 +38,7 @@
             {{ saveLabel ?? $t('common.save') }}
           </button>
         </div>
+        <div class="ep-resize-handle" @mousedown.stop="startResize" />
       </div>
       <slot name="subpanels" />
     </div>
@@ -41,7 +46,7 @@
 
   <!-- SUBPANEL: floating card, no overlay; closes via × -->
   <div v-else class="entity-panel-wrap">
-    <div class="entity-panel">
+    <div ref="panelRef" class="entity-panel" :style="subPanelStyle">
       <div class="ep-header" :style="headerStyle">
         <div class="ep-header-left">
           <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
@@ -74,13 +79,14 @@
           {{ saveLabel ?? $t('common.save') }}
         </button>
       </div>
+      <div class="ep-resize-handle" @mousedown.stop="startSubResize" />
     </div>
     <slot name="subpanels" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../BaseModal.vue';
 import { ENTITY_VISUALS, type EntityType } from '../../constants/entityColors';
@@ -134,4 +140,136 @@ const resolvedIcon = computed(() => props.icon ?? visual.value.icon);
 const saveBg = computed(() =>
   props.tone === 'danger' ? 'var(--error-text, #b91c1c)' : visual.value.fg
 );
+
+// ── Drag / resize ───────────────────────────────────────────────────────────
+
+type ModalPos = { x: number; y: number; w: number; h: number | null };
+
+const STORAGE_KEY = `modal-pos-${props.entityType}`;
+const DEFAULT_POS: ModalPos = { x: 24, y: 32, w: 320, h: null };
+
+function loadPos(): ModalPos {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) return JSON.parse(s);
+  } catch {}
+  return { ...DEFAULT_POS };
+}
+
+const pos = reactive<ModalPos>(loadPos());
+const panelRef = ref<HTMLElement | null>(null);
+
+function savePos() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pos));
+}
+
+const wrapStyle = computed(() =>
+  props.mode === 'standalone'
+    ? { position: 'fixed' as const, left: `${pos.x}px`, top: `${pos.y}px` }
+    : undefined
+);
+
+const panelStyle = computed(() =>
+  props.mode === 'standalone'
+    ? { width: `${pos.w}px`, ...(pos.h !== null ? { height: `${pos.h}px` } : {}) }
+    : undefined
+);
+
+function startDrag(e: MouseEvent) {
+  if ((e.target as HTMLElement).closest('button, input, select, textarea, a')) return;
+  const startX = e.clientX - pos.x;
+  const startY = e.clientY - pos.y;
+
+  function onMove(ev: MouseEvent) {
+    pos.x = Math.max(0, ev.clientX - startX);
+    pos.y = Math.max(0, ev.clientY - startY);
+  }
+  function onUp() {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    document.body.classList.remove('modal-dragging');
+    savePos();
+  }
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  document.body.classList.add('modal-dragging');
+  e.preventDefault();
+}
+
+function startResize(e: MouseEvent) {
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const startW = pos.w;
+  const startH = panelRef.value?.offsetHeight ?? 400;
+
+  // Minimum height = full content height so scrolling is never forced
+  const panel = panelRef.value;
+  const bodyEl = panel?.querySelector('.ep-body') as HTMLElement | null;
+  const headerH = (panel?.querySelector('.ep-header') as HTMLElement | null)?.offsetHeight ?? 0;
+  const footerH = (panel?.querySelector('.ep-footer') as HTMLElement | null)?.offsetHeight ?? 0;
+  const minH = Math.max(180, (bodyEl?.scrollHeight ?? 0) + headerH + footerH + 14);
+
+  function onMove(ev: MouseEvent) {
+    pos.w = Math.max(280, startW + (ev.clientX - startX));
+    pos.h = Math.max(minH, startH + (ev.clientY - startY));
+  }
+  function onUp() {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    document.body.classList.remove('modal-resizing');
+    savePos();
+  }
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  document.body.classList.add('modal-resizing');
+  e.preventDefault();
+}
+
+// ── Sub-panel resize (width + height, no drag) ──────────────────────────────
+
+type SubPos = { w: number; h: number | null };
+const SUB_KEY = `modal-pos-${props.entityType}-sub`;
+
+function loadSubPos(): SubPos {
+  try {
+    const s = localStorage.getItem(SUB_KEY);
+    if (s) return JSON.parse(s);
+  } catch {}
+  return { w: 320, h: null };
+}
+
+const subPos = reactive<SubPos>(loadSubPos());
+
+const subPanelStyle = computed(() => ({
+  width: `${subPos.w}px`,
+  ...(subPos.h !== null ? { height: `${subPos.h}px` } : {}),
+}));
+
+function startSubResize(e: MouseEvent) {
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const startW = subPos.w;
+  const startH = panelRef.value?.offsetHeight ?? 400;
+
+  const panel = panelRef.value;
+  const bodyEl = panel?.querySelector('.ep-body') as HTMLElement | null;
+  const headerH = (panel?.querySelector('.ep-header') as HTMLElement | null)?.offsetHeight ?? 0;
+  const footerH = (panel?.querySelector('.ep-footer') as HTMLElement | null)?.offsetHeight ?? 0;
+  const minH = Math.max(180, (bodyEl?.scrollHeight ?? 0) + headerH + footerH + 14);
+
+  function onMove(ev: MouseEvent) {
+    subPos.w = Math.max(280, startW + (ev.clientX - startX));
+    subPos.h = Math.max(minH, startH + (ev.clientY - startY));
+  }
+  function onUp() {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    document.body.classList.remove('modal-resizing');
+    localStorage.setItem(SUB_KEY, JSON.stringify(subPos));
+  }
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  document.body.classList.add('modal-resizing');
+  e.preventDefault();
+}
 </script>
