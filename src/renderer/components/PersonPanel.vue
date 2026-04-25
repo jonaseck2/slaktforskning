@@ -53,7 +53,7 @@
         <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addName') }" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
           <SectionEmpty v-if="names.length === 0" :message="$t('empty.names')" />
-          <PersonNamesTable v-else :names="names" @edit="openNameForm" @delete="deleteName" />
+          <PersonNamesTable v-else :names="names" :readonly="props.readonly" @edit="openNameForm" @delete="deleteName" />
         </div>
       </div>
 
@@ -85,7 +85,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('identifiers.add') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
         <div v-if="sections.identifiers" class="panel-section-body">
-          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
+          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" :readonly="props.readonly" />
         </div>
       </div>
 
@@ -110,7 +110,7 @@
             />
           </div>
           <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
-          <GroupsTable v-else :groups="groups" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
+          <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
         </div>
       </div>
 
@@ -118,7 +118,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
-          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
+          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" :readonly="props.readonly" />
         </div>
       </div>
 
@@ -135,7 +135,7 @@
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
-          <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" @select="goToTask" />
+          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="loadResearchTasks(personId!)" @select="goToTask" />
         </div>
       </div>
 

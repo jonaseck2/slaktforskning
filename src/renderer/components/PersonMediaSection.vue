@@ -1,14 +1,14 @@
 <template>
   <div>
-    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" :action-label="$t('empty.attachMedia')" @action="attach()" />
+    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" :action-label="props.readonly ? '' : $t('empty.attachMedia')" @action="attach()" />
     <table v-else class="data-table">
       <thead>
         <tr>
           <th class="th-shrink"></th>
-          <th class="th-shrink"></th>
+          <th v-if="!props.readonly" class="th-shrink"></th>
           <th>{{ $t('media.title_label') }}</th>
           <th class="th-shrink">{{ $t('media.format') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -18,7 +18,7 @@
             <span v-else-if="isImage(m.format)" class="row-thumb-placeholder"></span>
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
-          <td class="td-shrink order-cell">
+          <td v-if="!props.readonly" class="td-shrink order-cell">
             <button
               class="star-btn"
               :class="{ 'is-profile': idx === 0 }"
@@ -32,7 +32,7 @@
           </td>
           <td>{{ mediaDisplayName(m.title, m.file_ref) }}</td>
           <td class="td-shrink">{{ m.format || '—' }}</td>
-          <td class="actions-cell">
+          <td v-if="!props.readonly" class="actions-cell">
             <button class="btn-sm btn-delete" @click.stop="unlink(m.link_id)">✕</button>
           </td>
         </tr>
@@ -65,7 +65,7 @@ export interface MediaItem {
   notes: string;
 }
 
-const props = defineProps<{ personId: string }>();
+const props = defineProps<{ personId: string; readonly?: boolean }>();
 const emit = defineEmits<{ profileChanged: [] }>();
 
 const router = useRouter();

@@ -18,7 +18,6 @@
       <ResearchTasksTable
         v-else
         :tasks="filteredTasks"
-        :show-person="true"
         :selected-id="selectedTaskId"
         @updated="load"
         @select="selectTask"
@@ -67,11 +66,6 @@ interface ResearchTask {
   task: string;
   notes?: string;
   result?: string;
-  person_id?: string;
-  person_given_name?: string | null;
-  person_surname?: string | null;
-  person_preferred_name?: string | null;
-  person_nickname?: string | null;
   priority: number;
   status: 'open' | 'in_progress' | 'done' | 'stopped';
   created_at: string;
@@ -119,21 +113,7 @@ function closePanel() {
 
 
 async function load() {
-  const raw = (await window.api.researchTasks.list()) as ResearchTask[];
-  // Enrich with person names using getNames (persons.get returns no name fields)
-  const enriched = await Promise.all(raw.map(async (task) => {
-    if (task.person_id) {
-      try {
-        const names = (await window.api.persons.getNames(task.person_id)) as Array<{ given_name?: string | null; surname?: string | null; preferred_name?: string | null; nickname?: string | null }>;
-        if (names.length > 0) {
-          const n = names[0];
-          return { ...task, person_given_name: n.given_name ?? null, person_surname: n.surname ?? null, person_preferred_name: n.preferred_name ?? null, person_nickname: n.nickname ?? null };
-        }
-      } catch { /* ignore */ }
-    }
-    return task;
-  }));
-  tasks.value = enriched;
+  tasks.value = (await window.api.researchTasks.list()) as ResearchTask[];
 }
 
 async function onSaved(newTask?: { id: string }) {

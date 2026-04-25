@@ -4,7 +4,6 @@
       <tr>
         <th class="th-shrink">{{ $t('researchTasks.priority') }}</th>
         <th class="th-shrink">{{ $t('researchTasks.status') }}</th>
-        <th v-if="showPerson" class="th-person">{{ $t('persons.title') }}</th>
         <th>{{ $t('researchTasks.task') }}</th>
         <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
       </tr>
@@ -37,15 +36,6 @@
             :title="$t('researchTasks.status')"
           >{{ $t('researchTasks.statuses.' + task.status) }}</span>
         </td>
-        <td v-if="showPerson" class="person-cell">
-          <router-link
-            v-if="task.person_id && (task.person_given_name || task.person_surname)"
-            :to="'/persons/' + task.person_id"
-            class="person-link"
-            @click.stop
-          ><PersonName :given-name="task.person_given_name ?? null" :surname="task.person_surname ?? null" :preferred-name="task.person_preferred_name ?? null" :nickname="task.person_nickname ?? null" /></router-link>
-          <span v-else>—</span>
-        </td>
         <td class="task-text">{{ task.task }}</td>
         <td v-if="!props.readonly" class="actions-cell">
           <button class="btn-sm btn-delete" @click.stop="handleDelete(task.id)">✕</button>
@@ -57,7 +47,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import PersonName from './PersonName.vue';
 import { narrateTaskRow } from '../utils/screenReaderNarration';
 
 export interface ResearchTaskRow {
@@ -65,22 +54,15 @@ export interface ResearchTaskRow {
   task: string;
   notes?: string;
   result?: string;
-  person_id?: string;
-  person_given_name?: string | null;
-  person_surname?: string | null;
-  person_preferred_name?: string | null;
-  person_nickname?: string | null;
   priority: number;
   status: 'open' | 'in_progress' | 'done' | 'stopped';
 }
 
 const props = withDefaults(defineProps<{
   tasks: ResearchTaskRow[];
-  showPerson?: boolean;
   selectedId?: string | null;
   readonly?: boolean;
 }>(), {
-  showPerson: false,
   selectedId: null,
   readonly: false,
 });
@@ -119,8 +101,6 @@ async function handleDelete(id: string) {
 
 <style scoped>
 .th-shrink { width: 1%; white-space: nowrap; }
-.th-person { width: 180px; white-space: nowrap; }
-.person-cell { white-space: nowrap; }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 .priority-badge {
   display: inline-block;

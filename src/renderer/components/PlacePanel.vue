@@ -143,7 +143,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
-          <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" />
+          <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" :readonly="props.readonly" />
         </div>
       </div>
 
