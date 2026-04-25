@@ -134,7 +134,7 @@
       <SectionHeader :title="$t('places.childPlaces')" :count="children.length" :collapsible="false" />
       <ul class="child-list">
         <li v-for="child in children" :key="child.id">
-          <a href="#" @click.prevent="$router.push('/places/' + child.id)">{{ child.name }}</a>
+          <a href="#" @click.prevent="$router.push({ path: '/places', query: { place: child.id } })">{{ child.name }}</a>
           <AppBadge v-if="child.place_type" variant="event">{{ $t('placeTypes.' + child.place_type) }}</AppBadge>
         </li>
       </ul>

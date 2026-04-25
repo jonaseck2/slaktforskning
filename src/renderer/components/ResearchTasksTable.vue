@@ -39,7 +39,7 @@
           <td v-if="showPerson" class="person-cell">
             <router-link
               v-if="task.person_id && (task.person_given_name || task.person_surname)"
-              :to="'/persons/' + task.person_id"
+              :to="'/visualisering/' + task.person_id"
               class="person-link"
               @click.stop
             ><PersonName :given-name="task.person_given_name ?? null" :surname="task.person_surname ?? null" :preferred-name="task.person_preferred_name ?? null" :nickname="task.person_nickname ?? null" /></router-link>
@@ -62,7 +62,7 @@
                 {{ $t('persons.title') }}
                 <div class="person-edit-row">
                   <PersonPicker v-model="editForm.person_id" :placeholder="$t('researchTasks.selectPersonOptional')" />
-                  <router-link v-if="editForm.person_id" :to="'/persons/' + editForm.person_id" class="person-link person-link-btn" @click.stop>{{ $t('common.view') }} →</router-link>
+                  <router-link v-if="editForm.person_id" :to="'/visualisering/' + editForm.person_id" class="person-link person-link-btn" @click.stop>{{ $t('common.view') }} →</router-link>
                 </div>
               </label>
               <label>

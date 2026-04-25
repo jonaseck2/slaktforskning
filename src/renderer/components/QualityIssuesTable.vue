@@ -154,10 +154,10 @@ function primaryLabel(r: QualityIssue, idx: number): string {
 
 function entityRoute(r: QualityIssue, id: string): { path: string; query?: Record<string, string> } {
   const t = entityType(r);
-  if (t === 'place') return { path: '/places/' + id };
+  if (t === 'place') return { path: '/places', query: { place: id } };
   if (t === 'media') return { path: '/media', query: { open: id } };
   if (t === 'source') return { path: '/sources/' + id };
-  return { path: '/persons/' + id };
+  return { path: '/visualisering/' + id };
 }
 </script>
 

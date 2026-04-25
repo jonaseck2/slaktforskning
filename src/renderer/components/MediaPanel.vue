@@ -77,7 +77,7 @@
           <SectionEmpty v-if="linkedPersons.length === 0 && !showPersonPicker" :message="$t('empty.persons')" />
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
             <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
-            <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
+            <router-link :to="'/visualisering/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
         </div>
@@ -100,7 +100,7 @@
           </div>
           <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
           <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
-            <router-link :to="'/places/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
+            <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
         </div>

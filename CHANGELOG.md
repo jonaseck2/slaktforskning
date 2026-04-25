@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.141.6 — minor UI fixes
+
+- fix: minor UI fixes across views (routing, PlacesView, PersonsView embedded mode)
+
 ## v0.141.5 — track .superpowers in git
 
 - fix: remove .superpowers/ from .gitignore and worktree copies so brainstorm state is tracked

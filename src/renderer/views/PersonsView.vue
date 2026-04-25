@@ -93,9 +93,12 @@
             <td>
               <div class="name-cell">
                 <AppAvatar :person-id="person.id" :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
-                <router-link :to="'/persons/' + person.id" class="person-link" @click.stop>
+                <router-link v-if="!embedded" :to="'/visualisering/' + person.id" class="person-link" @click.stop>
                   <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
                 </router-link>
+                <span v-else>
+                  <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
+                </span>
               </div>
             </td>
             <td>{{ person.surname }}</td>
@@ -329,9 +332,13 @@ function focusPrevRow(e: KeyboardEvent): void {
 }
 
 function goToDetail(person: PersonListItem) {
+  if (props.embedded) {
+    emit('select', person.id);
+    return;
+  }
   const name = fullNameParts(person.given_name ?? null, person.surname ?? null, null, null).map(p => p.text).join('');
   focusStore.set(person.id, name);
-  router.push(`/persons/${person.id}`);
+  router.push(`/visualisering/${person.id}`);
 }
 
 onMounted(async () => {

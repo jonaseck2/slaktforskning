@@ -28,7 +28,7 @@
           <strong>{{ $t('eventTypes.' + m.eventType) }}</strong>
           <div v-if="m.date" class="popup-date">{{ m.date }}</div>
           <div class="popup-place">
-            <router-link :to="'/places/' + m.placeId" class="popup-link">{{ m.placeName }}</router-link>
+            <router-link :to="{ path: '/places', query: { place: m.placeId } }" class="popup-link">{{ m.placeName }}</router-link>
           </div>
         </LPopup>
       </LCircleMarker>

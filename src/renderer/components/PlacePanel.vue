@@ -13,13 +13,12 @@
             <div class="panel-name">{{ place.name }}</div>
             <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
           </div>
-          <router-link :to="'/places/' + placeId" class="panel-view-full">{{ $t('placePanel.viewFull') }}</router-link>
         </div>
       </div>
 
       <!-- Place section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" :action-label="$t('common.edit')" @toggle="toggleSection('place')" @action="$router.push('/places/' + placeId)" />
+        <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" @toggle="toggleSection('place')" />
         <div v-if="sections.place" class="panel-section-body">
           <div class="compact-form">
             <div class="compact-field">
