@@ -206,6 +206,9 @@ const api = {
     htmlSite: (opts: unknown) => ipcRenderer.invoke('export:htmlSite', opts),
     openFolder: (folderPath: string) => ipcRenderer.invoke('export:openFolder', folderPath),
   },
+  website: {
+    export: (opts: unknown) => ipcRenderer.invoke('website:export', opts),
+  },
   print: {
     print: () => ipcRenderer.invoke('print:print'),
     exportPdf: (defaultPath?: string, landscape?: boolean) => ipcRenderer.invoke('print:exportPdf', defaultPath, landscape),
