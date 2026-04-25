@@ -15,8 +15,8 @@
       @ready="onMapReady"
     >
       <LTileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+        :url="tileUrl"
+        :attribution="tileAttribution"
         layer-type="base"
       />
       <slot />
@@ -73,6 +73,16 @@ const emit = defineEmits<{
 
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
 const maxZoom = 18;
+
+// In static mode (file://), OSM blocks tile requests without a referrer.
+// CartoDB Voyager doesn't require a referrer and renders OSM data.
+const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
+const tileUrl = isStaticMode
+  ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+  : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const tileAttribution = isStaticMode
+  ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const currentZoom = ref(props.initialZoom);
 
 const containerStyle = computed(() => ({

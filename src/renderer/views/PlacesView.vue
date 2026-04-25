@@ -9,19 +9,19 @@
             <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
             <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
           </div>
-          <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
+          <AppButton v-if="!isStaticMode" variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
         </div>
       </div>
       <div class="places-list-content">
         <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
         <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
-        <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="$t('empty.addPlace')" @action="showAddForm = true" />
+        <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPlace')" @action="showAddForm = true" />
         <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
         <table v-else class="data-table">
           <thead>
             <tr>
               <th>{{ $t('places.name') }}</th>
-              <th class="actions-cell">{{ $t('common.actions') }}</th>
+              <th v-if="!isStaticMode" class="actions-cell">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -45,7 +45,7 @@
               @keydown.up.prevent="focusPrevRow($event)"
             >
               <td>{{ place.name }}</td>
-              <td class="actions-cell">
+              <td v-if="!isStaticMode" class="actions-cell">
                 <AppButton variant="ghost" size="sm" @click.stop="deletePlace(place.id)">✕</AppButton>
               </td>
             </tr>
@@ -65,7 +65,7 @@
               <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
               <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
             </div>
-            <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
+            <AppButton v-if="!isStaticMode" variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
           </div>
         </div>
       </template>

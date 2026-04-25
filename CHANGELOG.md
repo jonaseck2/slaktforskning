@@ -6,6 +6,8 @@
 - fix(media): refresh profile picture immediately after setting from face region; auto-create media link when only tagged via region
 - fix(website-export): static site now actually shows charts, maps, and media — switched to the main PersonsView/PlacesView/MediaView and rewrote static-api to match the real preload surface (forEntity, forPerson, listPage→items, profilePicRef, etc.)
 - fix(website-export): hide entity side panels in static mode — the chart/map area now uses the full width
+- fix(website-export): hide all add/edit/delete controls in static mode — "+ Add Person/Place/Media" buttons, per-row delete buttons, chart placeholder outlines, inline edit fields
+- fix(website-export): use CartoDB Voyager tiles in static mode — OSM blocks tile requests without a referrer, which file:// can't send
 
 ## v0.146.0 — App-look website export
 

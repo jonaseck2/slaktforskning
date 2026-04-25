@@ -30,7 +30,7 @@
           <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
           <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
         </div>
-        <AppButton variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
+        <AppButton v-if="!isStaticMode" variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
       </div>
     </div>
 
@@ -87,6 +87,7 @@
           <span v-if="item.linkCount > 0" class="card-badge">{{ item.linkCount }} {{ $t('media.lightbox.linkedEntities').toLowerCase() }}</span>
         </div>
         <AppButton
+          v-if="!isStaticMode"
           class="card-delete"
           variant="ghost"
           size="sm"
@@ -128,7 +129,9 @@
             <span v-else class="table-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
           </td>
           <td>
+            <span v-if="isStaticMode">{{ item.title }}</span>
             <input
+              v-else
               type="text"
               :value="item.title"
               class="inline-edit"
@@ -140,7 +143,9 @@
             <span v-if="item.format" class="format-badge">{{ item.format }}</span>
           </td>
           <td>
+            <span v-if="isStaticMode">{{ item.notes }}</span>
             <input
+              v-else
               type="text"
               :value="item.notes"
               class="inline-edit"
@@ -150,7 +155,7 @@
             />
           </td>
           <td class="links-cell">{{ item.linkCount }}</td>
-          <td>
+          <td v-if="!isStaticMode">
             <AppButton variant="ghost" size="sm" @click="deleteItem(item.id)" :title="$t('common.delete')">&#10005;</AppButton>
           </td>
         </tr>
@@ -211,6 +216,7 @@ const PAGE_SIZE = 100;
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 
 type ViewMode = 'gallery' | 'table';
 const viewMode = ref<ViewMode>(

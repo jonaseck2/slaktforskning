@@ -9,7 +9,7 @@
             <AppButton :variant="viewMode === 'tree' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('tree')">{{ $t('visualization.tab.tree') }}</AppButton>
             <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('list')">{{ $t('visualization.listView') }}</AppButton>
           </div>
-          <AppButton variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
+          <AppButton v-if="!isStaticMode" variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
         </div>
       </div>
 
@@ -36,7 +36,7 @@
       </div>
 
       <!-- Empty state -->
-      <AppEmptyState v-if="noPersonsExist" icon="🌳" :title="$t('empty.persons')" :description="$t('empty.treeDesc')" :action-label="$t('empty.addPerson')" data-testid="viz-empty" @action="showAddPerson = true" />
+      <AppEmptyState v-if="noPersonsExist" icon="🌳" :title="$t('empty.persons')" :description="$t('empty.treeDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPerson')" data-testid="viz-empty" @action="showAddPerson = true" />
 
       <!-- No focal person selected -->
       <AppEmptyState v-else-if="noFocalPerson" icon="🌳" :title="$t('visualization.noFocalPerson')" :description="$t('empty.noFocalPerson')" data-testid="viz-no-focal" />
@@ -50,6 +50,7 @@
           :person-id="personId"
           :selected-person-id="selectedPersonId"
           :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
+          :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
         />
@@ -59,6 +60,7 @@
           :key="'hourglass-' + chartKey"
           :person-id="personId"
           :selected-person-id="selectedPersonId"
+          :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
         />
@@ -68,17 +70,20 @@
           :key="'descendants-' + chartKey"
           :person-id="personId"
           :selected-person-id="selectedPersonId"
+          :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
         />
         <FanChart
           v-if="activeTab === 'fan'"
           :person-id="personId"
+          :readonly="isStaticMode"
           @navigate="navigateTo"
         />
         <TimelineChart
           v-if="activeTab === 'timeline'"
           :person-id="personId"
+          :readonly="isStaticMode"
           @navigate="navigateTo"
         />
       </div>
