@@ -11,13 +11,19 @@
     <div class="ep-fields">
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('sources.sourceTitle') }}</span>
-        <div v-if="props.sourceId" class="ep-field-readonly">{{ props.sourceTitle }}</div>
-        <SourcePicker
-          v-else
-          :model-value="pickedSourceId"
-          @update:model-value="pickedSourceId = $event"
-          @select="onSourceSelected"
-        />
+        <div v-if="props.sourceId" class="ep-source-row">
+          <div class="ep-field-readonly ep-source-name">{{ props.sourceTitle }}</div>
+          <button class="ep-source-edit-btn" type="button" @click="openSourceEdit({ id: props.sourceId, title: props.sourceTitle ?? '' })">✎</button>
+        </div>
+        <div v-else class="ep-source-row">
+          <SourcePicker
+            :model-value="pickedSourceId"
+            @update:model-value="pickedSourceId = $event"
+            @select="onSourceSelected"
+            @create-new="openSourceCreate"
+          />
+          <button v-if="pickedSourceId" class="ep-source-edit-btn" type="button" @click="openSourceEdit({ id: pickedSourceId!, title: pickedSourceTitle })">✎</button>
+        </div>
       </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('citations.pageLocation') }}</span>
@@ -60,6 +66,18 @@
         <input class="ep-input" type="date" v-model="form.date_accessed" />
       </div>
     </div>
+
+    <template #subpanels>
+      <SourceModal
+        v-if="showSourceModal"
+        mode="subpanel"
+        :editing-source="editingSourceForModal"
+        :initial-title="editingSourceForModal ? undefined : pendingTitle"
+        @saved="onSourceModalSaved"
+        @cancel="showSourceModal = false"
+        @close="showSourceModal = false"
+      />
+    </template>
   </BaseSubPanel>
 </template>
 
@@ -67,6 +85,7 @@
 import { reactive, ref, nextTick, onMounted } from 'vue';
 import BaseSubPanel from './BaseSubPanel.vue';
 import SourcePicker from '../SourcePicker.vue';
+import SourceModal from './SourceModal.vue';
 import { ENTITY_COLORS } from '../../constants/entityColors';
 import { CONFIDENCE_LEVEL_VALUES } from '../../constants/eventTypes';
 import { useSourceSession } from '../../stores/sourceSession';
@@ -100,6 +119,30 @@ const emit = defineEmits<{
 }>();
 
 const pageRef = ref<HTMLInputElement | null>(null);
+
+// Source sub-panel
+const showSourceModal = ref(false);
+const pendingTitle = ref('');
+interface EditSource { id: string; title: string; }
+const editingSourceForModal = ref<EditSource | null>(null);
+
+function openSourceCreate(title: string) {
+  editingSourceForModal.value = null;
+  pendingTitle.value = title;
+  showSourceModal.value = true;
+}
+
+function openSourceEdit(source: EditSource) {
+  editingSourceForModal.value = source;
+  pendingTitle.value = '';
+  showSourceModal.value = true;
+}
+
+function onSourceModalSaved(sourceId: string, sourceTitle: string) {
+  pickedSourceId.value = sourceId;
+  pickedSourceTitle.value = sourceTitle;
+  showSourceModal.value = false;
+}
 const sourceSession = useSourceSession();
 
 // When sourceId is preset by parent (e.g. EventModal), use it directly.
@@ -170,3 +213,30 @@ async function save() {
   }
 }
 </script>
+
+<style scoped>
+.ep-source-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ep-source-name {
+  flex: 1;
+  min-width: 0;
+}
+.ep-source-edit-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 6px;
+  line-height: 1;
+}
+.ep-source-edit-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+</style>

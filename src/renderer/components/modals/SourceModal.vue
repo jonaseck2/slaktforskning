@@ -103,6 +103,7 @@ interface Citation {
 const props = withDefaults(defineProps<{
   mode?: 'standalone' | 'subpanel';
   editingSource?: Source | null;
+  initialTitle?: string;
 }>(), {
   mode: 'subpanel',
   editingSource: null,
@@ -120,7 +121,7 @@ const savedSourceId = ref<string | null>(props.editingSource?.id ?? null);
 const citations = ref<Citation[]>([]);
 
 const form = reactive({
-  title: props.editingSource?.title ?? '',
+  title: props.editingSource?.title ?? props.initialTitle ?? '',
   source_type: 'church_record',
   author: '',
   publication_info: '',

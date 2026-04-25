@@ -67,6 +67,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string | null];
   'select': [source: SourceRow];
+  'create-new': [title: string];
 }>();
 
 const { t } = useI18n();
@@ -139,9 +140,9 @@ function select(source: SourceRow) {
   emit('select', source);
 }
 
-async function createNew() {
-  const source = (await window.api.sources.create({ title: query.value })) as SourceRow;
-  select(source);
+function createNew() {
+  emit('create-new', query.value);
+  showDropdown.value = false;
 }
 
 function onBlur() {

@@ -2,7 +2,7 @@
   <div class="citation-fields">
     <label>
       {{ $t('citations.source') }}
-      <SourcePicker v-model="model.source_id" />
+      <SourcePicker v-model="model.source_id" @create-new="createSourceInline" />
     </label>
     <label>
       {{ $t('citations.pageLocation') }}
@@ -55,6 +55,10 @@ import SimpleDateInput from './SimpleDateInput.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../constants/eventTypes';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 
+declare const window: Window & {
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+};
+
 export interface CitationFieldsModel {
   source_id: string | null;
   page: string;
@@ -64,13 +68,18 @@ export interface CitationFieldsModel {
   date_accessed: string;
 }
 
-defineProps<{
+const props = defineProps<{
   model: CitationFieldsModel;
   storageKeyPrefix?: string;
 }>();
 
 const { textareaRef: transRef, storedHeight: transStoredHeight, persistHeight: persistTransHeight } = useTextareaHeight('citation-fields-transcription');
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('citation-fields-notes');
+
+async function createSourceInline(title: string) {
+  const source = (await window.api.sources.create({ title })) as { id: string };
+  props.model.source_id = source.id;
+}
 </script>
 
 <style scoped>
