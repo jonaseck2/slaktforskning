@@ -154,6 +154,7 @@ export default {
     confirmDelete: 'Ta bort denna relation? Detta kan inte ångras.',
     showingOf: 'Visar {shown} av {total} relationer',
     searchOrAdd: 'Sök eller lägg till relation…',
+    newRelationship: 'Ny relation',
   },
   relationshipDetail: {
     title: 'Relation',

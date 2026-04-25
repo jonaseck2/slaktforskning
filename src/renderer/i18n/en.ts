@@ -154,6 +154,7 @@ export default {
     confirmDelete: 'Delete this relation? This cannot be undone.',
     showingOf: 'Showing {shown} of {total} relations',
     searchOrAdd: 'Search or add relationship…',
+    newRelationship: 'New Relationship',
   },
   relationshipDetail: {
     title: 'Relationship',
