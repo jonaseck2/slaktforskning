@@ -513,7 +513,6 @@ async function setProfileForRegion(r: RegionData) {
   if (!props.mediaId || !r.person_id) return;
   if (regionIsProfile.value[r.id]) return; // already profile
   await setMediaAsPersonProfile(r.person_id, props.mediaId);
-  void profilePicStore.ensureLoaded(r.person_id);
   await computeRegionProfileState();
   emit('link-changed');
 }

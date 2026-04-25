@@ -463,7 +463,10 @@ async function onRegionUpdated(id: string, rect: { x: number; y: number; width: 
   if (selectedMediaId.value) {
     const regs = await window.api.mediaRegions.getForMedia(selectedMediaId.value) as Array<{ id: string; person_id: string | null }>;
     const r = regs.find(rr => rr.id === id);
-    if (r?.person_id) profilePicStore.invalidatePerson(r.person_id);
+    if (r?.person_id) {
+      profilePicStore.invalidatePerson(r.person_id);
+      void profilePicStore.ensureLoaded(r.person_id);
+    }
   }
   viewerRef.value?.reloadRegions();
 }
