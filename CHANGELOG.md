@@ -4,6 +4,7 @@
 
 - fix(timeline): render labels on top of stems; make axis line black
 - fix(media): refresh profile picture immediately after setting from face region; auto-create media link when only tagged via region
+- fix(media): show "Media" heading in viewer/tagging mode; media list table is now read-only; title editing moved to side panel
 - fix(website-export): static site now actually shows charts, maps, and media — switched to the main PersonsView/PlacesView/MediaView and rewrote static-api to match the real preload surface (forEntity, forPerson, listPage→items, profilePicRef, etc.)
 - fix(website-export): hide entity side panels in static mode — the chart/map area now uses the full width
 - fix(website-export): hide all add/edit/delete controls in static mode — "+ Add Person/Place/Media" buttons, per-row delete buttons, chart placeholder outlines, inline edit fields

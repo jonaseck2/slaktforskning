@@ -36,6 +36,7 @@ test('website export produces a working static site', async () => {
         includeMedia: false,
         excludeLiving: false,
         redactLiving: false,
+        mediaPersonOnly: false,
       },
       _outputDir: args.outDir,
     });

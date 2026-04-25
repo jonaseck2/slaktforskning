@@ -44,6 +44,10 @@
         <input type="checkbox" v-model="redactLiving" />
         {{ $t('htmlSite.redactLiving') }}
       </label>
+      <label class="check-label">
+        <input type="checkbox" v-model="mediaPersonOnly" />
+        {{ $t('htmlSite.mediaPersonOnly') }}
+      </label>
     </section>
 
     <section class="export-section">
@@ -94,6 +98,7 @@ const ancestors = ref(5);
 const descendants = ref(3);
 const excludeLiving = ref(false);
 const redactLiving = ref(true);
+const mediaPersonOnly = ref(true);
 const includeMedia = ref(true);
 const siteTitle = ref('Family Tree');
 const exporting = ref(false);
@@ -120,6 +125,7 @@ async function exportSite() {
         includeMedia: includeMedia.value,
         excludeLiving: excludeLiving.value,
         redactLiving: redactLiving.value,
+        mediaPersonOnly: mediaPersonOnly.value,
       },
     }) as { canceled?: boolean; outputDir?: string; bundleMissing?: boolean } | null;
     if (res?.bundleMissing) {

@@ -1,22 +1,6 @@
 <template>
   <div class="media-layout" ref="mediaBodyRef">
-  <div class="media-main">
-    <MediaViewer
-      v-if="viewerMode"
-      ref="viewerRef"
-      :media-items="viewerItems"
-      :initial-index="viewerIndex"
-      :thumbnails="thumbnails"
-      :draw-mode="drawMode"
-      :highlighted-region-id="highlightedRegionId"
-      @close="closeViewer"
-      @update:current-index="onViewerIndexChange"
-      @region-drawn="onRegionDrawn"
-      @region-updated="onRegionUpdated"
-      @region-clicked="(id: string) => highlightedRegionId = id"
-      @region-hovered="(id: string | null) => highlightedRegionId = id"
-    />
-    <template v-else>
+  <div class="media-main" :class="{ 'viewer-active': viewerMode }">
     <div class="header">
       <div class="header-left">
         <h2>{{ $t('media.title') }}</h2>
@@ -25,7 +9,7 @@
           <button class="filter-clear" @click="router.push({ path: '/media' })" :title="$t('common.clearFilter')">×</button>
         </div>
       </div>
-      <div class="header-right">
+      <div v-if="!viewerMode" class="header-right">
         <div v-if="!loading && items.length > 0" class="view-toggle">
           <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
           <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
@@ -33,6 +17,24 @@
         <AppButton v-if="!isStaticMode" variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
       </div>
     </div>
+
+    <div v-if="viewerMode" class="viewer-content">
+      <MediaViewer
+        ref="viewerRef"
+        :media-items="viewerItems"
+        :initial-index="viewerIndex"
+        :thumbnails="thumbnails"
+        :draw-mode="drawMode"
+        :highlighted-region-id="highlightedRegionId"
+        @close="closeViewer"
+        @update:current-index="onViewerIndexChange"
+        @region-drawn="onRegionDrawn"
+        @region-updated="onRegionUpdated"
+        @region-clicked="(id: string) => highlightedRegionId = id"
+        @region-hovered="(id: string | null) => highlightedRegionId = id"
+      />
+    </div>
+    <template v-else>
 
     <p v-if="!loading && items.length > 0" class="count-label">
       {{ $t('media.showingOf', { shown: items.length, total }) }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
@@ -128,32 +130,11 @@
             />
             <span v-else class="table-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
           </td>
-          <td>
-            <span v-if="isStaticMode">{{ item.title }}</span>
-            <input
-              v-else
-              type="text"
-              :value="item.title"
-              class="inline-edit"
-              @blur="e => { const v = (e.target as HTMLInputElement).value; if (v !== item.title) { item.title = v; saveField(item.id, 'title', v); } }"
-              @keydown.enter="($event.target as HTMLInputElement).blur()"
-            />
-          </td>
+          <td>{{ item.title }}</td>
           <td class="format-cell">
             <span v-if="item.format" class="format-badge">{{ item.format }}</span>
           </td>
-          <td>
-            <span v-if="isStaticMode">{{ item.notes }}</span>
-            <input
-              v-else
-              type="text"
-              :value="item.notes"
-              class="inline-edit"
-              :placeholder="$t('media.notesPlaceholder')"
-              @blur="e => { const v = (e.target as HTMLInputElement).value; if (v !== item.notes) { item.notes = v; saveField(item.id, 'notes', v); } }"
-              @keydown.enter="($event.target as HTMLInputElement).blur()"
-            />
-          </td>
+          <td>{{ item.notes }}</td>
           <td class="links-cell">{{ item.linkCount }}</td>
           <td v-if="!isStaticMode">
             <AppButton variant="ghost" size="sm" @click="deleteItem(item.id)" :title="$t('common.delete')">&#10005;</AppButton>
@@ -199,10 +180,8 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
-import { useToast } from '../composables/useToast';
 import { useFocusStore } from '../stores/focus';
 import { useProfilePicStore } from '../stores/profilePic';
-const toast = useToast();
 const focusStore = useFocusStore();
 const profilePicStore = useProfilePicStore();
 
@@ -226,15 +205,6 @@ const viewMode = ref<ViewMode>(
 function setViewMode(mode: ViewMode) {
   viewMode.value = mode;
   localStorage.setItem('media-view-mode', mode);
-}
-
-async function saveField(itemId: string, field: 'title' | 'notes', value: string) {
-  try {
-    await window.api.media.update(itemId, { [field]: value });
-  } catch (err) {
-    console.error('[MediaView] saveField failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
 }
 
 interface MediaItem {
@@ -545,6 +515,17 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   box-shadow: var(--shadow-lg);
   padding: var(--space-lg);
 }
+.media-main.viewer-active {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.viewer-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
 .panel-drag-handle {
   width: 6px;
   background: var(--surface-border-subtle);
@@ -767,21 +748,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-muted);
-}
-.inline-edit {
-  width: 100%;
-  border: 1px solid transparent;
-  background: transparent;
-  padding: 4px 6px;
-  font-size: var(--font-sm);
-  border-radius: var(--radius-sm);
-  outline: none;
-  color: var(--text-primary);
-}
-.inline-edit:focus {
-  border-color: var(--accent);
-  background: var(--surface);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .format-badge {
   font-size: var(--font-xs);

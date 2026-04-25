@@ -21,7 +21,14 @@
           </div>
         </div>
         <div class="media-info">
-          <div class="media-title">{{ media.title || $t('media.untitled') }}</div>
+          <input
+            class="media-title-input"
+            :value="titleDraft"
+            :placeholder="$t('media.untitled')"
+            @input="titleDraft = ($event.target as HTMLInputElement).value"
+            @blur="saveTitle"
+            @keydown.enter="($event.target as HTMLInputElement).blur()"
+          />
           <div v-if="media.format" class="media-meta">{{ media.format.toUpperCase() }}</div>
         </div>
       </div>
@@ -261,6 +268,7 @@ const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
 const editingTagId = ref<string | null>(null);
+const titleDraft = ref('');
 const notesDraft = ref('');
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('media-panel-notes');
 const profilePicStore = useProfilePicStore();
@@ -314,6 +322,7 @@ async function load() {
   if (!props.mediaId) {
     media.value = null;
     thumbnailSrc.value = null;
+    titleDraft.value = '';
     notesDraft.value = '';
     linkedPersons.value = [];
     linkedPlaces.value = [];
@@ -327,6 +336,7 @@ async function load() {
   try {
     const m = await window.api.media.get(props.mediaId) as MediaData | null;
     media.value = m;
+    titleDraft.value = m?.title ?? '';
     notesDraft.value = m?.notes ?? '';
     if (m?.notes) sections.notes = true;
 
@@ -435,6 +445,14 @@ async function load() {
   } finally {
     loading.value = false;
   }
+}
+
+async function saveTitle() {
+  if (!props.mediaId || !media.value) return;
+  const next = titleDraft.value;
+  if (next === (media.value.title ?? '')) return;
+  await window.api.media.update(props.mediaId, { title: next });
+  media.value.title = next;
 }
 
 async function saveNotes() {
@@ -619,13 +637,26 @@ defineExpose({ reload: load, expandFaceTags });
   min-width: 0;
 }
 
-.media-title {
+.media-title-input {
+  width: 100%;
   font-size: var(--font-base);
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+  margin: -2px -4px;
+  outline: none;
+}
+.media-title-input:hover {
+  border-color: var(--surface-border);
+  background: var(--surface-hover);
+}
+.media-title-input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .media-meta {
