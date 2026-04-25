@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.141.4 — remove unicode chars from BaseSubPanel comments
+
+- fix: remove unicode box-drawing characters from HTML comments in BaseSubPanel.vue (ESLint compatibility)
+
 ## v0.141.3 — lint fix
 
 - fix: fix import order in ipc-worker-coverage test (vitest after node: imports)

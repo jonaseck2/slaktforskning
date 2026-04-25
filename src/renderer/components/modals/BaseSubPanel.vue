@@ -1,5 +1,5 @@
 <template>
-  <!-- ── STANDALONE: centred overlay via BaseModal ── -->
+  <!-- STANDALONE: centred overlay via BaseModal -->
   <BaseModal
     v-if="mode === 'standalone'"
     :title-id="titleId"
@@ -34,7 +34,7 @@
     </div>
   </BaseModal>
 
-  <!-- ── SUBPANEL: floating card, no overlay ── -->
+  <!-- SUBPANEL: floating card, no overlay -->
   <div v-else class="entity-panel-wrap">
     <div class="entity-panel" :class="{ 'entity-panel--dim': hasSub }">
       <div class="ep-header" :style="headerStyle">
