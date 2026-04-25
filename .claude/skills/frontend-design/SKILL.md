@@ -349,6 +349,7 @@ Side panels (PersonPanel, PlacePanel, MediaPanel, ReportPanel) are self-containe
 Section order matters — put the most-used sections first:
 - **PersonPanel**: Person > Names > Events > Timeline > Identifiers > Relationships > Groups > Media > Media Timeline > Research Tasks > Quality
 - **PlacePanel**: Place Details > People > Events > Citations > Media > Media Timeline > Address > Hierarchy
+- **MediaPanel**: Header (thumbnail + editable title input + Open button → emits `open-viewer` so MediaView can call `openViewerById`) > Notes > Linked Persons > Linked Places > Linked Events > Face Tags (★ sets profile pic) > Quality. After title/notes save (on blur), MediaPanel emits `media-updated` so MediaView can patch its items array — this keeps the MediaViewer caption preview in sync with the panel without a reload.
 
 ### ReportPanel data sourcing pattern
 
