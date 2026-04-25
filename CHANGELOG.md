@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.141.0 — separate fan chart settings in Your Ancestors report panel
+
+- feat: add dedicated "Fan Chart" section to Your Ancestors report panel with independent arc span, color mode, and generation limit (3–8)
+- feat: rename "Appearance" panel section to "Report" for keepsake reports and "Chart" for chart-print tabs
+- feat: Your Ancestors report generations (ancestor pages) now go up to 10 independently of the embedded fan chart
+
 ## v0.140.0 — two-tier empty state system + chart outline fixes
 
 - feat: introduce `SectionEmpty` component — compact one-line muted text with optional underlined action link, for sub-section empties inside detail views and panels
