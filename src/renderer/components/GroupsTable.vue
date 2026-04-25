@@ -40,16 +40,12 @@ export interface GroupRow {
   memberCount?: number;
 }
 
-const { readonly } = withDefaults(defineProps<{
+const { readonly = false } = defineProps<{
   groups: GroupRow[];
   showMembers?: boolean;
   selectedId?: string | null;
   readonly?: boolean;
-}>(), {
-  showMembers: false,
-  selectedId: null,
-  readonly: false,
-});
+}>();
 
 defineEmits<{ remove: [id: string]; select: [id: string] }>();
 </script>
