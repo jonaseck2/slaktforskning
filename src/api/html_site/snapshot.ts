@@ -3,6 +3,11 @@ import { queryAll } from '../db';
 import type { ScopeOptions } from './scope';
 import { computeScope } from './scope';
 import { redactPerson } from './redact';
+import { getDbSetting } from '../db_settings';
+import { getImportedGazetteers } from '../gazetteers';
+import { getAllGazetteers } from '../place-gazetteers/bundled';
+import { loadGazetteers } from '../place-gazetteers/merge';
+import { resolvePlace } from '../place-gazetteers/resolver';
 import type {
   Person,
   PersonName,
@@ -125,7 +130,40 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
     events.filter(e => e.place_id).map(e => e.place_id as string)
   );
   const allPlaces = queryAll<Place>(db, 'SELECT * FROM places');
-  const places = allPlaces.filter(p => referencedPlaceIds.has(p.id));
+  const placesById = new Map(allPlaces.map(p => [p.id, p]));
+  const placesRaw = allPlaces.filter(p => referencedPlaceIds.has(p.id));
+
+  // Resolve missing lat/lon via gazetteers — the static site can't load them
+  // at runtime so we bake coordinates into the snapshot.
+  let gazetteers: ReturnType<typeof loadGazetteers> = [];
+  try {
+    const configJson = getDbSetting(db, 'gazetteer_config');
+    const config = configJson ? JSON.parse(configJson) as { enabledGazetteers?: string[] } : null;
+    const enabled = config?.enabledGazetteers ?? [];
+    if (enabled.length > 0) {
+      gazetteers = loadGazetteers({ enabledGazetteers: enabled }, getAllGazetteers(), getImportedGazetteers(db));
+    }
+  } catch {
+    // If gazetteer loading fails for any reason, ship places without resolved coords.
+    gazetteers = [];
+  }
+
+  const places: Place[] = placesRaw.map(p => {
+    if (p.latitude != null && p.longitude != null) return p;
+    if (gazetteers.length === 0) return p;
+    // Build "Place, Parent, Grandparent" string for the resolver
+    const parts: string[] = [p.name];
+    let cur = p.parent_place_id;
+    while (cur) {
+      const parent = placesById.get(cur);
+      if (!parent) break;
+      parts.push(parent.name);
+      cur = parent.parent_place_id;
+    }
+    const resolved = resolvePlace(parts.join(', '), gazetteers);
+    if (!resolved) return p;
+    return { ...p, latitude: resolved.lat, longitude: resolved.lon };
+  });
 
   // Citations: include those linked to scoped events/persons/relationships
   const allCitations = queryAll<Citation>(db, 'SELECT * FROM citations');
