@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(timeline): render labels on top of stems; make axis line black
+
 ## v0.146.0 — App-look website export
 
 The website export (Present → Website) now produces a read-only Vue SPA that visually matches the application — same sidebar, search, design tokens, detail layouts — minus editing affordances. Features: focus-person + N ancestor / M descendant generation scope filter; living-person privacy controls (exclude entirely or redact to decade-only birth year); optional media (full + thumbnail), pre-rendered keepsake reports, and frameable chart prints. The old standalone HTML generator has been removed.
