@@ -41,8 +41,17 @@
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Import report modal (shared across all three flows) -->
-    <BaseModal v-if="showGenneyReport && genneyReport" @close="showGenneyReport = false" title-id="modal-title-genney-report">
-      <h3 id="modal-title-genney-report">{{ $t('importExport.genneyReportTitle') }}</h3>
+    <BaseSubPanel
+      v-if="showGenneyReport && genneyReport"
+      entity-type="neutral"
+      :title="$t('importExport.genneyReportTitle')"
+      label=""
+      mode="standalone"
+      hide-save
+      :cancel-label="$t('common.close')"
+      @cancel="showGenneyReport = false"
+      @close="showGenneyReport = false"
+    >
       <ul class="report-counts">
         <li>{{ $t('importExport.genneyReportPersons', { n: genneyReport.persons }) }}</li>
         <li>{{ $t('importExport.genneyReportCoupleRels', { n: genneyReport.coupleRelationships }) }}</li>
@@ -66,10 +75,7 @@
           </li>
         </ul>
       </div>
-      <div class="modal-actions">
-        <button @click="showGenneyReport = false">{{ $t('importExport.importReportClose') }}</button>
-      </div>
-    </BaseModal>
+    </BaseSubPanel>
   </div>
 </template>
 
@@ -77,7 +83,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
-import BaseModal from '../BaseModal.vue';
+import BaseSubPanel from '../modals/BaseSubPanel.vue';
 import type { ImportSummary } from '../../../import/genney/transform';
 
 declare const window: Window & {
@@ -202,14 +208,6 @@ async function importGed() {
 </script>
 
 <style scoped>
-:deep(.modal) {
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .report-counts {
   list-style: none;
   margin: 0;

@@ -23,8 +23,17 @@
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
-    <BaseModal v-if="showExportReport && exportReport" @close="showExportReport = false" title-id="modal-title-gedcom-export-report">
-      <h3 id="modal-title-gedcom-export-report">{{ $t('importExport.exportReportTitle') }}</h3>
+    <BaseSubPanel
+      v-if="showExportReport && exportReport"
+      entity-type="neutral"
+      :title="$t('importExport.exportReportTitle')"
+      label=""
+      mode="standalone"
+      hide-save
+      :cancel-label="$t('common.close')"
+      @cancel="showExportReport = false"
+      @close="showExportReport = false"
+    >
       <ul class="report-counts">
         <li>{{ $t('importExport.exportReportPersons', { n: exportReport.persons }) }}</li>
         <li>{{ $t('importExport.exportReportFamilies', { n: exportReport.families }) }}</li>
@@ -39,10 +48,7 @@
           </li>
         </ul>
       </div>
-      <div class="modal-actions">
-        <button @click="showExportReport = false">{{ $t('importExport.importReportClose') }}</button>
-      </div>
-    </BaseModal>
+    </BaseSubPanel>
   </div>
 </template>
 
@@ -50,7 +56,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
-import BaseModal from '../BaseModal.vue';
+import BaseSubPanel from '../modals/BaseSubPanel.vue';
 import ExportOptionsPanel from '../ExportOptionsPanel.vue';
 import type { ExportOptions } from '../ExportOptionsPanel.vue';
 
@@ -112,12 +118,3 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
 }
 </script>
 
-<style scoped>
-:deep(.modal) {
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-</style>
