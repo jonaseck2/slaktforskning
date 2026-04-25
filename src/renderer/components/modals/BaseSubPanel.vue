@@ -10,7 +10,7 @@
       <div class="entity-panel">
         <div class="ep-header" :style="headerStyle">
           <div class="ep-header-left">
-            <span v-if="visual.icon" class="ep-icon" aria-hidden="true">{{ visual.icon }}</span>
+            <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
             <div class="ep-header-text">
               <span v-if="resolvedLabel" class="ep-label" :style="{ color: visual.fg }">{{ resolvedLabel }}</span>
               <div :id="titleId" class="ep-title">{{ title }}</div>
@@ -27,7 +27,7 @@
           <button
             type="button"
             class="btn-add"
-            :style="{ background: visual.fg, color: '#fff' }"
+            :style="{ background: saveBg, color: '#fff' }"
             @click="$emit('save')"
           >
             {{ saveLabel ?? $t('common.save') }}
@@ -43,7 +43,7 @@
     <div class="entity-panel">
       <div class="ep-header" :style="headerStyle">
         <div class="ep-header-left">
-          <span v-if="visual.icon" class="ep-icon" aria-hidden="true">{{ visual.icon }}</span>
+          <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
           <div class="ep-header-text">
             <span v-if="resolvedLabel" class="ep-label" :style="{ color: visual.fg }">{{ resolvedLabel }}</span>
             <div class="ep-title">{{ title }}</div>
@@ -66,7 +66,7 @@
         <button
           type="button"
           class="btn-add"
-          :style="{ background: visual.fg, color: '#fff' }"
+          :style="{ background: saveBg, color: '#fff' }"
           @click="$emit('save')"
         >
           {{ saveLabel ?? $t('common.save') }}
@@ -91,8 +91,13 @@ const props = withDefaults(defineProps<{
   label?: string;
   mode?: 'standalone' | 'subpanel';
   saveLabel?: string;
+  /** Optional icon override — when provided, replaces the entity visual's default icon in the header. */
+  icon?: string;
+  /** Tone for the save button. 'danger' renders a red background using --error-text (#b91c1c). Default: 'info'. */
+  tone?: 'info' | 'warning' | 'danger';
 }>(), {
   mode: 'standalone',
+  tone: 'info',
 });
 
 defineEmits<{
@@ -116,4 +121,10 @@ const resolvedLabel = computed(() => {
   if (!key) return '';
   return te(key) ? t(key) : '';
 });
+
+const resolvedIcon = computed(() => props.icon ?? visual.value.icon);
+
+const saveBg = computed(() =>
+  props.tone === 'danger' ? 'var(--error-text, #b91c1c)' : visual.value.fg
+);
 </script>
