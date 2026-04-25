@@ -167,12 +167,10 @@
       <PersonChecksSection ref="checksSectionRef" :person-id="person.id" @fix="handleCheckFix" />
     </section>
 
-    <AddRelatedPersonModal
+    <PersonModal
       v-if="showAddRelated"
-      :person-id="person.id"
-      :person-sex="person.sex as 'M' | 'F' | 'U'"
-      :person-surname="primaryNameData?.surname ?? undefined"
-      :mode="addRelatedMode"
+      mode="standalone"
+      :add-related-to="{ personId: person.id, mode: addRelatedMode, personSex: person.sex as 'M' | 'F' | 'U', personSurname: primaryNameData?.surname ?? undefined }"
       @close="showAddRelated = false"
       @saved="showAddRelated = false; relSectionRef?.reload()"
     />
@@ -202,7 +200,7 @@ import { useTTS } from '../composables/useTTS';
 import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import ResearchTaskModal from '../components/modals/ResearchTaskModal.vue';
 import EventList from '../components/EventList.vue';
-import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
+import PersonModal from '../components/modals/PersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
 import PersonNamesTable from '../components/PersonNamesTable.vue';
 import PersonNameModal from '../components/modals/PersonNameModal.vue';

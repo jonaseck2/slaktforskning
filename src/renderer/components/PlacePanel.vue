@@ -234,8 +234,9 @@
     />
 
     <!-- Add person modal -->
-    <AddPersonModal
+    <PersonModal
       v-if="showAddPersonForm && placeId"
+      mode="standalone"
       :prefill-place-id="placeId"
       @close="showAddPersonForm = false"
       @saved="onPersonSaved"
@@ -247,7 +248,7 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import EventList from './EventList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
-import AddPersonModal from './AddPersonModal.vue';
+import PersonModal from './modals/PersonModal.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';

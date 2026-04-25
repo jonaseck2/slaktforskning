@@ -109,7 +109,7 @@
     </template>
 
     <!-- Add Person Modal -->
-    <AddPersonModal v-if="showAddPerson" @close="showAddPerson = false" @saved="onPersonAdded" />
+    <PersonModal v-if="showAddPerson" mode="standalone" @close="showAddPerson = false" @saved="onPersonAdded" />
   </div>
 </template>
 
@@ -130,7 +130,7 @@ import HourglassChart from '../components/charts/HourglassChart.vue';
 import DescendantChart from '../components/charts/DescendantChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
-import AddPersonModal from '../components/AddPersonModal.vue';
+import PersonModal from '../components/modals/PersonModal.vue';
 import PersonsView from './PersonsView.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
