@@ -263,7 +263,7 @@ describe('WCAG AA — light and dark base themes (regression)', () => {
       }
 
       for (const pair of ENTITY_UI_PAIRS) {
-        it(`${pair.label} ≥ 3:1 (UI)`, () => {
+        it(`${pair.label} ≥ 3:1 (UI, ${appearance})`, () => {
           assertUiPair(palette, pair);
         });
       }
