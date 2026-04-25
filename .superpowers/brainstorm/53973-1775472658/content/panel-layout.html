@@ -1,0 +1,125 @@
+<h2>Panel Layout — Section Design</h2>
+<p class="subtitle">The right-side panel after the redesign. Does this section order and content feel right?</p>
+
+<div class="split" style="align-items:flex-start;gap:32px">
+
+  <!-- BEFORE -->
+  <div style="flex:1;min-width:0">
+    <div class="label" style="margin-bottom:8px">BEFORE (current)</div>
+    <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:12px;background:#fafafa">
+
+      <!-- Header -->
+      <div style="background:#1a2a3a;color:white;padding:10px 12px;display:flex;gap:8px;align-items:center">
+        <div style="width:3px;height:36px;background:#7eb8f7;border-radius:2px;flex-shrink:0"></div>
+        <div>
+          <div style="font-weight:600;font-size:13px">Anna Svensson</div>
+          <div style="opacity:0.6;font-size:11px">1842–1901</div>
+          <div style="margin-top:4px"><span style="font-size:11px;color:#93c5fd">Open →</span></div>
+        </div>
+      </div>
+
+      <!-- Events (readonly) -->
+      <div style="border-bottom:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9">
+        <span style="font-weight:600;color:#555">▾ Händelser</span>
+      </div>
+      <div style="padding:8px 12px;color:#888;font-size:11px">
+        * Födselbokföring — 1842-03-12, Göteborg<br>
+        † Dödbokföring — 1901-11-05, Göteborg<br>
+        <span style="color:#ccc">— read only, no add button —</span>
+      </div>
+
+      <!-- Relationships (readonly) -->
+      <div style="border-bottom:1px solid #e5e7eb;border-top:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9">
+        <span style="font-weight:600;color:#555">▸ Relationer</span>
+      </div>
+
+      <!-- Notes (readonly) -->
+      <div style="border-top:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9">
+        <span style="font-weight:600;color:#555">▸ Anteckningar</span>
+      </div>
+
+      <div style="padding:16px 12px;color:#aaa;font-size:11px;text-align:center;border-top:1px solid #eee">
+        To add events, sources, groups:<br>navigate away to PersonDetailView
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div style="flex:1;min-width:0">
+    <div class="label" style="margin-bottom:8px">AFTER (proposed)</div>
+    <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:12px;background:#fafafa">
+
+      <!-- Header — editable -->
+      <div style="background:#1a2a3a;color:white;padding:10px 12px">
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="width:3px;min-height:36px;background:#7eb8f7;border-radius:2px;flex-shrink:0;align-self:stretch"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px;border-bottom:1px dashed rgba(255,255,255,0.3);padding-bottom:3px;margin-bottom:5px">Anna Svensson <span style="font-weight:400;font-size:10px;opacity:0.5">✎ editable</span></div>
+            <div style="opacity:0.6;font-size:11px;margin-bottom:6px">1842–1901</div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <span style="background:#3b82f6;color:white;border-radius:10px;padding:2px 8px;font-size:10px">♂ Man</span>
+              <span style="background:rgba(255,255,255,0.15);color:white;border-radius:10px;padding:2px 8px;font-size:10px">☐ Levande</span>
+              <button style="margin-left:auto;background:#2563eb;color:white;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer">+ Lägg till släkting</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes inline (collapsed) -->
+      <div style="border-bottom:1px solid #e5e7eb;padding:6px 12px;background:#f8fafc;cursor:pointer">
+        <span style="font-weight:600;color:#555;font-size:11px">▸ Anteckningar</span>
+      </div>
+
+      <!-- Events — full CRUD -->
+      <div style="border-bottom:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:#555">▾ Händelser</span>
+        <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">+ Händelse</button>
+      </div>
+      <div style="padding:8px 12px;font-size:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f0f0f0">
+          <span style="color:#555">* Födselbokföring <span style="color:#aaa">1842-03-12, Göteborg</span></span>
+          <span style="display:flex;gap:4px"><button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0">
+          <span style="color:#555">† Dödbokföring <span style="color:#aaa">1901-11-05</span></span>
+          <span style="display:flex;gap:4px"><button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button></span>
+        </div>
+      </div>
+
+      <!-- Relationships -->
+      <div style="border-bottom:1px solid #e5e7eb;border-top:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9">
+        <span style="font-weight:600;color:#555">▸ Relationer</span>
+      </div>
+
+      <!-- Sources (NEW) -->
+      <div style="border-bottom:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:#555">▾ Källor</span>
+        <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">+ Källa</button>
+      </div>
+      <div style="padding:8px 12px;font-size:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f0f0f0">
+          <span style="color:#555">Husförhörslängd Göteborg <span style="color:#aaa">s. 42</span> <span style="background:#dcfce7;color:#166534;border-radius:8px;padding:1px 5px;font-size:9px">●●●</span></span>
+          <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button>
+        </div>
+      </div>
+
+      <!-- Groups (NEW) -->
+      <div style="border-top:1px solid #e5e7eb;padding:8px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:#555">▾ Grupper</span>
+        <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">+ Grupp</button>
+      </div>
+      <div style="padding:8px 12px;font-size:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0">
+          <span style="color:#2563eb;cursor:pointer">Emigranter till Amerika</span>
+          <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:24px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:12px 16px;font-size:12px;color:#78350f">
+  <strong>On chart nodes:</strong> hovering any person box shows a small <strong>⊕</strong> icon at the bottom edge. Clicking opens a 3-button popover: <em>Add parent · Add spouse · Add child</em>. The newly created person immediately becomes the selected person in the panel.
+</div>

@@ -1,0 +1,97 @@
+<h2>Chart Person Boxes — Current vs. Competitors</h2>
+<p class="subtitle">How our 155×54px boxes compare to what major genealogy apps show</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Our Current Boxes (155×54px)</div>
+    <div class="mockup-body" style="background: #f5f5f0; padding: 32px; display: flex; flex-direction: column; gap: 24px; align-items: center;">
+
+      <!-- Current: Living male -->
+      <div style="position: relative; width: 155px; height: 54px;">
+        <svg width="155" height="54" viewBox="0 0 155 54">
+          <rect x="0" y="0" width="155" height="54" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+          <rect x="0" y="0" width="4" height="54" rx="2" fill="#7eb8f7"/>
+          <text x="12" y="17" font-size="12" font-weight="600" font-family="-apple-system, sans-serif" fill="#333">Karl-Johan Anderss…</text>
+          <text x="12" y="30" font-size="10" font-family="-apple-system, sans-serif" fill="#888">* 1847-03-15</text>
+          <text x="12" y="43" font-size="10" font-family="-apple-system, sans-serif" fill="#888">† 1923-11-02</text>
+        </svg>
+        <div style="position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; font-size: 9px; padding: 1px 5px; border-radius: 8px;">clipped!</div>
+      </div>
+
+      <!-- Current: Living female -->
+      <div style="width: 155px; height: 54px;">
+        <svg width="155" height="54" viewBox="0 0 155 54">
+          <rect x="0" y="0" width="155" height="54" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+          <rect x="0" y="0" width="4" height="54" rx="2" fill="#f7a5c0"/>
+          <text x="12" y="17" font-size="12" font-weight="600" font-family="-apple-system, sans-serif" fill="#333">Anna Kristina Svens…</text>
+          <text x="12" y="30" font-size="10" font-family="-apple-system, sans-serif" fill="#888">* 1852-06-22</text>
+          <text x="12" y="43" font-size="10" font-family="-apple-system, sans-serif" fill="#888">† 1901-01-09</text>
+        </svg>
+      </div>
+
+      <!-- Current: Focal person -->
+      <div style="width: 155px; height: 54px;">
+        <svg width="155" height="54" viewBox="0 0 155 54">
+          <rect x="0" y="0" width="155" height="54" rx="4" fill="#2c3e50" stroke="#1a2a3a" stroke-width="1"/>
+          <rect x="0" y="0" width="4" height="54" rx="2" fill="#7eb8f7"/>
+          <text x="12" y="17" font-size="12" font-weight="600" font-family="-apple-system, sans-serif" fill="white">Jonas Ahnstedt</text>
+          <text x="12" y="30" font-size="10" font-family="-apple-system, sans-serif" fill="rgba(255,255,255,0.65)">* 1985-01-01</text>
+        </svg>
+      </div>
+
+      <div style="margin-top: 8px; padding: 12px 16px; background: #fff3cd; border-radius: 8px; font-size: 12px; color: #856404; max-width: 280px; text-align: center;">
+        <strong>Issues:</strong> 20-char name limit clips common Swedish names. No photos, no places, no deceased indicator. Hardcoded colors ignore theme.
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">What Competitors Show</div>
+    <div class="mockup-body" style="background: #f5f5f0; padding: 32px; display: flex; flex-direction: column; gap: 24px; align-items: center;">
+
+      <!-- Ancestry-style -->
+      <div style="width: 220px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); overflow: hidden; border-left: 4px solid #7eb8f7;">
+        <div style="display: flex; padding: 10px 12px; gap: 10px; align-items: center;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #e8f0fe; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #4a6fa5; flex-shrink: 0;">KA</div>
+          <div style="min-width: 0;">
+            <div style="font-size: 13px; font-weight: 600; color: #333;">Karl-Johan Andersson</div>
+            <div style="font-size: 11px; color: #888; margin-top: 2px;">* 1847 Lunds socken</div>
+            <div style="font-size: 11px; color: #888;">† 1923 Malmö</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: #999; margin-top: -16px;">Ancestry / MyHeritage style — photo + place</div>
+
+      <!-- FamilySearch-style -->
+      <div style="width: 220px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); overflow: hidden;">
+        <div style="padding: 10px 14px;">
+          <div style="font-size: 13px; font-weight: 600; color: #333;">Anna Kristina Svensdotter</div>
+          <div style="font-size: 11px; color: #888; margin-top: 3px;">1852–1901</div>
+          <div style="display: flex; gap: 4px; margin-top: 6px;">
+            <span style="font-size: 9px; background: #f0f0f0; padding: 1px 6px; border-radius: 4px; color: #666;">deceased</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: #999; margin-top: -16px;">FamilySearch style — clean, date range, badges</div>
+
+      <!-- MacFamilyTree-style -->
+      <div style="width: 220px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); overflow: hidden; position: relative;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #f7a5c0, #e091ab);"></div>
+        <div style="display: flex; padding: 12px 14px; gap: 10px; align-items: center;">
+          <div style="width: 40px; height: 40px; border-radius: 6px; background: linear-gradient(135deg, #fce4ec, #f8bbd0); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">👤</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: #333;">Maria Johansdotter</div>
+            <div style="font-size: 11px; color: #888; margin-top: 2px;">* 1820 · Västra Sallerup</div>
+            <div style="font-size: 11px; color: #888;">† 1889 · Lund</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: #999; margin-top: -16px;">MacFamilyTree style — top accent, square photo, places</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px 20px; background: #f0f4ff; border-radius: 10px; border-left: 4px solid #4a6fa5;">
+  <h3 style="margin: 0 0 8px;">Key Question</h3>
+  <p style="margin: 0; font-size: 14px; color: #444;">Before I propose specific designs — what's your instinct on scope? Are we talking about a visual refresh of the existing box (better colors, fix clipping, use design tokens) or a bigger upgrade (photos, places, new layout)?</p>
+</div>

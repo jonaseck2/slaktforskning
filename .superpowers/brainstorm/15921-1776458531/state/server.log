@@ -1,0 +1,11 @@
+{"type":"server-started","port":59306,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:59306","screen_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content","state_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/state"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/audit-findings.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/visual-directions.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/green-earthy-directions.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/theme-switcher.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/sidebar-options.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/waiting.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/view-inventory.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/three-perspectives.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/15921-1776458531/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

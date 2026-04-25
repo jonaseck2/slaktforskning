@@ -1,0 +1,79 @@
+<h2>GroupsView — `/groups`</h2>
+<p class="subtitle">Mockup of the main groups list view. Let me know if anything should change.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Släktforskning</div>
+  <div class="mockup-body" style="display:flex;gap:0;min-height:420px;">
+
+    <!-- Sidebar -->
+    <div style="width:160px;background:#2c3e50;color:#ecf0f1;padding:16px 0;flex-shrink:0;font-size:13px;">
+      <div style="padding:8px 16px;opacity:0.6;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Navigera</div>
+      <div style="padding:8px 16px;opacity:0.5;">🌳 Träd</div>
+      <div style="padding:8px 16px;opacity:0.5;">👥 Personer</div>
+      <div style="padding:8px 16px;opacity:0.5;">🔗 Relationer</div>
+      <div style="padding:8px 16px;opacity:0.5;">📍 Platser</div>
+      <div style="padding:8px 16px;opacity:0.5;">📚 Källor</div>
+      <div style="padding:8px 16px;background:#3d566e;border-left:3px solid #3498db;font-weight:600;">🏷️ Grupper</div>
+      <div style="padding:8px 16px;opacity:0.5;">🔬 Forskning</div>
+      <div style="padding:8px 16px;opacity:0.5;">⚠️ Kvalitet</div>
+    </div>
+
+    <!-- Main content -->
+    <div style="flex:1;padding:24px;background:#f8f9fa;">
+
+      <!-- Header row -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="margin:0;font-size:18px;">Grupper</h3>
+        <button class="mock-button">+ Lägg till grupp</button>
+      </div>
+
+      <!-- Table -->
+      <table style="width:100%;border-collapse:collapse;background:white;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <thead>
+          <tr style="background:#eee;">
+            <th style="padding:10px 14px;text-align:left;font-size:13px;font-weight:600;">Namn</th>
+            <th style="padding:10px 14px;text-align:left;font-size:13px;font-weight:600;">Medlemmar</th>
+            <th style="padding:10px 14px;text-align:left;font-size:13px;font-weight:600;">Anteckningar</th>
+            <th style="padding:10px 14px;text-align:left;font-size:13px;font-weight:600;">Åtgärder</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="cursor:pointer;border-bottom:1px solid #eee;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">
+            <td style="padding:10px 14px;font-size:14px;color:#2c3e50;font-weight:500;">Emigranter till Amerika</td>
+            <td style="padding:10px 14px;font-size:14px;">14</td>
+            <td style="padding:10px 14px;font-size:14px;color:#777;">Familjer som emigrerade 1880–1910</td>
+            <td style="padding:10px 14px;">
+              <button style="background:#fee;color:#c0392b;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;">Ta bort</button>
+            </td>
+          </tr>
+          <tr style="cursor:pointer;border-bottom:1px solid #eee;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">
+            <td style="padding:10px 14px;font-size:14px;color:#2c3e50;font-weight:500;">Officerare</td>
+            <td style="padding:10px 14px;font-size:14px;">7</td>
+            <td style="padding:10px 14px;font-size:14px;color:#777;">Militärt befäl i släkten</td>
+            <td style="padding:10px 14px;">
+              <button style="background:#fee;color:#c0392b;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;">Ta bort</button>
+            </td>
+          </tr>
+          <tr style="cursor:pointer;border-bottom:1px solid #eee;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">
+            <td style="padding:10px 14px;font-size:14px;color:#2c3e50;font-weight:500;">Hantverkare</td>
+            <td style="padding:10px 14px;font-size:14px;">23</td>
+            <td style="padding:10px 14px;font-size:14px;color:#777;"></td>
+            <td style="padding:10px 14px;">
+              <button style="background:#fee;color:#c0392b;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;">Ta bort</button>
+            </td>
+          </tr>
+          <tr style="cursor:pointer;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">
+            <td style="padding:10px 14px;font-size:14px;color:#2c3e50;font-weight:500;">DNA-matchningar</td>
+            <td style="padding:10px 14px;font-size:14px;">5</td>
+            <td style="padding:10px 14px;font-size:14px;color:#777;">Bekräftade DNA-matchningar</td>
+            <td style="padding:10px 14px;">
+              <button style="background:#fee;color:#c0392b;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;">Ta bort</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:12px;color:#aaa;margin-top:12px;">Klicka på en rad för att se och hantera gruppens medlemmar.</p>
+    </div>
+  </div>
+</div>

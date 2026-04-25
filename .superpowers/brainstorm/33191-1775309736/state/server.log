@@ -1,0 +1,3 @@
+{"type":"server-started","port":55576,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:55576","screen_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/33191-1775309736/content","state_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/33191-1775309736/state"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/33191-1775309736/content/viz-layout.html"}
+{"type":"server-stopped","reason":"idle timeout"}

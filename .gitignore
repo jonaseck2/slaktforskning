@@ -8,7 +8,6 @@ test-results/
 playwright-report/
 coverage/
 .worktrees/
-.superpowers/
 /export-import/
 /src/import/genney/lib/
 /genney-media/

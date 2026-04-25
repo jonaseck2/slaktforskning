@@ -166,6 +166,7 @@ const PAGE_SIZE = 100;
 const { t } = useI18n();
 const toast = useToast();
 const props = defineProps<{ embedded?: boolean }>();
+const emit = defineEmits<{ select: [id: string] }>();
 const router = useRouter();
 const focusStore = useFocusStore();
 
