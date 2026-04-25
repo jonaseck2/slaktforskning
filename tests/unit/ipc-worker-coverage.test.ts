@@ -6,9 +6,9 @@
  * If a channel is added to an ipc/*.ts file but forgotten in the worker
  * dispatch table AND not listed here, this test fails immediately.
  */
-import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { describe, it, expect } from 'vitest';
 
 // Channels that intentionally stay on the main thread (Electron APIs, dialog, shell, BrowserWindow, imports)
 const MAIN_THREAD_ONLY_CHANNELS = new Set([
