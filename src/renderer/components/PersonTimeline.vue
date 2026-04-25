@@ -352,10 +352,10 @@ defineExpose({ reload: load });
   justify-content: center;
   min-width: 16px;
   height: 16px;
-  border-radius: 8px;
-  background: var(--color-primary, #3b82f6);
-  color: white;
-  font-size: 10px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 0 3px;
 }

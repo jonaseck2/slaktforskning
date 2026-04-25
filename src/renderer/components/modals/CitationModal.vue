@@ -231,8 +231,8 @@ async function save() {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
-  padding: 3px 6px;
+  font-size: var(--font-xs);
+  padding: var(--space-xs) var(--space-sm);
   line-height: 1;
 }
 .ep-source-edit-btn:hover {

@@ -711,7 +711,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--font-base);
   cursor: pointer;
   transition: opacity 0.15s, background 0.1s;
   backdrop-filter: blur(4px);

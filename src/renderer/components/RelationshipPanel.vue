@@ -157,7 +157,7 @@
                   </span>
                 </td>
                 <td v-if="!props.readonly" class="actions-cell">
-                  <AppButton variant="ghost" size="sm" @click.stop="removeCitation(cit.id)">✕</AppButton>
+                  <AppButton variant="ghost" size="sm" :aria-label="$t('common.remove')" @click.stop="removeCitation(cit.id)">✕</AppButton>
                 </td>
               </tr>
             </tbody>
@@ -206,6 +206,7 @@ import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
+import { usePanelSections } from '../composables/usePanelSections';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -237,21 +238,11 @@ const router = useRouter();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
-const STORAGE_PREFIX = 'rel-panel-section-';
-function loadBool(key: string, def: boolean): boolean {
-  const v = localStorage.getItem(STORAGE_PREFIX + key);
-  return v === null ? def : v === 'true';
-}
-const sections = reactive({
-  relationship: loadBool('relationship', true),
-  events: loadBool('events', true),
-  citations: loadBool('citations', false),
-  media: loadBool('media', false),
-});
-function toggleSection(key: keyof typeof sections) {
-  sections[key] = !sections[key];
-  localStorage.setItem(STORAGE_PREFIX + key, String(sections[key]));
-}
+const { sections, toggleSection } = usePanelSections(
+  'relationship-panel-section-',
+  { relationship: true, events: true, citations: false, media: false },
+  { relationship: true, events: true, citations: true, media: true },
+);
 
 // ── Refs / state ────────────────────────────────────────────────────────────
 

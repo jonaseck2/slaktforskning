@@ -11,12 +11,12 @@
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('identifiers.type') }}</span>
         <select class="ep-input" v-model="form.identifier_type">
-          <option value="familysearch">FamilySearch</option>
-          <option value="ancestry">Ancestry</option>
-          <option value="riksarkivet">Riksarkivet</option>
-          <option value="personnummer">Personnummer</option>
+          <option value="familysearch">{{ $t('identifiers.types.familysearch') }}</option>
+          <option value="ancestry">{{ $t('identifiers.types.ancestry') }}</option>
+          <option value="riksarkivet">{{ $t('identifiers.types.riksarkivet') }}</option>
+          <option value="personnummer">{{ $t('identifiers.types.personnummer') }}</option>
           <option value="refn">{{ $t('identifiers.types.refn') }}</option>
-          <option value="rin">RIN</option>
+          <option value="rin">{{ $t('identifiers.types.rin') }}</option>
           <option value="other">{{ $t('identifiers.types.other') }}</option>
         </select>
       </div>

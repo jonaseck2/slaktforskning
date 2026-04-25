@@ -686,7 +686,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 |-----------|---------|
 | `usePlaceResolver` | Render-time place resolution via gazetteers. Loads config from db_settings, caches results in session. Used by PlacesView (map + PlacePanel) and PersonMap. |
 | `usePanelResize` | Drag-resize side panels. Each view passes a `storageKey` (e.g. `persons-panel-width`) and a `maxWidthRatio`. |
-| `usePlacePanelSections` | Section open/close state management for PlacePanel. Tracks which of the 8 collapsible sections are expanded. |
+| `usePanelSections` | Generic collapsible-section state for every entity panel. Takes a storage prefix + defaults (and optional static-mode defaults), persists per-section open/closed flags in localStorage. Used by PersonPanel/PlacePanel/SourcePanel/RelationshipPanel/GroupPanel/ResearchTaskPanel/MediaPanel/ReportPanel. |
 | `useChartExport` | SVG export helpers (`buildExportSvgString`, `wrapWithTitle`). Used by `ReportsView` chart tabs to serialize the rendered chart SVG before calling `window.api.chart.saveSvg` / `saveTiledPdf`. |
 | `usePersonProfilePic` | Reactive `{ src, loading }` for a person's cropped profile picture. Wraps `useProfilePicStore`. Used automatically by `AppAvatar` when `personId` is set. |
 | `useLifeMap` | Resolves a person's life events into map coordinates via gazetteers. Returns ordered waypoints (birth → marriages → death) with latitude/longitude. Used by `LifeMap` primitive + A Life / A Marriage / Life on One Page reports. |

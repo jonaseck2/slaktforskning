@@ -36,6 +36,7 @@
           </div>
           <div v-if="media.format" class="media-meta">{{ media.format.toUpperCase() }}</div>
         </div>
+        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Notes -->
@@ -96,7 +97,7 @@
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
             <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
             <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -119,7 +120,7 @@
           <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
           <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
             <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -136,7 +137,7 @@
           <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
           <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
             <span>{{ le.label }}</span>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -193,7 +194,7 @@
                 @click.stop="setProfileForRegion(r)"
               >{{ regionIsProfile[r.id] ? '★' : '☆' }}</button>
             </template>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="deleteRegion(r.id)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -215,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import AppLoadingState from './ui/AppLoadingState.vue';
@@ -227,6 +228,7 @@ import MediaChecksSection from './MediaChecksSection.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
+import { usePanelSections } from '../composables/usePanelSections';
 import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
 import { useProfilePicStore } from '../stores/profilePic';
 
@@ -301,18 +303,11 @@ const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: p
 const profilePicStore = useProfilePicStore();
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('media');
 
-const sections = reactive({
-  notes: false,
-  persons: true,
-  places: true,
-  events: false,
-  faceTags: false,
-  quality: false,
-});
-
-function toggleSection(key: keyof typeof sections) {
-  sections[key] = !sections[key];
-}
+const { sections, toggleSection } = usePanelSections(
+  'media-panel-section-',
+  { notes: false, persons: true, places: true, events: false, faceTags: false, quality: false },
+  { notes: true, persons: true, places: true, events: true, faceTags: true, quality: false },
+);
 
 async function resolveEntityLabel(entityType: string, entityId: string): Promise<string> {
   try {
@@ -602,18 +597,14 @@ defineExpose({ reload: load, expandFaceTags });
 
 /* Close button */
 .panel-close-btn {
-  position: absolute;
-  top: var(--space-xs);
-  right: var(--space-xs);
-  z-index: 10;
   background: none;
   border: none;
-  cursor: pointer;
   color: var(--text-muted);
-  font-size: var(--font-sm);
-  line-height: 1;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
+  font-size: var(--font-lg);
+  cursor: pointer;
+  padding: 0 var(--space-md);
+  align-self: stretch;
+  margin: calc(var(--space-md) * -1) 0;
 }
 .panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 
@@ -622,11 +613,10 @@ defineExpose({ reload: load, expandFaceTags });
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
-  padding: var(--space-lg) var(--space-lg);
+  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  position: relative;
 }
 
 .media-thumbnail {
@@ -705,9 +695,9 @@ defineExpose({ reload: load, expandFaceTags });
 
 /* Sections */
 .panel-section {
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: 0 var(--space-md);
+  padding: 0 var(--space-lg);
 }
 
 .panel-section-body {
@@ -787,7 +777,7 @@ defineExpose({ reload: load, expandFaceTags });
   border: 1px solid transparent;
   cursor: pointer;
   padding: 0 3px;
-  font-size: 14px;
+  font-size: var(--font-base);
   color: var(--text-muted);
   line-height: 1;
   margin-left: auto;

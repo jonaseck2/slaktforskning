@@ -68,6 +68,7 @@ export default {
     add: 'Add',
     cancel: 'Cancel',
     delete: 'Delete',
+    remove: 'Remove',
     edit: 'Edit',
     save: 'Save',
     create: 'Create',
@@ -521,6 +522,7 @@ export default {
     relationships: 'Relationships',
     notes: 'Notes',
     noNotes: 'No notes',
+    personSection: 'Person',
   },
   placeTypes: {
     country: 'Country',
@@ -1163,6 +1165,8 @@ export default {
       drawTag: '+ Draw',
       drawDone: 'Done',
       assignPerson: 'Assign person...',
+      previousImage: 'Previous image',
+      nextImage: 'Next image',
     },
     filter: {
       search: 'Search media',

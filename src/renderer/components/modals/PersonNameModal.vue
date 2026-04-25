@@ -257,25 +257,25 @@ onMounted(() => {
 
 <style scoped>
 .ep-details {
-  margin-top: 4px;
+  margin-top: var(--space-xs);
 }
 .ep-details-summary {
   font-size: var(--font-sm);
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px 0;
+  padding: var(--space-xs) 0;
   user-select: none;
 }
 .ep-details-summary:hover {
   color: var(--text-secondary);
 }
 .ep-details[open] .ep-details-summary {
-  margin-bottom: 6px;
+  margin-bottom: var(--space-sm);
 }
 .ep-field-hint {
   display: block;
   font-size: var(--font-xs);
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: var(--space-xs);
 }
 </style>

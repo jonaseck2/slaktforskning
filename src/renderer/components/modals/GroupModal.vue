@@ -83,12 +83,13 @@
           <button
             type="button"
             class="ep-entity-remove"
+            :aria-label="$t('common.remove')"
             @click="removeMember(m.person_id)"
           >×</button>
         </div>
         <div v-if="members.length === 0" class="ep-sec-empty">{{ $t('groups.noMembers') }}</div>
       </div>
-      <div style="height:8px"></div>
+      <div class="ep-spacer"></div>
     </template>
 
     <!-- Sub-panels -->
@@ -289,8 +290,11 @@ onMounted(async () => {
   max-height: 220px;
   overflow-y: auto;
 }
+.ep-spacer {
+  height: var(--space-sm);
+}
 .ep-search-item {
-  padding: 8px 12px;
+  padding: var(--space-sm) var(--space-md);
   font-size: var(--font-sm);
   cursor: pointer;
   color: var(--text-primary);
@@ -309,7 +313,7 @@ onMounted(async () => {
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--font-md);
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
   line-height: 1;
   flex-shrink: 0;
 }
@@ -317,7 +321,7 @@ onMounted(async () => {
   color: var(--error-text);
 }
 .ep-sec-empty {
-  padding: 8px 12px;
+  padding: var(--space-sm) var(--space-md);
   font-size: var(--font-sm);
   color: var(--text-muted);
 }

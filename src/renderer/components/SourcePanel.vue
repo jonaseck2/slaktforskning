@@ -144,7 +144,7 @@
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <AppButton variant="ghost" size="sm" @click.stop="removeCitation(cit.id)">✕</AppButton>
+                  <AppButton variant="ghost" size="sm" :aria-label="$t('common.remove')" @click.stop="removeCitation(cit.id)">✕</AppButton>
                 </td>
               </tr>
             </tbody>
@@ -183,7 +183,7 @@
               <tr v-for="repo in linkedRepositories" :key="repo.id">
                 <td>{{ repo.name }}</td>
                 <td class="actions-cell">
-                  <AppButton variant="ghost" size="sm" @click="removeRepository(repo.id)">✕</AppButton>
+                  <AppButton variant="ghost" size="sm" :aria-label="$t('common.remove')" @click="removeRepository(repo.id)">✕</AppButton>
                 </td>
               </tr>
             </tbody>
@@ -248,6 +248,7 @@ import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
+import { usePanelSections } from '../composables/usePanelSections';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 
 declare const window: Window & {
@@ -295,22 +296,11 @@ const router = useRouter();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
-const STORAGE_PREFIX = 'source-panel-section-';
-function loadBool(key: string, def: boolean): boolean {
-  const v = localStorage.getItem(STORAGE_PREFIX + key);
-  return v === null ? def : v === 'true';
-}
-const sections = reactive({
-  source: loadBool('source', true),
-  citations: loadBool('citations', true),
-  repositories: loadBool('repositories', false),
-  media: loadBool('media', false),
-  quality: loadBool('quality', false),
-});
-function toggleSection(key: keyof typeof sections) {
-  sections[key] = !sections[key];
-  localStorage.setItem(STORAGE_PREFIX + key, String(sections[key]));
-}
+const { sections, toggleSection } = usePanelSections(
+  'source-panel-section-',
+  { source: true, citations: true, repositories: false, media: false, quality: false },
+  { source: true, citations: true, repositories: true, media: true, quality: false },
+);
 
 // ── Refs / state ────────────────────────────────────────────────────────────
 

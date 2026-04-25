@@ -7,7 +7,7 @@
 
     <!-- Subject -->
     <div class="panel-section">
-      <SectionHeader :title="subjectSectionTitle" :collapsed="!open.subject" @toggle="open.subject = !open.subject" />
+      <SectionHeader :title="subjectSectionTitle" :collapsed="!open.subject" @toggle="toggleSection('subject')" />
       <div v-if="open.subject" class="panel-section-body">
 
         <PersonPicker
@@ -66,7 +66,7 @@
 
     <!-- Options (keepsake reports only) -->
     <div v-if="!isChartPrint" class="panel-section">
-      <SectionHeader :title="$t('reports.panel.options')" :collapsed="!open.options" @toggle="open.options = !open.options" />
+      <SectionHeader :title="$t('reports.panel.options')" :collapsed="!open.options" @toggle="toggleSection('options')" />
       <div v-if="open.options" class="panel-section-body">
 
         <template v-if="activeTab === 'alife'">
@@ -135,7 +135,7 @@
 
     <!-- Report / Chart appearance -->
     <div v-if="hasAppearance" class="panel-section">
-      <SectionHeader :title="appearanceSectionTitle" :collapsed="!open.appearance" @toggle="open.appearance = !open.appearance" />
+      <SectionHeader :title="appearanceSectionTitle" :collapsed="!open.appearance" @toggle="toggleSection('appearance')" />
       <div v-if="open.appearance" class="panel-section-body">
 
         <template v-if="activeTab === 'onePage'">
@@ -233,7 +233,7 @@
 
     <!-- Fan Chart (Your Ancestors only) -->
     <div v-if="hasFanChartSection" class="panel-section">
-      <SectionHeader :title="$t('reports.panel.fanChart')" :collapsed="!open.fanChart" @toggle="open.fanChart = !open.fanChart" />
+      <SectionHeader :title="$t('reports.panel.fanChart')" :collapsed="!open.fanChart" @toggle="toggleSection('fanChart')" />
       <div v-if="open.fanChart" class="panel-section-body">
         <div class="panel-control">
           <label class="panel-label">{{ $t('chart.export.colorMode') }}</label>
@@ -273,13 +273,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { useReportConfigStore } from '../stores/reportConfig';
+import { usePanelSections } from '../composables/usePanelSections';
 import {
   pedigreeGenerations,
   hourglassGenerations,
@@ -309,7 +310,10 @@ const store = useReportConfigStore();
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 
 // Subject and Options open by default; Report/Chart/Fan Chart collapsed.
-const open = reactive({ subject: true, options: true, appearance: false, fanChart: false });
+const { sections: open, toggleSection } = usePanelSections(
+  'report-panel-section-',
+  { subject: true, options: true, appearance: false, fanChart: false },
+);
 
 const isPersonReport = computed(() =>
   ['alife', 'yourAncestors', 'onePage',
@@ -380,8 +384,8 @@ const subjectSectionTitle = computed(() => {
   font-size: var(--font-sm);
 }
 .panel-header {
-  padding: var(--space-lg) var(--space-lg) var(--space-sm);
-  border-bottom: 1px solid var(--surface-border);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--surface-border-subtle);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-title { font-size: var(--font-md); font-weight: 600; color: var(--text-primary); }
