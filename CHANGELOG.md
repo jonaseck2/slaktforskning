@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.142.0 — Modal redesign: PersonModal, EventModal, CitationModal, SourceModal
+
+- feat: unified entity modals — PersonModal, EventModal, CitationModal, SourceModal replace AddPersonModal, EventForm, CitationForm for keyboard-first entity entry with inline source citation flow
+
 ## v0.141.4 — remove unicode chars from BaseSubPanel comments
 
 - fix: remove unicode box-drawing characters from HTML comments in BaseSubPanel.vue (ESLint compatibility)
