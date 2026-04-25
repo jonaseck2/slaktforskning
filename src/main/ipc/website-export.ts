@@ -1,9 +1,9 @@
 import * as fs from 'fs';
+import { promises as fsp } from 'fs';
 import * as path from 'path';
 import { app, dialog } from 'electron';
 import { wrapHandler } from './wrap-handler';
 import { callWorker } from './worker-client';
-import { generateThumbnail } from '../../api/html_site/thumbnails';
 
 export function registerWebsiteExportHandlers(): void {
   wrapHandler('website:export', async (opts: {
@@ -34,7 +34,7 @@ export function registerWebsiteExportHandlers(): void {
     if (!fs.existsSync(bundleSrc)) {
       return { bundleMissing: true };
     }
-    fs.cpSync(bundleSrc, out, { recursive: true });
+    await fsp.cp(bundleSrc, out, { recursive: true });
 
     // 2. Build snapshot via worker thread
     const snapshot = await callWorker('website:buildSnapshot', {
@@ -45,21 +45,38 @@ export function registerWebsiteExportHandlers(): void {
     });
     // Write as data.js (script tag, works from file://) — JSON would require fetch which is blocked from file://
     const json = JSON.stringify(snapshot);
-    fs.writeFileSync(path.join(out, 'data.js'), `window.__SNAPSHOT__=${json};`);
+    await fsp.writeFile(path.join(out, 'data.js'), `window.__SNAPSHOT__=${json};`);
 
-    // 3. Copy media + thumbnails
+    // 3. Copy media (async, with periodic yields so the main thread stays
+    //    responsive on large libraries — 7000+ images would otherwise lock
+    //    the app for minutes and trigger Electron's unresponsive-app kill).
+    //    No thumbnails: the static site reads from media/full/ directly via
+    //    static-api.readAsDataUrl; the browser handles scaling.
     if (opts.options.includeMedia) {
       const mediaItems = (snapshot as { media: Array<{ id: string; file_ref: string | null }> }).media;
       const fullDir = path.join(out, 'media', 'full');
-      const thumbDir = path.join(out, 'media', 'thumb');
-      fs.mkdirSync(fullDir, { recursive: true });
-      fs.mkdirSync(thumbDir, { recursive: true });
+      await fsp.mkdir(fullDir, { recursive: true });
+      let copied = 0;
       for (const m of mediaItems) {
-        if (!m.file_ref || !fs.existsSync(m.file_ref)) continue;
+        if (!m.file_ref) continue;
+        try {
+          await fsp.access(m.file_ref);
+        } catch {
+          continue;
+        }
         const ext = path.extname(m.file_ref);
         const filename = `${m.id}${ext}`;
-        fs.copyFileSync(m.file_ref, path.join(fullDir, filename));
-        await generateThumbnail(m.file_ref, path.join(thumbDir, filename));
+        try {
+          await fsp.copyFile(m.file_ref, path.join(fullDir, filename));
+        } catch {
+          // Skip individual file failures rather than aborting the export
+          continue;
+        }
+        copied++;
+        // Yield every 25 files so IPC and renderer events can process
+        if (copied % 25 === 0) {
+          await new Promise(resolve => setImmediate(resolve));
+        }
       }
     }
 

@@ -13,6 +13,7 @@
 - fix(website-export): hide MediaPanel in static mode (was still appearing on media row click)
 - fix(website-export): bake gazetteer-resolved lat/lon into the snapshot so places appear on the map even when coordinates aren't stored on the place row (the static site can't run the resolver itself — gazetteers don't ship in the bundle)
 - feat(website-export): new privacy option "Only include media linked to a person" — drops media that's only attached to events/places/sources/relationships, useful when you want to share faces without random documents
+- fix(website-export): app no longer locks up / crashes on libraries with thousands of media files. Removed the per-file thumbnail generation step (the static site reads from media/full/ directly — thumbnails were never used) and switched to async file I/O with periodic event-loop yields so the main thread stays responsive during 700MB+ exports
 
 ## v0.146.0 — App-look website export
 
