@@ -2,8 +2,8 @@
   <BaseSubPanel
     entity-type="citation"
     :title="sourceTitle"
-    mode="subpanel"
-    :save-label="$t('common.save') + ' ↩'"
+    :mode="mode"
+    :save-label="$t('common.save') + (mode === 'subpanel' ? ' ↩' : '')"
     @cancel="$emit('cancel')"
     @save="save"
     @close="$emit('close')"
@@ -49,6 +49,10 @@
         <span class="ep-field-label">{{ $t('citations.notes') }}</span>
         <input class="ep-input" v-model="form.notes" :placeholder="$t('citations.notesPlaceholder')" />
       </div>
+      <div class="ep-field">
+        <span class="ep-field-label">{{ $t('citations.dateAccessed') }}</span>
+        <input class="ep-input" type="date" v-model="form.date_accessed" />
+      </div>
     </div>
   </BaseSubPanel>
 </template>
@@ -64,8 +68,17 @@ declare const window: Window & {
 };
 
 const props = defineProps<{
+  mode?: 'subpanel' | 'standalone';
   sourceId: string;
   sourceTitle: string;
+  editingCitation?: {
+    id: string;
+    page: string;
+    confidence: number;
+    transcription: string;
+    notes: string;
+    date_accessed: string;
+  } | null;
   eventId?: string;
   personId?: string;
   relationshipId?: string;
@@ -81,32 +94,44 @@ const emit = defineEmits<{
 const pageRef = ref<HTMLInputElement | null>(null);
 
 const form = reactive({
-  page: '',
-  confidence: 2 as 0 | 1 | 2 | 3,
-  transcription: '',
-  notes: '',
-  date_accessed: new Date().toISOString().slice(0, 10),
+  page: props.editingCitation?.page ?? '',
+  confidence: (props.editingCitation?.confidence ?? 2) as 0 | 1 | 2 | 3,
+  transcription: props.editingCitation?.transcription ?? '',
+  notes: props.editingCitation?.notes ?? '',
+  date_accessed: props.editingCitation?.date_accessed ?? new Date().toISOString().slice(0, 10),
 });
+
+const mode = props.mode ?? 'subpanel';
 
 onMounted(() => nextTick(() => pageRef.value?.focus()));
 
 async function save() {
   if (!window.api) return;
   try {
-    const data: Record<string, unknown> = {
-      source_id: props.sourceId,
-      page: form.page,
-      confidence: form.confidence,
-      transcription: form.transcription,
-      notes: form.notes,
-      date_accessed: form.date_accessed,
-    };
-    if (props.eventId)        data.event_id        = props.eventId;
-    if (props.personId)       data.person_id       = props.personId;
-    if (props.relationshipId) data.relationship_id = props.relationshipId;
-    if (props.placeId)        data.place_id        = props.placeId;
+    if (props.editingCitation) {
+      await window.api.citations.update(props.editingCitation.id, {
+        page: form.page,
+        confidence: form.confidence,
+        transcription: form.transcription,
+        notes: form.notes,
+        date_accessed: form.date_accessed,
+      });
+    } else {
+      const data: Record<string, unknown> = {
+        source_id: props.sourceId,
+        page: form.page,
+        confidence: form.confidence,
+        transcription: form.transcription,
+        notes: form.notes,
+        date_accessed: form.date_accessed,
+      };
+      if (props.eventId)        data.event_id        = props.eventId;
+      if (props.personId)       data.person_id       = props.personId;
+      if (props.relationshipId) data.relationship_id = props.relationshipId;
+      if (props.placeId)        data.place_id        = props.placeId;
 
-    await window.api.citations.create(data);
+      await window.api.citations.create(data);
+    }
     emit('saved');
   } catch (err) {
     console.error('[CitationModal] save failed:', err);
