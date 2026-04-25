@@ -24,10 +24,10 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 const reports = [
-  { slug: 'a-life', title: t('reports.aLife'), icon: '📖' },
-  { slug: 'your-ancestors', title: t('reports.yourAncestors'), icon: '🌳' },
-  { slug: 'life-on-one-page', title: t('reports.lifeOnOnePage'), icon: '📄' },
-  { slug: 'photo-album', title: t('reports.photoAlbum'), icon: '📷' },
+  { slug: 'a-life', title: t('reports.alife.title'), icon: '📖' },
+  { slug: 'your-ancestors', title: t('reports.yourAncestors.tabTitle'), icon: '🌳' },
+  { slug: 'life-on-one-page', title: t('reports.onePage.title'), icon: '📄' },
+  { slug: 'photo-album', title: t('reports.photoAlbum.tabTitle'), icon: '📷' },
 ];
 </script>
 

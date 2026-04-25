@@ -905,15 +905,6 @@ export default {
       captions: 'Photo captions',
       photoNotes: 'Photo notes',
     },
-    aLife: 'A Life',
-    yourAncestors: 'Your Ancestors',
-    lifeOnOnePage: 'Life on One Page',
-    photoAlbum: 'Photo Album',
-    pedigreeChart: 'Pedigree Chart',
-    hourglassChart: 'Hourglass Chart',
-    descendantChart: 'Descendant Chart',
-    fanChart: 'Fan Chart',
-    timelineChart: 'Timeline',
     relations: {
       father: 'Father',
       mother: 'Mother',
@@ -1131,6 +1122,7 @@ export default {
     siteTitle: 'Site title:',
     exporting: 'Exporting…',
     exportedTo: 'Exported to',
+    bundleMissing: 'Website bundle not built. Run "npm run build:static" in the project directory first.',
   },
   website: {
     reportsHint: 'Click a report to read it.',

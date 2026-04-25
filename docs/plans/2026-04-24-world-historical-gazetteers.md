@@ -421,17 +421,54 @@ git commit -m "feat(gazetteers): register world-historical point gazetteer"
 
 ---
 
-### Task 5: Build boundary gazetteer script
+### ~~Task 5: Build boundary gazetteer script (Wikidata P3896 — ABANDONED)~~
+
+**Abandoned:** Wikidata P3896 (geoshape) coverage for historical states turned out to be essentially zero — fewer than 15 entities across all of Wikidata history, and none of the genealogically relevant ones. The script `scripts/build-world-historical-boundaries.ts` was written for this approach and is committed, but should be deleted. See Task 5B below for the replacement plan.
+
+---
+
+### Task 5B: Delete the abandoned Wikidata boundary script
+
+- [ ] **Step 1: Delete the script and commit**
+
+```bash
+git rm scripts/build-world-historical-boundaries.ts
+git commit -m "chore(gazetteers): remove world-historical-boundaries script (Wikidata P3896 has no coverage)"
+```
+
+---
+
+### Task 5C: Build boundary gazetteer from historical-basemaps *(BLOCKED)*
+
+**Blocker — license:** The best available source for genealogy-era historical boundaries (1500–2000) is [aourednik/historical-basemaps](https://github.com/aourednik/historical-basemaps). It has 20+ GeoJSON snapshots covering that window with all major dissolved states (Ottoman Empire, Austro-Hungarian Empire, Russian Empire, Holy Roman Empire, German Empire, etc.). The license is currently GPL-3.0, which is incompatible with bundling into a non-GPL app.
+
+A GitHub issue has been drafted asking the author to re-license the data under CC BY or CC0, referencing the unanswered 2017 request in [issue #3](https://github.com/aourednik/historical-basemaps/issues/3). The issue cannot be filed until the app is public. Once filed, resume this task based on the author's response.
+
+**Other candidates evaluated and ruled out:**
+
+| Source | License | Why ruled out |
+|--------|---------|---------------|
+| Wikidata P3896 + Wikimedia Maps | CC0 | Zero coverage for historical states |
+| CShapes 2.0 (ETH Zurich) | CC BY-NC-SA 4.0 | NC clause; also only covers 1886–2019 (misses Ottoman Empire, Russian Empire in their prime) |
+| OpenHistoricalMap | CC0 | Coverage too sparse; planet dump is 768 MB PBF requiring osmium (not TypeScript-friendly); Overpass instance unreliable |
+| Natural Earth | CC0 | Modern boundaries only, no historical layers |
+
+**Build approach (once license is resolved):**
+
+The historical-basemaps repo contains one GeoJSON `FeatureCollection` per time snapshot (e.g. `geojson/1500.geojson`, `geojson/1914.geojson`). Each feature has a `NAME` property. The build script will:
+
+1. Download all snapshot files in the 1500–2000 range from raw GitHub URLs
+2. Collect all unique `NAME` values across snapshots, along with their polygons
+3. Per entity: keep the polygon from the snapshot where it is largest (best representative extent), compute centroid, round coordinates to 4 decimal places
+4. Filter out entities that are present in `world-countries` or `world-admin1` (i.e. states that still exist) — boundaries for living states are already covered
+5. Emit a flat `world-historical-boundaries` gazetteer (same structure as other boundary gazetteers)
 
 **Files:**
-- Create: `scripts/build-world-historical-boundaries.ts`
+- Delete: `scripts/build-world-historical-boundaries.ts` (done in Task 5B)
+- Create: `scripts/build-world-historical-boundaries.ts` (new version using historical-basemaps)
+- Generated: `src/api/place-gazetteers/data/world-historical-boundaries.json`
 
-**Background:** Wikidata `P3896` (geoshape) declares that an entity has a geoshape file on Wikimedia Commons. The Wikimedia Maps geoshape API serves these as GeoJSON:
-`GET https://maps.wikimedia.org/geoshape?getgeojson=1&ids=Q15180`
-Returns `{ type: "FeatureCollection", features: [...] }`. Empty features array = no boundary.
-Rate-limit to 500ms between requests. `sleep` is from `src/gazetteer-build/sparql.ts`.
-`computeCentroid(geometry)` returns `[lat, lon]` from `src/gazetteer-build/geo.ts`.
-`round4` rounds to 4 decimal places (~11m accuracy, matching other boundary gazetteers).
+**Background:** `computeCentroid(geometry)` from `src/gazetteer-build/geo.ts`. `round4` rounds to 4 decimal places. The `GazetteerGeometry` type accepts `Polygon` and `MultiPolygon`. The snapshot files use `EPSG:4326` so no reprojection needed.
 
 - [ ] **Step 1: Write the script**
 
@@ -598,59 +635,49 @@ git commit -m "feat(gazetteers): add world-historical-boundaries build script"
 
 ---
 
-### Task 6: Run boundary script and verify output
+### Task 6: Write and run the historical-basemaps boundary script *(BLOCKED — see Task 5C)*
 
 **Files:**
+- Create: `scripts/build-world-historical-boundaries.ts` (new version)
 - Generated: `src/api/place-gazetteers/data/world-historical-boundaries.json`
 
-**Note:** This script fetches boundaries one at a time at 500ms/request. With ~50–300 candidates (most dissolved entities lack P3896), expect 1–3 minutes total.
+Once the author confirms a CC-compatible license, write the script per the design in Task 5C, then:
 
-- [ ] **Step 1: Run the script**
+- [ ] **Step 1: Write the script** (follow Task 5C build approach)
+
+- [ ] **Step 2: Commit the script**
+
+```bash
+git add scripts/build-world-historical-boundaries.ts
+git commit -m "feat(gazetteers): add world-historical-boundaries build script (historical-basemaps source)"
+```
+
+- [ ] **Step 3: Run the script**
 
 ```bash
 npx tsx scripts/build-world-historical-boundaries.ts
 ```
 
-Expected output:
-```
-Building world-historical-boundaries gazetteer...
-
-Querying Wikidata for dissolved entities with geoshapes (P3896)...
-  NN candidates
-
-Fetching geoshapes from Wikimedia Maps (500ms/request)...
-  20/NN fetched, NN with geometry
-  ...
-
-Results: NN with boundaries, NN skipped
-Written: world-historical-boundaries.json (NNN KB, NN entities)
-Done!
-```
-
-If candidates = 0: the SPARQL query may have timed out. Re-run once.
-If all fetches return null geometry: check the Wikimedia Maps API URL manually:
-  `curl "https://maps.wikimedia.org/geoshape?getgeojson=1&ids=Q15180"` (Soviet Union)
-  Should return non-empty features array.
-
-- [ ] **Step 2: Spot-check output**
+- [ ] **Step 4: Spot-check output**
 
 ```bash
 node -e "
 const g = require('./src/api/place-gazetteers/data/world-historical-boundaries.json');
 const c = g.root.children;
 console.log('Total entities with boundaries:', c.length);
-const su = c.find(n => n.name === 'Soviet Union');
+const su = c.find(n => n.name.includes('Soviet') || n.name.includes('USSR'));
 if (su) {
-  console.log('Soviet Union geometry type:', su.geometry?.type);
-  console.log('Soviet Union lat/lon:', su.lat, su.lon);
+  console.log('Soviet Union match:', su.name, 'geometry:', su.geometry?.type, su.lat, su.lon);
 } else {
-  console.log('Soviet Union: not found (may lack P3896 in Wikidata)');
+  console.log('Soviet Union: not found — check name matching');
 }
 console.log('First 5:', c.slice(0, 5).map(n => n.name));
 "
 ```
 
-- [ ] **Step 3: Commit generated data**
+Expected: >50 entities with geometry, key empires present.
+
+- [ ] **Step 5: Commit generated data**
 
 ```bash
 git add src/api/place-gazetteers/data/world-historical-boundaries.json

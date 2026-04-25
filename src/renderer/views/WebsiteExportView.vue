@@ -81,6 +81,9 @@
     <p v-if="lastOutput" class="success-hint">
       {{ $t('htmlSite.exportedTo') }} <code>{{ lastOutput }}</code>
     </p>
+    <p v-if="bundleMissing" class="error-hint">
+      {{ $t('htmlSite.bundleMissing') }}
+    </p>
   </div>
 </template>
 
@@ -105,6 +108,7 @@ const includePrints = ref(true);
 const siteTitle = ref('Family Tree');
 const exporting = ref(false);
 const lastOutput = ref<string | null>(null);
+const bundleMissing = ref(false);
 
 onMounted(async () => {
   const id = await window.api.db.getSetting('default_person_id');
@@ -114,6 +118,7 @@ onMounted(async () => {
 async function exportSite() {
   exporting.value = true;
   lastOutput.value = null;
+  bundleMissing.value = false;
   try {
     const res = await window.api.website.export({
       siteTitle: siteTitle.value,
@@ -128,8 +133,10 @@ async function exportSite() {
         excludeLiving: excludeLiving.value,
         redactLiving: redactLiving.value,
       },
-    }) as { canceled: boolean; outputDir?: string } | null;
-    if (res && !res.canceled && res.outputDir) {
+    }) as { canceled?: boolean; outputDir?: string; bundleMissing?: boolean } | null;
+    if (res?.bundleMissing) {
+      bundleMissing.value = true;
+    } else if (res && !res.canceled && res.outputDir) {
       lastOutput.value = res.outputDir;
     }
   } catch (e) {
@@ -165,6 +172,9 @@ async function exportSite() {
 }
 .success-hint {
   color: var(--success-text);
+}
+.error-hint {
+  color: var(--error-text);
 }
 .radio-label, .check-label {
   display: flex;

@@ -24,12 +24,12 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 const prints = [
-  { slug: 'pedigree', title: t('reports.pedigreeChart'), icon: '🌲' },
-  { slug: 'hourglass', title: t('reports.hourglassChart'), icon: '⏳' },
-  { slug: 'descendant', title: t('reports.descendantChart'), icon: '👨‍👩‍👧‍👦' },
-  { slug: 'fan', title: t('reports.fanChart'), icon: '🎴' },
-  { slug: 'timeline', title: t('reports.timelineChart'), icon: '📅' },
-  { slug: 'life-on-one-page', title: t('reports.lifeOnOnePage'), icon: '📄' },
+  { slug: 'pedigree', title: t('reports.tabPedigreeChart'), icon: '🌲' },
+  { slug: 'hourglass', title: t('reports.tabHourglassChart'), icon: '⏳' },
+  { slug: 'descendant', title: t('reports.tabDescendantChart'), icon: '👨‍👩‍👧‍👦' },
+  { slug: 'fan', title: t('reports.tabFanChart'), icon: '🎴' },
+  { slug: 'timeline', title: t('reports.tabTimeline'), icon: '📅' },
+  { slug: 'life-on-one-page', title: t('reports.onePage.title'), icon: '📄' },
 ];
 </script>
 

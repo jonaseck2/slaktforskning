@@ -35,9 +35,10 @@ export function registerWebsiteExportHandlers(): void {
     const bundleSrc = app.isPackaged
       ? path.join(process.resourcesPath, 'dist-static')
       : path.join(__dirname, '../..', 'dist-static');
-    if (fs.existsSync(bundleSrc)) {
-      fs.cpSync(bundleSrc, out, { recursive: true });
+    if (!fs.existsSync(bundleSrc)) {
+      return { bundleMissing: true };
     }
+    fs.cpSync(bundleSrc, out, { recursive: true });
 
     // 2. Build snapshot via worker thread
     const snapshot = await callWorker('website:buildSnapshot', {
