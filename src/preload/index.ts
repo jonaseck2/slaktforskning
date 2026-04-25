@@ -202,9 +202,10 @@ const api = {
     delete: mutating((id: string) => ipcRenderer.invoke('mediaRegions:delete', id)),
   },
   export: {
-    htmlSiteSelectDir: () => ipcRenderer.invoke('export:htmlSiteSelectDir'),
-    htmlSite: (opts: unknown) => ipcRenderer.invoke('export:htmlSite', opts),
     openFolder: (folderPath: string) => ipcRenderer.invoke('export:openFolder', folderPath),
+  },
+  website: {
+    export: (opts: unknown) => ipcRenderer.invoke('website:export', opts),
   },
   print: {
     print: () => ipcRenderer.invoke('print:print'),

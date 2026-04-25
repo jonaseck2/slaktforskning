@@ -5,10 +5,10 @@
       <thead>
         <tr>
           <th class="th-shrink"></th>
-          <th class="th-shrink"></th>
+          <th v-if="!props.readonly" class="th-shrink"></th>
           <th>{{ $t('media.title_label') }}</th>
           <th class="th-shrink">{{ $t('media.format') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -18,14 +18,14 @@
             <span v-else-if="isImage(m.format)" class="row-thumb-placeholder"></span>
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
-          <td class="td-shrink order-cell">
+          <td v-if="!props.readonly" class="td-shrink order-cell">
             <span v-if="idx === 0" class="profile-badge">{{ $t('media.profile') }}</span>
             <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')">&#9650;</button>
             <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')">&#9660;</button>
           </td>
           <td>{{ mediaDisplayName(m.title, m.file_ref) }}</td>
           <td class="td-shrink">{{ m.format || '—' }}</td>
-          <td class="actions-cell">
+          <td v-if="!props.readonly" class="actions-cell">
             <button v-if="m.file_ref" class="btn-sm" @click.stop="openFile(m.id)">{{ $t('media.open') }}</button>
             <button class="btn-sm btn-delete" @click.stop="unlink(m.link_id)">&#10005;</button>
           </td>
@@ -61,6 +61,7 @@ export interface MediaItem {
 const props = defineProps<{
   entityType: 'person' | 'place' | 'event' | 'relationship' | 'source';
   entityId: string;
+  readonly?: boolean;
 }>();
 
 const router = useRouter();

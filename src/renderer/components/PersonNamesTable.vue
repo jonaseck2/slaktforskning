@@ -3,13 +3,13 @@
     <div
       v-for="name in names"
       :key="name.id"
-      class="name-row clickable-row"
-      tabindex="0"
-      role="button"
-      :aria-label="$t('a11y.editItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
-      @click="$emit('edit', name)"
-      @keydown.enter="$emit('edit', name)"
-      @keydown.space.prevent="$emit('edit', name)"
+      :class="['name-row', readonly ? '' : 'clickable-row']"
+      :tabindex="readonly ? undefined : 0"
+      :role="readonly ? undefined : 'button'"
+      :aria-label="readonly ? undefined : $t('a11y.editItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
+      @click="!readonly && $emit('edit', name)"
+      @keydown.enter="!readonly && $emit('edit', name)"
+      @keydown.space.prevent="!readonly && $emit('edit', name)"
     >
       <div class="name-content">
         <span class="name-full">
@@ -24,7 +24,7 @@
         <span class="type-badge">{{ $t('nameTypes.' + name.name_type) }}</span>
         <span v-if="name.sort_order === 0" class="primary-star" title="Primary name">★</span>
         <button
-          v-if="name.sort_order !== 0"
+          v-if="name.sort_order !== 0 && !readonly"
           class="btn-sm btn-delete"
           :aria-label="$t('a11y.deleteItem', { item: ((name.given_name || '') + ' ' + (name.surname || '')).trim() })"
           @click.stop="$emit('delete', name.id)"
@@ -51,7 +51,7 @@ export interface NameRow {
   nickname?: string | null;
 }
 
-defineProps<{ names: NameRow[] }>();
+const { readonly } = defineProps<{ names: NameRow[]; readonly?: boolean }>();
 defineEmits<{
   edit: [name: NameRow];
   delete: [nameId: string];

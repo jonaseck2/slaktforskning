@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.146.0 — App-look website export
+
+The website export (Present → Website) now produces a read-only Vue SPA that visually matches the application — same sidebar, search, design tokens, detail layouts — minus editing affordances. Features: focus-person + N ancestor / M descendant generation scope filter; living-person privacy controls (exclude entirely or redact to decade-only birth year); optional media (full + thumbnail), pre-rendered keepsake reports, and frameable chart prints. The old standalone HTML generator has been removed.
+
 ## v0.145.0 — universal side panels
 
 - feat: every entity-list view (persons, relationships, sources, places, groups, research tasks) now hosts its own resizable side panel — no DetailView components remain

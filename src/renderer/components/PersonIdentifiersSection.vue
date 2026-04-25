@@ -1,19 +1,19 @@
 <template>
   <div>
-    <SectionEmpty v-if="identifiers.length === 0" :message="$t('empty.identifiers')" :action-label="$t('empty.addIdentifier')" @action="openAddForm()" />
+    <SectionEmpty v-if="identifiers.length === 0" :message="$t('empty.identifiers')" :action-label="!props.readonly ? $t('empty.addIdentifier') : ''" @action="openAddForm()" />
     <table v-else class="data-table">
       <thead>
         <tr>
           <th class="th-shrink">{{ $t('identifiers.type') }}</th>
           <th>{{ $t('identifiers.value') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="ident in identifiers" :key="ident.id">
           <td class="td-type"><span class="type-badge">{{ $t('identifiers.types.' + ident.identifier_type) }}</span></td>
           <td>{{ ident.identifier_value }}</td>
-          <td class="actions-cell">
+          <td v-if="!props.readonly" class="actions-cell">
             <button class="btn-sm btn-delete" @click="remove(ident.id)">✕</button>
           </td>
         </tr>
@@ -21,7 +21,7 @@
     </table>
 
     <PersonIdentifierModal
-      v-if="showAddForm"
+      v-if="showAddForm && !props.readonly"
       :person-id="personId"
       mode="standalone"
       @cancel="showAddForm = false"
@@ -42,7 +42,7 @@ export interface IdentifierRow {
   identifier_value: string;
 }
 
-const props = defineProps<{ personId: string }>();
+const props = defineProps<{ personId: string; readonly?: boolean }>();
 
 const identifiers = ref<IdentifierRow[]>([]);
 const showAddForm = ref(false);

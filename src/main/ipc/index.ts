@@ -12,6 +12,7 @@ import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
 import { registerUtilityHandlers } from './utility';
 import { registerGazetteerHandlers } from './gazetteers';
+import { registerWebsiteExportHandlers } from './website-export';
 
 export function registerIpcHandlers(): void {
   // Start the DB worker — fires and forgets; callWorker queues until worker signals ready
@@ -30,4 +31,5 @@ export function registerIpcHandlers(): void {
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerUtilityHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerGazetteerHandlers(getDb, wrapHandler);
+  registerWebsiteExportHandlers();
 }

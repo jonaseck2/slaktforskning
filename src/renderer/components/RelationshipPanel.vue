@@ -21,7 +21,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('relationshipDetail.title')" :collapsed="!sections.relationship" @toggle="toggleSection('relationship')" />
         <div v-if="sections.relationship" class="panel-section-body">
-          <div class="compact-form">
+          <div v-if="!props.readonly" class="compact-form">
             <div class="compact-field">
               <label class="compact-label">{{ $t('common.type') }}</label>
               <select
@@ -87,6 +87,24 @@
               />
             </div>
           </div>
+          <div v-else class="compact-form">
+            <div class="compact-field">
+              <span class="compact-label">{{ $t('common.type') }}</span>
+              <span class="readonly-value">{{ $t('relTypes.' + editFields.type) }}</span>
+            </div>
+            <div v-if="editFields.subtype" class="compact-field">
+              <span class="compact-label">{{ $t('relationshipDetail.subtype') }}</span>
+              <span class="readonly-value">
+                <template v-if="editFields.type === 'couple'">{{ $t('coupleSubtypes.' + editFields.subtype) }}</template>
+                <template v-else-if="editFields.type === 'parent_child'">{{ $t('parentChildSubtypes.' + editFields.subtype) }}</template>
+                <template v-else>{{ editFields.subtype }}</template>
+              </span>
+            </div>
+            <div v-if="editFields.notes" class="compact-field">
+              <span class="compact-label">{{ $t('common.notes') }}</span>
+              <span class="readonly-value">{{ editFields.notes }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -95,12 +113,12 @@
         <SectionHeader
           :title="$t('panel.events')"
           :collapsed="!sections.events"
-          :action-label="'+ ' + $t('events.event')"
+          :action-label="!props.readonly ? '+ ' + $t('events.event') : undefined"
           @toggle="toggleSection('events')"
           @action="eventListRef?.openAddForm()"
         />
         <div v-if="sections.events" class="panel-section-body">
-          <EventList ref="eventListRef" :relationship-id="relationship.id" hide-header />
+          <EventList ref="eventListRef" :relationship-id="relationship.id" :readonly="props.readonly" hide-header />
         </div>
       </div>
 
@@ -110,7 +128,7 @@
           :title="$t('sourceDetail.citations')"
           :count="citations.length"
           :collapsed="!sections.citations"
-          :action-label="'+ ' + $t('sourceDetail.addCitation')"
+          :action-label="!props.readonly ? '+ ' + $t('sourceDetail.addCitation') : undefined"
           @toggle="toggleSection('citations')"
           @action="showCitationForm = true"
         />
@@ -122,7 +140,7 @@
                 <th>{{ $t('citations.source') }}</th>
                 <th>{{ $t('citations.pageLocation') }}</th>
                 <th>{{ $t('citations.confidence') }}</th>
-                <th></th>
+                <th v-if="!props.readonly"></th>
               </tr>
             </thead>
             <tbody>
@@ -138,7 +156,7 @@
                     {{ $t('confidenceLevels.' + cit.confidence) }}
                   </span>
                 </td>
-                <td class="actions-cell">
+                <td v-if="!props.readonly" class="actions-cell">
                   <AppButton variant="ghost" size="sm" @click.stop="removeCitation(cit.id)">✕</AppButton>
                 </td>
               </tr>
@@ -152,7 +170,7 @@
         <SectionHeader
           :title="$t('media.title')"
           :collapsed="!sections.media"
-          :action-label="'+ ' + $t('media.attachShort')"
+          :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined"
           @toggle="toggleSection('media')"
           @action="mediaSectionRef?.attach()"
         />
@@ -164,7 +182,7 @@
 
     <!-- Add citation modal -->
     <CitationModal
-      v-if="showCitationForm && relationshipId"
+      v-if="!props.readonly && showCitationForm && relationshipId"
       mode="standalone"
       :relationship-id="relationshipId"
       @close="showCitationForm = false"
@@ -210,7 +228,7 @@ interface CitationRow {
   confidence: number | null;
 }
 
-const props = defineProps<{ relationshipId: string | null }>();
+const props = defineProps<{ relationshipId: string | null; readonly?: boolean }>();
 const emit = defineEmits<{ close: [] }>();
 
 const { t } = useI18n();
@@ -321,7 +339,7 @@ watch(() => props.relationshipId, load, { immediate: true });
 // ── Field updates ───────────────────────────────────────────────────────────
 
 async function saveField(field: keyof typeof editFields) {
-  if (!props.relationshipId || !relationship.value) return;
+  if (!props.relationshipId || !relationship.value || props.readonly) return;
   const val = editFields[field];
   if (val === (relationship.value as Record<string, unknown>)[field]) return;
   try {
@@ -483,6 +501,12 @@ function onCitationSaved() {
 .compact-control:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.readonly-value {
+  font-size: var(--font-xs);
+  color: var(--text-primary);
+  padding: var(--space-xs) 0;
 }
 
 .confidence-badge {

@@ -2,6 +2,7 @@
   <QualityIssuesTable
     :issues="issues"
     :clickable-when="hasFixAction"
+    :readonly="props.readonly"
     @row-click="onRowClick"
   />
 </template>
@@ -33,7 +34,7 @@ const FIX_ACTIONS: Record<string, FixAction> = {
   UNRELATED_PERSON: 'add-father',
 };
 
-const props = defineProps<{ personId: string }>();
+const props = defineProps<{ personId: string; readonly?: boolean }>();
 const emit = defineEmits<{
   fix: [action: FixAction];
 }>();
