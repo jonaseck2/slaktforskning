@@ -8,8 +8,8 @@
     <!-- Toolbar -->
     <div class="viewer-toolbar">
       <span class="viewer-counter">{{ currentIndex + 1 }} / {{ mediaItems.length }}</span>
-      <button class="viewer-close" :title="$t('common.close')" @click="emit('close')">✕</button>
     </div>
+    <button class="viewer-close" :title="$t('common.close')" @click="emit('close')">✕</button>
 
     <!-- Canvas -->
     <div
@@ -350,6 +350,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius-lg);
   outline: none;
@@ -376,6 +377,10 @@ onMounted(() => {
 }
 
 .viewer-close {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 10;
   background: none;
   border: none;
   padding: 2px 6px;
