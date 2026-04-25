@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   root: 'src/static',
   build: {
-    outDir: resolve('.vite/static'),
+    outDir: resolve(__dirname, 'dist-static'),
     emptyOutDir: true,
     target: 'es2022',
   },
