@@ -1,0 +1,274 @@
+<h2>C — Citation sub-panel flow</h2>
+<p class="subtitle">Search → ↩ → sub-panel opens, cursor lands on first field. Save closes it, cursor returns to search.</p>
+
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
+:root {
+  --event-bg: #fff7ed; --event-fg: #c2410c; --event-hd: #fff3e8; --event-border: #fed7aa;
+  --source-bg: #fdf4ff; --source-fg: #7e22ce; --source-hd: #faf5ff; --source-border: #e9d5ff;
+  --cite-bg: #f0fdf4; --cite-fg: #166534; --cite-border: #bbf7d0;
+}
+
+.scene {
+  background: rgba(0,0,0,0.2);
+  border-radius: 14px;
+  padding: 22px 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.18);
+  font-size: 12px;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 9px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+.header-left { display: flex; flex-direction: column; gap: 3px; }
+.panel-title { font-size: 13px; font-weight: 600; color: #111827; }
+.entity-label { font-size: 11px; font-weight: 700; }
+.close-x { font-size: 18px; color: #9ca3af; cursor: pointer; line-height: 1; }
+
+.panel-body { flex: 1; overflow-y: auto; }
+.fields-area { padding: 10px 14px 8px; }
+
+.f { margin-bottom: 8px; }
+.f:last-child { margin-bottom: 0; }
+.f .lbl { display: block; font-size: 10px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.inp { width: 100%; background: #f3f4f6; border: 1.5px solid #e5e7eb; border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #374151; }
+.inp.v { background: #fff; border-color: #d1d5db; color: #111827; }
+.inp.focused { background: #fff; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); color: #111827; }
+.inp.readonly { background: #f9fafb; border-color: #e5e7eb; color: #6b7280; }
+
+.section-header {
+  padding: 7px 14px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid var(--source-border);
+  background: var(--source-hd);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.section-left { display: flex; align-items: center; gap: 8px; }
+.section-title { font-size: 11px; font-weight: 700; color: var(--source-fg); }
+.section-count { font-size: 11px; font-weight: 700; color: var(--source-fg); opacity: 0.6; }
+.section-open  { font-size: 11px; font-weight: 600; color: var(--source-fg); opacity: 0.65; }
+
+.section-content { padding: 8px 14px 8px; }
+
+/* Search bar */
+.add-bar {
+  border: 1.5px solid #e5e7eb; border-radius: 6px;
+  padding: 6px 9px; margin-bottom: 6px; background: #f9fafb;
+  font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 6px;
+}
+.add-bar.focused {
+  border-color: #3b82f6; background: #fff;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12); color: #374151;
+}
+
+/* Dropdown */
+.dd {
+  border: 1px solid #e5e7eb; border-radius: 7px;
+  background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  overflow: hidden; margin-bottom: 6px;
+}
+.dd-row {
+  padding: 7px 11px; font-size: 12px; color: #374151; cursor: pointer;
+  border-bottom: 1px solid #fafafa;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dd-row:last-child { border-bottom: none; }
+.dd-row.hl { background: #eff6ff; color: #1d4ed8; }
+.dd-row.create { color: #2563eb; font-weight: 600; border-top: 1px solid #f0f0f0; }
+.dd-meta { font-size: 10px; color: #9ca3af; }
+.dd-key {
+  font-size: 10px; font-family: monospace; background: #f3f4f6;
+  border: 1px solid #e5e7eb; border-radius: 3px; padding: 1px 5px; color: #6b7280;
+}
+
+/* Source rows in list */
+.source-row {
+  display: flex; align-items: center;
+  padding: 5px 6px; border-radius: 6px; cursor: pointer; margin-bottom: 2px;
+}
+.source-row:hover { background: #f9fafb; }
+.source-main { flex: 1; min-width: 0; }
+.source-name { font-size: 12px; font-weight: 600; color: #111827; }
+.source-sub  { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.pull-arrow  { color: #cbd5e1; font-size: 14px; }
+
+/* Segmented control */
+.seg { display: flex; border: 1.5px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.seg .so { flex: 1; text-align: center; padding: 5px 0; font-size: 11px; color: #9ca3af; background: #f9fafb; border-right: 1px solid #e5e7eb; cursor: pointer; }
+.seg .so:last-child { border-right: none; }
+.seg .so.on { font-weight: 700; background: var(--cite-bg); color: var(--cite-fg); }
+
+.panel-footer {
+  display: flex; justify-content: flex-end; gap: 6px;
+  padding: 8px 14px; border-top: 1px solid #f3f4f6; flex-shrink: 0;
+}
+.btn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+.btn-primary { color: #fff; }
+.btn-ghost { background: #f3f4f6; color: #374151; }
+
+.flow-arrow {
+  align-self: center; font-size: 22px; color: rgba(255,255,255,0.4);
+  flex-shrink: 0; padding-top: 10px;
+}
+
+.step-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(255,255,255,0.45);
+  text-align: center; margin-bottom: 7px;
+}
+
+.col { display: flex; flex-direction: column; align-items: center; }
+</style>
+
+<!-- STATE 1: Search open -->
+<h3 style="text-align:center;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">① Type to search — ↩ on any result opens the sub-panel</h3>
+<div class="scene" style="margin-bottom:24px">
+
+  <div class="panel" style="width:268px">
+    <div class="panel-header" style="background:var(--event-hd);border-bottom:1px solid var(--event-border)">
+      <div class="header-left">
+        <span class="entity-label" style="color:var(--event-fg)">📅 Event</span>
+        <div class="panel-title">Marriage</div>
+      </div>
+      <span class="close-x">×</span>
+    </div>
+    <div class="panel-body">
+      <div class="fields-area">
+        <div class="f"><span class="lbl">Date</span><div class="inp v">1875-06-12</div></div>
+        <div class="f"><span class="lbl">Place</span><div class="inp v">Göteborg domkyrkoförs.</div></div>
+      </div>
+      <div class="section-header">
+        <div class="section-left">
+          <span class="section-title">📚 Sources</span>
+          <span class="section-count">0</span>
+        </div>
+        <span class="section-open">Open ›</span>
+      </div>
+      <div class="section-content">
+        <div class="add-bar focused">Husförhörslängd…</div>
+        <div class="dd">
+          <div class="dd-row hl">Husförhörslängd 1870–1880 <span class="dd-key">↩</span></div>
+          <div class="dd-row">Husförhörslängd 1855–1865</div>
+          <div class="dd-row">Husförhörslängd 1840–1855</div>
+          <div class="dd-row create">+ Create new source <span class="dd-key">↩</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--event-fg)">Save</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATE 2: Citation sub-panel open -->
+<h3 style="text-align:center;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">② ↩ — Citation sub-panel opens, cursor on Page. Save closes it, cursor returns to search bar.</h3>
+<div class="scene">
+
+  <!-- Event panel, dimmed slightly -->
+  <div class="panel" style="width:252px;opacity:0.55">
+    <div class="panel-header" style="background:var(--event-hd);border-bottom:1px solid var(--event-border)">
+      <div class="header-left">
+        <span class="entity-label" style="color:var(--event-fg)">📅 Event</span>
+        <div class="panel-title">Marriage</div>
+      </div>
+      <span class="close-x">×</span>
+    </div>
+    <div class="panel-body">
+      <div class="fields-area">
+        <div class="f"><span class="lbl">Date</span><div class="inp v">1875-06-12</div></div>
+        <div class="f"><span class="lbl">Place</span><div class="inp v">Göteborg domkyrkoförs.</div></div>
+      </div>
+      <div class="section-header">
+        <div class="section-left">
+          <span class="section-title">📚 Sources</span>
+          <span class="section-count">0</span>
+        </div>
+        <span class="section-open">Open ›</span>
+      </div>
+      <div class="section-content">
+        <div class="add-bar">Search or add source…</div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--event-fg)">Save</button>
+    </div>
+  </div>
+
+  <!-- Citation sub-panel, fully active -->
+  <div class="panel" style="width:240px">
+    <div class="panel-header" style="background:var(--cite-bg);border-bottom:1px solid var(--cite-border)">
+      <div class="header-left">
+        <span class="entity-label" style="color:var(--cite-fg)">🔗 Citation</span>
+        <div class="panel-title">Husförhörslängd 1870–1880</div>
+      </div>
+      <span class="close-x">×</span>
+    </div>
+    <div class="panel-body">
+      <div class="fields-area">
+        <div class="f">
+          <span class="lbl">Source</span>
+          <div class="inp readonly">Husförhörslängd 1870–1880</div>
+        </div>
+        <div class="f">
+          <span class="lbl">Page / location</span>
+          <input class="inp focused" value="34r" />
+        </div>
+        <div class="f">
+          <span class="lbl">Confidence</span>
+          <div class="seg">
+            <div class="so">Unreliable</div>
+            <div class="so">Questionable</div>
+            <div class="so on">Secondary</div>
+            <div class="so">Primary</div>
+          </div>
+        </div>
+        <div class="f">
+          <span class="lbl">Transcription</span>
+          <div class="inp" style="color:#9ca3af;min-height:40px">optional…</div>
+        </div>
+        <div class="f">
+          <span class="lbl">Notes</span>
+          <div class="inp" style="color:#9ca3af">optional…</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--cite-fg)">Save ↩</button>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:18px;max-width:580px;margin-left:auto;margin-right:auto;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px">
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;margin-bottom:6px">The rule</div>
+  <div style="font-size:12px;color:#374151;line-height:1.7">
+    Each entity owns its fields. <strong>Citation owns page, confidence, transcription</strong> — these never leak into the Event or Source panel.<br>
+    The Source panel owns title, type, repository — clean separation.<br>
+    Sub-panels open and close cleanly; focus always returns to where you were.
+  </div>
+</div>
