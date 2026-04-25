@@ -6,7 +6,7 @@
         <th class="th-shrink">{{ $t('researchTasks.status') }}</th>
         <th v-if="showPerson" class="th-person">{{ $t('persons.title') }}</th>
         <th>{{ $t('researchTasks.task') }}</th>
-        <th class="actions-cell">{{ $t('common.actions') }}</th>
+        <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -32,8 +32,8 @@
         <td><span :class="['priority-badge', 'priority-' + task.priority]">{{ task.priority }}</span></td>
         <td>
           <span
-            :class="['status-chip', 'status-' + task.status]"
-            @click.stop="cycleStatus(task)"
+            :class="['status-chip', 'status-' + task.status, { 'status-readonly': props.readonly }]"
+            @click.stop="!props.readonly && cycleStatus(task)"
             :title="$t('researchTasks.status')"
           >{{ $t('researchTasks.statuses.' + task.status) }}</span>
         </td>
@@ -47,7 +47,7 @@
           <span v-else>—</span>
         </td>
         <td class="task-text">{{ task.task }}</td>
-        <td class="actions-cell">
+        <td v-if="!props.readonly" class="actions-cell">
           <button class="btn-sm btn-delete" @click.stop="handleDelete(task.id)">✕</button>
         </td>
       </tr>
@@ -78,9 +78,11 @@ const props = withDefaults(defineProps<{
   tasks: ResearchTaskRow[];
   showPerson?: boolean;
   selectedId?: string | null;
+  readonly?: boolean;
 }>(), {
   showPerson: false,
   selectedId: null,
+  readonly: false,
 });
 
 const emit = defineEmits<{ updated: []; select: [id: string] }>();
@@ -147,6 +149,7 @@ async function handleDelete(id: string) {
   white-space: nowrap;
 }
 .status-chip:hover { opacity: 0.8; }
+.status-readonly { cursor: default; pointer-events: none; }
 .status-open { background: #dbeafe; color: #1d4ed8; }
 .status-in_progress { background: #fef3c7; color: #92400e; }
 .status-done { background: #d1fae5; color: #065f46; }
