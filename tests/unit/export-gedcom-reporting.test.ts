@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createPerson } from '../../src/api/persons';
-import { createGroup, addGroupMember } from '../../src/api/groups';
-import { createResearchTask } from '../../src/api/research_tasks';
+import { createGroup, addGroupLink } from '../../src/api/groups';
+import { createResearchTask, addTaskLink } from '../../src/api/research_tasks';
 import { createRelationship } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { exportGedcom } from '../../src/gedcom/exporter';
@@ -12,7 +12,8 @@ describe('GEDCOM export — ExportReport', () => {
   it('reports excluded Research Tasks', () => {
     const db = createTestDb();
     const p = createPerson(db, { given_name: 'Lars' });
-    createResearchTask(db, { task: 'Find birth record', person_id: p.id });
+    const rt = createResearchTask(db, { task: 'Find birth record' });
+    addTaskLink(db, rt.id, 'person', p.id);
     const { report } = exportGedcom(db);
     const entry = report.excluded.find(e => e.category.includes('Research'));
     expect(entry).toBeTruthy();
@@ -23,7 +24,7 @@ describe('GEDCOM export — ExportReport', () => {
     const db = createTestDb();
     const p = createPerson(db, { given_name: 'Lars' });
     const g = createGroup(db, { name: 'Emigrants' });
-    addGroupMember(db, g.id, p.id);
+    addGroupLink(db, g.id, 'person', p.id);
     const { report } = exportGedcom(db);
     const entry = report.excluded.find(e => e.category.includes('Group'));
     expect(entry).toBeTruthy();

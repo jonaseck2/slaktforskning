@@ -4,8 +4,8 @@ import { createRelationship, addEventParticipant } from '../../src/api/relations
 import { createEvent } from '../../src/api/events';
 import { createPlace, findOrCreatePlace } from '../../src/api/places';
 import { createSource, createCitation } from '../../src/api/sources';
-import { createGroup, addGroupMember } from '../../src/api/groups';
-import { createResearchTask } from '../../src/api/research_tasks';
+import { createGroup, addGroupLink } from '../../src/api/groups';
+import { createResearchTask, addTaskLink } from '../../src/api/research_tasks';
 import {
   getPersonSummary,
   getFamilyUnit,
@@ -41,9 +41,10 @@ describe('getPersonSummary', () => {
     createCitation(db, { source_id: source.id, person_id: person.id, page: 'p. 42' });
 
     const group = createGroup(db, { name: 'Test Group' });
-    addGroupMember(db, group.id, person.id);
+    addGroupLink(db, group.id, 'person', person.id);
 
-    createResearchTask(db, { task: 'Find death record', person_id: person.id });
+    const rt = createResearchTask(db, { task: 'Find death record' });
+    addTaskLink(db, rt.id, 'person', person.id);
 
     const summary = getPersonSummary(db, person.id);
     expect(summary).not.toBeNull();

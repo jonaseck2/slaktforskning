@@ -105,6 +105,8 @@ export function updatePlace(
 }
 
 export function deletePlace(db: Database, id: string): boolean {
+  runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
+  runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
   return runSqlChanges(db, 'DELETE FROM places WHERE id = ?', [id]) > 0;
 }
 

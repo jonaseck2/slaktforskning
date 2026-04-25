@@ -5,8 +5,8 @@ import { createPerson, addPersonName, getPersonNames, getPerson, addPersonIdenti
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant, getEventParticipants, createRelationship, getRelationshipsOfPerson } from '../../src/api/relationships';
 import { createSource, createCitation, getCitationsForPerson } from '../../src/api/sources';
-import { createGroup, addGroupMember, getGroupsForPerson } from '../../src/api/groups';
-import { createResearchTask, getResearchTasksForPerson } from '../../src/api/research_tasks';
+import { createGroup, addGroupLink, getGroupsForPerson } from '../../src/api/groups';
+import { createResearchTask, getResearchTasksForPerson, addTaskLink } from '../../src/api/research_tasks';
 import { createTestDb } from './helpers';
 
 let db: Database;
@@ -129,10 +129,11 @@ describe('mergePersons', () => {
 
     // Group membership
     const group = createGroup(db, { name: 'Test Group' });
-    addGroupMember(db, group.id, source.id);
+    addGroupLink(db, group.id, 'person', source.id);
 
-    // Research task
-    createResearchTask(db, { task: 'Find birth record', person_id: source.id });
+    // Research task linked to person
+    const rt = createResearchTask(db, { task: 'Find birth record' });
+    addTaskLink(db, rt.id, 'person', source.id);
 
     const result = mergePersons(db, target.id, source.id);
 
@@ -177,8 +178,8 @@ describe('mergePersons', () => {
     const target = createPerson(db, { given_name: 'Erik', surname: 'A' });
     const source = createPerson(db, { given_name: 'Erik', surname: 'A' });
     const group = createGroup(db, { name: 'Test Group' });
-    addGroupMember(db, group.id, target.id);
-    addGroupMember(db, group.id, source.id);
+    addGroupLink(db, group.id, 'person', target.id);
+    addGroupLink(db, group.id, 'person', source.id);
 
     const result = mergePersons(db, target.id, source.id);
     expect(result.moved.group_members).toBe(0); // both in same group

@@ -50,6 +50,8 @@ export function countMedia(db: Database): number {
 }
 
 export function deleteMedia(db: Database, id: string): boolean {
+  runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
+  runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
   return runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id]) > 0;
 }
 
