@@ -69,7 +69,7 @@
         <MediaCaption
           v-if="imageUrl && (captionFaceTags.length > 0 || currentItem?.notes)"
           class="viewer-caption"
-          :style="{ width: imageDisplayWidth ? imageDisplayWidth + 'px' : undefined }"
+          :style="captionStyle"
           :face-tags="captionFaceTags"
           :notes="currentItem?.notes ?? null"
           @person-click="onCaptionPersonClick"
@@ -177,6 +177,7 @@ const loading = ref(false);
 const imgNaturalWidth = ref(0);
 const imgNaturalHeight = ref(0);
 const imageDisplayWidth = ref(0);
+const imageDisplayHeight = ref(0);
 const enrichedRegions = ref<EnrichedRegion[]>([]);
 
 const zoomState = useImageZoom();
@@ -286,6 +287,7 @@ function onImageLoad() {
   imgNaturalWidth.value = img.naturalWidth;
   imgNaturalHeight.value = img.naturalHeight;
   imageDisplayWidth.value = img.offsetWidth;
+  imageDisplayHeight.value = img.offsetHeight;
   observeImageSize(img);
 }
 
@@ -294,10 +296,24 @@ function observeImageSize(img: HTMLImageElement) {
   imgResizeObserver?.disconnect();
   imgResizeObserver = new ResizeObserver(() => {
     imageDisplayWidth.value = img.offsetWidth;
+    imageDisplayHeight.value = img.offsetHeight;
   });
   imgResizeObserver.observe(img);
 }
 onUnmounted(() => imgResizeObserver?.disconnect());
+
+const captionStyle = computed(() => {
+  const w = imageDisplayWidth.value;
+  const h = imageDisplayHeight.value;
+  if (!w) return undefined;
+  const zoom = zoomState.zoom.value;
+  const offsetX = zoomState.panX.value + (w * (zoom - 1)) / 2;
+  const offsetY = zoomState.panY.value + h * (zoom - 1);
+  return {
+    width: w + 'px',
+    transform: `translate(${offsetX}px, ${offsetY}px)`,
+  };
+});
 
 function onCanvasWheel(e: WheelEvent) {
   if (!canvasEl.value) return;
