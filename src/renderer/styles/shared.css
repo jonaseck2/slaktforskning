@@ -1017,3 +1017,135 @@ html.screen-reader h1:focus {
 .mono-toggle-t.is-mono {
   font-family: var(--font-mono);
 }
+
+/* ── Entity panel layout (modal redesign) ── */
+.entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
+
+.entity-panel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  font-size: 12px;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 268px;
+}
+.entity-panel--dim { opacity: 0.5; pointer-events: none; }
+
+.ep-header {
+  padding: 9px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+.ep-header-left { display: flex; flex-direction: column; gap: 3px; }
+.ep-label { font-size: 11px; font-weight: 700; }
+.ep-title { font-size: 13px; font-weight: 600; color: #111827; }
+.ep-close {
+  font-size: 18px; color: #9ca3af; background: none; border: none;
+  cursor: pointer; line-height: 1; padding: 0; flex-shrink: 0;
+}
+
+.ep-body { flex: 1; overflow-y: auto; }
+.ep-fields { padding: 10px 14px 8px; }
+
+.ep-footer {
+  display: flex; justify-content: flex-end; gap: 6px;
+  padding: 8px 14px; border-top: 1px solid #f3f4f6; flex-shrink: 0;
+}
+
+/* Section headers inside entity panels (flush-sections-v3 style) */
+.ep-sec-header {
+  padding: 7px 14px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid transparent;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ep-sec-left { display: flex; align-items: center; gap: 8px; }
+.ep-sec-title { font-size: 11px; font-weight: 700; }
+.ep-sec-count { font-size: 11px; font-weight: 700; opacity: 0.6; }
+.ep-sec-open  { font-size: 11px; font-weight: 600; opacity: 0.65; }
+.ep-sec-content { padding: 8px 14px 8px; }
+.ep-sec-gap { height: 8px; }
+
+/* Entity rows in sections */
+.ep-entity-row {
+  display: flex; align-items: center;
+  padding: 5px 6px; border-radius: 6px; cursor: pointer; margin-bottom: 2px;
+}
+.ep-entity-row:hover { background: #f9fafb; }
+.ep-entity-main { flex: 1; min-width: 0; }
+.ep-entity-name { font-size: 12px; font-weight: 600; color: #111827; }
+.ep-entity-sub  { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.ep-entity-arrow { color: #cbd5e1; font-size: 14px; flex-shrink: 0; }
+
+/* Search bar in sections */
+.ep-search-input {
+  width: 100%; border: 1.5px solid #e5e7eb; border-radius: 6px;
+  padding: 6px 9px; margin-bottom: 6px; background: #f9fafb;
+  font-size: 12px; color: #374151; outline: none;
+}
+.ep-search-input:focus {
+  border-color: #3b82f6; background: #fff;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* Dropdown results */
+.ep-dropdown {
+  border: 1px solid #e5e7eb; border-radius: 7px;
+  background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  overflow: hidden; margin-bottom: 6px;
+}
+.ep-dd-row {
+  padding: 7px 11px; font-size: 12px; color: #374151; cursor: pointer;
+  border-bottom: 1px solid #fafafa;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ep-dd-row:last-child { border-bottom: none; }
+.ep-dd-row:hover, .ep-dd-row--hl { background: #eff6ff; color: #1d4ed8; }
+.ep-dd-row--create { color: #2563eb; font-weight: 600; border-top: 1px solid #f0f0f0; }
+.ep-dd-key {
+  font-size: 10px; font-family: monospace; background: #f3f4f6;
+  border: 1px solid #e5e7eb; border-radius: 3px; padding: 1px 5px; color: #6b7280;
+}
+
+/* Segmented controls */
+.ep-seg { display: flex; border: 1.5px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.ep-seg-opt {
+  flex: 1; text-align: center; padding: 5px 0; font-size: 11px;
+  color: #9ca3af; background: #f9fafb; border-right: 1px solid #e5e7eb;
+  cursor: pointer; border-top: none; border-bottom: none; border-left: none;
+}
+.ep-seg-opt:last-child { border-right: none; }
+.ep-seg-opt--on { font-weight: 700; }
+
+/* Readonly display field */
+.ep-field-readonly {
+  width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb;
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #6b7280;
+}
+/* Standard text inputs inside entity panels */
+.ep-input {
+  width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb;
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #374151;
+  outline: none;
+}
+.ep-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.ep-input--name { flex: 1; }
+.ep-name-row { display: flex; gap: 6px; }
+.ep-field { margin-bottom: 8px; }
+.ep-field:last-child { margin-bottom: 0; }
+.ep-field-label {
+  display: block; font-size: 10px; color: #6b7280; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;
+}
+.ep-textarea {
+  width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb;
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #374151;
+  outline: none; resize: vertical; min-height: 48px;
+}
+.ep-textarea:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
