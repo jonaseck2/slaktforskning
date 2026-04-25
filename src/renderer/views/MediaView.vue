@@ -3,11 +3,9 @@
   <div class="media-main" :class="{ 'viewer-active': viewerMode }">
     <div class="header">
       <div class="header-left">
-        <h2>{{ $t('media.title') }}</h2>
-        <div v-if="personFilterId && personName" class="person-filter-badge">
-          {{ $t('media.filter.person', { name: personName }) }}
-          <button class="filter-clear" @click="router.push({ path: '/media' })" :title="$t('common.clearFilter')">×</button>
-        </div>
+        <h2>
+          {{ $t('media.title') }}<template v-if="personFilterId && personName"><span class="filter-suffix"> — {{ $t('media.filter.person', { name: personName }) }}</span> <button class="filter-clear" @click="router.push({ path: '/media' })" :title="$t('common.clearFilter')">×</button></template>
+        </h2>
       </div>
       <div class="header-right">
         <button v-if="viewerMode" class="viewer-close-btn" :title="$t('common.close')" @click="closeViewer">✕</button>
@@ -556,29 +554,26 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   max-width: 1040px;
 }
 
-.person-filter-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: var(--space-sm);
-  padding: 4px 10px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  border-radius: var(--radius-full);
-  font-size: var(--font-sm);
-  color: var(--accent);
+.filter-suffix {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 0.85em;
 }
 .filter-clear {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--accent);
-  font-size: 16px;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
   line-height: 1;
-  padding: 0 2px;
-  opacity: 0.7;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
 }
-.filter-clear:hover { opacity: 1; }
+.filter-clear:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
 
 .gallery-filter {
   margin-bottom: 12px;

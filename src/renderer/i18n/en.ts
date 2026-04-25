@@ -1167,7 +1167,7 @@ export default {
     },
     filter: {
       search: 'Search media',
-      person: '{name}\'s media',
+      person: 'filtered on {name}',
     },
     galleryView: 'Gallery',
     listView: 'List',
