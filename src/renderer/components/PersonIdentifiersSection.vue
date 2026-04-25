@@ -20,37 +20,20 @@
       </tbody>
     </table>
 
-    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-identifier">
-        <h3 id="modal-title-identifier">{{ $t('identifiers.addTitle') }}</h3>
-        <form @submit.prevent="add">
-          <label>
-            {{ $t('identifiers.type') }}
-            <select v-model="form.identifier_type">
-              <option value="familysearch">FamilySearch</option>
-              <option value="ancestry">Ancestry</option>
-              <option value="riksarkivet">Riksarkivet</option>
-              <option value="personnummer">Personnummer</option>
-              <option value="refn">{{ $t('identifiers.types.refn') }}</option>
-              <option value="rin">RIN</option>
-              <option value="other">{{ $t('identifiers.types.other') }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('identifiers.value') }}
-            <input v-model="form.identifier_value" type="text" required autofocus />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showAddForm = false">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-    </BaseModal>
+    <PersonIdentifierModal
+      v-if="showAddForm"
+      :person-id="personId"
+      mode="standalone"
+      @cancel="showAddForm = false"
+      @close="showAddForm = false"
+      @saved="onSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
-import BaseModal from './BaseModal.vue';
+import { ref, computed, watch } from 'vue';
+import PersonIdentifierModal from './modals/PersonIdentifierModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 
 export interface IdentifierRow {
@@ -63,7 +46,6 @@ const props = defineProps<{ personId: string }>();
 
 const identifiers = ref<IdentifierRow[]>([]);
 const showAddForm = ref(false);
-const form = reactive({ identifier_type: 'familysearch', identifier_value: '' });
 
 defineExpose({ openAddForm: () => { showAddForm.value = true; }, count: computed(() => identifiers.value.length) });
 
@@ -71,15 +53,9 @@ async function load() {
   identifiers.value = (await window.api.persons.getIdentifiers(props.personId)) as IdentifierRow[];
 }
 
-async function add() {
-  if (!form.identifier_value.trim()) return;
-  await window.api.persons.addIdentifier(props.personId, {
-    identifier_type: form.identifier_type,
-    identifier_value: form.identifier_value,
-  });
-  form.identifier_value = '';
+function onSaved() {
   showAddForm.value = false;
-  await load();
+  load();
 }
 
 async function remove(id: string) {
