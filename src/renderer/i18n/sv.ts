@@ -112,6 +112,8 @@ export default {
     name: 'Namn',
     info: 'Info',
     entity: 'Person',
+    nameEntity: 'Namn',
+    identifierEntity: 'Identifierare',
     newPerson: 'Ny person',
   },
   personDetail: {
@@ -145,6 +147,7 @@ export default {
   relationships: {
     title: 'Relationer',
     addRelationship: 'Relation',
+    entity: 'Relation',
     person1: 'Person 1',
     person2: 'Person 2',
     searchPerson: 'Sök efter en person\u2026',
@@ -419,6 +422,7 @@ export default {
     addTitle: 'Plats',
     name: 'Namn',
     type: 'Typ',
+    entity: 'Plats',
     parentPlace: 'Överordnad plats',
     coordinates: 'Koordinater',
     latitude: 'Latitud',
@@ -895,6 +899,7 @@ export default {
     notes: 'Anteckningar',
     result: 'Resultat',
     addTask: 'Forskningsuppgift',
+    entity: 'Forskningsuppgift',
     statuses: {
       open: 'Öppen',
       in_progress: 'Pågående',
@@ -911,6 +916,7 @@ export default {
     addGroupShort: 'Grupp',
     name: 'Namn',
     notes: 'Anteckningar',
+    entity: 'Grupp',
     members: 'Medlemmar',
     addMember: 'Medlem',
     confirmDelete: 'Ta bort gruppen? Alla medlemskap tas bort.',
