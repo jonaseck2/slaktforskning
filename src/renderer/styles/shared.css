@@ -146,6 +146,10 @@
   word-break: break-word;
   overflow-wrap: anywhere;
 }
+/* Side-panel tables are narrow + the row content is self-evident
+   (avatar+name link, date, action ✕). Skip the column headers for a
+   denser, more consistent look across every panel. */
+.panel-section .data-table thead { display: none; }
 .panel-section .compact-control,
 .panel-section .compact-form input,
 .panel-section .compact-form select,
