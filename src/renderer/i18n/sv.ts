@@ -905,15 +905,6 @@ export default {
       captions: 'Bildtexter',
       photoNotes: 'Bildanteckningar',
     },
-    aLife: 'Ett liv',
-    yourAncestors: 'Dina förfäder',
-    lifeOnOnePage: 'Livet på en sida',
-    photoAlbum: 'Fotoalbum',
-    pedigreeChart: 'Stamtavla',
-    hourglassChart: 'Timglas',
-    descendantChart: 'Efterkommande',
-    fanChart: 'Solfjäder',
-    timelineChart: 'Tidslinje',
     relations: {
       father: 'Pappa',
       mother: 'Mamma',
@@ -1131,6 +1122,7 @@ export default {
     siteTitle: 'Platstitel:',
     exporting: 'Exporterar…',
     exportedTo: 'Exporterades till',
+    bundleMissing: 'Webbplatsen är inte byggt. Kör "npm run build:static" i projektmappen först.',
   },
   website: {
     reportsHint: 'Klicka på ett bokslut för att läsa det.',
