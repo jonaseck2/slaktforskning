@@ -57,10 +57,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/lunr": "^2.3.7",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "electron-squirrel-startup": "^1.0.1",
     "fflate": "^0.8.2",
     "leaflet": "^1.9.4",
+    "lunr": "^2.3.9",
     "node-sqlite3-wasm": "^0.8.56",
     "pinia": "^3.0.4",
     "uuid": "^13.0.0",
