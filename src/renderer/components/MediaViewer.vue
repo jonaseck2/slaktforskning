@@ -69,6 +69,7 @@
         <MediaCaption
           v-if="imageUrl && (captionFaceTags.length > 0 || currentItem?.notes)"
           class="viewer-caption"
+          :style="{ width: imageDisplayWidth ? imageDisplayWidth + 'px' : undefined }"
           :face-tags="captionFaceTags"
           :notes="currentItem?.notes ?? null"
           @person-click="onCaptionPersonClick"
@@ -111,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useImageZoom } from '../composables/useImageZoom';
@@ -175,6 +176,7 @@ const imageUrl = ref<string | null>(null);
 const loading = ref(false);
 const imgNaturalWidth = ref(0);
 const imgNaturalHeight = ref(0);
+const imageDisplayWidth = ref(0);
 const enrichedRegions = ref<EnrichedRegion[]>([]);
 
 const zoomState = useImageZoom();
@@ -283,7 +285,19 @@ function onImageLoad() {
   if (!img) return;
   imgNaturalWidth.value = img.naturalWidth;
   imgNaturalHeight.value = img.naturalHeight;
+  imageDisplayWidth.value = img.offsetWidth;
+  observeImageSize(img);
 }
+
+let imgResizeObserver: ResizeObserver | null = null;
+function observeImageSize(img: HTMLImageElement) {
+  imgResizeObserver?.disconnect();
+  imgResizeObserver = new ResizeObserver(() => {
+    imageDisplayWidth.value = img.offsetWidth;
+  });
+  imgResizeObserver.observe(img);
+}
+onUnmounted(() => imgResizeObserver?.disconnect());
 
 function onCanvasWheel(e: WheelEvent) {
   if (!canvasEl.value) return;
@@ -422,10 +436,11 @@ onMounted(() => {
 }
 
 .viewer-caption {
-  max-width: 720px;
+  max-width: 100%;
   text-align: center;
   margin-top: 0 !important;
   flex-shrink: 0;
+  word-wrap: break-word;
 }
 
 .image-wrapper {
