@@ -440,6 +440,7 @@ export default {
     eventCount: 'Events',
     hierarchy: 'Hierarchy',
     showingOf: 'Showing {shown} of {total} places',
+    newPlace: 'New place',
   },
   placePanel: {
     noPlaceSelected: 'Click a pin on the map',

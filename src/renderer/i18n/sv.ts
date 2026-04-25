@@ -440,6 +440,7 @@ export default {
     eventCount: 'Händelser',
     hierarchy: 'Hierarki',
     showingOf: 'Visar {shown} av {total} platser',
+    newPlace: 'Ny plats',
   },
   placePanel: {
     noPlaceSelected: 'Klicka på en markör på kartan',
