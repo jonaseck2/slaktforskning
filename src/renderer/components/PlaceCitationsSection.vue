@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="citations.length === 0" class="empty-hint">{{ $t('empty.citations') }}</div>
+    <SectionEmpty v-if="citations.length === 0" :message="$t('empty.citations')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;

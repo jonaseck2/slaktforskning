@@ -61,9 +61,9 @@ export default {
   chart: {
     export: {
       colorMode: 'Color',
-      themed: 'Themed',
-      blackWhite: 'B&W',
-      sexColored: 'Sex',
+      themed: 'Color',
+      blackWhite: 'Grayscale',
+      sexColored: 'Gender',
       saveSvg: 'SVG',
       savePdf: 'PDF',
     },
@@ -455,12 +455,10 @@ export default {
       focal: 'Focal Person',
       children: 'Children',
     },
-    fanColorMode: 'Color mode',
-    fanColorBranch: 'Branch',
+    fanColorBranch: 'Color',
     fanColorSex: 'Gender',
     fan: {
       arc: 'Arc',
-      colorMode: 'Fan color',
       generations: 'Generations',
     },
     empty: 'Create a person to start visualizing.',
@@ -727,6 +725,9 @@ export default {
     panel: {
       options: 'Options',
       appearance: 'Appearance',
+      report: 'Report',
+      chart: 'Chart',
+      fanChart: 'Fan Chart',
     },
     groups: {
       keepsake: 'Keepsake reports',
@@ -760,7 +761,6 @@ export default {
       density: 'Pages per ancestor',
       densityOne: 'One per page',
       densityTwo: 'Two per page',
-      colorThemed: 'Themed',
     },
     loadingReport: 'Loading report\u2026',
     pedigreePrint: {

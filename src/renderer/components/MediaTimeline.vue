@@ -1,6 +1,6 @@
 <template>
   <div class="media-timeline">
-    <div v-if="items.length === 0" class="empty-hint">{{ $t('empty.media') }}</div>
+    <SectionEmpty v-if="items.length === 0" :message="$t('empty.media')" />
     <div v-else class="timeline-scroll" role="list" :aria-label="$t('mediaTimeline.title')">
       <!-- Year markers + thumbnails -->
       <div class="timeline-track">
@@ -65,6 +65,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 interface TimelineMedia {
   id: string;

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="rows.length === 0" class="empty-hint">{{ $t('empty.relationships') }}</div>
+  <SectionEmpty v-if="rows.length === 0" :message="$t('empty.relationships')" />
   <RelationshipsList v-else :rows="rows" @delete="remove" />
 </template>
 
@@ -7,6 +7,7 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import { formatFullName } from '../utils/nameUtils';
 
 interface PersonRelRow {

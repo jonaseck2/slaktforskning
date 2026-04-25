@@ -52,7 +52,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" :action-label="'+ ' + $t('personDetail.addName')" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
-          <div v-if="names.length === 0" class="empty-hint">{{ $t('empty.names') }}</div>
+          <SectionEmpty v-if="names.length === 0" :message="$t('empty.names')" />
           <PersonNamesTable v-else :names="names" @edit="openNameForm" @delete="deleteName" />
         </div>
       </div>
@@ -109,7 +109,7 @@
               @cancel="showGroupPicker = false"
             />
           </div>
-          <div v-if="groups.length === 0" class="empty-hint">{{ $t('empty.groups') }}</div>
+          <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
           <GroupsTable v-else :groups="groups" @remove="removeFromGroup" />
         </div>
       </div>
@@ -134,7 +134,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.addTask')" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
-          <div v-if="researchTasks.length === 0" class="empty-hint">{{ $t('empty.researchTasks') }}</div>
+          <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
           <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
         </div>
       </div>
@@ -202,6 +202,7 @@ import PersonMap from './PersonMap.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import SectionHeader from './ui/SectionHeader.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import { usePersonPanelData, type NameData } from '../composables/usePersonPanelData';
 import { useSectionState } from '../composables/useSectionState';
 

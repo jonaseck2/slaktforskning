@@ -24,8 +24,8 @@
       <section id="fan-chart-section" class="report-section fan-chart-page">
         <FanChartReport
           :person-id="personId"
-          :generations="generations"
-          :arc-span="270"
+          :generations="props.fanGenerations"
+          :arc-span="props.fanArcSpan"
           :color-mode="fanColorMode"
           anchor-base="#ancestor-"
         />
@@ -129,8 +129,10 @@ import { useToast } from '../../composables/useToast';
 const props = withDefaults(defineProps<{
   personId: string;
   generations?: number;
-  colorMode?: 'bw' | 'branch' | 'sex' | 'themed';
+  colorMode?: 'bw' | 'branch' | 'sex';
   density?: 'one' | 'two';
+  fanGenerations?: number;
+  fanArcSpan?: number;
   showEvents?: boolean;
   showLifeMap?: boolean;
   showMapCaption?: boolean;
@@ -141,8 +143,10 @@ const props = withDefaults(defineProps<{
   redactLiving?: boolean;
 }>(), {
   generations: 4,
-  colorMode: 'themed',
+  colorMode: 'branch',
   density: 'one',
+  fanGenerations: 8,
+  fanArcSpan: 270,
   showEvents: true,
   showLifeMap: true,
   showMapCaption: true,
@@ -253,12 +257,7 @@ const density = computed(() => props.density);
 const showEvents = computed(() => props.showEvents);
 const showSources = computed(() => props.showSources);
 
-// FanChartReport accepts bw | branch | sex; map the extra 'themed' option to 'branch'.
-const fanColorMode = computed<'bw' | 'branch' | 'sex'>(() => {
-  const m = props.colorMode;
-  if (m === 'bw' || m === 'branch' || m === 'sex') return m;
-  return 'branch';
-});
+const fanColorMode = computed(() => props.colorMode ?? 'branch');
 
 // --- Helpers ---
 

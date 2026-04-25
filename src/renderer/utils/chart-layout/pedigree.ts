@@ -113,7 +113,9 @@ export function computePedigreeLayout(
     if (leafY !== undefined) {
       cy = leafY;
     } else {
-      const parentCYs = node.parents.map(p => centerYOf(p));
+      const realParents = node.parents.filter(p => !p.isPlaceholder);
+      const parentsForCY = realParents.length > 0 ? realParents : node.parents;
+      const parentCYs = parentsForCY.map(p => centerYOf(p));
       cy = parentCYs.length > 0
         ? parentCYs.reduce((a, b) => a + b, 0) / parentCYs.length
         : PAD + hOf(node) / 2;
@@ -134,6 +136,7 @@ export function computePedigreeLayout(
   // ── Place boxes and curved paths ───────────────────────────────────────
   const boxes: BoxLayout[] = [];
   const paths: string[] = [];
+  const placeholderPaths: string[] = [];
 
   function placeNodes(node: TreePerson, visited = new Set<string>()): void {
     if (visited.has(node.person.id)) return;
@@ -155,7 +158,11 @@ export function computePedigreeLayout(
     const parentLeftX = genXOf(g + 1);
     for (const p of node.parents) {
       const pcy = centerYOf(p);
-      paths.push(curvedElbow(childRightX, cy, parentLeftX, pcy, 'right'));
+      if (p.isPlaceholder) {
+        placeholderPaths.push(curvedElbow(childRightX, cy, parentLeftX, pcy, 'right'));
+      } else {
+        paths.push(curvedElbow(childRightX, cy, parentLeftX, pcy, 'right'));
+      }
     }
 
     for (const p of node.parents) placeNodes(p, visited);
@@ -163,8 +170,6 @@ export function computePedigreeLayout(
   placeNodes(root);
 
   // ── Unplaced outlines for selected person ──────────────────────────────
-  const placeholderPaths: string[] = [];
-
   if (selectedPersonId) {
     const selBox = boxes.find(b => b.person.id === selectedPersonId);
     const placedIds = new Set(boxes.map(b => b.person.id));

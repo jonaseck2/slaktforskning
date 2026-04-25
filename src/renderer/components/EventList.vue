@@ -4,7 +4,7 @@
       <h4>{{ $t('events.title') }} <span v-if="events.length" class="section-count">({{ events.length }})</span></h4>
       <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="openAddForm()">+ {{ $t('events.event') }}</AppButton>
     </div>
-    <div v-if="events.length === 0" class="empty-hint">{{ $t('empty.events') }}</div>
+    <SectionEmpty v-if="events.length === 0" :message="$t('empty.events')" :action-label="!props.readonly ? $t('empty.addEvent') : ''" @action="openAddForm()" />
     <table v-else class="data-table events-table">
       <thead v-if="props.showPersons">
         <tr>
@@ -76,6 +76,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import EventForm from './EventForm.vue';
 import CitationForm from './CitationForm.vue';
 import { useToast } from '../composables/useToast';

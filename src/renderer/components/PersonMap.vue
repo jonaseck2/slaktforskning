@@ -34,12 +34,13 @@
       </LCircleMarker>
     </BaseMap>
   </div>
-  <div v-else class="empty-hint">{{ $t('empty.places') }}</div>
+  <SectionEmpty v-else :message="$t('empty.places')" />
 </template>
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
 import { LCircleMarker, LPolyline, LPopup } from '@vue-leaflet/vue-leaflet';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import BaseMap from './BaseMap.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 

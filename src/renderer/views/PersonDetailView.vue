@@ -42,7 +42,7 @@
         :data-narrate="t('screenReader.sectionNames', { count: names.length, summary: names[0] ? (names[0].given_name ?? '') + ' ' + (names[0].surname ?? '') : '' })"
         @action="showNameForm = true"
       />
-      <div v-if="names.length === 0" class="empty-hint">{{ $t('empty.names') }}</div>
+      <SectionEmpty v-if="names.length === 0" :message="$t('empty.names')" />
       <PersonNamesTable v-else :names="names" @edit="openEditName" @delete="removeName" />
     </section>
 
@@ -108,7 +108,7 @@
           @cancel="showGroupPicker = false"
         />
       </div>
-      <div v-if="personGroups.length === 0 && !showGroupPicker" class="empty-hint">{{ $t('empty.groups') }}</div>
+      <SectionEmpty v-if="personGroups.length === 0 && !showGroupPicker" :message="$t('empty.groups')" />
       <GroupsTable v-else-if="personGroups.length > 0" :groups="personGroups" @remove="removeFromGroup" />
     </section>
 
@@ -141,7 +141,7 @@
         :action-label="'+ ' + $t('researchTasks.addTask')"
         @action="showAddTaskModal = true"
       />
-      <div v-if="personTasks.length === 0" class="empty-hint">{{ $t('empty.researchTasks') }}</div>
+      <SectionEmpty v-if="personTasks.length === 0" :message="$t('empty.researchTasks')" />
       <ResearchTasksTable v-else :tasks="personTasks" @updated="loadPersonTasks" />
     </section>
 
@@ -216,6 +216,7 @@ import PersonMap from '../components/PersonMap.vue';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
 import AppButton from '../components/ui/AppButton.vue';
+import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import SectionHeader from '../components/ui/SectionHeader.vue';
 import { fullNameParts } from '../utils/nameUtils';
 import { useFocusStore } from '../stores/focus';

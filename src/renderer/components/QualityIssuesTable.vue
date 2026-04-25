@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="issues.length === 0" class="empty-hint">{{ $t('empty.qualityIssues') }}</div>
+    <SectionEmpty v-if="issues.length === 0" :message="$t('empty.qualityIssues')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { isIgnored, toggleIgnore, type IgnorableIssue } from '../utils/qualityIgnore';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 export interface QualityIssue extends IgnorableIssue {
   severity: 'error' | 'warning' | 'notice';
