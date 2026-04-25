@@ -263,6 +263,7 @@ async function reloadChart() {
 }
 
 async function load() {
+  if (!route.path.startsWith('/persons')) return;
   const id = personId.value;
   if (!id) {
     if (focusStore.personId) { router.replace('/persons/' + focusStore.personId); return; }
@@ -372,7 +373,7 @@ useChartBridge({
 
 // When App.vue auto-sets the focus store after this view is already mounted, navigate to that person
 watch(() => focusStore.personId, (newId) => {
-  if (newId && !personId.value) {
+  if (newId && !personId.value && route.path.startsWith('/persons')) {
     router.replace('/persons/' + newId);
   }
 });
