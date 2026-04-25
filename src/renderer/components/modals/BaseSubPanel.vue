@@ -22,9 +22,10 @@
         </div>
         <div class="ep-footer">
           <button type="button" class="btn-cancel" @click="$emit('cancel')">
-            {{ $t('common.cancel') }}
+            {{ cancelLabel ?? $t('common.cancel') }}
           </button>
           <button
+            v-if="!hideSave"
             type="button"
             class="btn-add"
             :style="{ background: saveBg, color: '#fff' }"
@@ -61,9 +62,10 @@
       </div>
       <div class="ep-footer">
         <button type="button" class="btn-cancel" @click="$emit('cancel')">
-          {{ $t('common.cancel') }}
+          {{ cancelLabel ?? $t('common.cancel') }}
         </button>
         <button
+          v-if="!hideSave"
           type="button"
           class="btn-add"
           :style="{ background: saveBg, color: '#fff' }"
@@ -91,12 +93,17 @@ const props = withDefaults(defineProps<{
   label?: string;
   mode?: 'standalone' | 'subpanel';
   saveLabel?: string;
+  /** When true, the save/primary button is hidden. Use for informational dialogs with only a close action. */
+  hideSave?: boolean;
+  /** Override label for the cancel/close button. Defaults to $t('common.cancel'). */
+  cancelLabel?: string;
   /** Optional icon override — when provided, replaces the entity visual's default icon in the header. */
   icon?: string;
   /** Tone for the save button. 'danger' renders a red background using --error-text (#b91c1c). Default: 'info'. */
   tone?: 'info' | 'warning' | 'danger';
 }>(), {
   mode: 'standalone',
+  hideSave: false,
   tone: 'info',
 });
 

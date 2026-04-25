@@ -13,8 +13,17 @@
 
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
-    <BaseModal v-if="showImportReport && importReport" @close="showImportReport = false" title-id="modal-title-holger-report">
-      <h3 id="modal-title-holger-report">{{ $t('importExport.importReportTitle') }}</h3>
+    <BaseSubPanel
+      v-if="showImportReport && importReport"
+      entity-type="neutral"
+      :title="$t('importExport.importReportTitle')"
+      label=""
+      mode="standalone"
+      hide-save
+      :cancel-label="$t('common.close')"
+      @cancel="showImportReport = false"
+      @close="showImportReport = false"
+    >
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
@@ -59,17 +68,14 @@
           />
         </div>
       </div>
-      <div class="modal-actions">
-        <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
-      </div>
-    </BaseModal>
+    </BaseSubPanel>
   </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import BaseModal from '../BaseModal.vue';
+import BaseSubPanel from '../modals/BaseSubPanel.vue';
 import PersonPicker from '../PersonPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
@@ -205,19 +211,6 @@ async function handleImportFromHolger() {
   margin: 0;
 }
 
-:deep(.modal) {
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 8px;
-}
 .subm-name {
   font-size: var(--font-sm);
   color: var(--color-text-muted);

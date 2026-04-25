@@ -21,8 +21,17 @@
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
-    <BaseModal v-if="showExportReport && exportReportData" @close="showExportReport = false" title-id="modal-title-archive-export-report">
-      <h3 id="modal-title-archive-export-report">{{ $t('importExport.exportReportTitle') }}</h3>
+    <BaseSubPanel
+      v-if="showExportReport && exportReportData"
+      entity-type="neutral"
+      :title="$t('importExport.exportReportTitle')"
+      label=""
+      mode="standalone"
+      hide-save
+      :cancel-label="$t('common.close')"
+      @cancel="showExportReport = false"
+      @close="showExportReport = false"
+    >
       <ul class="report-counts">
         <li>{{ $t('importExport.exportReportPersons', { n: exportReportData.gedcomReport.persons }) }}</li>
         <li>{{ $t('importExport.exportReportFamilies', { n: exportReportData.gedcomReport.families }) }}</li>
@@ -44,14 +53,20 @@
           </li>
         </ul>
       </div>
-      <div class="modal-actions">
-        <button @click="showExportReport = false">{{ $t('importExport.importReportClose') }}</button>
-      </div>
-    </BaseModal>
+    </BaseSubPanel>
 
     <!-- Import report modal -->
-    <BaseModal v-if="showImportReport && importReportData" @close="showImportReport = false" title-id="modal-title-archive-import-report">
-      <h3 id="modal-title-archive-import-report">{{ $t('importExport.importReportTitle') }}</h3>
+    <BaseSubPanel
+      v-if="showImportReport && importReportData"
+      entity-type="neutral"
+      :title="$t('importExport.importReportTitle')"
+      label=""
+      mode="standalone"
+      hide-save
+      :cancel-label="$t('common.close')"
+      @cancel="showImportReport = false"
+      @close="showImportReport = false"
+    >
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReportData.gedcomReport.persons }) }}</li>
         <li>{{ $t('importExport.importReportFamilies', { n: importReportData.gedcomReport.families }) }}</li>
@@ -91,10 +106,7 @@
           />
         </div>
       </div>
-      <div class="modal-actions">
-        <button @click="showImportReport = false">{{ $t('importExport.importReportClose') }}</button>
-      </div>
-    </BaseModal>
+    </BaseSubPanel>
   </div>
 </template>
 
@@ -103,7 +115,7 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import { resetDefaultPersonId } from '../../composables/useDefaultPerson';
-import BaseModal from '../BaseModal.vue';
+import BaseSubPanel from '../modals/BaseSubPanel.vue';
 import PersonPicker from '../PersonPicker.vue';
 
 declare const window: Window & {
@@ -246,13 +258,6 @@ async function handleImport() {
 </script>
 
 <style scoped>
-:deep(.modal) {
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 .subm-name {
   font-size: var(--font-sm);
   color: var(--color-text-muted);
