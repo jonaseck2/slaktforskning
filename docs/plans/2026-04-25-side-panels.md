@@ -10,6 +10,8 @@
 
 **Design spec:** `docs/plans/2026-04-25-side-panels-design.md`
 
+> **Ordering vs modal-redesign plan:** `docs/plans/2026-04-25-modal-redesign.md` deletes `CitationForm`, `EventForm`, and `EventFormBody` — components this plan composes into the new panels. Run modal-redesign first; then this plan reuses the replacement modal components from `src/renderer/components/modals/`. If executing this plan first, the new panels will need rewiring once modal-redesign lands.
+
 ---
 
 ## File Map
@@ -244,8 +246,8 @@ Note the exact component names — they will be needed in SourcePanel.vue.
 Create `src/renderer/components/SourcePanel.vue`. Model the structure on `PlacePanel.vue` — same panel-header, panel-body, panel-section pattern. Sections (matching design spec):
 
 1. **Source** (default open) — editable fields: title, author, source_type (select), publication_info, repository, url, call_number, abstract. Each field uses `@blur="saveField('fieldname')"` to auto-save.
-2. **Citations** (default open) — citations table loaded via `window.api.sources.getCitations(sourceId)`. Each row shows entity label + confidence badge + delete button. Clicking a row opens `CitationEditModal`. "+" action opens the add citation modal.
-3. **Repositories** (default closed) — repositories linked to the source loaded via `window.api.repositories.getForSource(sourceId)`. Each row shows repository name + remove button. Section header "+" action shows an inline picker (or a dropdown of all repositories via `window.api.repositories.list()`) + Add button to call `window.api.sources.linkRepository(sourceId, repositoryId)`. Verify the exact IPC channel name in `docs/IPC_REFERENCE.md` before wiring.
+2. **Citations** (default open) — citations table loaded via `window.api.citations.forSource(sourceId)`. Each row shows entity label + confidence badge + delete button. Clicking a row opens `CitationEditModal`. "+" action opens the add citation modal.
+3. **Repositories** (default closed) — repositories linked to the source loaded via `window.api.repositories.forSource(sourceId)`. Each row shows repository name + remove button. Section header "+" action shows an inline picker (or a dropdown of all repositories via `window.api.repositories.list()`) + Add button to call `window.api.repositories.linkSource(sourceId, repositoryId)`.
 4. **Media** (default closed) — `<EntityMediaSection entity-type="source" :entity-id="sourceId" />`.
 5. **Quality** (default closed) — source-scoped quality checks. If `window.api.checks` exposes a per-source filter, use it; otherwise reuse `PersonChecksSection`'s pattern adapted to source IDs. If the check engine has no source-level checks today, leave the section header rendered with an "no checks" placeholder so the layout is consistent — do not silently drop the section.
 
@@ -415,7 +417,7 @@ Create `src/renderer/components/RelationshipPanel.vue`. Model on PlacePanel. Sec
 
 2. **Events** (default open) — `<EventList ref="eventListRef" :relationship-id="relationship.id" hide-header />`. Section header "+" action calls `eventListRef?.openAddForm()`.
 
-3. **Citations** (default closed) — relationship-level citations loaded via `window.api.sources.getCitationsForRelationship(relationshipId)`. Each row shows source title + page + confidence + delete button. "+" action opens `CitationForm` with `relationshipId` pre-filled.
+3. **Citations** (default closed) — relationship-level citations loaded via `window.api.citations.forRelationship(relationshipId)`. Each row shows source title + page + confidence + delete button. "+" action opens `CitationForm` with `relationshipId` pre-filled.
 
 4. **Media** (default closed) — `<EntityMediaSection entity-type="relationship" :entity-id="relationship.id" />`.
 
