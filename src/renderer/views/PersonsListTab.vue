@@ -3,7 +3,7 @@
     <div v-if="!embedded" class="header">
       <h2>{{ $t('nav.people') }}</h2>
       <div class="header-actions">
-        <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('persons.addPerson') }}</AppButton>
+        <AppButton v-if="!isStaticMode" variant="soft" @click="showAddForm = true">+ {{ $t('persons.addPerson') }}</AppButton>
       </div>
     </div>
 
@@ -54,7 +54,7 @@
       icon="👤"
       :title="filter === 'unsourced' ? $t('persons.allSourced') : $t('empty.persons')"
       :description="filter === 'all' ? $t('persons.emptyHint') : ''"
-      :action-label="filter === 'all' ? $t('empty.addPerson') : ''"
+      :action-label="!isStaticMode && filter === 'all' ? $t('empty.addPerson') : ''"
       @action="showAddForm = true"
     />
 
@@ -66,7 +66,7 @@
             <th>{{ $t('persons.surname') }}</th>
             <th>{{ $t('persons.sex') }}</th>
             <th>{{ $t('persons.info') }}</th>
-            <th class="actions-cell"></th>
+            <th v-if="!isStaticMode" class="actions-cell"></th>
           </tr>
         </thead>
         <tbody>
@@ -104,7 +104,7 @@
             <td>{{ person.surname }}</td>
             <td><AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge></td>
             <td class="info-cell">{{ formatPersonInfo(person) }}</td>
-            <td class="actions-cell">
+            <td v-if="!isStaticMode" class="actions-cell">
               <AppButton variant="ghost" size="sm" @click.stop="removePerson(person.id)">✕</AppButton>
             </td>
           </tr>
@@ -150,6 +150,7 @@ import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
+const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
