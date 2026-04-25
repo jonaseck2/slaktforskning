@@ -20,10 +20,16 @@ export function registerWebsiteExportHandlers(): void {
       excludeLiving: boolean;
       redactLiving: boolean;
     };
+    _outputDir?: string;
   }) => {
-    const dir = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
-    if (dir.canceled || !dir.filePaths[0]) return { canceled: true };
-    const out = dir.filePaths[0];
+    let out: string;
+    if ((opts as { _outputDir?: string })._outputDir) {
+      out = (opts as { _outputDir?: string })._outputDir!;
+    } else {
+      const dir = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
+      if (dir.canceled || !dir.filePaths[0]) return { canceled: true };
+      out = dir.filePaths[0];
+    }
 
     // 1. Copy dist-static bundle
     const bundleSrc = app.isPackaged
