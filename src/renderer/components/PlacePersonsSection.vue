@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="persons.length === 0" class="empty-hint">{{ $t('empty.persons') }}</div>
+    <SectionEmpty v-if="persons.length === 0" :message="$t('empty.persons')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -28,6 +28,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import AppAvatar from './ui/AppAvatar.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;

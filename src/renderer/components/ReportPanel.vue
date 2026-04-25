@@ -133,9 +133,9 @@
       </div>
     </div>
 
-    <!-- Appearance -->
+    <!-- Report / Chart appearance -->
     <div v-if="hasAppearance" class="panel-section">
-      <SectionHeader :title="$t('reports.panel.appearance')" :collapsed="!open.appearance" @toggle="open.appearance = !open.appearance" />
+      <SectionHeader :title="appearanceSectionTitle" :collapsed="!open.appearance" @toggle="open.appearance = !open.appearance" />
       <div v-if="open.appearance" class="panel-section-body">
 
         <template v-if="activeTab === 'onePage'">
@@ -149,15 +149,6 @@
         </template>
 
         <template v-else-if="activeTab === 'yourAncestors'">
-          <div class="panel-control">
-            <label class="panel-label">{{ $t('chart.export.colorMode') }}</label>
-            <select v-model="store.yourAncestorsColorMode" class="panel-select">
-              <option value="themed">{{ $t('reports.yourAncestors.colorThemed') }}</option>
-              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
-              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
-              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
-            </select>
-          </div>
           <div class="panel-control">
             <label class="panel-label">{{ $t('reports.yourAncestors.density') }}</label>
             <select v-model="store.yourAncestorsDensity" class="panel-select">
@@ -188,21 +179,18 @@
         <template v-else-if="isChartPrint">
           <div class="panel-control">
             <label class="panel-label">{{ $t('chart.export.colorMode') }}</label>
-            <select v-model="store.chartColorMode" class="panel-select">
-              <option value="themed">{{ $t('reports.yourAncestors.colorThemed') }}</option>
+            <select v-if="activeTab !== 'fanChart'" v-model="store.chartColorMode" class="panel-select">
+              <option value="themed">{{ $t('chart.export.themed') }}</option>
               <option value="sex-colored">{{ $t('chart.export.sexColored') }}</option>
+              <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
+            </select>
+            <select v-else v-model="store.fanColorMode" class="panel-select">
+              <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
+              <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
               <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
             </select>
           </div>
           <template v-if="activeTab === 'fanChart'">
-            <div class="panel-control">
-              <label class="panel-label">{{ $t('visualization.fan.colorMode') }}</label>
-              <select v-model="store.fanColorMode" class="panel-select">
-                <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
-                <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
-                <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
-              </select>
-            </div>
             <div class="panel-control">
               <span class="panel-label">{{ $t('visualization.fan.arc') }}</span>
               <div class="panel-toggle-btns panel-toggle-btns--wrap">
@@ -240,6 +228,34 @@
           </template>
         </template>
 
+      </div>
+    </div>
+
+    <!-- Fan Chart (Your Ancestors only) -->
+    <div v-if="hasFanChartSection" class="panel-section">
+      <SectionHeader :title="$t('reports.panel.fanChart')" :collapsed="!open.fanChart" @toggle="open.fanChart = !open.fanChart" />
+      <div v-if="open.fanChart" class="panel-section-body">
+        <div class="panel-control">
+          <label class="panel-label">{{ $t('chart.export.colorMode') }}</label>
+          <select v-model="store.yourAncestorsColorMode" class="panel-select">
+            <option value="branch">{{ $t('visualization.fanColorBranch') }}</option>
+            <option value="sex">{{ $t('visualization.fanColorSex') }}</option>
+            <option value="bw">{{ $t('chart.export.blackWhite') }}</option>
+          </select>
+        </div>
+        <div class="panel-control">
+          <span class="panel-label">{{ $t('visualization.fan.arc') }}</span>
+          <div class="panel-toggle-btns panel-toggle-btns--wrap">
+            <button v-for="span in fanArcOptions" :key="span" :class="{ active: store.yourAncestorsFanArcSpan === span }" @click="store.yourAncestorsFanArcSpan = (span as ArcSpan)">{{ span }}deg</button>
+          </div>
+        </div>
+        <div class="panel-control">
+          <div class="panel-range-row">
+            <span class="panel-label">{{ $t('reports.generations') }}</span>
+            <span class="panel-range-value">{{ store.yourAncestorsFanGenerations }}</span>
+          </div>
+          <input type="range" min="3" max="8" step="1" v-model.number="store.yourAncestorsFanGenerations" class="panel-range" />
+        </div>
       </div>
     </div>
 
@@ -292,8 +308,8 @@ const store = useReportConfigStore();
 
 const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 
-// Subject and Options open by default; Appearance collapsed.
-const open = reactive({ subject: true, options: true, appearance: false });
+// Subject and Options open by default; Report/Chart/Fan Chart collapsed.
+const open = reactive({ subject: true, options: true, appearance: false, fanChart: false });
 
 const isPersonReport = computed(() =>
   ['alife', 'yourAncestors', 'onePage',
@@ -307,6 +323,12 @@ const isChartPrint = computed(() =>
 const hasAppearance = computed(() =>
   ['onePage', 'yourAncestors', 'photoAlbum',
    'pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'].includes(props.activeTab)
+);
+
+const hasFanChartSection = computed(() => props.activeTab === 'yourAncestors');
+
+const appearanceSectionTitle = computed(() =>
+  isChartPrint.value ? t('reports.panel.chart') : t('reports.panel.report')
 );
 
 const canPrint = computed(() => {

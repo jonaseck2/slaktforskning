@@ -199,7 +199,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('places.hierarchy')" :count="childPlaces.length" :collapsed="!sections.children" @toggle="toggleSection('children')" />
         <div v-if="sections.children" class="panel-section-body">
-          <div v-if="ancestors.length === 0 && childPlaces.length === 0" class="empty-hint">{{ $t('empty.places') }}</div>
+          <SectionEmpty v-if="ancestors.length === 0 && childPlaces.length === 0" :message="$t('empty.places')" />
           <template v-else>
             <!-- Ancestors (outermost first) -->
             <ul v-if="ancestors.length > 0" class="hierarchy-list">
@@ -247,6 +247,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import EventList from './EventList.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import AddPersonModal from './AddPersonModal.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import PlaceCitationsSection from './PlaceCitationsSection.vue';

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.140.0 — two-tier empty state system + chart outline fixes
+
+- feat: introduce `SectionEmpty` component — compact one-line muted text with optional underlined action link, for sub-section empties inside detail views and panels
+- feat: full empty state audit — full-view list empties (Persons, Relationships, Sources, Places, Media, Groups, ResearchTasks, Visualization, Quality, Reports, Map) now use `AppEmptyState` with icon, description, and action CTA; icons match their nav bar icon (👤 🔗 📚 📍 📷 🏷️ 🔬 ⚠️ 🖨️ 🌳 🗺️)
+- feat: replace all `<p class="empty-hint">` and inline empty divs in panels and detail views with `SectionEmpty`; action links wired where component exposes a mechanism (`openAddForm`, `attach`)
+- feat: MapView always renders the map even when empty — floating pill overlay for "no places" and "no matches" states instead of hiding the map behind AppEmptyState
+- fix: chart descendant layout — exclude placeholder children from subtreeExtents and placement loop; track depthOf per node; separate placeholderPaths array so connector lines render dashed
+- fix: chart pedigree layout — parent connector paths for placeholder parents go to placeholderPaths (rendered dashed); placeholder parents excluded from focal-person CY averaging
+- fix: ReportPanel — fan chart color mode merged into chart print Appearance block; Your Ancestors fan chart gets its own collapsible section with separate `fanGenerations` / `fanArcSpan` props; `yourAncestorsColorMode` drop-down moved to fan chart section
 - fix: improve empty states — map, media, visualization, places, and quality views now use AppEmptyState with descriptions and action shortcuts
 - fix: quality checks now defer 1500ms after navigation instead of loading immediately, preventing contention with main data loading on detail views
 

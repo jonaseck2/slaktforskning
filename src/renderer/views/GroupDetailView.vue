@@ -49,7 +49,7 @@
       <AppButton variant="secondary" size="sm" @click="showAddMember = false; newMemberId = null">{{ $t('common.cancel') }}</AppButton>
     </div>
 
-    <div v-if="members.length === 0" class="empty-hint">{{ $t('empty.persons') }}</div>
+    <SectionEmpty v-if="members.length === 0" :message="$t('empty.persons')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -97,6 +97,7 @@ import AppButton from '../components/ui/AppButton.vue';
 import SectionHeader from '../components/ui/SectionHeader.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
+import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 

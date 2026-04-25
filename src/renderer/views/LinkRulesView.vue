@@ -96,7 +96,7 @@
           </tr>
         </tbody>
       </table>
-      <p v-else class="empty-hint">{{ $t('empty.linkRules') }}</p>
+      <SectionEmpty v-else :message="$t('empty.linkRules')" />
     </div>
 
     <!-- Test field -->
@@ -197,6 +197,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
+import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
 

@@ -74,7 +74,7 @@
             <PersonPicker :model-value="null" :relatee-id="linkedPersons[0]?.entityId" :placeholder="$t('addRelated.searchPlaceholder')" @select="linkPerson" />
             <AppButton variant="ghost" size="sm" @click="showPersonPicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
-          <div v-if="linkedPersons.length === 0 && !showPersonPicker" class="empty-hint">{{ $t('empty.persons') }}</div>
+          <SectionEmpty v-if="linkedPersons.length === 0 && !showPersonPicker" :message="$t('empty.persons')" />
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
             <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
             <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
@@ -98,7 +98,7 @@
             <PlacePicker :model-value="null" :placeholder="$t('places.searchPlaceholder')" @select="linkPlace" />
             <AppButton variant="ghost" size="sm" @click="showPlacePicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
-          <div v-if="linkedPlaces.length === 0 && !showPlacePicker" class="empty-hint">{{ $t('empty.places') }}</div>
+          <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
           <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
             <router-link :to="'/places/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
@@ -115,7 +115,7 @@
           @toggle="toggleSection('events')"
         />
         <div v-if="sections.events" class="panel-section-body">
-          <div v-if="linkedEvents.length === 0" class="empty-hint">{{ $t('empty.events') }}</div>
+          <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
           <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
             <span>{{ le.label }}</span>
             <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
@@ -134,7 +134,7 @@
           @action="drawMode ? emit('stop-draw-mode') : emit('start-draw-mode')"
         />
         <div v-if="sections.faceTags" class="panel-section-body">
-          <div v-if="regions.length === 0 && !drawMode" class="empty-hint">{{ $t('empty.faceTags') }}</div>
+          <SectionEmpty v-if="regions.length === 0 && !drawMode" :message="$t('empty.faceTags')" />
           <div
             v-for="r in regions"
             :key="r.id"
@@ -189,6 +189,7 @@ import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import AppLoadingState from './ui/AppLoadingState.vue';
 import SectionHeader from './ui/SectionHeader.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import MediaChecksSection from './MediaChecksSection.vue';

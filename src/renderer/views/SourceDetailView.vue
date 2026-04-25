@@ -59,7 +59,7 @@
         :data-narrate="$t('sourceDetail.citations') + ', ' + citations.length"
         @action="showCitationForm = true"
       />
-      <div v-if="citations.length === 0" class="empty-hint">{{ $t('empty.citations') }}</div>
+      <SectionEmpty v-if="citations.length === 0" :message="$t('empty.citations')" />
       <table v-else class="data-table">
         <thead>
           <tr>
@@ -117,6 +117,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import CitationForm from '../components/CitationForm.vue';
+import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import CitationEditModal from '../components/CitationEditModal.vue';
 import LinkedText from '../components/LinkedText.vue';
 import AppBadge from '../components/ui/AppBadge.vue';

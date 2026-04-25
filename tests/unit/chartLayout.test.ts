@@ -1420,6 +1420,192 @@ describe('hourglass outline overlap detection', () => {
   });
 });
 
+// ─── Outline placeholder regressions ────────────────────────────────────────
+//
+// Two bugs were fixed together:
+// 1. Conditional injection (b029bd1): injectOutlines skipped father/mother when a real
+//    parent of that sex existed — broke the non-collapsed case.
+// 2. Ordering bug: injectOutlines ran before recordAndPrune, so collapsed parents were
+//    already "seen" by injection and no placeholders were created after pruning.
+//
+// These tests pin BOTH fixes for all three chart types so they cannot regress silently.
+
+describe('outline placeholders — pedigree regression', () => {
+  it('shows father+mother outlines when selected focal already has both parents visible', () => {
+    const tree = pedigree3(p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
+    const { placeholders } = computePedigreeLayout(tree, new Set(), 'f');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeDefined();
+  });
+
+  it('shows father+mother outlines when selected ancestor already has both parents visible', () => {
+    const tree = pedigree3(
+      p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), p('mgf', { sex: 'M' }), p('mgm', { sex: 'F' })],
+    );
+    const { placeholders } = computePedigreeLayout(tree, new Set(), 'dad');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeDefined();
+  });
+
+  it('shows father+mother outlines when selected person\'s parents branch is collapsed', () => {
+    const tree = pedigree3(p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
+    const { placeholders } = computePedigreeLayout(tree, new Set(['f:right']), 'f');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeDefined();
+  });
+
+  it('does not create spurious collapse button from placeholder parents', () => {
+    const tree = pedigree3(p('f'));
+    const { collapseButtons } = computePedigreeLayout(tree, new Set(), 'f');
+    expect(collapseButtons.find(b => b.personId === 'f')).toBeUndefined();
+  });
+
+  it('real box positions unchanged when placeholder parents are injected', () => {
+    const tree = pedigree3(p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
+    const noSel = computePedigreeLayout(tree);
+    const withSel = computePedigreeLayout(tree, new Set(), 'f');
+    expect(withSel.boxes.find(b => b.isFocal)!.y).toBe(noSel.boxes.find(b => b.isFocal)!.y);
+    expect(withSel.boxes.find(b => b.person.id === 'dad')!.y).toBe(noSel.boxes.find(b => b.person.id === 'dad')!.y);
+    expect(withSel.boxes.find(b => b.person.id === 'mom')!.y).toBe(noSel.boxes.find(b => b.person.id === 'mom')!.y);
+  });
+
+  it('no overlaps when selected person has both parents visible', () => {
+    const tree = pedigree3(
+      p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf'), p('pgm'), p('mgf'), p('mgm')],
+    );
+    const { boxes, placeholders } = computePedigreeLayout(tree, new Set(), 'f');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: `${ph.role}_${ph.childPersonId}` }, x: ph.x, y: ph.y, w: BOX_W, h: MIN_BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('no overlaps when selected ancestor has both parents visible', () => {
+    const tree = pedigree3(
+      p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf'), p('pgm'), p('mgf'), p('mgm')],
+    );
+    const { boxes, placeholders } = computePedigreeLayout(tree, new Set(), 'dad');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: `${ph.role}_${ph.childPersonId}` }, x: ph.x, y: ph.y, w: BOX_W, h: MIN_BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+
+  it('parent outline connector paths are dashed (D: prefix) not solid', () => {
+    const tree = pedigree3(p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
+    const { paths } = computePedigreeLayout(tree, new Set(), 'f');
+    const solidPaths = paths.filter(d => !d.startsWith('D:'));
+    const dashedPaths = paths.filter(d => d.startsWith('D:'));
+    // 2 solid connectors (focal→dad, focal→mom); ≥2 dashed (focal→ph_father, focal→ph_mother, plus child/spouse outlines)
+    expect(solidPaths.length).toBe(2);
+    expect(dashedPaths.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('outline placeholders — hourglass regression', () => {
+  it('shows father+mother outlines when focal already has both parents visible', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
+    const { placeholders } = computeHourglassLayout(tree, new Set(), 'f');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeDefined();
+  });
+
+  it('shows father+mother outlines when selected ancestor already has both parents visible', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), null, null],
+    );
+    const { placeholders } = computeHourglassLayout(tree, new Set(), 'dad');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeDefined();
+  });
+
+  it('shows father+mother outlines when ancestor\'s parents branch is collapsed', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), null, null],
+    );
+    const { placeholders } = computeHourglassLayout(tree, new Set(['dad:up']), 'dad');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeDefined();
+  });
+
+  it('does not create spurious up button from placeholder parents', () => {
+    const tree = hourglass(p('f', { sex: 'M' }));
+    const { collapseButtons } = computeHourglassLayout(tree, new Set(), 'f');
+    expect(collapseButtons.find(b => b.personId === 'f' && b.direction === 'up')).toBeUndefined();
+  });
+
+  it('real parent positions unchanged when placeholder parents are injected', () => {
+    const tree = hourglass(p('f', { sex: 'M' }), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
+    const noSel = computeHourglassLayout(tree);
+    const withSel = computeHourglassLayout(tree, new Set(), 'f');
+    expect(withSel.boxes.find(b => b.person.id === 'dad')!.y).toBe(noSel.boxes.find(b => b.person.id === 'dad')!.y);
+    expect(withSel.boxes.find(b => b.person.id === 'mom')!.y).toBe(noSel.boxes.find(b => b.person.id === 'mom')!.y);
+  });
+
+  it('no overlaps when focal with both parents is selected', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf'), p('pgm'), p('mgf'), p('mgm')],
+      [p('c1')], [p('s1')],
+    );
+    const { boxes, placeholders } = computeHourglassLayout(tree, new Set(), 'f');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: `${ph.role}_${ph.childPersonId}` }, x: ph.x, y: ph.y, w: BOX_W, h: MIN_BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+});
+
+describe('outline placeholders — descendant regression', () => {
+  it('shows child outline even when selected person\'s children are collapsed', () => {
+    const root: DescendantNode = {
+      person: p('f'),
+      children: [{ person: p('c1'), children: [] }],
+    };
+    const { placeholders } = computeDescendantLayout(root, 3, new Set(['f:down']), 'f');
+    expect(placeholders.find(ph => ph.role === 'child' && ph.childPersonId === 'f')).toBeDefined();
+  });
+
+  it('shows father+mother outlines for the focal person', () => {
+    const root: DescendantNode = {
+      person: p('f'),
+      children: [{ person: p('c1'), children: [] }],
+    };
+    const { placeholders } = computeDescendantLayout(root, 3, new Set(), 'f');
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeDefined();
+  });
+
+  it('does not create spurious down button when only placeholder child exists', () => {
+    const root: DescendantNode = { person: p('f'), children: [] };
+    const { collapseButtons } = computeDescendantLayout(root, 3, new Set(), 'f');
+    expect(collapseButtons.find(b => b.personId === 'f')).toBeUndefined();
+  });
+
+  it('real child positions unchanged when placeholder child is injected', () => {
+    const root: DescendantNode = {
+      person: p('f'),
+      children: [{ person: p('c1'), children: [] }, { person: p('c2'), children: [] }],
+    };
+    const noSel = computeDescendantLayout(root, 3);
+    const withSel = computeDescendantLayout(root, 3, new Set(), 'f');
+    expect(withSel.boxes.find(b => b.person.id === 'c1')!.x).toBe(noSel.boxes.find(b => b.person.id === 'c1')!.x);
+    expect(withSel.boxes.find(b => b.person.id === 'c1')!.y).toBe(noSel.boxes.find(b => b.person.id === 'c1')!.y);
+  });
+
+  it('no overlaps when focal with children is selected', () => {
+    const root: DescendantNode = {
+      person: p('f'),
+      children: [{ person: p('c1'), children: [] }, { person: p('c2'), children: [] }],
+    };
+    const { boxes, placeholders } = computeDescendantLayout(root, 3, new Set(), 'f');
+    const allBoxes = [...boxes, ...placeholders.map(ph => ({ person: { id: `${ph.role}_${ph.childPersonId}` }, x: ph.x, y: ph.y, w: BOX_W, h: MIN_BOX_H }))];
+    assertNoOverlaps(allBoxes as any);
+  });
+});
+
 describe('computeDescendantLayout — dynamic heights and curved paths', () => {
   it('sizes each box via measureBoxHeight', () => {
     const root: DescendantNode = {

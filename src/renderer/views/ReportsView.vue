@@ -37,6 +37,8 @@
               :generations="store.yourAncestorsGenerations"
               :color-mode="store.yourAncestorsColorMode"
               :density="store.yourAncestorsDensity"
+              :fan-generations="store.yourAncestorsFanGenerations"
+              :fan-arc-span="store.yourAncestorsFanArcSpan"
               :show-events="store.yourAncestorsShowEvents"
               :show-life-map="store.yourAncestorsShowLifeMap"
               :show-map-caption="store.yourAncestorsShowMapCaption"

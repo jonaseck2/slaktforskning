@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="identifiers.length === 0" class="empty-hint">{{ $t('empty.identifiers') }}</div>
+    <SectionEmpty v-if="identifiers.length === 0" :message="$t('empty.identifiers')" :action-label="$t('empty.addIdentifier')" @action="openAddForm()" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue';
 import BaseModal from './BaseModal.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 export interface IdentifierRow {
   id: string;

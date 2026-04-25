@@ -30,7 +30,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
 
   // Your Ancestors
   const yourAncestorsGenerations          = ref(4);
-  const yourAncestorsColorMode            = ref<'bw' | 'branch' | 'sex' | 'themed'>('themed');
+  const yourAncestorsColorMode            = ref<'bw' | 'branch' | 'sex'>('branch');
   const yourAncestorsDensity              = ref<'one' | 'two'>('one');
   const yourAncestorsShowEvents           = ref(true);
   const yourAncestorsShowLifeMap          = ref(true);
@@ -87,9 +87,13 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   // Shared privacy toggle (keepsake reports)
   const redactLiving = ref(false);
 
-  // Fan chart
+  // Fan chart (standalone print tab)
   const fanArcSpan   = ref<ArcSpan>(360);
   const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
+
+  // Fan chart embedded in Your Ancestors report
+  const yourAncestorsFanGenerations = ref(8);
+  const yourAncestorsFanArcSpan     = ref<ArcSpan>(270);
 
   // Chart export: shared across chart-print tabs
   const chartColorMode = ref<ColorMode>('themed');
@@ -116,6 +120,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
     aMarriageShowSources, aMarriageShowMediaCaptions, aMarriageShowMediaNotes,
     redactLiving,
     fanArcSpan, fanColorMode,
+    yourAncestorsFanGenerations, yourAncestorsFanArcSpan,
     chartColorMode,
     coupleRelationships,
   };

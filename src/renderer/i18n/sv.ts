@@ -61,8 +61,8 @@ export default {
   chart: {
     export: {
       colorMode: 'F\u00e4rg',
-      themed: 'Tema',
-      blackWhite: 'S/V',
+      themed: 'F\u00e4rg',
+      blackWhite: 'Gr\u00e5skala',
       sexColored: 'K\u00f6n',
       saveSvg: 'SVG',
       savePdf: 'PDF',
@@ -457,11 +457,9 @@ export default {
     },
     fan: {
       arc: 'Båge',
-      colorMode: 'Grensfärg',
       generations: 'Generationer',
     },
-    fanColorMode: 'Färgläge',
-    fanColorBranch: 'Gren',
+    fanColorBranch: 'Färg',
     fanColorSex: 'Kön',
     empty: 'Lägg till en person för att börja visualisera.',
     noFocalPerson: 'Välj en fokusperson för att visa trädet.',
@@ -727,6 +725,9 @@ export default {
     panel: {
       options: 'Alternativ',
       appearance: 'Utseende',
+      report: 'Rapport',
+      chart: 'Diagram',
+      fanChart: 'Solfjäderdiagram',
     },
     groups: {
       keepsake: 'Minnesrapporter',
@@ -760,7 +761,6 @@ export default {
       density: 'Sidor per förfader',
       densityOne: 'En per sida',
       densityTwo: 'Två per sida',
-      colorThemed: 'Tema',
     },
     loadingReport: 'Laddar rapport\u2026',
     pedigreePrint: {

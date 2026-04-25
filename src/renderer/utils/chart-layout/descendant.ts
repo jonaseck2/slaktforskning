@@ -88,17 +88,20 @@ export function computeDescendantLayout(
 
   const boxes: BoxLayout[] = [];
   const paths: string[] = [];
+  const placeholderPaths: string[] = [];
   const collapseButtons: CollapseButton[] = [];
+  const depthOf = new Map<string, number>();
 
-  // Subtree extents unchanged (horizontal only, uses BOX_W)
+  // Placeholder children are excluded from spacing — they're placed by the post-layout pass.
   function subtreeExtents(node: TreePerson, depth: number): [number, number] {
     const half = BOX_W / 2;
     const extraR = extraRightExtent.get(node.person.id) ?? 0;
     const extraL = extraLeftExtent.get(node.person.id) ?? 0;
-    if (depth >= maxGenerations || node.children.length === 0) return [half + extraL, half + extraR];
+    const realChildren = node.children.filter(c => !c.isPlaceholder);
+    if (depth >= maxGenerations || realChildren.length === 0) return [half + extraL, half + extraR];
     if (collapsed.has(`${node.person.id}:down`)) return [half + extraL, half + extraR];
-    const n = node.children.length;
-    const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
+    const n = realChildren.length;
+    const childExts = realChildren.map(c => subtreeExtents(c, depth + 1));
     const offsets: number[] = [0];
     for (let i = 1; i < n; i++) {
       offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
@@ -112,6 +115,7 @@ export function computeDescendantLayout(
   function place(node: TreePerson, depth: number, cx: number): void {
     const h = hOf(node);
     const y = rowTopY[depth];
+    depthOf.set(node.person.id, depth);
     boxes.push({
       person: node.person,
       isFocal: !!node.isFocal,
@@ -121,7 +125,8 @@ export function computeDescendantLayout(
     });
 
     const pid = node.person.id;
-    const hasChildren = node.children.length > 0;
+    const realChildren = node.children.filter(c => !c.isPlaceholder);
+    const hasChildren = realChildren.length > 0;
     const isCollapsed = collapsed.has(`${pid}:down`);
 
     if (!pid.startsWith(PLACEHOLDER_PREFIX)) {
@@ -143,8 +148,8 @@ export function computeDescendantLayout(
     }
 
     if (depth < maxGenerations && hasChildren && !isCollapsed) {
-      const n = node.children.length;
-      const childExts = node.children.map(c => subtreeExtents(c, depth + 1));
+      const n = realChildren.length;
+      const childExts = realChildren.map(c => subtreeExtents(c, depth + 1));
       const offsets: number[] = [0];
       for (let i = 1; i < n; i++) {
         offsets.push(offsets[i - 1] + childExts[i - 1][1] + V_GAP + childExts[i][0]);
@@ -156,7 +161,7 @@ export function computeDescendantLayout(
       // One curved path per child
       for (let ci = 0; ci < n; ci++) {
         paths.push(curvedElbow(cx, y + h, childCXs[ci], rowTopY[depth + 1], 'down'));
-        place(node.children[ci], depth + 1, childCXs[ci]);
+        place(realChildren[ci], depth + 1, childCXs[ci]);
       }
     }
   }
@@ -166,8 +171,6 @@ export function computeDescendantLayout(
   place(tp, 0, rootCX);
 
   // ── Unplaced outlines for selected person ────────────────────────────────
-  const placeholderPaths: string[] = [];
-
   if (selectedPersonId) {
     const selBox = boxes.find(b => b.person.id === selectedPersonId);
     const placedIds = new Set(boxes.map(b => b.person.id));
@@ -255,6 +258,20 @@ export function computeDescendantLayout(
             boxes.push({ person: unplacedParents[i].person, isFocal: false, x: px, y: parentY, w: BOX_W, h: ph });
             const parentCX = px + BOX_W / 2;
             placeholderPaths.push(curvedElbow(parentCX, parentY + ph, selCX, selBox.y, 'down'));
+          }
+        }
+
+        const unplacedChildren = selNode.children.filter(c => c.isPlaceholder && !placedIds.has(c.person.id));
+        if (unplacedChildren.length > 0) {
+          const selDepth = depthOf.get(selectedPersonId) ?? 0;
+          const chRowY = selDepth < maxGenerations
+            ? rowTopY[selDepth + 1]
+            : selBox.y + selBox.h + GEN_GAP;
+          for (const ch of unplacedChildren) {
+            const chH = hOf(ch);
+            const chX = findClearXRect(selCX - BOX_W / 2, chRowY, 1, chH);
+            boxes.push({ person: ch.person, isFocal: false, x: chX, y: chRowY, w: BOX_W, h: chH });
+            placeholderPaths.push(curvedElbow(selCX, selBox.y + selBox.h, chX + BOX_W / 2, chRowY, 'down'));
           }
         }
       }

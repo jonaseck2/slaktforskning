@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="media.length === 0" class="empty-hint">{{ $t('empty.media') }}</div>
+    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -39,6 +39,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;

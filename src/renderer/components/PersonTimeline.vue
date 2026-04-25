@@ -1,7 +1,7 @@
 <template>
   <div class="person-timeline">
-    <div v-if="loading" class="empty-hint">{{ $t('common.loading') }}</div>
-    <div v-else-if="datedEvents.length === 0 && undatedEvents.length === 0" class="empty-hint">{{ $t('personTimeline.empty') }}</div>
+    <SectionEmpty v-if="loading" :message="$t('common.loading')" />
+    <SectionEmpty v-else-if="datedEvents.length === 0 && undatedEvents.length === 0" :message="$t('personTimeline.empty')" />
     <template v-else>
       <!-- Dated events -->
       <div class="timeline-track">
@@ -74,6 +74,7 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventForm from './EventForm.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 
 interface EventRow {
   id: string;
