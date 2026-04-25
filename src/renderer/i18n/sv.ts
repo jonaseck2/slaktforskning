@@ -82,6 +82,7 @@ export default {
     close: 'Stäng',
     monospacedTooltip: 'Visa anteckningar med fast bredd för ASCII-tabeller och justerad text',
     clearFilter: 'Rensa filter',
+    more: 'Mer',
   },
   persons: {
     title: 'Personer',
@@ -390,6 +391,8 @@ export default {
     qualifierParticle: 'Adelstitel/partikel',
     patronymicBase: 'Faders/moders förnamn',
     patronymicBasePlaceholder: 't.ex. Erik (om efternamnet är Eriksson)',
+    dateFrom: 'Giltigt från',
+    dateTo: 'Giltigt till',
   },
   identifiers: {
     title: 'Externa identifierare',

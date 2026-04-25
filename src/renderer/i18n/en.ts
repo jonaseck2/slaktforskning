@@ -82,6 +82,7 @@ export default {
     close: 'Close',
     monospacedTooltip: 'Show notes in monospaced font for ASCII tables and aligned text',
     clearFilter: 'Clear filter',
+    more: 'More',
   },
   persons: {
     title: 'People',
@@ -390,6 +391,8 @@ export default {
     qualifierParticle: 'Noble particle',
     patronymicBase: "Parent's given name",
     patronymicBasePlaceholder: 'e.g. Erik (if surname is Eriksson)',
+    dateFrom: 'Valid from',
+    dateTo: 'Valid to',
   },
   identifiers: {
     title: 'External identifiers',
