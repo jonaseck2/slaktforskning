@@ -20,15 +20,6 @@
         />
       </div>
 
-      <!-- Person (hidden when personId is locked) -->
-      <div v-if="!props.personId" class="ep-field">
-        <span class="ep-field-label">{{ $t('persons.title') }}</span>
-        <PersonPicker
-          v-model="selectedPersonId"
-          :placeholder="$t('researchTasks.selectPersonOptional')"
-        />
-      </div>
-
       <!-- Priority segmented -->
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('researchTasks.priority') }}</span>
@@ -87,7 +78,6 @@ import { reactive, ref, computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
-import PersonPicker from '../PersonPicker.vue';
 import { RESEARCH_TASK_STATUS_VALUES } from '../../constants/eventTypes';
 
 declare const window: Window & {
@@ -99,7 +89,6 @@ interface ResearchTask {
   task: string;
   notes?: string | null;
   result?: string | null;
-  person_id?: string | null;
   priority: number;
   status: 'open' | 'in_progress' | 'done' | 'stopped';
 }
@@ -124,7 +113,6 @@ const { t } = useI18n();
 const toast = useToast();
 
 const taskRef = ref<HTMLTextAreaElement | null>(null);
-const selectedPersonId = ref<string | null>(props.editingTask?.person_id ?? null);
 
 const PRIORITY_OPTIONS = [
   { value: 1, label: '1' },
@@ -153,13 +141,16 @@ async function handleSave() {
       priority: form.priority,
       notes: form.notes.trim() || null,
       result: (form.status === 'done' || form.status === 'stopped') ? (form.result.trim() || null) : null,
-      person_id: props.personId ?? selectedPersonId.value ?? undefined,
     };
     let saved: ResearchTask;
     if (props.editingTask) {
       saved = (await window.api.researchTasks.update(props.editingTask.id, payload)) as ResearchTask;
     } else {
       saved = (await window.api.researchTasks.create(payload)) as ResearchTask;
+      // When opened from a person's panel, link the new task to that person.
+      if (saved && props.personId) {
+        await window.api.researchTasks.addLink(saved.id, 'person', props.personId);
+      }
     }
     emit('saved', saved);
     emit('close');

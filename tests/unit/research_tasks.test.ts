@@ -1,12 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createPerson, deletePerson } from '../../src/api/persons';
+import { createPlace } from '../../src/api/places';
+import { createMedia } from '../../src/api/media';
 import {
   createResearchTask,
   getResearchTask,
   listResearchTasks,
   getResearchTasksForPerson,
+  getResearchTasksForPlace,
+  getResearchTasksForMedia,
   updateResearchTask,
   deleteResearchTask,
+  addTaskLink,
+  removeTaskLink,
+  getTaskLinks,
 } from '../../src/api/research_tasks';
 import { createTestDb } from './helpers';
 
@@ -23,30 +30,21 @@ describe('research tasks', () => {
     expect(task.task).toBe('Find birth record for Erik Nilsson');
     expect(task.status).toBe('open');
     expect(task.priority).toBe(0);
-    expect(task.person_id).toBeNull();
 
     const fetched = getResearchTask(db, task.id);
     expect(fetched?.task).toBe('Find birth record for Erik Nilsson');
   });
 
   it('creates a task with all fields', () => {
-    const person = createPerson(db, { given_name: 'Erik', surname: 'Nilsson' });
     const task = createResearchTask(db, {
       task: 'Verify immigration date',
       notes: 'Conflicting sources',
-      person_id: person.id,
       priority: 3,
       status: 'in_progress',
     });
-    expect(task.person_id).toBe(person.id);
     expect(task.priority).toBe(3);
     expect(task.status).toBe('in_progress');
     expect(task.notes).toBe('Conflicting sources');
-  });
-
-  it('creates a task with null person_id (general task)', () => {
-    const task = createResearchTask(db, { task: 'Review source list', person_id: null });
-    expect(task.person_id).toBeNull();
   });
 
   it('lists tasks ordered by priority desc then created_at', () => {
@@ -96,63 +94,87 @@ describe('research tasks', () => {
   });
 });
 
-describe('tasks for person', () => {
-  it('gets tasks for a specific person', () => {
+describe('task links', () => {
+  it('adds a person link to a task', () => {
     const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
-    createResearchTask(db, { task: 'Find baptism', person_id: person.id });
-    createResearchTask(db, { task: 'Find marriage', person_id: person.id });
-    createResearchTask(db, { task: 'General task' }); // no person
+    const task = createResearchTask(db, { task: 'Find baptism' });
 
-    const tasks = getResearchTasksForPerson(db, person.id);
-    expect(tasks).toHaveLength(2);
+    const link = addTaskLink(db, task.id, 'person', person.id);
+    expect(link.task_id).toBe(task.id);
+    expect(link.entity_type).toBe('person');
+    expect(link.entity_id).toBe(person.id);
   });
 
-  it('returns empty array for person with no tasks', () => {
-    const person = createPerson(db, { given_name: 'Solo', surname: 'Person' });
+  it('addTaskLink is idempotent', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+    const task = createResearchTask(db, { task: 'Find baptism' });
+    addTaskLink(db, task.id, 'person', person.id);
+    addTaskLink(db, task.id, 'person', person.id);
+    expect(getTaskLinks(db, task.id)).toHaveLength(1);
+  });
+
+  it('supports persons, places, and media on the same task', () => {
+    const task = createResearchTask(db, { task: 'Cross-reference parish records' });
+    const p1 = createPerson(db, { given_name: 'Erik', surname: 'Nilsson' });
+    const p2 = createPerson(db, { given_name: 'Anna', surname: 'Larsdotter' });
+    const place = createPlace(db, { name: 'Härnösand' });
+    const media = createMedia(db, { title: 'Parish register scan' });
+
+    addTaskLink(db, task.id, 'person', p1.id);
+    addTaskLink(db, task.id, 'person', p2.id);
+    addTaskLink(db, task.id, 'place', place.id);
+    addTaskLink(db, task.id, 'media', media.id);
+
+    expect(getTaskLinks(db, task.id)).toHaveLength(4);
+    expect(getResearchTasksForPerson(db, p1.id)).toHaveLength(1);
+    expect(getResearchTasksForPerson(db, p2.id)).toHaveLength(1);
+    expect(getResearchTasksForPlace(db, place.id)).toHaveLength(1);
+    expect(getResearchTasksForMedia(db, media.id)).toHaveLength(1);
+  });
+
+  it('removes a task link by id', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+    const task = createResearchTask(db, { task: 'Find baptism' });
+    const link = addTaskLink(db, task.id, 'person', person.id);
+
+    expect(removeTaskLink(db, link.id)).toBe(true);
+    expect(getTaskLinks(db, task.id)).toHaveLength(0);
+  });
+
+  it('cascades delete: removing task removes its links', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+    const task = createResearchTask(db, { task: 'Find baptism' });
+    addTaskLink(db, task.id, 'person', person.id);
+
+    deleteResearchTask(db, task.id);
+    expect(getTaskLinks(db, task.id)).toHaveLength(0);
+  });
+
+  it('does not cascade person delete (links remain dangling, like media_links)', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+    const task = createResearchTask(db, { task: 'Find baptism' });
+    addTaskLink(db, task.id, 'person', person.id);
+    deletePerson(db, person.id);
+    // Tasks themselves are unaffected; the link row stays — joining queries return empty
+    expect(getResearchTask(db, task.id)).not.toBeNull();
     expect(getResearchTasksForPerson(db, person.id)).toHaveLength(0);
   });
+});
 
-  it('updates individual fields: priority', () => {
-    const task = createResearchTask(db, { task: 'Test task', priority: 1 });
-    const updated = updateResearchTask(db, task.id, { priority: 5 });
-    expect(updated?.priority).toBe(5);
+describe('tasks for entity', () => {
+  it('gets tasks for a specific person', () => {
+    const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
+    const t1 = createResearchTask(db, { task: 'Find baptism' });
+    const t2 = createResearchTask(db, { task: 'Find marriage' });
+    createResearchTask(db, { task: 'General task' }); // no person link
+    addTaskLink(db, t1.id, 'person', person.id);
+    addTaskLink(db, t2.id, 'person', person.id);
+
+    expect(getResearchTasksForPerson(db, person.id)).toHaveLength(2);
   });
 
-  it('updates individual fields: task text', () => {
-    const task = createResearchTask(db, { task: 'Original task' });
-    const updated = updateResearchTask(db, task.id, { task: 'Updated task' });
-    expect(updated?.task).toBe('Updated task');
-  });
-
-  it('updates individual fields: notes', () => {
-    const task = createResearchTask(db, { task: 'Test', notes: 'old notes' });
-    const updated = updateResearchTask(db, task.id, { notes: 'new notes' });
-    expect(updated?.notes).toBe('new notes');
-  });
-
-  it('updates person_id on a task', () => {
-    const person = createPerson(db, { given_name: 'Anna', surname: 'Test' });
-    const task = createResearchTask(db, { task: 'General task' });
-    expect(task.person_id).toBeNull();
-
-    const updated = updateResearchTask(db, task.id, { person_id: person.id });
-    expect(updated?.person_id).toBe(person.id);
-  });
-
-  it('clears person_id with null', () => {
-    const person = createPerson(db, { given_name: 'Anna', surname: 'Test' });
-    const task = createResearchTask(db, { task: 'Linked', person_id: person.id });
-    expect(task.person_id).toBe(person.id);
-
-    const updated = updateResearchTask(db, task.id, { person_id: null });
-    expect(updated?.person_id).toBeNull();
-  });
-
-  it('cascades delete: removing person removes their tasks', () => {
-    const person = createPerson(db, { given_name: 'Lars', surname: 'Svensson' });
-    const task = createResearchTask(db, { task: 'Find birth', person_id: person.id });
-
-    deletePerson(db, person.id);
-    expect(getResearchTask(db, task.id)).toBeNull();
+  it('returns empty array for person with no linked tasks', () => {
+    const person = createPerson(db, { given_name: 'Solo', surname: 'Person' });
+    expect(getResearchTasksForPerson(db, person.id)).toHaveLength(0);
   });
 });
