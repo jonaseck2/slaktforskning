@@ -8,43 +8,25 @@
     <AppEmptyState v-if="groups.length === 0" icon="🏷️" :title="$t('empty.groups')" :description="$t('empty.groupsDesc')" :action-label="$t('empty.addGroup')" @action="showAddForm = true" />
     <GroupsTable v-else :groups="groups" :show-members="true" @remove="deleteGroup" />
 
-    <!-- Add Group Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-group">
-        <h3 id="modal-title-add-group">{{ $t('common.add') }} {{ $t('groups.addGroup') }}</h3>
-        <form @submit.prevent="addGroup">
-          <label>
-            {{ $t('groups.name') }} *
-            <input v-model="form.name" type="text" required autofocus />
-          </label>
-          <label>
-            {{ $t('groups.notes') }}
-            <textarea
-              ref="notesRef"
-              v-model="form.notes"
-              rows="2"
-              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
-              @mouseup="persistNotesHeight"
-            />
-          </label>
-          <div class="modal-actions">
-            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
-            <AppButton variant="primary" type="submit">{{ $t('common.save') }}</AppButton>
-          </div>
-        </form>
-    </BaseModal>
+    <GroupModal
+      v-if="showAddForm"
+      mode="standalone"
+      @cancel="showAddForm = false"
+      @close="showAddForm = false"
+      @saved="onSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated } from 'vue';
+import { ref, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseModal from '../components/BaseModal.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useDataVersionStore } from '../stores/dataVersion';
-import { useTextareaHeight } from '../composables/useTextareaHeight';
 import GroupsTable from '../components/GroupsTable.vue';
-const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('group-add-notes');
+import GroupModal from '../components/modals/GroupModal.vue';
+
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
@@ -58,7 +40,6 @@ interface GroupRow {
 const { t } = useI18n();
 const groups = ref<GroupRow[]>([]);
 const showAddForm = ref(false);
-const form = reactive({ name: '', notes: '' });
 
 async function load() {
   if (!window.api) return;
@@ -71,13 +52,9 @@ async function load() {
   groups.value = enriched;
 }
 
-async function addGroup() {
-  if (!window.api || !form.name.trim()) return;
-  await window.api.groups.create({ name: form.name.trim(), notes: form.notes.trim() });
+function onSaved() {
   showAddForm.value = false;
-  form.name = '';
-  form.notes = '';
-  await load();
+  load();
 }
 
 async function deleteGroup(id: string) {
