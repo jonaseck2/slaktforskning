@@ -9,6 +9,7 @@
 - fix(website-export): hide all add/edit/delete controls in static mode — "+ Add Person/Place/Media" buttons, per-row delete buttons, chart placeholder outlines, inline edit fields
 - fix(website-export): use CartoDB Voyager tiles in static mode — OSM blocks tile requests without a referrer, which file:// can't send
 - fix(website-export): hide MediaPanel in static mode (was still appearing on media row click)
+- fix(website-export): bake gazetteer-resolved lat/lon into the snapshot so places appear on the map even when coordinates aren't stored on the place row (the static site can't run the resolver itself — gazetteers don't ship in the bundle)
 
 ## v0.146.0 — App-look website export
 

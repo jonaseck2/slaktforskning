@@ -436,7 +436,7 @@ onMounted(() => {
   color: var(--text-primary);
 }
 
-/* Canvas */
+/* Canvas — always dark so images render against a neutral background regardless of theme */
 .viewer-canvas {
   flex: 1;
   position: relative;
@@ -445,6 +445,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: default;
+  background: #000;
 }
 
 .image-wrapper {
