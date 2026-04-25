@@ -18,75 +18,28 @@
     <div ref="sentinel" class="scroll-sentinel"></div>
 
     <!-- Add Relationship Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-relationship">
-        <h3 id="modal-title-add-relationship">{{ $t('common.add') }} {{ $t('relationships.addRelationship') }}</h3>
-        <form @submit.prevent="addRelationship">
-          <label>
-            {{ $t('common.type') }}
-            <select v-model="form.type">
-              <option v-for="rt in RELATIONSHIP_TYPE_VALUES" :key="rt" :value="rt">
-                {{ $t('relTypes.' + rt) }}
-              </option>
-            </select>
-          </label>
-          <label v-if="form.type === 'couple'">
-            {{ $t('relationshipDetail.subtype') }}
-            <select v-model="form.subtype">
-              <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">
-                {{ $t('coupleSubtypes.' + st) }}
-              </option>
-            </select>
-          </label>
-          <label v-if="form.type === 'parent_child'">
-            {{ $t('relationshipDetail.subtype') }}
-            <select v-model="form.subtype">
-              <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">
-                {{ $t('parentChildSubtypes.' + st) }}
-              </option>
-            </select>
-          </label>
-          <label>
-            {{ $t('relationships.person1') }}
-            <PersonPicker v-model="form.person1_id" :placeholder="$t('relationships.searchPerson')" />
-          </label>
-          <label>
-            {{ $t('relationships.person2') }}
-            <PersonPicker v-model="form.person2_id" :placeholder="$t('relationships.searchPerson')" />
-          </label>
-          <label>
-            {{ $t('common.notes') }}
-            <textarea
-              ref="notesRef"
-              v-model="form.notes"
-              rows="2"
-              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
-              @mouseup="persistNotesHeight"
-            />
-          </label>
-          <div class="modal-actions">
-            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
-            <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
-          </div>
-        </form>
-    </BaseModal>
+    <RelationshipModal
+      v-if="showAddForm"
+      mode="standalone"
+      @cancel="showAddForm = false"
+      @close="showAddForm = false"
+      @saved="onSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseModal from '../components/BaseModal.vue';
-import PersonPicker from '../components/PersonPicker.vue';
 import RelationshipsTable from '../components/RelationshipsTable.vue';
+import RelationshipModal from '../components/modals/RelationshipModal.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import type { RelRow } from '../components/RelationshipsTable.vue';
-import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
+import { RELATIONSHIP_TYPE_VALUES } from '../constants/eventTypes';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
-import { useTextareaHeight } from '../composables/useTextareaHeight';
-const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('relationship-add-notes');
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
@@ -149,14 +102,6 @@ onUnmounted(() => {
   if (observer) observer.disconnect();
 });
 
-const form = reactive({
-  type: 'couple' as string,
-  subtype: 'marriage' as string,
-  person1_id: null as string | null,
-  person2_id: null as string | null,
-  notes: '',
-});
-
 async function load() {
   if (!window.api) return;
   loading.value = true;
@@ -190,27 +135,9 @@ async function loadMore() {
   }
 }
 
-async function addRelationship() {
-  if (!window.api) return;
-  try {
-    await window.api.relationships.create({
-      type: form.type,
-      person1_id: form.person1_id,
-      person2_id: form.person2_id,
-      subtype: form.subtype,
-      notes: form.notes,
-    });
-    showAddForm.value = false;
-    form.type = 'couple';
-    form.subtype = 'marriage';
-    form.person1_id = null;
-    form.person2_id = null;
-    form.notes = '';
-    await load();
-  } catch (err) {
-    console.error('[RelationshipsView] addRelationship failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
+async function onSaved() {
+  showAddForm.value = false;
+  await load();
 }
 
 async function removeRelationship(id: string) {
