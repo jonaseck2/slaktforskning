@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- fix(website-export): drop "+ thumbnails" from the includeMedia label since thumbnails are no longer generated (the static site reads from media/full/ directly)
+- feat(tasks/groups): research tasks and groups can now link to multiple persons, places, and media items. New `task_links` and `group_links` polymorphic tables replace the single `research_tasks.person_id` column and the persons-only `group_members` table. Existing data migrated in place. ResearchTaskPanel and GroupPanel rewritten with separate Persons / Places / Media sections (new `LinkedPersonsSection` / `LinkedPlacesSection` / `LinkedMediaSection` shared components and a new `MediaPicker`). MCP `add_research_task` now takes `person_ids` / `place_ids` / `media_ids` arrays. Genney import preserves the persons-only semantics.
+- feat(nav): renamed "Research Tasks" / "Forskningsuppgifter" → "Tasks" / "Uppgifter" in the navigation and headings; internal i18n / IPC / route names kept stable.
+- feat(reports): renamed "Framable prints" / "Inramningsbara diagram" → "Charts" / "Diagram" in the reports view tab group.
 - fix(charts): clicking a person box in pedigree, hourglass, descendant, and timeline charts now selects that person in the side panel even in readonly mode (the click handler was gated by `!readonly` — same mistake as the zoom controls; navigation isn't editing). Fan chart already worked.
 - fix(website-export): per-row delete (✕) buttons in panel sub-tables (PersonNamesTable, GroupsTable, ResearchTasksTable, PersonIdentifiersSection, PersonMediaSection, EntityMediaSection in PlacePanel) now hidden in readonly mode. PersonMediaSection also drops its star/reorder column. PersonPanel/PlacePanel pass `:readonly` through to all the sub-tables that needed it.
 - fix(map): map backdrop uses `var(--surface)` instead of Leaflet's default grey, and removed the border around the map container so it blends with the surrounding sheet

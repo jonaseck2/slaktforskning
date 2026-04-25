@@ -1115,7 +1115,7 @@ export default {
     redactLiving: 'Redact details for living persons',
     mediaPersonOnly: 'Only include media linked to a person',
     include: 'Include',
-    includeMedia: 'Media (originals + thumbnails)',
+    includeMedia: 'Media files',
     includeReports: 'Reports (pre-rendered for focus person)',
     includePrints: 'Frameable prints (pre-rendered for focus person)',
     site: 'Site',

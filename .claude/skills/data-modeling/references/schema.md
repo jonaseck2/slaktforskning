@@ -184,14 +184,19 @@ Research workflow tags for persons.
 | notes | TEXT | |
 | created_at | TEXT | datetime |
 
-### group_members
+### group_links
+
+Polymorphic membership — a group may contain persons, places, and media.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID v4 |
 | group_id | TEXT FK | → groups, CASCADE DELETE |
-| person_id | TEXT FK | → persons, CASCADE DELETE |
-| UNIQUE | | (group_id, person_id) |
+| entity_type | TEXT | CHECK ∈ {`person`, `place`, `media`} |
+| entity_id | TEXT | polymorphic — no FK; cleaned up by `deletePerson`/`deletePlace`/`deleteMedia` |
+| sort_order | INT | per-entity-type ordering |
+| created_at | TEXT | datetime |
+| UNIQUE | | (group_id, entity_type, entity_id) |
 
 ### repositories
 
@@ -225,7 +230,6 @@ Research workflow tags for persons.
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID v4 |
-| person_id | TEXT FK | → persons, CASCADE DELETE. Nullable |
 | priority | INTEGER | 1–3 |
 | status | TEXT | 'open' \| 'in_progress' \| 'done' \| 'stopped' |
 | task | TEXT | What to investigate |
@@ -233,6 +237,22 @@ Research workflow tags for persons.
 | result | TEXT | Findings |
 | created_at | TEXT | datetime |
 | updated_at | TEXT | datetime |
+
+Persons / places / media linked to a task live in `task_links`.
+
+### task_links
+
+Polymorphic per-task list of investigation targets — a task can name multiple persons, places, and media.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| task_id | TEXT FK | → research_tasks, CASCADE DELETE |
+| entity_type | TEXT | CHECK ∈ {`person`, `place`, `media`} |
+| entity_id | TEXT | polymorphic — no FK; cleaned up by `deletePerson`/`deletePlace`/`deleteMedia` |
+| sort_order | INT | per-entity-type ordering |
+| created_at | TEXT | datetime |
+| UNIQUE | | (task_id, entity_type, entity_id) |
 
 ### media
 
