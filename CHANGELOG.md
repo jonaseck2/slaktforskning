@@ -11,6 +11,7 @@
 - fix(website-export): use CartoDB Voyager tiles in static mode — OSM blocks tile requests without a referrer, which file:// can't send
 - fix(website-export): hide MediaPanel in static mode (was still appearing on media row click)
 - fix(website-export): bake gazetteer-resolved lat/lon into the snapshot so places appear on the map even when coordinates aren't stored on the place row (the static site can't run the resolver itself — gazetteers don't ship in the bundle)
+- feat(website-export): new privacy option "Only include media linked to a person" — drops media that's only attached to events/places/sources/relationships, useful when you want to share faces without random documents
 
 ## v0.146.0 — App-look website export
 
