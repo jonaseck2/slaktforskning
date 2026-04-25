@@ -28,8 +28,8 @@ import { createSource, createCitation } from '../../api/sources';
 import { createMedia, addMediaLink } from '../../api/media';
 import { getPlace } from '../../api/places';
 import { createRepository, linkSourceRepository } from '../../api/repositories';
-import { createGroup, addGroupMember } from '../../api/groups';
-import { createResearchTask } from '../../api/research_tasks';
+import { createGroup, addGroupLink } from '../../api/groups';
+import { createResearchTask, addTaskLink } from '../../api/research_tasks';
 import { getPatronymicBase } from './profiles/genney';
 import { holgerEngaSubtype, parseHolgerAdoptionSubtypes } from './profiles/holger';
 import type { ImportContext } from './import-types';
@@ -359,7 +359,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
       for (const grpNode of getChildren(node, '_GRP')) {
         const groupId = ctx.grpMap.get(grpNode.value ?? '');
         if (groupId) {
-          try { addGroupMember(ctx.db, groupId, person.id); } catch { /* ignore duplicate */ }
+          try { addGroupLink(ctx.db, groupId, 'person', person.id); } catch { /* ignore duplicate */ }
         }
       }
     }
@@ -599,7 +599,8 @@ export function phaseTodos(ctx: ImportContext): void {
     const priority = parseInt(getChild(node, '_PRIO')?.value ?? '1', 10);
     const task = getChild(node, '_TASK')?.value ?? '';
     const notes = resolveNote(node, ctx.noteMap);
-    createResearchTask(ctx.db, { task, notes: notes || undefined, person_id: person_id ?? undefined, priority, status });
+    const created = createResearchTask(ctx.db, { task, notes: notes || undefined, priority, status });
+    if (person_id) addTaskLink(ctx.db, created.id, 'person', person_id);
   }
 }
 

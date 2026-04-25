@@ -147,7 +147,7 @@
     <div ref="sentinel" class="scroll-sentinel"></div>
     </template>
   </div>
-  <template v-if="!isStaticMode && selectedMediaId">
+  <template v-if="selectedMediaId">
     <div
       class="panel-drag-handle"
       @mousedown="(e: MouseEvent) => startResize(e, mediaBodyRef!)"
@@ -158,6 +158,7 @@
         :media-id="selectedMediaId"
         :draw-mode="drawMode"
         :highlighted-region-id="highlightedRegionId"
+        :readonly="isStaticMode"
         @link-changed="reload"
         @close="selectedMediaId = null"
         @start-draw-mode="drawMode = true"

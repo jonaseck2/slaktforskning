@@ -92,26 +92,26 @@ describe('static-api places', () => {
 
 describe('static-api events', () => {
   it('getEventsForPerson returns events via participant join', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.events.getEventsForPerson('p1') as Array<{ event_type: string }>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.events.forPerson('p1') as Array<{ event_type: string }>;
     expect(result).toHaveLength(1);
     expect(result[0].event_type).toBe('birth');
   });
 
   it('getEventsForPerson returns empty for unknown person', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.events.getEventsForPerson('unknown') as Array<unknown>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.events.forPerson('unknown') as Array<unknown>;
     expect(result).toHaveLength(0);
   });
 });
 
 describe('static-api relationships', () => {
   it('getOfPerson returns relationships where person is person1 or person2', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.relationships.getOfPerson('p1') as Array<{ id: string }>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.relationships.getForPerson('p1') as Array<{ id: string }>;
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('r1');
   });
 
   it('getOfPerson also finds person2 membership', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.relationships.getOfPerson('p2') as Array<{ id: string }>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.relationships.getForPerson('p2') as Array<{ id: string }>;
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('r1');
   });
@@ -119,20 +119,20 @@ describe('static-api relationships', () => {
 
 describe('static-api citations', () => {
   it('getCitationsForPerson returns citations linked to that person', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.citations.getCitationsForPerson('p1') as Array<{ id: string }>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.citations.forPerson('p1') as Array<{ id: string }>;
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('c1');
   });
 
   it('getCitationsForPerson returns empty for unknown person', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.citations.getCitationsForPerson('unknown') as Array<unknown>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.citations.forPerson('unknown') as Array<unknown>;
     expect(result).toHaveLength(0);
   });
 });
 
 describe('static-api media', () => {
   it('getForEntity returns media merged with link fields', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.media.getForEntity('person', 'p1') as Array<{ id: string; link_id: string; sort_order: number }>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.media.forEntity('person', 'p1') as Array<{ id: string; link_id: string; sort_order: number }>;
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('m1');
     expect(result[0].link_id).toBe('ml1');
@@ -140,7 +140,7 @@ describe('static-api media', () => {
   });
 
   it('getForEntity returns empty for entity with no media', async () => {
-    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.media.getForEntity('person', 'p2') as Array<unknown>;
+    const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.media.forEntity('person', 'p2') as Array<unknown>;
     expect(result).toHaveLength(0);
   });
 });

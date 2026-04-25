@@ -52,7 +52,7 @@
           </tbody>
         </table>
       </div>
-      <button v-if="!isStaticMode && !panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
     <!-- Map mode: MapView (panel managed by PlacesView) -->
@@ -72,10 +72,10 @@
     </MapView>
 
     <!-- Panel: shared across list and map modes — never unmounts on view switch -->
-    <template v-if="!isStaticMode && panelOpen && selectedPlaceId">
+    <template v-if="panelOpen && selectedPlaceId">
       <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, placesBodyRef!)"></div>
       <div class="places-panel" :style="{ width: panelWidth + 'px' }">
-        <PlacePanel :place-id="selectedPlaceId" @close="closePanel" @select-place="selectPlace" @place-updated="load" />
+        <PlacePanel :place-id="selectedPlaceId" :readonly="isStaticMode" @close="closePanel" @select-place="selectPlace" @place-updated="load" />
       </div>
     </template>
 

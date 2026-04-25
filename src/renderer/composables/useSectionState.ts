@@ -37,10 +37,31 @@ const SECTION_DEFAULTS: Record<keyof PersonPanelSections, boolean> = {
   quality: false,
 };
 
+// In static-website-export mode, default everything open — visitors are
+// browsing, not curating, so collapsed sections just hide content from them.
+// Quality and research-tasks stay closed since they're researcher-facing.
+const STATIC_DEFAULTS: Record<keyof PersonPanelSections, boolean> = {
+  person: true,
+  names: true,
+  events: true,
+  timeline: true,
+  map: true,
+  relationships: true,
+  groups: true,
+  research: false,
+  identifiers: true,
+  media: true,
+  mediaTimeline: true,
+  quality: false,
+};
+
+const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
+
 export function useSectionState() {
+  const defaults = isStaticMode ? STATIC_DEFAULTS : SECTION_DEFAULTS;
   const sections = reactive<PersonPanelSections>(
     Object.fromEntries(
-      Object.entries(SECTION_DEFAULTS).map(([key, def]) => [key, loadSection(key, def)])
+      Object.entries(defaults).map(([key, def]) => [key, isStaticMode ? def : loadSection(key, def)])
     ) as PersonPanelSections
   );
 

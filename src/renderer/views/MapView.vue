@@ -490,7 +490,6 @@ onMounted(async () => {
 .map-empty-link:hover { color: var(--accent-hover); }
 /* Remove BaseMap's own border/radius — the sheet handles the outer shape */
 .map-chart-area :deep(.base-map-container) {
-  border: 1px solid var(--surface-border-subtle);
   border-radius: var(--radius-md);
   height: 100%;
 }

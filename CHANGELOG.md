@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(website-export): side panels (PersonPanel, PlacePanel, MediaPanel) are back in the static export — visitors get the full app-like experience with charts/maps + entity details. Add/edit/delete affordances are gated on `readonly`: the per-section "+ Add" buttons, delete (✕) buttons, picker action labels, and inline editors all disappear in static mode. The title input + notes textarea on MediaPanel render as plain text. Face-tag rows render as router-links to the tagged person. Panel sections also default to open in static so visitors don't have to click each one.
 - fix(charts): zoom controls now visible on pedigree, hourglass, descendant, and timeline charts even in readonly mode (they're navigation, not editing — were previously gated by `v-if="!readonly"` and only fan chart had them unconditionally)
 - feat(media): viewer now previews the report-style caption ("From left: …" + notes) under the picture, using the same MediaCaption component the reports use — extracted from MediaChronological so the look stays in sync
 - fix(timeline): render labels on top of stems; make axis line black

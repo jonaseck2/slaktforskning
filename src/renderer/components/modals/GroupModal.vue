@@ -161,15 +161,16 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null;
 async function loadMembers() {
   if (!savedGroupId.value || !window.api) return;
   try {
-    const raw = (await window.api.groups.getMembers(savedGroupId.value)) as Array<{ person_id: string }>;
+    const raw = (await window.api.groups.getLinks(savedGroupId.value)) as Array<{ entity_type: string; entity_id: string }>;
     const rows: MemberRow[] = [];
     for (const m of raw) {
-      const names = (await window.api.persons.getNames(m.person_id)) as Array<{
+      if (m.entity_type !== 'person') continue;
+      const names = (await window.api.persons.getNames(m.entity_id)) as Array<{
         given_name: string | null;
         surname: string | null;
       }>;
       const n = names[0] ?? { given_name: null, surname: null };
-      rows.push({ person_id: m.person_id, given_name: n.given_name, surname: n.surname });
+      rows.push({ person_id: m.entity_id, given_name: n.given_name, surname: n.surname });
     }
     members.value = rows;
   } catch { /* ignore */ }
@@ -211,7 +212,7 @@ function onSearchBlur() {
 async function addMember(person: PersonResult) {
   if (!savedGroupId.value || !window.api) return;
   try {
-    await window.api.groups.addMember(savedGroupId.value, person.id);
+    await window.api.groups.addLink(savedGroupId.value, 'person', person.id);
     memberSearch.value = '';
     searchResults.value = [];
     showDropdown.value = false;
@@ -222,7 +223,7 @@ async function addMember(person: PersonResult) {
 async function removeMember(personId: string) {
   if (!savedGroupId.value || !window.api) return;
   try {
-    await window.api.groups.removeMember(savedGroupId.value, personId);
+    await window.api.groups.removeLinkByEntity(savedGroupId.value, 'person', personId);
     await loadMembers();
   } catch { /* ignore */ }
 }
