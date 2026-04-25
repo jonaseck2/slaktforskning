@@ -110,10 +110,10 @@ export function buildHourglassTree(tree: HourglassTree): TreePerson {
 /**
  * Inject outline placeholders for the selected person.
  *
- * Father/mother placeholders are only injected when no real parent of that sex
- * is already linked — a person has at most one father and one mother, so there
- * is no "add another" slot when both are known. Child and spouse placeholders
- * are always injected (multiple children and spouses are valid).
+ * Always injects: father, mother, child, spouse. No conditions, no branching.
+ * Each chart's layout algorithm is responsible for placing these correctly
+ * (hourglass via Pass 4 collision avoidance, pedigree via placeNodes with
+ * dashed connectors and CY exclusion of placeholder parents).
  *
  * Mutates the tree in place (caller should clone if needed).
  */
@@ -121,24 +121,8 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
   const target = findPerson(root, selectedPersonId);
   if (!target) return;
 
-  const realParents = target.parents.filter(p => !p.isPlaceholder);
-  let hasFather = realParents.some(p => p.person.sex === 'M');
-  let hasMother = realParents.some(p => p.person.sex === 'F');
-
-  // When sex is 'U' we can't map a real parent to a father/mother slot. Rather
-  // than showing a phantom placeholder alongside a known-but-unsexed parent,
-  // treat each such parent as filling the next empty slot. A person has at
-  // most two biological parents, so two real parents always fill both slots.
-  if (realParents.length >= 2) {
-    hasFather = true;
-    hasMother = true;
-  } else if (realParents.length === 1 && !hasFather && !hasMother) {
-    hasFather = true;
-    hasMother = true;
-  }
-
-  if (!hasFather) target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
-  if (!hasMother) target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
+  target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
+  target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
 
   target.children.push(makePlaceholder('child', selectedPersonId));
   if (target.person.sex === 'F') {

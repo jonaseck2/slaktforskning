@@ -35,14 +35,10 @@
       </div>
 
       <!-- Empty state -->
-      <div v-if="noPersonsExist" class="empty-state" data-testid="viz-empty">
-        {{ $t('visualization.empty') }}
-      </div>
+      <AppEmptyState v-if="noPersonsExist" icon="🌳" :title="$t('empty.persons')" :description="$t('empty.treeDesc')" :action-label="$t('persons.addPerson')" data-testid="viz-empty" @action="showAddPerson = true" />
 
       <!-- No focal person selected -->
-      <div v-else-if="noFocalPerson" class="empty-state" data-testid="viz-no-focal">
-        {{ $t('visualization.noFocalPerson') }}
-      </div>
+      <AppEmptyState v-else-if="noFocalPerson" icon="🌳" :title="$t('visualization.noFocalPerson')" :description="$t('empty.noFocalPerson')" data-testid="viz-no-focal" />
 
       <!-- Chart content -->
       <div v-else-if="focalPerson" class="viz-chart-content" data-testid="viz-area">
@@ -122,6 +118,7 @@ import type { BoxLayout } from '../utils/chart-layout/types';
 import { useChartBridge } from '../composables/useChartBridge';
 import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
 import AppButton from '../components/ui/AppButton.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import PedigreeChart from '../components/charts/PedigreeChart.vue';
 import FanChart from '../components/charts/FanChart.vue';
@@ -460,11 +457,4 @@ onActivated(load);
   max-width: 1040px;
 }
 
-
-.empty-state {
-  color: var(--text-muted);
-  padding: 60px;
-  text-align: center;
-  font-size: var(--font-md);
-}
 </style>

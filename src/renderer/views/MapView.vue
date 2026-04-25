@@ -16,7 +16,6 @@
       </div>
 
       <AppLoadingState v-if="loading" />
-      <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places')" />
 
       <div v-else class="map-content">
         <BaseMap
@@ -35,6 +34,13 @@
             :options-style="boundaryStyle"
           />
         </BaseMap>
+        <div v-if="allDisplayPlaces.length === 0" class="map-empty-overlay">
+          <span>{{ $t('empty.places') }}</span>
+          <router-link to="/places" class="map-empty-link">{{ $t('empty.addPlace') }}</router-link>
+        </div>
+        <div v-else-if="filteredPlaces.length === 0" class="map-empty-overlay">
+          <span>{{ $t('empty.places') }} {{ $t('empty.withFilter') }}</span>
+        </div>
       </div>
 
       <!-- Reopen panel button -->
@@ -66,7 +72,6 @@ import L from 'leaflet';
 import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
-import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useThemeSignal } from '../composables/useThemeSignal';
@@ -451,6 +456,31 @@ onMounted(async () => {
   position: relative;
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
+.map-empty-overlay {
+  position: absolute;
+  top: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  z-index: 10;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+.map-empty-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.map-empty-link:hover { color: var(--accent-hover); }
 /* Remove BaseMap's own border/radius — the sheet handles the outer shape */
 .map-chart-area :deep(.base-map-container) {
   border: 1px solid var(--surface-border-subtle);
