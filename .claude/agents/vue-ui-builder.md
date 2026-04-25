@@ -97,9 +97,9 @@ If this task wires new api/ functions, their `window.api.*` methods will be desc
 |-----------|-------|-------|---------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Any field where user selects a person — 150ms debounced search |
 | `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Genealogy dates with uncertainty (exact/about/before/after/between) |
-| `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Create/edit event modal — handles both person and relationship events |
-| `EventList` | `personId?: string`, `relationshipId?: string` | — | Event table with inline edit/delete; exposes `reload()` via `defineExpose` |
-| `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Attach a source citation to any entity |
+| `EventModal` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null`, `mode?: 'standalone'\|'subpanel'` | `close`, `cancel`, `saved` | Create/edit event on `BaseSubPanel` — handles person and relationship events; embedded citation sub-panel |
+| `EventList` | `personId?: string`, `relationshipId?: string` | — | Event table with inline edit/delete; exposes `openAddForm()` via `defineExpose` |
+| `CitationModal` | `sourceId?: string`, `sourceTitle?: string`, `editingCitation?: object\|null`, `eventId?`/`personId?`/`relationshipId?`/`placeId?: string`, `mode?: 'standalone'\|'subpanel'` | `close`, `cancel`, `saved` | Attach a source citation to any entity. Inline `SourcePicker` when `sourceId` not preset |
 
 ## Modal dialog pattern (for create/edit forms)
 

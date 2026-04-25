@@ -130,7 +130,7 @@ Component tests live in `tests/components/` and test Vue components with Happy D
 
 ### Good candidates for component tests:
 - Form components with validation/debounce (DateInput, PersonPicker, PlacePicker)
-- Modal components with multi-step workflows (EventForm, CitationForm, AddRelatedPersonModal)
+- Modal components with multi-step workflows (EventModal, CitationModal, PersonModal with relatedTo)
 - Chart/layout components (PedigreeChart, VisualizationView)
 - Components with keyboard navigation or accessibility logic
 
