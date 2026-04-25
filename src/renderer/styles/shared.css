@@ -1120,15 +1120,15 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
 
 /* Section headers inside entity panels (flush-sections-v3 style) */
 .ep-sec-header {
-  padding: 7px 14px;
+  padding: 10px 14px;
   border-radius: 8px 8px 0 0;
   border-bottom: 1px solid transparent;
   display: flex; align-items: center; justify-content: space-between;
 }
 .ep-sec-left { display: flex; align-items: center; gap: 8px; }
-.ep-sec-title { font-size: 11px; font-weight: 700; }
+.ep-sec-title { font-size: 14px; font-weight: 600; }
 .ep-sec-count { font-size: 11px; font-weight: 700; opacity: 0.6; }
-.ep-sec-open  { font-size: 11px; font-weight: 600; opacity: 0.65; }
+.ep-sec-open  { font-size: 14px; font-weight: 600; opacity: 0.65; }
 .ep-sec-content { padding: 8px 14px 8px; }
 .ep-sec-gap { height: 8px; }
 
