@@ -6,6 +6,7 @@
   "main": ".vite/build/index.js",
   "private": true,
   "scripts": {
+    "prestart": "npm run build:static",
     "start": "electron-forge start",
     "prepackage": "npm run build:static",
     "package": "electron-forge package",
