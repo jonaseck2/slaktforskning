@@ -13,7 +13,6 @@
           <th class="th-date">{{ $t('events.date') }}</th>
           <th>{{ $t('places.title') }}</th>
           <th>{{ $t('events.description') }}</th>
-          <th v-if="!props.readonly">{{ $t('events.citeSources') }}</th>
           <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
@@ -36,16 +35,6 @@
             <router-link v-if="event.place_id" :to="'/places/' + event.place_id" class="person-link" @click.stop>{{ event.place_name || '—' }}</router-link>
           </td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
-          <td v-if="!props.readonly" class="cite-cell">
-            <span v-if="event.citation_count" class="cite-badge">
-              {{ event.citation_count }}
-            </span>
-            <button class="btn-sm btn-cite"
-              @click.stop="openCiteModal(event)"
-              :title="$t('events.addCitation')">
-              {{ $t('events.cite') }}
-            </button>
-          </td>
           <td v-if="!props.readonly" class="actions-cell">
             <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">✕</button>
           </td>
@@ -65,12 +54,6 @@
       @saved="onSaved"
     />
 
-    <CitationForm
-      v-if="citingEventId"
-      :event-id="citingEventId"
-      @close="citingEventId = null"
-      @saved="onCitationSaved"
-    />
   </div>
 </template>
 
@@ -80,7 +63,6 @@ import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import EventModal from './modals/EventModal.vue';
-import CitationForm from './CitationForm.vue';
 import { useToast } from '../composables/useToast';
 import { suggestNextEventType } from '../utils/eventDefaults';
 
@@ -113,7 +95,6 @@ const toast = useToast();
 const events = ref<EventRow[]>([]);
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
-const citingEventId = ref<string | null>(null);
 const smartDefaultsEnabled = ref(true);
 
 async function loadSmartDefaultsSetting() {
@@ -129,15 +110,6 @@ async function loadSmartDefaultsSetting() {
   } catch {
     smartDefaultsEnabled.value = true;
   }
-}
-
-function openCiteModal(event: { id: string }) {
-  citingEventId.value = event.id;
-}
-
-async function onCitationSaved() {
-  citingEventId.value = null;
-  await load();
 }
 
 async function load() {
@@ -271,33 +243,5 @@ tr.non-interactive:hover td { background: transparent; }
   color: var(--color-text-subtle);
   font-style: italic;
   font-size: var(--font-xs);
-}
-.cite-cell {
-  white-space: nowrap;
-}
-.cite-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
-  background: var(--color-primary, #3b82f6);
-  color: white;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  padding: 0 4px;
-  margin-right: 4px;
-}
-.btn-cite {
-  font-size: var(--font-xs);
-  padding: 2px 6px;
-  border: 1px solid var(--color-border, #cbd5e1);
-  background: var(--color-bg-subtle, #f8fafc);
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-cite:hover {
-  background: var(--color-bg-hover, #f1f5f9);
 }
 </style>
