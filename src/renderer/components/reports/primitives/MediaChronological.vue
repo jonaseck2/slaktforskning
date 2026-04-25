@@ -38,28 +38,25 @@
           </template>
         </div>
       </div>
-      <div v-if="showCaptions || showNotes" class="media-caption">
-        <template v-if="showCaptions">
-          <div v-if="item.contextLine" class="caption-context">{{ item.contextLine }}</div>
-          <div v-if="faceTags[item.id]?.length" class="caption-faces">
-            <span class="faces-prefix">{{ t('reports.common.fromLeft') }}</span>
-            <template v-for="(tag, i) in faceTags[item.id]" :key="tag.personId">
-              <a v-if="isLinked(tag.personId)" :href="'#person-' + tag.personId" class="face-link" @click.prevent="scrollToId('person-' + tag.personId)">{{ tagLabel(tag) }}</a>
-              <span v-else class="face-name">{{ tagLabel(tag) }}</span>
-              <span v-if="i < faceTags[item.id].length - 1">, </span>
-            </template>
-          </div>
-          <div v-if="item.inferredDateISO" class="caption-date">{{ formatDate(item.inferredDateISO) }}</div>
-        </template>
-        <div v-if="showNotes && item.notes" class="caption-notes">{{ item.notes }}</div>
-      </div>
+      <MediaCaption
+        :face-tags="faceTags[item.id] || []"
+        :notes="item.notes"
+        :inferred-date-i-s-o="item.inferredDateISO"
+        :context-line="item.contextLine"
+        :relations="relations"
+        :linked-person-ids="linkedPersonIds"
+        :show-captions="showCaptions"
+        :show-notes="showNotes"
+        :href-builder="(id: string) => '#person-' + id"
+        @person-click="onCaptionPersonClick"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import MediaCaption from '../../MediaCaption.vue';
 
 export interface MediaDisplayItem {
   id: string;
@@ -116,8 +113,6 @@ const props = withDefaults(defineProps<{
   relations: null,
   linkedPersonIds: null,
 });
-
-const { t } = useI18n();
 
 function isLinked(personId: string): boolean {
   if (props.linkedPersonIds === null) return true;
@@ -207,12 +202,13 @@ watch(printableItems, async () => {
   await Promise.all([loadUrls(), loadFaceTags()]);
 }, { immediate: true });
 
-function formatDate(iso: string): string {
-  return iso.slice(0, 10);
-}
-
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function onCaptionPersonClick(personId: string, event: MouseEvent) {
+  event.preventDefault();
+  scrollToId('person-' + personId);
 }
 </script>
 
@@ -267,35 +263,5 @@ function scrollToId(id: string) {
 
 @media print {
   .face-tag-overlay { display: none; }
-}
-.media-caption { margin-top: var(--space-sm); font-size: var(--font-sm); font-style: italic; }
-.caption-title { font-weight: 600; }
-.caption-context { color: var(--text-secondary); font-style: italic; }
-.caption-date { color: var(--text-muted); }
-
-.caption-faces {
-  margin-top: 2px;
-  color: var(--text-secondary);
-}
-.faces-prefix {
-  margin-right: 3px;
-  font-style: italic;
-}
-.face-name {
-  color: inherit;
-}
-.face-link {
-  color: inherit;
-  text-decoration: none;
-  border-bottom: 1px solid var(--surface-border-subtle);
-  transition: color 0.15s, border-color 0.15s;
-}
-.face-link:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-@media print {
-  .face-link { border-bottom: none; }
 }
 </style>

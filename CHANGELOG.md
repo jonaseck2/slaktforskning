@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(media): viewer now previews the report-style caption ("From left: …" + notes) under the picture, using the same MediaCaption component the reports use — extracted from MediaChronological so the look stays in sync
 - fix(timeline): render labels on top of stems; make axis line black
 - fix(media): refresh profile picture immediately after setting from face region; auto-create media link when only tagged via region
 - fix(media): show "Media" heading in viewer/tagging mode; media list table is now read-only; title editing moved to side panel
