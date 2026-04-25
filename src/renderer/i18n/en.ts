@@ -26,6 +26,8 @@ export default {
     organize: 'ORGANIZE',
     review: 'REVIEW',
     present: 'PRESENT',
+    framablePrints: 'Framable prints',
+    website: 'Website',
   },
   settings: {
     title: 'Settings',

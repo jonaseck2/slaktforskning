@@ -26,6 +26,8 @@ export default {
     organize: 'ORGANISERA',
     review: 'GRANSKA',
     present: 'PRESENTERA',
+    framablePrints: 'Inramningsbara diagram',
+    website: 'Webbplats',
   },
   settings: {
     title: 'Inställningar',

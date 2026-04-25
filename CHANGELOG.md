@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.144.0 — split Present nav: Reports / Framable prints / Website
+
+- feat: PRESENT section now has three nav items — Reports (keepsake), Framable prints, and Website
+- feat: new `/prints` route reuses `ReportsView` in framable mode; new `/website` route hosts the HTML site exporter as a standalone view
+- chore: `ReportsView` accepts a `mode` prop (`keepsake` | `framable`) and shows only the matching tab group
+- chore: HTML site export removed from Import / Export tabs (now its own nav item)
+
 ## v0.143.0 — modal redesign phase 2 — universal entity-panel modals
 
 - feat: every modal now uses the `BaseSubPanel` shell with `mode='standalone'|'subpanel'` for one consistent visual language across the app
