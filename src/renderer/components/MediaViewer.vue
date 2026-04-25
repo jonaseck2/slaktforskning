@@ -7,16 +7,7 @@
   >
     <!-- Toolbar -->
     <div class="viewer-toolbar">
-      <span class="viewer-filename" :title="displayName">{{ displayName }}</span>
       <span class="viewer-counter">{{ currentIndex + 1 }} / {{ mediaItems.length }}</span>
-      <span class="toolbar-sep" />
-      <div class="zoom-controls">
-        <button class="zoom-btn" :title="$t('media.viewer.zoomOut')" @click="zoomState.zoomOut()">−</button>
-        <span class="zoom-pct">{{ zoomState.zoomPercent.value }}</span>
-        <button class="zoom-btn" :title="$t('media.viewer.zoomIn')" @click="zoomState.zoomIn()">+</button>
-        <button class="zoom-btn" :title="$t('media.viewer.fit')" @click="zoomState.fitToContainer()">{{ $t('media.viewer.fit') }}</button>
-      </div>
-      <span class="toolbar-sep" />
       <button class="viewer-close" :title="$t('common.close')" @click="emit('close')">✕</button>
     </div>
 
@@ -82,6 +73,15 @@
         :disabled="currentIndex === mediaItems.length - 1"
         @click="goTo(currentIndex + 1)"
       >›</button>
+
+      <ZoomControls
+        overlay
+        show-fit
+        :zoom="zoomState.zoom.value"
+        @zoom-in="zoomState.zoomIn()"
+        @zoom-out="zoomState.zoomOut()"
+        @reset="zoomState.fitToContainer()"
+      />
     </div>
 
     <!-- Filmstrip -->
@@ -107,6 +107,7 @@ import { useI18n } from 'vue-i18n';
 import { useImageZoom } from '../composables/useImageZoom';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import FaceTagOverlay from './FaceTagOverlay.vue';
+import ZoomControls from './ZoomControls.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -349,9 +350,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--surface-bg);
+  background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
   outline: none;
   overflow: hidden;
 }
@@ -363,60 +363,15 @@ onMounted(() => {
   gap: var(--space-sm);
   height: 36px;
   padding: 0 var(--space-sm);
-  border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
   font-size: var(--font-sm);
   color: var(--text-secondary);
   user-select: none;
 }
 
-.viewer-filename {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
 .viewer-counter {
+  flex: 1;
   white-space: nowrap;
-  color: var(--text-muted);
-}
-
-.toolbar-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--surface-border-subtle);
-  flex-shrink: 0;
-}
-
-.zoom-controls {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.zoom-btn {
-  background: none;
-  border: none;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
-  line-height: 1;
-}
-
-.zoom-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.zoom-pct {
-  min-width: 40px;
-  text-align: center;
-  font-size: var(--font-xs);
   color: var(--text-muted);
 }
 
@@ -436,7 +391,6 @@ onMounted(() => {
   color: var(--text-primary);
 }
 
-/* Canvas — always dark so images render against a neutral background regardless of theme */
 .viewer-canvas {
   flex: 1;
   position: relative;
@@ -445,7 +399,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: default;
-  background: #000;
+  background: var(--surface);
 }
 
 .image-wrapper {
@@ -526,7 +480,7 @@ onMounted(() => {
   gap: 4px;
   height: 64px;
   padding: var(--space-sm);
-  border-top: 1px solid var(--surface-border-subtle);
+  background: var(--surface);
   overflow-x: auto;
   flex-shrink: 0;
 }
