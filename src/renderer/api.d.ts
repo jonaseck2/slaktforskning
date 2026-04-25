@@ -13,9 +13,11 @@ import type {
   Source,
   Citation,
   Group,
-  GroupMember,
+  GroupLink,
+  LinkEntityType,
   Repository,
   ResearchTask,
+  TaskLink,
   Media,
   MediaLink,
 } from '../../api/types';
@@ -189,10 +191,13 @@ declare global {
         create: (data: { name: string; notes?: string }) => Promise<Group>;
         update: (id: string, data: { name?: string; notes?: string }) => Promise<Group | null>;
         delete: (id: string) => Promise<boolean>;
-        addMember: (groupId: string, personId: string) => Promise<GroupMember>;
-        removeMember: (groupId: string, personId: string) => Promise<boolean>;
-        getMembers: (groupId: string) => Promise<GroupMember[]>;
+        addLink: (groupId: string, entityType: LinkEntityType, entityId: string) => Promise<GroupLink>;
+        removeLink: (linkId: string) => Promise<boolean>;
+        removeLinkByEntity: (groupId: string, entityType: LinkEntityType, entityId: string) => Promise<boolean>;
+        getLinks: (groupId: string) => Promise<GroupLink[]>;
         forPerson: (personId: string) => Promise<Group[]>;
+        forPlace: (placeId: string) => Promise<Group[]>;
+        forMedia: (mediaId: string) => Promise<Group[]>;
       };
       repositories: {
         list: () => Promise<Repository[]>;
@@ -208,11 +213,12 @@ declare global {
         list: () => Promise<ResearchTask[]>;
         get: (id: string) => Promise<ResearchTask | null>;
         forPerson: (personId: string) => Promise<ResearchTask[]>;
+        forPlace: (placeId: string) => Promise<ResearchTask[]>;
+        forMedia: (mediaId: string) => Promise<ResearchTask[]>;
         create: (data: {
           task: string;
           notes?: string;
           result?: string;
-          person_id?: string;
           priority?: number;
           status?: ResearchTask['status'];
         }) => Promise<ResearchTask>;
@@ -221,6 +227,9 @@ declare global {
           data: Partial<Pick<ResearchTask, 'task' | 'notes' | 'result' | 'status' | 'priority'>>,
         ) => Promise<ResearchTask | null>;
         delete: (id: string) => Promise<boolean>;
+        addLink: (taskId: string, entityType: LinkEntityType, entityId: string) => Promise<TaskLink>;
+        removeLink: (linkId: string) => Promise<boolean>;
+        getLinks: (taskId: string) => Promise<TaskLink[]>;
       };
       checks: {
         runAll: () => Promise<CheckResult[]>;

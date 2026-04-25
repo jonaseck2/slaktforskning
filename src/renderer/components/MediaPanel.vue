@@ -22,7 +22,9 @@
         </div>
         <div class="media-info">
           <div class="media-title-row">
+            <span v-if="props.readonly" class="media-title-readonly">{{ titleDraft || $t('media.untitled') }}</span>
             <input
+              v-else
               class="media-title-input"
               :value="titleDraft"
               :placeholder="$t('media.untitled')"
@@ -44,28 +46,34 @@
           @toggle="toggleSection('notes')"
         />
         <div v-if="sections.notes" class="panel-section-body">
-          <div class="notes-toggle-row">
-            <AppButton
-              variant="soft"
-              size="sm"
-              :aria-pressed="notesMonospaced"
-              :title="$t('common.monospacedTooltip')"
-              @click="toggleNotesMonospaced"
-            >
-              <span class="mono-toggle-t" :class="{ 'is-mono': !notesMonospaced }">iWi</span>
-            </AppButton>
-          </div>
-          <textarea
-            ref="notesRef"
-            v-model="notesDraft"
-            class="notes-textarea"
-            :class="{ 'notes-mono': notesMonospaced }"
-            :placeholder="$t('media.notesPlaceholder')"
-            rows="3"
-            :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
-            @blur="persistNotesHeight(); saveNotes()"
-            @mouseup="persistNotesHeight"
-          ></textarea>
+          <template v-if="props.readonly">
+            <SectionEmpty v-if="!notesDraft" :message="$t('empty.notes') || ''" />
+            <pre v-else class="notes-readonly" :class="{ 'notes-mono': notesMonospaced }">{{ notesDraft }}</pre>
+          </template>
+          <template v-else>
+            <div class="notes-toggle-row">
+              <AppButton
+                variant="soft"
+                size="sm"
+                :aria-pressed="notesMonospaced"
+                :title="$t('common.monospacedTooltip')"
+                @click="toggleNotesMonospaced"
+              >
+                <span class="mono-toggle-t" :class="{ 'is-mono': !notesMonospaced }">iWi</span>
+              </AppButton>
+            </div>
+            <textarea
+              ref="notesRef"
+              v-model="notesDraft"
+              class="notes-textarea"
+              :class="{ 'notes-mono': notesMonospaced }"
+              :placeholder="$t('media.notesPlaceholder')"
+              rows="3"
+              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
+              @blur="persistNotesHeight(); saveNotes()"
+              @mouseup="persistNotesHeight"
+            ></textarea>
+          </template>
         </div>
       </div>
 
@@ -75,12 +83,12 @@
           :title="$t('media.linkedPersons')"
           :count="linkedPersons.length"
           :collapsed="!sections.persons"
-          :action-label="$t('media.linkPerson')"
+          :action-label="props.readonly ? undefined : $t('media.linkPerson')"
           @toggle="toggleSection('persons')"
           @action="showPersonPicker = true"
         />
         <div v-if="sections.persons" class="panel-section-body">
-          <div v-if="showPersonPicker" class="picker-wrap">
+          <div v-if="!props.readonly && showPersonPicker" class="picker-wrap">
             <PersonPicker :model-value="null" :relatee-id="linkedPersons[0]?.entityId" :placeholder="$t('addRelated.searchPlaceholder')" @select="linkPerson" />
             <AppButton variant="ghost" size="sm" @click="showPersonPicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
@@ -88,7 +96,7 @@
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
             <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
             <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
-            <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -99,19 +107,19 @@
           :title="$t('media.linkedPlaces')"
           :count="linkedPlaces.length"
           :collapsed="!sections.places"
-          :action-label="$t('media.linkPlace')"
+          :action-label="props.readonly ? undefined : $t('media.linkPlace')"
           @toggle="toggleSection('places')"
           @action="showPlacePicker = true"
         />
         <div v-if="sections.places" class="panel-section-body">
-          <div v-if="showPlacePicker" class="picker-wrap">
+          <div v-if="!props.readonly && showPlacePicker" class="picker-wrap">
             <PlacePicker :model-value="null" :placeholder="$t('places.searchPlaceholder')" @select="linkPlace" />
             <AppButton variant="ghost" size="sm" @click="showPlacePicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
           <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
           <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
             <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
-            <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -128,7 +136,7 @@
           <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
           <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
             <span>{{ le.label }}</span>
-            <AppButton variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -139,7 +147,7 @@
           :title="$t('media.faceTags')"
           :count="regions.length"
           :collapsed="!sections.faceTags"
-          :action-label="drawMode ? $t('media.viewer.drawDone') : $t('media.viewer.drawTag')"
+          :action-label="props.readonly ? undefined : (drawMode ? $t('media.viewer.drawDone') : $t('media.viewer.drawTag'))"
           @toggle="toggleSection('faceTags')"
           @action="drawMode ? emit('stop-draw-mode') : emit('start-draw-mode')"
         />
@@ -153,7 +161,7 @@
             @mouseenter="emit('highlight-region', r.id)"
             @mouseleave="emit('highlight-region', null)"
           >
-            <template v-if="editingTagId === r.id">
+            <template v-if="!props.readonly && editingTagId === r.id">
               <div class="face-tag-assign">
                 <PersonPicker :model-value="null" :relatee-id="linkedPersons[0]?.entityId" :placeholder="$t('media.viewer.assignPerson')" @select="(person: { id: string }) => assignPersonToRegion(r.id, person.id)" />
               </div>
@@ -161,9 +169,22 @@
             <template v-else>
               <AppAvatar v-if="r.person_id" :person-id="r.person_id" :given-name="r.personGivenName || ''" :surname="r.personSurname || ''" :sex="r.personSex || 'U'" size="sm" />
               <div v-else class="face-tag-unknown">?</div>
-              <span class="face-tag-name face-tag-clickable" @click="editingTagId = r.id">{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
+              <router-link
+                v-if="props.readonly && r.person_id"
+                :to="'/persons/' + r.person_id"
+                class="person-link face-tag-name"
+              >{{ r.personName || $t('media.untitled') }}</router-link>
+              <span
+                v-else-if="props.readonly"
+                class="face-tag-name"
+              >{{ $t('media.untagged') || '—' }}</span>
+              <span
+                v-else
+                class="face-tag-name face-tag-clickable"
+                @click="editingTagId = r.id"
+              >{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
               <button
-                v-if="r.person_id"
+                v-if="!props.readonly && r.person_id"
                 class="star-btn"
                 :class="{ 'is-profile': regionIsProfile[r.id] }"
                 :title="regionIsProfile[r.id] ? $t('media.currentProfile') : $t('media.setAsProfile')"
@@ -172,7 +193,7 @@
                 @click.stop="setProfileForRegion(r)"
               >{{ regionIsProfile[r.id] ? '★' : '☆' }}</button>
             </template>
-            <AppButton variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" @click="deleteRegion(r.id)">&#10005;</AppButton>
           </div>
         </div>
       </div>
@@ -247,6 +268,7 @@ const props = defineProps<{
   mediaId: string | null;
   drawMode?: boolean;
   highlightedRegionId?: string | null;
+  readonly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -806,5 +828,28 @@ defineExpose({ reload: load, expandFaceTags });
 }
 .notes-textarea.notes-mono {
   font-family: var(--font-mono);
+}
+.media-title-readonly {
+  flex: 1;
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: var(--space-xs) var(--space-sm);
+}
+.notes-readonly {
+  margin: 0;
+  padding: var(--space-sm);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+.notes-readonly.notes-mono {
+  font-family: var(--font-mono);
+}
+.face-tag-name.person-link {
+  text-decoration: none;
 }
 </style>

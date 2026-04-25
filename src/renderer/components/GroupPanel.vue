@@ -11,7 +11,7 @@
         <div class="panel-header-content">
           <div class="panel-name-row">
             <div class="panel-name">{{ group.name || $t('common.unknown') }}</div>
-            <span class="member-count-badge">{{ members.length }} {{ $t('groups.members').toLowerCase() }}</span>
+            <span class="member-count-badge">{{ links.length }}</span>
           </div>
         </div>
         <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
@@ -46,57 +46,66 @@
         </div>
       </div>
 
-      <!-- Members section -->
+      <!-- Persons section -->
       <div class="panel-section">
         <SectionHeader
-          :title="$t('groups.members')"
-          :count="members.length"
-          :collapsed="!sections.members"
-          :action-label="!showAddMember ? '+ ' + $t('groups.addMember') : ''"
-          @toggle="toggleSection('members')"
-          @action="onAddMemberAction"
+          :title="$t('persons.title')"
+          :count="personLinks.length"
+          :collapsed="!sections.persons"
+          :action-label="!showPicker.person ? '+ ' + $t('common.add') : ''"
+          @toggle="toggleSection('persons')"
+          @action="openPicker('person')"
         />
-        <div v-if="sections.members" class="panel-section-body">
-          <div v-if="showAddMember" class="add-member-row">
-            <PersonPicker v-model="newMemberId" :placeholder="$t('common.unknown')" />
-            <AppButton variant="primary" size="sm" :disabled="!newMemberId" @click="addMember">{{ $t('common.add') }}</AppButton>
-            <AppButton variant="ghost" size="sm" @click="showAddMember = false; newMemberId = null">{{ $t('common.cancel') }}</AppButton>
-          </div>
-          <SectionEmpty v-if="members.length === 0 && !showAddMember" :message="$t('empty.persons')" />
-          <table v-else-if="members.length > 0" class="data-table">
-            <thead>
-              <tr>
-                <th>{{ $t('common.name') }}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="m in members" :key="m.person_id">
-                <td>
-                  <span class="member-cell">
-                    <AppAvatar
-                      :person-id="m.person_id"
-                      :given-name="m.given_name ?? ''"
-                      :surname="m.surname ?? ''"
-                      :sex="(m.sex as 'M' | 'F' | 'U')"
-                      size="sm"
-                    />
-                    <router-link :to="'/persons/' + m.person_id" class="person-link" @click.stop>
-                      <PersonName
-                        :given-name="m.given_name"
-                        :surname="m.surname"
-                        :preferred-name="m.preferred_name"
-                        :nickname="m.nickname"
-                      />
-                    </router-link>
-                  </span>
-                </td>
-                <td class="actions-cell">
-                  <AppButton variant="ghost" size="sm" @click="removeMember(m.person_id)">✕</AppButton>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-if="sections.persons" class="panel-section-body">
+          <LinkedPersonsSection
+            :links="personLinks"
+            :show-picker="showPicker.person"
+            @add="(id) => addLink('person', id)"
+            @remove="removeLink"
+            @cancel-picker="showPicker.person = false"
+          />
+        </div>
+      </div>
+
+      <!-- Places section -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('places.title')"
+          :count="placeLinks.length"
+          :collapsed="!sections.places"
+          :action-label="!showPicker.place ? '+ ' + $t('common.add') : ''"
+          @toggle="toggleSection('places')"
+          @action="openPicker('place')"
+        />
+        <div v-if="sections.places" class="panel-section-body">
+          <LinkedPlacesSection
+            :links="placeLinks"
+            :show-picker="showPicker.place"
+            @add="(id) => addLink('place', id)"
+            @remove="removeLink"
+            @cancel-picker="showPicker.place = false"
+          />
+        </div>
+      </div>
+
+      <!-- Media section -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('media.title')"
+          :count="mediaLinks.length"
+          :collapsed="!sections.media"
+          :action-label="!showPicker.media ? '+ ' + $t('common.add') : ''"
+          @toggle="toggleSection('media')"
+          @action="openPicker('media')"
+        />
+        <div v-if="sections.media" class="panel-section-body">
+          <LinkedMediaSection
+            :links="mediaLinks"
+            :show-picker="showPicker.media"
+            @add="(id) => addLink('media', id)"
+            @remove="removeLink"
+            @cancel-picker="showPicker.media = false"
+          />
         </div>
       </div>
     </template>
@@ -104,13 +113,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import PersonPicker from './PersonPicker.vue';
-import PersonName from './PersonName.vue';
-import AppAvatar from './ui/AppAvatar.vue';
-import AppButton from './ui/AppButton.vue';
-import SectionEmpty from './ui/SectionEmpty.vue';
+import LinkedPersonsSection from './LinkedPersonsSection.vue';
+import LinkedPlacesSection from './LinkedPlacesSection.vue';
+import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { useToast } from '../composables/useToast';
 
@@ -124,13 +131,10 @@ interface GroupData {
   notes: string;
 }
 
-interface MemberRow {
-  person_id: string;
-  given_name: string | null;
-  surname: string | null;
-  preferred_name: string | null;
-  nickname: string | null;
-  sex: string;
+interface Link {
+  id: string;
+  entity_type: 'person' | 'place' | 'media';
+  entity_id: string;
 }
 
 const props = defineProps<{ groupId: string | null }>();
@@ -148,7 +152,9 @@ function loadBool(key: string, def: boolean): boolean {
 }
 const sections = reactive({
   info: loadBool('info', true),
-  members: loadBool('members', true),
+  persons: loadBool('persons', true),
+  places: loadBool('places', true),
+  media: loadBool('media', true),
 });
 function toggleSection(key: keyof typeof sections) {
   sections[key] = !sections[key];
@@ -158,59 +164,41 @@ function toggleSection(key: keyof typeof sections) {
 // ── State ───────────────────────────────────────────────────────────────────
 
 const group = ref<GroupData | null>(null);
-const members = ref<MemberRow[]>([]);
-const showAddMember = ref(false);
-const newMemberId = ref<string | null>(null);
+const links = ref<Link[]>([]);
+const showPicker = reactive({ person: false, place: false, media: false });
 
-const editFields = reactive({
-  name: '',
-  notes: '',
-});
+const personLinks = computed(() => links.value.filter(l => l.entity_type === 'person'));
+const placeLinks = computed(() => links.value.filter(l => l.entity_type === 'place'));
+const mediaLinks = computed(() => links.value.filter(l => l.entity_type === 'media'));
+
+const editFields = reactive({ name: '', notes: '' });
 
 // ── Loaders ─────────────────────────────────────────────────────────────────
 
 async function load(id: string | null) {
   if (!id) {
     group.value = null;
-    members.value = [];
+    links.value = [];
     return;
   }
   try {
     const g = await window.api.groups.get(id) as GroupData | null;
-    if (props.groupId !== id) return; // raced past us
+    if (props.groupId !== id) return;
     group.value = g;
     if (!g) return;
-
     editFields.name = g.name ?? '';
     editFields.notes = g.notes ?? '';
-
-    await loadMembers(id);
+    await loadLinks(id);
   } catch (err) {
     console.error('[GroupPanel] load failed:', err);
     toast.error(t('errors.loadFailed'));
   }
 }
 
-async function loadMembers(id: string) {
-  try {
-    const raw = await window.api.groups.getMembers(id) as Array<{ person_id: string }>;
-    if (props.groupId !== id) return;
-    const rows: MemberRow[] = [];
-    for (const m of raw) {
-      const names = await window.api.persons.getNames(m.person_id) as Array<{
-        given_name: string | null; surname: string | null;
-        preferred_name: string | null; nickname: string | null;
-      }>;
-      const person = await window.api.persons.get(m.person_id) as { sex: string } | null;
-      const n = names[0] ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
-      rows.push({ person_id: m.person_id, ...n, sex: person?.sex ?? '' });
-    }
-    if (props.groupId !== id) return;
-    members.value = rows;
-  } catch (err) {
-    console.error('[GroupPanel] loadMembers failed:', err);
-    toast.error(t('errors.loadFailed'));
-  }
+async function loadLinks(id: string) {
+  const raw = await window.api.groups.getLinks(id) as Link[];
+  if (props.groupId !== id) return;
+  links.value = raw;
 }
 
 watch(() => props.groupId, load, { immediate: true });
@@ -230,35 +218,33 @@ async function saveField(field: keyof typeof editFields) {
   }
 }
 
-// ── Members ─────────────────────────────────────────────────────────────────
+// ── Link actions ────────────────────────────────────────────────────────────
 
-function onAddMemberAction() {
-  if (!sections.members) toggleSection('members');
-  showAddMember.value = true;
-  newMemberId.value = null;
+function openPicker(kind: 'person' | 'place' | 'media') {
+  const sectionKey = (kind === 'person' ? 'persons' : kind === 'place' ? 'places' : 'media') as keyof typeof sections;
+  if (!sections[sectionKey]) toggleSection(sectionKey);
+  showPicker[kind] = true;
 }
 
-async function addMember() {
-  if (!props.groupId || !newMemberId.value) return;
+async function addLink(entityType: 'person' | 'place' | 'media', entityId: string) {
+  if (!props.groupId) return;
   try {
-    await window.api.groups.addMember(props.groupId, newMemberId.value);
-    showAddMember.value = false;
-    newMemberId.value = null;
-    await loadMembers(props.groupId);
+    await window.api.groups.addLink(props.groupId, entityType, entityId);
+    showPicker[entityType] = false;
+    await loadLinks(props.groupId);
   } catch (err) {
-    console.error('[GroupPanel] addMember failed:', err);
+    console.error('[GroupPanel] addLink failed:', err);
     toast.error(t('errors.saveFailed'));
   }
 }
 
-async function removeMember(personId: string) {
+async function removeLink(linkId: string) {
   if (!props.groupId) return;
-  if (!confirm(t('groups.confirmRemoveMember'))) return;
   try {
-    await window.api.groups.removeMember(props.groupId, personId);
-    await loadMembers(props.groupId);
+    await window.api.groups.removeLink(linkId);
+    await loadLinks(props.groupId);
   } catch (err) {
-    console.error('[GroupPanel] removeMember failed:', err);
+    console.error('[GroupPanel] removeLink failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
 }
@@ -287,7 +273,6 @@ async function removeMember(personId: string) {
   text-align: center;
 }
 
-/* Header */
 .panel-header {
   display: flex;
   background: var(--surface);
@@ -334,7 +319,6 @@ async function removeMember(personId: string) {
 }
 .panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 
-/* Sections */
 .panel-section {
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
@@ -342,7 +326,6 @@ async function removeMember(personId: string) {
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 
-/* Compact form */
 .compact-form {
   display: flex;
   flex-direction: column;
@@ -376,20 +359,4 @@ async function removeMember(personId: string) {
   outline: none;
   border-color: var(--accent);
 }
-
-.add-member-row {
-  display: flex;
-  gap: var(--space-xs);
-  align-items: center;
-  padding: var(--space-xs) 0;
-}
-.add-member-row > :first-child { flex: 1; }
-
-.member-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 </style>

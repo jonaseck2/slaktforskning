@@ -74,8 +74,8 @@ async function load() {
   const raw = (await window.api.groups.list()) as Array<{ id: string; name: string; notes: string }>;
   const enriched: GroupRow[] = [];
   for (const g of raw) {
-    const members = (await window.api.groups.getMembers(g.id)) as unknown[];
-    enriched.push({ ...g, memberCount: members.length });
+    const links = (await window.api.groups.getLinks(g.id)) as Array<{ entity_type: string }>;
+    enriched.push({ ...g, memberCount: links.length });
   }
   groups.value = enriched;
 }

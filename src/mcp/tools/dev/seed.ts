@@ -41,7 +41,7 @@ function createSeededPerson(
     birth_place: opts.birth_place,
   });
 
-  groupApi.addGroupMember(db, groupId, person.id);
+  groupApi.addGroupLink(db, groupId, 'person', person.id);
   return person.id;
 }
 
@@ -164,11 +164,13 @@ export function clearTestData(db: Database): ClearTestDataResult {
   const testGroup = groups.find(g => g.name === '__test__');
   if (!testGroup) return { deleted_count: 0 };
 
-  const members = groupApi.getGroupMembers(db, testGroup.id);
+  const links = groupApi.getGroupLinks(db, testGroup.id);
   let deleted_count = 0;
-  for (const member of members) {
-    personApi.deletePerson(db, member.person_id);
-    deleted_count++;
+  for (const link of links) {
+    if (link.entity_type === 'person') {
+      personApi.deletePerson(db, link.entity_id);
+      deleted_count++;
+    }
   }
   groupApi.deleteGroup(db, testGroup.id);
   return { deleted_count };

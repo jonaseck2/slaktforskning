@@ -31,10 +31,27 @@ const SECTION_DEFAULTS: Record<keyof PlacePanelSections, boolean> = {
   quality: false,
 };
 
+// In static-website-export mode, default sections open so visitors see content
+// without having to expand each section. Quality stays closed (researcher view).
+const STATIC_DEFAULTS: Record<keyof PlacePanelSections, boolean> = {
+  place: true,
+  address: true,
+  children: true,
+  persons: true,
+  events: true,
+  citations: true,
+  media: true,
+  mediaTimeline: true,
+  quality: false,
+};
+
+const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
+
 export function usePlacePanelSections() {
+  const defaults = isStaticMode ? STATIC_DEFAULTS : SECTION_DEFAULTS;
   const sections = reactive<PlacePanelSections>(
     Object.fromEntries(
-      Object.entries(SECTION_DEFAULTS).map(([key, def]) => [key, loadSection(key, def)])
+      Object.entries(defaults).map(([key, def]) => [key, isStaticMode ? def : loadSection(key, def)])
     ) as PlacePanelSections
   );
 

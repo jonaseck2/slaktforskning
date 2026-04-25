@@ -375,8 +375,8 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     insertGroup: db.prepare(
       `INSERT INTO groups (id, name, notes) VALUES (?, ?, ?)`
     ),
-    insertGroupMember: db.prepare(
-      `INSERT OR IGNORE INTO group_members (id, group_id, person_id) VALUES (?, ?, ?)`
+    insertGroupLink: db.prepare(
+      `INSERT OR IGNORE INTO group_links (id, group_id, entity_type, entity_id, sort_order) VALUES (?, ?, 'person', ?, 0)`
     ),
     insertMedia: db.prepare(
       `INSERT INTO media (id, file_ref, title, format, notes, is_printable) VALUES (?, ?, ?, ?, ?, ?)`
@@ -385,7 +385,10 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       `INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type) VALUES (?, ?, ?, ?, ?)`
     ),
     insertResearchTask: db.prepare(
-      `INSERT INTO research_tasks (id, person_id, priority, status, task, notes, result) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO research_tasks (id, priority, status, task, notes, result) VALUES (?, ?, ?, ?, ?, ?)`
+    ),
+    insertTaskLink: db.prepare(
+      `INSERT OR IGNORE INTO task_links (id, task_id, entity_type, entity_id, sort_order) VALUES (?, ?, 'person', ?, 0)`
     ),
     insertParticipant: db.prepare(
       `INSERT OR IGNORE INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)`
@@ -712,7 +715,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     const group_id = groupMap.get(gm.GROUPS);
     const person_id = personMap.get(gm.PERSON);
     if (group_id && person_id) {
-      stmts.insertGroupMember.run([crypto.randomUUID(), group_id, person_id]);
+      stmts.insertGroupLink.run([crypto.randomUUID(), group_id, person_id]);
     }
   }
 
@@ -757,13 +760,17 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
 
   for (const todo of tables.TODO) {
     if (!todo.RID) continue;
+    const taskId = crypto.randomUUID();
     const person_id = todo.PERSON ? personMap.get(todo.PERSON) ?? null : null;
     const status = GENNEY_TODO_STATUS[String(todo.STATUS ?? '').toLowerCase()] ?? 'open';
     stmts.insertResearchTask.run([
-      crypto.randomUUID(), person_id,
+      taskId,
       todo.PRIORITY ?? 0, status,
       todo.TASK ?? '', todo.NOTE ?? '', todo.RESULT ?? '',
     ]);
+    if (person_id) {
+      stmts.insertTaskLink.run([crypto.randomUUID(), taskId, person_id]);
+    }
     summary.researchTasks++;
   }
 

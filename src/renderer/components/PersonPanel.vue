@@ -356,7 +356,7 @@ const showGroupPicker = ref(false);
 
 async function removeFromGroup(groupId: string) {
   if (!props.personId) return;
-  await window.api.groups.removeMember(groupId, props.personId);
+  await window.api.groups.removeLinkByEntity(groupId, 'person', props.personId);
   await loadGroups(props.personId);
 }
 

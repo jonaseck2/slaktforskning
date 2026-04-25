@@ -218,10 +218,13 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'groups:create': (data) => groups.createGroup(getDb(), data),
   'groups:update': (id, data) => groups.updateGroup(getDb(), id, data),
   'groups:delete': (id) => groups.deleteGroup(getDb(), id),
-  'groups:addMember': (groupId, personId) => groups.addGroupMember(getDb(), groupId, personId),
-  'groups:removeMember': (groupId, personId) => groups.removeGroupMember(getDb(), groupId, personId),
-  'groups:getMembers': (groupId) => groups.getGroupMembers(getDb(), groupId),
+  'groups:addLink': (groupId, entityType, entityId) => groups.addGroupLink(getDb(), groupId, entityType, entityId),
+  'groups:removeLink': (linkId) => groups.removeGroupLink(getDb(), linkId),
+  'groups:removeLinkByEntity': (groupId, entityType, entityId) => groups.removeGroupLinkByEntity(getDb(), groupId, entityType, entityId),
+  'groups:getLinks': (groupId) => groups.getGroupLinks(getDb(), groupId),
   'groups:forPerson': (personId) => groups.getGroupsForPerson(getDb(), personId),
+  'groups:forPlace': (placeId) => groups.getGroupsForPlace(getDb(), placeId),
+  'groups:forMedia': (mediaId) => groups.getGroupsForMedia(getDb(), mediaId),
 
   // Repositories
   'repositories:list': () => repositories.listRepositories(getDb()),
@@ -237,9 +240,14 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'researchTasks:list': () => researchTasks.listResearchTasks(getDb()),
   'researchTasks:get': (id) => researchTasks.getResearchTask(getDb(), id),
   'researchTasks:forPerson': (personId) => researchTasks.getResearchTasksForPerson(getDb(), personId),
+  'researchTasks:forPlace': (placeId) => researchTasks.getResearchTasksForPlace(getDb(), placeId),
+  'researchTasks:forMedia': (mediaId) => researchTasks.getResearchTasksForMedia(getDb(), mediaId),
   'researchTasks:create': (data) => researchTasks.createResearchTask(getDb(), data),
   'researchTasks:update': (id, data) => researchTasks.updateResearchTask(getDb(), id, data),
   'researchTasks:delete': (id) => researchTasks.deleteResearchTask(getDb(), id),
+  'researchTasks:addLink': (taskId, entityType, entityId) => researchTasks.addTaskLink(getDb(), taskId, entityType, entityId),
+  'researchTasks:removeLink': (linkId) => researchTasks.removeTaskLink(getDb(), linkId),
+  'researchTasks:getLinks': (taskId) => researchTasks.getTaskLinks(getDb(), taskId),
 
   // Reports
   'reports:personSummary': (personId) => reportData.getPersonSummary(getDb(), personId),

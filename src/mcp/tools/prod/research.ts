@@ -19,17 +19,29 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
   });
 
   server.registerTool('add_research_task', {
-    description: 'Create a new research task, optionally linked to a person',
+    description: 'Create a new research task. Optionally link it to one or more persons, places, or media items.',
     inputSchema: {
       task: z.string().describe('Description of the research task'),
-      person_id: z.string().optional().describe('Person ID this task relates to'),
+      person_ids: z.array(z.string()).optional().describe('Person IDs this task relates to'),
+      place_ids: z.array(z.string()).optional().describe('Place IDs this task relates to'),
+      media_ids: z.array(z.string()).optional().describe('Media IDs this task relates to'),
       priority: z.number().optional().describe('Priority (lower = higher priority, default 0)'),
       status: z.enum(['open', 'in_progress', 'done', 'stopped']).optional().describe('Task status (default: open)'),
       notes: z.string().optional().describe('Notes about the task'),
     },
   }, async (args) => {
-    const task = researchTasks.createResearchTask(getDb(), args);
-    return { content: [{ type: 'text', text: JSON.stringify(task, null, 2) }] };
+    const db = getDb();
+    const task = researchTasks.createResearchTask(db, {
+      task: args.task,
+      priority: args.priority,
+      status: args.status,
+      notes: args.notes,
+    });
+    for (const personId of args.person_ids ?? []) researchTasks.addTaskLink(db, task.id, 'person', personId);
+    for (const placeId of args.place_ids ?? []) researchTasks.addTaskLink(db, task.id, 'place', placeId);
+    for (const mediaId of args.media_ids ?? []) researchTasks.addTaskLink(db, task.id, 'media', mediaId);
+    const links = researchTasks.getTaskLinks(db, task.id);
+    return { content: [{ type: 'text', text: JSON.stringify({ ...task, links }, null, 2) }] };
   });
 
   server.registerTool('update_research_task', {

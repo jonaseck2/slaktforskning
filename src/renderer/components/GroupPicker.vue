@@ -96,8 +96,9 @@ async function loadGroups() {
   const raw = (await window.api.groups.list()) as Array<{ id: string; name: string }>;
   const options: GroupOption[] = [];
   for (const g of raw) {
-    const members = (await window.api.groups.getMembers(g.id)) as unknown[];
-    options.push({ id: g.id, name: g.name, memberCount: members.length });
+    const links = (await window.api.groups.getLinks(g.id)) as Array<{ entity_type: string }>;
+    const memberCount = links.filter(l => l.entity_type === 'person').length;
+    options.push({ id: g.id, name: g.name, memberCount });
   }
   allGroups.value = options;
 }
@@ -146,7 +147,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 async function select(g: GroupOption) {
-  await window.api.groups.addMember(g.id, props.personId);
+  await window.api.groups.addLink(g.id, 'person', props.personId);
   query.value = '';
   open.value = false;
   emit('added');
@@ -156,7 +157,7 @@ async function createAndAdd() {
   const name = query.value.trim();
   if (!name) return;
   const created = (await window.api.groups.create({ name, notes: '' })) as { id: string };
-  await window.api.groups.addMember(created.id, props.personId);
+  await window.api.groups.addLink(created.id, 'person', props.personId);
   query.value = '';
   open.value = false;
   emit('added');

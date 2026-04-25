@@ -245,26 +245,37 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   }
   moved.citations = citCount.length;
 
-  // 6. Group members (was 7) — reassign, skip if target already in group
-  const sourceGroups = queryAll<{ id: string; group_id: string }>(db, 'SELECT id, group_id FROM group_members WHERE person_id = ?', [sourceId]);
+  // 6. Group person-links — reassign, skip if target already linked to group
+  const sourceGroupLinks = queryAll<{ id: string; group_id: string }>(db,
+    `SELECT id, group_id FROM group_links WHERE entity_type = 'person' AND entity_id = ?`, [sourceId]);
   let gmMoved = 0;
-  for (const gm of sourceGroups) {
-    const exists = queryOne<{ id: string }>(db, 'SELECT id FROM group_members WHERE group_id = ? AND person_id = ?', [gm.group_id, targetId]);
+  for (const gl of sourceGroupLinks) {
+    const exists = queryOne<{ id: string }>(db,
+      `SELECT id FROM group_links WHERE group_id = ? AND entity_type = 'person' AND entity_id = ?`, [gl.group_id, targetId]);
     if (exists) {
-      runSql(db, 'DELETE FROM group_members WHERE id = ?', [gm.id]);
+      runSql(db, 'DELETE FROM group_links WHERE id = ?', [gl.id]);
     } else {
-      runSql(db, 'UPDATE group_members SET person_id = ? WHERE id = ?', [targetId, gm.id]);
+      runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [targetId, gl.id]);
       gmMoved++;
     }
   }
   moved.group_members = gmMoved;
 
-  // 8. Research tasks — reassign
-  const taskCount = queryAll<{ id: string }>(db, 'SELECT id FROM research_tasks WHERE person_id = ?', [sourceId]);
-  for (const t of taskCount) {
-    runSql(db, 'UPDATE research_tasks SET person_id = ? WHERE id = ?', [targetId, t.id]);
+  // 8. Research-task person-links — reassign, skip if target already linked
+  const sourceTaskLinks = queryAll<{ id: string; task_id: string }>(db,
+    `SELECT id, task_id FROM task_links WHERE entity_type = 'person' AND entity_id = ?`, [sourceId]);
+  let tlMoved = 0;
+  for (const tl of sourceTaskLinks) {
+    const exists = queryOne<{ id: string }>(db,
+      `SELECT id FROM task_links WHERE task_id = ? AND entity_type = 'person' AND entity_id = ?`, [tl.task_id, targetId]);
+    if (exists) {
+      runSql(db, 'DELETE FROM task_links WHERE id = ?', [tl.id]);
+    } else {
+      runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [targetId, tl.id]);
+      tlMoved++;
+    }
   }
-  moved.research_tasks = taskCount.length;
+  moved.research_tasks = tlMoved;
 
   // 9. Merge person fields — append notes
   const sourceData = queryOne<{ notes: string; sex: string; living: number }>(db, 'SELECT notes, sex, living FROM persons WHERE id = ?', [sourceId]);
