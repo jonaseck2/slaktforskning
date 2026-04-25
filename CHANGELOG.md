@@ -3,6 +3,7 @@
 ## Unreleased
 
 - fix(timeline): render labels on top of stems; make axis line black
+- fix(media): refresh profile picture immediately after setting from face region; auto-create media link when only tagged via region
 
 ## v0.146.0 — App-look website export
 
