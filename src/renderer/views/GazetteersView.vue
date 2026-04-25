@@ -87,7 +87,7 @@
           </div>
         </div>
       </div>
-      <p v-else class="empty-hint">{{ $t('empty.gazetteers') }}</p>
+      <SectionEmpty v-else :message="$t('empty.gazetteers')" />
     </div>
 
     <ConfirmModal
