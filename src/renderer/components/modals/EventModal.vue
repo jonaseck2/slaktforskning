@@ -1,10 +1,8 @@
 <template>
   <BaseSubPanel
     entity-type="event"
-    :label="$t('events.entity')"
     :title="eventTitle"
     :mode="mode"
-    :has-sub="!!subPanel"
     @cancel="handleCancel"
     @save="handleSave"
     @close="$emit('close')"

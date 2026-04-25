@@ -1,7 +1,6 @@
 <template>
   <BaseSubPanel
     entity-type="citation"
-    :label="$t('citations.entity')"
     :title="sourceTitle"
     mode="subpanel"
     :save-label="$t('common.save') + ' ↩'"
