@@ -112,7 +112,7 @@
     </template>
 
     <!-- Add Person Modal -->
-    <AddPersonModal v-if="showAddForm" @close="showAddForm = false" @saved="onPersonAdded" />
+    <PersonModal v-if="showAddForm" mode="standalone" @cancel="showAddForm = false" @saved="onPersonAdded" />
 
     <MergePersonsModal
       v-if="mergeCandidate"
@@ -133,7 +133,7 @@
 import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import AddPersonModal from '../components/AddPersonModal.vue';
+import PersonModal from '../components/modals/PersonModal.vue';
 import { narratePersonRow } from '../utils/screenReaderNarration';
 import PersonName from '../components/PersonName.vue';
 import MergePersonsModal from '../components/MergePersonsModal.vue';
