@@ -110,6 +110,8 @@ export default {
     emptyHint: 'Lägg till din första person för att börja bygga ditt släktträd.',
     name: 'Namn',
     info: 'Info',
+    entity: 'Person',
+    newPerson: 'Ny person',
   },
   personDetail: {
     deceased: 'Avliden',
@@ -147,6 +149,7 @@ export default {
     searchPerson: 'Sök efter en person\u2026',
     confirmDelete: 'Ta bort denna relation? Detta kan inte ångras.',
     showingOf: 'Visar {shown} av {total} relationer',
+    searchOrAdd: 'Sök eller lägg till relation…',
   },
   relationshipDetail: {
     title: 'Relation',
