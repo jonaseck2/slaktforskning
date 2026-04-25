@@ -73,6 +73,11 @@ src/
 │   │   ├── da.ts                  # Danish rules (Arkivalieronline, KIP)
 │   │   ├── no.ts                  # Norwegian rules (Digitalarkivet, Arkivverket)
 │   │   └── universal.ts           # Universal rules (plain URLs)
+│   ├── html_site/                 # Website export helpers (Node.js only — used by IPC, not renderer)
+│   │   ├── snapshot.ts            # Data snapshot builder: serialises DB to data.json
+│   │   ├── scope.ts               # Ancestor/descendant scope filter (N generations)
+│   │   ├── redact.ts              # Living-person privacy: exclude or decade-redact
+│   │   └── thumbnails.ts          # Thumbnail generator (≤800px, uses nativeImage)
 │   └── place-gazetteers/          # Render-time place resolution (coordinates from reference data)
 │       ├── types.ts               # GazetteerNode, Gazetteer, PlaceResolveResult, GazetteerConfig
 │       ├── resolver.ts            # resolvePlace() — match place strings against gazetteer trees
@@ -196,6 +201,24 @@ src/
 │   │   ├── screenReaderNarration.ts # Narration builders for screen reader mode
 │   └── constants/
 │       └── eventTypes.ts         # GEDCOM event types, date types, confidence levels, etc.
+├── static/                       # Static SPA entry (website export target)
+│   ├── main.ts                   # Vue bootstrap for static mode
+│   ├── App.vue                   # Simplified shell: 5-nav sidebar (People/Places/Media/Reports/Prints)
+│   ├── router.ts                 # Reduced route table (no editing routes)
+│   ├── static-api.ts             # window.api stub backed by data.json snapshot + lunr search
+│   ├── stores/
+│   │   └── uiMode.ts             # useUiModeStore — isReadOnly flag for static mode
+│   ├── dev/
+│   │   └── fixtures.json         # Small dev fixture for npm run dev:static
+│   └── views/
+│       ├── PersonsListView.vue   # List-only persons view (no panel)
+│       ├── PlacesListView.vue    # List-only places view (no panel)
+│       ├── PersonDetailView.vue  # Full-page person detail (readonly PersonPanel)
+│       ├── PlaceDetailView.vue   # Full-page place detail (readonly PlacePanel)
+│       ├── ReportsIndexView.vue  # Links to pre-rendered reports
+│       ├── ReportPageView.vue    # iframe + PDF download for one report
+│       ├── PrintsIndexView.vue   # Links to pre-rendered frameable prints
+│       └── PrintPageView.vue     # iframe + PDF download for one print
 └── mcp/
     ├── createServer.ts           # MCP tools — thin wrappers over api/ functions
     └── server.ts                 # Entry point: DB setup + launches createServer
@@ -825,6 +848,8 @@ npm run lint           # Run ESLint (must pass with 0 errors before committing)
 npm test               # Run unit tests (Vitest, 1159 tests)
 npm test -- --coverage # Run with coverage report (80% threshold on src/api/)
 npx playwright test    # Run E2E tests (app launch + MCP server)
+npm run build:static   # Build static SPA bundle (dist-static/)
+npm run dev:static     # Dev server for static SPA at localhost:5174
 npm run package        # Package for current platform
 npm run make           # Build distributable installers
 npx tsx src/mcp/server.ts  # Run MCP server standalone
@@ -938,6 +963,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 | `vite.worker.config.ts` | DB Worker build — same plugins as main (worker imports gazetteer code) |
 | `vite.preload.config.ts` | Preload build (`entryFileNames: 'preload.js'` — avoids collision) |
 | `vite.renderer.config.ts` | Renderer build (`root: src/renderer`, `outDir` resolves to project root) |
+| `vite.static.config.ts` | Static SPA build (VITE_STATIC_MODE=true, outDir=dist-static) |
 | `vitest.config.mts` | Unit test config |
 | `playwright.config.ts` | E2E test config |
 | `tsconfig.json` | TypeScript config |
