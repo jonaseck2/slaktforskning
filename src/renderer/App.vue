@@ -63,6 +63,14 @@
         <span class="nav-icon" aria-hidden="true">🖨️</span>
         <span class="nav-label">{{ $t('reports.nav') }}</span>
       </router-link>
+      <router-link to="/prints" class="nav-item" :aria-label="$t('nav.framablePrints')">
+        <span class="nav-icon" aria-hidden="true">🖼️</span>
+        <span class="nav-label">{{ $t('nav.framablePrints') }}</span>
+      </router-link>
+      <router-link to="/website" class="nav-item" :aria-label="$t('nav.website')">
+        <span class="nav-icon" aria-hidden="true">🌐</span>
+        <span class="nav-label">{{ $t('nav.website') }}</span>
+      </router-link>
       <div class="sidebar-spacer"></div>
       <router-link to="/import-export" class="nav-item nav-bottom-item" :aria-label="$t('nav.importExport')">
         <span class="nav-icon" aria-hidden="true">📦</span>
@@ -202,6 +210,8 @@ watch(() => route.path, () => {
       '/groups': 'groups',
       '/media': 'media',
       '/reports': 'reports',
+      '/prints': 'framablePrints',
+      '/website': 'website',
       '/quality': 'quality',
       '/database': 'database',
       '/import-export': 'importExport',
@@ -217,7 +227,7 @@ watch(() => route.path, () => {
   }
 });
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView'];
-const PANELED_ROUTES = ['/visualisering', '/media', '/places', '/reports'];
+const PANELED_ROUTES = ['/visualisering', '/media', '/places', '/reports', '/prints'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);

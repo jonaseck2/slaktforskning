@@ -3,21 +3,19 @@
 
     <div class="reports-main">
     <div class="view-header">
-      <h2>{{ $t('reports.title') }}</h2>
+      <h2>{{ mode === 'framable' ? $t('reports.groups.framablePrints') : $t('reports.title') }}</h2>
       <span v-if="reportLoading" class="running-hint">{{ $t('reports.loadingReport') }}</span>
     </div>
 
     <div class="tab-groups">
-      <div class="tab-group">
-        <h3 class="tab-group-label">{{ $t('reports.groups.keepsake') }}</h3>
+      <div v-if="mode === 'keepsake'" class="tab-group">
         <FilterChips
           :model-value="activeTab"
           :options="keepsakeTabs"
           @update:model-value="activeTab = $event as typeof activeTab"
         />
       </div>
-      <div class="tab-group">
-        <h3 class="tab-group-label">{{ $t('reports.groups.framablePrints') }}</h3>
+      <div v-if="mode === 'framable'" class="tab-group">
         <FilterChips
           :model-value="activeTab"
           :options="framableTabs"
@@ -269,13 +267,16 @@ import { buildExportSvgString } from '../composables/useChartExport';
 
 interface RelationshipOption { id: string; label: string; }
 
+const props = defineProps<{ mode?: 'keepsake' | 'framable' }>();
+const mode = computed(() => props.mode ?? 'keepsake');
+
 const { t } = useI18n();
 const route = useRoute();
 
 const focusStore = useFocusStore();
 const store = useReportConfigStore();
 
-const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>('pedigreePrint');
+const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>(mode.value === 'framable' ? 'pedigreePrint' : 'alife');
 const reportsViewRef = ref<HTMLElement | null>(null);
 const { panelWidth, startResize } = usePanelResize({ storageKey: 'reports-panel-width', defaultWidth: 240, minWidth: 180 });
 
@@ -432,9 +433,9 @@ onMounted(async () => {
 
   // Read query params for deep linking (e.g. /reports?tab=alife)
   const tabParam = route.query.tab as string | undefined;
-  const validTabs = ['yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum',
-    'placeChronicle', 'amarriage', 'pedigreePrint', 'hourglassChart',
-    'descendantChart', 'fanChart', 'timeline'];
+  const keepsakeValid = ['yourAncestors', 'alife', 'onePage', 'familyInYear', 'photoAlbum', 'placeChronicle', 'amarriage'];
+  const framableValid = ['pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'];
+  const validTabs = mode.value === 'framable' ? framableValid : keepsakeValid;
   if (tabParam && validTabs.includes(tabParam)) activeTab.value = tabParam as typeof activeTab.value;
   if (route.query.placeId)        store.placeChroniclePlaceId = route.query.placeId as string;
   if (route.query.relationshipId) store.aMarriageRelId        = route.query.relationshipId as string;

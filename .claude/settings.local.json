@@ -61,7 +61,8 @@
       "Read(//c/Users/linda/AppData/Roaming/slaktforskning/**)",
       "Read(//c/Users/linda/AppData/Roaming/Slaktforskning/**)",
       "Read(//c/Users/linda/AppData/Roaming//**)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(awk '/^  relationships: \\\\{/,/^  [a-z]/' src/renderer/i18n/en.ts)"
     ],
     "additionalDirectories": [
       "/Users/jonasahnstedt/git/slaktforskning/.claude",
