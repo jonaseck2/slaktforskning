@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(panels): hide `<thead>` column labels on every side-panel table — narrow panels with self-evident row content (avatar + name link, date badge, action ✕) read denser and more consistent without the redundant headings.
 - fix(panels): drop `table-layout: fixed` (it was squashing identifier / relationship / media / task tables into stacked vertical columns); replace with `min-width: 0` on `.panel-section` + `overflow-x: hidden` on `.panel-section-body` to clip residual overflow, plus `word-break: break-word` on cells so long source titles / URLs wrap naturally.
 - feat(panels): unify all 8 entity side panels onto one shell — new `usePanelSections` composable replaces the per-panel `localStorage` boilerplate (and deletes the redundant `useSectionState` / `usePlacePanelSections`); MediaPanel and ReportPanel now persist section state across reloads. Header padding is now identical (`var(--space-md) var(--space-lg)` on `.panel-header-content`) and the close button stretches the full header height in every panel. PersonPanel and MediaPanel gain a close button they were missing. MediaPanel section padding aligns with the rest (`var(--space-lg)`).
 - fix(layout): tighten list-view scroll containers — drop the `.filter-chips-bar` wrapper around chart-type tabs in PersonsView and PlacesView; wrap MediaView's list rows in a scrolling inner container so the header stays put

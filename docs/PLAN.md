@@ -27,6 +27,10 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 - Spec: [plans/archive/2026-04-18-open-source-publishing-design.md](plans/archive/2026-04-18-open-source-publishing-design.md)
 - Plan: [plans/archive/2026-04-18-open-source-publishing.md](plans/archive/2026-04-18-open-source-publishing.md)
 
+#### Entity-color Theming Migration [planned]
+Move entity colors (person/event/source/citation/place/relationship/task/group/name/identifier/neutral) from JS hex literals in `entityColors.ts` to CSS tokens with dark + high-contrast variants, attribute-selector consumption (`[data-entity="…"]`) on BaseSubPanel, and ~198 new WCAG assertions covering all entity × theme × mode combinations.
+- Spec: [plans/2026-04-25-entity-token-theming-design.md](plans/2026-04-25-entity-token-theming-design.md)
+
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion.
 
