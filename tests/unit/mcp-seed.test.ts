@@ -41,8 +41,8 @@ describe('seedFamilyWorkflow', () => {
     const groups = groupApi.listGroups(db);
     const testGroup = groups.find(g => g.name === '__test__');
     expect(testGroup).toBeTruthy();
-    const members = groupApi.getGroupMembers(db, testGroup!.id);
-    const memberIds = members.map(m => m.person_id);
+    const links = groupApi.getGroupLinks(db, testGroup!.id);
+    const memberIds = links.filter(l => l.entity_type === 'person').map(l => l.entity_id);
     for (const id of result.person_ids) {
       expect(memberIds).toContain(id);
     }

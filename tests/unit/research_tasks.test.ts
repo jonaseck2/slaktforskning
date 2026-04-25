@@ -150,14 +150,15 @@ describe('task links', () => {
     expect(getTaskLinks(db, task.id)).toHaveLength(0);
   });
 
-  it('does not cascade person delete (links remain dangling, like media_links)', () => {
+  it('cleans up dangling task_links when a person is deleted', () => {
     const person = createPerson(db, { given_name: 'Anna', surname: 'Berg' });
     const task = createResearchTask(db, { task: 'Find baptism' });
     addTaskLink(db, task.id, 'person', person.id);
     deletePerson(db, person.id);
-    // Tasks themselves are unaffected; the link row stays — joining queries return empty
+    // Task itself remains; only its link to the deleted person is gone
     expect(getResearchTask(db, task.id)).not.toBeNull();
     expect(getResearchTasksForPerson(db, person.id)).toHaveLength(0);
+    expect(getTaskLinks(db, task.id)).toHaveLength(0);
   });
 });
 

@@ -182,7 +182,7 @@ describe('GEDCOM import - _GRP records (Genney)', () => {
   it('creates group memberships from 1 _GRP links on INDI', () => {
     const db = createTestDb();
     importGedcom(db, parseGedcom(GRP_GED), { profile: 'genney' });
-    const stmt = db.prepare('SELECT COUNT(*) as n FROM group_members');
+    const stmt = db.prepare(`SELECT COUNT(*) as n FROM group_links WHERE entity_type = 'person'`);
     const { n } = stmt.get([]) as { n: number };
     (stmt as unknown as { finalize(): void }).finalize();
     expect(n).toBe(3); // Lars in 2 groups, Karin in 1
@@ -241,7 +241,7 @@ describe('GEDCOM import - _TODO records (Genney)', () => {
   it('links tasks to persons via _TARG', () => {
     const db = createTestDb();
     importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
-    const stmt = db.prepare('SELECT COUNT(*) as n FROM research_tasks WHERE person_id IS NOT NULL');
+    const stmt = db.prepare(`SELECT COUNT(*) as n FROM task_links WHERE entity_type = 'person'`);
     const { n } = stmt.get([]) as { n: number };
     (stmt as unknown as { finalize(): void }).finalize();
     expect(n).toBe(2);

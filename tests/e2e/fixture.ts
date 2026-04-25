@@ -504,7 +504,7 @@ export class AppDriver {
 
   async addGroupMember(groupId: string, personId: string): Promise<{ id: string }> {
     return this.executeJs<{ id: string }>(
-      `window.api.groups.addMember(${JSON.stringify(groupId)}, ${JSON.stringify(personId)})`
+      `window.api.groups.addLink(${JSON.stringify(groupId)}, 'person', ${JSON.stringify(personId)})`
     );
   }
 }

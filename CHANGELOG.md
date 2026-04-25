@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(charts): clicking a person box in pedigree, hourglass, descendant, and timeline charts now selects that person in the side panel even in readonly mode (the click handler was gated by `!readonly` — same mistake as the zoom controls; navigation isn't editing). Fan chart already worked.
 - fix(website-export): per-row delete (✕) buttons in panel sub-tables (PersonNamesTable, GroupsTable, ResearchTasksTable, PersonIdentifiersSection, PersonMediaSection, EntityMediaSection in PlacePanel) now hidden in readonly mode. PersonMediaSection also drops its star/reorder column. PersonPanel/PlacePanel pass `:readonly` through to all the sub-tables that needed it.
 - fix(map): map backdrop uses `var(--surface)` instead of Leaflet's default grey, and removed the border around the map container so it blends with the surrounding sheet
 - feat(website-export): side panels (PersonPanel, PlacePanel, MediaPanel) are back in the static export — visitors get the full app-like experience with charts/maps + entity details. Add/edit/delete affordances are gated on `readonly`: the per-section "+ Add" buttons, delete (✕) buttons, picker action labels, and inline editors all disappear in static mode. The title input + notes textarea on MediaPanel render as plain text. Face-tag rows render as router-links to the tagged person. Panel sections also default to open in static so visitors don't have to click each one.

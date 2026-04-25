@@ -81,6 +81,9 @@ export function updatePerson(
 }
 
 export function deletePerson(db: Database, id: string): boolean {
+  // Clean up polymorphic link rows that don't have FK CASCADE
+  runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
+  runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
   return runSqlChanges(db, `DELETE FROM persons WHERE id = ?`, [id]) > 0;
 }
 

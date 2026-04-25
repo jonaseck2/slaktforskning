@@ -98,8 +98,8 @@
             :key="bar.person.id"
             :data-testid="'timeline-row-' + bar.person.id"
             :class="['timeline-row', { focal: bar.isFocal, hovered: hoveredId === bar.person.id }]"
-            :style="{ cursor: readonly ? 'default' : undefined }"
-            @click="!readonly && $emit('navigate', bar.person.id)"
+            :style="{ cursor: 'pointer' }"
+            @click="$emit('navigate', bar.person.id)"
             @mouseenter="hoveredId = bar.person.id; hoveredMarker = null"
             @mouseleave="hoveredId = null"
           >
