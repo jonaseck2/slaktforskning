@@ -1,41 +1,50 @@
 <template>
-  <BaseModal v-if="visible" :title-id="titleId" @close="cancel">
-    <h3 :id="titleId">{{ title }}</h3>
+  <BaseSubPanel
+    v-if="visible"
+    entity-type="neutral"
+    :title="title"
+    :icon="icon"
+    :tone="tone"
+    :save-label="resolvedConfirmLabel"
+    mode="standalone"
+    @cancel="cancel"
+    @close="cancel"
+    @save="onConfirm"
+  >
     <p>{{ message }}</p>
-    <div class="modal-actions">
-      <AppButton
-        variant="secondary"
-        v-narrate="t('screenReader.btnCancel')"
-        @click="cancel"
-      >{{ $t('common.cancel') }}</AppButton>
-      <AppButton
-        variant="danger"
-        v-narrate="t('screenReader.btnDelete')"
-        @click="onConfirm"
-      >{{ $t('common.delete') }}</AppButton>
-    </div>
-  </BaseModal>
+  </BaseSubPanel>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseModal from './BaseModal.vue';
-import AppButton from './ui/AppButton.vue';
+import BaseSubPanel from './modals/BaseSubPanel.vue';
 
 const { t } = useI18n();
 
-const titleId = 'confirm-modal-title-' + Math.random().toString(36).slice(2, 8);
-
-defineProps<{
+const props = withDefaults(defineProps<{
   visible: boolean;
   title: string;
   message: string;
-}>();
+  /** Tone for the confirm button. Defaults to 'danger' (red) to match the original delete use case. */
+  tone?: 'info' | 'warning' | 'danger';
+  /** Optional icon shown in the panel header. */
+  icon?: string;
+  /** Override label for the confirm button. Defaults to 'Delete' for danger tone, 'Confirm' otherwise. */
+  confirmLabel?: string;
+}>(), {
+  tone: 'danger',
+});
 
 const emit = defineEmits<{
   confirm: [];
   cancel: [];
 }>();
+
+const resolvedConfirmLabel = computed(() => {
+  if (props.confirmLabel !== undefined) return props.confirmLabel;
+  return props.tone === 'danger' ? t('common.delete') : t('common.confirm');
+});
 
 function onConfirm() { emit('confirm'); }
 function cancel() { emit('cancel'); }
