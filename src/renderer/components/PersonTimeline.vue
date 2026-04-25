@@ -60,10 +60,12 @@
       </div>
     </template>
 
-    <EventForm
+    <EventModal
       v-if="showForm"
+      mode="standalone"
       :person-id="personId"
       :editing-event="editingEvent"
+      @cancel="closeForm"
       @close="closeForm"
       @saved="onSaved"
     />
@@ -73,7 +75,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import EventForm from './EventForm.vue';
+import EventModal from './modals/EventModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 
 interface EventRow {

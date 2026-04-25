@@ -226,9 +226,11 @@
     </template>
 
     <!-- Citation form modal -->
-    <CitationForm
+    <CitationModal
       v-if="showCitationForm && placeId"
+      mode="standalone"
       :place-id="placeId"
+      @cancel="showCitationForm = false"
       @close="showCitationForm = false"
       @saved="showCitationForm = false; citationsSectionRef?.reload(); load(placeId)"
     />
@@ -255,7 +257,7 @@ import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
-import CitationForm from './CitationForm.vue';
+import CitationModal from './modals/CitationModal.vue';
 import type { ComponentPublicInstance } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
