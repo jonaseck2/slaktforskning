@@ -1,6 +1,13 @@
 <template>
-  <BaseModal @close="$emit('close')" title-id="modal-title-merge">
-    <h3 id="modal-title-merge">{{ $t('duplicates.mergeTitle') }}</h3>
+  <BaseSubPanel
+    entity-type="person"
+    :title="$t('duplicates.mergeTitle')"
+    mode="standalone"
+    :save-label="merging ? $t('duplicates.merging') : $t('duplicates.confirmMerge')"
+    @cancel="$emit('close')"
+    @close="$emit('close')"
+    @save="doMerge"
+  >
     <div class="merge-layout">
       <div class="merge-side">
         <h5>{{ $t('duplicates.keepPerson') }}</h5>
@@ -29,19 +36,13 @@
     <div class="merge-warning">
       {{ $t('duplicates.mergeWarning') }}
     </div>
-    <div class="modal-actions">
-      <button type="button" class="btn-cancel" @click="$emit('close')">{{ $t('common.cancel') }}</button>
-      <button type="button" class="btn-merge" @click="doMerge" :disabled="merging">
-        {{ merging ? $t('duplicates.merging') : $t('duplicates.confirmMerge') }}
-      </button>
-    </div>
-  </BaseModal>
+  </BaseSubPanel>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseModal from './BaseModal.vue';
+import BaseSubPanel from './modals/BaseSubPanel.vue';
 import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
@@ -61,6 +62,7 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'merged'): void }>();
 const merging = ref(false);
 
 async function doMerge() {
+  if (merging.value) return;
   merging.value = true;
   try {
     await window.api.duplicates.merge(props.target.id, props.source.id);
@@ -126,17 +128,5 @@ async function doMerge() {
   border-radius: 6px;
   font-size: var(--font-xs);
   margin-bottom: 16px;
-}
-.btn-merge {
-  background: var(--color-danger, #dc2626);
-  color: white;
-  border: none;
-  padding: 6px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-merge:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>
