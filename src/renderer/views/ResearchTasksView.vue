@@ -17,66 +17,24 @@
     <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->
-    <BaseModal v-if="showAddModal" @close="showAddModal = false" title-id="modal-title-add-research-task">
-        <h3 id="modal-title-add-research-task">{{ $t('common.add') }} {{ $t('researchTasks.addTask') }}</h3>
-        <form @submit.prevent="createTask">
-          <label>
-            {{ $t('researchTasks.task') }} *
-            <input v-model="addForm.task" type="text" required autofocus />
-          </label>
-          <label>
-            {{ $t('persons.title') }}
-            <PersonPicker v-model="addForm.person_id" :placeholder="$t('researchTasks.selectPersonOptional')" />
-          </label>
-          <label>
-            {{ $t('researchTasks.priority') }}
-            <select v-model="addForm.priority">
-              <option :value="0">0</option>
-              <option :value="1">1</option>
-              <option :value="2">2</option>
-              <option :value="3">3</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('researchTasks.status') }}
-            <select v-model="addForm.status">
-              <option value="open">{{ $t('researchTasks.statuses.open') }}</option>
-              <option value="in_progress">{{ $t('researchTasks.statuses.in_progress') }}</option>
-              <option value="done">{{ $t('researchTasks.statuses.done') }}</option>
-              <option value="stopped">{{ $t('researchTasks.statuses.stopped') }}</option>
-            </select>
-          </label>
-          <label>
-            {{ $t('researchTasks.notes') }}
-            <textarea
-              ref="notesRef"
-              v-model="addForm.notes"
-              rows="2"
-              :style="notesStoredHeight ? { height: notesStoredHeight + 'px' } : undefined"
-              @mouseup="persistNotesHeight"
-            />
-          </label>
-          <div class="modal-actions">
-            <AppButton variant="secondary" @click="showAddModal = false">{{ $t('common.cancel') }}</AppButton>
-            <AppButton variant="primary" type="submit">{{ $t('common.save') }}</AppButton>
-          </div>
-        </form>
-    </BaseModal>
+    <ResearchTaskModal
+      v-if="showAddModal"
+      mode="standalone"
+      @cancel="showAddModal = false"
+      @close="showAddModal = false"
+      @saved="onSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseModal from '../components/BaseModal.vue';
-import PersonPicker from '../components/PersonPicker.vue';
+import ResearchTaskModal from '../components/modals/ResearchTaskModal.vue';
 import ResearchTasksTable from '../components/ResearchTasksTable.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
-import { useTextareaHeight } from '../composables/useTextareaHeight';
-
-const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('research-task-add-notes');
 
 const { t } = useI18n();
 
@@ -116,14 +74,6 @@ const filteredTasks = computed(() => {
   return tasks.value.filter(t => t.status === activeFilter.value);
 });
 
-const addForm = reactive({
-  task: '',
-  person_id: null as string | null,
-  priority: 1,
-  status: 'open' as 'open' | 'in_progress' | 'done' | 'stopped',
-  notes: '',
-});
-
 async function load() {
   const raw = (await window.api.researchTasks.list()) as ResearchTask[];
   // Enrich with person names using getNames (persons.get returns no name fields)
@@ -142,20 +92,7 @@ async function load() {
   tasks.value = enriched;
 }
 
-async function createTask() {
-  if (!addForm.task.trim()) return;
-  await window.api.researchTasks.create({
-    task: addForm.task,
-    notes: addForm.notes || undefined,
-    person_id: addForm.person_id || undefined,
-    priority: addForm.priority,
-    status: addForm.status,
-  });
-  addForm.task = '';
-  addForm.person_id = null;
-  addForm.priority = 1;
-  addForm.status = 'open';
-  addForm.notes = '';
+async function onSaved() {
   showAddModal.value = false;
   await load();
 }

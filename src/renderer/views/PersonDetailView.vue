@@ -146,11 +146,13 @@
     </section>
 
     <!-- Add Research Task Modal -->
-    <AddResearchTaskModal
+    <ResearchTaskModal
       v-if="showAddTaskModal"
+      mode="standalone"
       :person-id="personId"
+      @cancel="showAddTaskModal = false"
       @close="showAddTaskModal = false"
-      @saved="loadPersonTasks"
+      @saved="onTaskSaved"
     />
 
     <!-- Quality Section -->
@@ -197,7 +199,7 @@ import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useToast } from '../composables/useToast';
 import { useTTS } from '../composables/useTTS';
 import { narratePerson, narrationLabelsFromI18n } from '../utils/narration';
-import AddResearchTaskModal from '../components/AddResearchTaskModal.vue';
+import ResearchTaskModal from '../components/modals/ResearchTaskModal.vue';
 import EventList from '../components/EventList.vue';
 import AddRelatedPersonModal from '../components/AddRelatedPersonModal.vue';
 import PersonRelationshipsSection from '../components/PersonRelationshipsSection.vue';
@@ -293,6 +295,10 @@ const showGroupPicker = ref(false);
 async function loadPersonTasks() {
   if (!window.api?.researchTasks) return;
   personTasks.value = (await window.api.researchTasks.forPerson(personId)) as import('../components/ResearchTasksTable.vue').ResearchTaskRow[];
+}
+
+async function onTaskSaved() {
+  await loadPersonTasks();
 }
 
 async function loadPersonGroups() {
