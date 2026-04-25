@@ -53,12 +53,14 @@
       </tbody>
     </table>
 
-    <EventForm
+    <EventModal
       v-if="showForm"
+      mode="standalone"
       :person-id="personId"
       :relationship-id="relationshipId"
-      :editing-event="editingEvent"
+      :editing-event="editingEvent || undefined"
       :default-event-type="defaultEventType"
+      @cancel="closeForm"
       @close="closeForm"
       @saved="onSaved"
     />
@@ -77,7 +79,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
-import EventForm from './EventForm.vue';
+import EventModal from './modals/EventModal.vue';
 import CitationForm from './CitationForm.vue';
 import { useToast } from '../composables/useToast';
 import { suggestNextEventType } from '../utils/eventDefaults';
