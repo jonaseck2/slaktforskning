@@ -8,6 +8,7 @@
 - fix(website-export): hide entity side panels in static mode — the chart/map area now uses the full width
 - fix(website-export): hide all add/edit/delete controls in static mode — "+ Add Person/Place/Media" buttons, per-row delete buttons, chart placeholder outlines, inline edit fields
 - fix(website-export): use CartoDB Voyager tiles in static mode — OSM blocks tile requests without a referrer, which file:// can't send
+- fix(website-export): hide MediaPanel in static mode (was still appearing on media row click)
 
 ## v0.146.0 — App-look website export
 
