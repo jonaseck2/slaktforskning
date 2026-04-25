@@ -45,57 +45,25 @@
     </table>
 
     <!-- Add Source Modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-source">
-        <h3 id="modal-title-add-source">{{ $t('common.add') }} {{ $t('sources.addSource') }}</h3>
-        <form @submit.prevent="addSource">
-          <label>
-            {{ $t('sources.sourceTitle') }}
-            <input v-model="form.title" type="text" required autofocus />
-          </label>
-          <label>
-            {{ $t('sources.author') }}
-            <input v-model="form.author" type="text" />
-          </label>
-          <label>
-            {{ $t('sources.sourceType') }}
-            <select v-model="form.source_type">
-              <option value="">{{ $t('sources.selectType') }}</option>
-              <option v-for="st in SOURCE_TYPE_VALUES" :key="st" :value="st">
-                {{ $t('sourceTypes.' + st) }}
-              </option>
-            </select>
-          </label>
-          <label>
-            {{ $t('sources.publicationInfo') }}
-            <input v-model="form.publication_info" type="text" :placeholder="$t('sources.publicationPlaceholder')" />
-          </label>
-          <label>
-            {{ $t('sources.repository') }}
-            <input v-model="form.repository" type="text" :placeholder="$t('sources.repositoryPlaceholder')" />
-          </label>
-          <label>
-            {{ $t('sources.url') }}
-            <input v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
-          </label>
-          <div class="modal-actions">
-            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
-            <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
-          </div>
-        </form>
-    </BaseModal>
+    <SourceModal
+      v-if="showAddForm"
+      mode="standalone"
+      @cancel="showAddForm = false"
+      @close="showAddForm = false"
+      @saved="onSourceSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onActivated } from 'vue';
+import { ref, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import BaseModal from '../components/BaseModal.vue';
 import LinkedText from '../components/LinkedText.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
-import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
+import SourceModal from '../components/modals/SourceModal.vue';
 import { narrateSourceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
@@ -115,16 +83,6 @@ const router = useRouter();
 const sourceList = ref<SourceRow[]>([]);
 const showAddForm = ref(false);
 
-
-const form = reactive({
-  title: '',
-  author: '',
-  source_type: '',
-  publication_info: '',
-  repository: '',
-  url: '',
-});
-
 async function load() {
   if (!window.api) return;
   try {
@@ -135,29 +93,9 @@ async function load() {
   }
 }
 
-async function addSource() {
-  if (!window.api) return;
-  try {
-    await window.api.sources.create({
-      title: form.title,
-      author: form.author,
-      source_type: form.source_type,
-      publication_info: form.publication_info,
-      repository: form.repository,
-      url: form.url,
-    });
-    showAddForm.value = false;
-    form.title = '';
-    form.author = '';
-    form.source_type = '';
-    form.publication_info = '';
-    form.repository = '';
-    form.url = '';
-    await load();
-  } catch (err) {
-    console.error('[SourcesView] addSource failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
+function onSourceSaved() {
+  showAddForm.value = false;
+  load();
 }
 
 async function removeSource(id: string) {
