@@ -34,7 +34,7 @@ export function registerWebsiteExportHandlers(): void {
     // 1. Copy dist-static bundle
     const bundleSrc = app.isPackaged
       ? path.join(process.resourcesPath, 'dist-static')
-      : path.join(__dirname, '../../..', 'dist-static');
+      : path.join(__dirname, '../..', 'dist-static');
     if (fs.existsSync(bundleSrc)) {
       fs.cpSync(bundleSrc, out, { recursive: true });
     }
@@ -64,14 +64,15 @@ export function registerWebsiteExportHandlers(): void {
       }
     }
 
-    // 4. Pre-render reports via hidden BrowserWindow
-    if (opts.options.includeReports) {
+    // 4. Pre-render reports via hidden BrowserWindow (only if SPA bundle was copied)
+    const indexHtml = path.join(out, 'index.html');
+    if (opts.options.includeReports && fs.existsSync(indexHtml)) {
       fs.mkdirSync(path.join(out, 'reports'), { recursive: true });
       for (const slug of REPORT_SLUGS) {
         await prerenderPage(out, 'reports', slug);
       }
     }
-    if (opts.options.includePrints) {
+    if (opts.options.includePrints && fs.existsSync(indexHtml)) {
       fs.mkdirSync(path.join(out, 'prints'), { recursive: true });
       for (const slug of PRINT_SLUGS) {
         await prerenderPage(out, 'prints', slug);
