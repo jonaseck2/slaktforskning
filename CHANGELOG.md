@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.141.3 — lint fix
+
+- fix: fix import order in ipc-worker-coverage test (vitest after node: imports)
+
 ## v0.141.2 — AddResearchTaskModal uses PersonPicker
 
 - fix: AddResearchTaskModal now shows PersonPicker when no personId is pre-passed, matching ResearchTasksView inline modal
