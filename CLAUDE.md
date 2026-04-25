@@ -152,12 +152,18 @@ src/
 │   │   │   ├── AppLoadingState.vue # Loading spinner placeholder
 │   │   │   ├── FilterChips.vue     # Chip bar for filtering lists
 │   │   │   └── SectionHeader.vue   # Section header with title + action button slot
+│   │   ├── modals/               # All entity modals share BaseSubPanel shell
+│   │   │   ├── BaseSubPanel.vue    # Modal shell — mode='standalone'|'subpanel', tone/icon/hideSave/cancelLabel props
+│   │   │   ├── PersonModal.vue     # Add/edit person — supports prefill (place, surname, related-person modes)
+│   │   │   ├── EventModal.vue      # Create/edit event with embedded citation sub-panel
+│   │   │   ├── PlaceModal.vue, RelationshipModal.vue, GroupModal.vue
+│   │   │   ├── SourceModal.vue, CitationModal.vue (inline SourcePicker when sourceId not preset)
+│   │   │   ├── ResearchTaskModal.vue, PersonNameModal.vue, PersonIdentifierModal.vue
+│   │   │   └── LinkRuleModal.vue
 │   │   ├── MediaPanel.vue        # Media linking workbench panel (attach media to entities)
 │   │   ├── PersonPicker.vue      # Searchable person dropdown (typeahead)
 │   │   ├── DateInput.vue         # YYYY-MM-DD date input with auto-advance
-│   │   ├── EventForm.vue         # Event create/edit modal
-│   │   ├── EventList.vue         # Event table with add/edit/delete
-│   │   └── CitationForm.vue      # Citation create modal
+│   │   └── EventList.vue         # Event table with add/edit/delete (embeds EventModal)
 │   ├── directives/
 │   │   └── narrate.ts              # v-narrate directive (WeakMap + resolveNarration)
 │   ├── composables/
@@ -509,20 +515,27 @@ declare const window: Window & {
 
 Used for all create/edit forms. Stays in context (no page navigation).
 
-Always use `<BaseModal>` — it handles overlay, Escape key, and focus trap. Click-outside does NOT close modals. Submit buttons use action verbs: `$t('common.create')` for new, `$t('common.save')` for updates.
+Always use `<BaseSubPanel>` from `src/renderer/components/modals/` — it handles overlay, Escape key, focus trap, and the entity-colored header. Click-outside does NOT close modals. Save labels use action verbs and are auto-derived per entity; override with `save-label` if needed. Use `tone="danger"` for destructive confirmations and `hide-save` for purely informational dialogs.
 
 ```vue
-<BaseModal v-if="showForm" @close="showForm = false" title-id="modal-title">
-  <h3 id="modal-title">Title</h3>
-  <form @submit.prevent="handleSubmit">
-    <!-- fields -->
-    <div class="modal-actions">
-      <button type="button" class="btn-cancel" @click="showForm = false">{{ $t('common.cancel') }}</button>
-      <button type="submit">{{ $t('common.create') }}</button>
+<BaseSubPanel
+  entity-type="person"
+  :title="$t('persons.addTitle')"
+  mode="standalone"
+  @cancel="$emit('close')"
+  @save="handleSave"
+  @close="$emit('close')"
+>
+  <div class="ep-fields">
+    <div class="ep-field">
+      <span class="ep-field-label">{{ $t('persons.name') }}</span>
+      <input class="ep-input" v-model="form.name" />
     </div>
-  </form>
-</BaseModal>
+  </div>
+</BaseSubPanel>
 ```
+
+For nested modal flows (e.g. picking a source from inside an event), set `mode="subpanel"` on the inner modal and render it inside the parent's `#subpanels` slot — they appear side-by-side instead of stacking.
 
 ### List View Pattern
 
@@ -589,15 +602,16 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 |-----------|-------|-------|-------------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
 | `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Separate YYYY-MM-DD text inputs with auto-advance (4-digit year → month, 2-digit month → day). Shows end date only when type is "between". Preserves original source text. |
-| `EventForm` | `personId?: string`, `relationshipId?: string`, `editingEvent?: object\|null` | `close`, `saved` | Modal for creating/editing events. Composes `EventFormBody` for fields. Shows PERSON_EVENT_TYPES or RELATIONSHIP_EVENT_TYPES based on context. When creating a person event, also adds an event_participant. |
-| `EventFormBody` | `v-model:event`, `v-model:citation`, `context: 'person'\|'relationship'`, `personId?: string`, `suggestedEventType?: string` | — | Controlled event + citation fields (no submit logic). Embeds `CitationFields`. Used by `EventForm`, `AddPersonModal`, and `AddRelatedPersonModal`. |
-| `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `readonly?: boolean`, `hideHeader?: boolean`, `showPersons?: boolean` | — | Self-loading event table with edit/delete. Embeds EventForm. Exposes `openAddForm()` via `defineExpose`. `showPersons` adds a participant names column (used in PlacePanel). Uses `watch` for reactive reloading on prop changes. |
-| `CitationForm` | `sourceId?: string`, `eventId?: string`, `personId?: string` | `close`, `saved` | Modal for adding citations. Loads all sources into dropdown. Confidence dropdown with GEDCOM QUAY labels. |
-| `ConfirmModal` | `visible`, `title`, `message` | `confirm`, `cancel` | Accessible delete confirmation modal |
+| `BaseSubPanel` | `entityType: EntityType`, `title: string`, `mode: 'standalone'\|'subpanel'`, `saveLabel?: string`, `cancelLabel?: string`, `hideSave?: boolean`, `tone?: 'info'\|'warning'\|'danger'`, `icon?: string` | `cancel`, `save`, `close` | Universal modal shell driven by `ENTITY_VISUALS` registry. `standalone` renders a centered modal; `subpanel` renders side-by-side inside a `#subpanels` slot. Handles header color, save button, escape, focus trap. Every entity modal in the app uses this. |
+| `EventModal` | `personId?`, `relationshipId?`, `editingEvent?: object\|null`, `mode?: 'standalone'\|'subpanel'` | `close`, `cancel`, `saved` | Create/edit event with embedded place picker and citation sub-panel. Replaces the old `EventForm`/`EventFormBody` pair. |
+| `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `readonly?: boolean`, `hideHeader?: boolean`, `showPersons?: boolean` | — | Self-loading event table with edit/delete. Embeds `EventModal`. Exposes `openAddForm()` via `defineExpose`. `showPersons` adds a participant names column (used in PlacePanel). Uses `watch` for reactive reloading on prop changes. |
+| `CitationModal` | `sourceId?: string`, `sourceTitle?: string`, `editingCitation?: object\|null`, `eventId?`/`personId?`/`relationshipId?`/`placeId?: string`, `mode?: 'standalone'\|'subpanel'` | `close`, `cancel`, `saved` | Create/edit citation. When `sourceId` is preset (e.g. from EventModal) shows readonly source field; otherwise embeds `SourcePicker` and pre-fills from `useSourceSession`. |
+| `PersonModal` | `prefillPlaceId?`, `prefillSurname?: string`, `relatedTo?: { personId: string, mode: 'father'\|'mother'\|'spouse'\|'child' }` | `close`, `saved(person)` | Add/edit person. When `relatedTo` is set, also creates the relationship + appropriate parent_child link, auto-infers sex (father→M, mother→F, spouse→opposite), pre-fills surname for child mode. Embeds optional first event via inline event details (DateInput + PlacePicker + CitationFields). Submits via `window.api.persons.createWithEvent`. Folds the legacy `AddPersonModal` and `AddRelatedPersonModal`. |
+| `PlaceModal`, `RelationshipModal`, `GroupModal`, `SourceModal`, `ResearchTaskModal`, `PersonNameModal`, `PersonIdentifierModal`, `LinkRuleModal`, `MergePersonsModal` | per-entity props, all support `mode?: 'standalone'\|'subpanel'` and `editing*?: object\|null` for edit mode | `close`, `cancel`, `saved` | Per-entity modals built on `BaseSubPanel`. Standalone mode is the default; subpanel mode is used when nested from another modal (e.g. inline source creation from CitationModal). |
+| `ConfirmModal` | `visible: boolean`, `title: string`, `message: string`, `tone?: 'info'\|'warning'\|'danger'`, `icon?: string`, `confirmLabel?: string` | `confirm`, `cancel` | Accessible confirmation modal. Default tone is `danger` (red save button) — used for delete confirmations. |
 | `PlacePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(place)` | Searchable autocomplete for places. 150ms debounced search via `window.api.places.search()`. Creates new place inline via `findOrCreate`. |
 | `SourcePicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(source)` | Searchable autocomplete for sources. 150ms debounced search via `window.api.sources.search()`. Creates new source inline. Shows all sources on focus when field is empty. |
 | `PersonNamesTable` | `names: NameRow[]` | `edit(name)`, `delete(nameId)` | Names table with ★ primary indicator. Prop-driven. |
-| `PersonNameFormModal` | `personId: string`, `name: NameRow\|null` | `close`, `saved` | Add/edit name modal (`name=null` → add mode). |
 | `ResearchTasksTable` | `tasks: ResearchTaskRow[]`, `showPerson?: boolean` | `updated` | Inline-expand-to-edit task rows, status chip cycling, priority badge. Prop-driven. |
 | `GroupsTable` | `groups: GroupRow[]`, `showMembers?: boolean` | `remove(id)` | Groups table with clickable rows (→ `/groups/:id`) and remove button. Prop-driven. |
 | `PersonIdentifiersSection` | `personId: string` | — | Self-loading identifiers table + add modal. Exposes `openAddForm()`. |
@@ -605,8 +619,6 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `PersonChecksSection` | `personId: string` | — | Self-loading quality checks table with per-row ignore/restore. Exposes `reload()`. Shares ignore state with QualityView. |
 | `PedigreeListView` | `tree: PedigreeTree \| null` | — | Accessible nested list alternative to pedigree chart |
 | `LinkedText` | `text: string` | — | Auto-links structured references in text. Loads `link_rules_config` from db settings on mount and applies `resolveRules()` to filter by enabled locales. Renders matches as `<a>` tags that open in system browser via `shell.openExternal`. |
-| `AddPersonModal` | `prefillPlaceId?: string`, `prefillSurname?: string` | `close`, `saved(person)` | Add person modal with optional place and surname pre-fill. Embeds `EventFormBody` for an optional first event (type suggested by `suggestNextEventType`). Submits via `window.api.persons.createWithEvent` for atomic person + event + citation in a single transaction. |
-| `AddRelatedPersonModal` | `personId: string`, `mode: 'father'\|'mother'\|'spouse'\|'child'`, `personSex?`, `personSurname?` | `close`, `saved` | Combined person + relationship + event creation. Auto-infers sex (father→M, mother→F, spouse→opposite). Pre-fills surname for child mode. Embeds `EventFormBody` for optional event + citation (replaces the old bespoke birth panel). Submits via `window.api.persons.createWithEvent`. |
 | `PlacePanel` | `placeId: string\|null` | `close` | Collapsible side panel showing full place details when a map pin is clicked. 8 sections: info, events, persons, media, citations, child places, notes, coordinates. Mirrors PersonPanel pattern. Used by MapView. |
 | `PlacePersonsSection` | `placeId: string` | — | Self-loading table of persons linked to events at a place. Shows person name, event type, and date. |
 | `PlaceCitationsSection` | `placeId: string` | — | Self-loading table of citations linked to a place. |
@@ -717,7 +729,7 @@ All three chart types (Pedigree, Hourglass, Descendants) share the same outline 
 2. **Inject** outlines via `injectOutlines(root, selectedPersonId)` — always adds father + mother + child + spouse. No conditions, no branching.
 3. **Layout** — each chart's layout algorithm positions all nodes (real + outline) identically
 4. **Extract** placeholders — boxes with `PLACEHOLDER_PREFIX` IDs are moved from `boxes[]` to `placeholders[]`, lines touching them become `placeholderLines[]`
-5. **Render** — real → solid boxes, outlines → dashed boxes with "+". Click handlers open `AddRelatedPersonModal`.
+5. **Render** — real → solid boxes, outlines → dashed boxes with "+". Click handlers open `PersonModal` with `relatedTo` set.
 
 **Chart-specific layout details:**
 
@@ -883,7 +895,7 @@ Entry point: `npx tsx src/mcp/devServer.ts`
 
 ### Per-database settings
 
-`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import), `event_defaults_config` (JSON `{ smartDefaults: boolean }`, default `true` — controls smart event-type suggestions via `suggestNextEventType` in EventList "+ Add Event" and AddPersonModal's embedded event section; configurable in Settings → Defaults tab), `researcher_name` (string — genealogist's name used as "Compiled by …" attribution on report covers; configurable in Settings). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
+`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table (key TEXT PK, value TEXT). Known keys: `default_person_id` (tree subject — auto-set on GEDCOM import when SUBM NAME matches a person; editable in DatabaseView; used for startup navigation and GEDCOM SUBM export), `link_rules_config` (JSON, link rule overrides), `gazetteer_config` (JSON `{ enabledGazetteers: string[] }`, auto-set to `["sv-parishes"]` on Genney import), `event_defaults_config` (JSON `{ smartDefaults: boolean }`, default `true` — controls smart event-type suggestions via `suggestNextEventType` in EventList "+ Add Event" and PersonModal's embedded event section; configurable in Settings → Defaults tab), `researcher_name` (string — genealogist's name used as "Compiled by …" attribution on report covers; configurable in Settings). Exposed to renderer via `window.api.db.getSetting(key)`, `window.api.db.setSetting(key, value)`, `window.api.db.deleteSetting(key)`.
 
 **Gazetteer tools** (prod server): `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
 

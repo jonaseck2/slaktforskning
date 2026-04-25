@@ -286,8 +286,8 @@ import BaseModal from '../components/BaseModal.vue';
 - `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
 - `SourcePicker` — searchable autocomplete for selecting/creating a source; inline create-new; replaces source dropdowns
 - `DateInput` — separate YYYY-MM-DD inputs with auto-advance (4-digit year → month, 2-digit month → day)
-- `EventForm` / `EventList` — event CRUD, embeds in detail views; event rows are clickable (no Edit button)
-- `CitationForm` — attach a source citation to any entity (props: `eventId`, `personId`, `relationshipId`, `placeId`); wire `:place-id` for place views
+- `EventModal` / `EventList` — event CRUD on `BaseSubPanel`; EventList exposes `openAddForm()` via `defineExpose`; event rows are clickable (no Edit button)
+- `CitationModal` — attach a source citation to any entity (props: `sourceId?`, `sourceTitle?`, `eventId?`, `personId?`, `relationshipId?`, `placeId?`, `editingCitation?`, `mode?`); inline `SourcePicker` when no source preset
 - `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`
 
 ### Error handling in async operations
@@ -323,7 +323,7 @@ Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `error
 | Component | Self-loading | Exposes | Used in |
 |-----------|-------------|---------|---------|
 | `PersonNamesTable` | No (parent passes `names`) | — | Detail, Panel |
-| `PersonNameFormModal` | No | — | Detail, Panel |
+| `PersonNameModal` | No | — | Detail, Panel |
 | `EventList` | Yes (`personId` prop) | `openAddForm()` | Detail, Panel |
 | `ResearchTasksTable` | No (parent passes `tasks`) | — | Detail, Panel, ResearchTasksView |
 | `GroupsTable` | No (parent passes `groups`) | — | Detail, Panel, GroupsView |
@@ -427,7 +427,7 @@ Every new UI feature should be evaluated against the number of user actions (cli
 
 **Principles — apply to any new feature:**
 
-1. **Combine related entity creation** — When creating entity A always requires creating entity B, offer B's fields inline in A's form. Example: `AddRelatedPersonModal` creates person + relationship + birth event + citation in one modal instead of 4 separate workflows. Use `<details>` for optional sections to keep the form clean.
+1. **Combine related entity creation** — When creating entity A always requires creating entity B, offer B's fields inline in A's form. Example: `PersonModal` with `relatedTo` creates person + relationship + birth event + citation in one modal instead of 4 separate workflows. Use `<details>` for optional sections to keep the form clean.
 
 2. **Pre-fill from context** — When a user's intent is clear from context, pre-fill fields:
    - Sex: auto-infer from role (father→M, mother→F, spouse→opposite)
@@ -443,11 +443,11 @@ Every new UI feature should be evaluated against the number of user actions (cli
 4. **Composables for multi-entity creation** — Use `useBirthEventCreation` pattern: a composable that wraps multiple IPC calls (create event + add participant + create citation) into a single function. This keeps the logic DRY across modals.
 
 **Key components for data entry optimization:**
-- `AddRelatedPersonModal` — combined person + relationship + birth event creation with inference
+- `PersonModal` with `relatedTo` — combined person + relationship + birth event creation with inference
 - `useBirthEventCreation` composable — shared birth event + participant + citation creation
 - `sourceSession` Pinia store — last-used source memory for citation pre-fill
 - `EventList` cite button — quick citation without full event edit
-- `EventForm` "Save & Add Another" — batch event entry
+- `EventModal` "Save & Add Another" — batch event entry
 - Ghost placeholder boxes in `PedigreeChart` — click-to-add missing parents
 
 ## UI Verification (Step 9 — REQUIRED for any UI change)
