@@ -259,15 +259,11 @@ onActivated(async () => {
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-}
-.places-list-sheet > .header {
-  padding: var(--space-lg) var(--space-lg) 0;
-  margin-bottom: var(--space-sm);
+  padding: var(--space-lg);
 }
 .places-list-content {
   flex: 1;
   min-height: 0;
-  padding: 0 var(--space-lg) var(--space-lg);
   overflow-y: auto;
   position: relative;
 }

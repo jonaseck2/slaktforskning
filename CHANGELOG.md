@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(layout): tighten list-view scroll containers — drop the `.filter-chips-bar` wrapper around chart-type tabs in PersonsView and PlacesView; wrap MediaView's list rows in a scrolling inner container so the header stays put
 - fix(website-export): drop "+ thumbnails" from the includeMedia label since thumbnails are no longer generated (the static site reads from media/full/ directly)
 - feat(tasks/groups): research tasks and groups can now link to multiple persons, places, and media items. New `task_links` and `group_links` polymorphic tables replace the single `research_tasks.person_id` column and the persons-only `group_members` table. Existing data migrated in place. ResearchTaskPanel and GroupPanel rewritten with separate Persons / Places / Media sections (new `LinkedPersonsSection` / `LinkedPlacesSection` / `LinkedMediaSection` shared components and a new `MediaPicker`). MCP `add_research_task` now takes `person_ids` / `place_ids` / `media_ids` arrays. Genney import preserves the persons-only semantics.
 - feat(nav): renamed "Research Tasks" / "Forskningsuppgifter" → "Tasks" / "Uppgifter" in the navigation and headings; internal i18n / IPC / route names kept stable.

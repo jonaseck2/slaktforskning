@@ -37,6 +37,7 @@
     </div>
     <template v-else>
 
+    <div class="media-list-content">
     <p v-if="!loading && items.length > 0" class="count-label">
       {{ $t('media.showingOf', { shown: items.length, total }) }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
     </p>
@@ -145,6 +146,7 @@
     </table>
 
     <div ref="sentinel" class="scroll-sentinel"></div>
+    </div>
     </template>
   </div>
   <template v-if="selectedMediaId">
@@ -528,16 +530,20 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 .media-main {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-lg);
 }
+.media-list-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 .media-main.viewer-active {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
   padding-bottom: 0;
 }
 .viewer-content {
