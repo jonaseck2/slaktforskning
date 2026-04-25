@@ -9,7 +9,8 @@
           <button class="filter-clear" @click="router.push({ path: '/media' })" :title="$t('common.clearFilter')">×</button>
         </div>
       </div>
-      <div v-if="!viewerMode" class="header-right">
+      <div class="header-right">
+        <button v-if="viewerMode" class="btn-cancel" @click="closeViewer">{{ $t('common.close') }}</button>
         <div v-if="!loading && items.length > 0" class="view-toggle">
           <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
           <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
