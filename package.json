@@ -13,7 +13,9 @@
     "lint": "eslint --ext .ts,.tsx .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:static": "vite build --config vite.static.config.ts",
+    "dev:static": "vite --config vite.static.config.ts"
   },
   "keywords": [],
   "author": {
