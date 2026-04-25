@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: quality checks now defer 1500ms after navigation instead of loading immediately, preventing contention with main data loading on detail views
+
 - fix: packaged app crashed on startup with "Cannot find module '../../src/api/place-gazetteers/data/sv-socknar.json'" — Vite's externalize-gazetteers plugin rewrote imports to a src/ path that isn't shipped inside app.asar; imports now point to ./gazetteers/<file>.json and the JSON files are copied into .vite/build/gazetteers/ at build time so they ship alongside index.js
 
 - fix: packaged app DB worker failed the same way (every view toasted "Could not load data" because `checks:runAll` throws when the worker requires bundled gazetteer JSON) — vite.worker.config.ts still emitted the relative ../../src/... path; align it with vite.main.config.ts to emit ./gazetteers/<file>.json so the worker bundle resolves JSON alongside db-worker.js inside app.asar
@@ -10,6 +12,9 @@
 
 - fix: unify map marker style across all map views — white stroke, consistent radius/opacity, solid polylines with reasonable weight
 - fix: restore hourglass chart outline connectors and collision-free placement broken by perf commit
+- fix: modal titles now say "Add [Entity]" instead of showing a bare noun or a "+" prefix; add buttons keep the short "+ Entity" form; add common.add i18n key reused by all modal h3s
+- fix: standardize Swedish place terminology to "plats" throughout (was mixed "ort"/"plats"); fix citation button label "Citering" → "Hänvisning"; fix research task label "Uppgift" → "Forskningsuppgift"; fix English relationships section title "Relations" → "Relationships"
+- fix: PersonsView duplicates empty state now uses AppEmptyState component for visual consistency
 
 ## v0.139.0 — multilingual historical gazetteer
 

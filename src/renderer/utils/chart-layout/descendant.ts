@@ -14,7 +14,6 @@ export function computeDescendantLayout(
   selectedPersonId?: string | null,
 ): ChartLayout {
   const tp = buildDescendantTreePerson(root);
-  if (selectedPersonId) injectOutlines(tp, selectedPersonId);
 
   // ── Pre-measure heights ──────────────────────────────────────────────────
   const heightOf = new Map<string, number>();
@@ -29,7 +28,26 @@ export function computeDescendantLayout(
   measureAll(tp);
   const hOf = (node: TreePerson): number => heightOf.get(node.person.id) ?? MIN_BOX_H;
 
-  // ── Outline extents (unchanged logic, BOX_W-based) ───────────────────────
+  // ── Collapse filtering ───────────────────────────────────────────────────
+  const originalChildCount = new Map<string, number>();
+  const hasMoreDown = new Map<string, boolean>();
+  function recordAndPrune(node: TreePerson, visited = new Set<string>()): void {
+    if (visited.has(node.person.id)) return;
+    visited.add(node.person.id);
+    originalChildCount.set(node.person.id, node.children.filter(c => !c.isPlaceholder).length);
+    hasMoreDown.set(node.person.id, !!node.hasMoreChildren);
+    if (collapsed.has(`${node.person.id}:down`)) {
+      node.children = node.children.filter(c => c.isPlaceholder);
+    }
+    for (const c of node.children) recordAndPrune(c, visited);
+  }
+  recordAndPrune(tp);
+
+  // Inject outlines after collapse so collapsed nodes correctly receive
+  // placeholder boxes (their children=[] after pruning, injection sees it).
+  if (selectedPersonId) injectOutlines(tp, selectedPersonId);
+
+  // ── Outline extents (depends on injected placeholders) ───────────────────
   const extraRightExtent = new Map<string, number>();
   const extraLeftExtent = new Map<string, number>();
   if (selectedPersonId) {
@@ -48,21 +66,6 @@ export function computeDescendantLayout(
       }
     }
   }
-
-  // ── Collapse filtering ───────────────────────────────────────────────────
-  const originalChildCount = new Map<string, number>();
-  const hasMoreDown = new Map<string, boolean>();
-  function recordAndPrune(node: TreePerson, visited = new Set<string>()): void {
-    if (visited.has(node.person.id)) return;
-    visited.add(node.person.id);
-    originalChildCount.set(node.person.id, node.children.length);
-    hasMoreDown.set(node.person.id, !!node.hasMoreChildren);
-    if (collapsed.has(`${node.person.id}:down`)) {
-      node.children = node.children.filter(c => c.isPlaceholder);
-    }
-    for (const c of node.children) recordAndPrune(c, visited);
-  }
-  recordAndPrune(tp);
 
   // ── Compute per-row max height via a depth-traversal pre-pass ────────────
   const rowMaxH: number[] = [];

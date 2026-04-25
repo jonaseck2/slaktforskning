@@ -5,7 +5,7 @@
       <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('sources.addSource') }}</AppButton>
     </div>
     <p v-if="sourceList.length > 0" class="count-label">{{ sourceList.length }} {{ $t('sources.title').toLowerCase() }}</p>
-    <AppEmptyState v-if="sourceList.length === 0" icon="📚" :title="$t('empty.sources')" />
+    <AppEmptyState v-if="sourceList.length === 0" icon="📚" :title="$t('empty.sources')" :description="$t('empty.sourcesDesc')" :action-label="$t('empty.addSource')" @action="showAddForm = true" />
     <table v-else class="data-table">
       <thead>
         <tr>
@@ -46,7 +46,7 @@
 
     <!-- Add Source Modal -->
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-source">
-        <h3 id="modal-title-add-source">{{ $t('sources.addSource') }}</h3>
+        <h3 id="modal-title-add-source">{{ $t('common.add') }} {{ $t('sources.addSource') }}</h3>
         <form @submit.prevent="addSource">
           <label>
             {{ $t('sources.sourceTitle') }}

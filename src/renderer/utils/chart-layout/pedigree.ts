@@ -17,7 +17,6 @@ export function computePedigreeLayout(
   selectedPersonId?: string | null,
 ): ChartLayout {
   const root = buildPedigreeTreePerson(tree);
-  if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
   // ── Collapse filtering ──────────────────────────────────────────────────
   const originalParentCount = new Map<string, number>();
@@ -27,7 +26,7 @@ export function computePedigreeLayout(
     if (visited.has(node.person.id)) return;
     visited.add(node.person.id);
 
-    originalParentCount.set(node.person.id, node.parents.length);
+    originalParentCount.set(node.person.id, node.parents.filter(p => !p.isPlaceholder).length);
     hasMoreUp.set(node.person.id, !!node.hasMoreAncestors);
 
     if (collapsed.has(`${node.person.id}:right`)) {
@@ -37,6 +36,11 @@ export function computePedigreeLayout(
     for (const p of node.parents) recordAndPrune(p, visited);
   }
   recordAndPrune(root);
+
+  // Inject outlines after collapse so the selected person's post-collapse
+  // parent list is visible: collapsed nodes have parents=[] at this point,
+  // so injectOutlines correctly injects placeholders for them.
+  if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
   // ── Pre-measure heights ────────────────────────────────────────────────
   const heightOf = new Map<string, number>();

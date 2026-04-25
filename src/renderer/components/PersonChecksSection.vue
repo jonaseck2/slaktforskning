@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import QualityIssuesTable, { type QualityIssue } from './QualityIssuesTable.vue';
 
 export type { QualityIssue as CheckResult } from './QualityIssuesTable.vue';
@@ -56,5 +56,13 @@ async function load() {
 
 defineExpose({ reload: load, count: computed(() => issues.value.length) });
 
-watch(() => props.personId, load, { immediate: true });
+let loadTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleLoad() {
+  if (loadTimer) clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => { load(); loadTimer = null; }, 1500);
+}
+
+watch(() => props.personId, scheduleLoad, { immediate: true });
+onUnmounted(() => { if (loadTimer) clearTimeout(loadTimer); });
 </script>

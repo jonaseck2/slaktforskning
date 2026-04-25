@@ -13,12 +13,12 @@
     <FilterChips :options="filters" :model-value="activeFilter" @update:model-value="activeFilter = $event" />
 
     <!-- Task list -->
-    <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('empty.researchTasks')" />
+    <AppEmptyState v-if="filteredTasks.length === 0" icon="🔬" :title="$t('empty.researchTasks')" :description="$t('empty.researchTasksDesc')" :action-label="$t('empty.addTask')" @action="showAddModal = true" />
     <ResearchTasksTable v-else :tasks="filteredTasks" :show-person="true" @updated="load" />
 
     <!-- Add Task Modal -->
     <BaseModal v-if="showAddModal" @close="showAddModal = false" title-id="modal-title-add-research-task">
-        <h3 id="modal-title-add-research-task">{{ $t('researchTasks.addTask') }}</h3>
+        <h3 id="modal-title-add-research-task">{{ $t('common.add') }} {{ $t('researchTasks.addTask') }}</h3>
         <form @submit.prevent="createTask">
           <label>
             {{ $t('researchTasks.task') }} *

@@ -101,9 +101,8 @@ export function computeHourglassLayout(
   selectedPersonId?: string | null,
 ): ChartLayout {
 
-  // ── 1. Clone + inject outlines ─────────────────────────────────────────────
+  // ── 1. Clone tree ──────────────────────────────────────────────────────────
   const root = cloneTree(inputRoot);
-  if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
   // ── 1b. Pre-measure heights for every node in the tree ─────────────────────
   const heightOf = new Map<string, number>();
@@ -138,9 +137,9 @@ export function computeHourglassLayout(
     if (visited.has(node.person.id)) return;
     visited.add(node.person.id);
 
-    originalParentCount.set(node.person.id, node.parents.length);
-    originalChildCount.set(node.person.id, node.children.length);
-    originalSpouseCount.set(node.person.id, node.spouses.length);
+    originalParentCount.set(node.person.id, node.parents.filter(p => !p.isPlaceholder).length);
+    originalChildCount.set(node.person.id, node.children.filter(c => !c.isPlaceholder).length);
+    originalSpouseCount.set(node.person.id, node.spouses.filter(s => !s.isPlaceholder).length);
     hasMoreUp.set(node.person.id, !!node.hasMoreAncestors);
     hasMoreDown.set(node.person.id, !!node.hasMoreChildren);
 
@@ -172,6 +171,10 @@ export function computeHourglassLayout(
     for (const s of node.spouses) recordAndPrune(s, visited);
   }
   recordAndPrune(root);
+
+  // Inject outlines after collapse so collapsed nodes (whose parents/children/spouses
+  // were just pruned to []) correctly receive placeholder boxes.
+  if (selectedPersonId) injectOutlines(root, selectedPersonId);
 
   const focalId = root.person.id;
   const focalIsFemale = root.person.sex === 'F';
