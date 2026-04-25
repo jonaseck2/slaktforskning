@@ -165,6 +165,7 @@
         @highlight-region="(id: string | null) => highlightedRegionId = id"
         @region-deleted="() => viewerRef?.reloadRegions()"
         @media-updated="onMediaUpdated"
+        @open-viewer="onOpenViewerFromPanel"
       />
     </div>
   </template>
@@ -447,6 +448,10 @@ async function onRegionUpdated(id: string, rect: { x: number; y: number; width: 
     }
   }
   viewerRef.value?.reloadRegions();
+}
+
+function onOpenViewerFromPanel() {
+  if (selectedMediaId.value) void openViewerById(selectedMediaId.value);
 }
 
 function onMediaUpdated(mediaId: string, fields: { title?: string; notes?: string }) {
