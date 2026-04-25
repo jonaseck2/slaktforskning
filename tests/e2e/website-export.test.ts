@@ -34,8 +34,6 @@ test('website export produces a working static site', async () => {
       scope: { everyone: true },
       options: {
         includeMedia: false,
-        includeReports: false,
-        includePrints: false,
         excludeLiving: false,
         redactLiving: false,
       },

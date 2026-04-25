@@ -52,14 +52,6 @@
         <input type="checkbox" v-model="includeMedia" />
         {{ $t('htmlSite.includeMedia') }}
       </label>
-      <label class="check-label">
-        <input type="checkbox" v-model="includeReports" />
-        {{ $t('htmlSite.includeReports') }}
-      </label>
-      <label class="check-label">
-        <input type="checkbox" v-model="includePrints" />
-        {{ $t('htmlSite.includePrints') }}
-      </label>
     </section>
 
     <section class="export-section">
@@ -103,8 +95,6 @@ const descendants = ref(3);
 const excludeLiving = ref(false);
 const redactLiving = ref(true);
 const includeMedia = ref(true);
-const includeReports = ref(true);
-const includePrints = ref(true);
 const siteTitle = ref('Family Tree');
 const exporting = ref(false);
 const lastOutput = ref<string | null>(null);
@@ -128,8 +118,6 @@ async function exportSite() {
         : { focusId: focusPersonId.value, ancestors: ancestors.value, descendants: descendants.value },
       options: {
         includeMedia: includeMedia.value,
-        includeReports: includeReports.value,
-        includePrints: includePrints.value,
         excludeLiving: excludeLiving.value,
         redactLiving: redactLiving.value,
       },

@@ -1,12 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, dialog } from 'electron';
 import { wrapHandler } from './wrap-handler';
 import { callWorker } from './worker-client';
 import { generateThumbnail } from '../../api/html_site/thumbnails';
-
-const REPORT_SLUGS = ['a-life', 'your-ancestors', 'life-on-one-page', 'photo-album'];
-const PRINT_SLUGS = ['pedigree', 'hourglass', 'descendant', 'fan-chart', 'timeline'];
 
 export function registerWebsiteExportHandlers(): void {
   wrapHandler('website:export', async (opts: {
@@ -15,8 +12,6 @@ export function registerWebsiteExportHandlers(): void {
     scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
     options: {
       includeMedia: boolean;
-      includeReports: boolean;
-      includePrints: boolean;
       excludeLiving: boolean;
       redactLiving: boolean;
     };
@@ -67,38 +62,6 @@ export function registerWebsiteExportHandlers(): void {
       }
     }
 
-    // 4. Pre-render reports via hidden BrowserWindow (only if SPA bundle was copied)
-    const indexHtml = path.join(out, 'index.html');
-    if (opts.options.includeReports && fs.existsSync(indexHtml)) {
-      fs.mkdirSync(path.join(out, 'reports'), { recursive: true });
-      for (const slug of REPORT_SLUGS) {
-        await prerenderPage(out, 'reports', slug);
-      }
-    }
-    if (opts.options.includePrints && fs.existsSync(indexHtml)) {
-      fs.mkdirSync(path.join(out, 'prints'), { recursive: true });
-      for (const slug of PRINT_SLUGS) {
-        await prerenderPage(out, 'prints', slug);
-      }
-    }
-
     return { canceled: false, outputDir: out };
   });
-}
-
-async function prerenderPage(outDir: string, type: 'reports' | 'prints', slug: string): Promise<void> {
-  const win = new BrowserWindow({
-    show: false,
-    width: 1200,
-    height: 1600,
-    webPreferences: { sandbox: false },
-  });
-  const url = `file://${path.join(outDir, 'index.html')}#/${type}/${slug}?prerender=1`;
-  await win.loadURL(url);
-  await new Promise(r => setTimeout(r, 1500));
-  const html = await win.webContents.executeJavaScript('document.documentElement.outerHTML') as string;
-  fs.writeFileSync(path.join(outDir, type, `${slug}.html`), html);
-  const pdf = await win.webContents.printToPDF({});
-  fs.writeFileSync(path.join(outDir, type, `${slug}.pdf`), pdf);
-  win.close();
 }
