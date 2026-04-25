@@ -26,10 +26,6 @@
         <span class="nav-icon" aria-hidden="true">👤</span>
         <span class="nav-label">{{ $t('nav.people') }}</span>
       </router-link>
-      <router-link to="/sources" class="nav-item" :aria-label="$t('nav.sources')">
-        <span class="nav-icon" aria-hidden="true">📚</span>
-        <span class="nav-label">{{ $t('nav.sources') }}</span>
-      </router-link>
       <router-link to="/places" class="nav-item" :aria-label="$t('places.title')">
         <span class="nav-icon" aria-hidden="true">📍</span>
         <span class="nav-label">{{ $t('places.title') }}</span>
@@ -39,10 +35,6 @@
         <span class="nav-label">{{ $t('media.nav') }}</span>
       </router-link>
       <h2 class="nav-section-label">{{ $t('nav.organize') }}</h2>
-      <router-link to="/relationships" class="nav-item" :aria-label="$t('nav.relationships')">
-        <span class="nav-icon" aria-hidden="true">🔗</span>
-        <span class="nav-label">{{ $t('nav.relationships') }}</span>
-      </router-link>
       <router-link to="/groups" class="nav-item" :aria-label="$t('nav.groups')">
         <span class="nav-icon" aria-hidden="true">🏷️</span>
         <span class="nav-label">{{ $t('nav.groups') }}</span>
@@ -53,11 +45,20 @@
         <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
       </router-link>
       <h2 class="nav-section-label">{{ $t('nav.review') }}</h2>
+      <router-link to="/sources" class="nav-item" :aria-label="$t('nav.sources')">
+        <span class="nav-icon" aria-hidden="true">📚</span>
+        <span class="nav-label">{{ $t('nav.sources') }}</span>
+      </router-link>
+      <router-link to="/relationships" class="nav-item" :aria-label="$t('nav.relationships')">
+        <span class="nav-icon" aria-hidden="true">🔗</span>
+        <span class="nav-label">{{ $t('nav.relationships') }}</span>
+      </router-link>
       <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('nav.quality') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : $t('nav.quality')">
         <span class="nav-icon" aria-hidden="true">⚠️</span>
         <span class="nav-label">{{ $t('nav.quality') }}</span>
         <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
+      <h2 class="nav-section-label">{{ $t('nav.present') }}</h2>
       <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
         <span class="nav-icon" aria-hidden="true">🖨️</span>
         <span class="nav-label">{{ $t('reports.nav') }}</span>

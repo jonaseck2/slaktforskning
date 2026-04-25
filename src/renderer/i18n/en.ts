@@ -25,6 +25,7 @@ export default {
     research: 'RESEARCH',
     organize: 'ORGANIZE',
     review: 'REVIEW',
+    present: 'PRESENT',
   },
   settings: {
     title: 'Settings',
