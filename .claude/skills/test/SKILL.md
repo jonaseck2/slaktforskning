@@ -131,7 +131,7 @@ Component tests live in `tests/components/` and test Vue components with Happy D
 ### Good candidates for component tests:
 - Form components with validation/debounce (DateInput, PersonPicker, PlacePicker)
 - Modal components with multi-step workflows (EventModal, CitationModal, PersonModal with relatedTo)
-- Chart/layout components (PedigreeChart, VisualizationView)
+- Chart/layout components (PedigreeChart, PersonsView)
 - Components with keyboard navigation or accessibility logic
 
 ### Not worth component-testing:
@@ -246,10 +246,9 @@ Then add the test file to `playwright.config.ts` as a new project:
 
 **Common real patterns in the current codebase:**
 - PersonsView/SourcesView/PlacesView: `<AppButton variant="soft">+ {label}</AppButton>` for add, `<AppButton variant="ghost" size="sm">✕</AppButton>` for delete
-- PersonDetailView add relative buttons: `<AppButton variant="soft" size="sm">+ Father/Mother/Spouse/Child</AppButton>` (text is the role word only — no "Add Parent")
+- PersonPanel add relative buttons: `<AppButton variant="soft" size="sm">+ Father/Mother/Spouse/Child</AppButton>` (text is the role word only — no "Add Parent")
 - EventList add: `<AppButton variant="soft" size="sm">+ Event</AppButton>`
-- VisualizationView back button: `<AppButton variant="ghost" size="sm">←</AppButton>` inside `.viz-tab-bar`
-- No back button exists on PersonDetailView / PlaceDetailView / RelationshipDetailView — navigate via sidebar
+- No back buttons exist on any view — paneled views close the panel via the panel's `✕` button instead
 
 Before writing selectors, grep the component source to see what classes are actually used:
 ```bash
@@ -259,7 +258,7 @@ grep 'class.*btn\|:class' src/renderer/components/ui/AppButton.vue
 grep 'btn-add\|AppButton' src/renderer/views/ResearchTasksView.vue
 ```
 
-**When multiple `.app-btn--soft` exist on one view** (e.g., VisualizationView has an active view-toggle + Add Person button), match by text to disambiguate:
+**When multiple `.app-btn--soft` exist on one view** (e.g., PersonsView has an active view-toggle + Add Person button), match by text to disambiguate:
 ```typescript
 await app.executeJs(`
   Array.from(document.querySelectorAll('.app-btn--soft'))
@@ -375,24 +374,30 @@ grep 'UI_PORT = ' tests/e2e/gui-*.test.ts
 
 Port conflicts (two files sharing a port) cause "Vue did not initialize in time" on the second suite — deterministic, but looks like flakiness.
 
-#### 8a. Route `/` redirects to `/visualisering`
+#### 8a. Route `/` redirects to `/persons`
 
-There is **no standalone PersonsView route.** `router.ts` maps `/` → `/visualisering`. PersonsView renders embedded inside VisualizationView only when `viewMode === 'list'`.
+`router.ts` maps `/` → `/persons`. `PersonsView` is the canonical persons route — it hosts both the tree view, the embedded list table, and the `PersonPanel` side panel. The legacy `/visualisering` and `/visualisering/:personId` paths still resolve as redirects to `/persons` and `/persons/:personId`.
 
-To make the persons list visible on `/`, set view mode in `beforeAll`:
+To make the persons list (rather than the tree) visible after navigating to `/persons`, set view mode in `beforeAll`:
 ```typescript
 await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
 ```
 
 View-mode localStorage keys (both default to non-list):
-- VisualizationView: `persons-view-mode` → `'tree'` (default) or `'list'`
+- PersonsView: `persons-view-mode` → `'tree'` (default) or `'list'`
 - PlacesView: `slaktforskning-places-view` → `'map'` (default) or `'list'`
 
-Assertions after `navigate('/')` should not expect `currentRoute.value.path === '/'` — the redirect resolves to `/visualisering`.
+Assertions after `navigate('/')` should expect `currentRoute.value.path === '/persons'` (the redirect target).
 
-#### 8b. No back buttons on detail views
+#### 8b. No back buttons anywhere
 
-PersonDetailView, PlaceDetailView, and RelationshipDetailView have **no back button**. The only back button lives in VisualizationView's `.viz-tab-bar` (`<AppButton variant="ghost" size="sm">←</AppButton>`). To leave a detail view, navigate via the sidebar: `await app.navigate('/relationships')`.
+There are **no `DetailView` components** in the codebase — every entity is a list/tree view that hosts its own resizable side panel (`PersonPanel`, `RelationshipPanel`, `SourcePanel`, `PlacePanel`, `GroupPanel`, `ResearchTaskPanel`). The `:id` route opens the same list view with the panel pre-selected (e.g. `/sources/abc123` opens `SourcesView` with `SourcePanel` showing source `abc123`).
+
+There are no back buttons on any view. To "leave" a paneled view, either close the panel via its `✕` button or navigate via the sidebar: `await app.navigate('/relationships')`. Side-panel state lives in localStorage:
+- `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`
+- Section open/close: `<entity>-section-<name>-open`
+
+Clear these between tests if your assertions depend on a known panel state.
 
 #### 9. Clicking buttons by text content
 
@@ -434,7 +439,7 @@ await app.executeJs(`
 - CRUD flows (create via modal, list, detail, delete)
 - Filter/search interactions
 - State management visible in UI (ignore/restore, status cycling)
-- Cross-view navigation (list → detail → back)
+- Cross-view navigation (list → panel pre-selected via `:id` route → close panel)
 - Form validation visible to user
 
 **Not worth E2E testing:**

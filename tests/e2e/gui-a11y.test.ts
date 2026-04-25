@@ -13,8 +13,8 @@ test.beforeAll(async () => {
   instance = await startApp(UI_PORT, 'a11y');
   await app.settle(150);
   await app.setLocale('en');
-  // Set list mode in localStorage, then navigate away so VisualizationView unmounts.
-  // When a test navigates to '/', VisualizationView remounts fresh and reads 'list' from localStorage.
+  // Set list mode in localStorage, then navigate away so PersonsView unmounts.
+  // When a test navigates to '/', PersonsView remounts fresh and reads 'list' from localStorage.
   await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
   await app.navigate('/sources');
 });

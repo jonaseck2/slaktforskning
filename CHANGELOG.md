@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## v0.145.0 — universal side panels
+
+- feat: every entity-list view (persons, relationships, sources, places, groups, research tasks) now hosts its own resizable side panel — no DetailView components remain
+- feat: new panels — `SourcePanel`, `RelationshipPanel`, `GroupPanel`, `ResearchTaskPanel` (joining the existing `PersonPanel`, `PlacePanel`)
+- feat: `:id` routes navigate to the list view with the panel pre-selected (e.g. `/sources/abc` opens `SourcesView` with `SourcePanel` showing source `abc`)
+- feat: `usePanelResize` composable powers drag-resize on every panel-hosting view; per-view localStorage keys for selected id, panel open state, and width
+- feat: cross-entity links navigate to the related entity's list view (which auto-opens its panel) — no inline cross-entity editing
+- feat: `VisualizationView` renamed to `PersonsView` — same view now hosts tree, list, and `PersonPanel`; legacy `/visualisering` and `/visualisering/:personId` routes redirect to `/persons` and `/persons/:personId`
+- chore: deleted `PersonDetailView`, `RelationshipDetailView`, `SourceDetailView`, `GroupDetailView`, `PlaceDetailView` — all editing now happens through modals opened from inside panels
+- chore: removed `router.back()` calls and back buttons across all views — navigation is via the sidebar
+- chore: `ResearchTasksTable` row click now selects the task in the panel instead of inline-expanding
+- docs: refreshed CLAUDE.md (routes table, file map, panel components), `.claude/skills/{test,frontend-design,add-feature}/SKILL.md`, `.claude/agents/{ux-reviewer,vue-ui-builder}.md` for the side-panel pattern
+
 ## v0.144.0 — split Present nav: Reports / Framable prints / Website
 
 - feat: PRESENT section now has three nav items — Reports (keepsake), Framable prints, and Website

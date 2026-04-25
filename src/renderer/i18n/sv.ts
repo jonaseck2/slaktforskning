@@ -167,6 +167,9 @@ export default {
     notesPlaceholder: 'Valfria anteckningar\u2026',
     citeRelationship: 'Citera relation',
   },
+  relationshipPanel: {
+    noRelationshipSelected: 'Klicka på en relation i listan',
+  },
   sources: {
     title: 'Källor',
     addSource: 'Källa',
@@ -189,6 +192,23 @@ export default {
     createNew: 'Skapa "{name}"',
     createNewSource: 'Skapa ny källa',
     searchOrAdd: 'Sök eller lägg till källa…',
+    callNumber: 'Signum',
+    abstract: 'Sammanfattning',
+  },
+  groupPanel: {
+    noGroupSelected: 'Klicka på en grupp i listan',
+  },
+  taskPanel: {
+    noTaskSelected: 'Klicka på en uppgift i listan',
+  },
+  sourcePanel: {
+    noSourceSelected: 'Klicka på en källa i listan',
+    repositories: 'Arkiv',
+    addRepository: 'Arkiv',
+    repositoryName: 'Namn',
+    selectRepository: '— Välj arkiv —',
+    noRepositories: 'Inga arkiv kopplade',
+    noChecks: 'Inga källkontroller',
   },
   sourceDetail: {
     title: 'Källdetaljer',
@@ -918,6 +938,7 @@ export default {
     filterAll: 'Alla',
     selectPersonOptional: 'Välj person (valfri)',
     summary: '{count} forskningsuppgifter · {open} aktiva',
+    confirmDelete: 'Ta bort denna uppgift?',
   },
   groups: {
     title: 'Grupper',
@@ -1209,11 +1230,11 @@ export default {
     modeOff: 'Skärmläsare avaktiverat.',
     hotkeysAvailable: 'Tillgängliga kommandon: {list}',
     hotkeyPersons: 'P personer',
+    hotkeyPersonsV: 'V personer',
     hotkeyRelationships: 'R relationer',
     hotkeySources: 'S källor',
     hotkeyPlaces: 'L platser',
     hotkeyTasks: 'T forskningsuppgifter',
-    hotkeyVisualization: 'V visualisering',
     hotkeyQuality: 'Q kvalitetskontroller',
     hotkeyDatabase: 'D databas',
     hotkeySearch: 'snedstreck eller F sök',

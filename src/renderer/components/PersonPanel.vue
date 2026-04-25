@@ -135,7 +135,7 @@
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.addTask')" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
-          <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" />
+          <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" @select="goToTask" />
         </div>
       </div>
 
@@ -182,6 +182,7 @@
 
 <script setup lang="ts">
 import { ref, toRef, onMounted, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -366,6 +367,7 @@ async function onGroupAdded() {
 
 // ── Research tasks ──────────────────────────────────────────────────────────
 
+const router = useRouter();
 const showTaskForm = ref(false);
 
 function openTaskForm() {
@@ -374,6 +376,10 @@ function openTaskForm() {
 
 async function onTaskSaved() {
   if (props.personId) await loadResearchTasks(props.personId);
+}
+
+function goToTask(id: string) {
+  router.push('/research-tasks/' + id);
 }
 
 // ── Derived ─────────────────────────────────────────────────────────────────

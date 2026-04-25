@@ -6,12 +6,13 @@
         :key="row.id"
         v-narrate="row.narration ? () => row.narration! : undefined"
         class="clickable-row"
+        :class="{ 'selected-row': selectedId === row.id }"
         tabindex="0"
         role="button"
         :aria-label="row.ariaLabel"
-        @click="router.push('/relationships/' + row.id)"
-        @keydown.enter="router.push('/relationships/' + row.id)"
-        @keydown.space.prevent="router.push('/relationships/' + row.id)"
+        @click="$emit('select', row.id)"
+        @keydown.enter="$emit('select', row.id)"
+        @keydown.space.prevent="$emit('select', row.id)"
         @keydown.down.prevent="focusNextRow($event)"
         @keydown.up.prevent="focusPrevRow($event)"
       >
@@ -33,7 +34,7 @@
               <span v-if="p.roleLabel" class="role-label">{{ p.roleLabel }}</span>
               <router-link
                 v-if="p.id && (p.givenName || p.surname)"
-                :to="'/visualisering/' + p.id"
+                :to="'/persons/' + p.id"
                 class="person-link"
                 @click.stop
               >
@@ -65,7 +66,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
 import AppAvatar from './ui/AppAvatar.vue';
 import PersonName from './PersonName.vue';
 
@@ -88,10 +88,8 @@ export interface RelationshipListRow {
   ariaLabel?: string;
 }
 
-defineProps<{ rows: RelationshipListRow[] }>();
-defineEmits<{ delete: [id: string] }>();
-
-const router = useRouter();
+defineProps<{ rows: RelationshipListRow[]; selectedId?: string | null }>();
+defineEmits<{ delete: [id: string]; select: [id: string] }>();
 
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
@@ -126,4 +124,5 @@ function focusPrevRow(e: KeyboardEvent): void {
   color: var(--text-muted);
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.selected-row { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 </style>

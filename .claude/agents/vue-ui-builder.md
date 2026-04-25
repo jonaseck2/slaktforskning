@@ -121,52 +121,47 @@ If this task wires new api/ functions, their `window.api.*` methods will be desc
 </div>
 ```
 
-## List view pattern (PersonsView, RelationshipsView, SourcesView style)
+## List view + Side Panel pattern (universal — there are no DetailView components)
 
-- Header with title + "Add" button that opens a modal
-- `<table>` with clickable `<tr>` that navigates to detail: `router.push('/things/' + item.id)`
-- Delete button inside the row uses `@click.stop` to prevent navigation
-- Load data in `onMounted`
-
-## Detail view pattern (SourceDetailView is the reference)
-
-Every detail view follows this exact layout. **Do not deviate.**
+Every entity list view (PersonsView, RelationshipsView, SourcesView, PlacesView, GroupsView, ResearchTasksView) follows the same shape. The `:id` route opens the same view with the panel pre-selected — never a separate page.
 
 ```
-← Back button
-<h2>Entity display name</h2>   [optional action buttons: Cite, etc.]
-[optional evidence/status line]
-
-─── Entity Details (ALWAYS FIRST) ─────────
-  2-column field-grid
-  Each field: <label> wrapping <input> or <select>
-  Text: saves on @blur  |  Selects: saves on @change
-  No Save button — all changes are immediate
-
-─── Related entities (events, names, etc.) ─
-  section-header with h4 + optional Add button
-  table or list
+┌─ list/tree/map ────┐ │ ┌─ Side Panel ────────────┐
+│  selectedId        │ │ │ Entity-colored header   │
+│  highlighted       │ │ │ [Edit] [Cite]      [✕]  │
+│                    │ │ │                         │
+│ + Add button       │ │ │ ─ section (collapsible) │
+│                    │ │ │ ─ section               │
+│                    │ │ │ ─ section               │
+└────────────────────┘ ↑ └─────────────────────────┘
+                  drag handle
 ```
 
-**Rules — enforce all of them:**
-1. Entity Details section is **always first** — before names, events, relationships, etc.
-2. Header contains **only** back button + `<h2>` + action buttons. No inputs, no selects, no badges that substitute for edit controls.
-3. Every DB column (except id, created_at, updated_at) has an edit control in the Entity Details section.
-4. Auto-save: `@blur` for text, `@change` for selects. Never a Save button for inline fields.
-5. Every `<section>` has `<div class="section-header"><h4>...</h4></div>` — never a bare `<h4>`.
-6. 2-column field-grid (`grid-template-columns: 1fr 1fr`). Wide fields (pickers, textareas) use `grid-column: 1 / -1`.
+**View rules:**
+1. Header with title + "Add" button that opens a modal (`<EntityModal mode="standalone">`)
+2. Rows/tree nodes/map pins are clickable → call `selectId(item.id)` which sets `selectedId`, opens the panel, and pushes `/<entity>/:id`
+3. Delete button uses `@click.stop`
+4. Drag handle (`<div class="panel-drag-handle">`) bound to `usePanelResize({ storageKey: '<entity>-panel-width', maxWidthRatio: 0.7 })`
+5. `onMounted` and `onActivated` both read `route.params.id` and call `selectId(id)` for deep-link + back-nav restore
+6. localStorage keys: `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`
 
-**CSS constants for detail views:**
+**Panel rules (`SourcePanel.vue` is the reference):**
+1. Self-contained sheet: `background: var(--surface)`, `border-radius: var(--radius-lg)`, `box-shadow: var(--shadow-lg)`, `font-size: var(--font-sm)` on the root
+2. Header is entity-colored (uses `ENTITY_VISUALS`) and contains only: title, Edit button (opens the matching modal), optional action buttons, and `✕` close
+3. Editing happens in modals — the panel does not host inline `<input>` grids. Click Edit → `<EntityModal mode="standalone" :editing="entity" @saved="reload">`
+4. Sections are collapsible; open/close persists in `<entity>-section-<name>-open`
+5. Every section uses `<SectionHeader>` with `:count` and optional `:action-label`
+6. Cross-entity links (e.g. clicking a person row inside SourcePanel's citations) navigate via `router.push('/persons/' + id)` — never inline-edit across entity types
+
+**CSS constants for panel sections:**
 ```css
-.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #555; }
-.field-grid input, .field-grid select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit; }
-.full-width { grid-column: 1 / -1; }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.panel-section { padding: 0 var(--space-lg); border-bottom: 1px solid var(--surface-border-subtle); }
+.panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
+.section-header { display: flex; justify-content: space-between; align-items: center; }
 .section-header h4 { margin: 0; font-size: 15px; }
 ```
 
-Load entity via `useRoute().params.id` in `onMounted`. Sections for related entities embed `EventList` etc. Back link to list view.
+Reference panels: `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask}Panel.vue`.
 
 ## i18n
 
