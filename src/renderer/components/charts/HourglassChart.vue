@@ -180,10 +180,10 @@
     <ChartTooltip ref="tooltipRef" />
 
     <!-- Add related person modal -->
-    <AddRelatedPersonModal
+    <PersonModal
       v-if="showAddRelative && addRelativePersonId"
-      :person-id="addRelativePersonId"
-      :mode="addRelativeMode"
+      mode="standalone"
+      :add-related-to="{ personId: addRelativePersonId, mode: addRelativeMode }"
       @saved="onRelativeSaved"
       @close="showAddRelative = false"
     />
@@ -200,7 +200,7 @@ import type { BoxLayout, CollapseButton, TreePerson, PlaceholderBox } from '../.
 import { formatFullName } from '../../utils/nameUtils';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
-import AddRelatedPersonModal from '../AddRelatedPersonModal.vue';
+import PersonModal from '../modals/PersonModal.vue';
 import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { hourglassGenerations } from '../../composables/useChartGenerations';

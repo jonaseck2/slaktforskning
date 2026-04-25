@@ -170,12 +170,10 @@
     />
 
     <!-- Add relative modal -->
-    <AddRelatedPersonModal
+    <PersonModal
       v-if="showAddRelative && personId"
-      :person-id="personId"
-      :person-sex="person?.sex"
-      :person-surname="primaryName?.surname ?? undefined"
-      :mode="addRelativeMode"
+      mode="standalone"
+      :add-related-to="{ personId: personId, mode: addRelativeMode, personSex: person?.sex as 'M' | 'F' | 'U' | undefined, personSurname: primaryName?.surname ?? undefined }"
       @close="showAddRelative = false"
       @saved="onRelativeSaved"
     />
@@ -190,7 +188,7 @@ import type { ComponentPublicInstance } from 'vue';
 import PersonName from './PersonName.vue';
 import PersonNamesTable from './PersonNamesTable.vue';
 import PersonNameModal from './modals/PersonNameModal.vue';
-import AddRelatedPersonModal from './AddRelatedPersonModal.vue';
+import PersonModal from './modals/PersonModal.vue';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
