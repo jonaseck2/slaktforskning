@@ -121,76 +121,20 @@
       </div>
     </div>
 
-    <!-- Add custom rule modal -->
-    <div v-if="showAddModal" class="modal-overlay">
-      <div class="modal">
-        <h3>{{ $t('linkRules.addRule') }}</h3>
-        <form @submit.prevent="submitAddRule">
-          <label>
-            {{ $t('linkRules.name') }}
-            <input v-model="newRule.name" type="text" required />
-          </label>
-          <label>
-            {{ $t('linkRules.pattern') }}
-            <input v-model="newRule.pattern" type="text" required :class="{ 'input-error': patternError }" />
-            <span v-if="patternError" class="field-error">{{ patternError }}</span>
-          </label>
-          <label>
-            {{ $t('linkRules.urlTemplate') }}
-            <input v-model="newRule.urlTemplate" type="text" required />
-          </label>
-          <label>
-            {{ $t('linkRules.example') }}
-            <input v-model="newRule.example" type="text" :placeholder="$t('linkRules.examplePlaceholder')" />
-          </label>
-          <div v-if="newRule.example && newRule.pattern" class="example-test">
-            <span v-if="exampleMatchResult === 'valid'" class="match-ok">&#x2713; {{ $t('linkRules.exampleMatches') }}</span>
-            <span v-else-if="exampleMatchResult === 'no-match'" class="match-fail">&#x2717; {{ $t('linkRules.exampleNoMatch') }}</span>
-            <span v-else-if="exampleMatchResult === 'bad-regex'" class="match-fail">&#x2717; {{ patternError }}</span>
-            <div v-if="exampleMatchUrl" class="match-url">→ {{ exampleMatchUrl }}</div>
-          </div>
-          <label>
-            {{ $t('linkRules.priority') }}
-            <input v-model.number="newRule.priority" type="number" min="0" max="999" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="closeAddModal">{{ $t('common.cancel') }}</button>
-            <button type="submit">{{ $t('common.save') }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- View rule modal (read-only) -->
-    <div v-if="viewingRule" class="modal-overlay">
-      <div class="modal">
-        <h3>{{ viewingRule.name }}</h3>
-        <form @submit.prevent>
-          <label>
-            {{ $t('linkRules.name') }}
-            <input :value="viewingRule.name" type="text" readonly />
-          </label>
-          <label>
-            {{ $t('linkRules.pattern') }}
-            <input :value="viewingRule.pattern" type="text" readonly class="mono" />
-          </label>
-          <label>
-            {{ $t('linkRules.urlTemplate') }}
-            <input :value="viewingRule.urlTemplate" type="text" readonly class="mono" />
-          </label>
-          <label v-if="viewingRule.example">
-            {{ $t('linkRules.example') }}
-            <input :value="viewingRule.example" type="text" readonly />
-          </label>
-          <label>
-            {{ $t('linkRules.priority') }}
-            <input :value="viewingRule.priority" type="text" readonly />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="viewingRule = null">{{ $t('common.cancel') }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <LinkRuleModal
+      v-if="showAddModal"
+      mode="add"
+      @cancel="showAddModal = false"
+      @close="showAddModal = false"
+      @saved="onRuleSaved"
+    />
+    <LinkRuleModal
+      v-if="viewingRule"
+      mode="view"
+      :editing-rule="viewingRule"
+      @cancel="viewingRule = null"
+      @close="viewingRule = null"
+    />
   </div>
 </template>
 
@@ -198,6 +142,7 @@
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
 import SectionEmpty from '../components/ui/SectionEmpty.vue';
+import LinkRuleModal from '../components/modals/LinkRuleModal.vue';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
 
@@ -225,33 +170,6 @@ const testSegments = computed(() => linkify(testText.value, resolvedRules.value)
 
 const viewingRule = ref<LinkRule | null>(null);
 const showAddModal = ref(false);
-const newRule = ref({ name: '', pattern: '', urlTemplate: '', example: '', priority: 50 });
-const patternError = ref('');
-
-const exampleMatchResult = computed<'valid' | 'no-match' | 'bad-regex' | null>(() => {
-  if (!newRule.value.example || !newRule.value.pattern) return null;
-  try {
-    const regex = new RegExp(newRule.value.pattern);
-    return regex.test(newRule.value.example) ? 'valid' : 'no-match';
-  } catch {
-    return 'bad-regex';
-  }
-});
-
-const exampleMatchUrl = computed<string | null>(() => {
-  if (exampleMatchResult.value !== 'valid' || !newRule.value.urlTemplate) return null;
-  const segments = linkify(newRule.value.example, [{
-    id: 'preview',
-    name: 'Preview',
-    pattern: newRule.value.pattern,
-    urlTemplate: newRule.value.urlTemplate,
-    locale: '*',
-    enabled: true,
-    priority: 0,
-  }]);
-  const linked = segments.find((s) => s.url);
-  return linked?.url ?? null;
-});
 
 function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + '\u2026' : str;
@@ -304,39 +222,22 @@ function deleteRule(id: string) {
   saveConfig();
 }
 
-function closeAddModal() {
-  showAddModal.value = false;
-  newRule.value = { name: '', pattern: '', urlTemplate: '', example: '', priority: 50 };
-  patternError.value = '';
-}
-
-function submitAddRule() {
-  patternError.value = '';
-  try {
-    new RegExp(newRule.value.pattern);
-  } catch (e) {
-    patternError.value = String(e);
-    return;
-  }
-  const id = 'custom-' + Date.now();
-  const ruleData: Partial<LinkRule> & { enabled: boolean } = {
-    name: newRule.value.name,
-    pattern: newRule.value.pattern,
-    urlTemplate: newRule.value.urlTemplate,
-    priority: newRule.value.priority,
-    locale: '*',
-    enabled: true,
-  };
-  if (newRule.value.example) {
-    ruleData.example = newRule.value.example;
-  }
+function onRuleSaved(rule: LinkRule) {
   const overrides = {
     ...config.value.overrides,
-    [id]: ruleData,
+    [rule.id]: {
+      name: rule.name,
+      pattern: rule.pattern,
+      urlTemplate: rule.urlTemplate,
+      priority: rule.priority,
+      locale: rule.locale,
+      enabled: rule.enabled,
+      ...(rule.example ? { example: rule.example } : {}),
+    },
   };
   config.value = { ...config.value, overrides };
   saveConfig();
-  closeAddModal();
+  showAddModal.value = false;
 }
 
 onMounted(loadConfig);
@@ -404,45 +305,4 @@ onMounted(loadConfig);
   color: #888;
 }
 
-.example-test {
-  padding: 6px 0;
-  font-size: var(--font-sm);
-}
-
-.match-ok {
-  color: #22c55e;
-}
-
-.match-fail {
-  color: #e53e3e;
-}
-
-.match-url {
-  font-family: monospace;
-  font-size: var(--font-xs);
-  color: #888;
-  margin-top: 2px;
-  word-break: break-all;
-}
-
-.input-error {
-  border-color: #e53e3e !important;
-}
-
-.field-error {
-  display: block;
-  color: #e53e3e;
-  font-size: var(--font-xs);
-  margin-top: 2px;
-}
-
-.view-rule-fields input[readonly] {
-  background: #f5f5f5;
-  cursor: default;
-}
-
-.mono {
-  font-family: monospace;
-  font-size: var(--font-xs);
-}
 </style>

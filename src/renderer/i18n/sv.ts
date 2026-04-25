@@ -1311,6 +1311,7 @@ export default {
     danish: 'Danska',
     norwegian: 'Norska',
     activeRules: 'Aktiva regler',
+    entity: 'Länkregel',
     addRule: 'Regel',
     name: 'Namn',
     pattern: 'Mönster (regex)',

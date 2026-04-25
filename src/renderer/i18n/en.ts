@@ -1332,6 +1332,7 @@ export default {
     danish: 'Danish',
     norwegian: 'Norwegian',
     activeRules: 'Active Rules',
+    entity: 'Link rule',
     addRule: 'Rule',
     name: 'Name',
     pattern: 'Pattern (regex)',
