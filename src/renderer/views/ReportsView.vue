@@ -47,7 +47,7 @@
               :redact-living="store.redactLiving"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -68,7 +68,7 @@
               :redact-living="store.redactLiving"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -84,7 +84,7 @@
               :redact-living="store.redactLiving"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -99,7 +99,7 @@
               :redact-living="store.redactLiving"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.familyInYear.year') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -117,9 +117,9 @@
               :include-documents="store.photoAlbumIncludeDocuments"
             />
           </div>
-          <div v-else-if="store.photoAlbumSubjectType === 'person'" class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
-          <div v-else-if="store.photoAlbumSubjectType === 'relationship'" class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
-          <div v-else-if="store.photoAlbumSubjectType === 'place'" class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
+          <AppEmptyState v-else-if="store.photoAlbumSubjectType === 'person'" icon="🖨️" :title="$t('reports.selectPersonFirst')" />
+          <AppEmptyState v-else-if="store.photoAlbumSubjectType === 'relationship'" icon="🖨️" :title="$t('reports.selectCoupleFirst')" />
+          <AppEmptyState v-else-if="store.photoAlbumSubjectType === 'place'" icon="🖨️" :title="$t('reports.selectPlaceFirst')" />
         </div>
       </div>
 
@@ -138,7 +138,7 @@
               :show-media-notes="store.placeChronicleShowMediaNotes"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPlaceFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPlaceFirst')" />
         </div>
       </div>
 
@@ -158,7 +158,7 @@
               :redact-living="store.redactLiving"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectCoupleFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectCoupleFirst')" />
         </div>
       </div>
 
@@ -168,7 +168,7 @@
           <div v-if="store.personId" class="print-preview chart-print" :style="{ zoom: effectiveZoom }">
             <PedigreeChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -178,7 +178,7 @@
           <div v-if="store.personId" class="print-preview preview-landscape chart-print" :style="{ zoom: effectiveZoom }">
             <HourglassChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -188,7 +188,7 @@
           <div v-if="store.personId" class="print-preview preview-landscape chart-print" :style="{ zoom: effectiveZoom }">
             <DescendantChartReport :person-id="store.personId" :color-mode="store.chartColorMode" />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -203,7 +203,7 @@
               :color-mode="store.fanColorMode"
             />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -213,7 +213,7 @@
           <div v-if="store.personId" class="print-preview chart-print" :style="{ zoom: effectiveZoom }">
             <TimelineChartReport :person-id="store.personId" />
           </div>
-          <div v-else class="empty-hint">{{ $t('reports.selectPersonFirst') }}</div>
+          <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPersonFirst')" />
         </div>
       </div>
 
@@ -242,6 +242,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import FilterChips from '../components/ui/FilterChips.vue';
+import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useFocusStore } from '../stores/focus';
 import { useReportConfigStore } from '../stores/reportConfig';
 import { usePanelResize } from '../composables/usePanelResize';

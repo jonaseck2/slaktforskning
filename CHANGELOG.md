@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: improve empty states — map, media, visualization, places, and quality views now use AppEmptyState with descriptions and action shortcuts
 - fix: quality checks now defer 1500ms after navigation instead of loading immediately, preventing contention with main data loading on detail views
 
 - fix: packaged app crashed on startup with "Cannot find module '../../src/api/place-gazetteers/data/sv-socknar.json'" — Vite's externalize-gazetteers plugin rewrote imports to a src/ path that isn't shipped inside app.asar; imports now point to ./gazetteers/<file>.json and the JSON files are copied into .vite/build/gazetteers/ at build time so they ship alongside index.js

@@ -49,8 +49,8 @@
     </div>
 
     <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
-    <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" />
-    <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media')" />
+    <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" :description="$t('empty.mediaDesc')" />
+    <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
 
     <!-- Gallery grid -->
     <div v-else-if="viewMode === 'gallery'" class="gallery-grid">

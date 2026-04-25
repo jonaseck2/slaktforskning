@@ -42,7 +42,7 @@
           </div>
         </div>
       </div>
-      <p v-else-if="testQuery && results.length === 0" class="empty-hint">{{ $t('gazetteers.noMatch') }}</p>
+      <SectionEmpty v-else-if="testQuery && results.length === 0" :message="$t('gazetteers.noMatch')" />
     </div>
 
     <!-- Installed gazetteers -->
@@ -103,6 +103,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
+import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import { loadGazetteers } from '../../api/place-gazetteers/merge';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
