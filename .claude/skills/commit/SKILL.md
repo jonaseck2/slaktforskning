@@ -5,6 +5,11 @@ description: Stage ALL changes and create a git commit. Always use this instead 
 
 # Commit Skill
 
+**Quick-decode user intent → bump type:**
+- "commit the fix" / "commit this fix" / "commit the bug fix" / "commit the patch" → **patch bump**
+- "commit the feature" / "commit this feature" / "commit the new …" → **minor bump**
+- When in doubt, patch. Never skip the bump.
+
 When asked to commit, or when a commit is appropriate after completing work:
 
 1. **Always stage ALL files** — run `git add -A`. Never selectively stage files. There is no reason to test the whole app and then commit half of it.
