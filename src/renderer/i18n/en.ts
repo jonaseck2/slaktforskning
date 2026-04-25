@@ -176,6 +176,8 @@ export default {
     urlPlaceholder: 'https://\u2026',
     confirmDelete: 'Delete this source? This cannot be undone.',
     createNew: 'Create "{name}"',
+    createNewSource: 'Create new source',
+    searchOrAdd: 'Search or add source…',
   },
   sourceDetail: {
     title: 'Source Details',
@@ -198,6 +200,9 @@ export default {
   },
   events: {
     title: 'Events',
+    entity: 'Event',
+    newEvent: 'New Event',
+    searchOrAdd: 'Search or add event…',
     event: 'Event',
     addEvent: 'Create',
     date: 'Date',
