@@ -5,7 +5,7 @@
         <th>{{ $t('groups.name') }}</th>
         <th v-if="showMembers">{{ $t('groups.members') }}</th>
         <th>{{ $t('groups.notes') }}</th>
-        <th class="actions-cell">{{ $t('common.actions') }}</th>
+        <th v-if="!readonly" class="actions-cell">{{ $t('common.actions') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -24,7 +24,7 @@
         <td class="td-name">{{ g.name }}</td>
         <td v-if="showMembers">{{ g.memberCount }}</td>
         <td class="notes-cell">{{ g.notes }}</td>
-        <td class="actions-cell">
+        <td v-if="!readonly" class="actions-cell">
           <button class="btn-sm btn-delete" @click.stop="$emit('remove', g.id)">✕</button>
         </td>
       </tr>
@@ -40,13 +40,15 @@ export interface GroupRow {
   memberCount?: number;
 }
 
-withDefaults(defineProps<{
+const { readonly } = withDefaults(defineProps<{
   groups: GroupRow[];
   showMembers?: boolean;
   selectedId?: string | null;
+  readonly?: boolean;
 }>(), {
   showMembers: false,
   selectedId: null,
+  readonly: false,
 });
 
 defineEmits<{ remove: [id: string]; select: [id: string] }>();

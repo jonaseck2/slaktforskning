@@ -7,7 +7,7 @@
           <th class="th-shrink">{{ $t('quality.colSeverity') }}</th>
           <th v-if="showEntity" class="entity-col">{{ $t('quality.colEntity') }}</th>
           <th>{{ $t('quality.colIssue') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
+          <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -42,7 +42,7 @@
             <span v-else class="entity-name">{{ entityLabel(r) }}</span>
           </td>
           <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
-          <td class="actions-cell">
+          <td v-if="!props.readonly" class="actions-cell">
             <button
               class="btn-sm btn-delete"
               :title="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
@@ -74,6 +74,7 @@ const props = defineProps<{
   issues: QualityIssue[];
   clickableWhen?: (issue: QualityIssue) => boolean;
   showEntity?: boolean;
+  readonly?: boolean;
 }>();
 
 const emit = defineEmits<{
