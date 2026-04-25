@@ -905,6 +905,15 @@ export default {
       captions: 'Photo captions',
       photoNotes: 'Photo notes',
     },
+    aLife: 'A Life',
+    yourAncestors: 'Your Ancestors',
+    lifeOnOnePage: 'Life on One Page',
+    photoAlbum: 'Photo Album',
+    pedigreeChart: 'Pedigree Chart',
+    hourglassChart: 'Hourglass Chart',
+    descendantChart: 'Descendant Chart',
+    fanChart: 'Fan Chart',
+    timelineChart: 'Timeline',
     relations: {
       father: 'Father',
       mother: 'Mother',
@@ -1105,6 +1114,11 @@ export default {
     siteTitleLabel: 'Site title',
     siteTitlePlaceholder: 'Family Tree',
     openFolder: 'Open folder',
+  },
+  website: {
+    reportsHint: 'Click a report to read it.',
+    printsHint: 'Click a print to view it.',
+    downloadPdf: 'Download PDF',
   },
   media: {
     title: 'Media',

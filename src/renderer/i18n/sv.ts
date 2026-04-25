@@ -905,6 +905,15 @@ export default {
       captions: 'Bildtexter',
       photoNotes: 'Bildanteckningar',
     },
+    aLife: 'Ett liv',
+    yourAncestors: 'Dina förfäder',
+    lifeOnOnePage: 'Livet på en sida',
+    photoAlbum: 'Fotoalbum',
+    pedigreeChart: 'Stamtavla',
+    hourglassChart: 'Timglas',
+    descendantChart: 'Efterkommande',
+    fanChart: 'Solfjäder',
+    timelineChart: 'Tidslinje',
     relations: {
       father: 'Pappa',
       mother: 'Mamma',
@@ -1105,6 +1114,11 @@ export default {
     siteTitleLabel: 'Webbplatsens titel',
     siteTitlePlaceholder: 'Släktträd',
     openFolder: 'Öppna mapp',
+  },
+  website: {
+    reportsHint: 'Klicka på ett bokslut för att läsa det.',
+    printsHint: 'Klicka på ett diagram för att visa det.',
+    downloadPdf: 'Ladda ner PDF',
   },
   media: {
     title: 'Media',
