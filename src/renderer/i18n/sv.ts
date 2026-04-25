@@ -926,6 +926,9 @@ export default {
     searchOrCreate: 'Sök grupp eller skapa ny\u2026',
     createNew: 'Skapa ny grupp',
     cancel: 'Avbryt',
+    newGroup: 'Ny grupp',
+    searchOrAdd: 'Sök eller + lägg till medlem',
+    noMembers: 'Inga medlemmar än',
   },
   importExport: {
     title: 'Import / Export',

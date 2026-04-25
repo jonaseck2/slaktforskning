@@ -926,6 +926,9 @@ export default {
     searchOrCreate: 'Search group or create new\u2026',
     createNew: 'Create new group',
     cancel: 'Cancel',
+    newGroup: 'New group',
+    searchOrAdd: 'Search or + add member',
+    noMembers: 'No members yet',
   },
   importExport: {
     title: 'Import / Export',
