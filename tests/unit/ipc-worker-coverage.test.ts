@@ -17,7 +17,8 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   // db:createNew, db:switchTo, db:openExisting use ipcMain.handle directly — not caught by wrapHandler regex
   'backup:backup', 'backup:restore',
   'shell:open-external',
-  'export:htmlSiteSelectDir', 'export:htmlSite', 'export:openFolder',
+  'export:openFolder',
+  'website:export',
   'print:print', 'print:exportPdf',
   'chart:saveSvg', 'chart:savePdf',
   'csv:export',

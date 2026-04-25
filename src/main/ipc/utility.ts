@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { dialog, BrowserWindow, shell } from 'electron';
-import { generateHtmlSite } from '../../api/html_site/generator';
 import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../../api/csv_export';
 import type { CsvOptions } from '../../api/csv_export';
 import { callWorker } from './worker-client';
@@ -59,29 +58,6 @@ export function registerUtilityHandlers(
   wrapHandler('checks:forPerson', (...args) => callWorker('checks:forPerson', ...args));
   wrapHandler('checks:forPlace', (...args) => callWorker('checks:forPlace', ...args));
   wrapHandler('checks:forMedia', (...args) => callWorker('checks:forMedia', ...args));
-
-  // HTML Site Export — dialog + fs + DB (stays on main thread; infrequent user-initiated export)
-  wrapHandler('export:htmlSiteSelectDir', async () => {
-    const dialogOpts = {
-      title: 'Select output folder',
-      properties: ['openDirectory', 'createDirectory'] as ('openDirectory' | 'createDirectory')[],
-    };
-    const win = BrowserWindow.getFocusedWindow();
-    const result = win
-      ? await dialog.showOpenDialog(win, dialogOpts)
-      : await dialog.showOpenDialog(dialogOpts);
-    if (result.canceled || !result.filePaths.length) return { canceled: true };
-    return { canceled: false, path: result.filePaths[0] };
-  });
-
-  wrapHandler('export:htmlSite', (opts) => {
-    const { outputDir, excludeLiving, siteTitle } = opts as {
-      outputDir: string;
-      excludeLiving?: boolean;
-      siteTitle?: string;
-    };
-    return generateHtmlSite(getDb(), outputDir, { excludeLiving, siteTitle });
-  });
 
   wrapHandler('export:openFolder', async (folderPath) => {
     await shell.openPath(folderPath as string);

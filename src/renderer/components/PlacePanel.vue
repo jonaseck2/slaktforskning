@@ -20,7 +20,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" @toggle="toggleSection('place')" />
         <div v-if="sections.place" class="panel-section-body">
-          <div class="compact-form">
+          <div v-if="!props.readonly" class="compact-form">
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.name') }}</label>
               <PlacePicker
@@ -91,6 +91,20 @@
               />
             </div>
           </div>
+          <div v-else class="compact-form">
+            <div v-if="place.place_type" class="compact-field">
+              <span class="compact-label">{{ $t('places.type') }}</span>
+              <span class="readonly-value">{{ $t('placeTypes.' + place.place_type) }}</span>
+            </div>
+            <div v-if="place.latitude != null || place.longitude != null" class="compact-field">
+              <span class="compact-label">{{ $t('places.latitude') }} / {{ $t('places.longitude') }}</span>
+              <span class="readonly-value">{{ place.latitude ?? '—' }} / {{ place.longitude ?? '—' }}</span>
+            </div>
+            <div v-if="place.notes" class="compact-field">
+              <span class="compact-label">{{ $t('panel.notes') }}</span>
+              <span class="readonly-value">{{ place.notes }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -100,7 +114,7 @@
           :title="$t('persons.title')"
           :count="personCount"
           :collapsed="!sections.persons"
-          :action-label="'+ ' + $t('placePanel.addPerson')"
+          :action-label="!props.readonly ? '+ ' + $t('placePanel.addPerson') : undefined"
           @toggle="toggleSection('persons')"
           @action="showAddPersonForm = true"
         />
@@ -111,15 +125,15 @@
 
       <!-- Events section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="!props.readonly ? '+ ' + $t('events.event') : undefined" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
         <div v-if="sections.events" class="panel-section-body">
-          <EventList ref="eventListRef" :place-id="placeId!" hide-header show-persons />
+          <EventList ref="eventListRef" :place-id="placeId!" :readonly="props.readonly" hide-header show-persons />
         </div>
       </div>
 
       <!-- Citations section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" :action-label="'+ ' + $t('sourceDetail.addCitation')" @toggle="toggleSection('citations')" @action="showCitationForm = true" />
+        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" :action-label="!props.readonly ? '+ ' + $t('sourceDetail.addCitation') : undefined" @toggle="toggleSection('citations')" @action="showCitationForm = true" />
         <div v-if="sections.citations" class="panel-section-body">
           <PlaceCitationsSection ref="citationsSectionRef" :place-id="placeId!" />
         </div>
@@ -127,7 +141,7 @@
 
       <!-- Media section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
+        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
           <EntityMediaSection ref="mediaSectionRef" entity-type="place" :entity-id="placeId!" />
         </div>
@@ -135,7 +149,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="place" :entity-id="placeId!" />
         </div>
@@ -153,7 +167,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('places.address')" :collapsed="!sections.address" @toggle="toggleSection('address')" />
         <div v-if="sections.address" class="panel-section-body">
-          <div class="compact-form">
+          <div v-if="!props.readonly" class="compact-form">
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.street') }}</label>
               <input
@@ -189,6 +203,24 @@
                 :value="place.country ?? ''"
                 @blur="saveField('country', ($event.target as HTMLInputElement).value || null)"
               />
+            </div>
+          </div>
+          <div v-else class="compact-form">
+            <div v-if="place.street" class="compact-field">
+              <span class="compact-label">{{ $t('places.street') }}</span>
+              <span class="readonly-value">{{ place.street }}</span>
+            </div>
+            <div v-if="place.postal_code" class="compact-field">
+              <span class="compact-label">{{ $t('places.postalCode') }}</span>
+              <span class="readonly-value">{{ place.postal_code }}</span>
+            </div>
+            <div v-if="place.city" class="compact-field">
+              <span class="compact-label">{{ $t('places.city') }}</span>
+              <span class="readonly-value">{{ place.city }}</span>
+            </div>
+            <div v-if="place.country" class="compact-field">
+              <span class="compact-label">{{ $t('places.country') }}</span>
+              <span class="readonly-value">{{ place.country }}</span>
             </div>
           </div>
         </div>
@@ -227,7 +259,7 @@
 
     <!-- Citation form modal -->
     <CitationModal
-      v-if="showCitationForm && placeId"
+      v-if="!props.readonly && showCitationForm && placeId"
       mode="standalone"
       :place-id="placeId"
       @cancel="showCitationForm = false"
@@ -237,7 +269,7 @@
 
     <!-- Add person modal -->
     <PersonModal
-      v-if="showAddPersonForm && placeId"
+      v-if="!props.readonly && showAddPersonForm && placeId"
       mode="standalone"
       :prefill-place-id="placeId"
       @close="showAddPersonForm = false"
@@ -290,7 +322,7 @@ interface ChildPlace {
   parent_place_id: string | null;
 }
 
-const props = defineProps<{ placeId: string | null }>();
+const props = defineProps<{ placeId: string | null; readonly?: boolean }>();
 const emit = defineEmits<{ 'select-place': [id: string]; 'close': []; 'place-updated': [id: string] }>();
 
 // ── Section state ───────────────────────────────────────────────────────────
@@ -379,7 +411,7 @@ watch(() => props.placeId, load, { immediate: true });
 // ── Field updates ────────────────────────────────────────────────────────────
 
 async function saveField(field: string, value: unknown) {
-  if (!props.placeId || !place.value) return;
+  if (!props.placeId || !place.value || props.readonly) return;
   await window.api.places.update(props.placeId, { [field]: value });
   (place.value as Record<string, unknown>)[field] = value;
   emit('place-updated', props.placeId);
@@ -541,6 +573,12 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+.readonly-value {
+  font-size: var(--font-xs);
+  color: var(--text-primary);
+  padding: var(--space-xs) 0;
 }
 
 .notes-heading-row {

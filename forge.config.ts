@@ -13,6 +13,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     executableName: 'slaktforskning',
+    extraResource: ['./dist-static'],
   },
   rebuildConfig: {},
   makers: [

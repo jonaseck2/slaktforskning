@@ -31,7 +31,7 @@
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
             <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
           </div>
-          <div class="panel-add-relative-btns">
+          <div v-if="!props.readonly" class="panel-add-relative-btns">
             <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
             <AppButton variant="soft" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
             <AppButton variant="soft" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
@@ -44,13 +44,13 @@
       <div class="panel-section">
         <SectionHeader :title="'Person'" :collapsed="!sections.person" @toggle="toggleSection('person')" />
         <div v-if="sections.person" class="panel-section-body">
-          <PersonDetailsSection :person-id="personId!" :sex="person.sex" :living="person.living" @updated="onDetailUpdated" />
+          <PersonDetailsSection :person-id="personId!" :sex="person.sex" :living="person.living" :readonly="props.readonly" @updated="onDetailUpdated" />
         </div>
       </div>
 
       <!-- Namen section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" :action-label="'+ ' + $t('personDetail.addName')" @toggle="toggleSection('names')" @action="openNameForm(null)" />
+        <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addName') }" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
           <SectionEmpty v-if="names.length === 0" :message="$t('empty.names')" />
           <PersonNamesTable v-else :names="names" @edit="openNameForm" @delete="deleteName" />
@@ -59,15 +59,15 @@
 
       <!-- Händelser section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('events')" @action="triggerAddEvent" />
+        <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('events')" @action="triggerAddEvent" />
         <div v-if="sections.events" class="panel-section-body">
-          <EventList ref="eventListRef" :person-id="personId" hide-header />
+          <EventList ref="eventListRef" :person-id="personId" :readonly="props.readonly" hide-header />
         </div>
       </div>
 
       <!-- Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personTimeline.title')" :count="eventCount" :collapsed="!sections.timeline" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('timeline')" @action="triggerAddEvent" />
+        <SectionHeader :title="$t('personTimeline.title')" :count="eventCount" :collapsed="!sections.timeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('timeline')" @action="triggerAddEvent" />
         <div v-if="sections.timeline" class="panel-section-body">
           <PersonTimeline :person-id="personId!" />
         </div>
@@ -75,7 +75,7 @@
 
       <!-- Life Map section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('map.personMap')" :count="mapPointCount" :collapsed="!sections.map" :action-label="'+ ' + $t('events.event')" @toggle="toggleSection('map')" @action="triggerAddEvent" />
+        <SectionHeader :title="$t('map.personMap')" :count="mapPointCount" :collapsed="!sections.map" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('map')" @action="triggerAddEvent" />
         <div v-if="sections.map" class="panel-section-body">
           <PersonMap :person-id="personId!" />
         </div>
@@ -83,7 +83,7 @@
 
       <!-- Identifiers section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" :action-label="'+ ' + $t('identifiers.add')" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
+        <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('identifiers.add') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
         <div v-if="sections.identifiers" class="panel-section-body">
           <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" />
         </div>
@@ -91,7 +91,7 @@
 
       <!-- Relationer section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" :action-label="'+ ' + $t('relationships.addRelationship')" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
+        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('relationships.addRelationship') }" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
         <div v-if="sections.relationships" class="panel-section-body">
           <PersonRelationshipsSection ref="relSectionRef" :person-id="personId!" />
         </div>
@@ -99,9 +99,9 @@
 
       <!-- Grupper section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('groups.title')" :count="groups.length" :collapsed="!sections.groups" :action-label="'+ ' + $t('groups.addGroupShort')" @toggle="toggleSection('groups')" @action="showGroupPicker = !showGroupPicker" />
+        <SectionHeader :title="$t('groups.title')" :count="groups.length" :collapsed="!sections.groups" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('groups.addGroupShort') }" @toggle="toggleSection('groups')" @action="showGroupPicker = !showGroupPicker" />
         <div v-if="sections.groups" class="panel-section-body">
-          <div v-if="showGroupPicker && personId" class="panel-group-picker-wrap">
+          <div v-if="!props.readonly && showGroupPicker && personId" class="panel-group-picker-wrap">
             <GroupPicker
               :person-id="personId"
               :exclude-ids="groups.map(g => g.id)"
@@ -110,13 +110,13 @@
             />
           </div>
           <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
-          <GroupsTable v-else :groups="groups" @remove="removeFromGroup" />
+          <GroupsTable v-else :groups="groups" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
         </div>
       </div>
 
       <!-- Media section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
+        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
           <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" />
         </div>
@@ -124,7 +124,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" :action-label="'+ ' + $t('media.attachShort')" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="person" :entity-id="personId!" />
         </div>
@@ -132,7 +132,7 @@
 
       <!-- Forskning section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" :action-label="'+ ' + $t('researchTasks.addTask')" @toggle="toggleSection('research')" @action="openTaskForm()" />
+        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
           <ResearchTasksTable v-else :tasks="researchTasks" @updated="loadResearchTasks(personId!)" @select="goToTask" />
@@ -212,7 +212,7 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const props = defineProps<{ personId: string | null; showTreeBtn?: boolean }>();
+const props = defineProps<{ personId: string | null; showTreeBtn?: boolean; readonly?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
   'show-in-tree': [];
