@@ -166,6 +166,7 @@
         @stop-draw-mode="drawMode = false"
         @highlight-region="(id: string | null) => highlightedRegionId = id"
         @region-deleted="() => viewerRef?.reloadRegions()"
+        @media-updated="onMediaUpdated"
       />
     </div>
   </template>
@@ -448,6 +449,17 @@ async function onRegionUpdated(id: string, rect: { x: number; y: number; width: 
     }
   }
   viewerRef.value?.reloadRegions();
+}
+
+function onMediaUpdated(mediaId: string, fields: { title?: string; notes?: string }) {
+  const patch = (item: MediaItem) => {
+    if (fields.title !== undefined) item.title = fields.title;
+    if (fields.notes !== undefined) item.notes = fields.notes;
+  };
+  const found = items.value.find(i => i.id === mediaId);
+  if (found) patch(found);
+  const deep = deepLinkItems.value?.find(i => i.id === mediaId);
+  if (deep) patch(deep);
 }
 
 async function attachFile() {

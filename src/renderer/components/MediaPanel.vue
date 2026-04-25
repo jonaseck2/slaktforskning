@@ -253,6 +253,7 @@ const emit = defineEmits<{
   'stop-draw-mode': [];
   'highlight-region': [id: string | null];
   'region-deleted': [];
+  'media-updated': [mediaId: string, fields: { title?: string; notes?: string }];
 }>();
 
 const media = ref<MediaData | null>(null);
@@ -453,6 +454,7 @@ async function saveTitle() {
   if (next === (media.value.title ?? '')) return;
   await window.api.media.update(props.mediaId, { title: next });
   media.value.title = next;
+  emit('media-updated', props.mediaId, { title: next });
 }
 
 async function saveNotes() {
@@ -461,6 +463,7 @@ async function saveNotes() {
   if (next === (media.value.notes ?? '')) return;
   await window.api.media.update(props.mediaId, { notes: next });
   media.value.notes = next;
+  emit('media-updated', props.mediaId, { notes: next });
 }
 
 async function unlinkEntity(linkId: string) {
