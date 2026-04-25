@@ -127,11 +127,42 @@
         <details class="ep-event-details" :open="eventSectionOpen" @toggle="onEventToggle">
           <summary class="ep-event-summary">{{ $t('events.addEvent') }}</summary>
           <div class="ep-event-body">
-            <EventFormBody
-              v-model:event="eventForm"
-              v-model:citation="citationForm"
-              context="person"
-            />
+            <div class="ep-fields">
+              <div class="ep-field">
+                <span class="ep-field-label">{{ $t('events.eventType') }}</span>
+                <select class="ep-input" v-model="eventForm.event_type">
+                  <option value="" disabled>{{ $t('events.selectType') }}</option>
+                  <optgroup :label="$t('events.commonTypes')">
+                    <option v-for="et in COMMON_PERSON_EVENT_TYPES" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
+                  </optgroup>
+                  <optgroup :label="$t('events.allTypes')">
+                    <option v-for="et in OTHER_PERSON_EVENT_TYPES" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="ep-field">
+                <span class="ep-field-label">{{ $t('events.date') }}</span>
+                <DateInput
+                  :date-type="eventForm.date_type"
+                  :date-value="eventForm.date_value"
+                  :date-value-end="eventForm.date_value_end"
+                  :date-original="eventForm.date_original"
+                  @update:date-type="eventForm.date_type = $event"
+                  @update:date-value="eventForm.date_value = $event"
+                  @update:date-value-end="eventForm.date_value_end = $event"
+                  @update:date-original="eventForm.date_original = $event"
+                />
+              </div>
+              <div class="ep-field">
+                <span class="ep-field-label">{{ $t('places.title') }}</span>
+                <PlacePicker v-model="eventForm.place_id" :placeholder="$t('events.placePlaceholder')" />
+              </div>
+              <div v-if="eventForm.event_type === 'death'" class="ep-field">
+                <span class="ep-field-label">{{ $t('events.cause') }}</span>
+                <input class="ep-input" v-model="eventForm.cause" :placeholder="$t('events.causePlaceholder')" />
+              </div>
+            </div>
+            <CitationFields :model="citationForm" />
           </div>
         </details>
       </div>
@@ -223,11 +254,13 @@ import { reactive, ref, computed, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
-import EventFormBody from '../EventFormBody.vue';
 import PersonPicker from '../PersonPicker.vue';
+import DateInput from '../DateInput.vue';
+import PlacePicker from '../PlacePicker.vue';
+import CitationFields from '../CitationFields.vue';
 import type { CitationFieldsModel } from '../CitationFields.vue';
 import { ENTITY_COLORS } from '../../constants/entityColors';
-import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../../constants/eventTypes';
+import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES, PERSON_EVENT_TYPE_VALUES } from '../../constants/eventTypes';
 import { suggestNextEventType } from '../../utils/eventDefaults';
 import { useToast } from '../../composables/useToast';
 import { useSourceSession } from '../../stores/sourceSession';
@@ -241,6 +274,12 @@ const SEX_OPTIONS: [string, string][] = [
   ['F', 'persons.female'],
   ['U', 'persons.sexUnknown'],
 ];
+
+const COMMON_PERSON_EVENT_TYPES = ['birth', 'baptism', 'death', 'burial', 'marriage', 'residence', 'census', 'emigration', 'immigration'] as const;
+const OTHER_PERSON_EVENT_TYPES = [...PERSON_EVENT_TYPE_VALUES]
+  .filter(et => !(COMMON_PERSON_EVENT_TYPES as readonly string[]).includes(et) && et !== 'other')
+  .sort()
+  .concat(['other']);
 
 interface EventRow {
   id: string;
