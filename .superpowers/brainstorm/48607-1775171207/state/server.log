@@ -1,0 +1,7 @@
+{"type":"server-started","port":61223,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:61223","screen_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content","state_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/state"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/viz-styles.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/waiting-1.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/cytoscape-vs-svg.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/viz-mockup.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/48607-1775171207/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

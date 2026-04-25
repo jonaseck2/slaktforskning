@@ -1,0 +1,258 @@
+<h2>Proposed New Person Box Design</h2>
+<p class="subtitle">Full competitor parity: photo, place, deceased indicator, theme-aware colors. Click to select your preferred style.</p>
+
+<style>
+  .box-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 20px 0; }
+  .box-demo { display: flex; flex-direction: column; gap: 16px; align-items: center; padding: 24px; border-radius: 12px; }
+  .box-label { font-size: 11px; color: #999; text-align: center; margin-top: -8px; }
+
+  /* Simulated SVG-like boxes using HTML for clearer mockup */
+  .person-box {
+    width: 200px;
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .person-box-inner {
+    display: flex;
+    padding: 8px 10px;
+    gap: 8px;
+    align-items: center;
+  }
+  .person-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .person-avatar.has-photo {
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  .person-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .person-info { min-width: 0; flex: 1; }
+  .person-name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .person-dates {
+    font-size: 10px;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .person-place {
+    font-size: 9px;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sex-bar {
+    width: 3px;
+    align-self: stretch;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .deceased-mark {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 8px;
+    opacity: 0.5;
+  }
+</style>
+
+<!-- Row 1: Forest theme -->
+<h3 style="margin-top: 8px;">Forest Theme</h3>
+<div class="box-grid">
+  <div class="box-demo" style="background: #e8f0e8;">
+    <!-- Male, deceased, with initials -->
+    <div class="person-box" style="background: #fff; border: 1px solid #c0d4c0;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: #e0eaf2; color: #3a5a7a;">KA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #1a2e1a;">Karl-Johan Andersson</div>
+          <div class="person-dates" style="color: #6a7a62;">* 1847 &ndash; &dagger; 1923</div>
+          <div class="person-place" style="color: #6a7a62;">Lunds socken, Malmohus</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-label">Male, deceased, no photo &mdash; initials avatar</div>
+
+    <!-- Female, deceased -->
+    <div class="person-box" style="background: #fff; border: 1px solid #c0d4c0;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #f7a5c0;"></div>
+        <div class="person-avatar" style="background: #f5e8ee; color: #8a5068;">AS</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #1a2e1a;">Anna Kristina Svensdotter</div>
+          <div class="person-dates" style="color: #6a7a62;">* 1852 &ndash; &dagger; 1901</div>
+          <div class="person-place" style="color: #6a7a62;">Vastra Sallerup, Malmohus</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-label">Female, full name visible (no 20-char clip!)</div>
+  </div>
+
+  <div class="box-demo" style="background: #e8f0e8;">
+    <!-- Focal person -->
+    <div class="person-box" style="background: #2d5a27; border: 1px solid #1e4a1a;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9);">JA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #e0f0dc;">Jonas Ahnstedt</div>
+          <div class="person-dates" style="color: rgba(224,240,220,0.7);">* 1985</div>
+          <div class="person-place" style="color: rgba(224,240,220,0.5);">Lund, Skane</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-label">Focal person &mdash; uses <code>--accent</code> color</div>
+
+    <!-- With photo -->
+    <div class="person-box" style="background: #fff; border: 1px solid #c0d4c0;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #f7a5c0;"></div>
+        <div class="person-avatar has-photo" style="background: #ddd;">
+          <div style="width: 34px; height: 34px; background: linear-gradient(135deg, #c4a882, #8b7355); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">&#x1f464;</div>
+        </div>
+        <div class="person-info">
+          <div class="person-name" style="color: #1a2e1a;">Gunilla Emthen</div>
+          <div class="person-dates" style="color: #6a7a62;">* 1944</div>
+          <div class="person-place" style="color: #6a7a62;">Malmo, Malmohus</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-label">With photo thumbnail (from media)</div>
+  </div>
+</div>
+
+<!-- Row 2: Nordic theme -->
+<h3>Nordic Theme</h3>
+<div class="box-grid">
+  <div class="box-demo" style="background: #f0f2f6;">
+    <div class="person-box" style="background: #fafbfd; border: 1px solid #d0d8e4;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: #e0eaf2; color: #3a5a7a;">KA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #0f172a;">Karl-Johan Andersson</div>
+          <div class="person-dates" style="color: #64748b;">* 1847 &ndash; &dagger; 1923</div>
+          <div class="person-place" style="color: #64748b;">Lunds socken, Malmohus</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nordic focal -->
+    <div class="person-box" style="background: #1d4ed8; border: 1px solid #1e40af;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9);">JA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #fff;">Jonas Ahnstedt</div>
+          <div class="person-dates" style="color: rgba(255,255,255,0.65);">* 1985</div>
+          <div class="person-place" style="color: rgba(255,255,255,0.5);">Lund, Skane</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Twilight theme -->
+  <div class="box-demo" style="background: #f4f2f8;">
+    <div class="person-box" style="background: #faf8fd; border: 1px solid #d4cce0;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #f7a5c0;"></div>
+        <div class="person-avatar" style="background: #f5e8ee; color: #8a5068;">AS</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #1e1b2e;">Anna Kristina Svensdotter</div>
+          <div class="person-dates" style="color: #6a6090;">* 1852 &ndash; &dagger; 1901</div>
+          <div class="person-place" style="color: #6a6090;">Vastra Sallerup, Malmohus</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Twilight focal -->
+    <div class="person-box" style="background: #6c5ce7; border: 1px solid #5a4bd1;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9);">JA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #fff;">Jonas Ahnstedt</div>
+          <div class="person-dates" style="color: rgba(255,255,255,0.65);">* 1985</div>
+          <div class="person-place" style="color: rgba(255,255,255,0.5);">Lund, Skane</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-label">Twilight theme</div>
+  </div>
+</div>
+
+<!-- Export / unthemed version -->
+<h3>Export Version (Unthemed)</h3>
+<div class="box-demo" style="background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;">
+  <div style="display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap;">
+    <div class="person-box" style="background: #fff; border: 1px solid #ccc;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: #e8f0f8; color: #4a6a8a;">KA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #222;">Karl-Johan Andersson</div>
+          <div class="person-dates" style="color: #666;">* 1847 &ndash; &dagger; 1923</div>
+          <div class="person-place" style="color: #888;">Lunds socken, Malmohus</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="person-box" style="background: #f0f0f0; border: 1px solid #ccc;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #f7a5c0;"></div>
+        <div class="person-avatar" style="background: #f5e0ea; color: #8a4a68;">AS</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #222;">Anna Kristina Svensdotter</div>
+          <div class="person-dates" style="color: #666;">* 1852 &ndash; &dagger; 1901</div>
+          <div class="person-place" style="color: #888;">Vastra Sallerup, Malmohus</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="person-box" style="background: #2c3e50; border: 1px solid #1a2a3a;">
+      <div class="person-box-inner">
+        <div class="sex-bar" style="background: #7eb8f7;"></div>
+        <div class="person-avatar" style="background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85);">JA</div>
+        <div class="person-info">
+          <div class="person-name" style="color: #fff;">Jonas Ahnstedt</div>
+          <div class="person-dates" style="color: rgba(255,255,255,0.6);">* 1985</div>
+          <div class="person-place" style="color: rgba(255,255,255,0.45);">Lund, Skane</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box-label">Neutral colors for PDF/image export &mdash; no theme dependency</div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px 20px; background: #f8f8f4; border-radius: 10px; border: 1px solid #e0e0d8;">
+  <h3 style="margin: 0 0 10px;">Design Spec Summary</h3>
+  <table style="font-size: 13px; border-collapse: collapse; width: 100%;">
+    <tr><td style="padding: 4px 8px; color: #666;">Box size</td><td style="padding: 4px 8px;"><strong>200 &times; 56px</strong> (was 155&times;54)</td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Avatar</td><td style="padding: 4px 8px;">34px circle &mdash; photo thumbnail or initials</td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Name</td><td style="padding: 4px 8px;">CSS text-overflow: ellipsis (no char limit)</td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Date line</td><td style="padding: 4px 8px;">Compact: <code>* 1847 &ndash; &dagger; 1923</code></td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Place</td><td style="padding: 4px 8px;">Birth parish (one line, ellipsis if long)</td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Focal box</td><td style="padding: 4px 8px;">Uses <code>--accent</code> / <code>--accent-text</code></td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Normal box</td><td style="padding: 4px 8px;">Uses <code>--surface</code> / <code>--text-primary</code></td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Sex indicator</td><td style="padding: 4px 8px;">3px left bar (kept, same sex colors)</td></tr>
+    <tr><td style="padding: 4px 8px; color: #666;">Export mode</td><td style="padding: 4px 8px;">Fixed neutral palette, no CSS vars</td></tr>
+  </table>
+</div>

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.141.5 — track .superpowers in git
+
+- fix: remove .superpowers/ from .gitignore and worktree copies so brainstorm state is tracked
+
 ## v0.141.4 — nav reorganisation
 
 - fix: move Sources and Relationships to Review section, Reports to new Present section

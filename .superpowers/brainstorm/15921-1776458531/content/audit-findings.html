@@ -1,0 +1,106 @@
+<h2>UI Audit Findings</h2>
+<p class="subtitle">Organized by severity — what would a new user notice first?</p>
+
+<div class="section">
+  <h3>Critical: First-Run Experience</h3>
+  <div style="background:#1a1a2e;color:#e0e0e0;padding:20px;border-radius:8px;margin:12px 0;font-family:system-ui">
+    <div style="display:flex;gap:16px">
+      <div style="width:200px;background:#2d2d44;padding:12px;border-radius:6px;font-size:13px">
+        <div style="font-size:11px;color:#888;margin-bottom:8px">FOCUS PERSON</div>
+        <div style="color:#999;font-style:italic">None selected</div>
+        <hr style="border-color:#444;margin:12px 0">
+        <div style="font-size:12px;color:#7eb8da">Visualisation</div>
+        <div style="font-size:12px;color:#7eb8da;font-weight:bold;background:#3d3d5c;padding:4px 8px;border-radius:4px;margin:4px 0">Persons</div>
+        <div style="font-size:12px;color:#7eb8da">Relationships</div>
+        <div style="font-size:12px;color:#7eb8da">Places</div>
+        <div style="font-size:12px;color:#7eb8da">Map</div>
+        <div style="font-size:12px;color:#7eb8da">Sources</div>
+        <div style="font-size:12px;color:#7eb8da">Groups</div>
+        <div style="font-size:12px;color:#7eb8da">Media</div>
+        <div style="font-size:12px;color:#7eb8da">Research</div>
+        <div style="font-size:12px;color:#7eb8da">Data Quality</div>
+        <div style="font-size:12px;color:#7eb8da">Reports</div>
+        <hr style="border-color:#444;margin:12px 0">
+        <div style="font-size:11px;color:#888">Link Rules</div>
+        <div style="font-size:11px;color:#888">Gazetteers</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;font-size:18px">
+        <div style="font-size:48px;margin-bottom:16px">&#128566;</div>
+        <div><strong>No persons yet.</strong></div>
+        <div style="font-size:13px;margin-top:8px;color:#555">That's it. No guidance. No "what now?"</div>
+      </div>
+    </div>
+  </div>
+  <ul style="font-size:14px;line-height:1.8">
+    <li><strong>No onboarding</strong> — app drops user into empty PersonsView with 12+ sidebar items</li>
+    <li><strong>No welcome screen</strong> — no explanation of what the app does or how to start</li>
+    <li><strong>"Link Rules" and "Gazetteers"</strong> visible on day one — meaningless to new users</li>
+    <li><strong>Empty states say what's missing</strong> but never say what to do next</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>High: Sidebar Overload</h3>
+  <div style="display:flex;gap:24px;margin:12px 0">
+    <div style="flex:1">
+      <div class="label">Current: 14 items visible</div>
+      <div style="background:#2d2d44;color:#7eb8da;padding:12px;border-radius:6px;font-size:12px;line-height:2.2">
+        Visualisation<br>Persons<br>Relationships<br>Places<br>Map<br>Sources<br>Groups<br>Media<br>Research<br>Data Quality<br>Reports<br>
+        <span style="color:#666">Link Rules<br>Gazetteers</span><br>
+        <span style="color:#555">Database &bull; Import/Export</span>
+      </div>
+    </div>
+    <div style="flex:1">
+      <div class="label">What a new user actually needs</div>
+      <div style="background:#1a3a1a;color:#7eda7e;padding:12px;border-radius:6px;font-size:12px;line-height:2.2">
+        <strong>Family Tree</strong> (visualization)<br>
+        <strong>People</strong><br>
+        <strong>Sources</strong><br>
+        <strong>Places</strong><br>
+        <span style="color:#666;font-style:italic">...everything else is secondary</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>High: Missing Visual Feedback</h3>
+  <ul style="font-size:14px;line-height:1.8">
+    <li><strong>No loading spinners</strong> — most views show "Loading..." text or nothing during data fetch</li>
+    <li><strong>No progress indicators</strong> for import/export operations</li>
+    <li><strong>Errors disappear</strong> — toast notifications vanish with no retry option</li>
+    <li><strong>No skeleton screens</strong> — person detail shows blank then jumps to content</li>
+    <li><strong>MCP ui_navigate</strong> silently accepts invalid routes, shows infinite "Loading..."</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>Medium: Inconsistent Design Language</h3>
+  <ul style="font-size:14px;line-height:1.8">
+    <li>Sex badges use hardcoded hex colors instead of CSS variables</li>
+    <li>Quality severity badges use different color approach than sex badges</li>
+    <li>Some views show counts in header, others don't</li>
+    <li>Empty state messages inconsistent — singular vs plural, different phrasing</li>
+    <li>Form validation is "required" attribute only — no inline error messages</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>Medium: Person Detail Complexity</h3>
+  <ul style="font-size:14px;line-height:1.8">
+    <li>PersonDetailView is the most visited screen but has no visual hierarchy — all sections look equal</li>
+    <li>Profile placeholder uses text symbols (&#9792;/&#9794;/?) instead of proper icons</li>
+    <li>No photo/avatar prominence — media section buried among many sections</li>
+    <li>Notes field auto-saves on blur but gives no visual confirmation</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>Low: No Responsive Design</h3>
+  <ul style="font-size:14px;line-height:1.8">
+    <li>Sidebar is fixed 220px — no collapse for narrow windows</li>
+    <li>Tables overflow horizontally on small screens</li>
+    <li>No min-width constraint — app can be resized to unusable widths</li>
+    <li><em>Acceptable for desktop-first Electron app, but worth noting</em></li>
+  </ul>
+</div>

@@ -1,0 +1,143 @@
+<h2>Report Panel Layout Options</h2>
+<p class="subtitle">Controls and preview need to be visible at the same time. Three approaches:</p>
+
+<div class="cards" style="grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="card-image" style="padding: 12px; background: #1a1a2e; border-radius: 6px; margin-bottom: 8px;">
+      <div style="display: flex; gap: 6px; height: 220px; font-size: 10px; color: #ccc;">
+        <!-- Tab bar -->
+        <div style="display: flex; flex-direction: column; width: 100%; gap: 4px;">
+          <div style="background: #2a2a4a; border-radius: 4px; padding: 4px 8px; font-size: 9px; color: #aaa; display: flex; gap: 6px;">
+            <span style="background:#4a4aaa; color:white; padding: 2px 6px; border-radius: 3px;">A Life</span>
+            <span>A Marriage</span>
+            <span>Place</span>
+          </div>
+          <div style="display: flex; gap: 6px; flex: 1;">
+            <!-- Report preview -->
+            <div style="flex: 1; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #333; font-size: 9px; overflow: hidden; position: relative;">
+              <div style="position: absolute; top: 0; left: 0; right: 0; background: #eee; padding: 4px 6px; font-size: 8px; color: #666; border-bottom: 1px solid #ddd;">Report Preview</div>
+              <div style="margin-top: 16px; text-align: center; color: #888; font-size: 8px; line-height: 1.6;">
+                <div style="font-weight: bold; color: #333; font-size: 9px;">Per Andersson</div>
+                <div>1847 – 1912</div>
+                <div style="width: 60px; height: 3px; background: #ddd; margin: 4px auto;"></div>
+                <div style="width: 80px; height: 2px; background: #eee; margin: 2px auto;"></div>
+                <div style="width: 70px; height: 2px; background: #eee; margin: 2px auto;"></div>
+              </div>
+            </div>
+            <!-- Side panel -->
+            <div style="width: 90px; background: #252545; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-size: 8px; color: #aaa; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 2px;">Person</div>
+              <div style="background: #1a1a35; border-radius: 3px; padding: 3px 4px; font-size: 7px; color: #88aaff;">Per Andersson ▾</div>
+              <div style="font-size: 8px; color: #aaa; font-weight: bold; margin-top: 4px; border-bottom: 1px solid #333; padding-bottom: 2px;">Options</div>
+              <div style="display: flex; justify-content: space-between; font-size: 7px; color: #ccc;"><span>Photos</span><span style="color: #88ff88;">✓</span></div>
+              <div style="display: flex; justify-content: space-between; font-size: 7px; color: #ccc;"><span>Sources</span><span style="color: #88ff88;">✓</span></div>
+              <div style="display: flex; justify-content: space-between; font-size: 7px; color: #ccc;"><span>Life Map</span><span style="color: #aaa;">—</span></div>
+              <div style="font-size: 8px; color: #aaa; font-weight: bold; margin-top: 4px; border-bottom: 1px solid #333; padding-bottom: 2px;">Color</div>
+              <div style="display: flex; gap: 3px;">
+                <div style="width: 12px; height: 12px; background: white; border-radius: 2px; border: 2px solid #88aaff;"></div>
+                <div style="width: 12px; height: 12px; background: #222; border-radius: 2px;"></div>
+                <div style="width: 12px; height: 12px; background: #f5e6c8; border-radius: 2px;"></div>
+              </div>
+              <div style="margin-top: auto; background: #4a6aff; border-radius: 3px; text-align: center; padding: 3px; font-size: 7px; color: white;">Print</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Side Panel</h3>
+      <p>Controls in a fixed right-side panel, report fills the remaining space. Panel stays visible while you scroll the report. Matches the PersonPanel / PlacePanel pattern.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="card-image" style="padding: 12px; background: #1a1a2e; border-radius: 6px; margin-bottom: 8px;">
+      <div style="display: flex; flex-direction: column; gap: 4px; height: 220px; font-size: 10px; color: #ccc;">
+        <!-- Tab bar -->
+        <div style="background: #2a2a4a; border-radius: 4px; padding: 4px 8px; font-size: 9px; color: #aaa; display: flex; gap: 6px; flex-shrink: 0;">
+          <span style="background:#4a4aaa; color:white; padding: 2px 6px; border-radius: 3px;">A Life</span>
+          <span>A Marriage</span>
+          <span>Place</span>
+        </div>
+        <!-- Sticky compact controls bar -->
+        <div style="background: #252545; border-radius: 4px; padding: 5px 8px; font-size: 8px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; border-left: 3px solid #4a6aff;">
+          <span style="color: #aaa;">Person:</span>
+          <span style="background: #1a1a35; border-radius: 3px; padding: 2px 6px; font-size: 7px; color: #88aaff;">Per Andersson ▾</span>
+          <span style="color: #444;">|</span>
+          <span style="color: #aaa;">Photos ✓</span>
+          <span style="color: #aaa;">Sources ✓</span>
+          <span style="color: #aaa;">Map —</span>
+          <span style="color: #444;">|</span>
+          <div style="display: flex; gap: 2px;">
+            <div style="width: 10px; height: 10px; background: white; border-radius: 2px; border: 1px solid #88aaff;"></div>
+            <div style="width: 10px; height: 10px; background: #222; border-radius: 2px;"></div>
+          </div>
+          <span style="margin-left: auto; background: #4a6aff; border-radius: 3px; padding: 2px 8px; font-size: 7px; color: white;">Print</span>
+        </div>
+        <!-- Report preview fills rest -->
+        <div style="flex: 1; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #333; overflow: hidden; position: relative;">
+          <div style="text-align: center; color: #888; font-size: 8px; line-height: 1.6;">
+            <div style="font-weight: bold; color: #333; font-size: 9px;">Per Andersson</div>
+            <div>1847 – 1912</div>
+            <div style="width: 60px; height: 3px; background: #ddd; margin: 4px auto;"></div>
+            <div style="width: 80px; height: 2px; background: #eee; margin: 2px auto;"></div>
+            <div style="width: 70px; height: 2px; background: #eee; margin: 2px auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Sticky Control Bar</h3>
+      <p>A slim, pinned bar above the report with just the key controls (person picker, toggles, color, print). Always visible. Report preview takes the rest of the screen.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="card-image" style="padding: 12px; background: #1a1a2e; border-radius: 6px; margin-bottom: 8px;">
+      <div style="display: flex; flex-direction: column; gap: 4px; height: 220px; font-size: 10px; color: #ccc; position: relative;">
+        <!-- Tab bar -->
+        <div style="background: #2a2a4a; border-radius: 4px; padding: 4px 8px; font-size: 9px; color: #aaa; display: flex; gap: 6px;">
+          <span style="background:#4a4aaa; color:white; padding: 2px 6px; border-radius: 3px;">A Life</span>
+          <span>A Marriage</span>
+          <span>Place</span>
+        </div>
+        <!-- Report preview full width -->
+        <div style="flex: 1; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #333; overflow: hidden; position: relative;">
+          <div style="text-align: center; color: #888; font-size: 8px; line-height: 1.6;">
+            <div style="font-weight: bold; color: #333; font-size: 9px;">Per Andersson</div>
+            <div>1847 – 1912</div>
+            <div style="width: 60px; height: 3px; background: #ddd; margin: 4px auto;"></div>
+            <div style="width: 80px; height: 2px; background: #eee; margin: 2px auto;"></div>
+            <div style="width: 70px; height: 2px; background: #eee; margin: 2px auto;"></div>
+          </div>
+          <!-- Floating settings button -->
+          <div style="position: absolute; top: 6px; right: 6px; background: #252545; border-radius: 4px; padding: 3px 7px; font-size: 8px; color: #88aaff; display: flex; align-items: center; gap: 3px; box-shadow: 0 2px 6px #0006;">
+            ⚙ Options
+          </div>
+          <!-- Floating settings panel -->
+          <div style="position: absolute; top: 28px; right: 6px; background: #252545; border-radius: 6px; padding: 8px; width: 90px; box-shadow: 0 4px 12px #0008; display: flex; flex-direction: column; gap: 3px;">
+            <div style="font-size: 7px; color: #aaa; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 2px;">Person</div>
+            <div style="background: #1a1a35; border-radius: 3px; padding: 2px 4px; font-size: 7px; color: #88aaff;">Per Andersson ▾</div>
+            <div style="display: flex; justify-content: space-between; font-size: 7px; color: #ccc; margin-top: 3px;"><span>Photos</span><span style="color: #88ff88;">✓</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 7px; color: #ccc;"><span>Sources</span><span style="color: #88ff88;">✓</span></div>
+            <div style="background: #4a6aff; border-radius: 3px; text-align: center; padding: 3px; font-size: 7px; color: white; margin-top: 4px;">Print</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Floating Settings Panel</h3>
+      <p>Report fills the full screen. A floating ⚙ Options button opens a hovering settings panel in the corner. Maximum preview space, but controls overlay content.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top: 16px;">Click your preferred approach, or describe what you'd like to change.</p>

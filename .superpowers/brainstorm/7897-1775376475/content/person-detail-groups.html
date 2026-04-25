@@ -1,0 +1,52 @@
+<h2>PersonDetailView — Groups section</h2>
+<p class="subtitle">New section added below Events in the person detail page.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Släktforskning — Erik Johannes Lindqvist</div>
+  <div class="mockup-body" style="padding:24px;background:#f8f9fa;min-height:400px;">
+
+    <!-- Existing sections (collapsed for context) -->
+    <div style="background:white;border-radius:6px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);opacity:0.5;">
+      <div style="font-size:14px;font-weight:600;color:#555;">Händelser (3)</div>
+    </div>
+    <div style="background:white;border-radius:6px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);opacity:0.5;">
+      <div style="font-size:14px;font-weight:600;color:#555;">Relationer (2)</div>
+    </div>
+
+    <!-- Groups section (new) -->
+    <div style="background:white;border-radius:6px;padding:18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:600;color:#555;">Grupper (2)</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select style="padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;color:#333;">
+            <option>Lägg till i grupp…</option>
+            <option>Hantverkare</option>
+            <option>DNA-matchningar</option>
+            <option>Officerare</option>
+          </select>
+          <button class="mock-button" style="padding:5px 12px;font-size:13px;">+ Lägg till</button>
+        </div>
+      </div>
+
+      <!-- Group chips / list -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:20px;padding:5px 10px 5px 14px;font-size:13px;color:#3730a3;">
+          <a style="color:#3730a3;text-decoration:none;cursor:pointer;font-weight:500;">Emigranter till Amerika</a>
+          <span style="cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;" title="Ta bort från grupp">×</span>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:20px;padding:5px 10px 5px 14px;font-size:13px;color:#3730a3;">
+          <a style="color:#3730a3;text-decoration:none;cursor:pointer;font-weight:500;">Hantverkare</a>
+          <span style="cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;" title="Ta bort från grupp">×</span>
+        </div>
+      </div>
+
+      <div v-if="groups.length === 0" style="color:#aaa;font-size:13px;margin-top:4px;display:none;">Inte med i någon grupp ännu.</div>
+    </div>
+
+    <!-- More existing sections -->
+    <div style="background:white;border-radius:6px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);opacity:0.5;">
+      <div style="font-size:14px;font-weight:600;color:#555;">Anteckningar</div>
+    </div>
+
+  </div>
+</div>

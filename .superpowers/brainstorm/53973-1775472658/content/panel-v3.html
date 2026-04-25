@@ -1,0 +1,115 @@
+<h2>Panel Layout — v3</h2>
+<p class="subtitle">White header, dark blue add-relative buttons.</p>
+
+<div style="max-width:320px;margin:0 auto;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:12px;background:#fafafa;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+
+  <!-- Header: white bg, dark blue buttons -->
+  <div style="background:white;padding:10px 12px;border-bottom:1px solid #e5e7eb">
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <div style="width:3px;min-height:40px;background:#7eb8f7;border-radius:2px;flex-shrink:0;align-self:stretch"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;color:#1a2a3a;margin-bottom:3px">
+          Anna <span style="text-decoration:underline">Maja</span> Svensson
+        </div>
+        <div style="font-size:11px;color:#555;line-height:1.7">
+          <div>* 12 mars 1842, Göteborg</div>
+          <div>† 5 nov 1901, Göteborg</div>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+          <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer">+ Förälder</button>
+          <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer">+ Partner</button>
+          <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer">+ Barn</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Person section -->
+  <div style="border-bottom:1px solid #e5e7eb">
+    <div style="padding:7px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-weight:600;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.04em">▾ Person</span>
+    </div>
+    <div style="padding:8px 12px;background:white;display:flex;flex-direction:column;gap:8px">
+      <label style="display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:#555">
+        Kön
+        <select style="padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;background:white">
+          <option>Man</option>
+          <option selected>Kvinna</option>
+          <option>Okänt</option>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:#555">
+        Status
+        <select style="padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;background:white">
+          <option>Levande</option>
+          <option selected>Avliden</option>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:#555">
+        Anteckningar
+        <textarea rows="2" style="padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;resize:vertical;font-family:inherit" placeholder="Lägg till anteckning…"></textarea>
+      </label>
+    </div>
+  </div>
+
+  <!-- Names section -->
+  <div style="border-bottom:1px solid #e5e7eb">
+    <div style="padding:7px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-weight:600;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.04em">▾ Namn</span>
+      <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">+ Namn</button>
+    </div>
+    <div style="padding:6px 12px 8px;background:white;font-size:11px;color:#444">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f0f0f0">
+        <span>Anna <span style="text-decoration:underline">Maja</span> Svensson <span style="color:#aaa;font-size:10px">födslonamn</span></span>
+        <span style="color:#aaa;font-size:10px">★</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0">
+        <span>Anna Björk <span style="color:#aaa;font-size:10px">gift</span></span>
+        <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events -->
+  <div style="border-bottom:1px solid #e5e7eb">
+    <div style="padding:7px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-weight:600;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.04em">▾ Händelser</span>
+      <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">+ Händelse</button>
+    </div>
+    <div style="padding:6px 12px 8px;background:white;font-size:11px;color:#444">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f0f0f0">
+        <span>* Födselbokföring <span style="color:#aaa">1842-03-12</span></span>
+        <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0">
+        <span>† Dödbokföring <span style="color:#aaa">1901-11-05</span></span>
+        <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:3px;padding:1px 5px;font-size:10px;cursor:pointer">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Relationships -->
+  <div style="border-bottom:1px solid #e5e7eb">
+    <div style="padding:7px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-weight:600;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.04em">▸ Relationer</span>
+      <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">+ Relation</button>
+    </div>
+  </div>
+
+  <!-- Sources -->
+  <div style="border-bottom:1px solid #e5e7eb">
+    <div style="padding:7px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-weight:600;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.04em">▸ Källor</span>
+      <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">+ Källa</button>
+    </div>
+  </div>
+
+  <!-- Groups -->
+  <div>
+    <div style="padding:7px 12px;background:#f1f5f9;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-weight:600;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.04em">▸ Grupper</span>
+      <button style="background:#2c3e50;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">+ Grupp</button>
+    </div>
+  </div>
+
+</div>

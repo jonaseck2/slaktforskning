@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>Visualization Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #1a1a2e; }
+
+  /* Sidebar */
+  .sidebar { width: 210px; background: #2c3e50; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-title { padding: 18px 16px 12px; font-size: 15px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: 0.3px; }
+  .sidebar-title span { font-size: 11px; opacity: 0.5; display: block; font-weight: 400; margin-top: 2px; }
+  .sidebar-search { padding: 10px 12px; }
+  .sidebar-search input { width: 100%; background: rgba(255,255,255,0.1); border: none; border-radius: 4px; padding: 6px 10px; color: white; font-size: 12px; outline: none; }
+  .sidebar-search input::placeholder { color: rgba(255,255,255,0.4); }
+  .sidebar-nav { padding: 4px 0; }
+  .nav-item { padding: 9px 16px; font-size: 13px; color: rgba(255,255,255,0.75); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); }
+  .nav-item.active { background: rgba(255,255,255,0.18); color: white; font-weight: 500; }
+  .nav-icon { font-size: 14px; opacity: 0.8; }
+
+  /* Main content */
+  .content { flex: 1; background: #f5f5f5; display: flex; flex-direction: column; overflow: hidden; }
+  .content-header { background: white; border-bottom: 1px solid #e0e0e0; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  .content-header h2 { font-size: 17px; color: #2c3e50; font-weight: 600; }
+  .content-header .person-meta { font-size: 12px; color: #888; }
+  .back-btn { font-size: 12px; color: #888; cursor: pointer; padding: 4px 8px; border-radius: 3px; }
+  .back-btn:hover { background: #f0f0f0; }
+
+  /* Tabs */
+  .viz-tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 24px; display: flex; gap: 0; }
+  .tab { padding: 10px 18px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; }
+  .tab:hover { color: #444; }
+  .tab.active { color: #2c3e50; border-bottom-color: #2c3e50; }
+
+  /* Viz area */
+  .viz-area { flex: 1; padding: 24px; overflow: auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .chart-container { background: white; border-radius: 6px; border: 1px solid #e0e0e0; padding: 20px; overflow: auto; }
+  .chart-title { font-size: 13px; color: #888; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .chart-title strong { color: #444; }
+
+  /* SVG person boxes */
+  .person-box { cursor: pointer; }
+  .person-box:hover rect { stroke: #2c3e50; stroke-width: 2; }
+  .person-box.focal rect { fill: #2c3e50; }
+  .person-box.focal text { fill: white !important; }
+  .person-box.deceased rect { fill: #f8f8f8; }
+  .person-box.deceased .person-name { fill: #666 !important; }
+
+  /* Legend */
+  .legend { display: flex; gap: 20px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
+  .legend-swatch { width: 16px; height: 12px; border-radius: 2px; border: 1px solid #ddd; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-title">Släktforskning <span>v0.4.1</span></div>
+  <div class="sidebar-search"><input placeholder="Sök..." /></div>
+  <div class="sidebar-nav">
+    <div class="nav-item"><span class="nav-icon">👤</span> Personer</div>
+    <div class="nav-item"><span class="nav-icon">🔗</span> Relationer</div>
+    <div class="nav-item"><span class="nav-icon">📍</span> Platser</div>
+    <div class="nav-item"><span class="nav-icon">📚</span> Källor</div>
+    <div class="nav-item active"><span class="nav-icon">🌿</span> Visualisering</div>
+    <div class="nav-item"><span class="nav-icon">🔍</span> Sök</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="content">
+  <div class="content-header">
+    <span class="back-btn">← Tillbaka</span>
+    <h2>Magnus Eriksson</h2>
+    <span class="person-meta">f. 1978 · Levande</span>
+  </div>
+
+  <div class="viz-tabs">
+    <button class="tab active" onclick="showTab('pedigree',this)">Stamtavla</button>
+    <button class="tab" onclick="showTab('hourglass',this)">Timglas</button>
+    <button class="tab" onclick="showTab('timeline',this)">Tidslinje</button>
+  </div>
+
+  <div class="viz-area">
+
+    <!-- PEDIGREE -->
+    <div id="tab-pedigree" class="tab-content active">
+      <div class="chart-container">
+        <div class="chart-title"><strong>Stamtavla</strong> — Förfäder från Magnus Eriksson · 3 generationer</div>
+        <svg width="660" height="460" viewBox="0 0 660 460" style="max-width:100%">
+          <defs>
+            <marker id="arr" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#bbb"/>
+            </marker>
+          </defs>
+
+          <!-- Connector lines -->
+          <!-- Focal → parents fork at x=210→265 -->
+          <line x1="210" y1="205" x2="265" y2="205" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="265" y1="90" x2="265" y2="320" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="265" y1="90" x2="320" y2="90" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="265" y1="320" x2="320" y2="320" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Father → pat grandparents fork at x=470→480 -->
+          <line x1="470" y1="90" x2="480" y2="90" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="480" y1="32" x2="480" y2="147" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="480" y1="32" x2="490" y2="32" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="480" y1="147" x2="490" y2="147" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Mother → mat grandparents fork at x=470→480 -->
+          <line x1="470" y1="320" x2="480" y2="320" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="480" y1="262" x2="480" y2="377" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="480" y1="262" x2="490" y2="262" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="480" y1="377" x2="490" y2="377" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Gen 0: Magnus (focal) -->
+          <g class="person-box focal" onclick="alert('Magnus Eriksson')">
+            <rect x="60" y="183" width="150" height="44" rx="4" fill="#2c3e50" stroke="#1a2a3a" stroke-width="1"/>
+            <rect x="60" y="183" width="4" height="44" rx="2" fill="#4a90d9"/>
+            <text x="74" y="200" font-size="12" font-weight="600" fill="white" font-family="-apple-system,sans-serif">Magnus Eriksson</text>
+            <text x="74" y="216" font-size="10" fill="rgba(255,255,255,0.65)" font-family="-apple-system,sans-serif">f. 1978</text>
+          </g>
+
+          <!-- Gen 1: Father (Erik) -->
+          <g class="person-box male" onclick="alert('Erik Johansson')">
+            <rect x="320" y="68" width="150" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="320" y="68" width="4" height="44" rx="2" fill="#7eb8f7"/>
+            <text x="334" y="85" font-size="12" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Erik Johansson</text>
+            <text x="334" y="101" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 1952</text>
+          </g>
+
+          <!-- Gen 1: Mother (Sofia) -->
+          <g class="person-box female" onclick="alert('Sofia Lindqvist')">
+            <rect x="320" y="298" width="150" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="320" y="298" width="4" height="44" rx="2" fill="#f7a5c0"/>
+            <text x="334" y="315" font-size="12" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Sofia Lindqvist</text>
+            <text x="334" y="331" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 1955</text>
+          </g>
+
+          <!-- Gen 2: Pat GF (Lars) -->
+          <g class="person-box male deceased">
+            <rect x="490" y="10" width="150" height="44" rx="4" fill="#f8f8f8" stroke="#ddd" stroke-width="1"/>
+            <rect x="490" y="10" width="4" height="44" rx="2" fill="#aac8e8"/>
+            <text x="504" y="27" font-size="11" font-weight="600" fill="#555" font-family="-apple-system,sans-serif">Lars Johansson</text>
+            <text x="504" y="43" font-size="10" fill="#999" font-family="-apple-system,sans-serif">1920–1998</text>
+          </g>
+
+          <!-- Gen 2: Pat GM (Britta) -->
+          <g class="person-box female deceased">
+            <rect x="490" y="125" width="150" height="44" rx="4" fill="#f8f8f8" stroke="#ddd" stroke-width="1"/>
+            <rect x="490" y="125" width="4" height="44" rx="2" fill="#e8aac0"/>
+            <text x="504" y="142" font-size="11" font-weight="600" fill="#555" font-family="-apple-system,sans-serif">Britta Karlsson</text>
+            <text x="504" y="158" font-size="10" fill="#999" font-family="-apple-system,sans-serif">1922–2001</text>
+          </g>
+
+          <!-- Gen 2: Mat GF (Nils) -->
+          <g class="person-box male deceased">
+            <rect x="490" y="240" width="150" height="44" rx="4" fill="#f8f8f8" stroke="#ddd" stroke-width="1"/>
+            <rect x="490" y="240" width="4" height="44" rx="2" fill="#aac8e8"/>
+            <text x="504" y="257" font-size="11" font-weight="600" fill="#555" font-family="-apple-system,sans-serif">Nils Lindqvist</text>
+            <text x="504" y="273" font-size="10" fill="#999" font-family="-apple-system,sans-serif">1925–2005</text>
+          </g>
+
+          <!-- Gen 2: Mat GM (Anna) -->
+          <g class="person-box female">
+            <rect x="490" y="355" width="150" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="490" y="355" width="4" height="44" rx="2" fill="#f7a5c0"/>
+            <text x="504" y="372" font-size="11" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Anna Persson</text>
+            <text x="504" y="388" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 1928</text>
+          </g>
+        </svg>
+
+        <div class="legend">
+          <div class="legend-item"><div class="legend-swatch" style="background:#7eb8f7;border-color:#7eb8f7"></div> Man</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#f7a5c0;border-color:#f7a5c0"></div> Kvinna</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#f8f8f8"></div> Avliden</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#2c3e50;border-color:#1a2a3a"></div> Fokusperson</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOURGLASS -->
+    <div id="tab-hourglass" class="tab-content">
+      <div class="chart-container">
+        <div class="chart-title"><strong>Timglas</strong> — Förfäder &amp; efterkommande från Magnus Eriksson</div>
+        <svg width="690" height="490" viewBox="0 0 690 490" style="max-width:100%">
+
+          <!-- Gen 2 → Gen 1 connectors -->
+          <!-- Lars + Britta → Erik -->
+          <line x1="82" y1="74" x2="82" y2="88" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="237" y1="74" x2="237" y2="88" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="82" y1="88" x2="237" y2="88" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="160" y1="88" x2="160" y2="120" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Nils + Anna → Sofia -->
+          <line x1="452" y1="74" x2="452" y2="88" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="607" y1="74" x2="607" y2="88" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="452" y1="88" x2="607" y2="88" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="530" y1="88" x2="530" y2="120" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Gen 1 → Gen 0 connectors -->
+          <!-- Erik + Sofia → Magnus -->
+          <line x1="160" y1="164" x2="160" y2="195" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="530" y1="164" x2="530" y2="195" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="160" y1="195" x2="530" y2="195" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="345" y1="195" x2="345" y2="220" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Gen 0 → Gen -1 connectors -->
+          <!-- Magnus → Emma + Oscar -->
+          <line x1="345" y1="264" x2="345" y2="328" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="252" y1="328" x2="437" y2="328" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="252" y1="328" x2="252" y2="348" stroke="#ccc" stroke-width="1.5"/>
+          <line x1="437" y1="328" x2="437" y2="348" stroke="#ccc" stroke-width="1.5"/>
+
+          <!-- Couple dots -->
+          <circle cx="160" cy="88" r="4" fill="#bbb"/>
+          <circle cx="530" cy="88" r="4" fill="#bbb"/>
+          <circle cx="345" cy="195" r="4" fill="#bbb"/>
+
+          <!-- Gen 2: Lars -->
+          <g class="person-box male deceased">
+            <rect x="10" y="30" width="145" height="44" rx="4" fill="#f8f8f8" stroke="#ddd" stroke-width="1"/>
+            <rect x="10" y="30" width="4" height="44" rx="2" fill="#aac8e8"/>
+            <text x="24" y="47" font-size="11" font-weight="600" fill="#555" font-family="-apple-system,sans-serif">Lars Johansson</text>
+            <text x="24" y="63" font-size="10" fill="#999" font-family="-apple-system,sans-serif">1920–1998</text>
+          </g>
+
+          <!-- Gen 2: Britta -->
+          <g class="person-box female deceased">
+            <rect x="165" y="30" width="145" height="44" rx="4" fill="#f8f8f8" stroke="#ddd" stroke-width="1"/>
+            <rect x="165" y="30" width="4" height="44" rx="2" fill="#e8aac0"/>
+            <text x="179" y="47" font-size="11" font-weight="600" fill="#555" font-family="-apple-system,sans-serif">Britta Karlsson</text>
+            <text x="179" y="63" font-size="10" fill="#999" font-family="-apple-system,sans-serif">1922–2001</text>
+          </g>
+
+          <!-- Gen 2: Nils -->
+          <g class="person-box male deceased">
+            <rect x="380" y="30" width="145" height="44" rx="4" fill="#f8f8f8" stroke="#ddd" stroke-width="1"/>
+            <rect x="380" y="30" width="4" height="44" rx="2" fill="#aac8e8"/>
+            <text x="394" y="47" font-size="11" font-weight="600" fill="#555" font-family="-apple-system,sans-serif">Nils Lindqvist</text>
+            <text x="394" y="63" font-size="10" fill="#999" font-family="-apple-system,sans-serif">1925–2005</text>
+          </g>
+
+          <!-- Gen 2: Anna -->
+          <g class="person-box female">
+            <rect x="535" y="30" width="145" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="535" y="30" width="4" height="44" rx="2" fill="#f7a5c0"/>
+            <text x="549" y="47" font-size="11" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Anna Persson</text>
+            <text x="549" y="63" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 1928</text>
+          </g>
+
+          <!-- Gen 1: Erik -->
+          <g class="person-box male">
+            <rect x="88" y="120" width="145" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="88" y="120" width="4" height="44" rx="2" fill="#7eb8f7"/>
+            <text x="102" y="137" font-size="12" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Erik Johansson</text>
+            <text x="102" y="153" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 1952</text>
+          </g>
+
+          <!-- Gen 1: Sofia -->
+          <g class="person-box female">
+            <rect x="458" y="120" width="145" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="458" y="120" width="4" height="44" rx="2" fill="#f7a5c0"/>
+            <text x="472" y="137" font-size="12" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Sofia Lindqvist</text>
+            <text x="472" y="153" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 1955</text>
+          </g>
+
+          <!-- Gen 0: Magnus (focal) -->
+          <g class="person-box focal">
+            <rect x="273" y="220" width="145" height="44" rx="4" fill="#2c3e50" stroke="#1a2a3a" stroke-width="1.5"/>
+            <rect x="273" y="220" width="5" height="44" rx="2" fill="#4a90d9"/>
+            <text x="288" y="238" font-size="13" font-weight="600" fill="white" font-family="-apple-system,sans-serif">Magnus Eriksson</text>
+            <text x="288" y="254" font-size="10" fill="rgba(255,255,255,0.65)" font-family="-apple-system,sans-serif">f. 1978</text>
+          </g>
+
+          <!-- Gen -1: Emma -->
+          <g class="person-box female">
+            <rect x="180" y="348" width="145" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="180" y="348" width="4" height="44" rx="2" fill="#f7a5c0"/>
+            <text x="194" y="365" font-size="12" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Emma Eriksson</text>
+            <text x="194" y="381" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 2005</text>
+          </g>
+
+          <!-- Gen -1: Oscar -->
+          <g class="person-box male">
+            <rect x="365" y="348" width="145" height="44" rx="4" fill="white" stroke="#ddd" stroke-width="1"/>
+            <rect x="365" y="348" width="4" height="44" rx="2" fill="#7eb8f7"/>
+            <text x="379" y="365" font-size="12" font-weight="600" fill="#333" font-family="-apple-system,sans-serif">Oscar Eriksson</text>
+            <text x="379" y="381" font-size="10" fill="#888" font-family="-apple-system,sans-serif">f. 2008</text>
+          </g>
+
+          <!-- Generation labels -->
+          <text x="6" y="16" font-size="10" fill="#aaa" font-family="-apple-system,sans-serif">Morföräldrar / Farföräldrar</text>
+          <text x="6" y="116" font-size="10" fill="#aaa" font-family="-apple-system,sans-serif">Föräldrar</text>
+          <text x="6" y="217" font-size="10" fill="#aaa" font-family="-apple-system,sans-serif">Fokusperson</text>
+          <text x="6" y="345" font-size="10" fill="#aaa" font-family="-apple-system,sans-serif">Barn</text>
+
+          <!-- Horizontal generation dividers -->
+          <line x1="0" y1="108" x2="690" y2="108" stroke="#f0f0f0" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="0" y1="208" x2="690" y2="208" stroke="#f0f0f0" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="0" y1="335" x2="690" y2="335" stroke="#f0f0f0" stroke-width="1" stroke-dasharray="4,4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div id="tab-timeline" class="tab-content">
+      <div class="chart-container">
+        <div class="chart-title"><strong>Tidslinje</strong> — Levnadsperioder i Magnus Erikssons släkt</div>
+        <svg width="720" height="340" viewBox="0 0 720 340" style="max-width:100%">
+          <!-- x(year) = 60 + (year-1900) * 5.0, scale: 5px/year, 1900-2030 -->
+
+          <!-- Axis line -->
+          <line x1="60" y1="305" x2="715" y2="305" stroke="#ddd" stroke-width="1"/>
+          <!-- Decade ticks and labels -->
+          <g font-size="10" fill="#aaa" font-family="-apple-system,sans-serif" text-anchor="middle">
+            <!-- 1900 x=60, 1920 x=160, 1940 x=260, 1960 x=360, 1980 x=460, 2000 x=560, 2020 x=660 -->
+            <line x1="60"  y1="302" x2="60"  y2="310" stroke="#ccc"/>  <text x="60"  y="320">1900</text>
+            <line x1="160" y1="302" x2="160" y2="310" stroke="#ccc"/>  <text x="160" y="320">1920</text>
+            <line x1="260" y1="302" x2="260" y2="310" stroke="#ccc"/>  <text x="260" y="320">1940</text>
+            <line x1="360" y1="302" x2="360" y2="310" stroke="#ccc"/>  <text x="360" y="320">1960</text>
+            <line x1="460" y1="302" x2="460" y2="310" stroke="#ccc"/>  <text x="460" y="320">1980</text>
+            <line x1="560" y1="302" x2="560" y2="310" stroke="#ccc"/>  <text x="560" y="320">2000</text>
+            <line x1="660" y1="302" x2="660" y2="310" stroke="#ccc"/>  <text x="660" y="320">2020</text>
+          </g>
+
+          <!-- Minor decade grid lines -->
+          <g stroke="#f5f5f5" stroke-width="1">
+            <line x1="160" y1="20" x2="160" y2="300"/>
+            <line x1="260" y1="20" x2="260" y2="300"/>
+            <line x1="360" y1="20" x2="360" y2="300"/>
+            <line x1="460" y1="20" x2="460" y2="300"/>
+            <line x1="560" y1="20" x2="560" y2="300"/>
+            <line x1="660" y1="20" x2="660" y2="300"/>
+          </g>
+
+          <!-- Person bars: x = 60 + (year-1900)*5, bar height=20, row spacing=36 -->
+          <!-- Row 1 y=28: Lars Johansson 1920–1998 (x=160, x_end=560) -->
+          <rect x="160" y="28" width="390" height="22" rx="3" fill="#aac8e8"/>
+          <rect x="547" y="28" width="13" height="22" rx="2" fill="#8ab0d0" opacity="0.6"/><!-- death marker -->
+          <text x="157" y="42" font-size="10" fill="#555" text-anchor="end" font-family="-apple-system,sans-serif">Lars Johansson</text>
+          <text x="164" y="42" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="500">1920 – 1998</text>
+
+          <!-- Row 2 y=64: Britta Karlsson 1922–2001 -->
+          <rect x="170" y="64" width="405" height="22" rx="3" fill="#e8aac0"/>
+          <text x="167" y="78" font-size="10" fill="#555" text-anchor="end" font-family="-apple-system,sans-serif">Britta Karlsson</text>
+          <text x="174" y="78" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="500">1922 – 2001</text>
+
+          <!-- Row 3 y=100: Nils Lindqvist 1925–2005 -->
+          <rect x="185" y="100" width="425" height="22" rx="3" fill="#aac8e8"/>
+          <text x="182" y="114" font-size="10" fill="#555" text-anchor="end" font-family="-apple-system,sans-serif">Nils Lindqvist</text>
+          <text x="189" y="114" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="500">1925 – 2005</text>
+
+          <!-- Row 4 y=136: Anna Persson 1928– (living) -->
+          <rect x="200" y="136" width="515" height="22" rx="3" fill="#f7a5c0"/>
+          <!-- Arrow at end for living -->
+          <polygon points="715,136 715,158 725,147" fill="#f7a5c0"/>
+          <text x="197" y="150" font-size="10" fill="#555" text-anchor="end" font-family="-apple-system,sans-serif">Anna Persson</text>
+          <text x="204" y="150" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="500">f. 1928</text>
+
+          <!-- Row 5 y=172: Erik Johansson 1952– -->
+          <rect x="360" y="172" width="355" height="22" rx="3" fill="#7eb8f7"/>
+          <polygon points="715,172 715,194 725,183" fill="#7eb8f7"/>
+          <text x="357" y="186" font-size="10" fill="#555" text-anchor="end" font-family="-apple-system,sans-serif">Erik Johansson</text>
+          <text x="364" y="186" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="500">f. 1952</text>
+
+          <!-- Row 6 y=208: Sofia Lindqvist 1955– -->
+          <rect x="375" y="208" width="340" height="22" rx="3" fill="#f7a5c0"/>
+          <polygon points="715,208 715,230 725,219" fill="#f7a5c0"/>
+          <text x="372" y="222" font-size="10" fill="#555" text-anchor="end" font-family="-apple-system,sans-serif">Sofia Lindqvist</text>
+          <text x="379" y="222" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="500">f. 1955</text>
+
+          <!-- Row 7 y=244: Magnus Eriksson 1978– (focal) -->
+          <rect x="490" y="244" width="225" height="22" rx="3" fill="#2c3e50"/>
+          <polygon points="715,244 715,266 725,255" fill="#2c3e50"/>
+          <text x="487" y="258" font-size="10" fill="#2c3e50" text-anchor="end" font-weight="600" font-family="-apple-system,sans-serif">Magnus Eriksson</text>
+          <text x="494" y="258" font-size="10" fill="white" font-family="-apple-system,sans-serif" font-weight="600">f. 1978 · Fokusperson</text>
+
+          <!-- "today" marker -->
+          <line x1="710" y1="20" x2="710" y2="300" stroke="#e88" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="710" y="16" font-size="9" fill="#e88" text-anchor="middle" font-family="-apple-system,sans-serif">Idag</text>
+        </svg>
+        <div class="legend" style="margin-top:8px">
+          <div class="legend-item"><div class="legend-swatch" style="background:#7eb8f7;border-color:#7eb8f7"></div> Man</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#f7a5c0;border-color:#f7a5c0"></div> Kvinna</div>
+          <div class="legend-item" style="align-items:center"><span style="color:#e88;font-size:13px;margin-right:2px">- -</span> Idag</div>
+          <div class="legend-item"><span style="font-size:12px;margin-right:4px">→</span> Levande</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- viz-area -->
+</div><!-- content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<h2>Sidebar Structure Options</h2>
+<p class="subtitle">Same Forest theme — different ways to handle 14 navigation items</p>
+
+<div class="cards" style="gap:24px">
+
+  <!-- Option A: Current structure, just restyled -->
+  <div class="card" data-choice="restyle-only" onclick="toggleSelect(this)" style="padding:0;overflow:hidden">
+    <div style="background:#eae5dc;padding:20px;display:flex;gap:12px;min-height:480px">
+      <div style="width:180px;background:#1a2e1a;border-radius:10px;padding:14px;color:#8fb88f;font-size:11px;flex-shrink:0;display:flex;flex-direction:column">
+        <div style="font-size:14px;font-weight:600;color:#c8e0c8;margin-bottom:12px">&#127807; Släktforskning</div>
+        <div style="padding:5px 8px;background:#243824;border-radius:5px;margin-bottom:10px;color:#6a9a6a;font-size:10px">&#128270; Search...</div>
+
+        <div style="padding:5px 8px;background:#2e4a2e;border-radius:5px;margin-bottom:2px;color:#d0e8d0;font-size:11px">&#127795; Visualisation</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128100; Persons</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128196; Relationships</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128205; Places</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#127758; Map</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128218; Sources</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128193; Groups</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128247; Media</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128269; Research</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#9888; Data Quality <span style="background:#3a5a2a;color:#b0d8a0;padding:0 4px;border-radius:6px;font-size:9px">3</span></div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128203; Reports</div>
+
+        <div style="flex:1"></div>
+        <div style="border-top:1px solid #2e4a2e;padding-top:8px;margin-top:8px">
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">&#128279; Link Rules</div>
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">&#127760; Gazetteers</div>
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">Database 3.db</div>
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">Import / Export</div>
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">&#9881; Settings</div>
+        </div>
+      </div>
+      <div style="flex:1;background:#faf8f5;border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:center;color:#8a9a7a;font-size:13px">
+        All 14 items visible.<br>Just new colors.
+      </div>
+    </div>
+    <div class="card-body" style="padding:14px 18px">
+      <h3 style="margin:0 0 4px">A. Restyle Only</h3>
+      <p style="margin:0;font-size:12px;color:#888">Keep all 14 items. Apply Forest theme. No structural change. Fastest but sidebar still feels like a developer control panel.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Grouped with collapsible sections -->
+  <div class="card" data-choice="grouped" onclick="toggleSelect(this)" style="padding:0;overflow:hidden">
+    <div style="background:#eae5dc;padding:20px;display:flex;gap:12px;min-height:480px">
+      <div style="width:180px;background:#1a2e1a;border-radius:10px;padding:14px;color:#8fb88f;font-size:11px;flex-shrink:0;display:flex;flex-direction:column">
+        <div style="font-size:14px;font-weight:600;color:#c8e0c8;margin-bottom:12px">&#127807; Släktforskning</div>
+        <div style="padding:5px 8px;background:#243824;border-radius:5px;margin-bottom:10px;color:#6a9a6a;font-size:10px">&#128270; Search...</div>
+
+        <div style="font-size:9px;color:#5a7a5a;text-transform:uppercase;letter-spacing:0.5px;padding:0 8px;margin-bottom:4px">Research</div>
+        <div style="padding:5px 8px;background:#2e4a2e;border-radius:5px;margin-bottom:2px;color:#d0e8d0;font-size:11px">&#127795; Family Tree</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128100; People</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128218; Sources</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128205; Places</div>
+        <div style="padding:5px 8px;margin-bottom:10px">&#128247; Media</div>
+
+        <div style="font-size:9px;color:#5a7a5a;text-transform:uppercase;letter-spacing:0.5px;padding:0 8px;margin-bottom:4px">Organize</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128196; Relationships</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128193; Groups</div>
+        <div style="padding:5px 8px;margin-bottom:10px">&#128269; Research Tasks</div>
+
+        <div style="font-size:9px;color:#5a7a5a;text-transform:uppercase;letter-spacing:0.5px;padding:0 8px;margin-bottom:4px">Review</div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#9888; Quality <span style="background:#3a5a2a;color:#b0d8a0;padding:0 4px;border-radius:6px;font-size:9px">3</span></div>
+        <div style="padding:5px 8px;margin-bottom:2px">&#128203; Reports</div>
+
+        <div style="flex:1"></div>
+        <div style="border-top:1px solid #2e4a2e;padding-top:8px;margin-top:8px">
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">&#9881; Settings</div>
+        </div>
+      </div>
+      <div style="flex:1;background:#faf8f5;border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:center;color:#8a9a7a;font-size:13px">
+        Same items, grouped by workflow.<br>Section headers add visual breaks.
+      </div>
+    </div>
+    <div class="card-body" style="padding:14px 18px">
+      <h3 style="margin:0 0 4px">B. Grouped by Workflow</h3>
+      <p style="margin:0;font-size:12px;color:#888">Research (core) &rarr; Organize (structure) &rarr; Review (quality). Same items, visual grouping. Map merged into Places. Link Rules, Gazetteers, Database, Import/Export move into Settings. Moderate effort.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Minimal with expandable More -->
+  <div class="card" data-choice="minimal" onclick="toggleSelect(this)" style="padding:0;overflow:hidden">
+    <div style="background:#eae5dc;padding:20px;display:flex;gap:12px;min-height:480px">
+      <div style="width:180px;background:#1a2e1a;border-radius:10px;padding:14px;color:#8fb88f;font-size:11px;flex-shrink:0;display:flex;flex-direction:column">
+        <div style="font-size:14px;font-weight:600;color:#c8e0c8;margin-bottom:12px">&#127807; Släktforskning</div>
+        <div style="padding:5px 8px;background:#243824;border-radius:5px;margin-bottom:12px;color:#6a9a6a;font-size:10px">&#128270; Search...</div>
+
+        <div style="padding:7px 10px;background:#2e4a2e;border-radius:5px;margin-bottom:3px;color:#d0e8d0;font-size:12px;font-weight:500">&#127795; Family Tree</div>
+        <div style="padding:7px 10px;margin-bottom:3px;font-size:12px">&#128100; People</div>
+        <div style="padding:7px 10px;margin-bottom:3px;font-size:12px">&#128218; Sources</div>
+        <div style="padding:7px 10px;margin-bottom:3px;font-size:12px">&#128205; Places &amp; Map</div>
+        <div style="padding:7px 10px;margin-bottom:3px;font-size:12px">&#128247; Media</div>
+
+        <div style="padding:7px 10px;margin-bottom:3px;font-size:12px;margin-top:8px">&#9888; Quality <span style="background:#3a5a2a;color:#b0d8a0;padding:0 4px;border-radius:6px;font-size:9px">3</span></div>
+
+        <div style="margin-top:12px;border-top:1px solid #2e4a2e;padding-top:10px">
+          <div style="padding:5px 10px;font-size:11px;color:#6a8a6a;cursor:pointer">&#9662; More</div>
+          <div style="padding:4px 10px 4px 20px;font-size:10px;color:#5a7a5a;margin-bottom:1px">Relationships</div>
+          <div style="padding:4px 10px 4px 20px;font-size:10px;color:#5a7a5a;margin-bottom:1px">Groups</div>
+          <div style="padding:4px 10px 4px 20px;font-size:10px;color:#5a7a5a;margin-bottom:1px">Research Tasks</div>
+          <div style="padding:4px 10px 4px 20px;font-size:10px;color:#5a7a5a;margin-bottom:1px">Reports</div>
+        </div>
+
+        <div style="flex:1"></div>
+        <div style="border-top:1px solid #2e4a2e;padding-top:8px;margin-top:8px">
+          <div style="padding:4px 8px;font-size:10px;color:#5a7a5a">&#9881; Settings</div>
+        </div>
+      </div>
+      <div style="flex:1;background:#faf8f5;border-radius:10px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8a9a7a;font-size:13px">
+        <div style="margin-bottom:8px">6 primary items + expandable "More"</div>
+        <div style="font-size:11px;color:#a0aa98">New user sees a clean, focused sidebar.<br>Power user expands "More" once and it stays open.</div>
+      </div>
+    </div>
+    <div class="card-body" style="padding:14px 18px">
+      <h3 style="margin:0 0 4px">C. Minimal + Expandable</h3>
+      <p style="margin:0;font-size:12px;color:#888">6 primary items cover 90% of usage. "More" expands to show Relationships, Groups, Research, Reports. Remembers expand state. Link Rules, Gazetteers, Database, Import/Export all in Settings. Cleanest first impression.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:24px">
+  <h3>What moves where in B and C</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;margin:12px 0">
+    <div>
+      <div class="label">Always visible</div>
+      <div style="background:rgba(45,90,39,0.15);padding:8px 12px;border-radius:6px;line-height:1.8">
+        Family Tree<br>People<br>Sources<br>Places (+ Map)<br>Media<br>Quality
+      </div>
+    </div>
+    <div>
+      <div class="label">Behind "More" (C) or in Organize group (B)</div>
+      <div style="background:rgba(200,180,100,0.1);padding:8px 12px;border-radius:6px;line-height:1.8">
+        Relationships<br>Groups<br>Research Tasks<br>Reports
+      </div>
+    </div>
+    <div>
+      <div class="label">Moves to Settings</div>
+      <div style="background:rgba(200,100,100,0.1);padding:8px 12px;border-radius:6px;line-height:1.8">
+        Link Rules<br>Gazetteers<br>Database<br>Import / Export
+      </div>
+    </div>
+  </div>
+</div>

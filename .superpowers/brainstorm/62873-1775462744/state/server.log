@@ -1,0 +1,8 @@
+{"type":"server-started","port":56952,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56952","screen_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/content","state_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/state"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/content/expand-ux.html"}
+{"source":"user-event","type":"click","text":"A\n    \n      One generation at a time\n      Each click loads exactly the next generation. Keep clicking to go deeper. Simple and predictable — never loads more than you asked for.","choice":"a","id":null,"timestamp":1775462853641}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/content/waiting-1.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/content/button-style.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/content/waiting-2.html"}
+{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/62873-1775462744/content/design-overview.html"}
+{"type":"server-stopped","reason":"idle timeout"}

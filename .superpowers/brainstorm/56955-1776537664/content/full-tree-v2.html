@@ -1,0 +1,151 @@
+<h2>Full Pedigree Tree — Proposed Design</h2>
+<p class="subtitle">3-generation pedigree with new boxes, curved connectors, proper spacing</p>
+
+<div style="overflow-x: auto; padding: 16px;">
+<svg width="860" height="500" viewBox="0 0 860 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="-3%" y="-6%" width="106%" height="116%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- ════════ CONNECTORS (curved elbows) ════════ -->
+  <!-- Focal → Father -->
+  <path d="M 200,178 H 235 Q 247,178 247,166 V 100 Q 247,88 259,88 H 270"
+        fill="none" stroke="#a8c0a8" stroke-width="1.5"/>
+  <!-- Focal → Mother -->
+  <path d="M 200,178 H 235 Q 247,178 247,190 V 330 Q 247,342 259,342 H 270"
+        fill="none" stroke="#a8c0a8" stroke-width="1.5"/>
+
+  <!-- Father → Pat. GF -->
+  <path d="M 470,80 H 505 Q 517,80 517,68 V 40 Q 517,28 529,28 H 540"
+        fill="none" stroke="#a8c0a8" stroke-width="1.5"/>
+  <!-- Father → Pat. GM -->
+  <path d="M 470,80 H 505 Q 517,80 517,92 V 138 Q 517,150 529,150 H 540"
+        fill="none" stroke="#a8c0a8" stroke-width="1.5"/>
+
+  <!-- Mother → Mat. GF -->
+  <path d="M 470,334 H 505 Q 517,334 517,322 V 280 Q 517,268 529,268 H 540"
+        fill="none" stroke="#a8c0a8" stroke-width="1.5"/>
+  <!-- Mother → Mat. GM -->
+  <path d="M 470,334 H 505 Q 517,334 517,346 V 400 Q 517,412 529,412 H 540"
+        fill="none" stroke="#a8c0a8" stroke-width="1.5"/>
+
+  <!-- ════════ FOCAL PERSON ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="0" y="150" width="200" height="58" rx="6" fill="#2d5a27" stroke="#1e4a1a" stroke-width="1"/>
+    <rect x="0" y="150" width="3" height="58" rx="1.5" fill="#7eb8f7"/>
+    <!-- Portrait placeholder -->
+    <rect x="9" y="157" width="34" height="44" rx="4" fill="rgba(255,255,255,0.12)"/>
+    <text x="26" y="183" text-anchor="middle" font-size="13" font-weight="600" fill="rgba(255,255,255,0.8)" font-family="system-ui">JA</text>
+    <!-- Text -->
+    <text x="50" y="172" font-size="12" font-weight="600" fill="#e0f0dc" font-family="system-ui">Jonas Ahnstedt</text>
+    <text x="50" y="188" font-size="10" fill="rgba(224,240,220,0.65)" font-family="system-ui">* 1985 Lund</text>
+  </g>
+
+  <!-- ════════ FATHER ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="270" y="48" width="200" height="72" rx="6" fill="white" stroke="#c0d4c0" stroke-width="1"/>
+    <rect x="270" y="48" width="3" height="72" rx="1.5" fill="#7eb8f7"/>
+    <rect x="279" y="62" width="34" height="44" rx="4" fill="#e0eaf2"/>
+    <text x="296" y="88" text-anchor="middle" font-size="13" font-weight="600" fill="#3a5a7a" font-family="system-ui">JE</text>
+    <text x="320" y="68" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Jan Alexander</text>
+    <text x="320" y="82" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Eckerstrom</text>
+    <text x="320" y="97" font-size="10" fill="#6a7a62" font-family="system-ui">* 1938 Malmo</text>
+    <text x="320" y="111" font-size="10" fill="#6a7a62" font-family="system-ui">† 2014 Lund</text>
+  </g>
+
+  <!-- ════════ MOTHER ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="270" y="306" width="200" height="58" rx="6" fill="white" stroke="#c0d4c0" stroke-width="1"/>
+    <rect x="270" y="306" width="3" height="58" rx="1.5" fill="#f7a5c0"/>
+    <rect x="279" y="313" width="34" height="44" rx="4" fill="#f5e8ee"/>
+    <text x="296" y="339" text-anchor="middle" font-size="13" font-weight="600" fill="#8a5068" font-family="system-ui">GE</text>
+    <text x="320" y="328" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Gunilla Emthen</text>
+    <text x="320" y="343" font-size="10" fill="#6a7a62" font-family="system-ui">* 1944 Malmo</text>
+  </g>
+
+  <!-- ════════ PATERNAL GRANDFATHER ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="540" y="0" width="200" height="58" rx="6" fill="white" stroke="#c0d4c0" stroke-width="1"/>
+    <rect x="540" y="0" width="3" height="58" rx="1.5" fill="#7eb8f7"/>
+    <rect x="549" y="7" width="34" height="44" rx="4" fill="#e0eaf2"/>
+    <text x="566" y="33" text-anchor="middle" font-size="13" font-weight="600" fill="#3a5a7a" font-family="system-ui">KE</text>
+    <text x="590" y="20" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Karl Erik Eckerstrom</text>
+    <text x="590" y="35" font-size="10" fill="#6a7a62" font-family="system-ui">* 1905 Hassleholm</text>
+    <text x="590" y="49" font-size="10" fill="#6a7a62" font-family="system-ui">† 1978 Hassleholm</text>
+  </g>
+
+  <!-- ════════ PATERNAL GRANDMOTHER ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="540" y="122" width="200" height="58" rx="6" fill="white" stroke="#c0d4c0" stroke-width="1"/>
+    <rect x="540" y="122" width="3" height="58" rx="1.5" fill="#f7a5c0"/>
+    <rect x="549" y="129" width="34" height="44" rx="4" fill="#f5e8ee"/>
+    <text x="566" y="155" text-anchor="middle" font-size="13" font-weight="600" fill="#8a5068" font-family="system-ui">EM</text>
+    <text x="590" y="140" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Elsa Margareta</text>
+    <text x="590" y="154" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Johansson</text>
+    <text x="590" y="169" font-size="10" fill="#6a7a62" font-family="system-ui">* 1910 – † 1995</text>
+  </g>
+
+  <!-- ════════ MATERNAL GRANDFATHER ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="540" y="240" width="200" height="58" rx="6" fill="white" stroke="#c0d4c0" stroke-width="1"/>
+    <rect x="540" y="240" width="3" height="58" rx="1.5" fill="#7eb8f7"/>
+    <rect x="549" y="247" width="34" height="44" rx="4" fill="#e0eaf2"/>
+    <text x="566" y="273" text-anchor="middle" font-size="13" font-weight="600" fill="#3a5a7a" font-family="system-ui">NE</text>
+    <text x="590" y="262" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Nils Emthen</text>
+    <text x="590" y="277" font-size="10" fill="#6a7a62" font-family="system-ui">* 1912 Landskrona</text>
+    <text x="590" y="291" font-size="10" fill="#6a7a62" font-family="system-ui">† 1988 Landskrona</text>
+  </g>
+
+  <!-- ════════ MATERNAL GRANDMOTHER ════════ -->
+  <g filter="url(#shadow)">
+    <rect x="540" y="384" width="200" height="58" rx="6" fill="white" stroke="#c0d4c0" stroke-width="1"/>
+    <rect x="540" y="384" width="3" height="58" rx="1.5" fill="#f7a5c0"/>
+    <rect x="549" y="391" width="34" height="44" rx="4" fill="#f5e8ee"/>
+    <text x="566" y="417" text-anchor="middle" font-size="13" font-weight="600" fill="#8a5068" font-family="system-ui">MN</text>
+    <text x="590" y="406" font-size="12" font-weight="600" fill="#1a2e1a" font-family="system-ui">Margit Nilsson</text>
+    <text x="590" y="421" font-size="10" fill="#6a7a62" font-family="system-ui">* 1916 Landskrona</text>
+    <text x="590" y="435" font-size="10" fill="#6a7a62" font-family="system-ui">† 2001 Landskrona</text>
+  </g>
+
+  <!-- ════════ SPOUSE PLACEHOLDER ════════ -->
+  <rect x="0" y="228" width="200" height="58" rx="6"
+        fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="100" y="261" text-anchor="middle" font-size="13" fill="#94a3b8" font-family="system-ui">+ Lagg till partner</text>
+  <!-- Spouse connector -->
+  <line x1="100" y1="208" x2="100" y2="228" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3"/>
+
+</svg>
+</div>
+
+<!-- Summary -->
+<div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; font-size: 13px;">
+  <div style="padding: 12px 14px; background: #f0f8f0; border-radius: 8px; border-left: 3px solid #2d5a27;">
+    <strong>Boxes</strong>
+    <ul style="margin: 4px 0 0; padding-left: 16px; line-height: 1.5;">
+      <li>200px wide, dynamic height</li>
+      <li>Fixed 34&times;44px portrait</li>
+      <li>Name wraps freely</li>
+      <li>* date place / &dagger; date place</li>
+    </ul>
+  </div>
+  <div style="padding: 12px 14px; background: #f0f4f8; border-radius: 8px; border-left: 3px solid #1d4ed8;">
+    <strong>Connectors</strong>
+    <ul style="margin: 4px 0 0; padding-left: 16px; line-height: 1.5;">
+      <li>SVG &lt;path&gt; Q-bezier elbows</li>
+      <li>~12px rounded corners</li>
+      <li>Soft muted color (#a8c0a8)</li>
+      <li>Dashed for placeholders</li>
+    </ul>
+  </div>
+  <div style="padding: 12px 14px; background: #faf8f0; border-radius: 8px; border-left: 3px solid #d4a017;">
+    <strong>Layout Constants</strong>
+    <ul style="margin: 4px 0 0; padding-left: 16px; line-height: 1.5;">
+      <li>BOX_W: 200 (was 155)</li>
+      <li>H_GAP: 70 (was 50)</li>
+      <li>V_GAP: 24 (was 20)</li>
+      <li>BOX_H: dynamic (min ~58)</li>
+    </ul>
+  </div>
+</div>

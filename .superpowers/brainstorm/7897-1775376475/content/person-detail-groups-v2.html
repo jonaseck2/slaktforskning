@@ -1,0 +1,61 @@
+<h2>PersonDetailView — Groups section (v2)</h2>
+<p class="subtitle">Autocomplete input: type to search existing groups or create a new one inline.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Släktforskning — Erik Johannes Lindqvist</div>
+  <div class="mockup-body" style="padding:24px;background:#f8f9fa;min-height:420px;">
+
+    <div style="background:white;border-radius:6px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);opacity:0.5;">
+      <div style="font-size:14px;font-weight:600;color:#555;">Händelser (3)</div>
+    </div>
+    <div style="background:white;border-radius:6px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);opacity:0.5;">
+      <div style="font-size:14px;font-weight:600;color:#555;">Relationer (2)</div>
+    </div>
+
+    <!-- Groups section -->
+    <div style="background:white;border-radius:6px;padding:18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:600;color:#555;">Grupper (2)</div>
+        <button class="mock-button" style="padding:5px 12px;font-size:13px;" onclick="document.getElementById('group-input-row').style.display='flex';this.style.display='none'">+ Lägg till</button>
+      </div>
+
+      <!-- Chips -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:20px;padding:5px 10px 5px 14px;font-size:13px;color:#3730a3;">
+          <a style="color:#3730a3;text-decoration:none;cursor:pointer;font-weight:500;">Emigranter till Amerika</a>
+          <span style="cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;">×</span>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:20px;padding:5px 10px 5px 14px;font-size:13px;color:#3730a3;">
+          <a style="color:#3730a3;text-decoration:none;cursor:pointer;font-weight:500;">Hantverkare</a>
+          <span style="cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;">×</span>
+        </div>
+      </div>
+
+      <!-- Autocomplete input row (shown after clicking + Lägg till) -->
+      <div id="group-input-row" style="display:none;gap:8px;align-items:flex-start;flex-direction:column;margin-top:4px;">
+        <div style="position:relative;width:100%;">
+          <input class="mock-input" id="group-search" placeholder="Sök grupp eller skapa ny…" style="width:100%;box-sizing:border-box;font-size:13px;"
+            oninput="document.getElementById('group-dropdown').style.display=this.value?'block':'none'">
+
+          <!-- Dropdown suggestions -->
+          <div id="group-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:10;margin-top:2px;">
+            <div style="padding:8px 12px;font-size:13px;cursor:pointer;color:#333;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">Officerare</div>
+            <div style="padding:8px 12px;font-size:13px;cursor:pointer;color:#333;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">DNA-matchningar</div>
+            <div style="padding:8px 12px;font-size:13px;cursor:pointer;color:#059669;border-top:1px solid #eee;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+              ＋ Skapa ny grupp "Off…"
+            </div>
+          </div>
+        </div>
+        <button style="background:transparent;border:none;color:#888;font-size:13px;cursor:pointer;padding:0;" onclick="document.getElementById('group-input-row').style.display='none';document.querySelector('.mock-button').style.display='block'">Avbryt</button>
+      </div>
+
+    </div>
+
+    <div style="background:white;border-radius:6px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);opacity:0.5;">
+      <div style="font-size:14px;font-weight:600;color:#555;">Anteckningar</div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Click "+ Lägg till" in the mockup to see the autocomplete appear. Type anything to see the dropdown with existing groups and a "Skapa ny" option.</p>
