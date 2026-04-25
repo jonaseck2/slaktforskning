@@ -1,0 +1,314 @@
+<h2>Keyboard-first flow: Person → Event → Source</h2>
+<p class="subtitle">Tab through each panel, Enter confirms. New sub-panel opens when you need to link an entity.</p>
+
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  padding: 24px 20px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 14px;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.18);
+  font-size: 12px;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  overflow: visible;
+  transition: opacity 0.2s;
+}
+.panel.done { opacity: 0.45; }
+
+.panel-header {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 9px 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-radius: 10px 10px 0 0;
+}
+.header-left { display: flex; flex-direction: column; gap: 3px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; padding: 2px 6px; border-radius: 4px;
+}
+.b-person { background: #eef2ff; color: #4f46e5; }
+.b-event  { background: #fff7ed; color: #c2410c; }
+.b-source { background: #fdf2f8; color: #9d174d; }
+.b-citation { background: #f0fdf4; color: #166534; }
+.panel-title { font-size: 13px; font-weight: 600; color: #111827; }
+.close-x { font-size: 18px; color: #9ca3af; cursor: pointer; line-height: 1; }
+
+.panel-body { padding: 12px 14px; }
+
+.field { margin-bottom: 9px; }
+.field label {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: #6b7280; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+}
+.field label .key {
+  font-size: 9px; color: #d1d5db; font-weight: 500;
+  text-transform: none; letter-spacing: 0;
+  background: #f3f4f6; border: 1px solid #e5e7eb;
+  border-radius: 3px; padding: 1px 5px; font-family: monospace;
+}
+.field label .key.active { color: #6b7280; border-color: #9ca3af; }
+
+.input {
+  width: 100%; background: #f3f4f6; border: 1.5px solid #e5e7eb;
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #6b7280;
+}
+.input.focused {
+  background: #fff; border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  color: #111827;
+}
+.input.filled { background: #fff; border-color: #d1d5db; color: #111827; }
+.input-row { display: flex; gap: 6px; }
+.input-row .input { flex: 1; }
+
+/* Sex segmented */
+.seg { display: flex; border: 1.5px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.seg.focused-seg { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+.seg-opt {
+  flex: 1; text-align: center; padding: 6px 0;
+  font-size: 11px; font-weight: 500; cursor: pointer;
+  color: #9ca3af; background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+.seg-opt:last-child { border-right: none; }
+.seg-opt.on { background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+
+/* Picker */
+.picker {
+  width: 100%; background: #f3f4f6; border: 1.5px solid #e5e7eb;
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #9ca3af;
+  position: relative;
+}
+.picker.focused { background: #fff; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); color: #374151; }
+.picker.filled { background: #fff; border-color: #d1d5db; color: #111827; }
+
+.picker-dd {
+  position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.13); z-index: 20; overflow: hidden;
+}
+.dd-row {
+  padding: 6px 10px; font-size: 12px; color: #374151;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer;
+}
+.dd-row.hl { background: #eff6ff; color: #1d4ed8; }
+.dd-row.create { color: #2563eb; font-weight: 600; border-top: 1px solid #f3f4f6; }
+.dd-type { font-size: 10px; color: #9ca3af; }
+.dd-key { font-size: 10px; font-family: monospace; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 3px; padding: 1px 4px; color: #6b7280; }
+
+/* Toggle */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; background: #f9fafb; border-radius: 6px;
+  border: 1.5px solid #e5e7eb;
+}
+.toggle-label { font-size: 12px; color: #374151; font-weight: 500; }
+.toggle-sw { width: 30px; height: 18px; background: #d1d5db; border-radius: 99px; position: relative; flex-shrink: 0; }
+.toggle-sw::after { content:''; position: absolute; width: 12px; height: 12px; background: #fff; border-radius: 50%; top: 3px; left: 3px; }
+.toggle-sw.on { background: #2563eb; }
+.toggle-sw.on::after { left: 15px; }
+
+.divider { height: 1px; background: #f3f4f6; margin: 9px -14px; }
+
+.panel-footer {
+  display: flex; justify-content: flex-end; gap: 6px;
+  padding: 9px 14px; border-top: 1px solid #f3f4f6;
+}
+.btn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-green   { background: #059669; color: #fff; }
+.btn-pink    { background: #9d174d; color: #fff; }
+.btn-ghost   { background: #f3f4f6; color: #374151; }
+.btn .key-hint { font-size: 10px; opacity: 0.75; margin-left: 4px; font-family: monospace; }
+
+/* Arrow between panels */
+.arrow-col {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 6px; min-width: 28px; padding-top: 44px;
+  color: rgba(255,255,255,0.45); font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Step label */
+.step-label {
+  text-align: center; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.5); margin-bottom: 8px;
+}
+
+.col { display: flex; flex-direction: column; }
+</style>
+
+<div class="flow">
+
+  <!-- STEP 1: Person modal -->
+  <div class="col">
+    <div class="step-label">Step 1</div>
+    <div class="panel done" style="width:252px">
+      <div class="panel-header">
+        <div class="header-left">
+          <div class="badge b-person">👤 Person</div>
+          <div class="panel-title">Add Person</div>
+        </div>
+        <span class="close-x">×</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Name <span class="key active">⇥</span></label>
+          <div class="input-row">
+            <div class="input filled">Johannes</div>
+            <div class="input filled">Andersson</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Sex <span class="key active">← →</span></label>
+          <div class="seg">
+            <div class="seg-opt on">Male</div>
+            <div class="seg-opt">Female</div>
+            <div class="seg-opt">Unknown</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Living <span class="key active">space</span></label>
+          <div class="toggle-row">
+            <div class="toggle-label">Living person</div>
+            <div class="toggle-sw on"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-primary">Add Person <span class="key-hint">↩</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-col">›</div>
+
+  <!-- STEP 2: Event sub-panel -->
+  <div class="col">
+    <div class="step-label">Step 2</div>
+    <div class="panel done" style="width:252px">
+      <div class="panel-header" style="background:#fff8f3;border-bottom-color:#fde8d0">
+        <div class="header-left">
+          <div class="badge b-event">📅 Event</div>
+          <div class="panel-title">Add Event</div>
+        </div>
+        <span class="close-x">×</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Type <span class="key active">← →</span></label>
+          <div class="seg" style="border-color:#e5e7eb">
+            <div class="seg-opt" style="font-size:10px">Birth</div>
+            <div class="seg-opt on" style="font-size:10px;background:#fff7ed;color:#c2410c">Marriage</div>
+            <div class="seg-opt" style="font-size:10px">Death</div>
+            <div class="seg-opt" style="font-size:10px">…</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Date <span class="key active">⇥</span></label>
+          <div class="input filled">1875-06-12</div>
+        </div>
+        <div class="field">
+          <label>Place <span class="key active">⇥ type ↩</span></label>
+          <div class="picker filled">Göteborg domkyrkoförs…</div>
+        </div>
+        <div class="field">
+          <label>Notes <span class="key active">⇥</span></label>
+          <div class="input filled" style="color:#9ca3af;font-style:italic">optional</div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-green">Add Event <span class="key-hint">↩</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-col">›</div>
+
+  <!-- STEP 3: Source/citation sub-sub-panel — ACTIVE -->
+  <div class="col">
+    <div class="step-label">Step 3 — active</div>
+    <div class="panel" style="width:252px">
+      <div class="panel-header" style="background:#fdf5fa;border-bottom-color:#f0d6e8">
+        <div class="header-left">
+          <div class="badge b-source">📚 Source</div>
+          <div class="panel-title">Add Citation</div>
+        </div>
+        <span class="close-x">×</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Source <span class="key active">⇥ type ↩</span></label>
+          <div class="picker focused" style="position:relative">
+            Husförhörslängd…
+            <div class="picker-dd">
+              <div class="dd-row hl">Husförhörslängd 1870–1880 <span class="dd-key">↩</span></div>
+              <div class="dd-row">Husförhörslängd 1855–1865</div>
+              <div class="dd-row create">+ Create "Husförhörslängd…" <span class="dd-key">↩</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:52px">
+          <label>Page <span class="key">⇥</span></label>
+          <div class="input">34r</div>
+        </div>
+        <div class="field">
+          <label>Confidence <span class="key">← →</span></label>
+          <div class="seg">
+            <div class="seg-opt" style="font-size:10px">Low</div>
+            <div class="seg-opt on" style="font-size:10px">OK</div>
+            <div class="seg-opt" style="font-size:10px">High</div>
+            <div class="seg-opt" style="font-size:10px">Primary</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Transcription <span class="key">⇥</span></label>
+          <div class="input" style="color:#9ca3af;font-style:italic">optional</div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-pink">Add Citation <span class="key-hint">↩</span></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;max-width:780px;margin-left:auto;margin-right:auto">
+  <div style="flex:1;min-width:220px;background:#f0fdf4;border-radius:8px;padding:12px 14px;border:1px solid #bbf7d0">
+    <p style="margin:0;font-size:12px;color:#166534"><strong>Tab order per panel</strong><br>
+    Person: Given → Surname → Sex (← →) → Living (space) → ↩ Save<br>
+    Event: Type (← →) → Date → Place → Notes → ↩ Save<br>
+    Citation: Source → Page → Confidence (← →) → Transcription → ↩ Save</p>
+  </div>
+  <div style="flex:1;min-width:220px;background:#eff6ff;border-radius:8px;padding:12px 14px;border:1px solid #bfdbfe">
+    <p style="margin:0;font-size:12px;color:#1e40af"><strong>Event type is a segmented control</strong><br>
+    Left/right arrows cycle through all event types (Birth, Baptism, Marriage, Emigration, Death…). Any event can be added to any person — no hardcoded Born/Died fields.</p>
+  </div>
+  <div style="flex:1;min-width:220px;background:#fdf2f8;border-radius:8px;padding:12px 14px;border:1px solid #fbcfe8">
+    <p style="margin:0;font-size:12px;color:#9d174d"><strong>Pickers are keyboard-native</strong><br>
+    Type to search, ↑↓ to navigate results, ↩ to confirm. Last result is always "+ Create …" — ↩ on it opens the sub-panel and focuses its first field automatically.</p>
+  </div>
+</div>

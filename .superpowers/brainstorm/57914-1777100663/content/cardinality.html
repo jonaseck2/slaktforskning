@@ -1,0 +1,354 @@
+<h2>Modals with embedded entity lists</h2>
+<p class="subtitle">Each modal shows fields + a list of related entities. One search bar handles add / reuse / link.</p>
+
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
+/* entity color tokens */
+:root {
+  --person-bg: #eef2ff; --person-fg: #4f46e5; --person-hd: #f5f3ff;
+  --event-bg:  #fff7ed; --event-fg:  #c2410c; --event-hd:  #fff8f3;
+  --source-bg: #fdf4ff; --source-fg: #7e22ce; --source-hd: #faf5ff;
+  --citation-bg: #f0fdf4; --citation-fg: #166534; --citation-hd: #f0fdf4;
+}
+
+.scene {
+  background: rgba(0,0,0,0.2);
+  border-radius: 14px;
+  padding: 22px 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.18);
+  font-size: 12px;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 560px;
+}
+
+.panel-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 9px 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+  border-radius: 10px 10px 0 0;
+}
+.header-left { display: flex; flex-direction: column; gap: 3px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; padding: 2px 6px; border-radius: 4px; width: fit-content;
+}
+.panel-title { font-size: 13px; font-weight: 600; color: #111827; }
+.close-x { font-size: 18px; color: #9ca3af; cursor: pointer; line-height: 1; flex-shrink: 0; }
+
+.panel-body { padding: 12px 13px 0; overflow-y: auto; flex: 1; }
+
+/* Fields section */
+.fields { padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+.f { margin-bottom: 8px; }
+.f:last-child { margin-bottom: 0; }
+.f > .lbl {
+  font-size: 10px; color: #6b7280; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;
+  display: block;
+}
+.inp {
+  width: 100%; background: #f3f4f6; border: 1.5px solid #e5e7eb;
+  border-radius: 6px; padding: 5px 8px; font-size: 12px; color: #374151;
+}
+.inp.v { background: #fff; border-color: #d1d5db; }
+.inp-row { display: flex; gap: 6px; }
+.inp-row .inp { flex: 1; }
+.seg { display: flex; border: 1.5px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.seg .so { flex: 1; text-align: center; padding: 5px 0; font-size: 11px; color: #9ca3af; background: #f9fafb; border-right: 1px solid #e5e7eb; }
+.seg .so:last-child { border-right: none; }
+.seg .so.on { font-weight: 700; }
+
+/* Related list section */
+.list-section { }
+.list-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.list-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #9ca3af;
+}
+.list-count {
+  font-size: 10px; background: #f3f4f6; color: #6b7280;
+  border-radius: 99px; padding: 1px 6px; font-weight: 600;
+}
+
+/* Search-to-add bar */
+.add-bar {
+  display: flex; align-items: center; gap: 6px;
+  border: 1.5px solid #e5e7eb; border-radius: 7px;
+  padding: 5px 9px; margin-bottom: 7px; background: #f9fafb; cursor: text;
+}
+.add-bar .icon { font-size: 12px; flex-shrink: 0; }
+.add-bar span { font-size: 12px; color: #9ca3af; }
+.add-bar.focused { border-color: #93c5fd; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.add-bar.focused span { color: #374151; }
+
+/* Dropdown from add-bar */
+.add-dd {
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  overflow: hidden; margin-bottom: 7px;
+}
+.dd-item {
+  padding: 6px 10px; font-size: 12px; color: #374151;
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  border-bottom: 1px solid #f9fafb;
+}
+.dd-item:last-child { border-bottom: none; }
+.dd-item:hover, .dd-item.hl { background: #f3f4f6; }
+.dd-item.create { color: #2563eb; font-weight: 600; border-top: 1px solid #f0f0f0; }
+.dd-item.create:hover { background: #eff6ff; }
+.dd-meta { font-size: 10px; color: #9ca3af; margin-left: auto; white-space: nowrap; }
+
+/* Entity rows in list */
+.entity-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 8px; border-radius: 7px; cursor: pointer; margin-bottom: 3px;
+  border: 1px solid transparent;
+}
+.entity-row:hover { background: #f9fafb; border-color: #f0f0f0; }
+.entity-row.active { background: #eff6ff; border-color: #bfdbfe; }
+.entity-icon {
+  width: 24px; height: 24px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0; margin-top: 1px;
+}
+.entity-main { flex: 1; min-width: 0; }
+.entity-name { font-size: 12px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entity-sub  { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.entity-arrow { color: #d1d5db; font-size: 14px; align-self: center; }
+
+.panel-footer {
+  display: flex; justify-content: flex-end; gap: 6px;
+  padding: 9px 13px; border-top: 1px solid #f3f4f6; flex-shrink: 0;
+}
+.btn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-ghost { background: #f3f4f6; color: #374151; }
+</style>
+
+<div class="scene">
+
+  <!-- PERSON modal -->
+  <div class="panel" style="width:268px">
+    <div class="panel-header" style="background:var(--person-hd)">
+      <div class="header-left">
+        <div class="badge" style="background:var(--person-bg);color:var(--person-fg)">👤 Person</div>
+        <div class="panel-title">Johannes Andersson</div>
+      </div>
+      <span class="close-x">×</span>
+    </div>
+    <div class="panel-body">
+      <div class="fields">
+        <div class="f">
+          <span class="lbl">Name</span>
+          <div class="inp-row">
+            <div class="inp v">Johannes</div>
+            <div class="inp v">Andersson</div>
+          </div>
+        </div>
+        <div class="f">
+          <span class="lbl">Sex</span>
+          <div class="seg">
+            <div class="so on" style="background:var(--person-bg);color:var(--person-fg)">Male</div>
+            <div class="so">Female</div>
+            <div class="so">Unknown</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-section">
+        <div class="list-header">
+          <span class="list-title">Events</span>
+          <span class="list-count">3</span>
+        </div>
+        <div class="add-bar">
+          <span class="icon" style="color:var(--event-fg)">📅</span>
+          <span>Search or add event…</span>
+        </div>
+        <div class="entity-row active">
+          <div class="entity-icon" style="background:var(--event-bg)">📅</div>
+          <div class="entity-main">
+            <div class="entity-name">Marriage</div>
+            <div class="entity-sub">1875-06-12 · Göteborg domkyrkof.</div>
+          </div>
+          <div class="entity-arrow">›</div>
+        </div>
+        <div class="entity-row">
+          <div class="entity-icon" style="background:var(--event-bg)">📅</div>
+          <div class="entity-main">
+            <div class="entity-name">Birth</div>
+            <div class="entity-sub">1850-03-15 · Örgryte</div>
+          </div>
+          <div class="entity-arrow">›</div>
+        </div>
+        <div class="entity-row">
+          <div class="entity-icon" style="background:var(--event-bg)">📅</div>
+          <div class="entity-main">
+            <div class="entity-name">Emigration</div>
+            <div class="entity-sub">1892 · Göteborg</div>
+          </div>
+          <div class="entity-arrow">›</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--person-fg)">Save</button>
+    </div>
+  </div>
+
+  <!-- EVENT sub-panel — open because Marriage is clicked -->
+  <div class="panel" style="width:258px">
+    <div class="panel-header" style="background:var(--event-hd)">
+      <div class="header-left">
+        <div class="badge" style="background:var(--event-bg);color:var(--event-fg)">📅 Event</div>
+        <div class="panel-title">Marriage</div>
+      </div>
+      <span class="close-x">×</span>
+    </div>
+    <div class="panel-body">
+      <div class="fields">
+        <div class="f">
+          <span class="lbl">Type</span>
+          <div class="seg">
+            <div class="so" style="font-size:10px">Birth</div>
+            <div class="so on" style="font-size:10px;background:var(--event-bg);color:var(--event-fg)">Marriage</div>
+            <div class="so" style="font-size:10px">Death</div>
+            <div class="so" style="font-size:10px;color:#9ca3af">…</div>
+          </div>
+        </div>
+        <div class="f">
+          <span class="lbl">Date</span>
+          <div class="inp v">1875-06-12</div>
+        </div>
+        <div class="f">
+          <span class="lbl">Place</span>
+          <div class="inp v">Göteborg domkyrkoförs.</div>
+        </div>
+      </div>
+
+      <div class="list-section">
+        <div class="list-header">
+          <span class="list-title">Sources</span>
+          <span class="list-count">1</span>
+        </div>
+        <!-- Search bar open with results -->
+        <div class="add-bar focused">
+          <span class="icon" style="color:var(--source-fg)">📚</span>
+          <span>Husförhörslängd…</span>
+        </div>
+        <div class="add-dd">
+          <div class="dd-item hl">
+            <span>📚</span> Husförhörslängd 1870–1880
+            <span class="dd-meta">link</span>
+          </div>
+          <div class="dd-item">
+            <span>📚</span> Husförhörslängd 1855–1865
+            <span class="dd-meta">link</span>
+          </div>
+          <div class="dd-item create">+ Create "Husförhörslängd…"</div>
+        </div>
+        <div class="entity-row">
+          <div class="entity-icon" style="background:var(--source-bg)">📚</div>
+          <div class="entity-main">
+            <div class="entity-name">Husförhörslängd 1870–1880</div>
+            <div class="entity-sub">p. 34r · High confidence</div>
+          </div>
+          <div class="entity-arrow">›</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--event-fg)">Save</button>
+    </div>
+  </div>
+
+  <!-- SOURCE sub-sub-panel (if clicked) -->
+  <div class="panel" style="width:230px;opacity:0.72">
+    <div class="panel-header" style="background:var(--source-hd)">
+      <div class="header-left">
+        <div class="badge" style="background:var(--source-bg);color:var(--source-fg)">📚 Source</div>
+        <div class="panel-title">New Source</div>
+      </div>
+      <span class="close-x">×</span>
+    </div>
+    <div class="panel-body">
+      <div class="fields">
+        <div class="f">
+          <span class="lbl">Title</span>
+          <div class="inp v">Husförhörslängd 1870–1880</div>
+        </div>
+        <div class="f">
+          <span class="lbl">Type</span>
+          <div class="inp v">Church record</div>
+        </div>
+        <div class="f">
+          <span class="lbl">Repository</span>
+          <div class="inp">Search repository…</div>
+        </div>
+      </div>
+      <div class="list-section">
+        <div class="list-header">
+          <span class="list-title" style="color:var(--citation-fg)">Citations</span>
+          <span class="list-count">0</span>
+        </div>
+        <div class="add-bar">
+          <span class="icon">🔗</span>
+          <span>Link to event, person…</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--source-fg)">Add Source</button>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:18px;max-width:780px;margin-left:auto;margin-right:auto;display:flex;gap:10px;flex-wrap:wrap">
+  <div style="flex:1;min-width:200px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;margin-bottom:6px">Entity colours</div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+      <span><span style="background:#eef2ff;color:#4f46e5;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">👤 Person</span> indigo</span>
+      <span><span style="background:#fff7ed;color:#c2410c;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">📅 Event</span> orange</span>
+      <span><span style="background:#fdf4ff;color:#7e22ce;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">📚 Source</span> purple</span>
+      <span><span style="background:#f0fdf4;color:#166534;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">📍 Place</span> green</span>
+      <span><span style="background:#fdf2f8;color:#9d174d;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">🔗 Citation</span> pink</span>
+      <span><span style="background:#fefce8;color:#854d0e;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">🔬 Task</span> amber</span>
+      <span><span style="background:#f0f9ff;color:#0369a1;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">🏷️ Group</span> sky</span>
+    </div>
+  </div>
+  <div style="flex:2;min-width:260px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9ca3af;margin-bottom:6px">Search bar behaviour</div>
+    <div style="font-size:12px;color:#374151;line-height:1.6">
+      Empty → shows recently used entities of that type<br>
+      Typing → filters existing, always ends with <strong>+ Create "…"</strong><br>
+      ↑↓ navigate, ↩ select or create (opens sub-panel)<br>
+      Selecting existing <strong>links</strong> it (no duplicate created)<br>
+      The bar doubles as the create button — no separate "+" icon needed
+    </div>
+  </div>
+</div>

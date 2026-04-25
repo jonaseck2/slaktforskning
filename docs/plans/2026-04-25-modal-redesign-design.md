@@ -1,5 +1,19 @@
 # Modal Redesign — Design Spec
 
+## Visual References
+
+These HTML mockups were built during the brainstorming session and capture the approved design. Open them in a browser to see the exact aesthetics.
+
+| File | What it shows |
+|------|--------------|
+| [full-flow.html](../../.superpowers/brainstorm/57914-1777100663/content/full-flow.html) | **The complete flow** — Person → Event → Citation, all three panels side by side with approved aesthetics |
+| [flush-sections-v3.html](../../.superpowers/brainstorm/57914-1777100663/content/flush-sections-v3.html) | **Approved section header style** — flush, rounded top corners, entity border-below, no badge |
+| [citation-flow.html](../../.superpowers/brainstorm/57914-1777100663/content/citation-flow.html) | **Citation sub-panel flow** — State ① search open with dropdown, State ② Citation sub-panel with cursor on Page |
+| [recursive-panels.html](../../.superpowers/brainstorm/57914-1777100663/content/recursive-panels.html) | Sub-panel mechanic — how panels nest and grow rightward |
+| [citation-options.html](../../.superpowers/brainstorm/57914-1777100663/content/citation-options.html) | Options A/B/C considered for citation detail placement (C was chosen) |
+
+---
+
 ## Goals
 
 Fix the fragmented, inconsistent modal system by replacing it with a unified architecture: one canonical modal component per entity type, reused as side-panel sub-panels when creating linked entities. The result is a fast, keyboard-first research entry flow with no redundant components and consistent visual language.
