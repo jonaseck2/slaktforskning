@@ -83,14 +83,14 @@
         />
       </div>
       <!-- Reopen panel button when panel is closed (tree mode) -->
-      <button v-if="!panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!isStaticMode && !panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
       </template>
       <!-- Reopen panel button when panel is closed (list mode) -->
-      <button v-if="viewMode === 'list' && !panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!isStaticMode && viewMode === 'list' && !panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
     <!-- Drag handle + panel (both tree and list modes) -->
-    <template v-if="panelOpen && (selectedPersonId || personId)">
+    <template v-if="!isStaticMode && panelOpen && (selectedPersonId || personId)">
       <div
         class="panel-drag-handle"
         @mousedown="(e) => startResize(e, vizBodyRef!)"
@@ -150,6 +150,7 @@ const focusStore = useFocusStore();
 const ttsEnabled = inject<Ref<boolean>>('ttsEnabled');
 const tts = inject<{ speak: (text: string, locale?: string) => void }>('tts');
 
+const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
 
