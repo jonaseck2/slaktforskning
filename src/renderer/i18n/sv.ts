@@ -1167,7 +1167,7 @@ export default {
     },
     filter: {
       search: 'Sök media',
-      person: '{name}s media',
+      person: 'filtrerad på {name}',
     },
     galleryView: 'Galleri',
     listView: 'Lista',
