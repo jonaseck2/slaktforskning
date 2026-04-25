@@ -798,8 +798,10 @@ In `CLAUDE.md`, under the gazetteers skill section or build scripts table, add:
 
 ```markdown
 | `build-world-historical.ts` | Wikidata SPARQL (Q3024240, Q28171280, Q6256, Q7270, Q7275) | Two queries merged by QID | world-historical |
-| `build-world-historical-boundaries.ts` | Wikidata P3896 + Wikimedia Maps API | SPARQL pre-filter then HTTP per entity | world-historical-boundaries |
+| `build-world-historical-boundaries.ts` | aourednik/historical-basemaps GeoJSON snapshots (1500–2000) | Download snapshots, deduplicate by name, pick largest polygon | world-historical-boundaries |
 ```
+
+Note: `build-world-historical-boundaries.ts` is blocked until the historical-basemaps re-license is confirmed. Omit it from CLAUDE.md until the script and data file actually exist.
 
 - [ ] **Step 4: Run lint and full tests**
 
