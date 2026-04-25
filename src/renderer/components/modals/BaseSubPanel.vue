@@ -1,29 +1,22 @@
 <template>
-  <!-- STANDALONE: centred overlay via BaseModal -->
+  <!-- STANDALONE: plain white modal — entity panel card only for sub-panels -->
   <BaseModal
     v-if="mode === 'standalone'"
     :title-id="titleId"
+    :modal-class="hasSub ? 'modal--panel-host' : ''"
     @close="$emit('cancel')"
   >
-    <div class="entity-panel-wrap">
-      <div class="entity-panel" :class="{ 'entity-panel--dim': hasSub }">
-        <div class="ep-header" :style="headerStyle">
-          <div class="ep-header-left">
-            <span class="ep-label" :style="{ color: color.fg }">{{ label }}</span>
-            <div :id="titleId" class="ep-title">{{ title }}</div>
-          </div>
-        </div>
-        <div class="ep-body">
-          <slot />
-        </div>
-        <div class="ep-footer">
+    <div class="ep-host-row">
+      <div class="ep-host-main">
+        <h3 :id="titleId">{{ title }}</h3>
+        <slot />
+        <div class="modal-actions">
           <button type="button" class="btn-cancel" @click="$emit('cancel')">
             {{ $t('common.cancel') }}
           </button>
           <button
             type="button"
-            class="btn-add"
-            :style="{ background: color.fg, color: '#fff' }"
+            :style="{ background: color.fg, color: '#fff', padding: '8px 16px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', fontWeight: 600 }"
             @click="$emit('save')"
           >
             {{ saveLabel ?? $t('common.save') }}
@@ -34,9 +27,9 @@
     </div>
   </BaseModal>
 
-  <!-- SUBPANEL: floating card, no overlay -->
+  <!-- SUBPANEL: entity-coloured card, no overlay, no dimming -->
   <div v-else class="entity-panel-wrap">
-    <div class="entity-panel" :class="{ 'entity-panel--dim': hasSub }">
+    <div class="entity-panel">
       <div class="ep-header" :style="headerStyle">
         <div class="ep-header-left">
           <span class="ep-label" :style="{ color: color.fg }">{{ label }}</span>
