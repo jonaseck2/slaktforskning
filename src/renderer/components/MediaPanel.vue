@@ -21,14 +21,17 @@
           </div>
         </div>
         <div class="media-info">
-          <input
-            class="media-title-input"
-            :value="titleDraft"
-            :placeholder="$t('media.untitled')"
-            @input="titleDraft = ($event.target as HTMLInputElement).value"
-            @blur="saveTitle"
-            @keydown.enter="($event.target as HTMLInputElement).blur()"
-          />
+          <div class="media-title-row">
+            <input
+              class="media-title-input"
+              :value="titleDraft"
+              :placeholder="$t('media.untitled')"
+              @input="titleDraft = ($event.target as HTMLInputElement).value"
+              @blur="saveTitle"
+              @keydown.enter="($event.target as HTMLInputElement).blur()"
+            />
+            <AppButton variant="soft" size="sm" @click="emit('open-viewer')">{{ $t('panel.open') }}</AppButton>
+          </div>
           <div v-if="media.format" class="media-meta">{{ media.format.toUpperCase() }}</div>
         </div>
       </div>
@@ -254,6 +257,7 @@ const emit = defineEmits<{
   'highlight-region': [id: string | null];
   'region-deleted': [];
   'media-updated': [mediaId: string, fields: { title?: string; notes?: string }];
+  'open-viewer': [];
 }>();
 
 const media = ref<MediaData | null>(null);
@@ -640,6 +644,15 @@ defineExpose({ reload: load, expandFaceTags });
   min-width: 0;
 }
 
+.media-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.media-title-row .media-title-input {
+  flex: 1;
+  min-width: 0;
+}
 .media-title-input {
   width: 100%;
   font-size: var(--font-base);
