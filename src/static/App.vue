@@ -1,0 +1,467 @@
+<template>
+  <div class="app">
+    <a href="#main-content" class="skip-link">{{ $t('a11y.skipToMain') }}</a>
+    <nav class="sidebar" aria-label="Main navigation">
+      <div class="sidebar-header">
+        <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
+      </div>
+      <form class="sidebar-search" @submit.prevent="submitSearch">
+        <input
+          ref="searchInputRef"
+          v-model="searchQuery"
+          type="text"
+          :placeholder="$t('app.search')"
+          class="sidebar-search-input"
+        />
+      </form>
+      <div v-if="focusStore.personId" class="focus-indicator">
+        <span class="focus-label">{{ $t('nav.focusPerson') }}</span>
+        <router-link :to="'/persons/' + focusStore.personId" class="focus-name">
+          {{ focusStore.personName }}
+        </router-link>
+      </div>
+      <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
+        <span class="nav-icon" aria-hidden="true">👤</span>
+        <span class="nav-label">{{ $t('nav.people') }}</span>
+      </router-link>
+      <router-link to="/places" class="nav-item" :aria-label="$t('places.title')">
+        <span class="nav-icon" aria-hidden="true">📍</span>
+        <span class="nav-label">{{ $t('places.title') }}</span>
+      </router-link>
+      <router-link to="/media" class="nav-item" :aria-label="$t('media.nav')">
+        <span class="nav-icon" aria-hidden="true">📷</span>
+        <span class="nav-label">{{ $t('media.nav') }}</span>
+      </router-link>
+      <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
+        <span class="nav-icon" aria-hidden="true">🖨️</span>
+        <span class="nav-label">{{ $t('reports.nav') }}</span>
+      </router-link>
+      <router-link to="/prints" class="nav-item" :aria-label="$t('nav.framablePrints')">
+        <span class="nav-icon" aria-hidden="true">🖼️</span>
+        <span class="nav-label">{{ $t('nav.framablePrints') }}</span>
+      </router-link>
+      <div class="sidebar-spacer"></div>
+      <div class="settings-section">
+        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="isSettingsOpen = !isSettingsOpen">
+          <span class="nav-icon" aria-hidden="true">🎨</span>
+          <span class="nav-label">{{ $t('settings.appearance') }}</span>
+          <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
+        </button>
+        <div v-if="isSettingsOpen" class="settings-panel">
+          <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
+            <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
+            <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
+            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.theme') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.theme')">
+            <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="String(currentTheme === 'forest')" @click="setTheme('forest')">🌲</button>
+            <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
+            <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
+            <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
+            <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
+            <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.readAloud') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.readAloud')">
+            <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
+            <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
+          </div>
+          <div class="settings-group-label">{{ $t('settings.language') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
+            <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Sv</button>
+            <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">En</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <main id="main-content" :class="['content', { 'content-paneled': isPaneledView }]">
+      <router-view v-slot="{ Component, route }">
+        <keep-alive :include="CACHED_VIEWS">
+          <component
+            :is="Component"
+            :key="CACHED_VIEWS.includes(route.name as string) ? (route.name as string) : route.fullPath"
+          />
+        </keep-alive>
+      </router-view>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, provide } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { saveLocale } from '../renderer/i18n';
+import type { SupportedLocale } from '../renderer/i18n';
+import { useFocusStore } from '../renderer/stores/focus';
+import { useTTS } from '../renderer/composables/useTTS';
+import { useScreenReaderMode } from '../renderer/composables/useScreenReaderMode';
+
+declare const window: Window & {
+  api: {
+    db: { getSetting: (key: string) => Promise<unknown> };
+    persons: {
+      getNames: (id: string) => Promise<Array<{ given_name?: string; surname?: string }>>;
+      listPage: (limit: number, offset: number) => Promise<{ persons: Array<{ id: string; given_name: string; surname: string }>; total: number }>;
+    };
+  };
+};
+
+const router = useRouter();
+const route = useRoute();
+const { locale, t } = useI18n();
+const focusStore = useFocusStore();
+const tts = useTTS();
+const screenReader = useScreenReaderMode();
+
+type Appearance = 'light' | 'dark' | 'contrast';
+const appearance = ref<Appearance>(
+  (localStorage.getItem('slaktforskning-appearance') as Appearance) ||
+  (localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light')
+);
+
+const THEME_CLASSES = ['theme-forest', 'theme-nordic', 'theme-twilight'] as const;
+type Theme = 'forest' | 'nordic' | 'twilight';
+const currentTheme = ref<Theme>(
+  (localStorage.getItem('slaktforskning-theme') as Theme) || 'forest'
+);
+
+function setTheme(theme: Theme) {
+  currentTheme.value = theme;
+  document.documentElement.classList.remove(...THEME_CLASSES);
+  document.documentElement.classList.add(`theme-${theme}`);
+  localStorage.setItem('slaktforskning-theme', theme);
+}
+
+const APPEARANCE_I18N = { light: 'settings.lightMode', dark: 'settings.darkMode', contrast: 'settings.contrastMode' } as const;
+
+function setAppearance(value: Appearance) {
+  appearance.value = value;
+  localStorage.setItem('slaktforskning-appearance', value);
+  document.documentElement.classList.remove('dark', 'high-contrast');
+  if (value === 'dark') document.documentElement.classList.add('dark');
+  if (value === 'contrast') document.documentElement.classList.add('high-contrast');
+  if (screenReader.isTtsEnabled.value) {
+    tts.speak(t(APPEARANCE_I18N[value]), locale.value);
+  }
+}
+
+const isSettingsOpen = ref(false);
+
+provide('ttsEnabled', screenReader.isTtsEnabled);
+provide('tts', tts);
+provide('screenReader', screenReader);
+
+const CACHED_VIEWS = ['PersonsListView', 'PlacesListView'];
+const PANELED_ROUTES = ['/persons', '/places', '/media', '/reports', '/prints'];
+const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
+
+const searchQuery = ref('');
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+const RAW_TEXT_SIZE = localStorage.getItem('textSize');
+const textSize = ref<'small' | 'medium' | 'large'>(
+  (RAW_TEXT_SIZE === 'medium' || RAW_TEXT_SIZE === 'large') ? RAW_TEXT_SIZE : 'small'
+);
+
+function applyTextSize() {
+  document.documentElement.classList.remove('text-medium', 'text-large');
+  if (textSize.value === 'medium') document.documentElement.classList.add('text-medium');
+  if (textSize.value === 'large') document.documentElement.classList.add('text-large');
+}
+
+const TEXT_SIZE_I18N = { small: 'settings.textSizeSmall', medium: 'settings.textSizeMedium', large: 'settings.textSizeLarge' } as const;
+
+function setTextSize(size: 'small' | 'medium' | 'large') {
+  textSize.value = size;
+  localStorage.setItem('textSize', size);
+  applyTextSize();
+  if (screenReader.isTtsEnabled.value) {
+    tts.speak(t(TEXT_SIZE_I18N[size]), locale.value);
+  }
+}
+
+function setLocale(val: SupportedLocale) {
+  locale.value = val;
+  saveLocale(val);
+}
+
+function handleGlobalKey(e: KeyboardEvent) {
+  if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+    searchInputRef.value?.select();
+  }
+}
+
+async function autoSetFocusPerson() {
+  if (focusStore.personId) return;
+  try {
+    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
+    if (defaultId) {
+      const names = await window.api.persons.getNames(defaultId);
+      if (names.length > 0) {
+        const n = names[0];
+        const name = [n.given_name, n.surname].filter(Boolean).join(' ') || '—';
+        focusStore.set(defaultId, name);
+        return;
+      }
+    }
+  } catch { /* ignore */ }
+  try {
+    const result = await window.api.persons.listPage(1, 0);
+    if (result.persons.length > 0) {
+      const p = result.persons[0];
+      const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
+      focusStore.set(p.id, name);
+    }
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  setTheme(currentTheme.value);
+  setAppearance(appearance.value);
+  applyTextSize();
+  screenReader.init();
+  window.addEventListener('keydown', handleGlobalKey);
+  autoSetFocusPerson();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKey);
+});
+
+function submitSearch() {
+  const q = searchQuery.value.trim();
+  if (!q) return;
+  router.push({ path: '/search', query: { q } });
+  searchQuery.value = '';
+}
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--surface-bg);
+  padding: var(--space-md);
+  gap: var(--space-md);
+  box-sizing: border-box;
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 10px;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--sidebar-active-text);
+}
+
+.sidebar-search {
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+.sidebar-search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sidebar-border);
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-size: var(--font-sm);
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.sidebar-search-input::placeholder {
+  color: var(--sidebar-text-muted);
+}
+.sidebar-search-input:focus {
+  background: var(--sidebar-border);
+}
+
+.focus-indicator {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: var(--sidebar-active-bg);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+  flex-shrink: 0;
+}
+.focus-label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--sidebar-text-muted);
+  text-transform: uppercase;
+}
+.focus-name {
+  font-size: var(--font-xs);
+  color: var(--sidebar-active-text);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.focus-name:hover { color: var(--sidebar-active-text); text-decoration: underline; }
+
+.sidebar a,
+.nav-item {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  padding: 7px 10px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar a:hover,
+.sidebar a.router-link-active,
+.nav-item:hover,
+.nav-item.router-link-active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+}
+
+.nav-icon { font-size: var(--font-base); line-height: 1; flex-shrink: 0; }
+.nav-label { font-size: var(--font-sm); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sidebar-spacer {
+  flex: 1;
+}
+
+.settings-section {
+  margin-top: 4px;
+  border-top: 1px solid var(--sidebar-border);
+  padding-top: 6px;
+}
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  text-align: left;
+}
+.settings-toggle:hover {
+  background: var(--sidebar-active-bg);
+}
+.settings-arrow {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  color: var(--sidebar-text-muted);
+}
+.settings-panel {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-group-label {
+  font-size: var(--font-xs);
+  color: var(--sidebar-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.settings-row {
+  display: flex;
+  gap: 3px;
+}
+.settings-option {
+  flex: 1;
+  background: var(--sidebar-active-bg);
+  border: none;
+  color: var(--sidebar-text);
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-xs);
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.15s;
+}
+.settings-option:hover {
+  color: var(--sidebar-active-text);
+}
+.settings-option.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  will-change: scroll-position;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+}
+.content-paneled {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+@media print {
+  .sidebar { display: none !important; }
+  .app { display: block; height: auto; padding: 0; gap: 0; background: none; }
+  .content, .content-paneled { padding: 0; height: auto; overflow: visible !important; background: none; border-radius: 0; }
+  body { background: none; }
+}
+</style>
