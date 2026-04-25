@@ -104,9 +104,13 @@
         @saved="onCitationSaved"
       />
     </BaseModal>
-    <CitationEditModal
+    <CitationModal
       v-if="editingCitation"
-      :citation="editingCitation"
+      mode="standalone"
+      :editing-citation="editingCitation"
+      :source-id="source.id"
+      :source-title="source.title"
+      @cancel="editingCitation = null"
       @close="editingCitation = null"
       @saved="editingCitation = null; load()"
     />
@@ -122,8 +126,6 @@ import { onBeforeRouteLeave } from 'vue-router';
 import CitationModal from '../components/modals/CitationModal.vue';
 import BaseModal from '../components/BaseModal.vue';
 import SectionEmpty from '../components/ui/SectionEmpty.vue';
-// TODO(modal-redesign): replace CitationEditModal with CitationModal edit mode
-import CitationEditModal from '../components/CitationEditModal.vue';
 import LinkedText from '../components/LinkedText.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
 import AppButton from '../components/ui/AppButton.vue';
