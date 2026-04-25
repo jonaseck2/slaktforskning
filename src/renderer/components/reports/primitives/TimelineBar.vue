@@ -1,25 +1,41 @@
 <template>
   <div class="timeline-bar" v-if="items.length > 0">
     <div class="track" :style="{ height: trackHeight + 'px' }">
+      <!-- Pass 1: stems and dots (below labels in paint order) -->
       <div
         v-for="item in positioned"
         :key="item.id"
         class="marker"
-        :class="['event-' + item.eventType, { 'marker-linked': !!anchorBase }]"
+        :class="['event-' + item.eventType]"
+        :style="{ left: item.leftPct + '%', '--stem-h': stemPx(item.row) + 'px' }"
+      >
+        <span class="marker-stem" aria-hidden="true"></span>
+        <span class="marker-dot" aria-hidden="true"></span>
+      </div>
+      <!-- Pass 2: labels (rendered after stems so always on top) -->
+      <a
+        v-if="anchorBase"
+        v-for="item in positioned"
+        :key="'lbl-' + item.id"
+        class="marker-lbl marker-link"
+        :href="anchorBase + item.id"
         :style="{ left: item.leftPct + '%', '--stem-h': stemPx(item.row) + 'px' }"
         :title="item.label"
+        @click.prevent="scrollToId((anchorBase + item.id).replace(/^#/, ''))"
       >
-        <a v-if="anchorBase" :href="anchorBase + item.id" class="marker-inner marker-link" @click.prevent="scrollToId((anchorBase + item.id).replace(/^#/, ''))">
+        <span class="marker-label" :style="item.labelAdjustPx ? { transform: `translateX(${item.labelAdjustPx}px)` } : undefined">{{ item.label }}</span>
+      </a>
+      <template v-else>
+        <span
+          v-for="item in positioned"
+          :key="'lbl-' + item.id"
+          class="marker-lbl"
+          :style="{ left: item.leftPct + '%', '--stem-h': stemPx(item.row) + 'px' }"
+          :title="item.label"
+        >
           <span class="marker-label" :style="item.labelAdjustPx ? { transform: `translateX(${item.labelAdjustPx}px)` } : undefined">{{ item.label }}</span>
-          <span class="marker-stem" aria-hidden="true"></span>
-          <span class="marker-dot" aria-hidden="true"></span>
-        </a>
-        <template v-else>
-          <span class="marker-label" :style="item.labelAdjustPx ? { transform: `translateX(${item.labelAdjustPx}px)` } : undefined">{{ item.label }}</span>
-          <span class="marker-stem" aria-hidden="true"></span>
-          <span class="marker-dot" aria-hidden="true"></span>
-        </template>
-      </div>
+        </span>
+      </template>
     </div>
     <div class="axis">
       <span class="axis-start">{{ yearMin }}</span>
@@ -132,7 +148,6 @@ const trackHeight = computed(() =>
 
 .track {
   position: relative;
-  /* horizontal baseline at center of dots */
 }
 .track::after {
   content: '';
@@ -140,9 +155,10 @@ const trackHeight = computed(() =>
   bottom: 5px; /* half of 10px dot */
   left: 0; right: 0;
   height: 2px;
-  background: var(--surface-border);
+  background: var(--text-primary);
 }
 
+/* Pass 1: stem + dot */
 .marker {
   position: absolute;
   bottom: 0;
@@ -150,12 +166,16 @@ const trackHeight = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 1;
 }
-.marker-inner {
+
+/* Pass 2: label wrapper — positioned above the stem+dot */
+.marker-lbl {
+  position: absolute;
+  bottom: calc(var(--stem-h, 16px) + 10px); /* 10px = dot height */
+  transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 .marker-link {
   text-decoration: none;
@@ -165,20 +185,17 @@ const trackHeight = computed(() =>
 .marker-link:hover .marker-label {
   color: var(--accent);
 }
-.marker-link:hover .marker-dot {
-  filter: brightness(1.2);
-}
+
 .marker-label {
   font-size: var(--font-xs);
   white-space: nowrap;
   color: var(--text-secondary);
-  margin-bottom: 2px;
   line-height: 1;
   background: var(--surface-bg, white);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
   padding: 0 3px;
   border-radius: 2px;
-  position: relative;
-  z-index: 2;
 }
 .marker-stem {
   width: 1px;
