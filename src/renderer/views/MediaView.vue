@@ -10,12 +10,14 @@
         </div>
       </div>
       <div class="header-right">
-        <button v-if="viewerMode" class="btn-cancel" @click="closeViewer">{{ $t('common.close') }}</button>
-        <div v-if="!loading && items.length > 0" class="view-toggle">
-          <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
-          <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
-        </div>
-        <AppButton v-if="!isStaticMode" variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
+        <button v-if="viewerMode" class="viewer-close-btn" :title="$t('common.close')" @click="closeViewer">✕</button>
+        <template v-else>
+          <div v-if="!loading && items.length > 0" class="view-toggle">
+            <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
+            <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
+          </div>
+          <AppButton v-if="!isStaticMode" variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
+        </template>
       </div>
     </div>
 
@@ -727,6 +729,17 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 .header-left { display: flex; align-items: center; gap: var(--space-sm); }
 .header-right { display: flex; align-items: center; gap: 8px; }
 .view-toggle { display: flex; gap: 2px; }
+.viewer-close-btn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-base);
+  color: var(--text-muted);
+  line-height: 1;
+}
+.viewer-close-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
 
 .media-table .thumb-cell {
   padding: 4px;
