@@ -79,7 +79,9 @@ Hosted in GroupsView. Sections:
 
 Hosted in ResearchTasksView. Sections:
 
-1. **Task** — editable: task text, notes, result, status (chip cycling), priority, linked person (PersonPicker)
+1. **Task** — editable: task text, notes, result, status (`<select>`), priority, linked person (PersonPicker)
+
+The status chip-cycling affordance stays in the table row only (one-click "mark done" from the list). The panel uses a regular `<select>` so all fields edit consistently.
 
 ## Quality View
 
@@ -104,7 +106,8 @@ No panel. Each quality issue row gets a navigate action:
 - `/visualisering` → `/persons`; old route redirects
 
 **Sidebar nav entry:**
-- "Visualisering" → "Persons"
+- The sidebar uses an icon link `to="/"` (no visible "Visualisering" label), so no UI text changes. The redirect handles `/` → `/persons`.
+- The screen-reader hotkey description `screenReader.hotkeyVisualization` is renamed to `hotkeyPersons` in `sv.ts` + `en.ts`, and the `useScreenReaderMode` hotkey pushes `/persons` instead of `/visualisering`.
 
 **Inline-expand removed:**
 - `ResearchTasksTable` row click selects task in panel instead of expanding inline
@@ -124,7 +127,7 @@ New panels reuse these existing components — no new primitives needed:
 | `PersonPicker` | RelationshipPanel, GroupPanel, ResearchTaskPanel |
 | `ResearchTasksTable` | ResearchTaskPanel (table without inline-expand) |
 | `usePanelResize` | All four new panel-hosting views |
-| `useSectionState` | All four new panels |
+| Inline section-state pattern (per panel) | All four new panels — `useSectionState` is hardcoded for PersonPanel and not reusable; replicate the small `loadBool` + `reactive` + `toggleSection` pattern in each panel, optionally extracted to per-panel composables (`useSourcePanelSections`, etc.) for symmetry with `usePlacePanelSections` |
 
 ## Implementation Order
 

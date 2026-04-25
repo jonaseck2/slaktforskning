@@ -65,6 +65,8 @@
 mv src/renderer/views/PersonsView.vue src/renderer/views/PersonsListTab.vue
 ```
 
+> **Note:** the working tree may already have this rename staged (status shows `D PersonsView.vue` + `?? PersonsListTab.vue`). If so, `mv` will fail — skip the command and verify `src/renderer/views/PersonsListTab.vue` exists with the original PersonsView content.
+
 - [ ] **Step 2: Update the import in VisualizationView.vue**
 
 In `src/renderer/views/VisualizationView.vue` find:
@@ -182,6 +184,20 @@ f) Update the screen reader `routeMap` — replace the `/visualisering` entry wi
 ```
 Remove the `/visualisering` and any `/visualisering/` prefixed entries from that map.
 
+g) Update the screen-reader hotkey route in `src/renderer/composables/useScreenReaderMode.ts` (line ~156):
+```typescript
+{ key: 'v', action: () => _router?.push('/persons'), description: t('screenReader.hotkeyPersons') },
+```
+And rename the i18n key in both `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts`:
+- `hotkeyVisualization: 'V visualisering'` → `hotkeyPersons: 'V personer'` (sv)
+- `hotkeyVisualization: 'V visualization'` → `hotkeyPersons: 'V persons'` (en — verify the English wording matches existing convention)
+
+h) **keep-alive name verification:** `CACHED_VIEWS` matches by component `name`. The project uses `@vitejs/plugin-vue` only (no `unplugin-vue-components` or `vite-plugin-vue-setup-extend`), so `<script setup>` components have no auto-derived name. After renaming the file, add to the renamed `PersonsView.vue` `<script setup>` block (and verify the other CACHED_VIEWS entries — `RelationshipsView`, `SourcesView`, `PlacesView`, `GroupsView`, `ResearchTasksView` — all have it too):
+```typescript
+defineOptions({ name: 'PersonsView' });
+```
+If the existing views are missing `defineOptions`, keep-alive caching may already be silently broken. Add it where missing as part of this step.
+
 - [ ] **Step 8: Delete PersonDetailView.vue**
 
 ```bash
@@ -225,11 +241,13 @@ Note the exact component names — they will be needed in SourcePanel.vue.
 
 - [ ] **Step 2: Create SourcePanel.vue**
 
-Create `src/renderer/components/SourcePanel.vue`. Model the structure on `PlacePanel.vue` — same panel-header, panel-body, panel-section pattern. Sections:
+Create `src/renderer/components/SourcePanel.vue`. Model the structure on `PlacePanel.vue` — same panel-header, panel-body, panel-section pattern. Sections (matching design spec):
 
 1. **Source** (default open) — editable fields: title, author, source_type (select), publication_info, repository, url, call_number, abstract. Each field uses `@blur="saveField('fieldname')"` to auto-save.
 2. **Citations** (default open) — citations table loaded via `window.api.sources.getCitations(sourceId)`. Each row shows entity label + confidence badge + delete button. Clicking a row opens `CitationEditModal`. "+" action opens the add citation modal.
-3. **Media** (default closed) — `<EntityMediaSection entity-type="source" :entity-id="sourceId" />`.
+3. **Repositories** (default closed) — repositories linked to the source loaded via `window.api.repositories.getForSource(sourceId)`. Each row shows repository name + remove button. Section header "+" action shows an inline picker (or a dropdown of all repositories via `window.api.repositories.list()`) + Add button to call `window.api.sources.linkRepository(sourceId, repositoryId)`. Verify the exact IPC channel name in `docs/IPC_REFERENCE.md` before wiring.
+4. **Media** (default closed) — `<EntityMediaSection entity-type="source" :entity-id="sourceId" />`.
+5. **Quality** (default closed) — source-scoped quality checks. If `window.api.checks` exposes a per-source filter, use it; otherwise reuse `PersonChecksSection`'s pattern adapted to source IDs. If the check engine has no source-level checks today, leave the section header rendered with an "no checks" placeholder so the layout is consistent — do not silently drop the section.
 
 Section state stored in localStorage with prefix `source-panel-section-`. Pattern:
 ```typescript
@@ -241,13 +259,17 @@ function loadBool(key: string, def: boolean) {
 const sections = reactive({
   source: loadBool('source', true),
   citations: loadBool('citations', true),
+  repositories: loadBool('repositories', false),
   media: loadBool('media', false),
+  quality: loadBool('quality', false),
 });
 function toggleSection(key: keyof typeof sections) {
   sections[key] = !sections[key];
   localStorage.setItem(STORAGE_PREFIX + key, String(sections[key]));
 }
 ```
+
+> **Note:** `useSectionState` already exists at `src/renderer/composables/useSectionState.ts` but is hardcoded for PersonPanel (typed `PersonPanelSections`, prefix `viz-panel-section-`) and cannot be reused as-is. The inline pattern above is the correct approach. If symmetry with `usePlacePanelSections` is desired, extract a `useSourcePanelSections` composable into `src/renderer/composables/` — same internal logic, just typed for SourcePanel's keys.
 
 Data loading uses `watch(() => props.sourceId, load, { immediate: true })`.
 
@@ -387,21 +409,21 @@ defineEmits<{ delete: [id: string]; select: [id: string] }>();
 
 - [ ] **Step 3: Create RelationshipPanel.vue**
 
-Create `src/renderer/components/RelationshipPanel.vue`. Model on PlacePanel. Sections:
+Create `src/renderer/components/RelationshipPanel.vue`. Model on PlacePanel. Sections (matching design spec):
 
-1. **Details** (default open) — type select (RELATIONSHIP_TYPE_VALUES), subtype select (COUPLE_SUBTYPE_VALUES or PARENT_CHILD_SUBTYPE_VALUES based on type), two PersonPicker components for person1_id and person2_id, notes textarea. All fields save immediately on change (`@change` for selects, `@update:modelValue` for PersonPicker, `@blur` for textarea) via `window.api.relationships.update(id, { field: value })`.
+1. **Relationship** (default open) — type select (RELATIONSHIP_TYPE_VALUES), subtype select (COUPLE_SUBTYPE_VALUES or PARENT_CHILD_SUBTYPE_VALUES based on type), two PersonPicker components for person1_id and person2_id, notes textarea. All fields save immediately on change (`@change` for selects, `@update:modelValue` for PersonPicker, `@blur` for textarea) via `window.api.relationships.update(id, { field: value })`.
 
-2. **Events** (default open) — `<EventList ref="eventListRef" :relationship-id="relationshipId!" hide-header />`. Section header "+" action calls `eventListRef?.openAddForm()`.
+2. **Events** (default open) — `<EventList ref="eventListRef" :relationship-id="relationship.id" hide-header />`. Section header "+" action calls `eventListRef?.openAddForm()`.
 
-3. **Media** (default closed) — `<EntityMediaSection entity-type="relationship" :entity-id="relationshipId!" />`.
+3. **Citations** (default closed) — relationship-level citations loaded via `window.api.sources.getCitationsForRelationship(relationshipId)`. Each row shows source title + page + confidence + delete button. "+" action opens `CitationForm` with `relationshipId` pre-filled.
+
+4. **Media** (default closed) — `<EntityMediaSection entity-type="relationship" :entity-id="relationship.id" />`.
 
 Props: `relationshipId: string | null`. Emits: `close: []`.
 
-Section state prefix: `rel-panel-section-`.
+Section state prefix: `rel-panel-section-`. Use the same inline pattern as SourcePanel (Task 2 Step 2).
 
-Data loading: `watch(() => props.relationshipId, load, { immediate: true })`.
-
-Load calls `window.api.relationships.get(relationshipId)`.
+Data loading: `watch(() => props.relationshipId, load, { immediate: true })`. Store the loaded relationship in a `relationship = ref<Relationship | null>(null)` and wrap the panel body in `<template v-if="relationship">` so child components receive a non-null `relationship.id` without the `!` assertion. Load calls `window.api.relationships.get(relationshipId)`.
 
 - [ ] **Step 4: Wire RelationshipsView to host the panel**
 
@@ -561,6 +583,8 @@ Also update aria-label: replace `$t('a11y.expandRow', ...)` with `$t('a11y.editI
 
 c) Keep the status cycle button as a quick row action (it does not require the expand panel). Keep `cycleStatus` function.
 
+> **Decision:** the status chip stays in the table only — it is the convenient one-click "this is done now" affordance from the list view. The panel exposes status as a regular `<select>` for full editing alongside the other fields. This contradicts the design-spec phrasing "status (chip cycling)" in the Task section: treat the spec as describing the editable field, not requiring a chip-cycle UI inside the panel.
+
 d) Add `selectedId?: string | null` to props so the table can highlight the selected row:
 ```typescript
 const props = defineProps<{
@@ -681,7 +705,18 @@ function navigateTo(r: QualityResult) {
 }
 ```
 
-Note: places now use `/places/:id` (route param) instead of query param, consistent with the other entities. Verify that PlacesView reads `route.params.id` on `onActivated` (it should — check `src/renderer/views/PlacesView.vue` line ~238 and add if missing: `const id = route.params.id as string | undefined; if (id) selectPlace(id);`).
+Note: places now use `/places/:id` (route param) instead of query param, consistent with the other entities.
+
+- [ ] **Step 1b: Make PlacesView read `route.params.id`**
+
+Open `src/renderer/views/PlacesView.vue`. In `onActivated` (around line 238 — verify the actual location), ensure this block exists:
+
+```typescript
+const id = route.params.id as string | undefined;
+if (id) selectPlace(id);
+```
+
+Also verify `onMounted` does the same on first load. Without this, navigating to `/places/:id` from QualityView (or directly from the address bar) will not pre-select the place in PlacePanel — the panel will stay closed and the navigation appears broken.
 
 - [ ] **Step 2: Update QualityIssuesTable.vue entity link builder**
 
@@ -715,10 +750,12 @@ git commit -m "fix: quality view navigation uses /persons/, /sources/, /places/ 
 **Files:**
 - `src/renderer/components/MediaPanel.vue`
 - `src/renderer/components/PlacePersonsSection.vue`
-- `src/renderer/components/PedigreeListNode.vue`
+- `src/renderer/components/charts/PedigreeListNode.vue`
 - `src/renderer/components/import/GedcomImportSection.vue`
 - `src/renderer/components/import/HolgerImportSection.vue`
 - `src/renderer/components/import/ArchiveSection.vue`
+- `src/renderer/composables/useScreenReaderMode.ts` (handled in Task 1 Step 7g — re-grep to confirm)
+- `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts` (handled in Task 1 Step 7g — re-grep to confirm)
 - Delete: `src/renderer/views/PlaceDetailView.vue`
 
 - [ ] **Step 1: Find all remaining /visualisering refs**
@@ -727,9 +764,14 @@ git commit -m "fix: quality view navigation uses /persons/, /sources/, /places/ 
 grep -rn "visualisering" src/renderer/ --include="*.vue" --include="*.ts"
 ```
 
-For each result (excluding the redirect entries in router.ts), replace `/visualisering/` with `/persons/`.
+For each result (excluding the redirect entries in router.ts and the sv.ts label "V visualisering" if not already renamed), replace `/visualisering/` with `/persons/`.
 
-Expected files: MediaPanel.vue, PlacePersonsSection.vue, PedigreeListNode.vue, GedcomImportSection.vue, HolgerImportSection.vue, ArchiveSection.vue.
+Expected files: MediaPanel.vue, PlacePersonsSection.vue, PedigreeListNode.vue, GedcomImportSection.vue, HolgerImportSection.vue, ArchiveSection.vue. (The screen-reader composable + i18n hotkey keys should already be handled in Task 1 Step 7g — if grep still finds them, complete that work here.)
+
+Also grep for `Visualization` (PascalCase) to catch the i18n key `screenReader.hotkeyVisualization` if it was missed:
+```bash
+grep -rn "hotkeyVisualization\|Visualization" src/renderer/ --include="*.vue" --include="*.ts"
+```
 
 - [ ] **Step 2: Delete PlaceDetailView.vue**
 
