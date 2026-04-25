@@ -80,37 +80,22 @@
     </template>
 
     <!-- Add modal -->
-    <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-place">
-        <h3 id="modal-title-add-place">{{ $t('common.add') }} {{ $t('places.addTitle') }}</h3>
-        <form @submit.prevent="addPlace">
-          <label>
-            {{ $t('places.name') }}
-            <input v-model="newPlace.name" type="text" required />
-          </label>
-          <label>
-            {{ $t('places.type') }}
-            <select v-model="newPlace.place_type">
-              <option value="">—</option>
-              <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">
-                {{ $t('placeTypes.' + pt) }}
-              </option>
-            </select>
-          </label>
-          <div class="modal-actions">
-            <AppButton variant="secondary" @click="showAddForm = false">{{ $t('common.cancel') }}</AppButton>
-            <AppButton variant="primary" type="submit">{{ $t('common.save') }}</AppButton>
-          </div>
-        </form>
-    </BaseModal>
+    <PlaceModal
+      v-if="showAddForm"
+      mode="standalone"
+      @cancel="showAddForm = false"
+      @close="showAddForm = false"
+      @saved="onPlaceSaved"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onActivated, watch } from 'vue';
+import { ref, computed, onMounted, onActivated, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import BaseModal from '../components/BaseModal.vue';
 import AppButton from '../components/ui/AppButton.vue';
+import PlaceModal from '../components/modals/PlaceModal.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import MapView from './MapView.vue';
@@ -197,8 +182,6 @@ const filteredPlaces = computed(() =>
 );
 const showAddForm = ref(false);
 
-const newPlace = reactive({ name: '', place_type: '' });
-
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
   if (row?.matches('tr[tabindex]')) row.focus();
@@ -212,14 +195,9 @@ async function load() {
   places.value = (await window.api.places.list()) as PlaceRow[];
 }
 
-async function addPlace() {
-  await window.api.places.create({
-    name: newPlace.name,
-    place_type: newPlace.place_type || null,
-  });
+function onPlaceSaved() {
   showAddForm.value = false;
-  Object.assign(newPlace, { name: '', place_type: '' });
-  await load();
+  load();
 }
 
 async function deletePlace(id: string) {
