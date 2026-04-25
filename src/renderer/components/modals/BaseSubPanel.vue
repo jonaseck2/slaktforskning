@@ -47,7 +47,12 @@
   <!-- SUBPANEL: floating card, no overlay; closes via × -->
   <div v-else class="entity-panel-wrap">
     <div ref="panelRef" class="entity-panel" :style="subPanelStyle">
-      <div class="ep-header" :style="headerStyle">
+      <div
+        class="ep-header"
+        :class="{ 'ep-header--draggable': parentDrag }"
+        :style="headerStyle"
+        @mousedown="parentDrag?.($event)"
+      >
         <div class="ep-header-left">
           <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
           <div class="ep-header-text">
@@ -86,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue';
+import { computed, ref, reactive, provide, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../BaseModal.vue';
 import { ENTITY_VISUALS, type EntityType } from '../../constants/entityColors';
@@ -196,6 +201,9 @@ function startDrag(e: MouseEvent) {
   e.preventDefault();
 }
 
+// Sub-panels inject this to move the shared fixed wrapper
+provide('modalDrag', startDrag);
+
 function startResize(e: MouseEvent) {
   const startX = e.clientX;
   const startY = e.clientY;
@@ -225,7 +233,9 @@ function startResize(e: MouseEvent) {
   e.preventDefault();
 }
 
-// ── Sub-panel resize (width + height, no drag) ──────────────────────────────
+// ── Sub-panel: inherit drag from standalone parent, resize independently ────
+
+const parentDrag = inject<((e: MouseEvent) => void) | null>('modalDrag', null);
 
 type SubPos = { w: number; h: number | null };
 const SUB_KEY = `modal-pos-${props.entityType}-sub`;
