@@ -1114,6 +1114,7 @@ export default {
     descendants: 'Avkomlingsgenerationer:',
     privacy: 'Sekretess',
     redactLiving: 'Anonymisera uppgifter om levande personer',
+    mediaPersonOnly: 'Inkludera endast media kopplade till en person',
     include: 'Inkludera',
     includeMedia: 'Media (original + miniatyrer)',
     includeReports: 'Bokslut (förrenderade för fokuspersonen)',

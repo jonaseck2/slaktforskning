@@ -1114,6 +1114,7 @@ export default {
     descendants: 'Descendant generations:',
     privacy: 'Privacy',
     redactLiving: 'Redact details for living persons',
+    mediaPersonOnly: 'Only include media linked to a person',
     include: 'Include',
     includeMedia: 'Media (originals + thumbnails)',
     includeReports: 'Reports (pre-rendered for focus person)',

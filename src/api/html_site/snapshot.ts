@@ -33,6 +33,7 @@ export interface SnapshotOptions {
     includePrints: boolean;
     excludeLiving: boolean;
     redactLiving: boolean;
+    mediaPersonOnly: boolean;
   };
 }
 
@@ -188,19 +189,23 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
     const allMediaLinks = queryAll<MediaLink>(db, 'SELECT * FROM media_links');
     const scopedMediaLinks = allMediaLinks.filter(ml => {
       if (ml.entity_type === 'person') return finalPersonIds.has(ml.entity_id);
+      if (opts.options.mediaPersonOnly) return false;
       if (ml.entity_type === 'event') return scopedEventIds.has(ml.entity_id);
       if (ml.entity_type === 'relationship') return relationshipIds.has(ml.entity_id);
       if (ml.entity_type === 'place') return referencedPlaceIds.has(ml.entity_id);
       if (ml.entity_type === 'source') return referencedSourceIds.has(ml.entity_id);
       return false;
     });
-    const scopedMediaIds = new Set(scopedMediaLinks.map(ml => ml.media_id));
+    // When mediaPersonOnly is set, also drop media that has zero person links
+    // even if it has links to other entities (otherwise it'd be exported with
+    // no link metadata, leaving an orphan file).
+    const linkedMediaIds = new Set(scopedMediaLinks.map(ml => ml.media_id));
     const allMedia = queryAll<Media>(db, 'SELECT * FROM media');
-    media = allMedia.filter(m => scopedMediaIds.has(m.id));
+    media = allMedia.filter(m => linkedMediaIds.has(m.id));
     mediaLinks = scopedMediaLinks;
 
     const allMediaRegions = queryAll<MediaRegion>(db, 'SELECT * FROM media_regions');
-    mediaRegions = allMediaRegions.filter(r => scopedMediaIds.has(r.media_id));
+    mediaRegions = allMediaRegions.filter(r => linkedMediaIds.has(r.media_id));
   }
 
   return {

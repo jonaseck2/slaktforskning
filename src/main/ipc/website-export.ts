@@ -14,6 +14,7 @@ export function registerWebsiteExportHandlers(): void {
       includeMedia: boolean;
       excludeLiving: boolean;
       redactLiving: boolean;
+      mediaPersonOnly: boolean;
     };
     _outputDir?: string;
   }) => {

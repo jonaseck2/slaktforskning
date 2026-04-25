@@ -14,7 +14,7 @@ describe('buildSnapshot', () => {
       siteTitle: 'Test',
       focusPersonId: p.id,
       scope: { everyone: true },
-      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: true },
+      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: true, mediaPersonOnly: false },
     });
     expect(Object.keys(snap)).toEqual(expect.arrayContaining([
       'meta', 'persons', 'personNames', 'personIds', 'relationships',
@@ -33,7 +33,7 @@ describe('buildSnapshot', () => {
       siteTitle: 'Test',
       focusPersonId: focus.id,
       scope: { focusId: focus.id, ancestors: 0, descendants: 0 },
-      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: false },
+      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: false, mediaPersonOnly: false },
     });
     expect(snap.persons.map((p: any) => p.id)).toEqual([focus.id]);
     expect(snap.relationships.length).toBe(0);
@@ -46,7 +46,7 @@ describe('buildSnapshot', () => {
       siteTitle: 'T',
       focusPersonId: dead.id,
       scope: { everyone: true },
-      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: true, redactLiving: false },
+      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: true, redactLiving: false, mediaPersonOnly: false },
     });
     expect(snap.persons.map((p: any) => p.id)).toEqual([dead.id]);
   });
@@ -57,7 +57,7 @@ describe('buildSnapshot', () => {
       siteTitle: 'T',
       focusPersonId: focus.id,
       scope: { everyone: true },
-      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: true },
+      options: { includeMedia: false, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: true, mediaPersonOnly: false },
     });
     expect(snap.persons[0].notes).toBe('');
     expect(snap.persons[0].redacted).toBe(true);
