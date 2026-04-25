@@ -92,9 +92,9 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 | `list_groups` | List all groups |
 | `update_group` | Update group name or notes |
 | `delete_group` | Delete a group |
-| `add_group_member` | Add a person to a group |
-| `remove_group_member` | Remove a person from a group |
-| `get_group_members` | Get all members of a group |
+| `add_group_link` | Link a person, place, or media item to a group |
+| `remove_group_link` | Remove a group link by id |
+| `get_group_links` | Get all polymorphic links for a group |
 | `get_groups_for_person` | Get all groups a person belongs to |
 
 ## Repository Tools

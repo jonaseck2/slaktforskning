@@ -221,11 +221,11 @@ Then add the test file to `playwright.config.ts` as a new project:
 - `app.createCitation({ source_id, event_id?, person_id?, confidence? })`
 - `app.createPlace({ name, place_type?, street?, postal_code?, city?, country? })`
 - `app.createRelationship({ type, person1_id?, person2_id?, subtype? })`
-- `app.createResearchTask({ task, person_id?, priority?, status?, notes? })`
+- `app.createResearchTask({ task, priority?, status?, notes? })` (use `addTaskLink` afterwards to attach persons/places/media)
 - `app.createMedia({ title, file_ref?, format?, notes? })`
 - `app.addMediaLink({ media_id, entity_type, entity_id, sort_order? })`
 - `app.createGroup({ name, notes? })`
-- `app.addGroupMember(groupId, personId)`
+- `app.addGroupMember(groupId, personId)` — convenience helper around `addLink('person', …)`
 
 ### Critical E2E patterns and pitfalls
 

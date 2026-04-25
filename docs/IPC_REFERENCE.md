@@ -68,10 +68,13 @@ window.api.groups.get(id)                          // → Group | null
 window.api.groups.create(data)                     // → Group
 window.api.groups.update(id, data)                 // → Group | null
 window.api.groups.delete(id)                       // → boolean
-window.api.groups.addMember(groupId, personId)     // → GroupMember
-window.api.groups.removeMember(groupId, personId)  // → boolean
-window.api.groups.getMembers(groupId)              // → GroupMember[]
-window.api.groups.forPerson(personId)              // → Group[]
+window.api.groups.addLink(groupId, entityType, entityId)            // → GroupLink
+window.api.groups.removeLink(linkId)                                 // → boolean
+window.api.groups.removeLinkByEntity(groupId, entityType, entityId)  // → boolean
+window.api.groups.getLinks(groupId)                                  // → GroupLink[]
+window.api.groups.forPerson(personId)                                // → Group[]
+window.api.groups.forPlace(placeId)                                  // → Group[]
+window.api.groups.forMedia(mediaId)                                  // → Group[]
 
 window.api.repositories.list()                           // → Repository[]
 window.api.repositories.get(id)                          // → Repository | null
@@ -82,12 +85,17 @@ window.api.repositories.forSource(sourceId)              // → Repository[]
 window.api.repositories.linkSource(sourceId, repoId)     // → void
 window.api.repositories.unlinkSource(sourceId, repoId)   // → boolean
 
-window.api.researchTasks.list()                          // → ResearchTask[]
-window.api.researchTasks.get(id)                         // → ResearchTask | null
-window.api.researchTasks.forPerson(personId)             // → ResearchTask[]
-window.api.researchTasks.create(data)                    // → ResearchTask
-window.api.researchTasks.update(id, data)                // → ResearchTask | null
-window.api.researchTasks.delete(id)                      // → boolean
+window.api.researchTasks.list()                              // → ResearchTask[]
+window.api.researchTasks.get(id)                             // → ResearchTask | null
+window.api.researchTasks.forPerson(personId)                 // → ResearchTask[]
+window.api.researchTasks.forPlace(placeId)                   // → ResearchTask[]
+window.api.researchTasks.forMedia(mediaId)                   // → ResearchTask[]
+window.api.researchTasks.create(data)                        // → ResearchTask
+window.api.researchTasks.update(id, data)                    // → ResearchTask | null
+window.api.researchTasks.delete(id)                          // → boolean
+window.api.researchTasks.addLink(taskId, entityType, entityId) // → TaskLink
+window.api.researchTasks.removeLink(linkId)                  // → boolean
+window.api.researchTasks.getLinks(taskId)                    // → TaskLink[]
 
 window.api.media.list()                                  // → Media[]
 window.api.media.get(id)                                 // → Media | null
@@ -179,10 +187,13 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `groups:create` | `groups.createGroup(db, data)` |
 | `groups:update` | `groups.updateGroup(db, id, data)` |
 | `groups:delete` | `groups.deleteGroup(db, id)` |
-| `groups:addMember` | `groups.addGroupMember(db, groupId, personId)` |
-| `groups:removeMember` | `groups.removeGroupMember(db, groupId, personId)` |
-| `groups:getMembers` | `groups.getGroupMembers(db, groupId)` |
+| `groups:addLink` | `groups.addGroupLink(db, groupId, entityType, entityId)` |
+| `groups:removeLink` | `groups.removeGroupLink(db, linkId)` |
+| `groups:removeLinkByEntity` | `groups.removeGroupLinkByEntity(db, groupId, entityType, entityId)` |
+| `groups:getLinks` | `groups.getGroupLinks(db, groupId)` |
 | `groups:forPerson` | `groups.getGroupsForPerson(db, personId)` |
+| `groups:forPlace` | `groups.getGroupsForPlace(db, placeId)` |
+| `groups:forMedia` | `groups.getGroupsForMedia(db, mediaId)` |
 | `repositories:list` | `repositories.listRepositories(db)` |
 | `repositories:get` | `repositories.getRepository(db, id)` |
 | `repositories:create` | `repositories.createRepository(db, data)` |
@@ -194,9 +205,14 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `researchTasks:list` | `researchTasks.listResearchTasks(db)` |
 | `researchTasks:get` | `researchTasks.getResearchTask(db, id)` |
 | `researchTasks:forPerson` | `researchTasks.getResearchTasksForPerson(db, personId)` |
+| `researchTasks:forPlace` | `researchTasks.getResearchTasksForPlace(db, placeId)` |
+| `researchTasks:forMedia` | `researchTasks.getResearchTasksForMedia(db, mediaId)` |
 | `researchTasks:create` | `researchTasks.createResearchTask(db, data)` |
 | `researchTasks:update` | `researchTasks.updateResearchTask(db, id, data)` |
 | `researchTasks:delete` | `researchTasks.deleteResearchTask(db, id)` |
+| `researchTasks:addLink` | `researchTasks.addTaskLink(db, taskId, entityType, entityId)` |
+| `researchTasks:removeLink` | `researchTasks.removeTaskLink(db, linkId)` |
+| `researchTasks:getLinks` | `researchTasks.getTaskLinks(db, taskId)` |
 | `media:list` | `media.listMedia(db)` |
 | `media:get` | `media.getMedia(db, id)` |
 | `media:create` | `media.createMedia(db, data)` |

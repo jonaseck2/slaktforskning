@@ -1115,7 +1115,7 @@ export default {
     redactLiving: 'Anonymisera uppgifter om levande personer',
     mediaPersonOnly: 'Inkludera endast media kopplade till en person',
     include: 'Inkludera',
-    includeMedia: 'Media (original + miniatyrer)',
+    includeMedia: 'Mediafiler',
     includeReports: 'Bokslut (förrenderade för fokuspersonen)',
     includePrints: 'Inramningsbara utskrifter (förrenderade)',
     site: 'Webbplats',

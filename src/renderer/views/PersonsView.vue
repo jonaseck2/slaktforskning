@@ -21,7 +21,7 @@
       <!-- Tree mode: tab bar + chart -->
       <template v-if="viewMode === 'tree'">
       <!-- Tab bar -->
-      <div v-if="focalPerson" class="viz-tab-bar">
+      <div v-if="focalPerson" class="filter-chips-bar">
         <FilterChips
           :model-value="activeTab"
           :options="[
@@ -437,7 +437,7 @@ onActivated(load);
 }
 
 /* Tab bar row: back button + FilterChips + optional toggle */
-.viz-tab-bar {
+.filter-chips-bar {
   display: flex;
   align-items: center;
   gap: var(--space-xs);

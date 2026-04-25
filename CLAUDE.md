@@ -56,9 +56,9 @@ src/
 │   ├── events.ts                 # Life event CRUD
 │   ├── places.ts                 # Place CRUD + findOrCreate + getPlacePath
 │   ├── sources.ts                # Source + Citation CRUD
-│   ├── groups.ts                 # Group + GroupMember CRUD
+│   ├── groups.ts                 # Group + GroupLink CRUD (polymorphic links to person/place/media)
 │   ├── repositories.ts           # Repository CRUD + source links
-│   ├── research_tasks.ts         # ResearchTask CRUD
+│   ├── research_tasks.ts         # ResearchTask + TaskLink CRUD (polymorphic links to person/place/media)
 │   ├── media.ts                  # Media + MediaLink CRUD
 │   ├── report_data.ts            # Denormalized report data for AI narrative generation
 │   ├── media_ai.ts               # AI media tools: base64 retrieval, untagged discovery, person context, tagging status
@@ -298,9 +298,10 @@ Place            { id, name, normalized_name, place_type?, parent_place_id?, lat
 Source           { id, title, author, publication_info, repository, url, source_type, call_number?, abstract?, created_at, updated_at }
 Citation         { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, created_at }
 Group            { id, name, notes, created_at }
-GroupMember      { id, group_id, person_id }
+GroupLink        { id, group_id, entity_type: 'person'|'place'|'media', entity_id, sort_order, created_at }
 Repository       { id, name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes, created_at }
-ResearchTask     { id, person_id?, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
+ResearchTask     { id, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
+TaskLink         { id, task_id, entity_type: 'person'|'place'|'media', entity_id, sort_order, created_at }
 Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
 MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, sort_order: number, created_at }
 MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number, height: number, label?, created_at }
@@ -321,10 +322,11 @@ MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number
 | `sources` | title, author, publication_info, repository, url, source_type, call_number, abstract | — |
 | `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id | source → CASCADE, event/person/relationship → SET NULL |
 | `groups` | name, notes | — |
-| `group_members` | group_id, person_id (UNIQUE) | group → CASCADE, person → CASCADE |
+| `group_links` | group_id, entity_type ∈ {person\|place\|media}, entity_id, sort_order (UNIQUE on triple) | group → CASCADE; entity_id is polymorphic — cleaned up by `deletePerson`/`deletePlace`/`deleteMedia` |
 | `repositories` | name, address, city, postal_code, state, country, phone, email, web, call_number, notes | — |
 | `source_repositories` | source_id, repository_id (UNIQUE) | both → CASCADE |
-| `research_tasks` | person_id, priority, status, task, notes, result | person → CASCADE |
+| `research_tasks` | priority, status, task, notes, result | — |
+| `task_links` | task_id, entity_type ∈ {person\|place\|media}, entity_id, sort_order (UNIQUE on triple) | task → CASCADE; entity_id is polymorphic — cleaned up by `deletePerson`/`deletePlace`/`deleteMedia` |
 | `media` | file_ref, title, format, notes, is_printable | — |
 | `media_links` | media_id, entity_type, entity_id, link_type, sort_order | media → CASCADE |
 | `media_regions` | media_id, person_id, x, y, width, height, label | media → CASCADE, person → SET NULL |
@@ -408,10 +410,13 @@ getGroup(db, id) → Group | null
 listGroups(db) → Group[]
 updateGroup(db, id, { name?, notes? }) → Group | null
 deleteGroup(db, id) → boolean
-addGroupMember(db, groupId, personId) → GroupMember
-removeGroupMember(db, groupId, personId) → boolean
-getGroupMembers(db, groupId) → GroupMember[]
+addGroupLink(db, groupId, entityType, entityId) → GroupLink
+removeGroupLink(db, linkId) → boolean
+removeGroupLinkByEntity(db, groupId, entityType, entityId) → boolean
+getGroupLinks(db, groupId) → GroupLink[]
 getGroupsForPerson(db, personId) → Group[]
+getGroupsForPlace(db, placeId) → Group[]
+getGroupsForMedia(db, mediaId) → Group[]
 ```
 
 ### repositories.ts
@@ -428,12 +433,17 @@ getRepositoriesForSource(db, sourceId) → Repository[]
 
 ### research_tasks.ts
 ```
-createResearchTask(db, { task, notes?, result?, person_id?, priority?, status? }) → ResearchTask
+createResearchTask(db, { task, notes?, result?, priority?, status? }) → ResearchTask
 getResearchTask(db, id) → ResearchTask | null
 listResearchTasks(db) → ResearchTask[]
 getResearchTasksForPerson(db, personId) → ResearchTask[]
+getResearchTasksForPlace(db, placeId) → ResearchTask[]
+getResearchTasksForMedia(db, mediaId) → ResearchTask[]
 updateResearchTask(db, id, { task?, notes?, result?, status?, priority? }) → ResearchTask | null
 deleteResearchTask(db, id) → boolean
+addTaskLink(db, taskId, entityType, entityId) → TaskLink
+removeTaskLink(db, linkId) → boolean
+getTaskLinks(db, taskId) → TaskLink[]
 ```
 
 ### media.ts
