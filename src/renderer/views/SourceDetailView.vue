@@ -95,12 +95,15 @@
       </table>
     </section>
 
-    <CitationForm
-      v-if="showCitationForm"
-      :source-id="source.id"
-      @close="showCitationForm = false"
-      @saved="onCitationSaved"
-    />
+    <BaseModal v-if="showCitationForm" @close="showCitationForm = false" title-id="add-citation-title">
+      <CitationModal
+        :source-id="source.id"
+        :source-title="source.title"
+        @close="showCitationForm = false"
+        @cancel="showCitationForm = false"
+        @saved="onCitationSaved"
+      />
+    </BaseModal>
     <CitationEditModal
       v-if="editingCitation"
       :citation="editingCitation"
@@ -116,8 +119,10 @@ import { ref, reactive, onMounted, inject, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
-import CitationForm from '../components/CitationForm.vue';
+import CitationModal from '../components/modals/CitationModal.vue';
+import BaseModal from '../components/BaseModal.vue';
 import SectionEmpty from '../components/ui/SectionEmpty.vue';
+// TODO(modal-redesign): replace CitationEditModal with CitationModal edit mode
 import CitationEditModal from '../components/CitationEditModal.vue';
 import LinkedText from '../components/LinkedText.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
