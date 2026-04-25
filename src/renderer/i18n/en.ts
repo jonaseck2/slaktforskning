@@ -110,6 +110,8 @@ export default {
     emptyHint: 'Add your first person to start building your family tree.',
     name: 'Name',
     info: 'Info',
+    entity: 'Person',
+    newPerson: 'New Person',
   },
   personDetail: {
     deceased: 'Deceased',
@@ -147,6 +149,7 @@ export default {
     searchPerson: 'Search for a person\u2026',
     confirmDelete: 'Delete this relation? This cannot be undone.',
     showingOf: 'Showing {shown} of {total} relations',
+    searchOrAdd: 'Search or add relationship…',
   },
   relationshipDetail: {
     title: 'Relationship',
