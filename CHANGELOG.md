@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(charts): zoom controls now visible on pedigree, hourglass, descendant, and timeline charts even in readonly mode (they're navigation, not editing — were previously gated by `v-if="!readonly"` and only fan chart had them unconditionally)
 - feat(media): viewer now previews the report-style caption ("From left: …" + notes) under the picture, using the same MediaCaption component the reports use — extracted from MediaChronological so the look stays in sync
 - fix(timeline): render labels on top of stems; make axis line black
 - fix(media): refresh profile picture immediately after setting from face region; auto-create media link when only tagged via region

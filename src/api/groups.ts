@@ -1,5 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
-import type { Group, GroupMember } from './types';
+import type { Group, GroupLink, LinkEntityType } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 export function createGroup(db: Database, data: { name: string; notes?: string }): Group {
@@ -31,25 +31,66 @@ export function deleteGroup(db: Database, id: string): boolean {
   return runSqlChanges(db, 'DELETE FROM groups WHERE id = ?', [id]) > 0;
 }
 
-export function addGroupMember(db: Database, groupId: string, personId: string): GroupMember {
+// ── Links ──────────────────────────────────────────────────────────────────
+
+export function addGroupLink(db: Database, groupId: string, entityType: LinkEntityType, entityId: string): GroupLink {
   const id = crypto.randomUUID();
-  runSql(db, 'INSERT OR IGNORE INTO group_members (id, group_id, person_id) VALUES (?, ?, ?)', [id, groupId, personId]);
-  return queryOne<GroupMember>(db, 'SELECT * FROM group_members WHERE group_id = ? AND person_id = ?', [groupId, personId])!;
+  const nextOrder = queryOne<{ m: number | null }>(db,
+    'SELECT MAX(sort_order) AS m FROM group_links WHERE group_id = ? AND entity_type = ?',
+    [groupId, entityType]
+  );
+  const sort = (nextOrder?.m ?? -1) + 1;
+  runSql(db,
+    `INSERT OR IGNORE INTO group_links (id, group_id, entity_type, entity_id, sort_order) VALUES (?, ?, ?, ?, ?)`,
+    [id, groupId, entityType, entityId, sort]
+  );
+  return queryOne<GroupLink>(db,
+    'SELECT * FROM group_links WHERE group_id = ? AND entity_type = ? AND entity_id = ?',
+    [groupId, entityType, entityId]
+  )!;
 }
 
-export function removeGroupMember(db: Database, groupId: string, personId: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM group_members WHERE group_id = ? AND person_id = ?', [groupId, personId]) > 0;
+export function removeGroupLink(db: Database, linkId: string): boolean {
+  return runSqlChanges(db, 'DELETE FROM group_links WHERE id = ?', [linkId]) > 0;
 }
 
-export function getGroupMembers(db: Database, groupId: string): GroupMember[] {
-  return queryAll<GroupMember>(db, 'SELECT * FROM group_members WHERE group_id = ?', [groupId]);
+export function removeGroupLinkByEntity(db: Database, groupId: string, entityType: LinkEntityType, entityId: string): boolean {
+  return runSqlChanges(db,
+    'DELETE FROM group_links WHERE group_id = ? AND entity_type = ? AND entity_id = ?',
+    [groupId, entityType, entityId]
+  ) > 0;
+}
+
+export function getGroupLinks(db: Database, groupId: string): GroupLink[] {
+  return queryAll<GroupLink>(db,
+    'SELECT * FROM group_links WHERE group_id = ? ORDER BY entity_type, sort_order, created_at',
+    [groupId]
+  );
 }
 
 export function getGroupsForPerson(db: Database, personId: string): Group[] {
   return queryAll<Group>(db, `
     SELECT g.* FROM groups g
-    JOIN group_members gm ON gm.group_id = g.id
-    WHERE gm.person_id = ?
+    JOIN group_links gl ON gl.group_id = g.id
+    WHERE gl.entity_type = 'person' AND gl.entity_id = ?
     ORDER BY g.name
   `, [personId]);
+}
+
+export function getGroupsForPlace(db: Database, placeId: string): Group[] {
+  return queryAll<Group>(db, `
+    SELECT g.* FROM groups g
+    JOIN group_links gl ON gl.group_id = g.id
+    WHERE gl.entity_type = 'place' AND gl.entity_id = ?
+    ORDER BY g.name
+  `, [placeId]);
+}
+
+export function getGroupsForMedia(db: Database, mediaId: string): Group[] {
+  return queryAll<Group>(db, `
+    SELECT g.* FROM groups g
+    JOIN group_links gl ON gl.group_id = g.id
+    WHERE gl.entity_type = 'media' AND gl.entity_id = ?
+    ORDER BY g.name
+  `, [mediaId]);
 }

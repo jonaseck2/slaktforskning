@@ -172,7 +172,10 @@ src/
 │   │   ├── RelationshipPanel.vue # Side panel for a relationship: persons, type/subtype, events, citations, media
 │   │   ├── GroupPanel.vue        # Side panel for a group: name, notes, members
 │   │   ├── ResearchTaskPanel.vue # Side panel for a research task: editable fields + linked person
-│   │   ├── MediaPanel.vue        # Media linking workbench panel (attach media to entities)
+│   │   ├── MediaPanel.vue        # Side panel for a media item: editable title (input) + Open button, notes, linked persons/places/events, face tags, quality
+│   │   ├── MediaViewer.vue       # Full-canvas image viewer with face-tag overlay, ZoomControls overlay, filmstrip, and caption preview that follows the image during zoom/pan
+│   │   ├── MediaCaption.vue      # Reusable caption: "From left: …" face list + notes (extracted from MediaChronological so the report and the viewer preview stay in sync)
+│   │   ├── FaceTagOverlay.vue    # SVG overlay on top of the viewer image — draggable/resizable face regions with labels, draw mode for new tags
 │   │   ├── PersonPicker.vue      # Searchable person dropdown (typeahead)
 │   │   ├── DateInput.vue         # YYYY-MM-DD date input with auto-advance
 │   │   └── EventList.vue         # Event table with add/edit/delete (embeds EventModal)

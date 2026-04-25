@@ -170,7 +170,7 @@
         </template>
       </svg>
     </div>
-    <ZoomControls v-if="!readonly" overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+    <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
       <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
       <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
       <span class="zoom-extra-value">{{ genTarget }}</span>

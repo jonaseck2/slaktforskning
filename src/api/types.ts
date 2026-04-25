@@ -127,10 +127,15 @@ export interface Group {
   created_at: string;
 }
 
-export interface GroupMember {
+export type LinkEntityType = 'person' | 'place' | 'media';
+
+export interface GroupLink {
   id: string;
   group_id: string;
-  person_id: string;
+  entity_type: LinkEntityType;
+  entity_id: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Repository {
@@ -153,7 +158,6 @@ export type ResearchTaskStatus = 'open' | 'in_progress' | 'done' | 'stopped';
 
 export interface ResearchTask {
   id: string;
-  person_id: string | null;
   priority: number;
   status: ResearchTaskStatus;
   task: string;
@@ -161,6 +165,15 @@ export interface ResearchTask {
   result: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface TaskLink {
+  id: string;
+  task_id: string;
+  entity_type: LinkEntityType;
+  entity_id: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Media {

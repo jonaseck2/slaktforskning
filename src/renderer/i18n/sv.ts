@@ -26,7 +26,7 @@ export default {
     organize: 'ORGANISERA',
     review: 'GRANSKA',
     present: 'PRESENTERA',
-    framablePrints: 'Inramningsbara diagram',
+    framablePrints: 'Diagram',
     website: 'Webbplats',
   },
   settings: {
@@ -765,7 +765,7 @@ export default {
     },
     groups: {
       keepsake: 'Minnesrapporter',
-      framablePrints: 'Inramningsbara diagram',
+      framablePrints: 'Diagram',
     },
     rootPerson: 'Utgångsperson',
     person: 'Person',

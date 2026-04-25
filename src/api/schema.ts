@@ -130,14 +130,17 @@ export function initializeSchema(db: Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS group_members (
+    CREATE TABLE IF NOT EXISTS group_links (
       id TEXT PRIMARY KEY,
       group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-      person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-      UNIQUE(group_id, person_id)
+      entity_type TEXT NOT NULL CHECK(entity_type IN ('person', 'place', 'media')),
+      entity_id TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(group_id, entity_type, entity_id)
     );
-    CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
-    CREATE INDEX IF NOT EXISTS idx_group_members_person_id ON group_members(person_id);
+    CREATE INDEX IF NOT EXISTS idx_group_links_group_id ON group_links(group_id);
+    CREATE INDEX IF NOT EXISTS idx_group_links_entity ON group_links(entity_type, entity_id);
 
     CREATE TABLE IF NOT EXISTS repositories (
       id TEXT PRIMARY KEY,
@@ -163,7 +166,6 @@ export function initializeSchema(db: Database): void {
 
     CREATE TABLE IF NOT EXISTS research_tasks (
       id TEXT PRIMARY KEY,
-      person_id TEXT REFERENCES persons(id) ON DELETE CASCADE,
       priority INTEGER NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'in_progress', 'done', 'stopped')),
       task TEXT NOT NULL DEFAULT '',
@@ -172,7 +174,18 @@ export function initializeSchema(db: Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-    CREATE INDEX IF NOT EXISTS idx_research_tasks_person_id ON research_tasks(person_id);
+
+    CREATE TABLE IF NOT EXISTS task_links (
+      id TEXT PRIMARY KEY,
+      task_id TEXT NOT NULL REFERENCES research_tasks(id) ON DELETE CASCADE,
+      entity_type TEXT NOT NULL CHECK(entity_type IN ('person', 'place', 'media')),
+      entity_id TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(task_id, entity_type, entity_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_task_links_task_id ON task_links(task_id);
+    CREATE INDEX IF NOT EXISTS idx_task_links_entity ON task_links(entity_type, entity_id);
 
     CREATE TABLE IF NOT EXISTS media (
       id TEXT PRIMARY KEY,
@@ -352,6 +365,54 @@ export function initializeSchema(db: Database): void {
       DROP TABLE person_names;
       ALTER TABLE person_names_new RENAME TO person_names;
     `);
+  }
+
+  // v0.80.0: research_tasks.person_id → task_links; group_members → group_links
+  // Generic link tables let tasks and groups attach persons, places, and media.
+  const researchTaskCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(research_tasks)').map(c => c.name);
+  if (researchTaskCols.includes('person_id')) {
+    const existingTasks = queryAll<{ id: string; person_id: string | null }>(
+      db, 'SELECT id, person_id FROM research_tasks WHERE person_id IS NOT NULL'
+    );
+    for (const t of existingTasks) {
+      runSql(db,
+        `INSERT OR IGNORE INTO task_links (id, task_id, entity_type, entity_id, sort_order) VALUES (?, ?, 'person', ?, 0)`,
+        [crypto.randomUUID(), t.id, t.person_id!]
+      );
+    }
+    db.exec(`
+      DROP INDEX IF EXISTS idx_research_tasks_person_id;
+      CREATE TABLE research_tasks_new (
+        id TEXT PRIMARY KEY,
+        priority INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'in_progress', 'done', 'stopped')),
+        task TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        result TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO research_tasks_new (id, priority, status, task, notes, result, created_at, updated_at)
+        SELECT id, priority, status, task, notes, result, created_at, updated_at FROM research_tasks;
+      DROP TABLE research_tasks;
+      ALTER TABLE research_tasks_new RENAME TO research_tasks;
+    `);
+  }
+
+  const groupMembersExists = queryOne<{ name: string }>(db,
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='group_members'`
+  );
+  if (groupMembersExists) {
+    const existingMembers = queryAll<{ group_id: string; person_id: string }>(
+      db, 'SELECT group_id, person_id FROM group_members'
+    );
+    for (const m of existingMembers) {
+      runSql(db,
+        `INSERT OR IGNORE INTO group_links (id, group_id, entity_type, entity_id, sort_order) VALUES (?, ?, 'person', ?, 0)`,
+        [crypto.randomUUID(), m.group_id, m.person_id]
+      );
+    }
+    runSql(db, 'DROP TABLE group_members');
   }
 
   // Indexes that depend on migrated columns — run after migrations

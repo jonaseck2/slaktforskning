@@ -26,7 +26,7 @@ export default {
     organize: 'ORGANIZE',
     review: 'REVIEW',
     present: 'PRESENT',
-    framablePrints: 'Framable prints',
+    framablePrints: 'Charts',
     website: 'Website',
   },
   settings: {
@@ -765,7 +765,7 @@ export default {
     },
     groups: {
       keepsake: 'Keepsake reports',
-      framablePrints: 'Framable prints',
+      framablePrints: 'Charts',
     },
     rootPerson: 'Root person',
     person: 'Person',

@@ -1,9 +1,8 @@
 import type { Database } from 'node-sqlite3-wasm';
-import type { ResearchTask, ResearchTaskStatus } from './types';
+import type { LinkEntityType, ResearchTask, ResearchTaskStatus, TaskLink } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
 export function createResearchTask(db: Database, data: {
-  person_id?: string | null;
   priority?: number;
   status?: ResearchTaskStatus;
   task: string;
@@ -12,10 +11,10 @@ export function createResearchTask(db: Database, data: {
 }): ResearchTask {
   const id = crypto.randomUUID();
   runSql(db, `
-    INSERT INTO research_tasks (id, person_id, priority, status, task, notes, result)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO research_tasks (id, priority, status, task, notes, result)
+    VALUES (?, ?, ?, ?, ?, ?)
   `, [
-    id, data.person_id ?? null, data.priority ?? 0,
+    id, data.priority ?? 0,
     data.status ?? 'open', data.task,
     data.notes ?? '', data.result ?? '',
   ]);
@@ -31,7 +30,30 @@ export function listResearchTasks(db: Database): ResearchTask[] {
 }
 
 export function getResearchTasksForPerson(db: Database, personId: string): ResearchTask[] {
-  return queryAll<ResearchTask>(db, 'SELECT * FROM research_tasks WHERE person_id = ? ORDER BY priority DESC, created_at', [personId]);
+  return queryAll<ResearchTask>(db, `
+    SELECT rt.* FROM research_tasks rt
+    JOIN task_links tl ON tl.task_id = rt.id
+    WHERE tl.entity_type = 'person' AND tl.entity_id = ?
+    ORDER BY rt.priority DESC, rt.created_at
+  `, [personId]);
+}
+
+export function getResearchTasksForPlace(db: Database, placeId: string): ResearchTask[] {
+  return queryAll<ResearchTask>(db, `
+    SELECT rt.* FROM research_tasks rt
+    JOIN task_links tl ON tl.task_id = rt.id
+    WHERE tl.entity_type = 'place' AND tl.entity_id = ?
+    ORDER BY rt.priority DESC, rt.created_at
+  `, [placeId]);
+}
+
+export function getResearchTasksForMedia(db: Database, mediaId: string): ResearchTask[] {
+  return queryAll<ResearchTask>(db, `
+    SELECT rt.* FROM research_tasks rt
+    JOIN task_links tl ON tl.task_id = rt.id
+    WHERE tl.entity_type = 'media' AND tl.entity_id = ?
+    ORDER BY rt.priority DESC, rt.created_at
+  `, [mediaId]);
 }
 
 export function updateResearchTask(db: Database, id: string, data: {
@@ -40,7 +62,6 @@ export function updateResearchTask(db: Database, id: string, data: {
   task?: string;
   notes?: string;
   result?: string;
-  person_id?: string | null;
 }): ResearchTask | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -49,7 +70,6 @@ export function updateResearchTask(db: Database, id: string, data: {
   if (data.task !== undefined) { fields.push('task = ?'); values.push(data.task); }
   if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
   if (data.result !== undefined) { fields.push('result = ?'); values.push(data.result); }
-  if ('person_id' in data) { fields.push('person_id = ?'); values.push(data.person_id ?? null); }
   if (fields.length === 0) return getResearchTask(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
@@ -59,4 +79,34 @@ export function updateResearchTask(db: Database, id: string, data: {
 
 export function deleteResearchTask(db: Database, id: string): boolean {
   return runSqlChanges(db, 'DELETE FROM research_tasks WHERE id = ?', [id]) > 0;
+}
+
+// ── Links ──────────────────────────────────────────────────────────────────
+
+export function addTaskLink(db: Database, taskId: string, entityType: LinkEntityType, entityId: string): TaskLink {
+  const id = crypto.randomUUID();
+  const nextOrder = queryOne<{ m: number | null }>(db,
+    'SELECT MAX(sort_order) AS m FROM task_links WHERE task_id = ? AND entity_type = ?',
+    [taskId, entityType]
+  );
+  const sort = (nextOrder?.m ?? -1) + 1;
+  runSql(db,
+    `INSERT OR IGNORE INTO task_links (id, task_id, entity_type, entity_id, sort_order) VALUES (?, ?, ?, ?, ?)`,
+    [id, taskId, entityType, entityId, sort]
+  );
+  return queryOne<TaskLink>(db,
+    'SELECT * FROM task_links WHERE task_id = ? AND entity_type = ? AND entity_id = ?',
+    [taskId, entityType, entityId]
+  )!;
+}
+
+export function removeTaskLink(db: Database, linkId: string): boolean {
+  return runSqlChanges(db, 'DELETE FROM task_links WHERE id = ?', [linkId]) > 0;
+}
+
+export function getTaskLinks(db: Database, taskId: string): TaskLink[] {
+  return queryAll<TaskLink>(db,
+    'SELECT * FROM task_links WHERE task_id = ? ORDER BY entity_type, sort_order, created_at',
+    [taskId]
+  );
 }
