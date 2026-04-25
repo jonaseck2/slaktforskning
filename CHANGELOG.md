@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.142.2 — panel layout polish
+
+- fix: PlacePanel no longer reloads when switching list↔map — panel is now owned by PlacesView across both modes (MapView gets `noPanel` prop)
+- fix: PlacesView list padding reduced from 24px to 16px to match map/tree view
+- fix: VisualizationView list mode no longer double-pads the header (outer padding removed, inner header padding preserved)
+
 ## v0.142.1 — modal polish
 
 - fix: standalone BaseSubPanel simplified to plain modal with ep-host-row layout

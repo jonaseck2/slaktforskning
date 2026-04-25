@@ -44,11 +44,11 @@
       </div>
 
       <!-- Reopen panel button -->
-      <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="props.noPanel ? emit('reopen-panel') : openPanel()">▶</button>
     </div>
 
     <!-- Drag handle + panel (right sheet) -->
-    <template v-if="panelOpen">
+    <template v-if="!props.noPanel && panelOpen">
       <div
         class="panel-drag-handle"
         @mousedown="(e: MouseEvent) => startResize(e, mapBodyRef!)"
@@ -67,6 +67,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+
+const props = defineProps<{ noPanel?: boolean }>();
+const emit = defineEmits<{ 'select-place': [id: string]; 'reopen-panel': [] }>();
 import { LGeoJson } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
 import BaseMap from '../components/BaseMap.vue';
@@ -214,7 +217,11 @@ const { panelWidth, startResize } = usePanelResize({ storageKey: 'map-panel-widt
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
   localStorage.setItem('map-selected-place', id);
-  if (!panelOpen.value) openPanel();
+  if (props.noPanel) {
+    emit('select-place', id);
+  } else {
+    if (!panelOpen.value) openPanel();
+  }
 }
 
 function openPanel() {

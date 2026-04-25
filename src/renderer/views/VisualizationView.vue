@@ -14,7 +14,9 @@
       </div>
 
       <!-- List mode: person list -->
-      <PersonsView v-if="viewMode === 'list'" embedded @person-added="onPersonAdded" @select="selectNode" />
+      <div v-if="viewMode === 'list'" class="viz-list-content">
+        <PersonsView embedded @person-added="onPersonAdded" @select="selectNode" />
+      </div>
 
       <!-- Tree mode: tab bar + chart -->
       <template v-if="viewMode === 'tree'">
@@ -395,7 +397,15 @@ onActivated(load);
   margin-bottom: var(--space-sm);
 }
 .viz-list-mode {
-  padding: var(--space-lg);
+  overflow: hidden;
+}
+.viz-list-mode > .header {
+  padding: var(--space-lg) var(--space-lg) 0;
+}
+.viz-list-content {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--space-lg) var(--space-lg);
   overflow-y: auto;
 }
 .viz-chart-area {
