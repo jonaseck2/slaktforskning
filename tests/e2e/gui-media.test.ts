@@ -1,7 +1,10 @@
 /**
- * E2E: Media library — create via API, gallery/list view toggle, inline edit,
- * link/unlink, delete. File-dialog-based attach is not testable in E2E
- * (requires OS dialog), so we seed media via window.api.media.create().
+ * E2E: Media library — create via API, gallery/list view toggle, search,
+ * panel title edit, link/unlink, delete. File-dialog-based attach is not
+ * testable in E2E (requires OS dialog), so we seed media via window.api.media.create().
+ *
+ * The list/table view itself is read-only; title and notes editing happens in
+ * MediaPanel via .media-title-input + blur and the notes textarea.
  *
  * Runs on port 19248 with its own Electron instance, in parallel with other gui-* suites.
  */
@@ -144,32 +147,35 @@ test.describe('Media CRUD', () => {
     await app.expectText('Church Record');
   });
 
-  test('inline edit title in list view', async () => {
+  test('edit title via MediaPanel title input', async () => {
     await app.navigate('/');
     await app.navigate('/media');
     await app.waitForText('Family Photo');
 
-    // Switch to list view
+    // Click a card to open the side panel
     await app.executeJs(`
       (() => {
-        const btns = document.querySelectorAll('.view-toggle button');
-        for (const btn of btns) {
-          if (btn.textContent.trim() === 'List') { btn.click(); return; }
+        const cards = document.querySelectorAll('.gallery-card');
+        for (const card of cards) {
+          if (card.textContent.includes('Family Photo')) {
+            card.click();
+            return;
+          }
         }
       })()
     `);
     await app.settle(300);
 
-    // The inline edit uses :value + @blur save pattern.
-    // Set the native value and then blur to trigger the save handler.
+    // The panel title input uses :value + @blur save pattern.
+    // Set the native value and then blur to trigger saveTitle().
     await app.executeJs(`
       new Promise(resolve => {
-        const input = document.querySelector('.media-table .inline-edit');
+        const input = document.querySelector('.media-title-input');
         if (input) {
           input.focus();
           const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
           setter.call(input, 'Updated Photo Title');
-          // Blur triggers the save (the @blur handler compares new vs old value)
+          input.dispatchEvent(new Event('input', { bubbles: true }));
           input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
         }
         setTimeout(resolve, 200);
@@ -180,18 +186,6 @@ test.describe('Media CRUD', () => {
     // Reload to verify persistence
     await app.navigate('/');
     await app.navigate('/media');
-
-    // Switch back to list view to see the title
-    await app.executeJs(`
-      (() => {
-        const btns = document.querySelectorAll('.view-toggle button');
-        for (const btn of btns) {
-          if (btn.textContent.trim() === 'List') { btn.click(); return; }
-        }
-      })()
-    `);
-    await app.settle(300);
-
     await app.waitForText('Updated Photo Title');
   });
 

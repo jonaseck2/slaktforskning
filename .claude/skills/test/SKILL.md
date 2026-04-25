@@ -154,7 +154,7 @@ tests/e2e/
 ├── gui-viz.test.ts             # Visualization: empty state, tabs, SVG rendering (port 19245)
 ├── gui-a11y.test.ts            # ARIA accessibility verification (port 19246)
 ├── gui-quality.test.ts         # Quality checks: run, filter, ignore/restore (port 19247)
-├── gui-media.test.ts           # Media library: gallery/list, search, inline edit, delete (port 19248)
+├── gui-media.test.ts           # Media library: gallery/list, search, panel title edit (.media-title-input + blur), delete (port 19248)
 ├── gui-settings.test.ts        # Settings: database tab, tree subject, tab navigation (port 19249)
 ├── gui-research-tasks.test.ts  # Research tasks: CRUD, status cycling, inline edit, filters (port 19250)
 └── gui-dark-mode.test.ts       # Per-theme dark mode surface distinctness (port 19251)
@@ -329,10 +329,10 @@ await app.waitForText('New Task');
 Some inputs use `:value` + `@blur` instead of `v-model`. The native setter trick doesn't update Vue state — only the `blur` handler saves:
 
 ```typescript
-// For :value + @blur inputs (e.g., MediaView inline-edit)
+// For :value + @blur inputs (e.g. MediaPanel's .media-title-input)
 await app.executeJs(`
   new Promise(resolve => {
-    const input = document.querySelector('.inline-edit');
+    const input = document.querySelector('.media-title-input');
     if (input) {
       input.focus();
       const setter = Object.getOwnPropertyDescriptor(
@@ -345,6 +345,8 @@ await app.executeJs(`
   })
 `);
 ```
+
+Note: the media table list view is read-only — title and notes editing only happens in MediaPanel via the `.media-title-input` (header) and `.notes-textarea` (Notes section). The panel emits `media-updated` after a successful save so MediaView can patch its items array and the MediaViewer caption preview re-renders without a reload.
 
 #### 6. localStorage persists across Playwright retries
 
