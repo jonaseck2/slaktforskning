@@ -1,18 +1,18 @@
 <template>
   <div class="places-view" ref="placesBodyRef">
-    <!-- List mode: list sheet + optional side panel -->
-    <template v-if="viewMode === 'list'">
-      <div class="places-list-sheet">
-        <div class="header">
-          <h2>{{ $t('places.title') }}</h2>
-          <div class="header-right">
-            <div class="view-toggle">
-              <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
-              <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
-            </div>
-            <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
+    <!-- List mode: list sheet -->
+    <div v-if="viewMode === 'list'" class="places-list-sheet" style="position: relative;">
+      <div class="header">
+        <h2>{{ $t('places.title') }}</h2>
+        <div class="header-right">
+          <div class="view-toggle">
+            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
+            <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
           </div>
+          <AppButton variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
         </div>
+      </div>
+      <div class="places-list-content">
         <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
         <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
         <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="$t('empty.addPlace')" @action="showAddForm = true" />
@@ -51,18 +51,12 @@
             </tr>
           </tbody>
         </table>
-        <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
       </div>
-      <template v-if="panelOpen && selectedPlaceId">
-        <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, placesBodyRef!)"></div>
-        <div class="places-panel" :style="{ width: panelWidth + 'px' }">
-          <PlacePanel :place-id="selectedPlaceId" @close="closePanel" @select-place="selectPlace" @place-updated="load" />
-        </div>
-      </template>
-    </template>
+      <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
+    </div>
 
-    <!-- Map mode: MapView (has its own panel) -->
-    <MapView v-else style="flex: 1">
+    <!-- Map mode: MapView (panel managed by PlacesView) -->
+    <MapView v-else no-panel style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
       <template #header>
         <div class="header">
           <h2>{{ $t('places.title') }}</h2>
@@ -76,6 +70,14 @@
         </div>
       </template>
     </MapView>
+
+    <!-- Panel: shared across list and map modes — never unmounts on view switch -->
+    <template v-if="panelOpen && selectedPlaceId">
+      <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, placesBodyRef!)"></div>
+      <div class="places-panel" :style="{ width: panelWidth + 'px' }">
+        <PlacePanel :place-id="selectedPlaceId" @close="closePanel" @select-place="selectPlace" @place-updated="load" />
+      </div>
+    </template>
 
     <!-- Add modal -->
     <BaseModal v-if="showAddForm" @close="showAddForm = false" title-id="modal-title-add-place">
@@ -132,9 +134,11 @@ const viewMode = ref<'list' | 'map'>((localStorage.getItem(LS_KEY) as 'list' | '
 watch(viewMode, (v) => {
   localStorage.setItem(LS_KEY, v);
   if (v === 'list') {
-    // Sync selection from MapView's localStorage on return to list mode
+    // Sync selection and panel state from MapView's localStorage on return to list mode
     selectedPlaceId.value = localStorage.getItem('map-selected-place');
     panelOpen.value = localStorage.getItem('map-panel-open') !== 'false';
+    const stored = parseInt(localStorage.getItem('map-panel-width') ?? '', 10);
+    if (!isNaN(stored) && stored >= 200) panelWidth.value = stored;
   }
 });
 const activeTypeFilter = ref<string>('all');
@@ -150,7 +154,7 @@ if (typeof queryPlace === 'string' && queryPlace) {
 // Panel state (shared keys with MapView so switching modes preserves selection)
 const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
 const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'places-list-panel-width', maxWidthRatio: 0.5 });
+const { panelWidth, startResize } = usePanelResize({ storageKey: 'map-panel-width', maxWidthRatio: 0.5 });
 
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
@@ -254,13 +258,24 @@ onActivated(async () => {
 .places-list-sheet {
   flex: 1;
   min-width: 0;
-  position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  padding: 24px;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+}
+.places-list-sheet > .header {
+  padding: var(--space-lg) var(--space-lg) 0;
+  margin-bottom: var(--space-sm);
+}
+.places-list-content {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--space-lg) var(--space-lg);
+  overflow-y: auto;
+  position: relative;
 }
 .places-panel {
   flex-shrink: 0;
