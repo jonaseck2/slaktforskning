@@ -3,14 +3,15 @@
     <select
       class="details-select"
       :value="sex"
-      @change="updateSex(($event.target as HTMLSelectElement).value)"
+      :disabled="props.readonly"
+      @change="!props.readonly && updateSex(($event.target as HTMLSelectElement).value)"
     >
       <option value="M">{{ $t('sex.M') }}</option>
       <option value="F">{{ $t('sex.F') }}</option>
       <option value="U">{{ $t('sex.U') }}</option>
     </select>
     <label class="checkbox-label">
-      <input type="checkbox" :checked="!!living" @change="updateLiving(($event.target as HTMLInputElement).checked)" />
+      <input type="checkbox" :checked="!!living" :disabled="props.readonly" @change="!props.readonly && updateLiving(($event.target as HTMLInputElement).checked)" />
       {{ $t('personDetail.statusLiving') }}
     </label>
   </div>
@@ -44,6 +45,7 @@ const props = defineProps<{
   personId: string;
   sex: string;
   living: boolean | number;
+  readonly?: boolean;
 }>();
 
 const emit = defineEmits<{
