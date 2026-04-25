@@ -453,7 +453,7 @@ onMounted(() => {
 
 .viewer-caption {
   max-width: 100%;
-  text-align: center;
+  text-align: left;
   margin-top: 0 !important;
   flex-shrink: 0;
   word-wrap: break-word;
