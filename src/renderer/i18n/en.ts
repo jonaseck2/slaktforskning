@@ -112,6 +112,8 @@ export default {
     name: 'Name',
     info: 'Info',
     entity: 'Person',
+    nameEntity: 'Name',
+    identifierEntity: 'Identifier',
     newPerson: 'New Person',
   },
   personDetail: {
@@ -145,6 +147,7 @@ export default {
   relationships: {
     title: 'Relationships',
     addRelationship: 'Relationship',
+    entity: 'Relationship',
     person1: 'Person 1',
     person2: 'Person 2',
     searchPerson: 'Search for a person\u2026',
@@ -419,6 +422,7 @@ export default {
     addTitle: 'Place',
     name: 'Name',
     type: 'Type',
+    entity: 'Place',
     parentPlace: 'Parent place',
     coordinates: 'Coordinates',
     latitude: 'Latitude',
@@ -895,6 +899,7 @@ export default {
     notes: 'Notes',
     result: 'Result',
     addTask: 'Task',
+    entity: 'Research task',
     statuses: {
       open: 'Open',
       in_progress: 'In Progress',
@@ -911,6 +916,7 @@ export default {
     addGroupShort: 'Group',
     name: 'Name',
     notes: 'Notes',
+    entity: 'Group',
     members: 'Members',
     addMember: 'Member',
     confirmDelete: 'Delete this group? All memberships will be removed.',
