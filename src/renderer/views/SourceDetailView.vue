@@ -95,15 +95,15 @@
       </table>
     </section>
 
-    <BaseModal v-if="showCitationForm" @close="showCitationForm = false" title-id="add-citation-title">
-      <CitationModal
-        :source-id="source.id"
-        :source-title="source.title"
-        @close="showCitationForm = false"
-        @cancel="showCitationForm = false"
-        @saved="onCitationSaved"
-      />
-    </BaseModal>
+    <CitationModal
+      v-if="showCitationForm"
+      mode="standalone"
+      :source-id="source.id"
+      :source-title="source.title"
+      @close="showCitationForm = false"
+      @cancel="showCitationForm = false"
+      @saved="onCitationSaved"
+    />
     <CitationModal
       v-if="editingCitation"
       mode="standalone"
@@ -124,7 +124,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import CitationModal from '../components/modals/CitationModal.vue';
-import BaseModal from '../components/BaseModal.vue';
 import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import LinkedText from '../components/LinkedText.vue';
 import AppBadge from '../components/ui/AppBadge.vue';
