@@ -2,6 +2,7 @@ node_modules/
 out/
 .vite/
 dist/
+dist-static/
 *.db
 .DS_Store
 test-results/
