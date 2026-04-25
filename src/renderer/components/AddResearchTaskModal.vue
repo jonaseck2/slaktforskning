@@ -2,6 +2,10 @@
   <BaseModal @close="$emit('close')" title-id="modal-title-research-task">
     <h3 id="modal-title-research-task">{{ $t('common.add') }} {{ $t('researchTasks.addTask') }}</h3>
     <form @submit.prevent="save">
+      <label v-if="!props.personId">
+        {{ $t('persons.title') }}
+        <PersonPicker v-model="selectedPersonId" :placeholder="$t('researchTasks.selectPersonOptional')" />
+      </label>
       <label>
         {{ $t('researchTasks.task') }} *
         <textarea
@@ -48,19 +52,22 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import BaseModal from './BaseModal.vue';
+import PersonPicker from './PersonPicker.vue';
 import { RESEARCH_TASK_STATUS_VALUES } from '../constants/eventTypes';
 
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('research-task-modal-notes');
 const { textareaRef: taskRef, storedHeight: taskStoredHeight, persistHeight: persistTaskHeight } = useTextareaHeight('research-task-modal-task');
 
 const props = defineProps<{
-  personId: string;
+  personId?: string;
 }>();
+
+const selectedPersonId = ref<string | null>(null);
 
 const emit = defineEmits<{
   close: [];
@@ -85,7 +92,7 @@ async function save() {
       status: form.status,
       priority: form.priority,
       notes: form.notes || null,
-      person_id: props.personId,
+      person_id: props.personId ?? selectedPersonId.value ?? undefined,
     });
     emit('saved');
     emit('close');

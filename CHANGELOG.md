@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.141.1 — chart route alignment, i18n cleanup, focal person defaults
+
+- fix: descendant and hourglass connector routes now share one horizontal segment height per generation (routes no longer vary with individual node height, eliminating the cluttered look)
+- test: add route alignment unit tests verifying all depth-d→d+1 connectors share the same midY
+- fix: visualization focal person now reads `default_person_id` DB setting before falling back to first person in list
+- fix: MediaView empty state gets an "Attach media" action button
+- fix: EventForm update button uses `common.save` key instead of a bespoke translation
+- fix: remove duplicate `back` and unused nav keys from i18n files; standardise delete/cancel buttons to `common.*` keys throughout
+
 ## v0.141.0 — separate fan chart settings in Your Ancestors report panel
 
 - feat: add dedicated "Fan Chart" section to Your Ancestors report panel with independent arc span, color mode, and generation limit (3–8)

@@ -1676,3 +1676,182 @@ describe('computeDescendantLayout — dynamic heights and curved paths', () => {
     for (const d of layout.paths) expect(d).toMatch(/^M |^D:M /);
   });
 });
+
+// ── Route alignment ──────────────────────────────────────────────────────────
+//
+// When nodes in the same generation row have different heights, all connectors
+// from that row to the next must use the same midY so horizontal segments align
+// at one consistent height. Without this the routing looks cluttered.
+
+/** Extract the midY of a curvedElbow 'down' path.
+ *  Curved path: first Q control point is "fromX,midY".
+ *  L-shape path: "V midY H toX".
+ *  Returns null for same-X straight lines where midY is irrelevant. */
+function parseMidY(path: string): number | null {
+  const qMatch = path.match(/Q ([\d.-]+),([\d.-]+)/);
+  if (qMatch) return parseFloat(qMatch[2]);
+  const vhMatch = path.match(/V ([\d.-]+) H/);
+  if (vhMatch) return parseFloat(vhMatch[1]);
+  return null;
+}
+
+/** Extract fromY from a path that starts with "M fromX,fromY" (or "D:M ..."). */
+function parseFromY(path: string): number {
+  const m = path.match(/^(?:D:)?M [\d.-]+,([\d.-]+)/);
+  return m ? parseFloat(m[1]) : NaN;
+}
+
+/** Person with a long name that forces measureBoxHeight above MIN_BOX_H. */
+function tallP(id: string): PersonNode {
+  return p(id, { givenName: 'Aaaaaaaaa Bbbbbbbb Ccccccc Ddddddd', surname: 'Eeeeeeeeeee Ffffffffff' });
+}
+
+describe('route alignment — connectors from same depth share one midY', () => {
+  it('descendant layout: depth-1 nodes with different heights share connector midY to depth 2', () => {
+    // Each depth-1 node gets two grandchildren so the connectors fan out (dx ≠ 0),
+    // producing a curved elbow with a visible horizontal segment.
+    const tree: DescendantNode = {
+      person: p('f'),
+      children: [
+        {
+          person: tallP('tall'),
+          children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }],
+        },
+        {
+          person: p('short'),
+          children: [{ person: p('gc3'), children: [] }, { person: p('gc4'), children: [] }],
+        },
+      ],
+    };
+    const layout = computeDescendantLayout(tree, 3);
+
+    const tallBox  = layout.boxes.find(b => b.person.id === 'tall')!;
+    const shortBox = layout.boxes.find(b => b.person.id === 'short')!;
+    // Precondition: the two depth-1 nodes must differ in height for this test to be meaningful.
+    expect(tallBox.h).toBeGreaterThan(shortBox.h);
+
+    const tallFromY  = tallBox.y + tallBox.h;
+    const shortFromY = shortBox.y + shortBox.h;
+    // Differing heights → different fromY without the fix.
+    expect(tallFromY).not.toBeCloseTo(shortFromY, 1);
+
+    const realPaths = layout.paths.filter(d => !d.startsWith('D:'));
+    const fromTall  = realPaths.filter(d => Math.abs(parseFromY(d) - tallFromY)  < 0.5);
+    const fromShort = realPaths.filter(d => Math.abs(parseFromY(d) - shortFromY) < 0.5);
+
+    // 2 connectors per parent (one per grandchild)
+    expect(fromTall).toHaveLength(2);
+    expect(fromShort).toHaveLength(2);
+
+    const midYsTall  = fromTall.map(parseMidY).filter((y): y is number => y !== null);
+    const midYsShort = fromShort.map(parseMidY).filter((y): y is number => y !== null);
+    expect(midYsTall.length).toBe(2);
+    expect(midYsShort.length).toBe(2);
+
+    // All four connectors must share the same midY.
+    const allMidYs = [...midYsTall, ...midYsShort];
+    for (const y of allMidYs) expect(y).toBeCloseTo(allMidYs[0], 3);
+
+    // The shared midY must lie strictly between the max parent bottom and the grandchild row top.
+    const gc1Box = layout.boxes.find(b => b.person.id === 'gc1')!;
+    expect(allMidYs[0]).toBeGreaterThan(tallFromY); // below the taller parent's bottom
+    expect(allMidYs[0]).toBeLessThan(gc1Box.y);      // above the grandchild row top
+  });
+
+  it('hourglass descendant: depth-1 nodes with different heights share connector midY to depth 2', () => {
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [
+        {
+          person: tallP('tall'),
+          children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }],
+        },
+        {
+          person: p('short'),
+          children: [{ person: p('gc3'), children: [] }, { person: p('gc4'), children: [] }],
+        },
+      ],
+    });
+    const layout = computeHourglassLayout(tree);
+
+    const tallBox  = layout.boxes.find(b => b.person.id === 'tall')!;
+    const shortBox = layout.boxes.find(b => b.person.id === 'short')!;
+    expect(tallBox.h).toBeGreaterThan(shortBox.h);
+
+    const tallFromY  = tallBox.y + tallBox.h;
+    const shortFromY = shortBox.y + shortBox.h;
+
+    const realPaths = layout.paths.filter(d => !d.startsWith('D:'));
+    const fromTall  = realPaths.filter(d => Math.abs(parseFromY(d) - tallFromY)  < 0.5);
+    const fromShort = realPaths.filter(d => Math.abs(parseFromY(d) - shortFromY) < 0.5);
+
+    expect(fromTall).toHaveLength(2);
+    expect(fromShort).toHaveLength(2);
+
+    const midYsTall  = fromTall.map(parseMidY).filter((y): y is number => y !== null);
+    const midYsShort = fromShort.map(parseMidY).filter((y): y is number => y !== null);
+    expect(midYsTall.length).toBe(2);
+    expect(midYsShort.length).toBe(2);
+
+    const allMidYs = [...midYsTall, ...midYsShort];
+    for (const y of allMidYs) expect(y).toBeCloseTo(allMidYs[0], 3);
+
+    const gc1Box = layout.boxes.find(b => b.person.id === 'gc1')!;
+    expect(allMidYs[0]).toBeGreaterThan(tallFromY);
+    expect(allMidYs[0]).toBeLessThan(gc1Box.y);
+  });
+
+  it('hourglass ancestor: parents with different heights already share connector midY (regression)', () => {
+    const tree = hourglass(p('f'), [tallP('dad'), p('mom')]);
+    const layout = computeHourglassLayout(tree);
+
+    const focalBox = layout.boxes.find(b => b.isFocal)!;
+    const dadBox   = layout.boxes.find(b => b.person.id === 'dad')!;
+    const momBox   = layout.boxes.find(b => b.person.id === 'mom')!;
+    expect(dadBox.h).toBeGreaterThan(momBox.h);
+
+    // Ancestor connectors start at focalBox.y (focal top) and go upward.
+    const focalTopY = focalBox.y;
+    const realPaths = layout.paths.filter(d => !d.startsWith('D:'));
+    const ancestorPaths = realPaths.filter(d => Math.abs(parseFromY(d) - focalTopY) < 0.5);
+
+    expect(ancestorPaths.length).toBeGreaterThanOrEqual(2);
+    const midYs = ancestorPaths.map(parseMidY).filter((y): y is number => y !== null);
+    expect(midYs.length).toBeGreaterThanOrEqual(2);
+    for (const y of midYs) expect(y).toBeCloseTo(midYs[0], 3);
+  });
+
+  it('descendant layout: midY equals nextRowTop minus half the generation gap', () => {
+    // sharedMidY = rowTopY[d+1] - GEN_GAP/2 = grandchildRow.y - 35 (GEN_GAP=70).
+    // Two grandchildren per depth-1 node ensure the connector fans out (dx ≠ 0).
+    const tree: DescendantNode = {
+      person: p('f'),
+      children: [
+        {
+          person: tallP('a'),
+          children: [{ person: p('gc1'), children: [] }, { person: p('gc2'), children: [] }],
+        },
+        {
+          person: p('b'),
+          children: [{ person: p('gc3'), children: [] }, { person: p('gc4'), children: [] }],
+        },
+      ],
+    };
+    const layout = computeDescendantLayout(tree, 3);
+    const gc1Box = layout.boxes.find(b => b.person.id === 'gc1')!;
+    const gc3Box = layout.boxes.find(b => b.person.id === 'gc3')!;
+    // All grandchildren share the same row top.
+    expect(gc1Box.y).toBeCloseTo(gc3Box.y, 1);
+
+    // Pick one fanned connector from node 'a' (dx ≠ 0 since it has two children).
+    const aBox = layout.boxes.find(b => b.person.id === 'a')!;
+    const fromAY = aBox.y + aBox.h;
+    const realPaths = layout.paths.filter(d => !d.startsWith('D:'));
+    const pathsFromA = realPaths.filter(d => Math.abs(parseFromY(d) - fromAY) < 0.5);
+    expect(pathsFromA.length).toBeGreaterThan(0);
+    const midY = parseMidY(pathsFromA[0]);
+    expect(midY).not.toBeNull();
+    // midY = gc1Box.y - GEN_GAP/2 = gc1Box.y - 35
+    expect(midY!).toBeCloseTo(gc1Box.y - 35, 1);
+  });
+});

@@ -510,9 +510,11 @@ export function computeHourglassLayout(
     const leftmostCX = nodeCX - totalSpan / 2;
     const childCXs = offsets.map(o => leftmostCX + o);
 
-    // One curved elbow per child: from parent bottom → child top
+    // One curved elbow per child. Shared midY keeps all horizontal segments at one
+    // consistent height between generations, regardless of individual node heights.
+    const sharedMidY = descendantRowTopY[depth + 1] - GEN_GAP / 2;
     for (let i = 0; i < n; i++) {
-      paths.push(curvedElbow(nodeCX, nodeY + nodeH, childCXs[i], descRowY(depth + 1), 'down'));
+      paths.push(curvedElbow(nodeCX, nodeY + nodeH, childCXs[i], descRowY(depth + 1), 'down', sharedMidY));
       placeDescendants(realChildren[i], childCXs[i], depth + 1);
     }
   }
@@ -612,7 +614,8 @@ export function computeHourglassLayout(
       const pCX = px + BOX_W / 2;
       const ph = hOf(nodes[i]);
       if (dir === 'down') {
-        placeholderPaths.push(curvedElbow(ownerCX, ownerY + ownerH, pCX, targetY, 'down'));
+        const connectorMidY = rowMaxHHint !== undefined ? targetY - GEN_GAP / 2 : undefined;
+        placeholderPaths.push(curvedElbow(ownerCX, ownerY + ownerH, pCX, targetY, 'down', connectorMidY));
       } else {
         placeholderPaths.push(curvedElbow(pCX, targetY + ph, ownerCX, ownerY, 'down', connectorMidY));
       }
@@ -692,9 +695,11 @@ export function computeHourglassLayout(
     const leftmostCX = focalCX - totalSpan / 2;
     const childCXs = offsets.map(o => leftmostCX + o);
 
-    // One curved elbow per child: from focal bottom → child top
+    // One curved elbow per child. Shared midY aligns with row-gap midpoint so the
+    // connector stem is consistent even when focal and spouses have different heights.
+    const focalChildSharedMidY = descendantRowTopY[1] - GEN_GAP / 2;
     for (let i = 0; i < n; i++) {
-      paths.push(curvedElbow(focalCX, focalRowY + focalH, childCXs[i], descRowY(1), 'down'));
+      paths.push(curvedElbow(focalCX, focalRowY + focalH, childCXs[i], descRowY(1), 'down', focalChildSharedMidY));
       placeDescendants(focalRealChildren[i], childCXs[i], 1);
     }
   }

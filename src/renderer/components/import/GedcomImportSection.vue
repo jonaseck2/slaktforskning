@@ -26,7 +26,7 @@
         </ul>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn-cancel" @click="cancelImport">{{ $t('gedcom.previewCancel') }}</button>
+        <button type="button" class="btn-cancel" @click="cancelImport">{{ $t('common.cancel') }}</button>
         <button @click="proceedImport" :disabled="busy">{{ $t('gedcom.previewProceed') }}</button>
       </div>
     </BaseModal>

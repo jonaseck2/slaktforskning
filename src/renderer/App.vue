@@ -261,6 +261,18 @@ function handleGlobalKey(e: KeyboardEvent) {
 async function autoSetFocusPerson() {
   if (focusStore.personId) return;
   try {
+    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
+    if (defaultId) {
+      const names = await window.api.persons.getNames(defaultId) as Array<{ given_name?: string; surname?: string }>;
+      if (names.length > 0) {
+        const n = names[0];
+        const name = [n.given_name, n.surname].filter(Boolean).join(' ') || '—';
+        focusStore.set(defaultId, name);
+        return;
+      }
+    }
+  } catch { /* ignore */ }
+  try {
     const result = await window.api.persons.listPage(1, 0) as { persons: Array<{ id: string; given_name: string; surname: string }>; total: number };
     if (result.persons.length > 0) {
       const p = result.persons[0];

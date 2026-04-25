@@ -158,9 +158,11 @@ export function computeDescendantLayout(
       const leftmostCX = cx - totalSpan / 2;
       const childCXs = offsets.map(o => leftmostCX + o);
 
-      // One curved path per child
+      // One curved path per child. All connectors from this depth share the same midY
+      // so the horizontal segment sits at one consistent height between generations.
+      const sharedMidY = rowTopY[depth + 1] - GEN_GAP / 2;
       for (let ci = 0; ci < n; ci++) {
-        paths.push(curvedElbow(cx, y + h, childCXs[ci], rowTopY[depth + 1], 'down'));
+        paths.push(curvedElbow(cx, y + h, childCXs[ci], rowTopY[depth + 1], 'down', sharedMidY));
         place(realChildren[ci], depth + 1, childCXs[ci]);
       }
     }

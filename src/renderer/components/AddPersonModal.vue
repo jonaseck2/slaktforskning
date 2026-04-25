@@ -1,6 +1,6 @@
 <template>
   <BaseModal @close="emit('close')" title-id="modal-title-add-person">
-    <h3 id="modal-title-add-person">{{ $t('common.add') }} {{ $t('persons.addPerson') }}</h3>
+    <h3 id="modal-title-add-person">{{ $t('empty.addPerson') }}</h3>
     <form @submit.prevent="submit">
       <label>{{ $t('persons.givenName') }}
         <input v-model="form.given_name" type="text" required autofocus />
