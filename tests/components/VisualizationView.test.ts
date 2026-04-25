@@ -4,9 +4,15 @@ import { createPinia } from 'pinia';
 import VisualizationView from '../../src/renderer/views/VisualizationView.vue';
 import { i18n } from './setup';
 
+// Mutable route params so individual tests can vary personId
+const { routeParams, mockReplace } = vi.hoisted(() => ({
+  routeParams: { personId: 'test-id' as string | undefined },
+  mockReplace: vi.fn(),
+}));
+
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ params: { personId: 'test-id' } }),
-  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+  useRoute: () => ({ params: routeParams }),
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: mockReplace }),
 }));
 
 vi.mock('../../src/renderer/components/charts/FanChart.vue', () => ({
@@ -37,11 +43,15 @@ describe('VisualizationView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    routeParams.personId = 'test-id';
     (window as unknown as { api: unknown }).api = {
       persons: {
         get: vi.fn().mockResolvedValue({ id: 'test-id', sex: 'M', living: true }),
         getNames: vi.fn().mockResolvedValue([{ given_name: 'Magnus', surname: 'Eriksson', preferred_name: null, nickname: null, sort_order: 0 }]),
         list: vi.fn().mockResolvedValue([{ id: 'test-id' }]),
+      },
+      db: {
+        getSetting: vi.fn().mockResolvedValue(null),
       },
     };
   });
@@ -99,5 +109,71 @@ describe('VisualizationView', () => {
     await pedigree!.trigger('click');
     expect(findChip(wrapper, 'Pedigree')?.classes()).toContain('chip-btn--active');
     expect(findChip(wrapper, 'Hourglass')?.classes()).not.toContain('chip-btn--active');
+  });
+
+  // ── Tree subject fallback (load()) ─────────────────────────────────────────
+
+  describe('load() tree subject fallback', () => {
+    it('redirects to default_person_id when no route personId', async () => {
+      routeParams.personId = undefined;
+      (window as any).api.db.getSetting.mockResolvedValue('default-id');
+
+      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      await flushPromises();
+
+      expect(mockReplace).toHaveBeenCalledWith('/visualisering/default-id');
+    });
+
+    it('falls back to persons.list when no route personId and no default_person_id', async () => {
+      routeParams.personId = undefined;
+      // db.getSetting returns null (default mock)
+
+      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      await flushPromises();
+
+      expect(mockReplace).not.toHaveBeenCalled();
+      expect((window as any).api.persons.list).toHaveBeenCalled();
+    });
+
+    it('redirects to default_person_id when route person is not found in current db', async () => {
+      (window as any).api.persons.get.mockResolvedValue(null);
+      (window as any).api.db.getSetting.mockResolvedValue('default-id');
+
+      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      await flushPromises();
+
+      expect(mockReplace).toHaveBeenCalledWith('/visualisering/default-id');
+    });
+
+    it('falls back to persons.list when route person not found and no default_person_id', async () => {
+      (window as any).api.persons.get.mockResolvedValue(null);
+      // db.getSetting returns null (default mock)
+
+      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      await flushPromises();
+
+      expect(mockReplace).not.toHaveBeenCalled();
+      expect((window as any).api.persons.list).toHaveBeenCalled();
+    });
+
+    it('does not redirect when route person is found', async () => {
+      // persons.get returns a person (default mock)
+      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      await flushPromises();
+
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect when route person not found and default_person_id is same id', async () => {
+      (window as any).api.persons.get.mockResolvedValue(null);
+      (window as any).api.db.getSetting.mockResolvedValue('test-id'); // same as routeParams.personId
+
+      mount(VisualizationView, { global: { plugins: [i18n, createPinia()] } });
+      await flushPromises();
+
+      // Guard against infinite redirect loop: skip if defaultId === id
+      expect(mockReplace).not.toHaveBeenCalled();
+      expect((window as any).api.persons.list).toHaveBeenCalled();
+    });
   });
 });

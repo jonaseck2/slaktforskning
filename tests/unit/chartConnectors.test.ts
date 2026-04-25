@@ -39,4 +39,30 @@ describe('curvedElbow', () => {
     // Path should mention toX somewhere
     expect(d).toContain(String(toX));
   });
+
+  it('down direction: customMidY forces horizontal segment to that Y', () => {
+    const customMidY = 80;
+    const d = curvedElbow(100, 10, 200, 150, 'down', customMidY);
+    // First Q control point is "fromX,midY" — midY must equal customMidY
+    const match = d.match(/Q ([\d.-]+),([\d.-]+)/);
+    expect(match).not.toBeNull();
+    expect(parseFloat(match![2])).toBeCloseTo(customMidY, 3);
+  });
+
+  it('down direction: without customMidY horizontal segment is at geometric midpoint', () => {
+    const fromY = 10, toY = 150;
+    const d = curvedElbow(100, fromY, 200, toY, 'down');
+    const match = d.match(/Q ([\d.-]+),([\d.-]+)/);
+    expect(match).not.toBeNull();
+    expect(parseFloat(match![2])).toBeCloseTo((fromY + toY) / 2, 3);
+  });
+
+  it('down direction: L-shape when customMidY equals toY', () => {
+    const toY = 150;
+    const d = curvedElbow(100, 10, 200, toY, 'down', toY);
+    expect(d).toMatch(/^M \S+ V \S+ H \S+$/);
+    const vMatch = d.match(/V ([\d.-]+)/);
+    expect(vMatch).not.toBeNull();
+    expect(parseFloat(vMatch![1])).toBeCloseTo(toY, 3);
+  });
 });

@@ -49,7 +49,7 @@
     </div>
 
     <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
-    <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" :description="$t('empty.mediaDesc')" />
+    <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" :description="$t('empty.mediaDesc')" :action-label="$t('empty.attachMedia')" @action="attachFile" />
     <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
 
     <!-- Gallery grid -->
@@ -91,7 +91,7 @@
           variant="ghost"
           size="sm"
           @click.stop="deleteItem(item.id)"
-          :title="$t('media.delete')"
+          :title="$t('common.delete')"
         >&#10005;</AppButton>
       </div>
     </div>
@@ -151,7 +151,7 @@
           </td>
           <td class="links-cell">{{ item.linkCount }}</td>
           <td>
-            <AppButton variant="ghost" size="sm" @click="deleteItem(item.id)" :title="$t('media.delete')">&#10005;</AppButton>
+            <AppButton variant="ghost" size="sm" @click="deleteItem(item.id)" :title="$t('common.delete')">&#10005;</AppButton>
           </td>
         </tr>
       </tbody>

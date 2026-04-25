@@ -20,7 +20,7 @@
     <template v-else>
       <!-- Persons -->
       <section v-if="persons.length > 0" class="result-section">
-        <h3>{{ $t('nav.persons') }} <span class="count">{{ persons.length }}</span></h3>
+        <h3>{{ $t('nav.people') }} <span class="count">{{ persons.length }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>

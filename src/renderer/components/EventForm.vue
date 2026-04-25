@@ -30,7 +30,7 @@
             {{ $t('events.saveAndAnother') }}
           </AppButton>
           <AppButton variant="primary" type="submit">
-            {{ editing ? $t('events.updateEvent') : $t('events.addEvent') }}
+            {{ editing ? $t('common.save') : $t('events.addEvent') }}
           </AppButton>
         </div>
       </form>

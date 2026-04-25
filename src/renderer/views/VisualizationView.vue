@@ -35,7 +35,7 @@
       </div>
 
       <!-- Empty state -->
-      <AppEmptyState v-if="noPersonsExist" icon="🌳" :title="$t('empty.persons')" :description="$t('empty.treeDesc')" :action-label="$t('persons.addPerson')" data-testid="viz-empty" @action="showAddPerson = true" />
+      <AppEmptyState v-if="noPersonsExist" icon="🌳" :title="$t('empty.persons')" :description="$t('empty.treeDesc')" :action-label="$t('empty.addPerson')" data-testid="viz-empty" @action="showAddPerson = true" />
 
       <!-- No focal person selected -->
       <AppEmptyState v-else-if="noFocalPerson" icon="🌳" :title="$t('visualization.noFocalPerson')" :description="$t('empty.noFocalPerson')" data-testid="viz-no-focal" />
@@ -261,19 +261,24 @@ async function load() {
   const id = personId.value;
   if (!id) {
     if (focusStore.personId) { router.replace('/visualisering/' + focusStore.personId); return; }
-    const last = localStorage.getItem('viz-focal-person');
-    if (last) { router.replace('/visualisering/' + last); return; }
+    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
+    if (defaultId) { router.replace('/visualisering/' + defaultId); return; }
     const persons = (await window.api.persons.list()) as PersonWithName[];
     noPersonsExist.value = persons.length === 0;
     noFocalPerson.value = persons.length > 0;
     return;
   }
-  localStorage.setItem('viz-focal-person', id);
   const person = (await window.api.persons.get(id)) as Person | null;
-  if (!person) { focalPerson.value = null; return; }
+  if (!person) {
+    focalPerson.value = null;
+    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
+    if (defaultId && defaultId !== id) { router.replace('/visualisering/' + defaultId); return; }
+    const persons = (await window.api.persons.list()) as PersonWithName[];
+    noPersonsExist.value = persons.length === 0;
+    noFocalPerson.value = persons.length > 0;
+    return;
+  }
   focalPerson.value = person;
-  // Panel falls back to personId when selectedPersonId is null — no need to set it here.
-  // Placeholders only appear when the user actively clicks a person in the chart.
 }
 
 // --- Screen reader chart navigation ---

@@ -7,7 +7,7 @@
         <label>
           {{ $t('csv.entityType') }}
           <select v-model="entityType">
-            <option value="persons">{{ $t('nav.persons') }}</option>
+            <option value="persons">{{ $t('nav.people') }}</option>
             <option value="events">{{ $t('events.title') }}</option>
             <option value="sources">{{ $t('nav.sources') }}</option>
             <option value="places">{{ $t('places.title') }}</option>

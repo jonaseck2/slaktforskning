@@ -54,7 +54,7 @@
       icon="👤"
       :title="filter === 'unsourced' ? $t('persons.allSourced') : $t('empty.persons')"
       :description="filter === 'all' ? $t('persons.emptyHint') : ''"
-      :action-label="filter === 'all' ? $t('persons.addPerson') : ''"
+      :action-label="filter === 'all' ? $t('empty.addPerson') : ''"
       @action="showAddForm = true"
     />
 
