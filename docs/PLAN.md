@@ -27,6 +27,10 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 - Spec: [plans/archive/2026-04-18-open-source-publishing-design.md](plans/archive/2026-04-18-open-source-publishing-design.md)
 - Plan: [plans/archive/2026-04-18-open-source-publishing.md](plans/archive/2026-04-18-open-source-publishing.md)
 
+#### Modal / Form UX Redesign [planned]
+One canonical modal per entity type (Person, Event, Source, Citation, Place, Relationship, ResearchTask). Same component renders as centered standalone or right-growing sub-panel. Flush entity-colored section headers. Keyboard-first citation flow. Replaces AddPersonModal, AddRelatedPersonModal, EventForm, CitationForm/CitationEditModal.
+- Design spec: [plans/2026-04-25-modal-redesign-design.md](plans/2026-04-25-modal-redesign-design.md)
+
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion.
 
