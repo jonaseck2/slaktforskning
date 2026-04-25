@@ -28,41 +28,51 @@
         @click="goTo(currentIndex - 1)"
       >‹</button>
 
-      <!-- Image wrapper -->
-      <div
-        v-if="imageUrl"
-        class="image-wrapper"
-        :style="imageWrapperStyle"
-      >
-        <img
-          ref="imgEl"
-          :src="imageUrl"
-          draggable="false"
-          @load="onImageLoad"
-        />
-        <FaceTagOverlay
-          v-if="imgNaturalWidth > 0 && imgNaturalHeight > 0"
-          :regions="enrichedRegions"
-          :image-width="imgNaturalWidth"
-          :image-height="imgNaturalHeight"
-          :draw-mode="drawMode"
-          :highlighted-id="highlightedRegionId"
-          @region-drawn="rect => emit('regionDrawn', rect)"
-          @region-updated="(id, rect) => emit('regionUpdated', id, rect)"
-          @region-clicked="id => emit('regionClicked', id)"
-          @region-hovered="id => emit('regionHovered', id)"
-        />
-      </div>
+      <!-- Image + caption stack — caption sits directly below the picture -->
+      <div class="image-stack">
+        <div
+          v-if="imageUrl"
+          class="image-wrapper"
+          :style="imageWrapperStyle"
+        >
+          <img
+            ref="imgEl"
+            :src="imageUrl"
+            draggable="false"
+            @load="onImageLoad"
+          />
+          <FaceTagOverlay
+            v-if="imgNaturalWidth > 0 && imgNaturalHeight > 0"
+            :regions="enrichedRegions"
+            :image-width="imgNaturalWidth"
+            :image-height="imgNaturalHeight"
+            :draw-mode="drawMode"
+            :highlighted-id="highlightedRegionId"
+            @region-drawn="rect => emit('regionDrawn', rect)"
+            @region-updated="(id, rect) => emit('regionUpdated', id, rect)"
+            @region-clicked="id => emit('regionClicked', id)"
+            @region-hovered="id => emit('regionHovered', id)"
+          />
+        </div>
 
-      <!-- Loading state -->
-      <div v-else-if="loading" class="viewer-loading">
-        {{ $t('common.loading') }}
-      </div>
+        <!-- Loading state -->
+        <div v-else-if="loading" class="viewer-loading">
+          {{ $t('common.loading') }}
+        </div>
 
-      <!-- Non-image fallback -->
-      <div v-else class="viewer-fallback">
-        <span class="fallback-icon">📄</span>
-        <span>{{ displayName }}</span>
+        <!-- Non-image fallback -->
+        <div v-else class="viewer-fallback">
+          <span class="fallback-icon">📄</span>
+          <span>{{ displayName }}</span>
+        </div>
+
+        <MediaCaption
+          v-if="imageUrl && (captionFaceTags.length > 0 || currentItem?.notes)"
+          class="viewer-caption"
+          :face-tags="captionFaceTags"
+          :notes="currentItem?.notes ?? null"
+          @person-click="onCaptionPersonClick"
+        />
       </div>
 
       <!-- Next arrow -->
@@ -80,15 +90,6 @@
         @zoom-in="zoomState.zoomIn()"
         @zoom-out="zoomState.zoomOut()"
         @reset="zoomState.fitToContainer()"
-      />
-    </div>
-
-    <!-- Caption preview (matches report look) -->
-    <div v-if="captionFaceTags.length > 0 || currentItem?.notes" class="viewer-caption-area">
-      <MediaCaption
-        :face-tags="captionFaceTags"
-        :notes="currentItem?.notes ?? null"
-        @person-click="onCaptionPersonClick"
       />
     </div>
 
@@ -411,15 +412,20 @@ onMounted(() => {
   background: var(--surface);
 }
 
-.viewer-caption-area {
-  flex-shrink: 0;
-  padding: var(--space-sm) var(--space-lg);
+.image-stack {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  max-width: 100%;
+  max-height: 100%;
 }
-.viewer-caption-area :deep(.media-caption) {
+
+.viewer-caption {
   max-width: 720px;
-  width: 100%;
+  text-align: center;
+  margin-top: 0 !important;
+  flex-shrink: 0;
 }
 
 .image-wrapper {
