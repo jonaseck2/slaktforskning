@@ -219,6 +219,7 @@ export default {
     allTypes: 'Alla',
   },
   citations: {
+    entity: 'Hänvisning',
     title: 'Hänvisningar',
     addTitle: 'Lägg till hänvisning',
     editTitle: 'Redigera hänvisning',
