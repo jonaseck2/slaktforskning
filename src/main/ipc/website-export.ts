@@ -47,7 +47,9 @@ export function registerWebsiteExportHandlers(): void {
       scope: opts.scope,
       options: opts.options,
     });
-    fs.writeFileSync(path.join(out, 'data.json'), JSON.stringify(snapshot));
+    // Write as data.js (script tag, works from file://) — JSON would require fetch which is blocked from file://
+    const json = JSON.stringify(snapshot);
+    fs.writeFileSync(path.join(out, 'data.js'), `window.__SNAPSHOT__=${json};`);
 
     // 3. Copy media + thumbnails
     if (opts.options.includeMedia) {

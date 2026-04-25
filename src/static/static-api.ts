@@ -333,6 +333,12 @@ export function installStaticApiWith(snapshot: Snapshot): void {
 }
 
 export async function installStaticApi(): Promise<void> {
+  const injected = (globalThis as { __SNAPSHOT__?: Snapshot }).__SNAPSHOT__;
+  if (injected) {
+    installStaticApiWith(injected);
+    return;
+  }
+  // Dev mode fallback: load from data.json (served via npm run dev:static)
   const res = await fetch('./data.json');
   const snap = (await res.json()) as Snapshot;
   installStaticApiWith(snap);

@@ -45,9 +45,11 @@ test('website export produces a working static site', async () => {
 
   await app.close();
 
-  // Verify output
-  expect(fs.existsSync(path.join(outDir, 'data.json'))).toBe(true);
-  const data = JSON.parse(fs.readFileSync(path.join(outDir, 'data.json'), 'utf-8')) as {
+  // Verify output — data is written as data.js (window.__SNAPSHOT__=...) so it loads via <script> from file://
+  expect(fs.existsSync(path.join(outDir, 'data.js'))).toBe(true);
+  const dataJs = fs.readFileSync(path.join(outDir, 'data.js'), 'utf-8');
+  const json = dataJs.replace(/^window\.__SNAPSHOT__=/, '').replace(/;$/, '');
+  const data = JSON.parse(json) as {
     persons: Array<{ id: string }>;
     personNames: Array<{ given_name: string }>;
   };
