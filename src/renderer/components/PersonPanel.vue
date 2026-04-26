@@ -40,7 +40,7 @@
             <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
           </div>
         </div>
-        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
+        <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('panel.collapse') ?? $t('common.close')" @click="emit('close')">▶</button>
       </div>
 
       <!-- Person section -->
@@ -149,7 +149,26 @@
           <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
       </div>
+
+      <!-- Danger zone: delete person -->
+      <div v-if="!props.readonly" class="panel-danger-zone">
+        <AppButton variant="danger" size="sm" @click="showDeleteConfirm = true">
+          {{ $t('persons.deletePersonAction') }}
+        </AppButton>
+      </div>
     </template>
+
+    <!-- Delete confirmation -->
+    <ConfirmModal
+      :visible="showDeleteConfirm"
+      :title="$t('persons.deleteConfirmTitle')"
+      :message="deleteConfirmMessage"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('persons.deleteConfirmContinue')"
+      @cancel="showDeleteConfirm = false"
+      @confirm="performDelete"
+    />
 
     <!-- Name form modal -->
     <PersonNameModal
@@ -194,6 +213,10 @@ import PersonName from './PersonName.vue';
 import PersonNamesTable from './PersonNamesTable.vue';
 import PersonNameModal from './modals/PersonNameModal.vue';
 import PersonModal from './modals/PersonModal.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useToast } from '../composables/useToast';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
@@ -224,6 +247,9 @@ const emit = defineEmits<{
 }>();
 
 // ── Data (composable) ───────────────────────────────────────────────────────
+
+const { t } = useI18n();
+const toast = useToast();
 
 const personIdRef = toRef(props, 'personId');
 const {
@@ -297,6 +323,37 @@ async function triggerAttachMedia() {
   if (!sections.media) toggleSection('media');
   await nextTick();
   mediaSectionRef.value?.attach();
+}
+
+// ── Delete person ───────────────────────────────────────────────────────────
+
+const showDeleteConfirm = ref(false);
+const deleteConfirmMessage = computed(() => {
+  const name = primaryName.value
+    ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
+    : t('common.unknown');
+  return t('persons.deleteConfirmMessage', {
+    name,
+    relationships: relationshipCount.value,
+  });
+});
+
+async function performDelete() {
+  if (!props.personId) return;
+  try {
+    await window.api.persons.delete(props.personId);
+    showDeleteConfirm.value = false;
+    toast.success(t('persons.deletedToast', {
+      name: primaryName.value
+        ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
+        : t('common.unknown'),
+    }));
+    emit('person-changed');
+    emit('close');
+  } catch (err) {
+    console.error('[PersonPanel] delete failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 // ── Add relative modal ──────────────────────────────────────────────────────
@@ -425,11 +482,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.panel-danger-zone {
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  border-top: 1px solid var(--surface-border-subtle);
+  display: flex;
+  justify-content: flex-end;
+}
+
 .person-panel {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -495,6 +560,24 @@ onMounted(() => {
   margin: calc(var(--space-md) * -1) 0;
 }
 .panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
+/* Collapse arrow at the left edge of the panel — mirrors the
+   `list-collapse-btn` / `list-open-btn` pattern on the persons list. */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .panel-name-row {
   display: flex;
   align-items: center;
