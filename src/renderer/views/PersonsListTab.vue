@@ -7,36 +7,66 @@
       </div>
     </div>
 
-    <template v-if="loading && persons.length === 0">
+    <p v-if="total > 0 && filter !== 'duplicates'" class="count-label">
+      {{ $t('persons.showingOf', { shown: persons.length, total }) }}
+    </p>
+
+    <FilterChips :options="filterOptions" :model-value="filter" @update:model-value="setFilter" />
+
+    <!-- Duplicates view -->
+    <template v-if="filter === 'duplicates'">
+      <AppLoadingState v-if="duplicatesLoading" :rows="5" />
+      <AppEmptyState v-else-if="duplicates.length === 0" icon="✅" :title="$t('empty.duplicates')" />
+      <table v-else class="data-table">
+        <thead>
+          <tr>
+            <th>{{ $t('duplicates.keepPerson') }}</th>
+            <th>{{ $t('duplicates.mergePerson') }}</th>
+            <th>{{ $t('duplicates.score') }}</th>
+            <th class="actions-cell">{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in duplicates" :key="d.person1_id + ':' + d.person2_id">
+            <td>
+              <router-link :to="'/persons/' + d.person1_id" class="person-link" @click.stop>{{ d.person1_name }}</router-link>
+              <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
+            </td>
+            <td>
+              <router-link :to="'/persons/' + d.person2_id" class="person-link" @click.stop>{{ d.person2_name }}</router-link>
+              <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
+            </td>
+            <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
+            <td class="actions-cell">
+              <AppButton size="sm" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</AppButton>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+
+    <template v-else-if="loading && persons.length === 0">
       <AppLoadingState :rows="5" />
     </template>
 
     <AppEmptyState
       v-else-if="persons.length === 0 && !loading"
       icon="👤"
-      :title="$t('empty.persons')"
-      :description="$t('persons.emptyHint')"
-      :action-label="!isStaticMode ? $t('empty.addPerson') : ''"
+      :title="filter === 'unsourced' ? $t('persons.allSourced') : $t('empty.persons')"
+      :description="filter === 'all' ? $t('persons.emptyHint') : ''"
+      :action-label="!isStaticMode && filter === 'all' ? $t('empty.addPerson') : ''"
       @action="showAddForm = true"
     />
 
-    <template v-else>
-      <div class="persons-list-scroll">
+    <template v-else-if="filter !== 'duplicates'">
       <table class="data-table">
         <thead>
           <tr>
-            <th class="sortable-th" @click="toggleSort('given_name')">
-              {{ $t('persons.givenNameColumn') }}
-              <span v-if="sortBy === 'given_name'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-            </th>
-            <th class="sortable-th" @click="toggleSort('surname')">
-              {{ $t('persons.surname') }}
-              <span v-if="sortBy === 'surname'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-            </th>
-            <th class="sortable-th" @click="toggleSort('birth_date')">
-              {{ $t('persons.bornColumn') }}
-              <span v-if="sortBy === 'birth_date'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-            </th>
+            <th>{{ $t('persons.givenName') }}</th>
+            <th>{{ $t('persons.surname') }}</th>
+            <th>{{ $t('persons.sex') }}</th>
+            <th>{{ $t('persons.info') }}</th>
+            <th v-if="!isStaticMode" class="actions-cell"></th>
           </tr>
         </thead>
         <tbody>
@@ -64,42 +94,73 @@
               <div class="name-cell">
                 <AppAvatar :person-id="person.id" :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
                 <router-link v-if="!embedded" :to="'/persons/' + person.id" class="person-link" @click.stop>
-                  <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name ?? null" :nickname="person.nickname ?? null" />
+                  <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
                 </router-link>
                 <span v-else>
-                  <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name ?? null" :nickname="person.nickname ?? null" />
+                  <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
                 </span>
               </div>
             </td>
             <td>{{ person.surname }}</td>
-            <td class="info-cell">{{ person.birth_date || '' }}</td>
+            <td><AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge></td>
+            <td class="info-cell">{{ formatPersonInfo(person) }}</td>
+            <td v-if="!isStaticMode" class="actions-cell">
+              <AppButton
+                variant="ghost"
+                size="sm"
+                :aria-label="$t('a11y.deleteItem', { item: ((person.given_name || '') + ' ' + (person.surname || '')).trim() })"
+                @click.stop="removePerson(person.id)"
+              >✕</AppButton>
+            </td>
           </tr>
         </tbody>
       </table>
 
       <div ref="sentinel" class="scroll-sentinel"></div>
-      </div>
-      <p v-if="total > 0" class="persons-list-footer count-label">
-        {{ $t('persons.showingOf', { shown: persons.length, total }) }}
-      </p>
     </template>
 
     <!-- Add Person Modal -->
     <PersonModal v-if="showAddForm" mode="standalone" @cancel="showAddForm = false" @saved="onPersonAdded" />
+
+    <!-- Edit Person Modal -->
+    <PersonModal
+      v-if="editingPersonId"
+      mode="standalone"
+      :person-id="editingPersonId"
+      @close="onEditClosed"
+      @cancel="onEditClosed"
+      @saved="onEditSaved"
+    />
+
+    <MergePersonsModal
+      v-if="mergeCandidate"
+      :target="{ id: mergeCandidate.person1_id }"
+      :source="{ id: mergeCandidate.person2_id }"
+      :target-name="mergeCandidate.person1_name"
+      :source-name="mergeCandidate.person2_name"
+      :target-birth="mergeCandidate.person1_birth"
+      :source-birth="mergeCandidate.person2_birth"
+      :reasons="mergeCandidate.reasons"
+      @close="mergeCandidate = null"
+      @merged="onMerged"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonModal from '../components/modals/PersonModal.vue';
 import { narratePersonRow } from '../utils/screenReaderNarration';
 import PersonName from '../components/PersonName.vue';
+import MergePersonsModal from '../components/MergePersonsModal.vue';
 import AppButton from '../components/ui/AppButton.vue';
+import AppBadge from '../components/ui/AppBadge.vue';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -113,8 +174,6 @@ interface PersonListItem {
   sex: string;
   given_name: string;
   surname: string;
-  preferred_name: string | null;
-  nickname: string | null;
   birth_date: string | null;
   birth_place: string | null;
   death_date: string | null;
@@ -133,28 +192,31 @@ const focusStore = useFocusStore();
 const persons = ref<PersonListItem[]>([]);
 const total = ref(0);
 const offset = ref(0);
-
-// Sort state — clicking a column header toggles direction; clicking a
-// different column resets to asc. Persisted in localStorage so the choice
-// survives navigation.
-type SortBy = 'surname' | 'given_name' | 'birth_date';
-type SortDir = 'asc' | 'desc';
-const sortBy = ref<SortBy>((localStorage.getItem('persons-sort-by') as SortBy) || 'surname');
-const sortDir = ref<SortDir>((localStorage.getItem('persons-sort-dir') as SortDir) || 'asc');
-function toggleSort(column: SortBy) {
-  if (sortBy.value === column) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = column;
-    sortDir.value = 'asc';
-  }
-  localStorage.setItem('persons-sort-by', sortBy.value);
-  localStorage.setItem('persons-sort-dir', sortDir.value);
-  load();
-}
 const loading = ref(false);
 const showAddForm = ref(false);
+const editingPersonId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
+const filter = ref<'all' | 'unsourced' | 'duplicates'>('all');
+
+const filterOptions = computed(() => [
+  { value: 'all', label: t('persons.filterAll') },
+  { value: 'unsourced', label: t('persons.filterUnsourced') },
+  { value: 'duplicates', label: t('duplicates.filterDuplicates') },
+]);
+
+interface DuplicateCandidate {
+  person1_id: string;
+  person2_id: string;
+  person1_name: string;
+  person2_name: string;
+  person1_birth: string | null;
+  person2_birth: string | null;
+  score: number;
+  reasons: string[];
+}
+const duplicates = ref<DuplicateCandidate[]>([]);
+const duplicatesLoading = ref(false);
+const mergeCandidate = ref<DuplicateCandidate | null>(null);
 
 let observer: IntersectionObserver | null = null;
 
@@ -178,11 +240,21 @@ onUnmounted(() => {
 
 
 
+function formatPersonInfo(person: PersonListItem): string {
+  const parts: string[] = [];
+  if (person.birth_date) parts.push('b. ' + person.birth_date);
+  if (person.birth_place) parts.push(person.birth_place);
+  if (person.death_date) parts.push('d. ' + person.death_date);
+  if (person.death_place && !person.birth_place) parts.push(person.death_place);
+  return parts.join(' \u00b7 ');
+}
+
 async function load() {
   if (!window.api) return;
   loading.value = true;
   try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, 0, sortBy.value, sortDir.value) as { persons: PersonListItem[]; total: number };
+    const fn = filter.value === 'unsourced' ? window.api.persons.listUnsourcedPage : window.api.persons.listPage;
+    const result = await fn(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
     persons.value = result.persons;
     total.value = result.total;
     offset.value = PAGE_SIZE;
@@ -198,7 +270,8 @@ async function loadMore() {
   if (!window.api || loading.value) return;
   loading.value = true;
   try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value, sortBy.value, sortDir.value) as { persons: PersonListItem[]; total: number };
+    const fn = filter.value === 'unsourced' ? window.api.persons.listUnsourcedPage : window.api.persons.listPage;
+    const result = await fn(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
     persons.value = [...persons.value, ...result.persons];
     total.value = result.total;
     offset.value += PAGE_SIZE;
@@ -210,9 +283,60 @@ async function loadMore() {
   }
 }
 
+function setFilter(f: string) {
+  const val = f as 'all' | 'unsourced' | 'duplicates';
+  if (filter.value === val) return;
+  filter.value = val;
+  if (val === 'duplicates') {
+    loadDuplicates();
+  } else {
+    load();
+  }
+}
+
+async function loadDuplicates() {
+  if (!window.api) return;
+  duplicatesLoading.value = true;
+  try {
+    duplicates.value = (await window.api.duplicates.find(100)) as DuplicateCandidate[];
+  } catch (err) {
+    console.error('[PersonsView] loadDuplicates failed:', err);
+    toast.error(t('errors.loadFailed'));
+  } finally {
+    duplicatesLoading.value = false;
+  }
+}
+
+function scoreLevel(score: number): string {
+  if (score >= 80) return 'high';
+  if (score >= 60) return 'medium';
+  return 'low';
+}
+
+function openMerge(d: DuplicateCandidate) {
+  mergeCandidate.value = d;
+}
+
+async function onMerged() {
+  mergeCandidate.value = null;
+  await loadDuplicates();
+}
+
 async function onPersonAdded() {
   showAddForm.value = false;
   await load();
+}
+
+async function removePerson(id: string) {
+  if (!window.api) return;
+  if (!confirm(t('persons.confirmDelete'))) return;
+  try {
+    await window.api.persons.delete(id);
+    await load();
+  } catch (err) {
+    console.error('[PersonsView] removePerson failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 function focusNextRow(e: KeyboardEvent): void {
@@ -227,11 +351,21 @@ function focusPrevRow(e: KeyboardEvent): void {
 function goToDetail(person: PersonListItem) {
   if (props.embedded) {
     emit('select', person.id);
-    return;
+  } else {
+    const name = fullNameParts(person.given_name ?? null, person.surname ?? null, null, null).map(p => p.text).join('');
+    focusStore.set(person.id, name);
+    router.push(`/persons/${person.id}`);
   }
-  const name = fullNameParts(person.given_name ?? null, person.surname ?? null, null, null).map(p => p.text).join('');
-  focusStore.set(person.id, name);
-  router.push(`/persons/${person.id}`);
+  if (!isStaticMode) editingPersonId.value = person.id;
+}
+
+function onEditClosed() {
+  editingPersonId.value = null;
+}
+
+async function onEditSaved() {
+  editingPersonId.value = null;
+  await load();
 }
 
 onMounted(async () => {
@@ -254,48 +388,20 @@ onActivated(async () => {
   gap: 8px;
   align-items: center;
 }
-
-/* When embedded (left list column in PersonsView), the table scrolls in a
-   dedicated wrapper so the count footer stays pinned and visible without
-   scrolling. The table head sticks to the top of the wrapper so column
-   labels remain visible while the rows scroll. */
-.persons-list-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-.persons-list-scroll :deep(.data-table thead th) {
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-  /* The data-table's own border-bottom on rows already gives a separator,
-     but stickiness can hide the table border underneath the floating head.
-     Add a bottom border on the sticky head as a fallback. */
-  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
-}
-.sortable-th {
-  cursor: pointer;
-  user-select: none;
-}
-.sortable-th:hover {
-  background: var(--surface-hover);
-}
-.sort-arrow {
-  margin-left: 4px;
-  font-size: var(--font-xs);
-  color: var(--accent);
-}
-.persons-list-footer {
-  flex-shrink: 0;
-  margin: 0;
-  padding: var(--space-sm) 0 0 0;
-  border-top: 1px solid var(--surface-border-subtle);
-  text-align: center;
-}
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .name-cell { display: flex; align-items: center; gap: var(--space-sm); }
 .info-cell { color: var(--text-muted); font-size: var(--font-sm); }
+.birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
+.score-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+.score-high { background: var(--error-bg); color: var(--error-text); }
+.score-medium { background: var(--warning-bg); color: var(--warning-text); }
+.score-low { background: var(--info-bg); color: var(--info-text); }
 .form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
