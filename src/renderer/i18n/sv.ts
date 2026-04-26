@@ -102,6 +102,8 @@ export default {
     male: 'Man',
     female: 'Kvinna',
     sexUnknown: 'Okänt',
+    son: 'Son',
+    daughter: 'Dotter',
     confirmDelete: 'Ta bort denna person? Detta kan inte ångras.',
     birthDate: 'Födelsedag',
     birthPlace: 'Födelseort',
@@ -369,7 +371,7 @@ export default {
     other: 'Övrigt',
   },
   coupleSubtypes: {
-    marriage: 'Äktenskap',
+    marriage: 'Gift',
     civil_union: 'Partnerskap',
     cohabitation: 'Samboskap',
     living_apart: 'Särbo',

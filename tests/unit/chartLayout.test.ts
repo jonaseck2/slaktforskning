@@ -1422,30 +1422,27 @@ describe('hourglass outline overlap detection', () => {
 
 // ─── Outline placeholder regressions ────────────────────────────────────────
 //
-// Two bugs were fixed together:
-// 1. Conditional injection (b029bd1): injectOutlines skipped father/mother when a real
-//    parent of that sex existed — broke the non-collapsed case.
-// 2. Ordering bug: injectOutlines ran before recordAndPrune, so collapsed parents were
-//    already "seen" by injection and no placeholders were created after pruning.
-//
-// These tests pin BOTH fixes for all three chart types so they cannot regress silently.
+// Father/mother outlines are only injected when no real parent of the matching
+// sex exists. Collapsed branches still get outlines because collapse pruning
+// runs before injectOutlines — so the conditional check sees no real parents.
+// The collapsed-case tests pin that ordering so it cannot regress silently.
 
 describe('outline placeholders — pedigree regression', () => {
-  it('shows father+mother outlines when selected focal already has both parents visible', () => {
+  it('hides father+mother outlines when selected focal already has both parents', () => {
     const tree = pedigree3(p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
     const { placeholders } = computePedigreeLayout(tree, new Set(), 'f');
-    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeDefined();
-    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeUndefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeUndefined();
   });
 
-  it('shows father+mother outlines when selected ancestor already has both parents visible', () => {
+  it('hides father+mother outlines when selected ancestor already has both parents', () => {
     const tree = pedigree3(
       p('f'), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
       [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), p('mgf', { sex: 'M' }), p('mgm', { sex: 'F' })],
     );
     const { placeholders } = computePedigreeLayout(tree, new Set(), 'dad');
-    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeDefined();
-    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeUndefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeUndefined();
   });
 
   it('shows father+mother outlines when selected person\'s parents branch is collapsed', () => {
@@ -1502,22 +1499,22 @@ describe('outline placeholders — pedigree regression', () => {
 });
 
 describe('outline placeholders — hourglass regression', () => {
-  it('shows father+mother outlines when focal already has both parents visible', () => {
+  it('hides father+mother outlines when focal already has both parents', () => {
     const tree = hourglass(p('f', { sex: 'M' }), [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })]);
     const { placeholders } = computeHourglassLayout(tree, new Set(), 'f');
-    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeDefined();
-    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'f')).toBeUndefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'f')).toBeUndefined();
   });
 
-  it('shows father+mother outlines when selected ancestor already has both parents visible', () => {
+  it('hides father+mother outlines when selected ancestor already has both parents', () => {
     const tree = hourglass(
       p('f', { sex: 'M' }),
       [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
       [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), null, null],
     );
     const { placeholders } = computeHourglassLayout(tree, new Set(), 'dad');
-    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeDefined();
-    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'father' && ph.childPersonId === 'dad')).toBeUndefined();
+    expect(placeholders.find(ph => ph.role === 'mother' && ph.childPersonId === 'dad')).toBeUndefined();
   });
 
   it('shows father+mother outlines when ancestor\'s parents branch is collapsed', () => {

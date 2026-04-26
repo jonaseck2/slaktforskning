@@ -110,10 +110,10 @@ export function buildHourglassTree(tree: HourglassTree): TreePerson {
 /**
  * Inject outline placeholders for the selected person.
  *
- * Always injects: father, mother, child, spouse. No conditions, no branching.
- * Each chart's layout algorithm is responsible for placing these correctly
- * (hourglass via Pass 4 collision avoidance, pedigree via placeNodes with
- * dashed connectors and CY exclusion of placeholder parents).
+ * Injects child + spouse unconditionally. Father/mother placeholders are only
+ * injected when no real parent of the matching sex already exists — once a
+ * person has a father, the chart should not invite adding another (additional
+ * parents can still be added via the relationships panel).
  *
  * Mutates the tree in place (caller should clone if needed).
  */
@@ -121,8 +121,12 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
   const target = findPerson(root, selectedPersonId);
   if (!target) return;
 
-  target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
-  target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
+  const realParents = target.parents.filter(p => !p.isPlaceholder);
+  const hasFather = realParents.some(p => p.person.sex === 'M');
+  const hasMother = realParents.some(p => p.person.sex === 'F');
+
+  if (!hasFather) target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
+  if (!hasMother) target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
 
   target.children.push(makePlaceholder('child', selectedPersonId));
   if (target.person.sex === 'F') {

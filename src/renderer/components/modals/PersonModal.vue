@@ -3,11 +3,12 @@
     entity-type="person"
     :title="displayTitle"
     :mode="mode"
+    :hide-save="needsChildSexPick"
     @cancel="$emit('cancel')"
     @save="handleSave"
     @close="$emit('close')"
   >
-    <!-- Entry-mode toggle (only when addRelatedTo is set) -->
+    <!-- Entry-mode toggle (always when addRelatedTo is set, so existing-person path is reachable) -->
     <div v-if="addRelatedTo" class="ep-fields">
       <div class="ep-field">
         <div class="ep-seg">
@@ -23,6 +24,22 @@
             :class="{ 'ep-seg-opt--on': entryMode === 'existing' }"
             @click="entryMode = 'existing'"
           >{{ $t('addRelated.existingPerson') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Child-sex picker (only when addRelatedTo.mode === 'child', new-person path, and not yet picked) -->
+    <div v-if="needsChildSexPick" class="ep-fields">
+      <div class="ep-field">
+        <span class="ep-field-label">{{ $t('persons.sex') }}</span>
+        <div class="ep-seg">
+          <button
+            v-for="[val, key] in SEX_OPTIONS"
+            :key="val"
+            type="button"
+            class="ep-seg-opt"
+            @click="pickChildSex(val as 'M' | 'F' | 'U')"
+          >{{ $t(childSexLabelKey(val)) }}</button>
         </div>
       </div>
     </div>
@@ -53,7 +70,7 @@
     </div>
 
     <!-- New person fields (always shown unless addRelatedTo+existing) -->
-    <template v-if="!addRelatedTo || entryMode === 'new'">
+    <template v-if="!needsChildSexPick && (!addRelatedTo || entryMode === 'new')">
       <!-- Fields -->
       <div class="ep-fields">
         <div class="ep-field">
@@ -315,6 +332,23 @@ const savedPersonId = ref<string | null>(props.personId);
 // ── Add-related state ───────────────────────────────────────────────────────
 const entryMode = ref<'new' | 'existing'>('new');
 const existingPersonId = ref<string | null>(null);
+const childSexPicked = ref(props.addRelatedTo?.mode !== 'child');
+const needsChildSexPick = computed(() =>
+  props.addRelatedTo?.mode === 'child'
+  && entryMode.value === 'new'
+  && !childSexPicked.value
+);
+
+function childSexLabelKey(val: string): string {
+  if (val === 'M') return 'persons.son';
+  if (val === 'F') return 'persons.daughter';
+  return 'persons.sexUnknown';
+}
+
+function pickChildSex(val: 'M' | 'F' | 'U') {
+  form.sex = val;
+  childSexPicked.value = true;
+}
 
 function defaultSex(): 'M' | 'F' | 'U' {
   if (!props.addRelatedTo) return 'U';
@@ -331,9 +365,6 @@ function defaultSex(): 'M' | 'F' | 'U' {
 
 function defaultSurname(): string {
   if (props.prefillSurname) return props.prefillSurname;
-  if (props.addRelatedTo?.mode === 'child' && props.addRelatedTo.personSurname) {
-    return props.addRelatedTo.personSurname;
-  }
   return '';
 }
 

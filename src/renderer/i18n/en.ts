@@ -102,6 +102,8 @@ export default {
     male: 'Male',
     female: 'Female',
     sexUnknown: 'Unknown',
+    son: 'Son',
+    daughter: 'Daughter',
     confirmDelete: 'Delete this person? This cannot be undone.',
     birthDate: 'Birth date',
     birthPlace: 'Birth place',

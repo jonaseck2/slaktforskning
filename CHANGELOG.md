@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- feat(persons): "Lägg till barn" now opens a son/dotter/okänt picker before the person form when adding a new person, so the child's sex is set up front (matches how the existing father/mother flows pre-fill sex from role). The "Ny person / Befintlig person" toggle is now visible from the very first frame of every "add related" flow so the existing-person path is reachable for child mode too. New i18n keys `persons.son` / `persons.daughter` (sv + en).
+
+- feat(charts): father/mother outline placeholders are now hidden in the tree views (Hourglass / Pedigree / Descendant) when the person already has a real parent of that sex — the chart no longer invites a second father/mother where one already exists. Additional parents (step, foster, etc.) can still be added via the relationships panel.
+
+- fix(persons): the cancel button and click-outside on the "Add father / mother / spouse / child" PersonModal now actually closes the modal. Previously only `@close` was wired up in PersonPanel and the three chart components, so clicking "Cancel" emitted an unhandled event and left the modal open. Added `@cancel` listeners alongside `@close` in `PersonPanel.vue`, `HourglassChart.vue`, `PedigreeChart.vue`, `DescendantChart.vue`.
+
+- fix(persons): adding a child no longer pre-fills the parent's surname — the surname field starts empty. Swedish (and many other) children regularly take a different surname from either parent (patronymic, mother's surname, post-marriage change), so silently inheriting was wrong more often than right. Other surname pre-fills (`prefillSurname` prop) are unaffected.
+
+- fix(i18n): rename couple subtype "Äktenskap" → "Gift" in Swedish — shorter, matches how genealogists actually phrase it on event cards ("gift med …").
+
 - fix(quality): the entity-type chips in QualityView (Person / Plats / Media / Källa) now use the same theme-aware entity color tokens as the modal headers — set via `data-entity` instead of hardcoded fan-branch chart colors, so a Person chip matches PersonModal's indigo, a Place chip matches PlaceModal's cyan, a Source chip matches SourceModal's purple. Also fills in the gap by adding a new Media entity to the registry: `--entity-media-text/-bg/-border` (rose) in light/dark/HC modes, `[data-entity="media"]` alias, `media` added to `EntityType`/`ENTITY_META`/WCAG-test entity list (12 entities × 9 mode combinations now contrast-tested = 316 assertions).
 
 - fix(panels): notes monospace toggle ("iWi") no longer overrides font size and weight, so it matches the surrounding "Notes" heading instead of bulging above it. Only the proportional/monospace `font-family` swap remains, which is the visual signal the toggle needs.
