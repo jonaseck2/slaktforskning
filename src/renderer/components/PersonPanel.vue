@@ -172,7 +172,7 @@
 
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="soft" size="sm" @click="showDeleteConfirm = true">
+        <AppButton variant="ghost" size="sm" class="delete-person-btn" @click="showDeleteConfirm = true">
           <span class="trash-icon" aria-hidden="true">🗑️</span>
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
@@ -509,6 +509,19 @@ onMounted(() => {
   line-height: 1;
   margin-right: 6px;
   vertical-align: -3px;
+}
+
+/* Delete-person button: outlined, no background fill. Uses :deep so the
+   styles reach into AppButton's scoped element. */
+.delete-person-btn :deep(.app-btn) {
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--text-secondary);
+}
+.delete-person-btn :deep(.app-btn:hover:not(:disabled)) {
+  background: var(--surface-hover);
+  border-color: var(--surface-border);
+  color: var(--text-primary);
 }
 
 .person-panel {
