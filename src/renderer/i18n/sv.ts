@@ -145,6 +145,7 @@ export default {
     names: 'Namn',
     addName: 'Namn',
     relationships: 'Relationer',
+    addRelativeLabel: 'Lägg till anhörig',
     notesPlaceholder: 'Lägg till anteckningar om denna person\u2026',
     addNameTitle: 'Lägg till namn',
     editNameTitle: 'Redigera namn',

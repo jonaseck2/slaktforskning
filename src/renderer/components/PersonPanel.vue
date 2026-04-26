@@ -11,19 +11,19 @@
       <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
       <!-- Panel role label -->
       <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
-      <!-- Header -->
-      <div class="panel-header">
-        <AppAvatar
-          :person-id="personId"
-          :given-name="primaryName?.given_name ?? ''"
-          :surname="primaryName?.surname ?? ''"
-          :preferred-name="primaryName?.preferred_name ?? null"
-          :sex="person.sex"
-          size="lg"
-        />
-        <div class="panel-header-content">
-          <div class="panel-name-row">
-            <div class="panel-name">
+      <!-- Person summary card: name + always-rendered birth/death rows -->
+      <div class="person-summary-card">
+        <div class="person-summary-top">
+          <AppAvatar
+            :person-id="personId"
+            :given-name="primaryName?.given_name ?? ''"
+            :surname="primaryName?.surname ?? ''"
+            :preferred-name="primaryName?.preferred_name ?? null"
+            :sex="person.sex"
+            size="lg"
+          />
+          <div class="person-summary-header">
+            <div class="person-summary-name">
               <PersonName
                 :given-name="primaryName?.given_name ?? null"
                 :surname="primaryName?.surname ?? null"
@@ -31,22 +31,35 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-          </div>
-          <div class="panel-lifelines">
-            <div class="panel-lifeline-dates">
-              <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
-              <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
-            </div>
             <span v-if="showTreeBtn && isTreeSubject" class="tree-subject-chip">{{ $t('panel.treeSubject') }}</span>
             <AppButton v-else-if="showTreeBtn" variant="soft" size="sm" @click="emit('set-tree-subject')">{{ $t('panel.setAsTreeSubject') }}</AppButton>
           </div>
-          <div v-if="!props.readonly" class="panel-add-relative-btns">
-            <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
-            <AppButton variant="soft" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
-            <AppButton variant="soft" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
-            <AppButton variant="soft" size="sm" @click="openAddRelative('son')">+ {{ $t('personDetail.addSon') }}</AppButton>
-            <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
+        </div>
+        <dl class="person-summary-life">
+          <div class="person-summary-row">
+            <dt class="person-summary-marker" aria-label="Birth">*</dt>
+            <dd class="person-summary-value" :class="{ 'is-empty': !person.birthLine }">
+              {{ person.birthLine || '—' }}
+            </dd>
           </div>
+          <div class="person-summary-row">
+            <dt class="person-summary-marker" aria-label="Death">†</dt>
+            <dd class="person-summary-value" :class="{ 'is-empty': !person.deathLine }">
+              {{ person.deathLine || '—' }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Add-relative shortcuts, sitting below the summary card -->
+      <div v-if="!props.readonly" class="panel-add-relative-section">
+        <div class="panel-add-relative-label">{{ $t('personDetail.addRelativeLabel') ?? $t('relationships.addRelationship') }}</div>
+        <div class="panel-add-relative-btns">
+          <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="openAddRelative('son')">+ {{ $t('personDetail.addSon') }}</AppButton>
+          <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
         </div>
       </div>
 
@@ -559,9 +572,90 @@ onMounted(() => {
   top: 0;
   z-index: 5;
 }
-.panel-role-label + .panel-header {
+.panel-role-label + .panel-header,
+.panel-role-label + .person-summary-card {
   border-radius: 0;
   padding-top: var(--space-md);
+}
+
+/* Person summary card — compact identity panel under "Hantera person".
+   Always renders a row for birth and death even when missing, so the
+   layout stays predictable. */
+.person-summary-card {
+  margin: var(--space-md) var(--space-md) 0;
+  padding: var(--space-md);
+  background: var(--surface);
+  border: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+.person-summary-top {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+.person-summary-header {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.person-summary-name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.person-summary-life {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  padding: var(--space-xs) 0 0;
+  border-top: 1px dashed var(--surface-border-subtle);
+}
+.person-summary-row {
+  display: grid;
+  grid-template-columns: 1.25em 1fr;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+.person-summary-marker {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-base);
+  text-align: center;
+}
+.person-summary-value {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+.person-summary-value.is-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Add-relative shortcuts — moved out of the header so they sit a bit
+   below the identity card. */
+.panel-add-relative-section {
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  flex-shrink: 0;
+}
+.panel-add-relative-label {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-xs);
 }
 
 /* Header */

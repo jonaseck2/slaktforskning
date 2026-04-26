@@ -145,6 +145,7 @@ export default {
     names: 'Names',
     addName: 'Name',
     relationships: 'Relationships',
+    addRelativeLabel: 'Add relative',
     notesPlaceholder: 'Add notes about this person\u2026',
     addNameTitle: 'Add Name',
     editNameTitle: 'Edit Name',
