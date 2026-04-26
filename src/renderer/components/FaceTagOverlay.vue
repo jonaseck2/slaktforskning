@@ -9,17 +9,17 @@
     @mouseleave="onLayerMouseUp"
   >
     <!-- Existing regions -->
-    <div
+    <FaceTagBox
       v-for="region in regions"
       :key="region.id"
+      :rect="liveRectFor(region)"
+      :identified="!!region.person_id"
+      :label="region.personName || region.label || '?'"
+      visibility="always"
+      :themed="true"
+      :state="editingId === region.id ? 'editing' : 'normal'"
       class="face-tag-region"
-      :class="{
-        'identified': !!region.person_id,
-        'unidentified': !region.person_id,
-        'highlighted': highlightedId === region.id,
-        'editing': editingId === region.id,
-      }"
-      :style="regionStyle(region)"
+      style="cursor: move;"
       tabindex="0"
       role="button"
       v-narrate="region.personName || region.label || t('narration.faceTag.untagged')"
@@ -29,7 +29,6 @@
       @mouseenter="!editingId && emit('regionHovered', region.id)"
       @mouseleave="onRegionMouseLeave(region.id)"
     >
-      <span class="region-label">{{ region.personName || region.label || '?' }}</span>
       <!-- Resize handles (visible on hover/editing) -->
       <div class="resize-handle handle-n" @mousedown.stop="startResize($event, region, 'n')"></div>
       <div class="resize-handle handle-s" @mousedown.stop="startResize($event, region, 's')"></div>
@@ -39,7 +38,7 @@
       <div class="resize-handle handle-nw" @mousedown.stop="startResize($event, region, 'nw')"></div>
       <div class="resize-handle handle-se" @mousedown.stop="startResize($event, region, 'se')"></div>
       <div class="resize-handle handle-sw" @mousedown.stop="startResize($event, region, 'sw')"></div>
-    </div>
+    </FaceTagBox>
 
     <!-- Drawing rectangle -->
     <div
@@ -53,6 +52,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
+import FaceTagBox from './FaceTagBox.vue';
 
 interface Region {
   id: string;
@@ -154,25 +154,20 @@ const drawRectStyle = computed(() => {
   };
 });
 
-function regionStyle(region: Region) {
-  // Use live drag rect for the region being moved/resized
+function liveRectFor(region: Region) {
+  // FaceTagBox expects fractional (0-1) coords. During an active drag we map
+  // the live screen-pixel rect back to fractions of the cached overlay size.
   if (dragLiveRect.value && editingId.value === region.id) {
     const dw = dragDisplaySize.value.w;
     const dh = dragDisplaySize.value.h;
     return {
-      left: (dragLiveRect.value.x / dw * 100) + '%',
-      top: (dragLiveRect.value.y / dh * 100) + '%',
-      width: (dragLiveRect.value.width / dw * 100) + '%',
-      height: (dragLiveRect.value.height / dh * 100) + '%',
+      x: dragLiveRect.value.x / dw,
+      y: dragLiveRect.value.y / dh,
+      width: dragLiveRect.value.width / dw,
+      height: dragLiveRect.value.height / dh,
     };
   }
-  // Regions store fractional coords (0-1) — render as percentages
-  return {
-    left: (region.x * 100) + '%',
-    top: (region.y * 100) + '%',
-    width: (region.width * 100) + '%',
-    height: (region.height * 100) + '%',
-  };
+  return { x: region.x, y: region.y, width: region.width, height: region.height };
 }
 
 function getLocalCoords(e: MouseEvent): { x: number; y: number } {
@@ -400,48 +395,11 @@ function edgeCursor(edge: Edge): string {
   pointer-events: none !important;
 }
 
-.face-tag-region {
-  position: absolute;
-  border: 2px dashed rgba(74, 158, 255, 0.6);
-  border-radius: var(--radius-sm);
-  pointer-events: auto;
-  cursor: move;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.face-tag-region.unidentified {
-  border-color: rgba(255, 180, 74, 0.6);
-}
-
-.face-tag-region.highlighted,
-.face-tag-region.editing {
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.4);
-}
-
-.face-tag-region.unidentified.highlighted,
-.face-tag-region.unidentified.editing {
-  box-shadow: 0 0 0 2px rgba(255, 180, 74, 0.4);
-}
-
-.region-label {
-  position: absolute;
-  bottom: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: var(--font-xs);
-  color: rgba(74, 158, 255, 0.8);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.unidentified .region-label {
-  color: rgba(255, 180, 74, 0.8);
-}
-
 .draw-preview {
   position: absolute;
-  border: 2px dashed rgba(74, 158, 255, 0.8);
-  background: rgba(74, 158, 255, 0.1);
+  border: 2px dashed var(--accent);
+  background: var(--accent);
+  opacity: 0.4;
   border-radius: var(--radius-sm);
   pointer-events: none;
 }
@@ -454,7 +412,7 @@ function edgeCursor(edge: Edge): string {
 }
 
 .face-tag-region:hover .resize-handle,
-.face-tag-region.editing .resize-handle {
+.face-tag-region.state-editing .resize-handle {
   opacity: 1;
 }
 
