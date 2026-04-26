@@ -7,7 +7,7 @@
 
     <template v-else-if="person">
       <!-- Panel role label -->
-      <div class="panel-role-label">{{ $t('panel.managePerson') }}</div>
+      <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
       <!-- Header -->
       <div class="panel-header">
         <AppAvatar
@@ -447,13 +447,13 @@ onMounted(() => {
   text-align: center;
 }
 
-/* Role label above the person header (states what the panel does) */
+/* Role label above the person header (states what the panel does) —
+   mirrors the "Personlista" heading style on the left list column. */
 .panel-role-label {
-  font-size: var(--font-xs);
+  margin: 0;
+  font-size: var(--font-md);
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-primary);
   padding: var(--space-md) var(--space-lg) var(--space-sm);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
