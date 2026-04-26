@@ -29,6 +29,7 @@
         :aria-selected="idx === highlightIndex"
         class="dropdown-item"
         :class="{ highlighted: idx === highlightIndex }"
+        v-narrate="() => narrateSource({ title: source.title, author: source.author ?? undefined, citationCount: 0 }, labels)"
         @mousedown.prevent="select(source)"
       >
         <div class="source-main">
@@ -55,6 +56,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { narrateSource, narrationLabelsFromI18n } from '../utils/narration';
 
 const pickerId = 'source-picker-' + Math.random().toString(36).slice(2, 8);
 
@@ -71,6 +73,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const labels = narrationLabelsFromI18n(t);
 const query = ref('');
 const results = ref<SourceRow[]>([]);
 const showDropdown = ref(false);

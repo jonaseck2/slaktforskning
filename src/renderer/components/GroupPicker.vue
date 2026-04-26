@@ -29,6 +29,7 @@
         :aria-selected="idx === highlightIndex"
         class="picker-option"
         :class="{ highlighted: idx === highlightIndex }"
+        v-narrate="g.name + (g.memberCount ? ' — ' + g.memberCount + ' members' : '')"
         @mousedown.prevent="select(g)"
       >
         {{ g.name }}
