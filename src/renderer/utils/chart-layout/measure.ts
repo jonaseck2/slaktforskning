@@ -1,7 +1,7 @@
 // Text measurement utilities for chart box sizing.
 // Uses Canvas measureText API to wrap names and compute dynamic box heights.
 
-import { formatFullName } from '../../utils/nameUtils';
+import { formatFullName, fullNameParts, type NamePart } from '../../utils/nameUtils';
 import type { PersonNode } from './types';
 import { MIN_BOX_H, BOX_PAD_Y, TEXT_AREA_W } from './constants';
 
@@ -64,6 +64,58 @@ export function wrapName(name: string, maxWidth: number, fontSize: number): stri
   if (current) lines.push(current);
   _wrapCache.set(cacheKey, lines);
   return lines;
+}
+
+/**
+ * Wrap a name into lines of segments, preserving the preferred-name underline marker.
+ * Each line is an array of {text, underline} segments with explicit space segments
+ * between tokens — render with `xml:space="preserve"` on the parent SVG text element.
+ *
+ * Width-wise this matches `wrapName(formatFullName(…), …)` line-count.
+ */
+export function wrapFullNameSegments(
+  givenName: string | null,
+  surname: string | null,
+  preferredName: string | null,
+  nickname: string | null,
+  maxWidth: number,
+  fontSize: number,
+): NamePart[][] {
+  const tokens = fullNameParts(givenName, surname, preferredName, nickname).filter(p => p.text !== ' ');
+  if (tokens.length === 0) return [];
+
+  const ctx = getCtx();
+  const measureWidth = (text: string): number => {
+    if (!ctx) return text.length * fontSize * 0.6;
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+    return ctx.measureText(text).width;
+  };
+
+  const lines: NamePart[][] = [];
+  let currentTokens: NamePart[] = [];
+  let currentText = '';
+  for (const token of tokens) {
+    const candidate = currentText ? `${currentText} ${token.text}` : token.text;
+    if (measureWidth(candidate) <= maxWidth) {
+      currentTokens.push(token);
+      currentText = candidate;
+    } else {
+      if (currentTokens.length > 0) lines.push(joinWithSpaces(currentTokens));
+      currentTokens = [token];
+      currentText = token.text;
+    }
+  }
+  if (currentTokens.length > 0) lines.push(joinWithSpaces(currentTokens));
+  return lines;
+}
+
+function joinWithSpaces(tokens: NamePart[]): NamePart[] {
+  const result: NamePart[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (i > 0) result.push({ text: ' ', underline: false });
+    result.push(tokens[i]);
+  }
+  return result;
 }
 
 /**

@@ -28,6 +28,17 @@
       </div>
     </div>
 
+    <!-- Other-parent picker (only when adding a child to a person who has partner(s)) -->
+    <div v-if="addRelatedTo?.mode === 'child' && partnerOptions.length > 0" class="ep-fields">
+      <div class="ep-field">
+        <span class="ep-field-label">{{ $t('addRelated.otherParent') }}</span>
+        <select class="ep-input" v-model="secondParentId">
+          <option :value="null">{{ $t('addRelated.noOtherParent') }}</option>
+          <option v-for="opt in partnerOptions" :key="opt.id" :value="opt.id">{{ opt.label }}</option>
+        </select>
+      </div>
+    </div>
+
     <!-- Child-sex picker (only when addRelatedTo.mode === 'child', new-person path, and not yet picked) -->
     <div v-if="needsChildSexPick" class="ep-fields">
       <div class="ep-field">
@@ -74,22 +85,6 @@
       <!-- Fields -->
       <div class="ep-fields">
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('persons.name') }}</span>
-          <div class="ep-name-row">
-            <input
-              ref="givenNameRef"
-              class="ep-input ep-input--name"
-              v-model="form.given_name"
-              :placeholder="$t('persons.givenName')"
-            />
-            <input
-              class="ep-input ep-input--name"
-              v-model="form.surname"
-              :placeholder="$t('persons.surname')"
-            />
-          </div>
-        </div>
-        <div class="ep-field">
           <span class="ep-field-label">{{ $t('persons.sex') }}</span>
           <div class="ep-seg">
             <button
@@ -132,52 +127,25 @@
             </template>
           </select>
         </div>
+
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('persons.name') }}</span>
+          <div class="ep-name-row">
+            <input
+              ref="givenNameRef"
+              class="ep-input ep-input--name"
+              v-model="form.given_name"
+              :placeholder="$t('persons.givenName')"
+            />
+            <input
+              class="ep-input ep-input--name"
+              v-model="form.surname"
+              :placeholder="$t('persons.surname')"
+            />
+          </div>
+        </div>
       </div>
 
-      <!-- Embedded event section (only for new persons, before the Events section) -->
-      <div v-if="!savedPersonId" class="ep-event-inline">
-        <details class="ep-event-details" :open="eventSectionOpen" @toggle="onEventToggle">
-          <summary class="ep-event-summary">{{ $t('events.addEvent') }}</summary>
-          <div class="ep-event-body">
-            <div class="ep-fields">
-              <div class="ep-field">
-                <span class="ep-field-label">{{ $t('events.eventType') }}</span>
-                <select class="ep-input" v-model="eventForm.event_type">
-                  <option value="" disabled>{{ $t('events.selectType') }}</option>
-                  <optgroup :label="$t('events.commonTypes')">
-                    <option v-for="et in COMMON_PERSON_EVENT_TYPES" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
-                  </optgroup>
-                  <optgroup :label="$t('events.allTypes')">
-                    <option v-for="et in OTHER_PERSON_EVENT_TYPES" :key="et" :value="et">{{ $t('eventTypes.' + et) }}</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="ep-field">
-                <span class="ep-field-label">{{ $t('events.date') }}</span>
-                <DateInput
-                  :date-type="eventForm.date_type"
-                  :date-value="eventForm.date_value"
-                  :date-value-end="eventForm.date_value_end"
-                  :date-original="eventForm.date_original"
-                  @update:date-type="eventForm.date_type = $event"
-                  @update:date-value="eventForm.date_value = $event"
-                  @update:date-value-end="eventForm.date_value_end = $event"
-                  @update:date-original="eventForm.date_original = $event"
-                />
-              </div>
-              <div class="ep-field">
-                <span class="ep-field-label">{{ $t('places.title') }}</span>
-                <PlacePicker v-model="eventForm.place_id" :placeholder="$t('events.placePlaceholder')" />
-              </div>
-              <div v-if="eventForm.event_type === 'death'" class="ep-field">
-                <span class="ep-field-label">{{ $t('events.cause') }}</span>
-                <input class="ep-input" v-model="eventForm.cause" :placeholder="$t('events.causePlaceholder')" />
-              </div>
-            </div>
-            <CitationFields :model="citationForm" />
-          </div>
-        </details>
-      </div>
     </template>
 
     <!-- Events section (shown only after person is saved) -->
@@ -257,14 +225,8 @@ import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
 import PersonPicker from '../PersonPicker.vue';
-import DateInput from '../DateInput.vue';
-import PlacePicker from '../PlacePicker.vue';
-import CitationFields from '../CitationFields.vue';
-import type { CitationFieldsModel } from '../CitationFields.vue';
-import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES, PERSON_EVENT_TYPE_VALUES } from '../../constants/eventTypes';
-import { suggestNextEventType } from '../../utils/eventDefaults';
+import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../../constants/eventTypes';
 import { useToast } from '../../composables/useToast';
-import { useSourceSession } from '../../stores/sourceSession';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -275,12 +237,6 @@ const SEX_OPTIONS: [string, string][] = [
   ['F', 'persons.female'],
   ['U', 'persons.sexUnknown'],
 ];
-
-const COMMON_PERSON_EVENT_TYPES = ['birth', 'baptism', 'death', 'burial', 'marriage', 'residence', 'census', 'emigration', 'immigration'] as const;
-const OTHER_PERSON_EVENT_TYPES = [...PERSON_EVENT_TYPE_VALUES]
-  .filter(et => !(COMMON_PERSON_EVENT_TYPES as readonly string[]).includes(et) && et !== 'other')
-  .sort()
-  .concat(['other']);
 
 interface EventRow {
   id: string;
@@ -302,7 +258,6 @@ const props = withDefaults(defineProps<{
   mode?: 'standalone' | 'subpanel';
   personId?: string | null;
   prefillSurname?: string | null;
-  prefillPlaceId?: string | null;
   addRelatedTo?: {
     personId: string;
     mode: 'father' | 'mother' | 'spouse' | 'child';
@@ -313,7 +268,6 @@ const props = withDefaults(defineProps<{
   mode: 'standalone',
   personId: null,
   prefillSurname: null,
-  prefillPlaceId: null,
   addRelatedTo: null,
 });
 
@@ -325,7 +279,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
-const sourceSession = useSourceSession();
 const givenNameRef = ref<HTMLInputElement | null>(null);
 const savedPersonId = ref<string | null>(props.personId);
 
@@ -339,6 +292,11 @@ const needsChildSexPick = computed(() =>
   && !childSexPicked.value
 );
 
+// Partner candidates for the second-parent picker (only loaded in child mode).
+interface PartnerOption { id: string; label: string; }
+const partnerOptions = ref<PartnerOption[]>([]);
+const secondParentId = ref<string | null>(null);
+
 function childSexLabelKey(val: string): string {
   if (val === 'M') return 'persons.son';
   if (val === 'F') return 'persons.daughter';
@@ -348,6 +306,7 @@ function childSexLabelKey(val: string): string {
 function pickChildSex(val: 'M' | 'F' | 'U') {
   form.sex = val;
   childSexPicked.value = true;
+  nextTick(() => givenNameRef.value?.focus());
 }
 
 function defaultSex(): 'M' | 'F' | 'U' {
@@ -392,33 +351,6 @@ const displayTitle = computed(() => {
   }
   return [form.given_name, form.surname].filter(Boolean).join(' ') || t('persons.newPerson');
 });
-
-// ── Embedded event form ─────────────────────────────────────────────────────
-const eventSectionOpen = ref(!!props.prefillPlaceId);
-
-const eventForm = reactive({
-  event_type: '' as string,
-  date_type: 'exact',
-  date_value: '',
-  date_value_end: '',
-  date_original: '',
-  place_id: (props.prefillPlaceId ?? null) as string | null,
-  description: '',
-  cause: '',
-});
-
-const citationForm = reactive<CitationFieldsModel>({
-  source_id: null,
-  page: '',
-  confidence: 2,
-  transcription: '',
-  notes: '',
-  date_accessed: new Date().toISOString().slice(0, 10),
-});
-
-function onEventToggle(e: Event) {
-  eventSectionOpen.value = (e.target as HTMLDetailsElement).open;
-}
 
 // ── Events + relationships (loaded after person exists) ─────────────────────
 const events = ref<EventRow[]>([]);
@@ -476,38 +408,13 @@ async function handleSave() {
       if (!existingPersonId.value) return;
       person = (await window.api.persons.get(existingPersonId.value)) as Person;
     } else {
-      // Create new person (with optional embedded event)
+      // Create new person (no embedded event — events are added separately)
       const payload: Record<string, unknown> = {
         given_name: form.given_name,
         surname: form.surname,
         sex: form.sex,
         living: form.living,
       };
-
-      if (eventSectionOpen.value && eventForm.event_type) {
-        payload.event = {
-          event_type: eventForm.event_type,
-          date_type: eventForm.date_type,
-          date_value: eventForm.date_value || null,
-          date_value_end: eventForm.date_type === 'between' ? (eventForm.date_value_end || null) : null,
-          date_original: eventForm.date_original,
-          place_id: eventForm.place_id,
-          place_name: null,
-          description: eventForm.description,
-          cause: eventForm.event_type === 'death' ? (eventForm.cause || null) : null,
-        };
-        if (citationForm.source_id) {
-          payload.citation = {
-            source_id: citationForm.source_id,
-            page: citationForm.page,
-            confidence: citationForm.confidence,
-            transcription: citationForm.transcription,
-            notes: citationForm.notes,
-            date_accessed: citationForm.date_accessed,
-          };
-          sourceSession.setLastUsed(citationForm.source_id, citationForm.page);
-        }
-      }
 
       const result = (await window.api.persons.createWithEvent(payload)) as { person: Person };
       person = result.person;
@@ -539,6 +446,16 @@ async function handleSave() {
         relData.subtype = form.subtype;
       }
       await window.api.relationships.create(relData);
+
+      // Child mode: also link to the second parent (the selected partner) if any.
+      if (m === 'child' && secondParentId.value && secondParentId.value !== targetPersonId) {
+        await window.api.relationships.create({
+          type: 'parent_child',
+          person1_id: secondParentId.value,
+          person2_id: targetPersonId,
+          subtype: form.subtype,
+        });
+      }
     }
 
     emit('saved', person);
@@ -549,36 +466,36 @@ async function handleSave() {
   }
 }
 
-onMounted(async () => {
-  // Load smart-defaults setting for embedded event type
-  if (!savedPersonId.value && !props.addRelatedTo) {
-    let smartDefaultsEnabled = true;
-    if (window.api) {
-      try {
-        const raw = (await window.api.db.getSetting('event_defaults_config')) as string | null;
-        if (raw) {
-          const parsed = JSON.parse(raw) as { smartDefaults?: boolean };
-          if (typeof parsed.smartDefaults === 'boolean') {
-            smartDefaultsEnabled = parsed.smartDefaults;
-          }
-        }
-      } catch {
-        smartDefaultsEnabled = true;
-      }
+async function loadPartners() {
+  if (props.addRelatedTo?.mode !== 'child') return;
+  if (!window.api) return;
+  const parentId = props.addRelatedTo.personId;
+  try {
+    const rels = (await window.api.relationships.getForPerson(parentId)) as Array<{
+      id: string; type: string; person1_id: string | null; person2_id: string | null;
+    }>;
+    const partnerIds = rels
+      .filter(r => r.type === 'couple')
+      .map(r => r.person1_id === parentId ? r.person2_id : r.person1_id)
+      .filter((id): id is string => !!id && id !== parentId);
+    const seen = new Set<string>();
+    const options: PartnerOption[] = [];
+    for (const id of partnerIds) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+      const primary = names[0];
+      const label = primary ? [primary.given_name, primary.surname].filter(Boolean).join(' ') : id;
+      options.push({ id, label: label || id });
     }
-    eventForm.event_type = suggestNextEventType([], smartDefaultsEnabled);
-  } else if (props.addRelatedTo) {
-    // For related persons default event type is birth
-    eventForm.event_type = 'birth';
-  }
+    partnerOptions.value = options;
+    if (options.length === 1) secondParentId.value = options[0].id;
+  } catch { /* ignore */ }
+}
 
-  // Pre-fill citation from source session
-  if (sourceSession.lastSourceId) {
-    citationForm.source_id = sourceSession.lastSourceId;
-    if (sourceSession.lastPage) citationForm.page = sourceSession.lastPage;
-  }
-
+onMounted(async () => {
   await loadData();
+  await loadPartners();
   nextTick(() => givenNameRef.value?.focus());
 });
 </script>
@@ -586,28 +503,5 @@ onMounted(async () => {
 <style scoped>
 .ep-spacer {
   height: var(--space-sm);
-}
-.ep-event-inline {
-  padding: 0 var(--space-md) var(--space-sm);
-}
-.ep-event-details {
-  border: 1px solid var(--surface-border-subtle);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-}
-.ep-event-summary {
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  user-select: none;
-  list-style: none;
-}
-.ep-event-summary::-webkit-details-marker { display: none; }
-.ep-event-body {
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 </style>

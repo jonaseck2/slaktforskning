@@ -83,13 +83,18 @@
             font-weight="600"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="nameColor(box)"
+            xml:space="preserve"
           >
             <tspan
               v-for="(line, li) in wrappedName(box)"
               :key="li"
               :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
               :y="nameStartY(box) + li * 16"
-            >{{ line }}</tspan>
+            ><tspan
+                v-for="(seg, si) in line"
+                :key="si"
+                :text-decoration="seg.underline ? 'underline' : ''"
+              >{{ seg.text }}</tspan></tspan>
           </text>
           <!-- Birth line -->
           <text
@@ -183,7 +188,7 @@
     <PersonModal
       v-if="showAddRelative && addRelativePersonId"
       mode="standalone"
-      :add-related-to="{ personId: addRelativePersonId, mode: addRelativeMode }"
+      :add-related-to="{ personId: addRelativePersonId, mode: addRelativeMode, personSex: addRelativePersonSex, personSurname: addRelativePersonSurname }"
       @saved="onRelativeSaved"
       @close="showAddRelative = false"
       @cancel="showAddRelative = false"
@@ -194,11 +199,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
-import { wrapName, truncateToWidth } from '../../utils/chart-layout/measure';
+import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchHourglassTreePerson, loadAncestorGenerationTP, loadChildrenForNodeTP } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, TreePerson, PlaceholderBox } from '../../utils/chart-layout';
-import { formatFullName } from '../../utils/nameUtils';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
@@ -229,6 +233,8 @@ const hoveredPersonId = ref<string | null>(null);
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
 const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
+const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
+const addRelativePersonSurname = ref<string | undefined>(undefined);
 
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 1400, svgHeight: 688, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
@@ -352,14 +358,15 @@ function portraitTextColor(): string {
   return '#ffffff';
 }
 
-function wrappedName(box: BoxLayout): string[] {
-  const full = formatFullName({
-    given_name: box.person.givenName,
-    surname: box.person.surname,
-    preferred_name: box.person.preferredName,
-    nickname: box.person.nickname,
-  });
-  return wrapName(full, TEXT_AREA_W, 12);
+function wrappedName(box: BoxLayout) {
+  return wrapFullNameSegments(
+    box.person.givenName,
+    box.person.surname,
+    box.person.preferredName,
+    box.person.nickname,
+    TEXT_AREA_W,
+    12,
+  );
 }
 
 function birthText(box: BoxLayout): string {
@@ -401,8 +408,11 @@ function deathY(box: BoxLayout): number {
 }
 
 function startAddFromPlaceholder(ph: PlaceholderBox) {
+  const childBox = layout.value.boxes.find((b: BoxLayout) => b.person.id === ph.childPersonId);
   addRelativePersonId.value = ph.childPersonId;
   addRelativeMode.value = ph.role === 'spouse' ? 'spouse' : ph.role;
+  addRelativePersonSex.value = childBox?.person.sex ?? 'U';
+  addRelativePersonSurname.value = childBox?.person.surname ?? undefined;
   showAddRelative.value = true;
 }
 

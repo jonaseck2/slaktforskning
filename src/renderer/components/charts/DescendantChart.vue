@@ -83,13 +83,18 @@
             font-weight="600"
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="nameColor(box)"
+            xml:space="preserve"
           >
             <tspan
               v-for="(line, li) in wrappedName(box)"
               :key="li"
               :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
               :y="nameStartY(box) + li * 16"
-            >{{ line }}</tspan>
+            ><tspan
+                v-for="(seg, si) in line"
+                :key="si"
+                :text-decoration="seg.underline ? 'underline' : ''"
+              >{{ seg.text }}</tspan></tspan>
           </text>
           <!-- Birth line -->
           <text
@@ -195,11 +200,10 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeDescendantLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
-import { wrapName, truncateToWidth } from '../../utils/chart-layout/measure';
+import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchDescendantTree, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import type { BoxLayout, CollapseButton, DescendantNode, PlaceholderBox } from '../../utils/chart-layout';
-import { formatFullName } from '../../utils/nameUtils';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
@@ -358,14 +362,15 @@ function portraitTextColor(): string {
   return '#ffffff';
 }
 
-function wrappedName(box: BoxLayout): string[] {
-  const full = formatFullName({
-    given_name: box.person.givenName,
-    surname: box.person.surname,
-    preferred_name: box.person.preferredName,
-    nickname: box.person.nickname,
-  });
-  return wrapName(full, TEXT_AREA_W, 12);
+function wrappedName(box: BoxLayout) {
+  return wrapFullNameSegments(
+    box.person.givenName,
+    box.person.surname,
+    box.person.preferredName,
+    box.person.nickname,
+    TEXT_AREA_W,
+    12,
+  );
 }
 
 function birthText(box: BoxLayout): string {
