@@ -10,6 +10,9 @@ export interface PanelResizeOptions {
   minWidth?: number;
   maxWidthRatio?: number;
   defaultWidth?: number;
+  /** Which side of the container the panel is anchored to. Affects how
+   *  drag-distance maps to width. Defaults to 'right'. */
+  side?: 'left' | 'right';
 }
 
 export function clampWidth(w: number, maxWidth: number, minWidth = DEFAULT_MIN_WIDTH): number {
@@ -21,6 +24,7 @@ export function usePanelResize(options: PanelResizeOptions = {}) {
   const minWidth = options.minWidth ?? DEFAULT_MIN_WIDTH;
   const maxWidthRatio = options.maxWidthRatio ?? DEFAULT_MAX_WIDTH_RATIO;
   const defaultWidth = options.defaultWidth ?? DEFAULT_WIDTH;
+  const side = options.side ?? 'right';
 
   const stored = parseInt(localStorage.getItem(storageKey) ?? '', 10);
   const panelWidth = ref(isNaN(stored) ? defaultWidth : Math.max(minWidth, stored));
@@ -36,7 +40,10 @@ export function usePanelResize(options: PanelResizeOptions = {}) {
       rafId = requestAnimationFrame(() => {
         const rect = containerEl.getBoundingClientRect();
         const maxW = rect.width * maxWidthRatio;
-        panelWidth.value = clampWidth(rect.right - ev.clientX, maxW, minWidth);
+        const raw = side === 'left'
+          ? ev.clientX - rect.left
+          : rect.right - ev.clientX;
+        panelWidth.value = clampWidth(raw, maxW, minWidth);
       });
     }
 
