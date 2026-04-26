@@ -1,5 +1,7 @@
 // Chart layout types — shared across all layout algorithms.
 
+export type { SelectedParentInfo } from './hourglass-tree';
+
 export interface PersonNode {
   id: string;
   givenName: string | null;

@@ -5,7 +5,7 @@ import type { PedigreeTree, TreePerson, ChartLayout, BoxLayout, CollapseButton, 
 import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow } from './connectors';
-import { buildPedigreeTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
+import { buildPedigreeTreePerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 /**
  * Lay out a pedigree chart (focal at left, ancestors going right).
@@ -15,6 +15,7 @@ export function computePedigreeLayout(
   tree: PedigreeTree,
   collapsed: Set<string> = new Set(),
   selectedPersonId?: string | null,
+  selectedParentInfo?: SelectedParentInfo | null,
 ): ChartLayout {
   const root = buildPedigreeTreePerson(tree);
 
@@ -40,7 +41,7 @@ export function computePedigreeLayout(
   // Inject outlines after collapse so the selected person's post-collapse
   // parent list is visible: collapsed nodes have parents=[] at this point,
   // so injectOutlines correctly injects placeholders for them.
-  if (selectedPersonId) injectOutlines(root, selectedPersonId);
+  if (selectedPersonId) injectOutlines(root, selectedPersonId, selectedParentInfo ?? undefined);
 
   // ── Pre-measure heights ────────────────────────────────────────────────
   const heightOf = new Map<string, number>();

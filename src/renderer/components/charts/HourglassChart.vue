@@ -192,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, nextTick, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
@@ -204,6 +204,7 @@ import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { hourglassGenerations } from '../../composables/useChartGenerations';
+import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 
 const { t } = useI18n();
 
@@ -241,9 +242,11 @@ function placeholderLabel(role: string): string {
   return labels[role] ?? role;
 }
 
+const selectedParentInfo = useSelectedParentInfo(toRef(props, 'selectedPersonId'));
+
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 1400, svgHeight: 688, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
-  return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId);
+  return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId, selectedParentInfo.value);
 });
 
 const solidPaths = computed(() =>
