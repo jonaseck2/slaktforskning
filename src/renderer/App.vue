@@ -100,6 +100,11 @@
             <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
             <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
           </div>
+          <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
+            <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
+            <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🌿</button>
+          </div>
           <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
             <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
@@ -217,6 +222,11 @@
               <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
               <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
             </div>
+            <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
+              <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
+              <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🌿</button>
+            </div>
             <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
             <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
               <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
@@ -322,6 +332,19 @@ function setNavOrientation(value: NavOrientation) {
   localStorage.setItem('slaktforskning-nav-orientation', value);
 }
 
+// Add-family-member button style — controls whether the badge in each
+// chart person-box is a round + or a tilted leaf. Persisted in
+// localStorage; provided through `appearance-store` so charts read it
+// reactively.
+type AddBtnStyle = 'plus' | 'leaf';
+const addBtnStyle = ref<AddBtnStyle>(
+  (localStorage.getItem('slaktforskning-add-btn-style') as AddBtnStyle) || 'plus'
+);
+function setAddBtnStyle(value: AddBtnStyle) {
+  addBtnStyle.value = value;
+  localStorage.setItem('slaktforskning-add-btn-style', value);
+}
+
 provide('ttsEnabled', screenReader.isTtsEnabled);
 provide('tts', tts);
 provide('screenReader', screenReader);
@@ -330,6 +353,8 @@ provide('screenReader', screenReader);
 provide('appearance-store', {
   navOrientation,
   setNavOrientation,
+  addBtnStyle,
+  setAddBtnStyle,
 });
 
 watch(() => route.path, () => {

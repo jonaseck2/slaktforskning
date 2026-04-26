@@ -111,16 +111,18 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="dateColor(box)"
           >{{ deathText(box) }}</text>
-          <!-- Add-family-member badge — small rounded tile that overhangs the top-right corner -->
+          <!-- Add-family-member badge — small floating shape at the top-right corner.
+               Shape (plus circle vs tilted leaf) is configurable in Utseende → Knapp. -->
           <g
             v-if="!readonly"
-            class="add-relative-btn"
+            :class="['add-relative-btn', `add-relative-btn--${addBtnStyle}`]"
             :transform="`translate(${box.x + box.w}, ${box.y})`"
             role="button"
             :aria-label="$t('personDetail.addRelativeLabel')"
             @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           >
-            <circle r="10" />
+            <circle v-if="addBtnStyle === 'plus'" r="10" />
+            <path v-else d="M 0 -12 Q 11 0 0 12 Q -11 0 0 -12 Z" transform="rotate(-30)" />
             <line x1="-5" y1="0" x2="5" y2="0" />
             <line x1="0" y1="-5" x2="0" y2="5" />
           </g>
@@ -205,7 +207,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick, toRef } from 'vue';
+import { ref, computed, watch, onMounted, nextTick, toRef, inject } from 'vue';
+import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W, ADD_BTN_AREA_W, BOX_PAD_X_RIGHT } from '../../utils/chart-layout';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
@@ -222,6 +225,10 @@ import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 const { t } = useI18n();
 
 const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
+
+// Add-family-member badge style — provided by App.vue's appearance-store.
+const appearanceStore = inject<{ addBtnStyle: Ref<'plus' | 'leaf'> } | undefined>('appearance-store', undefined);
+const addBtnStyle = computed<'plus' | 'leaf'>(() => appearanceStore?.addBtnStyle?.value ?? 'plus');
 const emit = defineEmits<{
   navigate: [id: string];
   reload: [];
@@ -532,7 +539,8 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
    person box. Shape and styling match the box (rounded rect, border,
    surface fill) so it reads as a small attached tile. */
 .add-relative-btn { cursor: pointer; }
-.add-relative-btn circle {
+.add-relative-btn circle,
+.add-relative-btn path {
   fill: var(--surface);
   stroke: var(--surface-border);
   stroke-width: 1;
@@ -544,7 +552,8 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   stroke-linecap: round;
   pointer-events: none;
 }
-.add-relative-btn:hover circle {
+.add-relative-btn:hover circle,
+.add-relative-btn:hover path {
   fill: var(--accent);
   stroke: var(--accent);
 }
