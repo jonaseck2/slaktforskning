@@ -32,6 +32,17 @@
       @close="showAddForm = false"
       @saved="onSaved"
     />
+
+    <ConfirmModal
+      :visible="del.visible.value"
+      :title="$t('groups.removeConfirmTitle')"
+      :message="$t('groups.confirmDelete')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="del.cancel"
+      @confirm="del.confirm"
+    />
   </div>
 </template>
 
@@ -45,7 +56,9 @@ import { useDataVersionStore } from '../stores/dataVersion';
 import GroupsTable from '../components/GroupsTable.vue';
 import GroupModal from '../components/modals/GroupModal.vue';
 import GroupPanel from '../components/GroupPanel.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 
 defineOptions({ name: 'GroupsView' });
 
@@ -86,15 +99,15 @@ function onSaved(group?: { id: string }) {
   if (group?.id) selectGroup(group.id);
 }
 
-async function deleteGroup(id: string) {
-  if (!confirm(t('groups.confirmDelete'))) return;
+const del = useDeleteConfirm<string>(async (id) => {
   await window.api.groups.delete(id);
   if (selectedGroupId.value === id) {
     selectedGroupId.value = null;
     localStorage.removeItem('groups-selected-id');
   }
   await load();
-}
+});
+function deleteGroup(id: string) { del.ask(id); }
 
 function selectGroup(id: string) {
   selectedGroupId.value = id;

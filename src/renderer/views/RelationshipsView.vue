@@ -37,6 +37,17 @@
       @close="showAddForm = false"
       @saved="onSaved"
     />
+
+    <ConfirmModal
+      :visible="del.visible.value"
+      :title="$t('relationships.removeConfirmTitle')"
+      :message="$t('relationships.confirmDelete')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="del.cancel"
+      @confirm="del.confirm"
+    />
   </div>
 </template>
 
@@ -47,6 +58,8 @@ import { useI18n } from 'vue-i18n';
 import RelationshipsTable from '../components/RelationshipsTable.vue';
 import RelationshipModal from '../components/modals/RelationshipModal.vue';
 import RelationshipPanel from '../components/RelationshipPanel.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
@@ -164,9 +177,8 @@ async function onSaved() {
   await load();
 }
 
-async function removeRelationship(id: string) {
+const del = useDeleteConfirm<string>(async (id) => {
   if (!window.api) return;
-  if (!confirm(t('relationships.confirmDelete'))) return;
   try {
     await window.api.relationships.delete(id);
     if (selectedRelationshipId.value === id) {
@@ -178,7 +190,8 @@ async function removeRelationship(id: string) {
     console.error('[RelationshipsView] removeRelationship failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
-}
+});
+function removeRelationship(id: string) { del.ask(id); }
 
 function selectRelationship(id: string) {
   selectedRelationshipId.value = id;

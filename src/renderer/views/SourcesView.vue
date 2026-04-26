@@ -68,6 +68,17 @@
       @close="showAddForm = false"
       @saved="onSourceSaved"
     />
+
+    <ConfirmModal
+      :visible="del.visible.value"
+      :title="$t('sources.removeConfirmTitle')"
+      :message="$t('sources.confirmDelete')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="del.cancel"
+      @confirm="del.confirm"
+    />
   </div>
 </template>
 
@@ -81,7 +92,9 @@ import AppBadge from '../components/ui/AppBadge.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import SourceModal from '../components/modals/SourceModal.vue';
 import SourcePanel from '../components/SourcePanel.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { narrateSourceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
@@ -125,9 +138,8 @@ function onSourceSaved() {
   load();
 }
 
-async function removeSource(id: string) {
+const del = useDeleteConfirm<string>(async (id) => {
   if (!window.api) return;
-  if (!confirm(t('sources.confirmDelete'))) return;
   try {
     await window.api.sources.delete(id);
     if (selectedSourceId.value === id) {
@@ -139,7 +151,8 @@ async function removeSource(id: string) {
     console.error('[SourcesView] removeSource failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
-}
+});
+function removeSource(id: string) { del.ask(id); }
 
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;

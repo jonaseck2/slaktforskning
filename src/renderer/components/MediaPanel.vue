@@ -214,6 +214,28 @@
         </div>
       </div>
     </template>
+
+    <ConfirmModal
+      :visible="delRegion.visible.value"
+      :title="$t('media.removeFaceConfirmTitle')"
+      :message="$t('media.confirmDeleteRegion')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="delRegion.cancel"
+      @confirm="delRegion.confirm"
+    />
+
+    <ConfirmModal
+      :visible="delLink.visible.value"
+      :title="$t('media.unlinkConfirmTitle')"
+      :message="$t('media.confirmUnlink')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.remove')"
+      @cancel="delLink.cancel"
+      @confirm="delLink.confirm"
+    />
   </div>
 </template>
 
@@ -225,6 +247,8 @@ import AppLoadingState from './ui/AppLoadingState.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonPicker from './PersonPicker.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import PlacePicker from './PlacePicker.vue';
 import MediaChecksSection from './MediaChecksSection.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
@@ -489,14 +513,15 @@ async function saveNotes() {
   emit('media-updated', props.mediaId, { notes: next });
 }
 
-async function unlinkEntity(linkId: string) {
+const delLink = useDeleteConfirm<string>(async (linkId) => {
   const lp = linkedPersons.value.find(x => x.linkId === linkId);
   const personId = lp?.entityId ?? null;
   await window.api.media.removeLink(linkId);
   if (personId) profilePicStore.invalidatePerson(personId);
   emit('link-changed');
   if (props.mediaId) await load();
-}
+});
+function unlinkEntity(linkId: string) { delLink.ask(linkId); }
 
 async function linkPerson(person: { id: string }) {
   if (!props.mediaId) return;
@@ -523,14 +548,15 @@ async function linkPlace(place: { id: string }) {
   await load();
 }
 
-async function deleteRegion(regionId: string) {
+const delRegion = useDeleteConfirm<string>(async (regionId) => {
   const r = regions.value.find(rr => rr.id === regionId);
   const personId = r?.person_id ?? null;
   await window.api.mediaRegions.delete(regionId);
   if (personId) profilePicStore.invalidatePerson(personId);
   emit('region-deleted');
   if (props.mediaId) await load();
-}
+});
+function deleteRegion(regionId: string) { delRegion.ask(regionId); }
 
 async function assignPersonToRegion(regionId: string, personId: string) {
   editingTagId.value = null;

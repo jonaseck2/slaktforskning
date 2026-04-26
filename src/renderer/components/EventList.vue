@@ -59,6 +59,17 @@
       @saved="onSaved"
     />
 
+    <ConfirmModal
+      :visible="del.visible.value"
+      :title="$t('events.removeConfirmTitle')"
+      :message="$t('events.confirmDelete')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="del.cancel"
+      @confirm="del.confirm"
+    />
+
   </div>
 </template>
 
@@ -68,7 +79,9 @@ import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import EventModal from './modals/EventModal.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import { useToast } from '../composables/useToast';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { suggestNextEventType } from '../utils/eventDefaults';
 
 interface EventRow {
@@ -155,9 +168,8 @@ function editEvent(event: EventRow) {
   showForm.value = true;
 }
 
-async function removeEvent(id: string) {
+const del = useDeleteConfirm<string>(async (id) => {
   if (!window.api) return;
-  if (!confirm(t('events.confirmDelete'))) return;
   try {
     await window.api.events.delete(id);
     await load();
@@ -165,7 +177,8 @@ async function removeEvent(id: string) {
     console.error('[EventList] removeEvent failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
-}
+});
+function removeEvent(id: string) { del.ask(id); }
 
 function closeForm() {
   showForm.value = false;

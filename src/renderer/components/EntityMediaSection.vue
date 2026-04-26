@@ -36,6 +36,17 @@
         </tr>
       </tbody>
     </table>
+
+    <ConfirmModal
+      :visible="del.visible.value"
+      :title="$t('media.unlinkConfirmTitle')"
+      :message="$t('media.confirmUnlink')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.remove')"
+      @cancel="del.cancel"
+      @confirm="del.confirm"
+    />
   </div>
 </template>
 
@@ -44,6 +55,8 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -109,10 +122,11 @@ async function openFile(id: string) {
   await window.api.media.openFile(id);
 }
 
-async function unlink(linkId: string) {
+const del = useDeleteConfirm<string>(async (linkId) => {
   await window.api.media.removeLink(linkId);
   await load();
-}
+});
+function unlink(linkId: string) { del.ask(linkId); }
 
 async function reorder(newOrder: MediaItem[]) {
   media.value = newOrder;

@@ -47,10 +47,22 @@
       </tr>
     </tbody>
   </table>
+  <ConfirmModal
+    :visible="del.visible.value"
+    :title="$t('researchTasks.removeConfirmTitle')"
+    :message="$t('researchTasks.confirmDelete')"
+    tone="danger"
+    icon="⚠️"
+    :confirm-label="$t('common.delete')"
+    @cancel="del.cancel"
+    @confirm="del.confirm"
+  />
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import ConfirmModal from './ConfirmModal.vue';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { narrateTaskRow } from '../utils/screenReaderNarration';
 
 export interface ResearchTaskRow {
@@ -96,11 +108,11 @@ async function cycleStatus(task: ResearchTaskRow) {
   emit('updated');
 }
 
-async function handleDelete(id: string) {
-  if (!confirm(t('researchTasks.confirmDelete'))) return;
+const del = useDeleteConfirm<string>(async (id) => {
   await window.api.researchTasks.delete(id);
   emit('updated');
-}
+});
+function handleDelete(id: string) { del.ask(id); }
 </script>
 
 <style scoped>

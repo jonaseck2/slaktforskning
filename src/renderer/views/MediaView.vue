@@ -179,6 +179,17 @@
       />
     </div>
   </template>
+
+  <ConfirmModal
+    :visible="del.visible.value"
+    :title="$t('media.removeConfirmTitle')"
+    :message="$t('media.confirmDelete')"
+    tone="danger"
+    icon="⚠️"
+    :confirm-label="$t('common.delete')"
+    @cancel="del.cancel"
+    @confirm="del.confirm"
+  />
   </div>
 </template>
 
@@ -191,8 +202,10 @@ import MediaPanel from '../components/MediaPanel.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useProfilePicStore } from '../stores/profilePic';
 const selectedStore = useSelectedPersonStore();
@@ -491,13 +504,13 @@ async function attachFile() {
   }
 }
 
-async function deleteItem(id: string) {
-  if (!confirm(t('media.confirmDelete'))) return;
+const del = useDeleteConfirm<string>(async (id) => {
   await window.api.media.delete(id);
   delete thumbnails.value[id];
   items.value = items.value.filter(i => i.id !== id);
   total.value = Math.max(0, total.value - 1);
-}
+});
+function deleteItem(id: string) { del.ask(id); }
 
 watch(sentinel, (el) => {
   if (observer) { observer.disconnect(); observer = null; }

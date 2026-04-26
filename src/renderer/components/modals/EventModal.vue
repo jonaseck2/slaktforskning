@@ -159,6 +159,17 @@
       />
     </template>
   </BaseSubPanel>
+
+  <ConfirmModal
+    :visible="delCitation.visible.value"
+    :title="$t('citations.removeConfirmTitle')"
+    :message="$t('sourceDetail.confirmDeleteCitation')"
+    tone="danger"
+    icon="⚠️"
+    :confirm-label="$t('common.delete')"
+    @cancel="delCitation.cancel"
+    @confirm="delCitation.confirm"
+  />
 </template>
 
 <script setup lang="ts">
@@ -166,6 +177,8 @@ import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal from './CitationModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
+import { useDeleteConfirm } from '../../composables/useDeleteConfirm';
 import DateInput from '../DateInput.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
@@ -366,11 +379,12 @@ async function onCitationSaved() {
   await loadCitations();
 }
 
-async function deleteCitation(id: string) {
+const delCitation = useDeleteConfirm<string>(async (id) => {
   if (!window.api) return;
   await window.api.citations.delete(id);
   await loadCitations();
-}
+});
+function deleteCitation(id: string) { delCitation.ask(id); }
 
 onMounted(async () => {
   await loadCitations();
