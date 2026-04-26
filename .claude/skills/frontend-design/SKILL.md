@@ -416,6 +416,17 @@ This is the rule for **modal forms, panel inputs, settings forms, and one-off in
 
 The only intentional exception is `MediaPanel.media-title-input` — an in-place title editor that sits transparent in the header until focused. If you build another in-place editor (looks like a label until clicked), follow that same transparent-rest pattern; otherwise stick to gray-rest/white-focus.
 
+### Date fields
+
+**Always use `DateInput` (with `date_type`) or `SimpleDateInput` (plain `YYYY-MM-DD` v-model) — never roll a date input by hand.** Both render a single monospace text field with the calendar icon embedded on the right edge, matching the native `<input type="date">` look used for citation `date_accessed`. The text accepts partial dates (`1842`, `1842-03`, `1842-03-15`); the calendar icon opens the native picker for a full date.
+
+**Don't:**
+- Don't add separate Y / M / D inputs side-by-side. The single field is the canonical pattern; auto-advancing across three boxes was abandoned because it conflicted visually with the native date picker shown elsewhere in the same modal.
+- Don't put a calendar icon outside the field as a sibling button. The icon lives **inside** the field's right edge (absolute-positioned over a hidden native `<input type="date">` so `showPicker()` works).
+- Don't drop `font-family: ui-monospace, …` from the date text. The monospace digits are what makes the field read as a date and align with the native picker's rendering.
+
+If you need a date field for a new entity, reuse `DateInput` (full genealogy semantics — type, value, end value, original) or `SimpleDateInput` (plain ISO date, e.g. `date_accessed`).
+
 ---
 
 ## Buttons

@@ -38,7 +38,11 @@
         </td>
         <td class="task-text">{{ task.task }}</td>
         <td v-if="!props.readonly" class="actions-cell">
-          <button class="btn-sm btn-delete" @click.stop="handleDelete(task.id)">✕</button>
+          <button
+            class="btn-sm btn-delete"
+            :aria-label="$t('a11y.deleteItem', { item: task.task })"
+            @click.stop="handleDelete(task.id)"
+          >✕</button>
         </td>
       </tr>
     </tbody>

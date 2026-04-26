@@ -148,12 +148,20 @@ const headerNarration = computed(() => {
 type ModalPos = { x: number; y: number; w: number; h: number | null };
 
 const STORAGE_KEY = `modal-pos-${props.entityType}`;
-const DEFAULT_POS: ModalPos = { x: 24, y: 32, w: 320, h: null };
+const DEFAULT_POS: ModalPos = { x: 24, y: 32, w: 480, h: null };
+
+const MIN_W = 360;
+const MIN_H = 220;
 
 function loadPos(): ModalPos {
   try {
     const s = localStorage.getItem(STORAGE_KEY);
-    if (s) return JSON.parse(s);
+    if (s) {
+      const p = JSON.parse(s) as ModalPos;
+      if (p.w < MIN_W) p.w = MIN_W;
+      if (p.h !== null && p.h < MIN_H) p.h = MIN_H;
+      return p;
+    }
   } catch {}
   return { ...DEFAULT_POS };
 }
@@ -207,16 +215,9 @@ function startResize(e: MouseEvent) {
   const startW = pos.w;
   const startH = panelRef.value?.offsetHeight ?? 400;
 
-  // Minimum height = full content height so scrolling is never forced
-  const panel = panelRef.value;
-  const bodyEl = panel?.querySelector('.ep-body') as HTMLElement | null;
-  const headerH = (panel?.querySelector('.ep-header') as HTMLElement | null)?.offsetHeight ?? 0;
-  const footerH = (panel?.querySelector('.ep-footer') as HTMLElement | null)?.offsetHeight ?? 0;
-  const minH = Math.max(180, (bodyEl?.scrollHeight ?? 0) + headerH + footerH + 14);
-
   function onMove(ev: MouseEvent) {
-    pos.w = Math.max(280, startW + (ev.clientX - startX));
-    pos.h = Math.max(minH, startH + (ev.clientY - startY));
+    pos.w = Math.max(MIN_W, startW + (ev.clientX - startX));
+    pos.h = Math.max(MIN_H, startH + (ev.clientY - startY));
   }
   function onUp() {
     window.removeEventListener('mousemove', onMove);
@@ -240,9 +241,14 @@ const SUB_KEY = `modal-pos-${props.entityType}-sub`;
 function loadSubPos(): SubPos {
   try {
     const s = localStorage.getItem(SUB_KEY);
-    if (s) return JSON.parse(s);
+    if (s) {
+      const p = JSON.parse(s) as SubPos;
+      if (p.w < MIN_W) p.w = MIN_W;
+      if (p.h !== null && p.h < MIN_H) p.h = MIN_H;
+      return p;
+    }
   } catch {}
-  return { w: 320, h: null };
+  return { w: 480, h: null };
 }
 
 const subPos = reactive<SubPos>(loadSubPos());
@@ -258,15 +264,9 @@ function startSubResize(e: MouseEvent) {
   const startW = subPos.w;
   const startH = panelRef.value?.offsetHeight ?? 400;
 
-  const panel = panelRef.value;
-  const bodyEl = panel?.querySelector('.ep-body') as HTMLElement | null;
-  const headerH = (panel?.querySelector('.ep-header') as HTMLElement | null)?.offsetHeight ?? 0;
-  const footerH = (panel?.querySelector('.ep-footer') as HTMLElement | null)?.offsetHeight ?? 0;
-  const minH = Math.max(180, (bodyEl?.scrollHeight ?? 0) + headerH + footerH + 14);
-
   function onMove(ev: MouseEvent) {
-    subPos.w = Math.max(280, startW + (ev.clientX - startX));
-    subPos.h = Math.max(minH, startH + (ev.clientY - startY));
+    subPos.w = Math.max(MIN_W, startW + (ev.clientX - startX));
+    subPos.h = Math.max(MIN_H, startH + (ev.clientY - startY));
   }
   function onUp() {
     window.removeEventListener('mousemove', onMove);

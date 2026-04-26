@@ -35,7 +35,7 @@
           :placeholder="$t('database.treeSubjectNone')"
           @update:model-value="setTreeSubject"
         />
-        <button v-if="treeSubjectId" class="btn-sm btn-cancel" @click="clearTreeSubject">✕</button>
+        <button v-if="treeSubjectId" class="btn-sm btn-cancel" :aria-label="$t('a11y.clearSearch')" @click="clearTreeSubject">✕</button>
       </div>
     </section>
 

@@ -25,7 +25,11 @@
         <td v-if="showMembers">{{ g.memberCount }}</td>
         <td class="notes-cell">{{ g.notes }}</td>
         <td v-if="!readonly" class="actions-cell">
-          <button class="btn-sm btn-delete" @click.stop="$emit('remove', g.id)">✕</button>
+          <button
+            class="btn-sm btn-delete"
+            :aria-label="$t('a11y.deleteItem', { item: g.name })"
+            @click.stop="$emit('remove', g.id)"
+          >✕</button>
         </td>
       </tr>
     </tbody>

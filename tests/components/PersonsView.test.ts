@@ -11,7 +11,7 @@ const { routeParams, mockReplace } = vi.hoisted(() => ({
 }));
 
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ params: routeParams }),
+  useRoute: () => ({ params: routeParams, path: '/persons' }),
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: mockReplace }),
 }));
 

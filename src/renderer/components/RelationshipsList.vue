@@ -58,7 +58,11 @@
           </div>
         </td>
         <td class="actions-cell">
-          <button class="btn-sm btn-delete" @click.stop="$emit('delete', row.id)">✕</button>
+          <button
+            class="btn-sm btn-delete"
+            :aria-label="$t('a11y.deleteItem', { item: row.ariaLabel || row.typeLabel })"
+            @click.stop="$emit('delete', row.id)"
+          >✕</button>
         </td>
       </tr>
     </tbody>

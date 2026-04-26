@@ -105,7 +105,12 @@
             <td><AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge></td>
             <td class="info-cell">{{ formatPersonInfo(person) }}</td>
             <td v-if="!isStaticMode" class="actions-cell">
-              <AppButton variant="ghost" size="sm" @click.stop="removePerson(person.id)">✕</AppButton>
+              <AppButton
+                variant="ghost"
+                size="sm"
+                :aria-label="$t('a11y.deleteItem', { item: ((person.given_name || '') + ' ' + (person.surname || '')).trim() })"
+                @click.stop="removePerson(person.id)"
+              >✕</AppButton>
             </td>
           </tr>
         </tbody>
