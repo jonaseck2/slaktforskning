@@ -719,6 +719,44 @@
     --shadow-lg: 0 4px 16px rgba(30, 0, 60, 0.5);
   }
 
+  /* Entity colors — dark mode (theme-invariant baseline).
+   * Per-theme overrides only added if the WCAG test fails on a specific combo.
+   * Border tokens stay at their light pastel values (decorative; not WCAG-tested). */
+  html.dark {
+    --entity-person-text:       #c4b5fd;
+    --entity-person-bg:         #1e1b3a;
+
+    --entity-event-text:        #fdba74;
+    --entity-event-bg:          #3a1e0a;
+
+    --entity-source-text:       #d8b4fe;
+    --entity-source-bg:         #2e0a3a;
+
+    --entity-citation-text:     #86efac;
+    --entity-citation-bg:       #0a2e16;
+
+    --entity-place-text:        #67e8f9;
+    --entity-place-bg:          #0a2a30;
+
+    --entity-relationship-text: #cbd5e1;
+    --entity-relationship-bg:   #1e2533;
+
+    --entity-task-text:         #fcd34d;
+    --entity-task-bg:           #2e1d05;
+
+    --entity-group-text:        #7dd3fc;
+    --entity-group-bg:          #082030;
+
+    --entity-name-text:         #cbd5e1;
+    --entity-name-bg:           #1a1f2a;
+
+    --entity-identifier-text:   #cbd5e1;
+    --entity-identifier-bg:     #1a1f2a;
+
+    --entity-neutral-text:      #d1d5db;
+    --entity-neutral-bg:        #1a1f2a;
+  }
+
   /* Element-specific dark overrides for properties not covered by tokens.
      Most classes now inherit correct colors via --color-* aliases → token cascade.
      Only keep rules that set values not expressible through existing tokens. */
@@ -930,6 +968,43 @@
     --sidebar-active-bg:   #221e38;
     --sidebar-active-text: #ffffff;
     --sidebar-border:      #3a2e5a;
+  }
+
+  /* Entity colors — high-contrast mode (theme-invariant baseline).
+   * Border tokens stay at their light pastel values (decorative; not WCAG-tested). */
+  html.high-contrast {
+    --entity-person-text:       #e8e4ff;
+    --entity-person-bg:         #14102e;
+
+    --entity-event-text:        #ffe0c2;
+    --entity-event-bg:          #2e1505;
+
+    --entity-source-text:       #f0d8ff;
+    --entity-source-bg:         #220630;
+
+    --entity-citation-text:     #c8ffd0;
+    --entity-citation-bg:       #062012;
+
+    --entity-place-text:        #c8f8ff;
+    --entity-place-bg:          #061f25;
+
+    --entity-relationship-text: #e6ecf5;
+    --entity-relationship-bg:   #15192a;
+
+    --entity-task-text:         #ffeeb8;
+    --entity-task-bg:           #251604;
+
+    --entity-group-text:        #c8eeff;
+    --entity-group-bg:          #051825;
+
+    --entity-name-text:         #e6ecf5;
+    --entity-name-bg:           #14182a;
+
+    --entity-identifier-text:   #e6ecf5;
+    --entity-identifier-bg:     #14182a;
+
+    --entity-neutral-text:      #e8eaee;
+    --entity-neutral-bg:        #15171f;
   }
 
   html.high-contrast :focus-visible {
