@@ -272,9 +272,9 @@ h2 {
 .researcher-name-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
-  background: var(--color-bg);
+  background: var(--surface-bg);
   color: var(--color-text);
   font-size: var(--font-base);
   font-family: inherit;
@@ -282,8 +282,10 @@ h2 {
 }
 
 .researcher-name-input:focus {
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
   border-color: var(--accent);
+  background: var(--surface);
 }
 
 .db-status {

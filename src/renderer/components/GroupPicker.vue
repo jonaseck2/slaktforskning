@@ -176,11 +176,19 @@ onMounted(async () => {
 .group-picker input {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   box-sizing: border-box;
   font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+.group-picker input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .picker-dropdown {
   position: absolute;

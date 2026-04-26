@@ -106,11 +106,19 @@ async function openFolder() {
 }
 .site-title-input {
   padding: 6px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-sm);
   font-family: inherit;
   max-width: 300px;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+.site-title-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .button-row {
   display: flex;

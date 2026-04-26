@@ -106,9 +106,18 @@ async function handleExport() {
 
 .csv-form select {
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-sm);
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.csv-form select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 
 .csv-form button {

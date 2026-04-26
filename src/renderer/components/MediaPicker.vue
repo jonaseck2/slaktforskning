@@ -164,8 +164,14 @@ function onBlur() {
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-base);
-  background: var(--surface);
+  background: var(--surface-bg);
   color: var(--text-primary);
+}
+.picker-input-wrap input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .picker-clear {
   background: none;

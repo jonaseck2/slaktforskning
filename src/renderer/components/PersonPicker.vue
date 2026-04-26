@@ -197,9 +197,18 @@ function narratePerson(p: PersonResult): string {
 .picker-input-wrap input {
   flex: 1;
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.picker-input-wrap input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .picker-clear {
   background: none;

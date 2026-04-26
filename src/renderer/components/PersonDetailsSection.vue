@@ -79,12 +79,14 @@ async function updateLiving(checked: boolean) {
   border-radius: var(--radius-md);
   font-size: var(--font-sm);
   font-family: inherit;
-  background: var(--surface);
+  background: var(--surface-bg);
   color: var(--text-primary);
 }
 .details-select:focus {
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
   border-color: var(--accent);
+  background: var(--surface);
 }
 
 .checkbox-label {
@@ -129,14 +131,16 @@ async function updateLiving(checked: boolean) {
   font-family: inherit;
   font-size: var(--font-sm);
   color: var(--text-primary);
-  background: var(--surface);
+  background: var(--surface-bg);
   resize: vertical;
 }
 :deep(textarea.notes-mono) {
   font-family: var(--font-mono);
 }
 :deep(textarea:focus) {
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
   border-color: var(--accent);
+  background: var(--surface);
 }
 </style>

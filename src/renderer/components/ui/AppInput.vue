@@ -76,8 +76,8 @@ const emit = defineEmits<{
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-md);
   color: var(--text-primary);
-  background: var(--surface);
-  transition: border-color 0.15s, outline 0.15s;
+  background: var(--surface-bg);
+  transition: border-color 0.15s, outline 0.15s, background 0.15s;
   box-sizing: border-box;
   font-family: inherit;
 }
@@ -86,6 +86,7 @@ const emit = defineEmits<{
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: var(--accent);
+  background: var(--surface);
 }
 
 .app-input--error .app-input__field {

@@ -305,10 +305,19 @@ function updateDateOriginal(e: Event) {
 }
 .date-row select {
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   min-width: 120px;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.date-row select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .ymd-group {
   display: flex;
@@ -318,21 +327,33 @@ function updateDateOriginal(e: Event) {
 .date-input .ymd-year {
   width: 4.5em;
   padding: 5px 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   text-align: center;
   font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
 }
 .date-input .ymd-month,
 .date-input .ymd-day {
   width: 3em;
   padding: 5px 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   text-align: center;
   font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+.date-input .ymd-year:focus,
+.date-input .ymd-month:focus,
+.date-input .ymd-day:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .ymd-sep {
   color: #999;
@@ -382,9 +403,17 @@ function updateDateOriginal(e: Event) {
 .date-original-row input {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-sm);
-  color: #555;
+  color: var(--text-secondary);
+  background: var(--surface-bg);
+  font-family: inherit;
+}
+.date-original-row input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 </style>
