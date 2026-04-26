@@ -263,6 +263,10 @@ const { t } = useI18n();
 const toast = useToast();
 const givenNameRef = ref<HTMLInputElement | null>(null);
 const savedPersonId = ref<string | null>(props.personId);
+const isEditMode = computed(() => !!props.personId && !props.addRelatedTo);
+const primaryNameId = ref<string | null>(null);
+const initialGivenName = ref('');
+const initialSurname = ref('');
 
 // ── Add-related state ───────────────────────────────────────────────────────
 const entryMode = ref<'new' | 'existing'>('new');
@@ -373,6 +377,23 @@ async function loadData() {
   } catch { /* ignore */ }
 }
 
+async function loadPersonForEdit() {
+  if (!isEditMode.value || !savedPersonId.value || !window.api) return;
+  try {
+    const person = (await window.api.persons.get(savedPersonId.value)) as { sex: string } | null;
+    if (person) form.sex = (person.sex as 'M' | 'F' | 'U') || 'U';
+    const names = (await window.api.persons.getNames(savedPersonId.value)) as Array<{ id: string; given_name: string; surname: string }>;
+    const primary = names[0];
+    if (primary) {
+      primaryNameId.value = primary.id;
+      form.given_name = primary.given_name || '';
+      form.surname = primary.surname || '';
+      initialGivenName.value = form.given_name;
+      initialSurname.value = form.surname;
+    }
+  } catch { /* ignore */ }
+}
+
 const subPanel = ref<'event' | null>(null);
 const activeEvent = ref<EventRow | null>(null);
 const defaultEventType = ref('birth');
@@ -404,6 +425,26 @@ async function handleSave() {
       person = (await window.api.persons.update(savedPersonId.value, {
         sex: form.sex,
       })) as Person;
+      if (isEditMode.value) {
+        const givenChanged = form.given_name !== initialGivenName.value;
+        const surnameChanged = form.surname !== initialSurname.value;
+        if (givenChanged || surnameChanged) {
+          if (primaryNameId.value) {
+            await window.api.persons.updateName(primaryNameId.value, {
+              given_name: form.given_name,
+              surname: form.surname,
+            });
+          } else {
+            await window.api.persons.addName(savedPersonId.value, {
+              given_name: form.given_name,
+              surname: form.surname,
+              name_type: 'birth',
+            });
+          }
+          initialGivenName.value = form.given_name;
+          initialSurname.value = form.surname;
+        }
+      }
     } else if (props.addRelatedTo && entryMode.value === 'existing') {
       // Link existing person
       if (!existingPersonId.value) return;
@@ -498,6 +539,7 @@ async function loadPartners() {
 }
 
 onMounted(async () => {
+  await loadPersonForEdit();
   await loadData();
   await loadPartners();
   await loadRelatedPersonName();

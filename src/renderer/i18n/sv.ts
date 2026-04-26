@@ -548,6 +548,12 @@ export default {
     timelineDied: 'Död',
     timelineAge: 'Ålder',
   },
+  tree: {
+    setFocal: 'Visa i träd',
+    setFocalHint: 'Rota om trädet på den här personen',
+    isFocal: 'Trädets centrum',
+    isFocalHint: 'Den här personen är trädets rot',
+  },
   personPanel: {
     status: 'Status',
     partners: 'Partners',
