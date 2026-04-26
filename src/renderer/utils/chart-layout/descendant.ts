@@ -46,7 +46,9 @@ export function computeDescendantLayout(
 
   // Inject outlines after collapse so collapsed nodes correctly receive
   // placeholder boxes (their children=[] after pruning, injection sees it).
-  if (selectedPersonId) injectOutlines(tp, selectedPersonId, selectedParentInfo ?? undefined);
+  // Outline placeholders are obsolete — the + button on every person box
+  // covers all add-relative shortcuts. injectOutlines kept for unit tests.
+  void selectedPersonId; void selectedParentInfo; void injectOutlines;
 
   // ── Outline extents (depends on injected placeholders) ───────────────────
   const extraRightExtent = new Map<string, number>();
