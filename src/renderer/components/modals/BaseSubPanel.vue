@@ -112,10 +112,13 @@ const props = withDefaults(defineProps<{
   icon?: string;
   /** Tone for the save button. 'danger' renders a red background using --error-text. Default: 'info'. */
   tone?: 'info' | 'warning' | 'danger';
+  /** Center the standalone modal in the viewport instead of using the saved drag position. Use for transient dialogs (confirm, etc.). */
+  centered?: boolean;
 }>(), {
   mode: 'standalone',
   hideSave: false,
   tone: 'info',
+  centered: false,
 });
 
 defineEmits<{
@@ -173,11 +176,21 @@ function savePos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pos));
 }
 
-const wrapStyle = computed(() =>
-  props.mode === 'standalone'
-    ? { position: 'fixed' as const, left: `${pos.x}px`, top: `${pos.y}px` }
-    : undefined
-);
+const wrapStyle = computed(() => {
+  if (props.mode !== 'standalone') return undefined;
+  if (props.centered) {
+    // Center via fixed-position + translate. Drag is disabled for centered
+    // dialogs by suppressing the saved position; the panel re-centers if
+    // the viewport resizes.
+    return {
+      position: 'fixed' as const,
+      left: '50%',
+      top: '50%',
+      transform: 'translate(-50%, -50%)',
+    };
+  }
+  return { position: 'fixed' as const, left: `${pos.x}px`, top: `${pos.y}px` };
+});
 
 // `.entity-panel`'s min-height: min-content keeps the modal from shrinking
 // below its body, and its max-height caps it at viewport. The user-set height
@@ -190,6 +203,7 @@ const panelStyle = computed(() =>
 );
 
 function startDrag(e: MouseEvent) {
+  if (props.centered) return;
   if ((e.target as HTMLElement).closest('button, input, select, textarea, a')) return;
   const startX = e.clientX - pos.x;
   const startY = e.clientY - pos.y;
