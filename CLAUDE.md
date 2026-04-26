@@ -177,7 +177,7 @@ src/
 │   │   ├── MediaCaption.vue      # Reusable caption: "From left: …" face list + notes (extracted from MediaChronological so the report and the viewer preview stay in sync)
 │   │   ├── FaceTagOverlay.vue    # SVG overlay on top of the viewer image — draggable/resizable face regions with labels, draw mode for new tags
 │   │   ├── PersonPicker.vue      # Searchable person dropdown (typeahead)
-│   │   ├── DateInput.vue         # YYYY-MM-DD date input with auto-advance
+│   │   ├── DateInput.vue         # Single monospace YYYY-MM-DD field with embedded calendar icon (matches native input type=date)
 │   │   └── EventList.vue         # Event table with add/edit/delete (embeds EventModal)
 │   ├── directives/
 │   │   └── narrate.ts              # v-narrate directive (WeakMap + resolveNarration)
@@ -647,7 +647,8 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | Component | Props | Emits | Description |
 |-----------|-------|-------|-------------|
 | `PersonPicker` | `modelValue: string\|null`, `placeholder?: string` | `update:modelValue`, `select(person)` | Searchable autocomplete for selecting a person. 150ms debounced search via `window.api.persons.search()`. |
-| `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Separate YYYY-MM-DD text inputs with auto-advance (4-digit year → month, 2-digit month → day). Shows end date only when type is "between". Preserves original source text. |
+| `DateInput` | `dateType`, `dateValue`, `dateValueEnd`, `dateOriginal` (all string) | `update:dateType`, `update:dateValue`, `update:dateValueEnd`, `update:dateOriginal` | Single monospace `YYYY-MM-DD` text field with the calendar icon embedded on the right edge (matches native `<input type="date">`). Date-type select to its left, original-text row below. Accepts partial dates (`1842`, `1842-03`); clicking the icon opens the native picker. Shows the second field only when type is `between`. |
+| `SimpleDateInput` | `modelValue: string` (YYYY-MM-DD or partial) | `update:modelValue` | Same single-field-with-embedded-calendar style as `DateInput`, without the `date_type`/end-date/original rows. Used for plain ISO dates like citation `date_accessed`. |
 | `BaseSubPanel` | `entityType: EntityType`, `title: string`, `mode: 'standalone'\|'subpanel'`, `saveLabel?: string`, `cancelLabel?: string`, `hideSave?: boolean`, `tone?: 'info'\|'warning'\|'danger'`, `icon?: string` | `cancel`, `save`, `close` | Universal modal shell driven by `ENTITY_VISUALS` registry. `standalone` renders a centered modal; `subpanel` renders side-by-side inside a `#subpanels` slot. Handles header color, save button, escape, focus trap. Every entity modal in the app uses this. |
 | `EventModal` | `personId?`, `relationshipId?`, `editingEvent?: object\|null`, `mode?: 'standalone'\|'subpanel'` | `close`, `cancel`, `saved` | Create/edit event with embedded place picker and citation sub-panel. Replaces the old `EventForm`/`EventFormBody` pair. |
 | `EventList` | `personId?: string`, `relationshipId?: string`, `placeId?: string`, `readonly?: boolean`, `hideHeader?: boolean`, `showPersons?: boolean` | — | Self-loading event table with edit/delete. Embeds `EventModal`. Exposes `openAddForm()` via `defineExpose`. `showPersons` adds a participant names column (used in PlacePanel). Uses `watch` for reactive reloading on prop changes. |
