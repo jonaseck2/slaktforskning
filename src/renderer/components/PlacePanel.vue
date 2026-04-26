@@ -16,6 +16,7 @@
             <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
           </div>
         </div>
+        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Place section -->
@@ -499,6 +500,7 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
 /* Header */
 .panel-header {
   display: flex;
+  align-items: flex-start;
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;

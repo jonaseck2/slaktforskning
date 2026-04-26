@@ -141,6 +141,28 @@
   min-width: 0;
   overflow-x: hidden;
 }
+
+/* Side-panel close button — anchored to the top-right of the panel header,
+   in line with the heading row. Defined once here so every panel
+   (Person, Media, Place, Source, Group, Relationship, Research Task) renders
+   the same control. Don't redefine in scoped panel styles. */
+.panel-close-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--font-lg);
+  line-height: 1;
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  margin: var(--space-sm) var(--space-sm) 0 0;
+  border-radius: var(--radius-sm);
+}
+.panel-close-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
 .panel-section .data-table th,
 .panel-section .data-table td {
   word-break: break-word;

@@ -563,6 +563,7 @@ export default {
     showInTree: 'Show in tree',
     focus: '🌳 Show in tree',
     open: 'Open',
+    view: 'View',
     events: 'Events',
     relationships: 'Relationships',
     notes: 'Notes',

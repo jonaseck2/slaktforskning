@@ -440,16 +440,6 @@ function onCitationSaved() {
   padding: 1px 6px;
   font-size: var(--font-xs);
 }
-.panel-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 
 /* Sections */
 .panel-section {
