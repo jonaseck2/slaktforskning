@@ -120,7 +120,7 @@
             :aria-label="$t('personDetail.addRelativeLabel')"
             @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           >
-            <path d="M 0 -12 Q 11 0 0 12 Q -11 0 0 -12 Z" transform="rotate(-30)" />
+            <circle r="10" />
             <line x1="-5" y1="0" x2="5" y2="0" />
             <line x1="0" y1="-5" x2="0" y2="5" />
           </g>
@@ -532,7 +532,7 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
    person box. Shape and styling match the box (rounded rect, border,
    surface fill) so it reads as a small attached tile. */
 .add-relative-btn { cursor: pointer; }
-.add-relative-btn path {
+.add-relative-btn circle {
   fill: var(--surface);
   stroke: var(--surface-border);
   stroke-width: 1;
@@ -544,7 +544,7 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   stroke-linecap: round;
   pointer-events: none;
 }
-.add-relative-btn:hover path {
+.add-relative-btn:hover circle {
   fill: var(--accent);
   stroke: var(--accent);
 }
