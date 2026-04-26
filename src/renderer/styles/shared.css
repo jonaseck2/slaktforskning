@@ -1149,6 +1149,23 @@ html.screen-reader h1:focus {
   overflow: auto;
 }
 
+/* Entity color aliases.
+ * Set data-entity="<name>" on any container; descendants resolve
+ * --entity-text / --entity-bg / --entity-border to that entity's tokens.
+ * This is mode-aware automatically — the underlying --entity-*-text/bg/border
+ * tokens flip with html.dark / html.high-contrast. */
+[data-entity="person"]       { --entity-text: var(--entity-person-text);       --entity-bg: var(--entity-person-bg);       --entity-border: var(--entity-person-border); }
+[data-entity="event"]        { --entity-text: var(--entity-event-text);        --entity-bg: var(--entity-event-bg);        --entity-border: var(--entity-event-border); }
+[data-entity="source"]       { --entity-text: var(--entity-source-text);       --entity-bg: var(--entity-source-bg);       --entity-border: var(--entity-source-border); }
+[data-entity="citation"]     { --entity-text: var(--entity-citation-text);     --entity-bg: var(--entity-citation-bg);     --entity-border: var(--entity-citation-border); }
+[data-entity="place"]        { --entity-text: var(--entity-place-text);        --entity-bg: var(--entity-place-bg);        --entity-border: var(--entity-place-border); }
+[data-entity="relationship"] { --entity-text: var(--entity-relationship-text); --entity-bg: var(--entity-relationship-bg); --entity-border: var(--entity-relationship-border); }
+[data-entity="task"]         { --entity-text: var(--entity-task-text);         --entity-bg: var(--entity-task-bg);         --entity-border: var(--entity-task-border); }
+[data-entity="group"]        { --entity-text: var(--entity-group-text);        --entity-bg: var(--entity-group-bg);        --entity-border: var(--entity-group-border); }
+[data-entity="name"]         { --entity-text: var(--entity-name-text);         --entity-bg: var(--entity-name-bg);         --entity-border: var(--entity-name-border); }
+[data-entity="identifier"]   { --entity-text: var(--entity-identifier-text);   --entity-bg: var(--entity-identifier-bg);   --entity-border: var(--entity-identifier-border); }
+[data-entity="neutral"]      { --entity-text: var(--entity-neutral-text);      --entity-bg: var(--entity-neutral-bg);      --entity-border: var(--entity-neutral-border); }
+
 .entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
 
 .entity-panel {
