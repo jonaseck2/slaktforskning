@@ -121,47 +121,47 @@
    * remap rules in shared.css alias these to --entity-text/-bg/-border. */
   --entity-person-text:       #4f46e5;
   --entity-person-bg:         #f5f3ff;
-  --entity-person-border:     #6366f1;
+  --entity-person-border:     #c7d2fe;
 
   --entity-event-text:        #c2410c;
   --entity-event-bg:          #fff3e8;
-  --entity-event-border:      #ea580c;
+  --entity-event-border:      #fed7aa;
 
   --entity-source-text:       #7e22ce;
   --entity-source-bg:         #faf5ff;
-  --entity-source-border:     #a855f7;
+  --entity-source-border:     #e9d5ff;
 
   --entity-citation-text:     #166534;
   --entity-citation-bg:       #f0fdf4;
-  --entity-citation-border:   #15803d;
+  --entity-citation-border:   #bbf7d0;
 
   --entity-place-text:        #0e7490;
   --entity-place-bg:          #ecfeff;
-  --entity-place-border:      #0891b2;
+  --entity-place-border:      #a5f3fc;
 
   --entity-relationship-text: #475569;
   --entity-relationship-bg:   #f1f5f9;
-  --entity-relationship-border: #64748b;
+  --entity-relationship-border: #cbd5e1;
 
   --entity-task-text:         #92400e;
   --entity-task-bg:           #fffbeb;
-  --entity-task-border:       #b45309;
+  --entity-task-border:       #fde68a;
 
   --entity-group-text:        #0369a1;
   --entity-group-bg:          #f0f9ff;
-  --entity-group-border:      #0284c7;
+  --entity-group-border:      #bae6fd;
 
   --entity-name-text:         #475569;
   --entity-name-bg:           #f9fafb;
-  --entity-name-border:       #6b7280;
+  --entity-name-border:       #e5e7eb;
 
   --entity-identifier-text:   #475569;
   --entity-identifier-bg:     #f9fafb;
-  --entity-identifier-border: #6b7280;
+  --entity-identifier-border: #e5e7eb;
 
   --entity-neutral-text:      #374151;
   --entity-neutral-bg:        #f9fafb;
-  --entity-neutral-border:    #6b7280;
+  --entity-neutral-border:    #e5e7eb;
 
   /* Timeline chart */
   --tl-bar-m:          #7eb8f7;
