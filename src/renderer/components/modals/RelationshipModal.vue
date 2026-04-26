@@ -19,7 +19,6 @@
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': form.type === rt }"
-            :style="form.type === rt ? { background: ENTITY_COLORS.relationship.hd, color: ENTITY_COLORS.relationship.fg } : {}"
             @click="selectType(rt)"
           >{{ $t('relTypes.' + rt) }}</button>
         </div>
@@ -77,17 +76,12 @@
 
     <!-- Events section (only visible after first save) -->
     <template v-if="savedRelationshipId">
-      <div
-        class="ep-sec-header"
-        :style="{ background: ENTITY_COLORS.event.hd, borderBottomColor: ENTITY_COLORS.event.border }"
-      >
+      <div class="ep-sec-header" data-entity="event">
         <div class="ep-sec-left">
-          <span class="ep-sec-title" :style="{ color: ENTITY_COLORS.event.fg }">
-            📅 {{ $t('events.title') }}
-          </span>
-          <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.event.fg }">{{ events.length }}</span>
+          <span class="ep-sec-title">📅 {{ $t('events.title') }}</span>
+          <span class="ep-sec-count">{{ events.length }}</span>
         </div>
-        <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.event.fg }">›</span>
+        <span class="ep-sec-open">›</span>
       </div>
       <div class="ep-sec-content">
         <input
@@ -136,7 +130,6 @@ import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
 import PersonPicker from '../PersonPicker.vue';
-import { ENTITY_COLORS } from '../../constants/entityColors';
 import {
   RELATIONSHIP_TYPE_VALUES,
   COUPLE_SUBTYPE_VALUES,

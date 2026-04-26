@@ -719,6 +719,44 @@
     --shadow-lg: 0 4px 16px rgba(30, 0, 60, 0.5);
   }
 
+  /* Entity colors — dark mode (theme-invariant baseline).
+   * Per-theme overrides only added if the WCAG test fails on a specific combo.
+   * Border tokens stay at their light pastel values (decorative; not WCAG-tested). */
+  html.dark {
+    --entity-person-text:       #c4b5fd;
+    --entity-person-bg:         #1e1b3a;
+
+    --entity-event-text:        #fdba74;
+    --entity-event-bg:          #3a1e0a;
+
+    --entity-source-text:       #d8b4fe;
+    --entity-source-bg:         #2e0a3a;
+
+    --entity-citation-text:     #86efac;
+    --entity-citation-bg:       #0a2e16;
+
+    --entity-place-text:        #67e8f9;
+    --entity-place-bg:          #0a2a30;
+
+    --entity-relationship-text: #cbd5e1;
+    --entity-relationship-bg:   #1e2533;
+
+    --entity-task-text:         #fcd34d;
+    --entity-task-bg:           #2e1d05;
+
+    --entity-group-text:        #7dd3fc;
+    --entity-group-bg:          #082030;
+
+    --entity-name-text:         #cbd5e1;
+    --entity-name-bg:           #1a1f2a;
+
+    --entity-identifier-text:   #cbd5e1;
+    --entity-identifier-bg:     #1a1f2a;
+
+    --entity-neutral-text:      #d1d5db;
+    --entity-neutral-bg:        #1a1f2a;
+  }
+
   /* Element-specific dark overrides for properties not covered by tokens.
      Most classes now inherit correct colors via --color-* aliases → token cascade.
      Only keep rules that set values not expressible through existing tokens. */
@@ -932,6 +970,43 @@
     --sidebar-border:      #3a2e5a;
   }
 
+  /* Entity colors — high-contrast mode (theme-invariant baseline).
+   * Border tokens stay at their light pastel values (decorative; not WCAG-tested). */
+  html.high-contrast {
+    --entity-person-text:       #e8e4ff;
+    --entity-person-bg:         #14102e;
+
+    --entity-event-text:        #ffe0c2;
+    --entity-event-bg:          #2e1505;
+
+    --entity-source-text:       #f0d8ff;
+    --entity-source-bg:         #220630;
+
+    --entity-citation-text:     #c8ffd0;
+    --entity-citation-bg:       #062012;
+
+    --entity-place-text:        #c8f8ff;
+    --entity-place-bg:          #061f25;
+
+    --entity-relationship-text: #e6ecf5;
+    --entity-relationship-bg:   #15192a;
+
+    --entity-task-text:         #ffeeb8;
+    --entity-task-bg:           #251604;
+
+    --entity-group-text:        #c8eeff;
+    --entity-group-bg:          #051825;
+
+    --entity-name-text:         #e6ecf5;
+    --entity-name-bg:           #14182a;
+
+    --entity-identifier-text:   #e6ecf5;
+    --entity-identifier-bg:     #14182a;
+
+    --entity-neutral-text:      #e8eaee;
+    --entity-neutral-bg:        #15171f;
+  }
+
   html.high-contrast :focus-visible {
     outline: 3px solid #ffff00 !important;
     outline-offset: 3px !important;
@@ -1074,15 +1149,32 @@ html.screen-reader h1:focus {
   overflow: auto;
 }
 
+/* Entity color aliases.
+ * Set data-entity="<name>" on any container; descendants resolve
+ * --entity-text / --entity-bg / --entity-border to that entity's tokens.
+ * This is mode-aware automatically — the underlying --entity-*-text/bg/border
+ * tokens flip with html.dark / html.high-contrast. */
+[data-entity="person"]       { --entity-text: var(--entity-person-text);       --entity-bg: var(--entity-person-bg);       --entity-border: var(--entity-person-border); }
+[data-entity="event"]        { --entity-text: var(--entity-event-text);        --entity-bg: var(--entity-event-bg);        --entity-border: var(--entity-event-border); }
+[data-entity="source"]       { --entity-text: var(--entity-source-text);       --entity-bg: var(--entity-source-bg);       --entity-border: var(--entity-source-border); }
+[data-entity="citation"]     { --entity-text: var(--entity-citation-text);     --entity-bg: var(--entity-citation-bg);     --entity-border: var(--entity-citation-border); }
+[data-entity="place"]        { --entity-text: var(--entity-place-text);        --entity-bg: var(--entity-place-bg);        --entity-border: var(--entity-place-border); }
+[data-entity="relationship"] { --entity-text: var(--entity-relationship-text); --entity-bg: var(--entity-relationship-bg); --entity-border: var(--entity-relationship-border); }
+[data-entity="task"]         { --entity-text: var(--entity-task-text);         --entity-bg: var(--entity-task-bg);         --entity-border: var(--entity-task-border); }
+[data-entity="group"]        { --entity-text: var(--entity-group-text);        --entity-bg: var(--entity-group-bg);        --entity-border: var(--entity-group-border); }
+[data-entity="name"]         { --entity-text: var(--entity-name-text);         --entity-bg: var(--entity-name-bg);         --entity-border: var(--entity-name-border); }
+[data-entity="identifier"]   { --entity-text: var(--entity-identifier-text);   --entity-bg: var(--entity-identifier-bg);   --entity-border: var(--entity-identifier-border); }
+[data-entity="neutral"]      { --entity-text: var(--entity-neutral-text);      --entity-bg: var(--entity-neutral-bg);      --entity-border: var(--entity-neutral-border); }
+
 .entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
 
 .entity-panel {
   position: relative;
-  background: #fff;
+  background: var(--surface);
   border-radius: 10px;
-  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  box-shadow: var(--shadow-lg);
   font-size: 12px;
-  color: #1a1a1a;
+  color: var(--text-primary);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1097,6 +1189,8 @@ html.screen-reader h1:focus {
   align-items: flex-start;
   flex-shrink: 0;
   gap: 10px;
+  background: var(--entity-bg);
+  border-bottom: 1px solid var(--entity-border);
 }
 .ep-header-left { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
 .ep-icon {
@@ -1107,16 +1201,17 @@ html.screen-reader h1:focus {
 .ep-label {
   font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--entity-text);
 }
 .ep-title {
-  font-size: 14px; font-weight: 600; color: #111827;
+  font-size: 14px; font-weight: 600; color: var(--text-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .ep-close {
-  font-size: 18px; color: #9ca3af; background: none; border: none;
+  font-size: 18px; color: var(--text-muted); background: none; border: none;
   cursor: pointer; line-height: 1; padding: 0; flex-shrink: 0;
 }
-.ep-close:hover { color: #374151; }
+.ep-close:hover { color: var(--text-secondary); }
 
 .ep-body { flex: 1; overflow-y: auto; }
 .ep-fields { padding: 10px 14px 8px; }
@@ -1145,20 +1240,39 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
 
 .ep-footer {
   display: flex; justify-content: flex-end; gap: 6px;
-  padding: 8px 14px; border-top: 1px solid #f3f4f6; flex-shrink: 0;
+  padding: 8px 14px; border-top: 1px solid var(--surface-border-subtle); flex-shrink: 0;
+}
+
+/* Save button in entity panels — uses entity accent color in normal tone,
+   error color in danger tone. Works in light + dark because --entity-text
+   and --error-text both flip with appearance mode. */
+.ep-save-btn {
+  background: var(--entity-text);
+  color: var(--surface-bg);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: var(--font-base);
+  cursor: pointer;
+  font-family: inherit;
+}
+.ep-save-btn:hover:not(:disabled) { filter: brightness(1.05); }
+.ep-save-btn--danger {
+  background: var(--error-text);
 }
 
 /* Section headers inside entity panels (flush-sections-v3 style) */
 .ep-sec-header {
   padding: 10px 14px;
   border-radius: 8px 8px 0 0;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--entity-border, var(--surface-border));
+  background: var(--entity-bg, var(--surface));
   display: flex; align-items: center; justify-content: space-between;
 }
 .ep-sec-left { display: flex; align-items: center; gap: 8px; }
-.ep-sec-title { font-size: 14px; font-weight: 600; }
-.ep-sec-count { font-size: 11px; font-weight: 700; opacity: 0.6; }
-.ep-sec-open  { font-size: 14px; font-weight: 600; opacity: 0.65; }
+.ep-sec-title { font-size: 14px; font-weight: 600; color: var(--entity-text, var(--text-primary)); }
+.ep-sec-count { font-size: 11px; font-weight: 700; color: var(--entity-text, var(--text-primary)); opacity: 0.6; }
+.ep-sec-open  { font-size: 14px; font-weight: 600; color: var(--entity-text, var(--text-primary)); opacity: 0.65; }
 .ep-sec-content { padding: 8px 14px 8px; }
 .ep-sec-gap { height: 8px; }
 
@@ -1167,77 +1281,77 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
   display: flex; align-items: center;
   padding: 5px 6px; border-radius: 6px; cursor: pointer; margin-bottom: 2px;
 }
-.ep-entity-row:hover { background: #f9fafb; }
+.ep-entity-row:hover { background: var(--surface-bg); }
 .ep-entity-main { flex: 1; min-width: 0; }
-.ep-entity-name { font-size: 12px; font-weight: 600; color: #111827; }
-.ep-entity-sub  { font-size: 10px; color: #9ca3af; margin-top: 1px; }
-.ep-entity-arrow { color: #cbd5e1; font-size: 14px; flex-shrink: 0; }
+.ep-entity-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.ep-entity-sub  { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.ep-entity-arrow { color: var(--text-muted); font-size: 14px; flex-shrink: 0; }
 
 /* Search bar in sections */
 .ep-search-wrap { position: relative; }
 .ep-search-input {
-  width: 100%; border: 1.5px solid #e5e7eb; border-radius: 6px;
-  padding: 6px 9px; margin-bottom: 6px; background: #f9fafb;
-  font-size: 12px; color: #374151; outline: none;
+  width: 100%; border: 1.5px solid var(--surface-border); border-radius: 6px;
+  padding: 6px 9px; margin-bottom: 6px; background: var(--surface-bg);
+  font-size: 12px; color: var(--text-secondary); outline: none;
 }
 .ep-search-input:focus {
-  border-color: #3b82f6; background: #fff;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  border-color: var(--accent); background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 /* Dropdown results — position:absolute so it overlays rather than pushing modal height */
 .ep-dropdown {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
-  border: 1px solid #e5e7eb; border-radius: 7px;
-  background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  border: 1px solid var(--surface-border); border-radius: 7px;
+  background: var(--surface); box-shadow: var(--shadow-md);
   max-height: 180px; overflow-y: auto;
 }
 .ep-dd-row {
-  padding: 7px 11px; font-size: 12px; color: #374151; cursor: pointer;
-  border-bottom: 1px solid #fafafa;
+  padding: 7px 11px; font-size: 12px; color: var(--text-secondary); cursor: pointer;
+  border-bottom: 1px solid var(--surface-bg);
   display: flex; align-items: center; justify-content: space-between;
 }
 .ep-dd-row:last-child { border-bottom: none; }
-.ep-dd-row:hover, .ep-dd-row--hl { background: #eff6ff; color: #1d4ed8; }
-.ep-dd-row--create { color: #2563eb; font-weight: 600; border-top: 1px solid #f0f0f0; }
+.ep-dd-row:hover, .ep-dd-row--hl { background: var(--surface-hover); color: var(--accent); }
+.ep-dd-row--create { color: var(--accent); font-weight: 600; border-top: 1px solid var(--surface-border-subtle); }
 .ep-dd-key {
-  font-size: 10px; font-family: monospace; background: #f3f4f6;
-  border: 1px solid #e5e7eb; border-radius: 3px; padding: 1px 5px; color: #6b7280;
+  font-size: 10px; font-family: monospace; background: var(--surface-border-subtle);
+  border: 1px solid var(--surface-border); border-radius: 3px; padding: 1px 5px; color: var(--text-muted);
 }
 
 /* Segmented controls */
-.ep-seg { display: flex; border: 1.5px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.ep-seg { display: flex; border: 1.5px solid var(--surface-border); border-radius: 6px; overflow: hidden; }
 .ep-seg-opt {
   flex: 1; text-align: center; padding: 5px 0; font-size: 11px;
-  color: #9ca3af; background: #f9fafb; border-right: 1px solid #e5e7eb;
+  color: var(--text-muted); background: var(--surface-bg); border-right: 1px solid var(--surface-border);
   cursor: pointer; border-top: none; border-bottom: none; border-left: none;
 }
 .ep-seg-opt:last-child { border-right: none; }
-.ep-seg-opt--on { font-weight: 700; }
+.ep-seg-opt--on { font-weight: 700; background: var(--entity-bg, var(--surface)); color: var(--entity-text, var(--text-primary)); }
 
 /* Readonly display field */
 .ep-field-readonly {
-  width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb;
-  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #6b7280;
+  width: 100%; background: var(--surface-bg); border: 1.5px solid var(--surface-border);
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: var(--text-muted);
 }
 /* Standard text inputs inside entity panels */
 .ep-input {
-  width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb;
-  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #374151;
+  width: 100%; background: var(--surface-bg); border: 1.5px solid var(--surface-border);
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: var(--text-secondary);
   outline: none;
 }
-.ep-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.ep-input:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
 .ep-input--name { flex: 1; }
 .ep-name-row { display: flex; gap: 6px; }
 .ep-field { margin-bottom: 8px; }
 .ep-field:last-child { margin-bottom: 0; }
 .ep-field-label {
-  display: block; font-size: 10px; color: #6b7280; font-weight: 700;
+  display: block; font-size: 10px; color: var(--text-muted); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;
 }
 .ep-textarea {
-  width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb;
-  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: #374151;
+  width: 100%; background: var(--surface-bg); border: 1.5px solid var(--surface-border);
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; color: var(--text-secondary);
   outline: none; resize: vertical; min-height: 48px;
 }
-.ep-textarea:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.ep-textarea:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
