@@ -21,6 +21,7 @@ export default {
     focusPerson: 'Vald person',
     settings: 'Inställningar',
     quality: 'Kvalitet',
+    duplicates: 'Dubbletter',
     researchTasks: 'Uppgifter',
     research: 'FORSKNING',
     organize: 'ORGANISERA',
@@ -731,6 +732,7 @@ export default {
   },
   duplicates: {
     title: 'Möjliga dubbletter',
+    hint: 'Personer med liknande namn och födelseår som kan vara registrerade dubbelt. Klicka "Slå ihop" för att flytta data från person 2 till person 1 och ta bort person 2.',
     filterDuplicates: 'Dubbletter',
     score: 'Poäng',
     mergeTitle: 'Slå ihop personer',

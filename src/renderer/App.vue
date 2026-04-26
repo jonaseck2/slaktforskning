@@ -57,6 +57,10 @@
         <span class="nav-label">{{ $t('nav.quality') }}</span>
         <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
+      <router-link to="/duplicates" class="nav-item" :aria-label="$t('nav.duplicates')">
+        <span class="nav-icon" aria-hidden="true">👥</span>
+        <span class="nav-label">{{ $t('nav.duplicates') }}</span>
+      </router-link>
       <h2 class="nav-section-label">{{ $t('nav.present') }}</h2>
       <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
         <span class="nav-icon" aria-hidden="true">🖨️</span>
@@ -410,6 +414,7 @@ const navSections = computed<NavSectionDef[]>(() => [
       { to: '/sources', icon: '📚', labelKey: 'nav.sources' },
       { to: '/relationships', icon: '🔗', labelKey: 'nav.relationships' },
       { to: '/quality', icon: '⚠️', labelKey: 'nav.quality', badge: qualityErrorCount },
+      { to: '/duplicates', icon: '👥', labelKey: 'nav.duplicates' },
     ],
   },
   {
