@@ -727,6 +727,10 @@ defineExpose({ reload: load, expandFaceTags });
   border-bottom: 1px solid var(--surface-border-subtle);
   margin-bottom: var(--space-xs);
 }
+.picker-wrap > :first-child {
+  flex: 1;
+  min-width: 0;
+}
 
 /* Face tag rows */
 .face-tag-row {
