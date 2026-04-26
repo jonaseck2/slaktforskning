@@ -25,8 +25,14 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ $t('persons.givenName') }}</th>
-            <th>{{ $t('persons.surname') }}</th>
+            <th class="sortable-th" @click="toggleSort('given_name')">
+              {{ $t('persons.givenNameColumn') }}
+              <span v-if="sortBy === 'given_name'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th class="sortable-th" @click="toggleSort('surname')">
+              {{ $t('persons.surname') }}
+              <span v-if="sortBy === 'surname'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+            </th>
             <th>{{ $t('persons.sex') }}</th>
             <th>{{ $t('persons.info') }}</th>
             <th v-if="!isStaticMode" class="actions-cell"></th>
@@ -134,6 +140,25 @@ const focusStore = useFocusStore();
 const persons = ref<PersonListItem[]>([]);
 const total = ref(0);
 const offset = ref(0);
+
+// Sort state — clicking a column header toggles direction; clicking a
+// different column resets to asc. Persisted in localStorage so the choice
+// survives navigation.
+type SortBy = 'surname' | 'given_name';
+type SortDir = 'asc' | 'desc';
+const sortBy = ref<SortBy>((localStorage.getItem('persons-sort-by') as SortBy) || 'surname');
+const sortDir = ref<SortDir>((localStorage.getItem('persons-sort-dir') as SortDir) || 'asc');
+function toggleSort(column: SortBy) {
+  if (sortBy.value === column) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortDir.value = 'asc';
+  }
+  localStorage.setItem('persons-sort-by', sortBy.value);
+  localStorage.setItem('persons-sort-dir', sortDir.value);
+  load();
+}
 const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
@@ -173,7 +198,7 @@ async function load() {
   if (!window.api) return;
   loading.value = true;
   try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
+    const result = await window.api.persons.listPage(PAGE_SIZE, 0, sortBy.value, sortDir.value) as { persons: PersonListItem[]; total: number };
     persons.value = result.persons;
     total.value = result.total;
     offset.value = PAGE_SIZE;
@@ -189,7 +214,7 @@ async function loadMore() {
   if (!window.api || loading.value) return;
   loading.value = true;
   try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
+    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value, sortBy.value, sortDir.value) as { persons: PersonListItem[]; total: number };
     persons.value = [...persons.value, ...result.persons];
     total.value = result.total;
     offset.value += PAGE_SIZE;
@@ -276,6 +301,18 @@ onActivated(async () => {
      but stickiness can hide the table border underneath the floating head.
      Add a bottom border on the sticky head as a fallback. */
   box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
+}
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+.sortable-th:hover {
+  background: var(--surface-hover);
+}
+.sort-arrow {
+  margin-left: 4px;
+  font-size: var(--font-xs);
+  color: var(--accent);
 }
 .persons-list-footer {
   flex-shrink: 0;

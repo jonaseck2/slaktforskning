@@ -85,9 +85,9 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'persons:addIdentifier': (personId, data) => persons.addPersonIdentifier(getDb(), personId, data),
   'persons:getIdentifiers': (personId) => persons.getPersonIdentifiers(getDb(), personId),
   'persons:deleteIdentifier': (id) => persons.deletePersonIdentifier(getDb(), id),
-  'persons:listPage': (limit, offset) => {
+  'persons:listPage': (limit, offset, sortBy, sortDir) => {
     const d = getDb();
-    return { persons: persons.listPersonsPage(d, limit, offset), total: persons.countPersons(d) };
+    return { persons: persons.listPersonsPage(d, limit, offset, sortBy, sortDir), total: persons.countPersons(d) };
   },
   'persons:searchWithDetails': (query) => persons.searchPersonsWithDetails(getDb(), query),
   'persons:listUnsourcedPage': (limit, offset) => {

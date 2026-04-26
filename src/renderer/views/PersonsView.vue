@@ -14,7 +14,7 @@
     <!-- Left sheet -->
     <div class="viz-chart-area">
       <div class="header">
-        <h2>{{ $t('nav.people') }}</h2>
+        <h2>{{ $t('persons.familyTree') }}</h2>
         <div class="header-right">
           <AppButton v-if="!isStaticMode" variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
         </div>

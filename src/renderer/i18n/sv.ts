@@ -96,8 +96,10 @@ export default {
   persons: {
     title: 'Personer',
     listTitle: 'Personlista',
+    familyTree: 'Släktträd',
     addPerson: 'Person',
     givenName: 'Förnamn (fullständigt)',
+    givenNameColumn: 'Förnamn',
     givenNameHint: 'Markera tilltalsnamn med * eller ! efter det, t.ex. Eva Linda* Marie',
     preferredName: 'Tilltalsnamn',
     preferredNamePlaceholder: 't.ex. Linda (om fullständigt förnamn är Eva Linda Marie)',

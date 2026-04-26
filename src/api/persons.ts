@@ -353,10 +353,23 @@ const PERSON_LIST_BASE_QUERY = `
 `;
 
 
-export function listPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
+export type ListPersonsSortBy = 'surname' | 'given_name';
+export type ListPersonsSortDir = 'asc' | 'desc';
+
+export function listPersonsPage(
+  db: Database,
+  limit: number,
+  offset: number,
+  sortBy: ListPersonsSortBy = 'surname',
+  sortDir: ListPersonsSortDir = 'asc',
+): PersonListItem[] {
   // Pass 1: sort + paginate with only name data — no birth/death subqueries.
   // Correlated subqueries on all N persons before LIMIT caused O(4N) lookups on large DBs.
   // Use a derived table to find min sort_order per person, avoiding correlated subquery per row.
+  const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
+  const orderBy = sortBy === 'given_name'
+    ? `pn.given_name ${dir}, pn.surname ${dir}`
+    : `pn.surname ${dir}, pn.given_name ${dir}`;
   const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
@@ -370,7 +383,7 @@ export function listPersonsPage(db: Database, limit: number, offset: number): Pe
     LEFT JOIN person_names pn
       ON pn.person_id = p.id
       AND pn.sort_order = ms.min_sort
-    ORDER BY pn.surname, pn.given_name
+    ORDER BY ${orderBy}
     LIMIT ? OFFSET ?
   `, [limit, offset]);
 
