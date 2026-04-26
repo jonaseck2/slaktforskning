@@ -205,6 +205,28 @@
       @confirm="performDelete"
     />
 
+    <ConfirmModal
+      :visible="delName.visible.value"
+      :title="$t('personDetail.removeNameConfirmTitle')"
+      :message="$t('personDetail.removeNameConfirmMessage')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="delName.cancel"
+      @confirm="delName.confirm"
+    />
+
+    <ConfirmModal
+      :visible="delGroup.visible.value"
+      :title="$t('groups.removeMemberConfirmTitle')"
+      :message="$t('groups.confirmRemoveMember')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.remove')"
+      @cancel="delGroup.cancel"
+      @confirm="delGroup.confirm"
+    />
+
     <!-- Name form modal -->
     <PersonNameModal
       v-if="showNameForm && personId"
@@ -251,6 +273,7 @@ import PersonModal from './modals/PersonModal.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
@@ -453,12 +476,13 @@ function cancelNameForm() {
   editingName.value = null;
 }
 
-async function deleteName(nameId: string) {
+const delName = useDeleteConfirm<string>(async (nameId) => {
   if (!props.personId) return;
   await window.api.persons.deleteName(nameId);
   await loadNames(props.personId);
   emit('person-changed');
-}
+});
+function deleteName(nameId: string) { delName.ask(nameId); }
 
 async function reloadNames(id: string) {
   await loadNames(id);
@@ -469,11 +493,12 @@ async function reloadNames(id: string) {
 
 const showGroupPicker = ref(false);
 
-async function removeFromGroup(groupId: string) {
+const delGroup = useDeleteConfirm<string>(async (groupId) => {
   if (!props.personId) return;
   await window.api.groups.removeLinkByEntity(groupId, 'person', props.personId);
   await loadGroups(props.personId);
-}
+});
+function removeFromGroup(groupId: string) { delGroup.ask(groupId); }
 
 async function onGroupAdded() {
   showGroupPicker.value = false;

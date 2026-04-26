@@ -32,6 +32,17 @@
       @close="showAddForm = false"
       @saved="onSaved"
     />
+
+    <ConfirmModal
+      :visible="del.visible.value"
+      :title="$t('identifiers.removeConfirmTitle')"
+      :message="$t('identifiers.confirmDelete')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="del.cancel"
+      @confirm="del.confirm"
+    />
   </div>
 </template>
 
@@ -39,6 +50,8 @@
 import { ref, computed, watch } from 'vue';
 import PersonIdentifierModal from './modals/PersonIdentifierModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 
 export interface IdentifierRow {
   id: string;
@@ -62,10 +75,11 @@ function onSaved() {
   load();
 }
 
-async function remove(id: string) {
+const del = useDeleteConfirm<string>(async (id) => {
   await window.api.persons.deleteIdentifier(id);
   await load();
-}
+});
+function remove(id: string) { del.ask(id); }
 
 watch(() => props.personId, load, { immediate: true });
 </script>

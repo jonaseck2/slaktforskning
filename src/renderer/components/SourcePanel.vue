@@ -234,6 +234,17 @@
       @cancel="editingCitation = null"
       @saved="onCitationEdited"
     />
+
+    <ConfirmModal
+      :visible="delCitation.visible.value"
+      :title="$t('citations.removeConfirmTitle')"
+      :message="$t('sourceDetail.confirmDeleteCitation')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.delete')"
+      @cancel="delCitation.cancel"
+      @confirm="delCitation.confirm"
+    />
   </div>
 </template>
 
@@ -242,6 +253,8 @@ import { ref, reactive, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationModal from './modals/CitationModal.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import EntityMediaSection from './EntityMediaSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import SectionHeader from './ui/SectionHeader.vue';
@@ -430,8 +443,7 @@ async function saveField(field: keyof typeof editFields) {
 
 // ── Citations ───────────────────────────────────────────────────────────────
 
-async function removeCitation(id: string) {
-  if (!confirm(t('sourceDetail.confirmDeleteCitation'))) return;
+const delCitation = useDeleteConfirm<string>(async (id) => {
   try {
     await window.api.citations.delete(id);
     await load(props.sourceId);
@@ -439,7 +451,8 @@ async function removeCitation(id: string) {
     console.error('[SourcePanel] removeCitation failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
-}
+});
+function removeCitation(id: string) { delCitation.ask(id); }
 
 function onCitationSaved() {
   showCitationForm.value = false;
