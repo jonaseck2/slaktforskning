@@ -475,20 +475,31 @@ Paneled views should auto-select an item so the panel is never empty:
 
 ## Modal Dialogs
 
-All create/edit forms open in a modal. **Always use `<BaseModal>`**. Click-outside does NOT close modals.
+All create/edit forms open in a modal. **Always use `<BaseSubPanel>`** (in `src/renderer/components/modals/`). `BaseModal` is now only the internal overlay/backdrop primitive that BaseSubPanel uses — never instantiate it directly. Click-outside does NOT close modals; Escape does.
 
 ```html
-<BaseModal v-if="showForm" @close="showForm = false" title-id="modal-title">
-  <h3 id="modal-title">+ {{ $t('entity.noun') }}</h3>
-  <form @submit.prevent="handleSubmit">
-    <!-- fields -->
-    <div class="modal-actions">
-      <AppButton variant="secondary" @click="showForm = false">{{ $t('common.cancel') }}</AppButton>
-      <AppButton variant="primary" type="submit">{{ $t('common.create') }}</AppButton>
+<BaseSubPanel
+  entity-type="person"
+  :title="$t('persons.addTitle')"
+  :mode="mode"
+  @cancel="$emit('cancel')"
+  @save="handleSave"
+  @close="$emit('close')"
+>
+  <div class="ep-fields">
+    <div class="ep-field">
+      <span class="ep-field-label">{{ $t('persons.name') }}</span>
+      <input class="ep-input" v-model="form.name" />
     </div>
-  </form>
-</BaseModal>
+  </div>
+</BaseSubPanel>
 ```
+
+**Entity color theming.** `BaseSubPanel` writes `data-entity="<type>"` on its root; the modal header (`var(--entity-bg)` background, `var(--entity-text)` color), save button (`var(--entity-text)` background, `var(--surface-bg)` text), and accent border (`var(--entity-border)`) all flip with mode + theme automatically via the entity-token aliasing rules in `shared.css`. Never apply colors via inline `:style` in any modal — the directive system covers it. The `meta` computed (`ENTITY_META[entityType]` from `entityMeta.ts`) gives you `icon` + `labelKey` only — no colors there.
+
+**Header narration.** BaseSubPanel sets `v-narrate="headerNarration"` on `.ep-header` so screen readers and TTS announce `"{Entity} modal: {Title}"` (Swedish: `"{Entity}-dialog: {Title}"`) — extra wiring is not needed.
+
+**Modes.** `mode="standalone"` (default) renders a centered overlay; `mode="subpanel"` renders side-by-side inside a parent modal's `#subpanels` slot for nested flows (e.g. picking a source from inside an event modal).
 
 ### Reusable modals
 
