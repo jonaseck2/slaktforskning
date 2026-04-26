@@ -29,7 +29,7 @@ const api = {
     addIdentifier: mutating((personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addIdentifier', personId, data)),
     getIdentifiers: (personId: string) => ipcRenderer.invoke('persons:getIdentifiers', personId),
     deleteIdentifier: mutating((id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id)),
-    listPage: (limit: number, offset: number, sortBy?: 'surname' | 'given_name', sortDir?: 'asc' | 'desc') => ipcRenderer.invoke('persons:listPage', limit, offset, sortBy, sortDir),
+    listPage: (limit: number, offset: number, sortBy?: 'surname' | 'given_name' | 'birth_date', sortDir?: 'asc' | 'desc') => ipcRenderer.invoke('persons:listPage', limit, offset, sortBy, sortDir),
     searchWithDetails: (query: string) => ipcRenderer.invoke('persons:searchWithDetails', query),
     listUnsourcedPage: (limit: number, offset: number) => ipcRenderer.invoke('persons:listUnsourcedPage', limit, offset),
   },
