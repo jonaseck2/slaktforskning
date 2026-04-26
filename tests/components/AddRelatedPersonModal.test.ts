@@ -94,6 +94,10 @@ describe('PersonModal (add-related-person behaviour)', () => {
   it('creates parent_child with current person as parent for child mode', async () => {
     const wrapper = mountModal('child');
     await flushPromises();
+    // Child mode shows a sex picker after the entry-mode toggle — pick a sex to reveal the form.
+    // Buttons in document order: [new, existing, M (Son), F (Daughter), U (Unknown)].
+    const sexButtons = wrapper.findAll('.ep-seg-opt');
+    await sexButtons[3].trigger('click'); // F (Daughter)
     await wrapper.find('input.ep-input--name').setValue('Britta');
     await wrapper.findComponent({ name: 'BaseSubPanel' }).vm.$emit('save');
     await flushPromises();
@@ -134,11 +138,15 @@ describe('PersonModal (add-related-person behaviour)', () => {
     expect(wrapper.emitted('close')).toHaveLength(1);
   });
 
-  it('pre-fills surname for child mode', () => {
+  it('does not pre-fill surname for child mode (children may take a different surname)', async () => {
     const wrapper = mountModal('child', { personSurname: 'Andersson' });
+    // Child mode shows a sex picker after the entry-mode toggle — pick a sex to reveal the form.
+    // Buttons in document order: [new, existing, M (Son), F (Daughter), U (Unknown)].
+    const sexButtons = wrapper.findAll('.ep-seg-opt');
+    await sexButtons[4].trigger('click'); // U (Unknown)
     const inputs = wrapper.findAll('input.ep-input--name');
     const surnameInput = inputs[1]; // second name input is surname
-    expect(surnameInput.element.value).toBe('Andersson');
+    expect(surnameInput.element.value).toBe('');
   });
 
   it('infers opposite sex for spouse mode (M → F)', () => {

@@ -176,6 +176,7 @@
       mode="standalone"
       :add-related-to="{ personId: personId, mode: addRelativeMode, personSex: person?.sex as 'M' | 'F' | 'U' | undefined, personSurname: primaryName?.surname ?? undefined }"
       @close="showAddRelative = false"
+      @cancel="showAddRelative = false"
       @saved="onRelativeSaved"
     />
   </div>

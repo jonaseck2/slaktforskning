@@ -186,6 +186,7 @@
       :add-related-to="{ personId: addRelativePersonId, mode: addRelativeMode }"
       @saved="onRelativeSaved"
       @close="showAddRelative = false"
+      @cancel="showAddRelative = false"
     />
   </div>
 </template>
