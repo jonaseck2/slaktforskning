@@ -2,39 +2,80 @@
 // Fetches PersonNode trees from window.api for use by chart components.
 
 import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, DescendantNode, TreePerson } from './chart-layout';
+import { cropImageToDataUrl, type RegionFrac } from './cropImage';
 
 type RawPerson  = { id: string; sex: string; living: boolean };
 type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number };
 type RawEvent   = { event_type: string; date_value: string | null; place_id?: string | null };
 type RawRel     = { type: string; person1_id: string | null; person2_id: string | null };
-type RawMedia   = { id: string; file_ref?: string | null; sort_order: number };
 type RawPlace   = { id: string; name: string };
+type ProfilePicRef = { mediaId: string; region: RegionFrac | null };
 
-// Session cache: media id → resolved data URL (or null if the app reported no file).
-// Keyed by media id so the same photo shared across persons only pays the IPC cost once.
-const photoDataUrlCache = new Map<string, string | null>();
+// Session cache: person id → cropped face data URL (or null if no profile pic).
+// Trees show the *tagged face*, not the raw media — so we cache the cropped result
+// per person. Same photo shared across persons gets fetched once but cropped per person.
+const personPhotoCache = new Map<string, string | null>();
+// Inner cache: media id → raw image data URL. Lets us avoid re-fetching the same
+// photo when several siblings share one family portrait — but the cropped result
+// (which is what trees actually render) is keyed per person above.
+const rawMediaCache = new Map<string, string | null>();
 
-/** Test hook — reset the module-level photo cache between test cases. */
+/** Test hook — reset module-level caches between test cases. */
 export function _resetPhotoCacheForTests(): void {
-  photoDataUrlCache.clear();
+  personPhotoCache.clear();
+  rawMediaCache.clear();
 }
 
-async function resolvePhotoDataUrl(mediaId: string): Promise<string | null> {
-  if (photoDataUrlCache.has(mediaId)) return photoDataUrlCache.get(mediaId) ?? null;
-  const url = (await window.api.media.readAsDataUrl(mediaId)) as string | null;
-  const resolved = url ?? null;
-  // Only cache non-null — a transient null (e.g. file missing) shouldn't poison the cache permanently.
-  if (resolved !== null) photoDataUrlCache.set(mediaId, resolved);
-  return resolved;
+/**
+ * Drop the cached cropped photo for a person so the next chart load refetches.
+ * Called by the profilePic store on invalidation so list/panel avatars and
+ * tree boxes stay in sync after a profile-pic change.
+ */
+export function invalidatePersonPhoto(personId: string): void {
+  personPhotoCache.delete(personId);
+}
+
+export function invalidateAllPersonPhotos(): void {
+  personPhotoCache.clear();
+  rawMediaCache.clear();
+}
+
+async function resolvePersonPhotoUrl(personId: string): Promise<string | null> {
+  if (personPhotoCache.has(personId)) return personPhotoCache.get(personId) ?? null;
+  const ref = (await window.api.media.profilePicRef(personId)) as ProfilePicRef | null;
+  // Trees show the *tagged face* — the square crop centred on the face region.
+  // A media link with no face tag would fall through to the center-crop path
+  // inside cropImageToDataUrl and end up looking like "the whole media zoomed
+  // in", which is exactly what we don't want. Treat untagged media as no
+  // profile pic so the tree box renders the initials placeholder instead.
+  if (!ref || !ref.region) {
+    personPhotoCache.set(personId, null);
+    return null;
+  }
+  let raw = rawMediaCache.get(ref.mediaId) ?? null;
+  if (raw === null && !rawMediaCache.has(ref.mediaId)) {
+    raw = ((await window.api.media.readAsDataUrl(ref.mediaId)) as string | null) ?? null;
+    if (raw !== null) rawMediaCache.set(ref.mediaId, raw);
+  }
+  if (!raw) {
+    // Don't poison the cache permanently — a missing file may come back later.
+    return null;
+  }
+  // Trees must show the tagged face, never the raw media. If cropping fails
+  // (canvas/decode error), fall through to the initials placeholder rather
+  // than silently rendering the full image — a silent raw-media fallback is
+  // exactly the bug we're trying to remove.
+  const cropped = await cropImageToDataUrl(raw, ref.region);
+  personPhotoCache.set(personId, cropped);
+  return cropped;
 }
 
 export async function fetchPersonNode(id: string): Promise<PersonNode> {
-  const [person, names, events, mediaLinks] = await Promise.all([
+  const [person, names, events] = await Promise.all([
     window.api.persons.get(id),
     window.api.persons.getNames(id),
     window.api.events.forPerson(id),
-    window.api.media.forEntity('person', id),
-  ]) as [RawPerson | null, RawName[], RawEvent[], RawMedia[]];
+  ]) as [RawPerson | null, RawName[], RawEvent[]];
 
   if (!person) throw new Error(`Person not found: ${id}`);
   const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0]
@@ -59,10 +100,7 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
     } catch { /* ignore */ }
   }
 
-  // Profile photo: first media link sorted by sort_order, resolved to a data URL.
-  const sortedMedia = [...mediaLinks].sort((a, b) => a.sort_order - b.sort_order);
-  const profileMediaId = sortedMedia[0]?.id ?? null;
-  const photoUrl = profileMediaId ? await resolvePhotoDataUrl(profileMediaId) : null;
+  const photoUrl = await resolvePersonPhotoUrl(id);
 
   return {
     id,
