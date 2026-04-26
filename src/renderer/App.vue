@@ -5,20 +5,13 @@
       <div class="sidebar-header">
         <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
       </div>
-      <form class="sidebar-search" @submit.prevent="submitSearch">
-        <input
-          ref="searchInputRef"
-          v-model="searchQuery"
-          type="text"
+      <div class="sidebar-search">
+        <PersonPicker
+          ref="searchPickerRef"
+          :model-value="null"
           :placeholder="$t('app.search')"
-          class="sidebar-search-input"
+          @select="onSidebarPersonSelected"
         />
-      </form>
-      <div v-if="focusStore.personId" class="focus-indicator">
-        <span class="focus-label">{{ $t('nav.focusPerson') }}</span>
-        <router-link :to="'/persons/' + focusStore.personId" class="focus-name">
-          {{ focusStore.personName }}
-        </router-link>
       </div>
       <h2 class="nav-section-label">{{ $t('nav.research') }}</h2>
       <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
@@ -275,7 +268,9 @@ import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { useFocusStore } from './stores/focus';
+import { useSelectedPersonStore } from './stores/selectedPerson';
 import { useDataVersionStore } from './stores/dataVersion';
+import PersonPicker from './components/PersonPicker.vue';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
@@ -285,6 +280,7 @@ const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
 const focusStore = useFocusStore();
+const selectedStore = useSelectedPersonStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
@@ -379,8 +375,8 @@ const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'Places
 const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchQuery = ref('');
-const searchInputRef = ref<HTMLInputElement | null>(null);
 const searchInputRefH = ref<HTMLInputElement | null>(null);
+const searchPickerRef = ref<{ focus?: () => void; $el?: HTMLElement } | null>(null);
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
 
@@ -469,7 +465,9 @@ function setLocale(val: SupportedLocale) {
 function handleGlobalKey(e: KeyboardEvent) {
   if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
     e.preventDefault();
-    const el = navOrientation.value === 'vertical' ? searchInputRef.value : searchInputRefH.value;
+    const el = navOrientation.value === 'vertical'
+      ? (searchPickerRef.value?.$el?.querySelector?.('input') as HTMLInputElement | null)
+      : searchInputRefH.value;
     el?.focus();
     el?.select();
   }
@@ -585,6 +583,19 @@ function submitSearch() {
   if (!q) return;
   router.push({ path: '/search', query: { q } });
   searchQuery.value = '';
+}
+
+async function onSidebarPersonSelected(person: { id: string }) {
+  // Set as the selected person (panel target) without changing the chart
+  // focal. If the user is on /persons the panel reacts via the store; if
+  // not, navigate to /persons/:focal so the panel becomes visible while
+  // the chart stays centered on the previous focal (or this person if
+  // there is no current focal).
+  selectedStore.set(person.id);
+  if (!route.path.startsWith('/persons')) {
+    const focal = focusStore.personId ?? person.id;
+    await router.push('/persons/' + focal);
+  }
 }
 
 </script>
@@ -822,7 +833,7 @@ body {
   margin-bottom: 10px;
   flex-shrink: 0;
 }
-.sidebar-search-input {
+.sidebar-search .person-picker input {
   width: 100%;
   padding: 6px 10px;
   border-radius: var(--radius-md);
@@ -834,39 +845,12 @@ body {
   outline: none;
   box-sizing: border-box;
 }
-.sidebar-search-input::placeholder {
+.sidebar-search .person-picker input::placeholder {
   color: var(--sidebar-text-muted);
 }
-.sidebar-search-input:focus {
+.sidebar-search .person-picker input:focus {
   background: var(--sidebar-border);
 }
-
-.focus-indicator {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 10px;
-  margin-bottom: 4px;
-  background: var(--sidebar-active-bg);
-  border-radius: 6px;
-  border-left: 3px solid var(--accent);
-  flex-shrink: 0;
-}
-.focus-label {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--sidebar-text-muted);
-  text-transform: uppercase;
-}
-.focus-name {
-  font-size: var(--font-xs);
-  color: var(--sidebar-active-text);
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.focus-name:hover { color: var(--sidebar-active-text); text-decoration: underline; }
 
 .nav-section-label {
   font-size: var(--font-xs);

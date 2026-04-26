@@ -138,6 +138,7 @@ import PersonModal from '../components/modals/PersonModal.vue';
 import PersonsListTab from './PersonsListTab.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
+import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useChartNavigation } from '../composables/useChartNavigation';
 import { fetchPedigreeTree, fetchHourglassTree } from '../utils/chartData';
@@ -180,8 +181,11 @@ const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
 const chartKey = ref(0);
 
-// Selected node in the chart (may differ from chart focal person)
-const selectedPersonId = ref<string | null>(null);
+// Selected node in the chart (may differ from chart focal person).
+// Lives in a store so the sidebar PersonPicker can write to it without
+// touching the URL / tree focal.
+const selectedStore = useSelectedPersonStore();
+const selectedPersonId = computed(() => selectedStore.personId);
 
 // Template refs for chart components — used by useChartBridge to read layout boxes
 const pedigreeChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
@@ -223,7 +227,7 @@ function setTab(tab: TabName) {
 }
 
 function selectNode(id: string) {
-  selectedPersonId.value = id;
+  selectedStore.set(id);
   if (!panelOpen.value) openPanel();
 }
 
@@ -293,16 +297,15 @@ async function load() {
     return;
   }
   focalPerson.value = person;
-  // Sync the panel's selectedPersonId to the focal whenever the route changes.
-  // Without this, switching focal via direct URL / sidebar / Fokusera would
-  // leave the panel showing the previous person while the tree centers on the
-  // new one. selectNode() still wins for click-to-select on a non-focal node
-  // in the chart (it runs after this and overwrites selectedPersonId).
-  selectedPersonId.value = id;
+  // Sync the panel's selected person to the focal whenever the route
+  // changes. Without this, refocusing via "🌳 Visa i träd" / direct URL
+  // would leave the panel showing the previous person while the tree
+  // centers on the new one. selectNode() runs after this for chart clicks
+  // and overrides with the clicked person.
+  selectedStore.set(id);
   if (!panelOpen.value) openPanel();
-  // Keep the sidebar focus indicator in sync with whichever person is focal.
-  // Runs on every route change to /persons/:id, so direct-URL nav and the
-  // "Fokusera"-button update the sidebar consistently with click-to-navigate.
+  // Keep focusStore in sync with the chart focal — used as the "current
+  // person" anchor by other views (Reports default subject, etc).
   if (focusStore.personId !== id) {
     try {
       const names = (await window.api.persons.getNames(id)) as Array<{ given_name?: string; surname?: string }>;
