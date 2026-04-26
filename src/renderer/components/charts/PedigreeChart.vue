@@ -39,6 +39,7 @@
           :aria-label="boxAriaLabel(box)"
           tabindex="0"
           @click="$emit('navigate', box.person.id)"
+          @contextmenu.prevent="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           @keydown="onBoxKeydown($event, box)"
           @focus="focusedBoxId = box.person.id"
           @blur="focusedBoxId = null"
@@ -218,7 +219,11 @@ import { pedigreeGenerations } from '../../composables/useChartGenerations';
 const { t } = useI18n();
 
 const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
-const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
+const emit = defineEmits<{
+  navigate: [id: string];
+  reload: [];
+  'person-context-menu': [payload: { personId: string; x: number; y: number }];
+}>();
 
 const loading = ref(true);
 const loadingMore = ref(false);
