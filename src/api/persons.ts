@@ -304,6 +304,8 @@ export type PersonListItem = {
   sex: Person['sex'];
   given_name: string;
   surname: string;
+  preferred_name: string | null;
+  nickname: string | null;
   birth_date: string | null;
   birth_place: string | null;
   death_date: string | null;
@@ -373,10 +375,12 @@ export function listPersonsPage(
     : sortBy === 'birth_date'
     ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
-  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
+  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
-           COALESCE(pn.surname, '')    AS surname
+           COALESCE(pn.surname, '')    AS surname,
+           pn.preferred_name           AS preferred_name,
+           pn.nickname                 AS nickname
     FROM persons p
     LEFT JOIN (
       SELECT person_id, MIN(sort_order) AS min_sort
@@ -435,7 +439,15 @@ export function listPersonsPage(
 
   return page.map(p => {
     const events = eventMap.get(p.id) ?? { birth_date: null, birth_place: null, death_date: null, death_place: null };
-    return { id: p.id, sex: p.sex as Person['sex'], given_name: p.given_name, surname: p.surname, ...events };
+    return {
+      id: p.id,
+      sex: p.sex as Person['sex'],
+      given_name: p.given_name,
+      surname: p.surname,
+      preferred_name: p.preferred_name,
+      nickname: p.nickname,
+      ...events,
+    };
   });
 }
 
@@ -457,10 +469,12 @@ const UNSOURCED_FILTER = `
 `;
 
 export function listUnsourcedPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
-  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
+  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
-           COALESCE(pn.surname, '')    AS surname
+           COALESCE(pn.surname, '')    AS surname,
+           pn.preferred_name           AS preferred_name,
+           pn.nickname                 AS nickname
     FROM persons p
     LEFT JOIN person_names pn
       ON pn.person_id = p.id
@@ -507,7 +521,15 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
 
   return page.map(p => {
     const events = eventMap.get(p.id) ?? { birth_date: null, birth_place: null, death_date: null, death_place: null };
-    return { id: p.id, sex: p.sex as Person['sex'], given_name: p.given_name, surname: p.surname, ...events };
+    return {
+      id: p.id,
+      sex: p.sex as Person['sex'],
+      given_name: p.given_name,
+      surname: p.surname,
+      preferred_name: p.preferred_name,
+      nickname: p.nickname,
+      ...events,
+    };
   });
 }
 

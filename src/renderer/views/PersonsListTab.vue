@@ -64,10 +64,10 @@
               <div class="name-cell">
                 <AppAvatar :person-id="person.id" :given-name="person.given_name || ''" :surname="person.surname || ''" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
                 <router-link v-if="!embedded" :to="'/persons/' + person.id" class="person-link" @click.stop>
-                  <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
+                  <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name ?? null" :nickname="person.nickname ?? null" />
                 </router-link>
                 <span v-else>
-                  <PersonName :given-name="person.given_name" :preferred-name="null" :nickname="null" />
+                  <PersonName :given-name="person.given_name" :preferred-name="person.preferred_name ?? null" :nickname="person.nickname ?? null" />
                 </span>
               </div>
             </td>
@@ -113,6 +113,8 @@ interface PersonListItem {
   sex: string;
   given_name: string;
   surname: string;
+  preferred_name: string | null;
+  nickname: string | null;
   birth_date: string | null;
   birth_place: string | null;
   death_date: string | null;
