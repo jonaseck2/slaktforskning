@@ -128,10 +128,15 @@
             :aria-label="$t('personDetail.addRelativeLabel')"
             @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           >
-            <circle v-if="addBtnStyle === 'plus'" r="10" />
-            <path v-else d="M 0 -14 C 9 -10 12 -3 9 8 C 5 12 -5 12 -9 8 C -12 -3 -9 -10 0 -14 Z" transform="rotate(-25)" />
-            <line x1="-5" y1="0" x2="5" y2="0" />
-            <line x1="0" y1="-5" x2="0" y2="5" />
+            <template v-if="addBtnStyle === 'plus'">
+              <circle r="10" />
+              <line x1="-5" y1="0" x2="5" y2="0" />
+              <line x1="0" y1="-5" x2="0" y2="5" />
+            </template>
+            <template v-else>
+              <rect x="-12" y="-12" width="24" height="24" fill="transparent" />
+              <text class="add-relative-leaf-glyph" text-anchor="middle" dominant-baseline="central" font-size="20">🌿</text>
+            </template>
           </g>
         </g>
         <g
@@ -602,8 +607,7 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
 
 .add-relative-btn { cursor: pointer; }
-.add-relative-btn circle,
-.add-relative-btn path {
+.add-relative-btn circle {
   fill: var(--surface);
   stroke: var(--surface-border);
   stroke-width: 1;
@@ -615,7 +619,12 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   stroke-linecap: round;
   pointer-events: none;
 }
-.add-relative-btn:hover circle,
-.add-relative-btn:hover path { fill: var(--accent); stroke: var(--accent); }
+.add-relative-btn:hover circle { fill: var(--accent); stroke: var(--accent); }
 .add-relative-btn:hover line { stroke: var(--accent-text); }
+.add-relative-leaf-glyph {
+  pointer-events: none;
+  user-select: none;
+  transition: transform 0.1s;
+}
+.add-relative-btn:hover .add-relative-leaf-glyph { transform: scale(1.15); }
 </style>
