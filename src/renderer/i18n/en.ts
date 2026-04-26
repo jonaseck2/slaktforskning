@@ -561,7 +561,7 @@ export default {
     managePlace: 'Manage place',
     noPersonSelected: 'Click a person in the tree',
     showInTree: 'Show in tree',
-    focus: 'Focus',
+    focus: '🌳 Show in tree',
     open: 'Open',
     events: 'Events',
     relationships: 'Relationships',
