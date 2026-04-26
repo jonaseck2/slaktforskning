@@ -243,7 +243,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import FilterChips from '../components/ui/FilterChips.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
-import { useFocusStore } from '../stores/focus';
+import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useReportConfigStore } from '../stores/reportConfig';
 import { usePanelResize } from '../composables/usePanelResize';
 import ReportPanel from '../components/ReportPanel.vue';
@@ -273,7 +273,7 @@ const mode = computed(() => props.mode ?? 'keepsake');
 const { t } = useI18n();
 const route = useRoute();
 
-const focusStore = useFocusStore();
+const selectedStore = useSelectedPersonStore();
 const store = useReportConfigStore();
 
 const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>(mode.value === 'framable' ? 'pedigreePrint' : 'alife');
@@ -416,14 +416,22 @@ onMounted(async () => {
   }
   coupleRelationships.value = options;
 
-  if (focusStore.personId) {
+  // Seed report subject: prefer selected person, fall back to default_person_id
+  let subjectId: string | null = selectedStore.personId;
+  if (!subjectId) {
+    try {
+      subjectId = await window.api.db.getSetting('default_person_id') as string | null;
+    } catch { /* ignore */ }
+  }
+  if (subjectId) {
+    if (!store.personId) store.personId = subjectId;
     const focusCouple = couples.find(r =>
-      r.person1_id === focusStore.personId || r.person2_id === focusStore.personId
+      r.person1_id === subjectId || r.person2_id === subjectId
     );
     if (focusCouple) store.aMarriageRelId = focusCouple.id;
 
     try {
-      const events = await window.api.events.forPerson(focusStore.personId) as Array<{ event_type: string; place_id: string | null }>;
+      const events = await window.api.events.forPerson(subjectId) as Array<{ event_type: string; place_id: string | null }>;
       const birth = events.find(e => e.event_type === 'birth' && e.place_id);
       if (birth?.place_id) store.placeChroniclePlaceId = birth.place_id;
     } catch { /* ignore */ }

@@ -147,8 +147,7 @@ import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
-import { useFocusStore } from '../stores/focus';
-import { fullNameParts } from '../utils/nameUtils';
+import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { narratePersonRow, narrateRelationshipRow, narrateSourceRow } from '../utils/screenReaderNarration';
 
 interface PersonResult {
@@ -184,7 +183,7 @@ interface SourceResult {
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
-const focusStore = useFocusStore();
+const selectedStore = useSelectedPersonStore();
 
 const inputQuery = ref('');
 const displayedQuery = ref('');
@@ -205,8 +204,7 @@ function focusPrevRow(e: KeyboardEvent): void {
 }
 
 function goToPerson(p: PersonResult) {
-  const name = fullNameParts(p.given_name ?? null, p.surname ?? null, p.preferred_name ?? null, p.nickname ?? null).map(pt => pt.text).join('');
-  focusStore.set(p.id, name);
+  selectedStore.set(p.id);
   router.push(`/persons/${p.id}`);
 }
 
