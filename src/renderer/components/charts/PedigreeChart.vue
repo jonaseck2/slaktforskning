@@ -39,9 +39,6 @@
           :aria-label="boxAriaLabel(box)"
           tabindex="0"
           @click="$emit('navigate', box.person.id)"
-          @mouseenter="(e: MouseEvent) => { hoveredPersonId = box.person.id; tooltipRef?.show(box.person, e.clientX, e.clientY); }"
-          @mousemove="(e: MouseEvent) => tooltipRef?.move(e.clientX, e.clientY)"
-          @mouseleave="hoveredPersonId = null; tooltipRef?.hide()"
           @keydown="onBoxKeydown($event, box)"
           @focus="focusedBoxId = box.person.id"
           @blur="focusedBoxId = null"
@@ -191,8 +188,6 @@
       <button class="zoom-extra-btn" @click="incrGens">+</button>
     </ZoomControls>
 
-    <ChartTooltip ref="tooltipRef" />
-
     <!-- Add related person modal -->
     <PersonModal
       v-if="showAddRelative && addRelativePersonId"
@@ -216,12 +211,10 @@ import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '..
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
-import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { pedigreeGenerations } from '../../composables/useChartGenerations';
 
 const { t } = useI18n();
-const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
 const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
@@ -238,9 +231,6 @@ watch(genTarget, (n) => {
   if (n > loadedGens.value) load();
   else applyGenerationDepth(n);
 });
-
-// Hover state for ⊕ button
-const hoveredPersonId = ref<string | null>(null);
 
 // Focus state for keyboard navigation
 const focusedBoxId = ref<string | null>(null);

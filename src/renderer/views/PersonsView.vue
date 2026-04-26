@@ -15,7 +15,7 @@
 
       <!-- List mode: person list -->
       <div v-if="viewMode === 'list'" class="viz-list-content">
-        <PersonsListTab embedded @person-added="onPersonAdded" @select="selectNode" />
+        <PersonsListTab embedded @person-added="onPersonAdded" @select="navigateTo" />
       </div>
 
       <!-- Tree mode: tab bar + chart -->
@@ -229,6 +229,13 @@ function selectNode(id: string) {
 
 async function navigateTo(id: string) {
   selectNode(id);
+  // Refocus the tree on the clicked person (skip if already focal — avoids a
+  // pointless route push and chart re-render when clicking the focal node).
+  // The sidebar focus indicator is updated by load() once the route change
+  // settles, so direct-URL nav and click nav stay consistent.
+  if (id !== personId.value) {
+    router.push('/persons/' + id);
+  }
   if (!ttsEnabled?.value || !tts) return;
   try {
     const person = await window.api.persons.get(id) as { id: string; sex: string } | null;
@@ -291,6 +298,24 @@ async function load() {
     return;
   }
   focalPerson.value = person;
+  // Sync the panel's selectedPersonId to the focal whenever the route changes.
+  // Without this, switching focal via direct URL / sidebar / Fokusera would
+  // leave the panel showing the previous person while the tree centers on the
+  // new one. selectNode() still wins for click-to-select on a non-focal node
+  // in the chart (it runs after this and overwrites selectedPersonId).
+  selectedPersonId.value = id;
+  if (!panelOpen.value) openPanel();
+  // Keep the sidebar focus indicator in sync with whichever person is focal.
+  // Runs on every route change to /persons/:id, so direct-URL nav and the
+  // "Fokusera"-button update the sidebar consistently with click-to-navigate.
+  if (focusStore.personId !== id) {
+    try {
+      const names = (await window.api.persons.getNames(id)) as Array<{ given_name?: string; surname?: string }>;
+      const n = names[0];
+      const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+      focusStore.set(id, name);
+    } catch { /* best-effort */ }
+  }
 }
 
 // --- Screen reader chart navigation ---
