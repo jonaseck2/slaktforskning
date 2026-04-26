@@ -1,5 +1,5 @@
 <template>
-  <div v-if="hasContent" class="media-caption">
+  <div v-if="hasContent" class="media-caption" tabindex="0" v-narrate="captionPlainText">
     <template v-if="showCaptions">
       <div v-if="contextLine" class="caption-context">{{ contextLine }}</div>
       <div v-if="faceTags.length" class="caption-faces">
@@ -62,6 +62,17 @@ const hasContent = computed(() => {
   if (props.showCaptions && (props.contextLine || props.faceTags.length > 0 || props.inferredDateISO)) return true;
   if (props.showNotes && props.notes) return true;
   return false;
+});
+
+const captionPlainText = computed(() => {
+  const parts: string[] = [];
+  if (props.contextLine) parts.push(props.contextLine);
+  if (props.faceTags && props.faceTags.length > 0) {
+    parts.push('From left: ' + props.faceTags.map(f => f.name).join(', '));
+  }
+  if (props.inferredDateISO) parts.push(props.inferredDateISO.slice(0, 10));
+  if (props.notes) parts.push(props.notes);
+  return parts.join('. ');
 });
 
 function isLinked(personId: string): boolean {

@@ -40,6 +40,8 @@
             ref="imgEl"
             :src="imageUrl"
             draggable="false"
+            tabindex="0"
+            v-narrate="() => narrateMedia(currentMediaSummary.value, labels)"
             @load="onImageLoad"
           />
           <FaceTagOverlay
@@ -119,6 +121,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useImageZoom } from '../composables/useImageZoom';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import { narrateMedia, narrationLabelsFromI18n } from '../utils/narration';
 import FaceTagOverlay from './FaceTagOverlay.vue';
 import ZoomControls from './ZoomControls.vue';
 import MediaCaption, { type CaptionFaceTag } from './MediaCaption.vue';
@@ -192,6 +195,17 @@ const panStartX = ref(0);
 const panStartY = ref(0);
 
 const currentItem = computed(() => props.mediaItems[currentIndex.value] ?? null);
+
+const labels = narrationLabelsFromI18n($t);
+
+const currentMediaSummary = computed(() => ({
+  title: currentItem.value?.title || $t('media.untitled'),
+  format: currentItem.value?.format ?? undefined,
+  taggedPersonNames: enrichedRegions.value
+    .map(r => r.personName)
+    .filter((n): n is string => !!n),
+  notes: currentItem.value?.notes ?? undefined,
+}));
 
 const displayName = computed(() => {
   const item = currentItem.value;
