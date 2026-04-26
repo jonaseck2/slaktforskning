@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<{
   personId?: string | null;
   givenName?: string;
   surname?: string;
+  preferredName?: string | null;
   sex?: 'M' | 'F' | 'U';
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   src?: string | null;
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{
   personId: null,
   givenName: '',
   surname: '',
+  preferredName: null,
   sex: 'U',
   size: 'md',
   src: null,
@@ -35,8 +37,13 @@ const effectiveSrc = computed<string | null>(() => {
 const initials = computed(() => {
   const g = props.givenName.trim();
   const s = props.surname.trim();
-  if (g && s) return (g[0] + s[0]).toUpperCase();
-  if (g) return g.slice(0, 2).toUpperCase();
+  // Prefer the tilltalsnamn's first letter when it appears within the given names.
+  const pref = (props.preferredName ?? '').trim();
+  const givenFirst = pref && g.toLowerCase().split(/\s+/).includes(pref.toLowerCase())
+    ? pref[0]
+    : (g[0] ?? '');
+  if (givenFirst && s) return (givenFirst + s[0]).toUpperCase();
+  if (givenFirst) return (givenFirst + (g[1] ?? '')).toUpperCase();
   if (s) return s.slice(0, 2).toUpperCase();
   return '?';
 });

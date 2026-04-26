@@ -28,6 +28,7 @@
                 :person-id="p.id"
                 :given-name="p.givenName"
                 :surname="p.surname"
+                :preferred-name="p.preferredName ?? null"
                 :sex="p.sex ?? 'U'"
                 size="sm"
               />
