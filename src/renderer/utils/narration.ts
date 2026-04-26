@@ -33,6 +33,26 @@ export interface NarrationLabels {
   and: string;
   author: string;
   citationsLinked: string;
+
+  // Media
+  photo: string;
+  document: string;
+  tagged: string;
+  taken: string;
+  about: string;
+
+  // Place
+  eventsRecorded: string;
+
+  // Event
+  of: string;
+  on: string;
+
+  // Citation
+  page: string;
+  confidence: string;
+  confidenceLevels: { 0: string; 1: string; 2: string; 3: string };
+  for_: string;
 }
 
 /** Build labels from a vue-i18n `t` function. */
@@ -47,6 +67,23 @@ export function narrationLabelsFromI18n(t: (key: string) => string): NarrationLa
     and: t('narration.and'),
     author: t('narration.author'),
     citationsLinked: t('narration.citationsLinked'),
+    photo: t('narration.media.photo'),
+    document: t('narration.media.document'),
+    tagged: t('narration.media.tagged'),
+    taken: t('narration.media.taken'),
+    about: t('narration.media.about'),
+    eventsRecorded: t('narration.place.eventsRecorded'),
+    of: t('narration.event.of'),
+    on: t('narration.event.on'),
+    page: t('narration.citation.page'),
+    confidence: t('narration.citation.confidence'),
+    confidenceLevels: {
+      0: t('narration.citation.confidenceLevels.0'),
+      1: t('narration.citation.confidenceLevels.1'),
+      2: t('narration.citation.confidenceLevels.2'),
+      3: t('narration.citation.confidenceLevels.3'),
+    },
+    for_: t('narration.citation.for'),
   };
 }
 
@@ -60,6 +97,18 @@ const EN_LABELS: NarrationLabels = {
   and: 'and',
   author: 'Author',
   citationsLinked: 'citations linked',
+  photo: 'Photo',
+  document: 'Document',
+  tagged: 'Tagged',
+  taken: 'Taken',
+  about: 'about',
+  eventsRecorded: 'events recorded',
+  of: 'of',
+  on: 'on',
+  page: 'page',
+  confidence: 'Confidence',
+  confidenceLevels: { 0: 'unreliable', 1: 'questionable', 2: 'secondary', 3: 'primary' },
+  for_: 'For',
 };
 
 export function narratePerson(data: PersonNarration, labels: NarrationLabels = EN_LABELS): string {
@@ -114,6 +163,110 @@ export function narrateSource(data: SourceNarration, labels: NarrationLabels = E
   }
 
   parts.push(data.citationCount + ' ' + labels.citationsLinked + '.');
+
+  return parts.join(' ');
+}
+
+export interface MediaNarration {
+  title: string;
+  format?: string;
+  taggedPersonNames?: string[];
+  inferredDate?: string;
+  notes?: string;
+}
+
+export function narrateMedia(data: MediaNarration, labels: NarrationLabels = EN_LABELS): string {
+  const parts: string[] = [data.title + '.'];
+
+  if (data.format) {
+    const isImage = /^(jpe?g|png|gif|webp|bmp|tiff?|heic)$/i.test(data.format);
+    parts.push((isImage ? labels.photo : labels.document) + '.');
+  }
+
+  if (data.taggedPersonNames && data.taggedPersonNames.length > 0) {
+    parts.push(labels.tagged + ': ' + data.taggedPersonNames.join(', ') + '.');
+  }
+
+  if (data.inferredDate) {
+    parts.push(labels.taken + ' ' + labels.about + ' ' + data.inferredDate + '.');
+  }
+
+  if (data.notes) {
+    parts.push(data.notes);
+  }
+
+  return parts.join(' ');
+}
+
+export interface PlaceNarration {
+  name: string;
+  type?: string;
+  parentPath?: string;
+  eventCount?: number;
+}
+
+export function narratePlace(data: PlaceNarration, labels: NarrationLabels = EN_LABELS): string {
+  const parts: string[] = [];
+
+  const head = data.type ? data.name + ' ' + data.type : data.name;
+  const headWithParent = data.parentPath ? head + ' ' + labels.in_ + ' ' + data.parentPath : head;
+  parts.push(headWithParent + '.');
+
+  if (data.eventCount !== undefined && data.eventCount > 0) {
+    parts.push(data.eventCount + ' ' + labels.eventsRecorded + '.');
+  }
+
+  return parts.join(' ');
+}
+
+export interface EventNarration {
+  type: string;
+  date?: string;
+  place?: string;
+  primaryPersonName?: string;
+}
+
+export function narrateEvent(data: EventNarration, labels: NarrationLabels = EN_LABELS): string {
+  let head = data.type;
+  if (data.primaryPersonName) {
+    head = head + ' ' + labels.of + ' ' + data.primaryPersonName;
+  }
+
+  const parts: string[] = [head];
+
+  if (data.date) {
+    parts.push(labels.on + ' ' + data.date);
+  }
+
+  if (data.place) {
+    parts.push(labels.in_ + ' ' + data.place);
+  }
+
+  return parts.join(' ') + '.';
+}
+
+export interface CitationNarration {
+  sourceTitle: string;
+  page?: string;
+  confidence?: 0 | 1 | 2 | 3;
+  attachedToLabel?: string;
+}
+
+export function narrateCitation(data: CitationNarration, labels: NarrationLabels = EN_LABELS): string {
+  const parts: string[] = [data.sourceTitle];
+
+  if (data.page) {
+    parts[0] += ', ' + labels.page + ' ' + data.page;
+  }
+  parts[0] += '.';
+
+  if (data.confidence !== undefined) {
+    parts.push(labels.confidence + ': ' + labels.confidenceLevels[data.confidence] + '.');
+  }
+
+  if (data.attachedToLabel) {
+    parts.push(labels.for_ + ' ' + data.attachedToLabel + '.');
+  }
 
   return parts.join(' ');
 }
