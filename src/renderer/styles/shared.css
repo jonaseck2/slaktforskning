@@ -739,6 +739,9 @@
     --entity-place-text:        #67e8f9;
     --entity-place-bg:          #0a2a30;
 
+    --entity-media-text:        #fda4af;
+    --entity-media-bg:          #3a0a18;
+
     --entity-relationship-text: #cbd5e1;
     --entity-relationship-bg:   #1e2533;
 
@@ -989,6 +992,9 @@
     --entity-place-text:        #c8f8ff;
     --entity-place-bg:          #061f25;
 
+    --entity-media-text:        #ffd6e0;
+    --entity-media-bg:          #200612;
+
     --entity-relationship-text: #e6ecf5;
     --entity-relationship-bg:   #15192a;
 
@@ -1158,6 +1164,7 @@ html.screen-reader h1:focus {
 [data-entity="source"]       { --entity-text: var(--entity-source-text);       --entity-bg: var(--entity-source-bg);       --entity-border: var(--entity-source-border); }
 [data-entity="citation"]     { --entity-text: var(--entity-citation-text);     --entity-bg: var(--entity-citation-bg);     --entity-border: var(--entity-citation-border); }
 [data-entity="place"]        { --entity-text: var(--entity-place-text);        --entity-bg: var(--entity-place-bg);        --entity-border: var(--entity-place-border); }
+[data-entity="media"]        { --entity-text: var(--entity-media-text);        --entity-bg: var(--entity-media-bg);        --entity-border: var(--entity-media-border); }
 [data-entity="relationship"] { --entity-text: var(--entity-relationship-text); --entity-bg: var(--entity-relationship-bg); --entity-border: var(--entity-relationship-border); }
 [data-entity="task"]         { --entity-text: var(--entity-task-text);         --entity-bg: var(--entity-task-bg);         --entity-border: var(--entity-task-border); }
 [data-entity="group"]        { --entity-text: var(--entity-group-text);        --entity-bg: var(--entity-group-bg);        --entity-border: var(--entity-group-border); }

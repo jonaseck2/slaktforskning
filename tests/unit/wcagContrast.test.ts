@@ -170,7 +170,7 @@ const UI_PAIRS: UiPair[] = [
 ];
 
 const ENTITIES = [
-  'person', 'event', 'source', 'citation', 'place',
+  'person', 'event', 'source', 'citation', 'place', 'media',
   'relationship', 'task', 'group', 'name', 'identifier', 'neutral',
 ] as const;
 

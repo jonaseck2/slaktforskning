@@ -11,6 +11,7 @@ export type EntityType =
   | 'source'
   | 'citation'
   | 'place'
+  | 'media'
   | 'relationship'
   | 'task'
   | 'group'
@@ -24,6 +25,7 @@ export const ENTITY_META: Record<EntityType, EntityMeta> = {
   source:       { icon: '📚', labelKey: 'sources.entity' },
   citation:     { icon: '📖', labelKey: 'citations.entity' },
   place:        { icon: '📍', labelKey: 'places.entity' },
+  media:        { icon: '🖼️', labelKey: 'media.entity' },
   relationship: { icon: '🔗', labelKey: 'relationships.entity' },
   task:         { icon: '📋', labelKey: 'researchTasks.entity' },
   group:        { icon: '👥', labelKey: 'groups.entity' },

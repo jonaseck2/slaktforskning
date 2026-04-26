@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(quality): the entity-type chips in QualityView (Person / Plats / Media / Källa) now use the same theme-aware entity color tokens as the modal headers — set via `data-entity` instead of hardcoded fan-branch chart colors, so a Person chip matches PersonModal's indigo, a Place chip matches PlaceModal's cyan, a Source chip matches SourceModal's purple. Also fills in the gap by adding a new Media entity to the registry: `--entity-media-text/-bg/-border` (rose) in light/dark/HC modes, `[data-entity="media"]` alias, `media` added to `EntityType`/`ENTITY_META`/WCAG-test entity list (12 entities × 9 mode combinations now contrast-tested = 316 assertions).
+
 - fix(panels): notes monospace toggle ("iWi") no longer overrides font size and weight, so it matches the surrounding "Notes" heading instead of bulging above it. Only the proportional/monospace `font-family` swap remains, which is the visual signal the toggle needs.
 
 - docs(skills): document the single-field date-input pattern in `frontend-design`, `add-feature`, and the `CLAUDE.md` shared-components table. New rule: use `DateInput`/`SimpleDateInput` for any date entry — never roll separate Y / M / D inputs or a sibling calendar button.
