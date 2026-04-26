@@ -389,6 +389,35 @@ Shared classes include: `.header`, `.data-table`, `.clickable-row`, `.btn-add`, 
 
 ---
 
+## Form fields (input / select / textarea)
+
+Every text input, select, and textarea in the app uses **one** consistent treatment — gray-rest, white-on-focus:
+
+```css
+background: var(--surface-bg);             /* rest */
+border:     1px solid var(--surface-border);
+color:      var(--text-primary);
+font-family: inherit;
+
+/* on focus */
+outline:    2px solid var(--accent);
+outline-offset: 1px;
+border-color: var(--accent);
+background: var(--surface);
+```
+
+This is the rule for **modal forms, panel inputs, settings forms, and one-off inputs alike**. Don't introduce a separate "modal" treatment — when modal forms used `var(--surface)` (white) at rest while panel inputs used `var(--surface-bg)`, every modal opened from a panel section produced a visible color jump.
+
+**The canonical class is `.ep-input`** (with `.ep-textarea`, `.ep-search-input`, `.ep-seg-opt` for related controls — all defined in `shared.css`). Use it whenever possible. If you need a one-off rule for a non-`.ep-*` input:
+
+- **Never** hardcode `#ccc` or any other hex border. Use `var(--surface-border)`.
+- **Never** set `background: var(--surface)` at rest — that's the focus state.
+- **Always** include both rest and `:focus` rules so the affordance stays consistent.
+
+The only intentional exception is `MediaPanel.media-title-input` — an in-place title editor that sits transparent in the header until focused. If you build another in-place editor (looks like a label until clicked), follow that same transparent-rest pattern; otherwise stick to gray-rest/white-focus.
+
+---
+
 ## Buttons
 
 **Label conventions:**
