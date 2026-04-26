@@ -53,7 +53,7 @@ export default {
     themes: { forest: 'Skog', nordic: 'Nordisk', twilight: 'Skymning' },
     addBtnStyle: 'Knapp',
     addBtnPlus: 'Plus',
-    addBtnLeaf: 'Löv',
+    addBtnLeaf: 'Lövträd',
     tabs: { appearance: 'Utseende', database: 'Databas', defaults: 'Standardval', importExport: 'Import / Export', linkRules: 'Länkregler', gazetteers: 'Ortsregister' },
     menuLayout: 'Meny',
     menuLayoutHint: 'Visa huvudmenyn till vänster i sidofältet eller överst i fönstret.',
