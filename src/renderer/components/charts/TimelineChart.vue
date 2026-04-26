@@ -9,7 +9,6 @@
           :height="layout.svgHeight * zoom"
           :viewBox="`0 0 ${layout.svgWidth} ${layout.svgHeight}`"
           class="timeline-svg"
-          :style="{ background: tlColors.surface }"
           data-testid="timeline-svg"
           @mouseleave="hoveredId = null; hoveredMarker = null"
         >
@@ -228,6 +227,7 @@ useI18n();
 const props = defineProps<{ personId: string | undefined; readonly?: boolean; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string] }>();
 
+const outerRef = ref<HTMLElement | null>(null);
 const themeVersion = useThemeSignal();
 const tlColors = computed(() => {
   void themeVersion.value;
@@ -249,7 +249,12 @@ const tlColors = computed(() => {
       marker:     '#333333',
     };
   }
-  const s = getComputedStyle(document.documentElement);
+  // Read from the chart's own outer element so that when the chart is
+  // embedded inside `.export-scope` / `.print-preview` (reports / prints),
+  // the scope's pinned chart tokens propagate via CSS-variable inheritance
+  // and the timeline renders print-safe even in dark / high-contrast mode.
+  const root = outerRef.value ?? document.documentElement;
+  const s = getComputedStyle(root);
   const g = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback;
   return {
     surface:    g('--surface',         '#ffffff'),
@@ -278,7 +283,6 @@ const layout = ref<TimelineLayout>({ bars: [], ticks: [], todayX: 0, svgWidth: 8
 const hoveredId = ref<string | null>(null);
 const hoveredMarker = ref<{ bar: BarLayout; marker: EventMarker } | null>(null);
 const containerWidth = ref(800);
-const outerRef = ref<HTMLElement | null>(null);
 const genTarget = timelineGenerations;
 watch(genTarget, () => load());
 

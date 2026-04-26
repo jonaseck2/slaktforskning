@@ -372,6 +372,8 @@ Two separate mechanisms cover the two classes of export:
 
 Regression test: `tests/components/exportTextColorInvariance.test.ts` for the scoped DOM path. Touching `tokens.css`, `shared.css`, or `useChartColors.ts`? Run it before committing.
 
+**No text shadowing on report/print surfaces.** Do not add `text-shadow`, SVG `stroke` halos via `paint-order: stroke fill`, or filter-based glows to text rendered inside reports or chart exports. These are legibility hacks that work against light backgrounds in interactive views (where the halo is `var(--surface)` to mask underlying graphics) but turn into a visible smudge in dark mode and high-contrast mode, where the halo color does not match the report's pinned neutrals. If a chart component uses such an effect for the live view, override it inside the report wrapper (`.chart-report :deep(.marker-symbol) { stroke: none; paint-order: normal; }`) rather than removing it from the chart itself.
+
 ### Shared CSS classes
 
 Defined in `src/renderer/styles/shared.css`. **Never redefine these in `<style scoped>`** — scoped styles override the CSS variables that power the text-size accessibility feature.

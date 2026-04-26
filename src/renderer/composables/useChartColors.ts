@@ -1,7 +1,7 @@
 // Theme-aware chart colors composable.
 // Returns CSS custom property values when themed, or hardcoded neutral palette for export.
 
-import { computed } from 'vue';
+import { computed, type Ref } from 'vue';
 import type { ColorMode } from '../../api/chart-export';
 import { useThemeSignal } from './useThemeSignal';
 
@@ -109,11 +109,15 @@ function readCssVar(style: CSSStyleDeclaration, name: string, fallback: string):
 /**
  * Composable that returns chart colors.
  *
- * When `themed` is true, reads CSS custom properties from the document root
- * (so colors update with theme changes).
+ * When `themed` is true, reads CSS custom properties from `scopeEl` (or the
+ * document root if not provided). Pass the chart's own outer element when
+ * the chart can be embedded inside `.export-scope` / `.print-preview` — the
+ * scope re-pins chart tokens to neutrals so the chart renders print-safe
+ * even though the rest of the app is in dark / high-contrast mode.
+ *
  * When `themed` is false, returns `EXPORT_COLORS` for unthemed export.
  */
-export function useChartColors(themed: boolean) {
+export function useChartColors(themed: boolean, scopeEl?: Ref<HTMLElement | null>) {
   const themeVersion = useThemeSignal();
   return computed<ChartColors>(() => {
     if (!themed) return EXPORT_COLORS;
@@ -123,7 +127,8 @@ export function useChartColors(themed: boolean) {
     // non-themed branch — exports must stay invariant.
     void themeVersion.value;
 
-    const s = getComputedStyle(document.documentElement);
+    const root = scopeEl?.value ?? document.documentElement;
+    const s = getComputedStyle(root);
     const g = (name: string, fallback: string) => readCssVar(s, name, fallback);
 
     return {

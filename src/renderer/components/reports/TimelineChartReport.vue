@@ -23,4 +23,17 @@ defineProps<{ personId: string; colorMode?: ColorMode }>();
   width: 100%;
   height: auto;
 }
+.chart-report :deep(.zoom-controls-bar) {
+  display: none;
+}
+.chart-report :deep(.marker-symbol) {
+  stroke: none;
+  paint-order: normal;
+}
+/* Names sit at x = LEFT - 8 with text-anchor="end" — long names extend
+ * past the viewBox's left edge. Allow the SVG to render content outside
+ * its viewBox so names are not clipped at the edge in the report. */
+.chart-report :deep(.timeline-svg) {
+  overflow: visible;
+}
 </style>

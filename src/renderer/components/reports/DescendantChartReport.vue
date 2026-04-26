@@ -23,4 +23,7 @@ defineProps<{ personId: string; colorMode?: ColorMode }>();
   width: 100%;
   height: auto;
 }
+.chart-report :deep(.zoom-controls-bar) {
+  display: none;
+}
 </style>

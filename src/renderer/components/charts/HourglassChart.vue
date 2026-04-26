@@ -1,5 +1,5 @@
 <template>
-  <div class="chart-outer">
+  <div class="chart-outer" ref="outerRef">
     <div v-if="loading && tree" class="chart-reload-indicator" aria-live="polite">{{ $t('common.loading') }}</div>
     <div :class="['chart-scroll', { panning: isPanning }]" ref="scrollRef" @wheel="onWheel"
          @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp">
@@ -308,7 +308,8 @@ async function handleCollapseButton(btn: CollapseButton) {
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-hourglass');
 
-const baseColors = useChartColors(true);
+const outerRef = ref<HTMLElement | null>(null);
+const baseColors = useChartColors(true, outerRef);
 const colors = computed(() => applyColorMode(baseColors.value, props.colorMode ?? 'themed'));
 
 const chartTokens = computed(() => ({
