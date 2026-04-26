@@ -369,11 +369,12 @@ export function listPersonsPage(
   // subqueries (those are pass 2). Correlated subqueries on all N persons
   // before LIMIT caused O(4N) lookups on large DBs.
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
-  // NULL birth_dates sort last on asc, first on desc (CASE WHEN trick).
+  // NULL/empty birth_dates follow the sort direction — bottom on asc,
+  // top on desc — so the column flips symmetrically like name columns do.
   const orderBy = sortBy === 'given_name'
     ? `pn.given_name ${dir}, pn.surname ${dir}`
     : sortBy === 'birth_date'
-    ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
+    ? `CASE WHEN bd.date_value IS NULL OR bd.date_value = '' THEN 1 ELSE 0 END ${dir}, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
   const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.id, p.sex,
