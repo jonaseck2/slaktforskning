@@ -47,7 +47,7 @@
           ref="pedigreeChartRef"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
-          :selected-person-id="selectedPersonId"
+          :selected-person-id="personId"
           :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           :readonly="isStaticMode"
           @navigate="navigateTo"
@@ -58,7 +58,7 @@
           ref="hourglassChartRef"
           :key="'hourglass-' + chartKey"
           :person-id="personId"
-          :selected-person-id="selectedPersonId"
+          :selected-person-id="personId"
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
@@ -68,7 +68,7 @@
           ref="descendantChartRef"
           :key="'descendants-' + chartKey"
           :person-id="personId"
-          :selected-person-id="selectedPersonId"
+          :selected-person-id="personId"
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
@@ -87,26 +87,24 @@
         />
       </div>
       <!-- Reopen panel button when panel is closed (tree mode) -->
-      <button v-if="!panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && personId" class="panel-open-btn" @click="openPanel">▶</button>
       </template>
       <!-- Reopen panel button when panel is closed (list mode) -->
-      <button v-if="viewMode === 'list' && !panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="viewMode === 'list' && !panelOpen && personId" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
     <!-- Drag handle + panel (both tree and list modes) -->
-    <template v-if="panelOpen && (selectedPersonId || personId)">
+    <template v-if="panelOpen && personId">
       <div
         class="panel-drag-handle"
         @mousedown="(e) => startResize(e, vizBodyRef!)"
       ></div>
       <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
         <PersonPanel
-          :person-id="selectedPersonId ?? personId ?? null"
-          :show-tree-btn="true"
+          :person-id="personId ?? null"
           :readonly="isStaticMode"
           @relative-added="reloadChart"
           @person-changed="reloadChart"
-          @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
           @close="closePanel"
         />
       </div>
@@ -180,9 +178,6 @@ const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
 const chartKey = ref(0);
 
-// Selected node in the chart (may differ from chart focal person)
-const selectedPersonId = ref<string | null>(null);
-
 // Template refs for chart components — used by useChartBridge to read layout boxes
 const pedigreeChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
 const hourglassChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
@@ -222,19 +217,16 @@ function setTab(tab: TabName) {
   localStorage.setItem('viz-tab', tab);
 }
 
-function selectNode(id: string) {
-  selectedPersonId.value = id;
-  if (!panelOpen.value) openPanel();
-}
-
+// Click-to-select: makes `id` the selected (and tree-focal) person.
+// Selecting a person opens the panel, refocuses the chart, and updates the
+// sidebar's selected-person indicator — there is only one notion of "current
+// person", everywhere it appears.
 async function navigateTo(id: string) {
-  selectNode(id);
-  // Refocus the tree on the clicked person (skip if already focal — avoids a
-  // pointless route push and chart re-render when clicking the focal node).
-  // The sidebar focus indicator is updated by load() once the route change
-  // settles, so direct-URL nav and click nav stay consistent.
+  if (!panelOpen.value) openPanel();
   if (id !== personId.value) {
-    router.push('/persons/' + id);
+    await router.push('/persons/' + id);
+  } else {
+    await load();
   }
   if (!ttsEnabled?.value || !tts) return;
   try {
@@ -256,18 +248,6 @@ async function navigateTo(id: string) {
     const text = narratePerson({ name, birthDate, deathDate }, narrationLabelsFromI18n(t));
     tts.speak(text, locale.value);
   } catch { /* ignore */ }
-}
-
-async function showInTree(id: string) {
-  // Update sidebar focus indicator
-  try {
-    const names = (await window.api.persons.getNames(id)) as { given_name: string; surname: string }[];
-    const n = names[0];
-    const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
-    focusStore.set(id, name);
-  } catch { /* best-effort */ }
-  // Change the chart focal person (re-centers the chart)
-  router.push('/persons/' + id);
 }
 
 async function reloadChart() {
@@ -298,16 +278,9 @@ async function load() {
     return;
   }
   focalPerson.value = person;
-  // Sync the panel's selectedPersonId to the focal whenever the route changes.
-  // Without this, switching focal via direct URL / sidebar / Fokusera would
-  // leave the panel showing the previous person while the tree centers on the
-  // new one. selectNode() still wins for click-to-select on a non-focal node
-  // in the chart (it runs after this and overwrites selectedPersonId).
-  selectedPersonId.value = id;
   if (!panelOpen.value) openPanel();
-  // Keep the sidebar focus indicator in sync with whichever person is focal.
-  // Runs on every route change to /persons/:id, so direct-URL nav and the
-  // "Fokusera"-button update the sidebar consistently with click-to-navigate.
+  // Keep the sidebar's selected-person indicator in sync with whichever
+  // person is currently selected (= focal — they're the same thing).
   if (focusStore.personId !== id) {
     try {
       const names = (await window.api.persons.getNames(id)) as Array<{ given_name?: string; surname?: string }>;
@@ -328,7 +301,6 @@ const chartNav = useChartNavigation({
   t: t as (key: string, params?: Record<string, string | number>) => string,
   onNavigate: (pid: string) => navigateTo(pid),
   onFocusChanged: (pid: string) => {
-    selectNode(pid);
     chartNavFocusedPerson.value = pid;
   },
 });
@@ -392,13 +364,15 @@ onUnmounted(() => {
   unregisterChartNav();
 });
 
-// Chart inspection bridge — wires Vue state to HTTP endpoints via IPC
+// Chart inspection bridge — wires Vue state to HTTP endpoints via IPC.
+// Selected and focal are now the same thing — there's only one person.
+const personIdRef = computed(() => personId.value ?? null);
 useChartBridge({
   boxes: chartBoxes,
-  selectedPersonId,
-  focalPersonId: computed(() => personId.value ?? null),
+  selectedPersonId: personIdRef,
+  focalPersonId: personIdRef,
   chartType: activeTab,
-  selectPerson: selectNode,
+  selectPerson: navigateTo,
   focusPerson: (id: string) => router.push('/persons/' + id),
 });
 

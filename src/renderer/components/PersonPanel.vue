@@ -25,7 +25,6 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-            <AppButton v-if="showTreeBtn" variant="soft" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
           </div>
           <div class="panel-lifelines">
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
@@ -214,10 +213,9 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const props = defineProps<{ personId: string | null; showTreeBtn?: boolean; readonly?: boolean }>();
+const props = defineProps<{ personId: string | null; readonly?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
-  'show-in-tree': [];
   'person-changed': [];
   'close': [];
 }>();

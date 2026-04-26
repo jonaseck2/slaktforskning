@@ -18,7 +18,7 @@ export default {
     sources: 'Sources',
     importExport: 'Import / Export',
     groups: 'Groups',
-    focusPerson: 'Focus person',
+    focusPerson: 'Selected person',
     settings: 'Settings',
     quality: 'Quality',
     researchTasks: 'Tasks',
