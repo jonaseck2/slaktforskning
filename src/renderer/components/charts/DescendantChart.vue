@@ -120,7 +120,7 @@
             :aria-label="$t('personDetail.addRelativeLabel')"
             @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           >
-            <rect x="-10" y="-10" width="20" height="20" rx="4" />
+            <path d="M 0 -12 Q 11 0 0 12 Q -11 0 0 -12 Z" transform="rotate(-30)" />
             <line x1="-5" y1="0" x2="5" y2="0" />
             <line x1="0" y1="-5" x2="0" y2="5" />
           </g>
@@ -529,7 +529,7 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
 
 .add-relative-btn { cursor: pointer; }
-.add-relative-btn rect {
+.add-relative-btn path {
   fill: var(--surface);
   stroke: var(--surface-border);
   stroke-width: 1;
@@ -541,6 +541,6 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
   stroke-linecap: round;
   pointer-events: none;
 }
-.add-relative-btn:hover rect { fill: var(--accent); stroke: var(--accent); }
+.add-relative-btn:hover path { fill: var(--accent); stroke: var(--accent); }
 .add-relative-btn:hover line { stroke: var(--accent-text); }
 </style>
