@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.153.1",
+  "version": "0.153.2",
   "description": "A genealogy desktop application",
   "main": ".vite/build/index.js",
   "private": true,
