@@ -1,7 +1,7 @@
 <template>
-  <div class="app">
+  <div class="app" :class="['app--' + navOrientation]">
     <a href="#main-content" class="skip-link">{{ $t('a11y.skipToMain') }}</a>
-    <nav class="sidebar" aria-label="Main navigation">
+    <nav v-if="navOrientation === 'vertical'" class="sidebar" aria-label="Main navigation">
       <div class="sidebar-header">
         <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
       </div>
@@ -86,6 +86,11 @@
           <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
         </button>
         <div v-if="isSettingsOpen" class="settings-panel">
+          <div class="settings-group-label">{{ $t('settings.menuLayout') }}</div>
+          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.menuLayout')">
+            <button :class="['settings-option', { active: navOrientation === 'vertical' }]" role="radio" :aria-checked="String(navOrientation === 'vertical')" @click="setNavOrientation('vertical')">{{ $t('settings.menuVertical') }}</button>
+            <button :class="['settings-option', { active: navOrientation === 'horizontal' }]" role="radio" :aria-checked="String(navOrientation === 'horizontal')" @click="setNavOrientation('horizontal')">{{ $t('settings.menuHorizontal') }}</button>
+          </div>
           <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
             <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
@@ -118,7 +123,114 @@
         </div>
       </div>
     </nav>
-    <main id="main-content" :class="['content', { 'content-paneled': isPaneledView }]">
+
+    <!-- ── Horizontal top-bar layout ───────────────────────────────── -->
+    <header v-else class="topbar" aria-label="App header">
+      <div class="topbar-row topbar-row--meta">
+        <span class="topbar-title">🌿 {{ $t('app.title') }}</span>
+        <form class="topbar-search" @submit.prevent="submitSearch">
+          <input
+            ref="searchInputRefH"
+            v-model="searchQuery"
+            type="text"
+            :placeholder="$t('app.search')"
+            class="topbar-search-input"
+          />
+        </form>
+        <router-link
+          v-if="focusStore.personId"
+          :to="'/persons/' + focusStore.personId"
+          class="topbar-focus-chip"
+        >
+          <span class="topbar-focus-label">{{ $t('nav.focusPerson') }}</span>
+          <span class="topbar-focus-name">{{ focusStore.personName }}</span>
+        </router-link>
+        <div v-else class="topbar-focus-spacer"></div>
+      </div>
+      <nav class="topbar-row topbar-row--nav" aria-label="Main navigation" @click.stop>
+        <div v-for="sec in navSections" :key="sec.key" class="nav-section">
+          <button
+            type="button"
+            class="nav-section-toggle"
+            :class="{ 'nav-section-toggle--active': isSectionActive(sec) || openSection === sec.key }"
+            :aria-expanded="openSection === sec.key"
+            @click="toggleSection(sec.key)"
+          >
+            <span>{{ $t(sec.labelKey) }}</span>
+            <span class="nav-section-arrow">{{ openSection === sec.key ? '▴' : '▾' }}</span>
+          </button>
+          <div v-if="openSection === sec.key" class="nav-section-menu" role="menu">
+            <router-link
+              v-for="item in sec.items"
+              :key="item.to"
+              :to="item.to"
+              class="nav-section-item"
+              role="menuitem"
+              @click="openSection = null"
+            >
+              <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+              <span>{{ $t(item.labelKey) }}</span>
+              <span v-if="item.badge && item.badge.value > 0" class="error-badge">{{ item.badge.value }}</span>
+            </router-link>
+          </div>
+        </div>
+        <span class="nav-spacer"></span>
+        <router-link to="/import-export" class="nav-item nav-item--quiet">
+          <span class="nav-icon" aria-hidden="true">📦</span>
+          <span class="nav-label">{{ $t('nav.importExport') }}</span>
+        </router-link>
+        <router-link to="/settings" class="nav-item nav-item--quiet">
+          <span class="nav-icon" aria-hidden="true">⚙️</span>
+          <span class="nav-label">{{ $t('nav.settings') }}</span>
+        </router-link>
+        <div class="topbar-settings">
+          <button
+            class="topbar-settings-toggle"
+            :aria-expanded="isSettingsOpen"
+            :aria-label="$t('a11y.settings')"
+            @click.stop="isSettingsOpen = !isSettingsOpen"
+          >🎨</button>
+          <div v-if="isSettingsOpen" class="settings-panel topbar-settings-panel">
+            <div class="settings-group-label">{{ $t('settings.menuLayout') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.menuLayout')">
+              <button :class="['settings-option', { active: navOrientation === 'vertical' }]" role="radio" :aria-checked="String(navOrientation === 'vertical')" @click="setNavOrientation('vertical')">{{ $t('settings.menuVertical') }}</button>
+              <button :class="['settings-option', { active: navOrientation === 'horizontal' }]" role="radio" :aria-checked="String(navOrientation === 'horizontal')" @click="setNavOrientation('horizontal')">{{ $t('settings.menuHorizontal') }}</button>
+            </div>
+            <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
+              <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
+              <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
+              <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
+            </div>
+            <div class="settings-group-label">{{ $t('settings.theme') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.theme')">
+              <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="String(currentTheme === 'forest')" @click="setTheme('forest')">🌲</button>
+              <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
+              <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
+            </div>
+            <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
+              <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
+              <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
+              <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
+            </div>
+            <div class="settings-group-label">{{ $t('settings.readAloud') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.readAloud')">
+              <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
+              <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
+              <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
+            </div>
+            <div class="settings-group-label">{{ $t('settings.language') }}</div>
+            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
+              <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Sv</button>
+              <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">En</button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main-content" :class="['content', { 'content-paneled': isPaneledView }]" @click="openSection = null">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="CACHED_VIEWS">
           <component
@@ -186,12 +298,29 @@ function setAppearance(value: Appearance) {
   }
 }
 
-// --- Sidebar appearance panel ---
+// --- Sidebar / topbar appearance panel ---
 const isSettingsOpen = ref(false);
+
+// Nav orientation: vertical (left sidebar) or horizontal (top-bar with section
+// dropdowns). Persisted in localStorage; UI preference, not db_settings.
+type NavOrientation = 'vertical' | 'horizontal';
+const navOrientation = ref<NavOrientation>(
+  (localStorage.getItem('slaktforskning-nav-orientation') as NavOrientation) || 'vertical'
+);
+function setNavOrientation(value: NavOrientation) {
+  navOrientation.value = value;
+  localStorage.setItem('slaktforskning-nav-orientation', value);
+}
 
 provide('ttsEnabled', screenReader.isTtsEnabled);
 provide('tts', tts);
 provide('screenReader', screenReader);
+// Appearance state shared with SettingsView's Utseende tab so both the
+// sidebar/topbar popover and /settings stay in sync without duplicating refs.
+provide('appearance-store', {
+  navOrientation,
+  setNavOrientation,
+});
 
 watch(() => route.path, () => {
   if (screenReader.isScreenReader.value) {
@@ -227,8 +356,63 @@ const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', 
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchQuery = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const searchInputRefH = ref<HTMLInputElement | null>(null);
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
+
+// Section dropdowns (horizontal mode). The same items as the vertical
+// sidebar's section labels, just grouped behind toggle buttons.
+type NavSectionKey = 'research' | 'organize' | 'review' | 'present';
+interface NavItemDef { to: string; icon: string; labelKey: string; badge?: { value: number } }
+interface NavSectionDef { key: NavSectionKey; labelKey: string; items: NavItemDef[] }
+const navSections = computed<NavSectionDef[]>(() => [
+  {
+    key: 'research',
+    labelKey: 'nav.research',
+    items: [
+      { to: '/', icon: '👤', labelKey: 'nav.people' },
+      { to: '/places', icon: '📍', labelKey: 'places.title' },
+      { to: '/media', icon: '📷', labelKey: 'media.nav' },
+    ],
+  },
+  {
+    key: 'organize',
+    labelKey: 'nav.organize',
+    items: [
+      { to: '/groups', icon: '🏷️', labelKey: 'nav.groups' },
+      { to: '/research-tasks', icon: '🔬', labelKey: 'nav.researchTasks', badge: openTaskCount },
+    ],
+  },
+  {
+    key: 'review',
+    labelKey: 'nav.review',
+    items: [
+      { to: '/sources', icon: '📚', labelKey: 'nav.sources' },
+      { to: '/relationships', icon: '🔗', labelKey: 'nav.relationships' },
+      { to: '/quality', icon: '⚠️', labelKey: 'nav.quality', badge: qualityErrorCount },
+    ],
+  },
+  {
+    key: 'present',
+    labelKey: 'nav.present',
+    items: [
+      { to: '/reports', icon: '🖨️', labelKey: 'reports.nav' },
+      { to: '/prints', icon: '🖼️', labelKey: 'nav.framablePrints' },
+      { to: '/website', icon: '🌐', labelKey: 'nav.website' },
+    ],
+  },
+]);
+const openSection = ref<NavSectionKey | null>(null);
+function toggleSection(key: NavSectionKey) {
+  openSection.value = openSection.value === key ? null : key;
+}
+function isSectionActive(sec: NavSectionDef): boolean {
+  return sec.items.some(it => {
+    if (it.to === '/') return route.path === '/' || route.path.startsWith('/persons');
+    return route.path.startsWith(it.to);
+  });
+}
+function handleDocClick() { openSection.value = null; }
 
 const RAW_TEXT_SIZE = localStorage.getItem('textSize');
 const textSize = ref<'small' | 'medium' | 'large'>(
@@ -260,9 +444,11 @@ function setLocale(val: SupportedLocale) {
 function handleGlobalKey(e: KeyboardEvent) {
   if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
     e.preventDefault();
-    searchInputRef.value?.focus();
-    searchInputRef.value?.select();
+    const el = navOrientation.value === 'vertical' ? searchInputRef.value : searchInputRefH.value;
+    el?.focus();
+    el?.select();
   }
+  if (e.key === 'Escape') openSection.value = null;
 }
 
 async function autoSetFocusPerson() {
@@ -322,6 +508,7 @@ onMounted(() => {
   applyTextSize();
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
+  window.addEventListener('click', handleDocClick);
   autoSetFocusPerson();
   loadDefaultPerson();
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
@@ -365,6 +552,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKey);
+  window.removeEventListener('click', handleDocClick);
 });
 
 function submitSearch() {
@@ -398,6 +586,160 @@ body {
   gap: var(--space-md);
   box-sizing: border-box;
 }
+.app--horizontal { flex-direction: column; }
+
+/* ── Top bar (horizontal nav orientation) ──────────────────────── */
+.topbar {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 50;
+}
+.topbar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 8px 16px;
+}
+.topbar-row--meta { border-bottom: 1px solid var(--sidebar-border); }
+.topbar-row--nav { flex-wrap: wrap; gap: 8px; padding: 4px 12px; }
+.topbar-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--sidebar-active-text);
+  flex-shrink: 0;
+}
+.topbar-search { flex: 1; max-width: 420px; }
+.topbar-search-input {
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sidebar-border);
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-size: var(--font-sm);
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.topbar-search-input::placeholder { color: var(--sidebar-text-muted); }
+.topbar-focus-spacer { flex: 1; }
+.topbar-focus-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4px 12px;
+  background: var(--sidebar-active-bg);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+  text-decoration: none;
+  max-width: 240px;
+  flex-shrink: 0;
+}
+.topbar-focus-label {
+  font-size: var(--font-xs);
+  letter-spacing: 0.06em;
+  color: var(--sidebar-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.topbar-focus-name {
+  font-size: var(--font-sm);
+  color: var(--sidebar-active-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.topbar-settings { position: relative; flex-shrink: 0; }
+.topbar-settings-toggle {
+  background: none;
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-active-text);
+  padding: 5px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-base);
+  line-height: 1;
+}
+.topbar-settings-toggle:hover { background: var(--sidebar-active-bg); }
+.topbar-settings-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  min-width: 220px;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+}
+
+.nav-spacer { flex: 1; min-width: 0; }
+.nav-section { position: relative; flex-shrink: 0; }
+.nav-section-toggle {
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-section-toggle:hover { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+.nav-section-toggle--active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.nav-section-arrow { font-size: var(--font-xs); color: var(--sidebar-text-muted); }
+.nav-section-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  min-width: 180px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+}
+.nav-section-item {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
+.nav-section-item:hover { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+.nav-section-item.router-link-active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.topbar-row--nav .nav-item { padding: 6px 12px; }
+.nav-item--quiet { opacity: 0.85; }
 
 .sidebar {
   width: 220px;
@@ -619,7 +961,7 @@ body {
 }
 
 @media print {
-  .sidebar { display: none !important; }
+  .sidebar, .topbar { display: none !important; }
   .app { display: block; height: auto; padding: 0; gap: 0; background: none; }
   .content, .content-paneled { padding: 0; height: auto; overflow: visible !important; background: none; border-radius: 0; }
   body { background: none; }
