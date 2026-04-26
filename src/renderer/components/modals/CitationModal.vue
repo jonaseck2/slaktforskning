@@ -43,7 +43,6 @@
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': form.confidence === level }"
-            :style="form.confidence === level ? { background: ENTITY_COLORS.citation.hd, color: ENTITY_COLORS.citation.fg } : {}"
             @click="form.confidence = level"
           >{{ $t('confidenceLevels.' + level) }}</button>
         </div>
@@ -86,7 +85,6 @@ import { reactive, ref, nextTick, onMounted } from 'vue';
 import BaseSubPanel from './BaseSubPanel.vue';
 import SourcePicker from '../SourcePicker.vue';
 import SourceModal from './SourceModal.vue';
-import { ENTITY_COLORS } from '../../constants/entityColors';
 import { CONFIDENCE_LEVEL_VALUES } from '../../constants/eventTypes';
 import { useSourceSession } from '../../stores/sourceSession';
 

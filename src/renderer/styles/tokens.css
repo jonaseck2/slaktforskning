@@ -115,6 +115,54 @@
   --sex-u-bg:   #e8e8e8;
   --sex-u-text: #666666;
 
+  /* Entity colors — theme-invariant light defaults.
+   * Dark + high-contrast overrides live in shared.css.
+   * Element consumption: set data-entity="<name>" on a container; the
+   * remap rules in shared.css alias these to --entity-text/-bg/-border. */
+  --entity-person-text:       #4f46e5;
+  --entity-person-bg:         #f5f3ff;
+  --entity-person-border:     #c7d2fe;
+
+  --entity-event-text:        #c2410c;
+  --entity-event-bg:          #fff3e8;
+  --entity-event-border:      #fed7aa;
+
+  --entity-source-text:       #7e22ce;
+  --entity-source-bg:         #faf5ff;
+  --entity-source-border:     #e9d5ff;
+
+  --entity-citation-text:     #166534;
+  --entity-citation-bg:       #f0fdf4;
+  --entity-citation-border:   #bbf7d0;
+
+  --entity-place-text:        #0e7490;
+  --entity-place-bg:          #ecfeff;
+  --entity-place-border:      #a5f3fc;
+
+  --entity-relationship-text: #475569;
+  --entity-relationship-bg:   #f1f5f9;
+  --entity-relationship-border: #cbd5e1;
+
+  --entity-task-text:         #92400e;
+  --entity-task-bg:           #fffbeb;
+  --entity-task-border:       #fde68a;
+
+  --entity-group-text:        #0369a1;
+  --entity-group-bg:          #f0f9ff;
+  --entity-group-border:      #bae6fd;
+
+  --entity-name-text:         #475569;
+  --entity-name-bg:           #f9fafb;
+  --entity-name-border:       #e5e7eb;
+
+  --entity-identifier-text:   #475569;
+  --entity-identifier-bg:     #f9fafb;
+  --entity-identifier-border: #e5e7eb;
+
+  --entity-neutral-text:      #374151;
+  --entity-neutral-bg:        #f9fafb;
+  --entity-neutral-border:    #e5e7eb;
+
   /* Timeline chart */
   --tl-bar-m:          #7eb8f7;
   --tl-bar-f:          #f7a5c0;
