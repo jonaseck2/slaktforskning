@@ -121,7 +121,7 @@
     <PersonModal
       v-if="ctxAddRelative"
       mode="standalone"
-      :related-to="ctxAddRelative"
+      :add-related-to="ctxAddRelative"
       @close="ctxAddRelative = null"
       @cancel="ctxAddRelative = null"
       @saved="onCtxRelativeSaved"
