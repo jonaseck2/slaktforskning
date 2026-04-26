@@ -122,7 +122,7 @@
             @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           >
             <circle v-if="addBtnStyle === 'plus'" r="10" />
-            <path v-else d="M 0 -12 Q 11 0 0 12 Q -11 0 0 -12 Z" transform="rotate(-30)" />
+            <path v-else d="M 0 -14 C 9 -10 12 -3 9 8 C 5 12 -5 12 -9 8 C -12 -3 -9 -10 0 -14 Z" transform="rotate(-25)" />
             <line x1="-5" y1="0" x2="5" y2="0" />
             <line x1="0" y1="-5" x2="0" y2="5" />
           </g>
