@@ -30,7 +30,7 @@ permanent — we drop it.
 
 ## Tasks
 
-- [ ] **A. Nav orientation toggle** — `src/renderer/App.vue`
+- [x] **A. Nav orientation toggle** — `src/renderer/App.vue`
   - Add `navOrientation: 'vertical' | 'horizontal'` ref, persist in
     `localStorage`, default `vertical`.
   - Render the existing left sidebar template under `v-if="navOrientation === 'vertical'"`.
@@ -43,11 +43,11 @@ permanent — we drop it.
   - 🎨 popover hosts the same Appearance / Theme / Text size / Read aloud /
     Language tabs as today, plus a new "Meny" row at the top.
 
-- [ ] **B. SettingsView appearance tab** — `src/renderer/views/SettingsView.vue`
+- [x] **B. SettingsView appearance tab** — `src/renderer/views/SettingsView.vue`
   - Mirror the "Meny" segmented control in the Appearance tab.
   - Both controls write to the same `localStorage` key and reactive ref.
 
-- [ ] **C. List-on-left in PersonsView** — `src/renderer/views/PersonsView.vue`
+- [x] **C. List-on-left in PersonsView** — `src/renderer/views/PersonsView.vue`
   - Drop the `viewMode: 'list' | 'tree'` toggle. List is always visible left
     of the chart now.
   - New layout:
@@ -63,16 +63,16 @@ permanent — we drop it.
   - Drop `CACHED_VIEWS = ['PersonsListView']` since list is no longer a
     standalone keep-alive view.
 
-- [ ] **D. List-on-left in PlacesView** — `src/renderer/views/PlacesView.vue`
+- [x] **D. List-on-left in PlacesView** — `src/renderer/views/PlacesView.vue`
   - Same shape as PersonsView. Map stays in the center, list on the left.
   - Drop the existing list/map tab toggle.
 
-- [ ] **E. Collapsible list column**
+- [x] **E. Collapsible list column**
   - Add a ▶ collapse button on the list column (matches the existing ▶ on
     the right panel). Persisted per-view in `localStorage`.
   - Default: list visible.
 
-- [ ] **F. Tests**
+- [x] **F. Tests**
   - WCAG: run `tests/unit/wcagContrast.test.ts`. Top-bar uses existing
     `--sidebar-*` tokens, so this is a regression check.
   - Component: a smoke test on PersonsView that mounts in both modes and
@@ -80,7 +80,7 @@ permanent — we drop it.
   - E2E: add one Playwright test that toggles orientation in 🎨 and asserts
     the layout container changes.
 
-- [ ] **G. Docs**
+- [x] **G. Docs**
   - Update `CLAUDE.md` routes table — note that `/persons` and `/places` no
     longer have a list/tree tab toggle; list is always left.
   - Update `frontend-design` skill if the layout pattern is referenced.
