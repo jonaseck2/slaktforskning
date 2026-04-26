@@ -393,12 +393,8 @@ const navSections = computed<NavSectionDef[]>(() => [
     ],
   },
   {
-    // Organisera renders inline in the top-bar (no dropdown) so the user can
-    // reach Grupper / Forskning in one click — matches the always-visible
-    // sidebar layout. Other sections stay collapsed behind a dropdown.
     key: 'organize',
     labelKey: 'nav.organize',
-    flat: true,
     items: [
       { to: '/groups', icon: '🏷️', labelKey: 'nav.groups' },
       { to: '/research-tasks', icon: '🔬', labelKey: 'nav.researchTasks', badge: openTaskCount },
