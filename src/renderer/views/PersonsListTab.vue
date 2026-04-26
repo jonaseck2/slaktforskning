@@ -33,7 +33,7 @@
               {{ $t('persons.surname') }}
               <span v-if="sortBy === 'surname'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
-            <th class="sortable-th" @click="toggleSort('birth_date')">
+            <th class="sortable-th born-col" @click="toggleSort('birth_date')">
               {{ $t('persons.bornColumn') }}
               <span v-if="sortBy === 'birth_date'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
@@ -72,7 +72,7 @@
               </div>
             </td>
             <td>{{ person.surname }}</td>
-            <td class="info-cell">{{ person.birth_date || '' }}</td>
+            <td class="info-cell born-col">{{ person.birth_date || '' }}</td>
           </tr>
         </tbody>
       </table>
@@ -294,6 +294,12 @@ onActivated(async () => {
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .name-cell { display: flex; align-items: center; gap: var(--space-sm); }
 .info-cell { color: var(--text-muted); font-size: var(--font-sm); }
+/* Lock the Born column to a width that fits a full ISO date (YYYY-MM-DD)
+   on one line, so dates never wrap when the column is narrow. */
+.born-col {
+  width: 11ch;
+  white-space: nowrap;
+}
 .form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
