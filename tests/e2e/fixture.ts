@@ -82,6 +82,28 @@ export interface AppInstance {
  * Returns when the UI HTTP server is accepting connections.
  * Throws if the app doesn't start within 90 seconds.
  */
+/**
+ * Resolve the path to the packaged Electron binary for the current platform.
+ * Throws with a helpful message if the binary is missing — the e2e script is
+ * expected to run `npm run package` before invoking Playwright.
+ */
+export function packagedBinaryPath(): string {
+  const { platform, arch } = process;
+  const outDir = path.join(PROJECT_ROOT, 'out', `Släktforskning-${platform}-${arch}`);
+  const binary = platform === 'darwin'
+    ? path.join(outDir, 'Släktforskning.app', 'Contents', 'MacOS', 'Släktforskning')
+    : platform === 'win32'
+      ? path.join(outDir, 'Släktforskning.exe')
+      : path.join(outDir, 'slaktforskning');
+  if (!fs.existsSync(binary)) {
+    throw new Error(
+      `Packaged Electron binary not found at:\n  ${binary}\n` +
+      `Run \`npm run package\` first (the test:e2e script does this automatically).`
+    );
+  }
+  return binary;
+}
+
 export async function startApp(port: number, tag = ''): Promise<AppInstance> {
   killPort(port);
 
@@ -91,12 +113,11 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
   );
 
   const isWindows = process.platform === 'win32';
-  // On Windows, npx is npx.cmd and cannot be spawned directly — use cmd /c.
-  // On POSIX, use detached to form a process group so killProcessGroup(-pid) kills all children.
-  const spawnCmd  = isWindows ? 'cmd'  : 'npx';
-  const spawnArgs = isWindows
-    ? ['/c', 'npx electron-forge start']
-    : ['electron-forge', 'start'];
+  // Spawn the packaged Electron binary directly. Tests run against the same
+  // build users get, with no Vite dev-server contention. On POSIX, detached
+  // forms a process group so killProcessGroup(-pid) kills all children.
+  const spawnCmd  = packagedBinaryPath();
+  const spawnArgs: string[] = [];
   const proc = spawn(spawnCmd, spawnArgs, {
     cwd: PROJECT_ROOT,
     env: {
@@ -115,12 +136,13 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
   const baseUrl = `http://127.0.0.1:${port}`;
 
-  // Phase 1: wait for the HTTP server to accept connections
+  // Phase 1: wait for the HTTP server to accept connections.
+  // Packaged binary launches in ~1–3s — no Vite dev-server compile.
   const httpReady = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
       console.error(`[e2e:${port}] App did not start in time. Output:\n`, output);
       resolve(false);
-    }, 90_000);
+    }, 30_000);
 
     const poll = async () => {
       try {
@@ -138,8 +160,8 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       setTimeout(poll, 250);
     };
 
-    // Give Vite a head start before polling (11 instances compile simultaneously).
-    setTimeout(poll, 3000);
+    // Brief delay before first poll so Electron has time to bind the UI server.
+    setTimeout(poll, 500);
 
     proc.on('error', () => { clearTimeout(timeout); resolve(false); });
     proc.on('exit', () => { clearTimeout(timeout); resolve(false); });
@@ -147,7 +169,11 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
   if (!httpReady) {
     await killProcessGroup(proc);
-    throw new Error(`Electron app on port ${port} did not start in time`);
+    const tail = output.slice(-2000).trim();
+    throw new Error(
+      `Electron app on port ${port} did not start in time (30s). ` +
+      `Last 2000 chars of output:\n${tail || '(no output captured)'}`
+    );
   }
 
   // Phase 2: wait for the Vue app to mount (window.__vue_router set by renderer)
@@ -155,7 +181,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
     const timeout = setTimeout(() => {
       console.error(`[e2e:${port}] Vue did not initialize in time.`);
       resolve(false);
-    }, 60_000);
+    }, 20_000);
 
     const poll = async () => {
       try {
@@ -182,14 +208,26 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
   if (!ready) {
     await killProcessGroup(proc);
-    throw new Error(`Vue app on port ${port} did not initialize in time`);
+    const tail = output.slice(-2000).trim();
+    throw new Error(
+      `Vue app on port ${port} did not initialize in time (20s after HTTP up). ` +
+      `Last 2000 chars of output:\n${tail || '(no output captured)'}`
+    );
   }
 
   return { proc, dbPath };
 }
 
-/** Kill the app process group and clean up the temp DB. */
-export async function teardownApp({ proc, dbPath }: AppInstance): Promise<void> {
+/**
+ * Kill the app process group and clean up the temp DB.
+ *
+ * Tolerates `undefined` so that when `startApp` throws in `beforeAll`, the
+ * `afterAll` cleanup doesn't crash with a destructure error that masks the
+ * real startup failure in the Playwright report.
+ */
+export async function teardownApp(instance: AppInstance | undefined): Promise<void> {
+  if (!instance) return;
+  const { proc, dbPath } = instance;
   await killProcessGroup(proc);
   fs.rmSync(dbPath, { force: true });
   // Also clean up stale lock dirs left by node-sqlite3-wasm

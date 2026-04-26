@@ -27,7 +27,11 @@
           <td class="td-shrink">{{ m.format || '—' }}</td>
           <td v-if="!props.readonly" class="actions-cell">
             <button v-if="m.file_ref" class="btn-sm" @click.stop="openFile(m.id)">{{ $t('media.open') }}</button>
-            <button class="btn-sm btn-delete" @click.stop="unlink(m.link_id)">&#10005;</button>
+            <button
+              class="btn-sm btn-delete"
+              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(m.title, m.file_ref) })"
+              @click.stop="unlink(m.link_id)"
+            >&#10005;</button>
           </td>
         </tr>
       </tbody>

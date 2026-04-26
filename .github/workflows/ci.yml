@@ -40,11 +40,15 @@ jobs:
         run: |
           Xvfb :99 -screen 0 1280x1024x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
+      # Build the packaged binary once. E2E tests run against this output —
+      # no Vite dev server, no per-instance compile contention.
+      - name: Package Electron app
+        run: npm run package
       # Dependency bumps: smoke only (MCP + app launch). Fast and sufficient.
       - name: E2E (smoke — dep bump)
         if: github.actor == 'dependabot[bot]'
         run: npx playwright test --project=smoke
-      # Code changes: full suite, capped at 2 workers so CI doesn't OOM.
+      # Code changes: full suite.
       - name: E2E (full — code change)
         if: github.actor != 'dependabot[bot]'
-        run: npx playwright test --workers=2
+        run: npx playwright test

@@ -35,7 +35,12 @@
             </span>
           </td>
           <td class="actions-cell">
-            <AppButton variant="ghost" size="sm" @click="emit('remove', r.linkId)">✕</AppButton>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              :aria-label="$t('a11y.deleteItem', { item: ((r.given_name || '') + ' ' + (r.surname || '')).trim() })"
+              @click="emit('remove', r.linkId)"
+            >✕</AppButton>
           </td>
         </tr>
       </tbody>

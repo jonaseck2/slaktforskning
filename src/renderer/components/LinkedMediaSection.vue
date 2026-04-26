@@ -19,7 +19,12 @@
           <td>{{ mediaDisplayName(r.title, r.file_ref) }}</td>
           <td class="td-shrink">{{ r.format || '—' }}</td>
           <td class="actions-cell">
-            <AppButton variant="ghost" size="sm" @click.stop="emit('remove', r.linkId)">✕</AppButton>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(r.title, r.file_ref) })"
+              @click.stop="emit('remove', r.linkId)"
+            >✕</AppButton>
           </td>
         </tr>
       </tbody>

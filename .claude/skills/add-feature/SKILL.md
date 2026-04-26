@@ -302,7 +302,8 @@ Reference panels live at `src/renderer/components/{Person,Place,Source,Relations
 - `PersonPicker` — searchable autocomplete for selecting a person; has `width: 100%` so it fills any container
 - `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
 - `SourcePicker` — searchable autocomplete for selecting/creating a source; inline create-new; replaces source dropdowns
-- `DateInput` — separate YYYY-MM-DD inputs with auto-advance (4-digit year → month, 2-digit month → day)
+- `DateInput` — single monospace `YYYY-MM-DD` text field with embedded calendar icon, plus a `date_type` select (Exact/About/Before/After/Between/Calculated/Unknown) and an `original` text row for verbatim source date strings. Accepts partial dates (`1842`, `1842-03`). Calendar icon opens the native picker for full dates. **Do not** add separate Y/M/D fields — the single field is the canonical pattern (matches the native `<input type="date">` look used for citation `date_accessed`).
+- `SimpleDateInput` — same single-field-with-embedded-calendar style for plain `YYYY-MM-DD` v-model values without `date_type`
 - `EventModal` / `EventList` — event CRUD on `BaseSubPanel`; EventList exposes `openAddForm()` via `defineExpose`; event rows are clickable (no Edit button)
 - `CitationModal` — attach a source citation to any entity (props: `sourceId?`, `sourceTitle?`, `eventId?`, `personId?`, `relationshipId?`, `placeId?`, `editingCitation?`, `mode?`); inline `SourcePicker` when no source preset
 - `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`

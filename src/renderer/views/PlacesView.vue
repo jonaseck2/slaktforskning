@@ -46,7 +46,12 @@
             >
               <td>{{ place.name }}</td>
               <td v-if="!isStaticMode" class="actions-cell">
-                <AppButton variant="ghost" size="sm" @click.stop="deletePlace(place.id)">✕</AppButton>
+                <AppButton
+                  variant="ghost"
+                  size="sm"
+                  :aria-label="$t('a11y.deleteItem', { item: place.name })"
+                  @click.stop="deletePlace(place.id)"
+                >✕</AppButton>
               </td>
             </tr>
           </tbody>

@@ -46,6 +46,7 @@
             <button
               class="btn-sm btn-delete"
               :title="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
+              :aria-label="isIgnored(r) ? $t('quality.unignore') : $t('quality.ignore')"
               @click.stop="toggleIgnore(r)"
             >✕</button>
           </td>

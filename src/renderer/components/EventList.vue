@@ -36,7 +36,12 @@
           </td>
           <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
           <td v-if="!props.readonly" class="actions-cell">
-            <button type="button" class="btn-sm btn-delete" @click.stop="removeEvent(event.id)">✕</button>
+            <button
+              type="button"
+              class="btn-sm btn-delete"
+              :aria-label="$t('a11y.deleteItem', { item: $t('eventTypes.' + event.event_type) })"
+              @click.stop="removeEvent(event.id)"
+            >✕</button>
           </td>
         </tr>
       </tbody>

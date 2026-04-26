@@ -14,7 +14,11 @@
           <td class="td-type"><span class="type-badge">{{ $t('identifiers.types.' + ident.identifier_type) }}</span></td>
           <td>{{ ident.identifier_value }}</td>
           <td v-if="!props.readonly" class="actions-cell">
-            <button class="btn-sm btn-delete" @click="remove(ident.id)">✕</button>
+            <button
+              class="btn-sm btn-delete"
+              :aria-label="$t('a11y.deleteItem', { item: $t('identifiers.types.' + ident.identifier_type) + ' ' + ident.identifier_value })"
+              @click="remove(ident.id)"
+            >✕</button>
           </td>
         </tr>
       </tbody>

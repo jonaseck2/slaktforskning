@@ -40,7 +40,12 @@
             <td>{{ source.author || '—' }}</td>
             <td><AppBadge v-if="source.source_type" variant="event">{{ $t('sourceTypes.' + source.source_type) }}</AppBadge></td>
             <td class="actions-cell">
-              <AppButton variant="ghost" size="sm" @click.stop="removeSource(source.id)">✕</AppButton>
+              <AppButton
+                variant="ghost"
+                size="sm"
+                :aria-label="$t('a11y.deleteItem', { item: source.title })"
+                @click.stop="removeSource(source.id)"
+              >✕</AppButton>
             </td>
           </tr>
         </tbody>

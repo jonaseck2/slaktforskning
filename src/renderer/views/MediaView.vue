@@ -8,7 +8,7 @@
         </h2>
       </div>
       <div class="header-right">
-        <button v-if="viewerMode" class="viewer-close-btn" :title="$t('common.close')" @click="closeViewer">✕</button>
+        <button v-if="viewerMode" class="viewer-close-btn" :title="$t('common.close')" :aria-label="$t('common.close')" @click="closeViewer">✕</button>
         <template v-else>
           <div v-if="!loading && items.length > 0" class="view-toggle">
             <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
@@ -97,6 +97,7 @@
           size="sm"
           @click.stop="deleteItem(item.id)"
           :title="$t('common.delete')"
+          :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(item.title, item.file_ref) })"
         >&#10005;</AppButton>
       </div>
     </div>
@@ -139,7 +140,13 @@
           <td>{{ item.notes }}</td>
           <td class="links-cell">{{ item.linkCount }}</td>
           <td v-if="!isStaticMode">
-            <AppButton variant="ghost" size="sm" @click="deleteItem(item.id)" :title="$t('common.delete')">&#10005;</AppButton>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              @click="deleteItem(item.id)"
+              :title="$t('common.delete')"
+              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(item.title, item.file_ref) })"
+            >&#10005;</AppButton>
           </td>
         </tr>
       </tbody>

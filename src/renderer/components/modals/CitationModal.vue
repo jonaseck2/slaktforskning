@@ -1,30 +1,29 @@
 <template>
   <BaseSubPanel
     entity-type="citation"
-    :title="pickedSourceTitle || $t('citations.addTitle')"
+    :title="modalTitle"
     :mode="mode"
     :save-label="$t('common.save') + (mode === 'subpanel' ? ' ↩' : '')"
+    :hide-save="phase === 'pick-source'"
     @cancel="$emit('cancel')"
     @save="save"
     @close="$emit('close')"
   >
-    <div class="ep-fields">
+    <!-- Phase A: pick a source first (standalone create with no preset) -->
+    <div v-if="phase === 'pick-source'" class="ep-fields">
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.sourceTitle') }}</span>
-        <div v-if="props.sourceId" class="ep-source-row">
-          <div class="ep-field-readonly ep-source-name">{{ props.sourceTitle }}</div>
-          <button class="ep-source-edit-btn" type="button" @click="openSourceEdit({ id: props.sourceId, title: props.sourceTitle ?? '' })">✎</button>
-        </div>
-        <div v-else class="ep-source-row">
-          <SourcePicker
-            :model-value="pickedSourceId"
-            @update:model-value="pickedSourceId = $event"
-            @select="onSourceSelected"
-            @create-new="openSourceCreate"
-          />
-          <button v-if="pickedSourceId" class="ep-source-edit-btn" type="button" @click="openSourceEdit({ id: pickedSourceId!, title: pickedSourceTitle })">✎</button>
-        </div>
+        <span class="ep-field-label">{{ $t('citations.source') }}</span>
+        <SourcePicker
+          :model-value="pickedSourceId"
+          @update:model-value="pickedSourceId = $event"
+          @select="onSourceSelected"
+          @create-new="openSourceCreate"
+        />
       </div>
+    </div>
+
+    <!-- Phase B: citation fields, with source card at the bottom -->
+    <div v-else class="ep-fields">
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('citations.pageLocation') }}</span>
         <input
@@ -64,6 +63,28 @@
         <span class="ep-field-label">{{ $t('citations.dateAccessed') }}</span>
         <input class="ep-input" type="date" v-model="form.date_accessed" />
       </div>
+
+      <!-- Source entity card -->
+      <div class="ep-source-card" data-entity="source">
+        <span class="ep-source-card-icon" aria-hidden="true">📚</span>
+        <div class="ep-source-card-body">
+          <span class="ep-source-card-label">{{ $t('citations.source') }}</span>
+          <span class="ep-source-card-title">{{ pickedSourceTitle || $t('citations.selectSource') }}</span>
+        </div>
+        <button
+          v-if="pickedSourceId"
+          class="ep-source-card-action"
+          type="button"
+          :title="$t('common.edit')"
+          @click="openSourceEdit({ id: pickedSourceId, title: pickedSourceTitle })"
+        >✎</button>
+        <button
+          v-if="canChangeSource"
+          class="ep-source-card-action"
+          type="button"
+          @click="resetSource"
+        >{{ $t('citations.changeSource') }}</button>
+      </div>
     </div>
 
     <template #subpanels>
@@ -81,7 +102,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, nextTick, onMounted } from 'vue';
+import { reactive, ref, computed, nextTick, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import SourcePicker from '../SourcePicker.vue';
 import SourceModal from './SourceModal.vue';
@@ -116,6 +138,8 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
+const { t } = useI18n();
+
 const pageRef = ref<HTMLInputElement | null>(null);
 
 // Source sub-panel
@@ -143,8 +167,6 @@ function onSourceModalSaved(sourceId: string, sourceTitle: string) {
 }
 const sourceSession = useSourceSession();
 
-// When sourceId is preset by parent (e.g. EventModal), use it directly.
-// When not preset (e.g. PlacePanel), allow source picking via SourcePicker.
 const pickedSourceId = ref<string | null>(props.sourceId ?? null);
 const pickedSourceTitle = ref(props.sourceTitle ?? '');
 
@@ -163,16 +185,45 @@ const form = reactive({
 
 const mode = props.mode ?? 'subpanel';
 
+// ── Phases ─────────────────────────────────────────────────────────────────
+// Phase A ('pick-source'): no source picked yet, user must choose one.
+// Phase B ('edit-citation'): a source is set, edit citation fields.
+//
+// canChangeSource is true only in standalone-create flows where the parent
+// did not preset a source — those are the only cases the user can step back
+// to phase A.
+const isStandaloneCreate = !props.sourceId && !props.editingCitation;
+const phase = computed<'pick-source' | 'edit-citation'>(() =>
+  pickedSourceId.value ? 'edit-citation' : 'pick-source'
+);
+const canChangeSource = computed(() => isStandaloneCreate);
+
+const modalTitle = computed(() => {
+  if (phase.value === 'pick-source') return t('citations.chooseSourceTitle');
+  return pickedSourceTitle.value || t('citations.addTitle');
+});
+
+function resetSource() {
+  pickedSourceId.value = null;
+  pickedSourceTitle.value = '';
+}
+
+// Focus the page field when entering edit-citation phase.
+watch(phase, (p) => {
+  if (p === 'edit-citation') nextTick(() => pageRef.value?.focus());
+});
+
 onMounted(async () => {
-  nextTick(() => pageRef.value?.focus());
-  // Pre-fill source from session when no source was preset
-  if (!props.sourceId && sourceSession.lastSourceId) {
+  // Pre-fill source from session when no source was preset by parent.
+  if (!props.sourceId && !props.editingCitation && sourceSession.lastSourceId) {
     pickedSourceId.value = sourceSession.lastSourceId;
-    // Fetch title for the pre-filled source so the picker displays it
     try {
       const src = (await window.api.sources.get(sourceSession.lastSourceId)) as SourceRow | null;
       if (src) pickedSourceTitle.value = src.title;
     } catch { /* non-critical */ }
+  }
+  if (phase.value === 'edit-citation') {
+    nextTick(() => pageRef.value?.focus());
   }
 });
 
@@ -213,16 +264,42 @@ async function save() {
 </script>
 
 <style scoped>
-.ep-source-row {
+.ep-source-card {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--entity-bg);
+  border: 1px solid var(--entity-border);
+  border-left: 3px solid var(--entity-text);
+  border-radius: var(--radius-md);
 }
-.ep-source-name {
+.ep-source-card-icon {
+  font-size: var(--font-lg);
+  flex-shrink: 0;
+}
+.ep-source-card-body {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.ep-source-edit-btn {
+.ep-source-card-label {
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--entity-text);
+}
+.ep-source-card-title {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ep-source-card-action {
   flex-shrink: 0;
   background: none;
   border: 1px solid var(--surface-border);
@@ -233,8 +310,8 @@ async function save() {
   padding: var(--space-xs) var(--space-sm);
   line-height: 1;
 }
-.ep-source-edit-btn:hover {
-  background: var(--surface-hover);
+.ep-source-card-action:hover {
+  background: var(--surface);
   color: var(--text-primary);
 }
 </style>
