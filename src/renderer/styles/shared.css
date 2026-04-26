@@ -1189,6 +1189,8 @@ html.screen-reader h1:focus {
   align-items: flex-start;
   flex-shrink: 0;
   gap: 10px;
+  background: var(--entity-bg);
+  border-bottom: 1px solid var(--entity-border);
 }
 .ep-header-left { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
 .ep-icon {
@@ -1199,9 +1201,10 @@ html.screen-reader h1:focus {
 .ep-label {
   font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--entity-text);
 }
 .ep-title {
-  font-size: 14px; font-weight: 600; color: #111827;
+  font-size: 14px; font-weight: 600; color: var(--text-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .ep-close {
@@ -1237,7 +1240,25 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
 
 .ep-footer {
   display: flex; justify-content: flex-end; gap: 6px;
-  padding: 8px 14px; border-top: 1px solid #f3f4f6; flex-shrink: 0;
+  padding: 8px 14px; border-top: 1px solid var(--surface-border-subtle); flex-shrink: 0;
+}
+
+/* Save button in entity panels — uses entity accent color in normal tone,
+   error color in danger tone. Works in light + dark because --entity-text
+   and --error-text both flip with appearance mode. */
+.ep-save-btn {
+  background: var(--entity-text);
+  color: var(--surface-bg);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: var(--font-base);
+  cursor: pointer;
+  font-family: inherit;
+}
+.ep-save-btn:hover:not(:disabled) { filter: brightness(1.05); }
+.ep-save-btn--danger {
+  background: var(--error-text);
 }
 
 /* Section headers inside entity panels (flush-sections-v3 style) */

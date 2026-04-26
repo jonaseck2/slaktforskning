@@ -7,16 +7,15 @@
     @close="$emit('cancel')"
   >
     <div class="entity-panel-wrap" :style="wrapStyle">
-      <div ref="panelRef" class="entity-panel" :style="panelStyle">
+      <div ref="panelRef" class="entity-panel" :data-entity="entityType" :style="panelStyle">
         <div
           class="ep-header ep-header--draggable"
-          :style="headerStyle"
           @mousedown="startDrag"
         >
           <div class="ep-header-left">
             <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
             <div class="ep-header-text">
-              <span v-if="resolvedLabel" class="ep-label" :style="{ color: visual.fg }">{{ resolvedLabel }}</span>
+              <span v-if="resolvedLabel" class="ep-label">{{ resolvedLabel }}</span>
               <div :id="titleId" class="ep-title">{{ title }}</div>
             </div>
           </div>
@@ -31,8 +30,8 @@
           <button
             v-if="!hideSave"
             type="button"
-            class="btn-add"
-            :style="{ background: saveBg, color: '#fff' }"
+            class="ep-save-btn"
+            :class="{ 'ep-save-btn--danger': tone === 'danger' }"
             @click="$emit('save')"
           >
             {{ saveLabel ?? $t('common.save') }}
@@ -46,17 +45,16 @@
 
   <!-- SUBPANEL: floating card, no overlay; closes via × -->
   <div v-else class="entity-panel-wrap">
-    <div ref="panelRef" class="entity-panel" :style="subPanelStyle">
+    <div ref="panelRef" class="entity-panel" :data-entity="entityType" :style="subPanelStyle">
       <div
         class="ep-header"
         :class="{ 'ep-header--draggable': parentDrag }"
-        :style="headerStyle"
         @mousedown="parentDrag?.($event)"
       >
         <div class="ep-header-left">
           <span v-if="resolvedIcon" class="ep-icon" aria-hidden="true">{{ resolvedIcon }}</span>
           <div class="ep-header-text">
-            <span v-if="resolvedLabel" class="ep-label" :style="{ color: visual.fg }">{{ resolvedLabel }}</span>
+            <span v-if="resolvedLabel" class="ep-label">{{ resolvedLabel }}</span>
             <div class="ep-title">{{ title }}</div>
           </div>
         </div>
@@ -77,8 +75,8 @@
         <button
           v-if="!hideSave"
           type="button"
-          class="btn-add"
-          :style="{ background: saveBg, color: '#fff' }"
+          class="ep-save-btn"
+          :class="{ 'ep-save-btn--danger': tone === 'danger' }"
           @click="$emit('save')"
         >
           {{ saveLabel ?? $t('common.save') }}
@@ -110,7 +108,7 @@ const props = withDefaults(defineProps<{
   cancelLabel?: string;
   /** Optional icon override — when provided, replaces the entity visual's default icon in the header. */
   icon?: string;
-  /** Tone for the save button. 'danger' renders a red background using --error-text (#b91c1c). Default: 'info'. */
+  /** Tone for the save button. 'danger' renders a red background using --error-text. Default: 'info'. */
   tone?: 'info' | 'warning' | 'danger';
 }>(), {
   mode: 'standalone',
@@ -128,10 +126,6 @@ const { t, te } = useI18n();
 
 const visual = computed(() => ENTITY_VISUALS[props.entityType]);
 const titleId = computed(() => `${props.entityType}-panel-title`);
-const headerStyle = computed(() => ({
-  background: visual.value.hd,
-  borderBottom: `1px solid ${visual.value.border}`,
-}));
 
 const resolvedLabel = computed(() => {
   if (props.label !== undefined) return props.label;
@@ -141,10 +135,6 @@ const resolvedLabel = computed(() => {
 });
 
 const resolvedIcon = computed(() => props.icon ?? visual.value.icon);
-
-const saveBg = computed(() =>
-  props.tone === 'danger' ? 'var(--error-text, #b91c1c)' : visual.value.fg
-);
 
 // ── Drag / resize ───────────────────────────────────────────────────────────
 
