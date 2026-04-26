@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- docs(skills): document the single-field date-input pattern in `frontend-design`, `add-feature`, and the `CLAUDE.md` shared-components table. New rule: use `DateInput`/`SimpleDateInput` for any date entry — never roll separate Y / M / D inputs or a sibling calendar button.
+
 - feat(citations): two-phase CitationModal. When opened from a panel without a preset source (PlacePanel, RelationshipPanel) the modal now starts in a "Choose a source" phase that shows only the source picker — the save button is hidden until a source is picked or created, so the primary action of the standalone flow is the first thing on screen. Once a source is set (either by phase A, by a preset from EventModal/SourcePanel, or by editing an existing citation), the modal switches to the citation fields (page, confidence, transcription, notes, date accessed) and renders the source as an entity-styled card at the bottom — clearly contextual rather than a form field. The card has ✎ to edit the source and (in standalone-create only) a "Change" button to step back to phase A. Pre-fill from `sourceSession.lastSourceId` still skips phase A on the common path.
 
 - fix(forms): single-field date input — `DateInput` and `SimpleDateInput` now render `YYYY-MM-DD` in one monospace field with the calendar icon embedded on the right edge, matching the native `<input type="date">` look used elsewhere (e.g. citation "Date Accessed"). Replaces the previous Y / M / D split with separate calendar button. Partial dates (`1842`, `1842-03`) are still accepted; sizing/border/radius now match `.ep-input` for visual consistency in modals.
