@@ -34,6 +34,7 @@
           :class="['person-box', 'clickable']"
           :style="{ cursor: 'pointer' }"
           @click="$emit('navigate', box.person.id)"
+          @contextmenu.prevent="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
         >
           <!-- Box background -->
           <rect
@@ -209,7 +210,11 @@ import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 const { t } = useI18n();
 
 const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
-const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
+const emit = defineEmits<{
+  navigate: [id: string];
+  reload: [];
+  'person-context-menu': [payload: { personId: string; x: number; y: number }];
+}>();
 
 const loading = ref(true);
 const loadingMore = ref(false);

@@ -69,6 +69,11 @@ export default {
       savePdf: 'PDF',
     },
   },
+  contextMenu: {
+    personActions: 'Person actions',
+    showInTree: 'Show in tree',
+    openManagePerson: 'Open Manage Person',
+  },
   common: {
     add: 'Add',
     cancel: 'Cancel',

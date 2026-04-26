@@ -53,6 +53,7 @@
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
+          @person-context-menu="openContextMenu"
         />
         <HourglassChart
           v-if="activeTab === 'hourglass'"
@@ -63,6 +64,7 @@
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
+          @person-context-menu="openContextMenu"
         />
         <DescendantChart
           v-if="activeTab === 'descendants'"
@@ -73,6 +75,7 @@
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
+          @person-context-menu="openContextMenu"
         />
         <FanChart
           v-if="activeTab === 'fan'"
@@ -113,6 +116,44 @@
 
     <!-- Add Person Modal -->
     <PersonModal v-if="showAddPerson" mode="standalone" @close="showAddPerson = false" @cancel="showAddPerson = false" @saved="onPersonAdded" />
+
+    <!-- Add-relative modal triggered from the chart context menu -->
+    <PersonModal
+      v-if="ctxAddRelative"
+      mode="standalone"
+      :related-to="ctxAddRelative"
+      @close="ctxAddRelative = null"
+      @cancel="ctxAddRelative = null"
+      @saved="onCtxRelativeSaved"
+    />
+
+    <!-- Chart person right-click context menu -->
+    <PersonContextMenu
+      v-if="ctxMenu"
+      :visible="!!ctxMenu"
+      :person-id="ctxMenu.personId"
+      :x="ctxMenu.x"
+      :y="ctxMenu.y"
+      :is-tree-subject="ctxMenu.personId === personId"
+      :readonly="isStaticMode"
+      @close="ctxMenu = null"
+      @set-tree-subject="onCtxSetTreeSubject"
+      @select-person="onCtxSelectPerson"
+      @add-relative="onCtxAddRelative"
+      @delete-person="onCtxDeletePerson"
+    />
+
+    <!-- Delete confirm triggered from the chart context menu -->
+    <ConfirmModal
+      :visible="!!ctxDeleteId"
+      :title="$t('persons.deleteConfirmTitle')"
+      :message="$t('persons.confirmDelete')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('persons.deleteConfirmContinue')"
+      @cancel="ctxDeleteId = null"
+      @confirm="onCtxConfirmDelete"
+    />
   </div>
 </template>
 
@@ -134,6 +175,9 @@ import DescendantChart from '../components/charts/DescendantChart.vue';
 import TimelineChart from '../components/charts/TimelineChart.vue';
 import PersonPanel from '../components/PersonPanel.vue';
 import PersonModal from '../components/modals/PersonModal.vue';
+import PersonContextMenu from '../components/charts/PersonContextMenu.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
+import { useToast } from '../composables/useToast';
 import PersonsListTab from './PersonsListTab.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
@@ -270,6 +314,71 @@ async function setTreeSubject(id: string) {
   } catch { /* best-effort */ }
   // Re-root the tree on the new subject
   router.push('/persons/' + id);
+}
+
+// ── Right-click context menu on chart person boxes ──────────────────────────
+
+const toast = useToast();
+
+interface CtxMenuState { personId: string; x: number; y: number }
+const ctxMenu = ref<CtxMenuState | null>(null);
+
+type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'son' | 'daughter';
+interface AddRelativeTarget { personId: string; mode: AddRelativeMode; personSex?: 'M' | 'F' | 'U'; personSurname?: string }
+const ctxAddRelative = ref<AddRelativeTarget | null>(null);
+
+const ctxDeleteId = ref<string | null>(null);
+
+function openContextMenu(payload: { personId: string; x: number; y: number }) {
+  ctxMenu.value = payload;
+}
+function onCtxSetTreeSubject(id: string) {
+  ctxMenu.value = null;
+  setTreeSubject(id);
+}
+function onCtxSelectPerson(id: string) {
+  ctxMenu.value = null;
+  navigateTo(id);
+}
+async function onCtxAddRelative(payload: { personId: string; mode: AddRelativeMode }) {
+  // Look up sex + surname so PersonModal can pre-fill the new relative
+  // exactly like the panel's add-relative buttons do.
+  let personSex: 'M' | 'F' | 'U' | undefined;
+  let personSurname: string | undefined;
+  try {
+    const p = await window.api.persons.get(payload.personId) as { sex?: string } | null;
+    personSex = (p?.sex as 'M' | 'F' | 'U') || 'U';
+    const names = await window.api.persons.getNames(payload.personId) as Array<{ surname?: string; sort_order?: number }>;
+    personSurname = names.length > 0 ? [...names].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0]?.surname ?? undefined : undefined;
+  } catch { /* ignore */ }
+  ctxMenu.value = null;
+  ctxAddRelative.value = { ...payload, personSex, personSurname };
+}
+function onCtxRelativeSaved() {
+  ctxAddRelative.value = null;
+  reloadChart();
+}
+function onCtxDeletePerson(id: string) {
+  ctxMenu.value = null;
+  ctxDeleteId.value = id;
+}
+async function onCtxConfirmDelete() {
+  const id = ctxDeleteId.value;
+  ctxDeleteId.value = null;
+  if (!id) return;
+  try {
+    await window.api.persons.delete(id);
+    toast.success(t('persons.deletedToast', { name: t('common.unknown') }));
+    if (id === personId.value) {
+      // Tree subject was deleted → bounce to /persons so the next default loads
+      router.push('/persons');
+    } else {
+      reloadChart();
+    }
+  } catch (err) {
+    console.error('[PersonsView] context-menu delete failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 async function reloadChart() {
