@@ -499,6 +499,9 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
+  /* Reserve a slot at the left for the collapse arrow so it never
+     overlaps section content or the sticky "Hantera person" header. */
+  padding-left: 28px;
 }
 
 .panel-empty {
@@ -520,7 +523,9 @@ onMounted(() => {
   font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-primary);
-  padding: var(--space-md) var(--space-lg) var(--space-sm);
+  /* Right padding stays generous; left is small because .person-panel
+     already reserves a 28px slot for the collapse arrow. */
+  padding: var(--space-md) var(--space-lg) var(--space-sm) var(--space-sm);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-bottom: 1px solid var(--surface-border-subtle);
@@ -542,7 +547,8 @@ onMounted(() => {
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
+  /* Smaller left padding — .person-panel reserves the 28px slot. */
+  padding: var(--space-md) 0 var(--space-md) var(--space-sm);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .panel-header-content {

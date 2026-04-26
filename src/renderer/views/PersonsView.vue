@@ -463,7 +463,8 @@ onActivated(load);
 }
 .panel-drag-handle:hover { background: var(--surface-border); }
 
-/* Left list column */
+/* Left list column. The right edge reserves space for the collapse
+   button so it doesn't overlap the table / heading content. */
 .viz-list-column {
   display: flex;
   flex-direction: column;
@@ -474,6 +475,7 @@ onActivated(load);
   overflow: hidden;
   flex-shrink: 0;
   min-height: 0;
+  padding-right: 28px;
 }
 .viz-list-title {
   margin: 0;
