@@ -100,6 +100,7 @@ export default {
     addPerson: 'Person',
     givenName: 'Given Name (full)',
     givenNameColumn: 'Given name',
+    bornColumn: 'Born',
     givenNameHint: 'Mark preferred name with * or ! after it, e.g. Eva Linda* Marie',
     preferredName: 'Preferred Name',
     preferredNamePlaceholder: 'e.g. Linda (if full given name is Eva Linda Marie)',

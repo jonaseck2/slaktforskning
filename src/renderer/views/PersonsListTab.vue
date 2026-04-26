@@ -34,7 +34,10 @@
               <span v-if="sortBy === 'surname'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
             <th>{{ $t('persons.sex') }}</th>
-            <th>{{ $t('persons.birthDate') }}</th>
+            <th class="sortable-th" @click="toggleSort('birth_date')">
+              {{ $t('persons.bornColumn') }}
+              <span v-if="sortBy === 'birth_date'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+            </th>
             <th v-if="!isStaticMode" class="actions-cell"></th>
           </tr>
         </thead>
@@ -144,7 +147,7 @@ const offset = ref(0);
 // Sort state — clicking a column header toggles direction; clicking a
 // different column resets to asc. Persisted in localStorage so the choice
 // survives navigation.
-type SortBy = 'surname' | 'given_name';
+type SortBy = 'surname' | 'given_name' | 'birth_date';
 type SortDir = 'asc' | 'desc';
 const sortBy = ref<SortBy>((localStorage.getItem('persons-sort-by') as SortBy) || 'surname');
 const sortDir = ref<SortDir>((localStorage.getItem('persons-sort-dir') as SortDir) || 'asc');

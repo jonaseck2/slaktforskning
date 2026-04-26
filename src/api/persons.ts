@@ -353,7 +353,7 @@ const PERSON_LIST_BASE_QUERY = `
 `;
 
 
-export type ListPersonsSortBy = 'surname' | 'given_name';
+export type ListPersonsSortBy = 'surname' | 'given_name' | 'birth_date';
 export type ListPersonsSortDir = 'asc' | 'desc';
 
 export function listPersonsPage(
@@ -363,12 +363,15 @@ export function listPersonsPage(
   sortBy: ListPersonsSortBy = 'surname',
   sortDir: ListPersonsSortDir = 'asc',
 ): PersonListItem[] {
-  // Pass 1: sort + paginate with only name data — no birth/death subqueries.
-  // Correlated subqueries on all N persons before LIMIT caused O(4N) lookups on large DBs.
-  // Use a derived table to find min sort_order per person, avoiding correlated subquery per row.
+  // Pass 1: sort + paginate with only name + birth-date data — no death/place
+  // subqueries (those are pass 2). Correlated subqueries on all N persons
+  // before LIMIT caused O(4N) lookups on large DBs.
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
+  // NULL birth_dates sort last on asc, first on desc (CASE WHEN trick).
   const orderBy = sortBy === 'given_name'
     ? `pn.given_name ${dir}, pn.surname ${dir}`
+    : sortBy === 'birth_date'
+    ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
   const page = queryAll<{ id: string; sex: string; given_name: string; surname: string }>(db, `
     SELECT p.id, p.sex,
@@ -383,6 +386,13 @@ export function listPersonsPage(
     LEFT JOIN person_names pn
       ON pn.person_id = p.id
       AND pn.sort_order = ms.min_sort
+    LEFT JOIN (
+      SELECT ep.person_id, MIN(e.date_value) AS date_value
+      FROM event_participants ep
+      JOIN events e ON e.id = ep.event_id
+      WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
+      GROUP BY ep.person_id
+    ) bd ON bd.person_id = p.id
     ORDER BY ${orderBy}
     LIMIT ? OFFSET ?
   `, [limit, offset]);
