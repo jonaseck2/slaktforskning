@@ -1,6 +1,7 @@
 <template>
   <div class="place-picker">
     <input
+      ref="inputRef"
       type="text"
       v-model="query"
       :placeholder="placeholder || $t('places.searchPlaceholder')"
@@ -15,11 +16,13 @@
       @keydown="onKeydown"
       autocomplete="off"
     />
+    <Teleport to="body">
     <ul
       v-if="showDropdown && (results.length > 0 || gazetteerResults.length > 0 || query.length > 1)"
       :id="pickerId + '-listbox'"
       role="listbox"
       class="dropdown"
+      :style="dropdownStyle"
     >
       <li
         v-for="(place, idx) in results"
@@ -68,6 +71,7 @@
         {{ $t('places.createNew', { name: query }) }}
       </li>
     </ul>
+    </Teleport>
     <div v-if="showDropdown && (results.length > 0 || gazetteerResults.length > 0)" class="sr-only" aria-live="polite">
       {{ $t('a11y.searchResults', { count: results.length + gazetteerResults.length }, results.length + gazetteerResults.length) }}
     </div>
@@ -75,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, inject } from 'vue';
+import { ref, watch, inject, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { searchGazetteer } from '../../api/place-gazetteers/resolver';
@@ -103,10 +107,40 @@ const results = ref<PlaceRow[]>([]);
 const gazetteerResults = ref<GazetteerSuggestion[]>([]);
 const showDropdown = ref(false);
 const highlightIndex = ref(-1);
+const inputRef = ref<HTMLInputElement | null>(null);
+const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout>;
 
-// Reset highlight when results change
-watch(results, () => { highlightIndex.value = -1; });
+function updateDropdownPosition() {
+  const el = inputRef.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  dropdownStyle.value = {
+    position: 'fixed',
+    top: `${r.bottom + 2}px`,
+    left: `${r.left}px`,
+    width: `${r.width}px`,
+  };
+}
+function onScroll() { if (showDropdown.value) updateDropdownPosition(); }
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, true);
+  window.addEventListener('resize', onScroll);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll, true);
+  window.removeEventListener('resize', onScroll);
+});
+watch(showDropdown, (o) => { if (o) nextTick(updateDropdownPosition); });
+
+// Reset highlight when results change; also reposition the teleported dropdown.
+watch(results, () => {
+  highlightIndex.value = -1;
+  if (showDropdown.value) nextTick(updateDropdownPosition);
+});
+watch(gazetteerResults, () => {
+  if (showDropdown.value) nextTick(updateDropdownPosition);
+});
 
 watch(() => props.modelValue, async (id) => {
   if (!id) { query.value = ''; return; }
@@ -227,17 +261,15 @@ function onBlur() {
 .place-picker { position: relative; width: 100%; box-sizing: border-box; }
 .place-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
 .place-picker input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); background: var(--surface); }
+/* Teleported to <body>; position is set inline from inputRef's bounding rect.
+   Scoped styles still apply because Vue keeps the data-v-* attribute. */
 .dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-input);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 100;
-  max-height: 200px;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  max-height: 240px;
   overflow-y: auto;
   list-style: none;
   margin: 0;
