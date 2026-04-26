@@ -149,21 +149,33 @@ function onNativePick(e: Event) {
 .simple-date-input .ymd-year {
   width: 4.5em;
   padding: 5px 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   text-align: center;
   font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
 }
 .simple-date-input .ymd-month,
 .simple-date-input .ymd-day {
   width: 3em;
   padding: 5px 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   font-size: var(--font-base);
   text-align: center;
   font-family: inherit;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+.simple-date-input .ymd-year:focus,
+.simple-date-input .ymd-month:focus,
+.simple-date-input .ymd-day:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 .ymd-sep {
   color: #999;

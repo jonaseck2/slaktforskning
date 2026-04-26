@@ -309,7 +309,7 @@
   font-size: var(--font-base);
   font-family: inherit;
   color: var(--text-primary);
-  background: var(--surface);
+  background: var(--surface-bg);
 }
 .modal form textarea {
   width: 100%;
@@ -324,6 +324,7 @@
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: var(--accent);
+  background: var(--surface);
 }
 .field-hint {
   display: block;

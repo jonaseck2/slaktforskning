@@ -155,7 +155,8 @@ function onBlur() {
 
 <style scoped>
 .source-picker { position: relative; width: 100%; box-sizing: border-box; }
-.source-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+.source-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
+.source-picker input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); background: var(--surface); }
 .dropdown {
   position: absolute;
   top: 100%;
