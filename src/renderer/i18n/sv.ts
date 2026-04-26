@@ -561,7 +561,7 @@ export default {
     managePlace: 'Hantera plats',
     noPersonSelected: 'Klicka på en person i trädet',
     showInTree: 'Visa i träd',
-    focus: 'Fokusera',
+    focus: '🌳 Visa i träd',
     open: 'Öppna',
     events: 'Händelser',
     relationships: 'Relationer',
