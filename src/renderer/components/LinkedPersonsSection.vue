@@ -21,6 +21,7 @@
                 :person-id="r.personId"
                 :given-name="r.given_name ?? ''"
                 :surname="r.surname ?? ''"
+                :preferred-name="r.preferred_name"
                 :sex="(r.sex as 'M' | 'F' | 'U')"
                 size="sm"
               />

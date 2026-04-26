@@ -12,6 +12,7 @@
           :person-id="personId"
           :given-name="primaryName?.given_name ?? ''"
           :surname="primaryName?.surname ?? ''"
+          :preferred-name="primaryName?.preferred_name ?? null"
           :sex="person.sex"
           size="lg"
         />
