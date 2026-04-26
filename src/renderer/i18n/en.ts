@@ -548,6 +548,12 @@ export default {
     timelineDied: 'Died',
     timelineAge: 'Age',
   },
+  tree: {
+    setFocal: 'Set as tree focal',
+    setFocalHint: 'Re-root the chart on this person',
+    isFocal: 'Tree focal',
+    isFocalHint: 'This person is the root of the tree',
+  },
   personPanel: {
     status: 'Status',
     partners: 'Partners',

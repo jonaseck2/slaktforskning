@@ -47,7 +47,7 @@
           v-if="activeTab === 'pedigree'"
           ref="pedigreeChartRef"
           :key="'pedigree-' + chartKey"
-          :person-id="personId"
+          :person-id="treeFocalId"
           :selected-person-id="personId"
           :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           :readonly="isStaticMode"
@@ -58,7 +58,7 @@
           v-if="activeTab === 'hourglass'"
           ref="hourglassChartRef"
           :key="'hourglass-' + chartKey"
-          :person-id="personId"
+          :person-id="treeFocalId"
           :selected-person-id="personId"
           :readonly="isStaticMode"
           @navigate="navigateTo"
@@ -68,7 +68,7 @@
           v-if="activeTab === 'descendants'"
           ref="descendantChartRef"
           :key="'descendants-' + chartKey"
-          :person-id="personId"
+          :person-id="treeFocalId"
           :selected-person-id="personId"
           :readonly="isStaticMode"
           @navigate="navigateTo"
@@ -101,8 +101,10 @@
         <PersonPanel
           :person-id="personId ?? null"
           :readonly="isStaticMode"
+          :show-tree-focal-button="!isStaticMode"
           @relative-added="reloadChart"
           @person-changed="reloadChart"
+          @refocus="onRefocus"
           @close="closePanel"
         />
       </div>
@@ -134,6 +136,7 @@ import PersonModal from '../components/modals/PersonModal.vue';
 import PersonsListTab from './PersonsListTab.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useFocusStore } from '../stores/focus';
+import { useTreeFocalStore } from '../stores/treeFocal';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useChartNavigation } from '../composables/useChartNavigation';
 import { fetchPedigreeTree, fetchHourglassTree } from '../utils/chartData';
@@ -148,6 +151,8 @@ const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const focusStore = useFocusStore();
+const treeFocalStore = useTreeFocalStore();
+const treeFocalId = computed(() => treeFocalStore.personId);
 const ttsEnabled = inject<Ref<boolean>>('ttsEnabled');
 const tts = inject<{ speak: (text: string, locale?: string) => void }>('tts');
 
@@ -287,8 +292,7 @@ async function load() {
   }
   focalPerson.value = person;
   if (!panelOpen.value) openPanel();
-  // Keep the sidebar's selected-person indicator in sync with whichever
-  // person is currently selected (= focal — they're the same thing).
+  // Sidebar's "current person" indicator follows the selected person.
   if (focusStore.personId !== id) {
     try {
       const names = (await window.api.persons.getNames(id)) as Array<{ given_name?: string; surname?: string }>;
@@ -297,6 +301,28 @@ async function load() {
       focusStore.set(id, name);
     } catch { /* best-effort */ }
   }
+  // Resolve tree focal. If unset or stale (person no longer exists in this
+  // DB — e.g. after a database switch), fall back to the selected person.
+  await resolveTreeFocal(id);
+}
+
+async function resolveTreeFocal(selectedId: string) {
+  const stored = treeFocalStore.personId;
+  if (!stored) {
+    treeFocalStore.set(selectedId);
+    return;
+  }
+  if (stored === selectedId) return;
+  try {
+    const exists = (await window.api.persons.get(stored)) as Person | null;
+    if (!exists) treeFocalStore.set(selectedId);
+  } catch {
+    treeFocalStore.set(selectedId);
+  }
+}
+
+function onRefocus(id: string) {
+  treeFocalStore.set(id);
 }
 
 // --- Screen reader chart navigation ---
@@ -373,15 +399,16 @@ onUnmounted(() => {
 });
 
 // Chart inspection bridge — wires Vue state to HTTP endpoints via IPC.
-// Selected and focal are now the same thing — there's only one person.
+// Selected (URL) and focal (tree root) are independent — see PersonPanel's
+// "Set as tree focal" button.
 const personIdRef = computed(() => personId.value ?? null);
 useChartBridge({
   boxes: chartBoxes,
   selectedPersonId: personIdRef,
-  focalPersonId: personIdRef,
+  focalPersonId: treeFocalId,
   chartType: activeTab,
   selectPerson: navigateTo,
-  focusPerson: (id: string) => router.push('/persons/' + id),
+  focusPerson: onRefocus,
 });
 
 // When App.vue auto-sets the focus store after this view is already mounted, navigate to that person
