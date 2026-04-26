@@ -160,7 +160,7 @@
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
         <AppButton variant="danger" size="sm" @click="showDeleteConfirm = true">
-          🗑 {{ $t('persons.deletePersonAction') }}
+          <span class="trash-icon">🗑</span> {{ $t('persons.deletePersonAction') }}
         </AppButton>
       </div>
     </template>
@@ -489,6 +489,11 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: auto;
+}
+.trash-icon {
+  font-size: 1.25em;
+  vertical-align: -2px;
+  margin-right: 2px;
 }
 
 .person-panel {
