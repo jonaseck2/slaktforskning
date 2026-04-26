@@ -563,6 +563,9 @@ onMounted(() => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  /* Breathing room between the pinned identity card and the first
+     section below it. */
+  padding-top: var(--space-lg);
 }
 
 /* Collapse arrow on the panel's left edge — mirrors the
