@@ -14,6 +14,7 @@ const mockApi = {
   media: {
     forEntity: vi.fn(),
     readAsDataUrl: vi.fn(),
+    profilePicRef: vi.fn().mockResolvedValue(null),
   },
   relationships: { getForPerson: vi.fn(), get: vi.fn() },
   db: { getSetting: vi.fn() },
