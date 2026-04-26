@@ -122,6 +122,7 @@ export default {
     nameEntity: 'Namn',
     identifierEntity: 'Identifierare',
     newPerson: 'Ny person',
+    titleFor: '{title} – {name}',
   },
   personDetail: {
     deceased: 'Avliden',
@@ -245,6 +246,7 @@ export default {
     title: 'Händelser',
     entity: 'Händelse',
     newEvent: 'Ny händelse',
+    titleOf: '{event} – {name}',
     searchOrAdd: 'Sök eller lägg till händelse…',
     event: 'Händelse',
     addEvent: 'Skapa',
@@ -283,6 +285,8 @@ export default {
     title: 'Hänvisningar',
     addTitle: 'Lägg till hänvisning',
     editTitle: 'Redigera hänvisning',
+    noPage: '(ingen sida)',
+    titleFor: '{title} – {name}',
     chooseSourceTitle: 'Välj en källa',
     changeSource: 'Byt',
     source: 'Källa',
@@ -442,6 +446,7 @@ export default {
     title: 'Externa identifierare',
     add: 'Identifierare',
     addTitle: 'Lägg till identifierare',
+    titleFor: '{title} – {name}',
     type: 'Typ',
     value: 'Värde',
     types: {
@@ -489,6 +494,7 @@ export default {
     hierarchy: 'Hierarki',
     showingOf: 'Visar {shown} av {total} platser',
     newPlace: 'Ny plats',
+    titleIn: '{title} i {name}',
   },
   placePanel: {
     noPlaceSelected: 'Klicka på en markör på kartan',
@@ -948,6 +954,7 @@ export default {
     addTask: 'Uppgift',
     newTask: 'Ny uppgift',
     editTask: 'Redigera uppgift',
+    titleFor: '{title} – {name}',
     entity: 'Uppgift',
     statuses: {
       open: 'Öppen',

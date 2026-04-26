@@ -326,18 +326,33 @@ const form = reactive({
   subtype: defaultSubtype(),
 });
 
+const relatedPersonName = ref('');
+
 const displayTitle = computed(() => {
   if (props.addRelatedTo) {
     const m = props.addRelatedTo.mode;
-    if (m === 'father') return t('personDetail.addFatherTitle');
-    if (m === 'mother') return t('personDetail.addMotherTitle');
-    if (m === 'spouse') return t('personDetail.addSpouseTitle');
-    if (m === 'son') return t('personDetail.addSonTitle');
-    if (m === 'daughter') return t('personDetail.addDaughterTitle');
-    return t('personDetail.addChildTitle');
+    let base: string;
+    if (m === 'father') base = t('personDetail.addFatherTitle');
+    else if (m === 'mother') base = t('personDetail.addMotherTitle');
+    else if (m === 'spouse') base = t('personDetail.addSpouseTitle');
+    else if (m === 'son') base = t('personDetail.addSonTitle');
+    else if (m === 'daughter') base = t('personDetail.addDaughterTitle');
+    else base = t('personDetail.addChildTitle');
+    return relatedPersonName.value
+      ? t('persons.titleFor', { title: base, name: relatedPersonName.value })
+      : base;
   }
   return [form.given_name, form.surname].filter(Boolean).join(' ') || t('persons.newPerson');
 });
+
+async function loadRelatedPersonName() {
+  if (!props.addRelatedTo || !window.api) return;
+  try {
+    const names = (await window.api.persons.getNames(props.addRelatedTo.personId)) as Array<{ given_name: string; surname: string }>;
+    const primary = names[0];
+    if (primary) relatedPersonName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+  } catch { /* ignore */ }
+}
 
 // ── Events + relationships (loaded after person exists) ─────────────────────
 const events = ref<EventRow[]>([]);
@@ -481,6 +496,7 @@ async function loadPartners() {
 onMounted(async () => {
   await loadData();
   await loadPartners();
+  await loadRelatedPersonName();
   nextTick(() => givenNameRef.value?.focus());
 });
 </script>

@@ -211,13 +211,13 @@
           <template v-else-if="activeTab === 'hourglassChart'">
             <div class="panel-control">
               <div class="panel-range-row"><span class="panel-label">{{ $t('reports.generations') }}</span><span class="panel-range-value">{{ hourglassGenerations }}</span></div>
-              <input type="range" min="2" max="8" step="1" v-model.number="hourglassGenerations" class="panel-range" />
+              <input type="range" min="2" max="20" step="1" v-model.number="hourglassGenerations" class="panel-range" />
             </div>
           </template>
           <template v-else-if="activeTab === 'descendantChart'">
             <div class="panel-control">
               <div class="panel-range-row"><span class="panel-label">{{ $t('reports.generations') }}</span><span class="panel-range-value">{{ descendantGenerations }}</span></div>
-              <input type="range" min="2" max="8" step="1" v-model.number="descendantGenerations" class="panel-range" />
+              <input type="range" min="2" max="20" step="1" v-model.number="descendantGenerations" class="panel-range" />
             </div>
           </template>
           <template v-else-if="activeTab === 'timeline'">

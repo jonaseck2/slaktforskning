@@ -128,9 +128,22 @@ const form = reactive({
   result: props.editingTask?.result ?? '',
 });
 
-const displayTitle = computed(() =>
-  form.task.trim() || (props.editingTask ? t('researchTasks.editTask') : t('researchTasks.newTask'))
-);
+const personName = ref('');
+
+const displayTitle = computed(() => {
+  if (form.task.trim()) return form.task.trim();
+  const base = props.editingTask ? t('researchTasks.editTask') : t('researchTasks.newTask');
+  return personName.value ? t('researchTasks.titleFor', { title: base, name: personName.value }) : base;
+});
+
+async function loadPersonName() {
+  if (!props.personId || !window.api) return;
+  try {
+    const names = (await window.api.persons.getNames(props.personId)) as Array<{ given_name: string; surname: string }>;
+    const primary = names[0];
+    if (primary) personName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+  } catch { /* ignore */ }
+}
 
 async function handleSave() {
   if (!form.task.trim()) return;
@@ -160,7 +173,9 @@ async function handleSave() {
   }
 }
 
-onMounted(() => {
-  nextTick(() => taskRef.value?.focus());
+onMounted(async () => {
+  await loadPersonName();
+  await nextTick();
+  taskRef.value?.focus();
 });
 </script>

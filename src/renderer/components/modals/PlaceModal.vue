@@ -1,7 +1,7 @@
 <template>
   <BaseSubPanel
     entity-type="place"
-    :title="form.name || $t('places.newPlace')"
+    :title="displayTitle"
     :mode="mode"
     @cancel="$emit('cancel')"
     @save="handleSave"
@@ -69,7 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, nextTick } from 'vue';
+import { reactive, ref, computed, onMounted, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import PlacePicker from '../PlacePicker.vue';
 import { PLACE_TYPE_VALUES } from '../../constants/eventTypes';
@@ -104,7 +105,27 @@ const emit = defineEmits<{
   saved: [place: Place];
 }>();
 
+const { t } = useI18n();
+
 const nameRef = ref<HTMLInputElement | null>(null);
+
+const parentPlaceName = ref('');
+
+const displayTitle = computed(() => {
+  if (form.name) return form.name;
+  const base = t('places.newPlace');
+  return parentPlaceName.value
+    ? t('places.titleIn', { title: base, name: parentPlaceName.value })
+    : base;
+});
+
+async function loadParentPlaceName() {
+  if (!form.parent_place_id || !window.api) return;
+  try {
+    const place = (await window.api.places.get(form.parent_place_id)) as { name: string } | null;
+    if (place) parentPlaceName.value = place.name;
+  } catch { /* ignore */ }
+}
 
 const form = reactive({
   name: props.editingPlace?.name ?? '',
@@ -143,7 +164,11 @@ async function handleSave() {
   }
 }
 
-onMounted(() => nextTick(() => nameRef.value?.focus()));
+onMounted(async () => {
+  await loadParentPlaceName();
+  await nextTick();
+  nameRef.value?.focus();
+});
 </script>
 
 <style scoped>

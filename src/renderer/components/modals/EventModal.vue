@@ -99,82 +99,55 @@
       </template>
     </div>
 
-    <!-- Sources section -->
-    <div class="ep-sec-header" data-entity="source">
-      <div class="ep-sec-left">
-        <span class="ep-sec-title">📚 {{ $t('sources.title') }}</span>
-        <span class="ep-sec-count">{{ citations.length }}</span>
+    <!-- Citations section (only after first save — needs an event_id to attach to) -->
+    <template v-if="savedEventId">
+      <div class="ep-sec-header" data-entity="citation">
+        <div class="ep-sec-left">
+          <span class="ep-sec-title">📖 {{ $t('citations.title') }}</span>
+          <span class="ep-sec-count">{{ citations.length }}</span>
+        </div>
+        <button type="button" class="ep-sec-action" @click="openAddCitation">
+          + {{ $t('sourceDetail.addCitation') }}
+        </button>
       </div>
-      <span class="ep-sec-open">›</span>
-    </div>
-    <div class="ep-sec-content">
-      <div class="ep-search-wrap">
-        <input
-          class="ep-search-input"
-          v-model="sourceSearch"
-          :placeholder="$t('sources.searchOrAdd')"
-          @focus="onSearchFocus"
-          @blur="onSearchBlur"
-          @keydown.down.prevent="highlightedIdx = Math.min(highlightedIdx + 1, searchResults.length)"
-          @keydown.up.prevent="highlightedIdx = Math.max(highlightedIdx - 1, 0)"
-          @keydown.enter.prevent="selectHighlighted"
-          @keydown.esc="closeDropdown"
-          @input="runSearch"
-        />
-        <div v-if="showDropdown" class="ep-dropdown">
-          <div
-            v-for="(src, i) in searchResults"
-            :key="src.id"
-            class="ep-dd-row"
-            :class="{ 'ep-dd-row--hl': i === highlightedIdx }"
-            @mousedown.prevent="openCitationFor(src.id, src.title)"
-          >
-            {{ src.title }}
-            <span class="ep-dd-key">↩</span>
+      <div class="ep-sec-content">
+        <div v-if="citations.length === 0" class="ep-sec-empty">{{ $t('empty.citations') }}</div>
+        <div
+          v-for="cit in citations"
+          :key="cit.id"
+          class="ep-entity-row"
+          @click="openEditCitation(cit.id)"
+        >
+          <div class="ep-entity-main">
+            <div class="ep-entity-name">
+              <span v-if="cit.confidence != null" :class="'confidence-badge confidence-' + cit.confidence">
+                {{ $t('confidenceLevels.' + cit.confidence) }}
+              </span>
+              <span class="ep-cit-page">{{ cit.page || $t('citations.noPage') }}</span>
+            </div>
+            <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
           </div>
-          <div
-            class="ep-dd-row ep-dd-row--create"
-            :class="{ 'ep-dd-row--hl': highlightedIdx === searchResults.length }"
-            @mousedown.prevent="openCreateSource"
-          >
-            + {{ $t('sources.createNewSource') }}
-            <span class="ep-dd-key">↩</span>
-          </div>
+          <button
+            type="button"
+            class="btn-sm btn-delete"
+            style="flex-shrink:0"
+            :aria-label="$t('common.remove')"
+            @click.stop="deleteCitation(cit.id)"
+          >✕</button>
         </div>
       </div>
-
-      <!-- Citations list -->
-      <div v-for="cit in citations" :key="cit.id" class="ep-entity-row">
-        <div class="ep-entity-main">
-          <div class="ep-entity-name">{{ cit.sourceTitle }}</div>
-          <div v-if="cit.page" class="ep-entity-sub">{{ cit.page }}</div>
-        </div>
-        <button
-          type="button"
-          class="btn-sm btn-delete"
-          style="flex-shrink:0"
-          :aria-label="$t('common.remove')"
-          @click.stop="deleteCitation(cit.id)"
-        >✕</button>
-      </div>
-    </div>
+    </template>
 
     <!-- Sub-panels -->
     <template #subpanels>
       <CitationModal
-        v-if="subPanel === 'citation' && activeSrc"
-        :source-id="activeSrc.id"
-        :source-title="activeSrc.title"
+        v-if="subPanel === 'citation'"
+        mode="subpanel"
         :event-id="savedEventId || undefined"
+        :editing-citation="editingCitation"
         @cancel="closeSubPanel"
         @close="closeSubPanel"
         @saved="onCitationSaved"
-      />
-      <SourceModal
-        v-if="subPanel === 'source'"
-        @cancel="closeSubPanel"
-        @close="closeSubPanel"
-        @saved="onSourceCreated"
       />
       <PersonModal
         v-if="subPanel === 'person' && props.personId"
@@ -193,7 +166,6 @@ import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal from './CitationModal.vue';
-import SourceModal from './SourceModal.vue';
 import DateInput from '../DateInput.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
@@ -208,8 +180,15 @@ declare const window: Window & {
 const QUICK_EVENT_TYPES = ['birth', 'baptism', 'marriage', 'death'] as const;
 type QuickType = typeof QUICK_EVENT_TYPES[number];
 
-interface SourceRow { id: string; title: string; }
-interface CitationRow { id: string; sourceTitle: string; page: string | null; }
+interface CitationRow { id: string; sourceTitle: string; page: string | null; confidence: number | null; }
+interface EditingCitation {
+  id: string;
+  page: string;
+  confidence: number;
+  transcription: string;
+  notes: string;
+  date_accessed: string;
+}
 interface EventData {
   id?: string;
   event_type: string;
@@ -256,9 +235,12 @@ const form = reactive<EventData>({
   description: props.editingEvent?.description ?? '',
 });
 
-const eventTitle = computed(() =>
-  form.event_type ? t('eventTypes.' + form.event_type) : t('events.newEvent')
-);
+const contextName = ref('');
+
+const eventTitle = computed(() => {
+  const base = form.event_type ? t('eventTypes.' + form.event_type) : t('events.newEvent');
+  return contextName.value ? t('events.titleOf', { event: base, name: contextName.value }) : base;
+});
 const showTypeDropdown = ref(false);
 
 // Birth-only baptism companion fields. Hidden when editing an existing event so we
@@ -332,84 +314,28 @@ async function reloadPartnerOptions() {
   } catch { /* ignore */ }
 }
 
-// Source search
-const sourceSearch = ref('');
-const searchResults = ref<SourceRow[]>([]);
-const showDropdown = ref(false);
-const highlightedIdx = ref(0);
-let searchTimer: ReturnType<typeof setTimeout> | null = null;
+// Sub-panel state — citation flow delegates source picking to CitationModal itself
+const subPanel = ref<'citation' | 'person' | null>(null);
+const editingCitation = ref<EditingCitation | null>(null);
 
-function runSearch() {
-  if (searchTimer) clearTimeout(searchTimer);
-  searchTimer = setTimeout(async () => {
-    if (!window.api) return;
-    try {
-      if (sourceSearch.value.trim()) {
-        const all = (await window.api.sources.search(sourceSearch.value)) as SourceRow[];
-        searchResults.value = all.slice(0, 5);
-      } else {
-        const all = (await window.api.sources.list()) as SourceRow[];
-        searchResults.value = all.slice(0, 5);
-      }
-      showDropdown.value = true;
-      highlightedIdx.value = 0;
-    } catch { /* ignore */ }
-  }, 150);
-}
-
-async function onSearchFocus() {
-  if (!window.api) return;
-  try {
-    const all = (await window.api.sources.list()) as SourceRow[];
-    searchResults.value = all.slice(0, 5);
-    showDropdown.value = true;
-    highlightedIdx.value = 0;
-  } catch { /* ignore */ }
-}
-
-function onSearchBlur() {
-  setTimeout(() => { showDropdown.value = false; }, 150);
-}
-
-function closeDropdown() {
-  showDropdown.value = false;
-}
-
-function selectHighlighted() {
-  if (!showDropdown.value) return;
-  if (highlightedIdx.value < searchResults.value.length) {
-    const src = searchResults.value[highlightedIdx.value];
-    openCitationFor(src.id, src.title);
-  } else {
-    openCreateSource();
-  }
-}
-
-// Sub-panel state
-const subPanel = ref<'citation' | 'source' | 'person' | null>(null);
-const activeSrc = ref<SourceRow | null>(null);
-
-function openCitationFor(sourceId: string, sourceTitle: string) {
-  closeDropdown();
-  sourceSearch.value = sourceTitle;
-  activeSrc.value = { id: sourceId, title: sourceTitle };
+function openAddCitation() {
+  editingCitation.value = null;
   subPanel.value = 'citation';
 }
 
-function openCreateSource() {
-  closeDropdown();
-  subPanel.value = 'source';
+async function openEditCitation(citationId: string) {
+  if (!window.api) return;
+  try {
+    const c = (await window.api.citations.get(citationId)) as EditingCitation | null;
+    if (!c) return;
+    editingCitation.value = c;
+    subPanel.value = 'citation';
+  } catch { /* ignore */ }
 }
 
 function closeSubPanel() {
   subPanel.value = null;
-  activeSrc.value = null;
-  sourceSearch.value = '';
-}
-
-function onSourceCreated(sourceId: string, sourceTitle: string) {
-  activeSrc.value = { id: sourceId, title: sourceTitle };
-  subPanel.value = 'citation';
+  editingCitation.value = null;
 }
 
 // Citations list
@@ -419,12 +345,17 @@ async function loadCitations() {
   if (!savedEventId.value || !window.api) return;
   try {
     const raw = (await window.api.citations.forEvent(savedEventId.value)) as Array<{
-      id: string; source_id: string; page: string | null;
+      id: string; source_id: string; page: string | null; confidence: number | null;
     }>;
     const rows: CitationRow[] = [];
     for (const c of raw) {
       const src = (await window.api.sources.get(c.source_id)) as { title: string } | null;
-      rows.push({ id: c.id, sourceTitle: src?.title ?? c.source_id, page: c.page });
+      rows.push({
+        id: c.id,
+        sourceTitle: src?.title ?? c.source_id,
+        page: c.page,
+        confidence: c.confidence,
+      });
     }
     citations.value = rows;
   } catch { /* ignore */ }
@@ -444,7 +375,31 @@ async function deleteCitation(id: string) {
 onMounted(async () => {
   await loadCitations();
   await reloadPartnerOptions();
+  await loadContextName();
 });
+
+async function loadContextName() {
+  if (!window.api) return;
+  try {
+    if (props.personId) {
+      const names = (await window.api.persons.getNames(props.personId)) as Array<{ given_name: string; surname: string }>;
+      const primary = names[0];
+      if (primary) contextName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+    } else if (props.relationshipId) {
+      const rel = (await window.api.relationships.get(props.relationshipId)) as { person1_id: string | null; person2_id: string | null } | null;
+      if (rel) {
+        const labels: string[] = [];
+        for (const id of [rel.person1_id, rel.person2_id]) {
+          if (!id) continue;
+          const nm = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+          const p = nm[0];
+          if (p) labels.push([p.given_name, p.surname].filter(Boolean).join(' '));
+        }
+        contextName.value = labels.join(' & ');
+      }
+    }
+  } catch { /* ignore */ }
+}
 
 // Save event
 async function handleSave() {
@@ -580,5 +535,43 @@ function handleCancel() {
 }
 .ep-link-btn:hover {
   text-decoration: underline;
+}
+/* Citation row visuals — keep page + confidence visible together so each row
+   reads as a citation, not a source. */
+.ep-cit-page {
+  font-size: var(--font-xs);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-left: var(--space-xs);
+}
+.confidence-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+.confidence-0 { background: var(--error-bg);   color: var(--error-text); }
+.confidence-1 { background: var(--warning-bg); color: var(--warning-text); }
+.confidence-2 { background: var(--info-bg);    color: var(--info-text); }
+.confidence-3 { background: var(--success-bg); color: var(--success-text); }
+.ep-sec-action {
+  background: transparent;
+  border: 1px solid var(--entity-border, var(--surface-border));
+  color: var(--entity-text, var(--text-primary));
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+}
+.ep-sec-action:hover { background: var(--entity-bg, var(--surface-hover)); filter: brightness(0.97); }
+.ep-sec-empty {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  padding: var(--space-xs) 0;
 }
 </style>

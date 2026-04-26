@@ -198,10 +198,44 @@ const phase = computed<'pick-source' | 'edit-citation'>(() =>
 );
 const canChangeSource = computed(() => isStandaloneCreate);
 
+const citedEntityName = ref('');
+
 const modalTitle = computed(() => {
   if (phase.value === 'pick-source') return t('citations.chooseSourceTitle');
-  return pickedSourceTitle.value || t('citations.addTitle');
+  const base = pickedSourceTitle.value || t('citations.addTitle');
+  return citedEntityName.value
+    ? t('citations.titleFor', { title: base, name: citedEntityName.value })
+    : base;
 });
+
+async function loadCitedEntityName() {
+  if (!window.api) return;
+  try {
+    if (props.eventId) {
+      const ev = (await window.api.events.get(props.eventId)) as { event_type: string } | null;
+      if (ev) citedEntityName.value = t('eventTypes.' + ev.event_type);
+    } else if (props.personId) {
+      const names = (await window.api.persons.getNames(props.personId)) as Array<{ given_name: string; surname: string }>;
+      const primary = names[0];
+      if (primary) citedEntityName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+    } else if (props.relationshipId) {
+      const rel = (await window.api.relationships.get(props.relationshipId)) as { person1_id: string | null; person2_id: string | null } | null;
+      if (rel) {
+        const labels: string[] = [];
+        for (const id of [rel.person1_id, rel.person2_id]) {
+          if (!id) continue;
+          const nm = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+          const p = nm[0];
+          if (p) labels.push([p.given_name, p.surname].filter(Boolean).join(' '));
+        }
+        citedEntityName.value = labels.join(' & ');
+      }
+    } else if (props.placeId) {
+      const place = (await window.api.places.get(props.placeId)) as { name: string } | null;
+      if (place) citedEntityName.value = place.name;
+    }
+  } catch { /* ignore */ }
+}
 
 function resetSource() {
   pickedSourceId.value = null;
@@ -222,6 +256,7 @@ onMounted(async () => {
       if (src) pickedSourceTitle.value = src.title;
     } catch { /* non-critical */ }
   }
+  await loadCitedEntityName();
   if (phase.value === 'edit-citation') {
     nextTick(() => pageRef.value?.focus());
   }

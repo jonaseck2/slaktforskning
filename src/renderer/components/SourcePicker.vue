@@ -1,6 +1,7 @@
 <template>
   <div class="source-picker">
     <input
+      ref="inputRef"
       type="text"
       v-model="query"
       :placeholder="placeholder || $t('citations.selectSource')"
@@ -15,11 +16,13 @@
       @keydown="onKeydown"
       autocomplete="off"
     />
+    <Teleport to="body">
     <ul
       v-if="showDropdown && totalOptions() > 0"
       :id="pickerId + '-listbox'"
       role="listbox"
       class="dropdown"
+      :style="dropdownStyle"
     >
       <li
         v-for="(source, idx) in results"
@@ -50,11 +53,12 @@
         {{ $t('sources.createNew', { name: query }) }}
       </li>
     </ul>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { narrateSource, narrationLabelsFromI18n } from '../utils/narration';
 
@@ -78,9 +82,40 @@ const query = ref('');
 const results = ref<SourceRow[]>([]);
 const showDropdown = ref(false);
 const highlightIndex = ref(-1);
+const inputRef = ref<HTMLInputElement | null>(null);
+const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout>;
 
-watch(results, () => { highlightIndex.value = -1; });
+function updateDropdownPosition() {
+  const el = inputRef.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  dropdownStyle.value = {
+    position: 'fixed',
+    top: `${r.bottom + 2}px`,
+    left: `${r.left}px`,
+    width: `${r.width}px`,
+  };
+}
+
+function onScroll() { if (showDropdown.value) updateDropdownPosition(); }
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, true);
+  window.addEventListener('resize', onScroll);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll, true);
+  window.removeEventListener('resize', onScroll);
+});
+
+watch(showDropdown, (open) => {
+  if (open) nextTick(updateDropdownPosition);
+});
+watch(results, () => {
+  highlightIndex.value = -1;
+  if (showDropdown.value) nextTick(updateDropdownPosition);
+});
 
 watch(() => props.modelValue, async (id) => {
   if (!id) { query.value = ''; return; }
@@ -157,17 +192,16 @@ function onBlur() {
 .source-picker { position: relative; width: 100%; box-sizing: border-box; }
 .source-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
 .source-picker input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); background: var(--surface); }
+/* Position is set inline (computed from input's bounding rect) since the
+   dropdown is teleported to <body>. Scoped styles still reach the teleported
+   element because Vue keeps the data-v-* attribute on it. */
 .dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-input);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 100;
-  max-height: 200px;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  max-height: 240px;
   overflow-y: auto;
   list-style: none;
   margin: 0;
