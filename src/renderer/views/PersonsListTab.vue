@@ -7,12 +7,6 @@
       </div>
     </div>
 
-    <p v-if="total > 0 && filter !== 'duplicates'" class="count-label">
-      {{ $t('persons.showingOf', { shown: persons.length, total }) }}
-    </p>
-
-    <FilterChips :options="filterOptions" :model-value="filter" @update:model-value="setFilter" />
-
     <template v-if="loading && persons.length === 0">
       <AppLoadingState :rows="5" />
     </template>
@@ -20,13 +14,14 @@
     <AppEmptyState
       v-else-if="persons.length === 0 && !loading"
       icon="👤"
-      :title="filter === 'unsourced' ? $t('persons.allSourced') : $t('empty.persons')"
-      :description="filter === 'all' ? $t('persons.emptyHint') : ''"
-      :action-label="!isStaticMode && filter === 'all' ? $t('empty.addPerson') : ''"
+      :title="$t('empty.persons')"
+      :description="$t('persons.emptyHint')"
+      :action-label="!isStaticMode ? $t('empty.addPerson') : ''"
       @action="showAddForm = true"
     />
 
     <template v-else>
+      <div class="persons-list-scroll">
       <table class="data-table">
         <thead>
           <tr>
@@ -85,6 +80,10 @@
       </table>
 
       <div ref="sentinel" class="scroll-sentinel"></div>
+      </div>
+      <p v-if="total > 0" class="persons-list-footer count-label">
+        {{ $t('persons.showingOf', { shown: persons.length, total }) }}
+      </p>
     </template>
 
     <!-- Add Person Modal -->
@@ -93,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonModal from '../components/modals/PersonModal.vue';
@@ -104,7 +103,6 @@ import AppBadge from '../components/ui/AppBadge.vue';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
-import FilterChips from '../components/ui/FilterChips.vue';
 import { useFocusStore } from '../stores/focus';
 import { fullNameParts } from '../utils/nameUtils';
 import { useDataVersionStore } from '../stores/dataVersion';
@@ -139,12 +137,6 @@ const offset = ref(0);
 const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
-const filter = ref<'all' | 'unsourced'>('all');
-
-const filterOptions = computed(() => [
-  { value: 'all', label: t('persons.filterAll') },
-  { value: 'unsourced', label: t('persons.filterUnsourced') },
-]);
 
 let observer: IntersectionObserver | null = null;
 
@@ -181,8 +173,7 @@ async function load() {
   if (!window.api) return;
   loading.value = true;
   try {
-    const fn = filter.value === 'unsourced' ? window.api.persons.listUnsourcedPage : window.api.persons.listPage;
-    const result = await fn(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
+    const result = await window.api.persons.listPage(PAGE_SIZE, 0) as { persons: PersonListItem[]; total: number };
     persons.value = result.persons;
     total.value = result.total;
     offset.value = PAGE_SIZE;
@@ -198,8 +189,7 @@ async function loadMore() {
   if (!window.api || loading.value) return;
   loading.value = true;
   try {
-    const fn = filter.value === 'unsourced' ? window.api.persons.listUnsourcedPage : window.api.persons.listPage;
-    const result = await fn(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
+    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value) as { persons: PersonListItem[]; total: number };
     persons.value = [...persons.value, ...result.persons];
     total.value = result.total;
     offset.value += PAGE_SIZE;
@@ -209,13 +199,6 @@ async function loadMore() {
   } finally {
     loading.value = false;
   }
-}
-
-function setFilter(f: string) {
-  const val = f as 'all' | 'unsourced';
-  if (filter.value === val) return;
-  filter.value = val;
-  load();
 }
 
 async function onPersonAdded() {
@@ -273,6 +256,33 @@ onActivated(async () => {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+/* When embedded (left list column in PersonsView), the table scrolls in a
+   dedicated wrapper so the count footer stays pinned and visible without
+   scrolling. The table head sticks to the top of the wrapper so column
+   labels remain visible while the rows scroll. */
+.persons-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.persons-list-scroll :deep(.data-table thead th) {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  /* The data-table's own border-bottom on rows already gives a separator,
+     but stickiness can hide the table border underneath the floating head.
+     Add a bottom border on the sticky head as a fallback. */
+  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
+}
+.persons-list-footer {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--space-sm) 0 0 0;
+  border-top: 1px solid var(--surface-border-subtle);
+  text-align: center;
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
 .name-cell { display: flex; align-items: center; gap: var(--space-sm); }

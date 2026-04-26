@@ -116,7 +116,7 @@ export default {
     birthPlace: 'Födelseort',
     deathDate: 'Dödsdag',
     deathPlace: 'Dödsort',
-    showingOf: 'Visar {shown} av {total} personer',
+    showingOf: 'Personregistret har {total} personer',
     loadMore: 'Ladda fler',
     filterAll: 'Alla',
     filterUnsourced: 'Utan källa',

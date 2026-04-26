@@ -279,6 +279,13 @@ onActivated(async () => {
   padding: var(--space-md);
   position: relative;
 }
+.places-list-content .data-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
+}
 .list-collapse-btn {
   position: absolute;
   top: 50%;

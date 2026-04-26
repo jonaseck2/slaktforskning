@@ -487,7 +487,8 @@ onActivated(load);
 .viz-list-column :deep(.persons-view-content) {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-md);
 }
 .list-collapse-btn {

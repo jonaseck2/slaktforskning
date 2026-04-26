@@ -116,7 +116,7 @@ export default {
     birthPlace: 'Birth place',
     deathDate: 'Death date',
     deathPlace: 'Death place',
-    showingOf: 'Showing {shown} of {total} persons',
+    showingOf: 'The person register contains {total} persons',
     loadMore: 'Load more',
     filterAll: 'All',
     filterUnsourced: 'Unsourced',
