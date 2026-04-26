@@ -449,10 +449,15 @@ onMounted(() => {
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
+  padding: 0 0 0 var(--space-lg);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
+.panel-header > .app-avatar {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}
 .panel-header-content {
+  padding: var(--space-md) 0;
   flex: 1;
   min-width: 0;
 }
@@ -478,7 +483,7 @@ onMounted(() => {
 .panel-lifelines {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-sm);
   margin-bottom: var(--space-xs);
 }

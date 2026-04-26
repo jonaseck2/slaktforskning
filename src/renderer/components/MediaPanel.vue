@@ -602,7 +602,7 @@ defineExpose({ reload: load, expandFaceTags });
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
-  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
+  padding: 0 0 0 var(--space-lg);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -618,6 +618,8 @@ defineExpose({ reload: load, expandFaceTags });
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .media-thumb-img {
@@ -643,6 +645,7 @@ defineExpose({ reload: load, expandFaceTags });
 .media-info {
   flex: 1;
   min-width: 0;
+  padding: var(--space-md) 0;
 }
 
 .media-title-row {

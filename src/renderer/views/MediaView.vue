@@ -110,7 +110,7 @@
         <col style="width: 60px">
         <col>
         <col style="width: 60px">
-        <col style="width: 40px">
+        <col>
       </colgroup>
       <thead>
         <tr>
@@ -119,7 +119,7 @@
           <th>{{ $t('media.colFormat') }}</th>
           <th>{{ $t('media.colNotes') }}</th>
           <th>{{ $t('media.colLinks') }}</th>
-          <th></th>
+          <th class="actions-cell"></th>
         </tr>
       </thead>
       <tbody>
@@ -139,7 +139,7 @@
           </td>
           <td>{{ item.notes }}</td>
           <td class="links-cell">{{ item.linkCount }}</td>
-          <td v-if="!isStaticMode">
+          <td v-if="!isStaticMode" class="actions-cell">
             <AppButton
               variant="ghost"
               size="sm"
