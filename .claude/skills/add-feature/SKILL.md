@@ -247,24 +247,31 @@ import { useRouter, useRoute } from 'vue-router';
 
 ### Modal dialog (for create/edit forms)
 
-Use `<BaseModal>` — it owns the overlay, click-to-close, and Escape key. Never repeat the raw `div.modal-overlay > div.modal` shell.
+Use `<BaseSubPanel>` from `src/renderer/components/modals/`. It owns the overlay, Escape key, focus trap, entity-colored header, and TTS narration. **Never use `BaseModal` directly** — it's the internal overlay primitive that BaseSubPanel wraps. Set `entity-type` on the panel; the header background, save button color, and accent border are all driven by `[data-entity="<type>"]` aliases in `shared.css`. Don't apply colors via inline `:style`.
 
 ```vue
-<BaseModal v-if="showForm" @close="showForm = false">
-  <h3>{{ $t('thing.add') }}</h3>
-  <form @submit.prevent="handleSubmit">
-    <!-- fields -->
-    <div class="modal-actions">
-      <button type="button" class="btn-cancel" @click="showForm = false">{{ $t('common.cancel') }}</button>
-      <button type="submit">{{ $t('common.save') }}</button>
+<BaseSubPanel
+  entity-type="thing"
+  :title="$t('things.addTitle')"
+  :mode="mode"
+  @cancel="$emit('cancel')"
+  @save="handleSave"
+  @close="$emit('close')"
+>
+  <div class="ep-fields">
+    <div class="ep-field">
+      <span class="ep-field-label">{{ $t('things.name') }}</span>
+      <input class="ep-input" v-model="form.name" />
     </div>
-  </form>
-</BaseModal>
+  </div>
+</BaseSubPanel>
 ```
 
 ```typescript
-import BaseModal from '../components/BaseModal.vue';
+import BaseSubPanel from './BaseSubPanel.vue';
 ```
+
+If your new entity warrants its own color identity, add it to `EntityType` in `entityMeta.ts`, define `--entity-{name}-text/-bg` (light in `tokens.css`, dark + HC overrides in `shared.css`), and add a `[data-entity="{name}"]` remap rule. The `wcagContrast.test.ts` will catch any contrast failures across the 9 (theme × mode) combinations automatically.
 
 ### List view pattern (PersonsView, RelationshipsView, SourcesView)
 - Header + "Add" button opens modal
