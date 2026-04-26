@@ -584,11 +584,13 @@ onMounted(() => {
 /* Role label above the person header — mirrors "Personlista" on the
    list column. Sticky so it stays visible while panel scrolls. */
 /* Sticky stack at the top of the scrollable panel: role label +
-   identity card stay pinned together while the rest scrolls. */
+   identity card stay pinned together while the rest scrolls.
+   z-index must be above Leaflet's map panes (which use up to ~700)
+   so the PersonMap section can't paint over the pinned heading. */
 .panel-sticky-top {
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 1000;
   background: var(--surface);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
