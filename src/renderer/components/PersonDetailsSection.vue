@@ -10,10 +10,9 @@
       <option value="F">{{ $t('sex.F') }}</option>
       <option value="U">{{ $t('sex.U') }}</option>
     </select>
-    <label class="checkbox-label">
-      <input type="checkbox" :checked="!!living" :disabled="props.readonly" @change="!props.readonly && updateLiving(($event.target as HTMLInputElement).checked)" />
-      {{ $t('personDetail.statusLiving') }}
-    </label>
+    <span class="living-status" :class="{ 'living-status--deceased': !living }">
+      {{ living ? $t('personDetail.statusLiving') : $t('personDetail.statusDeceased') }}
+    </span>
   </div>
   <div class="notes-block">
     <div class="notes-heading-row">
@@ -58,12 +57,6 @@ async function updateSex(value: string) {
   await window.api.persons.update(props.personId, { sex: value });
   emit('updated', 'sex', value);
 }
-
-async function updateLiving(checked: boolean) {
-  const value = checked ? 1 : 0;
-  await window.api.persons.update(props.personId, { living: value });
-  emit('updated', 'living', value);
-}
 </script>
 
 <style scoped>
@@ -89,18 +82,12 @@ async function updateLiving(checked: boolean) {
   background: var(--surface);
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+.living-status {
   font-size: var(--font-sm);
   color: var(--text-secondary);
-  cursor: pointer;
 }
-.checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
+.living-status--deceased {
+  color: var(--text-muted);
 }
 
 .notes-block {

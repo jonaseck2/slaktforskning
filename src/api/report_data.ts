@@ -8,6 +8,7 @@ import { getGroupsForPerson } from './groups';
 import { getResearchTasksForPerson } from './research_tasks';
 import { getEventParticipants } from './relationships';
 import { queryAll } from './db';
+import { livingSqlExpr } from './personLiving';
 import type { Person, PersonName, GenealogyEvent, Relationship, Citation, Group, ResearchTask } from './types';
 
 // ── Return types ──
@@ -533,7 +534,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
       JOIN event_participants ep ON ep.event_id = e.id
       WHERE e.date_value IS NOT NULL
     )
-    SELECT p.id, p.sex, p.living,
+    SELECT p.id, p.sex, ${livingSqlExpr('p')} AS living,
            pn.given_name, pn.surname,
            b.birth_year, d.death_year,
            (SELECT pl.name FROM events e2

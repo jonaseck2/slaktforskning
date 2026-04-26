@@ -20,7 +20,6 @@ export interface CreatePersonArgs {
   birth_place?: string;
   source_title?: string;
   source_page?: string;
-  living?: boolean;
   notes?: string;
 }
 
@@ -48,7 +47,6 @@ export function findOrCreateSource(db: Database, title: string): Source {
 export function _createPersonCore(db: Database, args: CreatePersonArgs): CreatePersonResult {
   const person = personApi.createPerson(db, {
     sex: args.sex,
-    living: args.living,
     notes: args.notes,
     given_name: args.given_name,
     surname: args.surname,
@@ -118,7 +116,6 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       birth_place: z.string().optional().describe('Birth place name'),
       source_title: z.string().optional().describe('Title of the source document; reuses existing source if title matches'),
       source_page: z.string().optional().describe('Page or reference within the source'),
-      living: z.boolean().optional().describe('Is the person currently living?'),
       notes: z.string().optional().describe('Free-text notes'),
     },
   }, async (args) => {
@@ -152,7 +149,6 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     inputSchema: {
       id: z.string().describe('Person ID'),
       sex: z.enum(['M', 'F', 'U']).optional(),
-      living: z.boolean().optional(),
       notes: z.string().optional(),
       given_name: z.string().optional().describe('Updates the given name on the primary (lowest sort_order) name record'),
       surname: z.string().optional().describe('Updates the surname on the primary (lowest sort_order) name record'),

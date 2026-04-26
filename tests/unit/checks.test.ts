@@ -248,24 +248,6 @@ describe('NO_NAME', () => {
   });
 });
 
-describe('LIVING_WITH_DEATH_EVENT', () => {
-  it('fires when a living person has a death event', () => {
-    const p = createPerson(db, { given_name: 'Ghost', surname: 'Person', living: true });
-    addDeathEvent(db, p.id, '2020-01-01');
-    const results = runAllChecks(db);
-    const hit = results.filter(r => r.code === 'LIVING_WITH_DEATH_EVENT' && r.personIds.includes(p.id));
-    expect(hit).toHaveLength(1);
-  });
-
-  it('does not fire for deceased person with death event', () => {
-    const p = createPerson(db, { given_name: 'Dead', surname: 'Person', living: false });
-    addDeathEvent(db, p.id, '2020-01-01');
-    const results = runAllChecks(db);
-    const hit = results.filter(r => r.code === 'LIVING_WITH_DEATH_EVENT' && r.personIds.includes(p.id));
-    expect(hit).toHaveLength(0);
-  });
-});
-
 // ---------------------------------------------------------------------------
 // runChecksForPerson — isolation
 // ---------------------------------------------------------------------------
@@ -638,15 +620,6 @@ describe('DEATH_WITHOUT_BIRTH', () => {
   });
 });
 
-describe('NOT_LIVING_WITHOUT_DEATH', () => {
-  it('fires for a deceased person without death event', () => {
-    const p = createPerson(db, { given_name: 'Erik', surname: 'Dead', living: false });
-    const results = runAllChecks(db);
-    const hit = results.filter(r => r.code === 'NOT_LIVING_WITHOUT_DEATH' && r.personIds.includes(p.id));
-    expect(hit).toHaveLength(1);
-  });
-});
-
 describe('DUPLICATE_RELATIONSHIP', () => {
   it('fires when two identical relationships exist between same persons', () => {
     const p1 = createPerson(db, { given_name: 'A', surname: 'Test' });
@@ -741,27 +714,3 @@ describe('PARTIAL_NAME', () => {
   });
 });
 
-describe('LIVING_OVER_120', () => {
-  it('fires when a living person was born more than 120 years ago', () => {
-    const ancientYear = new Date().getFullYear() - 121;
-    const { person } = personWithBirth(db, `${ancientYear}-01-01`, { living: true });
-    const results = runAllChecks(db);
-    const hit = results.filter(r => r.code === 'LIVING_OVER_120' && r.personIds.includes(person.id));
-    expect(hit).toHaveLength(1);
-    expect(hit[0].severity).toBe('warning');
-  });
-
-  it('does not fire when living person is within 120 years', () => {
-    const recentYear = new Date().getFullYear() - 50;
-    const { person } = personWithBirth(db, `${recentYear}-01-01`, { living: true });
-    const results = runAllChecks(db);
-    expect(results.filter(r => r.code === 'LIVING_OVER_120' && r.personIds.includes(person.id))).toHaveLength(0);
-  });
-
-  it('does not fire when person is not living', () => {
-    const ancientYear = new Date().getFullYear() - 130;
-    const { person } = personWithBirth(db, `${ancientYear}-01-01`, { living: false });
-    const results = runAllChecks(db);
-    expect(results.filter(r => r.code === 'LIVING_OVER_120' && r.personIds.includes(person.id))).toHaveLength(0);
-  });
-});

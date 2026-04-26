@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { Person } from './types';
 import { queryAll } from './db';
+import { livingSqlExpr } from './personLiving';
 
 export interface ExportOptions {
   excludeLiving: boolean;
@@ -141,7 +142,7 @@ export function applyExportOptions(
   if (options.excludeLiving) {
     const livingIds = queryAll<{ id: string }>(
       db,
-      `SELECT id FROM persons WHERE living = 1`,
+      `SELECT p.id AS id FROM persons p WHERE ${livingSqlExpr('p')} = 1`,
     );
     const livingSet = new Set(livingIds.map(r => r.id));
 

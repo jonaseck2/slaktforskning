@@ -2,6 +2,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Person, PersonName, PersonIdentifier } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { livingSqlExpr } from './personLiving';
 
 /**
  * Parse preferred-name markers from a given_name string.
@@ -19,12 +20,12 @@ export function parsePreferredName(givenName: string | undefined | null): { give
 
 export function createPerson(
   db: Database,
-  data: { sex?: Person['sex']; living?: boolean; notes?: string; given_name?: string; surname?: string }
+  data: { sex?: Person['sex']; notes?: string; given_name?: string; surname?: string }
 ): Person {
   const id = uuid();
   runSql(db,
-    `INSERT INTO persons (id, sex, living, notes) VALUES (?, ?, ?, ?)`,
-    [id, data.sex ?? 'U', data.living !== false ? 1 : 0, data.notes ?? '']
+    `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`,
+    [id, data.sex ?? 'U', data.notes ?? '']
   );
 
   if (data.given_name || data.surname) {
@@ -40,7 +41,13 @@ export function createPerson(
 }
 
 export function getPerson(db: Database, id: string): Person | null {
-  return queryOne<Person>(db, `SELECT *, living as living FROM persons WHERE id = ?`, [id]) ?? null;
+  const row = queryOne<Omit<Person, 'living'> & { living: number }>(
+    db,
+    `SELECT p.*, ${livingSqlExpr('p')} AS living FROM persons p WHERE p.id = ?`,
+    [id]
+  );
+  if (!row) return null;
+  return { ...row, living: row.living === 1 };
 }
 
 /**
@@ -53,25 +60,27 @@ export function getDisplayGivenName(name: { given_name: string | null; preferred
 }
 
 export function listPersons(db: Database): (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[] {
-  return queryAll<Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
-    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname
+  type Row = Omit<Person, 'living'> & { living: number; given_name: string; surname: string; preferred_name: string | null; nickname: string | null };
+  const rows = queryAll<Row>(db, `
+    SELECT p.*, ${livingSqlExpr('p')} AS living,
+           pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
     LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
     ORDER BY pn.surname, pn.given_name
   `);
+  return rows.map(r => ({ ...r, living: r.living === 1 }));
 }
 
 export function updatePerson(
   db: Database,
   id: string,
-  data: Partial<Pick<Person, 'sex' | 'living' | 'notes'>>
+  data: Partial<Pick<Person, 'sex' | 'notes'>>
 ): Person | null {
   const fields: string[] = [];
   const values: unknown[] = [];
   if (data.sex !== undefined) { fields.push('sex = ?'); values.push(data.sex); }
-  if (data.living !== undefined) { fields.push('living = ?'); values.push(data.living ? 1 : 0); }
   if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
   if (fields.length === 0) return getPerson(db, id);
   fields.push("updated_at = datetime('now')");
@@ -121,7 +130,8 @@ export function searchPersons(
 
   const relatee = relateeId ?? null;
 
-  return queryAll<Person & {
+  type Row = Omit<Person, 'living'> & {
+    living: number;
     given_name: string;
     surname: string;
     preferred_name: string | null;
@@ -129,8 +139,10 @@ export function searchPersons(
     relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
     birth_year: string | null;
     death_year: string | null;
-  }>(db, `
-    SELECT p.*, pn.given_name, pn.surname, pn.preferred_name, pn.nickname,
+  };
+  const rows = queryAll<Row>(db, `
+    SELECT p.*, ${livingSqlExpr('p')} AS living,
+      pn.given_name, pn.surname, pn.preferred_name, pn.nickname,
       (SELECT
           CASE
             WHEN r.type = 'parent_child' AND r.person1_id = p.id THEN 'parent'
@@ -180,6 +192,7 @@ export function searchPersons(
       pn.surname, pn.given_name
     LIMIT ?
   `, [relatee, relatee, relatee, ...tokenParams, ...relevanceParams, limit]);
+  return rows.map(r => ({ ...r, living: r.living === 1 }));
 }
 
 export function addPersonName(

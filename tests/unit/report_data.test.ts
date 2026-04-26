@@ -222,22 +222,25 @@ describe('getResearchGaps', () => {
   });
 
   it('identifies missing birth, death, parents, unsourced events', () => {
-    const person = createPerson(db, { given_name: 'Nils', surname: 'Karlsson', sex: 'M', living: false });
-    // Not living, no death event
+    // Living is now derived from birth/death events: an old birth (>120y ago) without
+    // a death event is presumed deceased.
+    const person = createPerson(db, { given_name: 'Nils', surname: 'Karlsson', sex: 'M' });
+    const birth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+    addEventParticipant(db, { event_id: birth.id, person_id: person.id });
     const event = createEvent(db, { event_type: 'census', date_original: '1880' });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
 
     const gaps = getResearchGaps(db, person.id);
     expect(gaps).not.toBeNull();
-    expect(gaps!.missing_birth).toBe(true);
+    expect(gaps!.missing_birth).toBe(false);
     expect(gaps!.missing_death).toBe(true);
     expect(gaps!.missing_parents).toBe(true);
-    expect(gaps!.unsourced_events).toHaveLength(1);
-    expect(gaps!.events_without_places).toHaveLength(1);
+    expect(gaps!.unsourced_events).toHaveLength(2);
+    expect(gaps!.events_without_places).toHaveLength(2);
   });
 
   it('does not flag death as missing for living person', () => {
-    const person = createPerson(db, { given_name: 'Eva', surname: 'Lindgren', sex: 'F', living: true });
+    const person = createPerson(db, { given_name: 'Eva', surname: 'Lindgren', sex: 'F' });
 
     const gaps = getResearchGaps(db, person.id);
     expect(gaps!.missing_death).toBe(false);

@@ -231,7 +231,6 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     }
 
     lines.push(`1 SEX ${p.sex}`);
-    if (p.living) lines.push(`1 _LIVING Y`);
     if (includeNotes && p.notes) lines.push(`1 NOTE ${p.notes}`);
 
     // Person events — only emit events where this person is the PRIMARY participant.

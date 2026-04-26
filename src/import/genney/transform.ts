@@ -349,7 +349,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       `INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, notes, street, postal_code, city, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
     insertPerson: db.prepare(
-      `INSERT INTO persons (id, sex, living, notes) VALUES (?, ?, ?, ?)`
+      `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`
     ),
     insertPersonName: db.prepare(
       `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order, name_prefix, name_suffix, preferred_name, nickname) VALUES (?, ?, ?, ?, 'birth', 0, ?, ?, ?, ?)`
@@ -469,8 +469,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     const notes = noteParts.length > 0 ? noteParts.join('\n') : '';
 
     const id = crypto.randomUUID();
-    // LIVING=1 means deceased in Genney; null/0 means alive
-    stmts.insertPerson.run([id, sex, p.LIVING === 1 ? 0 : 1, notes]);
+    stmts.insertPerson.run([id, sex, notes]);
     personMap.set(p.RID, id);
 
     if (given || p.SURNAME) {

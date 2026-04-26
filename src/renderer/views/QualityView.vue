@@ -62,9 +62,9 @@ const visibleCount = ref(PAGE_SIZE);
 const sentinel = ref<HTMLElement | null>(null);
 
 const CODE_CATEGORY: Record<string, string> = {
-  NO_NAME: 'quality', LIVING_WITH_DEATH_EVENT: 'quality', NOT_LIVING_WITHOUT_DEATH: 'quality',
+  NO_NAME: 'quality',
   INVALID_DATE: 'quality', UNRELATED_PERSON: 'quality', TEXT_CONTROL_CHARS: 'quality',
-  MULTIPLE_BIRTH_NAMES: 'quality', PARTIAL_NAME: 'quality', LIVING_OVER_120: 'quality',
+  MULTIPLE_BIRTH_NAMES: 'quality', PARTIAL_NAME: 'quality',
   UNSOURCED_BIRTH: 'quality', UNSOURCED_DEATH: 'quality',
   BIRTH_AFTER_DEATH: 'chronology', EVENT_AFTER_DEATH: 'chronology', BURIAL_BEFORE_DEATH: 'chronology',
   FUTURE_BIRTH: 'chronology', FUTURE_DEATH: 'chronology', BAPTISM_LATE: 'chronology',

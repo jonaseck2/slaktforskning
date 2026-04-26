@@ -23,7 +23,6 @@ export interface CreatePersonWithEventArgs {
   given_name?: string;
   surname?: string;
   sex?: Person['sex'];
-  living?: boolean;
   notes?: string;
   event?: PersonEventInput;
   citation?: {
@@ -47,7 +46,6 @@ function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithE
     given_name: args.given_name,
     surname: args.surname,
     sex: args.sex,
-    living: args.living,
     notes: args.notes,
   });
 

@@ -176,7 +176,6 @@ export function phaseIndividuals(ctx: ImportContext): void {
     if (node.tag !== 'INDI' || !node.xref) continue;
 
     const sex = (getChild(node, 'SEX')?.value ?? 'U') as 'M' | 'F' | 'U';
-    const living = getChild(node, '_LIVING')?.value === 'Y';
     let notes = resolveNote(node, ctx.noteMap);
 
     // Genney 4.1: haplogroup tags -> append to notes
@@ -205,7 +204,6 @@ export function phaseIndividuals(ctx: ImportContext): void {
 
     const person = createPerson(ctx.db, {
       sex,
-      living: living || undefined,
       notes: notes || undefined,
     });
     ctx.personMap.set(node.xref, person.id);

@@ -97,24 +97,6 @@
             >{{ $t(key) }}</button>
           </div>
         </div>
-        <div class="ep-field">
-          <span class="ep-field-label">{{ $t('persons.living') }}</span>
-          <div class="ep-seg">
-            <button
-              type="button"
-              class="ep-seg-opt"
-              :class="{ 'ep-seg-opt--on': form.living }"
-              @click="form.living = true"
-            >{{ $t('personDetail.statusLiving') }}</button>
-            <button
-              type="button"
-              class="ep-seg-opt"
-              :class="{ 'ep-seg-opt--on': !form.living }"
-              @click="form.living = false"
-            >{{ $t('personDetail.statusDeceased') }}</button>
-          </div>
-        </div>
-
         <!-- Subtype (new person path, when addRelatedTo is set) -->
         <div v-if="addRelatedTo" class="ep-field">
           <span class="ep-field-label">{{ addRelatedTo.mode === 'spouse' ? $t('personDetail.coupleSubtype') : $t('relationshipDetail.subtype') }}</span>
@@ -260,7 +242,7 @@ const props = withDefaults(defineProps<{
   prefillSurname?: string | null;
   addRelatedTo?: {
     personId: string;
-    mode: 'father' | 'mother' | 'spouse' | 'child';
+    mode: 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
     personSex?: 'M' | 'F' | 'U';
     personSurname?: string;
   } | null;
@@ -312,8 +294,8 @@ function pickChildSex(val: 'M' | 'F' | 'U') {
 function defaultSex(): 'M' | 'F' | 'U' {
   if (!props.addRelatedTo) return 'U';
   const m = props.addRelatedTo.mode;
-  if (m === 'father') return 'M';
-  if (m === 'mother') return 'F';
+  if (m === 'father' || m === 'son') return 'M';
+  if (m === 'mother' || m === 'daughter') return 'F';
   if (m === 'spouse') {
     if (props.addRelatedTo.personSex === 'M') return 'F';
     if (props.addRelatedTo.personSex === 'F') return 'M';
@@ -324,6 +306,10 @@ function defaultSex(): 'M' | 'F' | 'U' {
 
 function defaultSurname(): string {
   if (props.prefillSurname) return props.prefillSurname;
+  const m = props.addRelatedTo?.mode;
+  if ((m === 'child' || m === 'son' || m === 'daughter') && props.addRelatedTo?.personSurname) {
+    return props.addRelatedTo.personSurname;
+  }
   return '';
 }
 
@@ -337,7 +323,6 @@ const form = reactive({
   given_name: '',
   surname: defaultSurname(),
   sex: defaultSex(),
-  living: true,
   subtype: defaultSubtype(),
 });
 
@@ -347,6 +332,8 @@ const displayTitle = computed(() => {
     if (m === 'father') return t('personDetail.addFatherTitle');
     if (m === 'mother') return t('personDetail.addMotherTitle');
     if (m === 'spouse') return t('personDetail.addSpouseTitle');
+    if (m === 'son') return t('personDetail.addSonTitle');
+    if (m === 'daughter') return t('personDetail.addDaughterTitle');
     return t('personDetail.addChildTitle');
   }
   return [form.given_name, form.surname].filter(Boolean).join(' ') || t('persons.newPerson');
@@ -401,7 +388,6 @@ async function handleSave() {
       // Edit mode
       person = (await window.api.persons.update(savedPersonId.value, {
         sex: form.sex,
-        living: form.living,
       })) as Person;
     } else if (props.addRelatedTo && entryMode.value === 'existing') {
       // Link existing person
@@ -413,7 +399,6 @@ async function handleSave() {
         given_name: form.given_name,
         surname: form.surname,
         sex: form.sex,
-        living: form.living,
       };
 
       const result = (await window.api.persons.createWithEvent(payload)) as { person: Person };
@@ -434,7 +419,7 @@ async function handleSave() {
         relData.person1_id = targetPersonId;        // parent
         relData.person2_id = props.addRelatedTo.personId; // child
         relData.subtype = form.subtype;
-      } else if (m === 'child') {
+      } else if (m === 'child' || m === 'son' || m === 'daughter') {
         relData.type = 'parent_child';
         relData.person1_id = props.addRelatedTo.personId; // parent
         relData.person2_id = targetPersonId;        // child

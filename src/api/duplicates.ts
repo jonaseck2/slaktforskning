@@ -278,7 +278,7 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   moved.research_tasks = tlMoved;
 
   // 9. Merge person fields — append notes
-  const sourceData = queryOne<{ notes: string; sex: string; living: number }>(db, 'SELECT notes, sex, living FROM persons WHERE id = ?', [sourceId]);
+  const sourceData = queryOne<{ notes: string; sex: string }>(db, 'SELECT notes, sex FROM persons WHERE id = ?', [sourceId]);
   const targetData = queryOne<{ notes: string; sex: string }>(db, 'SELECT notes, sex FROM persons WHERE id = ?', [targetId]);
   if (sourceData && targetData) {
     const updates: string[] = [];
