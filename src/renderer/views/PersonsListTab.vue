@@ -33,12 +33,10 @@
               {{ $t('persons.surname') }}
               <span v-if="sortBy === 'surname'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
-            <th>{{ $t('persons.sex') }}</th>
             <th class="sortable-th" @click="toggleSort('birth_date')">
               {{ $t('persons.bornColumn') }}
               <span v-if="sortBy === 'birth_date'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
-            <th v-if="!isStaticMode" class="actions-cell"></th>
           </tr>
         </thead>
         <tbody>
@@ -74,16 +72,7 @@
               </div>
             </td>
             <td>{{ person.surname }}</td>
-            <td><AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge></td>
             <td class="info-cell">{{ person.birth_date || '' }}</td>
-            <td v-if="!isStaticMode" class="actions-cell">
-              <AppButton
-                variant="ghost"
-                size="sm"
-                :aria-label="$t('a11y.deleteItem', { item: ((person.given_name || '') + ' ' + (person.surname || '')).trim() })"
-                @click.stop="removePerson(person.id)"
-              >✕</AppButton>
-            </td>
           </tr>
         </tbody>
       </table>
@@ -108,7 +97,6 @@ import PersonModal from '../components/modals/PersonModal.vue';
 import { narratePersonRow } from '../utils/screenReaderNarration';
 import PersonName from '../components/PersonName.vue';
 import AppButton from '../components/ui/AppButton.vue';
-import AppBadge from '../components/ui/AppBadge.vue';
 import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
@@ -223,18 +211,6 @@ async function loadMore() {
 async function onPersonAdded() {
   showAddForm.value = false;
   await load();
-}
-
-async function removePerson(id: string) {
-  if (!window.api) return;
-  if (!confirm(t('persons.confirmDelete'))) return;
-  try {
-    await window.api.persons.delete(id);
-    await load();
-  } catch (err) {
-    console.error('[PersonsView] removePerson failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
 }
 
 function focusNextRow(e: KeyboardEvent): void {

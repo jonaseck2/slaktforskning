@@ -405,10 +405,12 @@ export function listPersonsPage(
   const eventRows = queryAll<{
     person_id: string;
     event_type: string;
-    date_original: string | null;
+    date_display: string | null;
     place_name: string | null;
   }>(db, `
-    SELECT ep.person_id, e.event_type, e.date_original, pl.name AS place_name
+    SELECT ep.person_id, e.event_type,
+           COALESCE(NULLIF(e.date_original, ''), e.date_value) AS date_display,
+           pl.name AS place_name
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id AND e.event_type IN ('birth', 'death')
     LEFT JOIN places pl ON pl.id = e.place_id
@@ -423,10 +425,10 @@ export function listPersonsPage(
     }
     const entry = eventMap.get(row.person_id)!;
     if (row.event_type === 'birth') {
-      if (entry.birth_date === null) entry.birth_date = row.date_original;
+      if (entry.birth_date === null) entry.birth_date = row.date_display;
       if (entry.birth_place === null) entry.birth_place = row.place_name;
     } else {
-      if (entry.death_date === null) entry.death_date = row.date_original;
+      if (entry.death_date === null) entry.death_date = row.date_display;
       if (entry.death_place === null) entry.death_place = row.place_name;
     }
   }
@@ -475,10 +477,12 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
   const eventRows = queryAll<{
     person_id: string;
     event_type: string;
-    date_original: string | null;
+    date_display: string | null;
     place_name: string | null;
   }>(db, `
-    SELECT ep.person_id, e.event_type, e.date_original, pl.name AS place_name
+    SELECT ep.person_id, e.event_type,
+           COALESCE(NULLIF(e.date_original, ''), e.date_value) AS date_display,
+           pl.name AS place_name
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id AND e.event_type IN ('birth', 'death')
     LEFT JOIN places pl ON pl.id = e.place_id
@@ -493,10 +497,10 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
     }
     const entry = eventMap.get(row.person_id)!;
     if (row.event_type === 'birth') {
-      if (entry.birth_date === null) entry.birth_date = row.date_original;
+      if (entry.birth_date === null) entry.birth_date = row.date_display;
       if (entry.birth_place === null) entry.birth_place = row.place_name;
     } else {
-      if (entry.death_date === null) entry.death_date = row.date_original;
+      if (entry.death_date === null) entry.death_date = row.date_display;
       if (entry.death_place === null) entry.death_place = row.place_name;
     }
   }
