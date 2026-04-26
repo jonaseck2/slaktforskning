@@ -160,13 +160,7 @@
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
         <AppButton variant="danger" size="sm" @click="showDeleteConfirm = true">
-          <svg class="trash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6" />
-            <path d="M14 11v6" />
-          </svg>
+          <span class="trash-icon" aria-hidden="true">🗑️</span>
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
       </div>
@@ -498,11 +492,10 @@ onMounted(() => {
   margin-top: auto;
 }
 .trash-icon {
-  width: 18px;
-  height: 18px;
-  display: inline-block;
-  vertical-align: -4px;
+  font-size: 1.4em;
+  line-height: 1;
   margin-right: 6px;
+  vertical-align: -3px;
 }
 
 .person-panel {
