@@ -89,6 +89,7 @@ export default {
     view: 'Visa',
     all: 'Alla',
     close: 'Stäng',
+    open: 'Öppna',
     monospacedTooltip: 'Visa anteckningar med fast bredd för ASCII-tabeller och justerad text',
     clearFilter: 'Rensa filter',
     more: 'Mer',

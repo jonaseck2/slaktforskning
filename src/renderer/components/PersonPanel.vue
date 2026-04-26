@@ -6,6 +6,8 @@
     </div>
 
     <template v-else-if="person">
+      <!-- Panel role label -->
+      <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
       <!-- Header -->
       <div class="panel-header">
         <AppAvatar
@@ -43,7 +45,6 @@
             <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
           </div>
         </div>
-        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Person section -->
@@ -443,6 +444,27 @@ onMounted(() => {
   font-size: var(--font-sm);
   padding: var(--space-xl);
   text-align: center;
+}
+
+/* Role label above the person header — mirrors "Personlista" on the
+   list column. Sticky so it stays visible while panel scrolls. */
+.panel-role-label {
+  margin: 0;
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: var(--space-md) var(--space-lg) var(--space-sm) var(--space-lg);
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--surface-border-subtle);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.panel-role-label + .panel-header {
+  border-radius: 0;
+  padding-top: var(--space-md);
 }
 
 /* Header */

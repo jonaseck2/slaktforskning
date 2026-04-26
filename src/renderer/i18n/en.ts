@@ -89,6 +89,7 @@ export default {
     view: 'View',
     all: 'All',
     close: 'Close',
+    open: 'Open',
     monospacedTooltip: 'Show notes in monospaced font for ASCII tables and aligned text',
     clearFilter: 'Clear filter',
     more: 'More',
