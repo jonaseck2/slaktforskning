@@ -184,10 +184,12 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
   text-align: center;
 }
 
-/* Header: title row + close button. Padding lives on .panel-header-content,
-   not .panel-header, so the close button can stretch full height. */
+/* Header: title row + close button. Use align-items: flex-start so the
+   close button anchors to the top-right corner regardless of how tall the
+   header content grows (e.g. PersonPanel's add-relative button row). */
 .panel-header {
   display: flex;
+  align-items: flex-start;
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
@@ -197,16 +199,6 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
   padding: var(--space-md) var(--space-lg);
   flex: 1; min-width: 0;
 }
-.panel-close-btn {
-  background: none; border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
-
 /* Sections — same horizontal padding as header */
 .panel-section {
   padding: 0 var(--space-lg);
@@ -216,15 +208,17 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 ```
 
-**Header variants** — when the entity has an avatar/thumbnail (PersonPanel, MediaPanel), put the avatar **outside** `.panel-header-content` as a sibling so the close button still stretches:
+**Don't redefine `.panel-close-btn` in scoped styles.** It's a shared global rule in [`shared.css`](../../../src/renderer/styles/shared.css) — anchored top-right via `align-self: flex-start` + `margin: var(--space-sm) var(--space-sm) 0 0`, aligned with the heading row. Scoped redefinitions outrank the shared rule and break consistency across panels.
+
+**Header variants** — when the entity has an avatar/thumbnail (PersonPanel, MediaPanel), put the avatar **outside** `.panel-header-content` as a sibling. The close button stays anchored to the top-right corner regardless:
 ```html
 <div class="panel-header">
   <AppAvatar :person-id="…" size="lg" />
   <div class="panel-header-content">…</div>
-  <button class="panel-close-btn" …>×</button>
+  <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
 </div>
 ```
-With `padding: var(--space-md) 0 var(--space-md) var(--space-lg)` on `.panel-header` so the avatar gets left-padding but the close button still hits the right edge. Use `margin: calc(var(--space-md) * -1) 0` on the close button to expand its hit area to the full header height.
+Use `padding: var(--space-md) 0 var(--space-md) var(--space-lg)` on `.panel-header` so the avatar gets left-padding while the close button sits flush against the right edge with its own margin.
 
 **Empty-state inside sections** — use `<SectionEmpty :message="$t('empty.foo')" />`, not inline divs. **Never pass `:action-label`** when the parent `<SectionHeader>` already has an `actionLabel` for the same action — the empty state and the header would render two identical "+ X" buttons stacked. The header button is the single entry point; the empty state shows only the message.
 

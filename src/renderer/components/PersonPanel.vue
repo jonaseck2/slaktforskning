@@ -25,11 +25,13 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-            <AppButton v-if="showTreeBtn" variant="soft" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
           </div>
           <div class="panel-lifelines">
-            <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
-            <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
+            <div class="panel-lifeline-dates">
+              <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
+              <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
+            </div>
+            <AppButton v-if="showTreeBtn" variant="soft" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
           </div>
           <div v-if="!props.readonly" class="panel-add-relative-btns">
             <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
@@ -454,17 +456,6 @@ onMounted(() => {
   flex: 1;
   min-width: 0;
 }
-.panel-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-  margin: calc(var(--space-md) * -1) 0;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 .panel-name-row {
   display: flex;
   align-items: center;
@@ -485,7 +476,14 @@ onMounted(() => {
   min-width: 0;
 }
 .panel-lifelines {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
   margin-bottom: var(--space-xs);
+}
+.panel-lifeline-dates {
+  min-width: 0;
 }
 .panel-lifeline {
   font-size: var(--font-xs);

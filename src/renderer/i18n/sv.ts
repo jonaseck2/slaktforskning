@@ -563,6 +563,7 @@ export default {
     showInTree: 'Visa i träd',
     focus: '🌳 Visa i träd',
     open: 'Öppna',
+    view: 'Visa',
     events: 'Händelser',
     relationships: 'Relationer',
     notes: 'Anteckningar',
