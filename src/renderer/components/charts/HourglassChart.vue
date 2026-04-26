@@ -336,23 +336,27 @@ function sexBg(sex: string): string {
   return colors.value.sexUBg;
 }
 
+function isHighlighted(box: BoxLayout): boolean {
+  return !!props.selectedPersonId && box.person.id === props.selectedPersonId;
+}
+
 function boxFill(box: BoxLayout): string {
-  if (box.isFocal) return colors.value.boxFocal;
+  if (isHighlighted(box)) return colors.value.boxFocal;
   if ((props.colorMode ?? 'themed') === 'sex-colored') return sexBg(box.person.sex);
   if (!box.person.living) return colors.value.boxDeceased;
   return colors.value.boxBg;
 }
 
 function boxStroke(box: BoxLayout): string {
-  return box.isFocal ? colors.value.focalStroke : colors.value.boxStroke;
+  return isHighlighted(box) ? colors.value.focalStroke : colors.value.boxStroke;
 }
 
 function nameColor(box: BoxLayout): string {
-  return box.isFocal ? colors.value.textFocal : colors.value.text;
+  return isHighlighted(box) ? colors.value.textFocal : colors.value.text;
 }
 
 function dateColor(box: BoxLayout): string {
-  return box.isFocal ? colors.value.textFocalSub : colors.value.textSub;
+  return isHighlighted(box) ? colors.value.textFocalSub : colors.value.textSub;
 }
 
 function portraitBg(box: BoxLayout): string {

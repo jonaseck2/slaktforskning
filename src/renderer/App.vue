@@ -134,15 +134,7 @@
             class="topbar-search-input"
           />
         </form>
-        <router-link
-          v-if="focusStore.personId"
-          :to="'/persons/' + focusStore.personId"
-          class="topbar-focus-chip"
-        >
-          <span class="topbar-focus-label">{{ $t('nav.focusPerson') }}</span>
-          <span class="topbar-focus-name">{{ focusStore.personName }}</span>
-        </router-link>
-        <div v-else class="topbar-focus-spacer"></div>
+        <div class="topbar-focus-spacer"></div>
       </div>
       <nav class="topbar-row topbar-row--nav" aria-label="Main navigation" @click.stop>
         <template v-for="sec in navSections" :key="sec.key">
@@ -267,7 +259,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
-import { useFocusStore } from './stores/focus';
 import { useSelectedPersonStore } from './stores/selectedPerson';
 import { useDataVersionStore } from './stores/dataVersion';
 import PersonPicker from './components/PersonPicker.vue';
@@ -279,7 +270,6 @@ import { useToast } from './composables/useToast';
 const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
-const focusStore = useFocusStore();
 const selectedStore = useSelectedPersonStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
@@ -474,30 +464,6 @@ function handleGlobalKey(e: KeyboardEvent) {
   if (e.key === 'Escape') openSection.value = null;
 }
 
-async function autoSetFocusPerson() {
-  if (focusStore.personId) return;
-  try {
-    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
-    if (defaultId) {
-      const names = await window.api.persons.getNames(defaultId) as Array<{ given_name?: string; surname?: string }>;
-      if (names.length > 0) {
-        const n = names[0];
-        const name = [n.given_name, n.surname].filter(Boolean).join(' ') || '—';
-        focusStore.set(defaultId, name);
-        return;
-      }
-    }
-  } catch { /* ignore */ }
-  try {
-    const result = await window.api.persons.listPage(1, 0) as { persons: Array<{ id: string; given_name: string; surname: string }>; total: number };
-    if (result.persons.length > 0) {
-      const p = result.persons[0];
-      const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
-      focusStore.set(p.id, name);
-    }
-  } catch { /* ignore */ }
-}
-
 async function loadDefaultPerson() {
   if (!window.api?.db?.getSetting) return;
   try {
@@ -532,7 +498,6 @@ onMounted(() => {
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
   window.addEventListener('click', handleDocClick);
-  autoSetFocusPerson();
   loadDefaultPerson();
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
   setTimeout(loadQualityBadge, 5000);
@@ -565,7 +530,6 @@ onMounted(() => {
   });
   window.api.onDataChanged(() => {
     dataVersionStore.increment();
-    if (!focusStore.personId) autoSetFocusPerson();
     if (qualityDebounce) clearTimeout(qualityDebounce);
     qualityDebounce = setTimeout(loadQualityBadge, 800);
     if (researchDebounce) clearTimeout(researchDebounce);
@@ -586,15 +550,18 @@ function submitSearch() {
 }
 
 async function onSidebarPersonSelected(person: { id: string }) {
-  // Set as the selected person (panel target) without changing the chart
-  // focal. If the user is on /persons the panel reacts via the store; if
-  // not, navigate to /persons/:focal so the panel becomes visible while
-  // the chart stays centered on the previous focal (or this person if
-  // there is no current focal).
+  // Set as the selected person (panel target) without changing the tree
+  // subject. If the user is on /persons the panel reacts via the store;
+  // if not, route there so the panel becomes visible. Use the saved
+  // default person as the tree subject when present, otherwise the
+  // clicked person becomes both subject and selected.
   selectedStore.set(person.id);
   if (!route.path.startsWith('/persons')) {
-    const focal = focusStore.personId ?? person.id;
-    await router.push('/persons/' + focal);
+    let subjectId: string | null = null;
+    try {
+      subjectId = await window.api.db.getSetting('default_person_id') as string | null;
+    } catch { /* ignore */ }
+    await router.push('/persons/' + (subjectId ?? person.id));
   }
 }
 
@@ -664,33 +631,6 @@ body {
 }
 .topbar-search-input::placeholder { color: var(--sidebar-text-muted); }
 .topbar-focus-spacer { flex: 1; }
-.topbar-focus-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 4px 12px;
-  background: var(--sidebar-active-bg);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--accent);
-  text-decoration: none;
-  max-width: 240px;
-  flex-shrink: 0;
-}
-.topbar-focus-label {
-  font-size: var(--font-xs);
-  letter-spacing: 0.06em;
-  color: var(--sidebar-text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-}
-.topbar-focus-name {
-  font-size: var(--font-sm);
-  color: var(--sidebar-active-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
 
 .topbar-settings { position: relative; flex-shrink: 0; }
 .topbar-settings-toggle {

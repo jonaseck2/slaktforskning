@@ -103,10 +103,11 @@
         <PersonPanel
           :person-id="selectedPersonId ?? personId ?? null"
           :show-tree-btn="true"
+          :tree-subject-id="personId ?? null"
           :readonly="isStaticMode"
           @relative-added="reloadChart"
           @person-changed="reloadChart"
-          @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
+          @set-tree-subject="setTreeSubject((selectedPersonId ?? personId)!)"
           @close="closePanel"
         />
       </div>
@@ -137,7 +138,6 @@ import PersonPanel from '../components/PersonPanel.vue';
 import PersonModal from '../components/modals/PersonModal.vue';
 import PersonsListTab from './PersonsListTab.vue';
 import { usePanelResize } from '../composables/usePanelResize';
-import { useFocusStore } from '../stores/focus';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useChartNavigation } from '../composables/useChartNavigation';
@@ -152,7 +152,6 @@ interface PersonWithName extends Person { given_name: string; surname: string; }
 const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
-const focusStore = useFocusStore();
 const ttsEnabled = inject<Ref<boolean>>('ttsEnabled');
 const tts = inject<{ speak: (text: string, locale?: string) => void }>('tts');
 
@@ -233,7 +232,7 @@ function selectNode(id: string) {
 
 async function navigateTo(id: string) {
   // Click-to-select: open panel and highlight, but do NOT re-root the tree.
-  // The chart focal only changes via the "Fokusera" button (showInTree).
+  // The tree subject only changes via the "Set as tree subject" button.
   selectNode(id);
   if (!ttsEnabled?.value || !tts) return;
   try {
@@ -257,15 +256,12 @@ async function navigateTo(id: string) {
   } catch { /* ignore */ }
 }
 
-async function showInTree(id: string) {
-  // Update sidebar focus indicator
+async function setTreeSubject(id: string) {
+  // Persist as the database's default person (used for export SUBM and startup nav)
   try {
-    const names = (await window.api.persons.getNames(id)) as { given_name: string; surname: string }[];
-    const n = names[0];
-    const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
-    focusStore.set(id, name);
+    await window.api.db.setSetting('default_person_id', id);
   } catch { /* best-effort */ }
-  // Change the chart focal person (re-centers the chart)
+  // Re-root the tree on the new subject
   router.push('/persons/' + id);
 }
 
@@ -278,7 +274,6 @@ async function load() {
   if (!route.path.startsWith('/persons')) return;
   const id = personId.value;
   if (!id) {
-    if (focusStore.personId) { router.replace('/persons/' + focusStore.personId); return; }
     const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
     if (defaultId) { router.replace('/persons/' + defaultId); return; }
     const persons = (await window.api.persons.list()) as PersonWithName[];
@@ -297,23 +292,11 @@ async function load() {
     return;
   }
   focalPerson.value = person;
-  // Sync the panel's selected person to the focal whenever the route
-  // changes. Without this, refocusing via "🌳 Visa i träd" / direct URL
-  // would leave the panel showing the previous person while the tree
-  // centers on the new one. selectNode() runs after this for chart clicks
-  // and overrides with the clicked person.
+  // Sync the panel's selected person to the tree subject whenever the route
+  // changes. selectNode() runs afterwards for chart clicks and overrides
+  // with the clicked person.
   selectedStore.set(id);
   if (!panelOpen.value) openPanel();
-  // Keep focusStore in sync with the chart focal — used as the "current
-  // person" anchor by other views (Reports default subject, etc).
-  if (focusStore.personId !== id) {
-    try {
-      const names = (await window.api.persons.getNames(id)) as Array<{ given_name?: string; surname?: string }>;
-      const n = names[0];
-      const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
-      focusStore.set(id, name);
-    } catch { /* best-effort */ }
-  }
 }
 
 // --- Screen reader chart navigation ---
@@ -397,14 +380,7 @@ useChartBridge({
   focalPersonId: computed(() => personId.value ?? null),
   chartType: activeTab,
   selectPerson: selectNode,
-  focusPerson: (id: string) => router.push('/persons/' + id),
-});
-
-// When App.vue auto-sets the focus store after this view is already mounted, navigate to that person
-watch(() => focusStore.personId, (newId) => {
-  if (newId && !personId.value && route.path.startsWith('/persons')) {
-    router.replace('/persons/' + newId);
-  }
+  focusPerson: (id: string) => setTreeSubject(id),
 });
 
 watch(() => route.params.personId, load);

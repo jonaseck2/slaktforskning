@@ -31,7 +31,8 @@
               <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
               <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
             </div>
-            <AppButton v-if="showTreeBtn" variant="soft" size="sm" @click="emit('show-in-tree')">{{ $t('panel.focus') }}</AppButton>
+            <span v-if="showTreeBtn && isTreeSubject" class="tree-subject-chip">{{ $t('panel.treeSubject') }}</span>
+            <AppButton v-else-if="showTreeBtn" variant="soft" size="sm" @click="emit('set-tree-subject')">{{ $t('panel.setAsTreeSubject') }}</AppButton>
           </div>
           <div v-if="!props.readonly" class="panel-add-relative-btns">
             <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
@@ -186,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, onMounted, nextTick } from 'vue';
+import { ref, toRef, computed, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
@@ -217,13 +218,15 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const props = defineProps<{ personId: string | null; showTreeBtn?: boolean; readonly?: boolean }>();
+const props = defineProps<{ personId: string | null; showTreeBtn?: boolean; treeSubjectId?: string | null; readonly?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
-  'show-in-tree': [];
+  'set-tree-subject': [];
   'person-changed': [];
   'close': [];
 }>();
+
+const isTreeSubject = computed(() => !!props.personId && props.personId === props.treeSubjectId);
 
 // ── Data (composable) ───────────────────────────────────────────────────────
 
@@ -499,6 +502,19 @@ onMounted(() => {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
+}
+.tree-subject-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
 /* Sections */

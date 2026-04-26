@@ -85,24 +85,12 @@ import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from '../renderer/i18n';
 import type { SupportedLocale } from '../renderer/i18n';
-import { useFocusStore } from '../renderer/stores/focus';
 import { useTTS } from '../renderer/composables/useTTS';
 import { useScreenReaderMode } from '../renderer/composables/useScreenReaderMode';
-
-declare const window: Window & {
-  api: {
-    db: { getSetting: (key: string) => Promise<unknown> };
-    persons: {
-      getNames: (id: string) => Promise<Array<{ given_name?: string; surname?: string }>>;
-      listPage: (limit: number, offset: number) => Promise<{ persons: Array<{ id: string; given_name: string; surname: string }>; total: number }>;
-    };
-  };
-};
 
 const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
-const focusStore = useFocusStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 
@@ -186,37 +174,12 @@ function handleGlobalKey(e: KeyboardEvent) {
   }
 }
 
-async function autoSetFocusPerson() {
-  if (focusStore.personId) return;
-  try {
-    const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
-    if (defaultId) {
-      const names = await window.api.persons.getNames(defaultId);
-      if (names.length > 0) {
-        const n = names[0];
-        const name = [n.given_name, n.surname].filter(Boolean).join(' ') || '—';
-        focusStore.set(defaultId, name);
-        return;
-      }
-    }
-  } catch { /* ignore */ }
-  try {
-    const result = await window.api.persons.listPage(1, 0);
-    if (result.persons.length > 0) {
-      const p = result.persons[0];
-      const name = [p.given_name, p.surname].filter(Boolean).join(' ') || '—';
-      focusStore.set(p.id, name);
-    }
-  } catch { /* ignore */ }
-}
-
 onMounted(() => {
   setTheme(currentTheme.value);
   setAppearance(appearance.value);
   applyTextSize();
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
-  autoSetFocusPerson();
 });
 
 onUnmounted(() => {

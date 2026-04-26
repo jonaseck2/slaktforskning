@@ -161,8 +161,7 @@ import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
-import { useFocusStore } from '../stores/focus';
-import { fullNameParts } from '../utils/nameUtils';
+import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
@@ -187,7 +186,7 @@ const toast = useToast();
 const props = defineProps<{ embedded?: boolean }>();
 const emit = defineEmits<{ select: [id: string] }>();
 const router = useRouter();
-const focusStore = useFocusStore();
+const selectedStore = useSelectedPersonStore();
 
 const persons = ref<PersonListItem[]>([]);
 const total = ref(0);
@@ -352,8 +351,7 @@ function goToDetail(person: PersonListItem) {
   if (props.embedded) {
     emit('select', person.id);
   } else {
-    const name = fullNameParts(person.given_name ?? null, person.surname ?? null, null, null).map(p => p.text).join('');
-    focusStore.set(person.id, name);
+    selectedStore.set(person.id);
     router.push(`/persons/${person.id}`);
   }
   if (!isStaticMode) editingPersonId.value = person.id;
