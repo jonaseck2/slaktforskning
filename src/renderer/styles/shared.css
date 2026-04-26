@@ -1116,8 +1116,6 @@ html.screen-reader h1:focus {
 }
 .mono-toggle-t {
   font-family: inherit;
-  font-weight: 700;
-  font-size: var(--font-md);
   line-height: 1;
 }
 .mono-toggle-t.is-mono {

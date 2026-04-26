@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(panels): notes monospace toggle ("iWi") no longer overrides font size and weight, so it matches the surrounding "Notes" heading instead of bulging above it. Only the proportional/monospace `font-family` swap remains, which is the visual signal the toggle needs.
+
 - docs(skills): document the single-field date-input pattern in `frontend-design`, `add-feature`, and the `CLAUDE.md` shared-components table. New rule: use `DateInput`/`SimpleDateInput` for any date entry — never roll separate Y / M / D inputs or a sibling calendar button.
 
 - feat(citations): two-phase CitationModal. When opened from a panel without a preset source (PlacePanel, RelationshipPanel) the modal now starts in a "Choose a source" phase that shows only the source picker — the save button is hidden until a source is picked or created, so the primary action of the standalone flow is the first thing on screen. Once a source is set (either by phase A, by a preset from EventModal/SourcePanel, or by editing an existing citation), the modal switches to the citation fields (page, confidence, transcription, notes, date accessed) and renders the source as an entity-styled card at the bottom — clearly contextual rather than a form field. The card has ✎ to edit the source and (in standalone-create only) a "Change" button to step back to phase A. Pre-fill from `sourceSession.lastSourceId` still skips phase A on the common path.
