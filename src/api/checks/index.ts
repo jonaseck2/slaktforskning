@@ -30,15 +30,12 @@ import {
 } from './checks-relationships';
 import {
   checkNoName,
-  checkLivingWithDeathEvent,
-  checkNotLivingWithoutDeathEvent,
   checkUnsourcedLifeEvent,
   checkInvalidDates,
   checkUnrelatedPerson,
   checkTextControlChars,
   checkMultipleBirthNames,
   checkPartialName,
-  checkLivingOver120,
 } from './checks-quality';
 import { checkOrphanedSource, checkSourceMissingTitle, checkOrphanedRepository } from './checks-source';
 import {
@@ -117,13 +114,10 @@ export function getAllCheckFunctions(): NamedCheck[] {
 
     // F. Data Completeness
     { name: 'checkNoName',                fn: (db) => checkNoName(db) },
-    { name: 'checkLivingWithDeathEvent',  fn: (db) => checkLivingWithDeathEvent(db) },
-    { name: 'checkNotLivingWithoutDeathEvent', fn: (db) => checkNotLivingWithoutDeathEvent(db) },
     { name: 'checkUnsourcedLifeEvent(birth)', fn: (db) => checkUnsourcedLifeEvent(db, 'birth') },
     { name: 'checkUnsourcedLifeEvent(death)', fn: (db) => checkUnsourcedLifeEvent(db, 'death') },
     { name: 'checkMultipleBirthNames',    fn: (db) => checkMultipleBirthNames(db) },
     { name: 'checkPartialName',           fn: (db) => checkPartialName(db) },
-    { name: 'checkLivingOver120',         fn: (db) => checkLivingOver120(db) },
 
     // G. Data Validation
     { name: 'checkInvalidDates',          fn: (db) => checkInvalidDates(db) },

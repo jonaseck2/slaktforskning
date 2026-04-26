@@ -1,5 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
+import { livingSqlExpr } from '../personLiving';
 import type { ScopeOptions } from './scope';
 import { computeScope } from './scope';
 import { redactPerson } from './redact';
@@ -63,7 +64,10 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   const scopeSet = computeScope(db, opts.scope);
 
   // 2. Load all persons in bulk, then filter
-  const allPersons = queryAll<Person>(db, 'SELECT * FROM persons');
+  // living is derived from birth/death events at read time
+  const rawPersons = queryAll<Omit<Person, 'living'> & { living: number }>(db,
+    `SELECT p.*, ${livingSqlExpr('p')} AS living FROM persons p`);
+  const allPersons: Person[] = rawPersons.map(r => ({ ...r, living: r.living === 1 }));
   let persons = allPersons.filter(p => scopeSet.has(p.id));
 
   // 3. Apply excludeLiving / redactLiving

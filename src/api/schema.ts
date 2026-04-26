@@ -9,7 +9,6 @@ export function initializeSchema(db: Database): void {
     CREATE TABLE IF NOT EXISTS persons (
       id TEXT PRIMARY KEY,
       sex TEXT NOT NULL DEFAULT 'U' CHECK(sex IN ('M', 'F', 'U')),
-      living INTEGER NOT NULL DEFAULT 1,
       notes TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -425,5 +424,12 @@ export function initializeSchema(db: Database): void {
 
   // Drop bad index that confuses the query planner on listPersonsPage
   runSql(db, 'DROP INDEX IF EXISTS idx_person_names_sort_name');
+
+  // Living flag is no longer stored — derived from birth/death events at read time.
+  // GEDCOM standard has no LIVING tag (the old _LIVING was a non-standard extension).
+  const personsCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)').map(c => c.name);
+  if (personsCols.includes('living')) {
+    runSql(db, 'ALTER TABLE persons DROP COLUMN living');
+  }
 
 }

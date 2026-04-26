@@ -19,7 +19,6 @@ export type FixAction =
   | 'add-name'
   | 'add-father'
   | 'add-mother'
-  | 'toggle-living'
   | 'add-event';
 
 const FIX_ACTIONS: Record<string, FixAction> = {
@@ -27,9 +26,7 @@ const FIX_ACTIONS: Record<string, FixAction> = {
   UNSOURCED_BIRTH: 'add-birth-event',
   NO_PARENTS: 'add-father',
   NO_NAME: 'add-name',
-  NOT_LIVING_WITHOUT_DEATH: 'add-death-event',
   UNSOURCED_DEATH: 'add-death-event',
-  LIVING_WITH_DEATH_EVENT: 'toggle-living',
   DEATH_WITHOUT_BIRTH: 'add-birth-event',
   UNRELATED_PERSON: 'add-father',
 };

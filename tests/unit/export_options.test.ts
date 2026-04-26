@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type Database from 'better-sqlite3';
 import { createPerson } from '../../src/api/persons';
-import { createRelationship } from '../../src/api/relationships';
+import { createRelationship, addEventParticipant } from '../../src/api/relationships';
+import { createEvent } from '../../src/api/events';
 import {
   getPersonIdsInBranch,
   filterPersonsByOptions,
@@ -11,6 +12,13 @@ import {
 import type { ExportOptions } from '../../src/api/export_options';
 import { createTestDb } from './helpers';
 
+function createDeadPerson(db: Database.Database, data: Parameters<typeof createPerson>[1] = {}) {
+  const p = createPerson(db, data);
+  const death = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+  addEventParticipant(db, { event_id: death.id, person_id: p.id });
+  return p;
+}
+
 let db: Database.Database;
 
 beforeEach(() => {
@@ -19,18 +27,22 @@ beforeEach(() => {
 
 describe('filterPersonsByOptions', () => {
   it('returns all persons when excludeLiving is false', () => {
-    const p1 = createPerson(db, { given_name: 'Alice', living: true });
-    const p2 = createPerson(db, { given_name: 'Bob', living: false });
-    const persons = [p1, p2].map(p => ({ ...p, given_name: '', surname: '' }));
-    const result = filterPersonsByOptions(db, persons, { ...DEFAULT_EXPORT_OPTIONS, excludeLiving: false });
+    const p1 = createPerson(db, { given_name: 'Alice' });
+    const p2 = createDeadPerson(db, { given_name: 'Bob' });
+    // re-fetch so derived living is current
+    const fetched = [p1, p2].map(p => ({ ...p, given_name: '', surname: '', living: p.id === p2.id ? false : true }));
+    const result = filterPersonsByOptions(db, fetched, { ...DEFAULT_EXPORT_OPTIONS, excludeLiving: false });
     expect(result).toHaveLength(2);
   });
 
   it('filters out living persons when excludeLiving is true', () => {
-    const p1 = createPerson(db, { given_name: 'Alice', living: true });
-    const p2 = createPerson(db, { given_name: 'Bob', living: false });
-    const persons = [p1, p2].map(p => ({ ...p, given_name: '', surname: '' }));
-    const result = filterPersonsByOptions(db, persons, { ...DEFAULT_EXPORT_OPTIONS, excludeLiving: true });
+    const p1 = createPerson(db, { given_name: 'Alice' });
+    const p2 = createDeadPerson(db, { given_name: 'Bob' });
+    const fetched = [
+      { ...p1, given_name: '', surname: '', living: true },
+      { ...p2, given_name: '', surname: '', living: false },
+    ];
+    const result = filterPersonsByOptions(db, fetched, { ...DEFAULT_EXPORT_OPTIONS, excludeLiving: true });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe(p2.id);
   });
@@ -127,8 +139,8 @@ describe('applyExportOptions', () => {
   });
 
   it('excludes living persons', () => {
-    const alive = createPerson(db, { given_name: 'Alive', living: true });
-    const dead = createPerson(db, { given_name: 'Dead', living: false });
+    const alive = createPerson(db, { given_name: 'Alive' });
+    const dead = createDeadPerson(db, { given_name: 'Dead' });
     const result = applyExportOptions(db, { ...DEFAULT_EXPORT_OPTIONS, excludeLiving: true });
     expect(result.personIds).not.toBeNull();
     expect(result.personIds!.has(alive.id)).toBe(false);
@@ -136,10 +148,10 @@ describe('applyExportOptions', () => {
   });
 
   it('combines branch filter and living filter', () => {
-    const gp = createPerson(db, { given_name: 'GP', sex: 'M', living: false });
-    const parent = createPerson(db, { given_name: 'Parent', sex: 'M', living: true });
-    const child = createPerson(db, { given_name: 'Child', sex: 'M', living: true });
-    const unrelated = createPerson(db, { given_name: 'Unrelated', living: false });
+    const gp = createDeadPerson(db, { given_name: 'GP', sex: 'M' });
+    const parent = createPerson(db, { given_name: 'Parent', sex: 'M' });
+    const child = createPerson(db, { given_name: 'Child', sex: 'M' });
+    const unrelated = createDeadPerson(db, { given_name: 'Unrelated' });
 
     createRelationship(db, { type: 'parent_child', person1_id: gp.id, person2_id: parent.id });
     createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });

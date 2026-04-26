@@ -34,7 +34,8 @@
             <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
             <AppButton variant="soft" size="sm" @click="openAddRelative('mother')">+ {{ $t('personDetail.addMother') }}</AppButton>
             <AppButton variant="soft" size="sm" @click="openAddRelative('spouse')">+ {{ $t('personDetail.addSpouse') }}</AppButton>
-            <AppButton variant="soft" size="sm" @click="openAddRelative('child')">+ {{ $t('personDetail.addChild') }}</AppButton>
+            <AppButton variant="soft" size="sm" @click="openAddRelative('son')">+ {{ $t('personDetail.addSon') }}</AppButton>
+            <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
           </div>
         </div>
         <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
@@ -291,9 +292,10 @@ async function triggerAttachMedia() {
 // ── Add relative modal ──────────────────────────────────────────────────────
 
 const showAddRelative = ref(false);
-const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
+type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
+const addRelativeMode = ref<AddRelativeMode>('father');
 
-function openAddRelative(mode: 'father' | 'mother' | 'spouse' | 'child') {
+function openAddRelative(mode: AddRelativeMode) {
   addRelativeMode.value = mode;
   showAddRelative.value = true;
 }
@@ -329,9 +331,6 @@ function handleCheckFix(action: string) {
     case 'add-mother':
       openAddRelative('mother');
       break;
-    case 'toggle-living':
-      if (person.value) updateLiving(!person.value.living);
-      break;
   }
 }
 
@@ -340,7 +339,6 @@ function handleCheckFix(action: string) {
 function onDetailUpdated(field: string, value: unknown) {
   if (!person.value) return;
   if (field === 'sex') person.value.sex = value as string;
-  if (field === 'living') person.value.living = value as boolean;
   emit('person-changed');
 }
 

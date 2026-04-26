@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
-import { createRelationship } from '../../src/api/relationships';
+import { createRelationship, addEventParticipant } from '../../src/api/relationships';
+import { createEvent } from '../../src/api/events';
 import { buildSnapshot } from '../../src/api/html_site/snapshot';
 
 let db: any;
@@ -40,8 +41,11 @@ describe('buildSnapshot', () => {
   });
 
   it('excludes living persons when excludeLiving=true', () => {
-    const dead = createPerson(db, { given_name: 'D', living: false });
-    const alive = createPerson(db, { given_name: 'A', living: true });
+    // living is now derived: presence of a death event marks deceased
+    const dead = createPerson(db, { given_name: 'D' });
+    const death = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+    addEventParticipant(db, { event_id: death.id, person_id: dead.id });
+    const _alive = createPerson(db, { given_name: 'A' });
     const snap = buildSnapshot(db, {
       siteTitle: 'T',
       focusPersonId: dead.id,
@@ -52,7 +56,7 @@ describe('buildSnapshot', () => {
   });
 
   it('redacts living persons when redactLiving=true', () => {
-    const focus = createPerson(db, { given_name: 'F', notes: 'secret', living: true });
+    const focus = createPerson(db, { given_name: 'F', notes: 'secret' });
     const snap = buildSnapshot(db, {
       siteTitle: 'T',
       focusPersonId: focus.id,

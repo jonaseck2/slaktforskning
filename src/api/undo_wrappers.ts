@@ -37,7 +37,7 @@ export function updatePersonUndo(
 ): Person | null {
   const old = persons.getPerson(db, id);
   if (!old) return null;
-  const oldData = { sex: old.sex, living: old.living, notes: old.notes };
+  const oldData = { sex: old.sex, notes: old.notes };
   const result = persons.updatePerson(db, id, data);
   const newData = { ...data };
   undoManager.push({
@@ -70,8 +70,8 @@ export function deletePersonUndo(
     label: 'undo.deletePerson',
     undo: () => {
       runSql(db,
-        `INSERT INTO persons (id, sex, living, notes) VALUES (?, ?, ?, ?)`,
-        [person.id, person.sex, person.living ? 1 : 0, person.notes]
+        `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`,
+        [person.id, person.sex, person.notes]
       );
       for (const name of names) {
         runSql(db,

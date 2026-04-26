@@ -459,25 +459,12 @@ function roundtrip(sourceDb: ReturnType<typeof createTestDb>): ReturnType<typeof
 }
 
 describe('Extended GEDCOM roundtrip — persons', () => {
-  it('_LIVING Y is emitted only for living persons', () => {
-    const p = createPerson(db, { sex: 'M', living: false });
+  it('does not emit non-standard _LIVING tag', () => {
+    // living is now derived from birth/death events; no separate flag is exported
+    const p = createPerson(db, { sex: 'M' });
     addPersonName(db, p.id, { given_name: 'Lars' });
     const { ged } = exportGedcom(db);
     expect(ged).not.toContain('_LIVING');
-  });
-
-  it('_LIVING Y round-trips', () => {
-    // createPerson stores living=1 by default; we need to force it off first
-    // then create a living person explicitly
-    const p = createPerson(db, { sex: 'F' });
-    addPersonName(db, p.id, { given_name: 'Anna' });
-    // Verify _LIVING Y appears for the default-living person
-    const { ged } = exportGedcom(db);
-    expect(ged).toContain('_LIVING Y');
-    // Re-import: person should still be living
-    const db2 = roundtrip(db);
-    const persons2 = listPersons(db2);
-    expect(persons2[0].living).toBeTruthy();
   });
 
   it('preferred_name survives roundtrip via asterisk in NAME', () => {

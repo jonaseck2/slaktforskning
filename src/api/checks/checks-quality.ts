@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
-import { personIdsWithEvent, isInvalidDate } from './check-utils';
+import { isInvalidDate } from './check-utils';
 
 export function checkNoName(db: Database): CheckResult[] {
   const hasName = new Set(
@@ -14,39 +14,6 @@ export function checkNoName(db: Database): CheckResult[] {
       code: 'NO_NAME',
       severity: 'notice' as CheckSeverity,
       message: `Person saknar namnuppgifter`,
-      messageParams: {},
-      personIds: [r.id],
-    }));
-}
-
-export function checkLivingWithDeathEvent(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; death_id: string }>(db, `
-    SELECT p.id AS person_id, e.id AS death_id
-    FROM persons p
-    JOIN event_participants ep ON ep.person_id = p.id
-    JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
-    WHERE p.living = 1
-  `);
-
-  return rows.map(r => ({
-    code: 'LIVING_WITH_DEATH_EVENT',
-    severity: 'warning' as CheckSeverity,
-    message: `Person är markerad som levande men har en registrerad dödshändelse`,
-    messageParams: {},
-    personIds: [r.person_id],
-    eventIds: [r.death_id],
-  }));
-}
-
-export function checkNotLivingWithoutDeathEvent(db: Database): CheckResult[] {
-  const hasDeath = personIdsWithEvent(db, 'death');
-  const notLiving = queryAll<{ id: string }>(db, `SELECT id FROM persons WHERE living = 0`);
-  return notLiving
-    .filter(r => !hasDeath.has(r.id))
-    .map(r => ({
-      code: 'NOT_LIVING_WITHOUT_DEATH',
-      severity: 'notice' as CheckSeverity,
-      message: `Person är markerad som ej levande men saknar dödshändelse`,
       messageParams: {},
       personIds: [r.id],
     }));
@@ -249,39 +216,6 @@ export function checkMultipleBirthNames(db: Database): CheckResult[] {
     messageParams: { count: r.cnt },
     personIds: [r.person_id],
   }));
-}
-
-export function checkLivingOver120(db: Database): CheckResult[] {
-  const currentYear = new Date().getFullYear();
-  const rows = queryAll<{ person_id: string; date_value: string }>(db, `
-    SELECT ep.person_id, e.date_value
-    FROM persons p
-    JOIN event_participants ep ON ep.person_id = p.id
-    JOIN events e ON e.id = ep.event_id
-      AND e.event_type = 'birth'
-      AND e.date_value IS NOT NULL
-      AND e.date_type IN ('exact', 'calculated')
-    WHERE p.living = 1
-  `);
-  const results: CheckResult[] = [];
-  const seen = new Set<string>();
-  for (const r of rows) {
-    if (seen.has(r.person_id)) continue;
-    const year = parseInt(r.date_value.substring(0, 4), 10);
-    if (isNaN(year)) continue;
-    const age = currentYear - year;
-    if (age > 120) {
-      seen.add(r.person_id);
-      results.push({
-        code: 'LIVING_OVER_120',
-        severity: 'warning' as CheckSeverity,
-        message: `Person är markerad som levande men skulle vara ${age} år gammal`,
-        messageParams: { age },
-        personIds: [r.person_id],
-      });
-    }
-  }
-  return results;
 }
 
 export function checkPartialName(db: Database): CheckResult[] {

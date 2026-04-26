@@ -1,5 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from './db';
+import { livingSqlExpr } from './personLiving';
 
 export interface CsvOptions {
   delimiter?: string;
@@ -43,7 +44,7 @@ export function exportPersonsCsv(db: Database, options: CsvOptions = {}): string
       pn.given_name,
       pn.surname,
       p.sex,
-      p.living,
+      ${livingSqlExpr('p')} AS living,
       p.notes,
       (SELECT e.date_value FROM events e JOIN event_participants ep ON ep.event_id = e.id
        WHERE ep.person_id = p.id AND e.event_type = 'birth' LIMIT 1) AS birth_date,
