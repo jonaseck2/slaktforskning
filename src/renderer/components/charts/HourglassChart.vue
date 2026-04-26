@@ -150,7 +150,7 @@
             class="ghost-box"
             tabindex="0"
             role="button"
-            :aria-label="ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : ph.role === 'spouse' ? $t('personDetail.addSpouse') : $t('personDetail.addChild')"
+            :aria-label="placeholderLabel(ph.role)"
             @click="startAddFromPlaceholder(ph)"
             @keydown.enter="startAddFromPlaceholder(ph)"
             @keydown.space.prevent="startAddFromPlaceholder(ph)"
@@ -165,9 +165,9 @@
               text-anchor="middle" :fill="chartTokens.placeholderText" font-size="14"
             >+</text>
             <text
-              :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 + 9"
-              text-anchor="middle" :fill="chartTokens.placeholderText" font-size="9"
-            >{{ ph.role === 'father' ? $t('personDetail.addFather') : ph.role === 'mother' ? $t('personDetail.addMother') : ph.role === 'spouse' ? $t('personDetail.addSpouse') : $t('personDetail.addChild') }}</text>
+              :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 + 12"
+              text-anchor="middle" :fill="chartTokens.placeholderText" font-size="11"
+            >{{ placeholderLabel(ph.role) }}</text>
           </g>
         </template>
       </svg>
@@ -193,6 +193,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchHourglassTreePerson, loadAncestorGenerationTP, loadChildrenForNodeTP } from '../../utils/chartData';
@@ -203,6 +204,8 @@ import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { hourglassGenerations } from '../../composables/useChartGenerations';
+
+const { t } = useI18n();
 
 const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
@@ -222,9 +225,21 @@ watch(genTarget, (n) => {
 
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
-const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
+type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
+const addRelativeMode = ref<AddRelativeMode>('father');
 const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
+
+function placeholderLabel(role: string): string {
+  const labels: Record<string, string> = {
+    father: t('personDetail.addFather'),
+    mother: t('personDetail.addMother'),
+    spouse: t('personDetail.addSpouse'),
+    son: t('personDetail.addSon'),
+    daughter: t('personDetail.addDaughter'),
+  };
+  return labels[role] ?? role;
+}
 
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 1400, svgHeight: 688, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
@@ -400,7 +415,7 @@ function deathY(box: BoxLayout): number {
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   const childBox = layout.value.boxes.find((b: BoxLayout) => b.person.id === ph.childPersonId);
   addRelativePersonId.value = ph.childPersonId;
-  addRelativeMode.value = ph.role === 'spouse' ? 'spouse' : ph.role;
+  addRelativeMode.value = ph.role;
   addRelativePersonSex.value = childBox?.person.sex ?? 'U';
   addRelativePersonSurname.value = childBox?.person.surname ?? undefined;
   showAddRelative.value = true;
