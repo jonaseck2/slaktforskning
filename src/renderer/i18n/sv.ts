@@ -150,7 +150,7 @@ export default {
     names: 'Namn',
     addName: 'Namn',
     relationships: 'Relationer',
-    addRelativeLabel: 'Lägg till anhörig',
+    addRelativeLabel: 'Lägg till familjemedlem',
     removeNameConfirmTitle: 'Ta bort namn?',
     removeNameConfirmMessage: 'Detta namn tas bort från personen. Andra namn för personen påverkas inte.',
     notesPlaceholder: 'Lägg till anteckningar om denna person\u2026',

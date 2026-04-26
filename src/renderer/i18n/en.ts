@@ -150,7 +150,7 @@ export default {
     names: 'Names',
     addName: 'Name',
     relationships: 'Relationships',
-    addRelativeLabel: 'Add relative',
+    addRelativeLabel: 'Add family member',
     removeNameConfirmTitle: 'Delete name?',
     removeNameConfirmMessage: 'This name will be removed from the person. Other names for this person are not affected.',
     notesPlaceholder: 'Add notes about this person\u2026',

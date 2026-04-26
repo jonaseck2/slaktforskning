@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="visible && person"
+    v-if="visible"
     ref="menuRef"
     class="person-ctx-menu"
     :style="positionStyle"
@@ -9,32 +9,6 @@
     @click.stop
     @contextmenu.prevent
   >
-    <!-- Header: identity readout (read-only) -->
-    <div class="ctx-header">
-      <AppAvatar
-        :person-id="person.id"
-        :given-name="primaryName?.given_name ?? ''"
-        :surname="primaryName?.surname ?? ''"
-        :preferred-name="primaryName?.preferred_name ?? null"
-        :sex="(person.sex as 'M' | 'F' | 'U') || 'U'"
-        size="md"
-      />
-      <div class="ctx-header-text">
-        <div class="ctx-name">
-          <PersonName
-            :given-name="primaryName?.given_name ?? null"
-            :surname="primaryName?.surname ?? null"
-            :preferred-name="primaryName?.preferred_name ?? null"
-            :nickname="primaryName?.nickname ?? null"
-          />
-        </div>
-        <div class="ctx-life">
-          <span>* {{ birthLine || '—' }}</span>
-          <span>† {{ deathLine || '—' }}</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Navigation actions -->
     <div class="ctx-section">
       <button v-if="!isTreeSubject" class="ctx-item" role="menuitem" @click="emit('set-tree-subject', personId)">
@@ -94,22 +68,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, toRef, nextTick } from 'vue';
-import AppAvatar from '../ui/AppAvatar.vue';
-import PersonName from '../PersonName.vue';
 import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
-
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
-interface Person { id: string; sex: string; }
-interface PersonNameRow {
-  given_name: string | null;
-  surname: string | null;
-  preferred_name: string | null;
-  nickname: string | null;
-  sort_order: number;
-}
 
 const props = defineProps<{
   visible: boolean;
@@ -127,38 +86,6 @@ const emit = defineEmits<{
   'add-relative': [payload: { personId: string; mode: 'father' | 'mother' | 'spouse' | 'son' | 'daughter' }];
   'delete-person': [personId: string];
 }>();
-
-// ── Data load ───────────────────────────────────────────────────────────────
-
-const person = ref<Person | null>(null);
-const primaryName = ref<PersonNameRow | null>(null);
-const birthLine = ref<string | null>(null);
-const deathLine = ref<string | null>(null);
-
-watch(() => props.personId, async (id) => {
-  if (!id) {
-    person.value = null;
-    primaryName.value = null;
-    birthLine.value = null;
-    deathLine.value = null;
-    return;
-  }
-  try {
-    const [p, names, events] = await Promise.all([
-      window.api.persons.get(id) as Promise<Person | null>,
-      window.api.persons.getNames(id) as Promise<PersonNameRow[]>,
-      window.api.events.forPerson(id) as Promise<Array<{ event_type: string; date_value: string | null; date_original: string | null }>>,
-    ]);
-    person.value = p;
-    primaryName.value = names.length > 0 ? [...names].sort((a, b) => a.sort_order - b.sort_order)[0] : null;
-    const pickDate = (e?: { date_value: string | null; date_original: string | null }) =>
-      e ? (e.date_original?.trim() || e.date_value || null) : null;
-    birthLine.value = pickDate(events.find(e => e.event_type === 'birth'));
-    deathLine.value = pickDate(events.find(e => e.event_type === 'death'));
-  } catch {
-    // ignore — menu will not render if person stays null
-  }
-}, { immediate: true });
 
 const parentInfo = useSelectedParentInfo(toRef(props, 'personId'));
 
@@ -221,30 +148,6 @@ onUnmounted(() => {
   color: var(--text-primary);
   padding: var(--space-xs) 0;
   user-select: none;
-}
-
-.ctx-header {
-  display: flex;
-  gap: var(--space-sm);
-  align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--surface-border-subtle);
-}
-.ctx-header-text {
-  flex: 1;
-  min-width: 0;
-}
-.ctx-name {
-  font-weight: var(--font-weight-bold);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.ctx-life {
-  display: flex;
-  flex-direction: column;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
 }
 
 .ctx-section {
