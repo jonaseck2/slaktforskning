@@ -599,7 +599,7 @@ async function removeRepository(repoId: string) {
 }
 
 .entity-link {
-  color: var(--accent);
+  color: var(--color-link);
   text-decoration: none;
   cursor: pointer;
 }

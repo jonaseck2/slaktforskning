@@ -83,7 +83,7 @@ withDefaults(defineProps<{
 .app-btn--soft {
   background: var(--surface-hover);
   border: none;
-  color: var(--accent);
+  color: var(--color-link);
 }
 .app-btn--soft:hover:not(:disabled) {
   background: var(--surface-border-subtle);
