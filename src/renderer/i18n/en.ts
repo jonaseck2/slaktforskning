@@ -1251,6 +1251,37 @@ export default {
     and: 'and',
     author: 'Author',
     citationsLinked: 'citations linked',
+    media: {
+      photo: 'Photo',
+      document: 'Document',
+      tagged: 'Tagged',
+      taken: 'Taken',
+      about: 'about',
+    },
+    place: {
+      eventsRecorded: 'events recorded',
+    },
+    event: {
+      of: 'of',
+      on: 'on',
+    },
+    citation: {
+      page: 'page',
+      confidence: 'Confidence',
+      confidenceLevels: {
+        0: 'unreliable',
+        1: 'questionable',
+        2: 'secondary',
+        3: 'primary',
+      },
+      for: 'For',
+    },
+    modal: {
+      header: '{entity} modal: {title}',
+    },
+    faceTag: {
+      untagged: 'Untagged person',
+    },
   },
   screenReader: {
     // Mode
