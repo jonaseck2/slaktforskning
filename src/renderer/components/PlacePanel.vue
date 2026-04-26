@@ -476,7 +476,8 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
 }
 
 /* Role label above the place header (states what the panel does) —
-   mirrors PersonsView's "Personlista" / "Hantera person" headings. */
+   mirrors PersonsView's "Personlista" / "Hantera person" headings.
+   Sticky at the top of the scrollable panel so the heading stays visible. */
 .panel-role-label {
   margin: 0;
   font-size: var(--font-md);
@@ -487,6 +488,9 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-bottom: 1px solid var(--surface-border-subtle);
   background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 .panel-role-label + .panel-header {
   border-radius: 0;
