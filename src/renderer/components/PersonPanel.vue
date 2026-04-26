@@ -491,9 +491,10 @@ onMounted(() => {
   margin-top: auto;
 }
 .trash-icon {
-  font-size: 1.25em;
-  vertical-align: -2px;
-  margin-right: 2px;
+  font-size: 1.6em;
+  line-height: 1;
+  vertical-align: -3px;
+  margin-right: 4px;
 }
 
 .person-panel {

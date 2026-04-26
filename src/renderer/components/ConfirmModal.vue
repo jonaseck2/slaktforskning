@@ -7,6 +7,7 @@
     :tone="tone"
     :save-label="resolvedConfirmLabel"
     mode="standalone"
+    centered
     @cancel="cancel"
     @close="cancel"
     @save="onConfirm"
