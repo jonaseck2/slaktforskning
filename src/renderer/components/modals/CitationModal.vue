@@ -22,70 +22,75 @@
       </div>
     </div>
 
-    <!-- Phase B: citation fields, with source card at the bottom -->
-    <div v-else class="ep-fields">
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.pageLocation') }}</span>
-        <input
-          ref="pageRef"
-          class="ep-input"
-          v-model="form.page"
-          :placeholder="$t('citations.pagePlaceholder')"
-        />
-      </div>
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.confidence') }}</span>
-        <div class="ep-seg">
-          <button
-            v-for="level in CONFIDENCE_LEVEL_VALUES"
-            :key="level"
-            type="button"
-            class="ep-seg-opt"
-            :class="{ 'ep-seg-opt--on': form.confidence === level }"
-            @click="form.confidence = level"
-          >{{ $t('confidenceLevels.' + level) }}</button>
+    <!-- Phase B: citation fields, with source as a section heading on top -->
+    <template v-else>
+      <div class="ep-fields">
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('citations.pageLocation') }}</span>
+          <input
+            ref="pageRef"
+            class="ep-input"
+            v-model="form.page"
+            :placeholder="$t('citations.pagePlaceholder')"
+          />
         </div>
-      </div>
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.transcription') }}</span>
-        <textarea
-          class="ep-textarea"
-          v-model="form.transcription"
-          :placeholder="$t('citations.transcriptionPlaceholder')"
-          rows="2"
-        />
-      </div>
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.notes') }}</span>
-        <input class="ep-input" v-model="form.notes" :placeholder="$t('citations.notesPlaceholder')" />
-      </div>
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.dateAccessed') }}</span>
-        <input class="ep-input" type="date" v-model="form.date_accessed" />
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('citations.confidence') }}</span>
+          <div class="ep-seg">
+            <button
+              v-for="level in CONFIDENCE_LEVEL_VALUES"
+              :key="level"
+              type="button"
+              class="ep-seg-opt"
+              :class="{ 'ep-seg-opt--on': form.confidence === level }"
+              @click="form.confidence = level"
+            >{{ $t('confidenceLevels.' + level) }}</button>
+          </div>
+        </div>
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('citations.transcription') }}</span>
+          <textarea
+            class="ep-textarea"
+            v-model="form.transcription"
+            :placeholder="$t('citations.transcriptionPlaceholder')"
+            rows="2"
+          />
+        </div>
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('citations.notes') }}</span>
+          <input class="ep-input" v-model="form.notes" :placeholder="$t('citations.notesPlaceholder')" />
+        </div>
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('citations.dateAccessed') }}</span>
+          <input class="ep-input" type="date" v-model="form.date_accessed" />
+        </div>
       </div>
 
-      <!-- Source entity card -->
-      <div class="ep-source-card" data-entity="source">
-        <span class="ep-source-card-icon" aria-hidden="true">📚</span>
-        <div class="ep-source-card-body">
-          <span class="ep-source-card-label">{{ $t('citations.source') }}</span>
-          <span class="ep-source-card-title">{{ pickedSourceTitle || $t('citations.selectSource') }}</span>
+      <!-- Source section -->
+      <div class="ep-sec-header" data-entity="source">
+        <div class="ep-sec-left">
+          <span class="ep-sec-title">📚 {{ $t('citations.source') }}</span>
         </div>
-        <button
-          v-if="pickedSourceId"
-          class="ep-source-card-action"
-          type="button"
-          :title="$t('common.edit')"
-          @click="openSourceEdit({ id: pickedSourceId, title: pickedSourceTitle })"
-        >✎</button>
-        <button
-          v-if="canChangeSource"
-          class="ep-source-card-action"
-          type="button"
-          @click="resetSource"
-        >{{ $t('citations.changeSource') }}</button>
+        <div class="ep-sec-actions">
+          <button
+            v-if="pickedSourceId"
+            type="button"
+            class="ep-sec-action"
+            :title="$t('common.edit')"
+            @click="openSourceEdit({ id: pickedSourceId, title: pickedSourceTitle })"
+          >✎</button>
+          <button
+            v-if="canChangeSource"
+            type="button"
+            class="ep-sec-action"
+            @click="resetSource"
+          >{{ $t('citations.changeSource') }}</button>
+        </div>
       </div>
-    </div>
+      <div class="ep-sec-content">
+        <div class="ep-source-name">{{ pickedSourceTitle || $t('citations.selectSource') }}</div>
+      </div>
+    </template>
 
     <template #subpanels>
       <SourceModal
@@ -299,54 +304,25 @@ async function save() {
 </script>
 
 <style scoped>
-.ep-source-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--entity-bg);
-  border: 1px solid var(--entity-border);
-  border-left: 3px solid var(--entity-text);
-  border-radius: var(--radius-md);
-}
-.ep-source-card-icon {
-  font-size: var(--font-lg);
-  flex-shrink: 0;
-}
-.ep-source-card-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.ep-source-card-label {
+.ep-sec-actions { display: flex; gap: var(--space-xs); }
+.ep-sec-action {
+  background: transparent;
+  border: 1px solid var(--entity-border, var(--surface-border));
+  color: var(--entity-text, var(--text-primary));
   font-size: var(--font-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--entity-text);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.4;
 }
-.ep-source-card-title {
+.ep-sec-action:hover { filter: brightness(0.97); }
+.ep-source-name {
   font-size: var(--font-sm);
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.ep-source-card-action {
-  flex-shrink: 0;
-  background: none;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: var(--font-xs);
-  padding: var(--space-xs) var(--space-sm);
-  line-height: 1;
-}
-.ep-source-card-action:hover {
-  background: var(--surface);
-  color: var(--text-primary);
 }
 </style>

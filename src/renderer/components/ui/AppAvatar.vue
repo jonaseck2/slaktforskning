@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<{
   givenName?: string;
   surname?: string;
   sex?: 'M' | 'F' | 'U';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   src?: string | null;
 }>(), {
   personId: null,
@@ -59,7 +59,7 @@ const avatarStyle = computed(() => {
 
 <style scoped>
 .app-avatar {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,18 +67,22 @@ const avatarStyle = computed(() => {
   font-weight: var(--font-weight-bold);
   user-select: none;
   overflow: hidden;
+  aspect-ratio: 1 / 1;
 }
 
 /* Sizes */
-.app-avatar--sm  { width: 20px; height: 20px; font-size: 8px;  }
-.app-avatar--md  { width: 28px; height: 28px; font-size: 10px; }
-.app-avatar--lg  { width: 36px; height: 36px; font-size: 13px; }
-.app-avatar--xl  { width: 56px; height: 56px; font-size: 18px; }
+.app-avatar--sm   { width: 20px; height: 20px; font-size: 8px;  }
+.app-avatar--md   { width: 28px; height: 28px; font-size: 10px; }
+.app-avatar--lg   { width: 36px; height: 36px; font-size: 13px; }
+.app-avatar--xl   { width: 56px; height: 56px; font-size: 18px; }
+.app-avatar--2xl  { width: 64px; height: 64px; font-size: 22px; }
+/* `auto` lets the parent size the avatar via width/height (used by chart/print contexts). */
+.app-avatar--auto { width: 100%; height: 100%; font-size: inherit; }
 
 .app-avatar__img {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-full);
+  border-radius: inherit;
   object-fit: cover;
 }
 </style>

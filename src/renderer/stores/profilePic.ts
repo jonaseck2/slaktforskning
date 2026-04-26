@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { cropImageToDataUrl, type RegionFrac } from '../utils/cropImage';
+import { invalidatePersonPhoto, invalidateAllPersonPhotos } from '../utils/chartData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -45,7 +46,11 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     mediaRef: MediaRef | null,
     urlPromise: Promise<string | null> | null,
   ): Promise<void> {
-    if (!mediaRef || !urlPromise) {
+    // Avatars must mirror what trees render: only the tagged face. Without a
+    // face tag we'd center-crop the raw media, which reads as "showing the
+    // whole picture" — show the initials placeholder instead so list rows,
+    // panel headers, mini cards and tree boxes stay consistent.
+    if (!mediaRef || !mediaRef.region || !urlPromise) {
       setEntry(personId, gen, { status: 'none', src: null });
       return;
     }
@@ -129,6 +134,7 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     delete copy[personId];
     entries.value = copy;
     inFlight.delete(personId);
+    invalidatePersonPhoto(personId);
   }
 
   function invalidateAll() {
@@ -137,6 +143,7 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     }
     entries.value = {};
     inFlight.clear();
+    invalidateAllPersonPhotos();
   }
 
   return {

@@ -18,24 +18,17 @@
           loading="lazy"
         />
         <div v-if="imageUrls[item.id] && faceTags[item.id]?.length" class="face-tag-overlay">
-          <template v-for="tag in faceTags[item.id]" :key="tag.personId">
-            <a
-              v-if="isLinked(tag.personId)"
-              :href="'#person-' + tag.personId"
-              class="face-box"
-              @click.prevent="scrollToId('person-' + tag.personId)"
-              :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
-            >
-              <span class="face-hover-label">{{ tagLabel(tag) }}</span>
-            </a>
-            <div
-              v-else
-              class="face-box face-box--no-link"
-              :style="{ left: (tag.x * 100) + '%', top: (tag.y * 100) + '%', width: (tag.width * 100) + '%', height: (tag.height * 100) + '%' }"
-            >
-              <span class="face-hover-label">{{ tagLabel(tag) }}</span>
-            </div>
-          </template>
+          <FaceTagBox
+            v-for="tag in faceTags[item.id]"
+            :key="tag.personId"
+            :rect="tag"
+            :identified="true"
+            :label="tagLabel(tag)"
+            visibility="hover"
+            :themed="false"
+            :href="isLinked(tag.personId) ? '#person-' + tag.personId : null"
+            @click="onFaceClick($event, tag.personId)"
+          />
         </div>
       </div>
       <MediaCaption
@@ -57,6 +50,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
 import MediaCaption from '../../MediaCaption.vue';
+import FaceTagBox from '../../FaceTagBox.vue';
 
 export interface MediaDisplayItem {
   id: string;
@@ -206,6 +200,12 @@ function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function onFaceClick(e: MouseEvent, personId: string) {
+  if (!isLinked(personId)) return;
+  e.preventDefault();
+  scrollToId('person-' + personId);
+}
+
 function onCaptionPersonClick(personId: string, event: MouseEvent) {
   event.preventDefault();
   scrollToId('person-' + personId);
@@ -226,40 +226,7 @@ function onCaptionPersonClick(personId: string, event: MouseEvent) {
   inset: 0;
   pointer-events: none;
   border-radius: var(--radius-sm);
-  overflow: hidden;
 }
-.face-box {
-  position: absolute;
-  border: 1.5px solid transparent;
-  border-radius: 2px;
-  pointer-events: auto;
-  cursor: pointer;
-  text-decoration: none;
-  transition: border-color 0.15s;
-}
-.face-box:hover {
-  border-color: rgba(74, 158, 255, 0.8);
-}
-.face-hover-label {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px 4px 3px;
-  text-align: center;
-  font-size: 10px;
-  font-style: normal;
-  color: white;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.face-box:hover .face-hover-label { opacity: 1; }
-.face-box--no-link { cursor: default; }
-.face-box--no-link:hover { border-color: rgba(74, 158, 255, 0.4); }
 
 @media print {
   .face-tag-overlay { display: none; }

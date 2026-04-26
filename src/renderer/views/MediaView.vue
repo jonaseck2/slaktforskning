@@ -110,7 +110,7 @@
         <col style="width: 60px">
         <col>
         <col style="width: 60px">
-        <col style="width: 40px">
+        <col>
       </colgroup>
       <thead>
         <tr>
@@ -119,7 +119,7 @@
           <th>{{ $t('media.colFormat') }}</th>
           <th>{{ $t('media.colNotes') }}</th>
           <th>{{ $t('media.colLinks') }}</th>
-          <th></th>
+          <th class="actions-cell"></th>
         </tr>
       </thead>
       <tbody>
@@ -139,7 +139,7 @@
           </td>
           <td>{{ item.notes }}</td>
           <td class="links-cell">{{ item.linkCount }}</td>
-          <td v-if="!isStaticMode">
+          <td v-if="!isStaticMode" class="actions-cell">
             <AppButton
               variant="ghost"
               size="sm"
@@ -193,9 +193,9 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
-import { useFocusStore } from '../stores/focus';
+import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useProfilePicStore } from '../stores/profilePic';
-const focusStore = useFocusStore();
+const selectedStore = useSelectedPersonStore();
 const profilePicStore = useProfilePicStore();
 
 declare const window: Window & {
@@ -302,11 +302,13 @@ async function load() {
       total.value = result.total;
       offset.value = PAGE_SIZE;
       loadThumbnails(items.value);
-      // Auto-select: focus person's first media, or first item
+      // Auto-select: selected person's first media, or first item
       if (!selectedMediaId.value && items.value.length > 0) {
         let picked: string | null = null;
-        if (focusStore.personId) {
-          const personMedia = await window.api.media.forEntity('person', focusStore.personId) as Array<{ id: string }>;
+        const anchorId = selectedStore.personId
+          ?? (await window.api.db.getSetting('default_person_id') as string | null);
+        if (anchorId) {
+          const personMedia = await window.api.media.forEntity('person', anchorId) as Array<{ id: string }>;
           if (personMedia.length > 0) picked = personMedia[0].id;
         }
         selectedMediaId.value = picked ?? items.value[0].id;

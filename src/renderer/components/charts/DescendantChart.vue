@@ -225,7 +225,8 @@ watch(genTarget, (n) => {
 
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
-const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('child');
+type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
+const addRelativeMode = ref<AddRelativeMode>('son');
 const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
@@ -326,23 +327,27 @@ function sexBg(sex: string): string {
   return colors.value.sexUBg;
 }
 
+function isHighlighted(box: BoxLayout): boolean {
+  return !!layoutSelectedId.value && box.person.id === layoutSelectedId.value;
+}
+
 function boxFill(box: BoxLayout): string {
-  if (box.isFocal) return colors.value.boxFocal;
+  if (isHighlighted(box)) return colors.value.boxFocal;
   if ((props.colorMode ?? 'themed') === 'sex-colored') return sexBg(box.person.sex);
   if (!box.person.living) return colors.value.boxDeceased;
   return colors.value.boxBg;
 }
 
 function boxStroke(box: BoxLayout): string {
-  return box.isFocal ? colors.value.focalStroke : colors.value.boxStroke;
+  return isHighlighted(box) ? colors.value.focalStroke : colors.value.boxStroke;
 }
 
 function nameColor(box: BoxLayout): string {
-  return box.isFocal ? colors.value.textFocal : colors.value.text;
+  return isHighlighted(box) ? colors.value.textFocal : colors.value.text;
 }
 
 function dateColor(box: BoxLayout): string {
-  return box.isFocal ? colors.value.textFocalSub : colors.value.textSub;
+  return isHighlighted(box) ? colors.value.textFocalSub : colors.value.textSub;
 }
 
 function portraitBg(box: BoxLayout): string {
@@ -407,14 +412,15 @@ function placeholderLabel(role: string): string {
     father: t('personDetail.addFather'),
     mother: t('personDetail.addMother'),
     spouse: t('personDetail.addSpouse'),
-    child: t('personDetail.addChild'),
+    son: t('personDetail.addSon'),
+    daughter: t('personDetail.addDaughter'),
   };
   return labels[role] ?? role;
 }
 
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   addRelativePersonId.value = ph.childPersonId;
-  addRelativeMode.value = ph.role as 'father' | 'mother' | 'spouse' | 'child';
+  addRelativeMode.value = ph.role as AddRelativeMode;
   const personBox = layout.value.boxes.find(b => b.person.id === ph.childPersonId);
   addRelativePersonSex.value = (personBox?.person.sex as 'M' | 'F' | 'U') ?? undefined;
   addRelativePersonSurname.value = personBox?.person.surname ?? undefined;

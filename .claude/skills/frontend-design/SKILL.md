@@ -184,10 +184,12 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
   text-align: center;
 }
 
-/* Header: title row + close button. Padding lives on .panel-header-content,
-   not .panel-header, so the close button can stretch full height. */
+/* Header: title row + close button. Use align-items: flex-start so the
+   close button anchors to the top-right corner regardless of how tall the
+   header content grows (e.g. PersonPanel's add-relative button row). */
 .panel-header {
   display: flex;
+  align-items: flex-start;
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
@@ -197,16 +199,6 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
   padding: var(--space-md) var(--space-lg);
   flex: 1; min-width: 0;
 }
-.panel-close-btn {
-  background: none; border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
-
 /* Sections — same horizontal padding as header */
 .panel-section {
   padding: 0 var(--space-lg);
@@ -216,15 +208,17 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 ```
 
-**Header variants** — when the entity has an avatar/thumbnail (PersonPanel, MediaPanel), put the avatar **outside** `.panel-header-content` as a sibling so the close button still stretches:
+**Don't redefine `.panel-close-btn` in scoped styles.** It's a shared global rule in [`shared.css`](../../../src/renderer/styles/shared.css) — anchored top-right via `align-self: flex-start` + `margin: var(--space-sm) var(--space-sm) 0 0`, aligned with the heading row. Scoped redefinitions outrank the shared rule and break consistency across panels.
+
+**Header variants** — when the entity has an avatar/thumbnail (PersonPanel, MediaPanel), put the avatar **outside** `.panel-header-content` as a sibling. The close button stays anchored to the top-right corner regardless:
 ```html
 <div class="panel-header">
   <AppAvatar :person-id="…" size="lg" />
   <div class="panel-header-content">…</div>
-  <button class="panel-close-btn" …>×</button>
+  <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
 </div>
 ```
-With `padding: var(--space-md) 0 var(--space-md) var(--space-lg)` on `.panel-header` so the avatar gets left-padding but the close button still hits the right edge. Use `margin: calc(var(--space-md) * -1) 0` on the close button to expand its hit area to the full header height.
+Use `padding: var(--space-md) 0 var(--space-md) var(--space-lg)` on `.panel-header` so the avatar gets left-padding while the close button sits flush against the right edge with its own margin.
 
 **Empty-state inside sections** — use `<SectionEmpty :message="$t('empty.foo')" />`, not inline divs. **Never pass `:action-label`** when the parent `<SectionHeader>` already has an `actionLabel` for the same action — the empty state and the header would render two identical "+ X" buttons stacked. The header button is the single entry point; the empty state shows only the message.
 
@@ -389,6 +383,26 @@ Shared classes include: `.header`, `.data-table`, `.clickable-row`, `.btn-add`, 
 
 ---
 
+## Avatars and profile pictures
+
+Person profile pictures use **one** component everywhere outside MediaView/MediaViewer: `<AppAvatar>` ([`src/renderer/components/ui/AppAvatar.vue`](../../../src/renderer/components/ui/AppAvatar.vue)). It's used in list rows, panel headers, mini cards, the Person panel's Linked Persons / Members tables, MediaPanel's face-tag list, etc. **MediaView and MediaViewer are the only places that render the raw media** — everywhere else shows the cropped tagged face.
+
+**Avatars are square, not round.** The component uses `border-radius: var(--radius-sm)` and `aspect-ratio: 1 / 1`. The same shape applies whether the avatar shows a photo or the sex-coloured initials placeholder, so list rows align cleanly with the rounded-square portrait area inside chart boxes. Don't override `border-radius` in scoped styles to make a "round version" — if a layout needs a circle, push back on the design instead of forking the avatar.
+
+```vue
+<AppAvatar :person-id="p.id" :given-name="p.given_name" :surname="p.surname" :sex="p.sex" size="sm" />
+```
+
+**Sizes:** `sm`=20, `md`=28, `lg`=36, `xl`=56, `2xl`=64, plus `auto` (parent controls width/height — use this when embedding in a container with its own dimensions, e.g. a print frame).
+
+**Photo source:** when `personId` is set, the photo comes from `useProfilePicStore` ([`src/renderer/stores/profilePic.ts`](../../../src/renderer/stores/profilePic.ts)), which calls `media.profilePicRef(personId)` and crops the result to a 128×128 jpeg via `cropImageToDataUrl(raw, region)`. The store dedupes per-photo IPC fetches inside a batch (3 people in 1 photo = 1 read), and invalidates per person on profile-pic changes. Tree boxes pull the same cropped data URL via `chartData.fetchPersonNode` so the avatar and the chart portrait are always in sync.
+
+**No face tag → no photo.** If a person has a media link without a face region, both the avatar store and `chartData` return `null` and the avatar/chart box falls through to the initials placeholder. Don't add a "centre-crop the whole image" fallback — that path renders as "show the whole photo zoomed in" and was the bug v0.157.7 fixed. To get an avatar/chart photo, the user must tag the face in the media item.
+
+**Cache invalidation.** When code mutates a person's profile pic (reorder media, set as profile, add/remove a face tag), call `useProfilePicStore().invalidatePerson(personId)`. The store automatically propagates that into the chart-data photo cache (`chartData.invalidatePersonPhoto`), so list/panel avatars and tree boxes refresh together. There is no need to call the chart invalidator directly.
+
+---
+
 ## Form fields (input / select / textarea)
 
 Every text input, select, and textarea in the app uses **one** consistent treatment — gray-rest, white-on-focus:
@@ -506,9 +520,9 @@ ReportPanel differs from PersonPanel/PlacePanel/MediaPanel: it sources configura
 ### Auto-select on load
 
 Paneled views should auto-select an item so the panel is never empty:
-- **Media**: select selected person's first media, fallback to first item
-- **Places/Map**: select selected person's first place, fallback to first place
-- **People/Tree**: panel shows the selected person (= chart focal — they're the same)
+- **Media**: select focus person's first media, fallback to first item
+- **Places/Map**: select focus person's first place, fallback to first place
+- **People/Tree**: panel shows the selected/focal person
 - **Reports**: ReportPanel always visible alongside the preview; no auto-select needed
 
 ---

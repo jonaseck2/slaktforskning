@@ -32,9 +32,11 @@
               @blur="saveTitle"
               @keydown.enter="($event.target as HTMLInputElement).blur()"
             />
-            <AppButton variant="soft" size="sm" @click="emit('open-viewer')">{{ $t('panel.open') }}</AppButton>
           </div>
-          <div v-if="media.format" class="media-meta">{{ media.format.toUpperCase() }}</div>
+          <div class="media-meta">
+            <span v-if="media.format" class="media-format">{{ media.format.toUpperCase() }}</span>
+            <AppButton variant="soft" size="sm" @click="emit('open-viewer')">{{ $t('panel.view') }}</AppButton>
+          </div>
         </div>
         <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
@@ -595,25 +597,12 @@ defineExpose({ reload: load, expandFaceTags });
   padding: var(--space-lg);
 }
 
-/* Close button */
-.panel-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-  margin: calc(var(--space-md) * -1) 0;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
-
 /* Header */
 .panel-header {
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
-  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
+  padding: 0 0 0 var(--space-lg);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -629,6 +618,8 @@ defineExpose({ reload: load, expandFaceTags });
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .media-thumb-img {
@@ -654,6 +645,7 @@ defineExpose({ reload: load, expandFaceTags });
 .media-info {
   flex: 1;
   min-width: 0;
+  padding: var(--space-md) 0;
 }
 
 .media-title-row {
@@ -688,9 +680,15 @@ defineExpose({ reload: load, expandFaceTags });
 }
 
 .media-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   font-size: var(--font-xs);
   color: var(--text-muted);
   margin-top: 2px;
+}
+.media-format {
+  flex-shrink: 0;
 }
 
 /* Sections */

@@ -44,7 +44,7 @@ export interface CollapseButton {
 
 export interface PlaceholderBox {
   type: 'placeholder';
-  role: 'father' | 'mother' | 'child' | 'spouse';
+  role: 'father' | 'mother' | 'son' | 'daughter' | 'spouse';
   /** The person this placeholder is attached to. */
   childPersonId: string;
   x: number;
@@ -65,7 +65,7 @@ export interface TreePerson {
   /** True for outline placeholder nodes (rendered with dashed style). */
   isPlaceholder?: boolean;
   /** Role of the placeholder relative to its owner. */
-  placeholderRole?: 'father' | 'mother' | 'child' | 'spouse';
+  placeholderRole?: 'father' | 'mother' | 'son' | 'daughter' | 'spouse';
   /** Person ID this placeholder belongs to. */
   placeholderForPersonId?: string;
   /** Whether more ancestors exist in DB but aren't loaded. */

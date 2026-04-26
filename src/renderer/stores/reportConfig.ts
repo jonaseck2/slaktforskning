@@ -2,16 +2,14 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import type { ColorMode } from '../../api/chart-export';
 import type { ArcSpan } from '../utils/fanLayout';
-import { useFocusStore } from './focus';
 
 export interface RelationshipOption { id: string; label: string; }
 
 export const useReportConfigStore = defineStore('reportConfig', () => {
-  const focusStore = useFocusStore();
-
   // Shared person subject: all person-based reports + chart prints.
-  // Initialised once from focusStore; the panel picker controls it after that.
-  const personId = ref<string | null>(focusStore.personId);
+  // Seeded by ReportsView.onMounted from the selected person (or
+  // default_person_id setting); the panel picker controls it after that.
+  const personId = ref<string | null>(null);
 
   // A Life
   const aLifeShowLifeMap        = ref(true);
