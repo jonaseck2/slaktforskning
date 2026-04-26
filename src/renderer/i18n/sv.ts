@@ -94,6 +94,7 @@ export default {
   },
   persons: {
     title: 'Personer',
+    listTitle: 'Personlista',
     addPerson: 'Person',
     givenName: 'Förnamn (fullständigt)',
     givenNameHint: 'Markera tilltalsnamn med * eller ! efter det, t.ex. Eva Linda* Marie',
@@ -127,6 +128,7 @@ export default {
     identifierEntity: 'Identifierare',
     newPerson: 'Ny person',
     titleFor: '{title} – {name}',
+    missingNameWarning: 'Personen sparades utan förnamn och efternamn — du kan lägga till namn senare.',
   },
   personDetail: {
     deceased: 'Avliden',
@@ -545,6 +547,7 @@ export default {
     partner2: 'Partner 2',
   },
   panel: {
+    managePerson: 'Hantera person',
     noPersonSelected: 'Klicka på en person i trädet',
     showInTree: 'Visa i träd',
     focus: 'Fokusera',

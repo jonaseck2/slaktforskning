@@ -94,6 +94,7 @@ export default {
   },
   persons: {
     title: 'People',
+    listTitle: 'Person list',
     addPerson: 'Person',
     givenName: 'Given Name (full)',
     givenNameHint: 'Mark preferred name with * or ! after it, e.g. Eva Linda* Marie',
@@ -127,6 +128,7 @@ export default {
     identifierEntity: 'Identifier',
     newPerson: 'New Person',
     titleFor: '{title} for {name}',
+    missingNameWarning: 'Person was saved with no given name or surname — you can add a name later.',
   },
   personDetail: {
     deceased: 'Deceased',
@@ -545,6 +547,7 @@ export default {
     partner2: 'Partner 2',
   },
   panel: {
+    managePerson: 'Manage person',
     noPersonSelected: 'Click a person in the tree',
     showInTree: 'Show in tree',
     focus: 'Focus',
