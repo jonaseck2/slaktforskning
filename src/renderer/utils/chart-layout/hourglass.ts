@@ -175,7 +175,12 @@ export function computeHourglassLayout(
 
   // Inject outlines after collapse so collapsed nodes (whose parents/children/spouses
   // were just pruned to []) correctly receive placeholder boxes.
-  if (selectedPersonId) injectOutlines(root, selectedPersonId, selectedParentInfo ?? undefined);
+  // Outline placeholders for + Father / + Mother / + Spouse / + Child are no
+  // longer injected here — the + button on every person box now covers the
+  // same shortcuts (and more, since it ignores the "already has a parent of
+  // this sex" check so foster/step parents can be added). injectOutlines is
+  // intentionally left in the codebase for unit tests and future reuse.
+  void selectedPersonId; void selectedParentInfo; void injectOutlines;
 
   const focalId = root.person.id;
   const focalIsFemale = root.person.sex === 'F';

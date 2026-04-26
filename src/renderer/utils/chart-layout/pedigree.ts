@@ -41,7 +41,9 @@ export function computePedigreeLayout(
   // Inject outlines after collapse so the selected person's post-collapse
   // parent list is visible: collapsed nodes have parents=[] at this point,
   // so injectOutlines correctly injects placeholders for them.
-  if (selectedPersonId) injectOutlines(root, selectedPersonId, selectedParentInfo ?? undefined);
+  // Outline placeholders are obsolete — the + button on every person box
+  // covers all add-relative shortcuts. injectOutlines kept for unit tests.
+  void selectedPersonId; void selectedParentInfo; void injectOutlines;
 
   // ── Pre-measure heights ────────────────────────────────────────────────
   const heightOf = new Map<string, number>();
