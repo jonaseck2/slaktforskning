@@ -20,6 +20,9 @@
         'editing': editingId === region.id,
       }"
       :style="regionStyle(region)"
+      tabindex="0"
+      role="button"
+      v-narrate="region.personName || region.label || t('narration.faceTag.untagged')"
       @mousedown.stop="onRegionMouseDown($event, region)"
       @mousemove.stop="onRegionMouseMove($event, region)"
       @click.stop="onRegionClick(region.id)"
@@ -49,6 +52,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 interface Region {
   id: string;
@@ -77,6 +81,8 @@ const emit = defineEmits<{
   regionClicked: [id: string];
   regionHovered: [id: string | null];
 }>();
+
+const { t } = useI18n();
 
 const layerEl = ref<HTMLElement | null>(null);
 
