@@ -9,9 +9,8 @@
       <!-- Collapse arrow on the panel's left edge — same pattern as the
            persons-list ◀/▶ buttons. -->
       <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Sticky stack: panel role label + identity card stay pinned at the
-           top of the scrollable panel so the person stays in view while
-           scrolling through sections. -->
+      <!-- Pinned header: role label + identity card never scroll. The
+           scrollbar belongs to the .panel-scroll-area below them. -->
       <div class="panel-sticky-top">
       <!-- Panel role label -->
       <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
@@ -56,6 +55,9 @@
       </div>
       </div>
 
+      <!-- Scrollable area: everything below the pinned header scrolls in
+           its own region so the scrollbar can't pass over the card. -->
+      <div class="panel-scroll-area">
       <!-- Add-relative shortcuts, sitting below the summary card -->
       <div v-if="!props.readonly" class="panel-add-relative-section">
         <div class="panel-add-relative-label">{{ $t('personDetail.addRelativeLabel') ?? $t('relationships.addRelationship') }}</div>
@@ -187,6 +189,7 @@
           </svg>
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
+      </div>
       </div>
     </template>
 
@@ -540,7 +543,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
+  /* The panel itself does not scroll — its inner .panel-scroll-area
+     does, so the scrollbar starts below the pinned header card. */
+  overflow: hidden;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -549,6 +554,15 @@ onMounted(() => {
   /* Reserve a slot at the left for the collapse arrow so it never
      overlaps section content or the sticky "Hantera person" header. */
   padding-left: 28px;
+}
+
+/* Scrollable region below the pinned header. */
+.panel-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Collapse arrow on the panel's left edge — mirrors the
@@ -583,17 +597,15 @@ onMounted(() => {
 
 /* Role label above the person header — mirrors "Personlista" on the
    list column. Sticky so it stays visible while panel scrolls. */
-/* Sticky stack at the top of the scrollable panel: role label +
-   identity card stay pinned together while the rest scrolls.
-   z-index must be above Leaflet's map panes (which use up to ~700)
-   so the PersonMap section can't paint over the pinned heading. */
+/* Pinned stack: role label + identity card live outside the scroll
+   region so the scrollbar starts below them and can't paint over the
+   card. No sticky needed any more — flexbox keeps them at top. */
 .panel-sticky-top {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
   background: var(--surface);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  position: relative;
+  z-index: 2;
 }
 .panel-role-label {
   margin: 0;
