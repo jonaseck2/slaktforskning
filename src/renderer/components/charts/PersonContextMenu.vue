@@ -9,8 +9,8 @@
     @click.stop
     @contextmenu.prevent
   >
-    <!-- Navigation actions -->
-    <div class="ctx-section">
+    <!-- Navigation actions (hidden in add-only mode) -->
+    <div v-if="!addOnly" class="ctx-section">
       <button v-if="!isTreeSubject" class="ctx-item" role="menuitem" @click="emit('set-tree-subject', personId)">
         <span class="ctx-icon">🌳</span>
         <span>{{ $t('contextMenu.showInTree') }}</span>
@@ -46,8 +46,8 @@
       </button>
     </div>
 
-    <!-- Destructive action -->
-    <div v-if="!readonly" class="ctx-section ctx-section--danger">
+    <!-- Destructive action (hidden in add-only mode) -->
+    <div v-if="!readonly && !addOnly" class="ctx-section ctx-section--danger">
       <button class="ctx-item ctx-item--danger" role="menuitem" @click="emit('delete-person', personId)">
         <span class="ctx-icon">🗑️</span>
         <span>{{ $t('persons.deletePersonAction') }}</span>
@@ -66,6 +66,8 @@ const props = defineProps<{
   y: number;
   isTreeSubject?: boolean;
   readonly?: boolean;
+  /** When true, only the "Add family member" shortcuts are shown — no navigation, no delete. */
+  addOnly?: boolean;
 }>();
 
 const emit = defineEmits<{
