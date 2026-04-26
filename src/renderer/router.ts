@@ -24,6 +24,7 @@ export const router = createRouter({
     { path: '/import-export', component: () => import('./views/ImportExportView.vue') },
     { path: '/database', redirect: '/settings' },
     { path: '/quality', component: () => import('./views/QualityView.vue') },
+    { path: '/duplicates', component: () => import('./views/DuplicatesView.vue') },
     { path: '/reports', component: () => import('./views/ReportsView.vue'), props: { mode: 'keepsake' } },
     { path: '/prints', component: () => import('./views/ReportsView.vue'), props: { mode: 'framable' } },
     { path: '/website', component: () => import('./views/WebsiteExportView.vue') },

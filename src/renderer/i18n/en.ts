@@ -21,6 +21,7 @@ export default {
     focusPerson: 'Selected person',
     settings: 'Settings',
     quality: 'Quality',
+    duplicates: 'Duplicates',
     researchTasks: 'Tasks',
     research: 'RESEARCH',
     organize: 'ORGANIZE',
@@ -731,6 +732,7 @@ export default {
   },
   duplicates: {
     title: 'Potential Duplicates',
+    hint: 'Persons with similar names and birth years that may be registered twice. Click "Merge" to move data from person 2 to person 1 and delete person 2.',
     filterDuplicates: 'Duplicates',
     score: 'Score',
     mergeTitle: 'Merge Persons',
