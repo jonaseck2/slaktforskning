@@ -392,10 +392,14 @@ export function listPersonsPage(
       ON pn.person_id = p.id
       AND pn.sort_order = ms.min_sort
     LEFT JOIN (
-      SELECT ep.person_id, MIN(e.date_value) AS date_value
+      -- Mirrors the displayed Born value: prefer the original-text date
+      -- (e.g. "circa 1820"), fall back to the structured date_value.
+      -- Persons with no birth event at all get NULL → sort as empty string.
+      SELECT ep.person_id,
+             MIN(COALESCE(NULLIF(e.date_original, ''), e.date_value)) AS date_value
       FROM event_participants ep
       JOIN events e ON e.id = ep.event_id
-      WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
+      WHERE e.event_type = 'birth'
       GROUP BY ep.person_id
     ) bd ON bd.person_id = p.id
     ORDER BY ${orderBy}
