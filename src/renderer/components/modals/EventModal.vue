@@ -18,7 +18,6 @@
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': form.event_type === et }"
-            :style="form.event_type === et ? { background: ENTITY_COLORS.event.hd, color: ENTITY_COLORS.event.fg } : {}"
             @click="form.event_type = et"
           >{{ $t('eventTypes.' + et) }}</button>
           <button
@@ -64,17 +63,12 @@
     </div>
 
     <!-- Sources section -->
-    <div
-      class="ep-sec-header"
-      :style="{ background: ENTITY_COLORS.source.hd, borderBottomColor: ENTITY_COLORS.source.border }"
-    >
+    <div class="ep-sec-header" data-entity="source">
       <div class="ep-sec-left">
-        <span class="ep-sec-title" :style="{ color: ENTITY_COLORS.source.fg }">
-          📚 {{ $t('sources.title') }}
-        </span>
-        <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.source.fg }">{{ citations.length }}</span>
+        <span class="ep-sec-title">📚 {{ $t('sources.title') }}</span>
+        <span class="ep-sec-count">{{ citations.length }}</span>
       </div>
-      <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.source.fg }">›</span>
+      <span class="ep-sec-open">›</span>
     </div>
     <div class="ep-sec-content">
       <div class="ep-search-wrap">
@@ -157,7 +151,6 @@ import CitationModal from './CitationModal.vue';
 import SourceModal from './SourceModal.vue';
 import DateInput from '../DateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
-import { ENTITY_COLORS } from '../../constants/entityColors';
 import { EVENT_TYPE_VALUES } from '../../constants/eventTypes';
 
 declare const window: Window & {

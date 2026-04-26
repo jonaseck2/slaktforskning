@@ -92,7 +92,7 @@
 import { computed, ref, reactive, provide, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../BaseModal.vue';
-import { ENTITY_VISUALS, type EntityType } from '../../constants/entityColors';
+import { ENTITY_META, type EntityType } from '../../constants/entityMeta';
 
 const props = withDefaults(defineProps<{
   entityType: EntityType;
@@ -124,7 +124,7 @@ defineEmits<{
 
 const { t, te } = useI18n();
 
-const visual = computed(() => ENTITY_VISUALS[props.entityType]);
+const visual = computed(() => ENTITY_META[props.entityType]);
 const titleId = computed(() => `${props.entityType}-panel-title`);
 
 const resolvedLabel = computed(() => {

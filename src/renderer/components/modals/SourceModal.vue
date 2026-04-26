@@ -46,17 +46,12 @@
 
     <!-- Citations section — only in standalone mode after first save -->
     <template v-if="mode === 'standalone' && savedSourceId">
-      <div
-        class="ep-sec-header"
-        :style="{ background: ENTITY_COLORS.citation.hd, borderBottomColor: ENTITY_COLORS.citation.border }"
-      >
+      <div class="ep-sec-header" data-entity="citation">
         <div class="ep-sec-left">
-          <span class="ep-sec-title" :style="{ color: ENTITY_COLORS.citation.fg }">
-            📖 {{ $t('citations.title') }}
-          </span>
-          <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.citation.fg }">{{ citations.length }}</span>
+          <span class="ep-sec-title">📖 {{ $t('citations.title') }}</span>
+          <span class="ep-sec-count">{{ citations.length }}</span>
         </div>
-        <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.citation.fg }">›</span>
+        <span class="ep-sec-open">›</span>
       </div>
       <div class="ep-sec-content">
         <div
@@ -85,7 +80,6 @@ import { reactive, ref, watch, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseSubPanel from './BaseSubPanel.vue';
 import { SOURCE_TYPE_VALUES } from '../../constants/eventTypes';
-import { ENTITY_COLORS } from '../../constants/entityColors';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
