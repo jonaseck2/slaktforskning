@@ -18,7 +18,7 @@ export default {
     sources: 'Källor',
     importExport: 'Import / Export',
     groups: 'Grupper',
-    focusPerson: 'Vald person',
+    focusPerson: 'Fokusperson',
     settings: 'Inställningar',
     quality: 'Kvalitet',
     duplicates: 'Dubbletter',
