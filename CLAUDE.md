@@ -803,7 +803,7 @@ All three chart types (Pedigree, Hourglass, Descendants) share the same outline 
 
 **Post-layout pass:** All three charts have a post-layout pass that places outline nodes not handled by the main traversal (e.g., spouse outlines for ancestors in pedigree, child outlines for ancestors in hourglass).
 
-**Key rule:** Selected person and tree focal are independent. Selecting (URL `/persons/:id`) drives the panel and the highlighted/focal-styled box in the chart, but does NOT re-root the tree. The tree focal is sticky and only changes via the explicit "🌳 Set as tree focal" button in the PersonPanel header. State lives in `useTreeFocalStore` (`src/renderer/stores/treeFocal.ts`), persisted to localStorage as `tree-focal-id`. PersonsView passes `:person-id="treeFocalId"` (tree root) and `:selected-person-id="personId"` (URL = highlight) to Pedigree/Hourglass/Descendant charts. FanChart and TimelineChart stay merged (single-person summaries — click = navigate). On view load, if the stored focal is null or no longer resolves to a person in the current DB (e.g. after a database switch), it falls back to the URL-selected person.
+**Key rule:** Selected person and focal person are the same thing. Clicking a person in the chart refocuses the tree on them, opens the panel for them, and updates the sidebar's selected-person indicator — there is one notion of "current person", not two. The chart's `selectedPersonId` prop is plumbed in for outline placement (it equals the focal); previously these were independent concepts. URL `/persons/:id` is the single source of truth.
 
 ---
 
