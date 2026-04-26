@@ -1,7 +1,7 @@
 <template>
   <BaseSubPanel
     entity-type="identifier"
-    :title="$t('identifiers.addTitle')"
+    :title="displayTitle"
     :mode="mode"
     @cancel="$emit('cancel')"
     @save="handleSave"
@@ -29,7 +29,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, nextTick } from 'vue';
+import { reactive, ref, computed, onMounted, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 
 declare const window: Window & {
@@ -49,12 +50,30 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
+const { t } = useI18n();
+
 const valueRef = ref<HTMLInputElement | null>(null);
 
 const form = reactive({
   identifier_type: 'familysearch',
   identifier_value: '',
 });
+
+const personName = ref('');
+
+const displayTitle = computed(() => {
+  const base = t('identifiers.addTitle');
+  return personName.value ? t('identifiers.titleFor', { title: base, name: personName.value }) : base;
+});
+
+async function loadPersonName() {
+  if (!window.api) return;
+  try {
+    const names = (await window.api.persons.getNames(props.personId)) as Array<{ given_name: string; surname: string }>;
+    const primary = names[0];
+    if (primary) personName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+  } catch { /* ignore */ }
+}
 
 async function handleSave() {
   if (!form.identifier_value.trim()) return;
@@ -69,5 +88,9 @@ async function handleSave() {
   }
 }
 
-onMounted(() => nextTick(() => valueRef.value?.focus()));
+onMounted(async () => {
+  await loadPersonName();
+  await nextTick();
+  valueRef.value?.focus();
+});
 </script>

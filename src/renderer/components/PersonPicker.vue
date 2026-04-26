@@ -18,7 +18,14 @@
       />
       <button v-if="modelValue" type="button" class="picker-clear" :aria-label="$t('a11y.clearSearch')" @click="clear">&times;</button>
     </div>
-    <ul v-if="open && results.length > 0" :id="pickerId + '-listbox'" role="listbox" class="picker-dropdown">
+    <Teleport to="body">
+    <ul
+      v-if="open && results.length > 0"
+      :id="pickerId + '-listbox'"
+      role="listbox"
+      class="picker-dropdown"
+      :style="dropdownStyle"
+    >
       <li
         v-for="(person, idx) in results"
         :key="person.id"
@@ -35,6 +42,7 @@
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
     </ul>
+    </Teleport>
     <div v-if="open && results.length > 0" class="sr-only" aria-live="polite">
       {{ $t('a11y.searchResults', { count: results.length }, results.length) }}
     </div>

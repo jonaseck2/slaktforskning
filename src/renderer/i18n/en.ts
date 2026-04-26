@@ -122,6 +122,7 @@ export default {
     nameEntity: 'Name',
     identifierEntity: 'Identifier',
     newPerson: 'New Person',
+    titleFor: '{title} for {name}',
   },
   personDetail: {
     deceased: 'Deceased',
@@ -245,6 +246,7 @@ export default {
     title: 'Events',
     entity: 'Event',
     newEvent: 'New Event',
+    titleOf: '{event} of {name}',
     searchOrAdd: 'Search or add event…',
     event: 'Event',
     addEvent: 'Create',
@@ -283,6 +285,8 @@ export default {
     title: 'Citations',
     addTitle: 'Add Citation',
     editTitle: 'Edit citation',
+    noPage: '(no page)',
+    titleFor: '{title} for {name}',
     chooseSourceTitle: 'Choose a source',
     changeSource: 'Change',
     source: 'Source',
@@ -442,6 +446,7 @@ export default {
     title: 'External identifiers',
     add: 'Identifier',
     addTitle: 'Add identifier',
+    titleFor: '{title} for {name}',
     type: 'Type',
     value: 'Value',
     types: {
@@ -489,6 +494,7 @@ export default {
     hierarchy: 'Hierarchy',
     showingOf: 'Showing {shown} of {total} places',
     newPlace: 'New place',
+    titleIn: '{title} in {name}',
   },
   placePanel: {
     noPlaceSelected: 'Click a pin on the map',
@@ -948,6 +954,7 @@ export default {
     addTask: 'Task',
     newTask: 'New task',
     editTask: 'Edit task',
+    titleFor: '{title} for {name}',
     entity: 'Task',
     statuses: {
       open: 'Open',

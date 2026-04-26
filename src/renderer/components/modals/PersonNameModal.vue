@@ -214,10 +214,23 @@ watch(() => props.editingName, (n) => {
   form.date_to = '';
 }, { immediate: true });
 
+const personName = ref('');
+
 const displayTitle = computed(() => {
   const full = [form.given_name, form.surname].filter(Boolean).join(' ');
-  return full || (props.editingName ? t('personDetail.editNameTitle') : t('personDetail.addNameTitle'));
+  if (full) return full;
+  const base = props.editingName ? t('personDetail.editNameTitle') : t('personDetail.addNameTitle');
+  return personName.value ? t('persons.titleFor', { title: base, name: personName.value }) : base;
 });
+
+async function loadPersonName() {
+  if (!window.api) return;
+  try {
+    const names = (await window.api.persons.getNames(props.personId)) as Array<{ given_name: string; surname: string }>;
+    const primary = names[0];
+    if (primary) personName.value = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+  } catch { /* ignore */ }
+}
 
 async function handleSave() {
   if (!form.given_name.trim()) return;
@@ -250,8 +263,10 @@ async function handleSave() {
   }
 }
 
-onMounted(() => {
-  nextTick(() => givenNameRef.value?.focus());
+onMounted(async () => {
+  await loadPersonName();
+  await nextTick();
+  givenNameRef.value?.focus();
 });
 </script>
 

@@ -1186,6 +1186,12 @@ html.screen-reader h1:focus {
   flex-direction: column;
   overflow: hidden;
   width: 320px;
+  /* Content sets the floor: the panel never shrinks below what its body needs.
+     A user-set height (via the resize handle) only takes effect if it is
+     taller. Capped at viewport so the modal never runs off-screen — past that
+     cap, .ep-body scrolls inside the panel. */
+  min-height: min-content;
+  max-height: calc(100vh - 64px);
 }
 
 .ep-header {
@@ -1196,7 +1202,9 @@ html.screen-reader h1:focus {
   flex-shrink: 0;
   gap: 10px;
   background: var(--entity-bg);
-  border-bottom: 1px solid var(--entity-border);
+  border: 1px solid var(--entity-border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
 }
 .ep-header-left { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
 .ep-icon {
@@ -1271,7 +1279,7 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
 .ep-sec-header {
   padding: 10px 14px;
   border-radius: 8px 8px 0 0;
-  border-bottom: 1px solid var(--entity-border, var(--surface-border));
+  border: 1px solid var(--entity-border, var(--surface-border));
   background: var(--entity-bg, var(--surface));
   display: flex; align-items: center; justify-content: space-between;
 }
