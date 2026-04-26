@@ -1,25 +1,25 @@
 <template>
   <div class="visualization-view" ref="vizBodyRef">
+    <!-- Permanent left list column -->
+    <template v-if="listOpen">
+      <div class="viz-list-column" :style="{ width: listWidth + 'px' }">
+        <PersonsListTab embedded @person-added="onPersonAdded" @select="navigateTo" />
+        <button class="list-collapse-btn" :aria-label="$t('common.close')" title="Dölj listan" @click="closeList">◀</button>
+      </div>
+      <div class="list-drag-handle" @mousedown="(e) => startListResize(e, vizBodyRef!)"></div>
+    </template>
+    <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
+
     <!-- Left sheet -->
     <div class="viz-chart-area">
       <div class="header">
         <h2>{{ $t('nav.people') }}</h2>
         <div class="header-right">
-          <div class="view-toggle">
-            <AppButton :variant="viewMode === 'tree' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('tree')">{{ $t('visualization.tab.tree') }}</AppButton>
-            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('list')">{{ $t('visualization.listView') }}</AppButton>
-          </div>
           <AppButton v-if="!isStaticMode" variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
         </div>
       </div>
 
-      <!-- List mode: person list -->
-      <div v-if="viewMode === 'list'" class="viz-list-content">
-        <PersonsListTab embedded @person-added="onPersonAdded" @select="navigateTo" />
-      </div>
-
-      <!-- Tree mode: tab bar + chart -->
-      <template v-if="viewMode === 'tree'">
+      <!-- Tree: tab bar + chart -->
       <FilterChips
         v-if="focalPerson"
         class="viz-tabs"
@@ -86,11 +86,8 @@
           @navigate="navigateTo"
         />
       </div>
-      <!-- Reopen panel button when panel is closed (tree mode) -->
+      <!-- Reopen panel button when panel is closed -->
       <button v-if="!panelOpen && personId" class="panel-open-btn" @click="openPanel">▶</button>
-      </template>
-      <!-- Reopen panel button when panel is closed (list mode) -->
-      <button v-if="viewMode === 'list' && !panelOpen && personId" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
     <!-- Drag handle + panel (both tree and list modes) -->
@@ -157,14 +154,17 @@ const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
 
-// View mode: tree or list
-type ViewMode = 'tree' | 'list';
-const viewMode = ref<ViewMode>(
-  (localStorage.getItem('persons-view-mode') as ViewMode) || 'tree'
-);
-function setViewMode(mode: ViewMode) {
-  viewMode.value = mode;
-  localStorage.setItem('persons-view-mode', mode);
+// Persistent left list column. Replaces the old tree/list tab toggle —
+// list and tree are now always visible side-by-side, with the list
+// collapsible via a ▶/◀ button.
+const listOpen = ref(localStorage.getItem('persons-list-open') !== 'false');
+function openList() {
+  listOpen.value = true;
+  localStorage.setItem('persons-list-open', 'true');
+}
+function closeList() {
+  listOpen.value = false;
+  localStorage.setItem('persons-list-open', 'false');
 }
 
 // Add person modal
@@ -209,6 +209,13 @@ function closePanel() {
 }
 
 const { panelWidth, startResize } = usePanelResize();
+const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
+  storageKey: 'persons-list-width',
+  side: 'left',
+  defaultWidth: 280,
+  minWidth: 200,
+  maxWidthRatio: 0.4,
+});
 
 const personId = computed(() => route.params.personId as string | undefined);
 
@@ -444,7 +451,7 @@ onActivated(load);
 }
 .panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
-/* Drag handle */
+/* Drag handle (right panel) */
 .panel-drag-handle {
   width: 6px;
   background: var(--surface-border-subtle);
@@ -454,6 +461,65 @@ onActivated(load);
   transition: background 0.1s;
 }
 .panel-drag-handle:hover { background: var(--surface-border); }
+
+/* Left list column */
+.viz-list-column {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.viz-list-column :deep(.persons-view-content) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+.list-collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.list-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+.list-open-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.list-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+.list-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.list-drag-handle:hover { background: var(--surface-border); }
 
 /* Panel */
 .viz-panel {

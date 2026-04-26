@@ -82,11 +82,14 @@ describe('PersonsView', () => {
 
   // ── Tab chip accessibility ──────────────────────────────────────────────────
 
-  it('renders 5 tab chips in the FilterChips bar', async () => {
+  it('renders 5 tab chips in the chart FilterChips bar', async () => {
     const wrapper = mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
     await flushPromises();
-    const chips = wrapper.findAll('.chip-btn');
-    expect(chips).toHaveLength(5);
+    // Scope to the chart's own tab bar — the embedded PersonsListTab has its
+    // own FilterChips for the persons list filter that would otherwise be
+    // counted here.
+    const chartTabs = wrapper.find('.viz-tabs').findAll('.chip-btn');
+    expect(chartTabs).toHaveLength(5);
   });
 
   it('active tab chip has the active class, others do not', async () => {

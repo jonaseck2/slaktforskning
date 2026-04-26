@@ -1,75 +1,65 @@
 <template>
   <div class="places-view" ref="placesBodyRef">
-    <!-- List mode: list sheet -->
-    <div v-if="viewMode === 'list'" class="places-list-sheet" style="position: relative;">
-      <div class="header">
-        <h2>{{ $t('places.title') }}</h2>
-        <div class="header-right">
-          <div class="view-toggle">
-            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
-            <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
-          </div>
-          <AppButton v-if="!isStaticMode" variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
+    <!-- Permanent left list column -->
+    <template v-if="listOpen">
+      <div class="places-list-column" :style="{ width: listWidth + 'px' }">
+        <div class="places-list-content">
+          <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
+          <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
+          <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPlace')" @action="showAddForm = true" />
+          <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th>{{ $t('places.name') }}</th>
+                <th v-if="!isStaticMode" class="actions-cell">{{ $t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="place in filteredPlaces"
+                :key="place.id"
+                v-narrate="() => narratePlaceRow({
+                  name: place.name || '',
+                  place_type: place.place_type || '',
+                  path: '',
+                }, t)"
+                class="clickable-row"
+                :class="{ 'selected-row': selectedPlaceId === place.id }"
+                tabindex="0"
+                role="button"
+                :aria-label="$t('a11y.editItem', { item: place.name })"
+                @click="selectPlace(place.id)"
+                @keydown.enter="selectPlace(place.id)"
+                @keydown.space.prevent="selectPlace(place.id)"
+                @keydown.down.prevent="focusNextRow($event)"
+                @keydown.up.prevent="focusPrevRow($event)"
+              >
+                <td>{{ place.name }}</td>
+                <td v-if="!isStaticMode" class="actions-cell">
+                  <AppButton
+                    variant="ghost"
+                    size="sm"
+                    :aria-label="$t('a11y.deleteItem', { item: place.name })"
+                    @click.stop="deletePlace(place.id)"
+                  >✕</AppButton>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+        <button class="list-collapse-btn" :aria-label="$t('common.close')" title="Dölj listan" @click="closeList">◀</button>
       </div>
-      <div class="places-list-content">
-        <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
-        <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
-        <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPlace')" @action="showAddForm = true" />
-        <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
-        <table v-else class="data-table">
-          <thead>
-            <tr>
-              <th>{{ $t('places.name') }}</th>
-              <th v-if="!isStaticMode" class="actions-cell">{{ $t('common.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="place in filteredPlaces"
-              :key="place.id"
-              v-narrate="() => narratePlaceRow({
-                name: place.name || '',
-                place_type: place.place_type || '',
-                path: '',
-              }, t)"
-              class="clickable-row"
-              :class="{ 'selected-row': selectedPlaceId === place.id }"
-              tabindex="0"
-              role="button"
-              :aria-label="$t('a11y.editItem', { item: place.name })"
-              @click="selectPlace(place.id)"
-              @keydown.enter="selectPlace(place.id)"
-              @keydown.space.prevent="selectPlace(place.id)"
-              @keydown.down.prevent="focusNextRow($event)"
-              @keydown.up.prevent="focusPrevRow($event)"
-            >
-              <td>{{ place.name }}</td>
-              <td v-if="!isStaticMode" class="actions-cell">
-                <AppButton
-                  variant="ghost"
-                  size="sm"
-                  :aria-label="$t('a11y.deleteItem', { item: place.name })"
-                  @click.stop="deletePlace(place.id)"
-                >✕</AppButton>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" @click="openPanel">▶</button>
-    </div>
+      <div class="list-drag-handle" @mousedown="(e: MouseEvent) => startListResize(e, placesBodyRef!)"></div>
+    </template>
+    <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
 
-    <!-- Map mode: MapView (panel managed by PlacesView) -->
-    <MapView v-else no-panel style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
+    <!-- Map (always shown in center) -->
+    <MapView no-panel style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
       <template #header>
         <div class="header">
           <h2>{{ $t('places.title') }}</h2>
           <div class="header-right">
-            <div class="view-toggle">
-              <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'list'">{{ $t('places.listView') }}</AppButton>
-              <AppButton :variant="viewMode === 'map' ? 'soft' : 'ghost'" size="sm" @click="viewMode = 'map'">{{ $t('places.mapView') }}</AppButton>
-            </div>
             <AppButton v-if="!isStaticMode" variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
           </div>
         </div>
@@ -122,18 +112,18 @@ const route = useRoute();
 const places = ref<PlaceRow[]>([]);
 const placesBodyRef = ref<HTMLElement | null>(null);
 
-const LS_KEY = 'slaktforskning-places-view';
-const viewMode = ref<'list' | 'map'>((localStorage.getItem(LS_KEY) as 'list' | 'map') ?? 'map');
-watch(viewMode, (v) => {
-  localStorage.setItem(LS_KEY, v);
-  if (v === 'list') {
-    // Sync selection and panel state from MapView's localStorage on return to list mode
-    selectedPlaceId.value = localStorage.getItem('map-selected-place');
-    panelOpen.value = localStorage.getItem('map-panel-open') !== 'false';
-    const stored = parseInt(localStorage.getItem('map-panel-width') ?? '', 10);
-    if (!isNaN(stored) && stored >= 200) panelWidth.value = stored;
-  }
-});
+// Persistent left list column. Replaces the old list/map tab toggle —
+// list and map are now always visible side-by-side, with the list
+// collapsible via a ▶/◀ button.
+const listOpen = ref(localStorage.getItem('places-list-open') !== 'false');
+function openList() {
+  listOpen.value = true;
+  localStorage.setItem('places-list-open', 'true');
+}
+function closeList() {
+  listOpen.value = false;
+  localStorage.setItem('places-list-open', 'false');
+}
 const activeTypeFilter = ref<string>('all');
 
 // If /places/:id or ?place= is in the URL, write to localStorage now (before MapView setup runs) so
@@ -153,6 +143,13 @@ const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-pl
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
 const { panelWidth, startResize } = usePanelResize({ storageKey: 'map-panel-width', maxWidthRatio: 0.5 });
+const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
+  storageKey: 'places-list-width',
+  side: 'left',
+  defaultWidth: 280,
+  minWidth: 200,
+  maxWidthRatio: 0.4,
+});
 
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
@@ -254,24 +251,64 @@ onActivated(async () => {
   height: 100%;
   gap: var(--space-xs);
 }
-.places-list-sheet {
-  flex: 1;
-  min-width: 0;
+.places-list-column {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: var(--space-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  min-height: 0;
 }
 .places-list-content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  padding: var(--space-md);
   position: relative;
 }
+.list-collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.list-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+.list-open-btn {
+  position: absolute;
+  top: 50%;
+  left: var(--space-md);
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.list-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+.list-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.list-drag-handle:hover { background: var(--surface-border); }
 .places-panel {
   flex-shrink: 0;
   min-width: 200px;
