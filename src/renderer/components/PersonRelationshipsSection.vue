@@ -1,6 +1,17 @@
 <template>
   <SectionEmpty v-if="rows.length === 0" :message="$t('empty.relationships')" />
-  <RelationshipsList v-else :rows="rows" @delete="remove" />
+  <RelationshipsList v-else :rows="rows" @delete="askRemove" />
+
+  <ConfirmModal
+    :visible="!!pendingDelete"
+    :title="$t('relationships.removeConfirmTitle')"
+    :messages="confirmMessages"
+    tone="danger"
+    icon="⚠️"
+    :confirm-label="$t('relationships.removeConfirmContinue')"
+    @cancel="pendingDelete = null"
+    @confirm="confirmRemove"
+  />
 </template>
 
 <script setup lang="ts">
@@ -8,6 +19,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import { formatFullName } from '../utils/nameUtils';
 
 interface PersonRelRow {
@@ -121,8 +133,43 @@ const rows = computed<RelationshipListRow[]>(() =>
   }))
 );
 
-async function remove(id: string) {
-  await window.api.relationships.delete(id);
+// ── Delete confirmation ────────────────────────────────────────────────────
+
+const pendingDelete = ref<PersonRelRow | null>(null);
+
+function askRemove(id: string) {
+  const row = rels.value.find(r => r.id === id);
+  pendingDelete.value = row ?? null;
+}
+
+const confirmMessages = computed<string[]>(() => {
+  const r = pendingDelete.value;
+  if (!r) return [];
+  const parts: string[] = [];
+  if (r.subtypeLabel) {
+    parts.push(t('relationships.removeConfirmLine', {
+      type: `${r.typeLabel} (${r.subtypeLabel})`,
+      name: r.otherName,
+    }));
+  } else {
+    parts.push(t('relationships.removeConfirmLine', {
+      type: r.typeLabel,
+      name: r.otherName,
+    }));
+  }
+  parts.push(t('relationships.removeConfirmPersonsKept'));
+  if (r.type === 'couple') {
+    parts.push(t('relationships.removeConfirmEventsNote'));
+  }
+  parts.push(t('relationships.removeConfirmIrreversible'));
+  return parts;
+});
+
+async function confirmRemove() {
+  const r = pendingDelete.value;
+  if (!r) return;
+  pendingDelete.value = null;
+  await window.api.relationships.delete(r.id);
   await load();
   emit('deleted');
 }
