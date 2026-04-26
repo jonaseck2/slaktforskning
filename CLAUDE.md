@@ -233,8 +233,11 @@ tests/
 │   ├── relationships.test.ts
 │   ├── events.test.ts
 │   └── sources.test.ts
-└── e2e/                          # Playwright — process spawning tests
-    └── app.test.ts               # App launch smoke test + MCP server connectivity
+└── e2e/                          # Playwright — runs against packaged binary
+    ├── fixture.ts                # Spawns packaged Electron + UI bridge driver
+    ├── app.test.ts               # Smoke: packaged app boot, prod + dev MCP handshake
+    ├── crud-roundtrip.test.ts    # Single IPC round-trip across all major entities
+    └── website-export.test.ts    # Filesystem round-trip for website:export
 
 docs/
 ├── PLAN.md                       # Active roadmap (active/planned/backlog only)
@@ -863,9 +866,10 @@ npm start              # Launch Electron app in dev mode (Vite HMR)
 ./.devcontainer/dev-debug.sh # Launch with Chrome DevTools Protocol (CDP port 9222)
 ./.devcontainer/dev-debug.sh 9223 19242  # Custom ports for parallel instances
 npm run lint           # Run ESLint (must pass with 0 errors before committing)
-npm test               # Run unit tests (Vitest, 1159 tests)
+npm test               # Run unit + component tests (Vitest, ~2120 tests)
 npm test -- --coverage # Run with coverage report (80% threshold on src/api/)
-npx playwright test    # Run E2E tests (app launch + MCP server)
+npm run test:e2e       # Package Electron app, then run Playwright (~30s end-to-end)
+npx playwright test    # Run E2E directly — assumes `out/` is already built
 npm run build:static   # Build static SPA bundle (dist-static/)
 npm run dev:static     # Dev server for static SPA at localhost:5174
 npm run package        # Package for current platform
@@ -883,7 +887,7 @@ npx tsx scripts/build-world.ts         # Rebuild world gazetteers (GeoNames)
 ```bash
 npm test                                # unit + component tests — no display needed
 source .devcontainer/xvfb-start.sh     # start Xvfb on :99 (once per session)
-npx playwright test                     # E2E tests (requires Xvfb running)
+npm run test:e2e                        # Package + E2E tests (requires Xvfb running)
 npm run package                         # produces a Linux distributable
 ```
 
@@ -901,7 +905,16 @@ beforeEach(() => { db = createTestDb(); }); // Fresh DB per test
 
 ### E2E Tests (Playwright)
 
-Tests live in `tests/e2e/`. Two tests: app launch smoke test + MCP server `initialize` handshake. Both use `SLAKTFORSKNING_DB` env var for temp DB. Config: `playwright.config.ts`.
+Tests live in `tests/e2e/` and run against the **packaged Electron binary**, not `electron-forge start`. `npm run test:e2e` calls `npm run package` first via `pretest:e2e`, then runs Playwright. This avoids Vite-dev contention and matches what users actually run.
+
+Five tests total, all under 20s:
+- `app.test.ts` — packaged app boot, prod MCP, dev MCP (3 cases)
+- `crud-roundtrip.test.ts` — one IPC round-trip across persons/places/sources/relationships/events/citations (1 case)
+- `website-export.test.ts` — filesystem export round-trip (1 case)
+
+Each test uses `startApp(port, tag)` from `fixture.ts`, which spawns the packaged binary with a temp DB and waits for HTTP + Vue mount. UI control via the in-app `ui-server` on `SLAKTFORSKNING_UI_PORT`.
+
+**What e2e does NOT cover** (and shouldn't): UI rendering, modals, filter chips, status cycling, search filtering, badge rendering, theming, form validation, route config — these are in `tests/components/` and `tests/unit/`. The api/ layer is exhaustively unit-tested against in-memory SQLite. E2e exists only for things that can only diverge at runtime (real packaging, real IPC chain, real filesystem).
 
 ### SQLite Quirks (node-sqlite3-wasm)
 

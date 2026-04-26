@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import { test, expect } from '@playwright/test';
+import { startApp, teardownApp, AppInstance } from './fixture';
 
 const projectRoot = path.resolve(__dirname, '..', '..');
 
@@ -10,57 +11,27 @@ function tempDbPath(): string {
   return path.join(os.tmpdir(), `slaktforskning-test-${Date.now()}.db`);
 }
 
-test('app builds and launches via electron-forge', async () => {
-  const dbPath = tempDbPath();
-
-  const result = await new Promise<{ success: boolean; output: string }>((resolve) => {
-    let output = '';
-    let launched = false;
-
-    const isWindows = process.platform === 'win32';
-    const proc = spawn(
-      isWindows ? 'cmd' : 'npx',
-      isWindows ? ['/c', 'npx electron-forge start'] : ['electron-forge', 'start'],
-      {
-        cwd: projectRoot,
-        env: { ...process.env, SLAKTFORSKNING_DB: dbPath },
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }
-    );
-
-    const timeout = setTimeout(() => {
-      proc.kill();
-      resolve({ success: launched, output });
-    }, 90000);
-
-    const onData = (data: Buffer) => {
-      output += data.toString();
-      if (output.includes('Launched Electron')) {
-        launched = true;
-        clearTimeout(timeout);
-        // App launched successfully, kill it after a moment
-        setTimeout(() => {
-          proc.kill();
-          resolve({ success: true, output });
-        }, 3000);
-      }
-    };
-
-    proc.stdout?.on('data', onData);
-    proc.stderr?.on('data', onData);
-
-    proc.on('error', () => {
-      clearTimeout(timeout);
-      resolve({ success: false, output });
+// Smoke #1: the packaged Electron app boots and the renderer mounts Vue.
+// Proves: packaged binary, main → preload → renderer → worker → SQLite chain.
+test('packaged app launches and Vue mounts', async () => {
+  const UI_PORT = 19200;
+  let instance: AppInstance | undefined;
+  try {
+    instance = await startApp(UI_PORT, 'smoke');
+    const res = await fetch(`http://127.0.0.1:${UI_PORT}/execute_js`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: '!!window.__vue_router && !!window.api' }),
     });
-  });
-
-  fs.rmSync(dbPath, { force: true });
-
-  expect(result.success).toBe(true);
-  expect(result.output).toContain('Launched Electron');
+    const body = (await res.json()) as { result?: boolean };
+    expect(body.result).toBe(true);
+  } finally {
+    await teardownApp(instance);
+  }
 });
 
+// Smoke #2: prod MCP server stdio handshake.
+// Proves: MCP entry point + api/ wiring still loads.
 test('MCP server starts and responds', async () => {
   const dbPath = tempDbPath();
 
@@ -78,7 +49,6 @@ test('MCP server starts and responds', async () => {
       }
     );
 
-    // Send MCP initialize request
     const initMsg = JSON.stringify({
       jsonrpc: '2.0',
       id: 1,
@@ -121,6 +91,7 @@ test('MCP server starts and responds', async () => {
   expect(result.output).toContain('slaktforskning');
 });
 
+// Smoke #3: dev MCP server stdio handshake (covers UI bridge + chart tools wiring).
 test('dev MCP server starts and responds', async () => {
   const dbPath = tempDbPath();
 
@@ -138,7 +109,6 @@ test('dev MCP server starts and responds', async () => {
       }
     );
 
-    // Send MCP initialize request
     const initMsg = JSON.stringify({
       jsonrpc: '2.0',
       id: 1,

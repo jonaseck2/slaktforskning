@@ -45,7 +45,10 @@
 2. **[2026-04-24] vite.worker.config.ts must replicate all plugins AND emit the same externalized paths as vite.main.config.ts**
    Do instead: both configs' `externalize-gazetteers` plugin MUST return `./gazetteers/<file>.json` from `resolveId`. Don't recompute a relative path from the importer — that emits `../../src/api/place-gazetteers/data/...` which happens to work in dev (src/ lives next to .vite/build/) but fails in the packaged app because src/ is not shipped inside app.asar. Symptom: every view toasts "Could not load data" because `checks:runAll` throws when the worker requires a gazetteer JSON. vite.main.config.ts owns the `closeBundle` that copies JSONs into `.vite/build/gazetteers/`; the worker just has to point at the same destination. Keep the WASM copy plugin in both configs too.
 
-3. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
+3. **[2026-04-26] E2E tests run against the packaged Electron binary, never `electron-forge start`**
+   Do instead: `npm run test:e2e` runs `npm run package` first via `pretest:e2e`, then Playwright spawns the binary from `out/Släktforskning-{platform}-{arch}/...`. macOS inner binary is lowercase `slaktforskning` (follows `executableName` in forge.config.ts), not `Släktforskning`. `tests/e2e/fixture.ts` `packagedBinaryPath()` resolves it. Dev-mode launch is forbidden — parallel Vite servers caused renderer stalls (forge#3198 + chunk-compile contention). The suite went from 22 flaky failures in 14.6 min → 5 stable passes in 15 sec by switching.
+
+4. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
    Do instead: keep the `externalize-gazetteers` plugin in both `vite.main.config.ts` and `vite.worker.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized.
 
 ## MCP Server

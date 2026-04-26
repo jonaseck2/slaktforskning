@@ -90,10 +90,11 @@ export interface AppInstance {
 export function packagedBinaryPath(): string {
   const { platform, arch } = process;
   const outDir = path.join(PROJECT_ROOT, 'out', `Släktforskning-${platform}-${arch}`);
+  // Inner binary follows packagerConfig.executableName ('slaktforskning').
   const binary = platform === 'darwin'
-    ? path.join(outDir, 'Släktforskning.app', 'Contents', 'MacOS', 'Släktforskning')
+    ? path.join(outDir, 'Släktforskning.app', 'Contents', 'MacOS', 'slaktforskning')
     : platform === 'win32'
-      ? path.join(outDir, 'Släktforskning.exe')
+      ? path.join(outDir, 'slaktforskning.exe')
       : path.join(outDir, 'slaktforskning');
   if (!fs.existsSync(binary)) {
     throw new Error(
