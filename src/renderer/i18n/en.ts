@@ -478,6 +478,7 @@ export default {
     searchPlaceholder: 'Search place\u2026',
     createNew: 'Create new place: {name}',
     title: 'Places',
+    listTitle: 'Place list',
     addTitle: 'Place',
     name: 'Name',
     type: 'Type',
@@ -548,6 +549,7 @@ export default {
   },
   panel: {
     managePerson: 'Manage person',
+    managePlace: 'Manage place',
     noPersonSelected: 'Click a person in the tree',
     showInTree: 'Show in tree',
     focus: 'Focus',

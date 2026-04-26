@@ -3,6 +3,7 @@
     <!-- Permanent left list column -->
     <template v-if="listOpen">
       <div class="places-list-column" :style="{ width: listWidth + 'px' }">
+        <h3 class="places-list-title">{{ $t('places.listTitle') }}</h3>
         <div class="places-list-content">
           <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
           <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
@@ -261,6 +262,15 @@ onActivated(async () => {
   overflow: hidden;
   flex-shrink: 0;
   min-height: 0;
+}
+.places-list-title {
+  margin: 0;
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--surface-border-subtle);
+  flex-shrink: 0;
 }
 .places-list-content {
   flex: 1;

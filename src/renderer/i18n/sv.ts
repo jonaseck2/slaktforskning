@@ -478,6 +478,7 @@ export default {
     searchPlaceholder: 'Sök plats\u2026',
     createNew: 'Skapa ny plats: {name}',
     title: 'Platser',
+    listTitle: 'Platslista',
     addTitle: 'Plats',
     name: 'Namn',
     type: 'Typ',
@@ -548,6 +549,7 @@ export default {
   },
   panel: {
     managePerson: 'Hantera person',
+    managePlace: 'Hantera plats',
     noPersonSelected: 'Klicka på en person i trädet',
     showInTree: 'Visa i träd',
     focus: 'Fokusera',

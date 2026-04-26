@@ -6,6 +6,8 @@
     </div>
 
     <template v-else-if="place">
+      <!-- Panel role label -->
+      <h3 class="panel-role-label">{{ $t('panel.managePlace') }}</h3>
       <!-- Header -->
       <div class="panel-header">
         <div class="panel-header-content">
@@ -471,6 +473,23 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   font-size: var(--font-sm);
   padding: var(--space-xl);
   text-align: center;
+}
+
+/* Role label above the place header (states what the panel does) —
+   mirrors PersonsView's "Personlista" / "Hantera person" headings. */
+.panel-role-label {
+  margin: 0;
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: var(--space-md) var(--space-lg) var(--space-sm);
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--surface-border-subtle);
+  background: var(--surface);
+}
+.panel-role-label + .panel-header {
+  border-radius: 0;
 }
 
 /* Header */
