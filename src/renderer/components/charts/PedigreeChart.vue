@@ -39,7 +39,6 @@
           :aria-label="boxAriaLabel(box)"
           tabindex="0"
           @click="$emit('navigate', box.person.id)"
-          @contextmenu.prevent="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           @keydown="onBoxKeydown($event, box)"
           @focus="focusedBoxId = box.person.id"
           @blur="focusedBoxId = null"
@@ -120,6 +119,19 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="dateColor(box)"
           >{{ deathText(box) }}</text>
+          <!-- Add-family-member button (top-right corner) -->
+          <g
+            v-if="!readonly"
+            class="add-relative-btn"
+            :transform="`translate(${box.x + box.w - 14}, ${box.y + 14})`"
+            role="button"
+            :aria-label="$t('personDetail.addRelativeLabel')"
+            @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
+          >
+            <circle r="9" />
+            <line x1="-4" y1="0" x2="4" y2="0" />
+            <line x1="0" y1="-4" x2="0" y2="4" />
+          </g>
         </g>
         <g
           v-if="!readonly"
@@ -582,4 +594,20 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }
 .ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
+
+.add-relative-btn { cursor: pointer; }
+.add-relative-btn circle {
+  fill: var(--surface);
+  stroke: var(--surface-border);
+  stroke-width: 1;
+  transition: fill 0.1s, stroke 0.1s;
+}
+.add-relative-btn line {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.add-relative-btn:hover circle { fill: var(--accent); stroke: var(--accent); }
+.add-relative-btn:hover line { stroke: var(--accent-text); }
 </style>

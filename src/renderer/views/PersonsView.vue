@@ -136,6 +136,7 @@
       :y="ctxMenu.y"
       :is-tree-subject="ctxMenu.personId === personId"
       :readonly="isStaticMode"
+      :add-only="ctxMenu.addOnly"
       @close="ctxMenu = null"
       @set-tree-subject="onCtxSetTreeSubject"
       @select-person="onCtxSelectPerson"
@@ -320,7 +321,7 @@ async function setTreeSubject(id: string) {
 
 const toast = useToast();
 
-interface CtxMenuState { personId: string; x: number; y: number }
+interface CtxMenuState { personId: string; x: number; y: number; addOnly?: boolean }
 const ctxMenu = ref<CtxMenuState | null>(null);
 
 type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'son' | 'daughter';
@@ -330,7 +331,10 @@ const ctxAddRelative = ref<AddRelativeTarget | null>(null);
 const ctxDeleteId = ref<string | null>(null);
 
 function openContextMenu(payload: { personId: string; x: number; y: number }) {
-  ctxMenu.value = payload;
+  // The + button on each person box only opens the add-family-member
+  // shortcuts — no navigation, no delete. There is no longer a right-click
+  // pathway, so every chart-emitted menu request is add-only.
+  ctxMenu.value = { ...payload, addOnly: true };
 }
 function onCtxSetTreeSubject(id: string) {
   ctxMenu.value = null;
