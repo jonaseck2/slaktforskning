@@ -316,7 +316,7 @@ MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
-| `persons` | id, sex, living, notes | — |
+| `persons` | id, sex, notes (living is derived from events at read time) | — |
 | `person_names` | person_id, given_name, surname, name_type, sort_order, preferred_name, nickname | person_id → CASCADE |
 | `relationships` | type, person1_id, person2_id, subtype, notes | person1/person2 → CASCADE |
 | `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description, relationship_id | relationship → SET NULL, place → SET NULL |
@@ -343,10 +343,10 @@ Every function takes `db: Database` as its first argument. Returns domain types 
 
 ### persons.ts
 ```
-createPerson(db, { sex?, living?, notes?, given_name?, surname? }) → Person
-getPerson(db, id) → Person | null
+createPerson(db, { sex?, notes?, given_name?, surname? }) → Person
+getPerson(db, id) → Person | null   // Person.living is derived: no death/burial/cremation event AND birth (if any) within last 120 years
 listPersons(db) → (Person & { given_name, surname })[]
-updatePerson(db, id, { sex?, living?, notes? }) → Person | null
+updatePerson(db, id, { sex?, notes? }) → Person | null
 deletePerson(db, id) → boolean
 searchPersons(db, query) → (Person & { given_name, surname })[]
 addPersonName(db, personId, { given_name, surname, name_type? }) → PersonName
@@ -636,7 +636,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 
 | Component | Props | Description |
 |-----------|-------|-------------|
-| `AppAvatar` | `personId?: string`, `givenName?: string`, `surname?: string`, `sex?: 'M'\|'F'\|'U'`, `size?: 'sm'\|'md'\|'lg'\|'xl'`, `src?: string` | Person avatar. When `personId` is set, auto-loads the cropped profile picture via `useProfilePicStore` (first media link's first region tagged to this person, or full-image center square if no region). Explicit `src` overrides the store. Falls back to sex-colored initials when no photo exists. |
+| `AppAvatar` | `personId?: string`, `givenName?: string`, `surname?: string`, `sex?: 'M'\|'F'\|'U'`, `size?: 'sm'\|'md'\|'lg'\|'xl'\|'2xl'\|'auto'`, `src?: string` | The single profile-picture component used everywhere — list rows, panels, mini cards. Square (`--radius-sm`), face-cropped via `useProfilePicStore` when `personId` is set. Falls back to sex-colored initials. Sizes: `sm`=20, `md`=28, `lg`=36, `xl`=56, `2xl`=64; `auto` lets the parent control width/height for arbitrary frames. Charts (Pedigree/Hourglass/Descendant) and the Life-on-One-Page report don't render `AppAvatar` directly (SVG / larger crop) but pull the same face-cropped source via `chartData.fetchPersonNode` / `cropImageToDataUrl`, so they stay in sync — the `profilePic` store's `invalidatePerson` propagates into both layers. |
 | `AppBadge` | `variant?: 'info'\|'success'\|'warning'\|'error'` | Semantic badge pill using design tokens |
 | `AppButton` | `variant?: 'primary'\|'ghost'\|'danger'`, `size?: 'sm'\|'md'`, `disabled?` | Button with variant/size system |
 | `AppEmptyState` | `icon?: string`, `message: string` | Empty state placeholder with centered icon + text |

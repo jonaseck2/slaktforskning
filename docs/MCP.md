@@ -19,7 +19,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `create_person` | Create a person. Optional: birth date, birth place, source citation — all resolved in a single call. |
 | `search_persons` | Search by name. Returns id, display name, birth year, death year. |
 | `get_person_summary` | All names, events (with places), relationships (with partner names), citations, groups, and research tasks for a person. One call, no follow-up queries needed. |
-| `update_person` | Update sex, living flag, or notes. |
+| `update_person` | Update sex or notes. (Living/deceased status is derived from birth/death events, not stored.) |
 | `delete_person` | Delete a person and all linked data (cascade). |
 | `add_person_name` | Add an alternate name (birth, married, alias, aka) with optional date range. |
 | `merge_persons` | Merge two persons: move all relationships, events, names, citations to target, then delete source. |

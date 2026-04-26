@@ -30,16 +30,17 @@ Citations link to any conclusion-layer entity:
 ## Entities
 
 ### persons
-The fundamental unit. Unchanged from v0.1.
+The fundamental unit.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID v4 |
 | sex | TEXT | 'M' \| 'F' \| 'U' |
-| living | INTEGER | boolean — suppresses details in public views |
 | notes | TEXT | |
 | created_at | TEXT | datetime |
 | updated_at | TEXT | datetime |
+
+**Living/deceased status is derived, not stored.** `Person.living` is computed at read time via `livingSqlExpr()` in `src/api/personLiving.ts`: a person is living unless they have a `death` / `burial` / `cremation` event, or a `birth` event with a year more than 120 years ago. This matches the GEDCOM convention that a `1 DEAT` event implies deceased — there is no standard living flag.
 
 ### person_names
 A person can have multiple names over time (birth, married, alias, aka).
