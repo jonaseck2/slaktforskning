@@ -10,6 +10,7 @@
       <div ref="panelRef" class="entity-panel" :data-entity="entityType" :style="panelStyle">
         <div
           class="ep-header ep-header--draggable"
+          v-narrate="headerNarration"
           @mousedown="startDrag"
         >
           <div class="ep-header-left">
@@ -49,6 +50,7 @@
       <div
         class="ep-header"
         :class="{ 'ep-header--draggable': parentDrag }"
+        v-narrate="headerNarration"
         @mousedown="parentDrag?.($event)"
       >
         <div class="ep-header-left">
@@ -135,6 +137,11 @@ const resolvedLabel = computed(() => {
 });
 
 const resolvedIcon = computed(() => props.icon ?? visual.value.icon);
+
+const headerNarration = computed(() => {
+  const entity = visual.value.labelKey && te(visual.value.labelKey) ? t(visual.value.labelKey) : props.entityType;
+  return t('narration.modal.header', { entity, title: props.title });
+});
 
 // ── Drag / resize ───────────────────────────────────────────────────────────
 

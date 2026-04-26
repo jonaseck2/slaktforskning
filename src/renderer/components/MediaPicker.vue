@@ -24,6 +24,7 @@
         :aria-selected="idx === highlightIndex"
         class="picker-option"
         :class="{ highlighted: idx === highlightIndex }"
+        v-narrate="() => narrateMedia({ title: displayTitle(item), format: item.format ?? undefined }, labels)"
         @mousedown.prevent="select(item)"
       >
         <span class="picker-name">{{ displayTitle(item) }}</span>
@@ -35,7 +36,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { mediaDisplayName } from '../utils/mediaUtils';
+import { narrateMedia, narrationLabelsFromI18n } from '../utils/narration';
 
 interface MediaItem {
   id: string;
@@ -54,6 +57,8 @@ const emit = defineEmits<{
   select: [item: MediaItem];
 }>();
 
+const { t } = useI18n();
+const labels = narrationLabelsFromI18n(t);
 const searchQuery = ref('');
 const allMedia = ref<MediaItem[]>([]);
 const results = ref<MediaItem[]>([]);
