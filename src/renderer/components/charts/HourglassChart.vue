@@ -111,19 +111,27 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="dateColor(box)"
           >{{ deathText(box) }}</text>
-          <!-- Add-family-member button (top-right corner) -->
-          <g
-            v-if="!readonly"
-            class="add-relative-btn"
-            :transform="`translate(${box.x + box.w - 14}, ${box.y + 14})`"
-            role="button"
-            :aria-label="$t('personDetail.addRelativeLabel')"
-            @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
-          >
-            <circle r="9" />
-            <line x1="-4" y1="0" x2="4" y2="0" />
-            <line x1="0" y1="-4" x2="0" y2="4" />
-          </g>
+          <!-- Add-family-member: dedicated column on the right with separator -->
+          <template v-if="!readonly">
+            <line
+              class="add-btn-separator"
+              :x1="box.x + box.w - BOX_PAD_X_RIGHT - ADD_BTN_AREA_W"
+              :y1="box.y + 6"
+              :x2="box.x + box.w - BOX_PAD_X_RIGHT - ADD_BTN_AREA_W"
+              :y2="box.y + box.h - 6"
+            />
+            <g
+              class="add-relative-btn"
+              :transform="`translate(${box.x + box.w - BOX_PAD_X_RIGHT - ADD_BTN_AREA_W / 2}, ${box.y + 14})`"
+              role="button"
+              :aria-label="$t('personDetail.addRelativeLabel')"
+              @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
+            >
+              <circle r="8" />
+              <line x1="-4" y1="0" x2="4" y2="0" />
+              <line x1="0" y1="-4" x2="0" y2="4" />
+            </g>
+          </template>
         </g>
         <template v-if="!readonly">
           <g
@@ -207,7 +215,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
+import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W, ADD_BTN_AREA_W, BOX_PAD_X_RIGHT } from '../../utils/chart-layout';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchHourglassTreePerson, loadAncestorGenerationTP, loadChildrenForNodeTP } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
@@ -527,6 +535,14 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }
 .ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
+
+/* Thin vertical separator that splits the dedicated + button column
+   from the name/date area. */
+.add-btn-separator {
+  stroke: var(--surface-border-subtle);
+  stroke-width: 1;
+  pointer-events: none;
+}
 
 /* Add-relative + button rendered in the corner of every person box. */
 .add-relative-btn { cursor: pointer; }
