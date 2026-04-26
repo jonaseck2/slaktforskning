@@ -34,7 +34,7 @@
               <span v-if="sortBy === 'surname'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
             <th>{{ $t('persons.sex') }}</th>
-            <th>{{ $t('persons.info') }}</th>
+            <th>{{ $t('persons.birthDate') }}</th>
             <th v-if="!isStaticMode" class="actions-cell"></th>
           </tr>
         </thead>
@@ -72,7 +72,7 @@
             </td>
             <td>{{ person.surname }}</td>
             <td><AppBadge :variant="'sex-' + ((person.sex || 'U') as string).toLowerCase() as any">{{ person.sex || 'U' }}</AppBadge></td>
-            <td class="info-cell">{{ formatPersonInfo(person) }}</td>
+            <td class="info-cell">{{ person.birth_date || '' }}</td>
             <td v-if="!isStaticMode" class="actions-cell">
               <AppButton
                 variant="ghost"
@@ -184,15 +184,6 @@ onUnmounted(() => {
 });
 
 
-
-function formatPersonInfo(person: PersonListItem): string {
-  const parts: string[] = [];
-  if (person.birth_date) parts.push('b. ' + person.birth_date);
-  if (person.birth_place) parts.push(person.birth_place);
-  if (person.death_date) parts.push('d. ' + person.death_date);
-  if (person.death_place && !person.birth_place) parts.push(person.death_place);
-  return parts.join(' \u00b7 ');
-}
 
 async function load() {
   if (!window.api) return;
