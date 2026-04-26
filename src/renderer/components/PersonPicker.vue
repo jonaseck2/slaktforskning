@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, inject } from 'vue';
+import { ref, watch, inject, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getDefaultPersonId } from '../composables/useDefaultPerson';
 
@@ -91,8 +91,34 @@ const highlightIndex = ref(-1);
 const defaultPersonId = ref<string | null>(null);
 getDefaultPersonId().then(id => { defaultPersonId.value = id; });
 
-// Reset highlight when results change
-watch(results, () => { highlightIndex.value = -1; });
+const dropdownStyle = ref<Record<string, string>>({});
+function updateDropdownPosition() {
+  const el = inputEl.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  dropdownStyle.value = {
+    position: 'fixed',
+    top: `${r.bottom + 2}px`,
+    left: `${r.left}px`,
+    width: `${r.width}px`,
+  };
+}
+function onScroll() { if (open.value) updateDropdownPosition(); }
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, true);
+  window.addEventListener('resize', onScroll);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll, true);
+  window.removeEventListener('resize', onScroll);
+});
+watch(open, (o) => { if (o) nextTick(updateDropdownPosition); });
+
+// Reset highlight when results change; also reposition the teleported dropdown.
+watch(results, () => {
+  highlightIndex.value = -1;
+  if (open.value) nextTick(updateDropdownPosition);
+});
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -230,22 +256,19 @@ function narratePerson(p: PersonResult): string {
 .picker-clear:hover {
   color: #333;
 }
+/* Teleported to <body>; position is set inline from inputEl's bounding rect.
+   Scoped styles still apply because Vue keeps the data-v-* attribute. */
 .picker-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-input);
-  border-top: none;
-  border-radius: 0 0 4px 4px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 4px;
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 200px;
+  max-height: 240px;
   overflow-y: auto;
-  z-index: 100;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
 }
 .picker-option {
   padding: 8px 10px;

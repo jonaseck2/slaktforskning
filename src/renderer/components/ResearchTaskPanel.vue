@@ -365,16 +365,6 @@ async function removeLink(linkId: string) {
 .status-done { background: #d1fae5; color: #065f46; }
 .status-stopped { background: #f3f4f6; color: #6b7280; }
 
-.panel-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 
 .panel-section {
   border-bottom: 1px solid var(--surface-border-subtle);

@@ -28,8 +28,8 @@
       </div>
     </div>
 
-    <!-- Other-parent picker (only when adding a child to a person who has partner(s)) -->
-    <div v-if="addRelatedTo?.mode === 'child' && partnerOptions.length > 0" class="ep-fields">
+    <!-- Other-parent picker (only when adding a child/son/daughter to a person who has partner(s)) -->
+    <div v-if="isChildMode && partnerOptions.length > 0" class="ep-fields">
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('addRelated.otherParent') }}</span>
         <select class="ep-input" v-model="secondParentId">
@@ -267,6 +267,10 @@ const savedPersonId = ref<string | null>(props.personId);
 // ── Add-related state ───────────────────────────────────────────────────────
 const entryMode = ref<'new' | 'existing'>('new');
 const existingPersonId = ref<string | null>(null);
+const isChildMode = computed(() => {
+  const m = props.addRelatedTo?.mode;
+  return m === 'child' || m === 'son' || m === 'daughter';
+});
 const childSexPicked = ref(props.addRelatedTo?.mode !== 'child');
 const needsChildSexPick = computed(() =>
   props.addRelatedTo?.mode === 'child'
@@ -447,8 +451,8 @@ async function handleSave() {
       }
       await window.api.relationships.create(relData);
 
-      // Child mode: also link to the second parent (the selected partner) if any.
-      if (m === 'child' && secondParentId.value && secondParentId.value !== targetPersonId) {
+      // Child/son/daughter mode: also link to the second parent (the selected partner) if any.
+      if ((m === 'child' || m === 'son' || m === 'daughter') && secondParentId.value && secondParentId.value !== targetPersonId) {
         await window.api.relationships.create({
           type: 'parent_child',
           person1_id: secondParentId.value,
@@ -467,7 +471,7 @@ async function handleSave() {
 }
 
 async function loadPartners() {
-  if (props.addRelatedTo?.mode !== 'child') return;
+  if (!isChildMode.value) return;
   if (!window.api) return;
   const parentId = props.addRelatedTo.personId;
   try {

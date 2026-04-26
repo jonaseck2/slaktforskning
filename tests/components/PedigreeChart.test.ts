@@ -17,7 +17,7 @@ describe('PedigreeChart', () => {
       },
       events: { forPerson: vi.fn().mockResolvedValue([]) },
       relationships: { getForPerson: vi.fn().mockResolvedValue([]) },
-      media: { forEntity: vi.fn().mockResolvedValue([]) },
+      media: { profilePicRef: vi.fn().mockResolvedValue(null) },
     };
   });
 
@@ -74,7 +74,7 @@ describe('PedigreeChart', () => {
           return Promise.resolve([]);
         }),
       },
-      media: { forEntity: vi.fn().mockResolvedValue([]) },
+      media: { profilePicRef: vi.fn().mockResolvedValue(null) },
     };
 
     const wrapper = mount(PedigreeChart, {

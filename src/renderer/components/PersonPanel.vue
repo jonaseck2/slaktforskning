@@ -6,8 +6,6 @@
     </div>
 
     <template v-else-if="person">
-      <!-- Panel role label -->
-      <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
       <!-- Header -->
       <div class="panel-header">
         <AppAvatar
@@ -29,8 +27,12 @@
             </div>
           </div>
           <div class="panel-lifelines">
-            <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
-            <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
+            <div class="panel-lifeline-dates">
+              <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
+              <div v-if="person.deathLine" class="panel-lifeline">† {{ person.deathLine }}</div>
+            </div>
+            <span v-if="showTreeBtn && isTreeSubject" class="tree-subject-chip">{{ $t('panel.treeSubject') }}</span>
+            <AppButton v-else-if="showTreeBtn" variant="soft" size="sm" @click="emit('set-tree-subject')">{{ $t('panel.setAsTreeSubject') }}</AppButton>
           </div>
           <div v-if="!props.readonly" class="panel-add-relative-btns">
             <AppButton variant="soft" size="sm" @click="openAddRelative('father')">+ {{ $t('personDetail.addFather') }}</AppButton>
@@ -40,7 +42,7 @@
             <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
           </div>
         </div>
-        <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('panel.collapse') ?? $t('common.close')" @click="emit('close')">▶</button>
+        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Person section -->
@@ -149,26 +151,7 @@
           <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
       </div>
-
-      <!-- Danger zone: delete person -->
-      <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="danger" size="sm" @click="showDeleteConfirm = true">
-          {{ $t('persons.deletePersonAction') }}
-        </AppButton>
-      </div>
     </template>
-
-    <!-- Delete confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('persons.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('persons.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
 
     <!-- Name form modal -->
     <PersonNameModal
@@ -204,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, watch, onMounted, nextTick } from 'vue';
+import { ref, toRef, computed, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
@@ -213,10 +196,6 @@ import PersonName from './PersonName.vue';
 import PersonNamesTable from './PersonNamesTable.vue';
 import PersonNameModal from './modals/PersonNameModal.vue';
 import PersonModal from './modals/PersonModal.vue';
-import ConfirmModal from './ConfirmModal.vue';
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useToast } from '../composables/useToast';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
@@ -239,17 +218,17 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const props = defineProps<{ personId: string | null; readonly?: boolean }>();
+const props = defineProps<{ personId: string | null; showTreeBtn?: boolean; treeSubjectId?: string | null; readonly?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
+  'set-tree-subject': [];
   'person-changed': [];
   'close': [];
 }>();
 
-// ── Data (composable) ───────────────────────────────────────────────────────
+const isTreeSubject = computed(() => !!props.personId && props.personId === props.treeSubjectId);
 
-const { t } = useI18n();
-const toast = useToast();
+// ── Data (composable) ───────────────────────────────────────────────────────
 
 const personIdRef = toRef(props, 'personId');
 const {
@@ -295,14 +274,6 @@ const { sections, toggleSection } = usePanelSections(
   },
 );
 
-// When the panel switches to a new person, force the Relationships section open
-// so the user immediately sees who this new selected person is connected to.
-watch(personIdRef, (newId, oldId) => {
-  if (newId && newId !== oldId) {
-    sections.relationships = true;
-  }
-});
-
 // ── Template refs ───────────────────────────────────────────────────────────
 
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
@@ -323,37 +294,6 @@ async function triggerAttachMedia() {
   if (!sections.media) toggleSection('media');
   await nextTick();
   mediaSectionRef.value?.attach();
-}
-
-// ── Delete person ───────────────────────────────────────────────────────────
-
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const name = primaryName.value
-    ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
-    : t('common.unknown');
-  return t('persons.deleteConfirmMessage', {
-    name,
-    relationships: relationshipCount.value,
-  });
-});
-
-async function performDelete() {
-  if (!props.personId) return;
-  try {
-    await window.api.persons.delete(props.personId);
-    showDeleteConfirm.value = false;
-    toast.success(t('persons.deletedToast', {
-      name: primaryName.value
-        ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
-        : t('common.unknown'),
-    }));
-    emit('person-changed');
-    emit('close');
-  } catch (err) {
-    console.error('[PersonPanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
 }
 
 // ── Add relative modal ──────────────────────────────────────────────────────
@@ -482,26 +422,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.panel-danger-zone {
-  padding: var(--space-md) var(--space-lg) var(--space-lg);
-  border-top: 1px solid var(--surface-border-subtle);
-  display: flex;
-  justify-content: flex-end;
-}
-
 .person-panel {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  position: relative;
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
-  /* Reserve a slot at the left for the collapse arrow so it never
-     overlaps section content or the sticky "Hantera person" header. */
-  padding-left: 28px;
 }
 
 .panel-empty {
@@ -515,30 +444,6 @@ onMounted(() => {
   text-align: center;
 }
 
-/* Role label above the person header (states what the panel does) —
-   mirrors the "Personlista" heading style on the left list column.
-   Sticky at the top of the scrollable panel so the heading stays visible. */
-.panel-role-label {
-  margin: 0;
-  font-size: var(--font-md);
-  font-weight: 600;
-  color: var(--text-primary);
-  /* Right padding stays generous; left is small because .person-panel
-     already reserves a 28px slot for the collapse arrow. */
-  padding: var(--space-md) var(--space-lg) var(--space-sm) var(--space-sm);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border-bottom: 1px solid var(--surface-border-subtle);
-  background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
-.panel-role-label + .panel-header {
-  border-radius: 0;
-  padding-top: var(--space-md);
-}
-
 /* Header */
 .panel-header {
   display: flex;
@@ -547,43 +452,18 @@ onMounted(() => {
   background: var(--surface);
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
-  /* Smaller left padding — .person-panel reserves the 28px slot. */
-  padding: var(--space-md) 0 var(--space-md) var(--space-sm);
+  padding: 0 0 0 var(--space-lg);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
+.panel-header > .app-avatar {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}
 .panel-header-content {
+  padding: var(--space-md) 0;
   flex: 1;
   min-width: 0;
 }
-.panel-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--font-lg);
-  cursor: pointer;
-  padding: 0 var(--space-md);
-  align-self: stretch;
-  margin: calc(var(--space-md) * -1) 0;
-}
-.panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
-/* Collapse arrow at the left edge of the panel — mirrors the
-   `list-collapse-btn` / `list-open-btn` pattern on the persons list. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-right: none;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .panel-name-row {
   display: flex;
   align-items: center;
@@ -604,7 +484,14 @@ onMounted(() => {
   min-width: 0;
 }
 .panel-lifelines {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--space-sm);
   margin-bottom: var(--space-xs);
+}
+.panel-lifeline-dates {
+  min-width: 0;
 }
 .panel-lifeline {
   font-size: var(--font-xs);
@@ -615,6 +502,19 @@ onMounted(() => {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
+}
+.tree-subject-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
 /* Sections */

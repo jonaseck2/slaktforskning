@@ -6,7 +6,7 @@ import type { HourglassTree, DescendantNode, TreePerson, PedigreeTree } from './
 const PLACEHOLDER_PREFIX = '__ph_';
 
 function makePlaceholder(
-  role: 'father' | 'mother' | 'child' | 'spouse',
+  role: 'father' | 'mother' | 'son' | 'daughter' | 'spouse',
   forPersonId: string,
   sex: 'M' | 'F' | 'U' = 'U',
 ): TreePerson {
@@ -110,10 +110,13 @@ export function buildHourglassTree(tree: HourglassTree): TreePerson {
 /**
  * Inject outline placeholders for the selected person.
  *
- * Injects child + spouse unconditionally. Father/mother placeholders are only
- * injected when no real parent of the matching sex already exists — once a
- * person has a father, the chart should not invite adding another (additional
- * parents can still be added via the relationships panel).
+ * Injects son + daughter + spouse unconditionally. Father/mother placeholders
+ * are only injected when no real parent of the matching sex already exists —
+ * once a person has a father, the chart should not invite adding another
+ * (additional parents can still be added via the relationships panel).
+ *
+ * The two child placeholders are sex-typed so PersonModal can pre-fill sex
+ * directly from `addRelatedTo.mode` without an in-modal sex picker.
  *
  * Mutates the tree in place (caller should clone if needed).
  */
@@ -128,7 +131,8 @@ export function injectOutlines(root: TreePerson, selectedPersonId: string): void
   if (!hasFather) target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
   if (!hasMother) target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));
 
-  target.children.push(makePlaceholder('child', selectedPersonId));
+  target.children.push(makePlaceholder('son', selectedPersonId, 'M'));
+  target.children.push(makePlaceholder('daughter', selectedPersonId, 'F'));
   if (target.person.sex === 'F') {
     target.spouses.unshift(makePlaceholder('spouse', selectedPersonId, 'M'));
   } else {
