@@ -135,7 +135,7 @@
             </template>
             <template v-else>
               <rect x="-12" y="-12" width="24" height="24" fill="transparent" />
-              <text class="add-relative-leaf-glyph" text-anchor="middle" dominant-baseline="central" font-size="20">🍃</text>
+              <text class="add-relative-leaf-glyph" text-anchor="middle" dominant-baseline="central" font-size="20">🌳</text>
             </template>
           </g>
         </g>
