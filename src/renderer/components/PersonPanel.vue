@@ -25,13 +25,6 @@
                 :nickname="primaryName?.nickname ?? null"
               />
             </div>
-            <button
-              v-if="!props.readonly"
-              class="panel-edit-btn"
-              :title="$t('common.edit')"
-              :aria-label="$t('common.edit')"
-              @click="showEditPerson = true"
-            >✎</button>
           </div>
           <div class="panel-lifelines">
             <div v-if="person.birthLine" class="panel-lifeline">* {{ person.birthLine }}</div>
@@ -45,21 +38,7 @@
             <AppButton variant="soft" size="sm" @click="openAddRelative('daughter')">+ {{ $t('personDetail.addDaughter') }}</AppButton>
           </div>
         </div>
-        <div class="panel-header-actions">
-          <AppButton
-            v-if="showTreeFocalButton && personId && !isTreeFocal"
-            variant="soft"
-            size="sm"
-            :title="$t('tree.setFocalHint')"
-            @click="emit('refocus', personId)"
-          >🌳 {{ $t('tree.setFocal') }}</AppButton>
-          <span
-            v-else-if="showTreeFocalButton && isTreeFocal"
-            class="tree-focal-badge"
-            :title="$t('tree.isFocalHint')"
-          >🌳 {{ $t('tree.isFocal') }}</span>
-          <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
-        </div>
+        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Person section -->
@@ -200,23 +179,12 @@
       @cancel="showAddRelative = false"
       @saved="onRelativeSaved"
     />
-
-    <!-- Edit person modal -->
-    <PersonModal
-      v-if="showEditPerson && personId"
-      mode="standalone"
-      :person-id="personId"
-      @close="showEditPerson = false"
-      @cancel="showEditPerson = false"
-      @saved="onPersonEdited"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, onMounted, nextTick, computed } from 'vue';
+import { ref, toRef, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTreeFocalStore } from '../stores/treeFocal';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -246,22 +214,12 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const props = defineProps<{
-  personId: string | null;
-  readonly?: boolean;
-  showTreeFocalButton?: boolean;
-}>();
+const props = defineProps<{ personId: string | null; readonly?: boolean }>();
 const emit = defineEmits<{
   'relative-added': [];
   'person-changed': [];
-  'refocus': [id: string];
   'close': [];
 }>();
-
-const treeFocalStore = useTreeFocalStore();
-const isTreeFocal = computed(() =>
-  !!props.personId && treeFocalStore.personId === props.personId,
-);
 
 // ── Data (composable) ───────────────────────────────────────────────────────
 
@@ -349,19 +307,6 @@ async function onRelativeSaved() {
     await loadPerson(props.personId);
   }
   emit('relative-added');
-}
-
-// ── Edit person modal ───────────────────────────────────────────────────────
-
-const showEditPerson = ref(false);
-
-async function onPersonEdited() {
-  showEditPerson.value = false;
-  if (props.personId) {
-    await loadPerson(props.personId);
-    await loadNames(props.personId);
-  }
-  emit('person-changed');
 }
 
 // ── Quality check fix actions ───────────────────────────────────────────────
@@ -518,26 +463,6 @@ onMounted(() => {
   margin: calc(var(--space-md) * -1) 0;
 }
 .panel-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
-.panel-header-actions {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  align-self: stretch;
-  padding-right: var(--space-sm);
-}
-.tree-focal-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px var(--space-sm);
-  background: var(--success-bg);
-  color: var(--success-text);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  white-space: nowrap;
-  align-self: center;
-}
 .panel-name-row {
   display: flex;
   align-items: center;
@@ -556,22 +481,6 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-}
-.panel-edit-btn {
-  background: none;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  line-height: 1;
-  flex-shrink: 0;
-}
-.panel-edit-btn:hover {
-  color: var(--text-primary);
-  background: var(--surface-hover);
-  border-color: var(--surface-border-subtle);
 }
 .panel-lifelines {
   margin-bottom: var(--space-xs);
