@@ -1,6 +1,6 @@
 <template>
   <div>
-    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" :action-label="props.readonly ? '' : $t('empty.attachMedia')" @action="attach()" />
+    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" />
     <table v-else class="data-table">
       <thead>
         <tr>

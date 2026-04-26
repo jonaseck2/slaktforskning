@@ -4,7 +4,7 @@
       <h4>{{ $t('events.title') }} <span v-if="events.length" class="section-count">({{ events.length }})</span></h4>
       <AppButton v-if="!props.readonly" variant="soft" size="sm" @click="openAddForm()">+ {{ $t('events.event') }}</AppButton>
     </div>
-    <SectionEmpty v-if="events.length === 0" :message="$t('empty.events')" :action-label="!props.readonly ? $t('empty.addEvent') : ''" @action="openAddForm()" />
+    <SectionEmpty v-if="events.length === 0" :message="$t('empty.events')" />
     <table v-else class="data-table events-table">
       <thead v-if="props.showPersons">
         <tr>

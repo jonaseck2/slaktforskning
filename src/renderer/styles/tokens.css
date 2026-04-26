@@ -99,6 +99,10 @@
   --accent-hover: #5a4bd1;
   --accent-text:  #ffffff;
 
+  /* Link color — Twilight's accent is too light to clear AA on muted
+   * surfaces, so override with a darker purple that does. */
+  --color-link:   #5343b8;
+
   /* Fan-chart branch palette — muted nightfall */
   --fan-branch-1: #272d5a;  /* midnight-indigo */
   --fan-branch-2: #3d2f5a;  /* dusk-violet */

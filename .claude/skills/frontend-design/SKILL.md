@@ -226,7 +226,7 @@ Static-mode defaults are only needed if the panel is rendered in `VITE_STATIC_MO
 ```
 With `padding: var(--space-md) 0 var(--space-md) var(--space-lg)` on `.panel-header` so the avatar gets left-padding but the close button still hits the right edge. Use `margin: calc(var(--space-md) * -1) 0` on the close button to expand its hit area to the full header height.
 
-**Empty-state inside sections** — use `<SectionEmpty :message="$t('empty.foo')" />`, not inline divs.
+**Empty-state inside sections** — use `<SectionEmpty :message="$t('empty.foo')" />`, not inline divs. **Never pass `:action-label`** when the parent `<SectionHeader>` already has an `actionLabel` for the same action — the empty state and the header would render two identical "+ X" buttons stacked. The header button is the single entry point; the empty state shows only the message.
 
 ### Content feathering
 
@@ -321,11 +321,18 @@ Key token categories:
 /* Accent */      --accent, --accent-hover, --accent-text
 /* Fan branches */--fan-branch-1..4 (per theme; read by readThemeColors() in fanColors.ts)
 /* Semantic */    --error-bg/text, --warning-bg/text, --success-bg/text, --info-bg/text
+/* Entity */      --entity-{person,event,source,citation,place,relationship,task,group,name,identifier,neutral}-text/-bg/-border
 /* Spacing */     --space-xs(4) --space-sm(8) --space-md(12) --space-lg(16) --space-xl(24)
 /* Typography */  --font-xs(11) --font-sm(13) --font-base(14) --font-md(15) --font-lg(16)
 /* Shape */       --radius-sm(4) --radius-md(6) --radius-lg(10)
 /* Shadows */     --shadow-sm, --shadow-md, --shadow-lg
 ```
+
+**Entity color consumption.** Per-entity tokens (light defaults in `tokens.css :root`; dark + HC overrides in `shared.css` under `html.dark` / `html.high-contrast`, theme-invariant) are aliased into element-scoped names by attribute selectors in `shared.css`:
+```css
+[data-entity="person"] { --entity-text: var(--entity-person-text); --entity-bg: var(--entity-person-bg); --entity-border: var(--entity-person-border); }
+```
+Set `data-entity="<type>"` on any container (BaseSubPanel does it on the modal root); descendants reference `var(--entity-text)` / `var(--entity-bg)` / `var(--entity-border)` and flip with mode + theme automatically. **Never** apply entity colors via inline `:style` or by importing hex values from JS — `entityMeta.ts` carries only `EntityType` + `icon` + `labelKey`, not colors. Entity borders are decorative pastels (no theme/mode WCAG requirement); the modal's structural border is `--surface-border` which the existing `surface-border on surface-bg` UI test already covers.
 
 ### Reactive theme/appearance updates in charts
 

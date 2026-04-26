@@ -44,7 +44,9 @@ function extractBlocks(css: string, selector: string): string[] {
 
 function parseVars(blockContent: string): Palette {
   const out: Palette = {};
-  const re = /--([a-zA-Z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\))\s*;/g;
+  // Capture hex, rgb[a](), or var(--...) [with optional fallback]. Anything
+  // else (px, numbers, keywords) is ignored — only color tokens matter here.
+  const re = /--([a-zA-Z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\)|var\([^)]+\))\s*;/g;
   for (const m of blockContent.matchAll(re)) {
     out[m[1]] = m[2];
   }
@@ -58,13 +60,42 @@ function mergeBlocks(css: string, selector: string): Palette {
   return p;
 }
 
+/**
+ * Recursively resolve `var(--name[, fallback])` references against the palette
+ * until each value is either a hex/rgb literal or an unresolvable var().
+ */
+function resolveValue(v: string, p: Palette, seen: Set<string>): string {
+  const m = v.match(/^var\(\s*--([a-zA-Z0-9-]+)(?:\s*,\s*(.+))?\s*\)\s*$/);
+  if (!m) return v;
+  const name = m[1];
+  if (seen.has(name)) return v;
+  const next = new Set(seen);
+  next.add(name);
+  if (p[name]) return resolveValue(p[name], p, next);
+  if (m[2]) return resolveValue(m[2].trim(), p, next);
+  return v;
+}
+
+function resolvePalette(p: Palette): Palette {
+  const out: Palette = {};
+  for (const k of Object.keys(p)) {
+    out[k] = resolveValue(p[k], p, new Set());
+  }
+  return out;
+}
+
 type Theme = 'forest' | 'nordic' | 'twilight';
 type Appearance = 'light' | 'dark' | 'high-contrast';
 
 function buildPalette(theme: Theme, appearance: Appearance): Palette {
   const p: Palette = {};
 
+  // Base tokens (theme-invariant + Forest defaults).
   Object.assign(p, mergeBlocks(TOKENS_CSS, ':root'));
+  // Legacy aliases (--color-link, --color-text-*, etc.) live in shared.css :root
+  // and reference token vars via var(...). Pull them in so resolveValue() can
+  // walk the chain to a hex literal.
+  Object.assign(p, mergeBlocks(SHARED_CSS, ':root'));
 
   if (theme === 'nordic') Object.assign(p, mergeBlocks(TOKENS_CSS, '.theme-nordic'));
   if (theme === 'twilight') Object.assign(p, mergeBlocks(TOKENS_CSS, '.theme-twilight'));
@@ -83,7 +114,7 @@ function buildPalette(theme: Theme, appearance: Appearance): Palette {
     if (theme === 'twilight') Object.assign(p, mergeBlocks(SHARED_CSS, 'html.high-contrast.theme-twilight'));
   }
 
-  return p;
+  return resolvePalette(p);
 }
 
 type TextSize = 'normal' | 'large';
@@ -119,6 +150,12 @@ const TEXT_PAIRS: TextPair[] = [
   { label: 'sex-m-text on sex-m-bg', fg: 'sex-m-text', bg: 'sex-m-bg', size: 'large' },
   { label: 'sex-f-text on sex-f-bg', fg: 'sex-f-text', bg: 'sex-f-bg', size: 'large' },
   { label: 'sex-u-text on sex-u-bg', fg: 'sex-u-text', bg: 'sex-u-bg', size: 'large' },
+
+  // Linked references inside side panels (.entity-link), and AppButton soft
+  // variant text — both use --color-link on a panel surface tone.
+  { label: 'color-link on surface', fg: 'color-link', bg: 'surface' },
+  { label: 'color-link on surface-bg', fg: 'color-link', bg: 'surface-bg' },
+  { label: 'color-link on surface-hover', fg: 'color-link', bg: 'surface-hover' },
 ];
 
 interface UiPair {

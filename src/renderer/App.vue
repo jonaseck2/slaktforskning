@@ -590,8 +590,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--error-text);
-  color: white;
+  background: var(--error-bg);
+  color: var(--error-text);
   border-radius: 8px;
   padding: 1px 5px;
   font-size: var(--font-xs);

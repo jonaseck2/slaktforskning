@@ -1,6 +1,6 @@
 <template>
   <div>
-    <SectionEmpty v-if="identifiers.length === 0" :message="$t('empty.identifiers')" :action-label="!props.readonly ? $t('empty.addIdentifier') : ''" @action="openAddForm()" />
+    <SectionEmpty v-if="identifiers.length === 0" :message="$t('empty.identifiers')" />
     <table v-else class="data-table">
       <thead>
         <tr>
