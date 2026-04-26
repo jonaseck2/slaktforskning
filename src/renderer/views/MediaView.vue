@@ -170,7 +170,7 @@
         :readonly="isStaticMode"
         @link-changed="reload"
         @close="selectedMediaId = null"
-        @start-draw-mode="drawMode = true"
+        @start-draw-mode="onStartDrawMode"
         @stop-draw-mode="drawMode = false"
         @highlight-region="(id: string | null) => highlightedRegionId = id"
         @region-deleted="() => viewerRef?.reloadRegions()"
@@ -419,6 +419,13 @@ async function openViewerById(mediaId: string) {
   viewerIndex.value = 0;
   selectedMediaId.value = normalized.id;
   viewerMode.value = true;
+}
+
+async function onStartDrawMode() {
+  drawMode.value = true;
+  if (!viewerMode.value && selectedMediaId.value) {
+    await openViewerById(selectedMediaId.value);
+  }
 }
 
 async function onRegionDrawn(rect: { x: number; y: number; width: number; height: number }) {
