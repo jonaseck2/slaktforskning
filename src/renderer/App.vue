@@ -206,7 +206,10 @@
             :aria-expanded="isSettingsOpen"
             :aria-label="$t('a11y.settings')"
             @click.stop="isSettingsOpen = !isSettingsOpen"
-          >🎨</button>
+          >
+            <span aria-hidden="true">🎨</span>
+            <span class="nav-label">{{ $t('settings.appearance') }}</span>
+          </button>
           <div v-if="isSettingsOpen" class="settings-panel topbar-settings-panel">
             <div class="settings-group-label">{{ $t('settings.menuLayout') }}</div>
             <div class="settings-row" role="radiogroup" :aria-label="$t('settings.menuLayout')">
@@ -681,8 +684,12 @@ body {
   padding: 5px 10px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: var(--font-base);
+  font-size: var(--font-sm);
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
 }
 .topbar-settings-toggle:hover { background: var(--sidebar-active-bg); }
 .topbar-settings-panel {
