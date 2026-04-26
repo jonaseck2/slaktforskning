@@ -103,7 +103,7 @@
           <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
             <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
-            <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🌳</button>
+            <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🍃</button>
           </div>
           <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
           <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
@@ -225,7 +225,7 @@
             <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
             <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
               <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
-              <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🌳</button>
+              <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🍃</button>
             </div>
             <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
             <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
