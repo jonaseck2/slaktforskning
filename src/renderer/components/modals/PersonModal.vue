@@ -306,10 +306,6 @@ function defaultSex(): 'M' | 'F' | 'U' {
 
 function defaultSurname(): string {
   if (props.prefillSurname) return props.prefillSurname;
-  const m = props.addRelatedTo?.mode;
-  if ((m === 'child' || m === 'son' || m === 'daughter') && props.addRelatedTo?.personSurname) {
-    return props.addRelatedTo.personSurname;
-  }
   return '';
 }
 
@@ -409,6 +405,10 @@ async function handleSave() {
       if (!existingPersonId.value) return;
       person = (await window.api.persons.get(existingPersonId.value)) as Person;
     } else {
+      // Warn (but allow) when neither name field is filled in.
+      if (!form.given_name.trim() && !form.surname.trim()) {
+        toast.info(t('persons.missingNameWarning'));
+      }
       // Create new person (no embedded event — events are added separately)
       const payload: Record<string, unknown> = {
         given_name: form.given_name,

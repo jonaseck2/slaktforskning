@@ -165,17 +165,17 @@
           @keydown.space.prevent="startAddFromPlaceholder(ph)"
         >
           <rect
-            :x="ph.x" :y="ph.y" :width="BOX_W" :height="MIN_BOX_H"
+            :x="ph.x + BOX_W / 4" :y="ph.y + MIN_BOX_H / 4" :width="BOX_W / 2" :height="MIN_BOX_H / 2"
             rx="6" ry="6"
             fill="transparent" :stroke="chartTokens.placeholderStroke" stroke-dasharray="4 3" stroke-width="1.5"
           />
           <text
-            :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 - 6"
-            text-anchor="middle" :fill="chartTokens.placeholderText" font-size="18"
+            :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 - 2"
+            text-anchor="middle" :fill="chartTokens.placeholderText" font-size="14"
           >+</text>
           <text
-            :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 + 12"
-            text-anchor="middle" :fill="chartTokens.placeholderText" font-size="11"
+            :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 + 9"
+            text-anchor="middle" :fill="chartTokens.placeholderText" font-size="9"
           >{{ placeholderLabel(ph.role) }}</text>
         </g>
         </template>
