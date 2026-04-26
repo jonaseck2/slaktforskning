@@ -369,12 +369,11 @@ export function listPersonsPage(
   // subqueries (those are pass 2). Correlated subqueries on all N persons
   // before LIMIT caused O(4N) lookups on large DBs.
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
-  // Empty/NULL values sort naturally with the chosen direction — same as the
-  // name columns. Empty strings come first on ASC, last on DESC.
+  // NULL birth_dates sort last on asc, first on desc (CASE WHEN trick).
   const orderBy = sortBy === 'given_name'
     ? `pn.given_name ${dir}, pn.surname ${dir}`
     : sortBy === 'birth_date'
-    ? `COALESCE(bd.date_value, '') ${dir}, pn.surname ASC, pn.given_name ASC`
+    ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
   const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.id, p.sex,
@@ -392,14 +391,10 @@ export function listPersonsPage(
       ON pn.person_id = p.id
       AND pn.sort_order = ms.min_sort
     LEFT JOIN (
-      -- Mirrors the displayed Born value: prefer the original-text date
-      -- (e.g. "circa 1820"), fall back to the structured date_value.
-      -- Persons with no birth event at all get NULL → sort as empty string.
-      SELECT ep.person_id,
-             MIN(COALESCE(NULLIF(e.date_original, ''), e.date_value)) AS date_value
+      SELECT person_id, MIN(date_value) AS date_value
       FROM event_participants ep
       JOIN events e ON e.id = ep.event_id
-      WHERE e.event_type = 'birth'
+      WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
       GROUP BY ep.person_id
     ) bd ON bd.person_id = p.id
     ORDER BY ${orderBy}
