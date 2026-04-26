@@ -148,32 +148,49 @@
         <div v-else class="topbar-focus-spacer"></div>
       </div>
       <nav class="topbar-row topbar-row--nav" aria-label="Main navigation" @click.stop>
-        <div v-for="sec in navSections" :key="sec.key" class="nav-section">
-          <button
-            type="button"
-            class="nav-section-toggle"
-            :class="{ 'nav-section-toggle--active': isSectionActive(sec) || openSection === sec.key }"
-            :aria-expanded="openSection === sec.key"
-            @click="toggleSection(sec.key)"
-          >
-            <span>{{ $t(sec.labelKey) }}</span>
-            <span class="nav-section-arrow">{{ openSection === sec.key ? '▴' : '▾' }}</span>
-          </button>
-          <div v-if="openSection === sec.key" class="nav-section-menu" role="menu">
+        <template v-for="sec in navSections" :key="sec.key">
+          <!-- Flat section: items inline, no dropdown -->
+          <div v-if="sec.flat" class="nav-flat-group">
+            <span class="nav-flat-label">{{ $t(sec.labelKey) }}</span>
             <router-link
               v-for="item in sec.items"
               :key="item.to"
               :to="item.to"
-              class="nav-section-item"
-              role="menuitem"
-              @click="openSection = null"
+              class="nav-item"
             >
               <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
-              <span>{{ $t(item.labelKey) }}</span>
+              <span class="nav-label">{{ $t(item.labelKey) }}</span>
               <span v-if="item.badge && item.badge.value > 0" class="error-badge">{{ item.badge.value }}</span>
             </router-link>
           </div>
-        </div>
+          <!-- Dropdown section -->
+          <div v-else class="nav-section">
+            <button
+              type="button"
+              class="nav-section-toggle"
+              :class="{ 'nav-section-toggle--active': isSectionActive(sec) || openSection === sec.key }"
+              :aria-expanded="openSection === sec.key"
+              @click="toggleSection(sec.key)"
+            >
+              <span>{{ $t(sec.labelKey) }}</span>
+              <span class="nav-section-arrow">{{ openSection === sec.key ? '▴' : '▾' }}</span>
+            </button>
+            <div v-if="openSection === sec.key" class="nav-section-menu" role="menu">
+              <router-link
+                v-for="item in sec.items"
+                :key="item.to"
+                :to="item.to"
+                class="nav-section-item"
+                role="menuitem"
+                @click="openSection = null"
+              >
+                <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+                <span>{{ $t(item.labelKey) }}</span>
+                <span v-if="item.badge && item.badge.value > 0" class="error-badge">{{ item.badge.value }}</span>
+              </router-link>
+            </div>
+          </div>
+        </template>
         <span class="nav-spacer"></span>
         <router-link to="/import-export" class="nav-item nav-item--quiet">
           <span class="nav-icon" aria-hidden="true">📦</span>
@@ -364,7 +381,7 @@ const openTaskCount = ref(0);
 // sidebar's section labels, just grouped behind toggle buttons.
 type NavSectionKey = 'research' | 'organize' | 'review' | 'present';
 interface NavItemDef { to: string; icon: string; labelKey: string; badge?: { value: number } }
-interface NavSectionDef { key: NavSectionKey; labelKey: string; items: NavItemDef[] }
+interface NavSectionDef { key: NavSectionKey; labelKey: string; items: NavItemDef[]; flat?: boolean }
 const navSections = computed<NavSectionDef[]>(() => [
   {
     key: 'research',
@@ -376,8 +393,12 @@ const navSections = computed<NavSectionDef[]>(() => [
     ],
   },
   {
+    // Organisera renders inline in the top-bar (no dropdown) so the user can
+    // reach Grupper / Forskning in one click — matches the always-visible
+    // sidebar layout. Other sections stay collapsed behind a dropdown.
     key: 'organize',
     labelKey: 'nav.organize',
+    flat: true,
     items: [
       { to: '/groups', icon: '🏷️', labelKey: 'nav.groups' },
       { to: '/research-tasks', icon: '🔬', labelKey: 'nav.researchTasks', badge: openTaskCount },
@@ -682,6 +703,25 @@ body {
 }
 
 .nav-spacer { flex: 1; min-width: 0; }
+
+/* Flat sections (e.g. Organisera) — inline items in the top bar with a small
+   uppercase label tag instead of a dropdown button. */
+.nav-flat-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.nav-flat-label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sidebar-text-muted);
+  padding: 0 6px 0 8px;
+  margin-left: 4px;
+  border-left: 1px solid var(--sidebar-border);
+}
 .nav-section { position: relative; flex-shrink: 0; }
 .nav-section-toggle {
   background: none;
