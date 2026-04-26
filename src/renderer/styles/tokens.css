@@ -14,8 +14,9 @@
   --sidebar-active-text: #d0e8d0;
   --sidebar-border:      #2e4a2e;
 
-  /* Surface */
-  --surface-bg:           #e8f0e8;
+  /* Surface — fresh leaf green for the app background, picking up the
+     same family as the 🍃 emoji used by the Knapp setting. */
+  --surface-bg:           #d8ecce;
   --surface:              #ffffff;
   --surface-hover:        #f0f6f0;
   --surface-border:       #c0d4c0;
