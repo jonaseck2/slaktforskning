@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { narratePerson, narrateRelationship, narrateSource } from '../../src/renderer/utils/narration';
+import {
+  narratePerson, narrateRelationship, narrateSource,
+  narrateMedia, narratePlace, narrateEvent, narrateCitation,
+} from '../../src/renderer/utils/narration';
 
 describe('narratePerson', () => {
   it('narrates a person with birth and death', () => {
@@ -78,5 +81,117 @@ describe('narrateSource', () => {
     const text = narrateSource({ title: 'Census 1880', citationCount: 0 });
     expect(text).toContain('Census 1880');
     expect(text).not.toContain('Author');
+  });
+});
+
+describe('narrateMedia', () => {
+  it('narrates a photo with title, format, and tagged people', () => {
+    const text = narrateMedia({
+      title: 'Karl och Anna 1923',
+      format: 'jpg',
+      taggedPersonNames: ['Karl Andersson', 'Anna Berg'],
+      inferredDate: '1923',
+    });
+    expect(text).toContain('Karl och Anna 1923');
+    expect(text).toContain('Photo');
+    expect(text).toContain('Karl Andersson');
+    expect(text).toContain('Anna Berg');
+    expect(text).toContain('1923');
+  });
+
+  it('handles a document with no tagged people', () => {
+    const text = narrateMedia({ title: 'Birth certificate', format: 'pdf' });
+    expect(text).toContain('Birth certificate');
+    expect(text).toContain('Document');
+    expect(text).not.toContain('Tagged');
+  });
+
+  it('handles minimal data (title only)', () => {
+    const text = narrateMedia({ title: 'Untitled' });
+    expect(text).toContain('Untitled');
+    expect(text).not.toContain('undefined');
+  });
+});
+
+describe('narratePlace', () => {
+  it('narrates a place with type, parent path, and event count', () => {
+    const text = narratePlace({
+      name: 'Älghult',
+      type: 'parish',
+      parentPath: 'Kronoberg, Sweden',
+      eventCount: 47,
+    });
+    expect(text).toContain('Älghult');
+    expect(text).toContain('parish');
+    expect(text).toContain('Kronoberg, Sweden');
+    expect(text).toContain('47');
+  });
+
+  it('handles a place with no events', () => {
+    const text = narratePlace({ name: 'Stockholm', eventCount: 0 });
+    expect(text).toContain('Stockholm');
+    expect(text).not.toContain('undefined');
+  });
+
+  it('handles minimal data (name only)', () => {
+    const text = narratePlace({ name: 'Unknown' });
+    expect(text).toContain('Unknown');
+    expect(text).not.toContain('undefined');
+  });
+});
+
+describe('narrateEvent', () => {
+  it('narrates a birth event with date, place, and primary person', () => {
+    const text = narrateEvent({
+      type: 'Birth',
+      date: '12 March 1850',
+      place: 'Stockholm',
+      primaryPersonName: 'Karl Andersson',
+    });
+    expect(text).toContain('Birth');
+    expect(text).toContain('Karl Andersson');
+    expect(text).toContain('12 March 1850');
+    expect(text).toContain('Stockholm');
+  });
+
+  it('handles a marriage event with no primary person', () => {
+    const text = narrateEvent({ type: 'Marriage', date: '1868', place: 'Göteborg' });
+    expect(text).toContain('Marriage');
+    expect(text).toContain('1868');
+    expect(text).not.toContain('undefined');
+  });
+
+  it('handles minimal data (type only)', () => {
+    const text = narrateEvent({ type: 'Census' });
+    expect(text).toContain('Census');
+    expect(text).not.toContain('undefined');
+  });
+});
+
+describe('narrateCitation', () => {
+  it('narrates a primary citation with page and attached entity', () => {
+    const text = narrateCitation({
+      sourceTitle: 'Stockholms domkyrkoförsamling födelsebok 1850-1859',
+      page: '47',
+      confidence: 3,
+      attachedToLabel: "Karl Andersson's birth",
+    });
+    expect(text).toContain('Stockholms domkyrkoförsamling');
+    expect(text).toContain('47');
+    expect(text).toContain('primary');
+    expect(text).toContain("Karl Andersson's birth");
+  });
+
+  it('handles a citation with no page', () => {
+    const text = narrateCitation({ sourceTitle: 'Census 1880', confidence: 2 });
+    expect(text).toContain('Census 1880');
+    expect(text).toContain('secondary');
+    expect(text).not.toContain('undefined');
+  });
+
+  it('handles minimal data (title only)', () => {
+    const text = narrateCitation({ sourceTitle: 'Unknown source' });
+    expect(text).toContain('Unknown source');
+    expect(text).not.toContain('undefined');
   });
 });
