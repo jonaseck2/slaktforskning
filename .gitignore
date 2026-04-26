@@ -13,4 +13,5 @@ coverage/
 /src/import/genney/lib/
 /genney-media/
 .claude/worktrees/
+.claude/scheduled_tasks.lock
 .env*
