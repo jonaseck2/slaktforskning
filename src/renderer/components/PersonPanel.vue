@@ -172,7 +172,7 @@
 
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="danger" size="sm" @click="showDeleteConfirm = true">
+        <AppButton variant="soft" size="sm" @click="showDeleteConfirm = true">
           <span class="trash-icon" aria-hidden="true">🗑️</span>
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
