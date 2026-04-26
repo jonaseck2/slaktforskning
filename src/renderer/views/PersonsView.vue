@@ -1,26 +1,25 @@
 <template>
   <div class="visualization-view" ref="vizBodyRef">
-    <!-- Permanent left list column -->
-    <template v-if="listOpen">
-      <div class="viz-list-column" :style="{ width: listWidth + 'px' }">
-        <h3 class="viz-list-title">{{ $t('persons.listTitle') }}</h3>
-        <PersonsListTab embedded @person-added="onPersonAdded" @select="navigateTo" />
-        <button class="list-collapse-btn" :aria-label="$t('common.close')" title="Dölj listan" @click="closeList">◀</button>
-      </div>
-      <div class="list-drag-handle" @mousedown="(e) => startListResize(e, vizBodyRef!)"></div>
-    </template>
-    <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
-
     <!-- Left sheet -->
     <div class="viz-chart-area">
       <div class="header">
-        <h2>{{ $t('persons.familyTree') }}</h2>
+        <h2>{{ $t('nav.people') }}</h2>
         <div class="header-right">
+          <div class="view-toggle">
+            <AppButton :variant="viewMode === 'tree' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('tree')">{{ $t('visualization.tab.tree') }}</AppButton>
+            <AppButton :variant="viewMode === 'list' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('list')">{{ $t('visualization.listView') }}</AppButton>
+          </div>
           <AppButton v-if="!isStaticMode" variant="soft" @click="showAddPerson = true">+ {{ $t('persons.addPerson') }}</AppButton>
         </div>
       </div>
 
-      <!-- Tree: tab bar + chart -->
+      <!-- List mode: person list -->
+      <div v-if="viewMode === 'list'" class="viz-list-content">
+        <PersonsListTab embedded @person-added="onPersonAdded" @select="selectNode" />
+      </div>
+
+      <!-- Tree mode: tab bar + chart -->
+      <template v-if="viewMode === 'tree'">
       <FilterChips
         v-if="focalPerson"
         class="viz-tabs"
@@ -48,7 +47,7 @@
           ref="pedigreeChartRef"
           :key="'pedigree-' + chartKey"
           :person-id="personId"
-          :selected-person-id="personId"
+          :selected-person-id="selectedPersonId"
           :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           :readonly="isStaticMode"
           @navigate="navigateTo"
@@ -59,7 +58,7 @@
           ref="hourglassChartRef"
           :key="'hourglass-' + chartKey"
           :person-id="personId"
-          :selected-person-id="personId"
+          :selected-person-id="selectedPersonId"
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
@@ -69,7 +68,7 @@
           ref="descendantChartRef"
           :key="'descendants-' + chartKey"
           :person-id="personId"
-          :selected-person-id="personId"
+          :selected-person-id="selectedPersonId"
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
@@ -87,22 +86,27 @@
           @navigate="navigateTo"
         />
       </div>
-      <!-- Reopen panel button when panel is closed -->
-      <button v-if="!panelOpen && personId" class="panel-open-btn" :aria-label="$t('panel.open') ?? 'Open'" @click="openPanel">◀</button>
+      <!-- Reopen panel button when panel is closed (tree mode) -->
+      <button v-if="!panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
+      </template>
+      <!-- Reopen panel button when panel is closed (list mode) -->
+      <button v-if="viewMode === 'list' && !panelOpen && (selectedPersonId || personId)" class="panel-open-btn" @click="openPanel">▶</button>
     </div>
 
     <!-- Drag handle + panel (both tree and list modes) -->
-    <template v-if="panelOpen && personId">
+    <template v-if="panelOpen && (selectedPersonId || personId)">
       <div
         class="panel-drag-handle"
         @mousedown="(e) => startResize(e, vizBodyRef!)"
       ></div>
       <div class="viz-panel" :style="{ width: panelWidth + 'px' }">
         <PersonPanel
-          :person-id="personId ?? null"
+          :person-id="selectedPersonId ?? personId ?? null"
+          :show-tree-btn="true"
           :readonly="isStaticMode"
           @relative-added="reloadChart"
           @person-changed="reloadChart"
+          @show-in-tree="showInTree((selectedPersonId ?? personId)!)"
           @close="closePanel"
         />
       </div>
@@ -155,17 +159,14 @@ const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 const focalPerson = ref<Person | null>(null);
 const noPersonsExist = ref(false);
 
-// Persistent left list column. Replaces the old tree/list tab toggle —
-// list and tree are now always visible side-by-side, with the list
-// collapsible via a ▶/◀ button.
-const listOpen = ref(localStorage.getItem('persons-list-open') !== 'false');
-function openList() {
-  listOpen.value = true;
-  localStorage.setItem('persons-list-open', 'true');
-}
-function closeList() {
-  listOpen.value = false;
-  localStorage.setItem('persons-list-open', 'false');
+// View mode: tree or list
+type ViewMode = 'tree' | 'list';
+const viewMode = ref<ViewMode>(
+  (localStorage.getItem('persons-view-mode') as ViewMode) || 'tree'
+);
+function setViewMode(mode: ViewMode) {
+  viewMode.value = mode;
+  localStorage.setItem('persons-view-mode', mode);
 }
 
 // Add person modal
@@ -178,6 +179,9 @@ function onPersonAdded(person: { id: string }) {
 const noFocalPerson = ref(false);
 const vizBodyRef = ref<HTMLElement | null>(null);
 const chartKey = ref(0);
+
+// Selected node in the chart (may differ from chart focal person)
+const selectedPersonId = ref<string | null>(null);
 
 // Template refs for chart components — used by useChartBridge to read layout boxes
 const pedigreeChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
@@ -210,13 +214,6 @@ function closePanel() {
 }
 
 const { panelWidth, startResize } = usePanelResize();
-const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
-  storageKey: 'persons-list-width',
-  side: 'left',
-  defaultWidth: 280,
-  minWidth: 200,
-  maxWidthRatio: 0.4,
-});
 
 const personId = computed(() => route.params.personId as string | undefined);
 
@@ -225,17 +222,15 @@ function setTab(tab: TabName) {
   localStorage.setItem('viz-tab', tab);
 }
 
-// Click-to-select: makes `id` the selected (and tree-focal) person.
-// Selecting a person opens the panel, refocuses the chart, and updates the
-// sidebar's selected-person indicator — there is only one notion of "current
-// person", everywhere it appears.
-async function navigateTo(id: string) {
+function selectNode(id: string) {
+  selectedPersonId.value = id;
   if (!panelOpen.value) openPanel();
-  if (id !== personId.value) {
-    await router.push('/persons/' + id);
-  } else {
-    await load();
-  }
+}
+
+async function navigateTo(id: string) {
+  // Click-to-select: open panel and highlight, but do NOT re-root the tree.
+  // The chart focal only changes via the "Fokusera" button (showInTree).
+  selectNode(id);
   if (!ttsEnabled?.value || !tts) return;
   try {
     const person = await window.api.persons.get(id) as { id: string; sex: string } | null;
@@ -256,6 +251,18 @@ async function navigateTo(id: string) {
     const text = narratePerson({ name, birthDate, deathDate }, narrationLabelsFromI18n(t));
     tts.speak(text, locale.value);
   } catch { /* ignore */ }
+}
+
+async function showInTree(id: string) {
+  // Update sidebar focus indicator
+  try {
+    const names = (await window.api.persons.getNames(id)) as { given_name: string; surname: string }[];
+    const n = names[0];
+    const name = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+    focusStore.set(id, name);
+  } catch { /* best-effort */ }
+  // Change the chart focal person (re-centers the chart)
+  router.push('/persons/' + id);
 }
 
 async function reloadChart() {
@@ -286,9 +293,16 @@ async function load() {
     return;
   }
   focalPerson.value = person;
+  // Sync the panel's selectedPersonId to the focal whenever the route changes.
+  // Without this, switching focal via direct URL / sidebar / Fokusera would
+  // leave the panel showing the previous person while the tree centers on the
+  // new one. selectNode() still wins for click-to-select on a non-focal node
+  // in the chart (it runs after this and overwrites selectedPersonId).
+  selectedPersonId.value = id;
   if (!panelOpen.value) openPanel();
-  // Keep the sidebar's selected-person indicator in sync with whichever
-  // person is currently selected (= focal — they're the same thing).
+  // Keep the sidebar focus indicator in sync with whichever person is focal.
+  // Runs on every route change to /persons/:id, so direct-URL nav and the
+  // "Fokusera"-button update the sidebar consistently with click-to-navigate.
   if (focusStore.personId !== id) {
     try {
       const names = (await window.api.persons.getNames(id)) as Array<{ given_name?: string; surname?: string }>;
@@ -309,6 +323,7 @@ const chartNav = useChartNavigation({
   t: t as (key: string, params?: Record<string, string | number>) => string,
   onNavigate: (pid: string) => navigateTo(pid),
   onFocusChanged: (pid: string) => {
+    selectNode(pid);
     chartNavFocusedPerson.value = pid;
   },
 });
@@ -372,15 +387,13 @@ onUnmounted(() => {
   unregisterChartNav();
 });
 
-// Chart inspection bridge — wires Vue state to HTTP endpoints via IPC.
-// Selected and focal are now the same thing — there's only one person.
-const personIdRef = computed(() => personId.value ?? null);
+// Chart inspection bridge — wires Vue state to HTTP endpoints via IPC
 useChartBridge({
   boxes: chartBoxes,
-  selectedPersonId: personIdRef,
-  focalPersonId: personIdRef,
+  selectedPersonId,
+  focalPersonId: computed(() => personId.value ?? null),
   chartType: activeTab,
-  selectPerson: navigateTo,
+  selectPerson: selectNode,
   focusPerson: (id: string) => router.push('/persons/' + id),
 });
 
@@ -452,7 +465,7 @@ onActivated(load);
 }
 .panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
-/* Drag handle (right panel) */
+/* Drag handle */
 .panel-drag-handle {
   width: 6px;
   background: var(--surface-border-subtle);
@@ -462,75 +475,6 @@ onActivated(load);
   transition: background 0.1s;
 }
 .panel-drag-handle:hover { background: var(--surface-border); }
-
-/* Left list column */
-.viz-list-column {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  flex-shrink: 0;
-  min-height: 0;
-}
-.viz-list-title {
-  margin: 0;
-  padding: var(--space-md) var(--space-md) var(--space-sm);
-  font-size: var(--font-md);
-  font-weight: 600;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-}
-.viz-list-column :deep(.persons-view-content) {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-md);
-}
-.list-collapse-btn {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.list-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-.list-open-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.list-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-.list-drag-handle {
-  width: 6px;
-  background: var(--surface-border-subtle);
-  cursor: col-resize;
-  flex-shrink: 0;
-  transition: background 0.1s;
-}
-.list-drag-handle:hover { background: var(--surface-border); }
 
 /* Panel */
 .viz-panel {
