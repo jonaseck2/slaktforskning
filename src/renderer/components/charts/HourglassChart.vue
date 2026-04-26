@@ -111,27 +111,19 @@
             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
             :fill="dateColor(box)"
           >{{ deathText(box) }}</text>
-          <!-- Add-family-member: dedicated column on the right with separator -->
-          <template v-if="!readonly">
-            <line
-              class="add-btn-separator"
-              :x1="box.x + box.w - BOX_PAD_X_RIGHT - ADD_BTN_AREA_W"
-              :y1="box.y + 6"
-              :x2="box.x + box.w - BOX_PAD_X_RIGHT - ADD_BTN_AREA_W"
-              :y2="box.y + box.h - 6"
-            />
-            <g
-              class="add-relative-btn"
-              :transform="`translate(${box.x + box.w - BOX_PAD_X_RIGHT - ADD_BTN_AREA_W / 2}, ${box.y + 14})`"
-              role="button"
-              :aria-label="$t('personDetail.addRelativeLabel')"
-              @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
-            >
-              <circle r="8" />
-              <line x1="-4" y1="0" x2="4" y2="0" />
-              <line x1="0" y1="-4" x2="0" y2="4" />
-            </g>
-          </template>
+          <!-- Add-family-member badge — small rounded tile that overhangs the top-right corner -->
+          <g
+            v-if="!readonly"
+            class="add-relative-btn"
+            :transform="`translate(${box.x + box.w}, ${box.y})`"
+            role="button"
+            :aria-label="$t('personDetail.addRelativeLabel')"
+            @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
+          >
+            <rect x="-10" y="-10" width="20" height="20" rx="4" />
+            <line x1="-5" y1="0" x2="5" y2="0" />
+            <line x1="0" y1="-5" x2="0" y2="5" />
+          </g>
         </g>
         <template v-if="!readonly">
           <g
@@ -536,17 +528,11 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 .ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
 .ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
 
-/* Thin vertical separator that splits the dedicated + button column
-   from the name/date area. */
-.add-btn-separator {
-  stroke: var(--surface-border-subtle);
-  stroke-width: 1;
-  pointer-events: none;
-}
-
-/* Add-relative + button rendered in the corner of every person box. */
+/* Add-family-member badge that overhangs the top-right corner of each
+   person box. Shape and styling match the box (rounded rect, border,
+   surface fill) so it reads as a small attached tile. */
 .add-relative-btn { cursor: pointer; }
-.add-relative-btn circle {
+.add-relative-btn rect {
   fill: var(--surface);
   stroke: var(--surface-border);
   stroke-width: 1;
@@ -554,11 +540,11 @@ defineExpose({ boxes: computed(() => layout.value.boxes) });
 }
 .add-relative-btn line {
   stroke: var(--text-muted);
-  stroke-width: 1.5;
+  stroke-width: 1.6;
   stroke-linecap: round;
   pointer-events: none;
 }
-.add-relative-btn:hover circle {
+.add-relative-btn:hover rect {
   fill: var(--accent);
   stroke: var(--accent);
 }
