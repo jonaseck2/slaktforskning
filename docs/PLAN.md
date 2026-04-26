@@ -27,10 +27,6 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 - Spec: [plans/archive/2026-04-18-open-source-publishing-design.md](plans/archive/2026-04-18-open-source-publishing-design.md)
 - Plan: [plans/archive/2026-04-18-open-source-publishing.md](plans/archive/2026-04-18-open-source-publishing.md)
 
-#### Narration Coverage Migration [planned]
-Add `v-narrate` to the 3 missing pickers (Source/Group/Media), enrich modal-header narration via BaseSubPanel, make MediaViewer image + caption + face tags focusable and narrated, and add 4 new builders in `narration.ts` (Media/Place/Event/Citation). Last systemic gap from the appearance audit.
-- Spec: [plans/2026-04-26-narration-coverage-design.md](plans/2026-04-26-narration-coverage-design.md)
-
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion.
 
