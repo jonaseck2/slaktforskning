@@ -29,17 +29,12 @@
 
     <!-- Members section (only after first save) -->
     <template v-if="savedGroupId">
-      <div
-        class="ep-sec-header"
-        :style="{ background: ENTITY_COLORS.person.hd, borderBottomColor: ENTITY_COLORS.person.border }"
-      >
+      <div class="ep-sec-header" data-entity="person">
         <div class="ep-sec-left">
-          <span class="ep-sec-title" :style="{ color: ENTITY_COLORS.person.fg }">
-            👤 {{ $t('groups.members') }}
-          </span>
-          <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.person.fg }">{{ members.length }}</span>
+          <span class="ep-sec-title">👤 {{ $t('groups.members') }}</span>
+          <span class="ep-sec-count">{{ members.length }}</span>
         </div>
-        <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.person.fg }">›</span>
+        <span class="ep-sec-open">›</span>
       </div>
       <div class="ep-sec-content">
         <div class="ep-search-wrap">
@@ -110,7 +105,6 @@ import { reactive, ref, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import PersonModal from './PersonModal.vue';
-import { ENTITY_COLORS } from '../../constants/entityColors';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;

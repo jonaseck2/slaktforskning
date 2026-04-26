@@ -15,14 +15,12 @@
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': entryMode === 'new' }"
-            :style="entryMode === 'new' ? { background: ENTITY_COLORS.person.hd, color: ENTITY_COLORS.person.fg } : {}"
             @click="entryMode = 'new'; existingPersonId = null"
           >{{ $t('addRelated.newPerson') }}</button>
           <button
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': entryMode === 'existing' }"
-            :style="entryMode === 'existing' ? { background: ENTITY_COLORS.person.hd, color: ENTITY_COLORS.person.fg } : {}"
             @click="entryMode = 'existing'"
           >{{ $t('addRelated.existingPerson') }}</button>
         </div>
@@ -83,7 +81,6 @@
               type="button"
               class="ep-seg-opt"
               :class="{ 'ep-seg-opt--on': form.sex === val }"
-              :style="form.sex === val ? { background: ENTITY_COLORS.person.hd, color: ENTITY_COLORS.person.fg } : {}"
               @click="form.sex = val as 'M' | 'F' | 'U'"
             >{{ $t(key) }}</button>
           </div>
@@ -95,14 +92,12 @@
               type="button"
               class="ep-seg-opt"
               :class="{ 'ep-seg-opt--on': form.living }"
-              :style="form.living ? { background: ENTITY_COLORS.person.hd, color: ENTITY_COLORS.person.fg } : {}"
               @click="form.living = true"
             >{{ $t('personDetail.statusLiving') }}</button>
             <button
               type="button"
               class="ep-seg-opt"
               :class="{ 'ep-seg-opt--on': !form.living }"
-              :style="!form.living ? { background: ENTITY_COLORS.person.hd, color: ENTITY_COLORS.person.fg } : {}"
               @click="form.living = false"
             >{{ $t('personDetail.statusDeceased') }}</button>
           </div>
@@ -170,17 +165,12 @@
 
     <!-- Events section (shown only after person is saved) -->
     <template v-if="savedPersonId">
-      <div
-        class="ep-sec-header"
-        :style="{ background: ENTITY_COLORS.event.hd, borderBottomColor: ENTITY_COLORS.event.border }"
-      >
+      <div class="ep-sec-header" data-entity="event">
         <div class="ep-sec-left">
-          <span class="ep-sec-title" :style="{ color: ENTITY_COLORS.event.fg }">
-            📅 {{ $t('events.title') }}
-          </span>
-          <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.event.fg }">{{ events.length }}</span>
+          <span class="ep-sec-title">📅 {{ $t('events.title') }}</span>
+          <span class="ep-sec-count">{{ events.length }}</span>
         </div>
-        <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.event.fg }">›</span>
+        <span class="ep-sec-open">›</span>
       </div>
       <div class="ep-sec-content">
         <input
@@ -208,17 +198,12 @@
       <div class="ep-sec-gap"></div>
 
       <!-- Relationships section -->
-      <div
-        class="ep-sec-header"
-        :style="{ background: ENTITY_COLORS.relationship.hd, borderBottomColor: ENTITY_COLORS.relationship.border }"
-      >
+      <div class="ep-sec-header" data-entity="relationship">
         <div class="ep-sec-left">
-          <span class="ep-sec-title" :style="{ color: ENTITY_COLORS.relationship.fg }">
-            🔗 {{ $t('relationships.title') }}
-          </span>
-          <span class="ep-sec-count" :style="{ color: ENTITY_COLORS.relationship.fg }">{{ relationships.length }}</span>
+          <span class="ep-sec-title">🔗 {{ $t('relationships.title') }}</span>
+          <span class="ep-sec-count">{{ relationships.length }}</span>
         </div>
-        <span class="ep-sec-open" :style="{ color: ENTITY_COLORS.relationship.fg }">›</span>
+        <span class="ep-sec-open">›</span>
       </div>
       <div class="ep-sec-content">
         <input class="ep-search-input" :placeholder="$t('relationships.searchOrAdd')" readonly />
@@ -259,7 +244,6 @@ import DateInput from '../DateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
 import CitationFields from '../CitationFields.vue';
 import type { CitationFieldsModel } from '../CitationFields.vue';
-import { ENTITY_COLORS } from '../../constants/entityColors';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES, PERSON_EVENT_TYPE_VALUES } from '../../constants/eventTypes';
 import { suggestNextEventType } from '../../utils/eventDefaults';
 import { useToast } from '../../composables/useToast';
