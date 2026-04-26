@@ -271,8 +271,8 @@
     <PersonModal
       v-if="!props.readonly && showAddPersonForm && placeId"
       mode="standalone"
-      :prefill-place-id="placeId"
       @close="showAddPersonForm = false"
+      @cancel="showAddPersonForm = false"
       @saved="onPersonSaved"
     />
   </div>

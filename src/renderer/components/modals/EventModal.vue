@@ -60,6 +60,43 @@
         <span class="ep-field-label">{{ $t('events.cause') }}</span>
         <input class="ep-input" v-model="form.cause" :placeholder="$t('events.causePlaceholder')" />
       </div>
+
+      <!-- Second person (only for couple events when called from a person panel) -->
+      <template v-if="showSecondPersonField">
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('events.spouse') }}</span>
+          <select
+            v-if="partnerOptions.length > 0 && secondPersonMode === 'select'"
+            class="ep-input"
+            :value="secondPersonId"
+            @change="onSecondPersonSelectChange(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">{{ $t('common.choose') }}</option>
+            <option v-for="opt in partnerOptions" :key="opt.id" :value="opt.id">{{ opt.label }}</option>
+            <option value="__pick">{{ $t('events.spouseOther') }}</option>
+            <option value="__new">{{ $t('events.spouseNew') }}</option>
+          </select>
+          <template v-else>
+            <PersonPicker v-model="secondPersonId" :placeholder="$t('relationships.searchPerson')" />
+            <button type="button" class="ep-link-btn" @click="openAddSpouse">+ {{ $t('events.spouseNew') }}</button>
+          </template>
+        </div>
+      </template>
+
+      <!-- Birth-only: optional baptism details (saved as a linked baptism event) -->
+      <template v-if="showBaptismFields">
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('events.baptismDate') }}</span>
+          <SimpleDateInput v-model="baptismDate" />
+        </div>
+        <div class="ep-field">
+          <span class="ep-field-label">{{ $t('events.godparents') }}</span>
+          <input class="ep-input" v-model="godparents" :placeholder="$t('events.godparentsPlaceholder')" />
+        </div>
+        <div v-if="baptismDate || godparents" class="ep-field-hint">
+          {{ $t('events.baptismHint') }}
+        </div>
+      </template>
     </div>
 
     <!-- Sources section -->
@@ -139,6 +176,14 @@
         @close="closeSubPanel"
         @saved="onSourceCreated"
       />
+      <PersonModal
+        v-if="subPanel === 'person' && props.personId"
+        mode="subpanel"
+        :add-related-to="{ personId: props.personId, mode: 'spouse' }"
+        @cancel="closeSubPanel"
+        @close="closeSubPanel"
+        @saved="onSpouseCreated"
+      />
     </template>
   </BaseSubPanel>
 </template>
@@ -150,14 +195,17 @@ import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal from './CitationModal.vue';
 import SourceModal from './SourceModal.vue';
 import DateInput from '../DateInput.vue';
+import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
+import PersonPicker from '../PersonPicker.vue';
+import PersonModal from './PersonModal.vue';
 import { EVENT_TYPE_VALUES } from '../../constants/eventTypes';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const QUICK_EVENT_TYPES = ['birth', 'marriage', 'death'] as const;
+const QUICK_EVENT_TYPES = ['birth', 'baptism', 'marriage', 'death'] as const;
 type QuickType = typeof QUICK_EVENT_TYPES[number];
 
 interface SourceRow { id: string; title: string; }
@@ -213,6 +261,77 @@ const eventTitle = computed(() =>
 );
 const showTypeDropdown = ref(false);
 
+// Birth-only baptism companion fields. Hidden when editing an existing event so we
+// don't accidentally create duplicate baptism events on every re-save.
+const baptismDate = ref('');
+const godparents = ref('');
+const showBaptismFields = computed(
+  () => form.event_type === 'birth' && !props.editingEvent && props.personId
+);
+const baptismCreatedId = ref<string | null>(null);
+
+// Couple-event companion: when creating a marriage / wedding / engagement / divorce
+// from a person panel, we need to attach a second participant (spouse).
+const COUPLE_EVENT_TYPES = new Set(['marriage', 'wedding', 'engagement', 'divorce']);
+interface PartnerOption { id: string; label: string; }
+const partnerOptions = ref<PartnerOption[]>([]);
+const secondPersonId = ref<string | null>(null);
+const secondPersonMode = ref<'select' | 'pick'>('select');
+const showSecondPersonField = computed(
+  () => COUPLE_EVENT_TYPES.has(form.event_type)
+    && !!props.personId
+    && !props.relationshipId
+    && !props.editingEvent
+);
+
+function onSecondPersonSelectChange(val: string) {
+  if (val === '__pick') {
+    secondPersonId.value = null;
+    secondPersonMode.value = 'pick';
+    return;
+  }
+  if (val === '__new') {
+    secondPersonId.value = null;
+    subPanel.value = 'person';
+    return;
+  }
+  secondPersonId.value = val || null;
+}
+
+function openAddSpouse() {
+  subPanel.value = 'person';
+}
+
+async function onSpouseCreated(person: { id: string }) {
+  secondPersonId.value = person.id;
+  subPanel.value = null;
+  await reloadPartnerOptions();
+}
+
+async function reloadPartnerOptions() {
+  if (!props.personId || !window.api) return;
+  try {
+    const rels = (await window.api.relationships.getForPerson(props.personId)) as Array<{
+      id: string; type: string; person1_id: string | null; person2_id: string | null;
+    }>;
+    const partnerIds = rels
+      .filter(r => r.type === 'couple')
+      .map(r => r.person1_id === props.personId ? r.person2_id : r.person1_id)
+      .filter((id): id is string => !!id && id !== props.personId);
+    const seen = new Set<string>();
+    const options: PartnerOption[] = [];
+    for (const id of partnerIds) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const names = (await window.api.persons.getNames(id)) as Array<{ given_name: string; surname: string }>;
+      const primary = names[0];
+      const label = primary ? [primary.given_name, primary.surname].filter(Boolean).join(' ') : id;
+      options.push({ id, label: label || id });
+    }
+    partnerOptions.value = options;
+  } catch { /* ignore */ }
+}
+
 // Source search
 const sourceSearch = ref('');
 const searchResults = ref<SourceRow[]>([]);
@@ -267,7 +386,7 @@ function selectHighlighted() {
 }
 
 // Sub-panel state
-const subPanel = ref<'citation' | 'source' | null>(null);
+const subPanel = ref<'citation' | 'source' | 'person' | null>(null);
 const activeSrc = ref<SourceRow | null>(null);
 
 function openCitationFor(sourceId: string, sourceTitle: string) {
@@ -322,7 +441,10 @@ async function deleteCitation(id: string) {
   await loadCitations();
 }
 
-onMounted(loadCitations);
+onMounted(async () => {
+  await loadCitations();
+  await reloadPartnerOptions();
+});
 
 // Save event
 async function handleSave() {
@@ -360,10 +482,79 @@ async function handleSave() {
           role: 'primary',
         });
       }
+      // Couple events from a person panel: also attach the second person.
+      if (showSecondPersonField.value && secondPersonId.value && props.personId
+        && secondPersonId.value !== props.personId) {
+        await window.api.eventParticipants.add({
+          event_id: ev.id,
+          person_id: secondPersonId.value,
+          role: 'spouse',
+        });
+      }
     }
+    await syncBaptismCompanion(ev.id!);
     emit('saved', ev);
   } catch (err) {
     console.error('[EventModal] save failed:', err);
+  }
+}
+
+// If the user filled in baptism date or godparents on a birth event, create/update
+// a separate baptism event with the same place, link the same primary participant,
+// and copy current citations from the birth event so the source carries over.
+async function syncBaptismCompanion(birthEventId: string) {
+  if (!showBaptismFields.value) return;
+  if (!window.api) return;
+  if (!props.personId) return;
+  const date = baptismDate.value.trim();
+  const fadder = godparents.value.trim();
+  if (!date && !fadder) return;
+
+  const description = fadder ? `${t('events.godparents')}: ${fadder}` : '';
+  const payload = {
+    event_type: 'baptism',
+    date_type: 'exact',
+    date_value: date || null,
+    date_value_end: null,
+    date_original: '',
+    place_id: form.place_id,
+    cause: null,
+    description,
+    relationship_id: null,
+  };
+
+  let baptismId = baptismCreatedId.value;
+  if (!baptismId) {
+    const baptism = (await window.api.events.create(payload)) as { id: string };
+    baptismId = baptism.id;
+    baptismCreatedId.value = baptismId;
+    await window.api.eventParticipants.add({
+      event_id: baptismId,
+      person_id: props.personId,
+      role: 'primary',
+    });
+  } else {
+    await window.api.events.update(baptismId, payload);
+  }
+
+  // Copy birth citations to baptism (only those not already present, by source_id)
+  const birthCits = (await window.api.citations.forEvent(birthEventId)) as Array<{
+    id: string; source_id: string; page: string; date_accessed: string;
+    confidence: number; transcription: string; notes: string;
+  }>;
+  const baptismCits = (await window.api.citations.forEvent(baptismId)) as Array<{ source_id: string }>;
+  const seen = new Set(baptismCits.map(c => c.source_id));
+  for (const c of birthCits) {
+    if (seen.has(c.source_id)) continue;
+    await window.api.citations.create({
+      source_id: c.source_id,
+      event_id: baptismId,
+      page: c.page,
+      date_accessed: c.date_accessed,
+      confidence: c.confidence,
+      transcription: c.transcription,
+      notes: c.notes,
+    });
   }
 }
 
@@ -371,3 +562,23 @@ function handleCancel() {
   emit('cancel');
 }
 </script>
+
+<style scoped>
+.ep-field-hint {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin: calc(var(--space-xs) * -1) 0 var(--space-sm) 0;
+  line-height: 1.4;
+}
+.ep-link-btn {
+  background: none;
+  border: none;
+  color: var(--color-link, var(--accent));
+  font-size: var(--font-sm);
+  padding: var(--space-xs) 0 0 0;
+  cursor: pointer;
+}
+.ep-link-btn:hover {
+  text-decoration: underline;
+}
+</style>

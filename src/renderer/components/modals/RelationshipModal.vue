@@ -44,7 +44,7 @@
 
       <!-- Person 1 -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('relationships.person1') }}</span>
+        <span class="ep-field-label">{{ person1Label }}</span>
         <PersonPicker
           v-model="form.person1_id"
           :placeholder="$t('relationships.searchPerson')"
@@ -54,7 +54,7 @@
 
       <!-- Person 2 -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('relationships.person2') }}</span>
+        <span class="ep-field-label">{{ person2Label }}</span>
         <PersonPicker
           v-model="form.person2_id"
           :placeholder="$t('relationships.searchPerson')"
@@ -135,6 +135,7 @@ import {
   COUPLE_SUBTYPE_VALUES,
   PARENT_CHILD_SUBTYPE_VALUES,
 } from '../../constants/eventTypes';
+import { useToast } from '../../composables/useToast';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -177,6 +178,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const toast = useToast();
 
 const savedRelationshipId = ref<string | null>(props.editingRelationship?.id ?? null);
 
@@ -199,6 +201,16 @@ const displayTitle = computed(() => {
   if (p1) return p1;
   if (p2) return p2;
   return t('relationships.newRelationship');
+});
+
+const person1Label = computed(() => {
+  if (form.type === 'parent_child') return t('relationships.parent');
+  return t('relationships.person1');
+});
+
+const person2Label = computed(() => {
+  if (form.type === 'parent_child') return t('relationships.child');
+  return t('relationships.person2');
 });
 
 function onPerson1Select(person: { given_name: string; surname: string }) {
@@ -279,6 +291,14 @@ async function loadPersonNames() {
 // Save relationship
 async function handleSave() {
   if (!window.api) return;
+  if (!form.person1_id || !form.person2_id) {
+    toast.error(t('relationships.pickBothPersons'));
+    return;
+  }
+  if (form.person1_id === form.person2_id) {
+    toast.error(t('relationships.differentPersons'));
+    return;
+  }
   try {
     let rel: RelationshipData;
     const payload = {
@@ -297,6 +317,7 @@ async function handleSave() {
     emit('saved', rel);
   } catch (err) {
     console.error('[RelationshipModal] save failed:', err);
+    toast.error(t('errors.saveFailed'));
   }
 }
 
