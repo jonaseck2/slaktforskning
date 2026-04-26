@@ -88,7 +88,7 @@
         />
       </div>
       <!-- Reopen panel button when panel is closed -->
-      <button v-if="!panelOpen && personId" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && personId" class="panel-open-btn" :aria-label="$t('panel.open') ?? 'Open'" @click="openPanel">◀</button>
     </div>
 
     <!-- Drag handle + panel (both tree and list modes) -->
