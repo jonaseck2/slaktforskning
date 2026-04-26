@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat(a11y): narration coverage for the 3 missing pickers (Source/Group/Media), modal headers, and the MediaViewer (image/caption/face tags). Adds 4 new builders in `narration.ts` (Media/Place/Event/Citation) following the existing `narratePerson` pattern, plus ~25 i18n keys per locale under `narration.*`. BaseSubPanel headers now announce "{Entity} modal: {Title}" instead of falling back to visible text. Face tag regions are now keyboard-focusable (`tabindex=0` + `role=button`) so a screen-reader user can tab through tagged people in a photo. Closes the last systemic gap from the appearance audit.
+
 - feat(theming): entity colors are now CSS tokens with dark + high-contrast variants. Per-entity tokens (`--entity-{person,event,source,…}-text/-bg`) live in `tokens.css` (light) and `shared.css` (dark + HC); entity borders stay as decorative pastel accents (no theme-specific WCAG requirement). `BaseSubPanel` and 6 modal sub-section headers consume them via a `data-entity="<type>"` attribute selector that aliases `--entity-text/-bg/-border` for the modal subtree, so headers and save buttons flip with mode + theme automatically. The `.ep-*` modal chrome (~33 hex literals) now uses surface/text/accent tokens that already have dark + HC variants. `entityColors.ts` renamed to `entityMeta.ts` with color fields removed (icon + labelKey only). The WCAG contrast test gained ~99 assertions covering all 11 entities × 9 (theme × mode) combinations for text-on-bg pairs — entity-color regressions now fail CI.
 
 - fix(panels): hide `<thead>` column labels on every side-panel table — narrow panels with self-evident row content (avatar + name link, date badge, action ✕) read denser and more consistent without the redundant headings.

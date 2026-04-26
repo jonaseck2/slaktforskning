@@ -1251,6 +1251,37 @@ export default {
     and: 'och',
     author: 'Författare',
     citationsLinked: 'källhänvisningar länkade',
+    media: {
+      photo: 'Foto',
+      document: 'Dokument',
+      tagged: 'Taggade',
+      taken: 'Taget',
+      about: 'omkring',
+    },
+    place: {
+      eventsRecorded: 'händelser registrerade',
+    },
+    event: {
+      of: 'för',
+      on: 'den',
+    },
+    citation: {
+      page: 'sida',
+      confidence: 'Tillförlitlighet',
+      confidenceLevels: {
+        0: 'opålitlig',
+        1: 'tveksam',
+        2: 'sekundär',
+        3: 'primär',
+      },
+      for: 'För',
+    },
+    modal: {
+      header: '{entity}-dialog: {title}',
+    },
+    faceTag: {
+      untagged: 'Otaggad person',
+    },
   },
   screenReader: {
     welcome: 'Skärmläsare aktivt. Tryck frågetecken för tillgängliga kommandon.',
