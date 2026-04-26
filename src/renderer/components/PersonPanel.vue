@@ -6,6 +6,9 @@
     </div>
 
     <template v-else-if="person">
+      <!-- Collapse arrow on the panel's left edge — same pattern as the
+           persons-list ◀/▶ buttons. -->
+      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
       <!-- Panel role label -->
       <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
       <!-- Header -->
@@ -153,7 +156,26 @@
           <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
       </div>
+
+      <!-- Danger zone: delete person -->
+      <div v-if="!props.readonly" class="panel-danger-zone">
+        <AppButton variant="danger" size="sm" @click="showDeleteConfirm = true">
+          🗑 {{ $t('persons.deletePersonAction') }}
+        </AppButton>
+      </div>
     </template>
+
+    <!-- Delete confirmation -->
+    <ConfirmModal
+      :visible="showDeleteConfirm"
+      :title="$t('persons.deleteConfirmTitle')"
+      :message="deleteConfirmMessage"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('persons.deleteConfirmContinue')"
+      @cancel="showDeleteConfirm = false"
+      @confirm="performDelete"
+    />
 
     <!-- Name form modal -->
     <PersonNameModal
@@ -198,6 +220,9 @@ import PersonName from './PersonName.vue';
 import PersonNamesTable from './PersonNamesTable.vue';
 import PersonNameModal from './modals/PersonNameModal.vue';
 import PersonModal from './modals/PersonModal.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { useI18n } from 'vue-i18n';
+import { useToast } from '../composables/useToast';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
@@ -229,6 +254,9 @@ const emit = defineEmits<{
 }>();
 
 const isTreeSubject = computed(() => !!props.personId && props.personId === props.treeSubjectId);
+
+const { t } = useI18n();
+const toast = useToast();
 
 // ── Data (composable) ───────────────────────────────────────────────────────
 
@@ -296,6 +324,37 @@ async function triggerAttachMedia() {
   if (!sections.media) toggleSection('media');
   await nextTick();
   mediaSectionRef.value?.attach();
+}
+
+// ── Delete person ───────────────────────────────────────────────────────────
+
+const showDeleteConfirm = ref(false);
+const deleteConfirmMessage = computed(() => {
+  const name = primaryName.value
+    ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
+    : t('common.unknown');
+  return t('persons.deleteConfirmMessage', {
+    name,
+    relationships: relationshipCount.value,
+  });
+});
+
+async function performDelete() {
+  if (!props.personId) return;
+  try {
+    await window.api.persons.delete(props.personId);
+    showDeleteConfirm.value = false;
+    toast.success(t('persons.deletedToast', {
+      name: primaryName.value
+        ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
+        : t('common.unknown'),
+    }));
+    emit('person-changed');
+    emit('close');
+  } catch (err) {
+    console.error('[PersonPanel] delete failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 // ── Add relative modal ──────────────────────────────────────────────────────
@@ -424,6 +483,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.panel-danger-zone {
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  border-top: 1px solid var(--surface-border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
 .person-panel {
   display: flex;
   flex-direction: column;
@@ -433,7 +500,30 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
+  position: relative;
+  /* Reserve a slot at the left for the collapse arrow so it never
+     overlaps section content or the sticky "Hantera person" header. */
+  padding-left: 28px;
 }
+
+/* Collapse arrow on the panel's left edge — mirrors the
+   `list-collapse-btn` / `list-open-btn` pattern on the persons list. */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
 .panel-empty {
   display: flex;
