@@ -41,7 +41,7 @@
             :src="imageUrl"
             draggable="false"
             tabindex="0"
-            v-narrate="() => narrateMedia(currentMediaSummary.value, labels)"
+            v-narrate="() => narrateMedia(currentMediaSummary, labels)"
             @load="onImageLoad"
           />
           <FaceTagOverlay
