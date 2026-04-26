@@ -34,9 +34,6 @@
           :class="['person-box', 'clickable']"
           :style="{ cursor: 'pointer' }"
           @click="$emit('navigate', box.person.id)"
-          @mouseenter="(e: MouseEvent) => { hoveredPersonId = box.person.id; tooltipRef?.show(box.person, e.clientX, e.clientY); }"
-          @mousemove="(e: MouseEvent) => tooltipRef?.move(e.clientX, e.clientY)"
-          @mouseleave="hoveredPersonId = null; tooltipRef?.hide()"
         >
           <!-- Box background -->
           <rect
@@ -182,8 +179,6 @@
       <button class="zoom-extra-btn" @click="incrGens">+</button>
     </ZoomControls>
 
-    <ChartTooltip ref="tooltipRef" />
-
     <!-- Add related person modal -->
     <PersonModal
       v-if="showAddRelative && addRelativePersonId"
@@ -207,12 +202,10 @@ import type { BoxLayout, CollapseButton, DescendantNode, PlaceholderBox } from '
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
-import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { descendantGenerations } from '../../composables/useChartGenerations';
 
 const { t } = useI18n();
-const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
 const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 const emit = defineEmits<{ navigate: [id: string]; reload: [] }>();
@@ -229,8 +222,6 @@ watch(genTarget, (n) => {
   if (n > maxGens.value) { maxGens.value = n; load(); }
   else applyGenerationDepth(n);
 });
-
-const hoveredPersonId = ref<string | null>(null);
 
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
