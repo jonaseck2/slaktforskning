@@ -173,7 +173,13 @@
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
         <AppButton variant="ghost" size="sm" class="delete-person-btn" @click="showDeleteConfirm = true">
-          <span class="trash-icon" aria-hidden="true">🗑️</span>
+          <!-- Filled "sheet-metal" trash can — solid silhouette instead of
+               the wire-mesh look the 🗑️ emoji has on Windows. -->
+          <svg class="trash-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M9 3a1 1 0 0 0-1 1v1H4.5a.75.75 0 0 0 0 1.5h.6l1.18 13.06A2 2 0 0 0 8.27 21.5h7.46a2 2 0 0 0 1.99-1.94L18.9 6.5h.6a.75.75 0 0 0 0-1.5H16V4a1 1 0 0 0-1-1H9zm.5 2v-.5h5V5h-5z"/>
+            <rect x="9.25" y="9" width="1.5" height="9" rx="0.5" fill="var(--surface)" opacity="0.55"/>
+            <rect x="13.25" y="9" width="1.5" height="9" rx="0.5" fill="var(--surface)" opacity="0.55"/>
+          </svg>
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
       </div>
@@ -505,10 +511,11 @@ onMounted(() => {
   margin-top: auto;
 }
 .trash-icon {
-  font-size: 1.4em;
-  line-height: 1;
+  width: 18px;
+  height: 18px;
+  display: inline-block;
   margin-right: 6px;
-  vertical-align: -3px;
+  vertical-align: -4px;
 }
 
 /* Delete-person button: outlined, no background fill. Uses :deep so the
