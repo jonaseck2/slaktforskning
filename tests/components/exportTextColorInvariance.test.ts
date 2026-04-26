@@ -167,6 +167,51 @@ describe('export text colour invariance (print media)', () => {
     });
   }
 
+  // Chart-domain CSS variables are read by JS via getComputedStyle on a
+  // chart's own DOM element (see useChartColors / TimelineChart's tlColors).
+  // Charts embedded in reports / prints must resolve these tokens to the
+  // export-scope pins, not the html-level dark / high-contrast overrides —
+  // otherwise the timeline turns dark in reports while the rest of the
+  // report stays neutral. Same idea as the text-colour invariance above,
+  // but for the SVG fill / stroke values that charts emit.
+  const CHART_TOKENS: Array<{ name: string; var: string }> = [
+    { name: 'pedigree/hourglass/descendant box bg',     var: '--chart-box-bg' },
+    { name: 'pedigree/hourglass/descendant box stroke', var: '--chart-box-stroke' },
+    { name: 'pedigree/hourglass/descendant text',       var: '--chart-text' },
+    { name: 'pedigree/hourglass/descendant connector',  var: '--chart-line' },
+    { name: 'timeline surface',  var: '--surface' },
+    { name: 'timeline grid',     var: '--tl-grid' },
+    { name: 'timeline axis',     var: '--tl-axis' },
+    { name: 'timeline bar (M)',  var: '--tl-bar-m' },
+    { name: 'timeline bar (F)',  var: '--tl-bar-f' },
+    { name: 'timeline marker',   var: '--tl-marker' },
+  ];
+  for (const scopeClass of ['export-scope', 'print-preview']) {
+    for (const tok of CHART_TOKENS) {
+      it(`${tok.var} (${tok.name}) inside .${scopeClass} is theme-invariant`, () => {
+        const scope = tag('div', { className: scopeClass });
+        document.body.appendChild(scope);
+
+        const seen: Array<{ mode: string; value: string }> = [];
+        for (const mode of MODES) {
+          document.documentElement.className = mode.classes.join(' ');
+          seen.push({
+            mode: mode.name,
+            value: getComputedStyle(scope).getPropertyValue(tok.var).trim(),
+          });
+        }
+
+        const unique = Array.from(new Set(seen.map(s => s.value)));
+        expect(
+          unique,
+          `${tok.var} drifted across theme/appearance inside .${scopeClass} ` +
+            `("${tok.name}"):\n` +
+            seen.map(s => `  ${s.mode.padEnd(24)} -> ${s.value}`).join('\n'),
+        ).toHaveLength(1);
+      });
+    }
+  }
+
   it('sanity check: an element OUTSIDE .export-scope does drift across themes', () => {
     // Proves the invariance test above is meaningful — the scope is actually
     // doing work, not just measuring a token that never varied.

@@ -151,6 +151,20 @@ Writes SVG to a temp `.svg` file, loads it in a hidden BrowserWindow, calls `pri
 
 ---
 
+## Text Effects in Reports
+
+**No text-shadow, SVG stroke halos (`paint-order: stroke fill`), or filter glows on report text.** They look fine on the interactive chart (where the halo is `var(--surface)` to mask grid lines or bars beneath labels), but in dark and high-contrast modes the halo color no longer matches the report's pinned neutrals and the text becomes illegible — a dark smudge around the glyph.
+
+If the underlying chart component uses such an effect, override it inside the report wrapper rather than removing it from the chart:
+
+```css
+/* TimelineChartReport.vue */
+.chart-report :deep(.marker-symbol) {
+  stroke: none;
+  paint-order: normal;
+}
+```
+
 ## Checklist When Adding a New Report Tab
 
 - [ ] Template: `class="print-preview"` (add `preview-landscape` if landscape, `chart-print` if it's a chart that needs fit-to-page)
