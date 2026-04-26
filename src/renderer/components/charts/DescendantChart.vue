@@ -28,7 +28,7 @@
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
-          v-memo="[box, props.colorMode, props.readonly]"
+          v-memo="[box, props.colorMode, props.readonly, addBtnStyle]"
           :data-testid="'person-box-' + box.person.id"
           filter="url(#chart-shadow)"
           :class="['person-box', 'clickable']"

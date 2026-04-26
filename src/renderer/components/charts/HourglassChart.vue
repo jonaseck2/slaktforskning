@@ -28,7 +28,7 @@
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
-          v-memo="[box.x, box.y, box.w, box.h, box.isFocal, box.person.id, box.person.sex, box.person.living, box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname, box.person.birthDate, box.person.birthPlace, box.person.deathDate, box.person.deathPlace, box.person.photoUrl, props.colorMode, props.readonly]"
+          v-memo="[box.x, box.y, box.w, box.h, box.isFocal, box.person.id, box.person.sex, box.person.living, box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname, box.person.birthDate, box.person.birthPlace, box.person.deathDate, box.person.deathPlace, box.person.photoUrl, props.colorMode, props.readonly, addBtnStyle]"
           :data-testid="'person-box-' + box.person.id"
           filter="url(#chart-shadow)"
           :class="['person-box', 'clickable']"
