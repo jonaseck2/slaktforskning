@@ -454,14 +454,15 @@ onMounted(() => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: var(--space-md) var(--space-lg) var(--space-xs);
+  padding: var(--space-md) var(--space-lg) var(--space-sm);
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--surface-border-subtle);
   background: var(--surface);
 }
 .panel-role-label + .panel-header {
   border-radius: 0;
-  padding-top: 0;
+  padding-top: var(--space-md);
 }
 
 /* Header */
