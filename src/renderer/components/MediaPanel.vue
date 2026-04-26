@@ -102,46 +102,6 @@
         </div>
       </div>
 
-      <!-- Linked Places -->
-      <div class="panel-section">
-        <SectionHeader
-          :title="$t('media.linkedPlaces')"
-          :count="linkedPlaces.length"
-          :collapsed="!sections.places"
-          :action-label="props.readonly ? undefined : $t('media.linkPlace')"
-          @toggle="toggleSection('places')"
-          @action="showPlacePicker = true"
-        />
-        <div v-if="sections.places" class="panel-section-body">
-          <div v-if="!props.readonly && showPlacePicker" class="picker-wrap">
-            <PlacePicker :model-value="null" :placeholder="$t('places.searchPlaceholder')" @select="linkPlace" />
-            <AppButton variant="ghost" size="sm" @click="showPlacePicker = false">{{ $t('common.cancel') }}</AppButton>
-          </div>
-          <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
-          <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
-            <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
-          </div>
-        </div>
-      </div>
-
-      <!-- Linked Events -->
-      <div class="panel-section">
-        <SectionHeader
-          :title="$t('media.linkedEvents')"
-          :count="linkedEvents.length"
-          :collapsed="!sections.events"
-          @toggle="toggleSection('events')"
-        />
-        <div v-if="sections.events" class="panel-section-body">
-          <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
-          <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
-            <span>{{ le.label }}</span>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
-          </div>
-        </div>
-      </div>
-
       <!-- Face Tags -->
       <div class="panel-section">
         <SectionHeader
@@ -195,6 +155,46 @@
               >{{ regionIsProfile[r.id] ? '★' : '☆' }}</button>
             </template>
             <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="deleteRegion(r.id)">&#10005;</AppButton>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Places -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('media.linkedPlaces')"
+          :count="linkedPlaces.length"
+          :collapsed="!sections.places"
+          :action-label="props.readonly ? undefined : $t('media.linkPlace')"
+          @toggle="toggleSection('places')"
+          @action="showPlacePicker = true"
+        />
+        <div v-if="sections.places" class="panel-section-body">
+          <div v-if="!props.readonly && showPlacePicker" class="picker-wrap">
+            <PlacePicker :model-value="null" :placeholder="$t('places.searchPlaceholder')" @select="linkPlace" />
+            <AppButton variant="ghost" size="sm" @click="showPlacePicker = false">{{ $t('common.cancel') }}</AppButton>
+          </div>
+          <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
+          <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
+            <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Events -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('media.linkedEvents')"
+          :count="linkedEvents.length"
+          :collapsed="!sections.events"
+          @toggle="toggleSection('events')"
+        />
+        <div v-if="sections.events" class="panel-section-body">
+          <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
+          <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
+            <span>{{ le.label }}</span>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
           </div>
         </div>
       </div>
