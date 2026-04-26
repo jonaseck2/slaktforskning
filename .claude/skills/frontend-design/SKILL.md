@@ -506,9 +506,9 @@ ReportPanel differs from PersonPanel/PlacePanel/MediaPanel: it sources configura
 ### Auto-select on load
 
 Paneled views should auto-select an item so the panel is never empty:
-- **Media**: select focus person's first media, fallback to first item
-- **Places/Map**: select focus person's first place, fallback to first place
-- **People/Tree**: panel shows the selected/focal person
+- **Media**: select selected person's first media, fallback to first item
+- **Places/Map**: select selected person's first place, fallback to first place
+- **People/Tree**: panel shows the selected person (= chart focal — they're the same)
 - **Reports**: ReportPanel always visible alongside the preview; no auto-select needed
 
 ---

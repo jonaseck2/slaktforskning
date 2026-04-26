@@ -803,7 +803,7 @@ All three chart types (Pedigree, Hourglass, Descendants) share the same outline 
 
 **Post-layout pass:** All three charts have a post-layout pass that places outline nodes not handled by the main traversal (e.g., spouse outlines for ancestors in pedigree, child outlines for ancestors in hourglass).
 
-**Key rule:** The selected person ≠ the focal person. The focal person controls the tree scope. The selected person controls where outlines appear. These are independent concepts.
+**Key rule:** Selected person and focal person are the same thing. Clicking a person in the chart refocuses the tree on them, opens the panel for them, and updates the sidebar's selected-person indicator — there is one notion of "current person", not two. The chart's `selectedPersonId` prop is plumbed in for outline placement (it equals the focal); previously these were independent concepts. URL `/persons/:id` is the single source of truth.
 
 ---
 

@@ -18,7 +18,7 @@ export default {
     sources: 'Källor',
     importExport: 'Import / Export',
     groups: 'Grupper',
-    focusPerson: 'Fokusperson',
+    focusPerson: 'Vald person',
     settings: 'Inställningar',
     quality: 'Kvalitet',
     researchTasks: 'Uppgifter',
