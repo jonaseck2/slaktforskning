@@ -9,6 +9,10 @@
       <!-- Collapse arrow on the panel's left edge — same pattern as the
            persons-list ◀/▶ buttons. -->
       <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
+      <!-- Sticky stack: panel role label + identity card stay pinned at the
+           top of the scrollable panel so the person stays in view while
+           scrolling through sections. -->
+      <div class="panel-sticky-top">
       <!-- Panel role label -->
       <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
       <!-- Person summary card: name + always-rendered birth/death rows -->
@@ -49,6 +53,7 @@
             </dd>
           </div>
         </dl>
+      </div>
       </div>
 
       <!-- Add-relative shortcuts, sitting below the summary card -->
@@ -578,24 +583,37 @@ onMounted(() => {
 
 /* Role label above the person header — mirrors "Personlista" on the
    list column. Sticky so it stays visible while panel scrolls. */
+/* Sticky stack at the top of the scrollable panel: role label +
+   identity card stay pinned together while the rest scrolls. */
+.panel-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--surface);
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
 .panel-role-label {
   margin: 0;
   font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-primary);
   padding: var(--space-md) var(--space-lg) var(--space-sm) var(--space-lg);
-  flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-bottom: 1px solid var(--surface-border-subtle);
   background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 5;
 }
 .panel-role-label + .panel-header,
 .panel-role-label + .person-summary-card {
   border-radius: 0;
   padding-top: var(--space-md);
+}
+/* When inside the sticky stack the card needs a bottom border so it
+   reads as a header block once the rest of the panel scrolls under it. */
+.panel-sticky-top .person-summary-card {
+  margin-bottom: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-bottom: 1px solid var(--surface-border-subtle);
 }
 
 /* Person summary card — compact identity panel under "Hantera person".
