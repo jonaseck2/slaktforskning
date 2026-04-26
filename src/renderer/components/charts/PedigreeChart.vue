@@ -201,9 +201,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computePedigreeLayout, BOX_W, MIN_BOX_H, H_GAP, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W } from '../../utils/chart-layout';
+import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
@@ -302,9 +303,11 @@ watch(() => props.selectedPersonId, (id) => {
 });
 onUnmounted(() => { if (selectionRaf !== null) cancelAnimationFrame(selectionRaf); });
 
+const selectedParentInfo = useSelectedParentInfo(toRef(props, 'selectedPersonId'));
+
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 995, svgHeight: 1024, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
-  return computePedigreeLayout(tree.value, collapsed.value, layoutSelectedId.value);
+  return computePedigreeLayout(tree.value, collapsed.value, layoutSelectedId.value, selectedParentInfo.value);
 });
 
 const solidPaths = computed(() =>

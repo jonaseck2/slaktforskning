@@ -5,13 +5,14 @@ import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton
 import { BOX_W, MIN_BOX_H, V_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow } from './connectors';
-import { buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
+import { buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 export function computeDescendantLayout(
   root: DescendantNode,
   maxGenerations: number,
   collapsed: Set<string> = new Set(),
   selectedPersonId?: string | null,
+  selectedParentInfo?: SelectedParentInfo | null,
 ): ChartLayout {
   const tp = buildDescendantTreePerson(root);
 
@@ -45,7 +46,7 @@ export function computeDescendantLayout(
 
   // Inject outlines after collapse so collapsed nodes correctly receive
   // placeholder boxes (their children=[] after pruning, injection sees it).
-  if (selectedPersonId) injectOutlines(tp, selectedPersonId);
+  if (selectedPersonId) injectOutlines(tp, selectedPersonId, selectedParentInfo ?? undefined);
 
   // ── Outline extents (depends on injected placeholders) ───────────────────
   const extraRightExtent = new Map<string, number>();

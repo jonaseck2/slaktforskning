@@ -120,13 +120,32 @@ export function buildHourglassTree(tree: HourglassTree): TreePerson {
  *
  * Mutates the tree in place (caller should clone if needed).
  */
-export function injectOutlines(root: TreePerson, selectedPersonId: string): void {
+export interface SelectedParentInfo {
+  hasFather: boolean;
+  hasMother: boolean;
+}
+
+export function injectOutlines(
+  root: TreePerson,
+  selectedPersonId: string,
+  parentInfo?: SelectedParentInfo,
+): void {
   const target = findPerson(root, selectedPersonId);
   if (!target) return;
 
-  const realParents = target.parents.filter(p => !p.isPlaceholder);
-  const hasFather = realParents.some(p => p.person.sex === 'M');
-  const hasMother = realParents.some(p => p.person.sex === 'F');
+  // For father/mother placeholders, prefer the explicit DB-backed parentInfo
+  // when given (selected person may be a descendant whose parents aren't
+  // loaded into the tree). Fall back to whatever parents the tree carries.
+  let hasFather: boolean;
+  let hasMother: boolean;
+  if (parentInfo) {
+    hasFather = parentInfo.hasFather;
+    hasMother = parentInfo.hasMother;
+  } else {
+    const realParents = target.parents.filter(p => !p.isPlaceholder);
+    hasFather = realParents.some(p => p.person.sex === 'M');
+    hasMother = realParents.some(p => p.person.sex === 'F');
+  }
 
   if (!hasFather) target.parents.push(makePlaceholder('father', selectedPersonId, 'M'));
   if (!hasMother) target.parents.push(makePlaceholder('mother', selectedPersonId, 'F'));

@@ -14,7 +14,7 @@ import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox
 import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow } from './connectors';
-import { injectOutlines, PLACEHOLDER_PREFIX } from './hourglass-tree';
+import { injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -99,6 +99,7 @@ export function computeHourglassLayout(
   inputRoot: TreePerson,
   collapsed: Set<string> = new Set(),
   selectedPersonId?: string | null,
+  selectedParentInfo?: SelectedParentInfo | null,
 ): ChartLayout {
 
   // ── 1. Clone tree ──────────────────────────────────────────────────────────
@@ -174,7 +175,7 @@ export function computeHourglassLayout(
 
   // Inject outlines after collapse so collapsed nodes (whose parents/children/spouses
   // were just pruned to []) correctly receive placeholder boxes.
-  if (selectedPersonId) injectOutlines(root, selectedPersonId);
+  if (selectedPersonId) injectOutlines(root, selectedPersonId, selectedParentInfo ?? undefined);
 
   const focalId = root.person.id;
   const focalIsFemale = root.person.sex === 'F';
