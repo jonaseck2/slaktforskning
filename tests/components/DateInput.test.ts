@@ -22,89 +22,78 @@ function mountDateInput(props: Partial<{
 }
 
 describe('DateInput', () => {
-  describe('date parsing', () => {
-    it('splits dateValue into year/month/day fields', () => {
+  describe('date display', () => {
+    it('shows dateValue in the start date field', () => {
       const wrapper = mountDateInput({ dateValue: '1850-03-15' });
-      const inputs = wrapper.findAll('.ymd-group input');
-      expect((inputs[0].element as HTMLInputElement).value).toBe('1850');
-      expect((inputs[1].element as HTMLInputElement).value).toBe('03');
-      expect((inputs[2].element as HTMLInputElement).value).toBe('15');
+      const input = wrapper.find('.date-field .date-text');
+      expect((input.element as HTMLInputElement).value).toBe('1850-03-15');
     });
 
-    it('handles year-only date', () => {
+    it('shows year-only date as-is', () => {
       const wrapper = mountDateInput({ dateValue: '1900' });
-      const inputs = wrapper.findAll('.ymd-group input');
-      expect((inputs[0].element as HTMLInputElement).value).toBe('1900');
-      expect((inputs[1].element as HTMLInputElement).value).toBe('');
-      expect((inputs[2].element as HTMLInputElement).value).toBe('');
+      const input = wrapper.find('.date-field .date-text');
+      expect((input.element as HTMLInputElement).value).toBe('1900');
     });
 
-    it('handles year-month date', () => {
+    it('shows year-month date as-is', () => {
       const wrapper = mountDateInput({ dateValue: '1900-06' });
-      const inputs = wrapper.findAll('.ymd-group input');
-      expect((inputs[0].element as HTMLInputElement).value).toBe('1900');
-      expect((inputs[1].element as HTMLInputElement).value).toBe('06');
-      expect((inputs[2].element as HTMLInputElement).value).toBe('');
+      const input = wrapper.find('.date-field .date-text');
+      expect((input.element as HTMLInputElement).value).toBe('1900-06');
     });
 
-    it('handles empty dateValue', () => {
+    it('shows empty value when dateValue is empty', () => {
       const wrapper = mountDateInput({ dateValue: '' });
-      const inputs = wrapper.findAll('.ymd-group input');
-      expect((inputs[0].element as HTMLInputElement).value).toBe('');
+      const input = wrapper.find('.date-field .date-text');
+      expect((input.element as HTMLInputElement).value).toBe('');
     });
   });
 
-  describe('date building (emit)', () => {
+  describe('text editing (emit)', () => {
     it('emits year-only when only year entered', async () => {
       const wrapper = mountDateInput();
-      const yearInput = wrapper.find('.ymd-year');
-      await yearInput.setValue('1900');
-      // The input event triggers emit
-      await yearInput.trigger('input');
-      const emitted = wrapper.emitted('update:dateValue');
-      expect(emitted).toBeTruthy();
-      // Last emission should be year-only
-      const lastValue = emitted![emitted!.length - 1][0];
-      expect(lastValue).toBe('1900');
+      const input = wrapper.find('.date-field .date-text');
+      (input.element as HTMLInputElement).value = '1900';
+      await input.trigger('input');
+      const emitted = wrapper.emitted('update:dateValue')!;
+      expect(emitted[emitted.length - 1][0]).toBe('1900');
     });
 
-    it('emits full date when all parts present', async () => {
+    it('emits full date when complete value typed', async () => {
       const wrapper = mountDateInput({ dateValue: '1900-06' });
-      const dayInput = wrapper.findAll('.ymd-day')[0];
-      (dayInput.element as HTMLInputElement).value = '15';
-      await dayInput.trigger('input');
+      const input = wrapper.find('.date-field .date-text');
+      (input.element as HTMLInputElement).value = '1900-06-15';
+      await input.trigger('input');
       const emitted = wrapper.emitted('update:dateValue')!;
-      const lastValue = emitted[emitted.length - 1][0];
-      expect(lastValue).toBe('1900-06-15');
+      expect(emitted[emitted.length - 1][0]).toBe('1900-06-15');
     });
   });
 
   describe('digit filtering', () => {
-    it('strips non-digit characters from year input', async () => {
+    it('strips non-digit/non-dash characters', async () => {
       const wrapper = mountDateInput();
-      const yearInput = wrapper.find('.ymd-year');
-      (yearInput.element as HTMLInputElement).value = '19ab';
-      await yearInput.trigger('input');
-      expect((yearInput.element as HTMLInputElement).value).toBe('19');
+      const input = wrapper.find('.date-field .date-text');
+      (input.element as HTMLInputElement).value = '19ab50';
+      await input.trigger('input');
+      expect((input.element as HTMLInputElement).value).toBe('1950');
     });
   });
 
   describe('date type', () => {
-    it('hides date fields when type is unknown', () => {
+    it('hides date field when type is unknown', () => {
       const wrapper = mountDateInput({ dateType: 'unknown' });
-      expect(wrapper.findAll('.ymd-group')).toHaveLength(0);
+      expect(wrapper.findAll('.date-field')).toHaveLength(0);
     });
 
-    it('shows end date fields when type is between', () => {
+    it('shows end date field when type is between', () => {
       const wrapper = mountDateInput({ dateType: 'between' });
-      const ymdGroups = wrapper.findAll('.ymd-group');
-      expect(ymdGroups).toHaveLength(2);
+      const fields = wrapper.findAll('.date-field');
+      expect(fields).toHaveLength(2);
     });
 
     it('shows only start date for exact type', () => {
       const wrapper = mountDateInput({ dateType: 'exact' });
-      const ymdGroups = wrapper.findAll('.ymd-group');
-      expect(ymdGroups).toHaveLength(1);
+      const fields = wrapper.findAll('.date-field');
+      expect(fields).toHaveLength(1);
     });
 
     it('emits dateType change', async () => {
@@ -131,17 +120,15 @@ describe('DateInput', () => {
   });
 
   describe('between mode end date', () => {
-    it('parses dateValueEnd into end fields', () => {
+    it('shows dateValueEnd in the end field', () => {
       const wrapper = mountDateInput({
         dateType: 'between',
         dateValue: '1850-01-01',
         dateValueEnd: '1860-12-31',
       });
-      const ymdGroups = wrapper.findAll('.ymd-group');
-      const endInputs = ymdGroups[1].findAll('input');
-      expect((endInputs[0].element as HTMLInputElement).value).toBe('1860');
-      expect((endInputs[1].element as HTMLInputElement).value).toBe('12');
-      expect((endInputs[2].element as HTMLInputElement).value).toBe('31');
+      const fields = wrapper.findAll('.date-field');
+      const endInput = fields[1].find('.date-text');
+      expect((endInput.element as HTMLInputElement).value).toBe('1860-12-31');
     });
 
     it('emits update:dateValueEnd when end date changes', async () => {
@@ -149,10 +136,10 @@ describe('DateInput', () => {
         dateType: 'between',
         dateValueEnd: '1860',
       });
-      const ymdGroups = wrapper.findAll('.ymd-group');
-      const endMonthInput = ymdGroups[1].findAll('input')[1];
-      (endMonthInput.element as HTMLInputElement).value = '06';
-      await endMonthInput.trigger('input');
+      const fields = wrapper.findAll('.date-field');
+      const endInput = fields[1].find('.date-text');
+      (endInput.element as HTMLInputElement).value = '1860-06';
+      await endInput.trigger('input');
       const emitted = wrapper.emitted('update:dateValueEnd')!;
       expect(emitted[emitted.length - 1][0]).toBe('1860-06');
     });
