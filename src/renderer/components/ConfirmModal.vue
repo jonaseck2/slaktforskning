@@ -12,7 +12,8 @@
     @close="cancel"
     @save="onConfirm"
   >
-    <p>{{ message }}</p>
+    <p v-if="message">{{ message }}</p>
+    <p v-for="(line, i) in messages ?? []" :key="i">{{ line }}</p>
   </BaseSubPanel>
 </template>
 
@@ -26,7 +27,10 @@ const { t } = useI18n();
 const props = withDefaults(defineProps<{
   visible: boolean;
   title: string;
-  message: string;
+  /** Single-paragraph message. Use `messages` for multiple paragraphs. */
+  message?: string;
+  /** Multi-paragraph body (rendered as one `<p>` per item). */
+  messages?: string[];
   /** Tone for the confirm button. Defaults to 'danger' (red) to match the original delete use case. */
   tone?: 'info' | 'warning' | 'danger';
   /** Optional icon shown in the panel header. */
