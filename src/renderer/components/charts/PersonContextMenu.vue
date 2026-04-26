@@ -24,21 +24,11 @@
     <!-- Add-relative actions -->
     <div v-if="!readonly" class="ctx-section">
       <div class="ctx-section-label">{{ $t('personDetail.addRelativeLabel') }}</div>
-      <button
-        v-if="!parentInfo?.hasFather"
-        class="ctx-item"
-        role="menuitem"
-        @click="emit('add-relative', { personId, mode: 'father' })"
-      >
+      <button class="ctx-item" role="menuitem" @click="emit('add-relative', { personId, mode: 'father' })">
         <span class="ctx-icon">➕</span>
         <span>{{ $t('personDetail.addFather') }}</span>
       </button>
-      <button
-        v-if="!parentInfo?.hasMother"
-        class="ctx-item"
-        role="menuitem"
-        @click="emit('add-relative', { personId, mode: 'mother' })"
-      >
+      <button class="ctx-item" role="menuitem" @click="emit('add-relative', { personId, mode: 'mother' })">
         <span class="ctx-icon">➕</span>
         <span>{{ $t('personDetail.addMother') }}</span>
       </button>
@@ -67,8 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, toRef, nextTick } from 'vue';
-import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 
 const props = defineProps<{
   visible: boolean;
@@ -87,7 +76,6 @@ const emit = defineEmits<{
   'delete-person': [personId: string];
 }>();
 
-const parentInfo = useSelectedParentInfo(toRef(props, 'personId'));
 
 // ── Position (clamp to viewport) ────────────────────────────────────────────
 
