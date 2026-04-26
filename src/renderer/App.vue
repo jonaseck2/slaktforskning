@@ -315,6 +315,12 @@ function setNavOrientation(value: NavOrientation) {
 provide('ttsEnabled', screenReader.isTtsEnabled);
 provide('tts', tts);
 provide('screenReader', screenReader);
+// Appearance state shared with SettingsView's Utseende tab so both the
+// sidebar/topbar popover and /settings stay in sync without duplicating refs.
+provide('appearance-store', {
+  navOrientation,
+  setNavOrientation,
+});
 
 watch(() => route.path, () => {
   if (screenReader.isScreenReader.value) {

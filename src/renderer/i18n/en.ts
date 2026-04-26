@@ -52,6 +52,7 @@ export default {
     themes: { forest: 'Forest', nordic: 'Nordic', twilight: 'Twilight' },
     tabs: { appearance: 'Appearance', database: 'Database', defaults: 'Defaults', importExport: 'Import / Export', linkRules: 'Link Rules', gazetteers: 'Gazetteers' },
     menuLayout: 'Menu',
+    menuLayoutHint: 'Show the main menu on the left as a sidebar or along the top of the window.',
     menuVertical: 'Vertical',
     menuHorizontal: 'Horizontal',
     researcherName: 'Researcher name',
