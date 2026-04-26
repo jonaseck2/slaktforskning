@@ -143,6 +143,10 @@
   --entity-place-bg:          #ecfeff;
   --entity-place-border:      #a5f3fc;
 
+  --entity-media-text:        #be185d;
+  --entity-media-bg:          #fff1f2;
+  --entity-media-border:      #fecdd3;
+
   --entity-relationship-text: #475569;
   --entity-relationship-bg:   #f1f5f9;
   --entity-relationship-border: #cbd5e1;

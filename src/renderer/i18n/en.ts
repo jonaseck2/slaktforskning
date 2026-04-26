@@ -1136,6 +1136,7 @@ export default {
   },
   media: {
     title: 'Media',
+    entity: 'Media',
     nav: 'Media',
     open: 'Open',
     attach: 'Media',

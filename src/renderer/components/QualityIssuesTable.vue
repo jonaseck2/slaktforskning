@@ -27,7 +27,7 @@
             </span>
           </td>
           <td v-if="showEntity" :class="['entity-col', { 'ignored-text': isIgnored(r) }]">
-            <span v-if="entityType(r)" :class="['entity-type-badge', 'type-' + entityType(r)]">
+            <span v-if="entityType(r)" class="entity-type-badge" :data-entity="entityType(r)">
               {{ $t('quality.entityType.' + entityType(r)) }}
             </span>
             <template v-if="isDuplicateCode(r.code)">
@@ -192,22 +192,8 @@ function entityRoute(r: QualityIssue, id: string): { path: string; query?: Recor
   text-transform: uppercase;
   letter-spacing: 0.02em;
   vertical-align: middle;
+  background: var(--entity-bg);
+  color: var(--entity-text);
+  border: 1px solid var(--entity-border);
 }
-/* Light mode: pale bg derived from the fan-branch hue, saturated fan-branch as text */
-.type-person { background: color-mix(in srgb, var(--fan-branch-1) 22%, #fff); color: var(--fan-branch-1); }
-.type-place  { background: color-mix(in srgb, var(--fan-branch-2) 22%, #fff); color: var(--fan-branch-2); }
-.type-media  { background: color-mix(in srgb, var(--fan-branch-3) 22%, #fff); color: var(--fan-branch-3); }
-.type-source { background: color-mix(in srgb, var(--fan-branch-4) 22%, #fff); color: var(--fan-branch-4); }
-
-/* Dark mode: dark tinted bg, lightened fan-branch as text */
-html.dark .type-person { background: color-mix(in srgb, var(--fan-branch-1) 50%, #000); color: color-mix(in srgb, var(--fan-branch-1), #fff 60%); }
-html.dark .type-place  { background: color-mix(in srgb, var(--fan-branch-2) 50%, #000); color: color-mix(in srgb, var(--fan-branch-2), #fff 60%); }
-html.dark .type-media  { background: color-mix(in srgb, var(--fan-branch-3) 50%, #000); color: color-mix(in srgb, var(--fan-branch-3), #fff 60%); }
-html.dark .type-source { background: color-mix(in srgb, var(--fan-branch-4) 50%, #000); color: color-mix(in srgb, var(--fan-branch-4), #fff 60%); }
-
-/* High-contrast: solid saturated fan-branch bg + light text for max AA contrast */
-html.high-contrast .type-person { background: var(--fan-branch-1); color: #fff; }
-html.high-contrast .type-place  { background: var(--fan-branch-2); color: #fff; }
-html.high-contrast .type-media  { background: var(--fan-branch-3); color: #fff; }
-html.high-contrast .type-source { background: var(--fan-branch-4); color: #fff; }
 </style>
