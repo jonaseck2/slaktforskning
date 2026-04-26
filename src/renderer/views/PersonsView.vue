@@ -3,6 +3,7 @@
     <!-- Permanent left list column -->
     <template v-if="listOpen">
       <div class="viz-list-column" :style="{ width: listWidth + 'px' }">
+        <h3 class="viz-list-title">{{ $t('persons.listTitle') }}</h3>
         <PersonsListTab embedded @person-added="onPersonAdded" @select="navigateTo" />
         <button class="list-collapse-btn" :aria-label="$t('common.close')" title="Dölj listan" @click="closeList">◀</button>
       </div>
@@ -473,6 +474,15 @@ onActivated(load);
   overflow: hidden;
   flex-shrink: 0;
   min-height: 0;
+}
+.viz-list-title {
+  margin: 0;
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--surface-border-subtle);
+  flex-shrink: 0;
 }
 .viz-list-column :deep(.persons-view-content) {
   flex: 1;

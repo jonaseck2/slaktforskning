@@ -6,6 +6,8 @@
     </div>
 
     <template v-else-if="person">
+      <!-- Panel role label -->
+      <div class="panel-role-label">{{ $t('panel.managePerson') }}</div>
       <!-- Header -->
       <div class="panel-header">
         <AppAvatar
@@ -183,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, onMounted, nextTick } from 'vue';
+import { ref, toRef, watch, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
@@ -266,6 +268,14 @@ const { sections, toggleSection } = usePanelSections(
     media: true, mediaTimeline: true, quality: false,
   },
 );
+
+// When the panel switches to a new person, force the Relationships section open
+// so the user immediately sees who this new selected person is connected to.
+watch(personIdRef, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    sections.relationships = true;
+  }
+});
 
 // ── Template refs ───────────────────────────────────────────────────────────
 
@@ -435,6 +445,23 @@ onMounted(() => {
   font-size: var(--font-sm);
   padding: var(--space-xl);
   text-align: center;
+}
+
+/* Role label above the person header (states what the panel does) */
+.panel-role-label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: var(--space-md) var(--space-lg) var(--space-xs);
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+}
+.panel-role-label + .panel-header {
+  border-radius: 0;
+  padding-top: 0;
 }
 
 /* Header */
