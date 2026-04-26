@@ -281,7 +281,7 @@ export function computePedigreeLayout(
     const box = boxes[i];
     if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
     const pid = box.person.id;
-    let role: 'father' | 'mother' | 'child' | 'spouse';
+    let role: 'father' | 'mother' | 'son' | 'daughter' | 'spouse';
     let childPersonId: string;
     if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
       role = 'father';
@@ -292,9 +292,12 @@ export function computePedigreeLayout(
     } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'spouse_')) {
       role = 'spouse';
       childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'spouse_').length);
+    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'son_')) {
+      role = 'son';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'son_').length);
     } else {
-      role = 'child';
-      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'child_').length);
+      role = 'daughter';
+      childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'daughter_').length);
     }
     placeholders.push({ type: 'placeholder', role, childPersonId, x: box.x, y: box.y });
     boxes.splice(i, 1);

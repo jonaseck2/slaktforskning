@@ -225,7 +225,8 @@ watch(genTarget, (n) => {
 
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
-const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('child');
+type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
+const addRelativeMode = ref<AddRelativeMode>('son');
 const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
@@ -407,14 +408,15 @@ function placeholderLabel(role: string): string {
     father: t('personDetail.addFather'),
     mother: t('personDetail.addMother'),
     spouse: t('personDetail.addSpouse'),
-    child: t('personDetail.addChild'),
+    son: t('personDetail.addSon'),
+    daughter: t('personDetail.addDaughter'),
   };
   return labels[role] ?? role;
 }
 
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   addRelativePersonId.value = ph.childPersonId;
-  addRelativeMode.value = ph.role as 'father' | 'mother' | 'spouse' | 'child';
+  addRelativeMode.value = ph.role as AddRelativeMode;
   const personBox = layout.value.boxes.find(b => b.person.id === ph.childPersonId);
   addRelativePersonSex.value = (personBox?.person.sex as 'M' | 'F' | 'U') ?? undefined;
   addRelativePersonSurname.value = personBox?.person.surname ?? undefined;

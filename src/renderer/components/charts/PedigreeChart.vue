@@ -285,7 +285,8 @@ function onBoxKeydown(e: KeyboardEvent, box: BoxLayout) {
 
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
-const addRelativeMode = ref<'father' | 'mother' | 'spouse' | 'child'>('father');
+type AddRelativeMode = 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
+const addRelativeMode = ref<AddRelativeMode>('father');
 const addRelativePersonSex = ref<'M' | 'F' | 'U' | undefined>(undefined);
 const addRelativePersonSurname = ref<string | undefined>(undefined);
 
@@ -471,7 +472,8 @@ function placeholderLabel(role: string): string {
     father: t('personDetail.addFather'),
     mother: t('personDetail.addMother'),
     spouse: t('personDetail.addSpouse'),
-    child: t('personDetail.addChild'),
+    son: t('personDetail.addSon'),
+    daughter: t('personDetail.addDaughter'),
   };
   return labels[role] ?? role;
 }
@@ -479,7 +481,7 @@ function placeholderLabel(role: string): string {
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   const childBox = layout.value.boxes.find((b: BoxLayout) => b.person.id === ph.childPersonId);
   addRelativePersonId.value = ph.childPersonId;
-  addRelativeMode.value = ph.role as 'father' | 'mother' | 'spouse' | 'child';
+  addRelativeMode.value = ph.role as AddRelativeMode;
   addRelativePersonSex.value = childBox?.person.sex ?? 'U';
   addRelativePersonSurname.value = childBox?.person.surname ?? undefined;
   showAddRelative.value = true;

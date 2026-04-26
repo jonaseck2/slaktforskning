@@ -1556,13 +1556,14 @@ describe('outline placeholders — hourglass regression', () => {
 });
 
 describe('outline placeholders — descendant regression', () => {
-  it('shows child outline even when selected person\'s children are collapsed', () => {
+  it('shows son+daughter outlines even when selected person\'s children are collapsed', () => {
     const root: DescendantNode = {
       person: p('f'),
       children: [{ person: p('c1'), children: [] }],
     };
     const { placeholders } = computeDescendantLayout(root, 3, new Set(['f:down']), 'f');
-    expect(placeholders.find(ph => ph.role === 'child' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'son' && ph.childPersonId === 'f')).toBeDefined();
+    expect(placeholders.find(ph => ph.role === 'daughter' && ph.childPersonId === 'f')).toBeDefined();
   });
 
   it('shows father+mother outlines for the focal person', () => {
