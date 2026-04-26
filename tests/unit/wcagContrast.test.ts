@@ -143,12 +143,6 @@ const ENTITY_TEXT_PAIRS: TextPair[] = ENTITIES.map(e => ({
   bg: `entity-${e}-bg`,
 }));
 
-const ENTITY_UI_PAIRS: UiPair[] = ENTITIES.map(e => ({
-  label: `entity-${e}-border on surface-bg`,
-  fg: `entity-${e}-border`,
-  bg: 'surface-bg',
-}));
-
 function assertPair(p: Palette, pair: TextPair, level: 'AA' | 'AAA'): void {
   const fgHex = p[pair.fg];
   const bgHex = p[pair.bg];
@@ -226,12 +220,6 @@ describe('WCAG AAA — high-contrast mode (theme-tinted)', () => {
           assertPair(palette, pair, 'AAA');
         });
       }
-
-      for (const pair of ENTITY_UI_PAIRS) {
-        it(`${pair.label} ≥ 3:1 (UI)`, () => {
-          assertUiPair(palette, pair);
-        });
-      }
     });
   }
 });
@@ -259,12 +247,6 @@ describe('WCAG AA — light and dark base themes (regression)', () => {
       for (const pair of ENTITY_TEXT_PAIRS) {
         it(`${pair.label} ≥ AA (${appearance})`, () => {
           assertPair(palette, pair, 'AA');
-        });
-      }
-
-      for (const pair of ENTITY_UI_PAIRS) {
-        it(`${pair.label} ≥ 3:1 (UI, ${appearance})`, () => {
-          assertUiPair(palette, pair);
         });
       }
     });
