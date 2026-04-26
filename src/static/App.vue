@@ -14,12 +14,6 @@
           class="sidebar-search-input"
         />
       </form>
-      <div v-if="focusStore.personId" class="focus-indicator">
-        <span class="focus-label">{{ $t('nav.focusPerson') }}</span>
-        <router-link :to="'/persons/' + focusStore.personId" class="focus-name">
-          {{ focusStore.personName }}
-        </router-link>
-      </div>
       <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
         <span class="nav-icon" aria-hidden="true">👤</span>
         <span class="nav-label">{{ $t('nav.people') }}</span>
@@ -311,33 +305,6 @@ body {
 .sidebar-search-input:focus {
   background: var(--sidebar-border);
 }
-
-.focus-indicator {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 10px;
-  margin-bottom: 4px;
-  background: var(--sidebar-active-bg);
-  border-radius: 6px;
-  border-left: 3px solid var(--accent);
-  flex-shrink: 0;
-}
-.focus-label {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--sidebar-text-muted);
-  text-transform: uppercase;
-}
-.focus-name {
-  font-size: var(--font-xs);
-  color: var(--sidebar-active-text);
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.focus-name:hover { color: var(--sidebar-active-text); text-decoration: underline; }
 
 .sidebar a,
 .nav-item {
