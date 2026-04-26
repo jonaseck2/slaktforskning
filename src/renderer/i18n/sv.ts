@@ -265,6 +265,8 @@ export default {
     title: 'Hänvisningar',
     addTitle: 'Lägg till hänvisning',
     editTitle: 'Redigera hänvisning',
+    chooseSourceTitle: 'Välj en källa',
+    changeSource: 'Byt',
     source: 'Källa',
     selectSource: 'Välj en källa\u2026',
     pageLocation: 'Sida / Plats',
@@ -287,6 +289,7 @@ export default {
     year: 'ÅÅÅÅ',
     month: 'MM',
     day: 'DD',
+    placeholder: 'ÅÅÅÅ-MM-DD',
     pickDate: 'Välj datum',
   },
   datePrefix: {

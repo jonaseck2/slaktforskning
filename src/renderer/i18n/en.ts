@@ -265,6 +265,8 @@ export default {
     title: 'Citations',
     addTitle: 'Add Citation',
     editTitle: 'Edit citation',
+    chooseSourceTitle: 'Choose a source',
+    changeSource: 'Change',
     source: 'Source',
     selectSource: 'Select a source\u2026',
     pageLocation: 'Page / Location',
@@ -287,6 +289,7 @@ export default {
     year: 'YYYY',
     month: 'MM',
     day: 'DD',
+    placeholder: 'YYYY-MM-DD',
     pickDate: 'Pick date',
   },
   datePrefix: {
