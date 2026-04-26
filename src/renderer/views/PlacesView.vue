@@ -13,7 +13,6 @@
             <thead>
               <tr>
                 <th>{{ $t('places.name') }}</th>
-                <th v-if="!isStaticMode" class="actions-cell">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -37,14 +36,6 @@
                 @keydown.up.prevent="focusPrevRow($event)"
               >
                 <td>{{ place.name }}</td>
-                <td v-if="!isStaticMode" class="actions-cell">
-                  <AppButton
-                    variant="ghost"
-                    size="sm"
-                    :aria-label="$t('a11y.deleteItem', { item: place.name })"
-                    @click.stop="deletePlace(place.id)"
-                  >✕</AppButton>
-                </td>
               </tr>
             </tbody>
           </table>
@@ -209,11 +200,6 @@ async function load() {
 function onPlaceSaved() {
   showAddForm.value = false;
   load();
-}
-
-async function deletePlace(id: string) {
-  await window.api.places.delete(id);
-  await load();
 }
 
 watch(() => route.params.id, (id) => {
