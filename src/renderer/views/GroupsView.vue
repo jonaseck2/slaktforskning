@@ -15,7 +15,7 @@
         @remove="deleteGroup"
         @select="selectGroup"
       />
-      <button v-if="!panelOpen && selectedGroupId" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && selectedGroupId" class="panel-open-btn" @click="openPanel">◀</button>
     </div>
 
     <template v-if="panelOpen && selectedGroupId">

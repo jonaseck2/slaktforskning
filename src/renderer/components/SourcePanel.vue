@@ -6,6 +6,8 @@
     </div>
 
     <template v-else-if="source">
+      <!-- Collapse arrow on the panel's left edge. -->
+      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
       <!-- Header -->
       <div class="panel-header">
         <div class="panel-header-content">
@@ -14,7 +16,6 @@
             <span v-if="source.source_type" class="source-type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span>
           </div>
         </div>
-        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Source section -->
@@ -508,7 +509,26 @@ async function removeRepository(repoId: string) {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
+  position: relative;
 }
+
+/* Collapse arrow on the panel's left edge. */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
 .panel-empty {
   display: flex;

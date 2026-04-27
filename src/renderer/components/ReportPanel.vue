@@ -1,5 +1,7 @@
 <template>
   <div class="report-panel">
+    <!-- Collapse arrow on the panel's left edge. -->
+    <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
 
     <div class="panel-header">
       <div class="panel-title">{{ reportTitle }}</div>
@@ -302,6 +304,7 @@ const emit = defineEmits<{
   'export-pdf': [];
   'save-svg': [];
   'save-chart-pdf': [];
+  close: [];
 }>();
 
 const { t } = useI18n();
@@ -382,7 +385,26 @@ const subjectSectionTitle = computed(() => {
   flex-direction: column;
   overflow-y: auto;
   font-size: var(--font-sm);
+  position: relative;
 }
+
+/* Collapse arrow on the panel's left edge. */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .panel-header {
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--surface-border-subtle);

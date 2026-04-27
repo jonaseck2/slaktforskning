@@ -12,6 +12,9 @@
     </template>
 
     <template v-else-if="media">
+      <!-- Collapse arrow on the panel's left edge — same pattern as the
+           media-list ◀/▶ buttons. -->
+      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
       <!-- Header: thumbnail + title -->
       <div class="panel-header">
         <div class="media-thumbnail">
@@ -38,7 +41,6 @@
             <AppButton variant="soft" size="sm" @click="emit('open-viewer')">{{ $t('panel.view') }}</AppButton>
           </div>
         </div>
-        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Notes -->
@@ -606,7 +608,27 @@ defineExpose({ reload: load, expandFaceTags });
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
+  position: relative;
 }
+
+/* Collapse arrow on the panel's left edge — mirrors the
+   `list-collapse-btn` / `list-open-btn` pattern on the media list. */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
 .panel-empty {
   display: flex;

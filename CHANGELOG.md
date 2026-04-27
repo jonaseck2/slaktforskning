@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- feat(panels): every right-side panel now has a `▶` collapse tab on its left edge instead of an `×` close button in the header (v0.158.0). PlacePanel, GroupPanel, ResearchTaskPanel, SourcePanel, RelationshipPanel and ReportPanel match the existing PersonPanel pattern. PlacesView gains the matching `◀` reopen button it was missing, and the left-list collapse tab in PlacesView now mirrors PersonsView's direction (rounded inward, anchored at the column's right edge) instead of sticking outward. ReportsView/PrintsView gain a panelOpen state so the right panel can fully collapse and be reopened (persisted under `reports-panel-open`). The four other views (Groups/ResearchTasks/Sources/Relationships) keep their existing reopen buttons but switch the arrow from `▶` to `◀` so direction matches the new convention.
+
+- feat(media): MediaView gets a permanent left-side list column (compact thumb + title) with the same `◀`/`▶` collapse tab pattern as PersonsView and PlacesView. The center stays as the gallery cards; the table view and gallery/list view-toggle are removed since the list is now always visible to the left of the gallery. Search filter moves from the gallery header into the list column. The right MediaPanel is now collapsible via the new `▶` tab. List width persists under `media-list-width`, list-open under `media-list-open`, panel-open under `media-panel-open`.
+
 - fix(nav): horizontal top-bar search uses the same PersonPicker typeahead as the vertical sidebar (v0.157.9). Selecting a person opens the panel for that person and routes to `/persons/...` — same behaviour in both nav orientations. Cmd+F focuses the picker in either mode. The plain `<input>` + `submitSearch` form that routed to `/search` is dropped.
 
 - fix(views): collapse-list reopen button (▶) anchors to the view's left edge, not the window's. PersonsView and PlacesView were missing `position: relative`, so the absolutely-positioned `.list-open-btn` escaped to the viewport — in vertical-nav mode it landed at the window edge, behind the sidebar. Both views now position relatively, putting the button flush with the right side of the nav.

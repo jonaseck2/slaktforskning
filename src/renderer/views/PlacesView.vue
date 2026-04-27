@@ -58,6 +58,9 @@
       </template>
     </MapView>
 
+    <!-- Reopen panel button when panel is closed -->
+    <button v-if="!panelOpen && selectedPlaceId" class="panel-open-btn" :aria-label="$t('panel.open') ?? 'Open'" @click="openPanel">◀</button>
+
     <!-- Panel: shared across list and map modes — never unmounts on view switch -->
     <template v-if="panelOpen && selectedPlaceId">
       <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, placesBodyRef!)"></div>
@@ -280,8 +283,8 @@ onActivated(async () => {
   transform: translateY(-50%);
   background: var(--surface);
   border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   padding: 6px 5px;
   cursor: pointer;
   color: var(--text-muted);
@@ -292,7 +295,7 @@ onActivated(async () => {
 .list-open-btn {
   position: absolute;
   top: 50%;
-  left: var(--space-md);
+  left: 0;
   transform: translateY(-50%);
   background: var(--surface);
   border: 1px solid var(--surface-border);

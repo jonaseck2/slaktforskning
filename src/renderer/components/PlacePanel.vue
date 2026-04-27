@@ -6,6 +6,9 @@
     </div>
 
     <template v-else-if="place">
+      <!-- Collapse arrow on the panel's left edge — same pattern as the
+           places-list ◀/▶ buttons. -->
+      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
       <!-- Panel role label -->
       <h3 class="panel-role-label">{{ $t('panel.managePlace') }}</h3>
       <!-- Header -->
@@ -16,7 +19,6 @@
             <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
           </div>
         </div>
-        <button class="panel-close-btn" :aria-label="$t('common.close')" @click="emit('close')">×</button>
       </div>
 
       <!-- Place section -->
@@ -463,7 +465,27 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: var(--font-sm);
+  position: relative;
 }
+
+/* Collapse arrow on the panel's left edge — mirrors the
+   `list-collapse-btn` / `list-open-btn` pattern on the places list. */
+.panel-collapse-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 
 .panel-empty {
   display: flex;
