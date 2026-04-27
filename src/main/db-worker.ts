@@ -14,8 +14,6 @@ import { undoManager } from '../api/undo';
 import * as persons from '../api/persons';
 import * as checks from '../api/checks';
 import * as media from '../api/media';
-import { getMediaTimeline } from '../api/media_timeline';
-import * as mediaRegions from '../api/media_regions';
 import * as gazetteers from '../api/gazetteers';
 import { getDbSetting, setDbSetting, deleteDbSetting } from '../api/db_settings';
 import { queryAll } from '../api/db';
@@ -80,24 +78,8 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'gazetteers:delete': (id) => gazetteers.deleteGazetteer(getDb(), id),
   'gazetteers:getImported': () => gazetteers.getImportedGazetteers(getDb()),
 
-  // Media (DB + file operations)
-  'media:list': () => media.listMedia(getDb()),
-  'media:listPage': (limit, offset) => ({
-    items: media.listMediaPage(getDb(), limit, offset),
-    total: media.countMedia(getDb()),
-  }),
-  'media:get': (id) => media.getMedia(getDb(), id),
-  'media:create': (data) => media.createMedia(getDb(), data),
-  'media:delete': (id) => media.deleteMedia(getDb(), id),
-  'media:update': (id, data) => media.updateMedia(getDb(), id, data),
-  'media:forEntity': (entityType, entityId) => media.getMediaForEntity(getDb(), entityType, entityId),
-  'media:linksForMedia': (mediaId) => media.getLinksForMedia(getDb(), mediaId),
-  'media:addLink': (data) => media.addMediaLink(getDb(), data),
-  'media:removeLink': (linkId) => media.removeMediaLink(getDb(), linkId),
-  'media:reorder': (linkIds) => media.reorderMediaLinks(getDb(), linkIds),
-  'media:profilePicRef': (personId) => media.getPersonProfilePicRef(getDb(), personId),
-  'media:profilePicRefs': (personIds) => media.getPersonProfilePicRefs(getDb(), personIds),
-  'media:getTimeline': (entityType, entityId) => getMediaTimeline(getDb(), entityType, entityId),
+  // Media (most channels migrated to registry — src/shared/channels/media.ts)
+  // These two remain here because they require getDbDir() (worker-local state):
   'media:getFilePath': (id) => {
     const item = media.getMedia(getDb(), id);
     if (!item?.file_ref) return null;
@@ -118,12 +100,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     return `data:${mime};base64,${nodeFs.readFileSync(absPath).toString('base64')}`;
   },
 
-  // Media Regions
-  'mediaRegions:create': (data) => mediaRegions.createMediaRegion(getDb(), data),
-  'mediaRegions:getForMedia': (mediaId) => mediaRegions.getMediaRegions(getDb(), mediaId),
-  'mediaRegions:getForPerson': (personId) => mediaRegions.getRegionsForPerson(getDb(), personId),
-  'mediaRegions:update': (id, data) => mediaRegions.updateMediaRegion(getDb(), id, data),
-  'mediaRegions:delete': (id) => mediaRegions.deleteMediaRegion(getDb(), id),
+  // Media Regions — migrated to registry (src/shared/channels/media.ts)
 
   // DB settings
   'db:getSetting': (key) => getDbSetting(getDb(), key),
