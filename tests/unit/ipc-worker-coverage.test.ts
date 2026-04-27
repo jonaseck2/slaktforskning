@@ -1,7 +1,8 @@
 /**
  * Asserts that every channel registered via wrapHandler() is either:
  *   (a) handled in the DB worker dispatch table, OR
- *   (b) explicitly listed in MAIN_THREAD_ONLY_CHANNELS.
+ *   (b) registered in the shared channel registry (migrated domains), OR
+ *   (c) explicitly listed in MAIN_THREAD_ONLY_CHANNELS.
  *
  * If a channel is added to an ipc/*.ts file but forgotten in the worker
  * dispatch table AND not listed here, this test fails immediately.
@@ -9,6 +10,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
+// Registry imports — each domain module registers its channels as a side effect
+import '../../src/shared/channels/persons';
+import { listChannels } from '../../src/shared/channels/registry';
 
 // Channels that intentionally stay on the main thread (Electron APIs, dialog, shell, BrowserWindow, imports)
 const MAIN_THREAD_ONLY_CHANNELS = new Set([
@@ -46,10 +50,12 @@ function extractWrapHandlerChannels(dir: string): string[] {
 function extractWorkerChannels(): Set<string> {
   const src = readFileSync(resolve(__dirname, '../../src/main/db-worker.ts'), 'utf-8');
   const channels = new Set<string>();
-  // Matches dispatch-table keys like:  'persons:get':
+  // Matches legacy dispatch-table keys like:  'events:get':
   const re = /^\s+['"]([a-zA-Z]+:[a-zA-Z]+)['"]\s*:/gm;
   let m: RegExpExecArray | null;
   while ((m = re.exec(src)) !== null) channels.add(m[1]);
+  // Also include channels from the shared registry (migrated domains like persons)
+  for (const name of listChannels()) channels.add(name);
   return channels;
 }
 

@@ -1,4 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import '../shared/channels/persons';
+import { channelRegistry } from '../shared/channels/registry';
 
 // Registry of callbacks to invoke after any mutating IPC call.
 // Uses the same contextBridge pattern as db.onSwitched — the only reliable
@@ -13,26 +15,18 @@ function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...a
   };
 }
 
+// Build the persons API object from the channel registry.
+// Channels with mutating:true are wrapped so dataChanged listeners fire after the call.
+const personsApi: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
+for (const ch of Object.values(channelRegistry)) {
+  if (!ch.name.startsWith('persons:')) continue;
+  const method = ch.name.slice('persons:'.length);
+  const invoke = (...args: unknown[]) => ipcRenderer.invoke(ch.name, ...args);
+  personsApi[method] = ch.mutating ? mutating(invoke) : invoke;
+}
+
 const api = {
-  persons: {
-    create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('persons:create', data)),
-    createWithEvent: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('persons:createWithEvent', data)),
-    get: (id: string) => ipcRenderer.invoke('persons:get', id),
-    list: () => ipcRenderer.invoke('persons:list'),
-    update: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:update', id, data)),
-    delete: mutating((id: string) => ipcRenderer.invoke('persons:delete', id)),
-    search: (query: string, relateeId?: string | null) => ipcRenderer.invoke('persons:search', query, relateeId ?? null),
-    addName: mutating((personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addName', personId, data)),
-    getNames: (personId: string) => ipcRenderer.invoke('persons:getNames', personId),
-    updateName: mutating((id: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:updateName', id, data)),
-    deleteName: mutating((id: string) => ipcRenderer.invoke('persons:deleteName', id)),
-    addIdentifier: mutating((personId: string, data: Record<string, unknown>) => ipcRenderer.invoke('persons:addIdentifier', personId, data)),
-    getIdentifiers: (personId: string) => ipcRenderer.invoke('persons:getIdentifiers', personId),
-    deleteIdentifier: mutating((id: string) => ipcRenderer.invoke('persons:deleteIdentifier', id)),
-    listPage: (limit: number, offset: number, sortBy?: 'surname' | 'given_name' | 'birth_date', sortDir?: 'asc' | 'desc') => ipcRenderer.invoke('persons:listPage', limit, offset, sortBy, sortDir),
-    searchWithDetails: (query: string) => ipcRenderer.invoke('persons:searchWithDetails', query),
-    listUnsourcedPage: (limit: number, offset: number) => ipcRenderer.invoke('persons:listUnsourcedPage', limit, offset),
-  },
+  persons: personsApi,
   relationships: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data)),
     get: (id: string) => ipcRenderer.invoke('relationships:get', id),
