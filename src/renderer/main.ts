@@ -6,12 +6,15 @@ import './styles/tokens.css';
 import './styles/shared.css';
 import App from './App.vue';
 import { vNarrate } from './directives/narrate';
+import { installComponentInspector } from './dev/component-inspector';
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(i18n);
 app.directive('narrate', vNarrate);
+
+installComponentInspector(i18n);
 
 const lastRoute = localStorage.getItem('slaktforskning-last-route');
 const hasHashRoute = window.location.hash && window.location.hash !== '#/';
