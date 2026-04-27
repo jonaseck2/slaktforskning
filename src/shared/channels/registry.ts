@@ -1,7 +1,13 @@
-import type { ChannelDef } from './types';
+import type { ChannelDef, ChannelRegistry, WorkerChannelDef, MainChannelDef } from './types';
 
 const registry: Record<string, ChannelDef> = {};
 
+export function defineChannel<Args extends unknown[], Result>(
+  def: WorkerChannelDef<Args, Result>
+): WorkerChannelDef<Args, Result>;
+export function defineChannel<Args extends unknown[], Result>(
+  def: MainChannelDef<Args, Result>
+): MainChannelDef<Args, Result>;
 export function defineChannel<Args extends unknown[], Result>(
   def: ChannelDef<Args, Result>
 ): ChannelDef<Args, Result> {
@@ -12,7 +18,10 @@ export function defineChannel<Args extends unknown[], Result>(
   return def;
 }
 
-export const channelRegistry: Readonly<Record<string, ChannelDef>> = registry;
+export const channelRegistry: ChannelRegistry = new Proxy(registry, {
+  set() { throw new Error('channelRegistry is immutable; use defineChannel'); },
+  deleteProperty() { throw new Error('channelRegistry is immutable; use defineChannel'); },
+});
 
 export function listChannels(): string[] {
   return Object.keys(registry);

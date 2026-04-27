@@ -1,9 +1,8 @@
 import { getDatabase, getCurrentDatabasePath, switchDatabase } from '../database';
 import { loadSettings } from '../settings';
+import { channelRegistry } from '../../shared/channels';
 import { wrapHandler } from './wrap-handler';
 import { startWorker, callWorker } from './worker-client';
-import '../../shared/channels/persons';
-import { channelRegistry } from '../../shared/channels/registry';
 import { registerRelationshipHandlers } from './relationships';
 import { registerEventHandlers } from './events';
 import { registerSourceHandlers } from './sources';
@@ -27,9 +26,7 @@ export function registerIpcHandlers(): void {
     if (ch.thread === 'worker') {
       wrapHandler(ch.name, (...args: unknown[]) => callWorker(ch.name, ...args));
     } else {
-      wrapHandler(ch.name, (...args: unknown[]) =>
-        (ch.handler as (...a: unknown[]) => unknown)(...args)
-      );
+      wrapHandler(ch.name, (...args: unknown[]) => ch.handler(...args));
     }
   }
 
