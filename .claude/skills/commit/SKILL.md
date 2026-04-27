@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Stage ALL changes and create a git commit. Always use this instead of manual git add/commit.
+description: Stage the files belonging to the current concern and create a git commit. Always use this instead of manual git add/commit.
 ---
 
 # Commit Skill
@@ -12,7 +12,7 @@ description: Stage ALL changes and create a git commit. Always use this instead 
 
 When asked to commit, or when a commit is appropriate after completing work:
 
-1. **Always stage ALL files** — run `git add -A`. Never selectively stage files. There is no reason to test the whole app and then commit half of it.
+1. **Stage by concern, not by tree.** Run `git status` first. If everything in the tree belongs to the current change, `git add -A` is fine. If the tree contains unrelated WIP from a previous session (different feature, different fix, different file family), stage explicitly by path: `git add <file1> <file2> ...`. Inside the same concern, never selectively skip a file — bundle every file your change touched (sources, tests, CHANGELOG, package.json, CLAUDE.md, docs). If unsure whether a modified file belongs to your concern, ask the user before committing.
 2. Run `git status` to review what will be committed.
 3. Run `git diff --cached --stat` to see a summary of changes.
 4. **Bump the version in `package.json`** — every commit that ships a fix or feature MUST bump it. No exceptions, no batching.
@@ -99,8 +99,7 @@ Run `npm test` and `npm run lint` on the merged index before completing the merg
 
 ## Rules
 
-- **NEVER use `git add <specific files>`** — always `git add -A`
-- **NEVER skip files** — if a file is modified or untracked, it gets committed
+- **Stage by concern.** If the tree is clean of unrelated WIP, `git add -A` is the default. If unrelated WIP is present, `git add <path> <path> ...` for the files in your concern only. Inside one concern, every file gets committed — sources, tests, CHANGELOG, package.json, CLAUDE.md, docs. Never selectively skip a file inside the same concern.
 - **NEVER amend** unless explicitly asked — always create a new commit
 - **NEVER skip hooks** (no `--no-verify`)
 - **Run lint and tests BEFORE committing** — `npm run lint && npm test`. Never commit first and test after. If lint or tests fail, fix them before committing.

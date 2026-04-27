@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(panels): every right-side entity panel and every left-side list column now reserves the same 28px slot for its `▶`/`◀` collapse tab, so the tab no longer clips against the panel's rounded corner on Place/Group/ResearchTask/Source/Relationship/Report/Media (v0.158.5). PersonPanel already had this; the other seven panels were missing it. Refactored: extracted `.side-panel` and `.list-column` into shared.css so the layout/surface/padding is defined once instead of duplicated in eight scoped style blocks. PlacesView and MediaView list columns also pick up the shared 28px right-padding through `.list-column`.
+
 - fix(media): the left list column in MediaView now infinite-scrolls on its own (v0.158.4). Previously only the gallery sentinel triggered `loadMore()`, so scrolling the list past the first page had no effect — it just bottomed out at whatever the gallery had already paged in. Adds a second sentinel inside `.media-list-content` and a second `IntersectionObserver` rooted in the list's own scroll container, with cleanup on unmount.
 
 - fix(media): gallery card thumbnails switch from a fixed 140px height to `aspect-ratio: 1 / 1.35`, giving them face-like portrait proportions that scale with column width (v0.158.3).

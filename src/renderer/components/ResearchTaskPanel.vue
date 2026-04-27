@@ -1,5 +1,5 @@
 <template>
-  <div class="task-panel">
+  <div class="task-panel side-panel">
     <!-- Empty state -->
     <div v-if="!taskId" class="panel-empty">
       {{ $t('taskPanel.noTaskSelected') }}
@@ -304,17 +304,9 @@ async function removeLink(linkId: string) {
 </script>
 
 <style scoped>
-.task-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  font-size: var(--font-sm);
-  position: relative;
-}
+/* Layout, surface, and `padding-left: 28px` for the collapse tab come
+   from `.side-panel` in shared.css. */
+.task-panel { overflow-y: auto; }
 
 /* Collapse arrow on the panel's left edge. */
 .panel-collapse-btn {

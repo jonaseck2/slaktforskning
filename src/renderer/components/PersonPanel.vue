@@ -1,5 +1,5 @@
 <template>
-  <div class="person-panel">
+  <div class="person-panel side-panel">
     <!-- Empty state -->
     <div v-if="!personId" class="panel-empty">
       {{ $t('panel.noPersonSelected') }}
@@ -564,22 +564,11 @@ onMounted(() => {
   color: var(--text-primary);
 }
 
-.person-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  /* The panel itself does not scroll — its inner .panel-scroll-area
-     does, so the scrollbar starts below the pinned header card. */
-  overflow: hidden;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  font-size: var(--font-sm);
-  position: relative;
-  /* Reserve a slot at the left for the collapse arrow so it never
-     overlaps section content or the sticky "Hantera person" header. */
-  padding-left: 28px;
-}
+/* Layout, surface, and `padding-left: 28px` for the collapse tab come
+   from `.side-panel` in shared.css. Person uses `overflow: hidden` (not
+   `overflow-y: auto`) because scrolling is delegated to the inner
+   `.panel-scroll-area` so the pinned header card stays fixed. */
+.person-panel { overflow: hidden; }
 
 /* Scrollable region below the pinned header. */
 .panel-scroll-area {

@@ -2,7 +2,7 @@
   <div class="visualization-view" ref="vizBodyRef">
     <!-- Permanent left list column -->
     <template v-if="listOpen">
-      <div class="viz-list-column" :style="{ width: listWidth + 'px' }">
+      <div class="viz-list-column list-column" :style="{ width: listWidth + 'px' }">
         <h3 class="viz-list-title">{{ $t('persons.listTitle') }}</h3>
         <PersonsListTab embedded @person-added="onPersonAdded" @select="selectNode" />
         <button class="list-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="closeList">◀</button>
@@ -576,19 +576,8 @@ onActivated(load);
 }
 .panel-drag-handle:hover { background: var(--surface-border); }
 
-/* Left list column */
-.viz-list-column {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  flex-shrink: 0;
-  min-height: 0;
-  padding-right: 28px;
-}
+/* Layout, surface, and `padding-right: 28px` for the collapse tab come
+   from `.list-column` in shared.css. */
 .viz-list-title {
   margin: 0;
   padding: var(--space-md) var(--space-md) var(--space-sm);

@@ -2,43 +2,62 @@
   <div class="places-view" ref="placesBodyRef">
     <!-- Permanent left list column -->
     <template v-if="listOpen">
-      <div class="places-list-column" :style="{ width: listWidth + 'px' }">
+      <div class="places-list-column list-column" :style="{ width: listWidth + 'px' }">
         <h3 class="places-list-title">{{ $t('places.listTitle') }}</h3>
-        <div class="places-list-content">
-          <p v-if="places.length > 0" class="count-label">{{ $t('places.showingOf', { shown: filteredPlaces.length, total: places.length }) }}</p>
-          <FilterChips v-if="places.length > 0" :options="typeFilters" :model-value="activeTypeFilter" @update:model-value="activeTypeFilter = $event" />
+        <div class="places-list-body">
+          <div v-if="places.length > 0" class="list-filter">
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="$t('places.filterSearch')"
+              class="list-filter-input"
+            />
+          </div>
           <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPlace')" @action="showAddForm = true" />
-          <AppEmptyState v-else-if="filteredPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
-          <table v-else class="data-table">
-            <thead>
-              <tr>
-                <th>{{ $t('places.name') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="place in filteredPlaces"
-                :key="place.id"
-                v-narrate="() => narratePlaceRow({
-                  name: place.name || '',
-                  place_type: place.place_type || '',
-                  path: '',
-                }, t)"
-                class="clickable-row"
-                :class="{ 'selected-row': selectedPlaceId === place.id }"
-                tabindex="0"
-                role="button"
-                :aria-label="$t('a11y.editItem', { item: place.name })"
-                @click="selectPlace(place.id)"
-                @keydown.enter="selectPlace(place.id)"
-                @keydown.space.prevent="selectPlace(place.id)"
-                @keydown.down.prevent="focusNextRow($event)"
-                @keydown.up.prevent="focusPrevRow($event)"
-              >
-                <td>{{ place.name }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <AppEmptyState v-else-if="sortedPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
+          <div v-else class="places-list-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="sortable-th" @click="toggleSort('name')">
+                    {{ $t('places.name') }}
+                    <span v-if="sortBy === 'name'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th class="sortable-th type-col" @click="toggleSort('place_type')">
+                    {{ $t('places.type') }}
+                    <span v-if="sortBy === 'place_type'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="place in sortedPlaces"
+                  :key="place.id"
+                  v-narrate="() => narratePlaceRow({
+                    name: place.name || '',
+                    place_type: place.place_type || '',
+                    path: '',
+                  }, t)"
+                  class="clickable-row"
+                  :class="{ 'selected-row': selectedPlaceId === place.id }"
+                  tabindex="0"
+                  role="button"
+                  :aria-label="$t('a11y.editItem', { item: place.name })"
+                  @click="selectPlace(place.id)"
+                  @keydown.enter="selectPlace(place.id)"
+                  @keydown.space.prevent="selectPlace(place.id)"
+                  @keydown.down.prevent="focusNextRow($event)"
+                  @keydown.up.prevent="focusPrevRow($event)"
+                >
+                  <td>{{ place.name }}</td>
+                  <td class="type-col info-cell">{{ place.place_type ? $t('placeTypes.' + place.place_type) : '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-if="places.length > 0" class="places-list-footer count-label">
+            {{ $t('places.showingOf', { shown: sortedPlaces.length, total: places.length }) }}
+          </p>
         </div>
         <button class="list-collapse-btn" :aria-label="$t('common.close')" title="Dölj listan" @click="closeList">◀</button>
       </div>
@@ -47,7 +66,7 @@
     <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
 
     <!-- Map (always shown in center) -->
-    <MapView no-panel style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
+    <MapView no-panel :search-text="searchQuery" style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
       <template #header>
         <div class="header">
           <h2>{{ $t('places.title') }}</h2>
@@ -55,6 +74,13 @@
             <AppButton v-if="!isStaticMode" variant="soft" @click="showAddForm = true">+ {{ $t('places.addTitle') }}</AppButton>
           </div>
         </div>
+        <FilterChips
+          v-if="places.length > 0"
+          class="map-type-filter"
+          :options="typeFilters"
+          :model-value="activeTypeFilter"
+          @update:model-value="activeTypeFilter = $event"
+        />
       </template>
     </MapView>
 
@@ -120,6 +146,7 @@ function closeList() {
   localStorage.setItem('places-list-open', 'false');
 }
 const activeTypeFilter = ref<string>('all');
+const searchQuery = ref<string>('');
 
 // If /places/:id or ?place= is in the URL, write to localStorage now (before MapView setup runs) so
 // MapView picks it up when it initializes its own selectedPlaceId from the same key.
@@ -180,11 +207,43 @@ const typeFilters = computed(() => [
     })),
 ]);
 
-const filteredPlaces = computed(() =>
-  activeTypeFilter.value === 'all'
-    ? places.value
-    : places.value.filter(p => (p.place_type ?? 'other') === activeTypeFilter.value)
-);
+const filteredPlaces = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  return places.value.filter(p => {
+    if (activeTypeFilter.value !== 'all' && (p.place_type ?? 'other') !== activeTypeFilter.value) return false;
+    if (q && !(p.name ?? '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+});
+
+type PlaceSortBy = 'name' | 'place_type';
+type SortDir = 'asc' | 'desc';
+const sortBy = ref<PlaceSortBy>((localStorage.getItem('places-sort-by') as PlaceSortBy) || 'name');
+const sortDir = ref<SortDir>((localStorage.getItem('places-sort-dir') as SortDir) || 'asc');
+function toggleSort(column: PlaceSortBy) {
+  if (sortBy.value === column) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortDir.value = 'asc';
+  }
+  localStorage.setItem('places-sort-by', sortBy.value);
+  localStorage.setItem('places-sort-dir', sortDir.value);
+}
+
+const sortedPlaces = computed(() => {
+  const rows = [...filteredPlaces.value];
+  const dir = sortDir.value === 'asc' ? 1 : -1;
+  const key = sortBy.value;
+  rows.sort((a, b) => {
+    const av = (a[key] ?? '').toString().toLowerCase();
+    const bv = (b[key] ?? '').toString().toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return rows;
+});
 const showAddForm = ref(false);
 
 function focusNextRow(e: KeyboardEvent): void {
@@ -242,17 +301,8 @@ onActivated(async () => {
   gap: var(--space-xs);
   position: relative;
 }
-.places-list-column {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  flex-shrink: 0;
-  min-height: 0;
-}
+/* Layout, surface, and `padding-right: 28px` for the collapse tab come
+   from `.list-column` in shared.css. */
 .places-list-title {
   margin: 0;
   padding: var(--space-md) var(--space-md) var(--space-sm);
@@ -262,19 +312,74 @@ onActivated(async () => {
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
 }
-.places-list-content {
+.places-list-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md);
+}
+.list-filter {
+  flex-shrink: 0;
+  padding: 0 0 var(--space-sm);
+}
+.list-filter-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: var(--font-sm);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.list-filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.map-type-filter {
+  padding: 0 var(--space-lg) var(--space-sm);
+}
+.places-list-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-md);
   position: relative;
 }
-.places-list-content .data-table thead th {
+.places-list-scroll .data-table thead th {
   position: sticky;
   top: 0;
   background: var(--surface);
   z-index: 1;
   box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
+}
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+.sortable-th:hover {
+  background: var(--surface-hover);
+}
+.sort-arrow {
+  margin-left: 4px;
+  font-size: var(--font-xs);
+  color: var(--accent);
+}
+.places-list-footer {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--space-sm) 0 0 0;
+  border-top: 1px solid var(--surface-border-subtle);
+  text-align: center;
+}
+.type-col {
+  width: 6em;
+  white-space: nowrap;
+}
+.info-cell {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
 }
 .list-collapse-btn {
   position: absolute;
