@@ -5,7 +5,7 @@ import { listChannels, getChannel } from '../../src/shared/channels/registry';
 describe('places channel registry', () => {
   it('registers all places:* channels', () => {
     const placeChannels = listChannels().filter(c => c.startsWith('places:'));
-    expect(placeChannels.length).toBeGreaterThanOrEqual(8);
+    expect(placeChannels.length).toBe(9);
   });
   it('places:get is a worker channel', () => {
     const ch = getChannel('places:get');
@@ -16,6 +16,7 @@ describe('places channel registry', () => {
     expect(getChannel('places:create')!.mutating).toBe(true);
     expect(getChannel('places:update')!.mutating).toBe(true);
     expect(getChannel('places:delete')!.mutating).toBe(true);
+    expect(getChannel('places:findOrCreate')!.mutating).toBe(true);
     // Read channels should not be mutating
     expect(getChannel('places:get')!.mutating).toBeFalsy();
     expect(getChannel('places:list')!.mutating).toBeFalsy();
