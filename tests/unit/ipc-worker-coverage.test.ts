@@ -11,8 +11,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 // Registry imports — each domain module registers its channels as a side effect
-import '../../src/shared/channels/persons';
-import { listChannels } from '../../src/shared/channels/registry';
+import { listChannels } from '../../src/shared/channels';
 
 // Channels that intentionally stay on the main thread (Electron APIs, dialog, shell, BrowserWindow, imports)
 const MAIN_THREAD_ONLY_CHANNELS = new Set([

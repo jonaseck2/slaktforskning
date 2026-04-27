@@ -3,13 +3,12 @@
  * All DB-touching IPC channels are dispatched here so the Electron main thread
  * is never blocked by SQLite.
  */
-// Registry imports — channels registered here are dispatched before the legacy table
-import '../shared/channels/persons';
-import { channelRegistry } from '../shared/channels/registry';
 import { parentPort } from 'node:worker_threads';
 import * as nodePath from 'node:path';
 import * as nodeFs from 'node:fs';
 import { Database } from 'node-sqlite3-wasm';
+// Registry imports — channels registered here are dispatched before the legacy table
+import { channelRegistry } from '../shared/channels';
 import { initializeSchema } from '../api/schema';
 import { undoManager } from '../api/undo';
 import * as uw from '../api/undo_wrappers';
@@ -372,8 +371,7 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
   const regCh = channelRegistry[channel];
   if (regCh && regCh.thread === 'worker') {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await Promise.resolve((regCh.handler as (db: Database, ...a: unknown[]) => unknown)(getDb(), ...args));
+      const result = await Promise.resolve(regCh.handler(getDb(), ...args));
       parentPort!.postMessage({ id, result: result ?? null });
     } catch (err) {
       parentPort!.postMessage({ id, error: err instanceof Error ? err.message : String(err) });

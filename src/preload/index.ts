@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import '../shared/channels/persons';
-import { channelRegistry } from '../shared/channels/registry';
+import { channelRegistry } from '../shared/channels';
+import type { ApiSurface } from '../shared/channels/api-type';
 
 // Registry of callbacks to invoke after any mutating IPC call.
 // Uses the same contextBridge pattern as db.onSwitched — the only reliable
@@ -15,18 +15,23 @@ function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...a
   };
 }
 
-// Build the persons API object from the channel registry.
+// Build the API object from the channel registry for all migrated domains.
 // Channels with mutating:true are wrapped so dataChanged listeners fire after the call.
-const personsApi: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
+const apiByDomain: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> = {};
 for (const ch of Object.values(channelRegistry)) {
-  if (!ch.name.startsWith('persons:')) continue;
-  const method = ch.name.slice('persons:'.length);
+  const colonIdx = ch.name.indexOf(':');
+  if (colonIdx === -1) continue;
+  const domain = ch.name.slice(0, colonIdx);
+  const method = ch.name.slice(colonIdx + 1);
+  apiByDomain[domain] ??= {};
   const invoke = (...args: unknown[]) => ipcRenderer.invoke(ch.name, ...args);
-  personsApi[method] = ch.mutating ? mutating(invoke) : invoke;
+  apiByDomain[domain][method] = ch.mutating ? mutating(invoke) : invoke;
 }
+// Cast to typed surface — the type is derived from the registry at compile time.
+const typedRegistryApi = apiByDomain as unknown as ApiSurface<typeof channelRegistry>;
 
 const api = {
-  persons: personsApi,
+  ...typedRegistryApi,
   relationships: {
     create: mutating((data: Record<string, unknown>) => ipcRenderer.invoke('relationships:create', data)),
     get: (id: string) => ipcRenderer.invoke('relationships:get', id),
