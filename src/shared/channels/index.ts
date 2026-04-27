@@ -10,5 +10,6 @@ import './repositories';
 import './research-tasks';
 import './reports';
 import './media';
+import './gazetteers';
 export { defineChannel, channelRegistry, listChannels, getChannel } from './registry';
 export type { ChannelDef, WorkerChannelDef, MainChannelDef, ThreadMode, ChannelRegistry } from './types';

@@ -7,7 +7,6 @@ import { registerImportHandlers } from './import';
 import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
 import { registerUtilityHandlers } from './utility';
-import { registerGazetteerHandlers } from './gazetteers';
 import { registerWebsiteExportHandlers } from './website-export';
 
 export function registerIpcHandlers(): void {
@@ -30,6 +29,5 @@ export function registerIpcHandlers(): void {
   registerDatabaseHandlers(getDb, getCurrentDatabasePath, switchDatabase, loadSettings, wrapHandler);
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerUtilityHandlers(getDb, getCurrentDatabasePath, wrapHandler);
-  registerGazetteerHandlers(getDb, wrapHandler);
   registerWebsiteExportHandlers();
 }

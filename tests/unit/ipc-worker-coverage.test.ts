@@ -14,6 +14,8 @@ import { describe, it, expect } from 'vitest';
 import { listChannels } from '../../src/shared/channels';
 
 // Channels that intentionally stay on the main thread (Electron APIs, dialog, shell, BrowserWindow, imports)
+// Note: channels that are now registered via the channel registry with thread:'main' are NOT listed here —
+// they appear in the registry's listChannels() result and are dispatched via the registry loop in index.ts.
 const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'media:attach', 'media:openFile',
   'db:getCurrent', 'db:getRecent',
@@ -25,7 +27,7 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'print:print', 'print:exportPdf',
   'chart:saveSvg', 'chart:savePdf',
   'csv:export',
-  'gazetteers:getSchema', 'gazetteers:getBundled',
+  // gazetteers:getSchema and gazetteers:getBundled migrated to registry with thread:'main'
   'gedcom:selectFile', 'gedcom:preview', 'gedcom:import', 'gedcom:export',
   'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
   'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
@@ -77,7 +79,9 @@ describe('IPC worker coverage', () => {
     const overlap = [...worker].filter(c => MAIN_THREAD_ONLY_CHANNELS.has(c));
     expect(overlap, `channels in both sets: ${overlap.join(', ')}`).toEqual([]);
 
-    expect(registered.length).toBeGreaterThan(50);
+    // Threshold decreases as channels migrate to the registry — update when adding domains.
+    // After all Task 6 migrations, only ~25–30 legacy wrapHandler calls remain.
+    expect(registered.length).toBeGreaterThan(20);
   });
 
   it('critical hot-path channels are in the worker', () => {

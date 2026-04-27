@@ -14,7 +14,6 @@ import { undoManager } from '../api/undo';
 import * as persons from '../api/persons';
 import * as checks from '../api/checks';
 import * as media from '../api/media';
-import * as gazetteers from '../api/gazetteers';
 import { getDbSetting, setDbSetting, deleteDbSetting } from '../api/db_settings';
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
@@ -71,12 +70,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   // Places — migrated to registry (src/shared/channels/places.ts)
 
-  // Gazetteers (DB-backed imported ones)
-  'gazetteers:list': () => gazetteers.listGazetteers(getDb()),
-  'gazetteers:import': (json) => gazetteers.importGazetteer(getDb(), json),
-  'gazetteers:export': (id) => gazetteers.exportGazetteer(getDb(), id),
-  'gazetteers:delete': (id) => gazetteers.deleteGazetteer(getDb(), id),
-  'gazetteers:getImported': () => gazetteers.getImportedGazetteers(getDb()),
+  // Gazetteers — migrated to registry (src/shared/channels/gazetteers.ts)
 
   // Media (most channels migrated to registry — src/shared/channels/media.ts)
   // These two remain here because they require getDbDir() (worker-local state):
