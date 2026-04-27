@@ -18,8 +18,12 @@ beforeEach(() => {
 });
 
 // Stub router-link globally so components that use it don't warn in tests.
+// Stub Teleport as an inline passthrough so wrapper.find() can reach
+// teleported dropdown DOM (PlacePicker/PersonPicker/SourcePicker dropdowns
+// teleport to body, which detaches them from the test wrapper's subtree).
 config.global.stubs = {
   RouterLink: { template: '<a><slot /></a>' },
+  Teleport: { template: '<div><slot /></div>' },
 };
 
 // Register pinia globally so all mounted components can use stores.
