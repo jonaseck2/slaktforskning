@@ -4,7 +4,6 @@ import { channelRegistry } from '../../shared/channels';
 import { wrapHandler } from './wrap-handler';
 import { startWorker, callWorker } from './worker-client';
 import { registerRelationshipHandlers } from './relationships';
-import { registerEventHandlers } from './events';
 import { registerSourceHandlers } from './sources';
 import { registerImportHandlers } from './import';
 import { registerDatabaseHandlers } from './database';
@@ -30,7 +29,6 @@ export function registerIpcHandlers(): void {
   }
 
   registerRelationshipHandlers(getDb, wrapHandler);
-  registerEventHandlers(getDb, wrapHandler);
   registerSourceHandlers(getDb, wrapHandler);
   registerImportHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerDatabaseHandlers(getDb, getCurrentDatabasePath, switchDatabase, loadSettings, wrapHandler);
