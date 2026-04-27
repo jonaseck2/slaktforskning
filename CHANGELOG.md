@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(media): the left list column in MediaView now infinite-scrolls on its own (v0.158.4). Previously only the gallery sentinel triggered `loadMore()`, so scrolling the list past the first page had no effect — it just bottomed out at whatever the gallery had already paged in. Adds a second sentinel inside `.media-list-content` and a second `IntersectionObserver` rooted in the list's own scroll container, with cleanup on unmount.
+
 - fix(media): gallery card thumbnails switch from a fixed 140px height to `aspect-ratio: 1 / 1.35`, giving them face-like portrait proportions that scale with column width (v0.158.3).
 
 - fix(media): gallery cards bias the photo crop toward the top (`object-position: 50% 25%`) so faces, which usually sit in the upper third of a portrait, stay visible instead of being centred away (v0.158.2).
