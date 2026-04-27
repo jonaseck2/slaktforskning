@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(media): gallery card thumbnails switch from a fixed 140px height to `aspect-ratio: 1 / 1.35`, giving them face-like portrait proportions that scale with column width (v0.158.3).
+
 - fix(media): gallery cards bias the photo crop toward the top (`object-position: 50% 25%`) so faces, which usually sit in the upper third of a portrait, stay visible instead of being centred away (v0.158.2).
 
 - fix(media): selecting a media item now scrolls both the left list and the gallery so the selected card stays visible (v0.158.1). Each gallery card and list row carries a `data-media-id` attribute; a watch on `selectedMediaId` calls `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` on every match. Selecting a row in the list now reveals the corresponding gallery card without manual scrolling.
