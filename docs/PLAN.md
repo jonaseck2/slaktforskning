@@ -30,6 +30,18 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion.
 
+#### IPC Channel Registry [planned]
+Replace 3-layer string-keyed IPC boilerplate (`src/main/ipc/<domain>.ts` + `db-worker.ts` + `preload/index.ts`) with a single typed channel registry in `src/shared/channels/`. Derives `window.api` types automatically; static-SPA parity test added.
+- Plan: [plans/2026-04-28-ipc-channel-registry.md](plans/2026-04-28-ipc-channel-registry.md)
+
+#### Panel Composables & EntityPanel [planned]
+Extract `useEntityData`, `useEditableFields`, and a shared `<EntityPanel>` shell to remove ~600 lines of repetition across 6 entity panels. Fixes the EventList stale-load race and centralizes 56+ ad-hoc localStorage keys.
+- Plan: [plans/2026-04-28-panel-composables.md](plans/2026-04-28-panel-composables.md)
+
+#### API Polymorphic Link Helpers [planned]
+Collapse 15 near-identical `getXFor<EntityType>` queries (citations, groups, tasks, media) into `getLinkedEntities` + `getCitationsByOwner`. Public per-entity functions stay as wrappers — no MCP/IPC churn.
+- Plan: [plans/2026-04-28-api-link-helpers.md](plans/2026-04-28-api-link-helpers.md)
+
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
 - Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`
