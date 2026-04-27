@@ -794,7 +794,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 .card-thumbnail {
   position: relative;
   width: 100%;
-  height: 140px;
+  aspect-ratio: 1 / 1.35;
   background: var(--surface-bg);
   display: flex;
   align-items: center;
