@@ -13,7 +13,6 @@ import { initializeSchema } from '../api/schema';
 import { undoManager } from '../api/undo';
 import * as uw from '../api/undo_wrappers';
 import * as persons from '../api/persons';
-import * as relationships from '../api/relationships';
 import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
@@ -74,21 +73,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   // Events — migrated to registry (src/shared/channels/events.ts)
 
-  // Relationships
-  'relationships:create': (data) => uw.createRelationshipUndo(getDb(), data),
-  'relationships:get': (id) => relationships.getRelationship(getDb(), id),
-  'relationships:list': () => relationships.listRelationships(getDb()),
-  'relationships:listPage': (limit, offset) => {
-    const d = getDb();
-    return { relationships: relationships.listRelationshipsPage(d, limit, offset), total: relationships.countRelationships(d) };
-  },
-  'relationships:update': (id, data) => uw.updateRelationshipUndo(getDb(), id, data),
-  'relationships:delete': (id) => uw.deleteRelationshipUndo(getDb(), id),
-  'relationships:getForPerson': (personId) => relationships.getRelationshipsOfPerson(getDb(), personId),
-  'relationships:search': (query) => relationships.searchRelationships(getDb(), query),
-  'eventParticipants:add': (data) => uw.addEventParticipantUndo(getDb(), data),
-  'eventParticipants:getForEvent': (eventId) => relationships.getEventParticipants(getDb(), eventId),
-  'eventParticipants:remove': (id) => uw.removeEventParticipantUndo(getDb(), id),
+  // Relationships — migrated to registry (src/shared/channels/relationships.ts)
 
   // Sources & Citations — migrated to registry (src/shared/channels/sources.ts)
 
