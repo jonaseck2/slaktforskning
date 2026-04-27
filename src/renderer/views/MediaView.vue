@@ -1,5 +1,45 @@
 <template>
   <div class="media-layout" ref="mediaBodyRef">
+  <!-- Permanent left list column -->
+  <template v-if="listOpen && !viewerMode">
+    <div class="media-list-column" :style="{ width: listWidth + 'px' }">
+      <h3 class="media-list-title">{{ $t('media.listView') }}</h3>
+      <div class="media-list-content">
+        <div v-if="!loading && items.length > 0" class="gallery-filter">
+          <input
+            v-model="searchQuery"
+            type="text"
+            :placeholder="$t('media.filter.search')"
+            class="gallery-search"
+          />
+        </div>
+        <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
+        <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" />
+        <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
+        <table v-else class="data-table media-list-table">
+          <tbody>
+            <tr
+              v-for="item in filteredItems"
+              :key="item.id"
+              class="clickable-row"
+              :class="{ 'selected-row': selectedMediaId === item.id }"
+              @click="selectMedia(item.id)"
+            >
+              <td class="media-list-thumb-cell">
+                <img v-if="thumbnails[item.id]" :src="thumbnails[item.id]" class="media-list-thumb" />
+                <span v-else class="media-list-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
+              </td>
+              <td class="media-list-title-cell">{{ mediaDisplayName(item.title, item.file_ref) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="list-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="closeList">◀</button>
+    </div>
+    <div class="list-drag-handle" @mousedown="(e: MouseEvent) => startListResize(e, mediaBodyRef!)"></div>
+  </template>
+  <button v-else-if="!viewerMode" class="list-open-btn" :aria-label="$t('common.open')" :title="$t('common.open')" @click="openList">▶</button>
+
   <div class="media-main" :class="{ 'viewer-active': viewerMode }">
     <div class="header">
       <div class="header-left">
@@ -9,13 +49,7 @@
       </div>
       <div class="header-right">
         <button v-if="viewerMode" class="viewer-close-btn" :title="$t('common.close')" :aria-label="$t('common.close')" @click="closeViewer">✕</button>
-        <template v-else>
-          <div v-if="!loading && items.length > 0" class="view-toggle">
-            <AppButton :variant="viewMode === 'gallery' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('gallery')">{{ $t('media.galleryView') }}</AppButton>
-            <AppButton :variant="viewMode === 'table' ? 'soft' : 'ghost'" size="sm" @click="setViewMode('table')">{{ $t('media.listView') }}</AppButton>
-          </div>
-          <AppButton v-if="!isStaticMode" variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
-        </template>
+        <AppButton v-else-if="!isStaticMode" variant="soft" @click="attachFile">+ {{ $t('media.attach') }}</AppButton>
       </div>
     </div>
 
@@ -42,22 +76,12 @@
       {{ $t('media.showingOf', { shown: items.length, total }) }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
     </p>
 
-    <!-- Search filter -->
-    <div v-if="!loading && items.length > 0" class="gallery-filter">
-      <input
-        v-model="searchQuery"
-        type="text"
-        :placeholder="$t('media.filter.search')"
-        class="gallery-search"
-      />
-    </div>
-
     <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
     <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" :description="$t('empty.mediaDesc')" :action-label="$t('empty.attachMedia')" @action="attachFile" />
     <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
 
     <!-- Gallery grid -->
-    <div v-else-if="viewMode === 'gallery'" class="gallery-grid">
+    <div v-else class="gallery-grid">
       <div
         v-for="(item, idx) in filteredItems"
         :key="item.id"
@@ -102,61 +126,14 @@
       </div>
     </div>
 
-    <!-- Table view -->
-    <table v-else-if="viewMode === 'table' && filteredItems.length > 0" class="data-table media-table">
-      <colgroup>
-        <col style="width: 48px">
-        <col>
-        <col style="width: 60px">
-        <col>
-        <col style="width: 60px">
-        <col>
-      </colgroup>
-      <thead>
-        <tr>
-          <th></th>
-          <th>{{ $t('media.colTitle') }}</th>
-          <th>{{ $t('media.colFormat') }}</th>
-          <th>{{ $t('media.colNotes') }}</th>
-          <th>{{ $t('media.colLinks') }}</th>
-          <th class="actions-cell"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(item, idx) in filteredItems" :key="item.id" :class="{ 'selected-row': selectedMediaId === item.id }" @click="selectMedia(item.id)">
-          <td class="thumb-cell">
-            <img
-              v-if="thumbnails[item.id]"
-              :src="thumbnails[item.id]"
-              class="table-thumb"
-              @click.stop="openViewer(idx)"
-            />
-            <span v-else class="table-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
-          </td>
-          <td>{{ item.title }}</td>
-          <td class="format-cell">
-            <span v-if="item.format" class="format-badge">{{ item.format }}</span>
-          </td>
-          <td>{{ item.notes }}</td>
-          <td class="links-cell">{{ item.linkCount }}</td>
-          <td v-if="!isStaticMode" class="actions-cell">
-            <AppButton
-              variant="ghost"
-              size="sm"
-              @click="deleteItem(item.id)"
-              :title="$t('common.delete')"
-              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(item.title, item.file_ref) })"
-            >&#10005;</AppButton>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
     <div ref="sentinel" class="scroll-sentinel"></div>
     </div>
     </template>
+
+    <!-- Reopen panel button when panel is closed -->
+    <button v-if="!viewerMode && !panelOpen && selectedMediaId" class="panel-open-btn" :aria-label="$t('panel.open') ?? 'Open'" @click="openPanel">◀</button>
   </div>
-  <template v-if="selectedMediaId">
+  <template v-if="selectedMediaId && panelOpen">
     <div
       class="panel-drag-handle"
       @mousedown="(e: MouseEvent) => startResize(e, mediaBodyRef!)"
@@ -169,7 +146,7 @@
         :highlighted-region-id="highlightedRegionId"
         :readonly="isStaticMode"
         @link-changed="reload"
-        @close="selectedMediaId = null"
+        @close="closePanel"
         @start-draw-mode="onStartDrawMode"
         @stop-draw-mode="drawMode = false"
         @highlight-region="(id: string | null) => highlightedRegionId = id"
@@ -223,14 +200,23 @@ const route = useRoute();
 const router = useRouter();
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 
-type ViewMode = 'gallery' | 'table';
-const viewMode = ref<ViewMode>(
-  (localStorage.getItem('media-view-mode') as ViewMode) || 'gallery'
-);
-
-function setViewMode(mode: ViewMode) {
-  viewMode.value = mode;
-  localStorage.setItem('media-view-mode', mode);
+const listOpen = ref(localStorage.getItem('media-list-open') !== 'false');
+function openList() {
+  listOpen.value = true;
+  localStorage.setItem('media-list-open', 'true');
+}
+function closeList() {
+  listOpen.value = false;
+  localStorage.setItem('media-list-open', 'false');
+}
+const panelOpen = ref(localStorage.getItem('media-panel-open') !== 'false');
+function openPanel() {
+  panelOpen.value = true;
+  localStorage.setItem('media-panel-open', 'true');
+}
+function closePanel() {
+  panelOpen.value = false;
+  localStorage.setItem('media-panel-open', 'false');
 }
 
 interface MediaItem {
@@ -247,6 +233,13 @@ interface MediaItem {
 
 const mediaBodyRef = ref<HTMLElement | null>(null);
 const { panelWidth, startResize } = usePanelResize({ storageKey: 'media-panel-width', maxWidthRatio: 0.5 });
+const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
+  storageKey: 'media-list-width',
+  side: 'left',
+  defaultWidth: 280,
+  minWidth: 200,
+  maxWidthRatio: 0.4,
+});
 
 const items = ref<MediaItem[]>([]);
 const total = ref(0);
@@ -380,6 +373,7 @@ async function loadThumbnails(mediaItems: MediaItem[]) {
 
 function selectMedia(id: string) {
   selectedMediaId.value = id;
+  if (!panelOpen.value) openPanel();
 }
 
 function openViewer(idx: number) {
@@ -555,7 +549,124 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   display: flex;
   height: 100%;
   gap: var(--space-xs);
+  position: relative;
 }
+
+/* Left list column */
+.media-list-column {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.media-list-title {
+  margin: 0;
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--surface-border-subtle);
+  flex-shrink: 0;
+}
+.media-list-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+.media-list-table {
+  width: 100%;
+}
+.media-list-thumb-cell {
+  width: 32px;
+  padding: 4px;
+}
+.media-list-thumb {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+.media-list-thumb-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--surface-border-subtle);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+.media-list-title-cell {
+  font-size: var(--font-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.list-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+.list-open-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.list-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
+.list-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.list-drag-handle:hover { background: var(--surface-border); }
+.panel-open-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .media-main {
   flex: 1;
   min-width: 0;
@@ -566,6 +677,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-lg);
+  position: relative;
 }
 .media-list-content {
   flex: 1;

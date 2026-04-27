@@ -23,7 +23,7 @@
         @select="selectTask"
       />
 
-      <button v-if="!panelOpen && selectedTaskId" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && selectedTaskId" class="panel-open-btn" @click="openPanel">◀</button>
     </div>
 
     <template v-if="panelOpen && selectedTaskId">

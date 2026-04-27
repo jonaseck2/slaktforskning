@@ -222,17 +222,23 @@
       </div><!-- .preview-wrapper -->
     </div><!-- .reports-main -->
 
-    <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, reportsViewRef!)"></div>
-    <div class="reports-panel" :style="{ width: panelWidth + 'px' }">
-      <ReportPanel
-        :active-tab="activeTab"
-        :couple-relationships="coupleRelationships"
-        @print="printCurrent"
-        @export-pdf="exportPdf"
-        @save-svg="saveChartSvg"
-        @save-chart-pdf="saveChartPdf"
-      />
-    </div>
+    <!-- Reopen panel button when panel is closed -->
+    <button v-if="!panelOpen" class="panel-open-btn" :aria-label="$t('panel.open') ?? 'Open'" @click="openPanel">◀</button>
+
+    <template v-if="panelOpen">
+      <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, reportsViewRef!)"></div>
+      <div class="reports-panel" :style="{ width: panelWidth + 'px' }">
+        <ReportPanel
+          :active-tab="activeTab"
+          :couple-relationships="coupleRelationships"
+          @print="printCurrent"
+          @export-pdf="exportPdf"
+          @save-svg="saveChartSvg"
+          @save-chart-pdf="saveChartPdf"
+          @close="closePanel"
+        />
+      </div>
+    </template>
 
   </div>
 </template>
@@ -279,6 +285,15 @@ const store = useReportConfigStore();
 const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>(mode.value === 'framable' ? 'pedigreePrint' : 'alife');
 const reportsViewRef = ref<HTMLElement | null>(null);
 const { panelWidth, startResize } = usePanelResize({ storageKey: 'reports-panel-width', defaultWidth: 240, minWidth: 180 });
+const panelOpen = ref(localStorage.getItem('reports-panel-open') !== 'false');
+function openPanel() {
+  panelOpen.value = true;
+  localStorage.setItem('reports-panel-open', 'true');
+}
+function closePanel() {
+  panelOpen.value = false;
+  localStorage.setItem('reports-panel-open', 'false');
+}
 
 const reportLoading = ref(false);
 const keepsakeTabs = computed(() => [
@@ -483,7 +498,24 @@ async function exportPdf() {
   flex-direction: row;
   height: 100%;
   gap: var(--space-xs);
+  position: relative;
 }
+.panel-open-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .panel-drag-handle {
   width: 6px;
   background: var(--surface-border-subtle);

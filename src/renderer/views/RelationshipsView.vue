@@ -19,7 +19,7 @@
         @select="selectRelationship"
       />
       <div ref="sentinel" class="scroll-sentinel"></div>
-      <button v-if="!panelOpen && selectedRelationshipId" class="panel-open-btn" @click="openPanel">▶</button>
+      <button v-if="!panelOpen && selectedRelationshipId" class="panel-open-btn" @click="openPanel">◀</button>
     </div>
 
     <template v-if="panelOpen && selectedRelationshipId">
