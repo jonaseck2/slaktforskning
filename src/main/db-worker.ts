@@ -14,7 +14,7 @@ import { undoManager } from '../api/undo';
 import * as persons from '../api/persons';
 import * as checks from '../api/checks';
 import * as media from '../api/media';
-import { getDbSetting, setDbSetting, deleteDbSetting } from '../api/db_settings';
+// getDbSetting/setDbSetting/deleteDbSetting — migrated to registry (src/shared/channels/database.ts)
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
 import { buildPreview } from '../api/html_site/preview';
@@ -96,17 +96,13 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   // Media Regions — migrated to registry (src/shared/channels/media.ts)
 
-  // DB settings
-  'db:getSetting': (key) => getDbSetting(getDb(), key),
-  'db:setSetting': (key, value) => setDbSetting(getDb(), key, value),
-  'db:deleteSetting': (key) => deleteDbSetting(getDb(), key),
+  // DB settings — migrated to registry (src/shared/channels/database.ts)
 
-  // Undo (undoManager lives in this worker)
+  // Undo (partial — undo:state, beginGroup, endGroup migrated to registry)
+  // undo:undo and undo:redo remain here because they broadcast undo:changed
+  // to all BrowserWindows after the call (handled in ipc/database.ts).
   'undo:undo': () => undoManager.undo(),
   'undo:redo': () => undoManager.redo(),
-  'undo:state': () => undoManager.getState(),
-  'undo:beginGroup': (label) => { undoManager.beginGroup(label); },
-  'undo:endGroup': () => { undoManager.endGroup(); },
 
   // Groups — migrated to registry (src/shared/channels/groups.ts)
 

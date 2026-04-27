@@ -11,5 +11,7 @@ import './research-tasks';
 import './reports';
 import './media';
 import './gazetteers';
+import './database';
+import './undo';
 export { defineChannel, channelRegistry, listChannels, getChannel } from './registry';
 export type { ChannelDef, WorkerChannelDef, MainChannelDef, ThreadMode, ChannelRegistry } from './types';
