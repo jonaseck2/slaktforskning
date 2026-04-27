@@ -514,6 +514,7 @@ onActivated(load);
   flex-direction: row;
   height: 100%;
   gap: var(--space-xs);
+  position: relative;
 }
 
 /* Left sheet: header + tabs + chart */
