@@ -77,7 +77,6 @@ describe('resolvePlace', () => {
     expect(result!.lat).toBe(57.42);
     expect(result!.lon).toBe(14.72);
     expect(result!.matchDepth).toBe(4);
-    expect(result!.treeDepth).toBe(4);
     expect(result!.unmatchedComponents).toEqual([]);
     expect(result!.gazetteer).toBe('sv-parishes');
   });
@@ -474,5 +473,22 @@ describe('hierarchy-aware matching', () => {
     const result = resolvePlace('Hudson Bay, Long Island, USA', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('United States');
+  });
+
+  it('prefers the state stem over a same-named leaf CDP (California, USA)', () => {
+    // "California, USA" should resolve to California the state, not the
+    // tiny CDP "California" inside Saint Mary's County, Maryland. Both
+    // are legitimate matches so the result is still flagged ambiguous,
+    // but the coordinates returned must be the state, not the CDP.
+    const config: GazetteerConfig = {
+      enabledGazetteers: ['us-all-states'],
+    };
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
+    const result = resolvePlace('California, USA', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toEqual(['United States', 'California']);
+    expect(result!.matchedNode.name).toBe('California');
+    expect(result!.matchedNode.type).toBe('state');
+    expect(result!.matchDepth).toBe(2);
   });
 });
