@@ -237,6 +237,7 @@ onActivated(async () => {
   flex-direction: row;
   height: 100%;
   gap: var(--space-xs);
+  position: relative;
 }
 .places-list-column {
   display: flex;

@@ -130,15 +130,14 @@
     <header v-else class="topbar" aria-label="App header">
       <div class="topbar-row topbar-row--meta">
         <span class="topbar-title">🌿 {{ $t('app.title') }}</span>
-        <form class="topbar-search" @submit.prevent="submitSearch">
-          <input
-            ref="searchInputRefH"
-            v-model="searchQuery"
-            type="text"
+        <div class="topbar-search">
+          <PersonPicker
+            ref="searchPickerRef"
+            :model-value="null"
             :placeholder="$t('app.search')"
-            class="topbar-search-input"
+            @select="onSidebarPersonSelected"
           />
-        </form>
+        </div>
         <div class="topbar-focus-spacer"></div>
       </div>
       <nav class="topbar-row topbar-row--nav" aria-label="Main navigation" @click.stop>
@@ -389,8 +388,6 @@ watch(() => route.path, () => {
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
 const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
-const searchQuery = ref('');
-const searchInputRefH = ref<HTMLInputElement | null>(null);
 const searchPickerRef = ref<{ focus?: () => void; $el?: HTMLElement } | null>(null);
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
@@ -480,9 +477,7 @@ function setLocale(val: SupportedLocale) {
 function handleGlobalKey(e: KeyboardEvent) {
   if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
     e.preventDefault();
-    const el = navOrientation.value === 'vertical'
-      ? (searchPickerRef.value?.$el?.querySelector?.('input') as HTMLInputElement | null)
-      : searchInputRefH.value;
+    const el = searchPickerRef.value?.$el?.querySelector?.('input') as HTMLInputElement | null;
     el?.focus();
     el?.select();
   }
@@ -567,13 +562,6 @@ onUnmounted(() => {
   window.removeEventListener('click', handleDocClick);
 });
 
-function submitSearch() {
-  const q = searchQuery.value.trim();
-  if (!q) return;
-  router.push({ path: '/search', query: { q } });
-  searchQuery.value = '';
-}
-
 async function onSidebarPersonSelected(person: { id: string }) {
   // Set as the selected person (panel target) without changing the tree
   // subject. If the user is on /persons the panel reacts via the store;
@@ -642,7 +630,7 @@ body {
   flex-shrink: 0;
 }
 .topbar-search { flex: 1; max-width: 420px; }
-.topbar-search-input {
+.topbar-search .person-picker input {
   width: 100%;
   padding: 6px 12px;
   border-radius: var(--radius-md);
@@ -654,7 +642,8 @@ body {
   outline: none;
   box-sizing: border-box;
 }
-.topbar-search-input::placeholder { color: var(--sidebar-text-muted); }
+.topbar-search .person-picker input::placeholder { color: var(--sidebar-text-muted); }
+.topbar-search .person-picker input:focus { background: var(--sidebar-border); }
 .topbar-focus-spacer { flex: 1; }
 
 .topbar-settings { position: relative; flex-shrink: 0; }
