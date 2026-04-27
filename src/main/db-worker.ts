@@ -13,7 +13,6 @@ import { initializeSchema } from '../api/schema';
 import { undoManager } from '../api/undo';
 import * as uw from '../api/undo_wrappers';
 import * as persons from '../api/persons';
-import * as events from '../api/events';
 import * as relationships from '../api/relationships';
 import * as sources from '../api/sources';
 import * as groups from '../api/groups';
@@ -74,14 +73,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   // Persons — migrated to registry (src/shared/channels/persons.ts)
 
-  // Events
-  'events:create': (data) => uw.createEventUndo(getDb(), data),
-  'events:get': (id) => events.getEvent(getDb(), id),
-  'events:forPerson': (personId) => events.getEventsForPerson(getDb(), personId),
-  'events:forRelationship': (relId) => events.getEventsForRelationship(getDb(), relId),
-  'events:update': (id, data) => uw.updateEventUndo(getDb(), id, data),
-  'events:delete': (id) => uw.deleteEventUndo(getDb(), id),
-  'events:forPlace': (placeId) => events.getEventsForPlace(getDb(), placeId),
+  // Events — migrated to registry (src/shared/channels/events.ts)
 
   // Relationships
   'relationships:create': (data) => uw.createRelationshipUndo(getDb(), data),
