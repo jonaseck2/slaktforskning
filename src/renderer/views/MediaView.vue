@@ -805,6 +805,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 25%;
 }
 .card-image-loading {
   width: 32px;
