@@ -1,10 +1,43 @@
 import * as fs from 'fs';
 import { promises as fsp } from 'fs';
 import * as path from 'path';
-import { app, dialog } from 'electron';
-import { setPreviewSnapshot } from '../preview-protocol';
+import { app, dialog, nativeImage } from 'electron';
+import { buildPreviewHtml } from '../preview-protocol';
 import { wrapHandler } from './wrap-handler';
 import { callWorker } from './worker-client';
+
+// Per-image and total budget for inlined preview thumbnails. The whole HTML
+// is loaded into the iframe via a Blob URL — keeping this bounded avoids
+// blowing up renderer memory on large libraries.
+const PREVIEW_THUMB_COUNT = 24;
+const PREVIEW_THUMB_WIDTH = 400;
+const PREVIEW_THUMB_QUALITY = 70;
+const PREVIEW_THUMB_BUDGET_BYTES = 5 * 1024 * 1024;
+
+async function buildPreviewThumbnails(
+  mediaItems: Array<{ id: string; file_ref: string | null }>,
+): Promise<Record<string, string>> {
+  const candidates = mediaItems.filter(m => m.file_ref).slice(0, PREVIEW_THUMB_COUNT);
+  if (candidates.length === 0) return {};
+  const sources = await callWorker('website:resolveMediaPaths', candidates.map(m => m.id)) as Record<string, { absPath: string; mime: string }>;
+  const dataUrls: Record<string, string> = {};
+  let totalBytes = 0;
+  for (const id of Object.keys(sources)) {
+    if (totalBytes >= PREVIEW_THUMB_BUDGET_BYTES) break;
+    try {
+      const img = nativeImage.createFromPath(sources[id].absPath);
+      if (img.isEmpty()) continue;
+      const resized = img.resize({ width: PREVIEW_THUMB_WIDTH });
+      const jpeg = resized.toJPEG(PREVIEW_THUMB_QUALITY);
+      if (totalBytes + jpeg.length > PREVIEW_THUMB_BUDGET_BYTES) continue;
+      totalBytes += jpeg.length;
+      dataUrls[id] = `data:image/jpeg;base64,${jpeg.toString('base64')}`;
+    } catch {
+      // Skip broken images rather than aborting the preview build
+    }
+  }
+  return dataUrls;
+}
 
 export function registerWebsiteExportHandlers(): void {
   wrapHandler('website:previewSnapshot', async (...args) => {
@@ -26,11 +59,17 @@ export function registerWebsiteExportHandlers(): void {
     });
   });
 
-  // Builds the full snapshot used by the iframe preview. Mirrors the export's
-  // worker call — same code path, same data shape — except it skips media
-  // (the preview can't access local files) and stashes the result in main
-  // for the `app-preview://` protocol to serve as data.js.
-  wrapHandler('website:setPreviewSnapshot', async (opts: {
+  // Builds the full snapshot for the iframe preview and inlines it into a
+  // copy of the static SPA's index.html. The renderer drops the returned
+  // HTML into a Blob URL so the preview shares the exact bootstrap path with
+  // the exported site, without needing a custom protocol scheme.
+  //
+  // Media metadata is included, and the first ~24 images are resized to
+  // thumbnails (~400px JPEG @ 70%) and inlined as data URLs in
+  // `snapshot.meta.previewMediaDataUrls`. The static SPA's `readAsDataUrl`
+  // uses these directly so the preview gets real photos instead of broken
+  // images.
+  wrapHandler('website:buildPreviewHtml', async (opts: {
     siteTitle: string;
     focusPersonId: string | null;
     scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
@@ -42,11 +81,24 @@ export function registerWebsiteExportHandlers(): void {
       scope: opts.scope,
       options: {
         ...opts.options,
-        includeMedia: false,
+        includeMedia: true,
       },
-    });
-    setPreviewSnapshot(snapshot);
-    return { ok: true };
+    }) as {
+      meta: Record<string, unknown>;
+      media: Array<{ id: string; file_ref: string | null }>;
+      mediaLinks: Array<{ media_id: string }>;
+      mediaRegions: Array<{ media_id: string }>;
+    };
+    const previewMediaDataUrls = await buildPreviewThumbnails(snapshot.media);
+    // Trim the snapshot's media (and dependent rows) to the items we actually
+    // inlined. The static SPA can't reach the user's local files, so anything
+    // beyond the inlined subset would render as a broken image in the gallery.
+    const inlinedIds = new Set(Object.keys(previewMediaDataUrls));
+    snapshot.media = snapshot.media.filter(m => inlinedIds.has(m.id));
+    snapshot.mediaLinks = snapshot.mediaLinks.filter(ml => inlinedIds.has(ml.media_id));
+    snapshot.mediaRegions = snapshot.mediaRegions.filter(r => inlinedIds.has(r.media_id));
+    snapshot.meta = { ...snapshot.meta, previewMediaDataUrls };
+    return await buildPreviewHtml(snapshot);
   });
 
   wrapHandler('website:export', async (opts: {

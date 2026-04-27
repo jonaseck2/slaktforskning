@@ -215,7 +215,7 @@ const api = {
   website: {
     export: (opts: unknown) => ipcRenderer.invoke('website:export', opts),
     previewSnapshot: (opts: unknown) => ipcRenderer.invoke('website:previewSnapshot', opts),
-    setPreviewSnapshot: (opts: unknown) => ipcRenderer.invoke('website:setPreviewSnapshot', opts),
+    buildPreviewHtml: (opts: unknown) => ipcRenderer.invoke('website:buildPreviewHtml', opts),
   },
   print: {
     print: () => ipcRenderer.invoke('print:print'),

@@ -44,6 +44,13 @@ export function computeSquareCropRectPx(
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    // Set crossOrigin only for sources where CORS actually works. file://
+    // doesn't support CORS at all in Chromium; setting the attribute there
+    // blocks the load entirely. data:/blob:/relative-under-http(s) load
+    // cleanly with anonymous CORS.
+    if (!src.startsWith('file:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
     img.onerror = (e) => reject(e);
     img.src = src;
@@ -52,6 +59,10 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 // Crops `imageDataUrl` to the pixel-square derived from `region` (may be null)
 // and returns a JPEG data URL at `outputSize` x `outputSize` pixels.
+//
+// In contexts where the canvas can't export (file:// origin taints the canvas
+// because there's no CORS), we fall back to the original src so avatars still
+// render — just uncropped — instead of breaking entirely.
 export async function cropImageToDataUrl(
   imageDataUrl: string,
   region: RegionFrac | null,
@@ -65,5 +76,9 @@ export async function cropImageToDataUrl(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('No 2D context');
   ctx.drawImage(img, sx, sy, size, size, 0, 0, outputSize, outputSize);
-  return canvas.toDataURL('image/jpeg', 0.85);
+  try {
+    return canvas.toDataURL('image/jpeg', 0.85);
+  } catch {
+    return imageDataUrl;
+  }
 }
