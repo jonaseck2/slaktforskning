@@ -9,5 +9,6 @@ import './groups';
 import './repositories';
 import './research-tasks';
 import './reports';
+import './media';
 export { defineChannel, channelRegistry, listChannels, getChannel } from './registry';
 export type { ChannelDef, WorkerChannelDef, MainChannelDef, ThreadMode, ChannelRegistry } from './types';
