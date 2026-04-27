@@ -16,7 +16,6 @@ import * as persons from '../api/persons';
 import * as events from '../api/events';
 import * as relationships from '../api/relationships';
 import * as sources from '../api/sources';
-import * as places from '../api/places';
 import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
@@ -117,16 +116,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'citations:delete': (id) => uw.deleteCitationUndo(getDb(), id),
   'citations:update': (id, data) => uw.updateCitationUndo(getDb(), id, data),
 
-  // Places
-  'places:create': (data) => places.createPlace(getDb(), data),
-  'places:get': (id) => places.getPlace(getDb(), id),
-  'places:list': () => places.listPlaces(getDb()),
-  'places:search': (query) => places.searchPlaces(getDb(), query),
-  'places:update': (id, data) => places.updatePlace(getDb(), id, data),
-  'places:delete': (id) => places.deletePlace(getDb(), id),
-  'places:findOrCreate': (name) => places.findOrCreatePlace(getDb(), name),
-  'places:getPath': (id) => places.getPlacePath(getDb(), id),
-  'places:getPersons': (placeId) => places.getPersonsForPlace(getDb(), placeId),
+  // Places — migrated to registry (src/shared/channels/places.ts)
 
   // Gazetteers (DB-backed imported ones)
   'gazetteers:list': () => gazetteers.listGazetteers(getDb()),
