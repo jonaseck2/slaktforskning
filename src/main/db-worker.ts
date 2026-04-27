@@ -11,13 +11,7 @@ import { Database } from 'node-sqlite3-wasm';
 import { channelRegistry } from '../shared/channels';
 import { initializeSchema } from '../api/schema';
 import { undoManager } from '../api/undo';
-import * as uw from '../api/undo_wrappers';
 import * as persons from '../api/persons';
-import * as groups from '../api/groups';
-import * as repositories from '../api/repositories';
-import * as researchTasks from '../api/research_tasks';
-import * as reportData from '../api/report_data';
-import * as duplicates from '../api/duplicates';
 import * as checks from '../api/checks';
 import * as media from '../api/media';
 import { getMediaTimeline } from '../api/media_timeline';
@@ -143,55 +137,13 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'undo:beginGroup': (label) => { undoManager.beginGroup(label); },
   'undo:endGroup': () => { undoManager.endGroup(); },
 
-  // Groups
-  'groups:list': () => groups.listGroups(getDb()),
-  'groups:get': (id) => groups.getGroup(getDb(), id),
-  'groups:create': (data) => groups.createGroup(getDb(), data),
-  'groups:update': (id, data) => groups.updateGroup(getDb(), id, data),
-  'groups:delete': (id) => groups.deleteGroup(getDb(), id),
-  'groups:addLink': (groupId, entityType, entityId) => groups.addGroupLink(getDb(), groupId, entityType, entityId),
-  'groups:removeLink': (linkId) => groups.removeGroupLink(getDb(), linkId),
-  'groups:removeLinkByEntity': (groupId, entityType, entityId) => groups.removeGroupLinkByEntity(getDb(), groupId, entityType, entityId),
-  'groups:getLinks': (groupId) => groups.getGroupLinks(getDb(), groupId),
-  'groups:forPerson': (personId) => groups.getGroupsForPerson(getDb(), personId),
-  'groups:forPlace': (placeId) => groups.getGroupsForPlace(getDb(), placeId),
-  'groups:forMedia': (mediaId) => groups.getGroupsForMedia(getDb(), mediaId),
+  // Groups — migrated to registry (src/shared/channels/groups.ts)
 
-  // Repositories
-  'repositories:list': () => repositories.listRepositories(getDb()),
-  'repositories:get': (id) => repositories.getRepository(getDb(), id),
-  'repositories:create': (data) => repositories.createRepository(getDb(), data),
-  'repositories:update': (id, data) => repositories.updateRepository(getDb(), id, data),
-  'repositories:delete': (id) => repositories.deleteRepository(getDb(), id),
-  'repositories:forSource': (sourceId) => repositories.getRepositoriesForSource(getDb(), sourceId),
-  'repositories:linkSource': (sourceId, repoId) => repositories.linkSourceRepository(getDb(), sourceId, repoId),
-  'repositories:unlinkSource': (sourceId, repoId) => repositories.unlinkSourceRepository(getDb(), sourceId, repoId),
+  // Repositories — migrated to registry (src/shared/channels/repositories.ts)
 
-  // Research tasks
-  'researchTasks:list': () => researchTasks.listResearchTasks(getDb()),
-  'researchTasks:get': (id) => researchTasks.getResearchTask(getDb(), id),
-  'researchTasks:forPerson': (personId) => researchTasks.getResearchTasksForPerson(getDb(), personId),
-  'researchTasks:forPlace': (placeId) => researchTasks.getResearchTasksForPlace(getDb(), placeId),
-  'researchTasks:forMedia': (mediaId) => researchTasks.getResearchTasksForMedia(getDb(), mediaId),
-  'researchTasks:create': (data) => researchTasks.createResearchTask(getDb(), data),
-  'researchTasks:update': (id, data) => researchTasks.updateResearchTask(getDb(), id, data),
-  'researchTasks:delete': (id) => researchTasks.deleteResearchTask(getDb(), id),
-  'researchTasks:addLink': (taskId, entityType, entityId) => researchTasks.addTaskLink(getDb(), taskId, entityType, entityId),
-  'researchTasks:removeLink': (linkId) => researchTasks.removeTaskLink(getDb(), linkId),
-  'researchTasks:getLinks': (taskId) => researchTasks.getTaskLinks(getDb(), taskId),
+  // Research tasks — migrated to registry (src/shared/channels/research-tasks.ts)
 
-  // Reports
-  'reports:personSummary': (personId) => reportData.getPersonSummary(getDb(), personId),
-  'reports:familyUnit': (relId) => reportData.getFamilyUnit(getDb(), relId),
-  'reports:ancestorTree': (personId, generations) => reportData.getAncestorTree(getDb(), personId, generations),
-  'reports:placeHistory': (placeId) => reportData.getPlaceHistory(getDb(), placeId),
-  'reports:researchGaps': (personId) => reportData.getResearchGaps(getDb(), personId),
-  'reports:timeline': (personId) => reportData.getTimeline(getDb(), personId),
-  'reports:aliveInYear': (year) => reportData.getAliveInYear(getDb(), year),
-
-  // Duplicates
-  'duplicates:find': (limit) => duplicates.findDuplicates(getDb(), limit),
-  'duplicates:merge': (targetId, sourceId) => duplicates.mergePersons(getDb(), targetId, sourceId),
+  // Reports, duplicates — migrated to registry (src/shared/channels/reports.ts)
 
   // Checks (async — yield between each check to stay responsive)
   'checks:runAll': async () => {
