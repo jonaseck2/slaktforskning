@@ -48,7 +48,6 @@ export interface PlaceResolveResult {
   matchedPath: string[];
   matchedNodes: GazetteerNode[];
   matchDepth: number;
-  treeDepth: number;
   matchQuality: 'exact' | 'partial' | 'ambiguous';
   matchedNode: GazetteerNode;
   gazetteer: string;

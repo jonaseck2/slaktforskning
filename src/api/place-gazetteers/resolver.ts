@@ -21,26 +21,10 @@ function normalize(name: string): string {
     .replace(/^(county of|province of|state of)\s+/i, '');
 }
 
-function fuzzyEqual(a: string, b: string): boolean {
-  return a === b;
-}
-
 function nodeMatches(node: GazetteerNode, component: string): boolean {
   const norm = normalize(component);
-  const normNode = normalize(node.name);
-  if (fuzzyEqual(normNode, norm)) return true;
-  return node.aliases?.some(a => fuzzyEqual(normalize(a), norm)) ?? false;
-}
-
-const treeDepthCache = new WeakMap<GazetteerNode, number>();
-function getTreeDepth(node: GazetteerNode): number {
-  const cached = treeDepthCache.get(node);
-  if (cached !== undefined) return cached;
-  const depth = (!node.children || node.children.length === 0)
-    ? 1
-    : 1 + Math.max(...node.children.map(getTreeDepth));
-  treeDepthCache.set(node, depth);
-  return depth;
+  if (normalize(node.name) === norm) return true;
+  return node.aliases?.some(a => normalize(a) === norm) ?? false;
 }
 
 interface MatchCandidate {
@@ -48,7 +32,13 @@ interface MatchCandidate {
   matched: string[];
   unmatched: string[];
   depth: number;
-  treeDepth: number;
+  /**
+   * Number of unmatched input components that match a node elsewhere.
+   * Set by `findMatches` as a local raw count (in-gazetteer only). For the
+   * winner of each gazetteer, `resolvePlace` overwrites this with a global
+   * depth-weighted score before cross-gazetteer comparison. Runners-up keep
+   * their stale local value — they are not consulted further.
+   */
   contradictions: number;
   /** Whether the last input component (typically the broadest geographic scope) matched a node on this path */
   lastComponentMatched: boolean;
@@ -91,47 +81,50 @@ function findMatches(
 ): MatchCandidate[] {
   const index = getNameIndex(root);
   const candidates: MatchCandidate[] = [];
-  const lastComponent = components[components.length - 1];
+  const lastIndex = components.length - 1;
+  // Each anchor node should produce exactly one candidate, even if the same
+  // name appears repeatedly in the input ("Stockholm, Stockholm, Sverige").
+  const anchored = new Set<GazetteerNode>();
 
-  // Find all nodes that match any component
   for (const component of components) {
     const norm = normalize(component);
     const entries = index.get(norm);
     if (!entries) continue;
 
     for (const { node, ancestors } of entries) {
+      if (anchored.has(node)) continue;
+      anchored.add(node);
+
       const fullPath = [...ancestors, node];
       const pathSet = new Set(fullPath);
-      // Check which components match nodes on this path.
-      // Use greedy 1:1 matching so one input component can only satisfy
-      // one path node — prevents "Iowa" from matching both Iowa (state)
-      // and Iowa (county) on the same path.
+      // Greedy 1:1 matching: each input component can satisfy at most one
+      // path node — prevents "Iowa" from matching both Iowa (state) and
+      // Iowa (county) on the same path. Track input positions (not values)
+      // so duplicate component strings each get one shot.
       const usedPathIndices = new Set<number>();
-      const remaining = components.filter(c => {
-        const cn = normalize(c);
-        for (let i = 0; i < fullPath.length; i++) {
-          if (usedPathIndices.has(i)) continue;
-          const n = fullPath[i];
+      const matchedInputIndices = new Set<number>();
+      for (let ci = 0; ci < components.length; ci++) {
+        const cn = normalize(components[ci]);
+        for (let pi = 0; pi < fullPath.length; pi++) {
+          if (usedPathIndices.has(pi)) continue;
+          const n = fullPath[pi];
           if (normalize(n.name) === cn || (n.aliases?.some(a => normalize(a) === cn) ?? false)) {
-            usedPathIndices.add(i);
-            return false; // matched — not remaining
+            usedPathIndices.add(pi);
+            matchedInputIndices.add(ci);
+            break;
           }
         }
-        return true; // no match found
-      });
+      }
+      const remaining = components.filter((_, i) => !matchedInputIndices.has(i));
 
       // Count contradictions: unmatched components that match nodes
       // ELSEWHERE in the tree (i.e. the input names a place that exists
-      // but in a different branch than this candidate)
+      // but in a different branch than this candidate).
       let contradictions = 0;
       for (const um of remaining) {
-        const umNorm = normalize(um);
-        const umEntries = index.get(umNorm);
-        if (umEntries) {
-          // The component matches something in this gazetteer —
-          // check if ALL matches are outside this candidate's path
-          const allOutside = umEntries.every(e => !pathSet.has(e.node));
-          if (allOutside) contradictions++;
+        const umEntries = index.get(normalize(um));
+        if (umEntries && umEntries.every(e => !pathSet.has(e.node))) {
+          contradictions++;
         }
       }
 
@@ -140,9 +133,8 @@ function findMatches(
         matched: fullPath.map(n => n.name),
         unmatched: remaining,
         depth: fullPath.length,
-        treeDepth: getTreeDepth(node) + fullPath.length - 1,
         contradictions,
-        lastComponentMatched: !remaining.includes(lastComponent),
+        lastComponentMatched: matchedInputIndices.has(lastIndex),
       });
     }
   }
@@ -153,6 +145,12 @@ function findMatches(
 function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguous: boolean } | null {
   if (candidates.length === 0) return null;
 
+  // NOTE: tiebreaker order here differs from `isBetterCandidate` by design.
+  // Within one gazetteer, contradictions reflect in-tree conflicts only and
+  // are the strongest signal. Across gazetteers, `isBetterCandidate` puts
+  // `lastComponentMatched` first because the country/region anchor is the
+  // strongest signal for picking the right gazetteer (the contradiction
+  // count is then the depth-weighted global score from `resolvePlace`).
   candidates.sort((a, b) => {
     // 1. Fewer contradictions first (unmatched components that exist elsewhere)
     if (a.contradictions !== b.contradictions) return a.contradictions - b.contradictions;
@@ -162,8 +160,12 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
     if (a.lastComponentMatched !== b.lastComponentMatched) return a.lastComponentMatched ? -1 : 1;
     // 3. Fewer unmatched components
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
-    // 4. Deeper match
-    return b.depth - a.depth;
+    // 4. Prefer the stem over the leaf: when the same name appears at multiple
+    // depths and input fully matches both, the shallower path has fewer
+    // "filler" nodes that don't correspond to any input. Example:
+    // "California, USA" → prefer USA→California (state) over
+    // USA→Maryland→Saint Mary's County→California (CDP).
+    return a.depth - b.depth;
   });
 
   const best = candidates[0];
@@ -233,8 +235,9 @@ function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
   if (a.contradictions !== b.contradictions) return a.contradictions < b.contradictions;
   // 3. Fewer unmatched components
   if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length < b.unmatched.length;
-  // 4. Deeper match
-  return a.depth > b.depth;
+  // 4. Prefer the stem: shallower path = fewer filler nodes when input fully
+  //    matches at multiple depths (e.g. "California, USA" → state, not CDP).
+  return a.depth < b.depth;
 }
 
 // Cache: global name → minimum depth across all gazetteers in a set.
@@ -334,7 +337,6 @@ export function resolvePlace(
     matchedPath: candidate.matched,
     matchedNodes: candidate.path,
     matchDepth: candidate.depth,
-    treeDepth: candidate.treeDepth,
     matchQuality,
     matchedNode: deepestNode,
     gazetteer: gazId,
@@ -375,11 +377,12 @@ export function resolveBoundary(
 
   if (allCandidates.length === 0) return null;
 
-  // Sort by match quality (fewest contradictions, then fewest unmatched, then deepest)
+  // Sort by match quality (fewest contradictions, then fewest unmatched,
+  // then prefer the stem — same rule as `pickBest`, see resolver.ts above).
   allCandidates.sort((a, b) => {
     if (a.contradictions !== b.contradictions) return a.contradictions - b.contradictions;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
-    return b.depth - a.depth;
+    return a.depth - b.depth;
   });
 
   const bestUnmatched = allCandidates[0].unmatched.length;
