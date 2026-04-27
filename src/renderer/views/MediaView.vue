@@ -4,7 +4,7 @@
   <template v-if="listOpen && !viewerMode">
     <div class="media-list-column" :style="{ width: listWidth + 'px' }">
       <h3 class="media-list-title">{{ $t('media.listView') }}</h3>
-      <div class="media-list-content">
+      <div class="media-list-content" ref="listScrollRef">
         <div v-if="!loading && items.length > 0" class="gallery-filter">
           <input
             v-model="searchQuery"
@@ -34,6 +34,7 @@
             </tr>
           </tbody>
         </table>
+        <div ref="listSentinel" class="scroll-sentinel"></div>
       </div>
       <button class="list-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="closeList">◀</button>
     </div>
@@ -259,7 +260,10 @@ const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
 const panelRef = ref<InstanceType<typeof MediaPanel> | null>(null);
 const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
+const listSentinel = ref<HTMLElement | null>(null);
+const listScrollRef = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
+let listObserver: IntersectionObserver | null = null;
 
 const personFilterId = computed(() => {
   const v = route.query.person;
@@ -522,6 +526,20 @@ watch(sentinel, (el) => {
   observer.observe(el);
 });
 
+watch([listSentinel, listScrollRef], ([el, root]) => {
+  if (listObserver) { listObserver.disconnect(); listObserver = null; }
+  if (!el || !root) return;
+  listObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && items.value.length < total.value && !loading.value) {
+        loadMore();
+      }
+    },
+    { root, rootMargin: '600px 0px' }
+  );
+  listObserver.observe(el);
+});
+
 onMounted(async () => {
   await load();
   const openId = route.query.open;
@@ -554,7 +572,10 @@ watch(selectedMediaId, async (id) => {
   for (const el of targets) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
 
-onUnmounted(() => { if (observer) observer.disconnect(); });
+onUnmounted(() => {
+  if (observer) observer.disconnect();
+  if (listObserver) listObserver.disconnect();
+});
 </script>
 
 <style scoped>
