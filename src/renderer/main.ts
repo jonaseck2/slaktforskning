@@ -12,12 +12,14 @@ app.use(createPinia());
 app.use(router);
 app.use(i18n);
 app.directive('narrate', vNarrate);
-app.mount('#app');
 
 const lastRoute = localStorage.getItem('slaktforskning-last-route');
-if (lastRoute && lastRoute !== '/') {
-  router.replace(lastRoute).catch(() => router.replace('/'));
+const hasHashRoute = window.location.hash && window.location.hash !== '#/';
+if (lastRoute && lastRoute !== '/' && !hasHashRoute) {
+  router.push(lastRoute).catch(() => router.push('/'));
 }
+
+router.isReady().finally(() => app.mount('#app'));
 
 // Expose router and i18n for MCP ui_navigate tool and E2E locale switching
 (window as Window & { __vue_router: typeof router; __vue_i18n: typeof i18n }).__vue_router = router;
