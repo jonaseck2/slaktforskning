@@ -1,8 +1,9 @@
 import { getDatabase, getCurrentDatabasePath, switchDatabase } from '../database';
 import { loadSettings } from '../settings';
 import { wrapHandler } from './wrap-handler';
-import { startWorker } from './worker-client';
-import { registerPersonHandlers } from './persons';
+import { startWorker, callWorker } from './worker-client';
+import '../../shared/channels/persons';
+import { channelRegistry } from '../../shared/channels/registry';
 import { registerRelationshipHandlers } from './relationships';
 import { registerEventHandlers } from './events';
 import { registerSourceHandlers } from './sources';
@@ -21,7 +22,17 @@ export function registerIpcHandlers(): void {
 
   const getDb = () => getDatabase();
 
-  registerPersonHandlers(getDb, wrapHandler);
+  // Register channels from the registry (migrated domains)
+  for (const ch of Object.values(channelRegistry)) {
+    if (ch.thread === 'worker') {
+      wrapHandler(ch.name, (...args: unknown[]) => callWorker(ch.name, ...args));
+    } else {
+      wrapHandler(ch.name, (...args: unknown[]) =>
+        (ch.handler as (...a: unknown[]) => unknown)(...args)
+      );
+    }
+  }
+
   registerRelationshipHandlers(getDb, wrapHandler);
   registerEventHandlers(getDb, wrapHandler);
   registerSourceHandlers(getDb, wrapHandler);

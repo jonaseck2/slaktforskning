@@ -10,6 +10,8 @@ export interface ChannelDef<Args extends unknown[] = unknown[], Result = unknown
   readonly name: string;
   readonly thread: ThreadMode;
   readonly handler: ChannelHandler<Args, Result>;
+  /** If true, the preload wraps calls with mutating() to fire dataChanged listeners */
+  readonly mutating?: boolean;
 }
 
 export type ChannelRegistry = Readonly<Record<string, ChannelDef>>;

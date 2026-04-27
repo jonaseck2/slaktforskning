@@ -3,6 +3,9 @@
  * All DB-touching IPC channels are dispatched here so the Electron main thread
  * is never blocked by SQLite.
  */
+// Registry imports — channels registered here are dispatched before the legacy table
+import '../shared/channels/persons';
+import { channelRegistry } from '../shared/channels/registry';
 import { parentPort } from 'node:worker_threads';
 import * as nodePath from 'node:path';
 import * as nodeFs from 'node:fs';
@@ -71,30 +74,7 @@ let checksRunId = 0;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handlers: Record<string, (...args: any[]) => unknown> = {
 
-  // Persons
-  'persons:create': (data) => uw.createPersonUndo(getDb(), data),
-  'persons:createWithEvent': (data) => uw.createPersonWithEventUndo(getDb(), data),
-  'persons:get': (id) => persons.getPerson(getDb(), id),
-  'persons:list': () => persons.listPersons(getDb()),
-  'persons:update': (id, data) => uw.updatePersonUndo(getDb(), id, data),
-  'persons:delete': (id) => uw.deletePersonUndo(getDb(), id),
-  'persons:search': (query, relateeId) => persons.searchPersons(getDb(), query, relateeId ?? null),
-  'persons:addName': (personId, data) => uw.addPersonNameUndo(getDb(), personId, data),
-  'persons:getNames': (personId) => persons.getPersonNames(getDb(), personId),
-  'persons:updateName': (id, data) => uw.updatePersonNameUndo(getDb(), id, data),
-  'persons:deleteName': (id) => uw.deletePersonNameUndo(getDb(), id),
-  'persons:addIdentifier': (personId, data) => persons.addPersonIdentifier(getDb(), personId, data),
-  'persons:getIdentifiers': (personId) => persons.getPersonIdentifiers(getDb(), personId),
-  'persons:deleteIdentifier': (id) => persons.deletePersonIdentifier(getDb(), id),
-  'persons:listPage': (limit, offset, sortBy, sortDir) => {
-    const d = getDb();
-    return { persons: persons.listPersonsPage(d, limit, offset, sortBy, sortDir), total: persons.countPersons(d) };
-  },
-  'persons:searchWithDetails': (query) => persons.searchPersonsWithDetails(getDb(), query),
-  'persons:listUnsourcedPage': (limit, offset) => {
-    const d = getDb();
-    return { persons: persons.listUnsourcedPersonsPage(d, limit, offset), total: persons.countUnsourcedPersons(d) };
-  },
+  // Persons — migrated to registry (src/shared/channels/persons.ts)
 
   // Events
   'events:create': (data) => uw.createEventUndo(getDb(), data),
@@ -387,6 +367,21 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
   }
 
   const { id, channel, args } = msg as CallMsg;
+
+  // Registry first — channels migrated to src/shared/channels/*.ts are dispatched here
+  const regCh = channelRegistry[channel];
+  if (regCh && regCh.thread === 'worker') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await Promise.resolve((regCh.handler as (db: Database, ...a: unknown[]) => unknown)(getDb(), ...args));
+      parentPort!.postMessage({ id, result: result ?? null });
+    } catch (err) {
+      parentPort!.postMessage({ id, error: err instanceof Error ? err.message : String(err) });
+    }
+    return;
+  }
+
+  // Legacy fallback — channels not yet migrated to registry
   const handler = handlers[channel];
   if (!handler) {
     parentPort!.postMessage({ id, error: `No worker handler for channel: ${channel}` });
