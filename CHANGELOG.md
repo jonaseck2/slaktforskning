@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix(media): gallery cards bias the photo crop toward the top (`object-position: 50% 25%`) so faces, which usually sit in the upper third of a portrait, stay visible instead of being centred away (v0.158.2).
+
 - fix(media): selecting a media item now scrolls both the left list and the gallery so the selected card stays visible (v0.158.1). Each gallery card and list row carries a `data-media-id` attribute; a watch on `selectedMediaId` calls `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` on every match. Selecting a row in the list now reveals the corresponding gallery card without manual scrolling.
 
 - feat(panels): every right-side panel now has a `▶` collapse tab on its left edge instead of an `×` close button in the header (v0.158.0). PlacePanel, GroupPanel, ResearchTaskPanel, SourcePanel, RelationshipPanel and ReportPanel match the existing PersonPanel pattern. PlacesView gains the matching `◀` reopen button it was missing, and the left-list collapse tab in PlacesView now mirrors PersonsView's direction (rounded inward, anchored at the column's right edge) instead of sticking outward. ReportsView/PrintsView gain a panelOpen state so the right panel can fully collapse and be reopened (persisted under `reports-panel-open`). The four other views (Groups/ResearchTasks/Sources/Relationships) keep their existing reopen buttons but switch the arrow from `▶` to `◀` so direction matches the new convention.
