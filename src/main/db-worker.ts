@@ -14,7 +14,6 @@ import { undoManager } from '../api/undo';
 import * as uw from '../api/undo_wrappers';
 import * as persons from '../api/persons';
 import * as relationships from '../api/relationships';
-import * as sources from '../api/sources';
 import * as groups from '../api/groups';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
@@ -91,22 +90,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   'eventParticipants:getForEvent': (eventId) => relationships.getEventParticipants(getDb(), eventId),
   'eventParticipants:remove': (id) => uw.removeEventParticipantUndo(getDb(), id),
 
-  // Sources & Citations
-  'sources:create': (data) => uw.createSourceUndo(getDb(), data),
-  'sources:get': (id) => sources.getSource(getDb(), id),
-  'sources:list': () => sources.listSources(getDb()),
-  'sources:update': (id, data) => uw.updateSourceUndo(getDb(), id, data),
-  'sources:delete': (id) => uw.deleteSourceUndo(getDb(), id),
-  'sources:search': (query) => sources.searchSources(getDb(), query),
-  'citations:create': (data) => uw.createCitationUndo(getDb(), data),
-  'citations:get': (id) => sources.getCitation(getDb(), id),
-  'citations:forSource': (sourceId) => sources.getCitationsForSource(getDb(), sourceId),
-  'citations:forEvent': (eventId) => sources.getCitationsForEvent(getDb(), eventId),
-  'citations:forPerson': (personId) => sources.getCitationsForPerson(getDb(), personId),
-  'citations:forRelationship': (relId) => sources.getCitationsForRelationship(getDb(), relId),
-  'citations:forPlace': (placeId) => sources.getCitationsForPlace(getDb(), placeId),
-  'citations:delete': (id) => uw.deleteCitationUndo(getDb(), id),
-  'citations:update': (id, data) => uw.updateCitationUndo(getDb(), id, data),
+  // Sources & Citations — migrated to registry (src/shared/channels/sources.ts)
 
   // Places — migrated to registry (src/shared/channels/places.ts)
 
