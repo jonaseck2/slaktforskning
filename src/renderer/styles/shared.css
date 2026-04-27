@@ -194,6 +194,40 @@
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: var(--color-row-hover); }
 
+/* Side-panel shell — surface card that hosts every right-side entity panel
+   (Person, Place, Group, Research Task, Source, Relationship, Media, Report).
+   The 28px left padding reserves space for the `.panel-collapse-btn` tab so
+   it never overlaps section content or the sticky header. Don't redefine
+   these declarations in scoped panel styles. */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--font-sm);
+  position: relative;
+  padding-left: 28px;
+}
+
+/* Left list column shell — surface card that hosts the resizable list
+   pane on views with a `▶`/`◀` collapse tab on its right edge (Persons
+   list, Places list, Media list). The 28px right padding reserves space
+   for the `.list-collapse-btn` tab. */
+.list-column {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  min-height: 0;
+  padding-right: 28px;
+}
+
 /* ── 5. Actions cell (right-aligned table column for delete/action buttons) */
 .data-table .actions-cell,
 .actions-cell {

@@ -754,6 +754,7 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 - Person links: `.person-link`, `.person-link:hover`
 - Sex badges: `.sex-badge`, `.sex-M`, `.sex-F`, `.sex-U`
 - Tabs: `.tab-bar`, `.tab-btn`, `.tab-btn.active`, `.tab-btn:hover`
+- Side panels: `.side-panel` (right-side entity panels — bakes in surface/radius/shadow + 28px left padding for the collapse tab), `.list-column` (left-side list columns — bakes in surface/radius/shadow + 28px right padding for the collapse tab)
 
 **Design token categories** (from `tokens.css`):
 ```css
@@ -1019,7 +1020,7 @@ Each `BrowserWindow` runs an independent Vue app instance. All windows share the
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
-| `/commit` | When committing | Always `git add -A`, compose message, never skip files |
+| `/commit` | When committing | Stage by explicit path — bundle every file in the same concern, never bundle unrelated WIP |
 | `/test` | When running/writing tests | Unit test patterns (Vitest), E2E patterns (Playwright) |
 | `/electron-dev` | When launching/debugging the app | Dev mode, IPC debugging, common issues |
 | `/add-feature` | Adding any new feature or entity | Full 10-step checklist: schema → API → IPC → MCP → Vue |
@@ -1071,7 +1072,7 @@ The `superpowers:brainstorming` and `superpowers:writing-plans` skills default t
 - **No global DB singletons** in api/ — always pass `db` as parameter
 - **Modal dialogs** for create/edit forms — reserve page navigation for detail views
 - **Always keep documentation up to date** — After finishing a feature, update `README.md`, `CLAUDE.md`, and `docs/PLAN.md`
-- **Always commit ALL files** — Use `git add -A`. Never selectively skip files.
+- **Commit only the files that belong together** — One commit = one concern. If the working tree has unrelated WIP from a previous session (different feature, different fix), do NOT bundle it into your commit. Stage explicitly by path. Bundle every file your change touched (sources, tests, CHANGELOG, package.json, CLAUDE.md, docs) — never selectively skip a file inside the same concern. If unsure whether a modified file belongs to your concern, ask.
 - **Persist plans and design specs** — Write plans and design specs to `docs/plans/` immediately (e.g. `docs/plans/YYYY-MM-DD-description.md`, `docs/plans/YYYY-MM-DD-description-design.md`) and **commit the file in the same step**. Files that are saved but not committed get orphaned on the source branch the moment a worktree is created (the worktree branches from HEAD and the uncommitted file is left behind). Context can be lost. When asked to "continue according to plan", look in `docs/plans/` for the most recent file.
 - **Keep plans and roadmap in sync** — When adding a plan or spec to `docs/plans/`, add a matching milestone to `docs/PLAN.md` roadmap with a pointer. When completing a milestone, mark it done in the plan file (checkboxes) and remove it from `docs/PLAN.md`. The roadmap is active work only; CHANGELOG.md is the permanent record.
 - **Archive completed plans and specs** — When a milestone is fully complete, move its plan/spec file from `docs/plans/` to `docs/plans/archive/`. Add a `## vX.Y.Z — description` entry to `CHANGELOG.md`. Remove the milestone heading from `docs/PLAN.md` — completed work does not belong there.

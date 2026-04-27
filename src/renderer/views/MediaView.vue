@@ -2,39 +2,58 @@
   <div class="media-layout" ref="mediaBodyRef">
   <!-- Permanent left list column -->
   <template v-if="listOpen && !viewerMode">
-    <div class="media-list-column" :style="{ width: listWidth + 'px' }">
+    <div class="media-list-column list-column" :style="{ width: listWidth + 'px' }">
       <h3 class="media-list-title">{{ $t('media.listView') }}</h3>
-      <div class="media-list-content" ref="listScrollRef">
-        <div v-if="!loading && items.length > 0" class="gallery-filter">
+      <div class="media-list-body">
+        <div v-if="!loading && items.length > 0" class="list-filter">
           <input
             v-model="searchQuery"
             type="text"
             :placeholder="$t('media.filter.search')"
-            class="gallery-search"
+            class="list-filter-input"
           />
         </div>
         <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
         <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" />
-        <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
-        <table v-else class="data-table media-list-table">
-          <tbody>
-            <tr
-              v-for="item in filteredItems"
-              :key="item.id"
-              :data-media-id="item.id"
-              class="clickable-row"
-              :class="{ 'selected-row': selectedMediaId === item.id }"
-              @click="selectMedia(item.id)"
-            >
-              <td class="media-list-thumb-cell">
-                <img v-if="thumbnails[item.id]" :src="thumbnails[item.id]" class="media-list-thumb" />
-                <span v-else class="media-list-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
-              </td>
-              <td class="media-list-title-cell">{{ mediaDisplayName(item.title, item.file_ref) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div ref="listSentinel" class="scroll-sentinel"></div>
+        <AppEmptyState v-else-if="sortedItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
+        <div v-else class="media-list-scroll" ref="listScrollRef">
+          <table class="data-table media-list-table">
+            <thead>
+              <tr>
+                <th class="thumb-col" aria-hidden="true"></th>
+                <th class="sortable-th" @click="toggleSort('title')">
+                  {{ $t('persons.name') }}
+                  <span v-if="sortBy === 'title'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+                <th class="sortable-th format-col" @click="toggleSort('format')">
+                  {{ $t('media.format') }}
+                  <span v-if="sortBy === 'format'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in sortedItems"
+                :key="item.id"
+                :data-media-id="item.id"
+                class="clickable-row"
+                :class="{ 'selected-row': selectedMediaId === item.id }"
+                @click="selectMedia(item.id)"
+              >
+                <td class="media-list-thumb-cell thumb-col">
+                  <img v-if="thumbnails[item.id]" :src="thumbnails[item.id]" class="media-list-thumb" />
+                  <span v-else class="media-list-thumb-placeholder">{{ (item.format || '?').toUpperCase() }}</span>
+                </td>
+                <td class="media-list-title-cell">{{ mediaDisplayName(item.title, item.file_ref) }}</td>
+                <td class="format-col info-cell">{{ (item.format || '').toUpperCase() }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div ref="listSentinel" class="scroll-sentinel"></div>
+        </div>
+        <p v-if="items.length > 0" class="media-list-footer count-label">
+          {{ $t('persons.showingOf', { shown: sortedItems.length, total }) }}
+        </p>
       </div>
       <button class="list-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="closeList">◀</button>
     </div>
@@ -280,6 +299,39 @@ const filteredItems = computed(() => {
     mediaDisplayName(i.title, i.file_ref, '').toLowerCase().includes(q) ||
     (i.format || '').toLowerCase().includes(q)
   );
+});
+
+type MediaSortBy = 'title' | 'format';
+type MediaSortDir = 'asc' | 'desc';
+const sortBy = ref<MediaSortBy>((localStorage.getItem('media-sort-by') as MediaSortBy) || 'title');
+const sortDir = ref<MediaSortDir>((localStorage.getItem('media-sort-dir') as MediaSortDir) || 'asc');
+function toggleSort(column: MediaSortBy) {
+  if (sortBy.value === column) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortDir.value = 'asc';
+  }
+  localStorage.setItem('media-sort-by', sortBy.value);
+  localStorage.setItem('media-sort-dir', sortDir.value);
+}
+
+const sortedItems = computed(() => {
+  const rows = [...filteredItems.value];
+  const dir = sortDir.value === 'asc' ? 1 : -1;
+  const key = sortBy.value;
+  rows.sort((a, b) => {
+    const av = key === 'title'
+      ? mediaDisplayName(a.title, a.file_ref, '').toLowerCase()
+      : (a.format ?? '').toLowerCase();
+    const bv = key === 'title'
+      ? mediaDisplayName(b.title, b.file_ref, '').toLowerCase()
+      : (b.format ?? '').toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return rows;
 });
 
 function isImageFormat(format: string | null): boolean {
@@ -586,18 +638,8 @@ onUnmounted(() => {
   position: relative;
 }
 
-/* Left list column */
-.media-list-column {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  flex-shrink: 0;
-  min-height: 0;
-}
+/* Layout, surface, and `padding-right: 28px` for the collapse tab come
+   from `.list-column` in shared.css. */
 .media-list-title {
   margin: 0;
   padding: var(--space-md) var(--space-md) var(--space-sm);
@@ -607,11 +649,54 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--surface-border-subtle);
   flex-shrink: 0;
 }
-.media-list-content {
+.media-list-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md);
+}
+.media-list-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-md);
+  position: relative;
+}
+.media-list-scroll .data-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
+}
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+.sortable-th:hover {
+  background: var(--surface-hover);
+}
+.sort-arrow {
+  margin-left: 4px;
+  font-size: var(--font-xs);
+  color: var(--accent);
+}
+.media-list-footer {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--space-sm) 0 0 0;
+  border-top: 1px solid var(--surface-border-subtle);
+  text-align: center;
+}
+.thumb-col { width: 36px; }
+.format-col {
+  width: 4em;
+  white-space: nowrap;
+  text-align: right;
+}
+.info-cell {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
 }
 .media-list-table {
   width: 100%;
@@ -762,12 +847,12 @@ onUnmounted(() => {
   background: var(--surface-hover);
 }
 
-.gallery-filter {
-  margin-bottom: 12px;
+.list-filter {
+  flex-shrink: 0;
+  padding: 0 0 var(--space-sm);
 }
-.gallery-search {
+.list-filter-input {
   width: 100%;
-  max-width: 300px;
   padding: 6px 10px;
   font-size: var(--font-sm);
   border: 1px solid var(--surface-border);
@@ -775,8 +860,9 @@ onUnmounted(() => {
   outline: none;
   background: var(--surface);
   color: var(--text-primary);
+  font-family: inherit;
 }
-.gallery-search:focus {
+.list-filter-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }

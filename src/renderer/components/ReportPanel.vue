@@ -1,5 +1,5 @@
 <template>
-  <div class="report-panel">
+  <div class="report-panel side-panel">
     <!-- Collapse arrow on the panel's left edge. -->
     <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
 
@@ -375,17 +375,11 @@ const subjectSectionTitle = computed(() => {
 </script>
 
 <style scoped>
+/* Layout, surface, and `padding-left: 28px` for the collapse tab come
+   from `.side-panel` in shared.css. */
 .report-panel {
   width: 100%;
-  height: 100%;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
   overflow-y: auto;
-  font-size: var(--font-sm);
-  position: relative;
 }
 
 /* Collapse arrow on the panel's left edge. */
@@ -406,7 +400,7 @@ const subjectSectionTitle = computed(() => {
 }
 .panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .panel-header {
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
   border-bottom: 1px solid var(--surface-border-subtle);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }

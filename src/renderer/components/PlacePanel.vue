@@ -1,5 +1,5 @@
 <template>
-  <div class="place-panel">
+  <div class="place-panel side-panel">
     <!-- Empty state -->
     <div v-if="!placeId" class="panel-empty">
       {{ $t('placePanel.noPlaceSelected') }}
@@ -456,17 +456,9 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
 </script>
 
 <style scoped>
-.place-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  font-size: var(--font-sm);
-  position: relative;
-}
+/* Layout, surface, and `padding-left: 28px` for the collapse tab come
+   from `.side-panel` in shared.css. */
+.place-panel { overflow-y: auto; }
 
 /* Collapse arrow on the panel's left edge — mirrors the
    `list-collapse-btn` / `list-open-btn` pattern on the places list. */

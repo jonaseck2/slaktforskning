@@ -1,5 +1,5 @@
 <template>
-  <div class="media-panel">
+  <div class="media-panel side-panel">
     <!-- Empty state -->
     <div v-if="!mediaId" class="panel-empty">
       {{ $t('media.selectMedia') }}
@@ -599,17 +599,9 @@ defineExpose({ reload: load, expandFaceTags });
 </script>
 
 <style scoped>
-.media-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  font-size: var(--font-sm);
-  position: relative;
-}
+/* Layout, surface, and `padding-left: 28px` for the collapse tab come
+   from `.side-panel` in shared.css. */
+.media-panel { overflow-y: auto; }
 
 /* Collapse arrow on the panel's left edge — mirrors the
    `list-collapse-btn` / `list-open-btn` pattern on the media list. */
