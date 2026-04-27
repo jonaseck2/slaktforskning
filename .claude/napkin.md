@@ -54,6 +54,23 @@
 5. **[2026-04-27] `npx vue-tsc --noEmit` OOMs on default 4 GB Node heap**
    Do instead: run `NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0`. There's no `typecheck` script in package.json — vue-tsc isn't part of the normal workflow, but when used for verification it needs 8 GB. There are pre-existing type errors in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`, `src/api/places.ts`, `src/api/undo.ts`, plus `import.meta.env`/api-shape errors throughout views — these are real but not introduced by recent edits, ignore unless they're in your touched files.
 
+## Static SPA & Iframe Preview
+
+1. **[2026-04-28] Electron `protocol.handle` chokes on U+FFFD chars in response body**
+   Do instead: don't use `protocol.handle` to serve content that may contain the Unicode REPLACEMENT character (U+FFFD). Electron's internal Headers ByteString conversion throws `TypeError: Cannot convert argument to a ByteString — character at index N has a value of 65533` from `electron/js2c/browser_init`. The dist-static SPA bundle has a literal U+FFFD as a fallback glyph (used in `String.fromCodePoint` paths) which makes this trigger every time. Use a Blob URL instead — see next item.
+
+2. **[2026-04-28] `<iframe srcdoc>` silently falls back to parent URL when oversized**
+   Do instead: don't put HTML over ~1 MB into `srcdoc`. Chromium silently rejects oversized attribute values and the iframe falls back to loading its parent renderer's URL — looks like full-app inception inside the iframe, no error in console. Use a Blob URL: `URL.createObjectURL(new Blob([html], { type: 'text/html' }))` and bind to `iframe.src`. Revoke the previous Blob URL on each refresh and on view unmount so memory stays bounded.
+
+3. **[2026-04-28] file:// has no CORS in Chromium — `img.crossOrigin = 'anonymous'` blocks the load**
+   Do instead: when loading an image into a canvas for cropping/encoding, only set `img.crossOrigin = 'anonymous'` if `src` doesn't start with `file:`. file:// sources fail to load entirely with the attribute set ("Access to image at 'file://…' from origin 'null' has been blocked by CORS policy"). Without the attribute, the canvas is tainted by file:// images, so wrap `canvas.toDataURL()` in try/catch and fall back to returning the original src — avatars then render uncropped instead of breaking. Hits exported static sites opened directly via file://.
+
+4. **[2026-04-28] Static SPA bundle reuses renderer views, so it pulls in their dependencies**
+   Do instead: any composable that touches `window.api` from a top-level call site (component setup, module body) needs an optional-chain or guard, because the static SPA's bundled renderer views (PersonsView etc.) load its lazy routes and will instantiate components like PersonPicker — and at that point `window.api` may be undefined (`useDefaultPerson` and `cropImage`-using `chartData.resolvePersonPhotoUrl` both bit us). The renderer's own `App.vue` `onMounted` should also use `?.` for `db.onSwitched`, `undo.onPerformed`, `undo.onChanged`, `onDataChanged` so a bad context doesn't tank the whole renderer.
+
+5. **[2026-04-28] Preview iframe can't reach local media — inline a thumbnail subset**
+   Do instead: the website-export preview iframe runs in a Blob URL origin and can't load `file://` media paths. `website:buildPreviewHtml` resizes the first 24 image media to 400px JPEGs @ 70% via Electron's `nativeImage` (5 MB total budget), bakes them into `snapshot.meta.previewMediaDataUrls`, and trims `snapshot.media`/`mediaLinks`/`mediaRegions` to those IDs so the gallery doesn't scroll past inlined data into 404s. `static-api.media.readAsDataUrl` checks the inlined map first, falls through to relative `./media/full/...` for the actual export.
+
 ## MCP Server
 
 1. **[2026-04-03] MCP server fails to start if `path` is not imported in server.ts**
