@@ -1,10 +1,18 @@
 import path from 'node:path';
-import { app, BrowserWindow, dialog, Menu } from 'electron';
+import { app, BrowserWindow, dialog, Menu, protocol } from 'electron';
 import started from 'electron-squirrel-startup';
 import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { callWorker, terminateWorker } from './ipc/worker-client';
 import { startUiServer, stopUiServer } from './ui-server';
+import { PREVIEW_SCHEME, registerPreviewProtocol } from './preview-protocol';
+
+// Privileged scheme registration must happen before app is ready.
+// The website-export view loads the static SPA via this scheme so the
+// preview iframe sees the same code path the user gets on disk.
+protocol.registerSchemesAsPrivileged([
+  { scheme: PREVIEW_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
+]);
 
 // Suppress EPIPE errors (occur when stdout pipe closes, e.g. during E2E tests).
 // Without this, a single console.log to a closed pipe kills the main process.
@@ -157,6 +165,7 @@ function buildMenu(): void {
 
 app.on('ready', () => {
   getDatabase();
+  registerPreviewProtocol();
   registerIpcHandlers();
   buildMenu();
   createWindow();

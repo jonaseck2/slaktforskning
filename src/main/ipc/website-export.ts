@@ -2,10 +2,53 @@ import * as fs from 'fs';
 import { promises as fsp } from 'fs';
 import * as path from 'path';
 import { app, dialog } from 'electron';
+import { setPreviewSnapshot } from '../preview-protocol';
 import { wrapHandler } from './wrap-handler';
 import { callWorker } from './worker-client';
 
 export function registerWebsiteExportHandlers(): void {
+  wrapHandler('website:previewSnapshot', async (...args) => {
+    const opts = args[0] as {
+      siteTitle: string;
+      scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
+      options: {
+        excludeLiving: boolean;
+        redactLiving: boolean;
+      };
+    };
+    return await callWorker('website:buildPreview', {
+      siteTitle: opts.siteTitle,
+      scope: opts.scope,
+      options: {
+        excludeLiving: opts.options.excludeLiving,
+        redactLiving: opts.options.redactLiving,
+      },
+    });
+  });
+
+  // Builds the full snapshot used by the iframe preview. Mirrors the export's
+  // worker call — same code path, same data shape — except it skips media
+  // (the preview can't access local files) and stashes the result in main
+  // for the `app-preview://` protocol to serve as data.js.
+  wrapHandler('website:setPreviewSnapshot', async (opts: {
+    siteTitle: string;
+    focusPersonId: string | null;
+    scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
+    options: { excludeLiving: boolean; redactLiving: boolean; mediaPersonOnly: boolean };
+  }) => {
+    const snapshot = await callWorker('website:buildSnapshot', {
+      siteTitle: opts.siteTitle,
+      focusPersonId: opts.focusPersonId ?? '',
+      scope: opts.scope,
+      options: {
+        ...opts.options,
+        includeMedia: false,
+      },
+    });
+    setPreviewSnapshot(snapshot);
+    return { ok: true };
+  });
+
   wrapHandler('website:export', async (opts: {
     siteTitle: string;
     focusPersonId: string | null;

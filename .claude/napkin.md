@@ -51,6 +51,9 @@
 4. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
    Do instead: keep the `externalize-gazetteers` plugin in both `vite.main.config.ts` and `vite.worker.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized.
 
+5. **[2026-04-27] `npx vue-tsc --noEmit` OOMs on default 4 GB Node heap**
+   Do instead: run `NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0`. There's no `typecheck` script in package.json — vue-tsc isn't part of the normal workflow, but when used for verification it needs 8 GB. There are pre-existing type errors in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`, `src/api/places.ts`, `src/api/undo.ts`, plus `import.meta.env`/api-shape errors throughout views — these are real but not introduced by recent edits, ignore unless they're in your touched files.
+
 ## MCP Server
 
 1. **[2026-04-03] MCP server fails to start if `path` is not imported in server.ts**

@@ -1,6 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
-import { livingSqlExpr } from '../personLiving';
+import { loadLivingDerivation, isLivingDerived } from '../personLiving';
 import type { ScopeOptions } from './scope';
 import { computeScope } from './scope';
 import { redactPerson } from './redact';
@@ -63,26 +63,28 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   // 1. Compute scope — the set of person IDs to include
   const scopeSet = computeScope(db, opts.scope);
 
-  // 2. Load all persons in bulk, then filter
-  // living is derived from birth/death events at read time
-  const rawPersons = queryAll<Omit<Person, 'living'> & { living: number }>(db,
-    `SELECT p.*, ${livingSqlExpr('p')} AS living FROM persons p`);
-  const allPersons: Person[] = rawPersons.map(r => ({ ...r, living: r.living === 1 }));
-  let persons = allPersons.filter(p => scopeSet.has(p.id));
+  // 2. Load only in-scope persons, then derive `living` in JS using two
+  //    pre-aggregated set queries (death events + birth years). Replaces
+  //    the per-row `livingSqlExpr` correlated subquery: O(events) instead
+  //    of O(persons × events_per_person). For a 7k-person tree this turns
+  //    ~14k EXISTS subqueries into 2 set-returning queries plus an
+  //    in-memory lookup per row.
+  const scopeIds = [...scopeSet];
+  let persons: Person[] = [];
+  if (scopeIds.length > 0) {
+    const placeholders = scopeIds.map(() => '?').join(',');
+    const rawPersons = queryAll<Omit<Person, 'living'>>(
+      db,
+      `SELECT * FROM persons WHERE id IN (${placeholders})`,
+      scopeIds,
+    );
+    const derivation = loadLivingDerivation(db);
+    persons = rawPersons.map(r => ({ ...r, living: isLivingDerived(r.id, derivation) }));
+  }
 
   // 3. Apply excludeLiving / redactLiving
   if (opts.options.excludeLiving) {
     persons = persons.filter(p => !p.living);
-  }
-
-  const excludedIds = new Set(
-    allPersons.filter(p => !scopeSet.has(p.id)).map(p => p.id)
-  );
-  // Also exclude living persons that were removed by excludeLiving
-  if (opts.options.excludeLiving) {
-    for (const p of allPersons) {
-      if (p.living) excludedIds.add(p.id);
-    }
   }
 
   const finalPersonIds = new Set(persons.map(p => p.id));
