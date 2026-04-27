@@ -12,6 +12,7 @@
           :loading="snapshotLoading"
           :error="snapshotError"
           :iframe-key="iframeKey"
+          :iframe-url="iframeUrl"
         />
       </div>
     </div>
@@ -39,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
 import WebsitePanel from '../components/WebsitePanel.vue';
 import WebsitePreview, { type PreviewSnapshot } from '../components/WebsitePreview.vue';
 import { usePanelResize } from '../composables/usePanelResize';
@@ -65,6 +66,19 @@ const snapshot = ref<PreviewSnapshot | null>(null);
 const snapshotLoading = ref(false);
 const snapshotError = ref<string | null>(null);
 const iframeKey = ref(0);
+const iframeUrl = ref<string | null>(null);
+
+function setIframeUrl(html: string): void {
+  // Revoke previous Blob URL so the renderer doesn't leak memory across
+  // refreshes (each preview is ~1.5 MB).
+  if (iframeUrl.value) URL.revokeObjectURL(iframeUrl.value);
+  const blob = new Blob([html], { type: 'text/html' });
+  iframeUrl.value = URL.createObjectURL(blob);
+}
+
+onBeforeUnmount(() => {
+  if (iframeUrl.value) URL.revokeObjectURL(iframeUrl.value);
+});
 
 const rootRef = ref<HTMLElement | null>(null);
 const { panelWidth, startResize } = usePanelResize({
@@ -85,8 +99,8 @@ async function refreshPreview() {
     return;
   }
   const previewFn = window.api.website?.previewSnapshot;
-  const setFullFn = window.api.website?.setPreviewSnapshot;
-  if (typeof previewFn !== 'function' || typeof setFullFn !== 'function') {
+  const buildHtmlFn = window.api.website?.buildPreviewHtml;
+  if (typeof previewFn !== 'function' || typeof buildHtmlFn !== 'function') {
     snapshot.value = null;
     snapshotLoading.value = false;
     snapshotError.value = 'Website preview IPC channels are missing — restart the app to pick up the new preload.';
@@ -100,14 +114,14 @@ async function refreshPreview() {
     : { focusId: focusPersonId.value, ancestors: ancestors.value, descendants: descendants.value };
   try {
     // Two parallel calls: lightweight stats for the pills, plus the full
-    // snapshot stashed in main for the `app-preview://` iframe to pick up.
-    const [statsResult] = await Promise.all([
+    // SPA HTML (with snapshot inlined) for the iframe srcdoc.
+    const [statsResult, htmlResult] = await Promise.all([
       previewFn({
         siteTitle: siteTitle.value,
         scope,
         options: { excludeLiving: excludeLiving.value, redactLiving: redactLiving.value },
       }),
-      setFullFn({
+      buildHtmlFn({
         siteTitle: siteTitle.value,
         focusPersonId: focusPersonId.value,
         scope,
@@ -120,6 +134,7 @@ async function refreshPreview() {
     ]);
     if (token !== pendingToken) return;
     snapshot.value = statsResult as PreviewSnapshot;
+    setIframeUrl(htmlResult as string);
     iframeKey.value++;
   } catch (e) {
     console.error('Preview snapshot failed', e);

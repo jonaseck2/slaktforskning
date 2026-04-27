@@ -62,12 +62,17 @@ async function resolvePersonPhotoUrl(personId: string): Promise<string | null> {
     return null;
   }
   // Trees must show the tagged face, never the raw media. If cropping fails
-  // (canvas/decode error), fall through to the initials placeholder rather
-  // than silently rendering the full image — a silent raw-media fallback is
-  // exactly the bug we're trying to remove.
-  const cropped = await cropImageToDataUrl(raw, ref.region);
-  personPhotoCache.set(personId, cropped);
-  return cropped;
+  // (canvas/decode error, image 404, tainted canvas), fall through to the
+  // initials placeholder rather than letting the rejection bubble up as an
+  // uncaught promise — a silent raw-media fallback is exactly the bug we're
+  // trying to remove.
+  try {
+    const cropped = await cropImageToDataUrl(raw, ref.region);
+    personPhotoCache.set(personId, cropped);
+    return cropped;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchPersonNode(id: string): Promise<PersonNode> {

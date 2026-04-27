@@ -21,6 +21,14 @@
     />
 
     <template v-else>
+      <div v-if="persons.length > 0" class="list-filter">
+        <input
+          v-model="searchQuery"
+          type="text"
+          :placeholder="$t('persons.filterSearch')"
+          class="list-filter-input"
+        />
+      </div>
       <div class="persons-list-scroll">
       <table class="data-table">
         <thead>
@@ -41,7 +49,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="person in persons"
+            v-for="person in filteredPersons"
             :key="person.id"
             v-narrate="() => narratePersonRow({
               given_name: person.given_name || '',
@@ -80,7 +88,7 @@
       <div ref="sentinel" class="scroll-sentinel"></div>
       </div>
       <p v-if="total > 0" class="persons-list-footer count-label">
-        {{ $t('persons.showingOf', { shown: persons.length, total }) }}
+        {{ $t('persons.showingOf', { shown: filteredPersons.length, total }) }}
       </p>
     </template>
 
@@ -90,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonModal from '../components/modals/PersonModal.vue';
@@ -132,6 +140,18 @@ const selectedPersonStore = useSelectedPersonStore();
 const persons = ref<PersonListItem[]>([]);
 const total = ref(0);
 const offset = ref(0);
+const searchQuery = ref('');
+
+const filteredPersons = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return persons.value;
+  return persons.value.filter(p =>
+    (p.given_name ?? '').toLowerCase().includes(q) ||
+    (p.surname ?? '').toLowerCase().includes(q) ||
+    (p.preferred_name ?? '').toLowerCase().includes(q) ||
+    (p.nickname ?? '').toLowerCase().includes(q)
+  );
+});
 
 // Sort state — clicking a column header toggles direction; clicking a
 // different column resets to asc. Persisted in localStorage so the choice
@@ -257,6 +277,25 @@ onActivated(async () => {
    dedicated wrapper so the count footer stays pinned and visible without
    scrolling. The table head sticks to the top of the wrapper so column
    labels remain visible while the rows scroll. */
+.list-filter {
+  flex-shrink: 0;
+  padding: 0 0 var(--space-sm);
+}
+.list-filter-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: var(--font-sm);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.list-filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
 .persons-list-scroll {
   flex: 1;
   min-height: 0;

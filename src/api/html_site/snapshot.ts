@@ -214,6 +214,15 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
     mediaRegions = allMediaRegions.filter(r => linkedMediaIds.has(r.media_id));
   }
 
+  // Bake the tree subject in as `default_person_id` so the static site
+  // (and the preview iframe) lands on the same person the editor's tree is
+  // focused on, instead of bouncing to a random first row. Only set when
+  // the focal person actually survived the scope+living filters.
+  const settings: Record<string, string> = {};
+  if (opts.focusPersonId && finalPersonIds.has(opts.focusPersonId)) {
+    settings.default_person_id = opts.focusPersonId;
+  }
+
   return {
     meta: {
       siteTitle: opts.siteTitle,
@@ -232,6 +241,6 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
     media,
     mediaLinks,
     mediaRegions,
-    settings: {},
+    settings,
   };
 }

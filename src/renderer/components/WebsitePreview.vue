@@ -24,9 +24,9 @@
       </div>
 
       <iframe
-        v-else
+        v-else-if="iframeUrl"
         :key="iframeKey"
-        :src="iframeSrc"
+        :src="iframeUrl"
         class="preview-iframe"
         :title="$t('htmlSite.preview.iframeLabel')"
       />
@@ -56,10 +56,10 @@ const props = defineProps<{
   loading: boolean;
   error?: string | null;
   iframeKey: number;
+  iframeUrl: string | null;
 }>();
 
 const ready = computed(() => props.snapshot !== null);
-const iframeSrc = computed(() => `app-preview://host/index.html?v=${props.iframeKey}`);
 </script>
 
 <style scoped>

@@ -365,7 +365,16 @@ export function installStaticApiWith(snapshot: Snapshot): void {
     forEntity: async (entityType: string, entityId: string) =>
       idx.mediaLinksByEntity.get(`${entityType}:${entityId}`) ?? [],
     linksForMedia: async (mediaId: string) => idx.mediaLinksByMedia.get(mediaId) ?? [],
-    readAsDataUrl: async (mediaId: string) => mediaUrl(idx.mediaById.get(mediaId)),
+    readAsDataUrl: async (mediaId: string) => {
+      // In the website-export preview, the main process inlines a small
+      // subset of resized thumbnails into snapshot.meta.previewMediaDataUrls
+      // so the iframe (which can't read absolute file:// paths) can still
+      // show real photos. Fall through to the relative file URL otherwise —
+      // that's what the actual exported site uses.
+      const inlined = (snapshot.meta as { previewMediaDataUrls?: Record<string, string> }).previewMediaDataUrls?.[mediaId];
+      if (inlined) return inlined;
+      return mediaUrl(idx.mediaById.get(mediaId));
+    },
     getFilePath: async (mediaId: string) => mediaUrl(idx.mediaById.get(mediaId)),
     profilePicRef: async (personId: string) => {
       // Use first media link for the person, sorted by sort_order

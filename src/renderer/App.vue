@@ -522,18 +522,18 @@ onMounted(() => {
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
   setTimeout(loadQualityBadge, 5000);
   setTimeout(loadResearchBadge, 1000);
-  window.api.db.onSwitched(() => {
+  window.api?.db?.onSwitched?.(() => {
     window.location.reload();
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
   let researchDebounce: ReturnType<typeof setTimeout> | null = null;
   // Undo/redo: show toast and refresh data
-  window.api.undo.onPerformed((data: { type: string; label: string }) => {
+  window.api?.undo?.onPerformed?.((data: { type: string; label: string }) => {
     const actionLabel = t(data.label);
     const msg = data.type === 'undo' ? t('undo.undone', { action: actionLabel }) : t('undo.redone', { action: actionLabel });
     toast.info(msg);
   });
-  window.api.undo.onChanged(() => {
+  window.api?.undo?.onChanged?.(() => {
     dataVersionStore.increment();
     if (qualityDebounce) clearTimeout(qualityDebounce);
     qualityDebounce = setTimeout(loadQualityBadge, 800);
@@ -548,7 +548,7 @@ onMounted(() => {
     if (researchDebounce) clearTimeout(researchDebounce);
     researchDebounce = setTimeout(loadResearchBadge, 400);
   });
-  window.api.onDataChanged(() => {
+  window.api?.onDataChanged?.(() => {
     dataVersionStore.increment();
     if (qualityDebounce) clearTimeout(qualityDebounce);
     qualityDebounce = setTimeout(loadQualityBadge, 800);

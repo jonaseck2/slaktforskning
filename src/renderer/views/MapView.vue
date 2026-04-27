@@ -3,14 +3,8 @@
     <!-- Left sheet: toolbar + map -->
     <div class="map-chart-area">
       <slot name="header" />
-      <div v-if="filterText || allDisplayPlaces.length > 0" class="map-toolbar">
-        <input
-          v-model="filterText"
-          type="text"
-          :placeholder="$t('app.search')"
-          class="map-search"
-        />
-        <span v-if="placesWithoutCoords > 0" class="no-coords-hint">
+      <div v-if="placesWithoutCoords > 0" class="map-toolbar">
+        <span class="no-coords-hint">
           {{ $t('map.noCoordinates', { count: placesWithoutCoords }) }}
         </span>
       </div>
@@ -27,8 +21,12 @@
           @ready="onMapReady"
         >
           <!-- Markers managed imperatively via canvasMarkers for performance -->
+          <!-- Only mount LGeoJson once Leaflet's canvas renderer is ready —
+               adding a layer before then races _addPath against onAdd and
+               throws "Cannot read properties of undefined (reading 'clearRect')"
+               from L.Canvas._clear when the canvas's 2D context isn't yet set. -->
           <LGeoJson
-            v-if="boundaryGeojson"
+            v-if="boundaryGeojson && mapInitialized"
             :key="selectedPlaceId + '-' + themeVersion"
             :geojson="boundaryGeojson"
             :options-style="boundaryStyle"
@@ -68,7 +66,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 
-const props = defineProps<{ noPanel?: boolean }>();
+const props = defineProps<{ noPanel?: boolean; searchText?: string }>();
 const emit = defineEmits<{ 'select-place': [id: string]; 'reopen-panel': [] }>();
 import { LGeoJson } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
@@ -194,7 +192,7 @@ let cachedPlaces: PlaceRow[] | null = null;
 
 const places = ref<PlaceRow[]>(cachedPlaces ?? []);
 const loading = ref(cachedPlaces === null);
-const filterText = ref('');
+const filterText = computed(() => props.searchText ?? '');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const mapBodyRef = ref<HTMLElement | null>(null);
 const mapInitialized = ref(false);
@@ -444,14 +442,6 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   padding: var(--space-md) var(--space-lg);
-}
-.map-search {
-  padding: 6px 10px;
-  border: 1px solid var(--surface-border);
-  border-radius: 4px;
-  font-size: var(--font-base);
-  font-family: inherit;
-  width: 260px;
 }
 .no-coords-hint {
   font-size: var(--font-sm);

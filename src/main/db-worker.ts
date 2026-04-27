@@ -354,6 +354,25 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   // Website export
   'website:buildSnapshot': (opts) => buildSnapshot(getDb(), opts),
   'website:buildPreview': (opts) => buildPreview(getDb(), opts),
+  'website:resolveMediaPaths': (mediaIds: string[]) => {
+    const result: Record<string, { absPath: string; mime: string }> = {};
+    const mimeMap: Record<string, string> = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
+    };
+    const db = getDb();
+    const dbDir = getDbDir();
+    for (const id of mediaIds) {
+      const item = media.getMedia(db, id);
+      if (!item?.file_ref) continue;
+      const absPath = nodePath.resolve(dbDir, item.file_ref);
+      if (!nodeFs.existsSync(absPath)) continue;
+      const ext = nodePath.extname(absPath).toLowerCase().slice(1);
+      if (!(ext in mimeMap)) continue;
+      result[id] = { absPath, mime: mimeMap[ext] };
+    }
+    return result;
+  },
 };
 
 /** Channel names handled in this worker — imported by the coverage test. */
