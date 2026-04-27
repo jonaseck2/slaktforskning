@@ -21,6 +21,7 @@
             <tr
               v-for="item in filteredItems"
               :key="item.id"
+              :data-media-id="item.id"
               class="clickable-row"
               :class="{ 'selected-row': selectedMediaId === item.id }"
               @click="selectMedia(item.id)"
@@ -85,6 +86,7 @@
       <div
         v-for="(item, idx) in filteredItems"
         :key="item.id"
+        :data-media-id="item.id"
         class="gallery-card"
         :class="{ 'missing-card': item.is_missing, 'selected-card': selectedMediaId === item.id }"
         @click="selectMedia(item.id)"
@@ -171,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import MediaViewer from '../components/MediaViewer.vue';
@@ -541,6 +543,17 @@ watch(personFilterId, async () => {
   deepLinkItems.value = null;
   await load();
 });
+// Scroll both the gallery and the left list to the selected media so it
+// stays visible when the selection changes (e.g. the user clicks a row in
+// the list and we want the corresponding gallery card to come into view).
+watch(selectedMediaId, async (id) => {
+  if (!id || viewerMode.value) return;
+  await nextTick();
+  if (!mediaBodyRef.value) return;
+  const targets = mediaBodyRef.value.querySelectorAll<HTMLElement>('[data-media-id="' + CSS.escape(id) + '"]');
+  for (const el of targets) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+
 onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
