@@ -386,7 +386,7 @@ watch(() => route.path, () => {
   }
 });
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
-const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks'];
+const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks', '/website'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const searchPickerRef = ref<{ focus?: () => void; $el?: HTMLElement } | null>(null);
 const qualityErrorCount = ref(0);
@@ -932,6 +932,7 @@ body {
 
 .content {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   padding: 24px;
   overflow-y: auto;

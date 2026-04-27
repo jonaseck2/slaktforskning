@@ -1,92 +1,48 @@
 <template>
-  <div class="website-export-view">
-    <h2>{{ $t('htmlSite.title') }}</h2>
+  <div class="website-export-view" ref="rootRef">
 
-    <section class="export-section">
-      <h3>{{ $t('htmlSite.subject') }}</h3>
-      <PersonPicker v-model="focusPersonId" />
-      <p class="hint">{{ $t('htmlSite.subjectHint') }}</p>
-    </section>
-
-    <section class="export-section">
-      <h3>{{ $t('htmlSite.scope') }}</h3>
-      <label class="radio-label">
-        <input type="radio" v-model="scopeMode" value="focus" />
-        {{ $t('htmlSite.scopeFocus') }}
-      </label>
-      <label class="radio-label">
-        <input type="radio" v-model="scopeMode" value="everyone" />
-        {{ $t('htmlSite.scopeEveryone') }}
-      </label>
-      <div v-if="scopeMode === 'focus'" class="indent">
-        <label class="select-label">
-          {{ $t('htmlSite.ancestors') }}
-          <select v-model.number="ancestors">
-            <option v-for="n in [3,4,5,6,7,8,9,10]" :key="n" :value="n">{{ n }}</option>
-          </select>
-        </label>
-        <label class="select-label">
-          {{ $t('htmlSite.descendants') }}
-          <select v-model.number="descendants">
-            <option v-for="n in [1,2,3,4,5,6]" :key="n" :value="n">{{ n }}</option>
-          </select>
-        </label>
+    <div class="export-main">
+      <div class="view-header">
+        <h2>{{ $t('htmlSite.title') }}</h2>
+        <span class="header-hint">{{ $t('htmlSite.desc') }}</span>
       </div>
-    </section>
+      <div class="export-content">
+        <WebsitePreview
+          :snapshot="snapshot"
+          :loading="snapshotLoading"
+          :error="snapshotError"
+          :iframe-key="iframeKey"
+        />
+      </div>
+    </div>
 
-    <section class="export-section">
-      <h3>{{ $t('htmlSite.privacy') }}</h3>
-      <label class="check-label">
-        <input type="checkbox" v-model="excludeLiving" />
-        {{ $t('htmlSite.excludeLiving') }}
-      </label>
-      <label class="check-label">
-        <input type="checkbox" v-model="redactLiving" />
-        {{ $t('htmlSite.redactLiving') }}
-      </label>
-      <label class="check-label">
-        <input type="checkbox" v-model="mediaPersonOnly" />
-        {{ $t('htmlSite.mediaPersonOnly') }}
-      </label>
-    </section>
+    <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, rootRef!)"></div>
+    <div class="export-panel" :style="{ width: panelWidth + 'px' }">
+      <WebsitePanel
+        v-model:focusPersonId="focusPersonId"
+        v-model:scopeMode="scopeMode"
+        v-model:ancestors="ancestors"
+        v-model:descendants="descendants"
+        v-model:excludeLiving="excludeLiving"
+        v-model:redactLiving="redactLiving"
+        v-model:mediaPersonOnly="mediaPersonOnly"
+        v-model:includeMedia="includeMedia"
+        v-model:siteTitle="siteTitle"
+        :exporting="exporting"
+        :last-output="lastOutput"
+        :bundle-missing="bundleMissing"
+        @export="exportSite"
+      />
+    </div>
 
-    <section class="export-section">
-      <h3>{{ $t('htmlSite.include') }}</h3>
-      <label class="check-label">
-        <input type="checkbox" v-model="includeMedia" />
-        {{ $t('htmlSite.includeMedia') }}
-      </label>
-    </section>
-
-    <section class="export-section">
-      <h3>{{ $t('htmlSite.site') }}</h3>
-      <label class="field-label">
-        {{ $t('htmlSite.siteTitle') }}
-        <input v-model="siteTitle" class="ep-input" />
-      </label>
-    </section>
-
-    <AppButton
-      variant="primary"
-      :disabled="exporting || !focusPersonId"
-      @click="exportSite"
-    >
-      {{ exporting ? $t('htmlSite.exporting') : $t('htmlSite.export') }}
-    </AppButton>
-
-    <p v-if="lastOutput" class="success-hint">
-      {{ $t('htmlSite.exportedTo') }} <code>{{ lastOutput }}</code>
-    </p>
-    <p v-if="bundleMissing" class="error-hint">
-      {{ $t('htmlSite.bundleMissing') }}
-    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import PersonPicker from '../components/PersonPicker.vue';
-import AppButton from '../components/ui/AppButton.vue';
+import { ref, watch, computed, onMounted } from 'vue';
+import WebsitePanel from '../components/WebsitePanel.vue';
+import WebsitePreview, { type PreviewSnapshot } from '../components/WebsitePreview.vue';
+import { usePanelResize } from '../composables/usePanelResize';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -105,9 +61,102 @@ const exporting = ref(false);
 const lastOutput = ref<string | null>(null);
 const bundleMissing = ref(false);
 
+const snapshot = ref<PreviewSnapshot | null>(null);
+const snapshotLoading = ref(false);
+const snapshotError = ref<string | null>(null);
+const iframeKey = ref(0);
+
+const rootRef = ref<HTMLElement | null>(null);
+const { panelWidth, startResize } = usePanelResize({
+  storageKey: 'website-panel-width',
+  defaultWidth: 280,
+  minWidth: 220,
+});
+
+const canPreview = computed(() => scopeMode.value === 'everyone' || !!focusPersonId.value);
+
+let pendingToken = 0;
+
+async function refreshPreview() {
+  if (!canPreview.value) {
+    snapshot.value = null;
+    snapshotLoading.value = false;
+    snapshotError.value = null;
+    return;
+  }
+  const previewFn = window.api.website?.previewSnapshot;
+  const setFullFn = window.api.website?.setPreviewSnapshot;
+  if (typeof previewFn !== 'function' || typeof setFullFn !== 'function') {
+    snapshot.value = null;
+    snapshotLoading.value = false;
+    snapshotError.value = 'Website preview IPC channels are missing — restart the app to pick up the new preload.';
+    return;
+  }
+  const token = ++pendingToken;
+  snapshotLoading.value = true;
+  snapshotError.value = null;
+  const scope = scopeMode.value === 'everyone'
+    ? { everyone: true }
+    : { focusId: focusPersonId.value, ancestors: ancestors.value, descendants: descendants.value };
+  try {
+    // Two parallel calls: lightweight stats for the pills, plus the full
+    // snapshot stashed in main for the `app-preview://` iframe to pick up.
+    const [statsResult] = await Promise.all([
+      previewFn({
+        siteTitle: siteTitle.value,
+        scope,
+        options: { excludeLiving: excludeLiving.value, redactLiving: redactLiving.value },
+      }),
+      setFullFn({
+        siteTitle: siteTitle.value,
+        focusPersonId: focusPersonId.value,
+        scope,
+        options: {
+          excludeLiving: excludeLiving.value,
+          redactLiving: redactLiving.value,
+          mediaPersonOnly: mediaPersonOnly.value,
+        },
+      }),
+    ]);
+    if (token !== pendingToken) return;
+    snapshot.value = statsResult as PreviewSnapshot;
+    iframeKey.value++;
+  } catch (e) {
+    console.error('Preview snapshot failed', e);
+    if (token === pendingToken) {
+      snapshot.value = null;
+      snapshotError.value = e instanceof Error ? e.message : String(e);
+    }
+  } finally {
+    if (token === pendingToken) snapshotLoading.value = false;
+  }
+}
+
+// Auto-refresh whenever a preview-affecting field changes. Debounced so
+// rapid changes (e.g. dragging a number input) coalesce into one worker
+// call. Preview is now ~15ms even on "everyone" scope after the bulk
+// living-derivation refactor, so auto-refresh no longer saturates the worker.
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+watch(
+  [focusPersonId, scopeMode, ancestors, descendants, excludeLiving, redactLiving, siteTitle],
+  () => {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => { refreshPreview(); }, 250);
+  },
+);
+
+// Default the subject to the database's tree subject and kick off the first
+// preview as soon as we have a focus.
 onMounted(async () => {
-  const id = await window.api.db.getSetting('default_person_id');
-  if (id) focusPersonId.value = id as string;
+  if (!focusPersonId.value) {
+    try {
+      const id = await window.api.db.getSetting('default_person_id') as string | null;
+      if (id) focusPersonId.value = id;
+    } catch (e) {
+      console.error('Failed to load default person', e);
+    }
+  }
+  if (canPreview.value) refreshPreview();
 });
 
 async function exportSite() {
@@ -143,63 +192,52 @@ async function exportSite() {
 
 <style scoped>
 .website-export-view {
-  padding: var(--space-xl);
-  max-width: 600px;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  gap: var(--space-xs);
+}
+.export-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
-.export-section {
+.view-header {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+  align-items: baseline;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-lg) var(--space-sm);
+  border-bottom: 1px solid var(--surface-border-subtle);
+  flex-shrink: 0;
 }
-.export-section h3 {
-  font-size: var(--font-md);
-  font-weight: 600;
-  margin: 0;
-}
-.hint, .success-hint {
+.view-header h2 { margin: 0; }
+.header-hint {
   font-size: var(--font-sm);
   color: var(--text-muted);
-  margin: 0;
 }
-.success-hint {
-  color: var(--success-text);
-}
-.error-hint {
-  color: var(--error-text);
-}
-.radio-label, .check-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  cursor: pointer;
-}
-.select-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-.field-label {
+.export-content {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
+  padding: var(--space-lg);
+  overflow: hidden;
 }
-.ep-input {
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-size: var(--font-base);
+.panel-drag-handle {
+  width: 6px;
+  background: var(--surface-border-subtle);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.1s;
 }
-.indent {
-  margin-left: var(--space-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.panel-drag-handle:hover { background: var(--surface-border); }
+.export-panel {
+  flex-shrink: 0;
+  height: 100%;
 }
 </style>

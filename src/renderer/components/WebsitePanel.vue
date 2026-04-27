@@ -1,0 +1,221 @@
+<template>
+  <div class="website-panel">
+
+    <div class="panel-header">
+      <div class="panel-title">{{ $t('htmlSite.title') }}</div>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- Subject -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('htmlSite.subject')" :collapsed="!open.subject" @toggle="toggleSection('subject')" />
+        <div v-if="open.subject" class="panel-section-body">
+          <PersonPicker :model-value="focusPersonId ?? null" @update:model-value="focusPersonId = $event" />
+          <p class="panel-hint">{{ $t('htmlSite.subjectHint') }}</p>
+        </div>
+      </div>
+
+      <!-- Scope -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('htmlSite.scope')" :collapsed="!open.scope" @toggle="toggleSection('scope')" />
+        <div v-if="open.scope" class="panel-section-body">
+          <label class="panel-radio">
+            <input type="radio" :checked="scopeMode === 'focus'" @change="scopeMode = 'focus'" />
+            {{ $t('htmlSite.scopeFocus') }}
+          </label>
+          <label class="panel-radio">
+            <input type="radio" :checked="scopeMode === 'everyone'" @change="scopeMode = 'everyone'" />
+            {{ $t('htmlSite.scopeEveryone') }}
+          </label>
+          <div v-if="scopeMode === 'focus'" class="panel-control">
+            <label class="panel-label">{{ $t('htmlSite.ancestors') }}</label>
+            <select :value="ancestors" class="panel-select" @change="ancestors = Number(($event.target as HTMLSelectElement).value)">
+              <option v-for="n in [3,4,5,6,7,8,9,10]" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </div>
+          <div v-if="scopeMode === 'focus'" class="panel-control">
+            <label class="panel-label">{{ $t('htmlSite.descendants') }}</label>
+            <select :value="descendants" class="panel-select" @change="descendants = Number(($event.target as HTMLSelectElement).value)">
+              <option v-for="n in [1,2,3,4,5,6]" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('htmlSite.privacy')" :collapsed="!open.privacy" @toggle="toggleSection('privacy')" />
+        <div v-if="open.privacy" class="panel-section-body">
+          <label class="panel-checkbox"><input type="checkbox" v-model="excludeLiving"> {{ $t('htmlSite.excludeLiving') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="redactLiving" :disabled="excludeLiving"> {{ $t('htmlSite.redactLiving') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="mediaPersonOnly"> {{ $t('htmlSite.mediaPersonOnly') }}</label>
+        </div>
+      </div>
+
+      <!-- Include -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('htmlSite.include')" :collapsed="!open.include" @toggle="toggleSection('include')" />
+        <div v-if="open.include" class="panel-section-body">
+          <label class="panel-checkbox"><input type="checkbox" v-model="includeMedia"> {{ $t('htmlSite.includeMedia') }}</label>
+        </div>
+      </div>
+
+      <!-- Site -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('htmlSite.site')" :collapsed="!open.site" @toggle="toggleSection('site')" />
+        <div v-if="open.site" class="panel-section-body">
+          <div class="panel-control">
+            <label class="panel-label">{{ $t('htmlSite.siteTitle') }}</label>
+            <input v-model="siteTitle" class="panel-input" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="panel-actions">
+      <AppButton
+        variant="primary"
+        class="panel-action-btn"
+        :disabled="exporting || !focusPersonId"
+        @click="$emit('export')"
+      >
+        {{ exporting ? $t('htmlSite.exporting') : $t('htmlSite.export') }}
+      </AppButton>
+      <p v-if="lastOutput" class="panel-success-hint">
+        {{ $t('htmlSite.exportedTo') }} <code>{{ lastOutput }}</code>
+      </p>
+      <p v-if="bundleMissing" class="panel-error-hint">
+        {{ $t('htmlSite.bundleMissing') }}
+      </p>
+    </div>
+
+  </div>
+</template>
+
+<script setup lang="ts">
+import SectionHeader from './ui/SectionHeader.vue';
+import AppButton from './ui/AppButton.vue';
+import PersonPicker from './PersonPicker.vue';
+import { usePanelSections } from '../composables/usePanelSections';
+
+const focusPersonId = defineModel<string | null>('focusPersonId');
+const scopeMode = defineModel<'focus' | 'everyone'>('scopeMode', { required: true });
+const ancestors = defineModel<number>('ancestors', { required: true });
+const descendants = defineModel<number>('descendants', { required: true });
+const excludeLiving = defineModel<boolean>('excludeLiving', { required: true });
+const redactLiving = defineModel<boolean>('redactLiving', { required: true });
+const mediaPersonOnly = defineModel<boolean>('mediaPersonOnly', { required: true });
+const includeMedia = defineModel<boolean>('includeMedia', { required: true });
+const siteTitle = defineModel<string>('siteTitle', { required: true });
+
+defineProps<{
+  exporting: boolean;
+  lastOutput: string | null;
+  bundleMissing: boolean;
+}>();
+
+defineEmits<{ export: [] }>();
+
+const { sections: open, toggleSection } = usePanelSections(
+  'website-panel-section-',
+  { subject: true, scope: true, privacy: true, include: true, site: true },
+);
+</script>
+
+<style scoped>
+.website-panel {
+  width: 100%;
+  height: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-sm);
+  overflow: hidden;
+}
+.panel-header {
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
+  border-bottom: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex-shrink: 0;
+}
+.panel-title { font-size: var(--font-md); font-weight: 600; color: var(--text-primary); }
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.panel-section { border-bottom: 1px solid var(--surface-border-subtle); padding: 0 var(--space-lg); }
+.panel-section:last-child { border-bottom: none; }
+.panel-section-body {
+  padding: var(--space-xs) 0 var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.panel-checkbox,
+.panel-radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.panel-checkbox input[type="checkbox"],
+.panel-radio input[type="radio"] {
+  accent-color: var(--accent);
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.panel-select,
+.panel-input {
+  width: 100%;
+  font-size: var(--font-sm);
+  padding: 3px var(--space-xs);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-bg);
+  color: var(--text-primary);
+}
+.panel-label {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  display: block;
+}
+.panel-control { display: flex; flex-direction: column; gap: 2px; }
+.panel-hint {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+.panel-actions {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-lg);
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  background: var(--surface);
+}
+.panel-action-btn { width: 100%; }
+.panel-success-hint {
+  font-size: var(--font-xs);
+  color: var(--success-text);
+  margin: 0;
+  word-break: break-all;
+}
+.panel-error-hint {
+  font-size: var(--font-xs);
+  color: var(--error-text);
+  margin: 0;
+}
+</style>

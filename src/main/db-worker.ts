@@ -28,6 +28,7 @@ import * as gazetteers from '../api/gazetteers';
 import { getDbSetting, setDbSetting, deleteDbSetting } from '../api/db_settings';
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
+import { buildPreview } from '../api/html_site/preview';
 
 if (!parentPort) throw new Error('db-worker must run in a worker thread');
 
@@ -352,6 +353,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   // Website export
   'website:buildSnapshot': (opts) => buildSnapshot(getDb(), opts),
+  'website:buildPreview': (opts) => buildPreview(getDb(), opts),
 };
 
 /** Channel names handled in this worker — imported by the coverage test. */
