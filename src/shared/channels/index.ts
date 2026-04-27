@@ -3,5 +3,6 @@
 import './persons';
 import './places';
 import './events';
+import './sources';
 export { defineChannel, channelRegistry, listChannels, getChannel } from './registry';
 export type { ChannelDef, WorkerChannelDef, MainChannelDef, ThreadMode, ChannelRegistry } from './types';
