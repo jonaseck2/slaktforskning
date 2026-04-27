@@ -6,7 +6,6 @@ import { startWorker, callWorker } from './worker-client';
 import { registerRelationshipHandlers } from './relationships';
 import { registerEventHandlers } from './events';
 import { registerSourceHandlers } from './sources';
-import { registerPlaceHandlers } from './places';
 import { registerImportHandlers } from './import';
 import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
@@ -33,7 +32,6 @@ export function registerIpcHandlers(): void {
   registerRelationshipHandlers(getDb, wrapHandler);
   registerEventHandlers(getDb, wrapHandler);
   registerSourceHandlers(getDb, wrapHandler);
-  registerPlaceHandlers(getDb, wrapHandler);
   registerImportHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerDatabaseHandlers(getDb, getCurrentDatabasePath, switchDatabase, loadSettings, wrapHandler);
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
