@@ -7,15 +7,11 @@ import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
 /**
- * Registers main-thread-only IPC handlers:
- *   - Checks → worker (checks:runAll, checks:forPerson, checks:forPlace, checks:forMedia
- *     stay in the legacy handlers table because they use worker-local state: checksRunId,
- *     importInProgress, and getDbDir() — these can't be expressed in the registry pattern)
- *   - chart:saveSvg, chart:savePdf, print:print, print:exportPdf, csv:export, export:openFolder
- *     use Electron dialog / BrowserWindow / fs and intentionally stay on the main thread.
- *
- * Groups, repositories, research_tasks, reports, and duplicates have been
- * migrated to src/shared/channels/ and are registered via the channel registry in index.ts.
+ * IPC channels that cannot fit the channel registry pattern:
+ *   - checks:* → forwarded to worker, but use worker-local state (checksRunId,
+ *     importInProgress, getDbDir()) not expressible in the registry
+ *   - chart:saveSvg, chart:savePdf, print:print, print:exportPdf, csv:export,
+ *     export:openFolder → require Electron dialog / BrowserWindow / fs
  */
 export function registerUtilityHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,

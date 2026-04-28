@@ -7,7 +7,6 @@ import { parentPort } from 'node:worker_threads';
 import * as nodePath from 'node:path';
 import * as nodeFs from 'node:fs';
 import { Database } from 'node-sqlite3-wasm';
-// Registry imports — channels registered here are dispatched before the legacy table
 import { channelRegistry } from '../shared/channels';
 import { initializeSchema } from '../api/schema';
 import { undoManager } from '../api/undo';
@@ -59,20 +58,10 @@ let checksRunId = 0;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handlers: Record<string, (...args: any[]) => unknown> = {
 
-  // Persons — migrated to registry (src/shared/channels/persons.ts)
+  // Channels that cannot fit the registry pattern because they need worker-local
+  // state (getDbDir(), checksRunId, importInProgress) or async yield loops.
 
-  // Events — migrated to registry (src/shared/channels/events.ts)
-
-  // Relationships — migrated to registry (src/shared/channels/relationships.ts)
-
-  // Sources & Citations — migrated to registry (src/shared/channels/sources.ts)
-
-  // Places — migrated to registry (src/shared/channels/places.ts)
-
-  // Gazetteers — migrated to registry (src/shared/channels/gazetteers.ts)
-
-  // Media (most channels migrated to registry — src/shared/channels/media.ts)
-  // These two remain here because they require getDbDir() (worker-local state):
+  // media:getFilePath and media:readAsDataUrl require getDbDir() (worker-local).
   'media:getFilePath': (id) => {
     const item = media.getMedia(getDb(), id);
     if (!item?.file_ref) return null;
@@ -93,25 +82,14 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     return `data:${mime};base64,${nodeFs.readFileSync(absPath).toString('base64')}`;
   },
 
-  // Media Regions — migrated to registry (src/shared/channels/media.ts)
-
-  // DB settings — migrated to registry (src/shared/channels/database.ts)
-
-  // Undo (partial — undo:state, beginGroup, endGroup migrated to registry)
-  // undo:undo and undo:redo remain here because they broadcast undo:changed
-  // to all BrowserWindows after the call (handled in ipc/database.ts).
+  // undo:undo and undo:redo: the actual undo/redo operations are dispatched here,
+  // but ipc/database.ts also broadcasts undo:changed after the call — that
+  // broadcast requires BrowserWindow access that can't live in the registry.
   'undo:undo': () => undoManager.undo(),
   'undo:redo': () => undoManager.redo(),
 
-  // Groups — migrated to registry (src/shared/channels/groups.ts)
-
-  // Repositories — migrated to registry (src/shared/channels/repositories.ts)
-
-  // Research tasks — migrated to registry (src/shared/channels/research-tasks.ts)
-
-  // Reports, duplicates — migrated to registry (src/shared/channels/reports.ts)
-
-  // Checks (async — yield between each check to stay responsive)
+  // checks: async with yield loop between each check (stays responsive during long runs);
+  // also uses checksRunId and importInProgress (worker-local cancellation state).
   'checks:runAll': async () => {
     if (importInProgress) {
       console.log('[worker] checks:runAll skipped — import in progress');
@@ -236,7 +214,7 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
 
   const { id, channel, args } = msg as CallMsg;
 
-  // Registry first — channels migrated to src/shared/channels/*.ts are dispatched here
+  // Registry channels (src/shared/channels/) are dispatched first.
   const regCh = channelRegistry[channel];
   if (regCh && regCh.thread === 'worker') {
     try {
@@ -248,7 +226,7 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
     return;
   }
 
-  // Legacy fallback — channels not yet migrated to registry
+  // Fallback: channels that remain outside the registry (worker-local state or async yield loops).
   const handler = handlers[channel];
   if (!handler) {
     parentPort!.postMessage({ id, error: `No worker handler for channel: ${channel}` });

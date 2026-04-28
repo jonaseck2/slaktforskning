@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.161.0 — IPC Channel Registry
+
+Replaced 3-layer string-keyed IPC channel boilerplate with a single typed registry under `src/shared/channels/`. Renderer's `window.api` is now typed for ~131 channels via `ApiSurface<typeof channelRegistry>`, eliminating loose `Record<string, …>` redeclarations across renderer files. Adding a new IPC channel is now one `defineChannel` entry instead of synchronized edits across `src/main/ipc/<domain>.ts`, `src/main/db-worker.ts`, and `src/preload/index.ts`. Tasks 1–8 across one branch.
+
+Internal refactor — no user-visible changes.
+
 ## Unreleased
 
 - feat(dev): hold-Alt component & i18n inspector in dev mode (v0.160.0). New `src/renderer/dev/component-inspector.ts` is wired in from `main.ts` behind `import.meta.env.DEV` so it's stripped from packaged builds. Holding Alt swaps the cursor to a crosshair and outlines whatever the user is hovering — a tooltip near the cursor names the nearest meaningful Vue component (skipping `RouterView`/`Transition`/etc.), shows the source file under `src/`, and lists any i18n keys whose translated value matches the hovered text (current locale + fallback, rebuilt when the locale changes). Clicking while Alt is held copies a paste-ready block (`Component: …`, `File: …`, `i18n: …`, `Text: …`) to the clipboard and shows a small toast — designed so users describing UI to Claude can paste an exact identifier instead of guessing what to call a panel/modal/section. Releasing Alt removes the overlay; no listeners fire on hover or click outside inspect mode. DOM is built via `replaceChildren` + `textContent` (no `innerHTML`).
