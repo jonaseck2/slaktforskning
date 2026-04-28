@@ -1,7 +1,15 @@
 // src/renderer/api.d.ts
 // Typed declaration for window.api, matching src/preload/index.ts exactly.
 // Do NOT import from this file — it augments the global Window interface automatically.
+//
+// Architecture note:
+// - Migrated domains (currently: persons) are typed via ApiSurface<typeof channelRegistry>.
+//   Adding a domain to src/shared/channels/index.ts automatically types it here.
+// - Not-yet-migrated domains stay explicitly typed below until they are migrated.
+// - LooseFallback catches any other unknown keys (e.g. third-party extensions).
 
+import type { ApiSurface } from '../../shared/channels/api-type';
+import type { channelRegistry } from '../../shared/channels/registry';
 import type {
   Person,
   PersonName,
@@ -21,6 +29,9 @@ import type {
   Media,
   MediaLink,
 } from '../../api/types';
+
+type Migrated = ApiSurface<typeof channelRegistry>;
+type LooseFallback = Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 
 export type PersonWithNames = Person & { given_name: string | null; surname: string | null };
 
@@ -42,7 +53,7 @@ export interface CheckResult {
 
 declare global {
   interface Window {
-    api: {
+    api: Migrated & LooseFallback & {
       persons: {
         create: (data: {
           sex?: 'M' | 'F' | 'U';

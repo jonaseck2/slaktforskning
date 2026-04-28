@@ -6,62 +6,19 @@ import type { CsvOptions } from '../../api/csv_export';
 import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
+/**
+ * IPC channels that cannot fit the channel registry pattern:
+ *   - checks:* → forwarded to worker, but use worker-local state (checksRunId,
+ *     importInProgress, getDbDir()) not expressible in the registry
+ *   - chart:saveSvg, chart:savePdf, print:print, print:exportPdf, csv:export,
+ *     export:openFolder → require Electron dialog / BrowserWindow / fs
+ */
 export function registerUtilityHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,
   getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
-  // Groups → worker
-  wrapHandler('groups:list', () => callWorker('groups:list'));
-  wrapHandler('groups:get', (...args) => callWorker('groups:get', ...args));
-  wrapHandler('groups:create', (...args) => callWorker('groups:create', ...args));
-  wrapHandler('groups:update', (...args) => callWorker('groups:update', ...args));
-  wrapHandler('groups:delete', (...args) => callWorker('groups:delete', ...args));
-  wrapHandler('groups:addLink', (...args) => callWorker('groups:addLink', ...args));
-  wrapHandler('groups:removeLink', (...args) => callWorker('groups:removeLink', ...args));
-  wrapHandler('groups:removeLinkByEntity', (...args) => callWorker('groups:removeLinkByEntity', ...args));
-  wrapHandler('groups:getLinks', (...args) => callWorker('groups:getLinks', ...args));
-  wrapHandler('groups:forPerson', (...args) => callWorker('groups:forPerson', ...args));
-  wrapHandler('groups:forPlace', (...args) => callWorker('groups:forPlace', ...args));
-  wrapHandler('groups:forMedia', (...args) => callWorker('groups:forMedia', ...args));
-
-  // Repositories → worker
-  wrapHandler('repositories:list', () => callWorker('repositories:list'));
-  wrapHandler('repositories:get', (...args) => callWorker('repositories:get', ...args));
-  wrapHandler('repositories:create', (...args) => callWorker('repositories:create', ...args));
-  wrapHandler('repositories:update', (...args) => callWorker('repositories:update', ...args));
-  wrapHandler('repositories:delete', (...args) => callWorker('repositories:delete', ...args));
-  wrapHandler('repositories:forSource', (...args) => callWorker('repositories:forSource', ...args));
-  wrapHandler('repositories:linkSource', (...args) => callWorker('repositories:linkSource', ...args));
-  wrapHandler('repositories:unlinkSource', (...args) => callWorker('repositories:unlinkSource', ...args));
-
-  // Research tasks → worker
-  wrapHandler('researchTasks:list', () => callWorker('researchTasks:list'));
-  wrapHandler('researchTasks:get', (...args) => callWorker('researchTasks:get', ...args));
-  wrapHandler('researchTasks:forPerson', (...args) => callWorker('researchTasks:forPerson', ...args));
-  wrapHandler('researchTasks:forPlace', (...args) => callWorker('researchTasks:forPlace', ...args));
-  wrapHandler('researchTasks:forMedia', (...args) => callWorker('researchTasks:forMedia', ...args));
-  wrapHandler('researchTasks:create', (...args) => callWorker('researchTasks:create', ...args));
-  wrapHandler('researchTasks:update', (...args) => callWorker('researchTasks:update', ...args));
-  wrapHandler('researchTasks:delete', (...args) => callWorker('researchTasks:delete', ...args));
-  wrapHandler('researchTasks:addLink', (...args) => callWorker('researchTasks:addLink', ...args));
-  wrapHandler('researchTasks:removeLink', (...args) => callWorker('researchTasks:removeLink', ...args));
-  wrapHandler('researchTasks:getLinks', (...args) => callWorker('researchTasks:getLinks', ...args));
-
-  // Report data → worker
-  wrapHandler('reports:personSummary', (...args) => callWorker('reports:personSummary', ...args));
-  wrapHandler('reports:familyUnit', (...args) => callWorker('reports:familyUnit', ...args));
-  wrapHandler('reports:ancestorTree', (...args) => callWorker('reports:ancestorTree', ...args));
-  wrapHandler('reports:placeHistory', (...args) => callWorker('reports:placeHistory', ...args));
-  wrapHandler('reports:researchGaps', (...args) => callWorker('reports:researchGaps', ...args));
-  wrapHandler('reports:timeline', (...args) => callWorker('reports:timeline', ...args));
-  wrapHandler('reports:aliveInYear', (...args) => callWorker('reports:aliveInYear', ...args));
-
-  // Duplicates → worker
-  wrapHandler('duplicates:find', (...args) => callWorker('duplicates:find', ...args));
-  wrapHandler('duplicates:merge', (...args) => callWorker('duplicates:merge', ...args));
-
-  // Checks → worker
+  // Checks → worker (stay in legacy dispatch table — worker-local state)
   wrapHandler('checks:runAll', () => callWorker('checks:runAll'));
   wrapHandler('checks:forPerson', (...args) => callWorker('checks:forPerson', ...args));
   wrapHandler('checks:forPlace', (...args) => callWorker('checks:forPlace', ...args));

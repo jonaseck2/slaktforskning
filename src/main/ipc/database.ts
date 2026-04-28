@@ -24,10 +24,7 @@ export function registerDatabaseHandlers(
       .map(p => ({ path: p, name: path.basename(p) }));
   });
 
-  // DB settings → worker
-  wrapHandler('db:getSetting', (...args) => callWorker('db:getSetting', ...args));
-  wrapHandler('db:setSetting', (...args) => callWorker('db:setSetting', ...args));
-  wrapHandler('db:deleteSetting', (...args) => callWorker('db:deleteSetting', ...args));
+  // db:getSetting, db:setSetting, db:deleteSetting migrated to registry (src/shared/channels/database.ts)
 
   wrapHandler('shell:open-external', (url) => {
     const urlStr = url as string;
@@ -109,7 +106,9 @@ export function registerDatabaseHandlers(
     return { success: true, path: backupPath };
   });
 
-  // Undo — worker holds undoManager; main thread broadcasts the change notification
+  // Undo — worker holds undoManager; undo:undo and undo:redo stay here because
+  // they broadcast undo:changed to all BrowserWindows after the call.
+  // undo:state, undo:beginGroup, undo:endGroup migrated to registry (src/shared/channels/undo.ts).
   wrapHandler('undo:undo', async () => {
     const label = await callWorker('undo:undo');
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('undo:changed'));
@@ -120,7 +119,4 @@ export function registerDatabaseHandlers(
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('undo:changed'));
     return label;
   });
-  wrapHandler('undo:state', () => callWorker('undo:state'));
-  wrapHandler('undo:beginGroup', (...args) => callWorker('undo:beginGroup', ...args));
-  wrapHandler('undo:endGroup', () => callWorker('undo:endGroup'));
 }

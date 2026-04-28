@@ -5,41 +5,38 @@ import * as media from '../../api/media';
 import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
-/** Derive the media folder name from the database filename: `foo.db` → `foo-media` */
+/**
+ * Derive the media folder name from the database filename: `foo.db` → `foo-media`.
+ * Exported for use by import.ts (archive import/export).
+ */
 export function mediaFolderName(dbPath: string): string {
   const dbName = path.basename(dbPath, path.extname(dbPath));
   return `${dbName}-media`;
 }
 
+/**
+ * Registers main-thread-only media IPC handlers.
+ *
+ * DB-backed media and mediaRegion channels (media:list, media:get, media:create, etc.)
+ * have been migrated to src/shared/channels/media.ts and are registered via the
+ * channel registry in index.ts.
+ *
+ * media:getFilePath and media:readAsDataUrl remain in the legacy dispatch table in
+ * db-worker.ts because they require getDbDir() (worker-local state).
+ *
+ * These two handlers stay on the main thread:
+ *   - media:attach — dialog + fs copy + media DB create (uses getDb() directly)
+ *   - media:openFile — shell.openPath for local file
+ */
 export function registerMediaHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,
   getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
-  // DB-only operations → worker
-  wrapHandler('media:list', () => callWorker('media:list'));
-  wrapHandler('media:listPage', (...args) => callWorker('media:listPage', ...args));
-  wrapHandler('media:get', (...args) => callWorker('media:get', ...args));
-  wrapHandler('media:create', (...args) => callWorker('media:create', ...args));
-  wrapHandler('media:delete', (...args) => callWorker('media:delete', ...args));
-  wrapHandler('media:update', (...args) => callWorker('media:update', ...args));
-  wrapHandler('media:forEntity', (...args) => callWorker('media:forEntity', ...args));
-  wrapHandler('media:linksForMedia', (...args) => callWorker('media:linksForMedia', ...args));
-  wrapHandler('media:addLink', (...args) => callWorker('media:addLink', ...args));
-  wrapHandler('media:removeLink', (...args) => callWorker('media:removeLink', ...args));
-  wrapHandler('media:reorder', (...args) => callWorker('media:reorder', ...args));
-  wrapHandler('media:profilePicRef', (...args) => callWorker('media:profilePicRef', ...args));
-  wrapHandler('media:profilePicRefs', (...args) => callWorker('media:profilePicRefs', ...args));
-  wrapHandler('media:getTimeline', (...args) => callWorker('media:getTimeline', ...args));
+  // Worker channels requiring getDbDir() — stay in legacy dispatch table, but
+  // wrapHandler registration still needed so ipcMain.handle is registered.
   wrapHandler('media:getFilePath', (...args) => callWorker('media:getFilePath', ...args));
   wrapHandler('media:readAsDataUrl', (...args) => callWorker('media:readAsDataUrl', ...args));
-
-  // Media Regions → worker
-  wrapHandler('mediaRegions:create', (...args) => callWorker('mediaRegions:create', ...args));
-  wrapHandler('mediaRegions:getForMedia', (...args) => callWorker('mediaRegions:getForMedia', ...args));
-  wrapHandler('mediaRegions:getForPerson', (...args) => callWorker('mediaRegions:getForPerson', ...args));
-  wrapHandler('mediaRegions:update', (...args) => callWorker('mediaRegions:update', ...args));
-  wrapHandler('mediaRegions:delete', (...args) => callWorker('mediaRegions:delete', ...args));
 
   // Electron-specific operations — stay on main thread
   wrapHandler('media:attach', async (data) => {
