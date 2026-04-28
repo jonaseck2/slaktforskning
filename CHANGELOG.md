@@ -1,6 +1,10 @@
 # Changelog
 
-## v0.161.0 — IPC Channel Registry
+## v0.162.1 — Preload regression fix
+
+Task 8's preload cleanup made `src/preload/index.ts` import the channel registry barrel (`src/shared/channels/index.ts`) and derive `window.api` from a registry walk. That import transitively dragged the entire `src/api/` layer into the preload bundle — most damagingly `src/api/place-gazetteers/bundled.ts` and its 27 static JSON imports (~42 MB). Rollup OOM'd at ~4 GB on `npm start` / `dev-debug.sh`, and even with externalization the preload bundle hit 25 MB and the Electron preload sandbox blocked the runtime `require()` calls. Reverted the preload to the pre-Task-8 hand-written inline declarations (matches what was working before the refactor — 288 lines, ~11 KB bundle, no `src/api/` imports). The registry still drives main and worker; `window.api` types in the renderer are still derived from `ApiSurface<typeof channelRegistry>` since that derivation is type-only and independent of the preload runtime shape.
+
+## v0.162.0 — IPC Channel Registry
 
 Replaced 3-layer string-keyed IPC channel boilerplate with a single typed registry under `src/shared/channels/`. Renderer's `window.api` is now typed for ~131 channels via `ApiSurface<typeof channelRegistry>`, eliminating loose `Record<string, …>` redeclarations across renderer files. Adding a new IPC channel is now one `defineChannel` entry instead of synchronized edits across `src/main/ipc/<domain>.ts`, `src/main/db-worker.ts`, and `src/preload/index.ts`. Tasks 1–8 across one branch.
 
