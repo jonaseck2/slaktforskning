@@ -44,11 +44,13 @@ export function computeSquareCropRectPx(
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    // Set crossOrigin only for sources where CORS actually works. file://
-    // doesn't support CORS at all in Chromium; setting the attribute there
-    // blocks the load entirely. data:/blob:/relative-under-http(s) load
-    // cleanly with anonymous CORS.
-    if (!src.startsWith('file:')) {
+    // Set crossOrigin only when CORS actually works. file:// doesn't support
+    // CORS in Chromium — setting the attribute blocks the load entirely.
+    // Detect via the page origin (window.location.protocol) since relative
+    // srcs like "./media/full/x.jpg" don't start with "file:" but resolve to
+    // file:// URLs when the SPA is opened directly (no web server).
+    const onFileOrigin = typeof window !== 'undefined' && window.location.protocol === 'file:';
+    if (!onFileOrigin && !src.startsWith('file:')) {
       img.crossOrigin = 'anonymous';
     }
     img.onload = () => resolve(img);

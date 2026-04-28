@@ -19,7 +19,13 @@
         :attribution="tileAttribution"
         layer-type="base"
       />
-      <slot />
+      <!-- Gate vector-layer children until the map's canvas renderer is
+           initialized. Otherwise the first child (LCircleMarker, LPolyline,
+           LGeoJson…) can mount before Leaflet sets up the canvas 2D context,
+           and the next-frame _redraw throws "Cannot read properties of
+           undefined (reading 'clearRect')". Hits hardest when opening the
+           exported static site under file:// in plain Chrome. -->
+      <slot v-if="mapReady" />
     </LMap>
 
     <ZoomControls
@@ -72,6 +78,7 @@ const emit = defineEmits<{
 }>();
 
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const mapReady = ref(false);
 const maxZoom = 18;
 
 // In static mode (file://), OSM blocks tile requests without a referrer.
@@ -98,6 +105,9 @@ function onMapReady() {
       setupSmoothWheel(map);
     }
   }
+  // Open the slot on the next tick — by then Leaflet has finished
+  // _initContainer for the canvas renderer and _ctx is set.
+  nextTick(() => { mapReady.value = true; });
   emit('ready');
 }
 
