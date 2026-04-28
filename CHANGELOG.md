@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.162.4 — Polymorphic link helpers (api/ cleanup)
+
+Collapsed 11 near-identical "get linked entities" SQL queries into 2 helpers in `src/api/links.ts` (`getLinkedEntities` for the polymorphic `group_links` / `task_links` tables, `getCitationsByOwner` for the citations FK columns). The 11 per-entity functions (`getCitationsForPerson/Place/Event/Relationship/Source`, `getGroupsForPerson/Place/Media`, `getResearchTasksForPerson/Place/Media`) stay as 1-line wrappers so MCP tools and IPC handlers don't need updating. Pure deletion / consolidation — no new abstraction layer for callers, no behaviour change. `getMediaForEntity` left alone because it returns extra link-table columns and is the only function in its pattern.
+
 ## v0.162.3 — Stale-load race fix in panels and sections
 
 Closes a race condition that affected every entity panel and most self-loading sections: when a user clicked rapidly between persons / places / sources / relationships / groups / research tasks / media, a slow `load(A)` could overwrite a fast `load(B)` and the panel would show A's data while B was selected. Added a small `useEntityData` composable (generation counter; stale results dropped) and migrated the 10 sections (`EventList`, `PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `PersonRelationshipsSection`, `PersonNotesSection`, `PlaceChecksSection`, `PlaceCitationsSection`, `PlacePersonsSection`, `MediaChecksSection`) and 6 panels (`PlacePanel`, `SourcePanel`, `RelationshipPanel`, `GroupPanel`, `ResearchTaskPanel`, `MediaPanel`) to use it. `PersonPanel` already had its own guarded loader. Editable-field state and section-collapse state untouched.

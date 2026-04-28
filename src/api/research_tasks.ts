@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { LinkEntityType, ResearchTask, ResearchTaskStatus, TaskLink } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { getLinkedEntities } from './links';
 
 export function createResearchTask(db: Database, data: {
   priority?: number;
@@ -29,31 +30,23 @@ export function listResearchTasks(db: Database): ResearchTask[] {
   return queryAll<ResearchTask>(db, 'SELECT * FROM research_tasks ORDER BY priority DESC, created_at');
 }
 
+const TASK_LINK_CONFIG = {
+  linkTable: 'task_links',
+  parentTable: 'research_tasks',
+  parentFk: 'task_id',
+  orderBy: 'rt.priority DESC, rt.created_at',
+} as const;
+
 export function getResearchTasksForPerson(db: Database, personId: string): ResearchTask[] {
-  return queryAll<ResearchTask>(db, `
-    SELECT rt.* FROM research_tasks rt
-    JOIN task_links tl ON tl.task_id = rt.id
-    WHERE tl.entity_type = 'person' AND tl.entity_id = ?
-    ORDER BY rt.priority DESC, rt.created_at
-  `, [personId]);
+  return getLinkedEntities<ResearchTask>(db, TASK_LINK_CONFIG, 'person', personId);
 }
 
 export function getResearchTasksForPlace(db: Database, placeId: string): ResearchTask[] {
-  return queryAll<ResearchTask>(db, `
-    SELECT rt.* FROM research_tasks rt
-    JOIN task_links tl ON tl.task_id = rt.id
-    WHERE tl.entity_type = 'place' AND tl.entity_id = ?
-    ORDER BY rt.priority DESC, rt.created_at
-  `, [placeId]);
+  return getLinkedEntities<ResearchTask>(db, TASK_LINK_CONFIG, 'place', placeId);
 }
 
 export function getResearchTasksForMedia(db: Database, mediaId: string): ResearchTask[] {
-  return queryAll<ResearchTask>(db, `
-    SELECT rt.* FROM research_tasks rt
-    JOIN task_links tl ON tl.task_id = rt.id
-    WHERE tl.entity_type = 'media' AND tl.entity_id = ?
-    ORDER BY rt.priority DESC, rt.created_at
-  `, [mediaId]);
+  return getLinkedEntities<ResearchTask>(db, TASK_LINK_CONFIG, 'media', mediaId);
 }
 
 export function updateResearchTask(db: Database, id: string, data: {

@@ -2,6 +2,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Source, Citation } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { getCitationsByOwner } from './links';
 
 export function createSource(
   db: Database,
@@ -86,23 +87,23 @@ export function getCitation(db: Database, id: string): Citation | null {
 }
 
 export function getCitationsForSource(db: Database, sourceId: string): Citation[] {
-  return queryAll<Citation>(db, `SELECT * FROM citations WHERE source_id = ?`, [sourceId]);
+  return getCitationsByOwner<Citation>(db, 'source', sourceId);
 }
 
 export function getCitationsForEvent(db: Database, eventId: string): Citation[] {
-  return queryAll<Citation>(db, `SELECT * FROM citations WHERE event_id = ?`, [eventId]);
+  return getCitationsByOwner<Citation>(db, 'event', eventId);
 }
 
 export function getCitationsForPerson(db: Database, personId: string): Citation[] {
-  return queryAll<Citation>(db, `SELECT * FROM citations WHERE person_id = ?`, [personId]);
+  return getCitationsByOwner<Citation>(db, 'person', personId);
 }
 
 export function getCitationsForRelationship(db: Database, relationshipId: string): Citation[] {
-  return queryAll<Citation>(db, `SELECT * FROM citations WHERE relationship_id = ?`, [relationshipId]);
+  return getCitationsByOwner<Citation>(db, 'relationship', relationshipId);
 }
 
 export function getCitationsForPlace(db: Database, placeId: string): Citation[] {
-  return queryAll<Citation>(db, `SELECT * FROM citations WHERE place_id = ?`, [placeId]);
+  return getCitationsByOwner<Citation>(db, 'place', placeId);
 }
 
 export function deleteCitation(db: Database, id: string): boolean {
