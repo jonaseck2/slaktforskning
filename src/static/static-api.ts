@@ -191,7 +191,8 @@ function mediaUrl(m: Media | undefined): string | null {
   return `./media/full/${m.id}${ext}`;
 }
 
-export function installStaticApiWith(snapshot: Snapshot): void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   const idx = buildIndices(snapshot);
 
   const personsWithNames = snapshot.persons.map(p => {
@@ -317,7 +318,10 @@ export function installStaticApiWith(snapshot: Snapshot): void {
     get: noop,
     getMembers: async () => [],
     forPerson: async () => [],
+    forPlace: async () => [],
+    forMedia: async () => [],
     create: noop, update: noop, delete: noopFalse, addMember: noop, removeMember: noopFalse,
+    addLink: noop, removeLink: noopFalse, removeLinkByEntity: noopFalse, getLinks: async () => [],
   };
 
   const repositories = {
@@ -331,7 +335,10 @@ export function installStaticApiWith(snapshot: Snapshot): void {
     list: async () => [],
     get: noop,
     forPerson: async () => [],
+    forPlace: async () => [],
+    forMedia: async () => [],
     create: noop, update: noop, delete: noopFalse,
+    addLink: noop, removeLink: noopFalse, getLinks: async () => [],
   };
 
   const reports = {
@@ -411,11 +418,14 @@ export function installStaticApiWith(snapshot: Snapshot): void {
     onPerformed: () => {},
     onChanged: () => {},
     undo: noopVoid, redo: noopVoid,
+    // 'undo:state' is the IPC channel name; preload exposes it as getState — both are stubs here.
+    state: async () => ({ canUndo: false, canRedo: false, undoLabel: null, redoLabel: null }),
     getState: async () => ({ canUndo: false, canRedo: false, undoLabel: null, redoLabel: null }),
     beginGroup: noopVoid, endGroup: noopVoid,
   };
 
-  const shell = { openExternal: noopVoid };
+  // 'open-external' matches the IPC channel name 'shell:open-external'; openExternal is the preload alias.
+  const shell = { openExternal: noopVoid, 'open-external': noopVoid };
   const exportApi = { openFolder: noopVoid };
   const printApi = { print: noopVoid, exportPdf: noop };
   const csv = { export: noop };
@@ -439,13 +449,17 @@ export function installStaticApiWith(snapshot: Snapshot): void {
     onFocusPerson: () => {}, onGetLayout: () => {}, removeAllChartHandlers: () => {},
   };
 
-  (globalThis as { api: unknown }).api = {
+  return {
     persons, places, events, eventParticipants, sources, citations, relationships,
     groups, repositories, researchTasks, reports, checks, media, mediaRegions,
     db, undo, shell, export: exportApi, print: printApi, csv, backup, gazetteers,
     duplicates, gedcom, import: importApi, archive, website, chart,
     onDataChanged: () => {},
   };
+}
+
+export function installStaticApiWith(snapshot: Snapshot): void {
+  (globalThis as { api: unknown }).api = buildStaticApi(snapshot);
 }
 
 export async function installStaticApi(): Promise<void> {
