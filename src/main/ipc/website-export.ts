@@ -88,7 +88,9 @@ export function registerWebsiteExportHandlers(): void {
       media: Array<{ id: string; file_ref: string | null }>;
       mediaLinks: Array<{ media_id: string }>;
       mediaRegions: Array<{ media_id: string }>;
+      settings: Record<string, string>;
     };
+    const totalMediaInScope = snapshot.media.length;
     const previewMediaDataUrls = await buildPreviewThumbnails(snapshot.media);
     // Trim the snapshot's media (and dependent rows) to the items we actually
     // inlined. The static SPA can't reach the user's local files, so anything
@@ -98,6 +100,13 @@ export function registerWebsiteExportHandlers(): void {
     snapshot.mediaLinks = snapshot.mediaLinks.filter(ml => inlinedIds.has(ml.media_id));
     snapshot.mediaRegions = snapshot.mediaRegions.filter(r => inlinedIds.has(r.media_id));
     snapshot.meta = { ...snapshot.meta, previewMediaDataUrls };
+    // Surface the cap to the static SPA so MediaView can show a "preview
+    // limited to N images" notice. Read via window.api.db.getSetting().
+    snapshot.settings = {
+      ...snapshot.settings,
+      preview_media_limit: String(PREVIEW_THUMB_COUNT),
+      preview_media_total_linked: String(totalMediaInScope),
+    };
     return await buildPreviewHtml(snapshot);
   });
 
