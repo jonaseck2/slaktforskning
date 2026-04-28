@@ -122,6 +122,7 @@ import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -154,45 +155,43 @@ const { sections, toggleSection } = usePanelSections(
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-const group = ref<GroupData | null>(null);
-const links = ref<Link[]>([]);
 const showPicker = reactive({ person: false, place: false, media: false });
+const editFields = reactive({ name: '', notes: '' });
+
+// ── Data (race-safe load) ────────────────────────────────────────────────────
+
+interface GroupPanelData {
+  group: GroupData | null;
+  links: Link[];
+}
+
+const idRef = computed(() => props.groupId ?? null);
+const { data: panelData, reload } = useEntityData<GroupPanelData>(idRef, async (id) => {
+  try {
+    const g = await window.api.groups.get(id) as GroupData | null;
+    if (!g) return { group: null, links: [] };
+    const raw = await window.api.groups.getLinks(id) as Link[];
+    return { group: g, links: raw };
+  } catch (err) {
+    console.error('[GroupPanel] load failed:', err);
+    toast.error(t('errors.loadFailed'));
+    return { group: null, links: [] };
+  }
+});
+
+const group = computed(() => panelData.value?.group ?? null);
+const links = computed(() => panelData.value?.links ?? []);
 
 const personLinks = computed(() => links.value.filter(l => l.entity_type === 'person'));
 const placeLinks = computed(() => links.value.filter(l => l.entity_type === 'place'));
 const mediaLinks = computed(() => links.value.filter(l => l.entity_type === 'media'));
 
-const editFields = reactive({ name: '', notes: '' });
-
-// ── Loaders ─────────────────────────────────────────────────────────────────
-
-async function load(id: string | null) {
-  if (!id) {
-    group.value = null;
-    links.value = [];
-    return;
-  }
-  try {
-    const g = await window.api.groups.get(id) as GroupData | null;
-    if (props.groupId !== id) return;
-    group.value = g;
-    if (!g) return;
-    editFields.name = g.name ?? '';
-    editFields.notes = g.notes ?? '';
-    await loadLinks(id);
-  } catch (err) {
-    console.error('[GroupPanel] load failed:', err);
-    toast.error(t('errors.loadFailed'));
-  }
-}
-
-async function loadLinks(id: string) {
-  const raw = await window.api.groups.getLinks(id) as Link[];
-  if (props.groupId !== id) return;
-  links.value = raw;
-}
-
-watch(() => props.groupId, load, { immediate: true });
+// Keep editFields in sync when group data changes
+watch(group, (g) => {
+  if (!g) return;
+  editFields.name = g.name ?? '';
+  editFields.notes = g.notes ?? '';
+}, { immediate: true });
 
 // ── Field updates ───────────────────────────────────────────────────────────
 
@@ -222,7 +221,7 @@ async function addLink(entityType: 'person' | 'place' | 'media', entityId: strin
   try {
     await window.api.groups.addLink(props.groupId, entityType, entityId);
     showPicker[entityType] = false;
-    await loadLinks(props.groupId);
+    await reload();
   } catch (err) {
     console.error('[GroupPanel] addLink failed:', err);
     toast.error(t('errors.saveFailed'));
@@ -233,7 +232,7 @@ async function removeLink(linkId: string) {
   if (!props.groupId) return;
   try {
     await window.api.groups.removeLink(linkId);
-    await loadLinks(props.groupId);
+    await reload();
   } catch (err) {
     console.error('[GroupPanel] removeLink failed:', err);
     toast.error(t('errors.deleteFailed'));
