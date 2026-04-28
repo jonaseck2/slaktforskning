@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.162.5 — Polymorphic link helpers (api/ cleanup)
+
+Collapsed 11 near-identical "get linked entities" SQL queries into 2 helpers in `src/api/links.ts` (`getLinkedEntities` for the polymorphic `group_links` / `task_links` tables, `getCitationsByOwner` for the citations FK columns). The 11 per-entity functions (`getCitationsForPerson/Place/Event/Relationship/Source`, `getGroupsForPerson/Place/Media`, `getResearchTasksForPerson/Place/Media`) stay as 1-line wrappers so MCP tools and IPC handlers don't need updating. Pure deletion / consolidation — no new abstraction layer for callers, no behaviour change. `getMediaForEntity` left alone because it returns extra link-table columns and is the only function in its pattern.
+
 ## Unreleased
 
 - fix(website-export): static site no longer ships broken-image entries for media whose source files are missing (v0.162.4). The export wrote `data.js` first and copied media files second, with `fsp.access` / `fsp.copyFile` failures silently dropping individual files. The snapshot kept the metadata, so the static SPA happily built `./media/full/<id>.<ext>` URLs for files that never made it into the bundle, and the gallery showed broken thumbnails. Reordered: copy first while tracking `exportedMediaIds`, then prune `snapshot.media` / `mediaLinks` / `mediaRegions` to that set before serializing. `includeMedia=false` also clears the three arrays so disabling media doesn't leak dead references either.
