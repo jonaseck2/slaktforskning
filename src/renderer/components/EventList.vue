@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -83,6 +83,7 @@ import ConfirmModal from './ConfirmModal.vue';
 import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { suggestNextEventType } from '../utils/eventDefaults';
+import { useEntityData } from '../composables/useEntityData';
 
 interface EventRow {
   id: string;
@@ -110,7 +111,6 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const toast = useToast();
-const events = ref<EventRow[]>([]);
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
 const smartDefaultsEnabled = ref(true);
@@ -130,21 +130,25 @@ async function loadSmartDefaultsSetting() {
   }
 }
 
-async function load() {
-  if (!window.api) return;
+const idRef = computed(() => props.personId ?? props.relationshipId ?? props.placeId ?? null);
+const { data: eventsData, reload } = useEntityData<EventRow[]>(idRef, async (_id) => {
+  if (!window.api) return [];
   try {
     if (props.personId) {
-      events.value = (await window.api.events.forPerson(props.personId)) as EventRow[];
+      return (await window.api.events.forPerson(props.personId)) as EventRow[];
     } else if (props.relationshipId) {
-      events.value = (await window.api.events.forRelationship(props.relationshipId)) as EventRow[];
+      return (await window.api.events.forRelationship(props.relationshipId)) as EventRow[];
     } else if (props.placeId) {
-      events.value = (await window.api.events.forPlace(props.placeId)) as EventRow[];
+      return (await window.api.events.forPlace(props.placeId)) as EventRow[];
     }
+    return [];
   } catch (err) {
     console.error('[EventList] load failed:', err);
     toast.error(t('errors.loadFailed'));
+    return [];
   }
-}
+});
+const events = computed(() => eventsData.value ?? []);
 
 function formatDate(event: EventRow): string {
   if (event.date_original) return event.date_original;
@@ -172,7 +176,7 @@ const del = useDeleteConfirm<string>(async (id) => {
   if (!window.api) return;
   try {
     await window.api.events.delete(id);
-    await load();
+    await reload();
   } catch (err) {
     console.error('[EventList] removeEvent failed:', err);
     toast.error(t('errors.deleteFailed'));
@@ -187,17 +191,11 @@ function closeForm() {
 
 function onSaved() {
   closeForm();
-  load();
+  reload();
 }
 
 // Load smart defaults once — it's a global setting that never changes between person switches.
 onMounted(loadSmartDefaultsSetting);
-
-watch(
-  () => props.personId ?? props.relationshipId ?? props.placeId,
-  load,
-  { immediate: true }
-);
 
 const defaultEventType = ref('');
 
@@ -214,7 +212,7 @@ function openAddForm(eventType?: string) {
   showForm.value = true;
 }
 
-defineExpose({ reload: load, openAddForm, count: computed(() => events.value.length) });
+defineExpose({ reload, openAddForm, count: computed(() => events.value.length) });
 </script>
 
 <style scoped>

@@ -259,6 +259,7 @@ import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { usePanelSections } from '../composables/usePanelSections';
 import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
 import { useProfilePicStore } from '../stores/profilePic';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -312,14 +313,6 @@ const emit = defineEmits<{
   'open-viewer': [];
 }>();
 
-const media = ref<MediaData | null>(null);
-const loading = ref(false);
-const thumbnailSrc = ref<string | null>(null);
-const linkedPersons = ref<LinkedEntity[]>([]);
-const linkedPlaces = ref<LinkedEntity[]>([]);
-const linkedEvents = ref<LinkedEntity[]>([]);
-const regions = ref<RegionData[]>([]);
-const regionIsProfile = ref<Record<string, boolean>>({});
 const checksSectionRef = ref<InstanceType<typeof MediaChecksSection> | null>(null);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const showPersonPicker = ref(false);
@@ -336,6 +329,142 @@ const { sections, toggleSection } = usePanelSections(
   { notes: false, persons: true, places: true, events: false, faceTags: false, quality: false },
   { notes: true, persons: true, places: true, events: true, faceTags: true, quality: false },
 );
+
+// ── Data (race-safe load) ────────────────────────────────────────────────────
+
+interface MediaPanelData {
+  media: MediaData | null;
+  thumbnailSrc: string | null;
+  linkedPersons: LinkedEntity[];
+  linkedPlaces: LinkedEntity[];
+  linkedEvents: LinkedEntity[];
+  regions: RegionData[];
+  regionIsProfile: Record<string, boolean>;
+}
+
+const idRef = computed(() => props.mediaId ?? null);
+const { data: panelData, loading, reload } = useEntityData<MediaPanelData>(idRef, async (id) => {
+  const m = await window.api.media.get(id) as MediaData | null;
+  if (!m) return { media: null, thumbnailSrc: null, linkedPersons: [], linkedPlaces: [], linkedEvents: [], regions: [], regionIsProfile: {} };
+
+  let thumbnailSrc: string | null = null;
+  if (m.format && IMAGE_FORMATS.has(m.format.toLowerCase())) {
+    thumbnailSrc = await window.api.media.readAsDataUrl(id) as string | null;
+  }
+
+  // Load links
+  const links = await window.api.media.linksForMedia(id) as Array<{
+    id: string;
+    entity_type: string;
+    entity_id: string;
+  }>;
+
+  const persons: LinkedEntity[] = [];
+  const places: LinkedEntity[] = [];
+  const events: LinkedEntity[] = [];
+
+  for (const link of links) {
+    const label = await resolveEntityLabel(link.entity_type, link.entity_id);
+    let givenName = '';
+    let surname = '';
+    let sex: 'M' | 'F' | 'U' = 'U';
+
+    if (link.entity_type === 'person') {
+      try {
+        const p = await window.api.persons.get(link.entity_id) as { sex?: string } | null;
+        if (p) {
+          sex = (p.sex as 'M' | 'F' | 'U') || 'U';
+        }
+        const names = await window.api.persons.getNames(link.entity_id) as Array<{
+          given_name?: string; surname?: string; sort_order: number;
+        }>;
+        if (names.length > 0) {
+          const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+          givenName = primary.given_name || '';
+          surname = primary.surname || '';
+        }
+      } catch { /* ignore */ }
+    }
+
+    const entity: LinkedEntity = {
+      linkId: link.id,
+      entityType: link.entity_type,
+      entityId: link.entity_id,
+      label,
+      givenName,
+      surname,
+      sex,
+    };
+
+    if (link.entity_type === 'person') persons.push(entity);
+    else if (link.entity_type === 'place') places.push(entity);
+    else if (link.entity_type === 'event') events.push(entity);
+  }
+
+  // Load face tag regions
+  const regs = await window.api.mediaRegions.getForMedia(id) as Array<{
+    id: string;
+    person_id: string | null;
+    label: string | null;
+  }>;
+
+  const enrichedRegions: RegionData[] = [];
+  for (const r of regs) {
+    let personName = '';
+    let personGivenName = '';
+    let personSurname = '';
+    let personSex: 'M' | 'F' | 'U' = 'U';
+    if (r.person_id) {
+      try {
+        personName = await resolvePersonDisplayName(r.person_id);
+        const p = await window.api.persons.get(r.person_id) as { sex?: string } | null;
+        if (p) {
+          personSex = (p.sex as 'M' | 'F' | 'U') || 'U';
+        }
+        const names = await window.api.persons.getNames(r.person_id) as Array<{
+          given_name?: string; surname?: string; sort_order: number;
+        }>;
+        if (names.length > 0) {
+          const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+          personGivenName = primary.given_name || '';
+          personSurname = primary.surname || '';
+        }
+      } catch { /* ignore */ }
+    }
+    enrichedRegions.push({
+      id: r.id,
+      person_id: r.person_id,
+      label: r.label,
+      personName,
+      personGivenName,
+      personSurname,
+      personSex,
+    });
+  }
+
+  const tagged = enrichedRegions.filter(r => r.person_id);
+  const profileResults = await Promise.all(
+    tagged.map(r => isMediaPersonProfile(r.person_id!, id).then(v => [r.id, v] as const))
+  );
+  const regionIsProfile = Object.fromEntries(profileResults);
+
+  return { media: m, thumbnailSrc, linkedPersons: persons, linkedPlaces: places, linkedEvents: events, regions: enrichedRegions, regionIsProfile };
+});
+
+const media = computed(() => panelData.value?.media ?? null);
+const thumbnailSrc = computed(() => panelData.value?.thumbnailSrc ?? null);
+const linkedPersons = computed(() => panelData.value?.linkedPersons ?? []);
+const linkedPlaces = computed(() => panelData.value?.linkedPlaces ?? []);
+const linkedEvents = computed(() => panelData.value?.linkedEvents ?? []);
+const regions = computed(() => panelData.value?.regions ?? []);
+const regionIsProfile = computed(() => panelData.value?.regionIsProfile ?? {});
+
+// Sync editable drafts + auto-open notes section when media changes
+watch(media, (m) => {
+  titleDraft.value = m?.title ?? '';
+  notesDraft.value = m?.notes ?? '';
+  if (m?.notes) sections.notes = true;
+}, { immediate: true });
 
 async function resolveEntityLabel(entityType: string, entityId: string): Promise<string> {
   try {
@@ -355,147 +484,6 @@ async function resolveEntityLabel(entityType: string, entityId: string): Promise
   return entityType + ':' + entityId;
 }
 
-async function computeRegionProfileState() {
-  const mediaId = props.mediaId;
-  if (!mediaId) {
-    regionIsProfile.value = {};
-    return;
-  }
-  const tagged = regions.value.filter(r => r.person_id);
-  const results = await Promise.all(
-    tagged.map(r => isMediaPersonProfile(r.person_id!, mediaId).then(v => [r.id, v] as const))
-  );
-  regionIsProfile.value = Object.fromEntries(results);
-}
-
-async function load() {
-  if (!props.mediaId) {
-    media.value = null;
-    thumbnailSrc.value = null;
-    titleDraft.value = '';
-    notesDraft.value = '';
-    linkedPersons.value = [];
-    linkedPlaces.value = [];
-    linkedEvents.value = [];
-    regions.value = [];
-    regionIsProfile.value = {};
-    return;
-  }
-
-  loading.value = true;
-  try {
-    const m = await window.api.media.get(props.mediaId) as MediaData | null;
-    media.value = m;
-    titleDraft.value = m?.title ?? '';
-    notesDraft.value = m?.notes ?? '';
-    if (m?.notes) sections.notes = true;
-
-    if (m && m.format && IMAGE_FORMATS.has(m.format.toLowerCase())) {
-      const url = await window.api.media.readAsDataUrl(props.mediaId) as string | null;
-      thumbnailSrc.value = url;
-    } else {
-      thumbnailSrc.value = null;
-    }
-
-    // Load links
-    const links = await window.api.media.linksForMedia(props.mediaId) as Array<{
-      id: string;
-      entity_type: string;
-      entity_id: string;
-    }>;
-
-    const persons: LinkedEntity[] = [];
-    const places: LinkedEntity[] = [];
-    const events: LinkedEntity[] = [];
-
-    for (const link of links) {
-      const label = await resolveEntityLabel(link.entity_type, link.entity_id);
-      let givenName = '';
-      let surname = '';
-      let sex: 'M' | 'F' | 'U' = 'U';
-
-      if (link.entity_type === 'person') {
-        try {
-          const p = await window.api.persons.get(link.entity_id) as { sex?: string } | null;
-          if (p) {
-            sex = (p.sex as 'M' | 'F' | 'U') || 'U';
-          }
-          const names = await window.api.persons.getNames(link.entity_id) as Array<{
-            given_name?: string; surname?: string; sort_order: number;
-          }>;
-          if (names.length > 0) {
-            const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
-            givenName = primary.given_name || '';
-            surname = primary.surname || '';
-          }
-        } catch { /* ignore */ }
-      }
-
-      const entity: LinkedEntity = {
-        linkId: link.id,
-        entityType: link.entity_type,
-        entityId: link.entity_id,
-        label,
-        givenName,
-        surname,
-        sex,
-      };
-
-      if (link.entity_type === 'person') persons.push(entity);
-      else if (link.entity_type === 'place') places.push(entity);
-      else if (link.entity_type === 'event') events.push(entity);
-    }
-
-    linkedPersons.value = persons;
-    linkedPlaces.value = places;
-    linkedEvents.value = events;
-
-    // Load face tag regions
-    const regs = await window.api.mediaRegions.getForMedia(props.mediaId) as Array<{
-      id: string;
-      person_id: string | null;
-      label: string | null;
-    }>;
-
-    const enrichedRegions: RegionData[] = [];
-    for (const r of regs) {
-      let personName = '';
-      let personGivenName = '';
-      let personSurname = '';
-      let personSex: 'M' | 'F' | 'U' = 'U';
-      if (r.person_id) {
-        try {
-          personName = await resolvePersonDisplayName(r.person_id);
-          const p = await window.api.persons.get(r.person_id) as { sex?: string } | null;
-          if (p) {
-            personSex = (p.sex as 'M' | 'F' | 'U') || 'U';
-          }
-          const names = await window.api.persons.getNames(r.person_id) as Array<{
-            given_name?: string; surname?: string; sort_order: number;
-          }>;
-          if (names.length > 0) {
-            const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
-            personGivenName = primary.given_name || '';
-            personSurname = primary.surname || '';
-          }
-        } catch { /* ignore */ }
-      }
-      enrichedRegions.push({
-        id: r.id,
-        person_id: r.person_id,
-        label: r.label,
-        personName,
-        personGivenName,
-        personSurname,
-        personSex,
-      });
-    }
-    regions.value = enrichedRegions;
-    await computeRegionProfileState();
-  } finally {
-    loading.value = false;
-  }
-}
 
 async function saveTitle() {
   if (!props.mediaId || !media.value) return;
@@ -521,7 +509,7 @@ const delLink = useDeleteConfirm<string>(async (linkId) => {
   await window.api.media.removeLink(linkId);
   if (personId) profilePicStore.invalidatePerson(personId);
   emit('link-changed');
-  if (props.mediaId) await load();
+  await reload();
 });
 function unlinkEntity(linkId: string) { delLink.ask(linkId); }
 
@@ -535,7 +523,7 @@ async function linkPerson(person: { id: string }) {
   profilePicStore.invalidatePerson(person.id);
   showPersonPicker.value = false;
   emit('link-changed');
-  await load();
+  await reload();
 }
 
 async function linkPlace(place: { id: string }) {
@@ -547,7 +535,7 @@ async function linkPlace(place: { id: string }) {
   });
   showPlacePicker.value = false;
   emit('link-changed');
-  await load();
+  await reload();
 }
 
 const delRegion = useDeleteConfirm<string>(async (regionId) => {
@@ -556,7 +544,7 @@ const delRegion = useDeleteConfirm<string>(async (regionId) => {
   await window.api.mediaRegions.delete(regionId);
   if (personId) profilePicStore.invalidatePerson(personId);
   emit('region-deleted');
-  if (props.mediaId) await load();
+  await reload();
 });
 function deleteRegion(regionId: string) { delRegion.ask(regionId); }
 
@@ -578,24 +566,22 @@ async function assignPersonToRegion(regionId: string, personId: string) {
     emit('link-changed');
   }
   emit('region-deleted'); // triggers viewer reload too
-  if (props.mediaId) await load();
+  await reload();
 }
 
 async function setProfileForRegion(r: RegionData) {
   if (!props.mediaId || !r.person_id) return;
   if (regionIsProfile.value[r.id]) return; // already profile
   await setMediaAsPersonProfile(r.person_id, props.mediaId);
-  await computeRegionProfileState();
+  await reload();
   emit('link-changed');
 }
-
-watch(() => props.mediaId, load, { immediate: true });
 
 function expandFaceTags() {
   sections.faceTags = true;
 }
 
-defineExpose({ reload: load, expandFaceTags });
+defineExpose({ reload, expandFaceTags });
 </script>
 
 <style scoped>

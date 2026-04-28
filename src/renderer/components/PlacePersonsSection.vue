@@ -26,9 +26,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed } from 'vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -43,15 +44,14 @@ interface PersonAtPlace {
 }
 
 const props = defineProps<{ placeId: string }>();
-const persons = ref<PersonAtPlace[]>([]);
 
-async function load() {
-  persons.value = (await window.api.places.getPersons(props.placeId)) as PersonAtPlace[];
-}
+const idRef = computed(() => props.placeId ?? null);
+const { data, reload } = useEntityData<PersonAtPlace[]>(idRef, async (id) => {
+  return (await window.api.places.getPersons(id)) as PersonAtPlace[];
+});
+const persons = computed(() => data.value ?? []);
 
-watch(() => props.placeId, () => load(), { immediate: true });
-
-defineExpose({ reload: load });
+defineExpose({ reload });
 </script>
 
 <style scoped>
