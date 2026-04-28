@@ -14,7 +14,6 @@ import { undoManager } from '../api/undo';
 import * as persons from '../api/persons';
 import * as checks from '../api/checks';
 import * as media from '../api/media';
-// getDbSetting/setDbSetting/deleteDbSetting — migrated to registry (src/shared/channels/database.ts)
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
 import { buildPreview } from '../api/html_site/preview';
