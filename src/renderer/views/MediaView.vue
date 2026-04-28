@@ -52,7 +52,12 @@
           <div ref="listSentinel" class="scroll-sentinel"></div>
         </div>
         <p v-if="items.length > 0" class="media-list-footer count-label">
-          {{ $t('persons.showingOf', { shown: sortedItems.length, total }) }}
+          <template v-if="isMediaPreviewTruncated">
+            {{ $t('htmlSite.preview.mediaLimited', { limit: previewMediaLimit, total: previewMediaTotalLinked }) }}
+          </template>
+          <template v-else>
+            {{ $t('media.showingOf', { shown: sortedItems.length, total }) }}
+          </template>
         </p>
       </div>
       <button class="list-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="closeList">◀</button>
@@ -94,7 +99,12 @@
 
     <div class="media-list-content">
     <p v-if="!loading && items.length > 0" class="count-label">
-      {{ $t('media.showingOf', { shown: items.length, total }) }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
+      <template v-if="isMediaPreviewTruncated">
+        {{ $t('htmlSite.preview.mediaLimited', { limit: previewMediaLimit, total: previewMediaTotalLinked }) }}
+      </template>
+      <template v-else>
+        {{ $t('media.showingOf', { shown: items.length, total }) }}<template v-if="missingCount > 0"> · {{ $t('media.missingCount', { count: missingCount }) }}</template>
+      </template>
     </p>
 
     <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
@@ -592,8 +602,33 @@ watch([listSentinel, listScrollRef], ([el, root]) => {
   listObserver.observe(el);
 });
 
+// In the website-export preview the main process inlines at most N
+// thumbnails (PREVIEW_THUMB_COUNT in src/main/ipc/website-export.ts) and
+// surfaces the cap via two settings. When set we replace the count line
+// with a notice explaining that the gallery is truncated.
+const previewMediaLimit = ref<number | null>(null);
+const previewMediaTotalLinked = ref<number | null>(null);
+const isMediaPreviewTruncated = computed(() =>
+  previewMediaLimit.value !== null
+  && previewMediaTotalLinked.value !== null
+  && previewMediaTotalLinked.value > previewMediaLimit.value);
+
 onMounted(async () => {
   await load();
+  if (isStaticMode) {
+    try {
+      const [limitRaw, totalRaw] = await Promise.all([
+        window.api.db.getSetting('preview_media_limit') as Promise<string | null>,
+        window.api.db.getSetting('preview_media_total_linked') as Promise<string | null>,
+      ]);
+      const limit = limitRaw ? Number(limitRaw) : NaN;
+      const totalLinked = totalRaw ? Number(totalRaw) : NaN;
+      if (Number.isFinite(limit)) previewMediaLimit.value = limit;
+      if (Number.isFinite(totalLinked)) previewMediaTotalLinked.value = totalLinked;
+    } catch {
+      // Settings missing in non-preview mode — leave the notice off
+    }
+  }
   const openId = route.query.open;
   if (typeof openId === 'string' && openId) {
     await openViewerById(openId);
