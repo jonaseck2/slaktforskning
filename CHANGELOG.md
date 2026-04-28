@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix(website-export): static site no longer ships broken-image entries for media whose source files are missing (v0.162.4). The export wrote `data.js` first and copied media files second, with `fsp.access` / `fsp.copyFile` failures silently dropping individual files. The snapshot kept the metadata, so the static SPA happily built `./media/full/<id>.<ext>` URLs for files that never made it into the bundle, and the gallery showed broken thumbnails. Reordered: copy first while tracking `exportedMediaIds`, then prune `snapshot.media` / `mediaLinks` / `mediaRegions` to that set before serializing. `includeMedia=false` also clears the three arrays so disabling media doesn't leak dead references either.
+
 ## v0.162.3 — Stale-load race fix in panels and sections
 
 Closes a race condition that affected every entity panel and most self-loading sections: when a user clicked rapidly between persons / places / sources / relationships / groups / research tasks / media, a slow `load(A)` could overwrite a fast `load(B)` and the panel would show A's data while B was selected. Added a small `useEntityData` composable (generation counter; stale results dropped) and migrated the 10 sections (`EventList`, `PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `PersonRelationshipsSection`, `PersonNotesSection`, `PlaceChecksSection`, `PlaceCitationsSection`, `PlacePersonsSection`, `MediaChecksSection`) and 6 panels (`PlacePanel`, `SourcePanel`, `RelationshipPanel`, `GroupPanel`, `ResearchTaskPanel`, `MediaPanel`) to use it. `PersonPanel` already had its own guarded loader. Editable-field state and section-collapse state untouched.
