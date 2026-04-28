@@ -158,6 +158,7 @@ import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -193,13 +194,7 @@ const { sections, toggleSection } = usePanelSections(
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-const task = ref<TaskData | null>(null);
-const links = ref<Link[]>([]);
 const showPicker = reactive({ person: false, place: false, media: false });
-
-const personLinks = computed(() => links.value.filter(l => l.entity_type === 'person'));
-const placeLinks = computed(() => links.value.filter(l => l.entity_type === 'place'));
-const mediaLinks = computed(() => links.value.filter(l => l.entity_type === 'media'));
 
 const editFields = reactive({
   task: '',
@@ -209,40 +204,43 @@ const editFields = reactive({
   result: '',
 });
 
-// ── Loaders ─────────────────────────────────────────────────────────────────
+// ── Data (race-safe load) ────────────────────────────────────────────────────
 
-async function load(id: string | null) {
-  if (!id) {
-    task.value = null;
-    links.value = [];
-    return;
-  }
+interface TaskPanelData {
+  task: TaskData | null;
+  links: Link[];
+}
+
+const idRef = computed(() => props.taskId ?? null);
+const { data: panelData, reload } = useEntityData<TaskPanelData>(idRef, async (id) => {
   try {
     const data = await window.api.researchTasks.get(id) as TaskData | null;
-    if (props.taskId !== id) return;
-    task.value = data;
-    if (!data) return;
-
-    editFields.task = data.task ?? '';
-    editFields.status = data.status ?? 'open';
-    editFields.priority = data.priority ?? 1;
-    editFields.notes = data.notes ?? '';
-    editFields.result = data.result ?? '';
-
-    await loadLinks(id);
+    if (!data) return { task: null, links: [] };
+    const raw = await window.api.researchTasks.getLinks(id) as Link[];
+    return { task: data, links: raw };
   } catch (err) {
     console.error('[ResearchTaskPanel] load failed:', err);
     toast.error(t('errors.loadFailed'));
+    return { task: null, links: [] };
   }
-}
+});
 
-async function loadLinks(id: string) {
-  const raw = await window.api.researchTasks.getLinks(id) as Link[];
-  if (props.taskId !== id) return;
-  links.value = raw;
-}
+const task = computed(() => panelData.value?.task ?? null);
+const links = computed(() => panelData.value?.links ?? []);
 
-watch(() => props.taskId, load, { immediate: true });
+const personLinks = computed(() => links.value.filter(l => l.entity_type === 'person'));
+const placeLinks = computed(() => links.value.filter(l => l.entity_type === 'place'));
+const mediaLinks = computed(() => links.value.filter(l => l.entity_type === 'media'));
+
+// Keep editFields in sync when task data changes
+watch(task, (data) => {
+  if (!data) return;
+  editFields.task = data.task ?? '';
+  editFields.status = data.status ?? 'open';
+  editFields.priority = data.priority ?? 1;
+  editFields.notes = data.notes ?? '';
+  editFields.result = data.result ?? '';
+}, { immediate: true });
 
 // ── Field updates ───────────────────────────────────────────────────────────
 
@@ -282,7 +280,7 @@ async function addLink(entityType: 'person' | 'place' | 'media', entityId: strin
   try {
     await window.api.researchTasks.addLink(props.taskId, entityType, entityId);
     showPicker[entityType] = false;
-    await loadLinks(props.taskId);
+    await reload();
     emit('updated');
   } catch (err) {
     console.error('[ResearchTaskPanel] addLink failed:', err);
@@ -294,7 +292,7 @@ async function removeLink(linkId: string) {
   if (!props.taskId) return;
   try {
     await window.api.researchTasks.removeLink(linkId);
-    await loadLinks(props.taskId);
+    await reload();
     emit('updated');
   } catch (err) {
     console.error('[ResearchTaskPanel] removeLink failed:', err);
