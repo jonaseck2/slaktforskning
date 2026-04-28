@@ -269,7 +269,7 @@
       :place-id="placeId"
       @cancel="showCitationForm = false"
       @close="showCitationForm = false"
-      @saved="showCitationForm = false; citationsSectionRef?.reload(); load(placeId)"
+      @saved="showCitationForm = false; citationsSectionRef?.reload(); reload()"
     />
 
     <!-- Add person modal -->
@@ -302,6 +302,7 @@ import { usePanelSections } from '../composables/usePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -365,31 +366,24 @@ const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonosp
 
 // ── Data ────────────────────────────────────────────────────────────────────
 
-const place = ref<Place | null>(null);
-const ancestors = ref<ChildPlace[]>([]);
-const childPlaces = ref<ChildPlace[]>([]);
-const personCount = ref(0);
-const eventCount = ref(0);
-const citationCount = ref(0);
-const mediaCount = ref(0);
+interface PlacePanelData {
+  place: Place | null;
+  ancestors: ChildPlace[];
+  childPlaces: ChildPlace[];
+  personCount: number;
+  eventCount: number;
+  citationCount: number;
+  mediaCount: number;
+}
 
-async function load(id: string | null) {
-  if (!id) {
-    place.value = null;
-    ancestors.value = [];
-    childPlaces.value = [];
-    personCount.value = 0;
-    eventCount.value = 0;
-    citationCount.value = 0;
-    mediaCount.value = 0;
-    return;
-  }
+const idRef = computed(() => props.placeId ?? null);
+const { data: panelData, reload } = useEntityData<PlacePanelData>(idRef, async (id) => {
   const [p, allPlaces] = await Promise.all([
     window.api.places.get(id) as Promise<Place | null>,
     window.api.places.list() as Promise<ChildPlace[]>,
   ]);
-  place.value = p;
-  childPlaces.value = allPlaces.filter((pl) => pl.parent_place_id === id);
+
+  const childPlaces = allPlaces.filter((pl) => pl.parent_place_id === id);
 
   // Build ancestor chain by walking up parent_place_id
   const chain: ChildPlace[] = [];
@@ -401,9 +395,12 @@ async function load(id: string | null) {
     chain.push(parent);
     parentId = parent.parent_place_id;
   }
-  ancestors.value = chain;
 
   // Load counts for collapsed section headers
+  let personCount = 0;
+  let eventCount = 0;
+  let citationCount = 0;
+  let mediaCount = 0;
   try {
     const [persons, events, citations, media] = await Promise.all([
       window.api.places.getPersons(id) as Promise<unknown[]>,
@@ -411,17 +408,24 @@ async function load(id: string | null) {
       window.api.citations.forPlace(id) as Promise<unknown[]>,
       window.api.media.forEntity('place', id) as Promise<unknown[]>,
     ]);
-    if (props.placeId !== id) return;
-    personCount.value = persons.length;
-    eventCount.value = events.length;
-    citationCount.value = citations.length;
-    mediaCount.value = media.length;
+    personCount = persons.length;
+    eventCount = events.length;
+    citationCount = citations.length;
+    mediaCount = media.length;
   } catch {
     // counts are non-critical
   }
-}
 
-watch(() => props.placeId, load, { immediate: true });
+  return { place: p, ancestors: chain, childPlaces, personCount, eventCount, citationCount, mediaCount };
+});
+
+const place = computed(() => panelData.value?.place ?? null);
+const ancestors = computed(() => panelData.value?.ancestors ?? []);
+const childPlaces = computed(() => panelData.value?.childPlaces ?? []);
+const personCount = computed(() => panelData.value?.personCount ?? 0);
+const eventCount = computed(() => panelData.value?.eventCount ?? 0);
+const citationCount = computed(() => panelData.value?.citationCount ?? 0);
+const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
 
 // ── Field updates ────────────────────────────────────────────────────────────
 
@@ -435,7 +439,7 @@ async function saveField(field: string, value: unknown) {
 async function onPersonSaved() {
   showAddPersonForm.value = false;
   personsSectionRef.value?.reload();
-  await load(props.placeId);
+  await reload();
 }
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {
@@ -450,7 +454,7 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
     if (source.parent_place_id) updates.parent_place_id = source.parent_place_id;
   }
   await window.api.places.update(props.placeId, updates);
-  await load(props.placeId);
+  await reload();
   emit('place-updated', props.placeId);
 }
 </script>

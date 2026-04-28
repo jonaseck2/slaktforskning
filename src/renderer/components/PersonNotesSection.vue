@@ -12,10 +12,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../composables/useToast';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -29,11 +30,15 @@ const props = defineProps<{ personId: string; rows?: number; monospaced?: boolea
 const notes = ref('');
 const { textareaRef, storedHeight, persistHeight } = useTextareaHeight('person-notes');
 
-async function load(id: string) {
-  const raw = (await window.api.persons.get(id)) as { notes: string | null } | null;
-  if (props.personId !== id) return;
+const idRef = computed(() => props.personId ?? null);
+const { data } = useEntityData<{ notes: string | null } | null>(idRef, async (id) => {
+  return (await window.api.persons.get(id)) as { notes: string | null } | null;
+});
+
+// Sync notes ref from loaded data (clears on id change, populates on load)
+watch(data, (raw) => {
   notes.value = raw?.notes ?? '';
-}
+}, { immediate: true });
 
 function onBlur(value: string) {
   persistHeight();
@@ -50,9 +55,4 @@ async function save(value: string) {
     toast.error(t('errors.saveFailed'));
   }
 }
-
-watch(() => props.personId, (id) => {
-  notes.value = '';
-  if (id) load(id);
-}, { immediate: true });
 </script>

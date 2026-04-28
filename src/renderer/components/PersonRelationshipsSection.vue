@@ -15,12 +15,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { formatFullName } from '../utils/nameUtils';
+import { useEntityData } from '../composables/useEntityData';
 
 interface PersonRelRow {
   id: string;
@@ -43,7 +44,6 @@ const props = defineProps<{ personId: string }>();
 const emit = defineEmits<{ deleted: [] }>();
 
 const { t } = useI18n();
-const rels = ref<PersonRelRow[]>([]);
 
 function getSubtypeLabel(type: string, subtype: string | null): string {
   if (!subtype) return '';
@@ -52,8 +52,9 @@ function getSubtypeLabel(type: string, subtype: string | null): string {
   return subtype;
 }
 
-async function load() {
-  const rawRels = (await window.api.relationships.getForPerson(props.personId)) as Array<{
+const idRef = computed(() => props.personId ?? null);
+const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (personId) => {
+  const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{
     id: string;
     type: string;
     person1_id: string | null;
@@ -61,8 +62,8 @@ async function load() {
     subtype: string | null;
   }>;
 
-  const enriched = await Promise.all(rawRels.map(async (r) => {
-    const otherId = r.person1_id === props.personId ? r.person2_id : r.person1_id;
+  return Promise.all(rawRels.map(async (r) => {
+    const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
     let otherName = t('common.unknown');
     let otherGivenName = '';
     let otherSurname = '';
@@ -91,7 +92,7 @@ async function load() {
 
     let typeLabel = t('relTypes.' + r.type);
     if (r.type === 'parent_child') {
-      typeLabel = r.person1_id === props.personId ? t('relTypes.child') : t('relTypes.parent');
+      typeLabel = r.person1_id === personId ? t('relTypes.child') : t('relTypes.parent');
     }
 
     return {
@@ -111,8 +112,8 @@ async function load() {
       subtypeLabel: getSubtypeLabel(r.type, r.subtype),
     } as PersonRelRow;
   }));
-  rels.value = enriched;
-}
+});
+const rels = computed(() => relsData.value ?? []);
 
 const rows = computed<RelationshipListRow[]>(() =>
   rels.value.map(r => ({
@@ -170,11 +171,9 @@ async function confirmRemove() {
   if (!r) return;
   pendingDelete.value = null;
   await window.api.relationships.delete(r.id);
-  await load();
+  await reload();
   emit('deleted');
 }
 
-defineExpose({ reload: load, count: computed(() => rels.value.length) });
-
-watch(() => props.personId, load, { immediate: true });
+defineExpose({ reload, count: computed(() => rels.value.length) });
 </script>

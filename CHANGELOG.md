@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.162.3 — Stale-load race fix in panels and sections
+
+Closes a race condition that affected every entity panel and most self-loading sections: when a user clicked rapidly between persons / places / sources / relationships / groups / research tasks / media, a slow `load(A)` could overwrite a fast `load(B)` and the panel would show A's data while B was selected. Added a small `useEntityData` composable (generation counter; stale results dropped) and migrated the 10 sections (`EventList`, `PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `PersonRelationshipsSection`, `PersonNotesSection`, `PlaceChecksSection`, `PlaceCitationsSection`, `PlacePersonsSection`, `MediaChecksSection`) and 6 panels (`PlacePanel`, `SourcePanel`, `RelationshipPanel`, `GroupPanel`, `ResearchTaskPanel`, `MediaPanel`) to use it. `PersonPanel` already had its own guarded loader. Editable-field state and section-collapse state untouched.
+
 ## v0.162.1 — Preload regression fix
 
 Task 8's preload cleanup made `src/preload/index.ts` import the channel registry barrel (`src/shared/channels/index.ts`) and derive `window.api` from a registry walk. That import transitively dragged the entire `src/api/` layer into the preload bundle — most damagingly `src/api/place-gazetteers/bundled.ts` and its 27 static JSON imports (~42 MB). Rollup OOM'd at ~4 GB on `npm start` / `dev-debug.sh`, and even with externalization the preload bundle hit 25 MB and the Electron preload sandbox blocked the runtime `require()` calls. Reverted the preload to the pre-Task-8 hand-written inline declarations (matches what was working before the refactor — 288 lines, ~11 KB bundle, no `src/api/` imports). The registry still drives main and worker; `window.api` types in the renderer are still derived from `ApiSurface<typeof channelRegistry>` since that derivation is type-only and independent of the preload runtime shape.

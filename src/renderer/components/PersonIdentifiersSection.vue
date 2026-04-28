@@ -47,11 +47,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import PersonIdentifierModal from './modals/PersonIdentifierModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
+import { useEntityData } from '../composables/useEntityData';
 
 export interface IdentifierRow {
   id: string;
@@ -61,27 +62,26 @@ export interface IdentifierRow {
 
 const props = defineProps<{ personId: string; readonly?: boolean }>();
 
-const identifiers = ref<IdentifierRow[]>([]);
 const showAddForm = ref(false);
+
+const idRef = computed(() => props.personId ?? null);
+const { data, reload } = useEntityData<IdentifierRow[]>(idRef, async (id) => {
+  return (await window.api.persons.getIdentifiers(id)) as IdentifierRow[];
+});
+const identifiers = computed(() => data.value ?? []);
 
 defineExpose({ openAddForm: () => { showAddForm.value = true; }, count: computed(() => identifiers.value.length) });
 
-async function load() {
-  identifiers.value = (await window.api.persons.getIdentifiers(props.personId)) as IdentifierRow[];
-}
-
 function onSaved() {
   showAddForm.value = false;
-  load();
+  reload();
 }
 
 const del = useDeleteConfirm<string>(async (id) => {
   await window.api.persons.deleteIdentifier(id);
-  await load();
+  await reload();
 });
 function remove(id: string) { del.ask(id); }
-
-watch(() => props.personId, load, { immediate: true });
 </script>
 
 <style scoped>

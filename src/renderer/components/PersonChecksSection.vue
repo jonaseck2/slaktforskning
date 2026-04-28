@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue';
 import QualityIssuesTable, { type QualityIssue } from './QualityIssuesTable.vue';
+import { useEntityData } from '../composables/useEntityData';
 
 export type { QualityIssue as CheckResult } from './QualityIssuesTable.vue';
 
@@ -36,8 +37,6 @@ const emit = defineEmits<{
   fix: [action: FixAction];
 }>();
 
-const issues = ref<QualityIssue[]>([]);
-
 function hasFixAction(r: QualityIssue): boolean {
   return r.code in FIX_ACTIONS;
 }
@@ -47,18 +46,20 @@ function onRowClick(r: QualityIssue) {
   if (action) emit('fix', action);
 }
 
-async function load() {
-  if (!window.api?.checks) return;
-  issues.value = (await window.api.checks.forPerson(props.personId)) as QualityIssue[];
-}
+const debouncedId = ref<string | null>(null);
+const { data, reload } = useEntityData<QualityIssue[]>(debouncedId, async (id) => {
+  if (!window.api?.checks) return [];
+  return (await window.api.checks.forPerson(id)) as QualityIssue[];
+});
+const issues = computed(() => data.value ?? []);
 
-defineExpose({ reload: load, count: computed(() => issues.value.length) });
+defineExpose({ reload, count: computed(() => issues.value.length) });
 
 let loadTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleLoad() {
   if (loadTimer) clearTimeout(loadTimer);
-  loadTimer = setTimeout(() => { load(); loadTimer = null; }, 1500);
+  loadTimer = setTimeout(() => { debouncedId.value = props.personId; loadTimer = null; }, 1500);
 }
 
 watch(() => props.personId, scheduleLoad, { immediate: true });

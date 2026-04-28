@@ -264,6 +264,7 @@ import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -319,10 +320,6 @@ const { sections, toggleSection } = usePanelSections(
 // ── Refs / state ────────────────────────────────────────────────────────────
 
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
-const source = ref<SourceData | null>(null);
-const citations = ref<CitationRow[]>([]);
-const linkedRepositories = ref<RepositoryRow[]>([]);
-const allRepositories = ref<RepositoryRow[]>([]);
 const showCitationForm = ref(false);
 const editingCitation = ref<CitationRow | null>(null);
 const showRepoPicker = ref(false);
@@ -338,6 +335,42 @@ const editFields = reactive({
   call_number: '',
   abstract: '',
 });
+
+// ── Data (race-safe load) ────────────────────────────────────────────────────
+
+interface SourcePanelData {
+  source: SourceData | null;
+  citations: CitationRow[];
+  linkedRepositories: RepositoryRow[];
+  allRepositories: RepositoryRow[];
+}
+
+const idRef = computed(() => props.sourceId ?? null);
+const { data: panelData, reload } = useEntityData<SourcePanelData>(idRef, async (id) => {
+  const s = await window.api.sources.get(id) as SourceData | null;
+  if (!s) return { source: null, citations: [], linkedRepositories: [], allRepositories: [] };
+
+  const [rawCits, repos, allRepos] = await Promise.all([
+    window.api.citations.forSource(id) as Promise<CitationRow[]>,
+    window.api.repositories.forSource(id) as Promise<RepositoryRow[]>,
+    window.api.repositories.list() as Promise<RepositoryRow[]>,
+  ]);
+
+  await Promise.all(rawCits.map(async (cit) => {
+    const resolved = await resolveEntityLabel(cit);
+    if (resolved) {
+      cit.entityLabel = resolved.label;
+      cit.entityRoute = resolved.route;
+    }
+  }));
+
+  return { source: s, citations: rawCits, linkedRepositories: repos, allRepositories: allRepos };
+});
+
+const source = computed(() => panelData.value?.source ?? null);
+const citations = computed(() => panelData.value?.citations ?? []);
+const linkedRepositories = computed(() => panelData.value?.linkedRepositories ?? []);
+const allRepositories = computed(() => panelData.value?.allRepositories ?? []);
 
 const unlinkedRepositories = computed(() => {
   const linkedIds = new Set(linkedRepositories.value.map(r => r.id));
@@ -376,56 +409,18 @@ async function resolveEntityLabel(cit: CitationRow): Promise<{ label: string; ro
   return null;
 }
 
-// ── Loaders ─────────────────────────────────────────────────────────────────
-
-async function load(id: string | null) {
-  if (!id) {
-    source.value = null;
-    citations.value = [];
-    linkedRepositories.value = [];
-    allRepositories.value = [];
-    return;
-  }
-  try {
-    const s = await window.api.sources.get(id) as SourceData | null;
-    if (props.sourceId !== id) return; // raced past us
-    source.value = s;
-    if (!s) return;
-
-    editFields.title = s.title ?? '';
-    editFields.author = s.author ?? '';
-    editFields.source_type = s.source_type ?? '';
-    editFields.publication_info = s.publication_info ?? '';
-    editFields.repository = s.repository ?? '';
-    editFields.url = s.url ?? '';
-    editFields.call_number = s.call_number ?? '';
-    editFields.abstract = s.abstract ?? '';
-
-    const [rawCits, repos, allRepos] = await Promise.all([
-      window.api.citations.forSource(id) as Promise<CitationRow[]>,
-      window.api.repositories.forSource(id) as Promise<RepositoryRow[]>,
-      window.api.repositories.list() as Promise<RepositoryRow[]>,
-    ]);
-    if (props.sourceId !== id) return;
-
-    await Promise.all(rawCits.map(async (cit) => {
-      const resolved = await resolveEntityLabel(cit);
-      if (resolved) {
-        cit.entityLabel = resolved.label;
-        cit.entityRoute = resolved.route;
-      }
-    }));
-    if (props.sourceId !== id) return;
-    citations.value = rawCits;
-    linkedRepositories.value = repos;
-    allRepositories.value = allRepos;
-  } catch (err) {
-    console.error('[SourcePanel] load failed:', err);
-    toast.error(t('errors.loadFailed'));
-  }
-}
-
-watch(() => props.sourceId, load, { immediate: true });
+// editFields are kept in sync when source changes
+watch(source, (s) => {
+  if (!s) return;
+  editFields.title = s.title ?? '';
+  editFields.author = s.author ?? '';
+  editFields.source_type = s.source_type ?? '';
+  editFields.publication_info = s.publication_info ?? '';
+  editFields.repository = s.repository ?? '';
+  editFields.url = s.url ?? '';
+  editFields.call_number = s.call_number ?? '';
+  editFields.abstract = s.abstract ?? '';
+}, { immediate: true });
 
 // ── Field updates ───────────────────────────────────────────────────────────
 
@@ -447,7 +442,7 @@ async function saveField(field: keyof typeof editFields) {
 const delCitation = useDeleteConfirm<string>(async (id) => {
   try {
     await window.api.citations.delete(id);
-    await load(props.sourceId);
+    await reload();
   } catch (err) {
     console.error('[SourcePanel] removeCitation failed:', err);
     toast.error(t('errors.deleteFailed'));
@@ -457,12 +452,12 @@ function removeCitation(id: string) { delCitation.ask(id); }
 
 function onCitationSaved() {
   showCitationForm.value = false;
-  load(props.sourceId);
+  reload();
 }
 
 function onCitationEdited() {
   editingCitation.value = null;
-  load(props.sourceId);
+  reload();
 }
 
 // ── Repositories ────────────────────────────────────────────────────────────
@@ -479,7 +474,7 @@ async function addRepository() {
     await window.api.repositories.linkSource(props.sourceId, repoToAdd.value);
     showRepoPicker.value = false;
     repoToAdd.value = '';
-    await load(props.sourceId);
+    await reload();
   } catch (err) {
     console.error('[SourcePanel] addRepository failed:', err);
     toast.error(t('errors.saveFailed'));
@@ -490,7 +485,7 @@ async function removeRepository(repoId: string) {
   if (!props.sourceId) return;
   try {
     await window.api.repositories.unlinkSource(props.sourceId, repoId);
-    await load(props.sourceId);
+    await reload();
   } catch (err) {
     console.error('[SourcePanel] removeRepository failed:', err);
     toast.error(t('errors.deleteFailed'));

@@ -221,6 +221,7 @@ import AppButton from './ui/AppButton.vue';
 import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -262,8 +263,6 @@ const { sections, toggleSection } = usePanelSections(
 
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
-const relationship = ref<RelData | null>(null);
-const citations = ref<CitationRow[]>([]);
 const showCitationForm = ref(false);
 
 const editFields = reactive({
@@ -301,45 +300,49 @@ const subtypeBadgeLabel = computed(() => {
   return relationship.value.subtype;
 });
 
-// ── Loaders ─────────────────────────────────────────────────────────────────
+// ── Data (race-safe load) ────────────────────────────────────────────────────
 
-async function load(id: string | null) {
-  if (!id) {
-    relationship.value = null;
-    citations.value = [];
-    return;
-  }
+interface RelationshipPanelData {
+  relationship: RelData | null;
+  citations: CitationRow[];
+}
+
+const idRef = computed(() => props.relationshipId ?? null);
+const { data: panelData, reload } = useEntityData<RelationshipPanelData>(idRef, async (id) => {
   try {
     const r = await window.api.relationships.get(id) as RelData | null;
-    if (props.relationshipId !== id) return; // raced past us
-    relationship.value = r;
-    if (!r) return;
-
-    editFields.type = r.type ?? '';
-    editFields.subtype = r.subtype ?? '';
-    editFields.person1_id = r.person1_id;
-    editFields.person2_id = r.person2_id;
-    editFields.notes = r.notes ?? '';
+    if (!r) return { relationship: null, citations: [] };
 
     const rawCits = await window.api.citations.forRelationship(id) as Array<{
       id: string; source_id: string; page: string | null; confidence: number | null;
     }>;
-    if (props.relationshipId !== id) return;
 
     const enriched: CitationRow[] = [];
     for (const c of rawCits) {
       const source = await window.api.sources.get(c.source_id) as { title: string } | null;
       enriched.push({ ...c, source_title: source?.title ?? '' });
     }
-    if (props.relationshipId !== id) return;
-    citations.value = enriched;
+
+    return { relationship: r, citations: enriched };
   } catch (err) {
     console.error('[RelationshipPanel] load failed:', err);
     toast.error(t('errors.loadFailed'));
+    return { relationship: null, citations: [] };
   }
-}
+});
 
-watch(() => props.relationshipId, load, { immediate: true });
+const relationship = computed(() => panelData.value?.relationship ?? null);
+const citations = computed(() => panelData.value?.citations ?? []);
+
+// Keep editFields in sync when relationship data changes
+watch(relationship, (r) => {
+  if (!r) return;
+  editFields.type = r.type ?? '';
+  editFields.subtype = r.subtype ?? '';
+  editFields.person1_id = r.person1_id;
+  editFields.person2_id = r.person2_id;
+  editFields.notes = r.notes ?? '';
+}, { immediate: true });
 
 // ── Field updates ───────────────────────────────────────────────────────────
 
@@ -381,7 +384,7 @@ function onPerson2Change(val: string | null) {
 const delCitation = useDeleteConfirm<string>(async (id) => {
   try {
     await window.api.citations.delete(id);
-    await load(props.relationshipId);
+    await reload();
   } catch (err) {
     console.error('[RelationshipPanel] removeCitation failed:', err);
     toast.error(t('errors.deleteFailed'));
@@ -391,7 +394,7 @@ function removeCitation(id: string) { delCitation.ask(id); }
 
 function onCitationSaved() {
   showCitationForm.value = false;
-  load(props.relationshipId);
+  reload();
 }
 </script>
 
