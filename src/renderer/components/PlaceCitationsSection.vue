@@ -29,8 +29,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed } from 'vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -45,10 +46,10 @@ interface CitationRow {
 }
 
 const props = defineProps<{ placeId: string }>();
-const citations = ref<CitationRow[]>([]);
 
-async function load() {
-  const raw = (await window.api.citations.forPlace(props.placeId)) as Array<{
+const idRef = computed(() => props.placeId ?? null);
+const { data, reload } = useEntityData<CitationRow[]>(idRef, async (id) => {
+  const raw = (await window.api.citations.forPlace(id)) as Array<{
     id: string; source_id: string; page: string | null; confidence: number | null;
   }>;
   const enriched: CitationRow[] = [];
@@ -56,10 +57,9 @@ async function load() {
     const source = (await window.api.sources.get(c.source_id)) as { title: string } | null;
     enriched.push({ ...c, source_title: source?.title ?? '' });
   }
-  citations.value = enriched;
-}
+  return enriched;
+});
+const citations = computed(() => data.value ?? []);
 
-watch(() => props.placeId, () => load(), { immediate: true });
-
-defineExpose({ reload: load });
+defineExpose({ reload });
 </script>

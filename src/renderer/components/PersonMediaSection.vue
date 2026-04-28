@@ -64,6 +64,7 @@ import { useProfilePicStore } from '../stores/profilePic';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
+import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -86,20 +87,18 @@ const props = defineProps<{ personId: string; readonly?: boolean }>();
 const emit = defineEmits<{ profileChanged: [] }>();
 
 const router = useRouter();
-const media = ref<MediaItem[]>([]);
 const thumbnails = ref<Record<string, string>>({});
 const profilePicStore = useProfilePicStore();
-
-defineExpose({ attach, reload: load, count: computed(() => media.value.length) });
 
 function isImage(format: string | null): boolean {
   return format ? IMAGE_FORMATS.has(format.toLowerCase()) : false;
 }
 
-async function load() {
-  media.value = (await window.api.media.forEntity('person', props.personId)) as MediaItem[];
-  loadThumbnails();
-}
+const idRef = computed(() => props.personId ?? null);
+const { data, reload } = useEntityData<MediaItem[]>(idRef, async (id) => {
+  return (await window.api.media.forEntity('person', id)) as MediaItem[];
+});
+const media = computed(() => data.value ?? []);
 
 async function loadThumbnails() {
   for (const m of media.value) {
@@ -112,6 +111,10 @@ async function loadThumbnails() {
   }
 }
 
+watch(media, loadThumbnails);
+
+defineExpose({ attach, reload, count: computed(() => media.value.length) });
+
 function openMedia(id: string) {
   router.push({ path: '/media', query: { open: id, person: props.personId } });
 }
@@ -120,7 +123,7 @@ async function attach() {
   const result = await window.api.media.attach({ entityType: 'person', entityId: props.personId });
   if (!(result as { canceled: boolean }).canceled) {
     profilePicStore.invalidatePerson(props.personId);
-    await load();
+    await reload();
     emit('profileChanged');
   }
 }
@@ -130,15 +133,15 @@ async function attach() {
 const del = useDeleteConfirm<string>(async (linkId) => {
   await window.api.media.removeLink(linkId);
   profilePicStore.invalidatePerson(props.personId);
-  await load();
+  await reload();
   emit('profileChanged');
 });
 function unlink(linkId: string) { del.ask(linkId); }
 
 async function reorder(newOrder: MediaItem[]) {
-  media.value = newOrder;
   await window.api.media.reorder(newOrder.map(m => m.link_id));
   profilePicStore.invalidatePerson(props.personId);
+  await reload();
   emit('profileChanged');
 }
 
@@ -164,7 +167,6 @@ function setAsProfile(idx: number) {
   reorder(items);
 }
 
-watch(() => props.personId, load, { immediate: true });
 </script>
 
 <style scoped>
