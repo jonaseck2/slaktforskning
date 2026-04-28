@@ -6,7 +6,7 @@ import { startWorker, callWorker } from './worker-client';
 import { registerImportHandlers } from './import';
 import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
-import { registerUtilityHandlers } from './utility';
+import { registerUtilityHandlers } from './main-only';
 import { registerWebsiteExportHandlers } from './website-export';
 
 export function registerIpcHandlers(): void {

@@ -110,27 +110,41 @@ src/
 │           ├── lang-sv-geonames.json  # Swedish place name translations (GeoNames)
 │           ├── lang-sv-wikidata.json  # Swedish place name translations (Wikidata)
 │           └── lang-world-historical.json # All-language translations for historical states (Wikidata)
+├── shared/
+│   └── channels/                 # Single typed channel registry — one defineChannel() call registers a channel everywhere
+│       ├── types.ts              # ChannelDef, WorkerChannelDef, MainChannelDef, ChannelRegistry types
+│       ├── registry.ts           # defineChannel(), channelRegistry, listChannels(), getChannel()
+│       ├── api-type.ts           # ApiSurface<Reg> — derives typed window.api from registry at compile time
+│       ├── index.ts              # Barrel: imports all domain files, re-exports registry helpers
+│       ├── persons.ts            # persons:* + personNames:* + personIdentifiers:* channels
+│       ├── events.ts             # events:* + eventParticipants:* channels
+│       ├── relationships.ts      # relationships:* channels
+│       ├── sources.ts            # sources:* + citations:* channels
+│       ├── places.ts             # places:* channels
+│       ├── groups.ts             # groups:* channels
+│       ├── repositories.ts       # repositories:* channels
+│       ├── research-tasks.ts     # researchTasks:* channels
+│       ├── reports.ts            # reports:* + duplicates:* channels
+│       ├── media.ts              # media:* + mediaRegions:* channels (DB-backed only)
+│       ├── gazetteers.ts         # gazetteers:* channels
+│       ├── database.ts           # db:getSetting / setSetting / deleteSetting channels
+│       └── undo.ts               # undo:state, undo:beginGroup, undo:endGroup channels
 ├── main/                         # Electron main process
 │   ├── index.ts                  # App lifecycle, BrowserWindow, menu (Cmd+N new window)
 │   ├── database.ts               # SQLite connection, stale lock cleanup, switchDatabase
 │   ├── settings.ts               # Persistent settings (lastDatabase, recentDatabases) in userData/settings.json
-│   ├── db-worker.ts              # Worker Thread: owns SQLite + UndoManager, 130+ channel dispatch table
-│   └── ipc/                      # IPC handlers — delegate DB channels to worker, keep Electron ops on main
-│       ├── index.ts              # registerIpcHandlers(): starts worker, registers all domain handlers
+│   ├── db-worker.ts              # Worker Thread: owns SQLite + UndoManager; dispatches registry channels then legacy fallbacks
+│   └── ipc/                      # IPC handlers — registry walk covers most domains; these files handle the rest
+│       ├── index.ts              # registerIpcHandlers(): starts worker, walks registry, calls domain register fns
 │       ├── worker-client.ts      # startWorker/callWorker/switchWorkerDb — fire-and-forget with call queue
 │       ├── wrap-handler.ts       # wrapHandler() — ipcMain.handle() with logging
-│       ├── persons.ts            # persons:* → callWorker
-│       ├── relationships.ts      # relationships:* → callWorker
-│       ├── events.ts             # events:* → callWorker
-│       ├── sources.ts            # sources:* → callWorker
-│       ├── places.ts             # places:* → callWorker
-│       ├── database.ts           # db:*, undo:*, backup:* — mix of worker + main
-│       ├── media.ts              # media:* DB channels → worker; media:attach/openFile → main
-│       ├── utility.ts            # groups, repos, tasks, reports → worker; print/chart/csv → main
+│       ├── database.ts           # db:getCurrent/getRecent/createNew/switchTo/openExisting, undo:undo/redo, backup:*
+│       ├── media.ts              # media:attach, media:openFile (Electron dialog + fs; DB channels are in registry)
+│       ├── main-only.ts          # checks:*, chart:*, print:*, csv:export, export:openFolder (can't fit registry pattern)
 │       ├── import.ts             # gedcom:*, archive:*, import:* — dialog + fs stay on main
-│       └── gazetteers.ts         # gazetteers DB channels → worker; getBundled/getSchema → main
+│       └── website-export.ts     # website:export, website:previewSnapshot, website:setPreviewSnapshot
 ├── preload/                      # contextBridge — exposes window.api
-│   └── index.ts                  # All IPC channels mapped to window.api.*
+│   └── index.ts                  # Walks registry → window.api; adds non-registry channels for db/media/undo/checks
 ├── renderer/                     # Vue 3 application
 │   ├── App.vue                   # Root layout: sidebar (Persons/Relationships/Sources) + <router-view>
 │   ├── router.ts                 # Hash-based router with 7 routes
@@ -512,19 +526,44 @@ getAliveInYear(db, year) → { year, persons: AlivePerson[] }  // Everyone alive
 
 ### How it works
 
-1. **Main process** (`src/main/ipc/*.ts`): `wrapHandler(channel, fn)` registers an `ipcMain.handle()` with logging
-2. **DB channels** → `callWorker(channel, ...args)` → Worker Thread dispatch table in `src/main/db-worker.ts`
-3. **Electron-only channels** (dialog, shell, fs, printToPDF) → handled directly on main thread
-4. **Preload** (`src/preload/index.ts`): Maps channels to `window.api.*` via `contextBridge`
-5. **Renderer**: Vue components call `window.api.persons.create(...)` etc.
+All ~131 IPC channels are defined once in `src/shared/channels/` via `defineChannel()`. The registry drives three layers automatically:
 
-### Adding a new DB channel
+1. **Main process** (`src/main/ipc/index.ts`): walks `channelRegistry` — worker channels get `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))`; main-thread channels get `wrapHandler('foo:bar', (...args) => ch.handler(...args))`
+2. **Worker dispatch** (`src/main/db-worker.ts`): checks the registry first on every message; registry worker channels are dispatched before the small legacy fallback table
+3. **Preload** (`src/preload/index.ts`): walks `channelRegistry` → builds `window.api.<domain>.<method>` via `contextBridge`; mutating channels are wrapped so `onDataChanged` listeners fire
+4. **Renderer**: Vue components call `window.api.persons.create(...)` etc. The `window.api` surface is **typed** — `ApiSurface<typeof channelRegistry>` derives the type at compile time, no loose `Record<string, …>` casts needed
 
-Two registrations required:
-- `src/main/ipc/<domain>.ts`: `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))`
-- `src/main/db-worker.ts`: `'foo:bar': (arg) => api.createFoo(getDb(), arg)` in the `handlers` object
+A small set of channels cannot fit the registry pattern and are registered separately:
+- `src/main/ipc/database.ts`: `db:getCurrent/getRecent/createNew/switchTo/openExisting`, `undo:undo/redo` (need post-call BrowserWindow broadcast), `backup:*`
+- `src/main/ipc/media.ts`: `media:attach`, `media:openFile` (Electron dialog + fs); `media:getFilePath`, `media:readAsDataUrl` (worker-local `getDbDir()`)
+- `src/main/ipc/main-only.ts`: `checks:*` (worker-local cancellation state), `chart:*`, `print:*`, `csv:export`, `export:openFolder` (Electron dialog / BrowserWindow / fs)
+- `src/main/ipc/import.ts`, `src/main/ipc/website-export.ts`: file dialog + fs operations
 
-Run `npx vitest run tests/unit/ipc-worker-coverage.test.ts` — fails immediately if either registration is missing.
+### Adding a new worker channel
+
+One step: add a `defineChannel` entry to the appropriate `src/shared/channels/<domain>.ts` file:
+
+```typescript
+defineChannel({
+  name: 'foo:bar',
+  thread: 'worker',
+  mutating: true,           // set true if this write — triggers onDataChanged in renderer
+  handler: (db, arg: string) => api.createFoo(db, arg),
+});
+```
+
+The registry walk in `index.ts` registers `ipcMain.handle`, the worker dispatch loop calls the handler, and the preload walk adds `window.api.foo.bar` — all automatically. No edits to three separate files.
+
+The domain file must be imported in `src/shared/channels/index.ts` (one line).
+
+### Adding a main-only channel
+
+Same `defineChannel` with `thread: 'main'`. The handler runs on the main thread (no `db` argument). For channels that need Electron APIs unavailable in shared code, register manually via `wrapHandler` in the appropriate `src/main/ipc/*.ts` file instead.
+
+### Enforcement
+
+- `tests/unit/ipc-worker-coverage.test.ts` — every `wrapHandler` call resolves to a worker handler, registry entry, or `MAIN_THREAD_ONLY_CHANNELS`; fails immediately if a channel is registered but has no handler
+- `tests/unit/static-api-coverage.test.ts` — the static build's `staticApi` mirrors the registry surface
 
 ### window.api Surface + IPC Channel Mapping
 

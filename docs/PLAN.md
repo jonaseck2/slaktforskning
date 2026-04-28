@@ -30,9 +30,9 @@ CI/CD, automated releases, Claude-powered issue triage, governance files, README
 #### Chart Layout Shared Utilities Refactor [planned]
 Extract duplicated logic from pedigree, descendant, and hourglass layouts into `chart-layout/shared.ts`: `findPersonInTree`, `findParentOf`, placeholder extraction, line-to-dashed conversion.
 
-#### IPC Channel Registry [planned]
-Replace 3-layer string-keyed IPC boilerplate (`src/main/ipc/<domain>.ts` + `db-worker.ts` + `preload/index.ts`) with a single typed channel registry in `src/shared/channels/`. Derives `window.api` types automatically; static-SPA parity test added.
-- Plan: [plans/2026-04-28-ipc-channel-registry.md](plans/2026-04-28-ipc-channel-registry.md)
+#### IPC Channel Registry [done]
+Replaced 3-layer string-keyed IPC boilerplate with a single typed registry in `src/shared/channels/` (~131 channels). Adding a channel is now one `defineChannel()` call instead of edits to three files. `window.api` is fully typed via `ApiSurface<typeof channelRegistry>`.
+- Plan: [plans/archive/2026-04-28-ipc-channel-registry.md](plans/archive/2026-04-28-ipc-channel-registry.md)
 
 #### Panel Composables & EntityPanel [planned]
 Extract `useEntityData`, `useEditableFields`, and a shared `<EntityPanel>` shell to remove ~600 lines of repetition across 6 entity panels. Fixes the EventList stale-load race and centralizes 56+ ad-hoc localStorage keys.
