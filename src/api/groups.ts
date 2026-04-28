@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { Group, GroupLink, LinkEntityType } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { getLinkedEntities } from './links';
 
 export function createGroup(db: Database, data: { name: string; notes?: string }): Group {
   const id = crypto.randomUUID();
@@ -68,29 +69,21 @@ export function getGroupLinks(db: Database, groupId: string): GroupLink[] {
   );
 }
 
+const GROUP_LINK_CONFIG = {
+  linkTable: 'group_links',
+  parentTable: 'groups',
+  parentFk: 'group_id',
+  orderBy: 'g.name',
+} as const;
+
 export function getGroupsForPerson(db: Database, personId: string): Group[] {
-  return queryAll<Group>(db, `
-    SELECT g.* FROM groups g
-    JOIN group_links gl ON gl.group_id = g.id
-    WHERE gl.entity_type = 'person' AND gl.entity_id = ?
-    ORDER BY g.name
-  `, [personId]);
+  return getLinkedEntities<Group>(db, GROUP_LINK_CONFIG, 'person', personId);
 }
 
 export function getGroupsForPlace(db: Database, placeId: string): Group[] {
-  return queryAll<Group>(db, `
-    SELECT g.* FROM groups g
-    JOIN group_links gl ON gl.group_id = g.id
-    WHERE gl.entity_type = 'place' AND gl.entity_id = ?
-    ORDER BY g.name
-  `, [placeId]);
+  return getLinkedEntities<Group>(db, GROUP_LINK_CONFIG, 'place', placeId);
 }
 
 export function getGroupsForMedia(db: Database, mediaId: string): Group[] {
-  return queryAll<Group>(db, `
-    SELECT g.* FROM groups g
-    JOIN group_links gl ON gl.group_id = g.id
-    WHERE gl.entity_type = 'media' AND gl.entity_id = ?
-    ORDER BY g.name
-  `, [mediaId]);
+  return getLinkedEntities<Group>(db, GROUP_LINK_CONFIG, 'media', mediaId);
 }
