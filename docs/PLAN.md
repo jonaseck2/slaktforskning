@@ -55,6 +55,16 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 - Close confirmation dialog on last window (production only)
 - Media copy-on-attach verified working
 
+#### Bengt Feedback Batch (2026-04-29) [planned]
+Source: [docs/BENGT.md](BENGT.md). Split into 6 workstreams + 1 design spec, each independently shippable.
+- Label tweaks: [plans/2026-04-29-bengt-label-tweaks.md](plans/2026-04-29-bengt-label-tweaks.md)
+- Bug fixes (DevTools, baptism, fan chart, About menu, parent_child subtype): [plans/2026-04-29-bengt-bug-fixes.md](plans/2026-04-29-bengt-bug-fixes.md)
+- Reactivity audit (panel counts, tree refresh, indirect events on timelines): [plans/2026-04-29-bengt-reactivity.md](plans/2026-04-29-bengt-reactivity.md)
+- Names rework (newest-as-displayed, reorder, Stavningsvariant types): [plans/2026-04-29-bengt-names-rework.md](plans/2026-04-29-bengt-names-rework.md)
+- Reports (researcher info, page numbers, citation rendering, GEDCOM SUBM): [plans/2026-04-29-bengt-reports.md](plans/2026-04-29-bengt-reports.md)
+- Place picker rework (parent-aware autocomplete + tree expander): [plans/2026-04-29-bengt-place-picker.md](plans/2026-04-29-bengt-place-picker.md) — design: [plans/2026-04-29-bengt-place-picker-design.md](plans/2026-04-29-bengt-place-picker-design.md)
+- Events bundle (sort-order setting, date-range UI): [plans/2026-04-29-bengt-events-bundle.md](plans/2026-04-29-bengt-events-bundle.md)
+
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*
 Define primary user objectives, map to current click counts, identify highest-friction paths, produce prioritized improvement backlog.
