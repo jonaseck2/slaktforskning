@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventModal from './modals/EventModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -230,6 +230,25 @@ function onSaved() {
 }
 
 watch(() => props.personId, load, { immediate: true });
+
+// Refresh on any mutation so the timeline picks up new/edited events for the
+// same person without a panel switch. Debounced to batch rapid mutations.
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+function onDataMutation() {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { if (props.personId) load(); }, 200);
+}
+onMounted(() => {
+  (window.api as unknown as {
+    onDataChanged: (cb: () => void) => void;
+  }).onDataChanged(onDataMutation);
+});
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  (window.api as unknown as {
+    offDataChanged: (cb: () => void) => void;
+  }).offDataChanged(onDataMutation);
+});
 
 defineExpose({ reload: load });
 </script>
