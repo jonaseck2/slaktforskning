@@ -127,6 +127,7 @@ import { useMediaChronological, type MediaEntityRef } from '../../composables/us
 import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
+import { isSpanEventType } from '../../constants/eventTypes';
 
 const props = withDefaults(defineProps<{
   relationshipId: string;
@@ -275,6 +276,10 @@ function toSex(s: string | null | undefined): 'M' | 'F' | 'U' {
 function formatDateDisplay(ev: RawEvent): string | null {
   if (ev.date_original) return ev.date_original;
   if (!ev.date_value) return null;
+  if (ev.date_value_end &&
+      (ev.date_type === 'between' || isSpanEventType(ev.event_type))) {
+    return `${ev.date_value}–${ev.date_value_end}`;
+  }
   return ev.date_value;
 }
 

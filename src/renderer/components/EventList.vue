@@ -83,6 +83,7 @@ import ConfirmModal from './ConfirmModal.vue';
 import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { suggestNextEventType } from '../utils/eventDefaults';
+import { isSpanEventType } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
 
 interface EventRow {
@@ -161,7 +162,10 @@ function formatDate(event: EventRow): string {
         : event.date_type === 'after'
           ? t('datePrefix.after')
           : '';
-  if (event.date_type === 'between' && event.date_value_end) {
+  // Range when date_type=between OR when a span event has an end date set
+  // (BENGT #28a — residence/education/occupation/military/travel).
+  if (event.date_value_end &&
+      (event.date_type === 'between' || isSpanEventType(event.event_type))) {
     return `${event.date_value} – ${event.date_value_end}`;
   }
   return `${prefix}${event.date_value}`;
