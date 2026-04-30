@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.172.9 — Stop tracking `.claude/settings.local.json`; share project MCP enablement
+
+- fix(repo): `.claude/settings.local.json` holds per-machine personal config (Bash allow-list, absolute home-directory paths, the personal Gmail MCP) and shouldn't be in version control. Removed from git tracking and added to `.gitignore` alongside the other `.claude/` per-machine entries.
+- fix(repo): migrated the genuinely project-level subset into the tracked `.claude/settings.json` so anyone cloning the repo gets the project's MCP servers auto-enabled — `enableAllProjectMcpServers: true`, `enabledMcpjsonServers: ["slaktforskning", "slaktforskning-dev"]`, and the matching `permissions.allow` entries for `mcp__slaktforskning__*`, `mcp__slaktforskning-dev__*`, and `mcp__plugin_chrome-devtools-mcp_chrome-devtools__*` (the chrome-devtools plugin is already in `enabledPlugins`). Did NOT migrate the Bash allow-list (varies per developer's risk tolerance) or any absolute-path entries.
+
 ## v0.172.8 — Update security contact email
 
 - fix(security): switch the SECURITY.md vulnerability-disclosure address from the work email to the maintainer's personal email (this is a personal project, not an Imeto one).
