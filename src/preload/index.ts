@@ -249,6 +249,11 @@ const api = {
       ipcRenderer.on('undo:performed', (_e, data: { type: string; label: string }) => cb(data)),
   },
   onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
+  app: {
+    getVersion: () => ipcRenderer.invoke('app:getVersion'),
+    openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
+    onOpenAbout: (cb: () => void) => ipcRenderer.on('app:openAbout', cb),
+  },
   chart: {
     saveSvg: (svgContent: string, fileNameHint?: string) => ipcRenderer.invoke('chart:saveSvg', svgContent, fileNameHint),
     savePdf: (svgContent: string, pxWidth: number, pxHeight: number, fileNameHint?: string) => ipcRenderer.invoke('chart:savePdf', svgContent, pxWidth, pxHeight, fileNameHint),

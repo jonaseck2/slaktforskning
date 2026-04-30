@@ -29,6 +29,7 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'backup:backup', 'backup:restore',
   'shell:open-external',
   'export:openFolder',
+  'app:getVersion', 'app:openExternal',
   'website:export', 'website:previewSnapshot', 'website:buildPreviewHtml',
   'print:print', 'print:exportPdf',
   'chart:saveSvg', 'chart:savePdf',

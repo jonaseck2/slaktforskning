@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { app, BrowserWindow, dialog, Menu } from 'electron';
+import { app, BrowserWindow, dialog, Menu, shell } from 'electron';
 import started from 'electron-squirrel-startup';
 import { getDatabase, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
@@ -150,6 +150,24 @@ function buildMenu(): void {
       submenu: [
         { role: 'minimize' },
         { role: 'close' },
+      ],
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'About OurLegacy',
+          click: () => {
+            const win = activeWindow ?? BrowserWindow.getAllWindows()[0];
+            if (win) win.webContents.send('app:openAbout');
+          },
+        },
+        {
+          label: 'View on GitHub',
+          click: () => {
+            shell.openExternal('https://github.com/jonaseck2/slaktforskning');
+          },
+        },
       ],
     },
   ];
