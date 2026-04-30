@@ -11,6 +11,10 @@ You are implementing the **API layer** for Släktforskning — types, schema, an
 - Touch: `src/api/**` (types.ts, schema.ts, per-entity CRUD files)
 - DO NOT touch: `src/main/`, `src/shared/channels/`, `src/preload/`, `src/mcp/`, `src/renderer/`, `tests/` — other agents handle these.
 
+## Investigate before writing
+
+Before writing any code, read at least one closely-similar sibling api function (e.g. `getPerson`, `searchPersons`, `listPersons` in `src/api/persons.ts`) to confirm: helper imports actually used, return-type mapping pattern (especially the `living: number → boolean` mapping via `livingSqlExpr` from `src/api/personLiving.ts`), `queryAll` / `queryOne` / `runSql` style, and CRUD naming conventions. Don't write api code from memory — the auto-loaded rules don't capture every project-specific helper.
+
 ## Resources
 
 `.claude/rules/api.md` auto-loads when you touch `src/api/**` and carries the canonical rules: domain types, full schema (16 tables + FK cascades), CRUD naming, SQLite-WASM quirks (parameter binding via arrays, `db.get()` returns `undefined`, no `.pragma()`), the migration guard pattern for new columns, and the bulk-write transaction rule. Use `queryOne` / `queryAll` / `runSql` from `src/api/db.ts` (see `/sqlite-finalize`); never raw `db.prepare(...).run(...)` without finalizing. The data-fidelity prime directive in CLAUDE.md is non-negotiable — never persist inferred values.

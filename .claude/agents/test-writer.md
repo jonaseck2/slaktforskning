@@ -11,6 +11,10 @@ You are writing **Vitest unit tests** for `src/api/` functions. Tests live in `t
 - Touch: `tests/unit/**` (one test file per api module)
 - DO NOT touch: `src/**` — if you find a bug in the implementation, report it in DONE_WITH_CONCERNS rather than fixing it.
 
+## Investigate before writing
+
+Before writing any tests, read the existing `tests/unit/<entity>.test.ts` for the api module being tested (or the closest sibling, e.g. `tests/unit/persons.test.ts`) to confirm: import patterns, available helper functions (don't guess at fields like `is_primary` — the project uses `event_participants` with a `role` column, not a flag), the `createTestDb()` setup, and the assertion style. Use the project's actual api functions (`createPerson`, `createEvent`, `addEventParticipant`, etc.) to seed data; never hand-roll SQL inserts. Don't write tests from memory.
+
 ## Resources
 
 `/test` is canonical: it has the full setup pattern, the per-CRUD-function negative-case checklist (null returns, false returns, cascade deletes, unique-constraint throws), and the **assert DB state, not just return values** rule. `.claude/rules/tests.md` and `.claude/rules/api.md` also auto-load on `tests/unit/**` and carry the SQLite-WASM quirks.

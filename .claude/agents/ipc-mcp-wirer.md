@@ -11,6 +11,10 @@ You are wiring already-implemented `src/api/` functions to the renderer and to t
 - Touch: `src/shared/channels/<domain>.ts` (one `defineChannel` per IPC channel), `src/preload/index.ts` (hand-maintained `window.api.<domain>.<method>` line per channel), `src/static/static-api.ts` (matching stub for the static SPA), `src/mcp/createProdServer.ts` (prod tools) or `createDevServer.ts` (dev/UI/seed tools).
 - DO NOT touch: `src/api/**`, `src/renderer/**`, `tests/**` — other agents handle these.
 
+## Investigate before writing
+
+Before adding entries: read the existing `src/shared/channels/<domain>.ts` for the domain you're touching (or the closest sibling), the matching block in `src/preload/index.ts`, the existing static-api stub in `src/static/static-api.ts`, and an existing MCP tool registration in `src/mcp/tools/prod/<file>.ts` (e.g. an existing `registerTool('search_persons', ...)` block in `tools/prod/persons.ts`). Confirm: import shape, the dispatcher function name (e.g. `registerPersonTools`), naming conventions (`get_*` vs `list_*` for prod tools — match what's already there), and whether the channel is already covered by a parent registration. Don't write wiring code from memory.
+
 ## Resources
 
 `.claude/rules/ipc.md` auto-loads on these paths and carries the canonical pattern: one `defineChannel({ name, thread, mutating, handler })` covers main-thread `wrapHandler` AND worker dispatch automatically; the preload entry is hand-maintained; the static-api stub keeps parity. The `/mcp-dev` skill is canonical for MCP tools — use `registerTool()` (not the deprecated `tool()` 4-arg overload), Zod inputSchema with `.describe()` on every parameter, JSON via `JSON.stringify(result, null, 2)` in `content[0].text`, and the prime directive: **pass-through, never synthesize defaults** (e.g. don't infer `date_type='exact'` because `date_value` was supplied — let the api/schema default it).
