@@ -576,9 +576,9 @@ describe('MARRIAGE_BEFORE_BIRTH', () => {
 });
 
 describe('BAPTISM_LATE', () => {
-  it('fires when baptism is more than 10 years after birth', () => {
+  it('fires when christening is more than 10 years after birth', () => {
     const { person } = personWithBirth(db, '1800-01-01');
-    const baptismEvent = createEvent(db, { event_type: 'baptism', date_type: 'exact', date_value: '1815-06-01' });
+    const baptismEvent = createEvent(db, { event_type: 'christening', date_type: 'exact', date_value: '1815-06-01' });
     addEventParticipant(db, { event_id: baptismEvent.id, person_id: person.id, role: 'primary' });
     const results = runAllChecks(db);
     const hit = results.filter(r => r.code === 'BAPTISM_LATE' && r.personIds.includes(person.id));

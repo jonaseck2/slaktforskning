@@ -6,10 +6,10 @@ describe('suggestNextEventType', () => {
     expect(suggestNextEventType([], true)).toBe('birth');
   });
 
-  it('returns birth when smart defaults disabled, regardless of existing events', () => {
-    expect(suggestNextEventType([], false)).toBe('birth');
-    expect(suggestNextEventType(['birth'], false)).toBe('birth');
-    expect(suggestNextEventType(['birth', 'death', 'occupation', 'residence'], false)).toBe('birth');
+  it('returns empty string when smart defaults disabled, regardless of existing events', () => {
+    expect(suggestNextEventType([], false)).toBe('');
+    expect(suggestNextEventType(['birth'], false)).toBe('');
+    expect(suggestNextEventType(['birth', 'death', 'occupation', 'residence'], false)).toBe('');
   });
 
   it('walks the ladder birth → death → occupation → residence', () => {
@@ -18,17 +18,17 @@ describe('suggestNextEventType', () => {
     expect(suggestNextEventType(['birth', 'death', 'occupation'], true)).toBe('residence');
   });
 
-  it('residence is terminal — stays at residence when all ladder types exist', () => {
-    expect(suggestNextEventType(['birth', 'death', 'occupation', 'residence'], true)).toBe('residence');
+  it('returns empty string when all ladder types exist (no preselection)', () => {
+    expect(suggestNextEventType(['birth', 'death', 'occupation', 'residence'], true)).toBe('');
   });
 
   it('ignores off-ladder events and returns first missing ladder type', () => {
-    expect(suggestNextEventType(['occupation', 'baptism'], true)).toBe('birth');
+    expect(suggestNextEventType(['occupation', 'christening'], true)).toBe('birth');
   });
 
-  it('returns residence when all ladder types present even with extras', () => {
-    expect(suggestNextEventType(['birth', 'death', 'occupation', 'residence', 'baptism'], true))
-      .toBe('residence');
+  it('returns empty string when all ladder types present even with extras', () => {
+    expect(suggestNextEventType(['birth', 'death', 'occupation', 'residence', 'christening'], true))
+      .toBe('');
   });
 
   it('exports the ladder as a readonly array', () => {

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.162.6 — Bengt feedback round: labels, event-type cleanup, About menu
+
+- fix(events): the "Källa (valfritt)" label is now just "Källa", "Orsak" reads "Dödsorsak" on death events, "Pension/Medborgarskap/Yrke" → "Pensionering / Nytt medborgarskap / Yrke/Anställning", and the "..." quick-pick button is labelled "Övriga händelser"
+- fix(media): the notes section in the media panel is now titled "Bildtext"
+- fix(events): "Dop" no longer appears twice — `baptism` and `christening` collapse to a single `christening` type, with a one-shot migration for existing rows and updated GEDCOM/Genney importers
+- fix(events): adding a new event no longer pre-selects a type when smart defaults are off
+- fix(events): editing an existing event shows a soft warning if you change its type — registration data may be inconsistent
+- fix(events): the "Övriga händelser" dropdown shows only types not in the quick row, and starts blank
+- fix(main): production launch no longer auto-opens the DevTools panel
+- feat(menu): Help → About OurLegacy shows the live version with a GitHub link
+
 ## v0.162.5 — Polymorphic link helpers
 
 - refactor(api): consolidate "get linked entities" SQL queries into 2 helpers — internal only

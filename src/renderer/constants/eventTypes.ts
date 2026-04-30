@@ -3,7 +3,7 @@
 
 export const EVENT_TYPE_VALUES = [
   'birth', 'death', 'marriage', 'divorce', 'christening', 'burial',
-  'baptism', 'confirmation', 'ordination', 'census', 'immigration',
+  'confirmation', 'ordination', 'census', 'immigration',
   'emigration', 'naturalization', 'occupation', 'residence', 'education',
   'graduation', 'military', 'retirement', 'will', 'probate', 'mention',
   'engagement', 'wedding', 'adoption', 'foster_placement',

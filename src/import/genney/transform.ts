@@ -246,7 +246,8 @@ export interface ImportSummary {
 
 const GENNEY_EVENT_TYPE: Record<string, string> = {
   BIRT: 'birth', DEAT: 'death', MARR: 'marriage', DIV: 'divorce',
-  CHR: 'christening', BURI: 'burial', BAPM: 'baptism', CONF: 'confirmation',
+  // BAPM collapses to christening — single canonical type for Swedish "Dop".
+  CHR: 'christening', BURI: 'burial', BAPM: 'christening', CONF: 'confirmation',
   OCCU: 'occupation', RESI: 'residence', EDUC: 'education', EMIG: 'emigration',
   IMMI: 'immigration', NATU: 'naturalization', CENS: 'census', PROB: 'probate',
   WILL: 'will', GRAD: 'graduation', RETI: 'retirement', EVEN: 'other',
