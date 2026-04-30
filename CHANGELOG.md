@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.166.1
+
+- fix(fan chart): centre segment in the "Your Ancestors" report no longer links to a wrong ancestor — the proband (ahnentafel #1) has no dedicated ancestor page, so the centre is now rendered without a hyperlink
+- fix(fan chart): hover on a segment now uses the standard browser tooltip (the same pattern as the rest of the app) instead of a bespoke floating panel
+
 ## v0.166.0 — Reports: researcher info, page numbers, richer citations, GEDCOM SUBM fix
 
 - feat(settings): four researcher fields (name, address, phone, email) live in `db_settings` and are configurable from Settings → "Forskarinformation"

@@ -52,8 +52,8 @@ Cluster of small, independent bug fixes and minor UX corrections from Bengt's fe
 - [x] Persist via `createRelationship` (subtype field already exists in schema)
 
 ### Fan chart bugs (deferred)
-- [ ] `FanChartReport.vue` (or chart component) — investigate center segment link target. Likely an off-by-one in the ahnentafel index when building the click handler
-- [ ] Replace bespoke tooltip with the same default tooltip used elsewhere in the app (find the existing pattern via grep — likely `title` attribute or a shared tooltip directive)
+- [x] `FanChartReport.vue` (or chart component) — investigate center segment link target. Likely an off-by-one in the ahnentafel index when building the click handler
+- [x] Replace bespoke tooltip with the same default tooltip used elsewhere in the app (find the existing pattern via grep — likely `title` attribute or a shared tooltip directive)
 
 ## Out of scope
 - Lock-on-event-type-change (#36 alternative) — explicitly chose warn over block
