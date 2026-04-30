@@ -217,6 +217,13 @@ function findRecognizedSpans(
     // Greedy longest-match starting at i.
     for (let len = tokens.length - i; len >= 1; len--) {
       const window = tokens.slice(i, i + len).join(' ').toLowerCase();
+      // Skip very short windows (≤ 2 chars) — they're admin abbreviations
+      // (`kn`, `sn`, länsbokstav `A`/`AB`) or ISO country codes (`KN` =
+      // Saint Kitts and Nevis, `SN` = Senegal). They aren't a "second name"
+      // jammed onto another — the resolver already handles them via alias
+      // matching. Treating them as a recognized span produces noisy false
+      // positives like flagging `Österåkers kn` as missing-comma.
+      if (window.length <= 2) continue;
       const depth = nameDepth.get(window);
       if (depth !== undefined) {
         spans.push({ start: i, end: i + len, name: tokens.slice(i, i + len).join(' '), depth });
