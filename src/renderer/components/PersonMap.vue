@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { LCircleMarker, LPolyline, LPopup } from '@vue-leaflet/vue-leaflet';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import BaseMap from './BaseMap.vue';
@@ -150,6 +150,26 @@ async function load() {
 }
 
 watch(() => props.personId, load, { immediate: true });
+
+// Refresh on any mutation so map points appear when the user adds an event
+// with a place to the same person (no panel switch needed). Debounced to
+// batch rapid mutations.
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+function onDataMutation() {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { if (props.personId) load(); }, 200);
+}
+onMounted(() => {
+  (window.api as unknown as {
+    onDataChanged: (cb: () => void) => void;
+  }).onDataChanged(onDataMutation);
+});
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  (window.api as unknown as {
+    offDataChanged: (cb: () => void) => void;
+  }).offDataChanged(onDataMutation);
+});
 </script>
 
 <style scoped>
