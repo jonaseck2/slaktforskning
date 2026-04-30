@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.163.0 — Events: sort order setting + date ranges for span events
+
+- feat(settings): new Defaults toggle "Sorteringsordning för händelsetyper" — choose between alphabetical (default) and life-arc order for the event-type picker
+- feat(events): residence, education, occupation, military, and travel events now accept an optional end date even when date type is not "between"
+- feat(events): added "Resa" / Travel as a first-class event type
+- feat(events): event lists and reports render "start – end" for span events with an end date set
+
 ## v0.162.7 — Reactivity: panels and tree refresh on mutation
 
 - fix(person-panel): "Händelser (n)" and the other section count badges update immediately after adding/editing/deleting an event — no longer require a panel switch
