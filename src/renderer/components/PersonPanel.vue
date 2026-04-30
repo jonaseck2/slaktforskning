@@ -261,7 +261,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, computed, onMounted, nextTick } from 'vue';
+import { ref, toRef, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
@@ -525,13 +525,28 @@ function goToTask(id: string) {
 // ── Derived ─────────────────────────────────────────────────────────────────
 
 // ── Data change listener ────────────────────────────────────────────────────
+// Counts (events / relationships / identifiers / media) are refreshed inside
+// usePersonPanelData via its own onDataChanged listener. This listener only
+// covers the quality-checks section, which is heavier and stays collapsed by
+// default — debounced 400ms so a burst of mutations runs the checks once.
+
+let checksDebounce: ReturnType<typeof setTimeout> | null = null;
+function onDataMutation() {
+  if (checksDebounce) clearTimeout(checksDebounce);
+  checksDebounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
+}
 
 onMounted(() => {
-  let debounce: ReturnType<typeof setTimeout> | null = null;
-  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
-    if (debounce) clearTimeout(debounce);
-    debounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
-  });
+  (window.api as unknown as {
+    onDataChanged: (cb: () => void) => void;
+  }).onDataChanged(onDataMutation);
+});
+
+onUnmounted(() => {
+  if (checksDebounce) clearTimeout(checksDebounce);
+  (window.api as unknown as {
+    offDataChanged: (cb: () => void) => void;
+  }).offDataChanged(onDataMutation);
 });
 </script>
 
