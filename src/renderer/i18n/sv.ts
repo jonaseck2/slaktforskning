@@ -276,6 +276,7 @@ export default {
     button: 'Sök',
     emptyState: 'Skriv ett namn eller sökord för att söka.',
     noResults: 'Inga resultat för \u201C{query}\u201D.',
+    resultCount: '{count} resultat',
   },
   events: {
     title: 'Händelser',

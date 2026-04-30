@@ -18,6 +18,7 @@
     <AppEmptyState v-else-if="totalResults === 0" icon="🔍" :title="$t('search.noResults', { query: displayedQuery })" />
 
     <template v-else>
+      <p class="results-summary">{{ $t('search.resultCount', { count: totalResults }, totalResults) }}</p>
       <!-- Persons -->
       <section v-if="persons.length > 0" class="result-section">
         <h3>{{ $t('nav.people') }} <span class="count">{{ persons.length }}</span></h3>
@@ -270,6 +271,11 @@ onMounted(() => {
 .search-input:focus {
   outline: none;
   border-color: var(--accent);
+}
+.results-summary {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  margin-bottom: 16px;
 }
 .result-section {
   margin-bottom: 32px;
