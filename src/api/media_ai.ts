@@ -3,6 +3,7 @@ import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { Media } from './types';
 import { queryOne, queryAll } from './db';
+import { displayedNameIdSql } from './persons';
 
 export interface MediaFileBase64Result {
   base64: string;
@@ -152,7 +153,7 @@ export function getMediaForPersonContext(db: Database, personId: string): MediaW
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id AND ml.entity_type = 'person'
     JOIN persons p ON p.id = ml.entity_id
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = 0
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     WHERE p.id != ? AND p.id IN (
       SELECT CASE WHEN r.person1_id = ? THEN r.person2_id ELSE r.person1_id END
       FROM relationships r
@@ -197,7 +198,7 @@ export function getPersonsForMatching(db: Database, limit = 50): PersonForMatchi
            mr.media_id, mr.x, mr.y, mr.width, mr.height
     FROM media_regions mr
     JOIN persons p ON p.id = mr.person_id
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = 0
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     WHERE mr.person_id IS NOT NULL
     ORDER BY pn.surname, pn.given_name
   `, []);

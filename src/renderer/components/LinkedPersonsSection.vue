@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import PersonPicker from './PersonPicker.vue';
+import { pickDisplayedName } from '../composables/usePersonPanelData';
 import PersonName from './PersonName.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
@@ -87,12 +88,16 @@ watch(() => props.links, async (links) => {
   const out: Row[] = [];
   for (const l of links) {
     const names = await window.api.persons.getNames(l.entity_id) as Array<{
-      given_name: string | null; surname: string | null;
+      id: string; given_name: string | null; surname: string | null;
       preferred_name: string | null; nickname: string | null;
+      sort_order: number; name_type: string; date_from: string | null;
     }>;
-    const p = await window.api.persons.get(l.entity_id) as { sex: string } | null;
-    const n = names[0] ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
-    out.push({ linkId: l.id, personId: l.entity_id, ...n, sex: p?.sex ?? '' });
+    const [p, events] = await Promise.all([
+      window.api.persons.get(l.entity_id) as Promise<{ sex: string } | null>,
+      window.api.events.forPerson(l.entity_id) as Promise<Array<{ event_type: string; date_value: string | null }>>,
+    ]);
+    const n = pickDisplayedName(names, events) ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
+    out.push({ linkId: l.id, personId: l.entity_id, given_name: n.given_name, surname: n.surname, preferred_name: n.preferred_name, nickname: n.nickname, sex: p?.sex ?? '' });
   }
   rows.value = out;
 }, { immediate: true, deep: true });

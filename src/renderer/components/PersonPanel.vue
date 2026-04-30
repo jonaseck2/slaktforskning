@@ -83,7 +83,7 @@
         <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addName') }" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
           <SectionEmpty v-if="names.length === 0" :message="$t('empty.names')" />
-          <PersonNamesTable v-else :names="names" :readonly="props.readonly" @edit="openNameForm" @delete="deleteName" />
+          <PersonNamesTable v-else :names="names" :birth-event-date="birthEventDate" :readonly="props.readonly" @edit="openNameForm" @delete="deleteName" @reorder="reorderNames" />
         </div>
       </div>
 
@@ -316,6 +316,7 @@ const {
   person,
   primaryName,
   names,
+  birthEventDate,
   groups,
   researchTasks,
   loadPerson,
@@ -486,6 +487,21 @@ function deleteName(nameId: string) { delName.ask(nameId); }
 
 async function reloadNames(id: string) {
   await loadNames(id);
+  emit('person-changed');
+}
+
+/**
+ * Apply a new name order: reassign sort_order so that newOrder[0] gets the
+ * highest value (newest, table-top). Mirrors PersonMediaSection's pattern.
+ */
+async function reorderNames(orderedIds: string[]) {
+  if (!props.personId) return;
+  // Top of the table is the displayed name → highest sort_order.
+  const total = orderedIds.length;
+  for (let i = 0; i < total; i++) {
+    await window.api.persons.updateName(orderedIds[i], { sort_order: total - i });
+  }
+  await loadNames(props.personId);
   emit('person-changed');
 }
 

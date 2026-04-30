@@ -5,7 +5,7 @@ import type { PersonNode, PedigreeTree, HourglassTree, TimelineEntry, Descendant
 import { cropImageToDataUrl, type RegionFrac } from './cropImage';
 
 type RawPerson  = { id: string; sex: string; living: boolean };
-type RawName    = { given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number };
+type RawName    = { id: string; given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number; name_type: string; date_from: string | null };
 type RawEvent   = { event_type: string; date_value: string | null; place_id?: string | null };
 type RawRel     = { type: string; person1_id: string | null; person2_id: string | null };
 type RawPlace   = { id: string; name: string };
@@ -38,6 +38,36 @@ export function invalidatePersonPhoto(personId: string): void {
 export function invalidateAllPersonPhotos(): void {
   personPhotoCache.clear();
   rawMediaCache.clear();
+}
+
+/**
+ * Pick the displayed primary name. Mirrors `displayedNameIdSql` in
+ * src/api/persons.ts: latest non-null effective date_from wins, then highest
+ * sort_order, then id. For `birth` names the effective date_from is the birth
+ * event's date_value if any.
+ */
+function pickDisplayedNameLocal(names: RawName[], events: RawEvent[]): RawName | null {
+  if (names.length === 0) return null;
+  const dated = events.filter(e => e.event_type === 'birth' && e.date_value && e.date_value.length > 0);
+  dated.sort((a, b) => (a.date_value ?? '').localeCompare(b.date_value ?? ''));
+  const birthDate = dated[0]?.date_value ?? null;
+  function effective(n: RawName): string | null {
+    if (n.name_type === 'birth') return birthDate ?? n.date_from ?? null;
+    return n.date_from ?? null;
+  }
+  return [...names].sort((a, b) => {
+    const ea = effective(a);
+    const eb = effective(b);
+    if (ea && eb) {
+      if (ea !== eb) return eb.localeCompare(ea);
+    } else if (ea && !eb) {
+      return -1;
+    } else if (!ea && eb) {
+      return 1;
+    }
+    if (a.sort_order !== b.sort_order) return b.sort_order - a.sort_order;
+    return a.id.localeCompare(b.id);
+  })[0];
 }
 
 async function resolvePersonPhotoUrl(personId: string): Promise<string | null> {
@@ -83,11 +113,10 @@ export async function fetchPersonNode(id: string): Promise<PersonNode> {
   ]) as [RawPerson | null, RawName[], RawEvent[]];
 
   if (!person) throw new Error(`Person not found: ${id}`);
-  const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0]
-    ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
-
   const birthEvent = events.find(e => e.event_type === 'birth');
   const deathEvent = events.find(e => e.event_type === 'death');
+  const primary = pickDisplayedNameLocal(names, events)
+    ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
 
   let birthPlace: string | null = null;
   let deathPlace: string | null = null;

@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from './db';
 import { livingSqlExpr } from './personLiving';
+import { displayedNameIdSql } from './persons';
 
 export interface CsvOptions {
   delimiter?: string;
@@ -57,9 +58,7 @@ export function exportPersonsCsv(db: Database, options: CsvOptions = {}): string
        LEFT JOIN places pl ON pl.id = e.place_id
        WHERE ep.person_id = p.id AND e.event_type = 'death' LIMIT 1) AS death_place
     FROM persons p
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
-      SELECT MIN(pn2.sort_order) FROM person_names pn2 WHERE pn2.person_id = p.id
-    )
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     ORDER BY pn.surname, pn.given_name
   `);
 
@@ -114,9 +113,7 @@ export function exportEventsCsv(db: Database, options: CsvOptions = {}): string 
       pn.given_name,
       pn.surname
     FROM event_participants ep
-    JOIN person_names pn ON pn.person_id = ep.person_id AND pn.sort_order = (
-      SELECT MIN(pn2.sort_order) FROM person_names pn2 WHERE pn2.person_id = ep.person_id
-    )
+    JOIN person_names pn ON pn.id = ${displayedNameIdSql('ep.person_id')}
     ORDER BY ep.event_id
   `);
 

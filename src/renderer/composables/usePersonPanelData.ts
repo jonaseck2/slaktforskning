@@ -23,6 +23,8 @@ export interface NameData {
   nickname: string | null;
   sort_order: number;
   name_type: string;
+  date_from?: string | null;
+  date_to?: string | null;
   name_prefix?: string | null;
   name_suffix?: string | null;
   name_qualifier?: string | null;
@@ -47,6 +49,57 @@ export interface ResearchTaskRow {
   person_surname?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Earliest birth event `date_value` for the person, or null if none.
+ */
+function birthDateValue(events: Array<{ event_type: string; date_value: string | null }>): string | null {
+  const dated = events.filter(e => e.event_type === 'birth' && e.date_value && e.date_value.length > 0);
+  if (dated.length === 0) return null;
+  dated.sort((a, b) => (a.date_value ?? '').localeCompare(b.date_value ?? ''));
+  return dated[0].date_value;
+}
+
+/**
+ * Sort names ascending by sort_order — used for the panel's "Names" table
+ * presentation order.
+ */
+export function sortNamesBySortOrder(names: NameData[]): NameData[] {
+  return [...names].sort((a, b) => a.sort_order - b.sort_order);
+}
+
+/**
+ * Pick the displayed name. Mirrors `displayedNameIdSql` in src/api/persons.ts:
+ *   1. Latest non-null effective `date_from` wins.
+ *   2. For `birth` names the effective date is the birth event's date_value
+ *      if any, otherwise the stored date_from.
+ *   3. Tie-break by highest sort_order, then by id for stability.
+ */
+export function pickDisplayedName(
+  names: NameData[],
+  events: Array<{ event_type: string; date_value: string | null }>,
+): NameData | null {
+  if (names.length === 0) return null;
+  const birthDate = birthDateValue(events);
+  function effective(n: NameData): string | null {
+    if (n.name_type === 'birth') return birthDate ?? n.date_from ?? null;
+    return n.date_from ?? null;
+  }
+  const ranked = [...names].sort((a, b) => {
+    const ea = effective(a);
+    const eb = effective(b);
+    if (ea && eb) {
+      if (ea !== eb) return eb.localeCompare(ea); // DESC
+    } else if (ea && !eb) {
+      return -1;
+    } else if (!ea && eb) {
+      return 1;
+    }
+    if (a.sort_order !== b.sort_order) return b.sort_order - a.sort_order;
+    return a.id.localeCompare(b.id);
+  });
+  return ranked[0];
 }
 
 async function buildDateLine(event: {
@@ -84,6 +137,9 @@ export function usePersonPanelData(personId: Ref<string | null>) {
   const names = ref<NameData[]>([]);
   const groups = ref<GroupData[]>([]);
   const researchTasks = ref<ResearchTaskRow[]>([]);
+  // Birth event date_value (earliest if multiple). Used by the Names table
+  // to render the birth name's "Datum (giltig från)" cell as readonly.
+  const birthEventDate = ref<string | null>(null);
 
   // Counts for collapsed sections (loaded independently of child components)
   const eventCount = ref(0);
@@ -95,9 +151,10 @@ export function usePersonPanelData(personId: Ref<string | null>) {
 
   async function loadNames(id: string) {
     const fetched = (await window.api.persons.getNames(id)) as NameData[];
-    const sorted = [...fetched].sort((a, b) => a.sort_order - b.sort_order);
-    names.value = sorted;
-    primaryName.value = sorted[0] ?? null;
+    const events = (await window.api.events.forPerson(id)) as Array<{ event_type: string; date_value: string | null }>;
+    names.value = sortNamesBySortOrder(fetched);
+    primaryName.value = pickDisplayedName(fetched, events);
+    birthEventDate.value = birthDateValue(events);
   }
 
   async function loadGroups(id: string) {
@@ -148,9 +205,9 @@ export function usePersonPanelData(personId: Ref<string | null>) {
 
     // Update name and identity immediately — panel header shows the new person without
     // waiting for the place lookups that build the birth/death lines.
-    const sorted = [...fetchedNames].sort((a, b) => a.sort_order - b.sort_order);
-    names.value = sorted;
-    primaryName.value = sorted[0] ?? null;
+    names.value = sortNamesBySortOrder(fetchedNames);
+    primaryName.value = pickDisplayedName(fetchedNames, events);
+    birthEventDate.value = birthDateValue(events);
     eventCount.value = events.length;
     mapPointCount.value = events.filter(e => e.place_id).length;
     person.value = {
@@ -196,6 +253,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
       names.value = [];
       groups.value = [];
       researchTasks.value = [];
+      birthEventDate.value = null;
       eventCount.value = 0;
       mapPointCount.value = 0;
       relationshipCount.value = 0;
@@ -229,6 +287,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     person,
     primaryName,
     names,
+    birthEventDate,
     groups,
     researchTasks,
     loadPerson,

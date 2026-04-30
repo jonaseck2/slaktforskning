@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.165.0 — Names: displayed name follows latest name change date
+
+- feat(names): the displayed name for a person is now picked by the latest non-null `date_from` instead of a manually starred entry; the birth name's effective date comes from the birth event when available
+- feat(names): names list now shows a "Datum (giltig från)" column, sorts by that date descending, and offers ▲/▼ reorder buttons for ties between undated entries — moving a younger-dated row above an older one is blocked with a toast
+- feat(names): adding a `Vigselnamn` or `Namnändring` pre-fills the form with the current displayed given name + surname so only the parts that change need editing
+- feat(names): renamed "Gift namn" → "Vigselnamn"; the name-type picker now sorts alphabetically by translation
+
 ## v0.164.0 — Gazetteer placement diagnostics
 
 - feat(places): map popup and PlacePanel info section now surface which gazetteer resolved a place plus the match quality (exact / partial / ambiguous), so outliers like `Richmond, Kalifornien USA → ca-divisions-boundaries` are visible at a glance

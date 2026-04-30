@@ -459,7 +459,7 @@ export default {
   },
   nameTypes: {
     birth: 'Födelsenamn',
-    married: 'Gift namn',
+    married: 'Vigselnamn',
     name_change: 'Namnändring',
     alias: 'Alias',
     aka: 'Även känd som',
@@ -482,6 +482,8 @@ export default {
     patronymicBasePlaceholder: 't.ex. Erik (om efternamnet är Eriksson)',
     dateFrom: 'Giltigt från',
     dateTo: 'Giltigt till',
+    dateFromBirthEvent: 'Datum hämtat från födelsehändelsen',
+    reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',
   },
   identifiers: {
     title: 'Externa identifierare',

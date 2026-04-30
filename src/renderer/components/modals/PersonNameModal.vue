@@ -35,19 +35,31 @@
         />
       </div>
 
-      <!-- Name type segmented -->
+      <!-- Name type segmented (alphabetical by translation) -->
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('names.nameType') }}</span>
         <div class="ep-seg">
           <button
-            v-for="nt in NAME_TYPE_VALUES"
+            v-for="nt in sortedNameTypes"
             :key="nt"
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': form.name_type === nt }"
-            @click="form.name_type = nt"
+            @click="onNameTypeChange(nt)"
           >{{ $t('nameTypes.' + nt) }}</button>
         </div>
+      </div>
+
+      <!-- Date from (for dated name types) -->
+      <div v-if="form.name_type === 'married' || form.name_type === 'name_change'" class="ep-field">
+        <span class="ep-field-label">{{ $t('names.dateFrom') }}</span>
+        <input
+          class="ep-input"
+          v-model="form.date_from"
+          type="text"
+          placeholder="YYYY-MM-DD"
+          @keydown.enter.prevent="handleSave"
+        />
       </div>
 
       <!-- Preferred name (only for birth names) -->
@@ -159,6 +171,7 @@ import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
 import { NAME_TYPE_VALUES } from '../../constants/eventTypes';
 import { parseAsteriskNotation } from '../../utils/nameUtils';
+import { pickDisplayedName } from '../../composables/usePersonPanelData';
 import type { NameRow } from '../PersonNamesTable.vue';
 
 declare const window: Window & {
@@ -184,6 +197,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
+
+// Name types alphabetically sorted by translation in the current locale.
+const sortedNameTypes = computed(() => {
+  return [...NAME_TYPE_VALUES].sort((a, b) =>
+    t('nameTypes.' + a).localeCompare(t('nameTypes.' + b))
+  );
+});
 const givenNameRef = ref<HTMLInputElement | null>(null);
 
 const form = reactive({
@@ -210,9 +230,33 @@ watch(() => props.editingName, (n) => {
   form.patronymic_base = n?.patronymic_base ?? '';
   form.preferred_name = n?.preferred_name ?? '';
   form.nickname = n?.nickname ?? '';
-  form.date_from = '';
-  form.date_to = '';
+  form.date_from = n?.date_from ?? '';
+  form.date_to = n?.date_to ?? '';
 }, { immediate: true });
+
+/**
+ * Switching to `married` or `name_change` on a freshly-opened add form
+ * pre-fills given_name + surname from the current displayed name so the
+ * user can edit just the parts that change.
+ */
+async function onNameTypeChange(nt: string) {
+  form.name_type = nt;
+  if (props.editingName) return; // edit mode → no prefill
+  if (nt !== 'married' && nt !== 'name_change') return;
+  if (form.given_name || form.surname) return; // user already typed
+  try {
+    const [namesResp, eventsResp] = await Promise.all([
+      window.api.persons.getNames(props.personId) as Promise<Array<NameRow & { date_from: string | null }>>,
+      window.api.events.forPerson(props.personId) as Promise<Array<{ event_type: string; date_value: string | null }>>,
+    ]);
+    if (namesResp.length === 0) return;
+    const current = pickDisplayedName(namesResp, eventsResp);
+    if (!current) return;
+    form.given_name = current.given_name ?? '';
+    form.surname = current.surname ?? '';
+    form.preferred_name = current.preferred_name ?? '';
+  } catch { /* ignore */ }
+}
 
 const personName = ref('');
 

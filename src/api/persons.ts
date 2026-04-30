@@ -5,6 +5,56 @@ import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 import { livingSqlExpr } from './personLiving';
 
 /**
+ * SQL fragment returning the id of the *displayed* name for a person.
+ *
+ * Display rule (Bengt feedback round, 2026-04-29):
+ *   1. The name with the latest non-null `date_from` wins.
+ *   2. For `name_type = 'birth'`, the effective `date_from` is the person's
+ *      birth event `date_value` if any (otherwise the stored `date_from`).
+ *   3. Names with no effective date sort below dated names.
+ *   4. Ties between undated names break by highest `sort_order` (manual
+ *      ▲/▼ ordering — most recently moved-down wins), then by `id` for
+ *      determinism.
+ *
+ * Replaces the old "MIN(sort_order)" / star-marked primary mechanism.
+ *
+ * `personIdRef` is an SQL expression yielding the person id (e.g. `p.id`,
+ * `r.person1_id`) — interpolated directly, NEVER user input.
+ */
+export function displayedNameIdSql(personIdRef: string): string {
+  return `(
+    SELECT pn_d.id
+    FROM person_names pn_d
+    LEFT JOIN events be_d
+      ON be_d.event_type = 'birth'
+     AND pn_d.name_type = 'birth'
+     AND be_d.id = (
+       SELECT e2.id FROM events e2
+       JOIN event_participants ep2 ON ep2.event_id = e2.id
+       WHERE ep2.person_id = pn_d.person_id
+         AND ep2.role = 'primary'
+         AND e2.event_type = 'birth'
+         AND e2.date_value IS NOT NULL AND e2.date_value <> ''
+       ORDER BY e2.date_value
+       LIMIT 1
+     )
+    WHERE pn_d.person_id = ${personIdRef}
+    ORDER BY
+      CASE WHEN COALESCE(
+        CASE WHEN pn_d.name_type = 'birth' THEN be_d.date_value ELSE NULL END,
+        pn_d.date_from
+      ) IS NULL THEN 1 ELSE 0 END,
+      COALESCE(
+        CASE WHEN pn_d.name_type = 'birth' THEN be_d.date_value ELSE NULL END,
+        pn_d.date_from
+      ) DESC,
+      pn_d.sort_order DESC,
+      pn_d.id
+    LIMIT 1
+  )`;
+}
+
+/**
  * Parse preferred-name markers from a given_name string.
  * A trailing `*` or `!` on any token marks it as the preferred name (tilltalsnamn).
  * E.g. "Johan Erik*" → { given_name: "Johan Erik", preferred_name: "Erik" }
@@ -65,9 +115,7 @@ export function listPersons(db: Database): (Person & { given_name: string; surna
     SELECT p.*, ${livingSqlExpr('p')} AS living,
            pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
-      SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
-    )
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     ORDER BY pn.surname, pn.given_name
   `);
   return rows.map(r => ({ ...r, living: r.living === 1 }));
@@ -183,9 +231,7 @@ export function searchPersons(
          LIMIT 1
       ) AS death_year
     FROM persons p
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
-      SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
-    )
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     WHERE ${tokenClauses}
     ORDER BY
       CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 1 ELSE 2 END,
@@ -246,7 +292,7 @@ export function getPersonNames(db: Database, personId: string): PersonName[] {
 export function updatePersonName(
   db: Database,
   id: string,
-  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'date_from' | 'date_to' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname'>>
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'date_from' | 'date_to' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname' | 'sort_order'>>
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -268,6 +314,7 @@ export function updatePersonName(
   if (data.name_qualifier !== undefined) { fields.push('name_qualifier = ?'); values.push(data.name_qualifier); }
   if (data.preferred_name !== undefined) { fields.push('preferred_name = ?'); values.push(data.preferred_name); }
   if (data.nickname !== undefined) { fields.push('nickname = ?'); values.push(data.nickname); }
+  if (data.sort_order !== undefined) { fields.push('sort_order = ?'); values.push(data.sort_order); }
   if (fields.length === 0) return queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]) ?? null;
   values.push(id);
   runSql(db, `UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`, values);
@@ -349,9 +396,7 @@ const PERSON_LIST_BASE_QUERY = `
       LIMIT 1
     ) AS death_place
   FROM persons p
-  LEFT JOIN person_names pn
-    ON pn.person_id = p.id
-    AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+  LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
 `;
 
 
@@ -382,14 +427,7 @@ export function listPersonsPage(
            pn.preferred_name           AS preferred_name,
            pn.nickname                 AS nickname
     FROM persons p
-    LEFT JOIN (
-      SELECT person_id, MIN(sort_order) AS min_sort
-      FROM person_names
-      GROUP BY person_id
-    ) ms ON ms.person_id = p.id
-    LEFT JOIN person_names pn
-      ON pn.person_id = p.id
-      AND pn.sort_order = ms.min_sort
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     LEFT JOIN (
       SELECT person_id, MIN(date_value) AS date_value
       FROM event_participants ep
@@ -476,9 +514,7 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
            pn.preferred_name           AS preferred_name,
            pn.nickname                 AS nickname
     FROM persons p
-    LEFT JOIN person_names pn
-      ON pn.person_id = p.id
-      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id)
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     WHERE ${UNSOURCED_FILTER}
     ORDER BY pn.surname, pn.given_name
     LIMIT ? OFFSET ?
@@ -568,7 +604,7 @@ export function getPersonDisplayNames(db: Database, ids: string[]): Map<string, 
            COALESCE(pn.surname, '')    AS surname
     FROM person_names pn
     WHERE pn.person_id IN (${placeholders})
-      AND pn.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = pn.person_id)
+      AND pn.id = ${displayedNameIdSql('pn.person_id')}
   `, ids);
   const map = new Map<string, string>();
   for (const row of rows) {

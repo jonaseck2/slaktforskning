@@ -101,7 +101,10 @@ describe('persons', () => {
     addPersonName(db, person.id, { given_name: 'Anna', surname: 'Ahnstedt', name_type: 'married' });
     const results = searchPersons(db, 'Ahnstedt');
     expect(results).toHaveLength(1);
-    expect(results[0].surname).toBe('Nord'); // display uses primary name
+    // No date_from on either name → tie broken by highest sort_order. The
+    // married entry was inserted second so it has the higher sort_order and
+    // becomes the displayed name.
+    expect(results[0].surname).toBe('Ahnstedt');
   });
 
   it('finds person by preferred_name on a non-primary name record', () => {
@@ -215,6 +218,16 @@ describe('persons', () => {
       const person = createPerson(db, {});
       const name = addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
       expect(name.nickname).toBeNull();
+    });
+  });
+
+  describe('updatePersonName with sort_order', () => {
+    it('updates sort_order so the names table reorder pattern works', () => {
+      const p = createPerson(db, { given_name: 'Anna', surname: 'A' });
+      const second = addPersonName(db, p.id, { given_name: 'Anna', surname: 'B' });
+      // Bump the second name's sort_order above the birth name's
+      const updated = updatePersonName(db, second.id, { sort_order: 99 });
+      expect(updated!.sort_order).toBe(99);
     });
   });
 
@@ -501,12 +514,88 @@ describe('getPersonDisplayNames', () => {
     expect(map.has(p.id)).toBe(false);
   });
 
-  it('uses primary name (lowest sort_order)', () => {
+  it('uses displayed name (newest by date / highest sort_order)', () => {
     const p = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Ahnstedt', name_type: 'married' });
 
+    // Newest (highest sort_order) wins when no dates are set.
     const map = getPersonDisplayNames(db, [p.id]);
-    expect(map.get(p.id)).toBe('Anna Nord');
+    expect(map.get(p.id)).toBe('Anna Ahnstedt');
+  });
+});
+
+describe('displayed name rule (Bengt 2026-04-29)', () => {
+  it('birth-only person → birth name displayed', () => {
+    const p = createPerson(db, { given_name: 'Erik', surname: 'Andersson' });
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('Andersson');
+  });
+
+  it('birth + later married → married displayed (newest sort_order wins ties)', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Ahnstedt', name_type: 'married' });
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('Ahnstedt');
+  });
+
+  it('birth + married + name_change → name_change displayed', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Ahnstedt', name_type: 'married' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Berg', name_type: 'name_change' });
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('Berg');
+  });
+
+  it('explicit date_from on married overrides sort_order', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Older', name_type: 'married', date_from: '1850-01-01' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Newer', name_type: 'married', date_from: '1900-01-01' });
+    // Insert a third (no date) with the highest sort_order — should NOT win
+    // because dated entries always rank above undated ones.
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Undated', name_type: 'name_change' });
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('Newer');
+  });
+
+  it('birth name effective date = birth event date_value (overrides stored date_from)', () => {
+    const p = createPerson(db, { given_name: 'Karl', surname: 'Birth' });
+    // Birth event sets effective date_from on the birth name
+    const birth = createEvent(db, { event_type: 'birth', date_value: '1900-05-01', date_type: 'exact' });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+    // Married name dated AFTER birth → should win
+    addPersonName(db, p.id, { given_name: 'Karl', surname: 'AfterBirth', name_type: 'married', date_from: '1925-01-01' });
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('AfterBirth');
+  });
+
+  it('name dated BEFORE birth event → birth still displayed', () => {
+    const p = createPerson(db, { given_name: 'Karl', surname: 'Birth' });
+    const birth = createEvent(db, { event_type: 'birth', date_value: '1900-05-01', date_type: 'exact' });
+    addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
+    addPersonName(db, p.id, { given_name: 'Karl', surname: 'Pre1900', name_type: 'married', date_from: '1850-01-01' });
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('Birth');
+  });
+
+  it('reordering with date inversions — dated names always rank by date, not sort_order', () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Nord' });
+    // Add name with high sort_order but earlier date
+    const older = addPersonName(db, p.id, { given_name: 'Anna', surname: 'Older', name_type: 'married', date_from: '1850-01-01' });
+    const newer = addPersonName(db, p.id, { given_name: 'Anna', surname: 'Newer', name_type: 'married', date_from: '1900-01-01' });
+    // Manually invert sort_order so 'Older' has higher sort_order than 'Newer'
+    updatePersonName(db, older.id, {});  // no-op — but we want to swap sort_orders
+    db.prepare('UPDATE person_names SET sort_order = ? WHERE id = ?').run([99, older.id]);
+    db.prepare('UPDATE person_names SET sort_order = ? WHERE id = ?').run([1, newer.id]);
+    // 'Newer' still wins because date_from beats sort_order
+    const list = listPersons(db);
+    const found = list.find(r => r.id === p.id)!;
+    expect(found.surname).toBe('Newer');
   });
 });
 
