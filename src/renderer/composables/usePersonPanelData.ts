@@ -1,7 +1,10 @@
-import { ref, watch, type Ref } from 'vue';
+import { ref, watch, onScopeDispose, type Ref } from 'vue';
 
 declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> & {
+    onDataChanged: (cb: () => void) => void;
+    offDataChanged: (cb: () => void) => void;
+  };
 };
 
 export interface PersonData {
@@ -107,6 +110,26 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     researchTasks.value = raw;
   }
 
+  // Refreshes the per-section count snapshots (events, map points, relationships,
+  // identifiers, media). Called from loadPerson() wave-2 and from the
+  // onDataChanged listener so the section header counts stay in sync after any
+  // mutation. Kept narrow on purpose — it doesn't refetch person/names/groups/
+  // tasks because those have their own reactive sources further down.
+  async function reloadCounts(id: string) {
+    const [events, rels, ids, media] = await Promise.all([
+      window.api.events.forPerson(id) as Promise<Array<{ place_id: string | null }>>,
+      window.api.relationships.getForPerson(id) as Promise<unknown[]>,
+      window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
+      window.api.media.forEntity('person', id) as Promise<unknown[]>,
+    ]);
+    if (personId.value !== id) return;
+    eventCount.value = events.length;
+    mapPointCount.value = events.filter(e => e.place_id).length;
+    relationshipCount.value = rels.length;
+    identifierCount.value = ids.length;
+    mediaCount.value = media.length;
+  }
+
   async function loadPerson(id: string) {
     // Wave 1: fetch person, names, and events in parallel
     const [raw, fetchedNames, events] = await Promise.all([
@@ -185,6 +208,23 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     await loadPerson(id);
   }, { immediate: true });
 
+  // Refresh count snapshots after any mutation so section header counts
+  // (e.g. "Händelser (n)") update without needing to switch person.
+  // Debounced ~150ms to batch rapid mutations (e.g. multi-step add via modal).
+  let countsDebounce: ReturnType<typeof setTimeout> | null = null;
+  const onMutation = () => {
+    if (countsDebounce) clearTimeout(countsDebounce);
+    countsDebounce = setTimeout(() => {
+      const id = personId.value;
+      if (id) reloadCounts(id);
+    }, 150);
+  };
+  window.api.onDataChanged(onMutation);
+  onScopeDispose(() => {
+    if (countsDebounce) clearTimeout(countsDebounce);
+    window.api.offDataChanged(onMutation);
+  });
+
   return {
     person,
     primaryName,
@@ -195,6 +235,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     loadNames,
     loadGroups,
     loadResearchTasks,
+    reloadCounts,
     eventCount,
     mapPointCount,
     relationshipCount,

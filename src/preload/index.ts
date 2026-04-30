@@ -249,6 +249,10 @@ const api = {
       ipcRenderer.on('undo:performed', (_e, data: { type: string; label: string }) => cb(data)),
   },
   onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
+  offDataChanged: (cb: () => void) => {
+    const idx = dataChangedListeners.indexOf(cb);
+    if (idx !== -1) dataChangedListeners.splice(idx, 1);
+  },
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),

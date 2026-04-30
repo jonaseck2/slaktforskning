@@ -464,6 +464,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     db, undo, shell, export: exportApi, print: printApi, csv, backup, gazetteers,
     duplicates, gedcom, import: importApi, archive, website, chart,
     onDataChanged: () => {},
+    offDataChanged: () => {},
   };
 }
 
