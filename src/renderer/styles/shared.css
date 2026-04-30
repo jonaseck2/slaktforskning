@@ -571,7 +571,18 @@
   cursor: not-allowed;
 }
 
-/* ── 14. Import report modal ────────────────────────────── */
+/* ── 14. Import / export report modal ──────────────────── */
+.report-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+
+.report-body > p {
+  margin: 0;
+}
+
 .report-version {
   font-size: var(--font-sm);
   color: var(--text-secondary);
@@ -590,11 +601,11 @@
 
 .report-section {
   border-top: 1px solid var(--surface-border-subtle);
-  padding-top: 8px;
+  padding-top: var(--space-md);
 }
 
 .report-section-label {
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-xs);
   font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-secondary);
@@ -602,9 +613,12 @@
 
 .report-section ul {
   margin: 0;
-  padding-left: 16px;
+  padding-left: var(--space-lg);
   font-size: var(--font-sm);
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .report-event-list {
@@ -616,6 +630,12 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
+}
+
+.size-warning {
+  color: var(--warning-text);
+  font-weight: 500;
+  margin: 0;
 }
 
 /* ── Focus visible — accessibility ─────────────────────── */

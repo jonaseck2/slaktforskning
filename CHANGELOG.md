@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.172.2 — Import/export report modal styling
+
+- fix(import): import/export report modals (GEDCOM, Holger, Genney/Derby, archive) now have the same edge padding and inter-section spacing as the rest of the modals. Content was slotted into `.ep-body` without the `.ep-fields` wrapper, so it sat flush against the panel edges and the `<p>` / `<ul>` / `.report-section` blocks had no consistent gaps. Adds a global `.report-body` wrapper class (padding + flex-column gap), tightens `.report-section ul` line spacing, and removes a duplicated scoped block in `GenneyImportSection` that used hardcoded `#eee` / `#444` / `#555` colors instead of design tokens. Holger's `.section-instructions` callout also moves off hardcoded colors
+
 ## v0.172.1 — Researcher email placeholder
 
 - fix(i18n): escape `@` in the researcher email placeholder (`{'@'}`) so vue-i18n stops interpreting `@example.com` / `@exempel.se` as a linked-message reference and renders the placeholder verbatim

@@ -32,26 +32,28 @@
       @cancel="showExportReport = false"
       @close="showExportReport = false"
     >
-      <ul class="report-counts">
-        <li>{{ $t('importExport.exportReportPersons', { n: exportReportData.gedcomReport.persons }) }}</li>
-        <li>{{ $t('importExport.exportReportFamilies', { n: exportReportData.gedcomReport.families }) }}</li>
-        <li>{{ $t('importExport.exportReportEvents', { n: exportReportData.gedcomReport.events }) }}</li>
-        <li>{{ $t('importExport.exportReportSources', { n: exportReportData.gedcomReport.sources }) }}</li>
-        <li>{{ $t('importExport.archiveMediaCount', { count: exportReportData.mediaCount }) }}</li>
-      </ul>
-      <div v-if="exportReportData.missingMedia.length > 0" class="report-section">
-        <p class="report-section-label">{{ $t('importExport.archiveMissingMedia') }}</p>
-        <ul>
-          <li v-for="(f, i) in exportReportData.missingMedia" :key="i">{{ f }}</li>
+      <div class="report-body">
+        <ul class="report-counts">
+          <li>{{ $t('importExport.exportReportPersons', { n: exportReportData.gedcomReport.persons }) }}</li>
+          <li>{{ $t('importExport.exportReportFamilies', { n: exportReportData.gedcomReport.families }) }}</li>
+          <li>{{ $t('importExport.exportReportEvents', { n: exportReportData.gedcomReport.events }) }}</li>
+          <li>{{ $t('importExport.exportReportSources', { n: exportReportData.gedcomReport.sources }) }}</li>
+          <li>{{ $t('importExport.archiveMediaCount', { count: exportReportData.mediaCount }) }}</li>
         </ul>
-      </div>
-      <div v-if="exportReportData.gedcomReport.excluded.length > 0" class="report-section">
-        <p class="report-section-label">{{ $t('importExport.exportReportExcluded') }}</p>
-        <ul>
-          <li v-for="item in exportReportData.gedcomReport.excluded" :key="item.category">
-            <strong>{{ item.category }}</strong> ({{ item.count }}): {{ item.reason }}
-          </li>
-        </ul>
+        <div v-if="exportReportData.missingMedia.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.archiveMissingMedia') }}</p>
+          <ul>
+            <li v-for="(f, i) in exportReportData.missingMedia" :key="i">{{ f }}</li>
+          </ul>
+        </div>
+        <div v-if="exportReportData.gedcomReport.excluded.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.exportReportExcluded') }}</p>
+          <ul>
+            <li v-for="item in exportReportData.gedcomReport.excluded" :key="item.category">
+              <strong>{{ item.category }}</strong> ({{ item.count }}): {{ item.reason }}
+            </li>
+          </ul>
+        </div>
       </div>
     </BaseSubPanel>
 
@@ -67,6 +69,7 @@
       @cancel="showImportReport = false"
       @close="showImportReport = false"
     >
+      <div class="report-body">
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReportData.gedcomReport.persons }) }}</li>
         <li>{{ $t('importExport.importReportFamilies', { n: importReportData.gedcomReport.families }) }}</li>
@@ -105,6 +108,7 @@
             @update:model-value="setTreeSubjectFromImport"
           />
         </div>
+      </div>
       </div>
     </BaseSubPanel>
   </div>

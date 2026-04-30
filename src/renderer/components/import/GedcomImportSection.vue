@@ -18,21 +18,23 @@
       @close="cancelImport"
       @save="proceedImport"
     >
-      <p>{{ $t('gedcom.willImport') }}</p>
-      <ul class="report-counts">
-        <li>{{ $t('gedcom.previewPersons', { n: previewData.personCount }) }}</li>
-        <li>{{ $t('gedcom.previewRelationships', { n: previewData.relationshipCount }) }}</li>
-        <li>{{ $t('gedcom.previewEvents', { n: previewData.eventCount }) }}</li>
-        <li>{{ $t('gedcom.previewSources', { n: previewData.sourceCount }) }}</li>
-        <li>{{ $t('gedcom.previewPlaces', { n: previewData.placeCount }) }}</li>
-        <li v-if="previewData.repositoryCount > 0">{{ $t('gedcom.previewRepositories', { n: previewData.repositoryCount }) }}</li>
-      </ul>
-      <p v-if="previewData.estimatedSize === 'large'" class="size-warning">{{ $t('gedcom.previewLargeWarning') }}</p>
-      <div v-if="previewData.warnings.length > 0" class="report-section">
-        <p class="report-section-label">{{ $t('gedcom.previewWarnings', { n: previewData.warnings.length }) }}</p>
-        <ul>
-          <li v-for="(w, i) in previewData.warnings" :key="i">{{ w }}</li>
+      <div class="report-body">
+        <p>{{ $t('gedcom.willImport') }}</p>
+        <ul class="report-counts">
+          <li>{{ $t('gedcom.previewPersons', { n: previewData.personCount }) }}</li>
+          <li>{{ $t('gedcom.previewRelationships', { n: previewData.relationshipCount }) }}</li>
+          <li>{{ $t('gedcom.previewEvents', { n: previewData.eventCount }) }}</li>
+          <li>{{ $t('gedcom.previewSources', { n: previewData.sourceCount }) }}</li>
+          <li>{{ $t('gedcom.previewPlaces', { n: previewData.placeCount }) }}</li>
+          <li v-if="previewData.repositoryCount > 0">{{ $t('gedcom.previewRepositories', { n: previewData.repositoryCount }) }}</li>
         </ul>
+        <p v-if="previewData.estimatedSize === 'large'" class="size-warning">{{ $t('gedcom.previewLargeWarning') }}</p>
+        <div v-if="previewData.warnings.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('gedcom.previewWarnings', { n: previewData.warnings.length }) }}</p>
+          <ul>
+            <li v-for="(w, i) in previewData.warnings" :key="i">{{ w }}</li>
+          </ul>
+        </div>
       </div>
     </BaseSubPanel>
 
@@ -48,6 +50,7 @@
       @cancel="showImportReport = false"
       @close="showImportReport = false"
     >
+      <div class="report-body">
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
@@ -116,6 +119,7 @@
             @update:model-value="setTreeSubjectFromImport"
           />
         </div>
+      </div>
       </div>
     </BaseSubPanel>
   </div>
@@ -285,10 +289,6 @@ async function proceedImport() {
 </script>
 
 <style scoped>
-.size-warning {
-  color: var(--color-warning, #c57600);
-  font-weight: 500;
-}
 .subm-name {
   font-size: var(--font-sm);
   color: var(--color-text-muted);

@@ -52,28 +52,30 @@
       @cancel="showGenneyReport = false"
       @close="showGenneyReport = false"
     >
-      <ul class="report-counts">
-        <li>{{ $t('importExport.genneyReportPersons', { n: genneyReport.persons }) }}</li>
-        <li>{{ $t('importExport.genneyReportCoupleRels', { n: genneyReport.coupleRelationships }) }}</li>
-        <li>{{ $t('importExport.genneyReportParentChildRels', { n: genneyReport.parentChildRelationships }) }}</li>
-        <li>{{ $t('importExport.genneyReportEvents', { n: genneyReport.events }) }}</li>
-        <li>{{ $t('importExport.genneyReportPlaces', { n: genneyReport.places }) }}</li>
-        <li>{{ $t('importExport.genneyReportSources', { n: genneyReport.sources }) }}</li>
-        <li>{{ $t('importExport.genneyReportCitations', { n: genneyReport.citations }) }}</li>
-      </ul>
-      <div v-if="genneyReport.warnings.length > 0" class="report-section">
-        <p class="report-section-label">{{ $t('importExport.importReportWarnings') }}</p>
-        <ul>
-          <li v-for="(w, i) in genneyReport.warnings" :key="i">{{ w }}</li>
+      <div class="report-body">
+        <ul class="report-counts">
+          <li>{{ $t('importExport.genneyReportPersons', { n: genneyReport.persons }) }}</li>
+          <li>{{ $t('importExport.genneyReportCoupleRels', { n: genneyReport.coupleRelationships }) }}</li>
+          <li>{{ $t('importExport.genneyReportParentChildRels', { n: genneyReport.parentChildRelationships }) }}</li>
+          <li>{{ $t('importExport.genneyReportEvents', { n: genneyReport.events }) }}</li>
+          <li>{{ $t('importExport.genneyReportPlaces', { n: genneyReport.places }) }}</li>
+          <li>{{ $t('importExport.genneyReportSources', { n: genneyReport.sources }) }}</li>
+          <li>{{ $t('importExport.genneyReportCitations', { n: genneyReport.citations }) }}</li>
         </ul>
-      </div>
-      <div v-if="genneyReport.skipped.length > 0" class="report-section">
-        <p class="report-section-label">{{ $t('importExport.importReportSkipped') }}</p>
-        <ul>
-          <li v-for="s in genneyReport.skipped" :key="s.category">
-            <strong>{{ s.category }}</strong> ({{ s.count }}): {{ s.reason }}
-          </li>
-        </ul>
+        <div v-if="genneyReport.warnings.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportWarnings') }}</p>
+          <ul>
+            <li v-for="(w, i) in genneyReport.warnings" :key="i">{{ w }}</li>
+          </ul>
+        </div>
+        <div v-if="genneyReport.skipped.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.importReportSkipped') }}</p>
+          <ul>
+            <li v-for="s in genneyReport.skipped" :key="s.category">
+              <strong>{{ s.category }}</strong> ({{ s.count }}): {{ s.reason }}
+            </li>
+          </ul>
+        </div>
       </div>
     </BaseSubPanel>
   </div>
@@ -207,33 +209,3 @@ async function importGed() {
 }
 </script>
 
-<style scoped>
-.report-counts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-base);
-}
-
-.report-section {
-  border-top: 1px solid #eee;
-  padding-top: 8px;
-}
-
-.report-section-label {
-  margin: 0 0 4px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: #555;
-}
-
-.report-section ul {
-  margin: 0;
-  padding-left: 16px;
-  font-size: var(--font-sm);
-  color: #444;
-}
-</style>

@@ -24,6 +24,7 @@
       @cancel="showImportReport = false"
       @close="showImportReport = false"
     >
+      <div class="report-body">
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
@@ -67,6 +68,7 @@
             @update:model-value="setTreeSubjectFromImport"
           />
         </div>
+      </div>
       </div>
     </BaseSubPanel>
   </div>
@@ -203,11 +205,11 @@ async function handleImportFromHolger() {
 <style scoped>
 .section-instructions {
   font-size: var(--font-sm);
-  color: #444;
-  background: #f8f8f8;
-  border-left: 3px solid var(--color-primary);
+  color: var(--text-primary);
+  background: var(--surface-hover);
+  border-left: 3px solid var(--accent);
   padding: 8px 12px;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   margin: 0;
 }
 
