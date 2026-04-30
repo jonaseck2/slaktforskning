@@ -1526,6 +1526,8 @@ export default {
       partial: 'Delvis',
       ambiguous: 'Tvetydig',
     },
+    via: 'via',
+    resolvedVia: 'Matchat via',
     source: 'Källa',
     created: 'skapad',
     fetched: 'hämtad',

@@ -1547,6 +1547,8 @@ export default {
       partial: 'Partial',
       ambiguous: 'Ambiguous',
     },
+    via: 'via',
+    resolvedVia: 'Resolved via',
     source: 'Source',
     created: 'created',
     fetched: 'fetched',

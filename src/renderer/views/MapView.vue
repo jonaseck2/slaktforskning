@@ -171,7 +171,8 @@ function showPopup(id: string) {
   if (place.resolved) {
     const qClass = 'match-' + place.resolved.matchQuality;
     html += `<div class="popup-resolved"><span class="${qClass}">${t('gazetteers.match.' + place.resolved.matchQuality)}</span>`;
-    html += `<span class="match-path">${place.resolved.matchedPath.join(' &gt; ')}</span></div>`;
+    html += `<span class="match-path">${place.resolved.matchedPath.join(' &gt; ')}</span>`;
+    html += `<span class="match-gazetteer">${t('gazetteers.via')} <code>${place.resolved.gazetteer}</code></span></div>`;
   }
 
   popup = L.popup({ offset: [0, -8] })
@@ -569,5 +570,18 @@ onMounted(async () => {
   color: var(--text-secondary);
   font-size: var(--font-xs);
   margin-top: 2px;
+}
+:deep(.match-gazetteer) {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  margin-top: 2px;
+}
+:deep(.match-gazetteer code) {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.95em;
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
 }
 </style>

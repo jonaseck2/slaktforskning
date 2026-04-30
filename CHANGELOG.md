@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.164.0 — Gazetteer placement diagnostics
+
+- feat(places): map popup and PlacePanel info section now surface which gazetteer resolved a place plus the match quality (exact / partial / ambiguous), so outliers like `Richmond, Kalifornien USA → ca-divisions-boundaries` are visible at a glance
+- feat(scripts): add `scripts/check-us-places.ts` — readonly diagnostic that resolves every US-tagged place in a database and buckets outliers (NOT_US, STATE_MISMATCH, AMBIGUOUS, UNRESOLVED) with the matched path and gazetteer ID
+- feat(skill): new `/gazetteer-testing` skill — workflow for auditing place resolution on real data, common outlier buckets, and a symptom→file map for fixes
+
 ## v0.163.1
 
 - fix(skill): commit skill now uses multiple `-m` flags instead of heredoc, so the same skill works in both interactive Claude Code and headless `claude -p` (the agentic-dev-pipeline runs the agent in headless mode where heredoc terminators corrupt under the bash wrapper)

@@ -71,6 +71,14 @@
                 @blur="saveField('longitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
               />
             </div>
+            <div v-if="resolvedMatch" class="compact-field resolved-field">
+              <span class="compact-label">{{ $t('gazetteers.resolvedVia') }}</span>
+              <span class="resolved-value">
+                <span :class="'resolved-quality match-' + resolvedMatch.matchQuality">{{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}</span>
+                <code class="resolved-gaz">{{ resolvedMatch.gazetteer }}</code>
+                <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
+              </span>
+            </div>
             <div class="compact-field">
               <div class="notes-heading-row">
                 <label class="compact-label">{{ $t('panel.notes') }}</label>
@@ -104,6 +112,14 @@
             <div v-if="place.latitude != null || place.longitude != null" class="compact-field">
               <span class="compact-label">{{ $t('places.latitude') }} / {{ $t('places.longitude') }}</span>
               <span class="readonly-value">{{ place.latitude ?? '—' }} / {{ place.longitude ?? '—' }}</span>
+            </div>
+            <div v-if="resolvedMatch" class="compact-field resolved-field">
+              <span class="compact-label">{{ $t('gazetteers.resolvedVia') }}</span>
+              <span class="resolved-value">
+                <span :class="'resolved-quality match-' + resolvedMatch.matchQuality">{{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}</span>
+                <code class="resolved-gaz">{{ resolvedMatch.gazetteer }}</code>
+                <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
+              </span>
             </div>
             <div v-if="place.notes" class="compact-field">
               <span class="compact-label">{{ $t('panel.notes') }}</span>
@@ -303,6 +319,8 @@ import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
+import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -422,6 +440,21 @@ const { data: panelData, reload } = useEntityData<PlacePanelData>(idRef, async (
 const place = computed(() => panelData.value?.place ?? null);
 const ancestors = computed(() => panelData.value?.ancestors ?? []);
 const childPlaces = computed(() => panelData.value?.childPlaces ?? []);
+
+// Gazetteer resolution: when the place has no stored lat/lon, surface which
+// gazetteer (if any) was used to place it on the map and at what quality.
+// Also runs even when stored coords exist, so the user can spot when the
+// stored coords disagree with what the gazetteer would pick.
+const { ready: resolverReady, ensureLoaded: ensureResolverLoaded, resolve } = usePlaceResolver();
+ensureResolverLoaded();
+
+const resolvedMatch = computed<PlaceResolveResult | null>(() => {
+  if (!resolverReady.value) return null;
+  const p = place.value;
+  if (!p) return null;
+  const parts = [p.name, ...ancestors.value.map(a => a.name)];
+  return resolve(parts.join(', '));
+});
 const personCount = computed(() => panelData.value?.personCount ?? 0);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
 const citationCount = computed(() => panelData.value?.citationCount ?? 0);
@@ -632,6 +665,49 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   font-size: var(--font-xs);
   color: var(--text-primary);
   padding: var(--space-xs) 0;
+}
+
+.resolved-field {
+  margin-top: var(--space-xs);
+}
+.resolved-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-xs);
+  padding: var(--space-xs) 0;
+}
+.resolved-quality {
+  display: inline-block;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+}
+.resolved-quality.match-exact {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.resolved-quality.match-partial {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+.resolved-quality.match-ambiguous {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+.resolved-gaz {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.95em;
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+  color: var(--text-secondary);
+}
+.resolved-path {
+  color: var(--text-muted);
+  flex-basis: 100%;
 }
 
 .notes-heading-row {
