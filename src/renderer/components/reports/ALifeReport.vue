@@ -89,8 +89,14 @@
         <h2 class="section-heading">{{ $t('reports.common.sources') }}</h2>
         <ol class="citation-list">
           <li v-for="src in uniqueSources" :key="src.id">
-            <span>{{ src.title || $t('common.unknown') }}</span>
+            <span class="src-title">{{ src.title || $t('common.unknown') }}</span>
             <span v-if="src.author" class="muted"> &middot; {{ src.author }}</span>
+            <div v-if="src.publication_info" class="src-line">{{ src.publication_info }}</div>
+            <div v-if="src.repository" class="src-line muted">{{ src.repository }}</div>
+            <div v-if="src.url" class="src-line src-url">{{ src.url }}</div>
+            <ul v-if="src.pages.length > 0" class="src-pages">
+              <li v-for="(p, i) in src.pages" :key="i">{{ p }}</li>
+            </ul>
           </li>
         </ol>
       </section>
@@ -176,6 +182,10 @@ interface RawCitation {
   source_id: string;
   source_title: string | null;
   source_author: string | null;
+  source_publication_info: string | null;
+  source_url: string | null;
+  source_repository: string | null;
+  page: string | null;
 }
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface PersonSummary {
@@ -406,16 +416,37 @@ const documentItems = computed<MediaDisplayItem[]>(() => {
     .map(toDisplayItem);
 });
 
-const uniqueSources = computed(() => {
+interface SourceListItem {
+  id: string;
+  title: string | null;
+  author: string | null;
+  publication_info: string | null;
+  url: string | null;
+  repository: string | null;
+  pages: string[];
+}
+
+const uniqueSources = computed<SourceListItem[]>(() => {
   if (!data.value?.citations) return [];
-  const seen = new Set<string>();
-  const out: Array<{ id: string; title: string | null; author: string | null }> = [];
+  const map = new Map<string, SourceListItem>();
   for (const c of data.value.citations) {
-    if (!c.source_id || seen.has(c.source_id)) continue;
-    seen.add(c.source_id);
-    out.push({ id: c.source_id, title: c.source_title, author: c.source_author });
+    if (!c.source_id) continue;
+    let entry = map.get(c.source_id);
+    if (!entry) {
+      entry = {
+        id: c.source_id,
+        title: c.source_title,
+        author: c.source_author,
+        publication_info: c.source_publication_info ?? null,
+        url: c.source_url ?? null,
+        repository: c.source_repository ?? null,
+        pages: [],
+      };
+      map.set(c.source_id, entry);
+    }
+    if (c.page && !entry.pages.includes(c.page)) entry.pages.push(c.page);
   }
-  return out;
+  return Array.from(map.values());
 });
 
 watch(
@@ -544,5 +575,16 @@ watch(() => props.personId, load, { immediate: true });
 .citation-list {
   padding-left: var(--space-lg);
   font-size: var(--font-sm);
+}
+.citation-list li { margin-bottom: var(--space-sm); }
+.citation-list .src-title { font-weight: 600; }
+.citation-list .src-line { font-size: var(--font-xs); color: var(--text-secondary); margin-top: 2px; }
+.citation-list .src-url { word-break: break-all; }
+.citation-list .src-pages {
+  list-style: disc;
+  margin: 4px 0 0 var(--space-md);
+  padding-left: var(--space-md);
+  font-size: var(--font-xs);
+  color: var(--text-muted);
 }
 </style>

@@ -38,11 +38,30 @@ Three related strands in Bengt's #14b: researcher contact info on every report, 
 - [x] Unit tests: `tests/unit/gedcom-export-subm.test.ts` (5 cases)
 
 ### Phase 5 — Citation rendering audit
-- [ ] Grep `citation` checkbox handling in `ALifeReport.vue`, `AMarriageReport.vue`, `PlaceChronicleReport.vue`, `LifeOnOnePageReport.vue`, `YourAncestorsReport.vue`
-- [ ] Identify each checkbox in `useReportConfigStore`
-- [ ] For each: trace what config flag is supposed to do and what the report renders
-- [ ] Fix gaps — at minimum: per-event citation footnotes, citation appendix at end, sources list with full bibliographic info
-- [ ] Document in this file under "Audit Results"
+- [x] Grep `citation` checkbox handling in `ALifeReport.vue`, `AMarriageReport.vue`, `PlaceChronicleReport.vue`, `LifeOnOnePageReport.vue`, `YourAncestorsReport.vue`
+- [x] Identify each checkbox in `useReportConfigStore`
+- [x] For each: trace what config flag is supposed to do and what the report renders
+- [x] Fix gaps — at minimum: per-event citation footnotes, citation appendix at end, sources list with full bibliographic info
+- [x] Document in this file under "Audit Results"
+
+## Audit Results
+
+| Report | Toggle | Pre-fix behaviour | Post-fix behaviour |
+|--------|--------|-------------------|--------------------|
+| ALifeReport | `aLifeShowSources` | Title + author only | Title + author + publication_info + repository + URL + per-source pages list |
+| AMarriageReport | `aMarriageShowSources` | Title + author only | Title + author + publication_info + repository + URL |
+| PlaceChronicleReport | `placeChronicleShowSources` | Title + author only | Title + author + publication_info + repository + URL |
+| YourAncestorsReport | `yourAncestorsShowSources` | Title + author only | Title + author + publication_info + repository + URL |
+| LifeOnOnePageReport | (none) | No citation block — single-sheet keepsake intentionally compact | Unchanged — out of scope |
+
+**Why Bengt felt "the toggle doesn't do much":** all four citation-bearing reports rendered the appendix as just `title · author`, throwing away `publication_info`, `repository`, `url`, and per-citation `page` from the underlying `Citation`/`Source` records. The toggle did flip a section on/off, but the section contained no research-trail detail.
+
+**Fix:** enriched `CitationWithSource` (in `report_data.ts`) with `source_publication_info`, `source_url`, `source_repository`, and updated all four reports' appendix templates to render those plus per-citation pages where the data flows through. Each toggle now produces a visibly richer result.
+
+**Deferred to a future plan:**
+- Per-event inline footnote markers + numbered footnote block (would require a numbered citation registry shared across event/relationship/place sections).
+- Citation `confidence`, `transcription`, `notes`, `date_accessed` — these are per-citation and would inflate the appendix; better surfaced via an inline-footnote view than a dedicated flag.
+- LifeOnOnePageReport citation block — single-sheet keepsake, no natural place for an appendix.
 
 ## Out of scope
 - Cross-DB cherry-pick (#15) — declined

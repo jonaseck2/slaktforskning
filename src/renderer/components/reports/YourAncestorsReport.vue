@@ -105,8 +105,11 @@
         <h2 class="section-heading">{{ $t('reports.common.sources') }}</h2>
         <ol class="citation-list">
           <li v-for="src in uniqueSources" :key="src.id">
-            <span>{{ src.title || $t('common.unknown') }}</span>
+            <span class="src-title">{{ src.title || $t('common.unknown') }}</span>
             <span v-if="src.author" class="muted"> &middot; {{ src.author }}</span>
+            <div v-if="src.publication_info" class="src-line">{{ src.publication_info }}</div>
+            <div v-if="src.repository" class="src-line muted">{{ src.repository }}</div>
+            <div v-if="src.url" class="src-line src-url">{{ src.url }}</div>
           </li>
         </ol>
       </section>
@@ -214,6 +217,9 @@ interface PersonSummary {
     source_id: string;
     source_title: string | null;
     source_author: string | null;
+    source_publication_info: string | null;
+    source_url: string | null;
+    source_repository: string | null;
   }>;
 }
 
@@ -244,6 +250,9 @@ interface SourceRef {
   id: string;
   title: string | null;
   author: string | null;
+  publication_info: string | null;
+  url: string | null;
+  repository: string | null;
 }
 
 // --- State ---
@@ -396,7 +405,14 @@ const uniqueSources = computed<SourceRef[]>(() => {
   for (const c of rootData.value.citations) {
     if (!c.source_id || seen.has(c.source_id)) continue;
     seen.add(c.source_id);
-    out.push({ id: c.source_id, title: c.source_title, author: c.source_author });
+    out.push({
+      id: c.source_id,
+      title: c.source_title,
+      author: c.source_author,
+      publication_info: c.source_publication_info ?? null,
+      url: c.source_url ?? null,
+      repository: c.source_repository ?? null,
+    });
   }
   return out;
 });
@@ -531,6 +547,10 @@ function scrollToId(id: string) {
   padding-left: var(--space-lg);
   font-size: var(--font-sm);
 }
+.citation-list li { margin-bottom: var(--space-sm); }
+.citation-list .src-title { font-weight: 600; }
+.citation-list .src-line { font-size: var(--font-xs); color: var(--text-secondary); margin-top: 2px; }
+.citation-list .src-url { word-break: break-all; }
 .muted { color: var(--text-muted); }
 
 .report-link {
