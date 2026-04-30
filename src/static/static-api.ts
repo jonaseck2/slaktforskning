@@ -265,7 +265,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
       }
       return out;
     },
-    findOrCreate: noop, create: noop, update: noop, delete: noopFalse,
+    findOrCreate: noop, findOrCreateWithChain: noop, create: noop, update: noop, delete: noopFalse,
   };
 
   const events = {

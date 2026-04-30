@@ -33,7 +33,8 @@
         class="dropdown-item"
         :class="{ highlighted: idx === highlightIndex }"
         v-narrate="place.name"
-        @mousedown.prevent="select(place)"
+        @mousedown.prevent.stop="select(place)"
+        @click.stop
       >
         <div class="place-main">
           <span class="place-name">{{ place.name }}</span>
@@ -50,23 +51,25 @@
         class="dropdown-item gazetteer-item"
         :class="{ highlighted: (results.length + gIdx) === highlightIndex }"
         v-narrate="gaz.name"
-        @mousedown.prevent="selectGazetteer(gaz)"
+        @mousedown.prevent.stop="selectGazetteer(gaz)"
+        @click.stop
       >
         <div class="place-main">
           <span class="place-name">{{ gaz.name }}</span>
           <span class="place-type">{{ gaz.pathNodes[gaz.pathNodes.length - 1]?.type }}</span>
           <span class="gazetteer-badge">{{ gaz.gazetteer }}</span>
         </div>
-        <div class="place-subtitle">{{ gaz.matchedPath.join(' > ') }}</div>
+        <div class="place-subtitle">{{ gaz.parentChain || gaz.matchedPath.join(' › ') }}</div>
       </li>
       <li
-        v-if="query.length > 1 && results.every(r => r.name.toLowerCase() !== query.toLowerCase())"
+        v-if="showCreateNew"
         :id="pickerId + '-option-' + (results.length + gazetteerResults.length)"
         role="option"
         :aria-selected="(results.length + gazetteerResults.length) === highlightIndex"
         class="dropdown-item create-new"
         :class="{ highlighted: (results.length + gazetteerResults.length) === highlightIndex }"
-        @mousedown.prevent="createNew"
+        @mousedown.prevent.stop="createNew"
+        @click.stop
       >
         {{ $t('places.createNew', { name: query }) }}
       </li>
@@ -79,16 +82,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, inject, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, watch, inject, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
-import { searchGazetteer } from '../../api/place-gazetteers/resolver';
+import { searchGazetteer, resolveHierarchical, tokenizePlaceString } from '../../api/place-gazetteers/resolver';
 
 const pickerId = 'place-picker-' + Math.random().toString(36).slice(2, 8);
 
 interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; parent_name?: string | null; }
 interface GazetteerPathNode { name: string; type: string; lat: number; lon: number; }
-interface GazetteerSuggestion { name: string; lat: number; lon: number; matchedPath: string[]; pathNodes: GazetteerPathNode[]; gazetteer: string; }
+interface GazetteerSuggestion {
+  name: string;
+  lat: number;
+  lon: number;
+  matchedPath: string[];
+  pathNodes: GazetteerPathNode[];
+  gazetteer: string;
+  /** Pretty-printed parent chain for the dropdown subtitle (e.g. "Mosås › Örebro län") */
+  parentChain?: string;
+  /** When this suggestion comes from the hierarchical resolver, the leaf
+   * tokens that were unmatched (typically the user's farm/locality name).
+   * Selecting this row will create a new Place named `unmatchedLeftTokens.join(', ')`
+   * with `parent_place_id` chained from the matched path. */
+  unmatchedLeftTokens?: string[];
+}
 
 const props = defineProps<{
   modelValue: string | null;
@@ -142,25 +159,78 @@ watch(gazetteerResults, () => {
   if (showDropdown.value) nextTick(updateDropdownPosition);
 });
 
+// Track the path string we set after a successful select. When the user
+// edits the input so it no longer matches this path, we clear modelValue
+// so the parent doesn't keep a stale place_id and showCreateNew is no
+// longer suppressed (BENGT #34 followup — typing a new query after picking
+// must be a clean search).
+const lastResolvedPath = ref<string>('');
+
 watch(() => props.modelValue, async (id) => {
-  if (!id) { query.value = ''; return; }
+  if (!id) {
+    query.value = '';
+    lastResolvedPath.value = '';
+    return;
+  }
   const path = await window.api.places.getPath(id);
-  if (path) query.value = path;
+  if (path) {
+    query.value = path;
+    lastResolvedPath.value = path;
+  }
 }, { immediate: true });
 
-function onInput() {
-  clearTimeout(debounceTimer);
+async function runSearch() {
   if (query.value.length < 1) { results.value = []; gazetteerResults.value = []; return; }
-  debounceTimer = setTimeout(async () => {
-    const dbResults = (await window.api.places.search(query.value)) as PlaceRow[];
-    results.value = dbResults.slice(0, 5);
+  const dbResults = (await window.api.places.search(query.value)) as PlaceRow[];
+  results.value = dbResults.slice(0, 5);
 
-    // Search all enabled gazetteers for matching nodes at every level
-    if (!gazetteerReady.value) await ensureGazetteersLoaded();
+  // Search all enabled gazetteers for matching nodes at every level
+  if (!gazetteerReady.value) await ensureGazetteersLoaded();
+
+  const gazSuggestions: GazetteerSuggestion[] = [];
+
+  // Tier 1 — hierarchical, parent-aware match (BENGT #27).
+  // Only run when the input has at least two tokens (commas or parens),
+  // because for single-word input the flat searchGazetteer is more useful.
+  const tokens = tokenizePlaceString(query.value);
+  if (tokens.length > 1) {
+    const hier = resolveHierarchical(query.value, getGazetteers());
+    if (hier.best && hier.candidates.length > 0) {
+      const seen = new Set<string>();
+      for (const cand of hier.candidates.slice(0, 5)) {
+        const node = cand.node;
+        // Build the leaf name: matched node OR the unmatched left tokens
+        // joined ("Hörningsholm" / "Mosås"). The actual create-flow uses
+        // `unmatchedLeftTokens` for the leaf name.
+        const leafName = cand.unmatchedLeftTokens.length > 0
+          ? cand.unmatchedLeftTokens.join(', ')
+          : node.name;
+        const key = `${leafName.toLowerCase()}|${cand.gazetteer}|${cand.path.map(n => n.name).join('>')}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        // Parent chain string: matched path bottom-to-top, leaf-first
+        const reversed = [...cand.path].reverse();
+        const parentChain = reversed.map(n => n.name).join(' › ');
+        gazSuggestions.push({
+          name: leafName,
+          lat: node.lat,
+          lon: node.lon,
+          matchedPath: cand.path.map(n => n.name),
+          pathNodes: cand.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
+          gazetteer: cand.gazetteer,
+          parentChain,
+          unmatchedLeftTokens: cand.unmatchedLeftTokens,
+        });
+      }
+    }
+  }
+
+  // Tier 0 fallback — flat full-tree search by node name. Useful for
+  // single-token input ("Solna", "Matteus") where the user hasn't yet
+  // typed any geographic context.
+  if (gazSuggestions.length === 0) {
     const hits = searchGazetteer(query.value, getGazetteers(), 5);
-    // Deduplicate by name + type (e.g. "Jönköping" as county vs municipality vs locality are distinct)
     const seen = new Set<string>();
-    const gazSuggestions: GazetteerSuggestion[] = [];
     for (const hit of hits) {
       const key = `${hit.node.name.toLowerCase()}|${hit.node.type}|${hit.gazetteer}`;
       if (seen.has(key)) continue;
@@ -172,21 +242,43 @@ function onInput() {
         matchedPath: hit.path.map(n => n.name),
         pathNodes: hit.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
         gazetteer: hit.gazetteer,
+        parentChain: hit.path.map(n => n.name).join(' › '),
       });
     }
-    // Sort most specific (deepest hierarchy) first
     gazSuggestions.sort((a, b) => b.pathNodes.length - a.pathNodes.length);
-    gazetteerResults.value = gazSuggestions;
-  }, 150);
+  }
+
+  gazetteerResults.value = gazSuggestions;
 }
 
-// Whether the "create new" option is currently shown
-function hasCreateNew(): boolean {
-  return query.value.length > 1 && results.value.every(r => r.name.toLowerCase() !== query.value.toLowerCase());
+function onInput() {
+  clearTimeout(debounceTimer);
+  // If the user edits away from the previously resolved path, drop the
+  // stored modelValue so showCreateNew kicks back in for the new query.
+  if (props.modelValue && query.value !== lastResolvedPath.value) {
+    emit('update:modelValue', null);
+    lastResolvedPath.value = '';
+  }
+  if (query.value.length < 1) { results.value = []; gazetteerResults.value = []; return; }
+  debounceTimer = setTimeout(runSearch, 150);
 }
+
+// Whether the "create new" option is currently shown.
+// Hidden when (a) the query exactly matches an existing DB place, OR
+// (b) the user just selected a place via this picker (modelValue is set
+// and matches the rendered query — BENGT #34: don't keep prompting to
+// create a place that already exists).
+const showCreateNew = computed(() => {
+  if (query.value.length <= 1) return false;
+  // Suppress while modelValue is set (means picker has already resolved a
+  // place for this query string).
+  if (props.modelValue) return false;
+  const q = query.value.toLowerCase();
+  return results.value.every(r => r.name.toLowerCase() !== q);
+});
 
 function totalOptions(): number {
-  return results.value.length + gazetteerResults.value.length + (hasCreateNew() ? 1 : 0);
+  return results.value.length + gazetteerResults.value.length + (showCreateNew.value ? 1 : 0);
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -218,6 +310,7 @@ function onKeydown(e: KeyboardEvent) {
 async function select(place: PlaceRow) {
   const path = await window.api.places.getPath(place.id);
   query.value = path || place.name;
+  lastResolvedPath.value = query.value;
   showDropdown.value = false;
   emit('update:modelValue', place.id);
   emit('select', place);
@@ -227,15 +320,50 @@ async function select(place: PlaceRow) {
 }
 
 async function selectGazetteer(gaz: GazetteerSuggestion) {
-  // Only create the leaf node — don't create intermediate hierarchy nodes
-  // (county, municipality) that aren't directly connected to any entity
+  // Hierarchical-resolver suggestion with an unmatched leaf token (e.g.
+  // "Hörningsholm" inside "Mosås (T)") — Phase 2: build the parent chain
+  // from the matched gazetteer path and create the leaf under the
+  // deepest matched node so subsequent lookups inherit the parent.
+  const hasUnmatchedLeaf = gaz.unmatchedLeftTokens && gaz.unmatchedLeftTokens.length > 0;
+
+  if (hasUnmatchedLeaf) {
+    const leafName = gaz.name;
+    const chain = gaz.pathNodes.map(n => ({
+      name: n.name,
+      place_type: n.type as PlaceRow['place_type'],
+      latitude: n.lat,
+      longitude: n.lon,
+    }));
+    const place = (await window.api.places.findOrCreateWithChain(leafName, chain)) as PlaceRow;
+    // Inherit coords from the parish (deepest matched node) so the leaf
+    // shows up on the map near the right place — only when leaf has none.
+    const full = (await window.api.places.get(place.id)) as {
+      id: string;
+      latitude: number | null;
+      longitude: number | null;
+    };
+    const deepestMatched = gaz.pathNodes[gaz.pathNodes.length - 1];
+    const updates: Record<string, unknown> = {};
+    if (full.latitude == null && deepestMatched) updates.latitude = deepestMatched.lat;
+    if (full.longitude == null && deepestMatched) updates.longitude = deepestMatched.lon;
+    if (Object.keys(updates).length > 0) {
+      await window.api.places.update(place.id, updates);
+    }
+    select(place);
+    return;
+  }
+
+  // Exact match — only the leaf node is created (lat/lon + type from the
+  // gazetteer). Pre-existing behavior, preserved for back-compat.
   const leafNode = gaz.pathNodes[gaz.pathNodes.length - 1];
   if (!leafNode) return;
-
   const place = (await window.api.places.findOrCreate(leafNode.name)) as PlaceRow;
-
-  // Fill in gazetteer data — only set fields that aren't already populated
-  const full = (await window.api.places.get(place.id)) as { id: string; place_type: string | null; latitude: number | null; longitude: number | null };
+  const full = (await window.api.places.get(place.id)) as {
+    id: string;
+    place_type: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
   const updates: Record<string, unknown> = {};
   if (!full.place_type) updates.place_type = leafNode.type;
   if (full.latitude == null) updates.latitude = leafNode.lat;
@@ -243,13 +371,23 @@ async function selectGazetteer(gaz: GazetteerSuggestion) {
   if (Object.keys(updates).length > 0) {
     await window.api.places.update(place.id, updates);
   }
-
   select(place);
 }
 
 async function createNew() {
   const place = (await window.api.places.findOrCreate(query.value)) as PlaceRow;
+  // BENGT #34: clear any cached suggestion so the next focus/search shows
+  // the newly created place as an existing match rather than offering to
+  // create it again.
+  results.value = [];
+  gazetteerResults.value = [];
   select(place);
+  // Re-run the search after a tick so that if the user re-focuses the
+  // dropdown the new place is visible. This also flushes any stale
+  // "Skapa ny plats" item from showCreateNew (which is now suppressed
+  // because modelValue is set).
+  await nextTick();
+  await runSearch();
 }
 
 function onBlur() {

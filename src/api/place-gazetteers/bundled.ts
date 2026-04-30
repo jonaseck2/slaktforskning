@@ -45,18 +45,50 @@ const HISTORICAL_LAN_ALIASES: Record<string, string[]> = {
   'Skåne län': ['Malmöhus län', 'Malmöhus', 'Kristianstads län', 'Kristianstads'],
 };
 
+// Standard one- or two-letter county codes used in Swedish genealogical
+// notation (e.g. "Solna (B)", "Mosås (T)"). These alias each modern län
+// to the letter the source records use; combined with HISTORICAL_LAN_ALIASES
+// the resolver also picks up historical letters like W (Kopparberg) and
+// O (Göteborgs och Bohus). See BENGT #27.
+const LAN_LETTER_CODES: Record<string, string[]> = {
+  'Stockholms län': ['AB', 'A', 'B'],
+  'Uppsala län': ['C'],
+  'Södermanlands län': ['D'],
+  'Östergötlands län': ['E'],
+  'Jönköpings län': ['F'],
+  'Kronobergs län': ['G'],
+  'Kalmar län': ['H'],
+  'Gotlands län': ['I'],
+  'Blekinge län': ['K'],
+  'Skåne län': ['L', 'M'], // L = Kristianstad, M = Malmöhus (pre-1997)
+  'Hallands län': ['N'],
+  'Västra Götalands län': ['O', 'P', 'R'], // O = Bohus, P = Älvsborg, R = Skaraborg
+  'Värmlands län': ['S'],
+  'Örebro län': ['T'],
+  'Västmanlands län': ['U'],
+  'Dalarnas län': ['W'],
+  'Gävleborgs län': ['X'],
+  'Västernorrlands län': ['Y'],
+  'Jämtlands län': ['Z'],
+  'Västerbottens län': ['AC'],
+  'Norrbottens län': ['BD'],
+};
+
 function enrichHistoricalAliases(gaz: Gazetteer): Gazetteer {
   if (!gaz.root.children) return gaz;
   for (const child of gaz.root.children) {
-    const extra = HISTORICAL_LAN_ALIASES[child.name];
-    if (extra) {
-      const existing = new Set(child.aliases ?? []);
-      const merged = [...(child.aliases ?? [])];
-      for (const alias of extra) {
-        if (!existing.has(alias)) merged.push(alias);
-      }
-      (child as GazetteerNode).aliases = merged;
+    const extra: string[] = [];
+    const hist = HISTORICAL_LAN_ALIASES[child.name];
+    if (hist) extra.push(...hist);
+    const letters = LAN_LETTER_CODES[child.name];
+    if (letters) extra.push(...letters);
+    if (extra.length === 0) continue;
+    const existing = new Set(child.aliases ?? []);
+    const merged = [...(child.aliases ?? [])];
+    for (const alias of extra) {
+      if (!existing.has(alias)) merged.push(alias);
     }
+    (child as GazetteerNode).aliases = merged;
   }
   return gaz;
 }

@@ -50,6 +50,17 @@ defineChannel({
 });
 
 defineChannel({
+  name: 'places:findOrCreateWithChain',
+  thread: 'worker',
+  mutating: true,
+  handler: (
+    db,
+    name: string,
+    chain: Parameters<typeof places.findOrCreatePlaceWithChain>[2],
+  ) => places.findOrCreatePlaceWithChain(db, name, chain),
+});
+
+defineChannel({
   name: 'places:getPath',
   thread: 'worker',
   handler: (db, id: string) => places.getPlacePath(db, id),

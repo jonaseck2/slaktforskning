@@ -118,6 +118,8 @@ const api = {
     update: mutating((id: string, data: unknown) => ipcRenderer.invoke('places:update', id, data)),
     delete: mutating((id: string) => ipcRenderer.invoke('places:delete', id)),
     findOrCreate: mutating((name: string) => ipcRenderer.invoke('places:findOrCreate', name)),
+    findOrCreateWithChain: mutating((name: string, chain: unknown) =>
+      ipcRenderer.invoke('places:findOrCreateWithChain', name, chain)),
     getPath: (id: string) => ipcRenderer.invoke('places:getPath', id),
     getPersons: (placeId: string) => ipcRenderer.invoke('places:getPersons', placeId),
   },

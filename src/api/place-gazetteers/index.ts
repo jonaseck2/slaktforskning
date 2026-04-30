@@ -6,8 +6,13 @@
 // bundled gazetteer data.
 
 export { loadGazetteers } from './merge';
-export { resolvePlace, resolveBoundary, searchGazetteer } from './resolver';
-export type { GazetteerSearchHit, BoundaryHint } from './resolver';
+export { resolvePlace, resolveBoundary, searchGazetteer, resolveHierarchical, tokenizePlaceString } from './resolver';
+export type {
+  GazetteerSearchHit,
+  BoundaryHint,
+  HierarchicalMatch,
+  HierarchicalResolveResult,
+} from './resolver';
 export type {
   GeoJSONPolygon,
   GeoJSONMultiPolygon,

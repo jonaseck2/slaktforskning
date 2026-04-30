@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.168.0 — Place picker: parent-aware autocomplete, county letter codes, no dataloss
+
+- feat(places): place picker now reads strings right-to-left like Swedish records — `Hörningsholm, Mosås (T)` anchors on Örebro län (T) and matches Mosås only inside it, no longer dragging the pin to a same-named hamlet in Norrland (BENGT #27)
+- feat(gazetteers): every Swedish län now carries its standard one- or two-letter county code as an alias — `Solna (B)` resolves to Stockholms län, `Mosås (T)` to Örebro län, etc. (full A–BD coverage including pre-1997 codes O/P/R/L/M/W)
+- feat(places): accepting a hierarchical suggestion creates the matched parent chain in the database in one step — the new farm/locality is parented under the right parish/municipality/län without manual fix-up; intermediate places are created once and reused on subsequent picks
+- fix(places): typing a place name and clicking "Skapa ny ort" inside an event modal no longer closes the surrounding event modal or loses the typed-in event data — dropdown items now stop click propagation explicitly (BENGT #19b)
+- fix(places): after creating a new place via the picker, the same "Skapa ny plats" suggestion no longer reappears on next focus — the picker now suppresses the create option whenever a place is already selected, and re-runs the search after creation so the new place shows up as a real match (BENGT #34)
+- feat(api): new `findOrCreatePlaceWithChain(name, chain)` API + IPC channel for renderer code that needs to materialise an ancestor chain of places in one call
+
 ## v0.166.0 — Reports: researcher info, page numbers, richer citations, GEDCOM SUBM fix
 
 - feat(settings): four researcher fields (name, address, phone, email) live in `db_settings` and are configurable from Settings → "Forskarinformation"

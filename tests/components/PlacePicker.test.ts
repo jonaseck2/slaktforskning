@@ -13,6 +13,10 @@ vi.mock('../../src/api/place-gazetteers/resolver', () => ({
   resolvePlace: vi.fn().mockReturnValue(null),
   resolveBoundary: vi.fn().mockReturnValue(null),
   searchGazetteer: vi.fn().mockReturnValue([]),
+  resolveHierarchical: vi.fn().mockReturnValue({ best: null, candidates: [], tokens: [] }),
+  tokenizePlaceString: vi.fn().mockImplementation((s: string) =>
+    s ? s.split(',').map((p) => p.trim()).filter(Boolean) : [],
+  ),
 }));
 vi.mock('../../src/api/place-gazetteers/index', () => ({
   loadGazetteers: vi.fn().mockReturnValue([]),

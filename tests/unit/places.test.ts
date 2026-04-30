@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createPlace, getPlace, listPlaces, searchPlaces,
-  updatePlace, deletePlace, findOrCreatePlace, getPersonsForPlace,
+  updatePlace, deletePlace, findOrCreatePlace, findOrCreatePlaceWithChain,
+  getPersonsForPlace,
 } from '../../src/api/places';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -85,6 +86,64 @@ describe('findOrCreatePlace', () => {
     const all = listPlaces(db);
     expect(all).toHaveLength(1);
     expect(p.name).toBe('Nyköping');
+  });
+});
+
+describe('findOrCreatePlaceWithChain', () => {
+  it('creates the full ancestor chain when none of it exists', () => {
+    const leaf = findOrCreatePlaceWithChain(db, 'Hörningsholm', [
+      { name: 'Sverige', place_type: 'country' },
+      { name: 'Örebro län', place_type: 'county' },
+      { name: 'Mosås', place_type: 'parish', latitude: 59.2, longitude: 15.18 },
+    ]);
+    expect(leaf.name).toBe('Hörningsholm');
+    expect(listPlaces(db)).toHaveLength(4); // Sverige + Örebro + Mosås + Hörningsholm
+
+    const parent = getPlace(db, leaf.parent_place_id!);
+    expect(parent?.name).toBe('Mosås');
+    expect(parent?.place_type).toBe('parish');
+
+    const grandparent = getPlace(db, parent!.parent_place_id!);
+    expect(grandparent?.name).toBe('Örebro län');
+  });
+
+  it('reuses an existing parent chain instead of duplicating', () => {
+    findOrCreatePlaceWithChain(db, 'Hörningsholm', [
+      { name: 'Sverige', place_type: 'country' },
+      { name: 'Örebro län', place_type: 'county' },
+      { name: 'Mosås', place_type: 'parish' },
+    ]);
+    findOrCreatePlaceWithChain(db, 'Skogsberga', [
+      { name: 'Sverige', place_type: 'country' },
+      { name: 'Örebro län', place_type: 'county' },
+      { name: 'Mosås', place_type: 'parish' },
+    ]);
+    // Should have 5 places: shared chain (3) + 2 leaves
+    const all = listPlaces(db);
+    expect(all).toHaveLength(5);
+    const moses = all.filter((p) => p.name === 'Mosås');
+    expect(moses).toHaveLength(1);
+  });
+
+  it('returns existing leaf without re-creating it on second call', () => {
+    const a = findOrCreatePlaceWithChain(db, 'Hörningsholm', [
+      { name: 'Sverige' },
+      { name: 'Mosås' },
+    ]);
+    const b = findOrCreatePlaceWithChain(db, 'Hörningsholm', [
+      { name: 'Sverige' },
+      { name: 'Mosås' },
+    ]);
+    expect(a.id).toBe(b.id);
+    expect(listPlaces(db)).toHaveLength(3);
+  });
+
+  it('matches case-insensitively when reusing parents', () => {
+    findOrCreatePlaceWithChain(db, 'Foo', [{ name: 'Mosås' }]);
+    findOrCreatePlaceWithChain(db, 'Bar', [{ name: 'MOSÅS' }]);
+    const all = listPlaces(db);
+    const moses = all.filter((p) => p.normalized_name === 'mosås');
+    expect(moses).toHaveLength(1);
   });
 });
 

@@ -194,6 +194,203 @@ export interface GazetteerSearchHit {
  * Search for all nodes whose name matches the query, returning every match
  * at every level (county, municipality, locality, etc.).
  */
+/**
+ * Tokenize a place string into discrete components, handling Swedish
+ * conventions where the most specific name is on the LEFT and broader scopes
+ * (parish, municipality, county) trail to the right. Parenthesized tokens
+ * (e.g. "(T)" for Örebro län) are extracted as separate components.
+ *
+ * Example: "Hörningsholm, Mosås (T)" → ["Hörningsholm", "Mosås", "T"]
+ */
+export function tokenizePlaceString(input: string): string[] {
+  const tokens: string[] = [];
+  // Split on commas first; then within each part, pull out anything in parens
+  // as its own token. This preserves the order specific → general.
+  for (const part of input.split(',')) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    // Match all parenthesized groups; collect them and the surrounding text
+    const parenRe = /\(([^)]+)\)/g;
+    const parens: string[] = [];
+    const stripped = trimmed.replace(parenRe, (_m, g1) => {
+      parens.push(String(g1).trim());
+      return ' ';
+    }).trim();
+    if (stripped) tokens.push(stripped);
+    for (const p of parens) {
+      if (p) tokens.push(p);
+    }
+  }
+  return tokens;
+}
+
+export interface HierarchicalMatch {
+  /** The matched gazetteer node */
+  node: GazetteerNode;
+  /** Full path to this node (root → ... → node) */
+  path: GazetteerNode[];
+  /** Gazetteer the match came from */
+  gazetteer: string;
+  /** Input tokens that the path consumed (right-to-left walk) */
+  consumedTokens: string[];
+  /** Input tokens to the LEFT of the deepest match — typically a leaf
+   * (farm/locality) name not present in any gazetteer */
+  unmatchedLeftTokens: string[];
+}
+
+export interface HierarchicalResolveResult {
+  /** Best match across all gazetteers (deepest path consuming the most
+   * right-side tokens). Null when no token matches anything. */
+  best: HierarchicalMatch | null;
+  /** All viable matches sorted best-first. Useful for picker suggestions. */
+  candidates: HierarchicalMatch[];
+  /** Tokens parsed from the input (specific → general) */
+  tokens: string[];
+}
+
+/**
+ * Walk an input place string right-to-left, anchoring on the broadest
+ * geographic token first and then narrowing on each more-specific token.
+ *
+ * In Swedish genealogical writing, place strings run specific → general:
+ * `farm, parish, municipality, län` (and often a parenthesized county
+ * letter code). Bengt #27: "Hörningsholm, Mosås (T)" — the picker should
+ * read `(T)` first, anchor on Örebro län, then look for "Mosås" only
+ * inside Örebro län (not in Norrland), and use "Hörningsholm" as a
+ * leaf name (a farm not in any gazetteer).
+ *
+ * Each successful right-to-left match constrains the search space for the
+ * next more-specific token. The final unmatched tokens to the left are
+ * returned as `unmatchedLeftTokens` — typically the leaf farm/locality
+ * name the user wants to create a Place for.
+ */
+export function resolveHierarchical(
+  input: string,
+  gazetteers: Gazetteer[],
+): HierarchicalResolveResult {
+  const tokens = tokenizePlaceString(input);
+  if (tokens.length === 0 || gazetteers.length === 0) {
+    return { best: null, candidates: [], tokens };
+  }
+
+  const matches: HierarchicalMatch[] = [];
+
+  for (const gaz of gazetteers) {
+    // Skip language gazetteers — they don't carry coordinates we want to use
+    if (gaz.kind === 'language') continue;
+    const index = getNameIndex(gaz.root);
+
+    // Walk tokens right-to-left. For the rightmost matched token, all
+    // entries in the index that match it are candidate anchors. Then for
+    // each anchor, walk further left and try to find descendants.
+    // We explore every anchor candidate so that ambiguous broad tokens
+    // (e.g. "Stockholm" matches county and city) still produce candidates.
+    const reversed = [...tokens].reverse();
+
+    function explore(
+      tokenIdx: number,                  // index in reversed (broadest first)
+      anchorPath: GazetteerNode[],       // path from root to current anchor
+      consumed: string[],
+    ): void {
+      if (tokenIdx >= reversed.length) {
+        // All tokens consumed — record match
+        matches.push({
+          node: anchorPath[anchorPath.length - 1],
+          path: anchorPath,
+          gazetteer: gaz.id,
+          consumedTokens: consumed,
+          unmatchedLeftTokens: [],
+        });
+        return;
+      }
+      const tok = reversed[tokenIdx];
+      const norm = normalize(tok);
+      // Find descendants of the current anchor whose name/alias === tok
+      const anchor = anchorPath[anchorPath.length - 1];
+      const childMatches = findDescendantMatches(anchor, norm);
+      if (childMatches.length === 0) {
+        // The current token doesn't match anything inside this anchor.
+        // Stop here and record the match so far; tokens to the LEFT
+        // (more specific) become the unmatched leaf tokens.
+        const remainingLeft = reversed.slice(tokenIdx).reverse();
+        matches.push({
+          node: anchor,
+          path: anchorPath,
+          gazetteer: gaz.id,
+          consumedTokens: consumed,
+          unmatchedLeftTokens: remainingLeft,
+        });
+        return;
+      }
+      // Recurse into each descendant match
+      for (const cm of childMatches) {
+        explore(tokenIdx + 1, [...anchorPath, ...cm.relPath], [...consumed, tok]);
+      }
+    }
+
+    // Seed: any node in the index that matches the rightmost (broadest)
+    // token serves as a starting anchor. We don't restrict to root — Bengt
+    // #27 type strings often skip the country.
+    const rightmost = reversed[0];
+    const seedEntries = index.get(normalize(rightmost));
+    if (seedEntries) {
+      const seenAnchors = new Set<GazetteerNode>();
+      for (const entry of seedEntries) {
+        if (seenAnchors.has(entry.node)) continue;
+        seenAnchors.add(entry.node);
+        const path = [...entry.ancestors, entry.node];
+        explore(1, path, [rightmost]);
+      }
+    }
+  }
+
+  if (matches.length === 0) {
+    return { best: null, candidates: [], tokens };
+  }
+
+  // Score each candidate: more consumed tokens = better. Ties broken by
+  // path depth (prefer specific levels) and fewer unmatched tokens.
+  matches.sort((a, b) => {
+    if (a.consumedTokens.length !== b.consumedTokens.length) {
+      return b.consumedTokens.length - a.consumedTokens.length;
+    }
+    if (a.path.length !== b.path.length) return b.path.length - a.path.length;
+    if (a.unmatchedLeftTokens.length !== b.unmatchedLeftTokens.length) {
+      return a.unmatchedLeftTokens.length - b.unmatchedLeftTokens.length;
+    }
+    return 0;
+  });
+
+  return { best: matches[0], candidates: matches, tokens };
+}
+
+/**
+ * Find descendants of `anchor` whose name (or alias) normalizes to `norm`.
+ * Returns relative path segments from anchor down to each match.
+ */
+function findDescendantMatches(
+  anchor: GazetteerNode,
+  norm: string,
+): Array<{ relPath: GazetteerNode[] }> {
+  const out: Array<{ relPath: GazetteerNode[] }> = [];
+  function walk(node: GazetteerNode, rel: GazetteerNode[]) {
+    if (!node.children) return;
+    for (const child of node.children) {
+      const childRel = [...rel, child];
+      const childNorm = normalize(child.name);
+      const matched =
+        childNorm === norm ||
+        (child.aliases?.some(a => normalize(a) === norm) ?? false);
+      if (matched) {
+        out.push({ relPath: childRel });
+      }
+      walk(child, childRel);
+    }
+  }
+  walk(anchor, []);
+  return out;
+}
+
 export function searchGazetteer(
   query: string,
   gazetteers: Gazetteer[],
