@@ -15,7 +15,7 @@
         <tr v-for="(m, idx) in media" :key="m.link_id" class="clickable-row" @click="openMedia(m.id)">
           <td class="td-shrink thumb-cell">
             <img v-if="thumbnails[m.id]" :src="thumbnails[m.id]" class="row-thumb" :alt="mediaDisplayName(m.title, m.file_ref, '')" />
-            <span v-else-if="isImage(m.format)" class="row-thumb-placeholder"></span>
+            <span v-else-if="isImageMedia(m.format, m.file_ref)" class="row-thumb-placeholder"></span>
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
           <td v-if="!props.readonly" class="td-shrink order-cell">
@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { mediaDisplayName } from '../utils/mediaUtils';
+import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
@@ -61,8 +61,6 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
-
-const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
 
 export interface MediaItem {
   id: string;
@@ -87,10 +85,6 @@ const thumbnails = ref<Record<string, string>>({});
 
 defineExpose({ attach, reload: load });
 
-function isImage(format: string | null): boolean {
-  return format ? IMAGE_FORMATS.has(format.toLowerCase()) : false;
-}
-
 async function load() {
   media.value = (await window.api.media.forEntity(props.entityType, props.entityId)) as MediaItem[];
   loadThumbnails();
@@ -98,7 +92,7 @@ async function load() {
 
 async function loadThumbnails() {
   for (const m of media.value) {
-    if (isImage(m.format) && !thumbnails.value[m.id]) {
+    if (isImageMedia(m.format, m.file_ref) && !thumbnails.value[m.id]) {
       const url = await window.api.media.readAsDataUrl(m.id) as string | null;
       if (url) {
         thumbnails.value[m.id] = url;

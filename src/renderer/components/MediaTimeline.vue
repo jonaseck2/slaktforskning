@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { mediaDisplayName } from '../utils/mediaUtils';
+import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import SectionEmpty from './ui/SectionEmpty.vue';
 
 interface TimelineMedia {
@@ -106,17 +106,12 @@ async function load() {
   // Load thumbnails for image media
   const thumbs: Record<string, string> = {};
   for (const item of items.value) {
-    if (item.media.file_ref && isImage(item.media.format)) {
+    if (isImageMedia(item.media.format, item.media.file_ref)) {
       const url = await window.api.media.readAsDataUrl(item.media.id) as string | null;
       if (url) thumbs[item.media.id] = url;
     }
   }
   thumbnails.value = thumbs;
-}
-
-function isImage(format: string | null): boolean {
-  if (!format) return false;
-  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(format.toLowerCase());
 }
 
 function displayYear(item: TimelineItem): string {

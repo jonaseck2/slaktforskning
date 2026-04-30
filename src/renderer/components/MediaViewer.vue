@@ -125,12 +125,11 @@ import { narrateMedia, narrationLabelsFromI18n } from '../utils/narration';
 import FaceTagOverlay from './FaceTagOverlay.vue';
 import ZoomControls from './ZoomControls.vue';
 import MediaCaption, { type CaptionFaceTag } from './MediaCaption.vue';
+import { isImageMedia } from '../utils/mediaUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
-
-const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
 
 interface MediaItem {
   id: string;
@@ -228,13 +227,7 @@ function onCaptionPersonClick(personId: string, event: MouseEvent) {
 
 const isImage = computed(() => {
   const item = currentItem.value;
-  if (!item) return false;
-  if (item.format && IMAGE_FORMATS.has(item.format.toLowerCase())) return true;
-  if (item.file_ref) {
-    const ext = item.file_ref.split('.').pop()?.toLowerCase() ?? '';
-    return IMAGE_FORMATS.has(ext);
-  }
-  return false;
+  return item ? isImageMedia(item.format, item.file_ref) : false;
 });
 
 const imageWrapperStyle = computed(() => ({

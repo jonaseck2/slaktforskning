@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { isImageMedia } from '../../../utils/mediaUtils';
 
 const props = defineProps<{
   personId?: string | null;
@@ -35,13 +36,12 @@ const props = defineProps<{
 declare const window: Window & {
   api: {
     media: {
-      forEntity: (type: string, id: string) => Promise<Array<{ id: string; format: string | null }>>;
+      forEntity: (type: string, id: string) => Promise<Array<{ id: string; format: string | null; file_ref: string | null }>>;
       readAsDataUrl: (id: string) => Promise<string | null>;
     };
   };
 };
 
-const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif']);
 const autoPortraitUrl = ref<string | null>(null);
 
 watch(() => props.personId, async (personId) => {
@@ -49,7 +49,7 @@ watch(() => props.personId, async (personId) => {
   if (!personId) return;
   try {
     const items = await window.api.media.forEntity('person', personId);
-    const first = items.find(m => m.format && IMAGE_FORMATS.has(m.format.toLowerCase()));
+    const first = items.find(m => isImageMedia(m.format, m.file_ref));
     if (!first) return;
     autoPortraitUrl.value = await window.api.media.readAsDataUrl(first.id);
   } catch { /* ignore */ }

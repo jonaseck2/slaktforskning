@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.172.5 — Tolerate junk media `format` values in the gallery
+
+- fix(media): the gallery, person/entity media sections, media panel, media timeline, and report mini-card all relied on the `media.format` column being a known image extension to decide whether to load a thumbnail. Some imported GEDCOMs carry junk in `format` (e.g. `"SE'"`, `"COM"`, `"KÄL"` — extracted by upstream tools from the wrong dot segment of filenames like `…Familjesidan.se'(jan2022).jpg`), so those rows rendered as a placeholder file icon in the gallery while the viewer still showed them correctly because it falls back to the `file_ref` extension. Hoisted `IMAGE_FORMATS` and a new `isImageMedia(format, file_ref)` helper into `mediaUtils.ts` (format match OR file_ref extension match — strict superset of the old check), and routed all 7 consumers (`MediaView`, `MediaViewer`, `MediaPanel`, `PersonMediaSection`, `EntityMediaSection`, `MediaTimeline`, `PersonMiniCard`) through it. The DB rows are untouched per the prime directive — render-time tolerance only. Side benefit: `PersonMiniCard` and `MediaTimeline` previously had local sets missing `svg`/`tiff`/`tif`; they now match the rest of the app
+
 ## v0.172.4 — Persist gazetteer parent chain on exact-match picks
 
 - fix(places): when the user picks an exact-match gazetteer suggestion, `PlacePicker` now persists the structural parent chain alongside the leaf (names only — not coordinates or `place_type`, per the prime directive). The previous code created only a bare leaf via `findOrCreate(leafName)`, leaving `parent_place_id = null`, so the map's render-time resolver got just the leaf name and could not disambiguate when multiple gazetteer nodes share a name. Picker-created places dropped off the map after v0.172.0 stopped persisting inferred lat/lon. The unmatched-leaf branch already used `findOrCreateWithChain`; the exact-match branch now does the same when `gaz.pathNodes` has ancestors

@@ -131,7 +131,7 @@
             :alt="mediaDisplayName(item.title, item.file_ref, '')"
             class="card-image"
           />
-          <div v-else-if="isImageFormat(item.format)" class="card-image-loading"></div>
+          <div v-else-if="isImageMedia(item.format, item.file_ref)" class="card-image-loading"></div>
           <div v-else class="card-file-icon">
             <span class="card-file-ext">{{ (item.format || '?').toUpperCase() }}</span>
           </div>
@@ -212,7 +212,7 @@ import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
-import { mediaDisplayName } from '../utils/mediaUtils';
+import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
@@ -224,8 +224,6 @@ const profilePicStore = useProfilePicStore();
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
-
-const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
 
 const { t } = useI18n();
 const route = useRoute();
@@ -295,10 +293,6 @@ const personFilterId = computed(() => {
 const personName = ref('');
 
 const missingCount = computed(() => items.value.filter(i => i.is_missing).length);
-
-function isImageFormat(format: string | null): boolean {
-  return format ? IMAGE_FORMATS.has(format.toLowerCase()) : false;
-}
 
 function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>): MediaItem[] {
   return raw.map(r => ({ ...r, linkCount: r.link_count }));
@@ -381,7 +375,7 @@ async function maybeAutoSelect(loaded: MediaItem[]) {
 
 async function loadThumbnails(mediaItems: MediaItem[]) {
   for (const item of mediaItems) {
-    if (isImageFormat(item.format) && !item.is_missing && !thumbnails.value[item.id]) {
+    if (isImageMedia(item.format, item.file_ref) && !item.is_missing && !thumbnails.value[item.id]) {
       const url = await window.api.media.readAsDataUrl(item.id) as string | null;
       if (url) {
         thumbnails.value[item.id] = url;
@@ -439,7 +433,7 @@ async function openViewerById(mediaId: string) {
     created_at: (media as MediaItem).created_at ?? '',
     linkCount: (media as MediaItem).linkCount ?? 0,
   };
-  if (isImageFormat(normalized.format) && !thumbnails.value[normalized.id]) {
+  if (isImageMedia(normalized.format, normalized.file_ref) && !thumbnails.value[normalized.id]) {
     const url = await window.api.media.readAsDataUrl(normalized.id) as string | null;
     if (url) thumbnails.value[normalized.id] = url;
   }

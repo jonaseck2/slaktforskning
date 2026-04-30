@@ -258,14 +258,13 @@ import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { usePanelSections } from '../composables/usePanelSections';
 import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaProfile';
+import { isImageMedia } from '../utils/mediaUtils';
 import { useProfilePicStore } from '../stores/profilePic';
 import { useEntityData } from '../composables/useEntityData';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
-
-const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
 
 interface MediaData {
   id: string;
@@ -348,7 +347,7 @@ const { data: panelData, loading, reload } = useEntityData<MediaPanelData>(idRef
   if (!m) return { media: null, thumbnailSrc: null, linkedPersons: [], linkedPlaces: [], linkedEvents: [], regions: [], regionIsProfile: {} };
 
   let thumbnailSrc: string | null = null;
-  if (m.format && IMAGE_FORMATS.has(m.format.toLowerCase())) {
+  if (isImageMedia(m.format, m.file_ref)) {
     thumbnailSrc = await window.api.media.readAsDataUrl(id) as string | null;
   }
 
