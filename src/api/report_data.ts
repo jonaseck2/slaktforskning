@@ -21,6 +21,9 @@ export interface EventWithPlace extends GenealogyEvent {
 export interface CitationWithSource extends Citation {
   source_title: string | null;
   source_author: string | null;
+  source_publication_info: string | null;
+  source_url: string | null;
+  source_repository: string | null;
 }
 
 export interface RelationshipSummary extends Relationship {
@@ -122,6 +125,9 @@ function resolveCitationSource(db: Database, citation: Citation): CitationWithSo
     ...citation,
     source_title: source?.title ?? null,
     source_author: source?.author ?? null,
+    source_publication_info: source?.publication_info ?? null,
+    source_url: source?.url ?? null,
+    source_repository: source?.repository ?? null,
   };
 }
 

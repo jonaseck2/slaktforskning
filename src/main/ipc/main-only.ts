@@ -43,7 +43,7 @@ export function registerUtilityHandlers(
     win.webContents.print({ silent: false, printBackground: true });
   });
 
-  wrapHandler('print:exportPdf', async (defaultPathHint?: unknown, landscape?: unknown) => {
+  wrapHandler('print:exportPdf', async (defaultPathHint?: unknown, landscape?: unknown, headerFooter?: unknown) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false, error: 'No window' };
     const result = await dialog.showSaveDialog(win, {
@@ -52,12 +52,47 @@ export function registerUtilityHandlers(
     });
     if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' };
     const savePath = result.filePath;
-    const pdfData = await win.webContents.printToPDF({
+    const hf = (headerFooter ?? {}) as {
+      showHeaderFooter?: boolean;
+      researcherName?: string | null;
+      researcherEmail?: string | null;
+      researcherPhone?: string | null;
+      appName?: string | null;
+    };
+    // showHeaderFooter governs the researcher band. Page numbers print whenever
+    // showHeaderFooter is true OR explicitly requested. Chart prints pass
+    // `showHeaderFooter: false` and get no header/footer at all.
+    const showHF = hf.showHeaderFooter !== false; // default on
+    let printOpts: Electron.PrintToPDFOptions = {
       printBackground: true,
       pageSize: 'A4',
       landscape: landscape === true,
-      margins: { marginType: 'none' },
-    });
+      margins: showHF ? { marginType: 'default' } : { marginType: 'none' },
+    };
+    if (showHF) {
+      const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const appName = escape(hf.appName ?? 'Släktforskning');
+      const name = hf.researcherName ? escape(hf.researcherName) : '';
+      const email = hf.researcherEmail ? escape(hf.researcherEmail) : '';
+      const phone = hf.researcherPhone ? escape(hf.researcherPhone) : '';
+      const headerTemplate = `<div style="font-size:8px;width:100%;padding:0 12mm;display:flex;justify-content:space-between;color:#666;font-family:Georgia,serif;">
+           <span>${appName}</span><span>${name}</span>
+         </div>`;
+      const leftFooter = email || phone
+        ? `${email}${email && phone ? ' &middot; ' : ''}${phone}`
+        : '';
+      const footerTemplate = `<div style="font-size:8px;width:100%;padding:0 12mm;display:flex;justify-content:space-between;color:#666;font-family:Georgia,serif;">
+           <span>${leftFooter}</span>
+           <span><span class="pageNumber"></span> / <span class="totalPages"></span></span>
+         </div>`;
+      printOpts = {
+        ...printOpts,
+        displayHeaderFooter: true,
+        headerTemplate,
+        footerTemplate,
+      };
+    }
+    const pdfData = await win.webContents.printToPDF(printOpts);
     fs.writeFileSync(savePath, pdfData);
     return { success: true, path: savePath };
   });

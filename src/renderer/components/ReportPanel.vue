@@ -66,6 +66,18 @@
       </div>
     </div>
 
+    <!-- Header/footer (keepsake reports only) -->
+    <div v-if="!isChartPrint" class="panel-section">
+      <SectionHeader :title="$t('reports.panel.headerFooter')" :collapsed="!open.headerFooter" @toggle="toggleSection('headerFooter')" />
+      <div v-if="open.headerFooter" class="panel-section-body">
+        <label class="panel-checkbox">
+          <input type="checkbox" v-model="store.showHeaderFooter">
+          {{ $t('reports.panel.showHeaderFooter') }}
+        </label>
+        <p class="panel-hint">{{ $t('reports.panel.headerFooterHint') }}</p>
+      </div>
+    </div>
+
     <!-- Options (keepsake reports only) -->
     <div v-if="!isChartPrint" class="panel-section">
       <SectionHeader :title="$t('reports.panel.options')" :collapsed="!open.options" @toggle="toggleSection('options')" />
@@ -315,7 +327,7 @@ const fanArcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 // Subject and Options open by default; Report/Chart/Fan Chart collapsed.
 const { sections: open, toggleSection } = usePanelSections(
   'report-panel-section-',
-  { subject: true, options: true, appearance: false, fanChart: false },
+  { subject: true, options: true, headerFooter: false, appearance: false, fanChart: false },
 );
 
 const isPersonReport = computed(() =>
@@ -450,6 +462,7 @@ const subjectSectionTitle = computed(() => {
 .panel-range-row { display: flex; justify-content: space-between; align-items: center; }
 .panel-range-value { font-size: var(--font-xs); color: var(--accent); font-weight: 600; }
 .panel-tile-info { font-size: var(--font-xs); color: var(--text-muted); font-style: italic; margin: 0; }
+.panel-hint { font-size: var(--font-xs); color: var(--text-muted); margin: 4px 0 0; line-height: 1.35; }
 .panel-actions {
   margin-top: auto;
   padding: var(--space-sm) var(--space-lg);
