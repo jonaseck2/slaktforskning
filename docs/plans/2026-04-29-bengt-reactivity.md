@@ -19,6 +19,96 @@ Most panel sections load via `onMounted` instead of `watch(() => props.id, load,
 
 The tree (PersonsView center) likely re-renders on tree-subject change but not on event/relationship mutations to the tree subject. The IPC `onDataChanged` broadcast probably fires, but consumers may not be listening, or are listening with stale closures.
 
+## Audit Results
+
+**Date:** 2026-04-30
+**Status:** complete
+
+### Pattern overview — 2 out of 15 panel/section files have an issue
+
+The hypothesis ("most panel sections use `onMounted` instead of `watch`") was mostly wrong. Only **1 data-loading `onMounted`** exists in the entire panel/section surface, and it is not a data-loading call but an `onDataChanged` registration gap. All `*Panel.vue` and self-loading `*Section.vue` components correctly use `useEntityData(idRef, loader)` (backed by `watch(idRef, reload, { immediate: true })`). The pattern drift is minimal.
+
+The real problem is narrower and different: **count snapshots in `usePersonPanelData` are never invalidated by mutations**, and **no chart component listens to `onDataChanged`**.
+
+---
+
+### `onMounted` sites in `*Panel.vue` and `*Section.vue` — full table
+
+| File:line | Classification | Reason |
+|-----------|---------------|--------|
+| `EventList.vue:198` | **N/A** | `onMounted(loadSmartDefaultsSetting)` — reads a global DB setting once per mount. Not per-person data. Correct. |
+| `PersonPanel.vue:529` | **partial** | `onMounted(() => { onDataChanged(() => checksSectionRef?.reload()) })` — wires a mutation listener but only for quality-checks reload. Does not refresh `eventCount`, `mapPointCount`, `relationshipCount`, `identifierCount`, `mediaCount`. |
+| `HourglassChart.vue:490` `PedigreeChart.vue` `DescendantChart.vue` | **structural gap** | `onMounted(() => load())` combined with `watch(() => props.personId, load)` (no `immediate`). Needed for initial load. The gap: neither hook fires when event/relationship data changes for the same focal person. |
+
+All other panels and sections — `PlacePanel`, `SourcePanel`, `RelationshipPanel`, `GroupPanel`, `ResearchTaskPanel`, `MediaPanel`, `PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `PersonRelationshipsSection`, `PersonTimeline`, `PersonMap` — use `useEntityData` or `watch(() => props.id, load, { immediate: true })`. **No broken `onMounted` data loads**.
+
+---
+
+### `onDataChanged` flow
+
+`preload/index.ts` wraps every mutating IPC call in `mutating()`. After each call returns, it iterates `dataChangedListeners` and fires every registered callback. Covers creates, updates, and deletes for all domains.
+
+**Who listens today:**
+- `PersonPanel.vue:529` — one listener in `onMounted`, only calls `checksSectionRef.value?.reload()`.
+
+**What is not covered:**
+- Count refs in `usePersonPanelData` (`eventCount`, `mapPointCount`, `relationshipCount`, `identifierCount`, `mediaCount`) — set once in `loadPerson(id)`, never refreshed on mutation.
+- `PersonsView.vue` — zero `onDataChanged` listeners. Chart components never redraw on event/relationship mutation.
+- `PersonTimeline.vue` and `PersonMap.vue` — reload on `personId` change only; stale after same-person event mutation.
+
+**Listener accumulation risk:** `onDataChanged` is push-only (`dataChangedListeners.push(cb)`). If `PersonPanel` is mounted multiple times in a session, the checks listener accumulates without cleanup. Not currently causing visible bugs but will compound once more listeners are added.
+
+---
+
+### Root cause of #29 (Händelser count stale)
+
+`PersonPanel` template: `:count="eventCount"` on the Händelser `SectionHeader` (line 92). `eventCount` is a `ref` in `usePersonPanelData`, set inside `loadPerson()` wave-1 as `eventCount.value = events.length`. `loadPerson()` runs only when `personId` changes.
+
+When the user adds an event via `EventList → EventModal`:
+1. `events:create` IPC fires → `mutating()` invokes `onDataChanged` callbacks
+2. `EventList.onSaved()` calls its internal `reload()` → `eventsData` ref updates
+3. Nothing updates `eventCount` in `usePersonPanelData`
+
+Count stays stale until navigation away and back.
+
+**Fix:** Extract a `reloadCounts(id)` from `loadPerson()` wave-2 (the parallel `events.forPerson`, `relationships.getForPerson`, `persons.getIdentifiers`, `media.forEntity` calls). In `usePersonPanelData`, register an `onDataChanged` listener that calls `reloadCounts(personId.value)` debounced at ~150ms.
+
+---
+
+### Root cause of #37 (tree doesn't refresh after event edit)
+
+`PersonsView.vue`'s `reloadChart()` (which bumps `chartKey` and refetches focal-person data) is called from: `@relative-added`, `@person-changed`, `@reload` (chart-internal), context-menu add/delete. None of these fire when an event is edited via `EventList → EventModal`.
+
+`EventList.onSaved()` calls `reload()` (own data) — no emit bubbles up. `PersonPanel` has no hook that calls `reloadChart()` for event mutations. `PersonsView` has no `onDataChanged` listener.
+
+`HourglassChart` (and Pedigree/Descendant) have `:key="'hourglass-' + chartKey"` — a full remount + re-fetch when `chartKey` changes. This is the right mechanism; it just isn't triggered.
+
+**Fix:** In `PersonsView.vue` inside `onMounted`, add:
+```typescript
+(window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(reloadChart);
+```
+One line. `reloadChart()` already does the full remount + refetch.
+
+---
+
+### Concrete fix list (prioritized)
+
+**Phase 2 — priority 1 (fixes Bengt's actual bugs):**
+
+1. `usePersonPanelData.ts` + `PersonPanel.vue` — **#29:** Add `reloadCounts(id)` extracted from wave-2 of `loadPerson()`. Register a debounced `onDataChanged(() => { if (personId.value) reloadCounts(personId.value); })` listener inside the composable. Replace the existing `PersonPanel` `onMounted` listener with a call to a unified handler (counts + checks).
+
+2. `PersonsView.vue` — **#37:** Add `onDataChanged(reloadChart)` in `onMounted`. Add `offDataChanged(reloadChart)` in `onUnmounted` once the preload supports it (see item 3).
+
+3. `preload/index.ts` — Add `offDataChanged(cb: () => void)` that splices the listener out. Required to avoid listener accumulation across panel/view mount cycles.
+
+**Phase 2 — priority 2:**
+
+4. `PersonTimeline.vue` and `PersonMap.vue` — Add a debounced `onDataChanged(() => load())` listener so timeline and map update on same-person event mutation. Needs the `offDataChanged` fix first.
+
+**Phase 3 (separate):**
+
+5. `HourglassChart.vue`, `PedigreeChart.vue`, `DescendantChart.vue` — Add a `refetch()` method that reloads data in-place without remounting (preserves zoom/scroll). Currently `reloadChart()` in PersonsView remounts via `chartKey` increment.
+
 ## Tasks
 
 ### Phase 1 — Audit (research subtask)
