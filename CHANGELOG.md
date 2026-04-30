@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.163.1
+
+- fix(skill): commit skill now uses multiple `-m` flags instead of heredoc, so the same skill works in both interactive Claude Code and headless `claude -p` (the agentic-dev-pipeline runs the agent in headless mode where heredoc terminators corrupt under the bash wrapper)
+
 ## v0.163.0 — Events: sort order setting + date ranges for span events
 
 - feat(settings): new Defaults toggle "Sorteringsordning för händelsetyper" — choose between alphabetical (default) and life-arc order for the event-type picker
