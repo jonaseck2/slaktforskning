@@ -281,6 +281,7 @@ declare global {
         restore: () => Promise<{ success: boolean; path?: string; error?: string }>;
       };
       onDataChanged: (cb: () => void) => void;
+      offDataChanged: (cb: () => void) => void;
     };
   }
 }
