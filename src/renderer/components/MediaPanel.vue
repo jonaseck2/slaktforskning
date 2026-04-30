@@ -46,7 +46,7 @@
       <!-- Notes -->
       <div class="panel-section">
         <SectionHeader
-          :title="$t('common.notes')"
+          :title="$t('media.caption')"
           :collapsed="!sections.notes"
           @toggle="toggleSection('notes')"
         />
