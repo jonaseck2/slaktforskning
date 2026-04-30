@@ -54,6 +54,12 @@
 5. **[2026-04-27] `npx vue-tsc --noEmit` OOMs on default 4 GB Node heap**
    Do instead: run `NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0`. There's no `typecheck` script in package.json — vue-tsc isn't part of the normal workflow, but when used for verification it needs 8 GB. There are pre-existing type errors in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`, `src/api/places.ts`, `src/api/undo.ts`, plus `import.meta.env`/api-shape errors throughout views — these are real but not introduced by recent edits, ignore unless they're in your touched files.
 
+6. **[2026-04-30] Empty UI right after import = worker thread blocked by checks, not missing data**
+   Symptom: Media/Persons/Tree show empty states; last log is `[worker/checks] runAll #N: Nms → M raw`. The renderer's `media:listPage`, `persons:list`, `db:getSetting('default_person_id')` IPCs are queued behind the running checks on the same worker thread. Don't go hunting for data corruption — `sqlite3 export-import/<file>.db "SELECT COUNT(*)..."` will show the rows are there. The `setImmediate` between checks doesn't help if individual checks are slow; yields must be inside the hot loops (every ~200 iterations via `await new Promise(r => setImmediate(r))`). The three gazetteer-aware checks (`checkGazetteerMatchQuality`, `checkPlaceMissingComma`, `checkPlaceNameNoRegion`) are the usual offenders — they each iterate ~thousands of places through `resolvePlace`. See the performance-profiling skill's "Worker contention" pattern for the full fix shape and the regression tripwires in `tests/unit/checks-perf.test.ts`.
+
+7. **[2026-04-30] Resolver caches must key on root identity (WeakMap), not array identity**
+   Do instead: in `src/api/place-gazetteers/resolver.ts`, the per-root `perGazetteerNameDepth = WeakMap<GazetteerNode, …>` survives `loadGazetteers` deep-cloning the gazetteer array. An array-identity cache (the `cachedGazRoots` shape introduced by e53c4776 and reverted in this session's fix) misses on every `loadGazetteers` call because the array is fresh each time. Two-tier: per-root WeakMap for the heavy walk + optional per-array WeakMap for the merge step. Don't merge per-gazetteer cache logic with `nameIndexCache` — that one keys on `Gazetteer` correctly because it uses `normalizeForGazetteer` (per-locale rules); the depth-map cache uses `normalizeUniversal` and is locale-agnostic.
+
 ## Static SPA & Iframe Preview
 
 1. **[2026-04-28] Electron `protocol.handle` chokes on U+FFFD chars in response body**

@@ -108,7 +108,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
       await new Promise<void>(resolve => setImmediate(resolve));
       if (runId !== checksRunId) { console.log(`[worker/checks] runAll #${runId} cancelled`); return null; }
       const start = Date.now();
-      const res = check.fn(d, dbDir);
+      const res = await check.fn(d, dbDir);
       console.log(`[worker/checks] ${check.name}: ${Date.now() - start}ms → ${res.length}`);
       results.push(...res);
     }
@@ -167,7 +167,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     for (const check of checks.getAllCheckFunctions()) {
       if (check.global) continue;
       await new Promise<void>(resolve => setImmediate(resolve));
-      const res = check.fn(d, dbDir);
+      const res = await check.fn(d, dbDir);
       results.push(...res.filter(r => r.personIds.includes(personId)));
     }
     return results;

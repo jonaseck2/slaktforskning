@@ -560,42 +560,57 @@ function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
   return a.depth < b.depth;
 }
 
-// Cache: global name → minimum depth across all gazetteers in a set.
-// Built once per unique gazetteers array (by identity), reused across
-// all resolvePlace calls for the same loaded gazetteer set.
+// Cache: per-gazetteer name → minimum depth, built lazily and keyed on root
+// identity via WeakMap so the entry survives any number of caller-side
+// gazetteer-array reshuffles. Once a gazetteer root is walked we never re-walk
+// it. The merged depth map for a given gazetteer-array call is rebuilt by
+// iterating the (already-built) per-gazetteer maps — cheap.
 //
 // Keys are universal-normalized (no per-gazetteer suffix vocabulary applied)
 // because contradiction lookups need to work across gazetteers, and a
 // component normalized for gazetteer A wouldn't be findable under gazetteer
 // B's key. Since the universal form is the lowest common denominator, any
 // hit there means at least one gazetteer indexes that bare form.
-let cachedGlobalNameDepth: Map<string, number> | null = null;
-let cachedGazRoots: GazetteerNode[] | null = null;
+const perGazetteerNameDepth = new WeakMap<GazetteerNode, Map<string, number>>();
+
+// Secondary memo for the merged array result: array-identity-keyed via
+// WeakMap on the array itself, so callers that hand the same gazetteer-list
+// reference repeatedly (the common runAllChecks path) skip the merge step
+// entirely. Falls through to the per-root cache when the array identity
+// changes (e.g. after a fresh loadGazetteers).
+const mergedDepthByArray = new WeakMap<Gazetteer[], Map<string, number>>();
+
+function buildDepthForRoot(root: GazetteerNode): Map<string, number> {
+  const cached = perGazetteerNameDepth.get(root);
+  if (cached) return cached;
+  const map = new Map<string, number>();
+  function walk(node: GazetteerNode, depth: number) {
+    const keys = [normalizeUniversal(node.name)];
+    if (node.aliases) for (const a of node.aliases) keys.push(normalizeUniversal(a));
+    for (const k of keys) {
+      if (!k) continue;
+      const existing = map.get(k);
+      if (existing === undefined || depth < existing) map.set(k, depth);
+    }
+    if (node.children) for (const c of node.children) walk(c, depth + 1);
+  }
+  walk(root, 1);
+  perGazetteerNameDepth.set(root, map);
+  return map;
+}
 
 function getGlobalNameDepth(gazetteers: Gazetteer[]): Map<string, number> {
-  const roots = gazetteers.map(g => g.root);
-  if (cachedGlobalNameDepth && cachedGazRoots &&
-      roots.length === cachedGazRoots.length &&
-      roots.every((r, i) => r === cachedGazRoots![i])) {
-    return cachedGlobalNameDepth;
-  }
-  const map = new Map<string, number>();
+  const memo = mergedDepthByArray.get(gazetteers);
+  if (memo) return memo;
+  const merged = new Map<string, number>();
   for (const gaz of gazetteers) {
-    function walk(node: GazetteerNode, depth: number) {
-      const keys = [normalizeUniversal(node.name)];
-      if (node.aliases) for (const a of node.aliases) keys.push(normalizeUniversal(a));
-      for (const k of keys) {
-        if (!k) continue;
-        const existing = map.get(k);
-        if (existing === undefined || depth < existing) map.set(k, depth);
-      }
-      if (node.children) for (const c of node.children) walk(c, depth + 1);
+    for (const [k, depth] of buildDepthForRoot(gaz.root)) {
+      const existing = merged.get(k);
+      if (existing === undefined || depth < existing) merged.set(k, depth);
     }
-    walk(gaz.root, 1);
   }
-  cachedGazRoots = roots;
-  cachedGlobalNameDepth = map;
-  return map;
+  mergedDepthByArray.set(gazetteers, merged);
+  return merged;
 }
 
 /**

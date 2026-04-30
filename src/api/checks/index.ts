@@ -65,7 +65,11 @@ export type { CheckResult, CheckSeverity } from './check-utils';
 /** A named check function that can be run individually. */
 export interface NamedCheck {
   name: string;
-  fn: (db: Database, dbDir?: string) => CheckResult[];
+  /**
+   * Returns sync or async — the heavy place-resolver checks yield mid-loop so
+   * the worker stays responsive to queued list/get-setting IPC during runAll.
+   */
+  fn: (db: Database, dbDir?: string) => CheckResult[] | Promise<CheckResult[]>;
   /** If true, this check is expensive and skipped for per-person runs. */
   global?: boolean;
 }
@@ -100,6 +104,20 @@ function loadGazetteersForChecks(db: Database) {
  * (yielding the event loop between each) to avoid blocking.
  */
 export function getAllCheckFunctions(): NamedCheck[] {
+  // Lazily load gazetteers once per call and share across the three
+  // gazetteer-aware checks below. Loading deep-clones ~42 MB of bundled
+  // data and merges language translations, so doing it three times per
+  // runAll dominated post-import CPU. Sharing also keeps the resolver's
+  // identity-keyed `getGlobalNameDepth` cache warm between checks.
+  let cachedGazetteers: ReturnType<typeof loadGazetteersForChecks> | null = null;
+  let cachedGazDb: Database | null = null;
+  function gazetteersFor(db: Database) {
+    if (cachedGazetteers && cachedGazDb === db) return cachedGazetteers;
+    cachedGazetteers = loadGazetteersForChecks(db);
+    cachedGazDb = db;
+    return cachedGazetteers;
+  }
+
   return [
     // A. Chronological — Person
     { name: 'checkBirthAfterDeath',       fn: (db) => checkBirthAfterDeath(db) },
@@ -132,24 +150,22 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkSimultaneousDistantLocations', fn: (db) => checkSimultaneousDistantLocations(db) },
 
     // E2. Gazetteer match quality (global)
-    { name: 'checkGazetteerMatchQuality', global: true, fn: (db) => {
-      const gazetteers = loadGazetteersForChecks(db);
+    { name: 'checkGazetteerMatchQuality', global: true, fn: async (db) => {
+      const gazetteers = gazetteersFor(db);
       const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
       const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
-      const raw = checkGazetteerMatchQuality(db, gazetteers);
+      const raw = await checkGazetteerMatchQuality(db, gazetteers);
       return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
     }},
 
     // E3. Missing-comma in place names (global, resolver-aware)
     { name: 'checkPlaceMissingComma', global: true, fn: (db) => {
-      const gazetteers = loadGazetteersForChecks(db);
-      return checkPlaceMissingComma(db, gazetteers);
+      return checkPlaceMissingComma(db, gazetteersFor(db));
     }},
 
     // E4. Bare unresolvable places without region context (global, resolver-aware)
     { name: 'checkPlaceNameNoRegion', global: true, fn: (db) => {
-      const gazetteers = loadGazetteersForChecks(db);
-      return checkPlaceNameNoRegion(db, gazetteers);
+      return checkPlaceNameNoRegion(db, gazetteersFor(db));
     }},
 
     // F. Data Completeness
@@ -187,7 +203,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
   ];
 }
 
-function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?: boolean }): CheckResult[] {
+async function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?: boolean }): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   console.log('[checks] runAllCheckFunctions starting');
   const t0 = Date.now();
@@ -196,7 +212,7 @@ function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?
     if (opts?.skipGlobal && check.global) continue;
     console.log(`[checks] ${check.name}: starting`);
     const start = Date.now();
-    const res = check.fn(db, dbDir);
+    const res = await check.fn(db, dbDir);
     const ms = Date.now() - start;
     console.log(`[checks] ${check.name}: done in ${ms}ms → ${res.length} result(s)`);
     results.push(...res);
@@ -206,25 +222,25 @@ function runAllCheckFunctions(db: Database, dbDir?: string, opts?: { skipGlobal?
   return results;
 }
 
-export function runAllChecks(db: Database, dbDir?: string): CheckResult[] {
+export async function runAllChecks(db: Database, dbDir?: string): Promise<CheckResult[]> {
   return runAllCheckFunctions(db, dbDir);
 }
 
-export function runChecksForPerson(db: Database, personId: string, dbDir?: string): CheckResult[] {
+export async function runChecksForPerson(db: Database, personId: string, dbDir?: string): Promise<CheckResult[]> {
   // Skip expensive global checks (media file existence, gazetteer matching) that
   // aren't person-scoped and cause multi-minute hangs on large databases.
-  return runAllCheckFunctions(db, dbDir, { skipGlobal: true })
-    .filter(r => r.personIds.includes(personId));
+  const all = await runAllCheckFunctions(db, dbDir, { skipGlobal: true });
+  return all.filter(r => r.personIds.includes(personId));
 }
 
-export function runChecksForPlace(db: Database, placeId: string, dbDir?: string): CheckResult[] {
+export async function runChecksForPlace(db: Database, placeId: string, dbDir?: string): Promise<CheckResult[]> {
   // Include global checks — gazetteer match quality is the main place-scoped signal.
-  return runAllCheckFunctions(db, dbDir)
-    .filter(r => r.placeIds?.includes(placeId));
+  const all = await runAllCheckFunctions(db, dbDir);
+  return all.filter(r => r.placeIds?.includes(placeId));
 }
 
-export function runChecksForMedia(db: Database, mediaId: string, dbDir?: string): CheckResult[] {
+export async function runChecksForMedia(db: Database, mediaId: string, dbDir?: string): Promise<CheckResult[]> {
   // Include global checks — media file existence is the main media-scoped signal.
-  return runAllCheckFunctions(db, dbDir)
-    .filter(r => r.mediaIds?.includes(mediaId));
+  const all = await runAllCheckFunctions(db, dbDir);
+  return all.filter(r => r.mediaIds?.includes(mediaId));
 }

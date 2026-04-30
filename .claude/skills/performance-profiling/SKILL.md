@@ -131,6 +131,20 @@ Normal — this is SQLite doing WAL file I/O. Not actionable.
 
 The name-resolution query after `checks.runAllChecks()` is slow. Cap the result set before calling it (already done with 500-result cap per notice-severity check code in `checks:runAll` handler).
 
+### Pattern: Empty UI views right after import / DB switch (worker contention)
+
+Symptom: list views (Media, Persons, Places) show their empty state, the tree shows `noFocalPerson`, and the last log line is `[worker/checks] runAll #N: <11s>ms → <many> raw`. The renderer's `media:listPage`, `persons:list`, `db:getSetting('default_person_id')` IPC calls are queued behind a long-running check on the same worker thread.
+
+The `setImmediate` yield BETWEEN checks in `db-worker.ts` doesn't help when an INDIVIDUAL check (gazetteer-aware ones especially) blocks for several seconds on a single synchronous loop. Yields must be inside the loop, not just between checks.
+
+Fix shape:
+- The slow check function returns `Promise<CheckResult[]>` (allowed by `NamedCheck.fn` signature).
+- Inside hot loops over places/persons, yield every ~200 iterations: `if (++processed % YIELD_EVERY === 0) await yieldNow();` where `yieldNow = () => new Promise(r => setImmediate(r))`.
+- Update both runAll loops in `src/main/db-worker.ts` (`checks:runAll`, `checks:forPerson`) to `await check.fn(...)`.
+- Mass-async test conversion: `perl -i -pe 's/= (runAllChecks|runChecksForPerson|...)\(/= await $1(/g; s/\bit\(([^,]+), \(\) => \{/it($1, async () => {/g'` — but watch for `it()` descriptions containing commas/parens (the `[^,]+` regex won't match them; fix those manually).
+
+Don't write a wall-clock perf test on a private fixture — the yield doesn't reduce TOTAL runtime, it makes the worker non-blocking. Wall-clock won't catch that. Write call-counting and cache-survival invariants instead (see `tests/unit/checks-perf.test.ts`).
+
 ---
 
 ## Known Slow Patterns in This Codebase
@@ -221,6 +235,32 @@ for (const rel of relationships) {
   const person = personMap.get(rel.person_id);
 }
 ```
+
+### 4. Gazetteer Load Fan-Out + Resolver Cache Fragility
+
+Three checks (`checkGazetteerMatchQuality`, `checkPlaceMissingComma`, `checkPlaceNameNoRegion`) each call `loadGazetteersForChecks(db)` independently. That helper deep-clones ~42 MB of bundled gazetteer data (`JSON.parse(JSON.stringify(g))` in `src/api/place-gazetteers/merge.ts`) and merges language translations on every call. Three calls per `runAll` = three full clones.
+
+Worse, the resolver's `getGlobalNameDepth` cache in `src/api/place-gazetteers/resolver.ts` was previously array-identity-keyed. Each fresh clone produced new identities → cache miss → full tree walk to rebuild a depth map across ~27 gazetteers.
+
+**Fix shape (caller-side):** Hoist the load to a closure variable in `getAllCheckFunctions()`:
+
+```typescript
+let cachedGazetteers: ReturnType<typeof loadGazetteersForChecks> | null = null;
+let cachedGazDb: Database | null = null;
+function gazetteersFor(db: Database) {
+  if (cachedGazetteers && cachedGazDb === db) return cachedGazetteers;
+  cachedGazetteers = loadGazetteersForChecks(db);
+  cachedGazDb = db;
+  return cachedGazetteers;
+}
+// Then all three checks call gazetteersFor(db) instead of loadGazetteersForChecks(db) directly.
+```
+
+**Fix shape (resolver-side):** Two-tier WeakMap, NOT array-identity. Per-root `WeakMap<GazetteerNode, Map<string, number>>` so the heavy walk runs once per root identity even if the surrounding array changes. The depth-map values are `normalizeUniversal`-keyed (language-agnostic), so root-keying is safe regardless of the gazetteer's per-locale normalize rules. The OTHER cache (`nameIndexCache`) does need full-`Gazetteer` keying because it uses `normalizeForGazetteer`.
+
+When changing the resolver's caching, lock the new behavior in with the tests already in `tests/unit/checks-perf.test.ts`:
+1. Spy on `getImportedGazetteers` from `gazetteersApi`; assert ≤1 call per `runAllChecks` (catches re-introducing fan-out).
+2. Wrap a synthetic gazetteer's `children` accessors with a Proxy counter; first `resolvePlace` builds (high count), second on the same root or in a different array hits the cache (low count).
 
 ---
 

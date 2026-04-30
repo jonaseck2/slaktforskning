@@ -5,6 +5,15 @@ import type { Gazetteer, GazetteerNode } from '../place-gazetteers/types';
 import type { CheckResult, CheckSeverity } from './check-utils';
 import { haversineKm } from './check-utils';
 
+// Yield to the event loop every N iterations of a hot loop so that other IPC
+// messages queued on the worker (list queries, db_settings reads) get a chance
+// to run between batches. Place-resolution loops walk thousands of places at
+// ~1 ms each — without yielding, the worker would block lists for seconds.
+const YIELD_EVERY = 200;
+function yieldNow(): Promise<void> {
+  return new Promise(resolve => setImmediate(resolve));
+}
+
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   // Find events for same person on same exact date with place lat/lon
   const rows = queryAll<{
@@ -55,7 +64,7 @@ export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]): CheckResult[] {
+export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]): Promise<CheckResult[]> {
   if (gazetteers.length === 0) return [];
 
   // Places used in events that have no manual coordinates
@@ -100,8 +109,10 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
   // Cache resolutions by name to avoid re-resolving duplicates
   const cache = new Map<string, ReturnType<typeof resolvePlace>>();
 
+  let processed = 0;
   for (const place of places) {
     if (!placesInUse.has(place.id)) continue;
+    if (++processed % YIELD_EVERY === 0) await yieldNow();
 
     // Build full place path from in-memory map
     const fullPath = buildPlacePath(place.id);
@@ -253,10 +264,10 @@ function findRecognizedSpans(
  * tokens may appear deep in some gazetteer but neither functions as a
  * strong geographic anchor.
  */
-export function checkPlaceMissingComma(
+export async function checkPlaceMissingComma(
   db: Database,
   gazetteers: Gazetteer[],
-): CheckResult[] {
+): Promise<CheckResult[]> {
   if (gazetteers.length === 0) return [];
 
   // Same scope as checkGazetteerMatchQuality: places referenced by ≥1
@@ -272,7 +283,9 @@ export function checkPlaceMissingComma(
   const nameDepth = buildNameDepthIndex(gazetteers);
   const results: CheckResult[] = [];
 
+  let processed = 0;
   for (const place of places) {
+    if (++processed % YIELD_EVERY === 0) await yieldNow();
     const components = (place.name ?? '').split(',').map(s => s.trim()).filter(Boolean);
     let suggestionForPlace: string | null = null;
 
@@ -333,10 +346,10 @@ export function checkPlaceMissingComma(
  * `resolvePlace(name, gazetteers)` must return null. The single-component
  * constraint is implicit (no parent + bare name).
  */
-export function checkPlaceNameNoRegion(
+export async function checkPlaceNameNoRegion(
   db: Database,
   gazetteers: Gazetteer[],
-): CheckResult[] {
+): Promise<CheckResult[]> {
   if (gazetteers.length === 0) return [];
 
   const places = queryAll<{ id: string; name: string }>(db, `
@@ -349,11 +362,14 @@ export function checkPlaceNameNoRegion(
   if (places.length === 0) return [];
 
   const results: CheckResult[] = [];
+  const cache = new Map<string, ReturnType<typeof resolvePlace>>();
+  let processed = 0;
   for (const place of places) {
+    if (++processed % YIELD_EVERY === 0) await yieldNow();
     const name = (place.name ?? '').trim();
     if (!name) continue;
-    const resolved = resolvePlace(name, gazetteers);
-    if (resolved !== null) continue;
+    if (!cache.has(name)) cache.set(name, resolvePlace(name, gazetteers));
+    if (cache.get(name) !== null) continue;
     results.push({
       code: 'PLACE_NAME_NO_REGION',
       severity: 'notice' as CheckSeverity,

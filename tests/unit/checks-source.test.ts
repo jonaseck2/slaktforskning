@@ -9,51 +9,51 @@ let db: ReturnType<typeof createTestDb>;
 beforeEach(() => { db = createTestDb(); });
 
 describe('ORPHANED_SOURCE (relocated)', () => {
-  it('still fires for sources with no citations', () => {
+  it('still fires for sources with no citations', async () => {
     const s = createSource(db, { title: 'Lonely source' });
-    const results = runAllChecks(db);
+    const results = await runAllChecks(db);
     expect(results.filter(r => r.code === 'ORPHANED_SOURCE' && r.sourceIds?.includes(s.id))).toHaveLength(1);
   });
 
-  it('does not fire when source has a citation', () => {
+  it('does not fire when source has a citation', async () => {
     const s = createSource(db, { title: 'Cited source' });
     const e = createEvent(db, { event_type: 'birth' });
     createCitation(db, { source_id: s.id, event_id: e.id });
-    const results = runAllChecks(db);
+    const results = await runAllChecks(db);
     expect(results.filter(r => r.code === 'ORPHANED_SOURCE' && r.sourceIds?.includes(s.id))).toHaveLength(0);
   });
 });
 
 describe('SOURCE_MISSING_TITLE', () => {
-  it('fires when title is empty string', () => {
+  it('fires when title is empty string', async () => {
     const s = createSource(db, { title: '' });
-    const results = runAllChecks(db);
+    const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'SOURCE_MISSING_TITLE' && r.sourceIds?.includes(s.id));
     expect(hit).toHaveLength(1);
     expect(hit[0].severity).toBe('warning');
   });
 
-  it('does not fire when title has content', () => {
+  it('does not fire when title has content', async () => {
     const s = createSource(db, { title: 'Proper title' });
-    const results = runAllChecks(db);
+    const results = await runAllChecks(db);
     expect(results.filter(r => r.code === 'SOURCE_MISSING_TITLE' && r.sourceIds?.includes(s.id))).toHaveLength(0);
   });
 });
 
 describe('ORPHANED_REPOSITORY', () => {
-  it('fires for a repository that no source references', () => {
+  it('fires for a repository that no source references', async () => {
     const r = createRepository(db, { name: 'Tyst arkiv' });
-    const results = runAllChecks(db);
+    const results = await runAllChecks(db);
     const hit = results.filter(h => h.code === 'ORPHANED_REPOSITORY' && h.messageParams?.repositoryId === r.id);
     expect(hit).toHaveLength(1);
     expect(hit[0].severity).toBe('notice');
   });
 
-  it('does not fire when the repository is linked to a source', () => {
+  it('does not fire when the repository is linked to a source', async () => {
     const repo = createRepository(db, { name: 'Använt arkiv' });
     const src = createSource(db, { title: 'Bok' });
     linkSourceRepository(db, src.id, repo.id);
-    const results = runAllChecks(db);
+    const results = await runAllChecks(db);
     expect(results.filter(h => h.code === 'ORPHANED_REPOSITORY' && h.messageParams?.repositoryId === repo.id)).toHaveLength(0);
   });
 });
