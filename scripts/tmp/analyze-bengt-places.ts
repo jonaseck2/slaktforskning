@@ -1,6 +1,6 @@
 /* eslint-disable */
-// Analyze all places in bengt-inte-trasig.db, categorize quality issues.
-// Run with: npx tsx /tmp/analyze-bengt-places.ts
+// Analyze all places in ben-inte-trasig.db, categorize quality issues.
+// Run with: npx tsx /tmp/analyze-ben-places.ts
 
 import Database from 'node-sqlite3-wasm';
 import { resolvePlace } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/resolver';
@@ -8,7 +8,7 @@ import { loadGazetteers } from '/Users/jonasahnstedt/git/slaktforskning/src/api/
 import { getAllGazetteers } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/bundled';
 import type { Gazetteer, GazetteerNode } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/types';
 
-const db = new (Database as any).Database('/tmp/bengt-analysis.db');
+const db = new (Database as any).Database('/tmp/ben-analysis.db');
 
 // Build place path
 const all = db.all('SELECT id, name, parent_place_id FROM places');

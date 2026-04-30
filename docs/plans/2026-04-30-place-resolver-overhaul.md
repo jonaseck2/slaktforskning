@@ -3,11 +3,11 @@
 **Date:** 2026-04-30
 **Status:** planned
 **Effort:** M (4 commits, one worktree)
-**Source:** Conversation analysis of `bengt-inte-trasig.db` (6 266 places used by ≥1 event)
+**Source:** Conversation analysis of `ben-inte-trasig.db` (6 266 places used by ≥1 event)
 
 ## Background
 
-Place resolution against `bengt-inte-trasig.db` resolves only 17 % of places exactly; 36 % don't resolve at all. Categorization of the 5 210 problem rows shows that almost all of them are caused by a small set of input-shape variations that the current resolver doesn't handle, **not** by missing gazetteer data:
+Place resolution against `ben-inte-trasig.db` resolves only 17 % of places exactly; 36 % don't resolve at all. Categorization of the 5 210 problem rows shows that almost all of them are caused by a small set of input-shape variations that the current resolver doesn't handle, **not** by missing gazetteer data:
 
 | Pattern | Count | Example |
 |---|---|---|
@@ -85,7 +85,7 @@ Plus one bug fix: `checkGazetteerMatchQuality` currently loads gazetteers withou
 
 ### 5. New quality checks
 
-After 1–4 land, partial/unmatched counts will drop dramatically. Re-run [scripts/tmp/analyze-bengt-places.ts](../../scripts/tmp/analyze-bengt-places.ts) to confirm. Then add these checks. All live in `src/api/checks/checks-place.ts` (data-only checks) or `checks-location.ts` (resolver-aware checks).
+After 1–4 land, partial/unmatched counts will drop dramatically. Re-run [scripts/tmp/analyze-ben-places.ts](../../scripts/tmp/analyze-ben-places.ts) to confirm. Then add these checks. All live in `src/api/checks/checks-place.ts` (data-only checks) or `checks-location.ts` (resolver-aware checks).
 
 - [ ] `PLACE_NAME_LOOKS_LIKE_DATE` — error severity. Regex: `/^\d{4}([-\s/]\d{1,2}){0,2}$/`. Detects `1736-11-11`, `1736 11`, `1736/11/11`. Fix suggestion: "Looks like a date. Was the place field used for a date?"
 - [ ] `PLACE_NAME_BROKEN_LANSBOKSTAV` — warning severity. After the resolver overhaul, this targets the ~14 cases like `Borås (PI`, `Hed (UI`, where the closing paren got mangled into `I` or `|`. Detector: unmatched 2–3 letter token where dropping a trailing `I`/`|` yields a known länsbokstav. Fix suggestion: rebuilt string with proper parens.
@@ -104,7 +104,7 @@ Do **not** add data-quality checks for the patterns the resolver now handles nat
 
 ## Verification
 
-- [ ] Re-run [scripts/tmp/analyze-bengt-places.ts](../../scripts/tmp/analyze-bengt-places.ts) against `bengt-inte-trasig.db`. Expected: exact ratio rises from 17 % to ≥80 %; unmatched drops from 36 % to <5 %.
+- [ ] Re-run [scripts/tmp/analyze-ben-places.ts](../../scripts/tmp/analyze-ben-places.ts) against `ben-inte-trasig.db`. Expected: exact ratio rises from 17 % to ≥80 %; unmatched drops from 36 % to <5 %.
 - [ ] Specific resolution test cases (add to `tests/unit/gazetteers.test.ts`):
   - `"Stockholm (A)"` → exact, Stockholms län (sv-socknar)
   - `"Åkersberga, Österåkers kn"` → exact, Österåkers kommun > Åkersberga (sv-orter)
@@ -114,7 +114,7 @@ Do **not** add data-quality checks for the patterns the resolver now handles nat
   - `"Husby Rekarne"` (no hyphen) ≈ `"Husby-Rekarne"`
   - `"Richmond, Kalifornien, USA"` → United States > California > Richmond (was the case that started this thread)
 - [ ] Existing resolver tests in `tests/unit/gazetteers.test.ts` and `tests/unit/gazetteer-build.test.ts` continue to pass.
-- [ ] Re-run quality checks against `bengt-inte-trasig.db`. The `PLACE_MATCH_PARTIAL`/`PLACE_MATCH_NONE` count should drop dramatically; the new checks should pick up only genuine data issues.
+- [ ] Re-run quality checks against `ben-inte-trasig.db`. The `PLACE_MATCH_PARTIAL`/`PLACE_MATCH_NONE` count should drop dramatically; the new checks should pick up only genuine data issues.
 
 ## Implementation order
 

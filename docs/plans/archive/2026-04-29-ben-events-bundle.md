@@ -1,17 +1,17 @@
-# Plan: Bengt feedback — events bundle (sort order setting + date ranges)
+# Plan: Ben feedback — events bundle (sort order setting + date ranges)
 
 **Date:** 2026-04-29
 **Status:** done — shipped in v0.163.0
-**Source:** `BENGT.md`
+**Source:** `BEN.md`
 **Effort:** S–M
 
 ## Background
 Three remaining event-related items that don't fit elsewhere: a default-sort-order setting (alpha vs canonical), date-range UI for events that span time, and the indirect-events question (split with reactivity plan).
 
 ## Tickets covered
-- BENGT #1 / #3 (sort order setting) — Add a `default settings` toggle for event-type list ordering. Default: alphabetical
-- BENGT #28(a) — Add `date_value_end` UI for events that span time: residence, education, occupation, military, travel
-- BENGT #28(f) / #31 — Sons/Dotters födelse + spouse death on event timelines (cross-references with reactivity plan)
+- BEN #1 / #3 (sort order setting) — Add a `default settings` toggle for event-type list ordering. Default: alphabetical
+- BEN #28(a) — Add `date_value_end` UI for events that span time: residence, education, occupation, military, travel
+- BEN #28(f) / #31 — Sons/Dotters födelse + spouse death on event timelines (cross-references with reactivity plan)
 
 ## Tasks
 
@@ -21,7 +21,7 @@ Three remaining event-related items that don't fit elsewhere: a default-sort-ord
 - [x] In every component that renders an event-type select, read the setting and sort accordingly
   - `EventModal.vue` "..." dropdown
   - PersonPanel and event filters wherever event_type lists appear
-- [x] Default `'alphabetical'` matches Bengt's preference; `'canonical'` preserves the order in `EVENT_TYPE_VALUES` for users who prefer chronological/logical order
+- [x] Default `'alphabetical'` matches Ben's preference; `'canonical'` preserves the order in `EVENT_TYPE_VALUES` for users who prefer chronological/logical order
 
 ### Phase 2 — Date-range UI for span events (#28a)
 - [x] Schema already supports `date_value_end` per CLAUDE.md events table
@@ -31,10 +31,10 @@ Three remaining event-related items that don't fit elsewhere: a default-sort-ord
 - [x] Update event display in panels and reports to render `start – end` for span events with end date set
 
 ### Phase 3 — Indirect events on timelines (#28f, #31)
-**Move this to the reactivity plan.** It's a timeline rendering question, not an EventModal change. See [2026-04-29-bengt-reactivity.md](2026-04-29-bengt-reactivity.md) Phase 4.
+**Move this to the reactivity plan.** It's a timeline rendering question, not an EventModal change. See [2026-04-29-ben-reactivity.md](2026-04-29-ben-reactivity.md) Phase 4.
 
 ## Out of scope
-- "Travel" event type doesn't yet exist in `EVENT_TYPE_VALUES`. Either add it (1-line) or use existing `other` with description. **Decision:** add `travel` to the enum since Bengt explicitly named it
+- "Travel" event type doesn't yet exist in `EVENT_TYPE_VALUES`. Either add it (1-line) or use existing `other` with description. **Decision:** add `travel` to the enum since Ben explicitly named it
 - Multi-period events (e.g., multiple residences with same address). Out of scope — each is its own event row
 
 ## Verification

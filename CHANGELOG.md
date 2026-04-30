@@ -2,11 +2,11 @@
 
 ## v0.169.0 — Place picker: parent-aware autocomplete, county letter codes, no dataloss
 
-- feat(places): place picker now reads strings right-to-left like Swedish records — `Hörningsholm, Mosås (T)` anchors on Örebro län (T) and matches Mosås only inside it, no longer dragging the pin to a same-named hamlet in Norrland (BENGT #27)
+- feat(places): place picker now reads strings right-to-left like Swedish records — `Hörningsholm, Mosås (T)` anchors on Örebro län (T) and matches Mosås only inside it, no longer dragging the pin to a same-named hamlet in Norrland (BEN #27)
 - feat(gazetteers): every Swedish län now carries its standard one- or two-letter county code as an alias — `Solna (B)` resolves to Stockholms län, `Mosås (T)` to Örebro län, etc. (full A–BD coverage including pre-1997 codes O/P/R/L/M/W)
 - feat(places): accepting a hierarchical suggestion creates the matched parent chain in the database in one step — the new farm/locality is parented under the right parish/municipality/län without manual fix-up; intermediate places are created once and reused on subsequent picks
-- fix(places): typing a place name and clicking "Skapa ny ort" inside an event modal no longer closes the surrounding event modal or loses the typed-in event data — dropdown items now stop click propagation explicitly (BENGT #19b)
-- fix(places): after creating a new place via the picker, the same "Skapa ny plats" suggestion no longer reappears on next focus — the picker now suppresses the create option whenever a place is already selected, and re-runs the search after creation so the new place shows up as a real match (BENGT #34)
+- fix(places): typing a place name and clicking "Skapa ny ort" inside an event modal no longer closes the surrounding event modal or loses the typed-in event data — dropdown items now stop click propagation explicitly (BEN #19b)
+- fix(places): after creating a new place via the picker, the same "Skapa ny plats" suggestion no longer reappears on next focus — the picker now suppresses the create option whenever a place is already selected, and re-runs the search after creation so the new place shows up as a real match (BEN #34)
 - feat(api): new `findOrCreatePlaceWithChain(name, chain)` API + IPC channel for renderer code that needs to materialise an ancestor chain of places in one call
 
 ## v0.168.1
@@ -24,7 +24,7 @@
 
 ## v0.167.0 — Tree refresh keeps zoom and scroll
 
-- feat(charts): editing a person's events no longer wipes your place in the tree — Pedigree, Hourglass, and Descendant charts now refetch in place when data changes, preserving zoom, scroll position, and expanded/collapsed branches (BENGT #37, Phase 3 of the reactivity audit)
+- feat(charts): editing a person's events no longer wipes your place in the tree — Pedigree, Hourglass, and Descendant charts now refetch in place when data changes, preserving zoom, scroll position, and expanded/collapsed branches (BEN #37, Phase 3 of the reactivity audit)
 - internal: each chart exposes a `refetch()` method; `PersonsView` calls it from the `onDataChanged` listener instead of bumping `chartKey`. Hard remounts (focal person change, focal-person deletion) still go through `reloadChart()`
 
 ## v0.166.1
@@ -69,7 +69,7 @@
 - fix(persons-view): the family tree (Pedigree/Hourglass/Descendant) re-renders after editing the focal person's events, names, or relationships
 - fix(person-panel): timeline and map re-fetch automatically when same-person events change
 
-## v0.162.6 — Bengt feedback round: labels, event-type cleanup, About menu
+## v0.162.6 — Ben feedback round: labels, event-type cleanup, About menu
 
 - fix(events): the "Källa (valfritt)" label is now just "Källa", "Orsak" reads "Dödsorsak" on death events, "Pension/Medborgarskap/Yrke" → "Pensionering / Nytt medborgarskap / Yrke/Anställning", and the "..." quick-pick button is labelled "Övriga händelser"
 - fix(media): the notes section in the media panel is now titled "Bildtext"

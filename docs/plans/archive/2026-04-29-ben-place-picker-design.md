@@ -2,16 +2,16 @@
 
 **Date:** 2026-04-29
 **Status:** design
-**Source:** `BENGT.md` #19b, #27, #34
+**Source:** `BEN.md` #19b, #27, #34
 **Effort:** L (substantial UX + algorithm work)
 
 ## Problem
 
-Three Bengt tickets all point at the same root cause: today's `PlacePicker` matches the user's typed string against place *names* directly, ignoring administrative hierarchy.
+Three Ben tickets all point at the same root cause: today's `PlacePicker` matches the user's typed string against place *names* directly, ignoring administrative hierarchy.
 
 Specific failures:
 - **#19b — dataloss bug.** Typing "Solna (B)" in the EventModal place field, then clicking "Skapa ny ort: Solna (B)" closes the place picker *and* the surrounding event modal, losing all event data the user typed.
-- **#27 — wrong map pins on imported data.** "Hörningsholm, Mosås (T)" matches "Hörningsholm" in northern Sweden because the picker doesn't read tokens right-to-left. Bengt observes that Swedish place strings are conventionally written from specific (farm) to general (county), so the matcher should peel from the right.
+- **#27 — wrong map pins on imported data.** "Hörningsholm, Mosås (T)" matches "Hörningsholm" in northern Sweden because the picker doesn't read tokens right-to-left. Ben observes that Swedish place strings are conventionally written from specific (farm) to general (county), so the matcher should peel from the right.
 - **#34 — stale "Skapa ny plats" suggestion.** After creating "Stockholms Matteus församling" via the picker, the same suggestion still appears in the autocomplete on next focus. Plus: user-created places have no `place_type` classification (e.g., `sv-församling`) so they don't get the same gazetteer treatment as imported places.
 
 These are symptoms of the same problem: the picker treats places as flat strings instead of hierarchical entities.
@@ -92,4 +92,4 @@ Root cause: after creating a place, the picker's local debounce/autocomplete cac
 - **Multi-gazetteer fuzzy match scoring** — keep simple right-to-left exact match for v1. Fuzzy/scoring later
 - **Coordinates from leaf** — leaves inherit parent coordinates. Adding lat/lon for individual farms is a manual or import-time concern
 - **Cross-language matching** — Swedish input matches Swedish gazetteers only. International support later
-- **Wikidata transcription parsing** — Bengt's "Norrb sockn Fsp" example lives in `transcription` field of the citation, not the place. Out of scope here
+- **Wikidata transcription parsing** — Ben's "Norrb sockn Fsp" example lives in `transcription` field of the citation, not the place. Out of scope here

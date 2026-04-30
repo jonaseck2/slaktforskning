@@ -43,7 +43,7 @@ Collapse 15 near-identical `getXFor<EntityType>` queries (citations, groups, tas
 - Plan: [plans/2026-04-28-api-link-helpers.md](plans/2026-04-28-api-link-helpers.md)
 
 #### Place Resolver Overhaul [planned]
-Drop resolver from 6 hardcoded language vocabularies to universal rules + per-gazetteer normalization. Adds Swedish `kn`/`sn`/`fs` and länsbokstav alias support, fixes parens-as-separator, period-as-separator, and whitespace tolerance. Targets ~1 700 places that currently fall on the floor in `bengt-inte-trasig.db`. Plus 4 new targeted quality checks.
+Drop resolver from 6 hardcoded language vocabularies to universal rules + per-gazetteer normalization. Adds Swedish `kn`/`sn`/`fs` and länsbokstav alias support, fixes parens-as-separator, period-as-separator, and whitespace tolerance. Targets ~1 700 places that currently fall on the floor in `ben-inte-trasig.db`. Plus 4 new targeted quality checks.
 - Plan: [plans/2026-04-30-place-resolver-overhaul.md](plans/2026-04-30-place-resolver-overhaul.md)
 
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
@@ -59,15 +59,11 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 - Close confirmation dialog on last window (production only)
 - Media copy-on-attach verified working
 
-#### Bengt Feedback Batch (2026-04-29) [planned]
-Source: [docs/BENGT.md](BENGT.md). Split into 6 workstreams + 1 design spec, each independently shippable.
-- Label tweaks: [plans/2026-04-29-bengt-label-tweaks.md](plans/2026-04-29-bengt-label-tweaks.md)
-- Bug fixes (DevTools, baptism, fan chart, About menu, parent_child subtype): [plans/2026-04-29-bengt-bug-fixes.md](plans/2026-04-29-bengt-bug-fixes.md)
-- Reactivity audit (panel counts, tree refresh, indirect events on timelines): [plans/2026-04-29-bengt-reactivity.md](plans/2026-04-29-bengt-reactivity.md)
-- Names rework (newest-as-displayed, reorder): [plans/archive/2026-04-29-bengt-names-rework.md](plans/archive/2026-04-29-bengt-names-rework.md) [done v0.165.0]
-- Reports (researcher info, page numbers, citation rendering, GEDCOM SUBM): [plans/archive/2026-04-29-bengt-reports.md](plans/archive/2026-04-29-bengt-reports.md) [done v0.166.0]
-- Place picker rework (parent-aware autocomplete): [plans/archive/2026-04-29-bengt-place-picker.md](plans/archive/2026-04-29-bengt-place-picker.md) — design: [plans/archive/2026-04-29-bengt-place-picker-design.md](plans/archive/2026-04-29-bengt-place-picker-design.md) [done v0.168.0]
-- Events bundle (sort-order setting, date-range UI): [plans/archive/2026-04-29-bengt-events-bundle.md](plans/archive/2026-04-29-bengt-events-bundle.md) [done v0.163.0]
+#### Ben Feedback Batch (2026-04-29) [done]
+25 items shipped across 8 releases (v0.162.6 → v0.169.0). Plans archived under `docs/plans/archive/2026-04-29-ben-*.md`. See CHANGELOG entries for the full list.
+
+Phase 4/5 of the reactivity work (indirect events on timelines, mini family tree on Add Member) deferred and tracked separately:
+- [plans/2026-04-29-ben-reactivity.md](plans/2026-04-29-ben-reactivity.md)
 
 #### Workflow Analysis [research]
 *High user-focus task — do this in a dedicated session with real usage data.*

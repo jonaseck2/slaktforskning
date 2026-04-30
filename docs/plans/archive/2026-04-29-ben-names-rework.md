@@ -1,19 +1,19 @@
-# Plan: Bengt feedback — names rework
+# Plan: Ben feedback — names rework
 
 **Date:** 2026-04-29
 **Status:** planned
-**Source:** `BENGT.md`
+**Source:** `BEN.md`
 **Effort:** M–L (data model + UI + display logic)
 
 ## Background
-Bengt has six tickets touching names. Two earlier rounds already landed (`name_change` type added, alphabetical sorting). This plan covers the rest: display logic shifts from "starred preferred name" to "newest by validity date", with manual reorder for ranking ties.
+Ben has six tickets touching names. Two earlier rounds already landed (`name_change` type added, alphabetical sorting). This plan covers the rest: display logic shifts from "starred preferred name" to "newest by validity date", with manual reorder for ranking ties.
 
 ## Tickets covered
-- BENGT #11 — "Namn" button stays. Newest = displayed. Add `Namnändring` (already in enum as `name_change`) with default values pre-filled from previous newest
-- BENGT #16 — Newest name = displayed (auto, not user-toggleable). Birth name auto-pulls date_from from birth event. Allow up/down ranking for ties. Prevent invalid date orderings
-- BENGT #17 — Rename name type "married" / "Gift man" → "Vigselnamn"
-- BENGT #18 — **Skip.** Inline qualifier chars (`&%*!`) not adopted; keep structured `name_qualifier` field
-- BENGT #19a — **Skip.** Stavningsvariant and Stavning vid dödsfallet — Bengt himself flagged as "krångligheter" and walked back. Stavningsvarianter belong in the `notes` field per current workflow.
+- BEN #11 — "Namn" button stays. Newest = displayed. Add `Namnändring` (already in enum as `name_change`) with default values pre-filled from previous newest
+- BEN #16 — Newest name = displayed (auto, not user-toggleable). Birth name auto-pulls date_from from birth event. Allow up/down ranking for ties. Prevent invalid date orderings
+- BEN #17 — Rename name type "married" / "Gift man" → "Vigselnamn"
+- BEN #18 — **Skip.** Inline qualifier chars (`&%*!`) not adopted; keep structured `name_qualifier` field
+- BEN #19a — **Skip.** Stavningsvariant and Stavning vid dödsfallet — Ben himself flagged as "krångligheter" and walked back. Stavningsvarianter belong in the `notes` field per current workflow.
 
 ## Tasks
 
@@ -58,4 +58,4 @@ Bengt has six tickets touching names. Two earlier rounds already landed (`name_c
 ## Decisions taken
 - **No star.** The displayed name is automatic.
 - **Date precedence over sort_order.** sort_order only resolves ties between undated entries.
-- **Skip inline qualifiers.** Bengt asked, then walked it back ("Jag vet inte om det här är bra").
+- **Skip inline qualifiers.** Ben asked, then walked it back ("Jag vet inte om det här är bra").

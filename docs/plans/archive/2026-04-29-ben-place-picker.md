@@ -1,18 +1,18 @@
-# Plan: Bengt feedback — place picker rework
+# Plan: Ben feedback — place picker rework
 
 **Date:** 2026-04-29
 **Status:** done v0.168.0 (Phases 0–2, 4 shipped; Phase 3 tree expander deferred)
-**Source:** `BENGT.md` (#19b, #27, #34)
-**Design:** [2026-04-29-bengt-place-picker-design.md](2026-04-29-bengt-place-picker-design.md)
+**Source:** `BEN.md` (#19b, #27, #34)
+**Design:** [2026-04-29-ben-place-picker-design.md](2026-04-29-ben-place-picker-design.md)
 **Effort:** L
 
 ## Background
-Three Bengt tickets reduce to one root cause: the place picker treats place strings as flat names instead of hierarchical entities. See linked design spec for full analysis.
+Three Ben tickets reduce to one root cause: the place picker treats place strings as flat names instead of hierarchical entities. See linked design spec for full analysis.
 
 ## Tickets covered
-- BENGT #19b — Creating a new place mid-event-edit loses event data
-- BENGT #27 — Place strings should be matched right-to-left (general → specific)
-- BENGT #34 — After creating a place, "Skapa ny plats" suggestion still appears for the same name; user-created places have no gazetteer classification
+- BEN #19b — Creating a new place mid-event-edit loses event data
+- BEN #27 — Place strings should be matched right-to-left (general → specific)
+- BEN #34 — After creating a place, "Skapa ny plats" suggestion still appears for the same name; user-created places have no gazetteer classification
 
 ## Approach
 Phased delivery. The two bugs (#19b, #34) ship first as quick wins; the algorithm work follows.
@@ -60,7 +60,7 @@ research shows the autocomplete is insufficient.
 ## Out of scope
 - Fuzzy matching / Levenshtein scoring — exact matches only for v1
 - Multi-language matching (Swedish input → English gazetteer)
-- Bengt's "Norrb sockn Fsp" transcription parsing — that's a citation transcription concern, not a place picker concern
+- Ben's "Norrb sockn Fsp" transcription parsing — that's a citation transcription concern, not a place picker concern
 - Coordinates for individual farms
 
 ## Verification

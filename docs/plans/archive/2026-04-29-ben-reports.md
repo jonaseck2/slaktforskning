@@ -1,17 +1,17 @@
-# Plan: Bengt feedback — reports researcher info, page numbers, citations
+# Plan: Ben feedback — reports researcher info, page numbers, citations
 
 **Date:** 2026-04-29
 **Status:** planned
-**Source:** `BENGT.md`
+**Source:** `BEN.md`
 **Effort:** M
 
 ## Background
-Three related strands in Bengt's #14b: researcher contact info on every report, page numbers in print output, and citation rendering checkboxes that "don't do much". `researcher_name` is already a `db_settings` key — extend it.
+Three related strands in Ben's #14b: researcher contact info on every report, page numbers in print output, and citation rendering checkboxes that "don't do much". `researcher_name` is already a `db_settings` key — extend it.
 
 ## Tickets covered
-- BENGT #14b — Researcher info (name + address + phone + email) in db_settings, surfaced as report header/footer, with page numbers always
-- BENGT #14b — GEDCOM SUBM contact fields populated from researcher info on export
-- BENGT #14b — Investigate and fix citation rendering checkboxes in reports
+- BEN #14b — Researcher info (name + address + phone + email) in db_settings, surfaced as report header/footer, with page numbers always
+- BEN #14b — GEDCOM SUBM contact fields populated from researcher info on export
+- BEN #14b — Investigate and fix citation rendering checkboxes in reports
 
 ## Tasks
 
@@ -54,7 +54,7 @@ Three related strands in Bengt's #14b: researcher contact info on every report, 
 | YourAncestorsReport | `yourAncestorsShowSources` | Title + author only | Title + author + publication_info + repository + URL |
 | LifeOnOnePageReport | (none) | No citation block — single-sheet keepsake intentionally compact | Unchanged — out of scope |
 
-**Why Bengt felt "the toggle doesn't do much":** all four citation-bearing reports rendered the appendix as just `title · author`, throwing away `publication_info`, `repository`, `url`, and per-citation `page` from the underlying `Citation`/`Source` records. The toggle did flip a section on/off, but the section contained no research-trail detail.
+**Why Ben felt "the toggle doesn't do much":** all four citation-bearing reports rendered the appendix as just `title · author`, throwing away `publication_info`, `repository`, `url`, and per-citation `page` from the underlying `Citation`/`Source` records. The toggle did flip a section on/off, but the section contained no research-trail detail.
 
 **Fix:** enriched `CitationWithSource` (in `report_data.ts`) with `source_publication_info`, `source_url`, `source_repository`, and updated all four reports' appendix templates to render those plus per-citation pages where the data flows through. Each toggle now produces a visibly richer result.
 

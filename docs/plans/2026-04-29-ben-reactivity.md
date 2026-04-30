@@ -1,18 +1,18 @@
-# Plan: Bengt feedback — reactivity audit
+# Plan: Ben feedback — reactivity audit
 
 **Date:** 2026-04-29
 **Status:** planned
-**Source:** `BENGT.md`
+**Source:** `BEN.md`
 **Effort:** M (investigation-led; bug-fix scope unclear until audit done)
 
 ## Background
-Bengt reports that several panels and views don't update reactively after a mutation; he has to switch away and back to see the change. The issue is broader than the specific cases he hit. This plan starts with a deliberate audit, then fixes the patterns found.
+Ben reports that several panels and views don't update reactively after a mutation; he has to switch away and back to see the change. The issue is broader than the specific cases he hit. This plan starts with a deliberate audit, then fixes the patterns found.
 
 ## Tickets covered
-- BENGT #29 — PersonPanel "Händelser (n)" count doesn't update after add
-- BENGT #37 — Tree (mittbild) doesn't update after editing focal person's events
-- BENGT #31 — Sons/Dotters födelse + spouse death on timelines (verify + extend)
-- BENGT #32 — Add Family Member mini-tree visualization (lågprio, defer if scope-creep)
+- BEN #29 — PersonPanel "Händelser (n)" count doesn't update after add
+- BEN #37 — Tree (mittbild) doesn't update after editing focal person's events
+- BEN #31 — Sons/Dotters födelse + spouse death on timelines (verify + extend)
+- BEN #32 — Add Family Member mini-tree visualization (lågprio, defer if scope-creep)
 
 ## Hypothesis
 Most panel sections load via `onMounted` instead of `watch(() => props.id, load, { immediate: true })`. The CLAUDE.md "Person Section Component pattern" already documents the correct approach — so this is drift, not unknown territory.
@@ -93,7 +93,7 @@ One line. `reloadChart()` already does the full remount + refetch.
 
 ### Concrete fix list (prioritized)
 
-**Phase 2 — priority 1 (fixes Bengt's actual bugs):**
+**Phase 2 — priority 1 (fixes Ben's actual bugs):**
 
 1. `usePersonPanelData.ts` + `PersonPanel.vue` — **#29:** Add `reloadCounts(id)` extracted from wave-2 of `loadPerson()`. Register a debounced `onDataChanged(() => { if (personId.value) reloadCounts(personId.value); })` listener inside the composable. Replace the existing `PersonPanel` `onMounted` listener with a call to a unified handler (counts + checks).
 
@@ -136,11 +136,11 @@ One line. `reloadChart()` already does the full remount + refetch.
 ### Phase 4 — Indirect events on timelines (#31)
 - [ ] Investigate `getTimeline(personId)` and report-side timelines
 - [ ] Add: spouse death events, child birth events, child death events
-- [ ] Constraint: only include events that fell within the subject's lifetime — or include posthumous child birth as Bengt suggested? **Decision:** include child births posthumous-up-to-9-months (covers postpartum births), exclude later. Drop spouse death after subject's own death.
+- [ ] Constraint: only include events that fell within the subject's lifetime — or include posthumous child birth as Ben suggested? **Decision:** include child births posthumous-up-to-9-months (covers postpartum births), exclude later. Drop spouse death after subject's own death.
 
 ### Phase 5 (optional) — Mini family tree on Add Member (#32)
 - [ ] Mock a small visualization in PersonModal when in `relatedTo` mode showing the 5 button positions around the central person
-- [ ] Lågprio per Bengt — defer if Phase 1–4 already runs long
+- [ ] Lågprio per Ben — defer if Phase 1–4 already runs long
 
 ## Out of scope
 - Full reactivity refactor (Pinia-driven cache, etc.) — too big for this round
@@ -153,4 +153,4 @@ One line. `reloadChart()` already does the full remount + refetch.
 - Add Family Member → if Phase 5 lands, see mini tree; otherwise five buttons stay as-is
 
 ## Notes
-This plan deliberately starts with audit because Bengt's reports point at symptoms, not causes. Don't fix #29 in isolation — find the others first.
+This plan deliberately starts with audit because Ben's reports point at symptoms, not causes. Don't fix #29 in isolation — find the others first.

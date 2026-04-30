@@ -1,21 +1,21 @@
-# Plan: Bengt feedback — small bug fixes
+# Plan: Ben feedback — small bug fixes
 
 **Date:** 2026-04-29
 **Status:** in progress (fan chart bugs deferred)
-**Source:** `BENGT.md`
+**Source:** `BEN.md`
 **Effort:** S–M (one PR per cluster, can be batched)
 
 ## Background
-Cluster of small, independent bug fixes and minor UX corrections from Bengt's feedback. None require architectural change.
+Cluster of small, independent bug fixes and minor UX corrections from Ben's feedback. None require architectural change.
 
 ## Tickets covered
-- BENGT #10 — Disable DevTools panel on production launch
-- BENGT #28(b) — Don't pre-select last-used event type when adding new event
-- BENGT #28(d) — Drop `baptism` from `EVENT_TYPE_VALUES` (keep `christening`)
-- BENGT #36 — Warn (not block) when changing event_type on existing event
-- BENGT #38 — "..." button shows tiny single-row dropdown — show full list directly
-- BENGT #40 — Help → About menu with version + OSS attribution
-- BENGT #8 (parent_child only) — Subtype select on Add-Related-Person flow, default `biological`
+- BEN #10 — Disable DevTools panel on production launch
+- BEN #28(b) — Don't pre-select last-used event type when adding new event
+- BEN #28(d) — Drop `baptism` from `EVENT_TYPE_VALUES` (keep `christening`)
+- BEN #36 — Warn (not block) when changing event_type on existing event
+- BEN #38 — "..." button shows tiny single-row dropdown — show full list directly
+- BEN #40 — Help → About menu with version + OSS attribution
+- BEN #8 (parent_child only) — Subtype select on Add-Related-Person flow, default `biological`
 - "Önskemål om cirkeldiagrammet" — fan chart center segment links to wrong ancestor
 - "Önskemål om cirkeldiagrammet" — replace fan chart bespoke tooltips with default tooltip system
 
