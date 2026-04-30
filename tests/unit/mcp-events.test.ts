@@ -20,6 +20,7 @@ describe('recordEventWorkflow', () => {
       event_type: 'birth',
       person_id: person.id,
       date_value: '1850',
+      date_type: 'exact',
     });
 
     expect(result.event.id).toBeTruthy();

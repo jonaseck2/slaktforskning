@@ -40,12 +40,17 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       place_id = place.id;
     }
 
+    // Pass through what the agent provided. Per CLAUDE.md prime directive,
+    // we never infer date_type from a free-form date string — agents must
+    // explicitly state `date_type` if they want a structured value. When
+    // omitted: date_original holds the raw input; date_type defaults to
+    // 'unknown' at the api/schema layer; date_value stays null.
     const event = eventApi.createEvent(db, {
       event_type: args.event_type,
       relationship_id: args.relationship_id ?? null,
       date_original: args.date_original ?? args.date_value ?? '',
-      date_type: (args.date_type as GenealogyEvent['date_type']) ?? (args.date_value ? 'exact' : 'unknown'),
-      date_value: args.date_value ?? null,
+      date_type: args.date_type as GenealogyEvent['date_type'] | undefined,
+      date_value: args.date_type ? args.date_value ?? null : null,
       place_id,
       description: args.description,
       cause: args.cause,

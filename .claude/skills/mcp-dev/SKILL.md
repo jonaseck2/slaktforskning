@@ -5,6 +5,22 @@ description: Add new MCP tools, test the MCP server, and debug MCP communication
 
 # MCP Dev Skill
 
+## ⚠️ Prime Directive: Pass-Through, Never Synthesize
+
+MCP tools are an interface for *the agent's* authored input. They are not a place to "be helpful" by filling in fields the agent didn't supply. Every persistent value an MCP tool writes must come from an explicit argument the agent provided.
+
+**Forbidden patterns:**
+- `date_type: args.date_type ?? (args.date_value ? 'exact' : 'unknown')` — this is the canonical violation. The agent passed `date_value` but didn't say what type. Inferring `'exact'` is fabricating data. Pass through `args.date_type` and let the api/schema default to `'unknown'`. Only populate `date_value` when the agent also confirmed `date_type` — otherwise store the input as `date_original` only.
+- Auto-resolving a place name to coordinates and writing them to `places.latitude/longitude` — that's a gazetteer-resolved value, never persisted (see gazetteers skill).
+- Defaulting `sex` to `'U'` is OK — that's the schema's "I don't know" sentinel, not an inference. Defaulting `sex` to `'M'` based on the given name would be a violation.
+
+**Allowed:**
+- Pass agent-supplied fields straight through to the api/ function. Let the api/schema layer default missing optional fields to a sentinel value (`'unknown'`, NULL).
+- Argument validation (rejecting clearly invalid input).
+- Document the contract in the tool's `describe()` so agents know when to supply structured fields vs free-form fallbacks.
+
+This rule is in `CLAUDE.md` as the prime directive. Past violations corrupted real databases. Treat MCP tool arguments as a write API, not a guessing game.
+
 ## Prod vs Dev Server
 
 The MCP server has two entry points:

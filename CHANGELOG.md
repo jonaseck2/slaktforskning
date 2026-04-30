@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.172.0 — Data fidelity prime directive: stop persisting inferred values
+
+- **policy(CLAUDE.md):** added the data-fidelity prime directive. The user's data is sacred — algorithmically-inferred values (gazetteer-resolved coords, "best guess" date types, fuzzy normalizations, default-when-omitted synthesis) are NEVER written to the database. The display/resolver layer computes them at render time, every render. Past violations corrupted real databases; the rule is non-negotiable going forward.
+- **fix(places):** the place picker (`PlacePicker.vue`) no longer persists gazetteer-derived `latitude`, `longitude`, or `place_type` onto picker-created place rows or their parent chain. Coordinates are computed by the resolver at view time. The map-popup "via X" gazetteer attribution returns automatically.
+- **fix(mcp):** `create_person`, `record_event`, and `add_relationship` no longer infer `date_type='exact'` when the agent supplied `date_value` without `date_type`. Tools now pass through what the agent gave; `date_value` is only persisted when the agent also confirmed `date_type`, otherwise the raw input is preserved as `date_original` and `date_type`/`date_value` default to NULL/'unknown'. Tool descriptions document the contract.
+- **policy(skills):** the `gazetteers`, `add-feature`, `data-modeling`, and `mcp-dev` skills now lead with the data-fidelity directive. Future agents extending the codebase get the rule before they touch the schema, the picker, or the MCP layer.
+- **note:** existing databases that picked up persisted gazetteer-resolved coordinates from v0.169.0–v0.171.1 retain those values until the user re-edits the affected places. No automatic migration is provided — clean databases are the way forward; stale persisted coordinates fade as users update places.
+
 ## v0.171.1 — Map place-type filter
 
 - fix(places): the place-type chip bar above the map now actually filters map points (and re-fits bounds). Previously `activeTypeFilter` was set on click but never read by `MapView` — the chips were dead UI

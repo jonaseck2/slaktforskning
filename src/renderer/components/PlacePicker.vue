@@ -320,57 +320,29 @@ async function select(place: PlaceRow) {
 }
 
 async function selectGazetteer(gaz: GazetteerSuggestion) {
-  // Hierarchical-resolver suggestion with an unmatched leaf token (e.g.
-  // "Hörningsholm" inside "Mosås (T)") — Phase 2: build the parent chain
-  // from the matched gazetteer path and create the leaf under the
-  // deepest matched node so subsequent lookups inherit the parent.
+  // Build only the *structural* parent chain (names + parent links). Per the
+  // data-fidelity prime directive in CLAUDE.md, gazetteer-derived values
+  // (coordinates, place_type, etc.) are NEVER persisted — they are computed
+  // on render by the resolver. The parent chain is structure, not inference:
+  // the user accepted this gazetteer suggestion by clicking it, so the names
+  // and the hierarchy are authored. Coordinates and node types remain on the
+  // gazetteer side and are looked up at render time.
   const hasUnmatchedLeaf = gaz.unmatchedLeftTokens && gaz.unmatchedLeftTokens.length > 0;
 
   if (hasUnmatchedLeaf) {
     const leafName = gaz.name;
-    const chain = gaz.pathNodes.map(n => ({
-      name: n.name,
-      place_type: n.type as PlaceRow['place_type'],
-      latitude: n.lat,
-      longitude: n.lon,
-    }));
+    const chain = gaz.pathNodes.map(n => ({ name: n.name }));
     const place = (await window.api.places.findOrCreateWithChain(leafName, chain)) as PlaceRow;
-    // Inherit coords from the parish (deepest matched node) so the leaf
-    // shows up on the map near the right place — only when leaf has none.
-    const full = (await window.api.places.get(place.id)) as {
-      id: string;
-      latitude: number | null;
-      longitude: number | null;
-    };
-    const deepestMatched = gaz.pathNodes[gaz.pathNodes.length - 1];
-    const updates: Record<string, unknown> = {};
-    if (full.latitude == null && deepestMatched) updates.latitude = deepestMatched.lat;
-    if (full.longitude == null && deepestMatched) updates.longitude = deepestMatched.lon;
-    if (Object.keys(updates).length > 0) {
-      await window.api.places.update(place.id, updates);
-    }
     select(place);
     return;
   }
 
-  // Exact match — only the leaf node is created (lat/lon + type from the
-  // gazetteer). Pre-existing behavior, preserved for back-compat.
+  // Exact match — only the leaf node is created. Coordinates and place_type
+  // are NOT persisted; the resolver computes them from the gazetteer at
+  // render time so they stay current as gazetteer data evolves.
   const leafNode = gaz.pathNodes[gaz.pathNodes.length - 1];
   if (!leafNode) return;
   const place = (await window.api.places.findOrCreate(leafNode.name)) as PlaceRow;
-  const full = (await window.api.places.get(place.id)) as {
-    id: string;
-    place_type: string | null;
-    latitude: number | null;
-    longitude: number | null;
-  };
-  const updates: Record<string, unknown> = {};
-  if (!full.place_type) updates.place_type = leafNode.type;
-  if (full.latitude == null) updates.latitude = leafNode.lat;
-  if (full.longitude == null) updates.longitude = leafNode.lon;
-  if (Object.keys(updates).length > 0) {
-    await window.api.places.update(place.id, updates);
-  }
   select(place);
 }
 

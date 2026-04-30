@@ -1,5 +1,37 @@
 # CLAUDE.md
 
+## ⚠️ Prime Directive: Data Fidelity
+
+**The user's data is sacred. Inferred data is NEVER persisted as truth. Ever.**
+
+The genealogist authored what is in the database. Every other value is derived at read time from what they authored. This is non-negotiable, project-defining, never-violated.
+
+**What is "inferred data":**
+- Coordinates resolved from a place name via a gazetteer
+- A "best guess" date computed from a `date_original` string
+- A "looks like" value from a typo-tolerance heuristic
+- A normalized version of a value when the original is preserved elsewhere
+- ANY value an algorithm produced that the user did not type, click, or import
+
+**The rule:**
+- The DB stores **only** what the user actively wrote (UI, modal, picker, MCP tool call) or what was in the file they imported.
+- The resolver / formatter / display layer computes inferred values **on demand**, every render, against the current gazetteers/rules. Users never see stale inference.
+- Any code path that writes inferred output back to the DB is a bug. Catch yourself at the point of `places.update`, `events.update`, `INSERT INTO`, or any mutation — if the value being written wasn't authored by a human action *in this session*, stop.
+
+**Why this matters:**
+- Persisted inferences pin the database to a specific version of the inferring code. Improving the resolver/gazetteer/parser later doesn't fix old rows.
+- The user can't tell what they authored vs what we made up. Their corrections are silently overwritten by our guesses.
+- Genealogy is a long-term archive; future researchers depend on data fidelity, not whatever we thought was "helpful" in 2026.
+
+**Allowed exceptions (these are not inferences — they are deterministic derivations of authored input):**
+- `normalized_name` from `name` (lowercase + strip diacritics — pure function of the authored value, used only for SQL collation).
+- `created_at` / `updated_at` timestamps.
+- UUIDs.
+
+**If a feature seems to need inferred persistence to work, it's the wrong design.** Compute on render. Cache in memory if needed for performance. Never write back to the DB.
+
+This rule applies to: import paths, MCP tools, IPC handlers, Vue components, AI agents, scripts, migrations. Everywhere. No exceptions.
+
 ## Approach
 
 Think before acting. Read existing files before writing code.

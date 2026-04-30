@@ -16,6 +16,7 @@ export interface AddChildArgs {
   surname: string;
   sex?: 'M' | 'F' | 'U';
   birth_date?: string;
+  birth_date_type?: string;
   birth_place?: string;
   source_title?: string;
   source_page?: string;
@@ -36,6 +37,7 @@ export function addChildWorkflow(db: Database, args: AddChildArgs): AddChildResu
       surname: args.surname,
       sex: args.sex,
       birth_date: args.birth_date,
+      birth_date_type: args.birth_date_type,
       birth_place: args.birth_place,
       source_title: args.source_title,
       source_page: args.source_page,
@@ -104,12 +106,15 @@ export function addRelationshipWorkflow(db: Database, args: AddRelationshipArgs)
         const place = placeApi.findOrCreatePlace(db, args.event_place);
         place_id = place.id;
       }
+      // Pass through what the agent provided. Per CLAUDE.md prime directive,
+      // we never infer date_type from a free-form date string — agents must
+      // explicitly state `event_date_type` for a structured value.
       event = eventApi.createEvent(db, {
         event_type: args.event_type,
         relationship_id: relationship.id,
         date_original: args.event_date ?? '',
-        date_type: (args.event_date_type as GenealogyEvent['date_type']) ?? (args.event_date ? 'exact' : 'unknown'),
-        date_value: args.event_date ?? null,
+        date_type: args.event_date_type as GenealogyEvent['date_type'] | undefined,
+        date_value: args.event_date_type ? args.event_date ?? null : null,
         place_id,
       });
     }
@@ -151,7 +156,8 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       given_name: z.string().describe('Given/first name(s) of the child'),
       surname: z.string().describe('Surname/family name of the child'),
       sex: z.enum(['M', 'F', 'U']).optional().describe('Sex: M, F, or U (unknown)'),
-      birth_date: z.string().optional().describe('Birth date (free text, e.g. "1850" or "12 Mar 1850")'),
+      birth_date: z.string().optional().describe('Birth date (free text, e.g. "1850" or "12 Mar 1850"). Without birth_date_type, this is stored only as date_original; date_value stays null.'),
+      birth_date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown. Required to populate the structured date_value field.'),
       birth_place: z.string().optional().describe('Birth place name'),
       source_title: z.string().optional().describe('Source document title; reuses existing source if title matches'),
       source_page: z.string().optional().describe('Page or reference within the source'),

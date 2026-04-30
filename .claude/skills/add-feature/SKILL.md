@@ -7,6 +7,20 @@ description: Add a new feature, entity type, or field to the Släktforskning cod
 
 This codebase has a strict layered architecture. Every data feature touches all layers in order. Skipping a layer means the feature is unreachable from either the UI or MCP agents.
 
+## ⚠️ Prime Directive: Data Fidelity
+
+**Before writing any code that mutates the DB, re-read the prime-directive section of `CLAUDE.md`.**
+
+The user's data is sacred. Any value an algorithm produced — a gazetteer-resolved coordinate, a "best guess" date_type from a free-form string, a fuzzy-matched normalized name, an auto-applied quality-check fix, a default-when-the-agent-was-vague — **must NOT be persisted**. Inferred values are computed at render time, every render, against the current rules. Authored values (UI input, modal save, picker click on a structured suggestion, MCP tool call with explicit fields, file import preserving source content) are persisted.
+
+Common traps when adding features:
+- A new picker that resolves names to coordinates and "helpfully" persists them. → DON'T. The map computes coords from gazetteers at render.
+- A new MCP tool that defaults `date_type` to `'exact'` because the agent passed `date_value`. → DON'T. Pass through what the agent gave; let the schema default to `'unknown'` if omitted.
+- A new auto-fix button on a quality-check row that writes the suggested string. → OK only if the user explicitly clicks "apply this fix" and the suggestion is a deterministic transformation, not a guess. A passively-applied fix is forbidden.
+- A new import path that fills in fields the source file didn't contain. → DON'T. Import only what's in the source.
+
+If a feature seems to need inferred persistence to work, the design is wrong — find the render-time path. This rule is non-negotiable.
+
 ## Execution mode
 
 Any feature backed by a plan file (`docs/plans/*.md`) runs in a **git worktree** with **subagent-driven execution**. Don't work plan-driven features on `main`.

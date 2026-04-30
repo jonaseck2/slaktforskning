@@ -5,6 +5,18 @@ description: Parse, validate, import/export GEDCOM files (5.5.1 and 7.0). Use fo
 
 # GEDCOM
 
+## ⚠️ Prime Directive: Import What's in the File, Nothing More
+
+GEDCOM imports are a write path — they bring data into the database from the source file. Per the data-fidelity prime directive in `CLAUDE.md`, the importer must:
+
+- **Preserve verbatim what the source file contains.** `MAP > LATI/LONG` sub-tags get persisted to `places.latitude`/`longitude` because the file already had those coordinates — they came with the file the user imported. That's authored data being preserved.
+- **NEVER fill in fields the source did not contain.** Don't infer `date_type='exact'` because a `DATE` line had a parseable string. Don't auto-resolve `PLAC "Stockholm"` to coordinates via a gazetteer and persist them — let the resolver compute coords at view time.
+- **NEVER fix obvious errors silently.** A typo in the source GEDCOM stays as a typo. The user can clean their data after import; the importer's job is fidelity, not correction.
+
+Export has the mirror obligation: round-trip what the database stores, with explicit `excluded[]` reporting for entities GEDCOM 5.5.1 cannot represent. Don't synthesize plausible-looking values to "complete" the export.
+
+This rule is non-negotiable. Past violations corrupted real databases.
+
 GEDCOM (Genealogical Data Communication) is the de facto standard for exchanging family tree data between genealogy applications.
 
 ## Versions

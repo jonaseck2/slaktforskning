@@ -5,6 +5,27 @@ description: Design data schemas for genealogy apps — persons, families, event
 
 # Genealogy Data Modeling
 
+## ⚠️ Prime Directive: Authored vs Inferred
+
+A genealogy database is a long-term archive. The single most important schema-design rule:
+
+**Persist only what the user authored. Compute everything else at read time.**
+
+- Authored: typed in a modal, clicked in a structured picker, supplied as an explicit MCP tool argument, present in an imported source file.
+- Inferred: anything an algorithm produced — gazetteer-resolved coords, parsed dates from free-form strings, fuzzy-matched normalizations, "best guess" defaults that fill in for omitted parameters.
+
+When designing a new field, ask: **does the user author this, or do we compute it?** If computed, it does not get its own column. It gets a render-time function that derives it from authored columns.
+
+Examples in this codebase:
+- `places.latitude/longitude` — authored (user typed them OR import preserved them from source). Gazetteer-resolved coords are NEVER stored here; they are computed by the resolver at view time.
+- `events.date_value` — authored only. The schema layer defaults to NULL when omitted; an MCP tool may NOT synthesize `'exact'` from the presence of a `date_value` argument.
+- `persons.living` — explicitly derived: not even a column. Computed from death events at read time. This is the right pattern.
+- `places.normalized_name` — authored derivative: a deterministic pure function of `name` (lowercase + trim), used only for SQL collation. Acceptable because there's no information loss and no inference.
+
+Past violations of this rule corrupted real databases and pinned them to specific gazetteer/parser versions. See `CLAUDE.md` for the full prime-directive section. Don't re-introduce inferred persistence; the cost is permanent and silent.
+
+---
+
 This skill helps design robust data schemas for genealogy applications.
 
 **For this project's actual implemented schema**, read `references/schema.md` (in this skill directory). The sections below cover general design principles that inform the schema.

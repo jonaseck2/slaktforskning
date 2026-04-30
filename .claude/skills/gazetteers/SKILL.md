@@ -5,6 +5,16 @@ description: Build, extend, and debug gazetteers for place resolution. Use when 
 
 # Gazetteer Skill
 
+## ⚠️ Prime Directive: Gazetteer values are NEVER persisted
+
+**Coordinates, place_type, matched paths, gazetteer IDs, and any other value derived from a gazetteer match are computed at render time only. They are NEVER written to the `places` table.**
+
+The resolver is the single source of truth for inferred place data. Improving the gazetteers (better coords, more aliases, richer hierarchy) immediately improves every existing place because the data layer holds only the user-authored name and parent chain — not stale guesses from a previous resolver version.
+
+If you find yourself writing `places.update({ latitude: ..., longitude: ... })` with a gazetteer-derived value, **stop**. The map / panel / report computes those at view time. Authored coordinates (typed by the user in `PlaceModal`, or imported verbatim from a GEDCOM `MAP > LATI/LONG` sub-tag the source file already contained) ARE allowed; gazetteer-resolved coordinates are NOT.
+
+This is non-negotiable per `CLAUDE.md`. Past violations corrupted databases and pinned them to specific gazetteer versions. Don't reintroduce them.
+
 ## Overview
 
 The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 27 bundled gazetteers (16 point + 8 boundary + 3 language) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, ~244 countries globally, and ~1,393 historical states/empires. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").

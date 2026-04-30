@@ -61,11 +61,16 @@ export function _createPersonCore(db: Database, args: CreatePersonArgs): CreateP
       const place = placeApi.findOrCreatePlace(db, args.birth_place);
       place_id = place.id;
     }
+    // Pass through what the agent provided. Per CLAUDE.md prime directive,
+    // we never infer date_type from a free-form date string — agents must
+    // explicitly state `birth_date_type` if they want a structured value.
+    // When omitted: date_original holds the raw input; date_type defaults to
+    // 'unknown' at the api/schema layer; date_value stays null.
     birth_event = eventApi.createEvent(db, {
       event_type: 'birth',
       date_original: args.birth_date ?? '',
-      date_type: (args.birth_date_type as GenealogyEvent['date_type']) ?? (args.birth_date ? 'exact' : 'unknown'),
-      date_value: args.birth_date ?? null,
+      date_type: args.birth_date_type as GenealogyEvent['date_type'] | undefined,
+      date_value: args.birth_date_type ? args.birth_date ?? null : null,
       place_id,
     });
     relationshipApi.addEventParticipant(db, {

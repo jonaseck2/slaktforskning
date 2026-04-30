@@ -61,6 +61,7 @@ describe('addChildWorkflow', () => {
       given_name: 'Britta',
       surname: 'Svensson',
       birth_date: '1875',
+      birth_date_type: 'exact',
       birth_place: 'Stockholm',
     });
 
@@ -120,6 +121,7 @@ describe('addRelationshipWorkflow', () => {
       subtype: 'marriage',
       event_type: 'marriage',
       event_date: '15 Jun 1900',
+      event_date_type: 'exact',
       event_place: 'Göteborg',
     });
 
