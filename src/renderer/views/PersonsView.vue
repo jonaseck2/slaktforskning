@@ -493,6 +493,27 @@ onUnmounted(() => {
   unregisterChartNav();
 });
 
+// Refresh the chart whenever any mutation lands. Without this, editing the
+// focal person's events (or any related mutation) leaves the rendered tree
+// stale until the user switches person or re-activates the view (BENGT #37).
+// Debounced ~250ms so a burst of mutations triggers one reload, not a flood.
+let chartReloadDebounce: ReturnType<typeof setTimeout> | null = null;
+function onChartDataChanged() {
+  if (chartReloadDebounce) clearTimeout(chartReloadDebounce);
+  chartReloadDebounce = setTimeout(() => { reloadChart(); }, 250);
+}
+onMounted(() => {
+  (window.api as unknown as {
+    onDataChanged: (cb: () => void) => void;
+  }).onDataChanged(onChartDataChanged);
+});
+onUnmounted(() => {
+  if (chartReloadDebounce) clearTimeout(chartReloadDebounce);
+  (window.api as unknown as {
+    offDataChanged: (cb: () => void) => void;
+  }).offDataChanged(onChartDataChanged);
+});
+
 // Chart inspection bridge — wires Vue state to HTTP endpoints via IPC
 useChartBridge({
   boxes: chartBoxes,

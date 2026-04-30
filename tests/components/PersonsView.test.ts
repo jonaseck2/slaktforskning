@@ -53,6 +53,8 @@ describe('PersonsView', () => {
       db: {
         getSetting: vi.fn().mockResolvedValue(null),
       },
+      onDataChanged: vi.fn(),
+      offDataChanged: vi.fn(),
     };
   });
 
