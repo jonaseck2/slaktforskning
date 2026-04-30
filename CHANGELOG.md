@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.172.8 — Update security contact email
+
+- fix(security): switch the SECURITY.md vulnerability-disclosure address from the work email to the maintainer's personal email (this is a personal project, not an Imeto one).
+
 ## v0.172.7 — Agent tooling: split CLAUDE.md into path-scoped rules
 
 - chore(agent): introduced `.claude/rules/` with six path-scoped rule files (`api.md`, `ipc.md`, `renderer.md`, `mcp.md`, `tests.md`, `build.md`). Each has `paths` frontmatter so its content loads only when files matching the pattern are read, per Claude Code's documented best practice. Migrated layer-specific reference material out of root CLAUDE.md (Domain Types, Database Schema, IPC Bridge, Vue Component Patterns, Testing, MCP Server, Build Configuration) and out of the napkin (drag/maps/static-SPA gotchas, security-hook false positive, vue-tsc OOM, type-check filtering).
