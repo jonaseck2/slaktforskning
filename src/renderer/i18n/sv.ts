@@ -365,7 +365,6 @@ export default {
     divorce: 'Skilsmässa',
     christening: 'Dop',
     burial: 'Begravning',
-    baptism: 'Dop',
     confirmation: 'Konfirmation',
     ordination: 'Ordination',
     census: 'Folkräkning',

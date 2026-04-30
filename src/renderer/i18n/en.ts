@@ -365,7 +365,6 @@ export default {
     divorce: 'Divorce',
     christening: 'Christening',
     burial: 'Burial',
-    baptism: 'Baptism',
     confirmation: 'Confirmation',
     ordination: 'Ordination',
     census: 'Census',

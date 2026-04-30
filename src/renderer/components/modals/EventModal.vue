@@ -190,7 +190,7 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const QUICK_EVENT_TYPES = ['birth', 'baptism', 'marriage', 'death'] as const;
+const QUICK_EVENT_TYPES = ['birth', 'marriage', 'death'] as const;
 type QuickType = typeof QUICK_EVENT_TYPES[number];
 
 interface CitationRow { id: string; sourceTitle: string; page: string | null; confidence: number | null; }
@@ -223,7 +223,9 @@ const props = withDefaults(defineProps<{
 }>(), {
   mode: 'subpanel',
   editingEvent: null,
-  defaultEventType: 'birth',
+  // Empty default — never pre-select an event type for new events (BENGT #28b).
+  // Callers can still pass an explicit type to pre-fill the picker.
+  defaultEventType: '',
 });
 
 const emit = defineEmits<{
@@ -481,7 +483,7 @@ async function syncBaptismCompanion(birthEventId: string) {
 
   const description = fadder ? `${t('events.godparents')}: ${fadder}` : '';
   const payload = {
-    event_type: 'baptism',
+    event_type: 'christening',
     date_type: 'exact',
     date_value: date || null,
     date_value_end: null,
