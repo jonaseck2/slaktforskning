@@ -337,12 +337,18 @@ async function selectGazetteer(gaz: GazetteerSuggestion) {
     return;
   }
 
-  // Exact match — only the leaf node is created. Coordinates and place_type
-  // are NOT persisted; the resolver computes them from the gazetteer at
-  // render time so they stay current as gazetteer data evolves.
+  // Exact match — persist the leaf together with its ancestor chain (names
+  // only). Without the chain, the leaf has no parent_place_id and the map's
+  // render-time resolver gets only the bare leaf name, which fails to
+  // disambiguate when multiple gazetteer nodes share a name. Names are
+  // authored (the user clicked the suggestion); coordinates and place_type
+  // remain inferred and are not persisted.
   const leafNode = gaz.pathNodes[gaz.pathNodes.length - 1];
   if (!leafNode) return;
-  const place = (await window.api.places.findOrCreate(leafNode.name)) as PlaceRow;
+  const ancestors = gaz.pathNodes.slice(0, -1).map(n => ({ name: n.name }));
+  const place = ancestors.length > 0
+    ? (await window.api.places.findOrCreateWithChain(leafNode.name, ancestors)) as PlaceRow
+    : (await window.api.places.findOrCreate(leafNode.name)) as PlaceRow;
   select(place);
 }
 
