@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.167.0 — Tree refresh keeps zoom and scroll
+
+- feat(charts): editing a person's events no longer wipes your place in the tree — Pedigree, Hourglass, and Descendant charts now refetch in place when data changes, preserving zoom, scroll position, and expanded/collapsed branches (BENGT #37, Phase 3 of the reactivity audit)
+- internal: each chart exposes a `refetch()` method; `PersonsView` calls it from the `onDataChanged` listener instead of bumping `chartKey`. Hard remounts (focal person change, focal-person deletion) still go through `reloadChart()`
+
 ## v0.166.1
 
 - fix(fan chart): centre segment in the "Your Ancestors" report no longer links to a wrong ancestor — the proband (ahnentafel #1) has no dedicated ancestor page, so the centre is now rendered without a hyperlink

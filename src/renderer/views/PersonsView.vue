@@ -231,10 +231,12 @@ const chartKey = ref(0);
 const selectedStore = useSelectedPersonStore();
 const selectedPersonId = computed(() => selectedStore.personId);
 
-// Template refs for chart components — used by useChartBridge to read layout boxes
-const pedigreeChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
-const hourglassChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
-const descendantChartRef = ref<{ boxes: BoxLayout[] } | null>(null);
+// Template refs for chart components — used by useChartBridge to read layout
+// boxes and by refreshChart() to reload data in place without remounting.
+type ChartHandle = { boxes: BoxLayout[]; refetch: () => Promise<void> };
+const pedigreeChartRef = ref<ChartHandle | null>(null);
+const hourglassChartRef = ref<ChartHandle | null>(null);
+const descendantChartRef = ref<ChartHandle | null>(null);
 
 // Boxes from whichever chart is currently active
 const chartBoxes = computed<BoxLayout[]>(() => {
@@ -390,6 +392,22 @@ async function reloadChart() {
   await load();
 }
 
+// In-place chart refresh: refetches data and re-runs layout without bumping
+// chartKey, so scroll/zoom/collapse state survive. Used for ambient
+// onDataChanged broadcasts; reloadChart() stays for cases that need a full
+// remount (focal person change, focal-person deletion).
+async function refreshChart() {
+  if (!route.path.startsWith('/persons') || !personId.value) return;
+  // Always refresh the focal-person header data alongside the chart so the
+  // empty/loading states stay accurate, but skip the chartKey bump.
+  await load();
+  if (activeTab.value === 'pedigree') await pedigreeChartRef.value?.refetch();
+  else if (activeTab.value === 'hourglass') await hourglassChartRef.value?.refetch();
+  else if (activeTab.value === 'descendants') await descendantChartRef.value?.refetch();
+  // FanChart and TimelineChart don't expose refetch yet — they remain on the
+  // old chartKey-driven path via reloadChart() if needed.
+}
+
 async function load() {
   if (!route.path.startsWith('/persons')) return;
   const id = personId.value;
@@ -497,10 +515,15 @@ onUnmounted(() => {
 // focal person's events (or any related mutation) leaves the rendered tree
 // stale until the user switches person or re-activates the view (BENGT #37).
 // Debounced ~250ms so a burst of mutations triggers one reload, not a flood.
+//
+// Phase 3: this uses refreshChart() (in-place refetch) rather than
+// reloadChart() (remount via chartKey++) so users keep their zoom and
+// scroll position while data updates. reloadChart() is reserved for
+// structural changes — focal person change, focal-person deletion, etc.
 let chartReloadDebounce: ReturnType<typeof setTimeout> | null = null;
 function onChartDataChanged() {
   if (chartReloadDebounce) clearTimeout(chartReloadDebounce);
-  chartReloadDebounce = setTimeout(() => { reloadChart(); }, 250);
+  chartReloadDebounce = setTimeout(() => { refreshChart(); }, 250);
 }
 onMounted(() => {
   (window.api as unknown as {

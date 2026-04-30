@@ -129,8 +129,9 @@ One line. `reloadChart()` already does the full remount + refetch.
 - [x] **Phase 2 complete** — shipped in v0.162.7
 
 ### Phase 3 — Tree refresh (#37)
-- [ ] When event mutations land for the tree subject, refetch tree data
-- [ ] Add a stable cache key so PedigreeChart/HourglassChart/DescendantChart re-renders without losing scroll/zoom unless data changes
+- [x] When event mutations land for the tree subject, refetch tree data — `PersonsView.refreshChart()` now calls `chartRef.refetch()` from the debounced `onDataChanged` listener (was `reloadChart()` which bumped `chartKey` and remounted)
+- [x] Add a stable cache key so PedigreeChart/HourglassChart/DescendantChart re-renders without losing scroll/zoom unless data changes — each chart now exposes a `refetch()` method that reloads data in place; the `chartKey`-driven remount stays for hard reloads (focal person change). Zoom is preserved by `useChartZoom` (localStorage-backed); scroll survives because the scrollable DOM container persists; collapse state survives because `keepView` skips the reset
+- [x] **Phase 3 complete** — shipped in v0.167.0
 
 ### Phase 4 — Indirect events on timelines (#31)
 - [ ] Investigate `getTimeline(personId)` and report-side timelines

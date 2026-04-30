@@ -463,18 +463,29 @@ function onRelativeSaved() {
   emit('reload');
 }
 
-async function load() {
+async function load(opts: { keepView?: boolean } = {}) {
   if (!props.personId) return;
   loading.value = true;
   try {
     tree.value = await fetchDescendantTree(props.personId, 0, maxGens.value);
-    collapsed.value = new Set<string>();
+    if (!opts.keepView) collapsed.value = new Set<string>();
     applyGenerationDepth(genTarget.value);
   } finally {
     loading.value = false;
   }
   await nextTick();
-  centerOnFocal();
+  // Initial loads recenter on the focal person; refetch() preserves the
+  // current scroll position so users editing data don't lose their place
+  // (BENGT #37 / Phase 3). Zoom is already preserved automatically by
+  // useChartZoom, which persists to localStorage.
+  if (!opts.keepView) centerOnFocal();
+}
+
+// Reload data in place without remounting the component. Preserves scroll,
+// zoom, and collapse state — used by PersonsView when an unrelated mutation
+// fires onDataChanged.
+function refetch() {
+  return load({ keepView: true });
 }
 
 function centerOnFocal() {
@@ -490,7 +501,7 @@ onMounted(() => {
   load();
 });
 
-defineExpose({ boxes: computed(() => layout.value.boxes) });
+defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 </script>
 
 <style scoped>

@@ -527,10 +527,10 @@ function onRelativeSaved() {
   emit('reload');
 }
 
-async function load() {
+async function load(opts: { keepView?: boolean } = {}) {
   if (!props.personId) return;
   loading.value = true;
-  collapsed.value = new Set();
+  if (!opts.keepView) collapsed.value = new Set();
   try {
     const gens = Math.max(5, genTarget.value);
     tree.value = await fetchPedigreeTree(props.personId, gens);
@@ -539,6 +539,14 @@ async function load() {
   } finally {
     loading.value = false;
   }
+}
+
+// Reload data in place without remounting the component. Preserves scroll,
+// zoom, and collapse state — used by PersonsView when an unrelated mutation
+// fires onDataChanged. Zoom is already preserved automatically by
+// useChartZoom, which persists to localStorage.
+function refetch() {
+  return load({ keepView: true });
 }
 
 // Sync focused box with parent-controlled focusedPerson prop (screen reader nav)
@@ -551,7 +559,7 @@ onMounted(() => {
   load();
 });
 
-defineExpose({ boxes: computed(() => layout.value.boxes) });
+defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 </script>
 
 <style scoped>
