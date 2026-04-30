@@ -40,14 +40,50 @@
     </section>
 
     <section class="db-section">
-      <h3>{{ $t('settings.researcherName') }}</h3>
-      <input
-        type="text"
-        class="researcher-name-input"
-        :value="researcherName"
-        :placeholder="$t('settings.researcherNamePlaceholder')"
-        @input="onResearcherNameInput(($event.target as HTMLInputElement).value)"
-      />
+      <h3>{{ $t('settings.researcherInfo') }}</h3>
+      <p class="db-hint">{{ $t('settings.researcherInfoHint') }}</p>
+      <div class="researcher-grid">
+        <label class="researcher-label">
+          {{ $t('settings.researcherName') }}
+          <input
+            type="text"
+            class="researcher-input"
+            :value="researcherName"
+            :placeholder="$t('settings.researcherNamePlaceholder')"
+            @input="onResearcherFieldInput('researcher_name', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+        <label class="researcher-label">
+          {{ $t('settings.researcherAddress') }}
+          <textarea
+            class="researcher-input researcher-textarea"
+            rows="3"
+            :value="researcherAddress"
+            :placeholder="$t('settings.researcherAddressPlaceholder')"
+            @input="onResearcherFieldInput('researcher_address', ($event.target as HTMLTextAreaElement).value)"
+          ></textarea>
+        </label>
+        <label class="researcher-label">
+          {{ $t('settings.researcherPhone') }}
+          <input
+            type="text"
+            class="researcher-input"
+            :value="researcherPhone"
+            :placeholder="$t('settings.researcherPhonePlaceholder')"
+            @input="onResearcherFieldInput('researcher_phone', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+        <label class="researcher-label">
+          {{ $t('settings.researcherEmail') }}
+          <input
+            type="email"
+            class="researcher-input"
+            :value="researcherEmail"
+            :placeholder="$t('settings.researcherEmailPlaceholder')"
+            @input="onResearcherFieldInput('researcher_email', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+      </div>
     </section>
 
     <section class="db-section db-actions">
@@ -81,6 +117,11 @@ const statusMsg = ref('');
 const backupStatus = ref('');
 const treeSubjectId = ref<string | null>(null);
 const researcherName = ref<string>('');
+const researcherAddress = ref<string>('');
+const researcherPhone = ref<string>('');
+const researcherEmail = ref<string>('');
+
+type ResearcherKey = 'researcher_name' | 'researcher_address' | 'researcher_phone' | 'researcher_email';
 
 async function load() {
   current.value = await window.api.db.getCurrent();
@@ -88,16 +129,30 @@ async function load() {
   // Exclude the currently active path from the recent list
   recent.value = all.filter(e => e.path !== current.value?.path);
   treeSubjectId.value = await window.api.db.getSetting('default_person_id') as string | null;
-  researcherName.value = (await window.api.db.getSetting('researcher_name') as string | null) || '';
+  const [name, address, phone, email] = await Promise.all([
+    window.api.db.getSetting('researcher_name') as Promise<string | null>,
+    window.api.db.getSetting('researcher_address') as Promise<string | null>,
+    window.api.db.getSetting('researcher_phone') as Promise<string | null>,
+    window.api.db.getSetting('researcher_email') as Promise<string | null>,
+  ]);
+  researcherName.value    = name    || '';
+  researcherAddress.value = address || '';
+  researcherPhone.value   = phone   || '';
+  researcherEmail.value   = email   || '';
 }
 
-async function onResearcherNameInput(value: string) {
-  researcherName.value = value;
-  const trimmed = value.trim();
+async function onResearcherFieldInput(key: ResearcherKey, value: string) {
+  // Mirror to local ref so the controlled input does not flicker.
+  if (key === 'researcher_name')    researcherName.value    = value;
+  if (key === 'researcher_address') researcherAddress.value = value;
+  if (key === 'researcher_phone')   researcherPhone.value   = value;
+  if (key === 'researcher_email')   researcherEmail.value   = value;
+  // Trim only single-line fields; keep multi-line address verbatim except trailing whitespace.
+  const trimmed = key === 'researcher_address' ? value.replace(/\s+$/, '') : value.trim();
   if (trimmed) {
-    await window.api.db.setSetting('researcher_name', trimmed);
+    await window.api.db.setSetting(key, trimmed);
   } else {
-    await window.api.db.deleteSetting('researcher_name');
+    await window.api.db.deleteSetting(key);
   }
 }
 
@@ -269,7 +324,21 @@ h2 {
   flex-shrink: 0;
 }
 
-.researcher-name-input {
+.researcher-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.researcher-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.researcher-input {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--surface-border);
@@ -281,7 +350,13 @@ h2 {
   box-sizing: border-box;
 }
 
-.researcher-name-input:focus {
+.researcher-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.researcher-input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: var(--accent);

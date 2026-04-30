@@ -61,6 +61,14 @@ export default {
     menuHorizontal: 'Horizontal',
     researcherName: 'Researcher name',
     researcherNamePlaceholder: 'Your name, as it appears in report attribution',
+    researcherInfo: 'Researcher information',
+    researcherInfoHint: 'Shown in report headers/footers and as SUBM details on GEDCOM export.',
+    researcherAddress: 'Address',
+    researcherAddressPlaceholder: 'Postal address (multiple lines allowed)',
+    researcherPhone: 'Phone',
+    researcherPhonePlaceholder: 'e.g. +46 70 123 45 67',
+    researcherEmail: 'Email',
+    researcherEmailPlaceholder: 'e.g. name@example.com',
   },
   chart: {
     export: {

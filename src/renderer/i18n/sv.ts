@@ -61,6 +61,14 @@ export default {
     menuHorizontal: 'Vågrät',
     researcherName: 'Släktforskarens namn',
     researcherNamePlaceholder: 'Ditt namn, som det visas i rapportens attribution',
+    researcherInfo: 'Forskarinformation',
+    researcherInfoHint: 'Visas i sidhuvud/sidfot på rapporter och som SUBM-uppgifter vid GEDCOM-export.',
+    researcherAddress: 'Adress',
+    researcherAddressPlaceholder: 'Postadress (kan vara flera rader)',
+    researcherPhone: 'Telefon',
+    researcherPhonePlaceholder: 't.ex. +46 70 123 45 67',
+    researcherEmail: 'E-post',
+    researcherEmailPlaceholder: 't.ex. namn@exempel.se',
   },
   chart: {
     export: {
