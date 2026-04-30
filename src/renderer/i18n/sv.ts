@@ -304,6 +304,7 @@ export default {
     addSourceOptional: 'Källa',
     cause: 'Dödsorsak',
     otherEvents: 'Övriga händelser',
+    typeChangeWarning: 'Att ändra händelsetyp efter registrering kan göra fält och hänvisningar inkonsekventa.',
     causePlaceholder: 't.ex. hjärtinfarkt',
     saveAndAnother: 'Spara & lägg till fler',
     eventsAdded: '{count} händelse tillagd | {count} händelser tillagda',

@@ -305,6 +305,7 @@ export default {
     cause: 'Cause of death',
     causePlaceholder: 'e.g. heart attack',
     otherEvents: 'Other events',
+    typeChangeWarning: 'Changing the event type after the event has been recorded may leave fields and citations inconsistent.',
     saveAndAnother: 'Save & Next',
     eventsAdded: '{count} event added | {count} events added',
     commonTypes: 'Common',
