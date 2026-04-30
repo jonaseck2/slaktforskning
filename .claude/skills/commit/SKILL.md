@@ -23,16 +23,17 @@ When asked to commit, or when a commit is appropriate after completing work:
    - First line: concise summary (imperative mood, under 72 chars)
    - Blank line, then details if the change is non-trivial
    - End with: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
-6. Run `git commit` using **separate `-m` flags** for each paragraph (each `-m` becomes one paragraph in the commit message — no heredoc, no embedded newlines):
+6. Run `git commit` using **separate `-m` flags on a single line** — each `-m` becomes one paragraph. The whole command must fit on one line; never split across lines with backslash-newline:
 
 ```bash
-git commit \
-  -m "Summary line here" \
-  -m "Optional details here." \
-  -m "Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+git commit -m "Summary line here" -m "Optional details here." -m "Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
-Heredoc syntax (`-m "$(cat <<'EOF' ... EOF)"`) **works in interactive Claude Code but corrupts under headless `claude -p`** (the agentic dev pipeline runs the agent in headless mode inside a devcontainer pod, and the bash wrapper there drops the heredoc terminator). Always use multiple `-m` flags so the same skill works in both modes.
+Why single-line and multi-`-m`:
+- **No heredoc** (`-m "$(cat <<'EOF' ... EOF)"`): works in interactive Claude Code but corrupts under headless `claude -p` (the bash wrapper drops the EOF terminator).
+- **No backslash-newline continuations**: the headless bash wrapper inserts a literal `\n` arg at every continuation, turning `git commit \⏎ -m "..."` into `git commit \n -m "..."` where `\n` becomes a pathspec/positional arg.
+
+Same single-line, multi-`-m` form works in both interactive and headless modes.
 
 7. Verify with `git status` that the working tree is clean.
 
