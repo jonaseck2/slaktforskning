@@ -34,10 +34,14 @@
           v-model="form.event_type"
           @change="showTypeDropdown = false"
         >
-          <option v-for="et in EVENT_TYPE_VALUES" :key="et" :value="et">
+          <option value="" disabled>{{ $t('events.selectType') }}</option>
+          <option v-for="et in OTHER_EVENT_TYPES" :key="et" :value="et">
             {{ $t('eventTypes.' + et) }}
           </option>
         </select>
+        <p v-if="showTypeChangeWarning" class="ep-type-warning">
+          {{ $t('events.typeChangeWarning') }}
+        </p>
       </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('events.date') }}</span>
@@ -193,6 +197,11 @@ declare const window: Window & {
 const QUICK_EVENT_TYPES = ['birth', 'marriage', 'death'] as const;
 type QuickType = typeof QUICK_EVENT_TYPES[number];
 
+// Dropdown shows everything else — quick row already covers the top three.
+const OTHER_EVENT_TYPES = EVENT_TYPE_VALUES.filter(
+  (et) => !QUICK_EVENT_TYPES.includes(et as QuickType),
+);
+
 interface CitationRow { id: string; sourceTitle: string; page: string | null; confidence: number | null; }
 interface EditingCitation {
   id: string;
@@ -238,6 +247,11 @@ const { t } = useI18n();
 
 const savedEventId = ref<string | null>(props.editingEvent?.id ?? null);
 
+// Snapshot of the event_type at the moment we entered edit mode. Used to drive
+// a soft warning when the user changes type on an already-saved event
+// (BENGT #36 — warn, don't block).
+const initialEventType = ref<string>(props.editingEvent?.event_type ?? '');
+
 const form = reactive<EventData>({
   id: props.editingEvent?.id,
   event_type: props.editingEvent?.event_type ?? props.defaultEventType,
@@ -257,6 +271,13 @@ const eventTitle = computed(() => {
   return contextName.value ? t('events.titleOf', { event: base, name: contextName.value }) : base;
 });
 const showTypeDropdown = ref(false);
+
+// Soft warning when changing type on an existing event. We don't block — some
+// users genuinely correct a mis-categorized event — but we flag the risk that
+// citations and type-specific fields may now be inconsistent.
+const showTypeChangeWarning = computed(
+  () => !!props.editingEvent && !!initialEventType.value && form.event_type !== initialEventType.value,
+);
 
 // Birth-only baptism companion fields. Hidden when editing an existing event so we
 // don't accidentally create duplicate baptism events on every re-save.
@@ -539,6 +560,15 @@ function handleCancel() {
   font-size: var(--font-xs);
   color: var(--text-muted);
   margin: calc(var(--space-xs) * -1) 0 var(--space-sm) 0;
+  line-height: 1.4;
+}
+.ep-type-warning {
+  font-size: var(--font-xs);
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  margin: var(--space-xs) 0 0 0;
   line-height: 1.4;
 }
 .ep-link-btn {
