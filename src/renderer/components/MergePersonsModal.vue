@@ -8,33 +8,35 @@
     @close="$emit('close')"
     @save="doMerge"
   >
-    <div class="merge-layout">
-      <div class="merge-side">
-        <h5>{{ $t('duplicates.keepPerson') }}</h5>
-        <div class="person-card target">
-          <strong>{{ targetName }}</strong>
-          <div v-if="targetBirth" class="person-meta">{{ $t('persons.birthDate') }}: {{ targetBirth }}</div>
-          <div class="person-meta">ID: {{ target.id.slice(0, 8) }}</div>
+    <div class="ep-fields merge-body">
+      <div class="merge-layout">
+        <div class="merge-side">
+          <h5>{{ $t('duplicates.keepPerson') }}</h5>
+          <div class="person-card target">
+            <strong>{{ targetName }}</strong>
+            <div v-if="targetBirth" class="person-meta">{{ $t('persons.birthDate') }}: {{ targetBirth }}</div>
+            <div class="person-meta">ID: {{ target.id.slice(0, 8) }}</div>
+          </div>
+        </div>
+        <div class="merge-arrow">←</div>
+        <div class="merge-side">
+          <h5>{{ $t('duplicates.mergePerson') }}</h5>
+          <div class="person-card source">
+            <strong>{{ sourceName }}</strong>
+            <div v-if="sourceBirth" class="person-meta">{{ $t('persons.birthDate') }}: {{ sourceBirth }}</div>
+            <div class="person-meta">ID: {{ source.id.slice(0, 8) }}</div>
+          </div>
         </div>
       </div>
-      <div class="merge-arrow">←</div>
-      <div class="merge-side">
-        <h5>{{ $t('duplicates.mergePerson') }}</h5>
-        <div class="person-card source">
-          <strong>{{ sourceName }}</strong>
-          <div v-if="sourceBirth" class="person-meta">{{ $t('persons.birthDate') }}: {{ sourceBirth }}</div>
-          <div class="person-meta">ID: {{ source.id.slice(0, 8) }}</div>
-        </div>
+      <div class="merge-explanation">
+        <p>{{ $t('duplicates.mergeExplanation') }}</p>
+        <ul>
+          <li v-for="reason in reasons" :key="reason">{{ $t('duplicates.reasons.' + reason, reason) }}</li>
+        </ul>
       </div>
-    </div>
-    <div class="merge-explanation">
-      <p>{{ $t('duplicates.mergeExplanation') }}</p>
-      <ul>
-        <li v-for="reason in reasons" :key="reason">{{ $t('duplicates.reasons.' + reason, reason) }}</li>
-      </ul>
-    </div>
-    <div class="merge-warning">
-      {{ $t('duplicates.mergeWarning') }}
+      <div class="merge-warning">
+        {{ $t('duplicates.mergeWarning') }}
+      </div>
     </div>
   </BaseSubPanel>
 </template>

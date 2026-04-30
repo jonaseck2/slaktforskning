@@ -34,19 +34,21 @@
       @cancel="showExportReport = false"
       @close="showExportReport = false"
     >
-      <ul class="report-counts">
-        <li>{{ $t('importExport.exportReportPersons', { n: exportReport.persons }) }}</li>
-        <li>{{ $t('importExport.exportReportFamilies', { n: exportReport.families }) }}</li>
-        <li>{{ $t('importExport.exportReportEvents', { n: exportReport.events }) }}</li>
-        <li>{{ $t('importExport.exportReportSources', { n: exportReport.sources }) }}</li>
-      </ul>
-      <div v-if="exportReport.excluded.length > 0" class="report-section">
-        <p class="report-section-label">{{ $t('importExport.exportReportExcluded') }}</p>
-        <ul>
-          <li v-for="item in exportReport.excluded" :key="item.category">
-            <strong>{{ item.category }}</strong> ({{ item.count }}): {{ item.reason }}
-          </li>
+      <div class="report-body">
+        <ul class="report-counts">
+          <li>{{ $t('importExport.exportReportPersons', { n: exportReport.persons }) }}</li>
+          <li>{{ $t('importExport.exportReportFamilies', { n: exportReport.families }) }}</li>
+          <li>{{ $t('importExport.exportReportEvents', { n: exportReport.events }) }}</li>
+          <li>{{ $t('importExport.exportReportSources', { n: exportReport.sources }) }}</li>
         </ul>
+        <div v-if="exportReport.excluded.length > 0" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.exportReportExcluded') }}</p>
+          <ul>
+            <li v-for="item in exportReport.excluded" :key="item.category">
+              <strong>{{ item.category }}</strong> ({{ item.count }}): {{ item.reason }}
+            </li>
+          </ul>
+        </div>
       </div>
     </BaseSubPanel>
   </div>

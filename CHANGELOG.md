@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.172.3 — More unstyled modals
+
+- fix(export): GEDCOM export report modal got the same `.report-body` wrapper as the import modals (was flush against the panel edges)
+- fix(merge): merge-persons confirmation modal had no edge padding — the side-by-side person cards and the warning banner sat against the panel border. Wrapped the body in `.ep-fields`
+- fix(confirm): every delete-confirm dialog (`ConfirmModal`) was rendering bare `<p>` tags directly into the panel body. Wrapped in `.ep-fields` with consistent paragraph spacing — the modal is heavily reused, so this affects every "Delete X?" prompt across the app
+
 ## v0.172.2 — Import/export report modal styling
 
 - fix(import): import/export report modals (GEDCOM, Holger, Genney/Derby, archive) now have the same edge padding and inter-section spacing as the rest of the modals. Content was slotted into `.ep-body` without the `.ep-fields` wrapper, so it sat flush against the panel edges and the `<p>` / `<ul>` / `.report-section` blocks had no consistent gaps. Adds a global `.report-body` wrapper class (padding + flex-column gap), tightens `.report-section ul` line spacing, and removes a duplicated scoped block in `GenneyImportSection` that used hardcoded `#eee` / `#444` / `#555` colors instead of design tokens. Holger's `.section-instructions` callout also moves off hardcoded colors

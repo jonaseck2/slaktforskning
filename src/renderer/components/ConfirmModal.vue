@@ -12,8 +12,10 @@
     @close="cancel"
     @save="onConfirm"
   >
-    <p v-if="message">{{ message }}</p>
-    <p v-for="(line, i) in messages ?? []" :key="i">{{ line }}</p>
+    <div class="ep-fields confirm-body">
+      <p v-if="message">{{ message }}</p>
+      <p v-for="(line, i) in messages ?? []" :key="i">{{ line }}</p>
+    </div>
   </BaseSubPanel>
 </template>
 
@@ -54,3 +56,16 @@ const resolvedConfirmLabel = computed(() => {
 function onConfirm() { emit('confirm'); }
 function cancel() { emit('cancel'); }
 </script>
+
+<style scoped>
+.confirm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.confirm-body p {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: 1.5;
+}
+</style>
