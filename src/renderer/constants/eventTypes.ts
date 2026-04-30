@@ -7,10 +7,23 @@ export const EVENT_TYPE_VALUES = [
   'emigration', 'naturalization', 'occupation', 'residence', 'education',
   'graduation', 'military', 'retirement', 'will', 'probate', 'mention',
   'engagement', 'wedding', 'adoption', 'foster_placement',
+  'travel',
   'other',
 ] as const;
 
 export type EventTypeValue = (typeof EVENT_TYPE_VALUES)[number];
+
+// Events that naturally span a date range. The EventModal shows an optional
+// end-date field for these even when date_type !== 'between' (BENGT #28a).
+export const SPAN_EVENT_TYPES = [
+  'residence', 'education', 'occupation', 'military', 'travel',
+] as const;
+
+export type SpanEventType = (typeof SPAN_EVENT_TYPES)[number];
+
+export function isSpanEventType(type: string): type is SpanEventType {
+  return (SPAN_EVENT_TYPES as readonly string[]).includes(type);
+}
 
 export const PERSON_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter(
   (t) => !['marriage', 'divorce', 'wedding'].includes(t),

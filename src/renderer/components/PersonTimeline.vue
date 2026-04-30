@@ -77,6 +77,7 @@ import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventModal from './modals/EventModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import { isSpanEventType } from '../constants/eventTypes';
 
 interface EventRow {
   id: string;
@@ -133,7 +134,8 @@ function formatDate(event: EventRow): string {
     event.date_type === 'about' ? t('datePrefix.about') :
     event.date_type === 'before' ? t('datePrefix.before') :
     event.date_type === 'after' ? t('datePrefix.after') : '';
-  if (event.date_type === 'between' && event.date_value_end) {
+  if (event.date_value_end &&
+      (event.date_type === 'between' || isSpanEventType(event.event_type))) {
     return `${event.date_value} – ${event.date_value_end}`;
   }
   return `${prefix}${event.date_value}`;

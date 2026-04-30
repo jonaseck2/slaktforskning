@@ -1,7 +1,7 @@
 # Plan: Bengt feedback — events bundle (sort order setting + date ranges)
 
 **Date:** 2026-04-29
-**Status:** planned
+**Status:** done — shipped in v0.163.0
 **Source:** `BENGT.md`
 **Effort:** S–M
 
@@ -16,19 +16,19 @@ Three remaining event-related items that don't fit elsewhere: a default-sort-ord
 ## Tasks
 
 ### Phase 1 — Sort-order setting (#1)
-- [ ] Add `event_type_sort` to `db_settings` (per-database setting): `'alphabetical' | 'canonical'`, default `'alphabetical'`
-- [ ] [src/renderer/views/SettingsView.vue](../../src/renderer/views/SettingsView.vue) Defaults tab — add radio toggle "Sorteringsordning för händelsetyper"
-- [ ] In every component that renders an event-type select, read the setting and sort accordingly
+- [x] Add `event_type_sort` to `db_settings` (per-database setting): `'alphabetical' | 'canonical'`, default `'alphabetical'`
+- [x] [src/renderer/views/SettingsView.vue](../../src/renderer/views/SettingsView.vue) Defaults tab — add radio toggle "Sorteringsordning för händelsetyper"
+- [x] In every component that renders an event-type select, read the setting and sort accordingly
   - `EventModal.vue` "..." dropdown
   - PersonPanel and event filters wherever event_type lists appear
-- [ ] Default `'alphabetical'` matches Bengt's preference; `'canonical'` preserves the order in `EVENT_TYPE_VALUES` for users who prefer chronological/logical order
+- [x] Default `'alphabetical'` matches Bengt's preference; `'canonical'` preserves the order in `EVENT_TYPE_VALUES` for users who prefer chronological/logical order
 
 ### Phase 2 — Date-range UI for span events (#28a)
-- [ ] Schema already supports `date_value_end` per CLAUDE.md events table
-- [ ] [src/renderer/components/modals/EventModal.vue](../../src/renderer/components/modals/EventModal.vue) — when `event_type` is in `SPAN_EVENT_TYPES = ['residence', 'education', 'occupation', 'military', 'travel']`, show a second `DateInput` for end date
-- [ ] When `date_type === 'between'`, end date is required (existing logic)
-- [ ] For span events with single-date input, the field is `Slutdatum (valfritt)` and stores to `date_value_end`
-- [ ] Update event display in panels and reports to render `start – end` for span events with end date set
+- [x] Schema already supports `date_value_end` per CLAUDE.md events table
+- [x] [src/renderer/components/modals/EventModal.vue](../../src/renderer/components/modals/EventModal.vue) — when `event_type` is in `SPAN_EVENT_TYPES = ['residence', 'education', 'occupation', 'military', 'travel']`, show a second `DateInput` for end date
+- [x] When `date_type === 'between'`, end date is required (existing logic)
+- [x] For span events with single-date input, the field is `Slutdatum (valfritt)` and stores to `date_value_end`
+- [x] Update event display in panels and reports to render `start – end` for span events with end date set
 
 ### Phase 3 — Indirect events on timelines (#28f, #31)
 **Move this to the reactivity plan.** It's a timeline rendering question, not an EventModal change. See [2026-04-29-bengt-reactivity.md](2026-04-29-bengt-reactivity.md) Phase 4.

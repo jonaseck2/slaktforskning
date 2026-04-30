@@ -56,6 +56,11 @@
           @update:date-original="form.date_original = $event"
         />
       </div>
+      <div v-if="showSpanEndDate" class="ep-field">
+        <span class="ep-field-label">{{ $t('events.endDateOptional') }}</span>
+        <SimpleDateInput v-model="spanEndDate" />
+        <p class="ep-field-hint">{{ $t('events.endDateHint') }}</p>
+      </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('events.place') }}</span>
         <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
@@ -188,7 +193,8 @@ import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
 import PersonPicker from '../PersonPicker.vue';
 import PersonModal from './PersonModal.vue';
-import { EVENT_TYPE_VALUES } from '../../constants/eventTypes';
+import { EVENT_TYPE_VALUES, isSpanEventType } from '../../constants/eventTypes';
+import { isEventTypeSortMode, sortEventTypes, type EventTypeSortMode } from '../../utils/eventTypeSort';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -198,7 +204,7 @@ const QUICK_EVENT_TYPES = ['birth', 'marriage', 'death'] as const;
 type QuickType = typeof QUICK_EVENT_TYPES[number];
 
 // Dropdown shows everything else — quick row already covers the top three.
-const OTHER_EVENT_TYPES = EVENT_TYPE_VALUES.filter(
+const OTHER_EVENT_TYPES_RAW = EVENT_TYPE_VALUES.filter(
   (et) => !QUICK_EVENT_TYPES.includes(et as QuickType),
 );
 
@@ -245,6 +251,22 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+// User-controlled sort order (BENGT #1, #3). Default: alphabetical.
+const eventTypeSort = ref<EventTypeSortMode>('alphabetical');
+const OTHER_EVENT_TYPES = computed(() =>
+  sortEventTypes(OTHER_EVENT_TYPES_RAW, eventTypeSort.value, (et) => t('eventTypes.' + et)),
+);
+
+async function loadEventTypeSort() {
+  if (!window.api) return;
+  try {
+    const raw = (await window.api.db.getSetting('event_type_sort')) as string | null;
+    eventTypeSort.value = isEventTypeSortMode(raw) ? raw : 'alphabetical';
+  } catch {
+    eventTypeSort.value = 'alphabetical';
+  }
+}
+
 const savedEventId = ref<string | null>(props.editingEvent?.id ?? null);
 
 // Snapshot of the event_type at the moment we entered edit mode. Used to drive
@@ -269,6 +291,18 @@ const contextName = ref('');
 const eventTitle = computed(() => {
   const base = form.event_type ? t('eventTypes.' + form.event_type) : t('events.newEvent');
   return contextName.value ? t('events.titleOf', { event: base, name: contextName.value }) : base;
+});
+
+// Span events (residence, occupation, education, military, travel) accept an
+// optional end date even when date_type is not 'between' (BENGT #28a).
+const showSpanEndDate = computed(
+  () => isSpanEventType(form.event_type) && form.date_type !== 'between'
+);
+// Proxy for SimpleDateInput which expects a non-null string. Reads/writes
+// form.date_value_end so the existing save path persists it unchanged.
+const spanEndDate = computed<string>({
+  get: () => form.date_value_end ?? '',
+  set: (val) => { form.date_value_end = val || null; },
 });
 const showTypeDropdown = ref(false);
 
@@ -410,6 +444,7 @@ const delCitation = useDeleteConfirm<string>(async (id) => {
 function deleteCitation(id: string) { delCitation.ask(id); }
 
 onMounted(async () => {
+  await loadEventTypeSort();
   await loadCitations();
   await reloadPartnerOptions();
   await loadContextName();
@@ -448,7 +483,9 @@ async function handleSave() {
         event_type: form.event_type,
         date_type: form.date_type,
         date_value: form.date_value || null,
-        date_value_end: form.date_type === 'between' ? form.date_value_end || null : null,
+        date_value_end: (form.date_type === 'between' || isSpanEventType(form.event_type))
+          ? form.date_value_end || null
+          : null,
         date_original: form.date_original,
         place_id: form.place_id,
         cause: form.event_type === 'death' ? form.cause : null,
@@ -459,7 +496,9 @@ async function handleSave() {
         event_type: form.event_type,
         date_type: form.date_type,
         date_value: form.date_value || null,
-        date_value_end: form.date_type === 'between' ? form.date_value_end || null : null,
+        date_value_end: (form.date_type === 'between' || isSpanEventType(form.event_type))
+          ? form.date_value_end || null
+          : null,
         date_original: form.date_original,
         place_id: form.place_id,
         cause: form.event_type === 'death' ? form.cause : null,
