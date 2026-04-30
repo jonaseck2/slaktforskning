@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.174.0 — Promote `.claude/agents/*` to real Claude Code subagents
+
+- feat(agent): added YAML frontmatter (`name`, `description`, `tools`) to all six files in `.claude/agents/` (`api-implementer`, `test-writer`, `ipc-mcp-wirer`, `vue-ui-builder`, `doc-syncer`, `ux-reviewer`) and dropped the `## Your task / {{TASK}}` placeholder block. They were previously prompt templates that needed `superpowers:subagent-driven-development` to substitute `{{TASK}}` and dispatch as `general-purpose`. With proper frontmatter the harness now auto-registers each as a Task tool `subagent_type`, so the Task tool itself can invoke them by name.
+- chore(agent): refreshed `.claude/agents/README.md` and the "Speeding up with subagents" section in the `add-feature` skill to describe the new dispatch model. `ux-reviewer` is read-only (`tools: Read, Grep, Glob`); the rest get `Read, Write, Edit, Grep, Glob, Bash` (or `Read, Edit, Grep, Glob, Bash` for `doc-syncer` since it doesn't create new files).
+- Quality is unverified — these were templates that were never run. Next session that uses one will tell us whether the agent bodies are still useful or need rework.
+
 ## v0.173.0 — Wire up the InstructionsLoaded hook for path-scoped rule debugging
 
 - feat(agent): added an `InstructionsLoaded` hook in `.claude/settings.json` pointing at `.claude/hooks/log-instructions-loaded.py`. Every time Claude Code loads a CLAUDE.md or `.claude/rules/*.md` file (at session start OR lazily on a path-glob match / nested traversal), the hook appends a one-line summary to `.claude/instructions-loaded.log` (gitignored). Format: `<utc-ts> <load_reason> <memory_type> <file_path> [trigger=…] [globs=…] [parent=…]`. Lets us verify the new path-scoped rules in `.claude/rules/` actually trigger on the right file paths instead of trusting the harness silently. Hook is observability-only — cannot block loads.

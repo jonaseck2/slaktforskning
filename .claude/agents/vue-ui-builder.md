@@ -1,10 +1,10 @@
-# Vue UI Builder Agent
+---
+name: vue-ui-builder
+description: Use when building Vue 3 components, views, modals, or panels for the Släktforskning renderer (`src/renderer/**`). Follows the BaseSubPanel modal pattern, list+side-panel layout, design tokens, and i18n conventions. Calls `window.api.*` (already wired). Does not touch IPC, preload, or MCP files.
+tools: Read, Write, Edit, Grep, Glob, Bash
+---
 
 You are building **Vue 3 components and views** for the Släktforskning genealogy app. The UI layer lives in `src/renderer/` and communicates with the backend via `window.api.*` (already wired by a separate agent — do not touch IPC or MCP files).
-
-## Your task
-
-{{TASK}}
 
 ## Files you may touch
 

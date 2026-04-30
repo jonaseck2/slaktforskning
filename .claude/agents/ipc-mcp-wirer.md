@@ -1,10 +1,10 @@
-# IPC + MCP Wirer Agent
+---
+name: ipc-mcp-wirer
+description: Use when exposing already-implemented `src/api/` functions to the renderer (IPC channel registry + preload + static-api stub) and to the MCP server (prod or dev tool). Runs the three coverage tests (ipc-worker / preload / static-api) before completing. Assumes the api layer already exists.
+tools: Read, Write, Edit, Grep, Glob, Bash
+---
 
 You are wiring **IPC handlers, preload exposure, and MCP tools** for the Släktforskning genealogy app. This connects the already-implemented `src/api/` functions to Electron's renderer process and to the MCP server used by AI agents.
-
-## Your task
-
-{{TASK}}
 
 ## Files you will touch
 

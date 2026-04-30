@@ -1,32 +1,29 @@
-# Subagent Templates
+# Project Subagents
 
-Prompt templates for dispatching focused subagents during feature development. Used with `superpowers:subagent-driven-development`.
+Each `.md` file in this directory is a Claude Code subagent — registered with YAML frontmatter (`name`, `description`, `tools`) so the harness exposes it as a `subagent_type` in the Task tool. Auto-discovered every session.
 
 ## Agents
 
-| Template | Layer | Steps |
+| Subagent | Layer | Steps |
 |----------|-------|-------|
-| `api-implementer.md` | Types + Schema + CRUD functions | 1–3 |
-| `test-writer.md` | Unit tests for api/ functions | 4 |
-| `ipc-mcp-wirer.md` | IPC handlers + preload + MCP tools | 5–7 |
-| `vue-ui-builder.md` | Vue views, components, i18n | 8 |
-| `doc-syncer.md` | CLAUDE.md, IPC_REFERENCE, PLAN.md, README | 10 |
+| `api-implementer` | Types + schema + CRUD functions in `src/api/` | 1–3 |
+| `test-writer` | Vitest unit tests for `src/api/` | 4 |
+| `ipc-mcp-wirer` | IPC channel registry + preload + MCP tool exposure | 5–7 |
+| `vue-ui-builder` | Vue views/components/modals/panels in `src/renderer/` | 8 |
+| `doc-syncer` | Sync CLAUDE.md, IPC_REFERENCE.md, PLAN.md, README, skills, rules to match a committed feature | 10 |
+| `ux-reviewer` | Read-only consistency review of list views and side panels | (review) |
 
 ## Parallelism
 
-Two groups can run in parallel:
-
 ```
-Phase 1 (parallel): api-implementer + test-writer
+Phase 1 (parallel): api-implementer + test-writer (test-writer starts once api signatures are committed)
 Phase 2 (parallel): ipc-mcp-wirer + vue-ui-builder
 Phase 3:            doc-syncer
+Optional:           ux-reviewer (read-only, can run anytime)
 ```
-
-`test-writer` can start once `api-implementer` has committed (function signatures are visible in git).
-`ipc-mcp-wirer` and `vue-ui-builder` can start once Phase 1 is done.
 
 ## How to dispatch
 
-Fill in `{{TASK}}` with a concrete description of what to implement — the api function signatures, the schema change, the UI section, etc. The more specific, the better.
+Use the Task tool with the matching `subagent_type`, passing a concrete task description as the `prompt`. The agent body becomes the system prompt; your prompt becomes the task. `superpowers:subagent-driven-development` orchestrates this with two-stage review (spec compliance + code quality) after each agent.
 
-Each agent commits its own work. Reviews (spec compliance + code quality) run after each agent using `superpowers:subagent-driven-development`.
+Each agent commits its own work.

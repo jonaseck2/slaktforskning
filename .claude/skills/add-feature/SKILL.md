@@ -399,7 +399,7 @@ When invoking `superpowers:brainstorming` or `superpowers:writing-plans`, explic
 
 ## Speeding up with subagents
 
-The checklist maps to four focused subagent templates in `.claude/agents/`:
+The checklist maps to focused subagents in `.claude/agents/` (auto-discovered by Claude Code as Task agent types — invoke them by name via the Task tool):
 
 | Agent | Steps | Can run in parallel with |
 |-------|-------|--------------------------|
@@ -408,6 +408,7 @@ The checklist maps to four focused subagent templates in `.claude/agents/`:
 | `ipc-mcp-wirer` | 5–7 | vue-ui-builder |
 | `vue-ui-builder` | 8 | ipc-mcp-wirer |
 | `doc-syncer` | 10 | — |
+| `ux-reviewer` | (review) | — — read-only consistency check |
 
 Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent.
 

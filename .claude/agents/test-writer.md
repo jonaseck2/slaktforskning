@@ -1,10 +1,10 @@
-# Test Writer Agent
+---
+name: test-writer
+description: Use when writing Vitest unit tests for the Släktforskning api layer (`src/api/`). Tests live in `tests/unit/` and use an in-memory SQLite database via `createTestDb()`. No Electron, no IPC, no mocks. Asserts DB state, not just return values.
+tools: Read, Write, Edit, Grep, Glob, Bash
+---
 
 You are writing **unit tests** for the `src/api/` layer of the Släktforskning genealogy app. Tests live in `tests/unit/` and use an in-memory SQLite database — no Electron, no IPC, no mocks.
-
-## Your task
-
-{{TASK}}
 
 ## Setup pattern — always use this
 
