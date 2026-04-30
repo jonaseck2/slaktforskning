@@ -172,38 +172,59 @@ it('imports places into the database', () => {
 
 ### Adding a new IPC channel
 
-All DB-touching channels run in the Worker Thread. New channels require **two** registrations:
+All DB-touching channels run in the Worker Thread. The codebase uses a registry pattern: one `defineChannel` call covers worker dispatch + main-thread `wrapHandler` registration. The renderer-side preload is **NOT** registry-driven — it must be edited manually.
 
-**1. Worker dispatch table** (`src/main/db-worker.ts`) — add to the `handlers` object:
+**1. Channel definition** (`src/shared/channels/<domain>.ts`) — single entry registers handler on both threads:
 ```typescript
-'things:create': (data) => things.createThing(getDb(), data as Parameters<typeof things.createThing>[1]),
-'things:delete': (id: string) => things.deleteThing(getDb(), id as string),
+defineChannel({
+  name: 'things:create',
+  thread: 'worker',
+  mutating: true,                  // set true when this writes — fires onDataChanged
+  handler: (db, data: Parameters<typeof things.createThing>[1]) => things.createThing(db, data),
+});
+defineChannel({
+  name: 'things:delete',
+  thread: 'worker',
+  mutating: true,
+  handler: (db, id: string) => things.deleteThing(db, id),
+});
 ```
 
-**2. IPC handler** (`src/main/ipc/<domain>.ts`) — delegate to worker:
-```typescript
-wrapHandler('things:create', (...args) => callWorker('things:create', ...args));
-wrapHandler('things:delete', (...args) => callWorker('things:delete', ...args));
-```
+The barrel (`src/shared/channels/index.ts`) must import the domain file once if it's new — one line.
 
-**3. Preload** (`src/preload/index.ts`) — expose via contextBridge:
+**2. ⚠️ Preload** (`src/preload/index.ts`) — **HAND-MAINTAINED, must be edited manually.** Adding a `defineChannel` does NOT auto-expose it on `window.api`; the renderer will hit `is not a function` at runtime. Add a matching line under the domain block:
 ```typescript
 things: {
-  create: (data: unknown) => ipcRenderer.invoke('things:create', data),
-  delete: (id: string) => ipcRenderer.invoke('things:delete', id),
+  create: mutating((data: unknown) => ipcRenderer.invoke('things:create', data)),
+  delete: mutating((id: string) => ipcRenderer.invoke('things:delete', id)),
 },
 ```
+Wrap mutating channels with the local `mutating()` helper so `onDataChanged` listeners fire.
+
+**3. Static API stub** (`src/static/static-api.ts`) — every registry channel needs a stub on the static-mode api, even if it's a no-op for the read-only website export. The `tests/unit/static-api-coverage.test.ts` parity check fails CI if you skip this.
 
 **4. Vue component** — use it:
 ```typescript
 await window.api.things.create({ name: 'test' });
 ```
 
-After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api` — components do not declare their own `window` type.
+After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api`.
 
-**Electron-only channels** (dialog, shell, printToPDF, fs ops) stay on the main thread — register `wrapHandler` only, add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`.
+**Electron-only channels** (dialog, shell, printToPDF, fs ops) stay on the main thread — use `defineChannel({ thread: 'main', ... })` or, when `electron`-specific APIs aren't available in shared code, register manually via `wrapHandler` in the appropriate `src/main/ipc/*.ts` file and add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`.
 
-The coverage test (`npx vitest run tests/unit/ipc-worker-coverage.test.ts`) fails fast if any registered channel is missing from the worker dispatch table, catching misses at dev time rather than silently returning nothing at runtime.
+### Required tests after adding a channel
+
+Run these together — they catch the three places where a channel can be silently dropped:
+
+```bash
+npx vitest run tests/unit/ipc-worker-coverage.test.ts \
+                tests/unit/preload-coverage.test.ts \
+                tests/unit/static-api-coverage.test.ts
+```
+
+- `ipc-worker-coverage` — every `wrapHandler` resolves to a worker handler, registry entry, or `MAIN_THREAD_ONLY_CHANNELS`
+- `preload-coverage` — every registry channel is exposed on the preload's `window.api` (parses preload as text)
+- `static-api-coverage` — every registry channel has a stub in the static SPA api
 
 See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
 
