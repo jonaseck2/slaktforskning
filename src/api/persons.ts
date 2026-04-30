@@ -101,6 +101,8 @@ export function searchPersons(
   query: string,
   relateeId?: string | null,
   limit = 20,
+  birthYearMin?: number | null,
+  birthYearMax?: number | null,
 ): (Person & {
   given_name: string;
   surname: string;
@@ -129,6 +131,29 @@ export function searchPersons(
   const relevanceParams = [firstToken, firstToken];
 
   const relatee = relateeId ?? null;
+
+  // Birth year subquery used for both SELECT and optional WHERE filters
+  const birthYearSubquery = `(SELECT CAST(SUBSTR(e.date_value, 1, 4) AS INTEGER)
+         FROM events e
+         JOIN event_participants ep ON ep.event_id = e.id
+         WHERE ep.person_id = p.id
+           AND ep.role = 'primary'
+           AND e.event_type = 'birth'
+           AND e.date_value IS NOT NULL AND e.date_value <> ''
+         ORDER BY e.date_value
+         LIMIT 1)`;
+
+  const birthYearFilters: string[] = [];
+  const birthYearParams: unknown[] = [];
+  if (birthYearMin != null) {
+    birthYearFilters.push(`${birthYearSubquery} >= ?`);
+    birthYearParams.push(birthYearMin);
+  }
+  if (birthYearMax != null) {
+    birthYearFilters.push(`${birthYearSubquery} <= ?`);
+    birthYearParams.push(birthYearMax);
+  }
+  const birthYearWhere = birthYearFilters.length > 0 ? `AND ${birthYearFilters.join(' AND ')}` : '';
 
   type Row = Omit<Person, 'living'> & {
     living: number;
@@ -187,11 +212,12 @@ export function searchPersons(
       SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
     )
     WHERE ${tokenClauses}
+    ${birthYearWhere}
     ORDER BY
       CASE WHEN pn.given_name LIKE ? THEN 0 WHEN pn.surname LIKE ? THEN 1 ELSE 2 END,
       pn.surname, pn.given_name
     LIMIT ?
-  `, [relatee, relatee, relatee, ...tokenParams, ...relevanceParams, limit]);
+  `, [relatee, relatee, relatee, ...tokenParams, ...birthYearParams, ...relevanceParams, limit]);
   return rows.map(r => ({ ...r, living: r.living === 1 }));
 }
 
