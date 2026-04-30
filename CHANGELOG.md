@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.167.0 — Tree refresh keeps zoom and scroll
+
+- feat(charts): editing a person's events no longer wipes your place in the tree — Pedigree, Hourglass, and Descendant charts now refetch in place when data changes, preserving zoom, scroll position, and expanded/collapsed branches (BENGT #37, Phase 3 of the reactivity audit)
+- internal: each chart exposes a `refetch()` method; `PersonsView` calls it from the `onDataChanged` listener instead of bumping `chartKey`. Hard remounts (focal person change, focal-person deletion) still go through `reloadChart()`
+
 ## v0.166.0 — Reports: researcher info, page numbers, richer citations, GEDCOM SUBM fix
 
 - feat(settings): four researcher fields (name, address, phone, email) live in `db_settings` and are configurable from Settings → "Forskarinformation"
