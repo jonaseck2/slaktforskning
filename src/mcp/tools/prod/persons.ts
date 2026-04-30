@@ -128,9 +128,11 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     inputSchema: {
       query: z.string().describe('Search query — matches given name, surname, or notes'),
       limit: z.number().int().min(1).max(200).optional().describe('Maximum number of results to return (default: 20, max: 200)'),
+      birth_year_min: z.number().int().optional().describe('Filter: only return persons born in this year or later'),
+      birth_year_max: z.number().int().optional().describe('Filter: only return persons born in this year or earlier'),
     },
   }, async (args) => {
-    const results = personApi.searchPersons(getDb(), args.query, null, args.limit);
+    const results = personApi.searchPersons(getDb(), args.query, null, args.limit, args.birth_year_min, args.birth_year_max);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
