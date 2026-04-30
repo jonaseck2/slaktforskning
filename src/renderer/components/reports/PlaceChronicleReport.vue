@@ -88,6 +88,7 @@ import PlaceBoundaryMap, { type PlacePin } from './primitives/PlaceBoundaryMap.v
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { useToast } from '../../composables/useToast';
+import { isSpanEventType } from '../../constants/eventTypes';
 
 const props = withDefaults(defineProps<{
   placeId: string;
@@ -197,7 +198,8 @@ function formatDateDisplay(ev: RawEvent): string | null {
   if (ev.date_original) return ev.date_original;
   if (!ev.date_value) return null;
   const prefix = ev.date_type ? t('datePrefix.' + ev.date_type, '') : '';
-  if (ev.date_type === 'between' && ev.date_value_end) {
+  if (ev.date_value_end &&
+      (ev.date_type === 'between' || isSpanEventType(ev.event_type))) {
     return `${prefix}${ev.date_value}\u2013${ev.date_value_end}`;
   }
   return `${prefix}${ev.date_value}`;

@@ -317,6 +317,8 @@ export default {
     spouse: 'Other person',
     spouseOther: 'Another existing person…',
     spouseNew: 'Add a new person',
+    endDateOptional: 'End date (optional)',
+    endDateHint: 'Leave blank if the event happened at a single point in time or has no known end.',
   },
   citations: {
     entity: 'Citation',
@@ -385,6 +387,7 @@ export default {
     wedding: 'Wedding',
     adoption: 'Adoption',
     foster_placement: 'Foster Placement',
+    travel: 'Travel',
     other: 'Other',
   },
   dateTypes: {
@@ -1592,6 +1595,10 @@ export default {
     eventsSection: 'Events',
     smartEventType: 'Suggest event type based on existing events',
     smartEventTypeHint: 'When enabled, picks the next missing type in the order: birth → death → occupation → residence. When off, leaves the picker blank.',
+    eventTypeSortLabel: 'Event type sort order',
+    eventTypeSortAlphabetical: 'Alphabetical',
+    eventTypeSortCanonical: 'Life-arc (birth → death → ...)',
+    eventTypeSortHint: 'Controls the order of the event-type picker when adding or editing an event.',
   },
   about: {
     title: 'About OurLegacy',
