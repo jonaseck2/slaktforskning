@@ -1570,6 +1570,13 @@ export default {
     title: 'Standardval',
     eventsSection: 'Händelser',
     smartEventType: 'Föreslå händelsetyp utifrån befintliga händelser',
-    smartEventTypeHint: 'När aktiverat väljs nästa saknade typ i ordningen: födelse → död → yrke → bostad. När avstängt väljs alltid födelse.',
+    smartEventTypeHint: 'När aktiverat väljs nästa saknade typ i ordningen: födelse → död → yrke → bostad. När avstängt lämnas fältet tomt.',
+  },
+  about: {
+    title: 'Om OurLegacy',
+    version: 'Version {version}',
+    description: 'Ett släktforskningsprogram som körs lokalt på din dator. All data ligger kvar hos dig.',
+    openSource: 'Öppen källkod (MIT-licens).',
+    viewOnGitHub: 'Visa på GitHub',
   },
 };

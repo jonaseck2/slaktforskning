@@ -1591,6 +1591,13 @@ export default {
     title: 'Defaults',
     eventsSection: 'Events',
     smartEventType: 'Suggest event type based on existing events',
-    smartEventTypeHint: 'When enabled, picks the next missing type in the order: birth → death → occupation → residence. When off, always defaults to birth.',
+    smartEventTypeHint: 'When enabled, picks the next missing type in the order: birth → death → occupation → residence. When off, leaves the picker blank.',
+  },
+  about: {
+    title: 'About OurLegacy',
+    version: 'Version {version}',
+    description: 'A local-first genealogy app. All your data stays on your computer.',
+    openSource: 'Open source (MIT licence).',
+    viewOnGitHub: 'View on GitHub',
   },
 };

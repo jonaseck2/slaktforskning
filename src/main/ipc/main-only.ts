@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { dialog, BrowserWindow, shell } from 'electron';
+import { app, dialog, BrowserWindow, shell } from 'electron';
 import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../../api/csv_export';
 import type { CsvOptions } from '../../api/csv_export';
 import { callWorker } from './worker-client';
@@ -26,6 +26,14 @@ export function registerUtilityHandlers(
 
   wrapHandler('export:openFolder', async (folderPath) => {
     await shell.openPath(folderPath as string);
+  });
+
+  // App metadata + system browser links (used by About dialog)
+  wrapHandler('app:getVersion', () => app.getVersion());
+  wrapHandler('app:openExternal', async (url) => {
+    if (typeof url !== 'string') return;
+    if (!url.startsWith('https://') && !url.startsWith('http://') && !url.startsWith('mailto:')) return;
+    await shell.openExternal(url);
   });
 
   // Print / PDF
