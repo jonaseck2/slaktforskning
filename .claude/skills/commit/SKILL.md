@@ -23,18 +23,16 @@ When asked to commit, or when a commit is appropriate after completing work:
    - First line: concise summary (imperative mood, under 72 chars)
    - Blank line, then details if the change is non-trivial
    - End with: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
-6. Run `git commit` with the message via HEREDOC:
+6. Run `git commit` using **separate `-m` flags** for each paragraph (each `-m` becomes one paragraph in the commit message — no heredoc, no embedded newlines):
 
 ```bash
-git commit -m "$(cat <<'EOF'
-Summary line here
-
-Optional details here.
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
-EOF
-)"
+git commit \
+  -m "Summary line here" \
+  -m "Optional details here." \
+  -m "Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
+
+Heredoc syntax (`-m "$(cat <<'EOF' ... EOF)"`) **works in interactive Claude Code but corrupts under headless `claude -p`** (the agentic dev pipeline runs the agent in headless mode inside a devcontainer pod, and the bash wrapper there drops the heredoc terminator). Always use multiple `-m` flags so the same skill works in both modes.
 
 7. Verify with `git status` that the working tree is clean.
 
