@@ -15,7 +15,7 @@ CPU profiles tell you exactly which functions consumed the time, with sample cou
 
 ## Step 1: Instrument the Suspect Operation
 
-The profiling helper lives in `src/main/ipc.ts`. Add it if not already present:
+Add the profiling helper to whichever file owns the operation you're investigating — typically `src/main/db-worker.ts` for DB-touching channels (where the bottleneck almost always lives), or `src/main/ipc/<domain>.ts` for main-thread channels:
 
 ```typescript
 import * as inspector from 'inspector';

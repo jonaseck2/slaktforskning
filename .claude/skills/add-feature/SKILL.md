@@ -39,7 +39,7 @@ Follow this order. Each step builds on the previous.
 2. **Schema** — add/alter tables in `src/api/schema.ts`; new tables use `CREATE TABLE IF NOT EXISTS`; new columns on existing tables **must** use a migration guard block (see below)
 3. **API functions** — implement CRUD in `src/api/*.ts` (pure TS, `db: Database` as first arg, no Electron deps)
 4. **Unit tests** — write tests in `tests/unit/` using `createTestDb()` before wiring anything else
-5. **IPC handler** — register in `src/main/ipc.ts` using `wrapHandler(channel, fn)`
+5. **IPC handler** — register via `defineChannel()` in `src/shared/channels/<domain>.ts` (covers main-thread + worker dispatch automatically)
 6. **Preload** — expose on `window.api.*` in `src/preload/index.ts`
 7. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
 8. **Vue UI** — build component or extend view in `src/renderer/`
@@ -137,50 +137,11 @@ export function deleteThing(db: Database, id: string): boolean {
 }
 ```
 
-### Unit test pattern
+### Unit tests
 
-```typescript
-// tests/unit/things.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
-import { createThing, deleteThing, listThings } from '../../src/api/things';
+See `/test` for the unit-test template, the `createTestDb()` helper, the per-CRUD-function negative-case checklist (null returns, false returns), and the **assert DB state, not just return values** rule (the EVENT_PLACE column-name bug shows why fixture-mirrored assertions silently pass on broken transforms).
 
-let db: any;
-beforeEach(() => { db = createTestDb(); });
-
-describe('things', () => {
-  it('creates and retrieves a thing', () => {
-    const thing = createThing(db, { name: 'Test' });
-    expect(thing.name).toBe('Test');
-  });
-
-  it('delete returns false for nonexistent id', () => {
-    expect(deleteThing(db, 'nonexistent')).toBe(false);
-  });
-});
-```
-
-Run after writing: `npm test -- --coverage` — verify thresholds still pass (80% lines and functions on `src/api/`)
-
-### Critical: test DB state, not just return values
-
-For any feature involving transforms or imports, tests must assert the actual database state — not just the return value of the function. **Return-value-only tests can silently pass while the feature is broken.**
-
-```typescript
-// WRONG — only checks the return value
-it('imports places', () => {
-  const result = transformGenney(db, tables);
-  expect(result.places).toBeGreaterThan(0); // passes even if DB insert failed
-});
-
-// RIGHT — asserts DB state
-it('imports places into the database', () => {
-  transformGenney(db, tables);
-  expect(listPlaces(db).length).toBeGreaterThan(0); // fails if insert was skipped
-});
-```
-
-**Why this matters:** The EVENT_PLACE column name bug in Genney import was invisible to tests because the test fixtures mirrored the same wrong column names. Only a DB-state assertion (`listPlaces(db).length > 0`) would have caught it. Any test that mirrors assumptions from the code under test cannot catch mismatches between those assumptions and reality.
+Run after writing: `npm test -- --coverage` — coverage thresholds (80% lines and functions on `src/api/`) must still pass.
 
 ## IPC Layer (Steps 5-6)
 
@@ -244,104 +205,17 @@ See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and I
 
 ## MCP Layer (Step 7)
 
-MCP tools live in `src/mcp/createServer.ts` (not `server.ts` — that file only handles DB setup and UI tools). Use `registerTool()`, not the deprecated `tool()`:
-
-```typescript
-// src/mcp/createServer.ts — inside createMcpServer(db)
-server.registerTool('create_thing', {
-  description: 'Create a new thing',
-  inputSchema: {
-    name: z.string().describe('The name of the thing'),
-  },
-}, async ({ name }) => {
-  const result = things.createThing(db, { name });
-  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-});
-```
-
-Add corresponding tests in `tests/unit/mcp.test.ts` using the `call()` helper (InMemoryTransport pattern).
-
-Rules:
-- The tool is a **thin wrapper** — all logic stays in `src/api/`
-- Use `registerTool()` not `tool()` — the 4-arg `tool()` overload is deprecated
-- Add `.describe()` to every Zod parameter in `inputSchema`
-- Handle not-found: return `{ content: [{ type: 'text', text: 'Thing not found' }] }`
-- Use `JSON.stringify(result, null, 2)` for readable output
+See `/mcp-dev` for the full pattern: `registerTool()` template, prod vs dev server split (`src/mcp/createProdServer.ts` for genealogy workflow tools, `src/mcp/createDevServer.ts` for UI/chart/seed tools), Zod inputSchema with `.describe()`, the thin-wrapper rule (all logic stays in `src/api/`), and the `tests/unit/mcp.test.ts` `call()` helper. The MCP-tool prime directive (pass-through, never synthesize defaults) lives there too.
 
 ## Vue UI Layer (Step 8)
 
-### script setup pattern
+For modal patterns, the three-sheet layout, paneled-view checklist, list view + side panel pattern, the shared component catalog (`BaseSubPanel`, pickers, `DateInput`, `EventModal`, `EventList`, `CitationModal`, `CitationBadge`, `AppButton`/`AppBadge`/etc.), the design tokens, and the `@media print` rules — see `/frontend-design`. It is the canonical reference; do not duplicate that knowledge here. CLAUDE.md's component table also lists every existing component by props/emits so you can find what to reuse.
 
-```vue
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-// No local window declaration needed — window.api is typed globally via src/renderer/api.d.ts
-</script>
-```
+A11y patterns (combobox, focus trap, contrast tokens, screen-reader narration via `v-narrate`) live in `/a11y`.
 
-### Modal dialog (for create/edit forms)
+### Adding a new entity color identity
 
-Use `<BaseSubPanel>` from `src/renderer/components/modals/`. It owns the overlay, Escape key, focus trap, entity-colored header, and TTS narration. **Never use `BaseModal` directly** — it's the internal overlay primitive that BaseSubPanel wraps. Set `entity-type` on the panel; the header background, save button color, and accent border are all driven by `[data-entity="<type>"]` aliases in `shared.css`. Don't apply colors via inline `:style`.
-
-```vue
-<BaseSubPanel
-  entity-type="thing"
-  :title="$t('things.addTitle')"
-  :mode="mode"
-  @cancel="$emit('cancel')"
-  @save="handleSave"
-  @close="$emit('close')"
->
-  <div class="ep-fields">
-    <div class="ep-field">
-      <span class="ep-field-label">{{ $t('things.name') }}</span>
-      <input class="ep-input" v-model="form.name" />
-    </div>
-  </div>
-</BaseSubPanel>
-```
-
-```typescript
-import BaseSubPanel from './BaseSubPanel.vue';
-```
-
-If your new entity warrants its own color identity, add it to `EntityType` in `entityMeta.ts`, define `--entity-{name}-text/-bg` (light in `tokens.css`, dark + HC overrides in `shared.css`), and add a `[data-entity="{name}"]` remap rule. The `wcagContrast.test.ts` will catch any contrast failures across the 9 (theme × mode) combinations automatically.
-
-### List view pattern (PersonsView, RelationshipsView, SourcesView)
-- Header + "Add" button opens modal
-- Count label: `{{ $t('persons.showingOf', { shown: items.length, total }) }}`
-- `<table>` with clickable rows navigating to `router.push('/things/:id')`
-- Delete button uses `@click.stop` to prevent row navigation
-- **Infinite scroll** via IntersectionObserver on a `<div ref="sentinel" class="scroll-sentinel">` after the table — **never use a "Load More" button**
-- Backend must use a `listPage(limit, offset)` query that JOINs all display data in one SQL statement — no per-row IPC calls (N+1 anti-pattern)
-- See `frontend-design` skill → "Data loading pattern" for the full IntersectionObserver template
-
-### List View + Side Panel pattern (universal — there are no DetailView components)
-
-Every entity (persons, relationships, sources, places, groups, research tasks) follows this pattern. The `:id` route opens the same list view with the panel pre-selected — never a separate page.
-
-- **Left pane:** list/table/map/tree of entities with `selectedId` highlighted
-- **Drag handle:** `<div class="panel-drag-handle">` bound to `usePanelResize({ storageKey, maxWidthRatio })`
-- **Right pane:** `<EntityPanel :entity-id="selectedId" @close="closePanel" />` rendered when `panelOpen && selectedId`
-- **Reopen button:** small "▶" affordance shown when the panel is closed
-- **localStorage keys:** `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`, plus per-section `<entity>-section-<name>-open`
-- **Routing:** `/entity` shows the list; `/entity/:id` shows the same view with the panel pre-selected. Drive `selectId(id)` from `route.params.id` in both `onMounted` and `onActivated` (for `<keep-alive>` round-trips).
-- **Cross-entity navigation:** clicking a related entity inside a panel routes to that entity's list view (which auto-opens its panel) — never inline-edit across entity types.
-- **Editing:** all create/edit happens in modals (`<EntityModal mode="standalone">`) opened from inside the panel. Inline auto-save fields are limited; most edits go through the modal.
-
-Reference panels live at `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask}Panel.vue`.
-
-### Shared components to reuse
-- `BaseModal` — modal shell with Escape key close. Click-outside does NOT close. **Always use this** — never write `div.modal-overlay > div.modal` directly. Import from `'../components/BaseModal.vue'`.
-- `PersonPicker` — searchable autocomplete for selecting a person; has `width: 100%` so it fills any container
-- `PlacePicker` — searchable autocomplete for selecting/creating a place; has `width: 100%` so it fills any container
-- `SourcePicker` — searchable autocomplete for selecting/creating a source; inline create-new; replaces source dropdowns
-- `DateInput` — single monospace `YYYY-MM-DD` text field with embedded calendar icon, plus a `date_type` select (Exact/About/Before/After/Between/Calculated/Unknown) and an `original` text row for verbatim source date strings. Accepts partial dates (`1842`, `1842-03`). Calendar icon opens the native picker for full dates. **Do not** add separate Y/M/D fields — the single field is the canonical pattern (matches the native `<input type="date">` look used for citation `date_accessed`).
-- `SimpleDateInput` — same single-field-with-embedded-calendar style for plain `YYYY-MM-DD` v-model values without `date_type`
-- `EventModal` / `EventList` — event CRUD on `BaseSubPanel`; EventList exposes `openAddForm()` via `defineExpose`; event rows are clickable (no Edit button)
-- `CitationModal` — attach a source citation to any entity (props: `sourceId?`, `sourceTitle?`, `eventId?`, `personId?`, `relationshipId?`, `placeId?`, `editingCitation?`, `mode?`); inline `SourcePicker` when no source preset
-- `CitationBadge` — green count / yellow "Unsourced" badge (props: `count: number`); use everywhere an entity may be cited; load count via `window.api.citations.forPerson/forRelationship/forPlace/forEvent`
+If your new entity warrants its own color: add it to `EntityType` in `entityMeta.ts`, define `--entity-{name}-text/-bg` (light in `tokens.css`, dark + HC overrides in `shared.css`), and add a `[data-entity="{name}"]` remap rule. `tests/unit/wcagContrast.test.ts` will catch any contrast failures across the 9 (theme × mode) combinations automatically.
 
 ### Error handling in async operations
 
@@ -505,50 +379,12 @@ Every new UI feature should be evaluated against the number of user actions (cli
 
 ## UI Verification (Step 9 — REQUIRED for any UI change)
 
-**Unit tests alone do not verify UI changes.** They don't cover modal lifecycle, Vue Router behavior, or visual correctness. Before committing, verify in the running app.
+**Unit tests alone do not verify UI changes** (they miss modal lifecycle, route remount on key change, ref timing, async-gated rendering, event-bubble overlap). Before committing, verify in the running app.
 
-### Headless / pipeline mode (no display, no interactive user)
+- Headless / CI: `npx playwright test --project=gui-xxx`
+- Interactive: ask the user to launch `npm start` (or `./.devcontainer/dev-debug.sh` for CDP), then drive the app with the `slaktforskning-dev` MCP tools (`ui_navigate`, `ui_screenshot`, `ui_click`, `ui_get_dom`).
 
-If you are running as a headless agent (Kubernetes pod, CI, no window server), skip the UI server approach entirely and use E2E tests:
-
-```bash
-npx playwright test --project=gui-xxx
-```
-
-Playwright runs headless and covers the full IPC → Vue rendering → UX stack. This is sufficient for pipeline verification. Do **not** try to launch `./.devcontainer/dev-debug.sh` or call `ui_screenshot` — neither will work without a display.
-
-### Interactive mode (local development with a running app)
-
-Ask the user to run `./.devcontainer/dev-debug.sh` from their terminal (cannot be launched from Claude Code's shell on macOS — needs window server access). Verify with:
-```bash
-curl -s http://127.0.0.1:19241/status   # UI server running?
-```
-
-### Verification loop via UI server (interactive only)
-```bash
-# 1. Seed test data via MCP data tools (create_person, add_event, etc.)
-# 2. Navigate to the view
-curl -s -X POST http://127.0.0.1:19241/navigate -d '{"path":"/your-route"}'
-# 3. Screenshot → visually inspect
-curl -s -X POST http://127.0.0.1:19241/screenshot | python3 -c "
-import sys,json,base64; d=json.load(sys.stdin)
-open('/tmp/verify.png','wb').write(base64.b64decode(d['data']))"
-# 4. Interact (click buttons, check modal opens)
-curl -s -X POST http://127.0.0.1:19241/click -d '{"selector":"button.btn-add"}'
-# 5. Screenshot again to confirm result
-```
-
-### What this catches that unit tests miss
-- Modals opening but immediately closing (route key change remounts component)
-- Form fields not pre-filled (ref timing issues with `watch` vs `onMounted`)
-- Click handlers on wrong element (event bubbling through overlays)
-- Autocomplete dropdowns not appearing (gazetteer/source data not loaded)
-- Component rendering conditional on async data (`v-if="person"` gating)
-
-### Notes
-- MCP data tools work without the Electron app — they go straight to SQLite
-- UI server and the app share the same SQLite DB — data seeded via MCP is immediately visible
-- **Never commit UI changes without visual verification** — see `/commit` skill
+See `/test` for the full E2E architecture, the `AppDriver` API, and the common pitfalls list. See `/electron-dev` for the launch + native-MCP-vs-CDP decision tree. See `/commit` for the rule that UI changes must NOT be committed without visual verification.
 
 ## Before implementing a non-trivial feature
 

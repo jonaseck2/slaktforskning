@@ -196,10 +196,13 @@ npm start
 
 ## Adding New IPC Channels
 
-**DB-touching channels** must be registered in two places:
-1. `src/main/ipc/<domain>.ts` — `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))`
-2. `src/main/db-worker.ts` — add `'foo:bar': (arg) => api.createFoo(getDb(), arg)` to the `handlers` dispatch table
+Channels are defined once via the typed registry in `src/shared/channels/<domain>.ts`. One `defineChannel()` call covers main-thread `wrapHandler` registration AND worker dispatch automatically. The preload (`src/preload/index.ts`) must still be edited manually.
 
-The unit test `tests/unit/ipc-worker-coverage.test.ts` will fail if you add a `wrapHandler` call without a matching worker handler (or without explicitly listing the channel in `MAIN_THREAD_ONLY_CHANNELS`).
+For the full pattern (registry → preload → static API stub → coverage tests), see the `/add-feature` skill's IPC Layer section.
 
-**Electron-only channels** (dialog, shell, fs): register in `wrapHandler` only — add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in the coverage test.
+Coverage tests catch any miss:
+- `tests/unit/ipc-worker-coverage.test.ts` — every `wrapHandler` resolves to a worker handler, registry entry, or `MAIN_THREAD_ONLY_CHANNELS`
+- `tests/unit/preload-coverage.test.ts` — every registry channel is exposed on `window.api`
+- `tests/unit/static-api-coverage.test.ts` — every registry channel has a stub in the static SPA api
+
+**Main-only channels** (dialog, shell, printToPDF, fs ops) use `defineChannel({ thread: 'main', ... })` or — when Electron-specific APIs aren't reachable from shared code — register manually via `wrapHandler` in `src/main/ipc/*.ts` and add the name to `MAIN_THREAD_ONLY_CHANNELS`.

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.172.7 — Agent tooling: split CLAUDE.md into path-scoped rules
+
+- chore(agent): introduced `.claude/rules/` with six path-scoped rule files (`api.md`, `ipc.md`, `renderer.md`, `mcp.md`, `tests.md`, `build.md`). Each has `paths` frontmatter so its content loads only when files matching the pattern are read, per Claude Code's documented best practice. Migrated layer-specific reference material out of root CLAUDE.md (Domain Types, Database Schema, IPC Bridge, Vue Component Patterns, Testing, MCP Server, Build Configuration) and out of the napkin (drag/maps/static-SPA gotchas, security-hook false positive, vue-tsc OOM, type-check filtering).
+- chore(agent): trimmed root CLAUDE.md from 1166 → 115 lines (-90%) and napkin from 182 → 29 lines (-84%). Always-loaded session context dropped from 1348 → 144 lines (-89%). Removed self-references to `CLAUDE.md`, the redundant Skills/install-snippet section (project plugins are managed via `.claude/settings.json` `enabledPlugins`), and the Approach section (every line duplicated the system prompt).
+- chore(agent): three skills (`a11y`, `gazetteer-testing`, `reports`) were silently failing to load because they lived as flat `.md` files instead of `<name>/SKILL.md` directories. Moved them into directory form. Added missing frontmatter to `reports` and `sqlite-finalize` so their descriptions register correctly in the session reminder. Removed `frontend-design-workspace/` eval cruft (77 files left over from skill iteration testing).
+- chore(agent): deduplicated `add-feature` skill (593 → 429 lines) — Vue UI section now defers to `/frontend-design`, MCP section to `/mcp-dev`, test section to `/test`. Fixed the BaseModal/BaseSubPanel self-contradiction. Updated stale `src/main/ipc.ts` and `src/mcp/createServer.ts` paths in `add-feature`, `mcp-dev`, `electron-dev`, `performance-profiling` to match the registry-driven IPC layer and the `createProdServer.ts` / `createDevServer.ts` split.
+- chore(agent): napkin reduced to four genuinely transient items (Electron-launch env caveat, two performance diagnostics, two design heuristics). Everything else either migrated into a skill/rule or removed as obsolete (chart export rules, IPC channel pattern, plan-path convention, GPG-signing workaround, etc.). Documented the `oss-*` skills as maintainer-bot-only so they're not confused for developer-facing tools.
+
 ## v0.172.6 — Stop quality checks from blocking the worker thread post-import
 
 - fix(perf): after importing a large GEDCOM, the renderer's media/person/places list IPCs were queued behind an 11-second `runAll` of quality checks, so the views mounted to empty states until the checks finished. Three orthogonal regressions stacked on top of each other since v0.171.0:

@@ -1,3 +1,8 @@
+---
+name: sqlite-finalize
+description: Finalize SQLite prepared statements to avoid WASM heap leaks in node-sqlite3-wasm. Use when writing or reviewing any code that calls db.prepare(), especially bulk import paths, or when investigating "out of memory" errors after large imports. Covers queryOne / queryAll / runSql helpers and the withStatementCache pattern.
+---
+
 # SQLite Statement Finalization
 
 ## The Problem

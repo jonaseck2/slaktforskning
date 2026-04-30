@@ -166,7 +166,7 @@ Use ToolSearch to find and call the `slaktforskning` MCP tools directly:
 **Production tools** live in `src/mcp/createProdServer.ts`. **Dev-only tools** live in `src/mcp/createDevServer.ts` (which imports and extends prod). Use `registerTool()`, not the deprecated `tool()` overload:
 
 ```typescript
-// src/mcp/createServer.ts — inside createMcpServer(db)
+// src/mcp/createProdServer.ts — inside createMcpServer(db)
 server.registerTool('tool_name', {
   description: 'Human-readable description',
   inputSchema: {
@@ -192,9 +192,9 @@ server.registerTool('tool_name', {
 ### End-to-end checklist for a new tool:
 1. Implement the function in `src/api/*.ts`
 2. Write unit tests in `tests/unit/`
-3. Add the MCP tool in `src/mcp/createServer.ts`
-4. Add the IPC handler in `src/main/ipc.ts`
-5. Add to preload in `src/preload/index.ts`
+3. Add the MCP tool in `src/mcp/createProdServer.ts` (or `createDevServer.ts` for dev-only tools)
+4. Add the IPC channel via `defineChannel()` in `src/shared/channels/<domain>.ts`
+5. Add the matching `window.api.<domain>.<method>` line manually to `src/preload/index.ts` (and a stub in `src/static/static-api.ts`)
 6. Test: `npm test && npx playwright test`
 
 ## Current MCP Tools

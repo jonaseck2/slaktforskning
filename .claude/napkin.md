@@ -3,181 +3,27 @@
 ## Curation Rules
 - Re-prioritize on every read.
 - Keep recurring, high-value notes only.
+- If guidance now lives in a path-scoped rule (`.claude/rules/`) or a skill, REMOVE it from here.
 - Max 10 items per category.
-- Each item includes date + "Do instead".
+- Each item includes date + concrete action.
 
-## Execution & Validation (Highest Priority)
+## Execution & Validation
 
-1. **[2026-04-17] Never commit UI changes without verifying in the running app**
-   Do instead: ask the user to run `./.devcontainer/dev-debug.sh`, verify CDP with `./.devcontainer/verify-cdp.sh`, then use Chrome DevTools MCP to interact and screenshot before committing.
+1. **[2026-04-17] Cannot launch Electron GUI from Claude Code's background shell on macOS**
+   Ask the user to launch the app from their terminal. Use `./.devcontainer/verify-cdp.sh` to confirm CDP is active. Never `pkill -f Electron` — it kills the user's app. `setsid` doesn't exist on macOS, so don't try to detach Electron from the terminal either.
 
-2. **[2026-04-17] Cannot launch Electron GUI from Claude Code's background shell on macOS**
-   Do instead: ask the user to launch the app from their terminal. Use `./.devcontainer/verify-cdp.sh` to confirm CDP is active. Never `pkill -f Electron` — it kills the user's app.
+## Performance & Symptoms
 
-3. **[2026-04-03] Bump `package.json` version when completing a milestone**
-   Do instead: at the end of each roadmap version, update `"version"` in `package.json` and include it in the final commit. Feature → minor bump, fix → patch bump.
+1. **[2026-04-30] Empty UI right after import = worker thread blocked by checks, not missing data**
+   Symptom: Media/Persons/Tree show empty states; last log is `[worker/checks] runAll #N: Nms → M raw`. The renderer's `media:listPage`, `persons:list`, `db:getSetting('default_person_id')` IPCs are queued behind running checks on the same worker thread. Don't go hunting for data corruption — `sqlite3 export-import/<file>.db "SELECT COUNT(*)..."` will show the rows are there. The `setImmediate` between checks doesn't help if individual checks are slow; yields must be inside the hot loops (every ~200 iterations via `await new Promise(r => setImmediate(r))`). The three gazetteer-aware checks (`checkGazetteerMatchQuality`, `checkPlaceMissingComma`, `checkPlaceNameNoRegion`) are the usual offenders. See `/performance-profiling` for the full fix shape and the regression tripwires in `tests/unit/checks-perf.test.ts`.
 
-4. **[2026-03-15] GPG signing fails in non-interactive agent context**
-   Do instead: if commit fails with "Bad PIN", tell user and suggest `git config --local commit.gpgsign false`.
-
-5. **[2026-04-17] Adding `const` vars inside handler scope can shadow outer declarations**
-   Do instead: check for existing same-name `const` later in the function before adding new ones.
-
-6. **[2026-04-12] `npx tsc --noEmit` errors are all in node_modules**
-   Do instead: filter with `grep "^src/"` to find actual source errors.
-
-## Shell & Command Reliability
-
-1. **[2026-04-20] Never use `cd /path/to/.worktrees/... && git <cmd>` from the controller**
-   Do instead: always use `git -C /abs/path/to/worktree <cmd>`. Compound `cd && git` forms trigger repeated approval prompts and are forbidden.
-
-2. **[2026-04-03] Security hook false-positive on SQLite Database method**
-   Do instead: the project hook flags the SQLite `Database.exec` method name as potential injection. Use `db.prepare('...').run([])` in source code instead — works identically. Avoid writing the flagged string in plan files and commit messages too.
-
-3. **[2026-04-17] `setsid` doesn't exist on macOS**
-   Do instead: don't try to detach Electron from terminal. Ask the user to run it.
-
-## Build & Performance
-
-1. **[2026-04-24] New IPC channels need TWO registrations — wrapHandler + db-worker dispatch table**
-   Do instead: add `'foo:bar': (arg) => api.fn(getDb(), arg)` to `handlers` in `src/main/db-worker.ts`, AND `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))` in the domain IPC file. Electron-only channels (dialog, shell, fs) go in wrapHandler only — add to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`. The coverage test catches misses immediately.
-
-2. **[2026-04-24] vite.worker.config.ts must replicate all plugins AND emit the same externalized paths as vite.main.config.ts**
-   Do instead: both configs' `externalize-gazetteers` plugin MUST return `./gazetteers/<file>.json` from `resolveId`. Don't recompute a relative path from the importer — that emits `../../src/api/place-gazetteers/data/...` which happens to work in dev (src/ lives next to .vite/build/) but fails in the packaged app because src/ is not shipped inside app.asar. Symptom: every view toasts "Could not load data" because `checks:runAll` throws when the worker requires a gazetteer JSON. vite.main.config.ts owns the `closeBundle` that copies JSONs into `.vite/build/gazetteers/`; the worker just has to point at the same destination. Keep the WASM copy plugin in both configs too.
-
-3. **[2026-04-26] E2E tests run against the packaged Electron binary, never `electron-forge start`**
-   Do instead: `npm run test:e2e` runs `npm run package` first via `pretest:e2e`, then Playwright spawns the binary from `out/Släktforskning-{platform}-{arch}/...`. macOS inner binary is lowercase `slaktforskning` (follows `executableName` in forge.config.ts), not `Släktforskning`. `tests/e2e/fixture.ts` `packagedBinaryPath()` resolves it. Dev-mode launch is forbidden — parallel Vite servers caused renderer stalls (forge#3198 + chunk-compile contention). The suite went from 22 flaky failures in 14.6 min → 5 stable passes in 15 sec by switching.
-
-4. **[2026-04-18] Gazetteer JSON files (~40 MB) must be externalized from Vite build**
-   Do instead: keep the `externalize-gazetteers` plugin in both `vite.main.config.ts` and `vite.worker.config.ts`. New gazetteer JSON files in `place-gazetteers/data/` are automatically externalized.
-
-5. **[2026-04-27] `npx vue-tsc --noEmit` OOMs on default 4 GB Node heap**
-   Do instead: run `NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0`. There's no `typecheck` script in package.json — vue-tsc isn't part of the normal workflow, but when used for verification it needs 8 GB. There are pre-existing type errors in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`, `src/api/places.ts`, `src/api/undo.ts`, plus `import.meta.env`/api-shape errors throughout views — these are real but not introduced by recent edits, ignore unless they're in your touched files.
-
-6. **[2026-04-30] Empty UI right after import = worker thread blocked by checks, not missing data**
-   Symptom: Media/Persons/Tree show empty states; last log is `[worker/checks] runAll #N: Nms → M raw`. The renderer's `media:listPage`, `persons:list`, `db:getSetting('default_person_id')` IPCs are queued behind the running checks on the same worker thread. Don't go hunting for data corruption — `sqlite3 export-import/<file>.db "SELECT COUNT(*)..."` will show the rows are there. The `setImmediate` between checks doesn't help if individual checks are slow; yields must be inside the hot loops (every ~200 iterations via `await new Promise(r => setImmediate(r))`). The three gazetteer-aware checks (`checkGazetteerMatchQuality`, `checkPlaceMissingComma`, `checkPlaceNameNoRegion`) are the usual offenders — they each iterate ~thousands of places through `resolvePlace`. See the performance-profiling skill's "Worker contention" pattern for the full fix shape and the regression tripwires in `tests/unit/checks-perf.test.ts`.
-
-7. **[2026-04-30] Resolver caches must key on root identity (WeakMap), not array identity**
-   Do instead: in `src/api/place-gazetteers/resolver.ts`, the per-root `perGazetteerNameDepth = WeakMap<GazetteerNode, …>` survives `loadGazetteers` deep-cloning the gazetteer array. An array-identity cache (the `cachedGazRoots` shape introduced by e53c4776 and reverted in this session's fix) misses on every `loadGazetteers` call because the array is fresh each time. Two-tier: per-root WeakMap for the heavy walk + optional per-array WeakMap for the merge step. Don't merge per-gazetteer cache logic with `nameIndexCache` — that one keys on `Gazetteer` correctly because it uses `normalizeForGazetteer` (per-locale rules); the depth-map cache uses `normalizeUniversal` and is locale-agnostic.
-
-## Static SPA & Iframe Preview
-
-1. **[2026-04-28] Electron `protocol.handle` chokes on U+FFFD chars in response body**
-   Do instead: don't use `protocol.handle` to serve content that may contain the Unicode REPLACEMENT character (U+FFFD). Electron's internal Headers ByteString conversion throws `TypeError: Cannot convert argument to a ByteString — character at index N has a value of 65533` from `electron/js2c/browser_init`. The dist-static SPA bundle has a literal U+FFFD as a fallback glyph (used in `String.fromCodePoint` paths) which makes this trigger every time. Use a Blob URL instead — see next item.
-
-2. **[2026-04-28] `<iframe srcdoc>` silently falls back to parent URL when oversized**
-   Do instead: don't put HTML over ~1 MB into `srcdoc`. Chromium silently rejects oversized attribute values and the iframe falls back to loading its parent renderer's URL — looks like full-app inception inside the iframe, no error in console. Use a Blob URL: `URL.createObjectURL(new Blob([html], { type: 'text/html' }))` and bind to `iframe.src`. Revoke the previous Blob URL on each refresh and on view unmount so memory stays bounded.
-
-3. **[2026-04-28] file:// has no CORS in Chromium — `img.crossOrigin = 'anonymous'` blocks the load**
-   Do instead: when loading an image into a canvas for cropping/encoding, only set `img.crossOrigin = 'anonymous'` if `src` doesn't start with `file:`. file:// sources fail to load entirely with the attribute set ("Access to image at 'file://…' from origin 'null' has been blocked by CORS policy"). Without the attribute, the canvas is tainted by file:// images, so wrap `canvas.toDataURL()` in try/catch and fall back to returning the original src — avatars then render uncropped instead of breaking. Hits exported static sites opened directly via file://.
-
-4. **[2026-04-28] Static SPA bundle reuses renderer views, so it pulls in their dependencies**
-   Do instead: any composable that touches `window.api` from a top-level call site (component setup, module body) needs an optional-chain or guard, because the static SPA's bundled renderer views (PersonsView etc.) load its lazy routes and will instantiate components like PersonPicker — and at that point `window.api` may be undefined (`useDefaultPerson` and `cropImage`-using `chartData.resolvePersonPhotoUrl` both bit us). The renderer's own `App.vue` `onMounted` should also use `?.` for `db.onSwitched`, `undo.onPerformed`, `undo.onChanged`, `onDataChanged` so a bad context doesn't tank the whole renderer.
-
-5. **[2026-04-28] Preview iframe can't reach local media — inline a thumbnail subset**
-   Do instead: the website-export preview iframe runs in a Blob URL origin and can't load `file://` media paths. `website:buildPreviewHtml` resizes the first 24 image media to 400px JPEGs @ 70% via Electron's `nativeImage` (5 MB total budget), bakes them into `snapshot.meta.previewMediaDataUrls`, and trims `snapshot.media`/`mediaLinks`/`mediaRegions` to those IDs so the gallery doesn't scroll past inlined data into 404s. `static-api.media.readAsDataUrl` checks the inlined map first, falls through to relative `./media/full/...` for the actual export.
-
-## MCP Server
-
-1. **[2026-04-03] MCP server fails to start if `path` is not imported in server.ts**
-   Do instead: verify `import path from 'node:path'` is present at the top of `src/mcp/server.ts`. Test with `echo '{"jsonrpc":"2.0","id":1,"method":"initialize",...}' | npx tsx src/mcp/server.ts`.
-
-2. **[2026-04-03] Use MCP tools (not one-off tsx scripts) for DB operations in a session**
-   Do instead: check that slaktforskning MCP server is connected and use its tools. If the server shows "failed" in Claude Code, fix the crash and ask user to reconnect.
-
-## Domain Behavior Guardrails
-
-1. **[2026-04-17] Component tests break when removing UI elements**
-   Do instead: update component tests in the same commit when changing component structure.
-
-2. **[2026-04-17] `usePlaceResolver` defaults to empty gazetteers on new databases**
-   Do instead: when `gazetteer_config` is null, default to all bundled gazetteers (same as GazetteersView).
-
-3. **[2026-04-12] Leaflet icon fix must happen at module level**
-   Do instead: BaseMap.vue handles this centrally — don't duplicate in consuming components.
-
-## Chart PDF/SVG Export
-
-1. **[2026-04-24] Chart PDFs: use main window `exportPdf`, not a hidden BrowserWindow**
-   Do instead: call `window.api.print.exportPdf(filename, landscape)` — it renders the main window with print CSS, giving exactly what's shown in the preview. The hidden BrowserWindow approach (serialize SVG → temp file → load in hidden window → printToPDF) produces empty PDFs because CSS custom properties don't resolve in the isolated window.
-
-2. **[2026-04-24] SVG exports: never add titles/headings — preserve exactly the raw SVG**
-   Do instead: call `buildExportSvgString(svg)` only. Never `wrapWithTitle()` — it injects a `<text>` node that extends outside the viewBox and clips the chart content.
-
-3. **[2026-04-24] Chart print fit-to-page: add `chart-print` class + CSS, not width constraints**
-   Do instead: add `chart-print` class to the chart `.print-preview` div. In `@media print`: `.chart-print` → flex center, `height: 100vh`, `margin: 0`. `:deep(svg)` → `max-width: 100%; max-height: 100vh; width: auto; height: auto`. Landscape charts also need `preview-landscape` class for the correct mm width in the preview.
-
-4. **[2026-04-24] Chart orientation mapping: descendant + hourglass → landscape, rest → portrait**
-   Do instead: `const landscape = tab === 'descendantChart' || tab === 'hourglassChart'`. Timeline, pedigree, and fan chart are portrait. `preview-landscape` on the div only for landscape charts.
-
-## Chart Architecture
-
-1. **[2026-04-11] Outline placeholders: inject unconditionally, layout treats them identically**
-   Do instead: inject father+mother+child+spouse outlines for the selected person unconditionally. Layout algorithm sees N parents, M children, K spouses and positions them uniformly. Selected person ≠ focal person — independent concepts.
-
-2. **[2026-04-12] All three charts share TreePerson + injectOutlines()**
-   Do instead: all charts convert input to TreePerson then call `injectOutlines()`. Placeholder extraction is identical across charts. Don't duplicate — it lives in `hourglass-tree.ts`.
-
-3. **[2026-04-12] Pedigree spouse outlines: reserve leaf slot, place tight**
-   Do instead: reserve a leaf slot during `assignLeafSlots()` to push subsequent boxes down. Place the outline at `selBox.y + BOX_H + V_GAP` (tight spacing), not at the full ROW_H slot position.
-
-## Drag/Mouse Interactions
-
-1. **[2026-04-18] Window listeners for drag, never element listeners**
-   Do instead: attach mousemove/mouseup to `window` on mousedown. Kill all `pointer-events` on the container during drag via CSS class (`!important` + `*` selector).
-
-2. **[2026-04-18] Never reset reactive state inside listener cleanup**
-   Do instead: keep `clearWindowListeners()` pure — only removes event listeners. Use a separate `resetDragState()` for refs.
-
-3. **[2026-04-18] Screen pixels during drag, fractions only on save**
-   Do instead: use raw `e.clientX/Y` deltas for drag math. Cache display dimensions at drag start. Convert to fractional coords only on mouseup.
-
-## Data Entry UX
-
-1. **[2026-04-10] Count actions before designing data entry UI**
-   Do instead: count total user actions (clicks, selections, text entries) for the full workflow before implementing. Key patterns: combined entity creation, field pre-fill from context, session memory for repeated selections, "Save & Add Another".
-
-2. **[2026-04-10] Use `<details>` for optional form sections, not always-visible fields**
-   Do instead: wrap optional fields in `<details class="birth-section">`. Use `open` attribute when the section is likely needed.
+2. **[2026-04-30] Resolver caches must key on root identity (WeakMap), not array identity**
+   In `src/api/place-gazetteers/resolver.ts`, the per-root `perGazetteerNameDepth = WeakMap<GazetteerNode, …>` survives `loadGazetteers` deep-cloning the gazetteer array. An array-identity cache (the `cachedGazRoots` shape introduced by e53c4776 and reverted) misses on every `loadGazetteers` call because the array is fresh each time. Two-tier: per-root WeakMap for the heavy walk + optional per-array WeakMap for the merge step. Don't merge per-gazetteer cache logic with `nameIndexCache` — that one keys on `Gazetteer` correctly because it uses `normalizeForGazetteer` (per-locale rules); the depth-map cache uses `normalizeUniversal` and is locale-agnostic.
 
 ## Research & Design
 
 1. **[2026-04-10] Mine the user's own data files for real-world patterns**
-   Do instead: before designing a feature that processes text or data, grep the user's GEDCOM files in `export-import/` for actual examples.
-
-2. **[2026-04-10] Prefer presentation enrichment over stored derived data**
-   Do instead: compute at render time in a pure function. Don't add columns/tables for derived data that needs sync. See `src/api/source-linker.ts`.
-
-## UI Conventions
-
-1. **[2026-04-25] List-view padding goes on the sheet, never on each child**
-   Do instead: every list-view sheet (PersonsView/PlacesView/MediaView/Groups/Tasks/Relations) has `display:flex; flex-direction:column; overflow:hidden; padding:var(--space-lg)`. The body wraps in a single `<x>-list-content` div with `flex:1; min-height:0; overflow-y:auto`. Header + FilterChips are direct children, no wrappers — `<FilterChips>` is the bar, never wrap it. Header→content gap comes from shared `.header { margin-bottom: 16px }` only — do not redefine. Never re-introduce per-child `padding: lg lg 0` on the header or `padding: 0 lg lg` on the content area.
-
-2. **[2026-04-25] All entity panels share one shell — `usePanelSections`, `.panel-header-content`, `.panel-close-btn`**
-   Do instead: every panel (Person/Place/Source/Relationship/Group/ResearchTask/Media/Report) follows the canonical shell from the `frontend-design` skill. Section state always uses `usePanelSections(prefix, defaults, staticDefaults?)` — never inline `localStorage` calls or `reactive({...})` with custom toggle functions. Header layout is `<div class="panel-header"> <div class="panel-header-content"> {title + badge} </div> <button class="panel-close-btn">×</button> </div>` so the close button can stretch full height; padding lives on `.panel-header-content` (`var(--space-md) var(--space-lg)`), NOT on `.panel-header`. Sections use `.panel-section { padding: 0 var(--space-lg); border-bottom: 1px solid var(--surface-border-subtle) }`. Never use `var(--space-md)` for section horizontal padding (was MediaPanel's outlier). Section order: main entity → linked entities → media → notes → quality (last).
-
-3. **[2026-04-25] Two-tier empty state system — AppEmptyState vs SectionEmpty**
-   Do instead: full-view list empties (PersonsView, SourcesView, etc.) → `AppEmptyState` with icon + title + description + action button (200px min-height). Sub-section empties inside detail views/panels → `SectionEmpty` (one-line muted text + optional underlined action link). Never use raw `<div class="empty-hint">` — replace with `SectionEmpty`. Wire `actionLabel` only when a direct mechanism exists in the same component (`openAddForm()`, `attach()`) — omit when the parent SectionHeader already has the action button.
-
-4. **[2026-04-25] Empty state icons must match the nav bar icon for the same entity type**
-   Do instead: 👤 Persons, 🔗 Relationships, 📚 Sources, 📍 Places, 📷 Media, 🏷️ Groups, 🔬 ResearchTasks, ⚠️ Quality (all states — don't swap to ✅ on "no issues"), 🖨️ Reports, 🌳 Visualization/Tree (no nav icon), 🗺️ Map (no nav icon). Full-view list views get icon + description + action button; filtered/scoped empty states get icon + title only.
-
-5. **[2026-04-25] Map views: never replace the map with a full empty state**
-   Do instead: always render `BaseMap` when not loading. Show a small floating pill overlay (`position: absolute; top: var(--space-xl); left: 50%; transform: translateX(-50%); z-index: 10`) with the "No places" text and an optional `router-link` action. Apply `pointer-events: auto` to the overlay and `white-space: nowrap`.
-
-6. **[2026-04-22] Paneled views require 5 explicit steps — read the frontend-design skill**
-   Do instead: when building any view with a side panel, invoke `/frontend-design` first and follow the 5-step checklist. Steps that get missed without it: (1) add route to PANELED_ROUTES in App.vue, (2) view root is flex row height:100%, (3) left sheet gets flex:1 + shadow, (4) drag handle + usePanelResize composable between sheets with panel on RIGHT, (5) panel component needs width:100% height:100% font-size:var(--font-sm) and sections need padding:0 var(--space-lg).
-
-7. **[2026-04-08] Import/export option cards use `.io-group`/`.io-groups`, never `.section`**
-   Do instead: wrap import/export option cards in `<div class="io-groups"><div class="io-group">`.
-
-8. **[2026-04-08] Import/export text follows strict conventions**
-   Do instead: tab names short ("Genney"), box headings prefix "Import"/"Export", descriptions one sentence third-person present ("Imports…"), no arrows, no ellipsis on buttons.
-
-## User Directives
-
-1. **[2026-04-19] All plan and spec files go under `docs/plans/` — never `docs/superpowers/` or `.claude/plans/`**
-   Do instead: design specs → `docs/plans/YYYY-MM-DD-topic-design.md`. Implementation plans → `docs/plans/YYYY-MM-DD-topic.md`. Archived → `docs/plans/archive/`. Override superpowers skill defaults every time.
+   Before designing a feature that processes text or data, grep the user's GEDCOM files in `export-import/` for actual examples.
 
 2. **[2026-03-15] Keep it simple — avoid unnecessary complexity**
-   Do instead: prefer simple solutions. WASM-based SQLite eliminated all native module rebuild complexity.
+   Prefer simple solutions. WASM-based SQLite eliminated all native module rebuild complexity.
