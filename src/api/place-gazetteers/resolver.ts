@@ -1,30 +1,86 @@
 import type { Gazetteer, GazetteerNode, PlaceResolveResult, BoundaryResolveResult } from './types';
 
-function normalize(name: string): string {
-  return name
+/**
+ * Universal normalization — language-agnostic. Lowercase, trim, collapse
+ * whitespace, strip parens (replace `(`/`)` with space), and treat hyphens
+ * as equivalent to spaces so `Husby-Rekarne` and `Husby Rekarne` compare
+ * equal. No language-specific suffix/prefix vocabulary lives here — that
+ * belongs to per-gazetteer rules (see `normalizeForGazetteer`).
+ */
+function normalizeUniversal(s: string): string {
+  return s
     .toLowerCase()
-    .trim()
+    .replace(/[()]/g, ' ')
+    .replace(/-/g, ' ')
     .replace(/\s+/g, ' ')
-    // Swedish
-    .replace(/\s*(församling|socken|kommun|stad|härad|län|distrikt|pastorat)$/i, '')
-    // Danish
-    .replace(/\s*(sogn|kirkedistrikt|kommune|amt|herred)$/i, '')
-    // Norwegian
-    .replace(/\s*(fylke|prestegjeld|sokn)$/i, '')
-    // Finnish
-    .replace(/\s*(kunta|kaupunki|maakunta|seurakunta)$/i, '')
-    // Icelandic
-    .replace(/\s*(sýsla|hreppur|sveitarfélag|sókn)$/i, '')
-    // English / North American
-    .replace(/\s*(county|parish|township|borough|province|state)$/i, '')
-    // Common prefixes
-    .replace(/^(county of|province of|state of)\s+/i, '');
+    .trim();
 }
 
-function nodeMatches(node: GazetteerNode, component: string): boolean {
-  const norm = normalize(component);
-  if (normalize(node.name) === norm) return true;
-  return node.aliases?.some(a => normalize(a) === norm) ?? false;
+/**
+ * Per-gazetteer normalization. Runs `normalizeUniversal` first, then strips
+ * suffixes / prefixes / patterns declared on the gazetteer itself. Used for
+ * both indexing the gazetteer's nodes and for comparing input components.
+ */
+function normalizeForGazetteer(s: string, gaz: Gazetteer): string {
+  let out = normalizeUniversal(s);
+  const rules = gaz.normalize;
+  if (!rules) return out;
+
+  if (rules.stripSuffixes && rules.stripSuffixes.length > 0) {
+    // Strip any trailing whitespace-separated suffix in the list (case-
+    // insensitive — the input is already lowercased by normalizeUniversal).
+    // Loop because legitimate inputs sometimes stack two ("Roskilde sogn kn").
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const suf of rules.stripSuffixes) {
+        const sufNorm = normalizeUniversal(suf);
+        if (!sufNorm) continue;
+        if (out === sufNorm) continue; // never strip the whole string
+        if (out.endsWith(' ' + sufNorm)) {
+          out = out.slice(0, -1 - sufNorm.length).trim();
+          changed = true;
+          break;
+        }
+      }
+    }
+  }
+
+  if (rules.stripPatterns && rules.stripPatterns.length > 0) {
+    for (const pat of rules.stripPatterns) {
+      try {
+        const re = new RegExp(pat, 'i');
+        out = out.replace(re, '').replace(/\s+/g, ' ').trim();
+      } catch {
+        // Skip invalid regex sources rather than throw — gazetteer data is untrusted.
+      }
+    }
+  }
+
+  if (rules.stripPrefixes && rules.stripPrefixes.length > 0) {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const pre of rules.stripPrefixes) {
+        const preNorm = normalizeUniversal(pre);
+        if (!preNorm) continue;
+        if (out === preNorm) continue;
+        if (out.startsWith(preNorm + ' ')) {
+          out = out.slice(preNorm.length + 1).trim();
+          changed = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+function nodeMatches(node: GazetteerNode, component: string, gaz: Gazetteer): boolean {
+  const norm = normalizeForGazetteer(component, gaz);
+  if (normalizeForGazetteer(node.name, gaz) === norm) return true;
+  return node.aliases?.some(a => normalizeForGazetteer(a, gaz) === norm) ?? false;
 }
 
 interface MatchCandidate {
@@ -42,23 +98,34 @@ interface MatchCandidate {
   contradictions: number;
   /** Whether the last input component (typically the broadest geographic scope) matched a node on this path */
   lastComponentMatched: boolean;
+  /**
+   * Number of path nodes that the input filled in. Differs from `matched.length`
+   * (which is the full path length) when the path has unmatched filler nodes.
+   * Used as a strong signal — token-scan can promote a deep candidate that
+   * consumed multiple input tokens over a shallow root-only candidate.
+   */
+  pathNodesMatched: number;
 }
 
-// Name index: maps normalized name → list of { node, ancestors } for O(1) lookup
+// Name index: maps gazetteer-normalized name → list of { node, ancestors } for
+// O(1) lookup. The index is per-gazetteer because each gazetteer carries its
+// own suffix/prefix vocabulary — a Swedish parish indexed under the form with
+// `socken` stripped won't (and shouldn't) collide with a Czech node that
+// happens to look similar.
 type NodeEntry = { node: GazetteerNode; ancestors: GazetteerNode[] };
-const nameIndexCache = new WeakMap<GazetteerNode, Map<string, NodeEntry[]>>();
+const nameIndexCache = new WeakMap<Gazetteer, Map<string, NodeEntry[]>>();
 
-function getNameIndex(root: GazetteerNode): Map<string, NodeEntry[]> {
-  const cached = nameIndexCache.get(root);
+function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
+  const cached = nameIndexCache.get(gaz);
   if (cached) return cached;
   const index = new Map<string, NodeEntry[]>();
   function walk(node: GazetteerNode, ancestors: GazetteerNode[]) {
-    const norm = normalize(node.name);
+    const norm = normalizeForGazetteer(node.name, gaz);
     if (!index.has(norm)) index.set(norm, []);
     index.get(norm)!.push({ node, ancestors });
     if (node.aliases) {
       for (const alias of node.aliases) {
-        const na = normalize(alias);
+        const na = normalizeForGazetteer(alias, gaz);
         if (!index.has(na)) index.set(na, []);
         index.get(na)!.push({ node, ancestors });
       }
@@ -68,26 +135,46 @@ function getNameIndex(root: GazetteerNode): Map<string, NodeEntry[]> {
       for (const child of node.children) walk(child, nextAncestors);
     }
   }
-  // Index the root node itself
-  walk(root, []);
+  walk(gaz.root, []);
 
-  nameIndexCache.set(root, index);
+  nameIndexCache.set(gaz, index);
   return index;
+}
+
+/**
+ * Whitespace-tokenize a component, dropping empties. Used by the token-scan
+ * pass that lets a single comma-component satisfy multiple path nodes (e.g.
+ * "Stockholm A" matches both Stockholm and the län letter alias `A`).
+ */
+function tokenizeComponent(s: string): string[] {
+  return s.split(/\s+/).filter(Boolean);
 }
 
 function findMatches(
   components: string[],
-  root: GazetteerNode,
+  gaz: Gazetteer,
 ): MatchCandidate[] {
-  const index = getNameIndex(root);
+  const index = getNameIndex(gaz);
   const candidates: MatchCandidate[] = [];
   const lastIndex = components.length - 1;
   // Each anchor node should produce exactly one candidate, even if the same
   // name appears repeatedly in the input ("Stockholm, Stockholm, Sverige").
   const anchored = new Set<GazetteerNode>();
 
+  // Anchor candidates from any whole component OR any whitespace-token of a
+  // component. Token-scan widens the seed set so inputs like
+  // `(Roskilde) Danmark` (single component after universal normalize) can
+  // still anchor on Roskilde or Danmark.
+  const seedNorms = new Set<string>();
   for (const component of components) {
-    const norm = normalize(component);
+    seedNorms.add(normalizeForGazetteer(component, gaz));
+    for (const tok of tokenizeComponent(component)) {
+      seedNorms.add(normalizeForGazetteer(tok, gaz));
+    }
+  }
+
+  for (const norm of seedNorms) {
+    if (!norm) continue;
     const entries = index.get(norm);
     if (!entries) continue;
 
@@ -101,19 +188,46 @@ function findMatches(
       // path node — prevents "Iowa" from matching both Iowa (state) and
       // Iowa (county) on the same path. Track input positions (not values)
       // so duplicate component strings each get one shot.
+      //
+      // Token-scan extension: a single comma-component may also be tried as
+      // its whitespace-tokens, so "Stockholm A" can satisfy two path nodes
+      // (Stockholm + län letter alias) in one component. The component is
+      // counted as matched once any one of its tokens matches.
       const usedPathIndices = new Set<number>();
       const matchedInputIndices = new Set<number>();
       for (let ci = 0; ci < components.length; ci++) {
-        const cn = normalize(components[ci]);
-        for (let pi = 0; pi < fullPath.length; pi++) {
-          if (usedPathIndices.has(pi)) continue;
-          const n = fullPath[pi];
-          if (normalize(n.name) === cn || (n.aliases?.some(a => normalize(a) === cn) ?? false)) {
-            usedPathIndices.add(pi);
-            matchedInputIndices.add(ci);
-            break;
+        // Build a candidate list of forms for this component: the whole
+        // component first (preferred — exact comma-component match), then
+        // its tokens (longest-first so multi-word names like "New York"
+        // beat "New").
+        const whole = normalizeForGazetteer(components[ci], gaz);
+        const tokens = tokenizeComponent(components[ci])
+          .map(t => normalizeForGazetteer(t, gaz))
+          .filter(t => t && t !== whole)
+          .sort((a, b) => b.length - a.length);
+        const forms = whole ? [whole, ...tokens] : tokens;
+
+        // Allow multiple tokens within the same component to each consume a
+        // distinct path node (this is the whole point of the token-scan).
+        let matched = false;
+        for (const form of forms) {
+          for (let pi = 0; pi < fullPath.length; pi++) {
+            if (usedPathIndices.has(pi)) continue;
+            const n = fullPath[pi];
+            const nName = normalizeForGazetteer(n.name, gaz);
+            if (nName === form ||
+                (n.aliases?.some(a => normalizeForGazetteer(a, gaz) === form) ?? false)) {
+              usedPathIndices.add(pi);
+              matched = true;
+              if (form === whole) break; // whole-component match: stop, don't double-count tokens
+              // For token matches, keep scanning forms so a second token in the
+              // same component can match a different path node.
+              break;
+            }
           }
+          if (matched && form === whole) break;
         }
+        if (matched) matchedInputIndices.add(ci);
       }
       const remaining = components.filter((_, i) => !matchedInputIndices.has(i));
 
@@ -122,7 +236,7 @@ function findMatches(
       // but in a different branch than this candidate).
       let contradictions = 0;
       for (const um of remaining) {
-        const umEntries = index.get(normalize(um));
+        const umEntries = index.get(normalizeForGazetteer(um, gaz));
         if (umEntries && umEntries.every(e => !pathSet.has(e.node))) {
           contradictions++;
         }
@@ -135,6 +249,7 @@ function findMatches(
         depth: fullPath.length,
         contradictions,
         lastComponentMatched: matchedInputIndices.has(lastIndex),
+        pathNodesMatched: usedPathIndices.size,
       });
     }
   }
@@ -160,7 +275,13 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
     if (a.lastComponentMatched !== b.lastComponentMatched) return a.lastComponentMatched ? -1 : 1;
     // 3. Fewer unmatched components
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
-    // 4. Prefer the stem over the leaf: when the same name appears at multiple
+    // 4. More path nodes filled by input wins. With token-scan a single
+    // component "Roskilde Danmark" can fill two path nodes on the deep
+    // Roskilde→Danmark path but only one on the bare Danmark root, and we
+    // want the deeper candidate then. Without this rule the depth tiebreaker
+    // below would always favor the root-only path.
+    if (a.pathNodesMatched !== b.pathNodesMatched) return b.pathNodesMatched - a.pathNodesMatched;
+    // 5. Prefer the stem over the leaf: when the same name appears at multiple
     // depths and input fully matches both, the shallower path has fewer
     // "filler" nodes that don't correspond to any input. Example:
     // "California, USA" → prefer USA→California (state) over
@@ -278,7 +399,7 @@ export function resolveHierarchical(
   for (const gaz of gazetteers) {
     // Skip language gazetteers — they don't carry coordinates we want to use
     if (gaz.kind === 'language') continue;
-    const index = getNameIndex(gaz.root);
+    const index = getNameIndex(gaz);
 
     // Walk tokens right-to-left. For the rightmost matched token, all
     // entries in the index that match it are candidate anchors. Then for
@@ -304,10 +425,10 @@ export function resolveHierarchical(
         return;
       }
       const tok = reversed[tokenIdx];
-      const norm = normalize(tok);
+      const norm = normalizeForGazetteer(tok, gaz);
       // Find descendants of the current anchor whose name/alias === tok
       const anchor = anchorPath[anchorPath.length - 1];
-      const childMatches = findDescendantMatches(anchor, norm);
+      const childMatches = findDescendantMatches(anchor, norm, gaz);
       if (childMatches.length === 0) {
         // The current token doesn't match anything inside this anchor.
         // Stop here and record the match so far; tokens to the LEFT
@@ -332,7 +453,7 @@ export function resolveHierarchical(
     // token serves as a starting anchor. We don't restrict to root — Bengt
     // #27 type strings often skip the country.
     const rightmost = reversed[0];
-    const seedEntries = index.get(normalize(rightmost));
+    const seedEntries = index.get(normalizeForGazetteer(rightmost, gaz));
     if (seedEntries) {
       const seenAnchors = new Set<GazetteerNode>();
       for (const entry of seedEntries) {
@@ -371,16 +492,17 @@ export function resolveHierarchical(
 function findDescendantMatches(
   anchor: GazetteerNode,
   norm: string,
+  gaz: Gazetteer,
 ): Array<{ relPath: GazetteerNode[] }> {
   const out: Array<{ relPath: GazetteerNode[] }> = [];
   function walk(node: GazetteerNode, rel: GazetteerNode[]) {
     if (!node.children) return;
     for (const child of node.children) {
       const childRel = [...rel, child];
-      const childNorm = normalize(child.name);
+      const childNorm = normalizeForGazetteer(child.name, gaz);
       const matched =
         childNorm === norm ||
-        (child.aliases?.some(a => normalize(a) === norm) ?? false);
+        (child.aliases?.some(a => normalizeForGazetteer(a, gaz) === norm) ?? false);
       if (matched) {
         out.push({ relPath: childRel });
       }
@@ -397,27 +519,26 @@ export function searchGazetteer(
   limit = 10,
 ): GazetteerSearchHit[] {
   if (!query.trim() || gazetteers.length === 0) return [];
-  const norm = normalize(query);
-  if (!norm) return [];
+  if (!normalizeUniversal(query)) return [];
 
   const hits: GazetteerSearchHit[] = [];
 
-  function walk(node: GazetteerNode, path: GazetteerNode[], gazId: string) {
+  function walk(node: GazetteerNode, path: GazetteerNode[], gaz: Gazetteer) {
     const currentPath = [...path, node];
-    if (nodeMatches(node, query)) {
-      hits.push({ node, path: currentPath, gazetteer: gazId });
+    if (nodeMatches(node, query, gaz)) {
+      hits.push({ node, path: currentPath, gazetteer: gaz.id });
     }
     if (hits.length >= limit) return;
     if (node.children) {
       for (const child of node.children) {
-        walk(child, currentPath, gazId);
+        walk(child, currentPath, gaz);
         if (hits.length >= limit) return;
       }
     }
   }
 
   for (const gaz of gazetteers) {
-    walk(gaz.root, [], gaz.id);
+    walk(gaz.root, [], gaz);
     if (hits.length >= limit) break;
   }
 
@@ -432,7 +553,9 @@ function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
   if (a.contradictions !== b.contradictions) return a.contradictions < b.contradictions;
   // 3. Fewer unmatched components
   if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length < b.unmatched.length;
-  // 4. Prefer the stem: shallower path = fewer filler nodes when input fully
+  // 4. More path nodes filled by input — see pickBest comment.
+  if (a.pathNodesMatched !== b.pathNodesMatched) return a.pathNodesMatched > b.pathNodesMatched;
+  // 5. Prefer the stem: shallower path = fewer filler nodes when input fully
   //    matches at multiple depths (e.g. "California, USA" → state, not CDP).
   return a.depth < b.depth;
 }
@@ -440,6 +563,12 @@ function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
 // Cache: global name → minimum depth across all gazetteers in a set.
 // Built once per unique gazetteers array (by identity), reused across
 // all resolvePlace calls for the same loaded gazetteer set.
+//
+// Keys are universal-normalized (no per-gazetteer suffix vocabulary applied)
+// because contradiction lookups need to work across gazetteers, and a
+// component normalized for gazetteer A wouldn't be findable under gazetteer
+// B's key. Since the universal form is the lowest common denominator, any
+// hit there means at least one gazetteer indexes that bare form.
 let cachedGlobalNameDepth: Map<string, number> | null = null;
 let cachedGazRoots: GazetteerNode[] | null = null;
 
@@ -452,19 +581,34 @@ function getGlobalNameDepth(gazetteers: Gazetteer[]): Map<string, number> {
   }
   const map = new Map<string, number>();
   for (const gaz of gazetteers) {
-    for (const [name, entries] of getNameIndex(gaz.root).entries()) {
-      for (const entry of entries) {
-        const depth = entry.ancestors.length + 1;
-        const existing = map.get(name);
-        if (existing === undefined || depth < existing) {
-          map.set(name, depth);
-        }
+    function walk(node: GazetteerNode, depth: number) {
+      const keys = [normalizeUniversal(node.name)];
+      if (node.aliases) for (const a of node.aliases) keys.push(normalizeUniversal(a));
+      for (const k of keys) {
+        if (!k) continue;
+        const existing = map.get(k);
+        if (existing === undefined || depth < existing) map.set(k, depth);
       }
+      if (node.children) for (const c of node.children) walk(c, depth + 1);
     }
+    walk(gaz.root, 1);
   }
   cachedGazRoots = roots;
   cachedGlobalNameDepth = map;
   return map;
+}
+
+/**
+ * Split a raw place string into comma-components, ALSO splitting on
+ * `.` directly followed by an uppercase letter (no whitespace between).
+ * This handles abbreviations stuck onto the next country/state name like
+ * `Saint-Claude College, Minn.USA` → `["Saint-Claude College", "Minn", "USA"]`.
+ */
+function splitComponents(placeName: string): string[] {
+  return placeName
+    .split(/,|\.(?=[A-Z])/)
+    .map(p => p.trim())
+    .filter(Boolean);
 }
 
 export function resolvePlace(
@@ -473,7 +617,7 @@ export function resolvePlace(
 ): PlaceResolveResult | null {
   if (!placeName.trim() || gazetteers.length === 0) return null;
 
-  const components = placeName.split(',').map(p => p.trim()).filter(Boolean);
+  const components = splitComponents(placeName);
   if (components.length === 0) return null;
 
   // Global name → minimum depth, cached across calls for the same gazetteer set.
@@ -486,7 +630,7 @@ export function resolvePlace(
   const perGaz: { candidate: MatchCandidate; ambiguous: boolean; gazId: string }[] = [];
 
   for (const gaz of gazetteers) {
-    const candidates = findMatches(components, gaz.root);
+    const candidates = findMatches(components, gaz);
     const picked = pickBest(candidates);
     if (!picked) continue;
 
@@ -496,7 +640,7 @@ export function resolvePlace(
     // ones.  Stored as integer (×1000) to avoid floating-point comparison.
     let weightedContradictions = 0;
     for (const um of picked.best.unmatched) {
-      const depth = globalNameDepth.get(normalize(um));
+      const depth = globalNameDepth.get(normalizeUniversal(um));
       if (depth !== undefined) {
         weightedContradictions += Math.round(1000 / depth);
       }
@@ -562,14 +706,14 @@ export function resolveBoundary(
   const boundaryGazetteers = gazetteers.filter(g => g.kind === 'boundary');
   if (boundaryGazetteers.length === 0) return null;
 
-  const components = placeName.split(',').map(p => p.trim()).filter(Boolean);
+  const components = splitComponents(placeName);
   if (components.length === 0) return null;
 
   // Collect all candidates across all boundary gazetteers
   const allCandidates: MatchCandidate[] = [];
 
   for (const gaz of boundaryGazetteers) {
-    allCandidates.push(...findMatches(components, gaz.root));
+    allCandidates.push(...findMatches(components, gaz));
   }
 
   if (allCandidates.length === 0) return null;

@@ -1,4 +1,7 @@
-import type { Gazetteer, GazetteerNode } from './types';
+import {
+  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES,
+} from '../../gazetteer-build/normalize-rules';
+import type { Gazetteer, GazetteerNode, GazetteerNormalizeRules } from './types';
 // Swedish
 import svSocknar from './data/sv-socknar.json';
 import svForsamlingar from './data/sv-forsamlingar.json';
@@ -74,6 +77,47 @@ const LAN_LETTER_CODES: Record<string, string[]> = {
   'Norrbottens län': ['BD'],
 };
 
+// Per-gazetteer normalization rules, applied at load time so we don't have to
+// regenerate the multi-megabyte bundled JSON files when the rule sets change.
+// Imported (third-party) gazetteers can ship a `normalize` field on their JSON
+// directly. World/historical gazetteers get NO rules — universal normalization
+// only.
+const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
+  // Swedish
+  'sv-socknar': SV_RULES,
+  'sv-forsamlingar': SV_RULES,
+  'sv-orter': SV_RULES,
+  'sv-gardar': SV_RULES,
+  'sv-kyrkor': SV_RULES,
+  'sv-sockenstad-boundaries': SV_RULES,
+  // Danish
+  'dk-sogne': DK_RULES,
+  'dk-sogne-dawa': DK_RULES,
+  'dk-sogne-boundaries': DK_RULES,
+  // Norwegian
+  'no-kommuner': NO_RULES,
+  'no-kommuner-boundaries': NO_RULES,
+  // Finnish
+  'fi-kunnat': FI_RULES,
+  'fi-kunnat-boundaries': FI_RULES,
+  // Icelandic
+  'is-sveitarfelog': IS_RULES,
+  'is-sveitarfelog-boundaries': IS_RULES,
+  // English / North American (admin1-style)
+  'us-immigration-states': EN_RULES,
+  'us-all-states': EN_RULES,
+  'ca-provinces': EN_RULES,
+  'world-admin1': EN_RULES,
+};
+
+function attachNormalizeRules(gaz: Gazetteer): Gazetteer {
+  const rules = NORMALIZE_RULES_BY_ID[gaz.id];
+  if (rules && !gaz.normalize) {
+    (gaz as Gazetteer).normalize = rules;
+  }
+  return gaz;
+}
+
 function enrichHistoricalAliases(gaz: Gazetteer): Gazetteer {
   if (!gaz.root.children) return gaz;
   for (const child of gaz.root.children) {
@@ -131,7 +175,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   usCountiesBoundaries as Gazetteer,
   caDivisionsBoundaries as Gazetteer,
   worldBoundaries as Gazetteer,
-].map(enrichHistoricalAliases);
+].map(attachNormalizeRules).map(enrichHistoricalAliases);
 
 export function getAllGazetteers(): Gazetteer[] {
   return BUNDLED_GAZETTEERS;

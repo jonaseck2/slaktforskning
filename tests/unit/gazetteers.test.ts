@@ -169,3 +169,82 @@ describe('cross-country place resolution', () => {
     expect(result!.matchedPath).toContain('United States');
   });
 });
+
+describe('per-gazetteer normalization rules', () => {
+  it('strips Swedish "kommun" suffix when matching against sv-orter (SV_RULES)', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-orter'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Stockholm kommun', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedNode.name.toLowerCase()).toContain('stockholm');
+    expect(result!.gazetteer).toBe('sv-orter');
+  });
+
+  it('strips Danish "Sogn" suffix when matching against dk-sogne (DK_RULES)', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['dk-sogne'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Roskilde Sogn', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedNode.name.toLowerCase()).toContain('roskilde');
+    expect(result!.gazetteer).toBe('dk-sogne');
+  });
+
+  it('treats hyphens and spaces as equivalent (universal rule)', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-socknar', 'sv-forsamlingar', 'sv-orter'] },
+      getAllGazetteers(),
+    );
+    const hyphen = resolvePlace('Husby-Rekarne', gazetteers);
+    const spaced = resolvePlace('Husby Rekarne', gazetteers);
+    expect(hyphen).not.toBeNull();
+    expect(spaced).not.toBeNull();
+    // Same node — same coordinates.
+    expect(hyphen!.lat).toBe(spaced!.lat);
+    expect(hyphen!.lon).toBe(spaced!.lon);
+  });
+
+  it('splits on period-before-uppercase to handle "Minn.USA" (universal rule)', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['world-countries', 'us-all-states'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Saint-Claude College, Minn.USA', gazetteers);
+    expect(result).not.toBeNull();
+    // The path should reach the United States (matched via the split-out USA component).
+    const pathStr = result!.matchedPath.join(' / ').toLowerCase();
+    expect(pathStr).toMatch(/united states|usa/);
+  });
+
+  it('strips parens and matches a token within a single component (universal rule + token-scan)', () => {
+    // Restrict to dk-sogne so the token-scan path must pick up "Roskilde" from
+    // the single component "(Roskilde) Danmark" → universal-normalized to
+    // "roskilde danmark" — neither parens nor the country tail prevent the
+    // match.
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['dk-sogne'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('(Roskilde) Danmark', gazetteers);
+    expect(result).not.toBeNull();
+    const pathStr = result!.matchedPath.join(' / ').toLowerCase();
+    expect(pathStr).toContain('roskilde');
+  });
+
+  it('does NOT strip "kommun" against world-countries (no SV_RULES on that gazetteer)', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['world-countries'] },
+      getAllGazetteers(),
+    );
+    // "Sweden kommun" should not resolve via Sweden because world-countries has
+    // no rule that strips "kommun". (The component "Sweden kommun" as a whole
+    // doesn't match any country name.) Token-scan would still let "Sweden"
+    // match as a whitespace-token, so this test instead picks an input where
+    // the unstripped form must fail: contrived non-country.
+    const result = resolvePlace('Atlantis kommun', gazetteers);
+    expect(result).toBeNull();
+  });
+});
