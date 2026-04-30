@@ -68,7 +68,7 @@ export default {
     researcherPhone: 'Telefon',
     researcherPhonePlaceholder: 't.ex. +46 70 123 45 67',
     researcherEmail: 'E-post',
-    researcherEmailPlaceholder: 't.ex. namn@exempel.se',
+    researcherEmailPlaceholder: "t.ex. namn{'@'}exempel.se",
   },
   chart: {
     export: {

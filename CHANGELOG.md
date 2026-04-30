@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.172.1 — Researcher email placeholder
+
+- fix(i18n): escape `@` in the researcher email placeholder (`{'@'}`) so vue-i18n stops interpreting `@example.com` / `@exempel.se` as a linked-message reference and renders the placeholder verbatim
+
 ## v0.172.0 — Data fidelity prime directive: stop persisting inferred values
 
 - **policy(CLAUDE.md):** added the data-fidelity prime directive. The user's data is sacred — algorithmically-inferred values (gazetteer-resolved coords, "best guess" date types, fuzzy normalizations, default-when-omitted synthesis) are NEVER written to the database. The display/resolver layer computes them at render time, every render. Past violations corrupted real databases; the rule is non-negotiable going forward.
