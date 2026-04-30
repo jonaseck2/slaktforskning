@@ -53,7 +53,10 @@ function createWindow(): BrowserWindow {
     );
   }
 
-  win.webContents.openDevTools();
+  // Only auto-open DevTools in dev mode. Users can still toggle via View menu in production.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    win.webContents.openDevTools();
+  }
 
   activeWindow = win;
   win.on('focus', () => { activeWindow = win; });
