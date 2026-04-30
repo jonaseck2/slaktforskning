@@ -1,7 +1,7 @@
 # Plan: Bengt feedback — place picker rework
 
 **Date:** 2026-04-29
-**Status:** planned
+**Status:** done v0.168.0 (Phases 0–2, 4 shipped; Phase 3 tree expander deferred)
 **Source:** `BENGT.md` (#19b, #27, #34)
 **Design:** [2026-04-29-bengt-place-picker-design.md](2026-04-29-bengt-place-picker-design.md)
 **Effort:** L
@@ -20,27 +20,30 @@ Phased delivery. The two bugs (#19b, #34) ship first as quick wins; the algorith
 ## Tasks
 
 ### Phase 0 — Quick bug fixes (ship first)
-- [ ] **#19b dataloss** — `PlacePicker.vue` audit click handlers, ensure `@click.stop` on dropdown items, ensure `findOrCreate` doesn't bubble or trigger navigation
-- [ ] Reproduce: open EventModal for Birth, type "Solna (B)" in place field, click "Skapa ny ort", verify event form data is preserved
-- [ ] **#34 stale suggestion** — after `findOrCreatePlace` resolves, invalidate the picker's suggestion cache and re-run search with current input
-- [ ] Verify: type "Stockholms Matteus", create, save event, edit again, type "Matteus" — see only the existing match, not "Skapa ny plats"
+- [x] **#19b dataloss** — `PlacePicker.vue` audit click handlers, ensure `@click.stop` on dropdown items, ensure `findOrCreate` doesn't bubble or trigger navigation
+- [x] Reproduce: open EventModal for Birth, type "Solna (B)" in place field, click "Skapa ny ort", verify event form data is preserved
+- [x] **#34 stale suggestion** — after `findOrCreatePlace` resolves, invalidate the picker's suggestion cache and re-run search with current input
+- [x] Verify: type "Stockholms Matteus", create, save event, edit again, type "Matteus" — see only the existing match, not "Skapa ny plats"
 
 ### Phase 1 — Smart autocomplete (Tier 1)
-- [ ] Read [src/api/place-gazetteers/resolver.ts](../../src/api/place-gazetteers/resolver.ts) to understand current matching
-- [ ] Add `resolveHierarchical(input: string, enabledGazetteers: string[])` that:
+- [x] Read [src/api/place-gazetteers/resolver.ts](../../src/api/place-gazetteers/resolver.ts) to understand current matching
+- [x] Add `resolveHierarchical(input: string, enabledGazetteers: string[])` that:
   - Tokenizes on `,`, `()`, ` ` with configurable separators
   - Walks tokens right-to-left
   - Returns `{ matched: GazetteerNode[], unmatched: string[], leafName: string }`
-- [ ] Each gazetteer node has a `level` and a `parent`. Use this to filter the next match's candidate set
-- [ ] Wire `PlacePicker.vue` to call `resolveHierarchical` on debounced input
-- [ ] Render suggestion list as `<leaf> · <parent chain>` with badges showing level (e.g., "församling · län")
+- [x] Each gazetteer node has a `level` and a `parent`. Use this to filter the next match's candidate set
+- [x] Wire `PlacePicker.vue` to call `resolveHierarchical` on debounced input
+- [x] Render suggestion list as `<leaf> · <parent chain>` with badges showing level (e.g., "församling · län")
 
 ### Phase 2 — Place-create flow
-- [ ] When user accepts a suggestion: call `findOrCreatePlace` with the full parent chain, creating intermediate places that don't exist yet
-- [ ] Each created place gets `place_type` from its gazetteer level
-- [ ] Lat/lon inherits from parent if leaf has no coordinates
+- [x] When user accepts a suggestion: call `findOrCreatePlace` with the full parent chain, creating intermediate places that don't exist yet
+- [x] Each created place gets `place_type` from its gazetteer level
+- [x] Lat/lon inherits from parent if leaf has no coordinates
 
-### Phase 3 — Tree expander (Tier 2)
+### Phase 3 — Tree expander (Tier 2) — DEFERRED
+Smart autocomplete in Phases 0–2 covers the three reported tickets. Tree
+expander stays in the backlog as a power-user feature; reopen if user
+research shows the autocomplete is insufficient.
 - [ ] Add an icon button (📂 or similar) next to PlacePicker
 - [ ] On click, open a side dialog with:
   - Gazetteer selector (top): list of `enabledGazetteers` from `gazetteer_config` setting
@@ -51,8 +54,8 @@ Phased delivery. The two bugs (#19b, #34) ship first as quick wins; the algorith
 - [ ] Acknowledge in code comments: this is a flexible-shape tree, exact UI per gazetteer may need iteration
 
 ### Phase 4 — User-created place classification
-- [ ] Allow user to set `place_type` on user-created places via PlaceModal
-- [ ] If user picks a `place_type` matching a gazetteer level (e.g., `parish`), surface it in the picker badge
+- [x] Allow user to set `place_type` on user-created places via PlaceModal
+- [x] If user picks a `place_type` matching a gazetteer level (e.g., `parish`), surface it in the picker badge
 
 ## Out of scope
 - Fuzzy matching / Levenshtein scoring — exact matches only for v1

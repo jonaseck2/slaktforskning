@@ -160,6 +160,57 @@ export function findOrCreatePlace(db: Database, name: string): Place {
   return createPlace(db, { name: name.trim() });
 }
 
+/**
+ * findOrCreatePlace plus an ancestor chain. Used by PlacePicker when the user
+ * accepts a hierarchical gazetteer suggestion: the deepest matched gazetteer
+ * node becomes the leaf's parent (creating intermediate Places only when
+ * none exist with that parent + name combination).
+ *
+ * `chain` is ordered root → leaf: e.g. for "Hörningsholm, Mosås (T)" it would
+ * be `[{name:'Sverige', ...}, {name:'Örebro län', ...}, {name:'Örebro kommun', ...}, {name:'Mosås', ...}]`
+ * and `name` would be `'Hörningsholm'`. Each link in the chain gets created
+ * once (matching by `(parent, normalized_name)`) and reused on subsequent calls.
+ */
+export function findOrCreatePlaceWithChain(
+  db: Database,
+  name: string,
+  chain: Array<{
+    name: string;
+    place_type?: Place['place_type'];
+    latitude?: number | null;
+    longitude?: number | null;
+  }>,
+): Place {
+  let parentId: string | null = null;
+  for (const link of chain) {
+    const norm = normalize(link.name);
+    // Match within the current parent scope to avoid colliding with
+    // unrelated places of the same name elsewhere in the tree.
+    const existing: Place | undefined = parentId === null
+      ? queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [norm])
+      : queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [norm, parentId]);
+    if (existing) {
+      parentId = existing.id;
+      continue;
+    }
+    const created = createPlace(db, {
+      name: link.name.trim(),
+      place_type: link.place_type,
+      parent_place_id: parentId,
+      latitude: link.latitude ?? null,
+      longitude: link.longitude ?? null,
+    });
+    parentId = created.id;
+  }
+  // Now look up / create the leaf under the resolved parent
+  const leafNorm = normalize(name);
+  const existingLeaf: Place | undefined = parentId === null
+    ? queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [leafNorm])
+    : queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [leafNorm, parentId]);
+  if (existingLeaf) return existingLeaf;
+  return createPlace(db, { name: name.trim(), parent_place_id: parentId });
+}
+
 export function getPersonsForPlace(
   db: Database,
   placeId: string

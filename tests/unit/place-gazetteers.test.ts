@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { resolvePlace, resolveBoundary } from '../../src/api/place-gazetteers/resolver';
+import {
+  resolvePlace,
+  resolveBoundary,
+  resolveHierarchical,
+  tokenizePlaceString,
+} from '../../src/api/place-gazetteers/resolver';
 import { loadGazetteers } from '../../src/api/place-gazetteers/merge';
 import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import type { Gazetteer, GazetteerConfig } from '../../src/api/place-gazetteers/types';
@@ -490,5 +495,140 @@ describe('hierarchy-aware matching', () => {
     expect(result!.matchedNode.name).toBe('California');
     expect(result!.matchedNode.type).toBe('state');
     expect(result!.matchDepth).toBe(2);
+  });
+});
+
+describe('tokenizePlaceString', () => {
+  it('splits on commas and trims', () => {
+    expect(tokenizePlaceString('Hörningsholm, Mosås')).toEqual(['Hörningsholm', 'Mosås']);
+  });
+
+  it('extracts parenthesized tokens as separate components', () => {
+    expect(tokenizePlaceString('Solna (B)')).toEqual(['Solna', 'B']);
+  });
+
+  it('handles mixed commas and parens — Bengt #27', () => {
+    expect(tokenizePlaceString('Hörningsholm, Mosås (T)')).toEqual([
+      'Hörningsholm',
+      'Mosås',
+      'T',
+    ]);
+  });
+
+  it('returns empty for empty input', () => {
+    expect(tokenizePlaceString('')).toEqual([]);
+    expect(tokenizePlaceString('  ')).toEqual([]);
+  });
+
+  it('preserves multi-word tokens', () => {
+    expect(tokenizePlaceString('Stockholms Matteus församling')).toEqual([
+      'Stockholms Matteus församling',
+    ]);
+  });
+
+  it('handles multiple parens in one part', () => {
+    expect(tokenizePlaceString('Foo (A) (BD)')).toEqual(['Foo', 'A', 'BD']);
+  });
+});
+
+describe('resolveHierarchical', () => {
+  // Build a small Swedish gazetteer with two distinct counties to verify
+  // that the right-to-left walk constrains where the next match looks.
+  const svHier: Gazetteer = {
+    id: 'sv-test',
+    name: 'Test',
+    locale: 'sv',
+    root: {
+      name: 'Sverige', type: 'country', lat: 62, lon: 15,
+      children: [
+        {
+          name: 'Örebro län', type: 'county', aliases: ['T'], lat: 59.27, lon: 15.21,
+          children: [{
+            name: 'Örebro kommun', type: 'municipality', lat: 59.27, lon: 15.21,
+            children: [{
+              name: 'Mosås', type: 'parish', lat: 59.21, lon: 15.18,
+            }],
+          }],
+        },
+        {
+          name: 'Norrbottens län', type: 'county', aliases: ['BD'], lat: 67.0, lon: 20.0,
+          children: [{
+            name: 'Boden kommun', type: 'municipality', lat: 65.83, lon: 21.7,
+            children: [{
+              name: 'Hörningsholm', type: 'locality', lat: 65.7, lon: 21.6,
+            }],
+          }],
+        },
+      ],
+    },
+  };
+
+  it('right-to-left match: "Mosås (T)" anchors on Örebro län, not Norrbotten', () => {
+    const r = resolveHierarchical('Mosås (T)', [svHier]);
+    expect(r.best).not.toBeNull();
+    expect(r.best!.node.name).toBe('Mosås');
+    expect(r.best!.path.map(n => n.name)).toEqual([
+      'Sverige', 'Örebro län', 'Örebro kommun', 'Mosås',
+    ]);
+    expect(r.best!.unmatchedLeftTokens).toEqual([]);
+  });
+
+  it('Bengt #27: "Hörningsholm, Mosås (T)" — leaf is unmatched farm in Örebro', () => {
+    const r = resolveHierarchical('Hörningsholm, Mosås (T)', [svHier]);
+    expect(r.best).not.toBeNull();
+    // Hörningsholm exists in Norrbotten but the (T) anchor restricts the
+    // walk to Örebro län, so it should be unmatched as a leaf token.
+    expect(r.best!.node.name).toBe('Mosås');
+    expect(r.best!.unmatchedLeftTokens).toEqual(['Hörningsholm']);
+    // Make sure we did NOT pick the Norrbotten Hörningsholm
+    expect(r.best!.path.map(n => n.name)).not.toContain('Norrbottens län');
+  });
+
+  it('returns the broadest anchor when no descendant matches', () => {
+    const r = resolveHierarchical('Okänd ort, T', [svHier]);
+    expect(r.best).not.toBeNull();
+    expect(r.best!.node.name).toBe('Örebro län');
+    expect(r.best!.unmatchedLeftTokens).toEqual(['Okänd ort']);
+  });
+
+  it('returns null best when nothing matches at all', () => {
+    const r = resolveHierarchical('Helt okänt', [svHier]);
+    expect(r.best).toBeNull();
+    expect(r.candidates).toEqual([]);
+  });
+
+  it('returns empty result for empty input', () => {
+    const r = resolveHierarchical('', [svHier]);
+    expect(r.best).toBeNull();
+    expect(r.tokens).toEqual([]);
+  });
+
+  it('matches county letter alias from parens — Solna (B)', () => {
+    // Use the bundled enrichment to verify "B" alias works in real data
+    const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar'] };
+    const gazetteers = loadGazetteers(config, getAllGazetteers());
+    const r = resolveHierarchical('Solna (B)', gazetteers);
+    expect(r.best).not.toBeNull();
+    // Stockholms län has aliases AB/A/B from LAN_LETTER_CODES
+    const matchedNames = r.best!.path.map(n => n.name);
+    expect(matchedNames).toContain('Stockholms län');
+  });
+
+  it('full chain "Hörningsholm, Mosås, Örebro län" — broadest token is län', () => {
+    const r = resolveHierarchical('Hörningsholm, Mosås, Örebro län', [svHier]);
+    expect(r.best).not.toBeNull();
+    expect(r.best!.node.name).toBe('Mosås');
+    expect(r.best!.unmatchedLeftTokens).toEqual(['Hörningsholm']);
+  });
+
+  it('candidates are sorted best-first by tokens consumed', () => {
+    const r = resolveHierarchical('Mosås (T)', [svHier]);
+    expect(r.candidates.length).toBeGreaterThan(0);
+    // Best (most consumed) should be first
+    for (let i = 1; i < r.candidates.length; i++) {
+      expect(
+        r.candidates[i - 1].consumedTokens.length,
+      ).toBeGreaterThanOrEqual(r.candidates[i].consumedTokens.length);
+    }
   });
 });

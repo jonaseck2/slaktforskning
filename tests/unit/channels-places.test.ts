@@ -5,7 +5,13 @@ import { listChannels, getChannel } from '../../src/shared/channels/registry';
 describe('places channel registry', () => {
   it('registers all places:* channels', () => {
     const placeChannels = listChannels().filter(c => c.startsWith('places:'));
-    expect(placeChannels.length).toBe(10);
+    expect(placeChannels.length).toBe(11);
+  });
+  it('places:findOrCreateWithChain is a mutating worker channel', () => {
+    const ch = getChannel('places:findOrCreateWithChain');
+    expect(ch).toBeDefined();
+    expect(ch!.thread).toBe('worker');
+    expect(ch!.mutating).toBe(true);
   });
   it('places:get is a worker channel', () => {
     const ch = getChannel('places:get');

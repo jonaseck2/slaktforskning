@@ -62,7 +62,7 @@ Source: [docs/BENGT.md](BENGT.md). Split into 6 workstreams + 1 design spec, eac
 - Reactivity audit (panel counts, tree refresh, indirect events on timelines): [plans/2026-04-29-bengt-reactivity.md](plans/2026-04-29-bengt-reactivity.md)
 - Names rework (newest-as-displayed, reorder): [plans/archive/2026-04-29-bengt-names-rework.md](plans/archive/2026-04-29-bengt-names-rework.md) [done v0.165.0]
 - Reports (researcher info, page numbers, citation rendering, GEDCOM SUBM): [plans/archive/2026-04-29-bengt-reports.md](plans/archive/2026-04-29-bengt-reports.md) [done v0.166.0]
-- Place picker rework (parent-aware autocomplete + tree expander): [plans/2026-04-29-bengt-place-picker.md](plans/2026-04-29-bengt-place-picker.md) — design: [plans/2026-04-29-bengt-place-picker-design.md](plans/2026-04-29-bengt-place-picker-design.md)
+- Place picker rework (parent-aware autocomplete): [plans/archive/2026-04-29-bengt-place-picker.md](plans/archive/2026-04-29-bengt-place-picker.md) — design: [plans/archive/2026-04-29-bengt-place-picker-design.md](plans/archive/2026-04-29-bengt-place-picker-design.md) [done v0.168.0]
 - Events bundle (sort-order setting, date-range UI): [plans/archive/2026-04-29-bengt-events-bundle.md](plans/archive/2026-04-29-bengt-events-bundle.md) [done v0.163.0]
 
 #### Workflow Analysis [research]
