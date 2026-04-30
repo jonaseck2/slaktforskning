@@ -18,14 +18,14 @@ Bengt has six tickets touching names. Two earlier rounds already landed (`name_c
 ## Tasks
 
 ### Phase 1 — Data model
-- [ ] No new name types (Stavningsvariant dropped from scope)
-- [ ] No schema migration needed (sort_order column already exists per CLAUDE.md person_names schema)
-- [ ] Confirm `preferred_name` column can be deprecated (still exists in schema for backward-compat — leave column, stop reading it)
+- [x] No new name types (Stavningsvariant dropped from scope)
+- [x] No schema migration needed (sort_order column already exists per CLAUDE.md person_names schema)
+- [x] Confirm `preferred_name` column can be deprecated (still exists in schema for backward-compat — leave column, stop reading it)
 
 ### Phase 2 — Display logic
-- [ ] [src/api/persons.ts](../../src/api/persons.ts) — when `getPerson` joins to person_names, return the *displayed* name as the one with the latest non-null `date_from`, falling back to highest `sort_order`. Document the rule.
-- [ ] If birth event exists, the birth name's effective `date_from` is the birth event's date, regardless of stored value. Encode this in the join logic.
-- [ ] Update all callers that previously prioritized `preferred_name = 1` — `searchPersons`, `listPersons`, etc.
+- [x] [src/api/persons.ts](../../src/api/persons.ts) — when `getPerson` joins to person_names, return the *displayed* name as the one with the latest non-null `date_from`, falling back to highest `sort_order`. Document the rule.
+- [x] If birth event exists, the birth name's effective `date_from` is the birth event's date, regardless of stored value. Encode this in the join logic.
+- [x] Update all callers that previously prioritized `preferred_name = 1` — `searchPersons`, `listPersons`, etc.
 
 ### Phase 3 — UI in `PersonNamesTable` and `PersonNameModal`
 - [ ] Remove the star (preferred_name toggle) from the table

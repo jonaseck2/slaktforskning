@@ -1,5 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
-import { getPerson, getPersonNames } from './persons';
+import { getPerson, getPersonNames, displayedNameIdSql } from './persons';
 import { getRelationshipsOfPerson } from './relationships';
 import { getEventsForPerson, getEventsForRelationship } from './events';
 import { getPlace, getPlacePath } from './places';
@@ -547,9 +547,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
             ORDER BY e2.date_value DESC LIMIT 1) AS place_name,
            EXISTS(SELECT 1 FROM any_event a WHERE a.pid = p.id AND a.any_year = ?) AS has_event_in_year
     FROM persons p
-    LEFT JOIN person_names pn ON pn.person_id = p.id AND pn.sort_order = (
-      SELECT MIN(sort_order) FROM person_names WHERE person_id = p.id
-    )
+    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     LEFT JOIN birth b ON b.pid = p.id
     LEFT JOIN death d ON d.pid = p.id
   `, [year, year]);

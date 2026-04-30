@@ -21,6 +21,7 @@ import RelationshipsList, { type RelationshipListRow } from './RelationshipsList
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { formatFullName } from '../utils/nameUtils';
+import { pickDisplayedName } from '../composables/usePersonPanelData';
 import { useEntityData } from '../composables/useEntityData';
 
 interface PersonRelRow {
@@ -72,15 +73,16 @@ const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (p
     let otherSex: 'M' | 'F' | 'U' = 'U';
     if (otherId) {
       try {
-        const [person, names] = await Promise.all([
+        const [person, names, events] = await Promise.all([
           window.api.persons.get(otherId) as Promise<{ sex?: string } | null>,
-          window.api.persons.getNames(otherId) as Promise<Array<{ given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; name_prefix: string | null; name_suffix: string | null; sort_order: number }>>,
+          window.api.persons.getNames(otherId) as Promise<Array<{ id: string; given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; name_prefix: string | null; name_suffix: string | null; sort_order: number; name_type: string; date_from: string | null }>>,
+          window.api.events.forPerson(otherId) as Promise<Array<{ event_type: string; date_value: string | null }>>,
         ]);
         if (person) {
           otherSex = (person.sex as 'M' | 'F' | 'U') || 'U';
         }
         if (names.length > 0) {
-          const primary = [...names].sort((a, b) => a.sort_order - b.sort_order)[0];
+          const primary = pickDisplayedName(names, events) ?? names[0];
           otherGivenName = primary.given_name || '';
           otherSurname = primary.surname || '';
           otherPreferredName = primary.preferred_name;

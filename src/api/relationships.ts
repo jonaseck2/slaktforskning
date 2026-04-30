@@ -2,6 +2,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Relationship, EventParticipant, RelationshipType, EventParticipantRole } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { displayedNameIdSql } from './persons';
 
 export function createRelationship(
   db: Database,
@@ -58,10 +59,8 @@ export function listRelationshipsPage(db: Database, limit: number, offset: numbe
     FROM relationships r
     LEFT JOIN persons p1 ON p1.id = r.person1_id
     LEFT JOIN persons p2 ON p2.id = r.person2_id
-    LEFT JOIN person_names pn1 ON pn1.person_id = r.person1_id
-      AND pn1.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person1_id)
-    LEFT JOIN person_names pn2 ON pn2.person_id = r.person2_id
-      AND pn2.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person2_id)
+    LEFT JOIN person_names pn1 ON pn1.id = ${displayedNameIdSql('r.person1_id')}
+    LEFT JOIN person_names pn2 ON pn2.id = ${displayedNameIdSql('r.person2_id')}
     ORDER BY r.created_at
     LIMIT ? OFFSET ?
   `, [limit, offset]);
@@ -113,10 +112,8 @@ export function searchRelationships(
       pn2.preferred_name as person2_preferred_name,
       pn2.nickname as person2_nickname
     FROM relationships r
-    LEFT JOIN person_names pn1 ON pn1.person_id = r.person1_id
-      AND pn1.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person1_id)
-    LEFT JOIN person_names pn2 ON pn2.person_id = r.person2_id
-      AND pn2.sort_order = (SELECT MIN(sort_order) FROM person_names WHERE person_id = r.person2_id)
+    LEFT JOIN person_names pn1 ON pn1.id = ${displayedNameIdSql('r.person1_id')}
+    LEFT JOIN person_names pn2 ON pn2.id = ${displayedNameIdSql('r.person2_id')}
     WHERE pn1.given_name LIKE ? OR pn1.surname LIKE ?
        OR pn2.given_name LIKE ? OR pn2.surname LIKE ?
     ORDER BY pn1.surname, pn1.given_name
