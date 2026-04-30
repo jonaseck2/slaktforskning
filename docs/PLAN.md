@@ -42,6 +42,10 @@ Extract `useEntityData`, `useEditableFields`, and a shared `<EntityPanel>` shell
 Collapse 15 near-identical `getXFor<EntityType>` queries (citations, groups, tasks, media) into `getLinkedEntities` + `getCitationsByOwner`. Public per-entity functions stay as wrappers — no MCP/IPC churn.
 - Plan: [plans/2026-04-28-api-link-helpers.md](plans/2026-04-28-api-link-helpers.md)
 
+#### Place Resolver Overhaul [planned]
+Drop resolver from 6 hardcoded language vocabularies to universal rules + per-gazetteer normalization. Adds Swedish `kn`/`sn`/`fs` and länsbokstav alias support, fixes parens-as-separator, period-as-separator, and whitespace tolerance. Targets ~1 700 places that currently fall on the floor in `bengt-inte-trasig.db`. Plus 4 new targeted quality checks.
+- Plan: [plans/2026-04-30-place-resolver-overhaul.md](plans/2026-04-30-place-resolver-overhaul.md)
+
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
 - Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`
