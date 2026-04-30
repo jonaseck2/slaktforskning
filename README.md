@@ -112,3 +112,4 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+Demo run: 2026-04-30
