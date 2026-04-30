@@ -112,3 +112,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+Last updated: 2026-04-30
