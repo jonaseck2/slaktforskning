@@ -407,10 +407,9 @@ The checklist maps to focused subagents in `.claude/agents/` (auto-discovered by
 | `test-writer` | 4 | — |
 | `ipc-mcp-wirer` | 5–7 | vue-ui-builder |
 | `vue-ui-builder` | 8 | ipc-mcp-wirer |
-| `doc-syncer` | 10 | — |
 | `ux-reviewer` | (review) | — — read-only consistency check |
 
-Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent.
+Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent. Each agent commits its OWN work AND its own docs in the same commit per the `/commit` bundle rule. The last commit of a multi-commit feature handles milestone closeout (plan archival, PLAN.md roadmap update, `## vX.Y.Z` CHANGELOG header) — also handled by `/commit`, no separate doc-sync phase.
 
 ## After implementing
 
