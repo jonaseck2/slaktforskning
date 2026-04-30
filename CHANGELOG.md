@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.166.0 — Reports: researcher info, page numbers, richer citations, GEDCOM SUBM fix
+
+- feat(settings): four researcher fields (name, address, phone, email) live in `db_settings` and are configurable from Settings → "Forskarinformation"
+- feat(reports): every keepsake report now renders a header with the researcher name + system name, a footer with email/phone, and "X / Y" page numbers in the printed PDF — toggle "Sidhuvud och sidfot" in ReportPanel (default on, persisted as `report_show_header_footer`)
+- feat(gedcom): GEDCOM export's `SUBM` record now writes the researcher's NAME / ADDR / PHON / EMAIL (the genealogist filing the file). Falls back to the proband's name when researcher info is unset, preserving Holger round-trip compatibility
+- feat(reports): citation appendix in A Life, A Marriage, Place Chronicle, and Your Ancestors now includes `publication_info`, `repository`, and `URL` — and A Life additionally lists per-source pages — so toggling "Show sources" produces a visibly richer research trail
+
 ## v0.165.0 — Names: displayed name follows latest name change date
 
 - feat(names): the displayed name for a person is now picked by the latest non-null `date_from` instead of a manually starred entry; the birth name's effective date comes from the birth event when available
