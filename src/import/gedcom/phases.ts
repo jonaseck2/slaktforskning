@@ -41,7 +41,10 @@ import { importEventNode } from './event-importer';
 
 export const PERSON_EVENT_TAGS: Record<string, string> = {
   BIRT: 'birth', DEAT: 'death', CHR: 'christening', BURI: 'burial',
-  BAPM: 'baptism', CONF: 'confirmation', OCCU: 'occupation',
+  // BAPM (adult/LDS baptism) collapses to christening in our model — single
+  // semantic type matching Swedish "Dop". Round-tripping LDS-specific data is
+  // out of scope.
+  BAPM: 'christening', CONF: 'confirmation', OCCU: 'occupation',
   RESI: 'residence', EDUC: 'education', EMIG: 'emigration',
   IMMI: 'immigration', NATU: 'naturalization', CENS: 'census',
   PROB: 'probate', WILL: 'will', GRAD: 'graduation', RETI: 'retirement',

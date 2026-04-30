@@ -435,7 +435,7 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
 
     const otherEvents = resolveEventsPlaces(db, getEventsForPerson(db, otherId));
     // Only include key life events for family members
-    const relevantTypes = ['birth', 'death', 'baptism', 'burial'];
+    const relevantTypes = ['birth', 'death', 'christening', 'burial'];
     for (const event of otherEvents) {
       if (relevantTypes.includes(event.event_type)) {
         entries.push({
