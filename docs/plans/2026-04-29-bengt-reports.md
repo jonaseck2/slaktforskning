@@ -16,22 +16,21 @@ Three related strands in Bengt's #14b: researcher contact info on every report, 
 ## Tasks
 
 ### Phase 1 — Data model
-- [ ] Extend `db_settings` keys: `researcher_address`, `researcher_phone`, `researcher_email` (alongside existing `researcher_name`)
-- [ ] Optional: bundle into a single `researcher_info` JSON setting instead of four keys — preference: separate keys for simplicity and existing patterns
+- [x] Extend `db_settings` keys: `researcher_address`, `researcher_phone`, `researcher_email` (alongside existing `researcher_name`)
+- [x] Optional: bundle into a single `researcher_info` JSON setting instead of four keys — preference: separate keys for simplicity and existing patterns
 
 ### Phase 2 — Settings UI
-- [ ] [src/renderer/views/SettingsView.vue](../../src/renderer/views/SettingsView.vue) — add a "Forskarinformation" section near tree subject
-- [ ] Fields: name, address (multi-line), phone, email
-- [ ] Save via `window.api.db.setSetting`
+- [x] [src/renderer/views/SettingsView.vue](../../src/renderer/views/SettingsView.vue) — add a "Forskarinformation" section near tree subject
+- [x] Fields: name, address (multi-line), phone, email
+- [x] Save via `window.api.db.setSetting`
 
 ### Phase 3 — Report header/footer
-- [ ] New primitive: `src/renderer/components/reports/primitives/ReportHeaderFooter.vue`
-  - Header (top of every page): system name "OurLegacy" + researcher name
-  - Footer (bottom of every page): researcher email + page number ("Sida X av Y")
-  - Use CSS `@page` margins + `position: running()` if Chromium supports; fallback to per-section repeating elements
-- [ ] Integrate into all 7 keepsake reports + 5 framable charts (or just keepsake reports — framable prints are single-page and don't need it)
-- [ ] Toggle in `ReportPanel.vue` Appearance section: "Visa sidhuvud/sidfot" (default on)
-- [ ] Page numbers always on for print, optional in screen preview
+- [x] New primitive: `src/renderer/components/reports/primitives/ReportHeaderFooter.vue`
+  - Screen preview: in-flow header at top + footer at bottom of report content (hidden via `@media print` so PDF doesn't double-render)
+  - PDF output: `displayHeaderFooter: true` with Chromium `headerTemplate`/`footerTemplate` strings injected by `print:exportPdf` (src/main/ipc/main-only.ts) — page number always printed when header/footer band is enabled
+- [x] Integrate into all 7 keepsake reports (one `<ReportHeaderFooter>` per `.print-preview` wrapper in ReportsView)
+- [x] Toggle in `ReportPanel.vue`: dedicated "Sidhuvud och sidfot" section above Options (default on, persisted to db_settings as `report_show_header_footer`)
+- [x] Chart prints pass `showHeaderFooter: false` so framable single-page prints stay clean
 
 ### Phase 4 — GEDCOM SUBM linkage
 - [ ] [src/api/gedcom-export.ts](../../src/api/) (find actual file) — when exporting, populate `SUBM` record's `NAME`, `ADDR`, `PHON`, `EMAIL` from researcher_* settings

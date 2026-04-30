@@ -848,6 +848,9 @@ export default {
       report: 'Rapport',
       chart: 'Diagram',
       fanChart: 'Solfjäderdiagram',
+      headerFooter: 'Sidhuvud och sidfot',
+      showHeaderFooter: 'Visa sidhuvud och sidfot',
+      headerFooterHint: 'Forskaruppgifter visas överst och nederst på varje sida. Sidnummer skrivs alltid ut. Fyll i forskarinformation under Inställningar.',
     },
     groups: {
       keepsake: 'Minnesrapporter',

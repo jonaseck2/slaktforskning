@@ -85,6 +85,10 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   // Shared privacy toggle (keepsake reports)
   const redactLiving = ref(false);
 
+  // Shared header/footer toggle (keepsake reports)
+  // Page numbers are independent of this — always rendered when printing.
+  const showHeaderFooter = ref(true);
+
   // Fan chart (standalone print tab)
   const fanArcSpan   = ref<ArcSpan>(360);
   const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
@@ -117,6 +121,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
     aMarriageRelId, aMarriageShowLifeMap, aMarriageShowMapCaption, aMarriageShowPhotos, aMarriageShowNotes,
     aMarriageShowSources, aMarriageShowMediaCaptions, aMarriageShowMediaNotes,
     redactLiving,
+    showHeaderFooter,
     fanArcSpan, fanColorMode,
     yourAncestorsFanGenerations, yourAncestorsFanArcSpan,
     chartColorMode,

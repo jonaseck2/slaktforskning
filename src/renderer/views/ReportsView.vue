@@ -30,6 +30,7 @@
       <div v-if="activeTab === 'yourAncestors'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <YourAncestorsReport
               :person-id="store.personId"
               :generations="store.yourAncestorsGenerations"
@@ -55,6 +56,7 @@
       <div v-if="activeTab === 'alife'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.personId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <ALifeReport
               :person-id="store.personId"
               :show-life-map="store.aLifeShowLifeMap"
@@ -76,6 +78,7 @@
       <div v-if="activeTab === 'onePage'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.personId" class="print-preview" :class="'preview-' + store.onePageOrientation" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <LifeOnOnePageReport
               :person-id="store.personId"
               :orientation="store.onePageOrientation"
@@ -92,6 +95,7 @@
       <div v-if="activeTab === 'familyInYear'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.familyInYearYear" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <FamilyInYearReport
               :year="store.familyInYearYear"
               :scope="store.familyInYearScope"
@@ -107,6 +111,7 @@
       <div v-if="activeTab === 'photoAlbum'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.photoAlbumCanRender" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <PhotoAlbumReport
               :subject-type="store.photoAlbumSubjectType"
               :subject-id="store.photoAlbumSubjectId"
@@ -127,6 +132,7 @@
       <div v-if="activeTab === 'placeChronicle'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.placeChroniclePlaceId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <PlaceChronicleReport
               :place-id="store.placeChroniclePlaceId"
               :show-boundary="store.placeChronicleShowBoundary"
@@ -146,6 +152,7 @@
       <div v-if="activeTab === 'amarriage'" class="tab-content">
         <div ref="previewContainer" class="preview-area">
           <div v-if="store.aMarriageRelId" class="print-preview" :style="{ zoom: effectiveZoom }">
+            <ReportHeaderFooter :enabled="store.showHeaderFooter" />
             <AMarriageReport
               :relationship-id="store.aMarriageRelId"
               :show-life-map="store.aMarriageShowLifeMap"
@@ -255,6 +262,7 @@ import { usePanelResize } from '../composables/usePanelResize';
 import ReportPanel from '../components/ReportPanel.vue';
 import YourAncestorsReport from '../components/reports/YourAncestorsReport.vue';
 import ALifeReport from '../components/reports/ALifeReport.vue';
+import ReportHeaderFooter from '../components/reports/primitives/ReportHeaderFooter.vue';
 import LifeOnOnePageReport from '../components/reports/LifeOnOnePageReport.vue';
 import FamilyInYearReport from '../components/reports/FamilyInYearReport.vue';
 import PhotoAlbumReport from '../components/reports/PhotoAlbumReport.vue';
@@ -341,7 +349,13 @@ async function saveChartSvg() {
 async function saveChartPdf() {
   const tab = activeTab.value;
   const landscape = tab === 'descendantChart' || tab === 'hourglassChart';
-  await window.api.print.exportPdf(chartExportName() + '.pdf', landscape);
+  // Charts: no header/footer, no page numbers (single framable page).
+  await window.api.print.exportPdf(chartExportName() + '.pdf', landscape, {
+    showHeaderFooter: false,
+    researcherName: null,
+    researcherEmail: null,
+    researcherPhone: null,
+  });
 }
 
 // --- Zoom ---
@@ -400,6 +414,10 @@ watch(() => store.photoAlbumSubjectId,     triggerLoading);
 watch(() => store.placeChroniclePlaceId,   triggerLoading);
 watch(() => store.aMarriageRelId,          triggerLoading);
 
+watch(() => store.showHeaderFooter, async v => {
+  try { await window.api.db.setSetting('report_show_header_footer', v ? '1' : '0'); } catch { /* ignore */ }
+});
+
 onUnmounted(() => { if (ro) ro.disconnect(); });
 
 // --- Data ---
@@ -418,6 +436,12 @@ async function getPersonName(id: string | null): Promise<string> {
 
 onMounted(async () => {
   if (!window.api) return;
+
+  // Load header/footer toggle from db settings (default on)
+  try {
+    const raw = await window.api.db.getSetting('report_show_header_footer') as string | null;
+    store.showHeaderFooter = raw == null ? true : raw === '1';
+  } catch { /* ignore */ }
 
   const rels = await window.api.relationships.list() as Array<{
     id: string; type: string; person1_id: string | null; person2_id: string | null;
@@ -487,8 +511,36 @@ function exportPdfFilename(): string {
 }
 
 async function exportPdf() {
-  await window.api.print.exportPdf(exportPdfFilename(), false);
+  // Charts are framable single-page prints — never apply header/footer or page numbers.
+  // Keepsake reports use the user's researcher info from db_settings.
+  let hf: {
+    showHeaderFooter: boolean;
+    researcherName: string | null;
+    researcherEmail: string | null;
+    researcherPhone: string | null;
+    appName?: string | null;
+  } = { showHeaderFooter: false, researcherName: null, researcherEmail: null, researcherPhone: null };
+  if (!isChartTab.value) {
+    try {
+      const [name, email, phone] = await Promise.all([
+        window.api.db.getSetting('researcher_name'),
+        window.api.db.getSetting('researcher_email'),
+        window.api.db.getSetting('researcher_phone'),
+      ]) as Array<string | null>;
+      hf = {
+        showHeaderFooter: store.showHeaderFooter,
+        researcherName: name || null,
+        researcherEmail: email || null,
+        researcherPhone: phone || null,
+      };
+    } catch { /* fall through with defaults */ }
+  }
+  await window.api.print.exportPdf(exportPdfFilename(), false, hf);
 }
+
+const isChartTab = computed(() =>
+  ['pedigreePrint', 'hourglassChart', 'descendantChart', 'fanChart', 'timeline'].includes(activeTab.value),
+);
 
 </script>
 

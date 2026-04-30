@@ -848,6 +848,9 @@ export default {
       report: 'Report',
       chart: 'Chart',
       fanChart: 'Fan Chart',
+      headerFooter: 'Header & footer',
+      showHeaderFooter: 'Show header and footer',
+      headerFooterHint: 'Researcher information appears at the top and bottom of every page. Page numbers are always printed. Fill in researcher info under Settings.',
     },
     groups: {
       keepsake: 'Keepsake reports',

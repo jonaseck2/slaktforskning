@@ -219,7 +219,17 @@ const api = {
   },
   print: {
     print: () => ipcRenderer.invoke('print:print'),
-    exportPdf: (defaultPath?: string, landscape?: boolean) => ipcRenderer.invoke('print:exportPdf', defaultPath, landscape),
+    exportPdf: (
+      defaultPath?: string,
+      landscape?: boolean,
+      headerFooter?: {
+        showHeaderFooter: boolean;
+        researcherName?: string | null;
+        researcherEmail?: string | null;
+        researcherPhone?: string | null;
+        appName?: string | null;
+      },
+    ) => ipcRenderer.invoke('print:exportPdf', defaultPath, landscape, headerFooter),
   },
   csv: {
     export: (entityType: string, options?: { delimiter?: string; encoding?: string }) =>
