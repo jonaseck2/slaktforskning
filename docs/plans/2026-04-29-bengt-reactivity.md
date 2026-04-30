@@ -122,9 +122,11 @@ One line. `reloadChart()` already does the full remount + refetch.
 - [ ] Document findings in this file under "Audit Results"
 
 ### Phase 2 — Fix the pattern
-- [ ] Convert each broken `onMounted` to `watch(() => props.X, load, { immediate: true })`
-- [ ] Ensure section counts (the `(n)` in panel section headers) come from a reactive source, not a snapshot taken on first load
-- [ ] Re-fetch tree data on `onDataChanged` if any of (persons, relationships, events, person_names) changes for the focal person or their immediate family
+- [x] Convert each broken `onMounted` to `watch(() => props.X, load, { immediate: true })` — audit found this was a non-issue; only fix needed was around `onDataChanged` registration
+- [x] Ensure section counts (the `(n)` in panel section headers) come from a reactive source, not a snapshot taken on first load — `usePersonPanelData` now exposes `reloadCounts()` and registers a debounced `onDataChanged` listener
+- [x] Re-fetch tree data on `onDataChanged` if any of (persons, relationships, events, person_names) changes for the focal person or their immediate family — `PersonsView.vue` registers `onDataChanged(reloadChart)`
+- [x] Add `offDataChanged` to preload + listener cleanup in `PersonPanel`, `PersonsView`, `PersonTimeline`, `PersonMap`
+- [x] **Phase 2 complete** — shipped in v0.162.7
 
 ### Phase 3 — Tree refresh (#37)
 - [ ] When event mutations land for the tree subject, refetch tree data

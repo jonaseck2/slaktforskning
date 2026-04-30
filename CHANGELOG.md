@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.162.7 — Reactivity: panels and tree refresh on mutation
+
+- fix(person-panel): "Händelser (n)" and the other section count badges update immediately after adding/editing/deleting an event — no longer require a panel switch
+- fix(persons-view): the family tree (Pedigree/Hourglass/Descendant) re-renders after editing the focal person's events, names, or relationships
+- fix(person-panel): timeline and map re-fetch automatically when same-person events change
+
 ## v0.162.6 — Bengt feedback round: labels, event-type cleanup, About menu
 
 - fix(events): the "Källa (valfritt)" label is now just "Källa", "Orsak" reads "Dödsorsak" on death events, "Pension/Medborgarskap/Yrke" → "Pensionering / Nytt medborgarskap / Yrke/Anställning", and the "..." quick-pick button is labelled "Övriga händelser"
