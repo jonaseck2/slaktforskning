@@ -49,9 +49,6 @@
       :key="seg.ahnNum"
       :class="['fan-seg', { clickable: !seg.isEmpty && !linkBase, linked: !seg.isEmpty && !!linkBase && !!seg.person }]"
       @click="!seg.isEmpty && !linkBase && seg.person && emit('navigate', seg.person.id)"
-      @mouseenter="(e: MouseEvent) => !linkBase && seg.person && emit('personenter', seg.person!, e)"
-      @mousemove="(e: MouseEvent) => !linkBase && seg.person && emit('personmove', e)"
-      @mouseleave="!linkBase && seg.person && emit('personleave')"
     >
       <a v-if="linkBase && seg.person" :href="segHref(seg)" @click.prevent="scrollToId(segHref(seg).replace(/^#/, ''))">
         <title>{{ tooltipLabel(seg) }}</title>
@@ -59,9 +56,9 @@
         <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#fan-empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
       </a>
       <template v-else>
+        <title v-if="seg.person">{{ tooltipLabel(seg) }}</title>
         <path :d="seg.pathD" :fill="segFill(seg)" :stroke="strokeColor" :stroke-width="strokeWidth" stroke-linejoin="round" class="seg-path" />
         <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#fan-empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
-        <title v-if="seg.person && !linkBase">{{ tooltipLabel(seg) }}</title>
       </template>
 
       <!-- Curved text (gen 1-4) -->
@@ -107,23 +104,16 @@
       </template>
     </g>
 
-    <!-- Focal person -->
+    <!-- Focal person — never wrapped in <a>: the proband (ahnentafel #1) has no
+         dedicated ancestor page in the report (those start at #2), so a link
+         from the centre segment would scroll nowhere or to the wrong target. -->
     <g
       v-if="focalSegment"
-      :class="['fan-seg', { clickable: focalSegment.person && !linkBase, linked: !!linkBase && !!focalSegment.person }]"
+      :class="['fan-seg', { clickable: focalSegment.person && !linkBase }]"
       @click="focalSegment.person && !linkBase && emit('navigate', focalSegment.person!.id)"
-      @mouseenter="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personenter', focalSegment!.person!, e)"
-      @mousemove="(e: MouseEvent) => !linkBase && focalSegment!.person && emit('personmove', e)"
-      @mouseleave="!linkBase && focalSegment!.person && emit('personleave')"
     >
-      <a v-if="linkBase && focalSegment.person" :href="segHref(focalSegment)" @click.prevent="scrollToId(segHref(focalSegment).replace(/^#/, ''))">
-        <title>{{ tooltipLabel(focalSegment) }}</title>
-        <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
-      </a>
-      <template v-else>
-        <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
-        <title v-if="focalSegment.person && !linkBase">{{ tooltipLabel(focalSegment) }}</title>
-      </template>
+      <title v-if="focalSegment.person">{{ tooltipLabel(focalSegment) }}</title>
+      <circle :cx="focalCx" :cy="focalCy" :r="focalSegment.rOuter" :fill="focalSegment.fill" filter="url(#fan-focal-shadow)" />
 
       <!-- Focal text labels (shared by link and non-link modes) -->
       <text
@@ -200,9 +190,6 @@ defineExpose({ rootRef });
 
 const emit = defineEmits<{
   navigate: [id: string];
-  personenter: [person: NonNullable<FanSegment['person']>, event: MouseEvent];
-  personmove: [event: MouseEvent];
-  personleave: [];
 }>();
 
 const nonFocalSegments = computed(() => props.segments.filter(s => !s.isFocal));

@@ -20,13 +20,9 @@
         :focal-shadow-color="colorMode === 'bw' ? 'rgba(0,0,0,0.15)' : (chartTheme.dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)')"
         :no-gradients="chartTheme.highContrast || colorMode === 'bw'"
         @navigate="$emit('navigate', $event)"
-        @personenter="(p, e) => tooltipRef?.show(p, e.clientX, e.clientY)"
-        @personmove="(e) => tooltipRef?.move(e.clientX, e.clientY)"
-        @personleave="tooltipRef?.hide()"
       />
     </div>
 
-    <ChartTooltip ref="tooltipRef" />
     <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
       <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
       <button
@@ -62,11 +58,8 @@ import {
 } from '../../utils/fanColors';
 import { useFanThemeColors } from '../../composables/useFanThemeColors';
 import FanChartSvg from './FanChartSvg.vue';
-import ChartTooltip from './ChartTooltip.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { fanGenerations } from '../../composables/useChartGenerations';
-
-const tooltipRef = ref<InstanceType<typeof ChartTooltip> | null>(null);
 
 const { t } = useI18n();
 
