@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.171.1 — Map place-type filter
+
+- fix(places): the place-type chip bar above the map now actually filters map points (and re-fits bounds). Previously `activeTypeFilter` was set on click but never read by `MapView` — the chips were dead UI
+
 ## v0.171.0 — Place quality checks
 
 - feat(checks): four new quality checks surface the genuine data issues that survive the v0.170.0 place-resolver overhaul (the 2.6 % truly unmatched cases — typos, dates, addresses, mangled länsbokstav notation):

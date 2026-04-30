@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 
-const props = defineProps<{ noPanel?: boolean; searchText?: string }>();
+const props = defineProps<{ noPanel?: boolean; searchText?: string; typeFilter?: string }>();
 const emit = defineEmits<{ 'select-place': [id: string]; 'reopen-panel': [] }>();
 import { LGeoJson } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
@@ -351,8 +351,12 @@ const placesWithoutCoords = computed(() => {
 
 const filteredPlaces = computed(() => {
   const q = filterText.value.trim().toLowerCase();
-  if (!q) return allDisplayPlaces.value;
-  return allDisplayPlaces.value.filter(p => p.name.toLowerCase().includes(q));
+  const type = props.typeFilter && props.typeFilter !== 'all' ? props.typeFilter : null;
+  return allDisplayPlaces.value.filter(p => {
+    if (type && p.place_type !== type) return false;
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
 });
 
 function fitBounds() {

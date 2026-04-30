@@ -67,7 +67,7 @@
     <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
 
     <!-- Map (always shown in center) -->
-    <MapView no-panel :search-text="searchQuery" style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
+    <MapView no-panel :search-text="searchQuery" :type-filter="activeTypeFilter" style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
       <template #header>
         <div class="header">
           <h2>{{ $t('places.title') }}</h2>
