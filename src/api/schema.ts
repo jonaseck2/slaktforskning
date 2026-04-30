@@ -432,4 +432,10 @@ export function initializeSchema(db: Database): void {
     runSql(db, 'ALTER TABLE persons DROP COLUMN living');
   }
 
+  // v0.162.6: collapse 'baptism' and 'christening' event types into 'christening'.
+  // The two were duplicates in Swedish ("Dop") and a single canonical type avoids
+  // double-listing in event-type pickers (BENGT #28d). Idempotent — no-op once
+  // all rows already say 'christening'.
+  runSql(db, "UPDATE events SET event_type='christening' WHERE event_type='baptism'");
+
 }

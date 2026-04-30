@@ -25,7 +25,7 @@
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': !QUICK_EVENT_TYPES.includes(form.event_type as QuickType) && !!form.event_type }"
             @click="showTypeDropdown = !showTypeDropdown"
-          >…</button>
+          >{{ $t('events.otherEvents') }}</button>
         </div>
         <select
           v-if="showTypeDropdown"
@@ -34,10 +34,14 @@
           v-model="form.event_type"
           @change="showTypeDropdown = false"
         >
-          <option v-for="et in EVENT_TYPE_VALUES" :key="et" :value="et">
+          <option value="" disabled>{{ $t('events.selectType') }}</option>
+          <option v-for="et in OTHER_EVENT_TYPES" :key="et" :value="et">
             {{ $t('eventTypes.' + et) }}
           </option>
         </select>
+        <p v-if="showTypeChangeWarning" class="ep-type-warning">
+          {{ $t('events.typeChangeWarning') }}
+        </p>
       </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('events.date') }}</span>
@@ -53,7 +57,7 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('places.title') }}</span>
+        <span class="ep-field-label">{{ $t('events.place') }}</span>
         <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
       </div>
       <div v-if="form.event_type === 'death'" class="ep-field">
@@ -190,8 +194,13 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-const QUICK_EVENT_TYPES = ['birth', 'baptism', 'marriage', 'death'] as const;
+const QUICK_EVENT_TYPES = ['birth', 'marriage', 'death'] as const;
 type QuickType = typeof QUICK_EVENT_TYPES[number];
+
+// Dropdown shows everything else — quick row already covers the top three.
+const OTHER_EVENT_TYPES = EVENT_TYPE_VALUES.filter(
+  (et) => !QUICK_EVENT_TYPES.includes(et as QuickType),
+);
 
 interface CitationRow { id: string; sourceTitle: string; page: string | null; confidence: number | null; }
 interface EditingCitation {
@@ -223,7 +232,9 @@ const props = withDefaults(defineProps<{
 }>(), {
   mode: 'subpanel',
   editingEvent: null,
-  defaultEventType: 'birth',
+  // Empty default — never pre-select an event type for new events (BENGT #28b).
+  // Callers can still pass an explicit type to pre-fill the picker.
+  defaultEventType: '',
 });
 
 const emit = defineEmits<{
@@ -235,6 +246,11 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const savedEventId = ref<string | null>(props.editingEvent?.id ?? null);
+
+// Snapshot of the event_type at the moment we entered edit mode. Used to drive
+// a soft warning when the user changes type on an already-saved event
+// (BENGT #36 — warn, don't block).
+const initialEventType = ref<string>(props.editingEvent?.event_type ?? '');
 
 const form = reactive<EventData>({
   id: props.editingEvent?.id,
@@ -255,6 +271,13 @@ const eventTitle = computed(() => {
   return contextName.value ? t('events.titleOf', { event: base, name: contextName.value }) : base;
 });
 const showTypeDropdown = ref(false);
+
+// Soft warning when changing type on an existing event. We don't block — some
+// users genuinely correct a mis-categorized event — but we flag the risk that
+// citations and type-specific fields may now be inconsistent.
+const showTypeChangeWarning = computed(
+  () => !!props.editingEvent && !!initialEventType.value && form.event_type !== initialEventType.value,
+);
 
 // Birth-only baptism companion fields. Hidden when editing an existing event so we
 // don't accidentally create duplicate baptism events on every re-save.
@@ -481,7 +504,7 @@ async function syncBaptismCompanion(birthEventId: string) {
 
   const description = fadder ? `${t('events.godparents')}: ${fadder}` : '';
   const payload = {
-    event_type: 'baptism',
+    event_type: 'christening',
     date_type: 'exact',
     date_value: date || null,
     date_value_end: null,
@@ -537,6 +560,15 @@ function handleCancel() {
   font-size: var(--font-xs);
   color: var(--text-muted);
   margin: calc(var(--space-xs) * -1) 0 var(--space-sm) 0;
+  line-height: 1.4;
+}
+.ep-type-warning {
+  font-size: var(--font-xs);
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  margin: var(--space-xs) 0 0 0;
   line-height: 1.4;
 }
 .ep-link-btn {

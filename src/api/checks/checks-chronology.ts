@@ -174,7 +174,7 @@ export function checkBaptismLate(db: Database): CheckResult[] {
            b.id AS birth_id, CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year
     FROM persons p
     JOIN event_participants epbap ON epbap.person_id = p.id
-    JOIN events bap ON bap.id = epbap.event_id AND bap.event_type = 'baptism'
+    JOIN events bap ON bap.id = epbap.event_id AND bap.event_type = 'christening'
       AND bap.date_type NOT IN ('unknown') AND bap.date_value IS NOT NULL
     JOIN event_participants epb ON epb.person_id = p.id
     JOIN events b ON b.id = epb.event_id AND b.event_type = 'birth'

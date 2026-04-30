@@ -259,6 +259,7 @@
       </router-view>
     </main>
     <ToastNotification />
+    <AboutModal :visible="aboutVisible" @close="aboutVisible = false" />
   </div>
 </template>
 
@@ -274,6 +275,7 @@ import PersonPicker from './components/PersonPicker.vue';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
+import AboutModal from './components/AboutModal.vue';
 import { useToast } from './composables/useToast';
 
 const router = useRouter();
@@ -319,6 +321,20 @@ function setAppearance(value: Appearance) {
 
 // --- Sidebar / topbar appearance panel ---
 const isSettingsOpen = ref(false);
+
+// About dialog — opened from Help → About OurLegacy via main process IPC.
+const aboutVisible = ref(false);
+
+declare const window: Window & {
+  api: {
+    app?: {
+      onOpenAbout: (cb: () => void) => void;
+    };
+  };
+};
+if (typeof window !== 'undefined' && window.api?.app?.onOpenAbout) {
+  window.api.app.onOpenAbout(() => { aboutVisible.value = true; });
+}
 
 // Nav orientation: vertical (left sidebar) or horizontal (top-bar with section
 // dropdowns). Persisted in localStorage; UI preference, not db_settings.
