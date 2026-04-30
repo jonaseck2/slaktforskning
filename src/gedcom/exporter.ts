@@ -120,16 +120,45 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
   }
 
-  // ── SUBM: write submitter from default_person_id ──────────────────────────
-  const defaultPersonId = getDbSetting(db, 'default_person_id');
-  if (defaultPersonId) {
-    const names = getPersonNames(db, defaultPersonId);
-    const primary = names.find(n => n.preferred_name) ?? names[0];
-    if (primary) {
-      const fullName = [primary.given_name, primary.surname].filter(Boolean).join(' ');
-      lines.push('1 SUBM @SUBM@');
-      lines.push(`0 @SUBM@ SUBM`);
-      lines.push(`1 NAME ${fullName}`);
+  // ── SUBM: write the researcher (genealogist filing this file) ─────────────
+  // Per GEDCOM spec, SUBM identifies the submitter — the person filing the
+  // file — not the proband / tree subject. The proband is tracked separately
+  // via `default_person_id` (used for startup nav and import-time matching);
+  // it has no native GEDCOM 5.5.1 tag and is not exported here.
+  const researcherName = getDbSetting(db, 'researcher_name');
+  if (researcherName && researcherName.trim()) {
+    const researcherAddress = getDbSetting(db, 'researcher_address');
+    const researcherPhone   = getDbSetting(db, 'researcher_phone');
+    const researcherEmail   = getDbSetting(db, 'researcher_email');
+    lines.push('1 SUBM @SUBM@');
+    lines.push(`0 @SUBM@ SUBM`);
+    lines.push(`1 NAME ${researcherName.trim()}`);
+    if (researcherAddress && researcherAddress.trim()) {
+      // GEDCOM ADDR supports continuation lines via CONT — split on newline.
+      const addrLines = researcherAddress.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      if (addrLines.length > 0) {
+        lines.push(`1 ADDR ${addrLines[0]}`);
+        for (let i = 1; i < addrLines.length; i++) {
+          lines.push(`2 CONT ${addrLines[i]}`);
+        }
+      }
+    }
+    if (researcherPhone && researcherPhone.trim()) lines.push(`1 PHON ${researcherPhone.trim()}`);
+    if (researcherEmail && researcherEmail.trim()) lines.push(`1 EMAIL ${researcherEmail.trim()}`);
+  } else {
+    // Fall back to default_person_id for backwards-compat with files that
+    // expect a SUBM NAME (e.g. Holger imports). This preserves round-trip
+    // behaviour for users who haven't filled in researcher info yet.
+    const defaultPersonId = getDbSetting(db, 'default_person_id');
+    if (defaultPersonId) {
+      const names = getPersonNames(db, defaultPersonId);
+      const primary = names.find(n => n.preferred_name) ?? names[0];
+      if (primary) {
+        const fullName = [primary.given_name, primary.surname].filter(Boolean).join(' ');
+        lines.push('1 SUBM @SUBM@');
+        lines.push(`0 @SUBM@ SUBM`);
+        lines.push(`1 NAME ${fullName}`);
+      }
     }
   }
 

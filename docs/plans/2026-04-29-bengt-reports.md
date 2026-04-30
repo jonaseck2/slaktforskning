@@ -33,8 +33,9 @@ Three related strands in Bengt's #14b: researcher contact info on every report, 
 - [x] Chart prints pass `showHeaderFooter: false` so framable single-page prints stay clean
 
 ### Phase 4 — GEDCOM SUBM linkage
-- [ ] [src/api/gedcom-export.ts](../../src/api/) (find actual file) — when exporting, populate `SUBM` record's `NAME`, `ADDR`, `PHON`, `EMAIL` from researcher_* settings
-- [ ] Existing `default_person_id` handling stays — that's the SUBJECT subject, not the SUBMITTER
+- [x] [src/gedcom/exporter.ts](../../src/gedcom/exporter.ts) — populate `SUBM` record's `NAME`, `ADDR` (with CONT continuation lines), `PHON`, `EMAIL` from researcher_* settings
+- [x] Disentangled SUBM (researcher) from `default_person_id` (proband). `default_person_id` is now used as the export fallback only when researcher_name is empty, preserving Holger round-trip compat. Import-side matching of SUBM NAME → person → `default_person_id` is unchanged (legacy convention from Holger files where SUBM stored the proband)
+- [x] Unit tests: `tests/unit/gedcom-export-subm.test.ts` (5 cases)
 
 ### Phase 5 — Citation rendering audit
 - [ ] Grep `citation` checkbox handling in `ALifeReport.vue`, `AMarriageReport.vue`, `PlaceChronicleReport.vue`, `LifeOnOnePageReport.vue`, `YourAncestorsReport.vue`
