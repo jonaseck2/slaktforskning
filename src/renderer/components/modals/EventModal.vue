@@ -25,7 +25,7 @@
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': !QUICK_EVENT_TYPES.includes(form.event_type as QuickType) && !!form.event_type }"
             @click="showTypeDropdown = !showTypeDropdown"
-          >…</button>
+          >{{ $t('events.otherEvents') }}</button>
         </div>
         <select
           v-if="showTypeDropdown"
@@ -53,7 +53,7 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('places.title') }}</span>
+        <span class="ep-field-label">{{ $t('events.place') }}</span>
         <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
       </div>
       <div v-if="form.event_type === 'death'" class="ep-field">
