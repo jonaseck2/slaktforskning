@@ -15,7 +15,7 @@
         </div>
         <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
         <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" />
-        <AppEmptyState v-else-if="sortedItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
+        <AppEmptyState v-else-if="items.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
         <div v-else class="media-list-scroll" ref="listScrollRef">
           <table class="data-table media-list-table">
             <thead>
@@ -33,7 +33,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="item in sortedItems"
+                v-for="item in items"
                 :key="item.id"
                 :data-media-id="item.id"
                 class="clickable-row"
@@ -56,7 +56,7 @@
             {{ $t('htmlSite.preview.mediaLimited', { limit: previewMediaLimit, total: previewMediaTotalLinked }) }}
           </template>
           <template v-else>
-            {{ $t('media.showingOf', { shown: sortedItems.length, total }) }}
+            {{ $t('media.showingOf', { shown: items.length, total }) }}
           </template>
         </p>
       </div>
@@ -109,12 +109,12 @@
 
     <AppLoadingState v-if="loading && items.length === 0" :rows="5" />
     <AppEmptyState v-else-if="!loading && items.length === 0" icon="📷" :title="$t('empty.media')" :description="$t('empty.mediaDesc')" :action-label="$t('empty.attachMedia')" @action="attachFile" />
-    <AppEmptyState v-else-if="filteredItems.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
+    <AppEmptyState v-else-if="items.length === 0" icon="📷" :title="$t('empty.media') + ' ' + $t('empty.withFilter')" />
 
     <!-- Gallery grid -->
     <div v-else class="gallery-grid">
       <div
-        v-for="(item, idx) in filteredItems"
+        v-for="(item, idx) in items"
         :key="item.id"
         :data-media-id="item.id"
         class="gallery-card"
@@ -203,7 +203,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import MediaViewer from '../components/MediaViewer.vue';
@@ -217,6 +217,7 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useProfilePicStore } from '../stores/profilePic';
+import { usePagedList } from '../composables/usePagedList';
 const selectedStore = useSelectedPersonStore();
 const profilePicStore = useProfilePicStore();
 
@@ -225,7 +226,6 @@ declare const window: Window & {
 };
 
 const IMAGE_FORMATS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif']);
-const PAGE_SIZE = 100;
 
 const { t } = useI18n();
 const route = useRoute();
@@ -273,16 +273,11 @@ const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
   maxWidthRatio: 0.4,
 });
 
-const items = ref<MediaItem[]>([]);
-const total = ref(0);
-const offset = ref(0);
-const loading = ref(true);
-const searchQuery = ref('');
 const thumbnails = ref<Record<string, string>>({});
 const viewerMode = ref(false);
 const viewerIndex = ref(0);
 const deepLinkItems = ref<MediaItem[] | null>(null);
-const viewerItems = computed<MediaItem[]>(() => deepLinkItems.value ?? filteredItems.value);
+const viewerItems = computed<MediaItem[]>(() => deepLinkItems.value ?? items.value);
 const drawMode = ref(false);
 const highlightedRegionId = ref<string | null>(null);
 const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
@@ -291,8 +286,7 @@ const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 const listSentinel = ref<HTMLElement | null>(null);
 const listScrollRef = ref<HTMLElement | null>(null);
-let observer: IntersectionObserver | null = null;
-let listObserver: IntersectionObserver | null = null;
+let pendingAutoSelect = true;
 
 const personFilterId = computed(() => {
   const v = route.query.person;
@@ -302,48 +296,6 @@ const personName = ref('');
 
 const missingCount = computed(() => items.value.filter(i => i.is_missing).length);
 
-const filteredItems = computed(() => {
-  if (!searchQuery.value.trim()) return items.value;
-  const q = searchQuery.value.toLowerCase();
-  return items.value.filter(i =>
-    mediaDisplayName(i.title, i.file_ref, '').toLowerCase().includes(q) ||
-    (i.format || '').toLowerCase().includes(q)
-  );
-});
-
-type MediaSortBy = 'title' | 'format';
-type MediaSortDir = 'asc' | 'desc';
-const sortBy = ref<MediaSortBy>((localStorage.getItem('media-sort-by') as MediaSortBy) || 'title');
-const sortDir = ref<MediaSortDir>((localStorage.getItem('media-sort-dir') as MediaSortDir) || 'asc');
-function toggleSort(column: MediaSortBy) {
-  if (sortBy.value === column) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = column;
-    sortDir.value = 'asc';
-  }
-  localStorage.setItem('media-sort-by', sortBy.value);
-  localStorage.setItem('media-sort-dir', sortDir.value);
-}
-
-const sortedItems = computed(() => {
-  const rows = [...filteredItems.value];
-  const dir = sortDir.value === 'asc' ? 1 : -1;
-  const key = sortBy.value;
-  rows.sort((a, b) => {
-    const av = key === 'title'
-      ? mediaDisplayName(a.title, a.file_ref, '').toLowerCase()
-      : (a.format ?? '').toLowerCase();
-    const bv = key === 'title'
-      ? mediaDisplayName(b.title, b.file_ref, '').toLowerCase()
-      : (b.format ?? '').toLowerCase();
-    if (av < bv) return -1 * dir;
-    if (av > bv) return 1 * dir;
-    return 0;
-  });
-  return rows;
-});
-
 function isImageFormat(format: string | null): boolean {
   return format ? IMAGE_FORMATS.has(format.toLowerCase()) : false;
 }
@@ -352,80 +304,79 @@ function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string |
   return raw.map(r => ({ ...r, linkCount: r.link_count }));
 }
 
-async function load() {
-  loading.value = true;
-  try {
+type MediaSortBy = 'title' | 'format';
+const {
+  items,
+  total,
+  loading,
+  searchQuery,
+  sortBy,
+  sortDir,
+  reload,
+  toggleSort,
+  attachSentinel,
+} = usePagedList<MediaItem, MediaSortBy>({
+  defaultSortBy: 'title',
+  storageKey: 'media',
+  fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+    // Person-scoped view: show only the media linked to the URL-specified
+    // person. We bypass the paged channel and return everything in one
+    // page; the filter+sort are applied client-side over that small set.
     if (personFilterId.value) {
-      const [rawMedia, names] = await Promise.all([
-        window.api.media.forEntity('person', personFilterId.value) as Promise<Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; created_at: string }>>,
-        window.api.persons.getNames(personFilterId.value) as Promise<Array<{ given_name: string; surname: string }>>,
-      ]);
-      const n = names[0];
-      personName.value = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
-      items.value = rawMedia.map(r => ({ ...r, notes: r.notes ?? '', is_missing: 0, linkCount: 0 }));
-      total.value = items.value.length;
-      offset.value = items.value.length;
-      loadThumbnails(items.value);
-      if (!selectedMediaId.value && items.value.length > 0) {
-        selectedMediaId.value = items.value[0].id;
+      if (offset > 0) return { items: [], total: 0 };
+      const raw = await window.api.media.forEntity('person', personFilterId.value) as Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; created_at: string }>;
+      let rows: MediaItem[] = raw.map(r => ({ ...r, notes: r.notes ?? '', is_missing: 0, linkCount: 0 }));
+      const q = (query ?? '').trim().toLowerCase();
+      if (q) {
+        rows = rows.filter(i =>
+          mediaDisplayName(i.title, i.file_ref, '').toLowerCase().includes(q) ||
+          (i.format || '').toLowerCase().includes(q));
       }
-    } else {
-      personName.value = '';
-      const result = await window.api.media.listPage(PAGE_SIZE, 0) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
-      items.value = mapPageItems(result.items);
-      total.value = result.total;
-      offset.value = PAGE_SIZE;
-      loadThumbnails(items.value);
-      // Auto-select: selected person's first media, or first item
-      if (!selectedMediaId.value && items.value.length > 0) {
-        let picked: string | null = null;
-        const anchorId = selectedStore.personId
-          ?? (await window.api.db.getSetting('default_person_id') as string | null);
-        if (anchorId) {
-          const personMedia = await window.api.media.forEntity('person', anchorId) as Array<{ id: string }>;
-          if (personMedia.length > 0) picked = personMedia[0].id;
-        }
-        selectedMediaId.value = picked ?? items.value[0].id;
-      }
+      const dir = sortDir === 'asc' ? 1 : -1;
+      rows.sort((a, b) => {
+        const av = sortBy === 'title'
+          ? mediaDisplayName(a.title, a.file_ref, '').toLowerCase()
+          : (a.format ?? '').toLowerCase();
+        const bv = sortBy === 'title'
+          ? mediaDisplayName(b.title, b.file_ref, '').toLowerCase()
+          : (b.format ?? '').toLowerCase();
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      });
+      return { items: rows, total: rows.length };
     }
-  } catch (err) {
-    console.error('[MediaView] load failed:', err);
-  } finally {
-    loading.value = false;
-  }
-}
+    const result = await window.api.media.listPage(limit, offset, sortBy, sortDir, query) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
+    return { items: mapPageItems(result.items), total: result.total };
+  },
+  onLoaded: (loaded) => {
+    void loadThumbnails(loaded);
+    void maybeAutoSelect(loaded);
+  },
+  onAppended: (appended) => {
+    void loadThumbnails(appended);
+  },
+});
+watch(sentinel, (el) => attachSentinel(el));
+watch([listSentinel, listScrollRef], ([el, root]) => attachSentinel(el, root));
 
-async function loadMore() {
-  if (loading.value) return;
-  loading.value = true;
-  try {
-    const result = await window.api.media.listPage(PAGE_SIZE, offset.value) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
-    const newItems = mapPageItems(result.items);
-    items.value = [...items.value, ...newItems];
-    total.value = result.total;
-    offset.value += PAGE_SIZE;
-    loadThumbnails(newItems);
-  } catch (err) {
-    console.error('[MediaView] loadMore failed:', err);
-  } finally {
-    loading.value = false;
+async function maybeAutoSelect(loaded: MediaItem[]) {
+  if (!pendingAutoSelect) return;
+  if (loaded.length === 0) return;
+  pendingAutoSelect = false;
+  if (selectedMediaId.value) return;
+  if (personFilterId.value) {
+    selectedMediaId.value = loaded[0].id;
+    return;
   }
-}
-
-async function reload() {
-  // Full reload preserving scroll — used after link changes
-  loading.value = true;
-  try {
-    const result = await window.api.media.listPage(PAGE_SIZE, 0) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
-    items.value = mapPageItems(result.items);
-    total.value = result.total;
-    offset.value = PAGE_SIZE;
-    loadThumbnails(items.value);
-  } catch (err) {
-    console.error('[MediaView] reload failed:', err);
-  } finally {
-    loading.value = false;
+  let picked: string | null = null;
+  const anchorId = selectedStore.personId
+    ?? (await window.api.db.getSetting('default_person_id') as string | null);
+  if (anchorId) {
+    const personMedia = await window.api.media.forEntity('person', anchorId) as Array<{ id: string }>;
+    if (personMedia.length > 0) picked = personMedia[0].id;
   }
+  selectedMediaId.value = picked ?? loaded[0].id;
 }
 
 async function loadThumbnails(mediaItems: MediaItem[]) {
@@ -447,7 +398,7 @@ function selectMedia(id: string) {
 function openViewer(idx: number) {
   deepLinkItems.value = null;
   viewerIndex.value = idx;
-  const item = filteredItems.value[idx];
+  const item = items.value[idx];
   if (item) selectedMediaId.value = item.id;
   viewerMode.value = true;
 }
@@ -569,38 +520,10 @@ async function attachFile() {
 const del = useDeleteConfirm<string>(async (id) => {
   await window.api.media.delete(id);
   delete thumbnails.value[id];
-  items.value = items.value.filter(i => i.id !== id);
-  total.value = Math.max(0, total.value - 1);
+  if (selectedMediaId.value === id) selectedMediaId.value = null;
+  await reload();
 });
 function deleteItem(id: string) { del.ask(id); }
-
-watch(sentinel, (el) => {
-  if (observer) { observer.disconnect(); observer = null; }
-  if (!el) return;
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && items.value.length < total.value && !loading.value) {
-        loadMore();
-      }
-    },
-    { rootMargin: '2000px 0px' }
-  );
-  observer.observe(el);
-});
-
-watch([listSentinel, listScrollRef], ([el, root]) => {
-  if (listObserver) { listObserver.disconnect(); listObserver = null; }
-  if (!el || !root) return;
-  listObserver = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && items.value.length < total.value && !loading.value) {
-        loadMore();
-      }
-    },
-    { root, rootMargin: '600px 0px' }
-  );
-  listObserver.observe(el);
-});
 
 // In the website-export preview the main process inlines at most N
 // thumbnails (PREVIEW_THUMB_COUNT in src/main/ipc/website-export.ts) and
@@ -614,7 +537,12 @@ const isMediaPreviewTruncated = computed(() =>
   && previewMediaTotalLinked.value > previewMediaLimit.value);
 
 onMounted(async () => {
-  await load();
+  if (personFilterId.value) {
+    const names = await window.api.persons.getNames(personFilterId.value) as Array<{ given_name: string; surname: string }>;
+    const n = names[0];
+    personName.value = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+  }
+  await reload();
   if (isStaticMode) {
     try {
       const [limitRaw, totalRaw] = await Promise.all([
@@ -639,14 +567,19 @@ watch(() => route.query.open, async (openId) => {
     await openViewerById(openId);
   }
 });
-watch(personFilterId, async () => {
-  items.value = [];
-  total.value = 0;
-  offset.value = 0;
+watch(personFilterId, async (id) => {
   selectedMediaId.value = null;
   viewerMode.value = false;
   deepLinkItems.value = null;
-  await load();
+  pendingAutoSelect = true;
+  if (id) {
+    const names = await window.api.persons.getNames(id) as Array<{ given_name: string; surname: string }>;
+    const n = names[0];
+    personName.value = n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '';
+  } else {
+    personName.value = '';
+  }
+  await reload();
 });
 // Scroll both the gallery and the left list to the selected media so it
 // stays visible when the selection changes (e.g. the user clicks a row in
@@ -659,10 +592,6 @@ watch(selectedMediaId, async (id) => {
   for (const el of targets) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
 
-onUnmounted(() => {
-  if (observer) observer.disconnect();
-  if (listObserver) listObserver.disconnect();
-});
 </script>
 
 <style scoped>

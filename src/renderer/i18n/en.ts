@@ -250,6 +250,7 @@ export default {
     searchOrAdd: 'Search or add source…',
     callNumber: 'Call Number',
     abstract: 'Abstract',
+    filterSearch: 'Search sources',
   },
   groupPanel: {
     noGroupSelected: 'Click a group in the list',

@@ -5,7 +5,7 @@ import { listChannels, getChannel } from '../../src/shared/channels/registry';
 describe('places channel registry', () => {
   it('registers all places:* channels', () => {
     const placeChannels = listChannels().filter(c => c.startsWith('places:'));
-    expect(placeChannels.length).toBe(9);
+    expect(placeChannels.length).toBe(10);
   });
   it('places:get is a worker channel', () => {
     const ch = getChannel('places:get');

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createPlace, getPlace, listPlaces, searchPlaces,
   updatePlace, deletePlace, findOrCreatePlace, getPersonsForPlace,
+  listPlacesPage, countPlaces,
 } from '../../src/api/places';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -60,6 +61,42 @@ describe('listPlaces', () => {
     const list = listPlaces(db);
     expect(list).toHaveLength(2);
     expect(list[0].name).toBe('Arboga');
+  });
+});
+
+describe('listPlacesPage / countPlaces', () => {
+  it('paginates and sorts by name', () => {
+    for (let i = 0; i < 5; i++) createPlace(db, { name: `Place${i}` });
+    const page1 = listPlacesPage(db, 3, 0, 'name', 'asc');
+    const page2 = listPlacesPage(db, 3, 3, 'name', 'asc');
+    expect(page1).toHaveLength(3);
+    expect(page2).toHaveLength(2);
+    expect(countPlaces(db)).toBe(5);
+  });
+
+  it('filters by name across the full table, not just the loaded page', () => {
+    createPlace(db, { name: 'Björkvik' });
+    createPlace(db, { name: 'Stockholm' });
+    createPlace(db, { name: 'Göteborg' });
+    const filtered = listPlacesPage(db, 100, 0, 'name', 'asc', 'björk');
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].name).toBe('Björkvik');
+    expect(countPlaces(db, 'björk')).toBe(1);
+  });
+
+  it('also matches city and country fields', () => {
+    createPlace(db, { name: 'Tvärgatan 5', city: 'Växjö', country: 'Sverige' });
+    createPlace(db, { name: 'Björkvik' });
+    expect(countPlaces(db, 'växjö')).toBe(1);
+    expect(countPlaces(db, 'sverige')).toBe(1);
+  });
+
+  it('sorts desc when requested', () => {
+    createPlace(db, { name: 'Arboga' });
+    createPlace(db, { name: 'Borås' });
+    const desc = listPlacesPage(db, 100, 0, 'name', 'desc');
+    expect(desc[0].name).toBe('Borås');
+    expect(desc[1].name).toBe('Arboga');
   });
 });
 

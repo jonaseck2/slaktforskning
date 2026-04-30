@@ -98,9 +98,9 @@ defineChannel({
 defineChannel({
   name: 'persons:listPage',
   thread: 'worker',
-  handler: (db, limit: number, offset: number, sortBy, sortDir) => ({
-    persons: persons.listPersonsPage(db, limit, offset, sortBy, sortDir),
-    total: persons.countPersons(db),
+  handler: (db, limit: number, offset: number, sortBy, sortDir, query?: string) => ({
+    persons: persons.listPersonsPage(db, limit, offset, sortBy, sortDir, query),
+    total: persons.countPersons(db, query),
   }),
 });
 

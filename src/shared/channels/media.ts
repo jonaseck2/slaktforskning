@@ -18,9 +18,9 @@ defineChannel({
 defineChannel({
   name: 'media:listPage',
   thread: 'worker',
-  handler: (db, limit: number, offset: number) => ({
-    items: media.listMediaPage(db, limit, offset),
-    total: media.countMedia(db),
+  handler: (db, limit: number, offset: number, sortBy?: media.ListMediaSortBy, sortDir?: media.ListMediaSortDir, query?: string) => ({
+    items: media.listMediaPage(db, limit, offset, sortBy, sortDir, query),
+    total: media.countMedia(db, query),
   }),
 });
 

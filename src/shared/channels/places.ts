@@ -22,6 +22,15 @@ defineChannel({
 });
 
 defineChannel({
+  name: 'places:listPage',
+  thread: 'worker',
+  handler: (db, limit: number, offset: number, sortBy: places.ListPlacesSortBy, sortDir: places.ListPlacesSortDir, query?: string) => ({
+    items: places.listPlacesPage(db, limit, offset, sortBy, sortDir, query),
+    total: places.countPlaces(db, query),
+  }),
+});
+
+defineChannel({
   name: 'places:search',
   thread: 'worker',
   handler: (db, query: string) => places.searchPlaces(db, query),

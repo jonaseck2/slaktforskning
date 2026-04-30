@@ -247,6 +247,27 @@ describe('media links', () => {
     createMedia(db, { title: 'B' });
     expect(countMedia(db)).toBe(2);
   });
+
+  it('filters by query across title, notes, format, file_ref', () => {
+    createMedia(db, { title: 'Wedding photo', notes: 'Karl and Anna', format: 'jpg' });
+    createMedia(db, { title: 'Death certificate', format: 'pdf' });
+    createMedia(db, { title: 'Letter', file_ref: 'letters/1850.txt' });
+
+    expect(countMedia(db, 'wedding')).toBe(1);
+    expect(countMedia(db, 'karl')).toBe(1);
+    expect(countMedia(db, 'pdf')).toBe(1);
+    expect(countMedia(db, '1850')).toBe(1);
+    expect(listMediaPage(db, 100, 0, 'title', 'asc', 'wedding').map(m => m.title)).toEqual(['Wedding photo']);
+  });
+
+  it('sorts by format and created_at', () => {
+    createMedia(db, { title: 'A', format: 'pdf' });
+    createMedia(db, { title: 'B', format: 'jpg' });
+    const byFormatAsc = listMediaPage(db, 100, 0, 'format', 'asc');
+    expect(byFormatAsc[0].format).toBe('jpg');
+    const byFormatDesc = listMediaPage(db, 100, 0, 'format', 'desc');
+    expect(byFormatDesc[0].format).toBe('pdf');
+  });
 });
 
 describe('getPersonProfilePicRef', () => {

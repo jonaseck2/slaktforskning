@@ -250,6 +250,7 @@ export default {
     searchOrAdd: 'Sök eller lägg till källa…',
     callNumber: 'Signum',
     abstract: 'Sammanfattning',
+    filterSearch: 'Sök källor',
   },
   groupPanel: {
     noGroupSelected: 'Klicka på en grupp i listan',

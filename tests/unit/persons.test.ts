@@ -372,6 +372,39 @@ describe('listPersonsPage / countPersons / searchPersonsWithDetails', () => {
     expect(countPersons(db)).toBe(2);
   });
 
+  it('listPersonsPage filters by query across given_name, surname, preferred_name, nickname', () => {
+    const a = createPerson(db, { given_name: 'Karl', surname: 'Andersson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
+    addPersonName(db, a.id, { given_name: 'Karl', surname: 'Andersson', name_type: 'birth', nickname: 'Kalle' });
+
+    const byGiven = listPersonsPage(db, 100, 0, 'surname', 'asc', 'Karl');
+    expect(byGiven.map(p => p.given_name)).toContain('Karl');
+    expect(byGiven.map(p => p.given_name)).not.toContain('Anna');
+
+    const bySurname = listPersonsPage(db, 100, 0, 'surname', 'asc', 'Svensson');
+    expect(bySurname.map(p => p.surname)).toContain('Svensson');
+    expect(bySurname.map(p => p.surname)).not.toContain('Andersson');
+
+    const byNickname = listPersonsPage(db, 100, 0, 'surname', 'asc', 'Kalle');
+    expect(byNickname.map(p => p.given_name)).toContain('Karl');
+  });
+
+  it('countPersons reflects filter when query is provided', () => {
+    createPerson(db, { given_name: 'Karl', surname: 'Andersson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Svensson' });
+    expect(countPersons(db)).toBe(2);
+    expect(countPersons(db, 'Karl')).toBe(1);
+    expect(countPersons(db, 'zzz')).toBe(0);
+  });
+
+  it('listPersonsPage AND-combines multiple tokens', () => {
+    createPerson(db, { given_name: 'Karl Erik', surname: 'Andersson' });
+    createPerson(db, { given_name: 'Karl', surname: 'Svensson' });
+    const both = listPersonsPage(db, 100, 0, 'surname', 'asc', 'Karl Erik');
+    expect(both).toHaveLength(1);
+    expect(both[0].surname).toBe('Andersson');
+  });
+
   it('searchPersonsWithDetails matches by name and includes birth data', () => {
     const p = createPerson(db, { given_name: 'Karl', surname: 'Johansson', sex: 'M' });
     const birth = createEvent(db, { event_type: 'birth', date_original: '5 MAJ 1850' });

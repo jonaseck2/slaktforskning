@@ -49,7 +49,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="person in filteredPersons"
+            v-for="person in persons"
             :key="person.id"
             v-narrate="() => narratePersonRow({
               given_name: person.given_name || '',
@@ -88,7 +88,7 @@
       <div ref="sentinel" class="scroll-sentinel"></div>
       </div>
       <p v-if="total > 0" class="persons-list-footer count-label">
-        {{ $t('persons.showingOf', { shown: filteredPersons.length, total }) }}
+        {{ $t('persons.showingOf', { shown: persons.length, total }) }}
       </p>
     </template>
 
@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue';
+import { ref, watch, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonModal from '../components/modals/PersonModal.vue';
@@ -111,6 +111,7 @@ import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
+import { usePagedList } from '../composables/usePagedList';
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
@@ -128,8 +129,6 @@ interface PersonListItem {
   death_place: string | null;
 }
 
-const PAGE_SIZE = 100;
-
 const { t } = useI18n();
 const toast = useToast();
 const props = defineProps<{ embedded?: boolean }>();
@@ -137,101 +136,40 @@ const emit = defineEmits<{ select: [id: string] }>();
 const router = useRouter();
 const selectedPersonStore = useSelectedPersonStore();
 
-const persons = ref<PersonListItem[]>([]);
-const total = ref(0);
-const offset = ref(0);
-const searchQuery = ref('');
+type SortBy = 'surname' | 'given_name' | 'birth_date';
 
-const filteredPersons = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase();
-  if (!q) return persons.value;
-  return persons.value.filter(p =>
-    (p.given_name ?? '').toLowerCase().includes(q) ||
-    (p.surname ?? '').toLowerCase().includes(q) ||
-    (p.preferred_name ?? '').toLowerCase().includes(q) ||
-    (p.nickname ?? '').toLowerCase().includes(q)
-  );
+const {
+  items: persons,
+  total,
+  loading,
+  searchQuery,
+  sortBy,
+  sortDir,
+  reload,
+  toggleSort,
+  attachSentinel,
+} = usePagedList<PersonListItem, SortBy>({
+  defaultSortBy: 'surname',
+  storageKey: 'persons',
+  fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+    try {
+      const result = await window.api.persons.listPage(limit, offset, sortBy, sortDir, query) as { persons: PersonListItem[]; total: number };
+      return { items: result.persons, total: result.total };
+    } catch (err) {
+      console.error('[PersonsView] fetchPage failed:', err);
+      toast.error(t('errors.loadFailed'));
+      return { items: [], total: 0 };
+    }
+  },
 });
 
-// Sort state — clicking a column header toggles direction; clicking a
-// different column resets to asc. Persisted in localStorage so the choice
-// survives navigation.
-type SortBy = 'surname' | 'given_name' | 'birth_date';
-type SortDir = 'asc' | 'desc';
-const sortBy = ref<SortBy>((localStorage.getItem('persons-sort-by') as SortBy) || 'surname');
-const sortDir = ref<SortDir>((localStorage.getItem('persons-sort-dir') as SortDir) || 'asc');
-function toggleSort(column: SortBy) {
-  if (sortBy.value === column) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = column;
-    sortDir.value = 'asc';
-  }
-  localStorage.setItem('persons-sort-by', sortBy.value);
-  localStorage.setItem('persons-sort-dir', sortDir.value);
-  load();
-}
-const loading = ref(false);
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
-
-let observer: IntersectionObserver | null = null;
-
-watch(sentinel, (el) => {
-  if (observer) { observer.disconnect(); observer = null; }
-  if (!el) return;
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && persons.value.length < total.value && !loading.value) {
-        loadMore();
-      }
-    },
-    { rootMargin: '2000px 0px' }
-  );
-  observer.observe(el);
-});
-
-onUnmounted(() => {
-  if (observer) observer.disconnect();
-});
-
-
-
-async function load() {
-  if (!window.api) return;
-  loading.value = true;
-  try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, 0, sortBy.value, sortDir.value) as { persons: PersonListItem[]; total: number };
-    persons.value = result.persons;
-    total.value = result.total;
-    offset.value = PAGE_SIZE;
-  } catch (err) {
-    console.error('[PersonsView] load failed:', err);
-    toast.error(t('errors.loadFailed'));
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function loadMore() {
-  if (!window.api || loading.value) return;
-  loading.value = true;
-  try {
-    const result = await window.api.persons.listPage(PAGE_SIZE, offset.value, sortBy.value, sortDir.value) as { persons: PersonListItem[]; total: number };
-    persons.value = [...persons.value, ...result.persons];
-    total.value = result.total;
-    offset.value += PAGE_SIZE;
-  } catch (err) {
-    console.error('[PersonsView] loadMore failed:', err);
-    toast.error(t('errors.loadFailed'));
-  } finally {
-    loading.value = false;
-  }
-}
+watch(sentinel, (el) => attachSentinel(el));
 
 async function onPersonAdded() {
   showAddForm.value = false;
-  await load();
+  await reload();
 }
 
 function focusNextRow(e: KeyboardEvent): void {
@@ -253,13 +191,13 @@ function goToDetail(person: PersonListItem) {
 }
 
 onMounted(async () => {
-  await load();
+  await reload();
   loadedVersion = dataVersionStore.version;
 });
 
 onActivated(async () => {
   if (dataVersionStore.version !== loadedVersion) {
-    await load();
+    await reload();
     loadedVersion = dataVersionStore.version;
   }
 });

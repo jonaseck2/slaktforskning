@@ -23,6 +23,15 @@ defineChannel({
 });
 
 defineChannel({
+  name: 'sources:listPage',
+  thread: 'worker',
+  handler: (db, limit: number, offset: number, sortBy: sources.ListSourcesSortBy, sortDir: sources.ListSourcesSortDir, query?: string) => ({
+    items: sources.listSourcesPage(db, limit, offset, sortBy, sortDir, query),
+    total: sources.countSources(db, query),
+  }),
+});
+
+defineChannel({
   name: 'sources:update',
   thread: 'worker',
   mutating: true,

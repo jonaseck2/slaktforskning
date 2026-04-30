@@ -5,7 +5,7 @@ import { listChannels, getChannel } from '../../src/shared/channels/registry';
 describe('sources channel registry', () => {
   it('registers all sources:* channels', () => {
     const sourceChannels = listChannels().filter(c => c.startsWith('sources:'));
-    expect(sourceChannels.length).toBe(6);
+    expect(sourceChannels.length).toBe(7);
   });
 
   it('registers all citations:* channels', () => {

@@ -48,6 +48,48 @@ export function listPlaces(db: Database): Place[] {
   return queryAll<Place>(db, 'SELECT * FROM places ORDER BY name ASC');
 }
 
+export type ListPlacesSortBy = 'name' | 'place_type';
+export type ListPlacesSortDir = 'asc' | 'desc';
+
+function buildPlacesFilterClause(query: string | undefined): { where: string; params: unknown[] } {
+  const q = (query ?? '').trim();
+  if (!q) return { where: '', params: [] };
+  const like = `%${normalize(q)}%`;
+  return {
+    where: 'WHERE p.normalized_name LIKE ? OR LOWER(COALESCE(p.city,\'\')) LIKE ? OR LOWER(COALESCE(p.country,\'\')) LIKE ?',
+    params: [like, like, like],
+  };
+}
+
+export function listPlacesPage(
+  db: Database,
+  limit: number,
+  offset: number,
+  sortBy: ListPlacesSortBy = 'name',
+  sortDir: ListPlacesSortDir = 'asc',
+  query?: string,
+): Place[] {
+  const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
+  const orderBy = sortBy === 'place_type'
+    ? `COALESCE(p.place_type,'') ${dir}, p.name ASC`
+    : `p.name ${dir}`;
+  const filter = buildPlacesFilterClause(query);
+  return queryAll<Place>(db, `
+    SELECT p.* FROM places p
+    ${filter.where}
+    ORDER BY ${orderBy}
+    LIMIT ? OFFSET ?
+  `, [...filter.params, limit, offset]);
+}
+
+export function countPlaces(db: Database, query?: string): number {
+  const filter = buildPlacesFilterClause(query);
+  if (!filter.where) {
+    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places')?.n ?? 0;
+  }
+  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM places p ${filter.where}`, filter.params)?.n ?? 0;
+}
+
 export function searchPlaces(db: Database, query: string): (Place & { parent_name: string | null })[] {
   const q = `%${normalize(query)}%`;
   return queryAll<Place & { parent_name: string | null }>(db, `

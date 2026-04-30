@@ -191,6 +191,90 @@ function mediaUrl(m: Media | undefined): string | null {
   return `./media/full/${m.id}${ext}`;
 }
 
+// Filter+sort helpers that mirror the SQL behavior of listPage on the main side.
+// Static mode loads everything in memory anyway, but applying filter/sort here
+// keeps the listPage semantics consistent across modes.
+type PersonRow = Snapshot['persons'][number] & { given_name: string; surname: string };
+function filterAndSortPersons(rows: PersonRow[], sortBy?: string, sortDir?: string, query?: string): PersonRow[] {
+  const tokens = (query ?? '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const filtered = tokens.length === 0 ? rows : rows.filter(p => {
+    const haystack = `${p.given_name} ${p.surname}`.toLowerCase();
+    return tokens.every(t => haystack.includes(t));
+  });
+  const dir = sortDir === 'desc' ? -1 : 1;
+  const key = (sortBy as 'surname' | 'given_name' | 'birth_date') ?? 'surname';
+  const out = [...filtered];
+  out.sort((a, b) => {
+    const av = (key === 'given_name' ? a.given_name : a.surname).toLowerCase();
+    const bv = (key === 'given_name' ? b.given_name : b.surname).toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return out;
+}
+
+function filterAndSortPlaces(rows: Place[], sortBy?: string, sortDir?: string, query?: string): Place[] {
+  const q = (query ?? '').trim().toLowerCase();
+  const filtered = !q ? rows : rows.filter(p =>
+    (p.name ?? '').toLowerCase().includes(q) ||
+    (p.city ?? '').toLowerCase().includes(q) ||
+    (p.country ?? '').toLowerCase().includes(q)
+  );
+  const dir = sortDir === 'desc' ? -1 : 1;
+  const key = (sortBy as 'name' | 'place_type') ?? 'name';
+  const out = [...filtered];
+  out.sort((a, b) => {
+    const av = (key === 'place_type' ? a.place_type ?? '' : a.name ?? '').toLowerCase();
+    const bv = (key === 'place_type' ? b.place_type ?? '' : b.name ?? '').toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return out;
+}
+
+function filterAndSortSources(rows: Source[], sortBy?: string, sortDir?: string, query?: string): Source[] {
+  const q = (query ?? '').trim().toLowerCase();
+  const filtered = !q ? rows : rows.filter(s =>
+    (s.title ?? '').toLowerCase().includes(q) ||
+    (s.author ?? '').toLowerCase().includes(q) ||
+    (s.publication_info ?? '').toLowerCase().includes(q)
+  );
+  const dir = sortDir === 'desc' ? -1 : 1;
+  const key = (sortBy as 'title' | 'author' | 'source_type') ?? 'title';
+  const out = [...filtered];
+  out.sort((a, b) => {
+    const av = ((a as unknown as Record<string, string>)[key] ?? '').toLowerCase();
+    const bv = ((b as unknown as Record<string, string>)[key] ?? '').toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return out;
+}
+
+function filterAndSortMedia(rows: Media[], sortBy?: string, sortDir?: string, query?: string): Media[] {
+  const q = (query ?? '').trim().toLowerCase();
+  const filtered = !q ? rows : rows.filter(m =>
+    (m.title ?? '').toLowerCase().includes(q) ||
+    ((m as unknown as { notes?: string }).notes ?? '').toLowerCase().includes(q) ||
+    (m.format ?? '').toLowerCase().includes(q) ||
+    (m.file_ref ?? '').toLowerCase().includes(q)
+  );
+  const dir = sortDir === 'desc' ? -1 : 1;
+  const key = (sortBy as 'title' | 'format' | 'created_at') ?? 'title';
+  const out = [...filtered];
+  out.sort((a, b) => {
+    const av = ((a as unknown as Record<string, string>)[key] ?? '').toLowerCase();
+    const bv = ((b as unknown as Record<string, string>)[key] ?? '').toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return out;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   const idx = buildIndices(snapshot);
@@ -206,10 +290,13 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const persons = {
     list: async () => personsWithNames,
-    listPage: async (limit: number, offset: number) => ({
-      persons: personsWithNames.slice(offset, offset + limit),
-      total: personsWithNames.length,
-    }),
+    listPage: async (limit: number, offset: number, sortBy?: string, sortDir?: string, query?: string) => {
+      const filtered = filterAndSortPersons(personsWithNames, sortBy, sortDir, query);
+      return {
+        persons: filtered.slice(offset, offset + limit),
+        total: filtered.length,
+      };
+    },
     get: async (id: string) => idx.personById.get(id) ?? null,
     getNames: async (id: string) => idx.namesByPerson.get(id) ?? [],
     getIdentifiers: async (id: string) => idx.idsByPerson.get(id) ?? [],
@@ -233,6 +320,13 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const places = {
     list: async () => snapshot.places,
+    listPage: async (limit: number, offset: number, sortBy?: string, sortDir?: string, query?: string) => {
+      const filtered = filterAndSortPlaces(snapshot.places, sortBy, sortDir, query);
+      return {
+        items: filtered.slice(offset, offset + limit),
+        total: filtered.length,
+      };
+    },
     get: async (id: string) => idx.placeById.get(id) ?? null,
     search: async (q: string) => {
       const ql = q.toLowerCase();
@@ -283,6 +377,13 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const sources = {
     list: async () => snapshot.sources,
+    listPage: async (limit: number, offset: number, sortBy?: string, sortDir?: string, query?: string) => {
+      const filtered = filterAndSortSources(snapshot.sources, sortBy, sortDir, query);
+      return {
+        items: filtered.slice(offset, offset + limit),
+        total: filtered.length,
+      };
+    },
     get: async (id: string) => idx.sourceById.get(id) ?? null,
     search: async (q: string) => {
       const ql = q.toLowerCase();
@@ -360,14 +461,17 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const media = {
     list: async () => snapshot.media,
-    listPage: async (limit: number, offset: number) => ({
-      items: snapshot.media.slice(offset, offset + limit).map(m => ({
-        ...m,
-        is_missing: 0,
-        link_count: idx.mediaLinkCounts.get(m.id) ?? 0,
-      })),
-      total: snapshot.media.length,
-    }),
+    listPage: async (limit: number, offset: number, sortBy?: string, sortDir?: string, query?: string) => {
+      const filtered = filterAndSortMedia(snapshot.media, sortBy, sortDir, query);
+      return {
+        items: filtered.slice(offset, offset + limit).map(m => ({
+          ...m,
+          is_missing: 0,
+          link_count: idx.mediaLinkCounts.get(m.id) ?? 0,
+        })),
+        total: filtered.length,
+      };
+    },
     get: async (id: string) => idx.mediaById.get(id) ?? null,
     forEntity: async (entityType: string, entityId: string) =>
       idx.mediaLinksByEntity.get(`${entityType}:${entityId}`) ?? [],

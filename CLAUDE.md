@@ -734,6 +734,7 @@ See the `add-feature` skill for the full component template and PersonPanel wiri
 | `usePersonProfilePic` | Reactive `{ src, loading }` for a person's cropped profile picture. Wraps `useProfilePicStore`. Used automatically by `AppAvatar` when `personId` is set. |
 | `useLifeMap` | Resolves a person's life events into map coordinates via gazetteers. Returns ordered waypoints (birth → marriages → death) with latitude/longitude. Used by `LifeMap` primitive + A Life / A Marriage / Life on One Page reports. |
 | `useMediaChronological` | Loads media items sorted by the first dated event each is attached to, falling back to created_at. Returns items with optional caption context (person, event type, date, place). Used by `MediaChronological` primitive + Photo Album / A Life / A Marriage / Place Chronicle reports. |
+| `usePagedList` | Server-paged list with debounced filter, stale-response guard, reset-on-filter/sort, and built-in IntersectionObserver wiring. Used by PersonsListTab/PlacesView/SourcesView/MediaView so all four left-list panels filter and sort across the whole DB, not just the loaded page. Each domain exposes a matching `listPage(limit, offset, sortBy, sortDir, query?)` channel returning `{ items, total }`. |
 
 **Reports (`src/renderer/components/reports/`):**
 

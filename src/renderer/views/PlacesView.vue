@@ -5,7 +5,7 @@
       <div class="places-list-column list-column" :style="{ width: listWidth + 'px' }">
         <h3 class="places-list-title">{{ $t('places.listTitle') }}</h3>
         <div class="places-list-body">
-          <div v-if="places.length > 0" class="list-filter">
+          <div v-if="totalPlaces > 0 || searchQuery" class="list-filter">
             <input
               v-model="searchQuery"
               type="text"
@@ -13,8 +13,8 @@
               class="list-filter-input"
             />
           </div>
-          <AppEmptyState v-if="places.length === 0" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPlace')" @action="showAddForm = true" />
-          <AppEmptyState v-else-if="sortedPlaces.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
+          <AppEmptyState v-if="totalPlaces === 0 && !searchQuery" icon="📍" :title="$t('empty.places')" :description="$t('empty.placesDesc')" :action-label="isStaticMode ? undefined : $t('empty.addPlace')" @action="showAddForm = true" />
+          <AppEmptyState v-else-if="placesPage.length === 0" icon="📍" :title="$t('empty.places') + ' ' + $t('empty.withFilter')" />
           <div v-else class="places-list-scroll">
             <table class="data-table">
               <thead>
@@ -31,7 +31,7 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="place in sortedPlaces"
+                  v-for="place in placesPage"
                   :key="place.id"
                   v-narrate="() => narratePlaceRow({
                     name: place.name || '',
@@ -54,9 +54,10 @@
                 </tr>
               </tbody>
             </table>
+            <div ref="sentinel" class="scroll-sentinel"></div>
           </div>
-          <p v-if="places.length > 0" class="places-list-footer count-label">
-            {{ $t('places.showingOf', { shown: sortedPlaces.length, total: places.length }) }}
+          <p v-if="totalPlaces > 0" class="places-list-footer count-label">
+            {{ $t('places.showingOf', { shown: placesPage.length, total: totalPlaces }) }}
           </p>
         </div>
         <button class="list-collapse-btn" :aria-label="$t('common.close')" title="Dölj listan" @click="closeList">◀</button>
@@ -91,7 +92,7 @@
     <template v-if="panelOpen && selectedPlaceId">
       <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, placesBodyRef!)"></div>
       <div class="places-panel" :style="{ width: panelWidth + 'px' }">
-        <PlacePanel :place-id="selectedPlaceId" :readonly="isStaticMode" @close="closePanel" @select-place="selectPlace" @place-updated="load" />
+        <PlacePanel :place-id="selectedPlaceId" :readonly="isStaticMode" @close="closePanel" @select-place="selectPlace" @place-updated="reloadAll" />
       </div>
     </template>
 
@@ -120,6 +121,7 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
+import { usePagedList } from '../composables/usePagedList';
 
 defineOptions({ name: 'PlacesView' });
 
@@ -146,7 +148,31 @@ function closeList() {
   localStorage.setItem('places-list-open', 'false');
 }
 const activeTypeFilter = ref<string>('all');
-const searchQuery = ref<string>('');
+
+// The left list column is server-paged; the map keeps a separate full list
+// (see `places` below) since the map needs every pin and the chip counts
+// need every type. The list filter input drives both: it's the composable's
+// `searchQuery` and we also pass it to the map as `:search-text`.
+type PlaceSortBy = 'name' | 'place_type';
+const {
+  items: placesPage,
+  total: totalPlaces,
+  searchQuery,
+  sortBy,
+  sortDir,
+  reload: reloadPaged,
+  toggleSort,
+  attachSentinel,
+} = usePagedList<PlaceRow, PlaceSortBy>({
+  defaultSortBy: 'name',
+  storageKey: 'places',
+  fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+    const result = await window.api.places.listPage(limit, offset, sortBy, sortDir, query) as { items: PlaceRow[]; total: number };
+    return { items: result.items, total: result.total };
+  },
+});
+const sentinel = ref<HTMLElement | null>(null);
+watch(sentinel, (el) => attachSentinel(el));
 
 // If /places/:id or ?place= is in the URL, write to localStorage now (before MapView setup runs) so
 // MapView picks it up when it initializes its own selectedPlaceId from the same key.
@@ -207,43 +233,6 @@ const typeFilters = computed(() => [
     })),
 ]);
 
-const filteredPlaces = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase();
-  return places.value.filter(p => {
-    if (activeTypeFilter.value !== 'all' && (p.place_type ?? 'other') !== activeTypeFilter.value) return false;
-    if (q && !(p.name ?? '').toLowerCase().includes(q)) return false;
-    return true;
-  });
-});
-
-type PlaceSortBy = 'name' | 'place_type';
-type SortDir = 'asc' | 'desc';
-const sortBy = ref<PlaceSortBy>((localStorage.getItem('places-sort-by') as PlaceSortBy) || 'name');
-const sortDir = ref<SortDir>((localStorage.getItem('places-sort-dir') as SortDir) || 'asc');
-function toggleSort(column: PlaceSortBy) {
-  if (sortBy.value === column) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = column;
-    sortDir.value = 'asc';
-  }
-  localStorage.setItem('places-sort-by', sortBy.value);
-  localStorage.setItem('places-sort-dir', sortDir.value);
-}
-
-const sortedPlaces = computed(() => {
-  const rows = [...filteredPlaces.value];
-  const dir = sortDir.value === 'asc' ? 1 : -1;
-  const key = sortBy.value;
-  rows.sort((a, b) => {
-    const av = (a[key] ?? '').toString().toLowerCase();
-    const bv = (b[key] ?? '').toString().toLowerCase();
-    if (av < bv) return -1 * dir;
-    if (av > bv) return 1 * dir;
-    return 0;
-  });
-  return rows;
-});
 const showAddForm = ref(false);
 
 function focusNextRow(e: KeyboardEvent): void {
@@ -259,9 +248,13 @@ async function load() {
   places.value = (await window.api.places.list()) as PlaceRow[];
 }
 
+async function reloadAll() {
+  await Promise.all([load(), reloadPaged()]);
+}
+
 function onPlaceSaved() {
   showAddForm.value = false;
-  load();
+  void reloadAll();
 }
 
 watch(() => route.params.id, (id) => {
@@ -273,8 +266,7 @@ watch(() => route.query.place, (id) => {
 });
 
 onMounted(async () => {
-  if (route.query.view === 'map') viewMode.value = 'map';
-  await load();
+  await reloadAll();
   loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectPlace(id);
@@ -284,7 +276,7 @@ onMounted(async () => {
 
 onActivated(async () => {
   if (dataVersionStore.version !== loadedVersion) {
-    await load();
+    await reloadAll();
     loadedVersion = dataVersionStore.version;
   }
   const id = route.params.id as string | undefined;

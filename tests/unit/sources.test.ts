@@ -8,6 +8,8 @@ import {
   createSource,
   getSource,
   listSources,
+  listSourcesPage,
+  countSources,
   updateSource,
   deleteSource,
   searchSources,
@@ -27,6 +29,37 @@ let db: Database.Database;
 
 beforeEach(() => {
   db = createTestDb();
+});
+
+describe('listSourcesPage / countSources', () => {
+  it('paginates with limit and offset', () => {
+    for (let i = 0; i < 5; i++) createSource(db, { title: `Title${i}` });
+    const page1 = listSourcesPage(db, 3, 0, 'title', 'asc');
+    const page2 = listSourcesPage(db, 3, 3, 'title', 'asc');
+    expect(page1).toHaveLength(3);
+    expect(page2).toHaveLength(2);
+    expect(countSources(db)).toBe(5);
+  });
+
+  it('filters by query across title, author, publication_info', () => {
+    createSource(db, { title: '1890 Census', author: 'Bureau' });
+    createSource(db, { title: 'Parish Records', author: 'Smith', publication_info: 'Stockholm' });
+    createSource(db, { title: 'Family Bible' });
+
+    expect(countSources(db, '1890')).toBe(1);
+    expect(countSources(db, 'smith')).toBe(1);
+    expect(countSources(db, 'stockholm')).toBe(1);
+    expect(listSourcesPage(db, 100, 0, 'title', 'asc', 'parish').map(r => r.title)).toEqual(['Parish Records']);
+  });
+
+  it('sorts by author asc and desc', () => {
+    createSource(db, { title: 'A', author: 'Zelda' });
+    createSource(db, { title: 'B', author: 'Anna' });
+    const asc = listSourcesPage(db, 100, 0, 'author', 'asc');
+    const desc = listSourcesPage(db, 100, 0, 'author', 'desc');
+    expect(asc.map(s => s.author)).toEqual(['Anna', 'Zelda']);
+    expect(desc.map(s => s.author)).toEqual(['Zelda', 'Anna']);
+  });
 });
 
 describe('sources', () => {

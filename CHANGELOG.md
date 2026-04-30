@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.168.0 — List filter and sort now span the whole database
+
+- feat(lists): the filter input and sortable headers in PersonsListTab, PlacesView, SourcesView, and MediaView now operate against the full database instead of just the rows already paginated into memory — the four left-hand list panels were all running a client-side filter over the loaded page, which silently hid matches and miscounted the "Showing X of Y" footer
+- feat(api): each domain gained a paginated `listPage(limit, offset, sortBy, sortDir, query?)` returning `{ items, total }` — total reflects the filtered count when a query is active
+- feat(sources): SourcesView gained a filter input, sortable headers (title/author/type), and infinite scroll for the first time
+- internal: new `usePagedList<T, SortBy>` composable with debounced filter (200 ms), stale-response guard via sequence id (faster query can't be clobbered by an in-flight slower one), reset-on-filter/sort, and built-in IntersectionObserver wiring — used by all four views so the UX stays consistent
+
 ## v0.167.0 — Tree refresh keeps zoom and scroll
 
 - feat(charts): editing a person's events no longer wipes your place in the tree — Pedigree, Hourglass, and Descendant charts now refetch in place when data changes, preserving zoom, scroll position, and expanded/collapsed branches (BENGT #37, Phase 3 of the reactivity audit)

@@ -35,18 +35,47 @@ export interface MediaListItem extends Media {
   link_count: number;
 }
 
-export function listMediaPage(db: Database, limit: number, offset: number): MediaListItem[] {
+export type ListMediaSortBy = 'title' | 'format' | 'created_at';
+export type ListMediaSortDir = 'asc' | 'desc';
+
+function buildMediaFilterClause(query: string | undefined): { where: string; params: unknown[] } {
+  const q = (query ?? '').trim();
+  if (!q) return { where: '', params: [] };
+  const like = `%${q}%`;
+  return {
+    where: `WHERE m.title LIKE ? OR COALESCE(m.notes,'') LIKE ? OR COALESCE(m.format,'') LIKE ? OR COALESCE(m.file_ref,'') LIKE ?`,
+    params: [like, like, like, like],
+  };
+}
+
+export function listMediaPage(
+  db: Database,
+  limit: number,
+  offset: number,
+  sortBy: ListMediaSortBy = 'title',
+  sortDir: ListMediaSortDir = 'asc',
+  query?: string,
+): MediaListItem[] {
+  const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
+  const col = sortBy === 'format' ? 'format' : sortBy === 'created_at' ? 'created_at' : 'title';
+  const orderBy = `COALESCE(m.${col},'') ${dir}, m.title ASC`;
+  const filter = buildMediaFilterClause(query);
   return queryAll<MediaListItem>(db, `
     SELECT m.*,
            (SELECT COUNT(*) FROM media_links ml WHERE ml.media_id = m.id) AS link_count
     FROM media m
-    ORDER BY m.title
+    ${filter.where}
+    ORDER BY ${orderBy}
     LIMIT ? OFFSET ?
-  `, [limit, offset]);
+  `, [...filter.params, limit, offset]);
 }
 
-export function countMedia(db: Database): number {
-  return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media')?.n ?? 0;
+export function countMedia(db: Database, query?: string): number {
+  const filter = buildMediaFilterClause(query);
+  if (!filter.where) {
+    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media')?.n ?? 0;
+  }
+  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${filter.where}`, filter.params)?.n ?? 0;
 }
 
 export function deleteMedia(db: Database, id: string): boolean {

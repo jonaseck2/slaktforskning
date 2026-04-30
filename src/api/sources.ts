@@ -24,6 +24,47 @@ export function listSources(db: Database): Source[] {
   return queryAll<Source>(db, `SELECT * FROM sources ORDER BY title`);
 }
 
+export type ListSourcesSortBy = 'title' | 'author' | 'source_type';
+export type ListSourcesSortDir = 'asc' | 'desc';
+
+function buildSourcesFilterClause(query: string | undefined): { where: string; params: unknown[] } {
+  const q = (query ?? '').trim();
+  if (!q) return { where: '', params: [] };
+  const like = `%${q}%`;
+  return {
+    where: 'WHERE title LIKE ? OR author LIKE ? OR publication_info LIKE ?',
+    params: [like, like, like],
+  };
+}
+
+export function listSourcesPage(
+  db: Database,
+  limit: number,
+  offset: number,
+  sortBy: ListSourcesSortBy = 'title',
+  sortDir: ListSourcesSortDir = 'asc',
+  query?: string,
+): Source[] {
+  const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
+  const col = sortBy === 'author' ? 'author' : sortBy === 'source_type' ? 'source_type' : 'title';
+  const orderBy = `COALESCE(${col},'') ${dir}, title ASC`;
+  const filter = buildSourcesFilterClause(query);
+  return queryAll<Source>(db, `
+    SELECT * FROM sources
+    ${filter.where}
+    ORDER BY ${orderBy}
+    LIMIT ? OFFSET ?
+  `, [...filter.params, limit, offset]);
+}
+
+export function countSources(db: Database, query?: string): number {
+  const filter = buildSourcesFilterClause(query);
+  if (!filter.where) {
+    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources')?.n ?? 0;
+  }
+  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM sources ${filter.where}`, filter.params)?.n ?? 0;
+}
+
 export function updateSource(
   db: Database,
   id: string,

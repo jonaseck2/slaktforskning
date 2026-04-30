@@ -403,12 +403,27 @@ const PERSON_LIST_BASE_QUERY = `
 export type ListPersonsSortBy = 'surname' | 'given_name' | 'birth_date';
 export type ListPersonsSortDir = 'asc' | 'desc';
 
+function buildPersonsFilterClause(query: string | undefined): { where: string; params: unknown[] } {
+  const tokens = (query ?? '').trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return { where: '', params: [] };
+  const tokenClauses = tokens.map(() =>
+    `EXISTS (
+       SELECT 1 FROM person_names n
+       WHERE n.person_id = p.id
+         AND (n.given_name LIKE ? OR n.surname LIKE ? OR n.preferred_name LIKE ? OR n.nickname LIKE ?)
+     )`
+  ).join(' AND ');
+  const params = tokens.flatMap(t => { const l = `%${t}%`; return [l, l, l, l]; });
+  return { where: `WHERE ${tokenClauses}`, params };
+}
+
 export function listPersonsPage(
   db: Database,
   limit: number,
   offset: number,
   sortBy: ListPersonsSortBy = 'surname',
   sortDir: ListPersonsSortDir = 'asc',
+  query?: string,
 ): PersonListItem[] {
   // Pass 1: sort + paginate with only name + birth-date data — no death/place
   // subqueries (those are pass 2). Correlated subqueries on all N persons
@@ -420,6 +435,7 @@ export function listPersonsPage(
     : sortBy === 'birth_date'
     ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
+  const filter = buildPersonsFilterClause(query);
   const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
@@ -435,9 +451,10 @@ export function listPersonsPage(
       WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
       GROUP BY ep.person_id
     ) bd ON bd.person_id = p.id
+    ${filter.where}
     ORDER BY ${orderBy}
     LIMIT ? OFFSET ?
-  `, [limit, offset]);
+  `, [...filter.params, limit, offset]);
 
   if (page.length === 0) return [];
 
@@ -489,8 +506,12 @@ export function listPersonsPage(
   });
 }
 
-export function countPersons(db: Database): number {
-  return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons')?.n ?? 0;
+export function countPersons(db: Database, query?: string): number {
+  const filter = buildPersonsFilterClause(query);
+  if (!filter.where) {
+    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons')?.n ?? 0;
+  }
+  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM persons p ${filter.where}`, filter.params)?.n ?? 0;
 }
 
 // Unsourced = no citations on any event the person participates in, AND no direct person citations
