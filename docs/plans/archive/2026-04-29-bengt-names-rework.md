@@ -28,20 +28,20 @@ Bengt has six tickets touching names. Two earlier rounds already landed (`name_c
 - [x] Update all callers that previously prioritized `preferred_name = 1` — `searchPersons`, `listPersons`, etc.
 
 ### Phase 3 — UI in `PersonNamesTable` and `PersonNameModal`
-- [ ] Remove the star (preferred_name toggle) from the table
-- [ ] Add ▲ / ▼ reorder buttons (matching media-reorder pattern in `PersonMediaSection`)
-- [ ] Show `Datum (giltig from)` column visibly; sort the table by this column descending
-- [ ] When user moves a dated row past another dated row in a way that creates a younger-before-older inversion, block with toast "Ett yngre datum kan inte placeras före ett äldre"
-- [ ] Birth name row: render `date_from` as readonly, sourced from birth event (if any)
+- [x] Remove the star (preferred_name toggle) from the table
+- [x] Add ▲ / ▼ reorder buttons (matching media-reorder pattern in `PersonMediaSection`)
+- [x] Show `Datum (giltig from)` column visibly; sort the table by this column descending
+- [x] When user moves a dated row past another dated row in a way that creates a younger-before-older inversion, block with toast "Ett yngre datum kan inte placeras före ett äldre"
+- [x] Birth name row: render `date_from` as readonly, sourced from birth event (if any)
 
 ### Phase 4 — `PersonNameModal` flow
-- [ ] When user adds a new name with type `name_change`, prefill given_name + surname from the current newest name
-- [ ] Show a `date_from` field for `name_change` type
-- [ ] Same prefill behavior for `married` (rename label to "Vigselnamn")
+- [x] When user adds a new name with type `name_change`, prefill given_name + surname from the current newest name
+- [x] Show a `date_from` field for `name_change` type
+- [x] Same prefill behavior for `married` (rename label to "Vigselnamn")
 
 ### Phase 5 — i18n
-- [ ] `nameTypes.married` → "Vigselnamn"
-- [ ] Sort modal type dropdown alphabetically by translation
+- [x] `nameTypes.married` → "Vigselnamn"
+- [x] Sort modal type dropdown alphabetically by translation
 
 ## Out of scope
 - Inline qualifier chars `&%*!` (#18) — explicit skip

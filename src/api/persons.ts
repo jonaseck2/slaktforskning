@@ -292,7 +292,7 @@ export function getPersonNames(db: Database, personId: string): PersonName[] {
 export function updatePersonName(
   db: Database,
   id: string,
-  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'date_from' | 'date_to' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname'>>
+  data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'date_from' | 'date_to' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname' | 'sort_order'>>
 ): PersonName | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -314,6 +314,7 @@ export function updatePersonName(
   if (data.name_qualifier !== undefined) { fields.push('name_qualifier = ?'); values.push(data.name_qualifier); }
   if (data.preferred_name !== undefined) { fields.push('preferred_name = ?'); values.push(data.preferred_name); }
   if (data.nickname !== undefined) { fields.push('nickname = ?'); values.push(data.nickname); }
+  if (data.sort_order !== undefined) { fields.push('sort_order = ?'); values.push(data.sort_order); }
   if (fields.length === 0) return queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]) ?? null;
   values.push(id);
   runSql(db, `UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`, values);

@@ -221,6 +221,16 @@ describe('persons', () => {
     });
   });
 
+  describe('updatePersonName with sort_order', () => {
+    it('updates sort_order so the names table reorder pattern works', () => {
+      const p = createPerson(db, { given_name: 'Anna', surname: 'A' });
+      const second = addPersonName(db, p.id, { given_name: 'Anna', surname: 'B' });
+      // Bump the second name's sort_order above the birth name's
+      const updated = updatePersonName(db, second.id, { sort_order: 99 });
+      expect(updated!.sort_order).toBe(99);
+    });
+  });
+
   describe('updatePersonName with preferred_name', () => {
     it('sets preferred_name', () => {
       const person = createPerson(db, { given_name: 'Eva Linda Marie', surname: 'Karlsson' });

@@ -459,10 +459,10 @@ export default {
   },
   nameTypes: {
     birth: 'Birth',
-    married: 'Married',
-    name_change: 'Name Change',
+    married: 'Marriage name',
+    name_change: 'Name change',
     alias: 'Alias',
-    aka: 'Also Known As',
+    aka: 'Also known as',
   },
   names: {
     add: 'Name',
@@ -482,6 +482,8 @@ export default {
     patronymicBasePlaceholder: 'e.g. Erik (if surname is Eriksson)',
     dateFrom: 'Valid from',
     dateTo: 'Valid to',
+    dateFromBirthEvent: 'Date taken from the birth event',
+    reorderInversionBlocked: 'A more recent date cannot be placed before an older one',
   },
   identifiers: {
     title: 'External identifiers',

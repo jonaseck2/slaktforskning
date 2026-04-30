@@ -137,6 +137,9 @@ export function usePersonPanelData(personId: Ref<string | null>) {
   const names = ref<NameData[]>([]);
   const groups = ref<GroupData[]>([]);
   const researchTasks = ref<ResearchTaskRow[]>([]);
+  // Birth event date_value (earliest if multiple). Used by the Names table
+  // to render the birth name's "Datum (giltig från)" cell as readonly.
+  const birthEventDate = ref<string | null>(null);
 
   // Counts for collapsed sections (loaded independently of child components)
   const eventCount = ref(0);
@@ -151,6 +154,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     const events = (await window.api.events.forPerson(id)) as Array<{ event_type: string; date_value: string | null }>;
     names.value = sortNamesBySortOrder(fetched);
     primaryName.value = pickDisplayedName(fetched, events);
+    birthEventDate.value = birthDateValue(events);
   }
 
   async function loadGroups(id: string) {
@@ -203,6 +207,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     // waiting for the place lookups that build the birth/death lines.
     names.value = sortNamesBySortOrder(fetchedNames);
     primaryName.value = pickDisplayedName(fetchedNames, events);
+    birthEventDate.value = birthDateValue(events);
     eventCount.value = events.length;
     mapPointCount.value = events.filter(e => e.place_id).length;
     person.value = {
@@ -248,6 +253,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
       names.value = [];
       groups.value = [];
       researchTasks.value = [];
+      birthEventDate.value = null;
       eventCount.value = 0;
       mapPointCount.value = 0;
       relationshipCount.value = 0;
@@ -281,6 +287,7 @@ export function usePersonPanelData(personId: Ref<string | null>) {
     person,
     primaryName,
     names,
+    birthEventDate,
     groups,
     researchTasks,
     loadPerson,
