@@ -317,6 +317,8 @@ export default {
     spouse: 'Andra personen',
     spouseOther: 'Annan befintlig person…',
     spouseNew: 'Lägg till ny person',
+    endDateOptional: 'Slutdatum (valfritt)',
+    endDateHint: 'Lämna tomt om händelsen pågick under en enda tidpunkt eller saknar känt slut.',
   },
   citations: {
     entity: 'Hänvisning',
@@ -385,6 +387,7 @@ export default {
     wedding: 'Bröllop',
     adoption: 'Adoption',
     foster_placement: 'Fosterhemsplacering',
+    travel: 'Resa',
     other: 'Övrigt',
   },
   dateTypes: {
@@ -1571,6 +1574,10 @@ export default {
     eventsSection: 'Händelser',
     smartEventType: 'Föreslå händelsetyp utifrån befintliga händelser',
     smartEventTypeHint: 'När aktiverat väljs nästa saknade typ i ordningen: födelse → död → yrke → bostad. När avstängt lämnas fältet tomt.',
+    eventTypeSortLabel: 'Sorteringsordning för händelsetyper',
+    eventTypeSortAlphabetical: 'Bokstavsordning',
+    eventTypeSortCanonical: 'Livsförlopp (födelse → död → ...)',
+    eventTypeSortHint: 'Bestämmer ordningen i händelsetyp-listan när du lägger till eller redigerar en händelse.',
   },
   about: {
     title: 'Om OurLegacy',

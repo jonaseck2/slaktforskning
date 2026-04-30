@@ -125,6 +125,7 @@ import FanChartReport from './FanChartReport.vue';
 import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
+import { isSpanEventType } from '../../constants/eventTypes';
 
 const props = withDefaults(defineProps<{
   personId: string;
@@ -292,7 +293,8 @@ function formatDateDisplay(ev: RawEvent | null): string | null {
   if (ev.date_original) return ev.date_original;
   if (!ev.date_value) return null;
   const prefix = ev.date_type ? t('datePrefix.' + ev.date_type, '') : '';
-  if (ev.date_type === 'between' && ev.date_value_end) {
+  if (ev.date_value_end &&
+      (ev.date_type === 'between' || isSpanEventType(ev.event_type))) {
     return `${prefix}${ev.date_value}\u2013${ev.date_value_end}`;
   }
   return `${prefix}${ev.date_value}`;
