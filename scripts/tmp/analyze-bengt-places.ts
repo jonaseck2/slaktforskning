@@ -3,10 +3,10 @@
 // Run with: npx tsx /tmp/analyze-ben-places.ts
 
 import Database from 'node-sqlite3-wasm';
-import { resolvePlace } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/resolver';
-import { loadGazetteers } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/merge';
-import { getAllGazetteers } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/bundled';
-import type { Gazetteer, GazetteerNode } from '/Users/jonasahnstedt/git/slaktforskning/src/api/place-gazetteers/types';
+import { resolvePlace } from '/Users/jonasahnstedt/git/slaktforskning/.worktrees/place-resolver/src/api/place-gazetteers/resolver';
+import { loadGazetteers } from '/Users/jonasahnstedt/git/slaktforskning/.worktrees/place-resolver/src/api/place-gazetteers/merge';
+import { getAllGazetteers } from '/Users/jonasahnstedt/git/slaktforskning/.worktrees/place-resolver/src/api/place-gazetteers/bundled';
+import type { Gazetteer, GazetteerNode } from '/Users/jonasahnstedt/git/slaktforskning/.worktrees/place-resolver/src/api/place-gazetteers/types';
 
 const db = new (Database as any).Database('/tmp/ben-analysis.db');
 

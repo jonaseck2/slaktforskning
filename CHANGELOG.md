@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.170.0 — Place resolver overhaul: universal rules + per-gazetteer normalization
+
+- refactor(place-resolver): the resolver no longer hardcodes admin-suffix vocabulary for six languages (församling/socken/sogn/county/etc.) inside `normalize()`. Country-specific rules now live with each gazetteer via a new `Gazetteer.normalize` field carrying `stripSuffixes`/`stripPrefixes`/`stripPatterns`. Shared rule sets (SV/DK/NO/FI/IS/EN_RULES) are exported from `src/gazetteer-build/normalize-rules.ts` and attached to bundled gazetteers at load time — no JSON regeneration needed. Imported third-party gazetteers can ship their own rules
+- feat(place-resolver): Swedish gazetteers now also strip the abbreviations `kn` (kommun), `sn` (socken), and `fs` (församling) — common in genealogy databases. `Åkersberga, Österåkers kn` now resolves cleanly to Österåkers kommun > Åkersberga
+- feat(place-resolver): parens are stripped during normalization, so `Stockholm (A)` flows into the matcher as `Stockholm A` and resolves via the existing länsbokstav A → Stockholms län alias. Combined with token-scan inside an unmatched component, mangled länsbokstav like `Hässleholm L)` (missing opening paren) also resolve
+- feat(place-resolver): hyphen and space are equivalent during compare — `Husby Rekarne` and `Husby-Rekarne` resolve to the same node
+- feat(place-resolver): input-split also splits on `.` directly followed by uppercase, so `Saint-Claude College, Minn.USA` parses cleanly without the trailing country glued to a state abbreviation
+- fix(checks): quality-check loader now always includes language gazetteers regardless of the user's `gazetteer_config` — country-name aliases like `Skottland`, `Tyskland`, `Italien`, `Kina` reach the resolver even when the database has a restricted gazetteer config (e.g. `["sv-parishes"]` auto-set on Genney import)
+- internal: against a real ~6 300-place database, exact-match coverage rose from 16.9 % to 38.7 % and unmatched dropped from 36.1 % to 2.6 %. The remaining 2.6 % are genuine data-quality cases (typos, occupations entered as places, dates entered as places) — targeted by future quality checks
+- internal: 8 new resolver tests added; full test suite (2246) passes
+
 ## v0.169.0 — Place picker: parent-aware autocomplete, county letter codes, no dataloss
 
 - feat(places): place picker now reads strings right-to-left like Swedish records — `Hörningsholm, Mosås (T)` anchors on Örebro län (T) and matches Mosås only inside it, no longer dragging the pin to a same-named hamlet in Norrland (BEN #27)
