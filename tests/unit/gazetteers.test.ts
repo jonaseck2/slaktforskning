@@ -170,6 +170,42 @@ describe('cross-country place resolution', () => {
   });
 });
 
+describe('language gazetteer integration', () => {
+  // Translations injected by lang-sv-geonames must reach the resolver when
+  // language gazetteers are explicitly included alongside data gazetteers.
+  // QualityView (src/api/checks/index.ts) appends language gazetteers to the
+  // user's gazetteer_config so this works regardless of user preference.
+  it('Skottland → Scotland via lang-sv-geonames + world-admin1', () => {
+    const gazetteers = loadGazetteers(
+      {
+        enabledGazetteers: [
+          'world-admin1', 'world-countries',
+          'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
+        ],
+      },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Aberdeen, Skottland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Scotland');
+  });
+
+  it('Tyskland → Germany via lang-sv-geonames + world-countries', () => {
+    const gazetteers = loadGazetteers(
+      {
+        enabledGazetteers: [
+          'world-countries',
+          'lang-sv-geonames', 'lang-sv-wikidata',
+        ],
+      },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Tyskland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Germany');
+  });
+});
+
 describe('per-gazetteer normalization rules', () => {
   it('strips Swedish "kommun" suffix when matching against sv-orter (SV_RULES)', () => {
     const gazetteers = loadGazetteers(

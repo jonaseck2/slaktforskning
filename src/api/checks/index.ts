@@ -104,8 +104,20 @@ export function getAllCheckFunctions(): NamedCheck[] {
       const gazConfig: GazetteerConfig = configJson
         ? JSON.parse(configJson)
         : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
+      // Always include language gazetteers so country/region aliases like
+      // "Skottland", "Tyskland", "USA" resolve in quality checks even when a
+      // user's gazetteer_config enables only a subset of data gazetteers
+      // (e.g. ["sv-parishes"] auto-set on Genney import). Language gazetteers
+      // only inject aliases into other gazetteers — they never appear as
+      // candidates themselves.
+      const langIds = getAllGazetteers().filter(g => g.kind === 'language').map(g => g.id);
+      const enabledWithLangs = Array.from(new Set([...gazConfig.enabledGazetteers, ...langIds]));
       const imported = getImportedGazetteers(db);
-      const gazetteers = loadGazetteers(gazConfig, getAllGazetteers(), imported);
+      const gazetteers = loadGazetteers(
+        { enabledGazetteers: enabledWithLangs },
+        getAllGazetteers(),
+        imported,
+      );
       const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
       const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
       const raw = checkGazetteerMatchQuality(db, gazetteers);
