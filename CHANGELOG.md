@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.171.0 — Place quality checks
+
+- feat(checks): four new quality checks surface the genuine data issues that survive the v0.170.0 place-resolver overhaul (the 2.6 % truly unmatched cases — typos, dates, addresses, mangled länsbokstav notation):
+  - `PLACE_NAME_LOOKS_LIKE_DATE` (error) — flags places whose name matches `1736`, `1736-11-11`, `1736/11/11`, etc., catching dates accidentally typed into the place field
+  - `PLACE_NAME_BROKEN_LANSBOKSTAV` (warning) — flags county-letter notation where the closing paren got typed as `I` or `|` (e.g. `Borås (PI`, `Hed (UI`, `Byske (ACI`); validates the captured letters against the canonical länsbokstav set so `(XYI` is ignored; suggests a fixed string `Borås (P)`
+  - `PLACE_MISSING_COMMA` (warning) — flags single comma-components that decompose into 2+ adjacent gazetteer-known names where at least one is at depth ≤2 (country / admin1); proposes a comma-separated split. Tightened depth floor avoids false positives on legitimate multi-word leaf names like `Saint Mary's Parish`
+  - `PLACE_NAME_NO_REGION` (notice) — flags places referenced by ≥1 event with no parent place that fully fail to resolve; surfaces typos (`Stockhom`), street addresses (`Fredsgatan 16`), and occupation strings without geographic context
+- internal: `LAN_LETTER_CODES` now exported from `place-gazetteers/bundled.ts` so checks share a single source of truth for valid Swedish county letters
+- internal: 29 new unit tests; full suite 2275 passes
+
 ## v0.170.0 — Place resolver overhaul: universal rules + per-gazetteer normalization
 
 - refactor(place-resolver): the resolver no longer hardcodes admin-suffix vocabulary for six languages (församling/socken/sogn/county/etc.) inside `normalize()`. Country-specific rules now live with each gazetteer via a new `Gazetteer.normalize` field carrying `stripSuffixes`/`stripPrefixes`/`stripPatterns`. Shared rule sets (SV/DK/NO/FI/IS/EN_RULES) are exported from `src/gazetteer-build/normalize-rules.ts` and attached to bundled gazetteers at load time — no JSON regeneration needed. Imported third-party gazetteers can ship their own rules

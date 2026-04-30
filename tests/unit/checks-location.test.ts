@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { checkGazetteerMatchQuality } from '../../src/api/checks/checks-location';
+import {
+  checkGazetteerMatchQuality,
+  checkPlaceMissingComma,
+  checkPlaceNameNoRegion,
+} from '../../src/api/checks/checks-location';
 import { createPlace } from '../../src/api/places';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -150,5 +154,162 @@ describe('checkGazetteerMatchQuality', () => {
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = checkGazetteerMatchQuality(db, []);
     expect(results).toHaveLength(0);
+  });
+});
+
+// Gazetteer with countries + admin1 regions + a city, used to exercise
+// the PLACE_MISSING_COMMA token-scan logic. Includes:
+//   - USA (depth 1) with Kalifornien alias for Sweden (depth 2 admin1)
+//   - Richmond as a US city at depth 3
+//   - Sverige as another country (depth 1)
+const usGazetteer: Gazetteer = {
+  id: 'us-test', name: 'US Test', locale: 'en', kind: 'point',
+  root: {
+    name: 'USA', type: 'country', lat: 39.0, lon: -98.0,
+    children: [{
+      name: 'Kalifornien', type: 'state', lat: 36.7, lon: -119.4,
+      aliases: ['California'],
+      children: [
+        { name: 'Richmond', type: 'city', lat: 37.93, lon: -122.34 },
+      ],
+    }],
+  },
+};
+
+const svGazetteer: Gazetteer = {
+  id: 'sv-test', name: 'SV Test', locale: 'sv', kind: 'point',
+  root: {
+    name: 'Sverige', type: 'country', lat: 62.0, lon: 15.0,
+    children: [{
+      name: 'Stockholms län', type: 'county', lat: 59.3, lon: 18.0,
+      children: [
+        { name: 'Stockholm', type: 'city', lat: 59.33, lon: 18.06 },
+      ],
+    }],
+  },
+};
+
+describe('checkPlaceMissingComma', () => {
+  it('returns empty array when no gazetteers are provided', () => {
+    const pl = createPlace(db, { name: 'Richmond Kalifornien USA' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceMissingComma(db, []);
+    expect(results).toHaveLength(0);
+  });
+
+  it('fires when two known names sit in one comma-component (country + state)', () => {
+    // Resolver matches "Richmond" → leaf, "Kalifornien USA" lands in unmatched.
+    // Token-scan finds Kalifornien (depth 2) + USA (depth 1) → flag.
+    const pl = createPlace(db, { name: 'Richmond, Kalifornien USA' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceMissingComma(db, [usGazetteer, svGazetteer]);
+    const hit = results.filter(r => r.code === 'PLACE_MISSING_COMMA' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('warning');
+    expect(hit[0].messageParams?.suggestion).toContain('Kalifornien');
+    expect(hit[0].messageParams?.suggestion).toContain('USA');
+    // Suggestion should include a comma between recognized names
+    expect((hit[0].messageParams?.suggestion as string)).toMatch(/,/);
+  });
+
+  it('does not fire when the place resolves cleanly with commas already', () => {
+    const pl = createPlace(db, { name: 'Richmond, Kalifornien, USA' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceMissingComma(db, [usGazetteer, svGazetteer]);
+    const hit = results.filter(r => r.code === 'PLACE_MISSING_COMMA' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(0);
+  });
+
+  it('does not fire on legit multi-word leaf names (no shallow anchor)', () => {
+    // A two-word name where neither token matches a country/admin1 anchor.
+    // Build a gazetteer with only a deep leaf "Saint Mary" (depth 3).
+    const leafGaz: Gazetteer = {
+      id: 'leaf-test', name: 'Leaf', locale: 'en', kind: 'point',
+      root: {
+        name: 'Atlantis', type: 'country', lat: 0, lon: 0,
+        children: [{
+          name: 'Region', type: 'state', lat: 0, lon: 0,
+          children: [
+            { name: 'Saint', type: 'parish', lat: 0, lon: 0 },
+            { name: 'Mary', type: 'parish', lat: 0, lon: 0 },
+          ],
+        }],
+      },
+    };
+    // Place name has both tokens recognized — but at depth 3 (parish), not ≤2.
+    const pl = createPlace(db, { name: 'Saint Mary' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceMissingComma(db, [leafGaz]);
+    const hit = results.filter(r => r.code === 'PLACE_MISSING_COMMA' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(0);
+  });
+
+  it('skips places not referenced by any event', () => {
+    createPlace(db, { name: 'Richmond Kalifornien USA' });
+    const results = checkPlaceMissingComma(db, [usGazetteer, svGazetteer]);
+    expect(results).toHaveLength(0);
+  });
+
+  it('does not flag a place with manual coordinates', () => {
+    const pl = createPlace(db, { name: 'Richmond Kalifornien USA', latitude: 37.93, longitude: -122.34 });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceMissingComma(db, [usGazetteer, svGazetteer]);
+    expect(results.filter(r => r.placeIds?.includes(pl.id))).toHaveLength(0);
+  });
+});
+
+describe('checkPlaceNameNoRegion', () => {
+  it('returns empty array when no gazetteers are provided', () => {
+    const pl = createPlace(db, { name: 'Stockhom' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceNameNoRegion(db, []);
+    expect(results).toHaveLength(0);
+  });
+
+  it('fires for a typo with no parent place (Stockhom)', () => {
+    const pl = createPlace(db, { name: 'Stockhom' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceNameNoRegion(db, [svGazetteer]);
+    const hit = results.filter(r => r.code === 'PLACE_NAME_NO_REGION' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(1);
+    expect(hit[0].severity).toBe('notice');
+  });
+
+  it('fires for a street address with no parent place', () => {
+    const pl = createPlace(db, { name: 'Fredsgatan 16' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceNameNoRegion(db, [svGazetteer]);
+    const hit = results.filter(r => r.code === 'PLACE_NAME_NO_REGION' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(1);
+  });
+
+  it('does not fire for a name that resolves cleanly', () => {
+    const pl = createPlace(db, { name: 'Stockholm' });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceNameNoRegion(db, [svGazetteer]);
+    const hit = results.filter(r => r.code === 'PLACE_NAME_NO_REGION' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(0);
+  });
+
+  it('does not fire when the place has a parent_place_id', () => {
+    const parent = createPlace(db, { name: 'Sverige' });
+    const pl = createPlace(db, { name: 'Hus', parent_place_id: parent.id });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceNameNoRegion(db, [svGazetteer]);
+    const hit = results.filter(r => r.code === 'PLACE_NAME_NO_REGION' && r.placeIds?.includes(pl.id));
+    expect(hit).toHaveLength(0);
+  });
+
+  it('skips places not referenced by any event', () => {
+    createPlace(db, { name: 'Stockhom' });
+    const results = checkPlaceNameNoRegion(db, [svGazetteer]);
+    expect(results).toHaveLength(0);
+  });
+
+  it('does not fire for a place with manual coordinates', () => {
+    const pl = createPlace(db, { name: 'Stockhom', latitude: 59.0, longitude: 18.0 });
+    createEvent(db, { event_type: 'birth', place_id: pl.id });
+    const results = checkPlaceNameNoRegion(db, [svGazetteer]);
+    expect(results.filter(r => r.placeIds?.includes(pl.id))).toHaveLength(0);
   });
 });

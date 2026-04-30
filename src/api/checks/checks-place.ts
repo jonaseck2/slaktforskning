@@ -1,6 +1,16 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
+import { LAN_LETTER_CODES } from '../place-gazetteers/bundled';
 import type { CheckResult, CheckSeverity } from './check-utils';
+
+/**
+ * Flat set of valid Swedish länsbokstav letters (one- or two-letter codes
+ * like A, AB, B, AC, BD). Derived from LAN_LETTER_CODES so there's a single
+ * source of truth.
+ */
+const LAN_LETTER_SET: Set<string> = new Set(
+  Object.values(LAN_LETTER_CODES).flatMap(letters => letters.map(l => l.toUpperCase())),
+);
 
 export function checkOrphanedPlace(db: Database): CheckResult[] {
   // Four bulk set-membership queries instead of four correlated NOT EXISTS
@@ -111,6 +121,73 @@ export function checkPlaceCoordinatesInvalid(db: Database): CheckResult[] {
         lon: r.longitude,
         reason,
       },
+      personIds: [],
+      placeIds: [r.id],
+    });
+  }
+  return results;
+}
+
+/**
+ * Detects when a date string was entered into the place name field.
+ * Matches: 1736, 1736-11, 1736-11-11, 1736 11 11, 1736/11/11, 1736.11.11.
+ */
+export function checkPlaceNameLooksLikeDate(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
+  const datePattern = /^\d{4}([-\s/.]\d{1,2}){0,2}$/;
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const trimmed = (r.name ?? '').trim();
+    if (!trimmed) continue;
+    if (!datePattern.test(trimmed)) continue;
+    results.push({
+      code: 'PLACE_NAME_LOOKS_LIKE_DATE',
+      severity: 'error' as CheckSeverity,
+      message: `Platsen "${r.name}" ser ut som ett datum — kontrollera att det inte är fel fält`,
+      messageParams: { name: r.name },
+      personIds: [],
+      placeIds: [r.id],
+    });
+  }
+  return results;
+}
+
+/**
+ * Detects mangled länsbokstav notation where the closing paren got typed
+ * as `I` or `|`. E.g. "Borås (PI", "Hed (UI", "Byske (ACI", "Borås (P|".
+ *
+ * Validates that the captured letter(s) is a real länsbokstav so we don't
+ * false-positive on phrases like "(Approximate" that happen to start with
+ * a valid prefix.
+ *
+ * Skips clean cases where the parens close properly — `Stockholm (A)` and
+ * `Gotland (I)` should NOT match.
+ */
+export function checkPlaceNameBrokenLansbokstav(db: Database): CheckResult[] {
+  const rows = queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
+  // Captures a 1-2 letter länsbokstav after `(`, followed by `I` or `|`
+  // and then either end-of-string, comma, or whitespace — but NOT `)`,
+  // which would mean the parens already close cleanly. Clean cases like
+  // `Stockholm (A)`, `Gotland (I)`, `Byske (AC)` must not match.
+  const brokenPattern = /\(([A-ZÅÄÖ]{1,2})([I|])(?=$|[\s,])/;
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const name = r.name ?? '';
+    if (!name) continue;
+    const m = name.match(brokenPattern);
+    if (!m) continue;
+    const letters = m[1].toUpperCase();
+    if (!LAN_LETTER_SET.has(letters)) continue;
+    // Build suggested fix: replace `(LETTERS<I|>` with `(LETTERS)`.
+    // Use a regex with the literal letters + the broken char captured.
+    const literal = `(${m[1]}${m[2]}`;
+    const fixed = `(${m[1]})`;
+    const suggestion = name.replace(literal, fixed);
+    results.push({
+      code: 'PLACE_NAME_BROKEN_LANSBOKSTAV',
+      severity: 'warning' as CheckSeverity,
+      message: `Platsen "${name}" verkar ha trasig länsbokstavnotation — föreslagen rättelse: "${suggestion}"`,
+      messageParams: { name, suggestion },
       personIds: [],
       placeIds: [r.id],
     });

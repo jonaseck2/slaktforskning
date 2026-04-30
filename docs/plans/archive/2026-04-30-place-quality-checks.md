@@ -1,7 +1,7 @@
 # Plan: Place resolver — targeted quality checks
 
 **Date:** 2026-04-30
-**Status:** planned
+**Status:** done (v0.171.0)
 **Effort:** S (one PR, single worktree)
 **Source:** Follow-up to v0.170.0 place resolver overhaul (`docs/plans/archive/2026-04-30-place-resolver-overhaul.md`)
 

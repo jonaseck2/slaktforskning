@@ -1,8 +1,8 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import { resolvePlace } from '../place-gazetteers/resolver';
-import type { Gazetteer } from '../place-gazetteers/types';
-import type { CheckResult } from './check-utils';
+import type { Gazetteer, GazetteerNode } from '../place-gazetteers/types';
+import type { CheckResult, CheckSeverity } from './check-utils';
 import { haversineKm } from './check-utils';
 
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
@@ -171,5 +171,190 @@ export function checkGazetteerMatchQuality(db: Database, gazetteers: Gazetteer[]
     // matchQuality === 'exact' → no result
   }
 
+  return results;
+}
+
+/**
+ * Build a name → minimum-depth map across all gazetteers, using the same
+ * universal-normalized keys (lowercase + trim + strip parens) the resolver
+ * uses so lookups are consistent across data sources. Depth 1 = root
+ * (country), 2 = admin1 (län/state), 3+ = locality.
+ */
+function buildNameDepthIndex(gazetteers: Gazetteer[]): Map<string, number> {
+  const map = new Map<string, number>();
+  function normalize(s: string): string {
+    return s.toLowerCase().replace(/[()[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function walk(node: GazetteerNode, depth: number) {
+    const keys = [normalize(node.name)];
+    if (node.aliases) for (const a of node.aliases) keys.push(normalize(a));
+    for (const k of keys) {
+      if (!k) continue;
+      const existing = map.get(k);
+      if (existing === undefined || depth < existing) map.set(k, depth);
+    }
+    if (node.children) for (const c of node.children) walk(c, depth + 1);
+  }
+  for (const gaz of gazetteers) walk(gaz.root, 1);
+  return map;
+}
+
+/**
+ * For one unmatched component, find the longest greedy token-runs that
+ * each match a known gazetteer name. Returns the list of recognized
+ * spans (each a `{ start, end, name, depth }`) covering disjoint token
+ * windows from left to right. Empty if nothing recognized.
+ */
+function findRecognizedSpans(
+  component: string,
+  nameDepth: Map<string, number>,
+): Array<{ start: number; end: number; name: string; depth: number }> {
+  const tokens = component.split(/\s+/).filter(Boolean);
+  const spans: Array<{ start: number; end: number; name: string; depth: number }> = [];
+  let i = 0;
+  while (i < tokens.length) {
+    let matched = false;
+    // Greedy longest-match starting at i.
+    for (let len = tokens.length - i; len >= 1; len--) {
+      const window = tokens.slice(i, i + len).join(' ').toLowerCase();
+      const depth = nameDepth.get(window);
+      if (depth !== undefined) {
+        spans.push({ start: i, end: i + len, name: tokens.slice(i, i + len).join(' '), depth });
+        i += len;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) i++;
+  }
+  return spans;
+}
+
+/**
+ * Detects places where two or more known place names are jammed into a
+ * single comma-component without a comma between them. Classic case:
+ * `Richmond Kalifornien USA` (should be `Richmond, Kalifornien, USA`).
+ *
+ * Scans every comma-component of every place's stored name, whitespace-
+ * tokenizes it, and runs a greedy longest-match against the gazetteer
+ * name index. If the component decomposes into 2+ adjacent recognized
+ * names — and at least one of them is at depth ≤2 (country / admin1) —
+ * the place is flagged.
+ *
+ * The depth-≤2 floor avoids false positives on legitimate multi-word
+ * leaf names like `Saint Mary's Parish` or `New York City`, where both
+ * tokens may appear deep in some gazetteer but neither functions as a
+ * strong geographic anchor.
+ */
+export function checkPlaceMissingComma(
+  db: Database,
+  gazetteers: Gazetteer[],
+): CheckResult[] {
+  if (gazetteers.length === 0) return [];
+
+  // Same scope as checkGazetteerMatchQuality: places referenced by ≥1
+  // event with no manual coordinates.
+  const places = queryAll<{ id: string; name: string }>(db, `
+    SELECT DISTINCT p.id, p.name
+    FROM places p
+    JOIN events e ON e.place_id = p.id
+    WHERE p.latitude IS NULL OR p.longitude IS NULL
+  `);
+  if (places.length === 0) return [];
+
+  const nameDepth = buildNameDepthIndex(gazetteers);
+  const results: CheckResult[] = [];
+
+  for (const place of places) {
+    const components = (place.name ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    let suggestionForPlace: string | null = null;
+
+    for (let ci = 0; ci < components.length; ci++) {
+      const component = components[ci];
+      const tokens = component.split(/\s+/).filter(Boolean);
+      if (tokens.length < 2) continue;
+
+      const spans = findRecognizedSpans(component, nameDepth);
+      if (spans.length < 2) continue;
+
+      // Only flag when at least one recognized name is at depth ≤2.
+      const hasShallow = spans.some(s => s.depth <= 2);
+      if (!hasShallow) continue;
+
+      // Build suggested split for this component.
+      const parts: string[] = [];
+      let cursor = 0;
+      for (const span of spans) {
+        if (span.start > cursor) {
+          parts.push(tokens.slice(cursor, span.start).join(' '));
+        }
+        parts.push(tokens.slice(span.start, span.end).join(' '));
+        cursor = span.end;
+      }
+      if (cursor < tokens.length) parts.push(tokens.slice(cursor).join(' '));
+
+      // Splice the split component back into the rest of the comma-path.
+      const replacedComponents = [
+        ...components.slice(0, ci),
+        ...parts,
+        ...components.slice(ci + 1),
+      ];
+      suggestionForPlace = replacedComponents.join(', ');
+      break;
+    }
+
+    if (suggestionForPlace !== null) {
+      results.push({
+        code: 'PLACE_MISSING_COMMA',
+        severity: 'warning' as CheckSeverity,
+        message: `Platsen "${place.name}" verkar saknas komma — föreslagen rättelse: "${suggestionForPlace}"`,
+        messageParams: { name: place.name, suggestion: suggestionForPlace },
+        personIds: [],
+        placeIds: [place.id],
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Detects single bare unmatched components with no parent place — typos,
+ * addresses, occupations, hyperlocal names without geographic context.
+ *
+ * Place must be referenced by ≥1 event, `parent_place_id IS NULL`, and
+ * `resolvePlace(name, gazetteers)` must return null. The single-component
+ * constraint is implicit (no parent + bare name).
+ */
+export function checkPlaceNameNoRegion(
+  db: Database,
+  gazetteers: Gazetteer[],
+): CheckResult[] {
+  if (gazetteers.length === 0) return [];
+
+  const places = queryAll<{ id: string; name: string }>(db, `
+    SELECT DISTINCT p.id, p.name
+    FROM places p
+    JOIN events e ON e.place_id = p.id
+    WHERE p.parent_place_id IS NULL
+      AND (p.latitude IS NULL OR p.longitude IS NULL)
+  `);
+  if (places.length === 0) return [];
+
+  const results: CheckResult[] = [];
+  for (const place of places) {
+    const name = (place.name ?? '').trim();
+    if (!name) continue;
+    const resolved = resolvePlace(name, gazetteers);
+    if (resolved !== null) continue;
+    results.push({
+      code: 'PLACE_NAME_NO_REGION',
+      severity: 'notice' as CheckSeverity,
+      message: `Platsen "${name}" kunde inte placeras geografiskt — kontrollera stavning eller lägg till en överordnad plats`,
+      messageParams: { name },
+      personIds: [],
+      placeIds: [place.id],
+    });
+  }
   return results;
 }

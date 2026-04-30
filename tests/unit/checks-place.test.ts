@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runAllChecks } from '../../src/api/checks';
+import {
+  checkPlaceNameLooksLikeDate,
+  checkPlaceNameBrokenLansbokstav,
+} from '../../src/api/checks/checks-place';
 import { createPlace } from '../../src/api/places';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -89,6 +93,115 @@ describe('PLACE_COORDINATES_INVALID', () => {
     const pl = createPlace(db, { name: 'NoCoords' });
     const results = runAllChecks(db);
     expect(results.filter(r => r.code === 'PLACE_COORDINATES_INVALID' && r.placeIds?.includes(pl.id))).toHaveLength(0);
+  });
+});
+
+describe('PLACE_NAME_LOOKS_LIKE_DATE', () => {
+  it('fires for a bare year', () => {
+    const pl = createPlace(db, { name: '1736' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].severity).toBe('error');
+    expect(hits[0].code).toBe('PLACE_NAME_LOOKS_LIKE_DATE');
+  });
+
+  it('fires for YYYY-MM-DD', () => {
+    const pl = createPlace(db, { name: '1736-11-11' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('fires for YYYY-MM', () => {
+    const pl = createPlace(db, { name: '1736-11' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('fires for YYYY/MM/DD', () => {
+    const pl = createPlace(db, { name: '1736/11/11' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('fires for YYYY MM DD (space-separated)', () => {
+    const pl = createPlace(db, { name: '1736 11 11' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('does not fire for a place name starting with a year', () => {
+    const pl = createPlace(db, { name: '1736 Frederiksberg' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does not fire for a normal place name', () => {
+    const pl = createPlace(db, { name: 'Stockholm' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does not fire for a 3-digit number (not a year)', () => {
+    const pl = createPlace(db, { name: '123' });
+    const hits = checkPlaceNameLooksLikeDate(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
+  });
+});
+
+describe('PLACE_NAME_BROKEN_LANSBOKSTAV', () => {
+  it('fires for "Borås (PI" (broken trailing I)', () => {
+    const pl = createPlace(db, { name: 'Borås (PI' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].severity).toBe('warning');
+    expect(hits[0].messageParams?.suggestion).toBe('Borås (P)');
+  });
+
+  it('fires for "Hed (UI" (broken trailing I)', () => {
+    const pl = createPlace(db, { name: 'Hed (UI' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].messageParams?.suggestion).toBe('Hed (U)');
+  });
+
+  it('fires for "Byske (ACI" (broken two-letter ACI)', () => {
+    const pl = createPlace(db, { name: 'Byske (ACI' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].messageParams?.suggestion).toBe('Byske (AC)');
+  });
+
+  it('fires for "Borås (P|" (broken pipe instead of paren)', () => {
+    const pl = createPlace(db, { name: 'Borås (P|' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].messageParams?.suggestion).toBe('Borås (P)');
+  });
+
+  it('does not fire for "Stockholm (A)" (clean parens)', () => {
+    const pl = createPlace(db, { name: 'Stockholm (A)' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does not fire for "Gotland (I)" (single I is a valid länsbokstav)', () => {
+    const pl = createPlace(db, { name: 'Gotland (I)' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does not fire for "(Approximate" (not a real länsbokstav)', () => {
+    // 'AP' is not a valid länsbokstav code, so even though the regex would
+    // structurally match, the validation step rejects it.
+    const pl = createPlace(db, { name: 'Foo (XYI' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does not fire for a normal place name without parens', () => {
+    const pl = createPlace(db, { name: 'Stockholm' });
+    const hits = checkPlaceNameBrokenLansbokstav(db).filter(r => r.placeIds?.includes(pl.id));
+    expect(hits).toHaveLength(0);
   });
 });
 

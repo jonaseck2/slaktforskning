@@ -41,9 +41,18 @@ import { checkOrphanedSource, checkSourceMissingTitle, checkOrphanedRepository }
 import {
   checkSimultaneousDistantLocations,
   checkGazetteerMatchQuality,
+  checkPlaceMissingComma,
+  checkPlaceNameNoRegion,
 } from './checks-location';
 import { checkMediaFileMissing, checkOrphanedMedia, checkMediaRegionOutOfBounds, checkPhotoAfterSubjectDeath, checkPhotoBeforeSubjectBirth } from './checks-media';
-import { checkOrphanedPlace, checkCircularPlaceHierarchy, checkPlaceCoordinatesInvalid, checkPlaceDatesInverted } from './checks-place';
+import {
+  checkOrphanedPlace,
+  checkCircularPlaceHierarchy,
+  checkPlaceCoordinatesInvalid,
+  checkPlaceDatesInverted,
+  checkPlaceNameLooksLikeDate,
+  checkPlaceNameBrokenLansbokstav,
+} from './checks-place';
 import { checkPossibleDuplicatePerson, checkDuplicateIdentifier, checkDuplicatePlace, checkDuplicateMedia, checkDuplicateSource } from './checks-duplicates';
 
 // Re-export public types
@@ -59,6 +68,30 @@ export interface NamedCheck {
   fn: (db: Database, dbDir?: string) => CheckResult[];
   /** If true, this check is expensive and skipped for per-person runs. */
   global?: boolean;
+}
+
+/**
+ * Loads the gazetteer set used by quality checks. Reads `gazetteer_config`
+ * from db_settings and always merges in the language gazetteers — country/
+ * region aliases like "Skottland", "Tyskland", "USA" must resolve even when
+ * the user's config enables only a subset of data gazetteers (e.g.
+ * `["sv-parishes"]` auto-set on Genney import). Language gazetteers only
+ * inject aliases into other gazetteers — they never appear as candidates
+ * themselves.
+ */
+function loadGazetteersForChecks(db: Database) {
+  const configJson = getDbSetting(db, 'gazetteer_config');
+  const gazConfig: GazetteerConfig = configJson
+    ? JSON.parse(configJson)
+    : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
+  const langIds = getAllGazetteers().filter(g => g.kind === 'language').map(g => g.id);
+  const enabledWithLangs = Array.from(new Set([...gazConfig.enabledGazetteers, ...langIds]));
+  const imported = getImportedGazetteers(db);
+  return loadGazetteers(
+    { enabledGazetteers: enabledWithLangs },
+    getAllGazetteers(),
+    imported,
+  );
 }
 
 /**
@@ -100,28 +133,23 @@ export function getAllCheckFunctions(): NamedCheck[] {
 
     // E2. Gazetteer match quality (global)
     { name: 'checkGazetteerMatchQuality', global: true, fn: (db) => {
-      const configJson = getDbSetting(db, 'gazetteer_config');
-      const gazConfig: GazetteerConfig = configJson
-        ? JSON.parse(configJson)
-        : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
-      // Always include language gazetteers so country/region aliases like
-      // "Skottland", "Tyskland", "USA" resolve in quality checks even when a
-      // user's gazetteer_config enables only a subset of data gazetteers
-      // (e.g. ["sv-parishes"] auto-set on Genney import). Language gazetteers
-      // only inject aliases into other gazetteers — they never appear as
-      // candidates themselves.
-      const langIds = getAllGazetteers().filter(g => g.kind === 'language').map(g => g.id);
-      const enabledWithLangs = Array.from(new Set([...gazConfig.enabledGazetteers, ...langIds]));
-      const imported = getImportedGazetteers(db);
-      const gazetteers = loadGazetteers(
-        { enabledGazetteers: enabledWithLangs },
-        getAllGazetteers(),
-        imported,
-      );
+      const gazetteers = loadGazetteersForChecks(db);
       const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
       const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
       const raw = checkGazetteerMatchQuality(db, gazetteers);
       return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
+    }},
+
+    // E3. Missing-comma in place names (global, resolver-aware)
+    { name: 'checkPlaceMissingComma', global: true, fn: (db) => {
+      const gazetteers = loadGazetteersForChecks(db);
+      return checkPlaceMissingComma(db, gazetteers);
+    }},
+
+    // E4. Bare unresolvable places without region context (global, resolver-aware)
+    { name: 'checkPlaceNameNoRegion', global: true, fn: (db) => {
+      const gazetteers = loadGazetteersForChecks(db);
+      return checkPlaceNameNoRegion(db, gazetteers);
     }},
 
     // F. Data Completeness
@@ -147,6 +175,8 @@ export function getAllCheckFunctions(): NamedCheck[] {
     { name: 'checkCircularPlaceHierarchy', fn: (db) => checkCircularPlaceHierarchy(db) },
     { name: 'checkPlaceCoordinatesInvalid', fn: (db) => checkPlaceCoordinatesInvalid(db) },
     { name: 'checkPlaceDatesInverted',    fn: (db) => checkPlaceDatesInverted(db) },
+    { name: 'checkPlaceNameLooksLikeDate', fn: (db) => checkPlaceNameLooksLikeDate(db) },
+    { name: 'checkPlaceNameBrokenLansbokstav', fn: (db) => checkPlaceNameBrokenLansbokstav(db) },
 
     // H. Duplicates
     { name: 'checkPossibleDuplicatePerson', fn: (db) => checkPossibleDuplicatePerson(db) },

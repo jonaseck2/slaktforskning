@@ -53,7 +53,7 @@ const HISTORICAL_LAN_ALIASES: Record<string, string[]> = {
 // to the letter the source records use; combined with HISTORICAL_LAN_ALIASES
 // the resolver also picks up historical letters like W (Kopparberg) and
 // O (Göteborgs och Bohus). See BENGT #27.
-const LAN_LETTER_CODES: Record<string, string[]> = {
+export const LAN_LETTER_CODES: Record<string, string[]> = {
   'Stockholms län': ['AB', 'A', 'B'],
   'Uppsala län': ['C'],
   'Södermanlands län': ['D'],
