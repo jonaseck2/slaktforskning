@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.173.0 — Wire up the InstructionsLoaded hook for path-scoped rule debugging
+
+- feat(agent): added an `InstructionsLoaded` hook in `.claude/settings.json` pointing at `.claude/hooks/log-instructions-loaded.py`. Every time Claude Code loads a CLAUDE.md or `.claude/rules/*.md` file (at session start OR lazily on a path-glob match / nested traversal), the hook appends a one-line summary to `.claude/instructions-loaded.log` (gitignored). Format: `<utc-ts> <load_reason> <memory_type> <file_path> [trigger=…] [globs=…] [parent=…]`. Lets us verify the new path-scoped rules in `.claude/rules/` actually trigger on the right file paths instead of trusting the harness silently. Hook is observability-only — cannot block loads.
+
 ## v0.172.9 — Stop tracking `.claude/settings.local.json`; share project MCP enablement
 
 - fix(repo): `.claude/settings.local.json` holds per-machine personal config (Bash allow-list, absolute home-directory paths, the personal Gmail MCP) and shouldn't be in version control. Removed from git tracking and added to `.gitignore` alongside the other `.claude/` per-machine entries.

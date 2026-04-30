@@ -15,4 +15,5 @@ coverage/
 .claude/worktrees/
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+.claude/instructions-loaded.log
 .env*
