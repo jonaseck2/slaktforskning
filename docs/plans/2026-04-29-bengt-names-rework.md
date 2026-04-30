@@ -12,14 +12,14 @@ Bengt has six tickets touching names. Two earlier rounds already landed (`name_c
 - BENGT #11 — "Namn" button stays. Newest = displayed. Add `Namnändring` (already in enum as `name_change`) with default values pre-filled from previous newest
 - BENGT #16 — Newest name = displayed (auto, not user-toggleable). Birth name auto-pulls date_from from birth event. Allow up/down ranking for ties. Prevent invalid date orderings
 - BENGT #17 — Rename name type "married" / "Gift man" → "Vigselnamn"
-- BENGT #19a — Add `Stavningsvariant` and `Stavning vid dödsfallet` types
 - BENGT #18 — **Skip.** Inline qualifier chars (`&%*!`) not adopted; keep structured `name_qualifier` field
+- BENGT #19a — **Skip.** Stavningsvariant and Stavning vid dödsfallet — Bengt himself flagged as "krångligheter" and walked back. Stavningsvarianter belong in the `notes` field per current workflow.
 
 ## Tasks
 
 ### Phase 1 — Data model
-- [ ] [src/renderer/constants/eventTypes.ts](../../src/renderer/constants/eventTypes.ts) — extend `NAME_TYPE_VALUES` with `spelling_variant` and `spelling_at_death`
-- [ ] No schema migration needed (enum values, sort_order column already exists per CLAUDE.md person_names schema)
+- [ ] No new name types (Stavningsvariant dropped from scope)
+- [ ] No schema migration needed (sort_order column already exists per CLAUDE.md person_names schema)
 - [ ] Confirm `preferred_name` column can be deprecated (still exists in schema for backward-compat — leave column, stop reading it)
 
 ### Phase 2 — Display logic
@@ -37,12 +37,10 @@ Bengt has six tickets touching names. Two earlier rounds already landed (`name_c
 ### Phase 4 — `PersonNameModal` flow
 - [ ] When user adds a new name with type `name_change`, prefill given_name + surname from the current newest name
 - [ ] Show a `date_from` field for `name_change` type
-- [ ] Same prefill behavior for `married` (rename label to "Vigselnamn") and `spelling_variant`
-- [ ] For `spelling_at_death`, optionally prefill from death event date
+- [ ] Same prefill behavior for `married` (rename label to "Vigselnamn")
 
 ### Phase 5 — i18n
 - [ ] `nameTypes.married` → "Vigselnamn"
-- [ ] Add `nameTypes.spelling_variant`, `nameTypes.spelling_at_death`
 - [ ] Sort modal type dropdown alphabetically by translation
 
 ## Out of scope
@@ -54,7 +52,6 @@ Bengt has six tickets touching names. Two earlier rounds already landed (`name_c
 - Add a person with birth name only — display name = birth name
 - Add `married` name with date_from later than birth — display switches to married
 - Add `name_change` later still — display switches to that
-- Add `spelling_variant` with no date — does not affect display, lives in table
 - Reorder undated names with ▲/▼ — order persists
 - Try to move a younger-dated name above an older — blocked with toast
 
