@@ -144,7 +144,7 @@ src/
 │       ├── import.ts             # gedcom:*, archive:*, import:* — dialog + fs stay on main
 │       └── website-export.ts     # website:export, website:previewSnapshot, website:setPreviewSnapshot
 ├── preload/                      # contextBridge — exposes window.api
-│   └── index.ts                  # Walks registry → window.api; adds non-registry channels for db/media/undo/checks
+│   └── index.ts                  # Hand-maintained window.api map (one ipcRenderer.invoke per method); preload-coverage.test.ts asserts every registry channel is exposed here
 ├── renderer/                     # Vue 3 application
 │   ├── App.vue                   # Root layout: sidebar (Persons/Relationships/Sources) + <router-view>
 │   ├── router.ts                 # Hash-based router with 7 routes
@@ -530,7 +530,7 @@ All ~131 IPC channels are defined once in `src/shared/channels/` via `defineChan
 
 1. **Main process** (`src/main/ipc/index.ts`): walks `channelRegistry` — worker channels get `wrapHandler('foo:bar', (...args) => callWorker('foo:bar', ...args))`; main-thread channels get `wrapHandler('foo:bar', (...args) => ch.handler(...args))`
 2. **Worker dispatch** (`src/main/db-worker.ts`): checks the registry first on every message; registry worker channels are dispatched before the small legacy fallback table
-3. **Preload** (`src/preload/index.ts`): walks `channelRegistry` → builds `window.api.<domain>.<method>` via `contextBridge`; mutating channels are wrapped so `onDataChanged` listeners fire
+3. **Preload** (`src/preload/index.ts`): **hand-maintained** map of `window.api.<domain>.<method>` to `ipcRenderer.invoke('domain:method', ...)`. Adding a `defineChannel` does NOT auto-expose it here — you must add the matching line in the preload's domain block. `tests/unit/preload-coverage.test.ts` parses the preload as text and fails CI if any registry channel is missing. Mutating channels are wrapped via the local `mutating()` helper so `onDataChanged` listeners fire.
 4. **Renderer**: Vue components call `window.api.persons.create(...)` etc. The `window.api` surface is **typed** — `ApiSurface<typeof channelRegistry>` derives the type at compile time, no loose `Record<string, …>` casts needed
 
 A small set of channels cannot fit the registry pattern and are registered separately:

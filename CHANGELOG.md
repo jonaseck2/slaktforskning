@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.168.1
+
+- fix(preload): expose new `places.listPage`, `sources.listPage` and update `persons.listPage` / `media.listPage` signatures on `window.api` — v0.168.0 added the IPC handlers but the preload is hand-maintained (not registry-driven), so the renderer hit `is not a function` at runtime
+- internal: new `tests/unit/preload-coverage.test.ts` parses the preload source and fails CI if any registered channel is missing — prevents this gap from recurring
+- docs: corrected CLAUDE.md description of the preload (was incorrectly described as registry-driven)
+
 ## v0.168.0 — List filter and sort now span the whole database
 
 - feat(lists): the filter input and sortable headers in PersonsListTab, PlacesView, SourcesView, and MediaView now operate against the full database instead of just the rows already paginated into memory — the four left-hand list panels were all running a client-side filter over the loaded page, which silently hid matches and miscounted the "Showing X of Y" footer
