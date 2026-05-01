@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.182.0 — Place tree picker: stage selection, OK to confirm
+
+- feat(ui): clicking a row in the place tree picker no longer commits-and-closes immediately. It stages the selection (highlighted row, the modal stays open) and the OK button in the footer commits when pressed. Cancel / ✕ discards. The pattern matches every other selection modal in the app — gives the user a chance to glance at the result of their pick (filter, ancestor chain, gazetteer badge) before confirming. Inline `+ Add child` still materializes the new place but now also stages it for OK rather than committing on the spot.
+- i18n: added `common.ok` (sv: "OK", en: "OK") used as the BaseSubPanel save-label override on this modal.
+
 ## v0.181.1 — Place tree picker: kill the dual scrollbar
 
 - fix(ui): `BaseSubPanel`'s `.ep-body` is already `flex: 1; overflow-y: auto`, so the modal's inner `.tree-scroll` (also `overflow-y: auto`) was stacking a second scrollbar on top of the first. Override `:deep(.ep-body)` for this modal to `overflow: hidden; display: flex; flex-direction: column` so the inner tree-scroll owns the single scroll axis, and the filter input + count-label stay pinned at top/bottom.

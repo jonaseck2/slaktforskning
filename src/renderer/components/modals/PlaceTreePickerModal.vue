@@ -3,7 +3,8 @@
     entity-type="place"
     :title="$t('places.tree.title')"
     mode="standalone"
-    hide-save
+    :save-label="$t('common.ok')"
+    @save="onConfirm"
     @cancel="$emit('close')"
     @close="$emit('close')"
   >
@@ -98,6 +99,9 @@ const sentinel = ref<HTMLElement | null>(null);
 const searchScrollRef = ref<HTMLElement | null>(null);
 const loading = ref(true);
 const selectedKey = ref<string | null>(null);
+// Selection is staged here when the user clicks a row. Committed only when
+// the OK button (BaseSubPanel's @save) fires. Cancel/close discards.
+const stagedPlace = ref<PlaceRow | null>(null);
 
 const { ready: gazetteerReady, ensureLoaded: ensureGazetteersLoaded, getGazetteers } = usePlaceResolver();
 // Destructure so reactive properties auto-unwrap in the template.
@@ -138,20 +142,24 @@ async function onToggle(node: TreeNode) {
 }
 
 async function onSelectNode(node: TreeNode) {
+  // Stage the click. Resolve the underlying Place row eagerly (cheap for
+  // existing DB nodes; gazetteer-only nodes still need findOrCreateWithChain
+  // before we have a valid id), but defer the emit until OK is pressed.
   selectedKey.value = node.key;
   try {
     if (node.dbId) {
       const place = (await window.api.places.get(node.dbId)) as PlaceRow | null;
-      if (place) { emit('select', place); return; }
+      if (place) stagedPlace.value = place;
+      return;
     }
     if (node.gazPath) {
       const ancestors = node.gazPath.slice(0, -1).map(n => ({ name: n }));
       const place = (await window.api.places.findOrCreateWithChain(node.name, ancestors)) as PlaceRow;
       node.dbId = place.id;
-      emit('select', place);
+      stagedPlace.value = place;
       return;
     }
-    toast.error(t('errors.saveFailed'));
+    stagedPlace.value = null;
   } catch (err) {
     console.error('[PlaceTreePickerModal] select failed:', err);
     toast.error(t('errors.saveFailed'));
@@ -160,18 +168,32 @@ async function onSelectNode(node: TreeNode) {
 
 function onSelectFlat(place: PlaceRow) {
   selectedKey.value = 'db:' + place.id;
-  emit('select', place);
+  stagedPlace.value = place;
 }
 
 async function onAddChild(payload: { parent: TreeNode; name: string }) {
+  // Inline-create + stage. The user typed a name and clicked Save in the
+  // inline form, so we materialise immediately, but the modal stays open and
+  // the new place becomes the staged selection — they still need to click OK
+  // (or correct their pick) to commit.
   try {
     const created = await tree.createChild(payload.parent, payload.name);
     const place = (await window.api.places.get(created.id)) as PlaceRow;
-    if (place) emit('select', place);
+    if (place) {
+      stagedPlace.value = place;
+      selectedKey.value = 'db:' + place.id;
+    }
   } catch (err) {
     console.error('[PlaceTreePickerModal] add-child failed:', err);
     toast.error(t('errors.saveFailed'));
   }
+}
+
+function onConfirm() {
+  // Pressing OK without a selection is a no-op; the picker keeps the modal
+  // open so the user can pick. Cancel/× is the way to close without a
+  // selection.
+  if (stagedPlace.value) emit('select', stagedPlace.value);
 }
 
 onMounted(async () => {

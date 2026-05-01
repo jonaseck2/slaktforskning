@@ -94,6 +94,7 @@ export default {
     save: 'Spara',
     create: 'Skapa',
     choose: 'Välj…',
+    ok: 'OK',
     actions: 'Åtgärder',
     loading: 'Laddar\u2026',
     yes: 'Ja',

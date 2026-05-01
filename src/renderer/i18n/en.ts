@@ -94,6 +94,7 @@ export default {
     save: 'Save',
     create: 'Create',
     choose: 'Choose…',
+    ok: 'OK',
     actions: 'Actions',
     loading: 'Loading\u2026',
     yes: 'Yes',
