@@ -5,7 +5,7 @@ import { listChannels, getChannel } from '../../src/shared/channels/registry';
 describe('places channel registry', () => {
   it('registers all places:* channels', () => {
     const placeChannels = listChannels().filter(c => c.startsWith('places:'));
-    expect(placeChannels.length).toBe(11);
+    expect(placeChannels.length).toBe(13);
   });
   it('places:findOrCreateWithChain is a mutating worker channel', () => {
     const ch = getChannel('places:findOrCreateWithChain');
@@ -27,5 +27,15 @@ describe('places channel registry', () => {
     expect(getChannel('places:get')!.mutating).toBeFalsy();
     expect(getChannel('places:list')!.mutating).toBeFalsy();
     expect(getChannel('places:search')!.mutating).toBeFalsy();
+  });
+  it('places:listChildren and places:getAncestors are read-only worker channels', () => {
+    const lc = getChannel('places:listChildren');
+    const ga = getChannel('places:getAncestors');
+    expect(lc).toBeDefined();
+    expect(lc!.thread).toBe('worker');
+    expect(lc!.mutating).toBeFalsy();
+    expect(ga).toBeDefined();
+    expect(ga!.thread).toBe('worker');
+    expect(ga!.mutating).toBeFalsy();
   });
 });

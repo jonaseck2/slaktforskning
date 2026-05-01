@@ -1,21 +1,35 @@
 <template>
   <div class="place-picker">
-    <input
-      ref="inputRef"
-      type="text"
-      v-model="query"
-      :placeholder="placeholder || $t('places.searchPlaceholder')"
-      role="combobox"
-      :aria-expanded="showDropdown && (results.length > 0 || query.length > 1)"
-      aria-autocomplete="list"
-      :aria-controls="pickerId + '-listbox'"
-      :aria-activedescendant="highlightIndex >= 0 ? pickerId + '-option-' + highlightIndex : undefined"
-      @input="onInput"
-      @focus="showDropdown = true"
-      @blur="onBlur"
-      @keydown="onKeydown"
-      autocomplete="off"
-    />
+    <div class="picker-input-row">
+      <input
+        ref="inputRef"
+        type="text"
+        v-model="query"
+        :placeholder="placeholder || $t('places.searchPlaceholder')"
+        role="combobox"
+        :aria-expanded="showDropdown && (results.length > 0 || query.length > 1)"
+        aria-autocomplete="list"
+        :aria-controls="pickerId + '-listbox'"
+        :aria-activedescendant="highlightIndex >= 0 ? pickerId + '-option-' + highlightIndex : undefined"
+        @input="onInput"
+        @focus="showDropdown = true"
+        @blur="onBlur"
+        @keydown="onKeydown"
+        autocomplete="off"
+      />
+      <button
+        type="button"
+        class="tree-picker-btn"
+        :aria-label="$t('places.tree.openTree')"
+        :title="$t('places.tree.openTree')"
+        @click="openTreeModal"
+      >
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+            d="M3 2h3l1 1.5h6V13H3z M3 6h10 M7 3.5V13" />
+        </svg>
+      </button>
+    </div>
     <Teleport to="body">
     <ul
       v-if="showDropdown && (results.length > 0 || gazetteerResults.length > 0 || query.length > 1)"
@@ -78,6 +92,13 @@
     <div v-if="showDropdown && (results.length > 0 || gazetteerResults.length > 0)" class="sr-only" aria-live="polite">
       {{ $t('a11y.searchResults', { count: results.length + gazetteerResults.length }, results.length + gazetteerResults.length) }}
     </div>
+    <PlaceTreePickerModal
+      v-if="treeModalOpen"
+      :initial-place-id="modelValue"
+      :initial-query="query"
+      @select="onTreeSelect"
+      @close="treeModalOpen = false"
+    />
   </div>
 </template>
 
@@ -86,6 +107,7 @@ import { ref, watch, inject, onMounted, onBeforeUnmount, nextTick, computed } fr
 import { useI18n } from 'vue-i18n';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { searchGazetteer, resolveHierarchical, tokenizePlaceString } from '../../api/place-gazetteers/resolver';
+import PlaceTreePickerModal from './modals/PlaceTreePickerModal.vue';
 
 const pickerId = 'place-picker-' + Math.random().toString(36).slice(2, 8);
 
@@ -127,6 +149,14 @@ const highlightIndex = ref(-1);
 const inputRef = ref<HTMLInputElement | null>(null);
 const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout>;
+
+const treeModalOpen = ref(false);
+
+function openTreeModal() { treeModalOpen.value = true; }
+function onTreeSelect(place: PlaceRow) {
+  treeModalOpen.value = false;
+  select(place);
+}
 
 function updateDropdownPosition() {
   const el = inputRef.value;
@@ -434,4 +464,19 @@ function onBlur() {
   white-space: nowrap;
   border: 0;
 }
+.picker-input-row {
+  display: flex; align-items: center; gap: 4px;
+  width: 100%;
+}
+.picker-input-row input { flex: 1; }
+.tree-picker-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-bg); color: var(--text-secondary);
+  cursor: pointer;
+}
+.tree-picker-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+.tree-picker-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 </style>

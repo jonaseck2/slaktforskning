@@ -429,7 +429,7 @@ describe('usePlaceTree', () => {
     const gazetteers: Gaz[] = [
       makeGaz('sv-geo', { name: 'Sverige', type: 'country', children: [{ name: 'Stockholm', type: 'county' }] }),
       makeGaz('dk-geo', { name: 'Danmark', type: 'country' }),
-    ]);
+    ];
     const tree = usePlaceTree({ getGazetteers: () => gazetteers });
     await tree.loadRoots();
     const names = tree.roots.value.map(n => n.name).sort();
@@ -452,7 +452,7 @@ describe('usePlaceTree', () => {
         type: 'country',
         children: [{ name: 'Stockholm', type: 'county' }, { name: 'Skåne', type: 'county' }],
       }),
-    ]);
+    ];
     const tree = usePlaceTree({ getGazetteers: () => gazetteers });
     await tree.loadRoots();
     const sv = tree.roots.value.find(n => n.name === 'Sverige')!;
@@ -476,7 +476,7 @@ describe('usePlaceTree', () => {
           { name: 'Skåne', type: 'county' },
         ],
       }),
-    ]);
+    ];
     const tree = usePlaceTree({ getGazetteers: () => gazetteers });
     await tree.loadRoots();
     await tree.applyFilter('solna');

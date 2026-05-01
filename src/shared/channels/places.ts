@@ -80,3 +80,15 @@ defineChannel({
   thread: 'worker',
   handler: (db, placeId: string) => places.getPersonsForPlace(db, placeId),
 });
+
+defineChannel({
+  name: 'places:listChildren',
+  thread: 'worker',
+  handler: (db, parentId: string | null) => places.listPlaceChildren(db, parentId),
+});
+
+defineChannel({
+  name: 'places:getAncestors',
+  thread: 'worker',
+  handler: (db, id: string) => places.getPlaceAncestors(db, id),
+});

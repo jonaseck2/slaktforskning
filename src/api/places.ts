@@ -211,6 +211,52 @@ export function findOrCreatePlaceWithChain(
   return createPlace(db, { name: name.trim(), parent_place_id: parentId });
 }
 
+/**
+ * Direct children of a place node. Pass `null` for root places (no parent).
+ * `hasChildren` is computed via EXISTS so the tree picker can render chevrons
+ * without N+1 queries when expanding.
+ */
+export function listPlaceChildren(
+  db: Database,
+  parentId: string | null,
+): (Place & { hasChildren: boolean })[] {
+  if (parentId === null) {
+    return queryAll<Place & { hasChildren: boolean }>(db, `
+      SELECT p.*,
+        EXISTS(SELECT 1 FROM places c WHERE c.parent_place_id = p.id) AS hasChildren
+      FROM places p
+      WHERE p.parent_place_id IS NULL
+      ORDER BY p.name ASC
+    `);
+  }
+  return queryAll<Place & { hasChildren: boolean }>(db, `
+    SELECT p.*,
+      EXISTS(SELECT 1 FROM places c WHERE c.parent_place_id = p.id) AS hasChildren
+    FROM places p
+    WHERE p.parent_place_id = ?
+    ORDER BY p.name ASC
+  `, [parentId]);
+}
+
+const MAX_PLACE_ANCESTOR_DEPTH = 32;
+
+/**
+ * Chain from root to `id` (inclusive). Walks `parent_place_id` upward then
+ * reverses. Capped at MAX_PLACE_ANCESTOR_DEPTH to defend against accidental
+ * cycles in user data.
+ */
+export function getPlaceAncestors(db: Database, id: string): Place[] {
+  const reverseChain: Place[] = [];
+  let currentId: string | null = id;
+  for (let i = 0; i < MAX_PLACE_ANCESTOR_DEPTH && currentId; i++) {
+    const row = queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [currentId]);
+    if (!row) break;
+    reverseChain.push(row);
+    currentId = row.parent_place_id ?? null;
+  }
+  return reverseChain.reverse();
+}
+
 export function getPersonsForPlace(
   db: Database,
   placeId: string

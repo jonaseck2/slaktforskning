@@ -4,6 +4,8 @@ import {
   updatePlace, deletePlace, findOrCreatePlace, findOrCreatePlaceWithChain,
   getPersonsForPlace,
   listPlacesPage, countPlaces,
+  listPlaceChildren,
+  getPlaceAncestors,
 } from '../../src/api/places';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -250,5 +252,84 @@ describe('getPersonsForPlace', () => {
     const result = getPersonsForPlace(db, place.id);
     expect(result).toHaveLength(1);
     expect(result[0].event_count).toBe(2);
+  });
+});
+
+describe('listPlaceChildren', () => {
+  it('returns root places when parentId is null', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    const denmark = createPlace(db, { name: 'Danmark' });
+    createPlace(db, { name: 'Stockholm', parent_place_id: sweden.id });
+
+    const roots = listPlaceChildren(db, null);
+
+    expect(roots.map(r => r.name).sort()).toEqual(['Danmark', 'Sverige']);
+  });
+
+  it('returns direct children only when parentId is set', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    const stockholm = createPlace(db, { name: 'Stockholm', parent_place_id: sweden.id });
+    createPlace(db, { name: 'Solna', parent_place_id: stockholm.id });
+    createPlace(db, { name: 'Skåne', parent_place_id: sweden.id });
+
+    const children = listPlaceChildren(db, sweden.id);
+
+    expect(children.map(c => c.name).sort()).toEqual(['Skåne', 'Stockholm']);
+  });
+
+  it('flags hasChildren correctly', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    const stockholm = createPlace(db, { name: 'Stockholm', parent_place_id: sweden.id });
+    createPlace(db, { name: 'Solna', parent_place_id: stockholm.id });
+
+    const roots = listPlaceChildren(db, null);
+    const sw = roots.find(r => r.name === 'Sverige')!;
+    expect(sw.hasChildren).toBeTruthy();
+
+    const children = listPlaceChildren(db, sweden.id);
+    const sthlm = children.find(c => c.name === 'Stockholm')!;
+    expect(sthlm.hasChildren).toBeTruthy();
+
+    const leaves = listPlaceChildren(db, stockholm.id);
+    const solna = leaves.find(c => c.name === 'Solna')!;
+    expect(solna.hasChildren).toBeFalsy();
+  });
+
+  it('returns empty array when parent has no children', () => {
+    const p = createPlace(db, { name: 'Solo' });
+    expect(listPlaceChildren(db, p.id)).toEqual([]);
+  });
+});
+
+describe('getPlaceAncestors', () => {
+  it('returns the chain from root to the given place inclusive', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    const stockholm = createPlace(db, { name: 'Stockholm', parent_place_id: sweden.id });
+    const solna = createPlace(db, { name: 'Solna', parent_place_id: stockholm.id });
+
+    const chain = getPlaceAncestors(db, solna.id);
+
+    expect(chain.map(p => p.name)).toEqual(['Sverige', 'Stockholm', 'Solna']);
+  });
+
+  it('returns single-element array for a root place', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    expect(getPlaceAncestors(db, sweden.id).map(p => p.name)).toEqual(['Sverige']);
+  });
+
+  it('returns empty array for unknown id', () => {
+    expect(getPlaceAncestors(db, 'nonexistent')).toEqual([]);
+  });
+
+  it('caps depth at 32 to defend against cycles', () => {
+    let parentId: string | null = null;
+    let lastId = '';
+    for (let i = 0; i < 40; i++) {
+      const p = createPlace(db, { name: `L${i}`, parent_place_id: parentId });
+      parentId = p.id;
+      lastId = p.id;
+    }
+    const chain = getPlaceAncestors(db, lastId);
+    expect(chain.length).toBeLessThanOrEqual(32);
   });
 });

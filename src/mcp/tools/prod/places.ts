@@ -69,4 +69,24 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     }
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
+
+  server.registerTool('list_place_children', {
+    description: 'List direct children of a place (pass null for root-level places). Returns rows with a hasChildren flag for each.',
+    inputSchema: {
+      parent_place_id: z.string().nullable().describe('Parent place ID, or null for root-level places'),
+    },
+  }, async (args) => {
+    const rows = placeApi.listPlaceChildren(getDb(), args.parent_place_id ?? null);
+    return { content: [{ type: 'text', text: JSON.stringify(rows, null, 2) }] };
+  });
+
+  server.registerTool('get_place_ancestors', {
+    description: 'Get the ancestor chain (root → self) for a place.',
+    inputSchema: {
+      place_id: z.string().describe('Place ID'),
+    },
+  }, async (args) => {
+    const chain = placeApi.getPlaceAncestors(getDb(), args.place_id);
+    return { content: [{ type: 'text', text: JSON.stringify(chain, null, 2) }] };
+  });
 }
