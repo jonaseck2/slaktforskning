@@ -53,13 +53,7 @@
       <!-- Date from (for dated name types) -->
       <div v-if="form.name_type === 'married' || form.name_type === 'name_change'" class="ep-field">
         <span class="ep-field-label">{{ $t('names.dateFrom') }}</span>
-        <input
-          class="ep-input"
-          v-model="form.date_from"
-          type="text"
-          placeholder="YYYY-MM-DD"
-          @keydown.enter.prevent="handleSave"
-        />
+        <SimpleDateInput v-model="form.date_from" />
       </div>
 
       <!-- Preferred name (only for birth names) -->
@@ -140,24 +134,12 @@
         <!-- Date from / to -->
         <div class="ep-field">
           <span class="ep-field-label">{{ $t('names.dateFrom') }}</span>
-          <input
-            class="ep-input"
-            v-model="form.date_from"
-            type="text"
-            placeholder="YYYY-MM-DD"
-            @keydown.enter.prevent="handleSave"
-          />
+          <SimpleDateInput v-model="form.date_from" />
         </div>
 
         <div class="ep-field">
           <span class="ep-field-label">{{ $t('names.dateTo') }}</span>
-          <input
-            class="ep-input"
-            v-model="form.date_to"
-            type="text"
-            placeholder="YYYY-MM-DD"
-            @keydown.enter.prevent="handleSave"
-          />
+          <SimpleDateInput v-model="form.date_to" />
         </div>
       </details>
     </div>
@@ -169,6 +151,7 @@ import { reactive, ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
+import SimpleDateInput from '../SimpleDateInput.vue';
 import { NAME_TYPE_VALUES } from '../../constants/eventTypes';
 import { parseAsteriskNotation } from '../../utils/nameUtils';
 import { pickDisplayedName } from '../../composables/usePersonPanelData';

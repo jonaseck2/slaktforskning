@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.175.3 — Names: align date inputs with the rest of the app
+
+- fix(ui): the date_from / date_to fields in the Add/Edit Name modal were plain text `<input>`s with a `YYYY-MM-DD` placeholder, while every other date field in the app (event date, baptism date, span end date, citation date_accessed) uses `SimpleDateInput` — a text field plus a calendar-picker button on the right. Swapped all three name-modal date inputs (the conditional `date_from` shown for married/name_change types, plus `date_from`/`date_to` under "More") to `<SimpleDateInput v-model="...">` so the picker affordance is consistent across modals.
+
 ## v0.175.2 — Settings: drop redundant clear-tree-subject button
 
 - fix(ui): the tree-subject row in Settings → Database had an external ✕ button next to the PersonPicker, but PersonPicker already renders its own clear ✕ — clicking the outer one fired a separate flow that emitted a now-obsolete status toast. Removed the duplicate button (and the now-unused `clearTreeSubject` handler, the `tree-subject-row` wrapper + CSS, and the orphaned `database.treeSubjectCleared` i18n key in both `sv.ts` and `en.ts`). The picker's built-in clear still calls `setTreeSubject(null)` and deletes the `default_person_id` setting.
