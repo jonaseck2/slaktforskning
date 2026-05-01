@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -15,6 +16,8 @@ import {
   reorderMediaLinks,
   getPersonProfilePicRef,
   getPersonProfilePicRefs,
+  getMediaDir,
+  getMediaFolderName,
 } from '../../src/api/media';
 import { createMediaRegion } from '../../src/api/media_regions';
 import { createTestDb } from './helpers';
@@ -348,5 +351,17 @@ describe('getPersonProfilePicRefs (batch)', () => {
   it('returns empty object for empty input', () => {
     const map = getPersonProfilePicRefs(db, []);
     expect(map).toEqual({});
+  });
+});
+
+describe('media folder convention helpers', () => {
+  it('derives folder name from db filename', () => {
+    expect(getMediaFolderName('/abs/foo.db')).toBe('foo-media');
+    expect(getMediaFolderName('/abs/My Tree.db')).toBe('My Tree-media');
+    expect(getMediaFolderName('relative/bar.db')).toBe('bar-media');
+  });
+
+  it('returns absolute media dir alongside db', () => {
+    expect(getMediaDir('/abs/foo.db')).toBe(path.join('/abs', 'foo-media'));
   });
 });

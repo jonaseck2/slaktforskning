@@ -1,6 +1,18 @@
+import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { Media, MediaLink, MediaLinkEntityType } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+
+/** Folder name convention: `foo.db` -> `foo-media`. Pure function of dbPath. */
+export function getMediaFolderName(dbPath: string): string {
+  const base = path.basename(dbPath, path.extname(dbPath));
+  return `${base}-media`;
+}
+
+/** Absolute path to the per-database media folder, sibling to the .db file. */
+export function getMediaDir(dbPath: string): string {
+  return path.join(path.dirname(dbPath), getMediaFolderName(dbPath));
+}
 
 export function createMedia(db: Database, data: {
   file_ref?: string | null;

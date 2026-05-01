@@ -7,12 +7,11 @@ import type { WrapHandlerFn } from './wrap-handler';
 
 /**
  * Derive the media folder name from the database filename: `foo.db` → `foo-media`.
- * Exported for use by import.ts (archive import/export).
+ * Re-exported from `src/api/media.ts` so import.ts (archive import/export) and
+ * other Electron-side callers can keep using `mediaFolderName(...)` while the
+ * convention itself lives in the pure-TS api layer.
  */
-export function mediaFolderName(dbPath: string): string {
-  const dbName = path.basename(dbPath, path.extname(dbPath));
-  return `${dbName}-media`;
-}
+export { getMediaFolderName as mediaFolderName, getMediaDir } from '../../api/media';
 
 /**
  * Registers main-thread-only media IPC handlers.
@@ -51,7 +50,7 @@ export function registerMediaHandlers(
 
     const srcPath = result.filePaths[0];
     const dbPath = getCurrentDatabasePath();
-    const mediaFolder = mediaFolderName(dbPath);
+    const mediaFolder = media.getMediaFolderName(dbPath);
     const mediaDir = path.join(dbDir, mediaFolder);
     fs.mkdirSync(mediaDir, { recursive: true });
 
