@@ -981,14 +981,14 @@ git commit -m "docs(gazetteer): document DE build scripts"
 ## Self-review checklist
 
 - [x] `de-gemeinden.json` exists, `kind: \'point\'`, root `Tyskland` → 16 Bundesländer → ~400 Kreise → cities ≥ 5000 pop.
-- [x] `de-gemeinden-boundaries.json` exists, `kind: \'boundary\'`, every leaf has a `geometry`.
+- [ ] `de-gemeinden-boundaries.json` exists, `kind: \'boundary\'`, every leaf has a `geometry`. **(Skipped: Wikimedia Maps geoshape returned HTTP 403 — boundary gazetteer deferred until an alternative source is identified.)**
 - [x] Combined data-folder growth < 15 MB.
 - [x] `bundled.ts` imports both, registers both, applies `DE_RULES` to both.
 - [x] `DE_RULES.stripSuffixes` covers Land / Bezirk / Kreis / Landkreis / Stadtkreis / Gemeinde / Stadt / Markt / Ortsteil.
 - [x] `tests/unit/gazetteers.test.ts` count assertion bumped, both new ids in the per-id list, resolution probes pass.
 - [x] `npm run lint` and `npx vitest run` green.
 - [x] Re-running both build scripts produces only date-line diffs (with cached GeoNames data — fresh re-fetches will round-trip the same data).
-- [x] `package.json` has `mapshaper` in `devDependencies`.
+- [ ] `package.json` has `mapshaper` in `devDependencies`. **(Skipped: only used by the boundary build, which was deferred. Adding it would be unused devDep bloat.)**
 
 ## Out of scope (future plans)
 
