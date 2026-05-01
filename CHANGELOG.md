@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.179.2 — Place tree picker: load resilience + filter style
+
+- fix(ui): wrap the `PlaceTreePickerModal` `onMounted` bootstrap in try/catch with a `errors.loadFailed` toast, and a `finally` clearing the loading flag. Without this, any throw during init (e.g. an undefined IPC channel after a stale preload bundle) left the modal stuck on "Loading…" with no recovery. Also tightened the optional chains in `usePlaceTree` (`window.api?.places?.listChildren?.(...)`) so a missing channel returns undefined instead of throwing TypeError mid-await.
+- fix(ui): the filter input in the place-tree modal now uses the same `.list-filter-input` styling as the entity-list filters (PersonsListTab, SourcesView, PlacesView, MediaView): `1px solid var(--surface-border)`, `var(--font-sm)`, `padding: 6px 10px`, focus-shadow at 2px instead of the ad-hoc 1.5px chunky border the modal had.
+
 ## v0.179.1 — Place tree picker: button inside the input
 
 - fix(ui): the tree-picker button now sits flush inside the place-picker input field (transparent background, no border, absolutely positioned on the right) instead of as a separate boxed button next to it. Matches the calendar-button pattern on `SimpleDateInput`. Input gets right-padding to make room.

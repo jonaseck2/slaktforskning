@@ -70,7 +70,7 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
   const filter = ref<string>('');
 
   async function loadRoots(): Promise<void> {
-    const dbRoots = (await window.api?.places.listChildren(null)) as DbChildRow[] | undefined ?? [];
+    const dbRoots = (await window.api?.places?.listChildren?.(null)) as DbChildRow[] | undefined ?? [];
     const merged = new Map<string, PlaceTreeNode>();
 
     for (const row of dbRoots) {
@@ -141,7 +141,7 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
     const merged = new Map<string, PlaceTreeNode>();
 
     if (node.dbId) {
-      const dbChildren = (await window.api?.places.listChildren(node.dbId)) as DbChildRow[] | undefined ?? [];
+      const dbChildren = (await window.api?.places?.listChildren?.(node.dbId)) as DbChildRow[] | undefined ?? [];
       for (const row of dbChildren) {
         merged.set(normalize(row.name), {
           key: dbKeyFor(row.id),
@@ -253,7 +253,7 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
   });
 
   async function findPathTo(placeId: string): Promise<PlaceTreeNode[]> {
-    const ancestors = (await window.api?.places.getAncestors(placeId)) as Array<{ id: string; name: string }> | undefined ?? [];
+    const ancestors = (await window.api?.places?.getAncestors?.(placeId)) as Array<{ id: string; name: string }> | undefined ?? [];
     if (ancestors.length === 0) return [];
     const path: PlaceTreeNode[] = [];
     let level = roots.value;

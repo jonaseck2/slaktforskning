@@ -114,18 +114,28 @@ async function onAddChild(payload: { parent: TreeNode; name: string }) {
 }
 
 onMounted(async () => {
-  if (!gazetteerReady.value) await ensureGazetteersLoaded();
-  await tree.loadRoots();
-  if (props.initialPlaceId) {
-    const path = await tree.findPathTo(props.initialPlaceId);
-    if (path.length > 0) {
-      selectedKey.value = path[path.length - 1].key;
+  // Wrap the whole bootstrap so a thrown rejection (e.g. an undefined IPC
+  // channel after a stale preload bundle) can't leave the modal stuck on
+  // "Loading…" forever. Any failure surfaces as a toast and the user can
+  // still cancel.
+  try {
+    if (!gazetteerReady.value) await ensureGazetteersLoaded();
+    await tree.loadRoots();
+    if (props.initialPlaceId) {
+      const path = await tree.findPathTo(props.initialPlaceId);
+      if (path.length > 0) {
+        selectedKey.value = path[path.length - 1].key;
+      }
+    } else if (props.initialQuery && props.initialQuery.trim().length >= 2) {
+      filterText.value = props.initialQuery;
+      await tree.applyFilter(props.initialQuery);
     }
-  } else if (props.initialQuery && props.initialQuery.trim().length >= 2) {
-    filterText.value = props.initialQuery;
-    await tree.applyFilter(props.initialQuery);
+  } catch (err) {
+    console.error('[PlaceTreePickerModal] init failed:', err);
+    toast.error(t('errors.loadFailed'));
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
   await nextTick();
   filterInputRef.value?.focus();
 });
@@ -133,18 +143,22 @@ onMounted(async () => {
 
 <style scoped>
 .tree-picker { display: flex; flex-direction: column; gap: 8px; min-width: 480px; }
+/* Match the canonical .list-filter-input from PersonsListTab / SourcesView /
+   PlacesView so this filter looks identical to every other entity-list filter. */
 .filter-input {
-  width: 100%; box-sizing: border-box;
-  padding: 8px 10px;
-  border: 1.5px solid var(--surface-border);
+  width: 100%;
+  padding: 6px 10px;
+  font-size: var(--font-sm);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  background: var(--surface-bg); color: var(--text-primary);
+  outline: none;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
 }
 .filter-input:focus {
-  outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .state {
   padding: 24px; text-align: center;
