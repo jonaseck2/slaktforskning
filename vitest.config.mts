@@ -50,7 +50,6 @@ export default defineConfig({
         // Composables that need full DOM/Electron/window.api
         'src/renderer/composables/useChartBridge.ts',
         'src/renderer/composables/useChartNavigation.ts',
-        'src/renderer/composables/useChartZoom.ts',
         'src/renderer/composables/usePersonPanelData.ts',
         'src/renderer/composables/usePlacePanelSections.ts',
         'src/renderer/composables/usePlaceResolver.ts',
@@ -68,11 +67,18 @@ export default defineConfig({
         // exercised in tests/unit/cropImage.test.ts but cannot contribute
         // enough covered lines to reach the 80% threshold on the file.
         'src/renderer/utils/cropImage.ts',
+
+        // Per-channel defineChannel() wrappers run in the IPC worker thread, not
+        // in unit tests. Parity between channel registry and preload is enforced
+        // by tests/unit/registry.test.ts and tests/unit/preload-coverage.test.ts.
+        'src/shared/channels/**',
       ],
       reporter: ['text', 'lcov'],
       thresholds: {
         lines: 80,
         functions: 80,
+        statements: 80,
+        branches: 70,
       },
     },
     projects: [

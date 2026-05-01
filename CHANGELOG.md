@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.179.9 — Coverage thresholds promoted to global, channels excluded
+
+- test: locked in the global coverage floor at lines 80%, functions 80%, statements 80%, branches 70% in `vitest.config.mts`. Current actuals: lines 89.92%, functions 89.96%, statements 87.09%, branches 75.54%. Future regressions below these thresholds will fail the coverage build (was previously a stale "must meet global threshold" warning that nothing enforced).
+- test: added `src/shared/channels/**` to the coverage exclude list — per-channel `defineChannel()` wrappers run in the IPC worker thread, not in unit tests. Parity between the channel registry and the preload bundle is enforced by `tests/unit/registry.test.ts` and `tests/unit/preload-coverage.test.ts`.
+- test: removed `src/renderer/composables/useChartZoom.ts` from the coverage exclude — it's now at 100% coverage (added in v0.179.6).
+
 ## v0.179.8 — Test coverage tier 4: Vue composables
 
 - test: brought six composable / util files to ≥80% line coverage (most at 100%): `usePanelSections.ts` (0% → 100%, 18 tests), `usePersonProfilePic.ts` (0% → 100%, 16 tests including 2 regression guards for v0.179.7), `mediaProfile.ts` (0% → 100%, 10 tests), `useDeleteConfirm.ts` (27% → 100%, 32 tests), `useSelectedParentInfo.ts` (21% → 100%, 17 tests), `usePanelResize.ts` (49% → 100%, 28 tests). All use the `mount` + host-component pattern from `usePagedList.test.ts`. Total tests in suite: 2651 → 2772 (+121).
