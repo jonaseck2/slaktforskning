@@ -371,9 +371,9 @@ export async function checkPlaceNameNoRegion(
   const cache = new Map<string, ReturnType<typeof resolvePlace>>();
   const yieldIfNeeded = makeYieldBudget();
   for (const place of places) {
-    await yieldIfNeeded();
     const name = (place.name ?? '').trim();
     if (!name) continue;
+    await yieldIfNeeded();
     if (!cache.has(name)) cache.set(name, resolvePlace(name, gazetteers));
     if (cache.get(name) !== null) continue;
     results.push({

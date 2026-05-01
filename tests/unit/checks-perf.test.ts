@@ -228,7 +228,7 @@ describe('resolver findMatches — name-normalization call count', () => {
 // ---------------------------------------------------------------------------
 
 describe('checks-location yield budget', () => {
-  it('yields at least once during a long synchronous loop', async () => {
+  it('yields at least 3 times over a ~300ms loop at the 75ms budget', async () => {
     // Drive the helper directly — we don't need a full DB to test the budget.
     // Inline-import via dynamic import to read the un-exported helper would
     // require an export; instead we simulate the pattern: a loop that does
