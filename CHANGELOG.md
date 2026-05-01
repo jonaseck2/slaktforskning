@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.179.7 — Profile pic store stuck on 'loading' after IPC failure
+
+- fix(stores): `profilePicStore.ensureLoaded()` now sets the entry to `{ status: 'error', src: null }` if `window.api.media.profilePicRef(personId)` itself throws. Previously only the inner `resolveOne()` had a catch — if `profilePicRef` rejected (e.g. IPC error before media data was reached), the outer try only had a `finally`, leaving the entry pinned at `'loading'` forever for that person. Subsequent `ensureLoaded` calls also wouldn't retry because the dedup-guard reads `'loading'` as in-progress. Caught while writing coverage tests for `usePersonProfilePic`.
+
 ## v0.179.6 — Test coverage tier 3: chart layouts + useChartZoom
 
 - test: brought four chart-layout files to high line coverage. New tests: `hourglass-tree.test.ts` (50, 25% → 100%), `chart-layout-descendant.test.ts` (61, 48% → 68%), `chart-layout-pedigree.test.ts` (26, 60% → 81%), `useChartZoom.test.ts` (33, 13% → 100%). All assert position invariants (parent above child, sibling spacing, lane separation) rather than pixel-perfect snapshots, so they don't rot when spacing constants are tuned. Total tests in suite: 2481 → 2651 (+170).
