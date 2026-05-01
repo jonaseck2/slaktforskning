@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.187.0 — Swedish landskap as a gazetteer
+
+- feat: new bundled gazetteer `sv-landskap` with all 25 historical Swedish provinces (Skåne, Bohuslän, Ångermanland, Lappland, …) — names that didn't fit the modern län/kommun tree now resolve to a real geographic anchor
+- chore: `landskap` added to Swedish suffix-strip rules so "Skåne landskap" matches the same as "Skåne"
+
 ## v0.186.0 — Continents in the boundary gazetteer
 
 - feat: world-boundaries now contains the 7 continents (Africa, Antarctica, Asia, Europe, North America, Oceania, South America) as siblings of countries — bare-continent inputs ("Afrika", "Europa") resolve to the continent polygon

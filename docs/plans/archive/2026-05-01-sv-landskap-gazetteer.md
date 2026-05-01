@@ -1,6 +1,6 @@
 # `sv-landskap` Gazetteer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a new bundled point gazetteer `sv-landskap` covering the 25 Swedish historical provinces (landskap), so inputs like "Ångermanland", "Bohuslän", and "Skåne landskap" resolve to a geographic anchor independent of the modern län/kommun hierarchy.
 
@@ -36,7 +36,7 @@
 **Files:**
 - Create: `scripts/build-sv-landskap.ts`
 
-- [ ] **Step 1: Create the script**
+- [x] **Step 1: Create the script**
 
 ```typescript
 /**
@@ -142,14 +142,14 @@ async function main() {
 main().catch(err => { console.error(err); process.exit(1); });
 ```
 
-- [ ] **Step 2: Run it and confirm 25 rows come back**
+- [x] **Step 2: Run it and confirm 25 rows come back**
 
 Run: `npx tsx scripts/build-sv-landskap.ts`
 Expected: `Fetched NN rows from Wikidata.` followed by `Parsed 25 valid rows.` (or close — Wikidata occasionally has duplicate or stub instances; ≥24 is acceptable, <24 means the SPARQL is wrong).
 
 If the count is way off, eyeball the row labels. Q200250 has been stable for years and should give exactly the 25 named in the design spec.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/build-sv-landskap.ts
@@ -163,7 +163,7 @@ git commit -m "feat(gazetteer): scaffold build-sv-landskap"
 **Files:**
 - Modify: `scripts/build-sv-landskap.ts`
 
-- [ ] **Step 1: Replace the `// Tasks 2-3 fill in...` comment with the JSON-build block**
+- [x] **Step 1: Replace the `// Tasks 2-3 fill in...` comment with the JSON-build block**
 
 Append:
 
@@ -215,12 +215,12 @@ Append:
 }
 ```
 
-- [ ] **Step 2: Run the script**
+- [x] **Step 2: Run the script**
 
 Run: `npx tsx scripts/build-sv-landskap.ts`
 Expected: `Wrote .../sv-landskap.json (NN.N KB, 25 landskap)`.
 
-- [ ] **Step 3: Eyeball the output**
+- [x] **Step 3: Eyeball the output**
 
 ```bash
 node -e "
@@ -234,7 +234,7 @@ console.log(\'last 3:\', j.root.children.slice(-3).map(c => `${c.name} (${c.lat}
 
 Expected: `count: 25`, names alphabetised in Swedish locale (Blekinge first, Östergötland last). All `lat` values between 55 (Skåne) and 69 (Lappland); all `lon` values between 11 and 25.
 
-- [ ] **Step 4: Confirm the 25 names match the design spec**
+- [x] **Step 4: Confirm the 25 names match the design spec**
 
 ```bash
 node -e "
@@ -258,7 +258,7 @@ Expected: `missing: []`, `extra: []`.
 
 If something is missing, the SPARQL query is dropping rows — check if it has a `wdt:P31 wd:Q200250` row in Wikidata. Some landskap may be classified under more specific subclasses; if so, broaden the filter to `wdt:P31/wdt:P279* wd:Q200250` (instance-of-or-subclass-of) and re-run.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/build-sv-landskap.ts \
@@ -273,7 +273,7 @@ git commit -m "feat(gazetteer): build sv-landskap from Wikidata Q200250"
 **Files:**
 - (none modified)
 
-- [ ] **Step 1: Run the script twice and diff**
+- [x] **Step 1: Run the script twice and diff**
 
 ```bash
 cp src/api/place-gazetteers/data/sv-landskap.json /tmp/sv-landskap-before.json
@@ -303,7 +303,7 @@ git commit -m "fix(gazetteer): sort aliases for sv-landskap determinism"
 **Files:**
 - Modify: `src/api/place-gazetteers/bundled.ts`
 
-- [ ] **Step 1: Add the static import**
+- [x] **Step 1: Add the static import**
 
 Around `bundled.ts:7-22` (the Swedish import block), add a new line:
 
@@ -324,7 +324,7 @@ import svLandskap from \'./data/sv-landskap.json\';
 import svSockenstadBoundaries from \'./data/sv-sockenstad-boundaries.json\';
 ```
 
-- [ ] **Step 2: Add to `NORMALIZE_RULES_BY_ID`**
+- [x] **Step 2: Add to `NORMALIZE_RULES_BY_ID`**
 
 Find the `NORMALIZE_RULES_BY_ID` object (around line 80-100). Add `\'sv-landskap\': SV_RULES` next to the other Swedish IDs:
 
@@ -339,7 +339,7 @@ Find the `NORMALIZE_RULES_BY_ID` object (around line 80-100). Add `\'sv-landskap
   \'sv-sockenstad-boundaries\': SV_RULES,
 ```
 
-- [ ] **Step 3: Push into `BUNDLED_GAZETTEERS`**
+- [x] **Step 3: Push into `BUNDLED_GAZETTEERS`**
 
 Around `bundled.ts:140-178`, in the `BUNDLED_GAZETTEERS` array, add `svLandskap as Gazetteer,` to the Swedish block:
 
@@ -358,7 +358,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
 ];
 ```
 
-- [ ] **Step 4: Run lint + the full vitest pass**
+- [x] **Step 4: Run lint + the full vitest pass**
 
 ```bash
 npm run lint
@@ -367,7 +367,7 @@ npx vitest run tests/unit/gazetteers.test.ts
 
 Expected: lint passes. The `loads all 27 bundled gazetteers` test FAILS because the count is now 28. We fix that in Task 6 — for now, log "test failure expected, fixed in Task 6" and proceed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/place-gazetteers/bundled.ts
@@ -381,7 +381,7 @@ git commit -m "feat(gazetteer): register sv-landskap in bundled set"
 **Files:**
 - Modify: `src/gazetteer-build/normalize-rules.ts:11-15`
 
-- [ ] **Step 1: Add `\'landskap\'` to `SV_RULES.stripSuffixes`**
+- [x] **Step 1: Add `\'landskap\'` to `SV_RULES.stripSuffixes`**
 
 Edit:
 
@@ -397,7 +397,7 @@ export const SV_RULES: GazetteerNormalizeRules = {
 
 The order inside the array doesn\'t matter for matching — the resolver tries every entry. Group it on its own line so the diff is clean.
 
-- [ ] **Step 2: Lint**
+- [x] **Step 2: Lint**
 
 ```bash
 npm run lint
@@ -405,7 +405,7 @@ npm run lint
 
 Expected: 0 errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/gazetteer-build/normalize-rules.ts
@@ -419,7 +419,7 @@ git commit -m "chore(resolver): add \'landskap\' to SV_RULES.stripSuffixes"
 **Files:**
 - Modify: `tests/unit/gazetteers.test.ts`
 
-- [ ] **Step 1: Bump the count assertion**
+- [x] **Step 1: Bump the count assertion**
 
 At `tests/unit/gazetteers.test.ts:10`:
 
@@ -429,7 +429,7 @@ At `tests/unit/gazetteers.test.ts:10`:
 
 Update the body\'s expected count from 27 to 28 (whatever the existing assertion was). Search the file for `27` to make sure no related count snapshot is left over.
 
-- [ ] **Step 2: Add an `includes sv-landskap` block**
+- [x] **Step 2: Add an `includes sv-landskap` block**
 
 Find the `BUNDLED_IDS` (or equivalent) array in the same file (around line 23) — the list of expected ids in the iterated `it(\'includes ${id}\')` test. Append `\'sv-landskap\'`:
 
@@ -442,7 +442,7 @@ const BUNDLED_IDS = [
 
 (If the test uses a different mechanism for the per-id check, just confirm sv-landskap is in whatever list drives it.)
 
-- [ ] **Step 3: Add resolution tests**
+- [x] **Step 3: Add resolution tests**
 
 Append a new `describe`:
 
@@ -499,7 +499,7 @@ describe(\'sv-landskap resolution\', () => {
 
 The exact `result.matches` shape depends on `resolvePlace`\'s return type — adjust the property names to match the existing tests\' usage above (around line 138-170 of `gazetteers.test.ts` they pull e.g. `result.matches[0].gazetteerId`). Mirror what works.
 
-- [ ] **Step 4: Run the full gazetteer test file**
+- [x] **Step 4: Run the full gazetteer test file**
 
 ```bash
 npx vitest run tests/unit/gazetteers.test.ts
@@ -509,7 +509,7 @@ Expected: ALL tests pass (count = 28, sv-landskap included, resolution tests gre
 
 If a test fails because the resolver returns a different shape than assumed, **read the actual return value** instead of guessing — `console.log(JSON.stringify(result, null, 2))` inside the test, run once, fix the assertion.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/gazetteers.test.ts
@@ -523,7 +523,7 @@ git commit -m "test(gazetteer): cover sv-landskap registration and resolution"
 **Files:**
 - Modify: `tests/unit/gazetteers.test.ts`
 
-- [ ] **Step 1: Add the disambiguation tests called out in the design spec**
+- [x] **Step 1: Add the disambiguation tests called out in the design spec**
 
 Inside the `describe(\'sv-landskap resolution\', ...)` block, add:
 
@@ -545,7 +545,7 @@ Inside the `describe(\'sv-landskap resolution\', ...)` block, add:
   });
 ```
 
-- [ ] **Step 2: Run**
+- [x] **Step 2: Run**
 
 ```bash
 npx vitest run tests/unit/gazetteers.test.ts
@@ -555,7 +555,7 @@ Expected: PASS.
 
 If the bare-`Skåne` test fails because only one gazetteer matches, you have a real disambiguation issue worth investigating with the user — commit only after the test reflects actual behaviour.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/gazetteers.test.ts
@@ -570,7 +570,7 @@ git commit -m "test(gazetteer): assert sv-landskap vs sv-orter disambiguation"
 - Check: `src/renderer/i18n/sv.ts:631-644`
 - Modify if missing: `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Check whether `placeTypes.landskap` already exists**
+- [x] **Step 1: Check whether `placeTypes.landskap` already exists**
 
 ```bash
 grep -n "landskap" src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -578,7 +578,7 @@ grep -n "landskap" src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
 
 The Swedish `placeTypes` block at `sv.ts:631-644` already has `province: \'Landskap\'`. That maps the type **value** `province` to the Swedish word "Landskap". We use type value `landskap` (not `province`) for the new gazetteer — so the badge will fall through to "Annat" / "other" until we add it.
 
-- [ ] **Step 2: Add `landskap: \'Landskap\'` to `sv.ts`**
+- [x] **Step 2: Add `landskap: \'Landskap\'` to `sv.ts`**
 
 In the `placeTypes:` block:
 
@@ -596,11 +596,11 @@ In the `placeTypes:` block:
 
 Both `province` and `landskap` map to the same Swedish word. That\'s fine — the type field is free-form and we control what the gazetteer emits.
 
-- [ ] **Step 3: Add `landskap: \'Province\'` to `en.ts`**
+- [x] **Step 3: Add `landskap: \'Province\'` to `en.ts`**
 
 In the matching `placeTypes` block in `en.ts`. The English label should match `province` (already English-named) — both keys map to the same string.
 
-- [ ] **Step 4: Lint**
+- [x] **Step 4: Lint**
 
 ```bash
 npm run lint
@@ -608,7 +608,7 @@ npm run lint
 
 Expected: 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -622,13 +622,13 @@ git commit -m "feat(i18n): add landskap placeType label"
 **Files:**
 - (none modified)
 
-- [ ] **Step 1: Start the dev app**
+- [x] **Step 1: Start the dev app**
 
 ```bash
 ./.devcontainer/dev-debug.sh
 ```
 
-- [ ] **Step 2: Use `slaktforskning-dev` MCP to drive the UI**
+- [x] **Step 2: Use `slaktforskning-dev` MCP to drive the UI**
 
 (This is the user\'s preferred inspection workflow per the feedback memory.)
 
@@ -639,22 +639,22 @@ git commit -m "feat(i18n): add landskap placeType label"
 
 If any of those probes fail, the data is registered correctly but the picker UI is filtering out the new gazetteer — check if `GazetteersView` defaults include `sv-landskap` or if the user needs to enable it explicitly. (Per the renderer rules: `usePlaceResolver` defaults to all bundled gazetteers when `gazetteer_config` is null, so a fresh DB should see it. An existing DB with a saved config may have it disabled.)
 
-- [ ] **Step 3: No commit — informational**
+- [x] **Step 3: No commit — informational**
 
 ---
 
 ## Self-review checklist
 
-- [ ] `sv-landskap.json` exists, has `kind: \'point\'`, root `Sverige (landskap)`, exactly 25 children.
-- [ ] All 25 expected landskap names present (per the design spec list).
-- [ ] Every node has `type: \'landskap\'`, lat in [54, 70], lon in [10, 25].
-- [ ] `bundled.ts` imports `svLandskap` and pushes it into `BUNDLED_GAZETTEERS`.
-- [ ] `NORMALIZE_RULES_BY_ID[\'sv-landskap\'] = SV_RULES`.
-- [ ] `SV_RULES.stripSuffixes` includes `\'landskap\'`.
-- [ ] `tests/unit/gazetteers.test.ts` has count = 28, sv-landskap in the per-id list, the new resolution tests, and the disambiguation tests.
-- [ ] `placeTypes.landskap` exists in both `sv.ts` and `en.ts`.
-- [ ] `npm run lint` and `npx vitest run tests/unit/gazetteers.test.ts` both pass.
-- [ ] Re-running the build script produces only a date-line diff.
+- [x] `sv-landskap.json` exists, has `kind: \'point\'`, root `Sverige (landskap)`, exactly 25 children.
+- [x] All 25 expected landskap names present (per the design spec list).
+- [x] Every node has `type: \'landskap\'`, lat in [54, 70], lon in [10, 25].
+- [x] `bundled.ts` imports `svLandskap` and pushes it into `BUNDLED_GAZETTEERS`.
+- [x] `NORMALIZE_RULES_BY_ID[\'sv-landskap\'] = SV_RULES`.
+- [x] `SV_RULES.stripSuffixes` includes `\'landskap\'`.
+- [x] `tests/unit/gazetteers.test.ts` has count = 28, sv-landskap in the per-id list, the new resolution tests, and the disambiguation tests.
+- [x] `placeTypes.landskap` exists in both `sv.ts` and `en.ts`.
+- [x] `npm run lint` and `npx vitest run tests/unit/gazetteers.test.ts` both pass.
+- [x] Re-running the build script produces only a date-line diff.
 
 ## Out of scope
 
@@ -662,3 +662,16 @@ If any of those probes fail, the data is registered correctly but the picker UI 
 - Pre-1973 parish hierarchy under landskap.
 - Reparenting län under landskap (the two are different hierarchies, would break the modern tree).
 - Landskap entries in `lang-sv-*` (handled by the Swedish exonyms expansion plan, only if Swedish exonyms exist for the names — most don\'t).
+
+---
+
+## Implementation Status — shipped 2026-05-01
+
+**Outcome:** Implemented end-to-end on `feat/sv-landskap` (commits `0f87a521`..`97929119`).
+
+**Deviations from plan:**
+- **Wikidata QID corrected.** The plan referenced `Q200250` but that's actually "metropolis" (returns 56 world cities). The correct QID for "province of Sweden" is `Q193556`. Build script comment, source URL, and the spec link in `sv-landskap.json` all use Q193556.
+- **Test return-type adapted.** Plan pseudocode used `result.matches?.find(...)`; actual `PlaceResolveResult` exposes `result.gazetteer: string` (single match). Tests rewritten with `loadGazetteers` per-test-isolated configs to disambiguate which gazetteer matched. Stronger than the plan's pseudocode.
+- **Aliases sorted with `localeCompare("sv")`** in the build script (not in the plan, but matches the determinism principle).
+
+Source/license: single Wikidata source (CC0 1.0), no mixing.
