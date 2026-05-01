@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.185.3 — Media filters actually filter
+
+- fix: Type / Status / Face-tag chips in the media library now filter results — were being ignored server-side
+
 ## v0.185.2 — Skill rules: filter chips on every center view
 
 - chore: internal only

@@ -45,19 +45,63 @@ export function listMedia(db: Database): Media[] {
 
 export interface MediaListItem extends Media {
   link_count: number;
+  face_tag_count: number;
 }
 
 export type ListMediaSortBy = 'title' | 'format' | 'created_at';
 export type ListMediaSortDir = 'asc' | 'desc';
 
-function buildMediaFilterClause(query: string | undefined): { where: string; params: unknown[] } {
+export type MediaTypeFilter = 'image' | 'document' | 'audio' | 'video';
+export type MediaStatusFilter = 'missing' | 'orphan';
+export type MediaFaceTagFilter = 'tagged' | 'untagged';
+export interface MediaListFilters {
+  type?: MediaTypeFilter;
+  status?: MediaStatusFilter;
+  faceTag?: MediaFaceTagFilter;
+}
+
+const MEDIA_TYPE_FORMATS: Record<MediaTypeFilter, string[]> = {
+  image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif', 'heic', 'heif'],
+  document: ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt', 'md'],
+  audio: ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'],
+  video: ['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'],
+};
+
+function buildMediaFilterClause(
+  query: string | undefined,
+  filters: MediaListFilters | undefined,
+): { where: string; params: unknown[] } {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+
   const q = (query ?? '').trim();
-  if (!q) return { where: '', params: [] };
-  const like = `%${q}%`;
-  return {
-    where: `WHERE (m.title LIKE ? OR COALESCE(m.notes,'') LIKE ? OR COALESCE(m.format,'') LIKE ? OR COALESCE(m.file_ref,'') LIKE ?)`,
-    params: [like, like, like, like],
-  };
+  if (q) {
+    const like = `%${q}%`;
+    clauses.push(`(m.title LIKE ? OR COALESCE(m.notes,'') LIKE ? OR COALESCE(m.format,'') LIKE ? OR COALESCE(m.file_ref,'') LIKE ?)`);
+    params.push(like, like, like, like);
+  }
+
+  if (filters?.type) {
+    const exts = MEDIA_TYPE_FORMATS[filters.type];
+    const placeholders = exts.map(() => '?').join(', ');
+    clauses.push(`LOWER(COALESCE(m.format,'')) IN (${placeholders})`);
+    params.push(...exts);
+  }
+
+  if (filters?.status === 'missing') {
+    clauses.push(`m.is_missing = 1`);
+  } else if (filters?.status === 'orphan') {
+    clauses.push(`(SELECT COUNT(*) FROM media_links ml WHERE ml.media_id = m.id) = 0`);
+  }
+
+  if (filters?.faceTag === 'tagged') {
+    clauses.push(`EXISTS (SELECT 1 FROM media_regions mr WHERE mr.media_id = m.id)`);
+  } else if (filters?.faceTag === 'untagged') {
+    clauses.push(`NOT EXISTS (SELECT 1 FROM media_regions mr WHERE mr.media_id = m.id)`);
+  }
+
+  if (clauses.length === 0) return { where: '', params: [] };
+  return { where: `WHERE ${clauses.join(' AND ')}`, params };
 }
 
 export function listMediaPage(
@@ -67,14 +111,16 @@ export function listMediaPage(
   sortBy: ListMediaSortBy = 'title',
   sortDir: ListMediaSortDir = 'asc',
   query?: string,
+  filters?: MediaListFilters,
 ): MediaListItem[] {
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
   const col = sortBy === 'format' ? 'format' : sortBy === 'created_at' ? 'created_at' : 'title';
   const orderBy = `COALESCE(m.${col},'') ${dir}, m.title ASC`;
-  const filter = buildMediaFilterClause(query);
+  const filter = buildMediaFilterClause(query, filters);
   return queryAll<MediaListItem>(db, `
     SELECT m.*,
-           (SELECT COUNT(*) FROM media_links ml WHERE ml.media_id = m.id) AS link_count
+           (SELECT COUNT(*) FROM media_links ml WHERE ml.media_id = m.id) AS link_count,
+           (SELECT COUNT(*) FROM media_regions mr WHERE mr.media_id = m.id) AS face_tag_count
     FROM media m
     ${filter.where}
     ORDER BY ${orderBy}
@@ -82,16 +128,16 @@ export function listMediaPage(
   `, [...filter.params, limit, offset]);
 }
 
-export function countMedia(db: Database, query?: string): number {
-  const filter = buildMediaFilterClause(query);
+export function countMedia(db: Database, query?: string, filters?: MediaListFilters): number {
+  const filter = buildMediaFilterClause(query, filters);
   if (!filter.where) {
     return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media')?.n ?? 0;
   }
   return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${filter.where}`, filter.params)?.n ?? 0;
 }
 
-export function countMissingMedia(db: Database, query?: string): number {
-  const filter = buildMediaFilterClause(query);
+export function countMissingMedia(db: Database, query?: string, filters?: MediaListFilters): number {
+  const filter = buildMediaFilterClause(query, filters);
   const missingClause = filter.where
     ? `${filter.where} AND m.is_missing = 1`
     : 'WHERE m.is_missing = 1';
