@@ -73,11 +73,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventModal from './modals/EventModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { isSpanEventType } from '../constants/eventTypes';
+import { useEntityData } from '../composables/useEntityData';
 
 interface EventRow {
   id: string;
@@ -107,11 +108,13 @@ interface TimelineItem {
 const props = defineProps<{ personId: string }>();
 const { t } = useI18n();
 
-const loading = ref(true);
-const datedEvents = ref<TimelineItem[]>([]);
-const undatedEvents = ref<TimelineItem[]>([]);
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
+
+interface TimelineData {
+  dated: TimelineItem[];
+  undated: TimelineItem[];
+}
 
 // Event type sort priority: birth first, death last
 const TYPE_PRIORITY: Record<string, number> = {
@@ -147,74 +150,74 @@ function resolvePlaceName(event: EventRow): string | null {
   return null;
 }
 
-async function load() {
-  loading.value = true;
-  try {
-    const events = (await window.api.events.forPerson(props.personId)) as EventRow[];
+const idRef = computed(() => props.personId ?? null);
+const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, async (id) => {
+  const events = (await window.api.events.forPerson(id)) as EventRow[];
 
-    // Place names are already included from the SQL JOIN
-    const placeNames = events.map(e => resolvePlaceName(e));
+  // Place names are already included from the SQL JOIN
+  const placeNames = events.map(e => resolvePlaceName(e));
 
-    // Find birth year for age calculation
-    const birthEvent = events.find(e => e.event_type === 'birth');
-    const birthYear = extractYear(birthEvent?.date_value ?? null);
+  // Find birth year for age calculation
+  const birthEvent = events.find(e => e.event_type === 'birth');
+  const birthYear = extractYear(birthEvent?.date_value ?? null);
 
-    // Build timeline items
-    const dated: TimelineItem[] = [];
-    const undated: TimelineItem[] = [];
+  // Build timeline items
+  const dated: TimelineItem[] = [];
+  const undated: TimelineItem[] = [];
 
-    events.forEach((event, i) => {
-      const year = extractYear(event.date_value);
-      const isApproximate = ['about', 'before', 'after', 'between', 'calculated'].includes(event.date_type);
-      const age = (year !== null && birthYear !== null && event.event_type !== 'birth')
-        ? year - birthYear
-        : null;
+  events.forEach((event, i) => {
+    const year = extractYear(event.date_value);
+    const isApproximate = ['about', 'before', 'after', 'between', 'calculated'].includes(event.date_type);
+    const age = (year !== null && birthYear !== null && event.event_type !== 'birth')
+      ? year - birthYear
+      : null;
 
-      const item: TimelineItem = {
-        event,
-        dateDisplay: formatDate(event),
-        placeName: placeNames[i],
-        isApproximate,
-        year,
-        age,
-        gapYears: null,
-      };
+    const item: TimelineItem = {
+      event,
+      dateDisplay: formatDate(event),
+      placeName: placeNames[i],
+      isApproximate,
+      year,
+      age,
+      gapYears: null,
+    };
 
-      if (year !== null) {
-        dated.push(item);
-      } else {
-        undated.push(item);
-      }
-    });
-
-    // Sort dated events
-    dated.sort((a, b) => {
-      const dateA = a.event.date_value ?? '';
-      const dateB = b.event.date_value ?? '';
-      if (dateA !== dateB) return dateA.localeCompare(dateB);
-      const prioA = TYPE_PRIORITY[a.event.event_type] ?? 50;
-      const prioB = TYPE_PRIORITY[b.event.event_type] ?? 50;
-      return prioA - prioB;
-    });
-
-    // Calculate gaps
-    for (let i = 1; i < dated.length; i++) {
-      const prevYear = dated[i - 1].year!;
-      const currYear = dated[i].year!;
-      const gap = currYear - prevYear;
-      if (gap > 20) {
-        dated[i].gapYears = gap;
-      }
+    if (year !== null) {
+      dated.push(item);
+    } else {
+      undated.push(item);
     }
+  });
 
-    datedEvents.value = dated;
-    undatedEvents.value = undated;
-  } catch (err) {
-    console.error('[PersonTimeline] load failed:', err);
-  } finally {
-    loading.value = false;
+  // Sort dated events
+  dated.sort((a, b) => {
+    const dateA = a.event.date_value ?? '';
+    const dateB = b.event.date_value ?? '';
+    if (dateA !== dateB) return dateA.localeCompare(dateB);
+    const prioA = TYPE_PRIORITY[a.event.event_type] ?? 50;
+    const prioB = TYPE_PRIORITY[b.event.event_type] ?? 50;
+    return prioA - prioB;
+  });
+
+  // Calculate gaps
+  for (let i = 1; i < dated.length; i++) {
+    const prevYear = dated[i - 1].year!;
+    const currYear = dated[i].year!;
+    const gap = currYear - prevYear;
+    if (gap > 20) {
+      dated[i].gapYears = gap;
+    }
   }
-}
+
+  return { dated, undated };
+});
+
+const datedEvents = computed<TimelineItem[]>(() => data.value?.dated ?? []);
+const undatedEvents = computed<TimelineItem[]>(() => data.value?.undated ?? []);
+
+watch(error, (err) => {
+  if (err) console.error('[PersonTimeline] load failed:', err);
+});
 
 function editEvent(event: EventRow) {
   editingEvent.value = event;
@@ -228,31 +231,10 @@ function closeForm() {
 
 function onSaved() {
   closeForm();
-  load();
+  reload();
 }
 
-watch(() => props.personId, load, { immediate: true });
-
-// Refresh on any mutation so the timeline picks up new/edited events for the
-// same person without a panel switch. Debounced to batch rapid mutations.
-let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
-function onDataMutation() {
-  if (mutationDebounce) clearTimeout(mutationDebounce);
-  mutationDebounce = setTimeout(() => { if (props.personId) load(); }, 200);
-}
-onMounted(() => {
-  (window.api as unknown as {
-    onDataChanged: (cb: () => void) => void;
-  }).onDataChanged(onDataMutation);
-});
-onUnmounted(() => {
-  if (mutationDebounce) clearTimeout(mutationDebounce);
-  (window.api as unknown as {
-    offDataChanged: (cb: () => void) => void;
-  }).offDataChanged(onDataMutation);
-});
-
-defineExpose({ reload: load });
+defineExpose({ reload });
 </script>
 
 <style scoped>
