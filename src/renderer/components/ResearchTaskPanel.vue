@@ -1,23 +1,19 @@
 <template>
-  <div class="task-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!taskId" class="panel-empty">
-      {{ $t('taskPanel.noTaskSelected') }}
-    </div>
-
-    <template v-else-if="task">
-      <!-- Collapse arrow on the panel's left edge. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Header -->
-      <div class="panel-header">
-        <div class="panel-header-content">
-          <div class="panel-name-row">
-            <div class="panel-name">{{ task.task || $t('common.unknown') }}</div>
-            <span :class="['status-chip', 'status-' + task.status]">{{ $t('researchTasks.statuses.' + task.status) }}</span>
-          </div>
-        </div>
+  <EntityPanel
+    entity-type="task"
+    :entity="task"
+    :label="$t('panel.manageTask')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('taskPanel.noTaskSelected') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ task?.task || $t('common.unknown') }}</div>
+        <span v-if="task" :class="['status-chip', 'status-' + task.status]">{{ $t('researchTasks.statuses.' + task.status) }}</span>
       </div>
+    </template>
 
+    <template v-if="task">
       <!-- Task section -->
       <div class="panel-section">
         <SectionHeader :title="$t('researchTasks.task')" :collapsed="!sections.task" @toggle="toggleSection('task')" />
@@ -28,17 +24,17 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.task"
-                @input="editFields.task = ($event.target as HTMLInputElement).value"
-                @blur="saveField('task')"
+                :value="fields.task ?? ''"
+                @input="(fields as TaskData).task = ($event.target as HTMLInputElement).value"
+                @blur="save('task')"
               />
             </div>
             <div class="compact-field">
               <label class="compact-label">{{ $t('researchTasks.status') }}</label>
               <select
                 class="compact-control"
-                :value="editFields.status"
-                @change="onStatusChange(($event.target as HTMLSelectElement).value)"
+                :value="fields.status ?? 'open'"
+                @change="saveField('status', ($event.target as HTMLSelectElement).value as TaskData['status'])"
               >
                 <option value="open">{{ $t('researchTasks.statuses.open') }}</option>
                 <option value="in_progress">{{ $t('researchTasks.statuses.in_progress') }}</option>
@@ -50,8 +46,8 @@
               <label class="compact-label">{{ $t('researchTasks.priority') }}</label>
               <select
                 class="compact-control"
-                :value="editFields.priority"
-                @change="onPriorityChange(Number(($event.target as HTMLSelectElement).value))"
+                :value="fields.priority ?? 1"
+                @change="saveField('priority', Number(($event.target as HTMLSelectElement).value))"
               >
                 <option :value="0">0</option>
                 <option :value="1">1</option>
@@ -64,9 +60,9 @@
               <textarea
                 class="compact-control"
                 rows="3"
-                :value="editFields.notes"
-                @input="editFields.notes = ($event.target as HTMLTextAreaElement).value"
-                @blur="saveField('notes')"
+                :value="fields.notes ?? ''"
+                @input="(fields as TaskData).notes = ($event.target as HTMLTextAreaElement).value"
+                @blur="save('notes')"
               />
             </div>
             <div class="compact-field">
@@ -74,9 +70,9 @@
               <textarea
                 class="compact-control"
                 rows="3"
-                :value="editFields.result"
-                @input="editFields.result = ($event.target as HTMLTextAreaElement).value"
-                @blur="saveField('result')"
+                :value="fields.result ?? ''"
+                @input="(fields as TaskData).result = ($event.target as HTMLTextAreaElement).value"
+                @blur="save('result')"
               />
             </div>
           </div>
@@ -146,19 +142,22 @@
         </div>
       </div>
     </template>
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { reactive, computed, toRef } from 'vue';
+import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LinkedPersonsSection from './LinkedPersonsSection.vue';
 import LinkedPlacesSection from './LinkedPlacesSection.vue';
 import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
+import EntityPanel from './EntityPanel.vue';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useEntityData } from '../composables/useEntityData';
+import { useEditableFields } from '../composables/useEditableFields';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -196,14 +195,6 @@ const { sections, toggleSection } = usePanelSections(
 
 const showPicker = reactive({ person: false, place: false, media: false });
 
-const editFields = reactive({
-  task: '',
-  status: 'open' as 'open' | 'in_progress' | 'done' | 'stopped',
-  priority: 1,
-  notes: '',
-  result: '',
-});
-
 // ── Data (race-safe load) ────────────────────────────────────────────────────
 
 interface TaskPanelData {
@@ -211,7 +202,7 @@ interface TaskPanelData {
   links: Link[];
 }
 
-const idRef = computed(() => props.taskId ?? null);
+const idRef = toRef(props, 'taskId');
 const { data: panelData, reload } = useEntityData<TaskPanelData>(idRef, async (id) => {
   try {
     const data = await window.api.researchTasks.get(id) as TaskData | null;
@@ -232,39 +223,29 @@ const personLinks = computed(() => links.value.filter(l => l.entity_type === 'pe
 const placeLinks = computed(() => links.value.filter(l => l.entity_type === 'place'));
 const mediaLinks = computed(() => links.value.filter(l => l.entity_type === 'media'));
 
-// Keep editFields in sync when task data changes
-watch(task, (data) => {
-  if (!data) return;
-  editFields.task = data.task ?? '';
-  editFields.status = data.status ?? 'open';
-  editFields.priority = data.priority ?? 1;
-  editFields.notes = data.notes ?? '';
-  editFields.result = data.result ?? '';
-}, { immediate: true });
+// ── Editable fields ──────────────────────────────────────────────────────────
 
-// ── Field updates ───────────────────────────────────────────────────────────
-
-async function saveField(field: keyof typeof editFields) {
-  if (!props.taskId || !task.value) return;
-  const val = editFields[field];
-  if (val === (task.value as Record<string, unknown>)[field]) return;
+const persistTask = async (id: string, patch: Partial<TaskData>) => {
   try {
-    await window.api.researchTasks.update(props.taskId, { [field]: val });
-    (task.value as Record<string, unknown>)[field] = val;
+    await window.api.researchTasks.update(id, patch);
     emit('updated');
   } catch (err) {
-    console.error(`[ResearchTaskPanel] saveField(${field}) failed:`, err);
+    console.error('[ResearchTaskPanel] persist failed:', err);
     toast.error(t('errors.saveFailed'));
+    throw err;
   }
-}
+};
 
-function onStatusChange(val: string) {
-  editFields.status = val as 'open' | 'in_progress' | 'done' | 'stopped';
-  saveField('status');
-}
-function onPriorityChange(val: number) {
-  editFields.priority = val;
-  saveField('priority');
+const { fields, save } = useEditableFields<TaskData & Record<string, unknown>>(
+  idRef,
+  task as unknown as Ref<(TaskData & Record<string, unknown>) | null>,
+  persistTask,
+);
+
+async function saveField<K extends keyof TaskData>(field: K, value: TaskData[K]) {
+  if (!props.taskId || !task.value) return;
+  (fields as TaskData)[field] = value;
+  await save(field);
 }
 
 // ── Link actions ────────────────────────────────────────────────────────────
@@ -302,51 +283,7 @@ async function removeLink(linkId: string) {
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.task-panel { overflow-y: auto; }
-
-/* Collapse arrow on the panel's left edge. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-.panel-header {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.panel-header-content {
-  padding: var(--space-md) var(--space-lg);
-  flex: 1;
-  min-width: 0;
-}
+/* Header slot content */
 .panel-name-row {
   display: flex;
   align-items: center;
