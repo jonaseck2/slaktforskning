@@ -65,14 +65,11 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import type { RelRow } from '../components/RelationshipsTable.vue';
 import { RELATIONSHIP_TYPE_VALUES } from '../constants/eventTypes';
-import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { usePanelResize } from '../composables/usePanelResize';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'RelationshipsView' });
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 
 const PAGE_SIZE = 100;
@@ -210,17 +207,12 @@ function closePanel() {
 
 onMounted(async () => {
   await load();
-  loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectRelationship(id);
   else if (selectedRelationshipId.value) openPanel();
 });
 
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await load();
-    loadedVersion = dataVersionStore.version;
-  }
+onActivated(() => {
   const id = route.params.id as string | undefined;
   if (id) selectRelationship(id);
 });
