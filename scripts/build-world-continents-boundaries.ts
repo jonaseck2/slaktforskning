@@ -15,7 +15,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { GazetteerNode, GazetteerGeometry } from '../src/api/place-gazetteers/types';
 import { computeCentroid, round4 } from '../src/gazetteer-build/geo';
-import { sleep, USER_AGENT } from '../src/gazetteer-build/sparql';
+import { sleep, USER_AGENT, fetchWithRetry } from '../src/gazetteer-build/sparql';
 
 interface ContinentSpec {
   qid: string;
@@ -54,7 +54,8 @@ async function fetchGeoshape(qid: string): Promise<GazetteerGeometry | null> {
     const geom = data.features[0].geometry;
     if (!geom || !['Polygon', 'MultiPolygon'].includes(geom.type)) return null;
     return geom as GazetteerGeometry;
-  } catch {
+  } catch (err) {
+    console.warn(`  fetchGeoshape ${qid} threw:`, err);
     return null;
   }
 }
@@ -84,7 +85,7 @@ interface NeFeature {
 
 async function fetchNaturalEarthContinents(): Promise<Map<string, GazetteerGeometry>> {
   console.log(`  Fetching Natural Earth continents from GitHub...`);
-  const res = await fetch(NE_CONTINENTS_URL, { headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetchWithRetry(NE_CONTINENTS_URL, { headers: { 'User-Agent': USER_AGENT } }, { attempts: 3, delayMs: 1000 });
   if (!res.ok) throw new Error(`Natural Earth fetch failed: ${res.status} ${res.statusText}`);
   const data = await res.json() as { features: NeFeature[] };
   const result = new Map<string, GazetteerGeometry>();
