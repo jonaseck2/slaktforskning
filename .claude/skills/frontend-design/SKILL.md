@@ -129,7 +129,9 @@ watch(sentinel, (el) => attachSentinel(el));
 
 **Reset on filter/sort.** `usePagedList` already does this — when `searchQuery`, `sortBy`, or `sortDir` change, it re-fetches from offset 0 with the new params. Do not reimplement filtering/sorting client-side over a partial slice; the whole point is that the server filters and sorts the full set.
 
-Reference: SourcesView, PlacesView, MediaView, RelationshipsView, DuplicatesView.
+**Modal pickers count too.** This rule isn't only for top-level views. Any modal that shows a filterable list of rows (place picker, person picker, source picker) follows the same shape: `.list-filter` wrapper, `.list-filter-input`, `usePagedList`, sentinel, count-label. Bind the input to the composable's `searchQuery` — never write a parallel client-side filter. **Tree-shaped pickers**: switch modes — empty filter renders the lazy-expand tree, ≥2-char filter swaps to a flat `usePagedList` of search results (e.g. `places.listPage(limit, offset, 'name', 'asc', query)`). Trying to filter the tree itself by walking every subtree and expanding matches will fan out into thousands of IPC calls and hang the modal. See `PlaceTreePickerModal.vue` for the canonical two-mode pattern.
+
+Reference: SourcesView, PlacesView, MediaView, RelationshipsView, DuplicatesView, PlaceTreePickerModal.
 
 **Step 4 — Drag handle + resizable panel** (always RIGHT side, always resizable):
 

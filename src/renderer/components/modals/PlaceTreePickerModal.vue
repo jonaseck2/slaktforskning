@@ -8,43 +8,76 @@
     @close="$emit('close')"
   >
     <div class="tree-picker">
-      <input
-        ref="filterInputRef"
-        type="text"
-        class="filter-input"
-        v-model="filterText"
-        :placeholder="$t('places.tree.filterPlaceholder')"
-        :aria-label="$t('places.tree.filterPlaceholder')"
-        @input="onFilterInput"
-      />
-      <div v-if="loading" class="state">{{ $t('places.tree.loading') }}</div>
-      <div v-else-if="roots.length === 0" class="state">{{ $t('places.tree.empty') }}</div>
-      <div v-else-if="filterActive && visibleNodes.length === 0" class="state">
-        {{ $t('places.tree.noResults') }}
-      </div>
-      <ul v-else role="tree" class="tree-root" :aria-label="$t('places.tree.title')">
-        <PlaceTreeNode
-          v-for="root in roots"
-          :key="root.key"
-          :node="root"
-          :level="1"
-          :selected-key="selectedKey"
-          @select="onSelectNode"
-          @toggle="onToggle"
-          @add-child="onAddChild"
+      <div class="list-filter">
+        <input
+          ref="filterInputRef"
+          v-model="searchQuery"
+          type="text"
+          class="list-filter-input"
+          :placeholder="$t('places.tree.filterPlaceholder')"
+          :aria-label="$t('places.tree.filterPlaceholder')"
         />
-      </ul>
+      </div>
+
+      <div v-if="loading" class="state">{{ $t('places.tree.loading') }}</div>
+
+      <!-- Search mode: flat results, server-paged via usePagedList -->
+      <template v-else-if="searchActive">
+        <div v-if="searchPaged.length === 0 && !searchLoading" class="state">{{ $t('places.tree.noResults') }}</div>
+        <div v-else class="tree-scroll" ref="searchScrollRef">
+          <ul role="listbox" class="search-results" :aria-label="$t('places.tree.title')">
+            <li
+              v-for="place in searchPaged"
+              :key="place.id"
+              role="option"
+              :aria-selected="selectedKey === ('db:' + place.id)"
+              class="result-row"
+              :class="{ selected: selectedKey === ('db:' + place.id) }"
+              v-narrate="place.name + (place.parent_name ? ', ' + place.parent_name : '')"
+              @click="onSelectFlat(place)"
+            >
+              <div class="result-main">
+                <span class="result-name">{{ place.name }}</span>
+                <span v-if="place.place_type" class="result-type">{{ $te('placeTypes.' + place.place_type) ? $t('placeTypes.' + place.place_type) : place.place_type }}</span>
+              </div>
+              <div v-if="place.parent_name" class="result-subtitle">{{ place.parent_name }}</div>
+            </li>
+          </ul>
+          <div ref="sentinel" class="scroll-sentinel"></div>
+        </div>
+        <p v-if="searchTotal > 0" class="count-label tree-count">
+          {{ $t('places.showingOf', { shown: searchPaged.length, total: searchTotal }) }}
+        </p>
+      </template>
+
+      <!-- Browse mode: hierarchical tree with lazy expand + Add child -->
+      <template v-else>
+        <div v-if="roots.length === 0" class="state">{{ $t('places.tree.empty') }}</div>
+        <ul v-else role="tree" class="tree-root tree-scroll" :aria-label="$t('places.tree.title')">
+          <PlaceTreeNode
+            v-for="root in roots"
+            :key="root.key"
+            :node="root"
+            :level="1"
+            :selected-key="selectedKey"
+            @select="onSelectNode"
+            @toggle="onToggle"
+            @add-child="onAddChild"
+          />
+        </ul>
+      </template>
     </div>
   </BaseSubPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import PlaceTreeNode from '../PlaceTreeNode.vue';
 import { usePlaceTree, type PlaceTreeNode as TreeNode } from '../../composables/usePlaceTree';
 import { usePlaceResolver } from '../../composables/usePlaceResolver';
+import { usePagedList } from '../../composables/usePagedList';
 import { useToast } from '../../composables/useToast';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; parent_name?: string | null; }
@@ -61,20 +94,43 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const toast = useToast();
 const filterInputRef = ref<HTMLInputElement | null>(null);
-const filterText = ref('');
+const sentinel = ref<HTMLElement | null>(null);
+const searchScrollRef = ref<HTMLElement | null>(null);
 const loading = ref(true);
 const selectedKey = ref<string | null>(null);
 
 const { ready: gazetteerReady, ensureLoaded: ensureGazetteersLoaded, getGazetteers } = usePlaceResolver();
 // Destructure so reactive properties auto-unwrap in the template.
 const tree = usePlaceTree({ getGazetteers });
-const { roots, visibleNodes, filterActive, loadRoots, expandNode, collapseNode, applyFilter, findPathTo, createChild } = tree;
+const { roots, loadRoots, findPathTo } = tree;
 
-let filterDebounce: ReturnType<typeof setTimeout> | null = null;
-function onFilterInput() {
-  if (filterDebounce) clearTimeout(filterDebounce);
-  filterDebounce = setTimeout(() => { tree.applyFilter(filterText.value); }, 150);
-}
+// Server-paged search backing the filter mode. Mirrors PlacesView's pattern:
+// places.listPage(limit, offset, sortBy, sortDir, query) returns {items,total}
+// already filtered server-side; usePagedList handles debounced query, sentinel
+// observation, and stale-response guarding.
+type PlaceSortBy = 'name';
+const {
+  items: searchPaged,
+  total: searchTotal,
+  loading: searchLoading,
+  searchQuery,
+  attachSentinel,
+} = usePagedList<PlaceRow, PlaceSortBy>({
+  defaultSortBy: 'name',
+  fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+    // Below threshold: empty result, skip the IPC entirely. The template
+    // shows tree-mode in that case, so this never renders.
+    if (query.trim().length < 2) return { items: [], total: 0 };
+    const result = await window.api.places.listPage(limit, offset, sortBy, sortDir, query) as { items: PlaceRow[]; total: number };
+    return result;
+  },
+});
+
+const searchActive = computed(() => searchQuery.value.trim().length >= 2);
+
+// Re-attach the sentinel each time the search-mode list mounts (the v-if
+// destroys the scroll container when switching back to browse mode).
+watch(sentinel, (el) => attachSentinel(el, searchScrollRef.value));
 
 async function onToggle(node: TreeNode) {
   if (node.expanded) tree.collapseNode(node);
@@ -102,6 +158,11 @@ async function onSelectNode(node: TreeNode) {
   }
 }
 
+function onSelectFlat(place: PlaceRow) {
+  selectedKey.value = 'db:' + place.id;
+  emit('select', place);
+}
+
 async function onAddChild(payload: { parent: TreeNode; name: string }) {
   try {
     const created = await tree.createChild(payload.parent, payload.name);
@@ -114,21 +175,20 @@ async function onAddChild(payload: { parent: TreeNode; name: string }) {
 }
 
 onMounted(async () => {
-  // Wrap the whole bootstrap so a thrown rejection (e.g. an undefined IPC
-  // channel after a stale preload bundle) can't leave the modal stuck on
-  // "Loading…" forever. Any failure surfaces as a toast and the user can
-  // still cancel.
+  // Wrap the bootstrap so a thrown rejection (e.g. a stale preload bundle
+  // missing places:listChildren) can't leave the modal stuck on "Loading…".
   try {
     if (!gazetteerReady.value) await ensureGazetteersLoaded();
-    await tree.loadRoots();
+    await loadRoots();
     if (props.initialPlaceId) {
-      const path = await tree.findPathTo(props.initialPlaceId);
+      const path = await findPathTo(props.initialPlaceId);
       if (path.length > 0) {
         selectedKey.value = path[path.length - 1].key;
       }
     } else if (props.initialQuery && props.initialQuery.trim().length >= 2) {
-      filterText.value = props.initialQuery;
-      await tree.applyFilter(props.initialQuery);
+      // Seed the filter — usePagedList's internal debounce will fire the
+      // first fetch automatically, no manual applyFilter call needed.
+      searchQuery.value = props.initialQuery;
     }
   } catch (err) {
     console.error('[PlaceTreePickerModal] init failed:', err);
@@ -142,10 +202,24 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.tree-picker { display: flex; flex-direction: column; gap: 8px; min-width: 480px; }
-/* Match the canonical .list-filter-input from PersonsListTab / SourcesView /
-   PlacesView so this filter looks identical to every other entity-list filter. */
-.filter-input {
+.tree-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 480px;
+  /* Cap height so the scroll container can be flex:1 within. The modal body
+     itself is already constrained by BaseSubPanel; we just need a stable
+     ceiling for the inner scrolling area. */
+  max-height: min(70vh, 640px);
+}
+/* Mirror the canonical .list-filter / .list-filter-input wrapper used across
+   PersonsListTab, SourcesView, PlacesView, MediaView. The wrapper provides
+   bottom padding (var(--space-sm)) so the filter doesn't crowd the list. */
+.list-filter {
+  flex-shrink: 0;
+  padding: 0 0 var(--space-sm);
+}
+.list-filter-input {
   width: 100%;
   padding: 6px 10px;
   font-size: var(--font-sm);
@@ -156,20 +230,60 @@ onMounted(async () => {
   color: var(--text-primary);
   font-family: inherit;
 }
-.filter-input:focus {
+.list-filter-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .state {
-  padding: 24px; text-align: center;
+  padding: 24px;
+  text-align: center;
   color: var(--text-muted);
   font-size: var(--font-base);
 }
-.tree-root {
-  list-style: none; padding: 0; margin: 0;
-  max-height: 480px; overflow-y: auto;
+.tree-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-md);
   padding: 4px;
+}
+.tree-root {
+  list-style: none;
+  margin: 0;
+}
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.result-row {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.result-row:hover { background: var(--surface-hover); }
+.result-row.selected { background: var(--accent); color: var(--accent-text); }
+.result-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.result-name { flex: 1 1 auto; }
+.result-type {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+.result-subtitle {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tree-count {
+  flex-shrink: 0;
+  margin: var(--space-sm) 0 0;
 }
 </style>

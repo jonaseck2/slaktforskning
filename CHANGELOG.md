@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.180.0 — Place tree picker: filter is server-paged, infinite-scroll search
+
+- feat(ui): the place-tree picker now switches between two modes — empty filter renders the lazy-expand tree, ≥2-char filter swaps to a flat `usePagedList` of search results backed by `places.listPage`. Same `.list-filter` wrapper, same `.list-filter-input`, sentinel-driven infinite scroll, `count-label` showing "Visar X av Y platser". The previous walking-the-tree filter would have fanned out into thousands of IPC calls across all 27 bundled gazetteers — that's now gone.
+- fix(ui): drop the `.tree-picker .filter-input` ad-hoc style and use the canonical `.list-filter` wrapper (with bottom padding) + `.list-filter-input` so the modal's filter looks identical to the entity-list filters in PersonsListTab / SourcesView / PlacesView / MediaView.
+- chore(usePlaceTree): remove the unused `applyFilter`, `expandAllForFilter`, `filterActive`, `visibleNodes`, and `filter` ref now that the modal owns search state through `usePagedList`. The composable's surface drops from 10 exports to 6.
+- docs(rules): extend the project-wide infinite-scroll rule (`.claude/rules/renderer.md` and `.claude/skills/frontend-design/SKILL.md`) to cover modal pickers explicitly: filter+rows go through `usePagedList`, never a parallel client-side filter, and tree-shaped pickers must switch to a flat paged list when the filter is active.
+
 ## v0.179.2 — Place tree picker: load resilience + filter style
 
 - fix(ui): wrap the `PlaceTreePickerModal` `onMounted` bootstrap in try/catch with a `errors.loadFailed` toast, and a `finally` clearing the loading flag. Without this, any throw during init (e.g. an undefined IPC channel after a stale preload bundle) left the modal stuck on "Loading…" with no recovery. Also tightened the optional chains in `usePlaceTree` (`window.api?.places?.listChildren?.(...)`) so a missing channel returns undefined instead of throwing TypeError mid-await.

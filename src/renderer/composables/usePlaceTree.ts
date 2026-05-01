@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 export type PlaceTreeNodeSource = 'db' | 'gazetteer' | 'merged';
 
@@ -67,8 +67,6 @@ function findGazNode(gaz: GazetteerLike, path: string[]): GazetteerNodeLike | nu
 
 export function usePlaceTree(opts: UsePlaceTreeOptions) {
   const roots = ref<PlaceTreeNode[]>([]);
-  const filter = ref<string>('');
-
   async function loadRoots(): Promise<void> {
     const dbRoots = (await window.api?.places?.listChildren?.(null)) as DbChildRow[] | undefined ?? [];
     const merged = new Map<string, PlaceTreeNode>();
@@ -201,57 +199,6 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
     node.expanded = false;
   }
 
-  async function expandAllForFilter(): Promise<void> {
-    const q = normalize(filter.value);
-    if (q.length < 2) return;
-    async function walk(node: PlaceTreeNode): Promise<boolean> {
-      if (!node.childrenLoaded && node.hasChildren) {
-        await expandNode(node);
-      }
-      let anyMatch = normalize(node.name).includes(q);
-      for (const child of node.children) {
-        const childMatch = await walk(child);
-        if (childMatch) anyMatch = true;
-      }
-      if (anyMatch) node.expanded = true;
-      return anyMatch;
-    }
-    for (const root of roots.value) {
-      await walk(root);
-    }
-  }
-
-  async function applyFilter(query: string): Promise<void> {
-    filter.value = query;
-    if (normalize(query).length >= 2) {
-      await expandAllForFilter();
-    }
-  }
-
-  /** True when the filter is active (>= 2 chars). */
-  const filterActive = computed(() => normalize(filter.value).length >= 2);
-
-  function nodeMatchesFilter(node: PlaceTreeNode): boolean {
-    if (!filterActive.value) return true;
-    const q = normalize(filter.value);
-    if (normalize(node.name).includes(q)) return true;
-    return node.children.some(c => nodeMatchesFilter(c));
-  }
-
-  /** Flat ordered list of nodes that should currently be rendered (respecting expand state and filter). */
-  const visibleNodes = computed<PlaceTreeNode[]>(() => {
-    const out: PlaceTreeNode[] = [];
-    function walk(node: PlaceTreeNode): void {
-      if (filterActive.value && !nodeMatchesFilter(node)) return;
-      out.push(node);
-      if (node.expanded) {
-        for (const c of node.children) walk(c);
-      }
-    }
-    for (const root of roots.value) walk(root);
-    return out;
-  });
-
   async function findPathTo(placeId: string): Promise<PlaceTreeNode[]> {
     const ancestors = (await window.api?.places?.getAncestors?.(placeId)) as Array<{ id: string; name: string }> | undefined ?? [];
     if (ancestors.length === 0) return [];
@@ -308,13 +255,9 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
 
   return {
     roots,
-    visibleNodes,
-    filter,
-    filterActive,
     loadRoots,
     expandNode,
     collapseNode,
-    applyFilter,
     findPathTo,
     createChild,
   };

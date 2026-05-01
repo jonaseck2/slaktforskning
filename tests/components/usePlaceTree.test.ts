@@ -72,29 +72,6 @@ describe('usePlaceTree', () => {
     expect(sv.childrenLoaded).toBe(true);
   });
 
-  it('filter keeps matching nodes plus their ancestors and auto-expands them', async () => {
-    setupApiMock([]);
-    const gazetteers: Gaz[] = [
-      makeGaz('sv-geo', {
-        name: 'Sverige',
-        type: 'country',
-        children: [
-          { name: 'Stockholm', type: 'county', children: [{ name: 'Solna', type: 'city' }] },
-          { name: 'Skåne', type: 'county' },
-        ],
-      }),
-    ];
-    const tree = usePlaceTree({ getGazetteers: () => gazetteers });
-    await tree.loadRoots();
-    await tree.applyFilter('solna');
-    const visible = tree.visibleNodes.value;
-    const names = visible.map((n: PlaceTreeNode) => n.name);
-    expect(names).toContain('Sverige');
-    expect(names).toContain('Stockholm');
-    expect(names).toContain('Solna');
-    expect(names).not.toContain('Skåne');
-  });
-
   it('findPathTo returns the chain of node keys for a DB place id', async () => {
     setupApiMock([
       { id: 'db-sv', name: 'Sverige', parent_place_id: null, place_type: null, hasChildren: true },
