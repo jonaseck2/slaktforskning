@@ -10,10 +10,11 @@ import { importFromGenney, discoverTables, isDockerAvailable } from '../../impor
 import { importFromHolger } from '../../import/holger/index';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
+import * as media from '../../api/media';
+import { consolidateMediaFolder } from '../../api/media_consolidate';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
-import * as media from '../../api/media';
 import { notifyWorkerImportStart, notifyWorkerImportEnd } from './worker-client';
 
 let importInProgress = false;
@@ -112,6 +113,7 @@ export function registerImportHandlers(
       const text = readGedcomFile(gedPath);
       const tree = parseGedcom(text);
       const report = importGedcom(getDb(), tree, options);
+      consolidateMediaFolder(getDb(), getCurrentDatabasePath());
       return { imported: true, filePath: gedPath, report };
     } finally {
       importInProgress = false;
@@ -205,6 +207,7 @@ export function registerImportHandlers(
     if (result.gedcomFallbackPath) {
       return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
     }
+    consolidateMediaFolder(getDb(), getCurrentDatabasePath());
     return { imported: true, summary: result.summary };
   });
 
@@ -245,6 +248,7 @@ export function registerImportHandlers(
           if (win) win.webContents.send('import:holgerProgress', { message: msg });
         },
       });
+      consolidateMediaFolder(getDb(), getCurrentDatabasePath());
       return { success: true, report: result.report };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };
@@ -282,6 +286,7 @@ export function registerImportHandlers(
     notifyWorkerImportStart();
     try {
       const report = importArchive(getDb(), archivePath, mediaDir);
+      consolidateMediaFolder(getDb(), getCurrentDatabasePath());
       return { imported: true, filePath: archivePath, report };
     } finally {
       importInProgress = false;
