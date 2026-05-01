@@ -240,6 +240,96 @@ describe('language gazetteer integration', () => {
   });
 });
 
+describe('Swedish exonym expansion', () => {
+  // Gazetteers with full language support enabled.
+  const gazetteers = loadGazetteers(
+    {
+      enabledGazetteers: [
+        'world-countries', 'world-admin1',
+        'dk-sogne', 'dk-sogne-dawa',
+        'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
+      ],
+    },
+    getAllGazetteers(),
+  );
+
+  // ── Admin1-level exonyms (GeoNames) ───────────────────────────────
+
+  it('resolves "Flandern" to Belgium > Flanders via lang-sv-geonames', () => {
+    const result = resolvePlace('Flandern', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Belgium');
+    expect(result!.matchedPath).toContain('Flanders');
+  });
+
+  it('resolves "Brysselregionen" to Belgium > Brussels Capital via lang-sv-geonames', () => {
+    const result = resolvePlace('Brysselregionen', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Belgium');
+    expect(result!.matchedPath).toContain('Brussels Capital');
+  });
+
+  it('resolves "Toscana" to Italy > Tuscany via lang-sv-wikidata', () => {
+    const result = resolvePlace('Toscana', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Italy');
+    expect(result!.matchedPath).toContain('Tuscany');
+  });
+
+  it('resolves "Bayern" to Germany > Bavaria via lang-sv-wikidata', () => {
+    const result = resolvePlace('Bayern', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Germany');
+    expect(result!.matchedPath).toContain('Bavaria');
+  });
+
+  it('resolves "Katalonien" to Spain > Catalonia via lang-sv-wikidata', () => {
+    const result = resolvePlace('Katalonien', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Spain');
+    expect(result!.matchedPath).toContain('Catalonia');
+  });
+
+  it('resolves "Skottland" to United Kingdom > Scotland via lang-sv-wikidata', () => {
+    const result = resolvePlace('Skottland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('United Kingdom');
+    expect(result!.matchedPath).toContain('Scotland');
+  });
+
+  // ── City-level exonyms (pre-positioned, no city nodes in world-admin1 yet) ──
+  //
+  // The entries "Belgium > Brussels Capital > Brussels → Bryssel",
+  // "Austria > State of Vienna > Vienna → Wien", etc. are in lang-sv-geonames
+  // but city nodes don't yet exist in world-admin1. The resolver's
+  // mergeTranslations silently skips unmatched path keys, so the aliases are
+  // not attached. These tests document the CURRENT state and will need to be
+  // updated when city nodes are added to world-admin1.
+
+  it('city exonyms (Bryssel/Wien/Köpenhamn/Florens) are in the translation file', () => {
+    const all = getAllGazetteers();
+    const langGaz = all.find(g => g.id === 'lang-sv-geonames')!;
+    const t = langGaz.translations!['world-admin1'];
+    expect(t['Belgium > Brussels Capital > Brussels']).toEqual(['Bryssel']);
+    expect(t['Austria > State of Vienna > Vienna']).toEqual(['Wien']);
+    expect(t['Denmark > Capital Region > Copenhagen']).toEqual(['Köpenhamn']);
+    expect(t['Italy > Tuscany > Florence']).toEqual(['Florens']);
+  });
+
+  // ── Negative-control ─────────────────────────────────────────────
+
+  it('does NOT resolve "Åhlborg" (typo of Aalborg) via a Swedish exonym alias', () => {
+    // "Åhlborg" is a typo not present in GeoNames or Wikidata. The path
+    // component "Åhlborg" should not appear in any resolved match.
+    const result = resolvePlace('Åhlborg, Danmark', gazetteers);
+    // A result may still exist (anchoring on Denmark), but the matched path
+    // should not contain "Åhlborg" as a named component.
+    if (result !== null) {
+      expect(result.matchedPath.some(p => p === 'Åhlborg')).toBe(false);
+    }
+  });
+});
+
 describe('per-gazetteer normalization rules', () => {
   it('strips Swedish "kommun" suffix when matching against sv-orter (SV_RULES)', () => {
     const gazetteers = loadGazetteers(
