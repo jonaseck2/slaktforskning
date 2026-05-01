@@ -138,6 +138,36 @@ The bumped version becomes the canonical version — use it in the `CHANGELOG.md
 - fix: cause field restricted to death events
 ```
 
+### CHANGELOG style
+
+The CHANGELOG is for the **user**, not the engineer. Follow these rules every time you write an entry:
+
+- **Bullet points only.** No paragraphs, no prose blocks.
+- **≤100 characters per bullet** (hard cap). If a bullet won't fit, split into two bullets or rephrase.
+- **What changes for the user, not how it's implemented.** Talk about behaviour, surfaces, and outcomes — not refactors, function names, file paths, or internal mechanics.
+- **Lead with intent.** What was the user pain or goal? "fix: place picker no longer commits on first click — gives a chance to confirm" beats "fix: route OK button through stageSelection()".
+- **Pull intent from the conversation context.** The why is usually upthread (the bug report, the feature request, the use case). Bake that into the bullet — don't make the user reverse-engineer it from the diff.
+- **No file paths, function names, or commit SHAs in user-facing bullets.** Engineering detail belongs in the commit message body, not CHANGELOG.
+- **No "this commit", "this PR", "this release"** — drop the framing word and just describe the change.
+- **Tests, refactors, and tooling changes are usually invisible to the user — skip them or fold them into one short line** ("test: 450+ tests added, coverage 81% → 90%"). Don't enumerate test files.
+- **Type prefixes are fine** (`fix:`, `feat:`, `perf:`, `docs:`, `test:`) but keep them short and skip the parenthetical scope unless it's a real disambiguator.
+
+Good:
+```
+- fix: place picker no longer commits on the first row click — preview the choice, press OK to confirm
+- feat: nav badge on Duplicates shows the true total instead of capping at 100
+- perf: imports of 50k+ persons now finish in seconds instead of minutes
+```
+
+Bad:
+```
+- fix(ui): wired stageSelection() through PlaceTreePickerModal's :selected binding so onClick stages instead of immediately calling emit('select')
+- feat(api): added countDuplicates(db) and refactored findDuplicates to share collectDuplicateCandidates()
+- perf(db): wrap bulk createPerson loop in BEGIN IMMEDIATE / COMMIT, drop redundant prepared-statement compiles
+```
+
+Engineering detail from the "bad" examples still belongs in the **commit message body** — just not in CHANGELOG.
+
 If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
 - Update `docs/PLAN.md` roadmap section accordingly
