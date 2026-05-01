@@ -9,6 +9,11 @@ paths:
 
 Loads when working in the renderer or static SPA. The `/frontend-design` skill is the canonical reference for component patterns; this file holds project-wide rules and at-a-glance design tokens.
 
+**Pointers (read these first when relevant):**
+- Plan authoring → [.claude/rules/plans.md](../rules/plans.md). Plans must open with a User goal section, enumerate full pattern scope, verify by user-observable outcome.
+- Layout / visual debugging → use the `dom-first-debugging` skill. The first action on any "looks wrong" report is reading the rendered DOM, not reasoning about CSS.
+- Subagent dispatch → use the `subagent-handoff` skill. Project-local prompt templates that center user goals (not just spec compliance).
+
 ## Routes
 
 Every entity-list view hosts its own resizable side panel. All `:id` routes navigate to the **list view with the panel pre-selected** — there are no separate detail-view components. Editing happens in modals opened from within the panel.

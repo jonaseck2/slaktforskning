@@ -107,7 +107,9 @@ Reference docs (load on demand): `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`,
 
 ## Workflow
 
-**Plan-driven work → worktree + subagents.** After `writing-plans` finishes, create a git worktree (`superpowers:using-git-worktrees`) and then invoke `superpowers:subagent-driven-development`. Do not present the execution-approach choice to the user. Plans are by definition multi-task work that benefits from isolation and fresh-context subagents.
+**Plan format:** every plan in `docs/plans/` follows [`.claude/rules/plans.md`](.claude/rules/plans.md) — User goal first, full pattern scope (deviations explicit), verification by user-observable outcome, RCA footer for follow-up plans. **Subagent dispatch:** use the `subagent-handoff` skill (project-local prompt templates centering user goals over spec compliance).
+
+**Plan-driven work → worktree + subagents.** After `writing-plans` finishes, create a git worktree (`superpowers:using-git-worktrees`) and then invoke `superpowers:subagent-driven-development` (with `subagent-handoff` templates). Do not present the execution-approach choice to the user. Plans are by definition multi-task work that benefits from isolation and fresh-context subagents.
 
 **Finishing a plan (do every time, not optional):** when the last task's spec + quality reviews pass, run this checklist before invoking `superpowers:finishing-a-development-branch`:
 1. Mark every checkbox in the plan file as `[x]` (Self-review checklist included). Skill / rule updates the plan called for must already have landed in commits.
