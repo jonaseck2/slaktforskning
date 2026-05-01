@@ -3,6 +3,10 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   test: {
+    // runAllChecks builds nameIndexCache against 27 bundled gazetteers on the
+    // first call per Vitest worker process — under suite-wide parallel load
+    // this can spike past the default 5s. Bump to 15s for the cold builds.
+    testTimeout: 15000,
     coverage: {
       provider: 'v8',
       include: [
