@@ -107,36 +107,78 @@ interface MatchCandidate {
   pathNodesMatched: number;
 }
 
-// Name index: maps gazetteer-normalized name → list of { node, ancestors } for
-// O(1) lookup. The index is per-gazetteer because each gazetteer carries its
-// own suffix/prefix vocabulary — a Swedish parish indexed under the form with
-// `socken` stripped won't (and shouldn't) collide with a Czech node that
-// happens to look similar.
-type NodeEntry = { node: GazetteerNode; ancestors: GazetteerNode[] };
+// Name index: maps gazetteer-normalized name → list of entries. Each entry
+// caches the node's pre-normalized name and aliases AND a normPath array
+// holding the same data for every ancestor on the way down. findMatches'
+// inner loop reads from normPath only — it never touches live GazetteerNode
+// fields during a cache hit. The index is per-gazetteer because each
+// gazetteer carries its own suffix/prefix vocabulary.
+type NormPathEntry = { name: string; aliases: Set<string> };
+type NodeEntry = {
+  node: GazetteerNode;
+  ancestors: GazetteerNode[];
+  /** Pre-normalized node name. */
+  normName: string;
+  /** Pre-normalized aliases as a Set for O(1) membership tests. */
+  normAliases: Set<string>;
+  /**
+   * Pre-normalized [...ancestors, node] in path order. findMatches walks
+   * this instead of building a per-anchor list from live node fields, so
+   * the warm path performs zero `node.name` reads.
+   */
+  normPath: NormPathEntry[];
+  /**
+   * Original (un-normalized) names for [...ancestors, node] in path order.
+   * Used to build the `matched` field without touching live GazetteerNode
+   * properties during a cache-hit run.
+   */
+  pathNames: string[];
+};
 const nameIndexCache = new WeakMap<Gazetteer, Map<string, NodeEntry[]>>();
 
 function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
   const cached = nameIndexCache.get(gaz);
   if (cached) return cached;
   const index = new Map<string, NodeEntry[]>();
-  function walk(node: GazetteerNode, ancestors: GazetteerNode[]) {
-    const norm = normalizeForGazetteer(node.name, gaz);
-    if (!index.has(norm)) index.set(norm, []);
-    index.get(norm)!.push({ node, ancestors });
+  function walk(
+    node: GazetteerNode,
+    ancestors: GazetteerNode[],
+    ancestorsNorm: NormPathEntry[],
+    ancestorNames: string[],
+  ) {
+    const nodeName = node.name;
+    const normName = normalizeForGazetteer(nodeName, gaz);
+    const normAliases = new Set<string>();
     if (node.aliases) {
       for (const alias of node.aliases) {
         const na = normalizeForGazetteer(alias, gaz);
-        if (!index.has(na)) index.set(na, []);
-        index.get(na)!.push({ node, ancestors });
+        if (na) normAliases.add(na);
       }
+    }
+    const selfNorm: NormPathEntry = { name: normName, aliases: normAliases };
+    const normPath = [...ancestorsNorm, selfNorm];
+    const pathNames = [...ancestorNames, nodeName];
+    const entry: NodeEntry = {
+      node,
+      ancestors,
+      normName,
+      normAliases,
+      normPath,
+      pathNames,
+    };
+    if (!index.has(normName)) index.set(normName, []);
+    index.get(normName)!.push(entry);
+    for (const na of normAliases) {
+      if (na === normName) continue;
+      if (!index.has(na)) index.set(na, []);
+      index.get(na)!.push(entry);
     }
     if (node.children) {
       const nextAncestors = [...ancestors, node];
-      for (const child of node.children) walk(child, nextAncestors);
+      for (const child of node.children) walk(child, nextAncestors, normPath, pathNames);
     }
   }
-  walk(gaz.root, []);
-
+  walk(gaz.root, [], [], []);
   nameIndexCache.set(gaz, index);
   return index;
 }
@@ -178,11 +220,11 @@ function findMatches(
     const entries = index.get(norm);
     if (!entries) continue;
 
-    for (const { node, ancestors } of entries) {
-      if (anchored.has(node)) continue;
-      anchored.add(node);
+    for (const entry of entries) {
+      if (anchored.has(entry.node)) continue;
+      anchored.add(entry.node);
 
-      const fullPath = [...ancestors, node];
+      const fullPath = [...entry.ancestors, entry.node];
       const pathSet = new Set(fullPath);
       // Greedy 1:1 matching: each input component can satisfy at most one
       // path node — prevents "Iowa" from matching both Iowa (state) and
@@ -193,6 +235,12 @@ function findMatches(
       // its whitespace-tokens, so "Stockholm A" can satisfy two path nodes
       // (Stockholm + län letter alias) in one component. The component is
       // counted as matched once any one of its tokens matches.
+      // The entry carries a pre-normalized normPath built at index time.
+      // Reading it does not touch any live GazetteerNode field — that is
+      // the whole point of the cache, and the Task 1 test asserts it
+      // (zero name reads on warm calls).
+      const normPath = entry.normPath;
+
       const usedPathIndices = new Set<number>();
       const matchedInputIndices = new Set<number>();
       for (let ci = 0; ci < components.length; ci++) {
@@ -211,12 +259,10 @@ function findMatches(
         // distinct path node (this is the whole point of the token-scan).
         let matched = false;
         for (const form of forms) {
-          for (let pi = 0; pi < fullPath.length; pi++) {
+          for (let pi = 0; pi < normPath.length; pi++) {
             if (usedPathIndices.has(pi)) continue;
-            const n = fullPath[pi];
-            const nName = normalizeForGazetteer(n.name, gaz);
-            if (nName === form ||
-                (n.aliases?.some(a => normalizeForGazetteer(a, gaz) === form) ?? false)) {
+            const np = normPath[pi];
+            if (np.name === form || np.aliases.has(form)) {
               usedPathIndices.add(pi);
               matched = true;
               if (form === whole) break; // whole-component match: stop, don't double-count tokens
@@ -244,7 +290,7 @@ function findMatches(
 
       candidates.push({
         path: fullPath,
-        matched: fullPath.map(n => n.name),
+        matched: entry.pathNames,
         unmatched: remaining,
         depth: fullPath.length,
         contradictions,

@@ -166,7 +166,7 @@ describe('resolver findMatches — name-normalization call count', () => {
     // 3-level tree: 1 root → 5 countries → 8 regions each = 40 leaves.
     // Each leaf has one alias. Two leaves share the name "Springfield"
     // to force multiple anchor candidates per resolvePlace.
-    const countries = ['SE', 'DE', 'DK', 'NO', 'FI'].map((c, ci) => ({
+    const countries = ['SE', 'DE', 'DK', 'NO', 'FI'].map(c => ({
       name: c,
       lat: 0, lon: 0,
       children: Array.from({ length: 8 }, (_, ri) => ({
@@ -178,13 +178,12 @@ describe('resolver findMatches — name-normalization call count', () => {
     return {
       id: 'synthetic',
       name: 'Synthetic',
-      kind: 'data' as const,
+      kind: 'point' as const,
       root: { name: 'WORLD', children: countries, lat: 0, lon: 0 },
     };
   }
 
   it('does not re-normalize the same node name on every iteration', async () => {
-    const { resolvePlace } = await import('../../src/api/place-gazetteers/resolver');
     const gaz = makeGaz();
 
     // Count reads of node.name during resolvePlace by wrapping the tree in
