@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship } from '../../src/api/relationships';
 import { computeScope } from '../../src/api/html_site/scope';
+import { createTestDb } from './helpers';
 
 let db: any;
 beforeEach(() => { db = createTestDb(); });

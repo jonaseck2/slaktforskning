@@ -25,7 +25,7 @@ describe('usePagedList', () => {
 
   it('loadMore appends next page and tracks offset', async () => {
     let call = 0;
-    const fetchPage = vi.fn(async (limit: number, offset: number) => {
+    const fetchPage = vi.fn(async (_limit: number, _offset: number) => {
       call++;
       if (call === 1) return { items: [{ id: '1' }, { id: '2' }], total: 4 };
       return { items: [{ id: '3' }, { id: '4' }], total: 4 };

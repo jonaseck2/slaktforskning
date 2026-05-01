@@ -18,11 +18,11 @@ import { runAllChecks } from '../../src/api/checks';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 import type { Gazetteer, GazetteerNode } from '../../src/api/place-gazetteers/types';
 import * as gazetteersApi from '../../src/api/gazetteers';
-import { createTestDb } from './helpers';
 import { createPlace } from '../../src/api/places';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
+import { createTestDb } from './helpers';
 
 // ---------------------------------------------------------------------------
 // Invariant 1: loadGazetteers* runs at most once per runAllChecks.

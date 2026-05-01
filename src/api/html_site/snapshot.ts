@@ -1,9 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import { loadLivingDerivation, isLivingDerived } from '../personLiving';
-import type { ScopeOptions } from './scope';
-import { computeScope } from './scope';
-import { redactPerson } from './redact';
 import { getDbSetting } from '../db_settings';
 import { getImportedGazetteers } from '../gazetteers';
 import { getAllGazetteers } from '../place-gazetteers/bundled';
@@ -23,6 +20,9 @@ import type {
   MediaLink,
   MediaRegion,
 } from '../types';
+import { redactPerson } from './redact';
+import { computeScope } from './scope';
+import type { ScopeOptions } from './scope';
 
 export interface SnapshotOptions {
   siteTitle: string;

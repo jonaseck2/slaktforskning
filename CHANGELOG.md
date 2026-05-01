@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.178.1 — Lint cleanup: import order and unused-arg renames
+
+- fix: reordered imports in `src/api/html_site/snapshot.ts` and five test files to satisfy import-order lint rules; renamed unused `limit`/`offset` args in `tests/components/usePagedList.test.ts` to `_limit`/`_offset`. No behavior change.
+
 ## v0.178.0 — Duplicates: infinite scroll, summary line, label cleanup
 
 - feat(ui): the Duplicates view now uses `usePagedList` with a scroll sentinel, sticky table header, and a `count-label` summary above the table — same pattern as Sources/Places/Media/Relationships. Previously the view called `find(100)` and stopped, hiding the rest of the candidates with no signal to the user.

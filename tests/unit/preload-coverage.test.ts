@@ -10,9 +10,9 @@
  * module directly because that pulls in `electron`, which is not available
  * in vitest.
  */
-import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { describe, it, expect } from 'vitest';
 import '../../src/shared/channels';
 import { channelRegistry } from '../../src/shared/channels/registry';
 

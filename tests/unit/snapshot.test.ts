@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { buildSnapshot } from '../../src/api/html_site/snapshot';
+import { createTestDb } from './helpers';
 
 let db: any;
 beforeEach(() => { db = createTestDb(); });
