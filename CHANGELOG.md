@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.186.0 — Continents in the boundary gazetteer
+
+- feat: world-boundaries now contains the 7 continents (Africa, Antarctica, Asia, Europe, North America, Oceania, South America) as siblings of countries — bare-continent inputs ("Afrika", "Europa") resolve to the continent polygon
+- chore: new build script `build-world-continents-boundaries.ts` (Wikidata primary, Natural Earth fallback)
+
 ## v0.185.3 — Media filters actually filter
 
 - fix: Type / Status / Face-tag chips in the media library now filter results — were being ignored server-side
