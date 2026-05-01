@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.179.4 — Test coverage tier 1: MCP wrappers, utils, html_site preview
+
+- test: brought six previously sub-80% files to ≥80% line coverage. Added `tests/unit/helpers/mcpHarness.ts` to capture anonymous MCP tool handlers (so the prod tools could be unit-tested without refactoring the source files), and `tests/unit/vitestSetup.ts` to provide a localStorage mock for the unit-test environment. New tests: `mcp-prod-{media,research,places}.test.ts` (16 + 27 + 30 tests), `qualityIgnore.test.ts` (22), `html_site-preview.test.ts` (19). `cropImage.ts` is added to the coverage `exclude` list — its testable math (`computeSquareCropRectPx`) already has 10 tests in `cropImage.test.ts`, but the `loadImage` / `cropImageToDataUrl` exports require HTMLCanvasElement / HTMLImageElement which aren't available in the Node test environment, so the file would never reach 80% line coverage.
+- Per-file results: `mcp/tools/prod/media.ts` 22 → 100%, `research.ts` 25 → 100%, `places.ts` 45 → 100%, `renderer/utils/qualityIgnore.ts` 45 → 100%, `api/html_site/preview.ts` 0 → 92%.
+- Total tests in suite: 2318 → 2432 (+114).
+
 ## v0.179.3 — MCP `run_checks` tool returned an empty object
 
 - fix(mcp): the `run_checks` prod-MCP tool handler was missing `await` on both `runChecksForPerson(db, personId)` and `runAllChecks(db)`. Both functions are async and return `Promise<CheckResult[]>`, so `JSON.stringify(Promise)` serialized them as `{}` — every call to the tool returned an empty object instead of the actual check results array. Caught while writing coverage tests for `src/mcp/tools/prod/research.ts`. One-line fix: `await` both calls.
