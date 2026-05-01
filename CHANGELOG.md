@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — German gazetteer (de-gemeinden)
+## v0.189.0 — German gazetteer (de-gemeinden)
 
 - feat: new bundled gazetteer `de-gemeinden` — 16 Bundesländer → ~400 Kreise → 3052 populated places (≥ 5000 pop) from GeoNames CC BY 4.0
 - chore: `DE_RULES` suffix-strip set added (Land, Bezirk, Kreis, Landkreis, Stadtkreis, Gemeinde, Stadt, Markt, Ortsteil) — user queries like "Landkreis Schwabach" now resolve to the same node as "Schwabach"
