@@ -119,6 +119,20 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
+// Buffered citation payload — used by defer mode (parent stores the citation
+// in memory until the parent entity has an id to attach to). tempId is set by
+// the parent for editing flows so it can replace the right buffered row.
+export interface DeferredCitationPayload {
+  tempId?: string;
+  source_id: string;
+  sourceTitle: string;
+  page: string;
+  confidence: 0 | 1 | 2 | 3;
+  transcription: string;
+  notes: string;
+  date_accessed: string;
+}
+
 const props = defineProps<{
   mode?: 'subpanel' | 'standalone';
   sourceId?: string;
@@ -135,12 +149,20 @@ const props = defineProps<{
   personId?: string;
   relationshipId?: string;
   placeId?: string;
+  // When true, skip the DB write and emit `deferredSave` with the form data
+  // so the parent can buffer it and persist later.
+  defer?: boolean;
+  // When defer-editing a previously buffered citation, the parent passes the
+  // existing payload here. The source is fixed (cannot change), matching the
+  // behaviour of editing a saved citation.
+  editingPending?: DeferredCitationPayload | null;
 }>();
 
 const emit = defineEmits<{
   cancel: [];
   close: [];
   saved: [];
+  deferredSave: [payload: DeferredCitationPayload];
 }>();
 
 const { t } = useI18n();
@@ -172,20 +194,25 @@ function onSourceModalSaved(sourceId: string, sourceTitle: string) {
 }
 const sourceSession = useSourceSession();
 
-const pickedSourceId = ref<string | null>(props.sourceId ?? null);
-const pickedSourceTitle = ref(props.sourceTitle ?? '');
+const pickedSourceId = ref<string | null>(
+  props.editingPending?.source_id ?? props.sourceId ?? null
+);
+const pickedSourceTitle = ref(
+  props.editingPending?.sourceTitle ?? props.sourceTitle ?? ''
+);
 
 interface SourceRow { id: string; title: string; }
 function onSourceSelected(source: SourceRow) {
   pickedSourceTitle.value = source.title;
 }
 
+const seed = props.editingCitation ?? props.editingPending ?? null;
 const form = reactive({
-  page: props.editingCitation?.page ?? '',
-  confidence: (props.editingCitation?.confidence ?? 2) as 0 | 1 | 2 | 3,
-  transcription: props.editingCitation?.transcription ?? '',
-  notes: props.editingCitation?.notes ?? '',
-  date_accessed: props.editingCitation?.date_accessed ?? new Date().toISOString().slice(0, 10),
+  page: seed?.page ?? '',
+  confidence: (seed?.confidence ?? 2) as 0 | 1 | 2 | 3,
+  transcription: seed?.transcription ?? '',
+  notes: seed?.notes ?? '',
+  date_accessed: seed?.date_accessed ?? new Date().toISOString().slice(0, 10),
 });
 
 const mode = props.mode ?? 'subpanel';
@@ -197,7 +224,7 @@ const mode = props.mode ?? 'subpanel';
 // canChangeSource is true only in standalone-create flows where the parent
 // did not preset a source — those are the only cases the user can step back
 // to phase A.
-const isStandaloneCreate = !props.sourceId && !props.editingCitation;
+const isStandaloneCreate = !props.sourceId && !props.editingCitation && !props.editingPending;
 const phase = computed<'pick-source' | 'edit-citation'>(() =>
   pickedSourceId.value ? 'edit-citation' : 'pick-source'
 );
@@ -254,7 +281,7 @@ watch(phase, (p) => {
 
 onMounted(async () => {
   // Pre-fill source from session when no source was preset by parent.
-  if (!props.sourceId && !props.editingCitation && sourceSession.lastSourceId) {
+  if (!props.sourceId && !props.editingCitation && !props.editingPending && sourceSession.lastSourceId) {
     pickedSourceId.value = sourceSession.lastSourceId;
     try {
       const src = (await window.api.sources.get(sourceSession.lastSourceId)) as SourceRow | null;
@@ -269,7 +296,23 @@ onMounted(async () => {
 
 async function save() {
   if (!window.api) return;
-  if (!pickedSourceId.value && !props.editingCitation) return;
+  if (!pickedSourceId.value && !props.editingCitation && !props.editingPending) return;
+  // Defer mode: hand the form data back to the parent for buffering — no DB write.
+  if (props.defer) {
+    if (!pickedSourceId.value) return;
+    if (pickedSourceId.value) sourceSession.setLastUsed(pickedSourceId.value, form.page);
+    emit('deferredSave', {
+      tempId: props.editingPending?.tempId,
+      source_id: pickedSourceId.value,
+      sourceTitle: pickedSourceTitle.value,
+      page: form.page,
+      confidence: form.confidence,
+      transcription: form.transcription,
+      notes: form.notes,
+      date_accessed: form.date_accessed,
+    });
+    return;
+  }
   try {
     if (props.editingCitation) {
       await window.api.citations.update(props.editingCitation.id, {

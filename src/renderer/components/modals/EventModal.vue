@@ -108,44 +108,44 @@
       </template>
     </div>
 
-    <!-- Citations section (only after first save — needs an event_id to attach to) -->
-    <template v-if="savedEventId">
-      <div class="ep-sec-header" data-entity="citation">
-        <div class="ep-sec-left">
-          <span class="ep-sec-title">📖 {{ $t('citations.title') }}</span>
-          <span class="ep-sec-count">{{ citations.length }}</span>
-        </div>
-        <button type="button" class="ep-sec-action" @click="openAddCitation">
-          + {{ $t('sourceDetail.addCitation') }}
-        </button>
+    <!-- Citations section. In add mode (no savedEventId yet) we buffer
+         pending citations in component state and persist them after the
+         event row is created. -->
+    <div class="ep-sec-header" data-entity="citation">
+      <div class="ep-sec-left">
+        <span class="ep-sec-title">📖 {{ $t('citations.title') }}</span>
+        <span class="ep-sec-count">{{ allCitationRows.length }}</span>
       </div>
-      <div class="ep-sec-content">
-        <div v-if="citations.length === 0" class="ep-sec-empty">{{ $t('empty.citations') }}</div>
-        <div
-          v-for="cit in citations"
-          :key="cit.id"
-          class="ep-entity-row"
-          @click="openEditCitation(cit.id)"
-        >
-          <div class="ep-entity-main">
-            <div class="ep-entity-name">
-              <span v-if="cit.confidence != null" :class="'confidence-badge confidence-' + cit.confidence">
-                {{ $t('confidenceLevels.' + cit.confidence) }}
-              </span>
-              <span class="ep-cit-page">{{ cit.page || $t('citations.noPage') }}</span>
-            </div>
-            <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
+      <button type="button" class="ep-sec-action" @click="openAddCitation">
+        + {{ $t('sourceDetail.addCitation') }}
+      </button>
+    </div>
+    <div class="ep-sec-content">
+      <div v-if="allCitationRows.length === 0" class="ep-sec-empty">{{ $t('empty.citations') }}</div>
+      <div
+        v-for="cit in allCitationRows"
+        :key="cit.key"
+        class="ep-entity-row"
+        @click="cit.isPending ? openEditPendingCitation(cit.id) : openEditCitation(cit.id)"
+      >
+        <div class="ep-entity-main">
+          <div class="ep-entity-name">
+            <span v-if="cit.confidence != null" :class="'confidence-badge confidence-' + cit.confidence">
+              {{ $t('confidenceLevels.' + cit.confidence) }}
+            </span>
+            <span class="ep-cit-page">{{ cit.page || $t('citations.noPage') }}</span>
           </div>
-          <button
-            type="button"
-            class="btn-sm btn-delete"
-            style="flex-shrink:0"
-            :aria-label="$t('common.remove')"
-            @click.stop="deleteCitation(cit.id)"
-          >✕</button>
+          <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
         </div>
+        <button
+          type="button"
+          class="btn-sm btn-delete"
+          style="flex-shrink:0"
+          :aria-label="$t('common.remove')"
+          @click.stop="cit.isPending ? removePendingCitation(cit.id) : deleteCitation(cit.id)"
+        >✕</button>
       </div>
-    </template>
+    </div>
 
     <!-- Sub-panels -->
     <template #subpanels>
@@ -154,6 +154,9 @@
         mode="subpanel"
         :event-id="savedEventId || undefined"
         :editing-citation="editingCitation"
+        :defer="!savedEventId"
+        :editing-pending="editingPendingCitation"
+        @deferred-save="onPendingCitationSaved"
         @cancel="closeSubPanel"
         @close="closeSubPanel"
         @saved="onCitationSaved"
@@ -185,7 +188,7 @@
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
-import CitationModal from './CitationModal.vue';
+import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import { useDeleteConfirm } from '../../composables/useDeleteConfirm';
 import DateInput from '../DateInput.vue';
@@ -387,9 +390,11 @@ async function reloadPartnerOptions() {
 // Sub-panel state — citation flow delegates source picking to CitationModal itself
 const subPanel = ref<'citation' | 'person' | null>(null);
 const editingCitation = ref<EditingCitation | null>(null);
+const editingPendingCitation = ref<DeferredCitationPayload | null>(null);
 
 function openAddCitation() {
   editingCitation.value = null;
+  editingPendingCitation.value = null;
   subPanel.value = 'citation';
 }
 
@@ -399,13 +404,23 @@ async function openEditCitation(citationId: string) {
     const c = (await window.api.citations.get(citationId)) as EditingCitation | null;
     if (!c) return;
     editingCitation.value = c;
+    editingPendingCitation.value = null;
     subPanel.value = 'citation';
   } catch { /* ignore */ }
+}
+
+function openEditPendingCitation(tempId: string) {
+  const found = pendingCitations.value.find((c) => c.tempId === tempId);
+  if (!found) return;
+  editingCitation.value = null;
+  editingPendingCitation.value = found;
+  subPanel.value = 'citation';
 }
 
 function closeSubPanel() {
   subPanel.value = null;
   editingCitation.value = null;
+  editingPendingCitation.value = null;
 }
 
 // Citations list
@@ -435,6 +450,56 @@ async function onCitationSaved() {
   closeSubPanel();
   await loadCitations();
 }
+
+// Pending (buffered) citations — used while creating a new event that does not
+// yet have an event_id. They are persisted in handleSave() after events.create.
+const pendingCitations = ref<DeferredCitationPayload[]>([]);
+
+function onPendingCitationSaved(payload: DeferredCitationPayload) {
+  if (payload.tempId) {
+    const i = pendingCitations.value.findIndex((c) => c.tempId === payload.tempId);
+    if (i >= 0) pendingCitations.value.splice(i, 1, payload);
+  } else {
+    pendingCitations.value.push({
+      ...payload,
+      tempId: 'pending-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    });
+  }
+  closeSubPanel();
+}
+
+function removePendingCitation(tempId: string) {
+  const i = pendingCitations.value.findIndex((c) => c.tempId === tempId);
+  if (i >= 0) pendingCitations.value.splice(i, 1);
+}
+
+interface MergedCitationRow {
+  key: string;
+  id: string;
+  isPending: boolean;
+  sourceTitle: string;
+  page: string | null;
+  confidence: number | null;
+}
+const allCitationRows = computed<MergedCitationRow[]>(() => {
+  const saved = citations.value.map((c): MergedCitationRow => ({
+    key: 'saved:' + c.id,
+    id: c.id,
+    isPending: false,
+    sourceTitle: c.sourceTitle,
+    page: c.page,
+    confidence: c.confidence,
+  }));
+  const pending = pendingCitations.value.map((c): MergedCitationRow => ({
+    key: 'pending:' + (c.tempId ?? ''),
+    id: c.tempId ?? '',
+    isPending: true,
+    sourceTitle: c.sourceTitle,
+    page: c.page,
+    confidence: c.confidence,
+  }));
+  return [...saved, ...pending];
+});
 
 const delCitation = useDeleteConfirm<string>(async (id) => {
   if (!window.api) return;
@@ -522,6 +587,21 @@ async function handleSave() {
           role: 'spouse',
         });
       }
+      // Persist any citations the user added before the event existed.
+      // syncBaptismCompanion below reads citations.forEvent(birthEventId), so
+      // these must be written first for the baptism companion to inherit them.
+      for (const pc of pendingCitations.value) {
+        await window.api.citations.create({
+          source_id: pc.source_id,
+          page: pc.page,
+          confidence: pc.confidence,
+          transcription: pc.transcription,
+          notes: pc.notes,
+          date_accessed: pc.date_accessed,
+          event_id: ev.id,
+        });
+      }
+      pendingCitations.value = [];
     }
     await syncBaptismCompanion(ev.id!);
     emit('saved', ev);

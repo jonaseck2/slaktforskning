@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.176.0 — Citations available while creating an event
+
+- feat(ui): the Add-event modal now shows the Citations section from the start (previously only the Edit-event modal did, gated on `savedEventId`). Citations added before the event has been saved are buffered in `EventModal`'s component state and persisted after `events.create` (and before `syncBaptismCompanion`, so a baptism companion still inherits them). `CitationModal` gained a `defer` prop and a `deferredSave` event: when `defer=true` it skips the DB write and emits the form data instead, plus an `editingPending` prop so a buffered row can be re-opened and edited (source locked, like editing a saved citation). Pending rows render identically to saved ones and can be removed from the buffer in-place; cancelling the event modal discards the buffer.
+
 ## v0.175.3 — Names: align date inputs with the rest of the app
 
 - fix(ui): the date_from / date_to fields in the Add/Edit Name modal were plain text `<input>`s with a `YYYY-MM-DD` placeholder, while every other date field in the app (event date, baptism date, span end date, citation date_accessed) uses `SimpleDateInput` — a text field plus a calendar-picker button on the right. Swapped all three name-modal date inputs (the conditional `date_from` shown for married/name_change types, plus `date_from`/`date_to` under "More") to `<SimpleDateInput v-model="...">` so the picker affordance is consistent across modals.
