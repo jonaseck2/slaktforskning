@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.174.3 — Remove the InstructionsLoaded hook (zero signal)
+
+- fix(agent): removed `.claude/hooks/log-instructions-loaded.py`, `.claude/hooks/audit-rule-firing.py`, the `hooks.InstructionsLoaded` block in `.claude/settings.json`, and the `.claude/instructions-loaded.log` gitignore line. The hook fired correctly for `CLAUDE.md` `session_start` events but never fired for `.claude/rules/*.md` files even when matching paths were read. Either Claude Code's harness has a quirk in our setup or path-scoped rule loading just doesn't surface this event for us; either way, instrumentation that produces zero useful signal isn't worth the carrying cost. Path-scoped rules themselves remain in place — they're auto-discoverable; we just can't observe their firing through the hook.
+
 ## v0.174.2 — Subagents: require investigation before writing code
 
 - fix(agent): smoke-tested all five project subagents (api-implementer, test-writer, ipc-mcp-wirer, vue-ui-builder, ux-reviewer) against general-purpose controls on realistic dry-run prompts. Two failed silently: `vue-ui-builder` did 0 tool reads and produced fabricated CSS classes / file paths; the general-purpose control read 10 files and produced correct code. `test-writer` was much better than control because it read the existing test file, but the control wrote tests using a non-existent `is_primary` field — a clean inversion of what we want. Root cause: the slim agent body relies on auto-loaded rules that only trigger when matching files are read; if the agent never reads source files, no rules fire and the agent writes code from memory.
