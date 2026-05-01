@@ -8,6 +8,7 @@ import svForsamlingar from './data/sv-forsamlingar.json';
 import svOrter from './data/sv-orter.json';
 import svGardar from './data/sv-gardar.json';
 import svKyrkor from './data/sv-kyrkor.json';
+import svLandskap from './data/sv-landskap.json';
 import svSockenstadBoundaries from './data/sv-sockenstad-boundaries.json';
 // Danish
 import dkSogne from './data/dk-sogne.json';
@@ -89,6 +90,7 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'sv-orter': SV_RULES,
   'sv-gardar': SV_RULES,
   'sv-kyrkor': SV_RULES,
+  'sv-landskap': SV_RULES,
   'sv-sockenstad-boundaries': SV_RULES,
   // Danish
   'dk-sogne': DK_RULES,
@@ -144,6 +146,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   svOrter as Gazetteer,
   svGardar as Gazetteer,
   svKyrkor as Gazetteer,
+  svLandskap as Gazetteer,
   svSockenstadBoundaries as Gazetteer,
   // Danish
   dkSogne as Gazetteer,
