@@ -7,14 +7,15 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 28 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(28);
+  it('loads all 29 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(29);
   });
 
   const dataIds = [
     'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-landskap', 'sv-sockenstad-boundaries',
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
+    'de-gemeinden',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',
@@ -494,5 +495,43 @@ describe('sv-landskap resolution', () => {
     const result = resolvePlace('Skåne', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.gazetteer).toBe('sv-orter');
+  });
+});
+
+describe('de-gemeinden resolution', () => {
+  const gazetteers = loadGazetteers(
+    { enabledGazetteers: ['de-gemeinden'] },
+    getAllGazetteers(),
+  );
+
+  it('resolves "Hamburg" to a German node', () => {
+    const result = resolvePlace('Hamburg', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('de-gemeinden');
+  });
+
+  it('resolves "Bayern" to the Bundesland', () => {
+    const result = resolvePlace('Bayern', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect(result!.matchedPath).toContain('Bayern');
+  });
+
+  it('strips German suffixes — "Landkreis Schwabach" matches the same as "Schwabach"', () => {
+    const a = resolvePlace('Landkreis Schwabach', gazetteers);
+    const b = resolvePlace('Schwabach', gazetteers);
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    expect(a!.gazetteer).toBe('de-gemeinden');
+    expect(b!.gazetteer).toBe('de-gemeinden');
+    expect(a!.lat).toBe(b!.lat);
+    expect(a!.lon).toBe(b!.lon);
+  });
+
+  it('resolves "Schleswig-Holstein" without breaking on the hyphen', () => {
+    const result = resolvePlace('Schleswig-Holstein', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect(result!.matchedPath).toContain('Schleswig-Holstein');
   });
 });
