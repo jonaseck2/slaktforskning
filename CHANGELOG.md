@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.183.1 — Places list shows the resolved gazetteer path
+
+- feat: each row in the places list now shows the gazetteer-matched path under the name
+
 ## v0.183.0 — Bug fixes + bigger test net under the build
 
 - fix: `run_checks` MCP tool now returns the quality issues — was returning `{}` for every call

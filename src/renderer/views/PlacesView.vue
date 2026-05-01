@@ -49,7 +49,10 @@
                   @keydown.down.prevent="focusNextRow($event)"
                   @keydown.up.prevent="focusPrevRow($event)"
                 >
-                  <td>{{ place.name }}</td>
+                  <td>
+                    <div>{{ place.name }}</div>
+                    <div v-if="resolvedPathFor(place.id)" class="resolved-subline">{{ resolvedPathFor(place.id) }}</div>
+                  </td>
                   <td class="type-col info-cell">{{ place.place_type ? $t('placeTypes.' + place.place_type) : '' }}</td>
                 </tr>
               </tbody>
@@ -122,13 +125,14 @@ import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { usePagedList } from '../composables/usePagedList';
+import { usePlaceResolver } from '../composables/usePlaceResolver';
 
 defineOptions({ name: 'PlacesView' });
 
 const dataVersionStore = useDataVersionStore();
 let loadedVersion = -1;
 
-interface PlaceRow { id: string; name: string; place_type: string | null; }
+interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id?: string | null; }
 
 const { t } = useI18n();
 const route = useRoute();
@@ -211,6 +215,41 @@ function openPanel() {
 function closePanel() {
   panelOpen.value = false;
   localStorage.setItem('map-panel-open', 'false');
+}
+
+// Show the gazetteer-resolved path under each row. We build the place's full
+// hierarchy ("Leaf, Parent, GrandParent") from the already-loaded `places`
+// list, run it through the resolver, and render `matchedPath` joined with ›.
+const { ready: resolverReady, ensureLoaded: ensureResolverLoaded, resolve } = usePlaceResolver();
+ensureResolverLoaded();
+
+const placesById = computed(() => {
+  const map = new Map<string, PlaceRow>();
+  for (const p of places.value) map.set(p.id, p);
+  return map;
+});
+
+function pathString(id: string): string {
+  const parts: string[] = [];
+  let cur: string | null | undefined = id;
+  const seen = new Set<string>();
+  while (cur && !seen.has(cur)) {
+    seen.add(cur);
+    const row = placesById.value.get(cur);
+    if (!row) break;
+    parts.push(row.name);
+    cur = row.parent_place_id ?? null;
+  }
+  return parts.join(', ');
+}
+
+function resolvedPathFor(id: string): string | null {
+  if (!resolverReady.value) return null;
+  const path = pathString(id);
+  if (!path) return null;
+  const match = resolve(path);
+  if (!match) return null;
+  return match.matchedPath.join(' › ');
 }
 
 const typeCounts = computed(() => {
@@ -372,6 +411,14 @@ onActivated(async () => {
 .info-cell {
   color: var(--text-muted);
   font-size: var(--font-sm);
+}
+.resolved-subline {
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .list-collapse-btn {
   position: absolute;
