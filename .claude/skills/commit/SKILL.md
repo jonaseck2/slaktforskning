@@ -140,30 +140,53 @@ The bumped version becomes the canonical version — use it in the `CHANGELOG.md
 
 ### CHANGELOG style
 
-The CHANGELOG is for the **user**, not the engineer. Follow these rules every time you write an entry:
+The CHANGELOG is for the **user**, not the engineer. Treat it as a release-notes feed they can skim — not a project log. Follow these rules every time you write or touch an entry.
 
-- **Bullet points only.** No paragraphs, no prose blocks.
-- **≤100 characters per bullet** (hard cap). If a bullet won't fit, split into two bullets or rephrase.
-- **What changes for the user, not how it's implemented.** Talk about behaviour, surfaces, and outcomes — not refactors, function names, file paths, or internal mechanics.
-- **Lead with intent.** What was the user pain or goal? "fix: place picker no longer commits on first click — gives a chance to confirm" beats "fix: route OK button through stageSelection()".
-- **Pull intent from the conversation context.** The why is usually upthread (the bug report, the feature request, the use case). Bake that into the bullet — don't make the user reverse-engineer it from the diff.
-- **No file paths, function names, or commit SHAs in user-facing bullets.** Engineering detail belongs in the commit message body, not CHANGELOG.
-- **No "this commit", "this PR", "this release"** — drop the framing word and just describe the change.
-- **Tests, refactors, and tooling changes are usually invisible to the user — skip them or fold them into one short line** ("test: 450+ tests added, coverage 81% → 90%"). Don't enumerate test files.
-- **Type prefixes are fine** (`fix:`, `feat:`, `perf:`, `docs:`, `test:`) but keep them short and skip the parenthetical scope unless it's a real disambiguator.
+#### Per-bullet rules (writing each line)
 
-Good:
+- **Bullet points only.** No paragraphs, no prose blocks, no nested sub-bullets.
+- **≤100 characters per bullet** — hard cap. If a bullet won't fit, split it or rephrase.
+- **One sentence per bullet.** No semicolons stringing two thoughts together. Period or em-dash, not "; also …".
+- **What changes for the user, not how it's implemented.** Talk about behaviour, surfaces, outcomes — not refactors, function names, file paths, line counts, or internal mechanics.
+- **Lead with intent.** What was the user pain or goal? Bake the why into the bullet — don't make the reader reverse-engineer it from the diff. Pull intent from the conversation context (bug report, feature request, use case) — the why is almost always upthread.
+- **No file paths, function names, class names, SQL fragments, or commit SHAs.** They belong in the commit message body, not CHANGELOG.
+- **No "this commit", "this PR", "this release"** — drop the framing word and describe the change.
+- **Type prefixes are fine** (`fix:`, `feat:`, `perf:`, `docs:`, `chore:`) — keep them short, skip the parenthetical scope unless it's a real disambiguator.
+
+#### Per-entry rules (writing the whole release block)
+
+- **≤5 bullets per release.** Most releases need 1–3. If you're at 6+, you're listing implementation work as if it were user-facing — collapse or cut.
+- **No restating the version title in bullets.** The header already says what the release is about; don't repeat it on the first bullet.
+- **Don't enumerate the same change three different ways.** If three bullets all describe slices of the same user-facing thing, collapse to one.
+- **Pure-internal version bumps get one short line.** Any release that touches only tests, refactors, build config, agent tooling, lint cleanup, or other stuff a user can't see should look like:
+  ```
+  ## v0.X.Y — Short title
+  - chore: internal only
+  ```
+  Or fold one specific signal in: `- chore: imports faster, no behaviour change`.
+
+#### Anti-bloat / no-regrowth rules (every time you touch CHANGELOG)
+
+- **Don't backfill detail into old entries.** If you want to preserve detail later, put it in the commit message or in `docs/plans/archive/` — never grow an existing CHANGELOG bullet.
+- **When adding a new entry, glance at the last 3–5.** If they're sliding back into engineering detail, trim them in the same commit. Drift compounds; correct it on contact.
+- **When shipping multiple related patches close together, prefer one minor bump with a few bullets** over five sequential patch bumps that each get their own entry. The version sequence is permanent; CHANGELOG entries should reflect meaningful units, not git tags.
+- **Skim test:** can a non-developer user read 100 entries in 60 seconds and get the gist of how the product evolved? If a single entry takes 30 seconds to read, it's too long.
+
+#### Examples
+
+Good (terse, user-facing, one sentence each):
 ```
-- fix: place picker no longer commits on the first row click — preview the choice, press OK to confirm
-- feat: nav badge on Duplicates shows the true total instead of capping at 100
+- fix: place picker no longer commits on the first row click — press OK to confirm
+- feat: Duplicates view shows all candidates with infinite scroll instead of capping at 100
 - perf: imports of 50k+ persons now finish in seconds instead of minutes
+- chore: internal only
 ```
 
-Bad:
+Bad (engineering detail, multi-thought, restating the title):
 ```
 - fix(ui): wired stageSelection() through PlaceTreePickerModal's :selected binding so onClick stages instead of immediately calling emit('select')
 - feat(api): added countDuplicates(db) and refactored findDuplicates to share collectDuplicateCandidates()
-- perf(db): wrap bulk createPerson loop in BEGIN IMMEDIATE / COMMIT, drop redundant prepared-statement compiles
+- perf(db): wrap bulk createPerson loop in BEGIN IMMEDIATE / COMMIT, drop redundant prepared-statement compiles; also added test coverage and updated CLAUDE.md
 ```
 
 Engineering detail from the "bad" examples still belongs in the **commit message body** — just not in CHANGELOG.
