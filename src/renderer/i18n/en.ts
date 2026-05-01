@@ -795,6 +795,9 @@ export default {
     mergeWarning: 'This action cannot be undone. Make sure these are truly the same person before merging.',
     confirmMerge: 'Merge Persons',
     merging: 'Merging...',
+    ignore: 'Ignore',
+    ignoreTooltip: 'Mark as not a duplicate — this pair won\'t reappear',
+    ignored: 'Pair ignored',
     reasons: {
       same_surname: 'Same surname',
       same_given_name: 'Same given name',

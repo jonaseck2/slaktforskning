@@ -173,7 +173,9 @@ const api = {
   },
   duplicates: {
     find: (limit?: number) => ipcRenderer.invoke('duplicates:find', limit),
+    count: () => ipcRenderer.invoke('duplicates:count'),
     merge: mutating((targetId: string, sourceId: string) => ipcRenderer.invoke('duplicates:merge', targetId, sourceId)),
+    ignore: mutating((personAId: string, personBId: string) => ipcRenderer.invoke('duplicates:ignore', personAId, personBId)),
   },
   checks: {
     runAll: () => ipcRenderer.invoke('checks:runAll'),

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.177.0 — Duplicates: ignore a pair from the list
+
+- feat(ui): each row in the Duplicates view gained a small ✕ button next to "Merge". Clicking it persists the pair in a new `ignored_duplicates` table and removes the row optimistically — `findDuplicates` now LEFT-checks against that table so the same two persons won't reappear on the next scan, and the Duplicates nav-badge count drops with them. New API `ignoreDuplicate(db, a, b)` stores the pair canonically (lower id first, enforced by a `CHECK (person1_id < person2_id)` constraint) so insertion order doesn't matter and re-ignoring is a no-op (`INSERT OR IGNORE`). Both FK columns CASCADE on persons, so deleting or merging a person automatically cleans up its ignored-pair rows. Wired through as `duplicates:ignore` (mutating worker channel), exposed on `window.api.duplicates.ignore`, with a stub in the static SPA api. New i18n keys: `duplicates.ignore`, `duplicates.ignoreTooltip`, `duplicates.ignored`.
+- feat(api): factored the duplicate-detection pipeline into `collectDuplicateCandidates(db)` and added `countDuplicates(db)` so the Duplicates nav badge can show the true total instead of being pinned at the `findDuplicates(100)` page-size cap. New worker channel `duplicates:count` (read-only) feeds `loadDuplicatesBadge()` in `App.vue` directly.
+
 ## v0.176.0 — Citations available while creating an event
 
 - feat(ui): the Add-event modal now shows the Citations section from the start (previously only the Edit-event modal did, gated on `savedEventId`). Citations added before the event has been saved are buffered in `EventModal`'s component state and persisted after `events.create` (and before `syncBaptismCompanion`, so a baptism companion still inherits them). `CitationModal` gained a `defer` prop and a `deferredSave` event: when `defer=true` it skips the DB write and emits the form data instead, plus an `editingPending` prop so a buffered row can be re-opened and edited (source locked, like editing a saved citation). Pending rows render identically to saved ones and can be removed from the buffer in-place; cancelling the event modal discards the buffer.

@@ -19,6 +19,21 @@ export interface DuplicateCandidate {
  * 2. Within each group, compare given names and birth dates
  */
 export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] {
+  const candidates = collectDuplicateCandidates(db);
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates.slice(0, limit);
+}
+
+/**
+ * Count all duplicate candidates without slicing or sorting — used by the
+ * nav badge so the displayed count reflects the true total instead of being
+ * pinned at the `findDuplicates` page-size limit.
+ */
+export function countDuplicates(db: Database): number {
+  return collectDuplicateCandidates(db).length;
+}
+
+function collectDuplicateCandidates(db: Database): DuplicateCandidate[] {
   // Load persons, primary names, and birth dates in bulk — the old correlated
   // subquery version was O(N²) on large DBs. Join in JS with Maps.
   const personRows = queryAll<{ id: string; sex: string }>(db, 'SELECT id, sex FROM persons');
@@ -72,6 +87,13 @@ export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] 
     byNormalizedSurname.get(key)!.push(p);
   }
 
+  // Pull the user-ignored pairs once and key them the same way as `seen` so the
+  // inner loop can skip them with no per-pair query.
+  const ignoredRows = queryAll<{ person1_id: string; person2_id: string }>(
+    db, 'SELECT person1_id, person2_id FROM ignored_duplicates'
+  );
+  const ignored = new Set<string>(ignoredRows.map(r => `${r.person1_id}:${r.person2_id}`));
+
   const candidates: DuplicateCandidate[] = [];
   const seen = new Set<string>();
 
@@ -85,6 +107,7 @@ export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] 
         const pairKey = [a.id, b.id].sort().join(':');
         if (seen.has(pairKey)) continue;
         seen.add(pairKey);
+        if (ignored.has(pairKey)) continue;
 
         const { score, reasons } = calculateSimilarity(a, b);
         if (score >= 50) {
@@ -103,9 +126,7 @@ export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] 
     }
   }
 
-  // Sort by score descending
-  candidates.sort((a, b) => b.score - a.score);
-  return candidates.slice(0, limit);
+  return candidates;
 }
 
 function normalizeName(name: string): string {
@@ -166,6 +187,21 @@ function calculateSimilarity(
   }
 
   return { score: Math.max(0, Math.min(100, score)), reasons };
+}
+
+/**
+ * Mark a duplicate pair as ignored so it won't reappear in `findDuplicates`.
+ * Pair is stored canonically (lower id first) so insertion order doesn't matter.
+ * Idempotent — re-ignoring the same pair is a no-op.
+ */
+export function ignoreDuplicate(db: Database, personAId: string, personBId: string): void {
+  if (personAId === personBId) throw new Error('Cannot ignore a person against themselves');
+  const [p1, p2] = personAId < personBId ? [personAId, personBId] : [personBId, personAId];
+  runSql(
+    db,
+    'INSERT OR IGNORE INTO ignored_duplicates (person1_id, person2_id) VALUES (?, ?)',
+    [p1, p2]
+  );
 }
 
 /**

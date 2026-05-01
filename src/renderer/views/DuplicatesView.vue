@@ -29,6 +29,13 @@
           <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
           <td class="actions-cell">
             <AppButton size="sm" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</AppButton>
+            <button
+              type="button"
+              class="btn-sm btn-delete btn-ignore-pair"
+              :title="$t('duplicates.ignoreTooltip')"
+              :aria-label="$t('duplicates.ignore')"
+              @click="ignorePair(d)"
+            >✕</button>
           </td>
         </tr>
       </tbody>
@@ -62,7 +69,10 @@ defineOptions({ name: 'DuplicatesView' });
 
 declare const window: Window & {
   api: {
-    duplicates: { find: (limit?: number) => Promise<DuplicateCandidate[]> };
+    duplicates: {
+      find: (limit?: number) => Promise<DuplicateCandidate[]>;
+      ignore: (personAId: string, personBId: string) => Promise<void>;
+    };
   };
 };
 
@@ -107,6 +117,20 @@ function openMerge(d: DuplicateCandidate) {
   mergeCandidate.value = d;
 }
 
+async function ignorePair(d: DuplicateCandidate) {
+  // Optimistic remove — same pair can't reappear because it's now persisted in
+  // ignored_duplicates, so no need to round-trip the whole list.
+  duplicates.value = duplicates.value.filter(x => !(x.person1_id === d.person1_id && x.person2_id === d.person2_id));
+  try {
+    await window.api.duplicates.ignore(d.person1_id, d.person2_id);
+    toast.success(t('duplicates.ignored'));
+  } catch (err) {
+    console.error('[DuplicatesView] ignore failed:', err);
+    toast.error(t('errors.saveFailed'));
+    await load();
+  }
+}
+
 async function onMerged() {
   mergeCandidate.value = null;
   await load();
@@ -136,4 +160,5 @@ onActivated(load);
 .score-high { background: var(--error-bg); color: var(--error-text); }
 .score-medium { background: var(--warning-bg); color: var(--warning-text); }
 .score-low { background: var(--info-bg); color: var(--info-text); }
+.actions-cell { display: flex; gap: var(--space-sm); align-items: center; justify-content: flex-end; }
 </style>

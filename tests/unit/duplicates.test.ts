@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Database } from 'node-sqlite3-wasm';
-import { findDuplicates, mergePersons } from '../../src/api/duplicates';
+import { findDuplicates, countDuplicates, mergePersons, ignoreDuplicate } from '../../src/api/duplicates';
+import { queryAll, queryOne, runSql } from '../../src/api/db';
+import { deletePerson } from '../../src/api/persons';
 import { createPerson, addPersonName, getPersonNames, getPerson, addPersonIdentifier, getPersonIdentifiers } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant, getEventParticipants, createRelationship, getRelationshipsOfPerson } from '../../src/api/relationships';
@@ -54,6 +56,111 @@ describe('findDuplicates', () => {
     const dupes = findDuplicates(db);
     // Score = 30 (surname) + 40 (given) - 40 (sex) = 30, below threshold
     expect(dupes).toHaveLength(0);
+  });
+});
+
+describe('countDuplicates', () => {
+  it('returns 0 when there are no candidate pairs', () => {
+    createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+    expect(countDuplicates(db)).toBe(0);
+  });
+
+  it('returns the true total even past the findDuplicates page-size limit', () => {
+    // Create 105 pairs, each pair sharing a unique surname so they don't all
+    // collapse into one big group (normalizeName strips digits).
+    const surnames: string[] = [];
+    for (let i = 0; i < 105; i++) {
+      const a = String.fromCharCode(97 + (i % 26));
+      const b = String.fromCharCode(97 + Math.floor(i / 26));
+      surnames.push(`Svensson${a}${b}xx`);
+    }
+    for (const sn of surnames) {
+      createPerson(db, { given_name: 'Erik', surname: sn });
+      createPerson(db, { given_name: 'Erik', surname: sn });
+    }
+    // findDuplicates caps at 100 by default; the badge needs the full count.
+    expect(findDuplicates(db)).toHaveLength(100);
+    expect(countDuplicates(db)).toBe(105);
+  });
+
+  it('drops by one after merging a candidate pair', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+
+    expect(countDuplicates(db)).toBe(2);
+    mergePersons(db, a.id, b.id);
+    expect(countDuplicates(db)).toBe(1);
+  });
+
+  it('drops by one after ignoring a candidate pair', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+    createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+
+    expect(countDuplicates(db)).toBe(2);
+    ignoreDuplicate(db, a.id, b.id);
+    expect(countDuplicates(db)).toBe(1);
+  });
+});
+
+describe('ignoreDuplicate', () => {
+  it('persists the pair canonically (lower id first) so insertion order does not matter', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const [lo, hi] = a.id < b.id ? [a.id, b.id] : [b.id, a.id];
+
+    ignoreDuplicate(db, hi, lo); // Reverse order on purpose
+
+    const rows = queryAll<{ person1_id: string; person2_id: string }>(db, 'SELECT person1_id, person2_id FROM ignored_duplicates');
+    expect(rows).toEqual([{ person1_id: lo, person2_id: hi }]);
+  });
+
+  it('is idempotent — re-ignoring the same pair does not duplicate the row', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+
+    ignoreDuplicate(db, a.id, b.id);
+    ignoreDuplicate(db, b.id, a.id);
+
+    const count = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM ignored_duplicates')?.n;
+    expect(count).toBe(1);
+  });
+
+  it('hides ignored pairs from findDuplicates while keeping other pairs visible', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const c = createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+    const d = createPerson(db, { given_name: 'Anna', surname: 'Johansson' });
+
+    expect(findDuplicates(db)).toHaveLength(2);
+
+    ignoreDuplicate(db, a.id, b.id);
+
+    const remaining = findDuplicates(db);
+    expect(remaining).toHaveLength(1);
+    expect(new Set([remaining[0].person1_id, remaining[0].person2_id])).toEqual(new Set([c.id, d.id]));
+  });
+
+  it('rejects ignoring a person against themselves', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    expect(() => ignoreDuplicate(db, a.id, a.id)).toThrow();
+  });
+
+  it('cascades on person delete — orphaned pair rows do not linger', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    ignoreDuplicate(db, a.id, b.id);
+
+    // FK ON DELETE CASCADE only fires when foreign_keys pragma is on (createTestDb sets it).
+    runSql(db, 'PRAGMA foreign_keys = ON');
+    deletePerson(db, a.id);
+
+    const count = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM ignored_duplicates')?.n;
+    expect(count).toBe(0);
   });
 });
 

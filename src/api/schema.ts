@@ -237,6 +237,14 @@ export function initializeSchema(db: Database): void {
       data TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS ignored_duplicates (
+      person1_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      person2_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (person1_id, person2_id),
+      CHECK (person1_id < person2_id)
+    );
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)

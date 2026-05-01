@@ -10,7 +10,7 @@ describe('reports & duplicates channel registry', () => {
 
   it('registers all duplicates:* channels', () => {
     const dupChannels = listChannels().filter(c => c.startsWith('duplicates:'));
-    expect(dupChannels.length).toBe(2);
+    expect(dupChannels.length).toBe(4);
   });
 
   it('reports:personSummary is a worker channel', () => {
@@ -21,6 +21,7 @@ describe('reports & duplicates channel registry', () => {
 
   it('mutating channels are flagged correctly', () => {
     expect(getChannel('duplicates:merge')!.mutating).toBe(true);
+    expect(getChannel('duplicates:ignore')!.mutating).toBe(true);
     // All report channels are read-only
     expect(getChannel('reports:personSummary')!.mutating).toBeFalsy();
     expect(getChannel('reports:familyUnit')!.mutating).toBeFalsy();
@@ -30,5 +31,6 @@ describe('reports & duplicates channel registry', () => {
     expect(getChannel('reports:timeline')!.mutating).toBeFalsy();
     expect(getChannel('reports:aliveInYear')!.mutating).toBeFalsy();
     expect(getChannel('duplicates:find')!.mutating).toBeFalsy();
+    expect(getChannel('duplicates:count')!.mutating).toBeFalsy();
   });
 });

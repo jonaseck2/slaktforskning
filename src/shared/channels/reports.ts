@@ -56,9 +56,23 @@ defineChannel({
 });
 
 defineChannel({
+  name: 'duplicates:count',
+  thread: 'worker',
+  handler: (db) => duplicates.countDuplicates(db),
+});
+
+defineChannel({
   name: 'duplicates:merge',
   thread: 'worker',
   mutating: true,
   handler: (db, targetId: string, sourceId: string) =>
     duplicates.mergePersons(db, targetId, sourceId),
+});
+
+defineChannel({
+  name: 'duplicates:ignore',
+  thread: 'worker',
+  mutating: true,
+  handler: (db, personAId: string, personBId: string) =>
+    duplicates.ignoreDuplicate(db, personAId, personBId),
 });

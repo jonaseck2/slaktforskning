@@ -795,6 +795,9 @@ export default {
     mergeWarning: 'Denna åtgärd kan inte ångras. Se till att det verkligen är samma person innan du slår ihop.',
     confirmMerge: 'Slå ihop',
     merging: 'Slår ihop...',
+    ignore: 'Ignorera',
+    ignoreTooltip: 'Markera som inte en dubblett — paret visas inte igen',
+    ignored: 'Paret ignoreras',
     reasons: {
       same_surname: 'Samma efternamn',
       same_given_name: 'Samma förnamn',

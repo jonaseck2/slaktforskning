@@ -501,10 +501,9 @@ async function loadQualityBadge() {
 }
 
 async function loadDuplicatesBadge() {
-  if (!window.api?.duplicates) return;
+  if (!window.api?.duplicates?.count) return;
   try {
-    const results = await window.api.duplicates.find(100);
-    duplicateCount.value = results.length;
+    duplicateCount.value = await window.api.duplicates.count();
   } catch { /* ignore */ }
 }
 
