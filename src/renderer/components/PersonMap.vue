@@ -38,11 +38,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { LCircleMarker, LPolyline, LPopup } from '@vue-leaflet/vue-leaflet';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import BaseMap from './BaseMap.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { useEntityData } from '../composables/useEntityData';
 
 interface EventRow {
   id: string;
@@ -73,10 +74,7 @@ const props = defineProps<{ personId: string }>();
 
 const { ensureLoaded, resolveCoordinates } = usePlaceResolver();
 
-const markers = ref<Marker[]>([]);
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
-
-const polylinePoints = ref<[number, number][]>([]);
 
 const EVENT_COLORS: Record<string, string> = {
   birth: '#22c55e',
@@ -101,20 +99,20 @@ function fitBounds() {
   });
 }
 
-async function load() {
-  if (!props.personId) { markers.value = []; return; }
+const idRef = computed(() => props.personId ?? null);
+const { data, reload } = useEntityData<Marker[]>(idRef, async (id) => {
   await ensureLoaded();
-  const events = (await window.api.events.forPerson(props.personId)) as EventRow[];
+  const events = (await window.api.events.forPerson(id)) as EventRow[];
   const eventsWithPlaces = events.filter(e => e.place_id);
 
   // Fetch all unique places and their paths in parallel instead of a serial loop.
   const uniquePlaceIds = [...new Set(eventsWithPlaces.map(e => e.place_id!))];
   const [placeResults, pathResults] = await Promise.all([
-    Promise.all(uniquePlaceIds.map(id => window.api.places.get(id) as Promise<PlaceRow | null>)),
-    Promise.all(uniquePlaceIds.map(id => window.api.places.getPath(id) as Promise<string>)),
+    Promise.all(uniquePlaceIds.map(pid => window.api.places.get(pid) as Promise<PlaceRow | null>)),
+    Promise.all(uniquePlaceIds.map(pid => window.api.places.getPath(pid) as Promise<string>)),
   ]);
-  const placeById = new Map<string, PlaceRow | null>(uniquePlaceIds.map((id, i) => [id, placeResults[i]]));
-  const pathById = new Map<string, string>(uniquePlaceIds.map((id, i) => [id, pathResults[i]]));
+  const placeById = new Map<string, PlaceRow | null>(uniquePlaceIds.map((pid, i) => [pid, placeResults[i]]));
+  const pathById = new Map<string, string>(uniquePlaceIds.map((pid, i) => [pid, pathResults[i]]));
 
   const result: Marker[] = [];
   for (const ev of eventsWithPlaces) {
@@ -143,33 +141,17 @@ async function load() {
     return a.date.localeCompare(b.date);
   });
 
-  markers.value = result;
-  polylinePoints.value = result.map(m => [m.lat, m.lon] as [number, number]);
+  return result;
+});
 
+const markers = computed(() => data.value ?? []);
+const polylinePoints = computed<[number, number][]>(() => markers.value.map(m => [m.lat, m.lon] as [number, number]));
+
+watch(markers, () => {
   if (baseMapRef.value?.getLeafletObject()) fitBounds();
-}
-
-watch(() => props.personId, load, { immediate: true });
-
-// Refresh on any mutation so map points appear when the user adds an event
-// with a place to the same person (no panel switch needed). Debounced to
-// batch rapid mutations.
-let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
-function onDataMutation() {
-  if (mutationDebounce) clearTimeout(mutationDebounce);
-  mutationDebounce = setTimeout(() => { if (props.personId) load(); }, 200);
-}
-onMounted(() => {
-  (window.api as unknown as {
-    onDataChanged: (cb: () => void) => void;
-  }).onDataChanged(onDataMutation);
 });
-onUnmounted(() => {
-  if (mutationDebounce) clearTimeout(mutationDebounce);
-  (window.api as unknown as {
-    offDataChanged: (cb: () => void) => void;
-  }).offDataChanged(onDataMutation);
-});
+
+defineExpose({ reload });
 </script>
 
 <style scoped>
