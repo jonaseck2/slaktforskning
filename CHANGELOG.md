@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.184.1 — Filter chips wrap instead of scrolling
+
+- fix: filter chip rows wrap to a second line when full instead of hiding overflow behind a scroll
+
 ## v0.184.0 — Filter places by country
 
 - feat: places filter is now country-based with live counts (Sverige 4657, USA 463, …) instead of the unhelpful place-type chips

@@ -37,11 +37,11 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
 .filter-chips-bar {
   flex: 1;
   display: flex;
+  flex-wrap: wrap;
   gap: 2px;
   background: var(--surface-border-subtle);
   border-radius: var(--radius-md);
   padding: 2px;
-  overflow-x: auto;
 }
 
 .chip-btn {
