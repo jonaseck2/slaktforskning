@@ -1,5 +1,5 @@
 import {
-  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES,
+  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES, DE_RULES,
 } from '../../gazetteer-build/normalize-rules';
 import type { Gazetteer, GazetteerNode, GazetteerNormalizeRules } from './types';
 // Swedish
@@ -19,6 +19,8 @@ import noKommuner from './data/no-kommuner.json';
 import fiKunnat from './data/fi-kunnat.json';
 // Icelandic
 import isSveitarfelog from './data/is-sveitarfelog.json';
+// German
+import deGemeinden from './data/de-gemeinden.json';
 // North American
 import usImmigrationStates from './data/us-immigration-states.json';
 import usAllStates from './data/us-all-states.json';
@@ -105,6 +107,8 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   // Icelandic
   'is-sveitarfelog': IS_RULES,
   'is-sveitarfelog-boundaries': IS_RULES,
+  // German
+  'de-gemeinden': DE_RULES,
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,
@@ -157,6 +161,8 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   fiKunnat as Gazetteer,
   // Icelandic
   isSveitarfelog as Gazetteer,
+  // German
+  deGemeinden as Gazetteer,
   // North American
   usImmigrationStates as Gazetteer,
   usAllStates as Gazetteer,
