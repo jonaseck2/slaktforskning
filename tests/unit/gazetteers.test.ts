@@ -122,6 +122,40 @@ describe('boundary gazetteers', () => {
       expect(['Polygon', 'MultiPolygon']).toContain(node.geometry!.type);
     });
   }
+
+  it('world-boundaries includes 7 continents as siblings of countries', () => {
+    const all = getAllGazetteers();
+    const wb = all.find(g => g.id === 'world-boundaries');
+    expect(wb).toBeDefined();
+
+    const continents = (wb!.root.children ?? []).filter(c => c.type === 'continent');
+    expect(continents).toHaveLength(7);
+
+    const names = new Set(continents.map(c => c.name));
+    for (const name of [
+      'Africa', 'Antarctica', 'Asia', 'Europe',
+      'North America', 'Oceania', 'South America',
+    ]) {
+      expect(names).toContain(name);
+    }
+
+    // Every continent has a non-empty geometry and a sensible centroid.
+    for (const c of continents) {
+      expect(c.geometry).toBeDefined();
+      expect(c.geometry!.coordinates).toBeDefined();
+      expect(typeof c.lat).toBe('number');
+      expect(typeof c.lon).toBe('number');
+      expect(c.lat).toBeGreaterThan(-90);
+      expect(c.lat).toBeLessThan(90);
+    }
+
+    // Spot-check Europe falls in northern hemisphere, eastern (or near-zero) longitude.
+    const europe = continents.find(c => c.name === 'Europe')!;
+    expect(europe.lat).toBeGreaterThan(35);
+    expect(europe.lat).toBeLessThan(71);
+    expect(europe.lon).toBeGreaterThan(-10);
+    expect(europe.lon).toBeLessThan(60);
+  });
 });
 
 describe('cross-country place resolution', () => {

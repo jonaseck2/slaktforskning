@@ -629,6 +629,7 @@ export default {
     personSection: 'Person',
   },
   placeTypes: {
+    continent: 'Continent',
     country: 'Country',
     admin1: 'State/Region',
     province: 'Province',
