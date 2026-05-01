@@ -260,11 +260,12 @@ Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `error
 
 #### Self-loading section component template
 
-Use this when the section owns its own data (no benefit to the parent holding the array):
+Use this when the section owns its own data (no benefit to the parent holding the array). **Always go through `useEntityData`** — it handles race-safe loading on id change AND auto-subscribes to `onDataChanged` so the section refreshes after any mutation (own component, sibling section, modal, MCP call). Never roll a manual `watch(() => props.id, load, { immediate: true })`, and never call `window.api.onDataChanged(...)` directly.
 
 ```vue
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, toRef } from 'vue';
+import { useEntityData } from '../composables/useEntityData';
 import { useToast } from '../composables/useToast';
 import { useI18n } from 'vue-i18n';
 // No local window declaration needed — window.api is typed globally via src/renderer/api.d.ts
@@ -274,29 +275,33 @@ export interface ThingRow { id: string; /* ... */ }
 const props = defineProps<{ personId: string }>();
 const { t } = useI18n();
 const toast = useToast();
-const items = ref<ThingRow[]>([]);
 
-async function load() {
-  try {
-    items.value = await window.api.things.forPerson(props.personId);
-  } catch (err) {
-    console.error('[PersonThingsSection] load failed:', err);
-    toast.error(t('errors.loadFailed'));
-  }
-}
+const { data, loading, error, reload } = useEntityData<ThingRow[]>(
+  toRef(props, 'personId'),
+  async (id) => {
+    try {
+      return await window.api.things.forPerson(id);
+    } catch (err) {
+      console.error('[PersonThingsSection] load failed:', err);
+      toast.error(t('errors.loadFailed'));
+      throw err;
+    }
+  },
+);
+const items = computed(() => data.value ?? []);
 
 // Expose any action the parent header button needs to trigger
-defineExpose({ openAddForm: () => { showForm.value = true; } });
-
-watch(() => props.personId, load, { immediate: true });
+defineExpose({ openAddForm: () => { showForm.value = true; }, reload });
 </script>
 ```
 
 Key rules:
-- Always `watch(() => props.personId, load, { immediate: true })` — never `onMounted` — so the component reloads when the panel switches person without being destroyed
+- **Always `useEntityData(toRef(props, 'personId'), loader)`** — never a manual `watch(() => props.X, load, { immediate: true })`. The composable owns race safety AND mutation reactivity.
+- **Never register `window.api.onDataChanged(...)` from a component.** The composable subscribes for you. If you find yourself wanting to, you're either (a) not using the composable yet, (b) wanting a Pattern-1 targeted refresh (see `frontend-design` skill), or (c) doing app-wide cross-entity work that belongs in `App.vue`.
 - Export the row interface so parents can type their own refs (e.g. `ref<import('./PersonXxx.vue').ThingRow[]>([])`)
-- Use `defineExpose` when the parent's header button must trigger an action inside the component (add form, file picker, etc.)
-- The parent keeps the `<section>` header with the `<h4>` and action `<button>`; the component renders only the table/content below
+- Use `defineExpose` when the parent's header button must trigger an action inside the component (add form, file picker, etc.). Re-export `reload` so the parent can imperatively refresh when needed.
+- The parent keeps the `<section>` header with the `<h4>` and action `<button>`; the component renders only the table/content below.
+- For new list views (left column), use `usePagedList({ ..., fetchPage })` — same auto-subscription, race guard, debounce.
 
 #### Parent wiring (panel-section style)
 

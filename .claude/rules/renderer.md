@@ -91,7 +91,7 @@ Two flavours:
 
 **Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`):
 - Takes `personId: string` prop
-- Loads its own data with `watch(() => props.personId, load, { immediate: true })` — **never `onMounted`** — so it reacts when the panel switches person without being destroyed/recreated
+- Loads its own data with `useEntityData(toRef(props, 'personId'), loader)` — the canonical pattern. The composable handles race-safe loading on id change AND auto-subscribes to `onDataChanged` so the section refreshes after any mutation (own component, sibling section, modal, MCP call). **Never** roll a manual `watch(() => props.personId, load, { immediate: true })` and **never** call `window.api.onDataChanged(...)` directly.
 - Uses `defineExpose({ action })` when the parent's header button must trigger something inside (e.g. open add form, file picker)
 
 **Prop-driven** (`PersonNamesTable`, `ResearchTasksTable`, `GroupsTable`):
@@ -99,6 +99,20 @@ Two flavours:
 - Reusable across list views (e.g. `ResearchTasksTable` is used in both `ResearchTasksView` and `PersonPanel`)
 
 Parent structure is always the same — the component renders only the table/content; the parent owns the section header. See `/add-feature` for the full template and PersonPanel wiring.
+
+### Cross-view reactivity (left list + right panel + center view)
+
+Every list+panel route shows three things at once: a left list of entities, a right side panel, and a center view (chart / map / timeline). When data is mutated anywhere — panel save, modal, MCP tool call, undo, import — **all three must update without the user navigating away and back**.
+
+**The contract:**
+- Use `useEntityData` for any self-loading section, panel, chart, or single-entity view.
+- Use `usePagedList` for any list view.
+- Both composables auto-subscribe to `window.api.onDataChanged` and reload (debounced ~150–200 ms) on every mutation, with `onScopeDispose` cleanup.
+- **Components must NOT register `window.api.onDataChanged(...)` themselves.** The composables own the subscription. If a component currently does, it's a refactor target — replace with the composable.
+- Opt-out: `useEntityData(idRef, loader, { subscribe: false })` for snapshot/read-only views (report previews, undo viewers). Rare.
+- The only justified ad-hoc `onDataChanged` listeners are: `App.vue` (badge debouncing across all entity types) and the panel-emits-`entity-updated` Pattern-1 in views like `MapView` that need a *targeted single-row refresh* on top of the auto-subscription (cheaper than a full reload).
+
+The mechanism: `preload/index.ts` wraps every mutating IPC call in `mutating()` which fans out to `dataChangedListeners`. Composables register and unregister against this single source of truth.
 
 ### Shared component catalog
 

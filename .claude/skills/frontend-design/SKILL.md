@@ -796,25 +796,31 @@ Maps load data once on mount and cache it at module level. **Pins do not move au
 
 ## Refreshing Views on Data Changes
 
-The app uses `dataVersionStore` (Pinia) to detect mutations. The preload `mutating()` wrapper calls `dataChangedListeners` after every `window.api` write, which increments `dataVersionStore.version`.
+**The mechanism (read-only background):** `preload/index.ts` wraps every mutating IPC call in `mutating()`, which fans out to `dataChangedListeners`. `App.vue` consumes that to bump `dataVersionStore.version` (used by quality / research / duplicates badges). For everything else — list views, panels, charts, maps, timelines, sections — the data-loading composables own the subscription.
 
-**But not all views react to this automatically.** Views that cache data at the module level (MapView, etc.) must explicitly refresh. Two patterns:
+### The rule: composables own reactivity
 
-### Pattern 1: Panel-emits-refresh (preferred for targeted updates)
+Every list+panel route shows three things at once — a **left list**, a **right side panel**, and a **center view** (chart / map / timeline). All three must refresh after any mutation, without the user navigating away.
 
-The panel emits an event after saving. The parent view refreshes only the changed item. Used by MapView + PlacePanel, MediaView + MediaPanel. See the map reactivity section above.
+- Use `useEntityData(idRef, loader)` for any self-loading section, panel data load, single-entity chart, or one-row view. It auto-subscribes to `onDataChanged` (debounced ~150 ms), reloads on mutation, and unsubscribes on scope dispose. Race-safe via a generation counter.
+- Use `usePagedList({ ..., fetchPage })` for any list view. Same auto-subscription, reload on mutation, race guard via sequence id.
+- **Never call `window.api.onDataChanged(...)` directly from a component or view.** If you find yourself reaching for it, the answer is one of:
+  - "I'm not using the composable" → use it.
+  - "I need a targeted single-item update" → see Pattern 1 below.
+  - "I'm doing app-wide cross-entity fan-out" → only `App.vue` is allowed (badges).
+- Opt-out: `useEntityData(idRef, loader, { subscribe: false })` for snapshot/read-only views (report previews, undo viewers). Rare.
 
-### Pattern 2: Watch dataVersionStore (for full reloads)
+### Pattern 1: Panel-emits-refresh (targeted single-row update)
 
-Use when many items might change or when targeted refresh is impractical:
+Used **on top of** the auto-subscription, only when a full reload is too expensive or causes visible flash. The map repins one place rather than rebuilding the whole resolver; the media library hot-swaps one row's thumbnail. See the "Map reactivity on data changes" section above for the full PlacePanel + MapView wiring.
 
-```typescript
-import { useDataVersionStore } from '../stores/dataVersion';
-const dataVersionStore = useDataVersionStore();
-watch(() => dataVersionStore.version, () => { loadAll(); });
-```
+The panel emits `entity-updated` after saving. The parent view's handler does the targeted refresh — and that's it; the composable will also reload, but the targeted refresh wins because it commits before the debounced reload fires.
 
-**Prefer Pattern 1** — it's faster (single-item refresh) and doesn't cause the map/list to flash.
+### What NOT to do
+
+- ❌ `watch(() => dataVersionStore.version, () => loadAll())` in a view — this is Task-15 cleanup. Use `usePagedList` (or `useEntityData`); both auto-react.
+- ❌ `onMounted(() => window.api.onDataChanged(...))` in a panel or chart — composables own it. Past components that did this (`PersonsView` chart bridge, `usePersonPanelData`) have been or are being migrated.
+- ❌ Manual `watch(() => props.personId, load, { immediate: true })` in a self-loading section — use `useEntityData` so the section also reacts to mutations, not just id changes.
 
 ---
 
