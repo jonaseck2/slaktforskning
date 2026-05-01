@@ -171,21 +171,36 @@ calling `normalizeForGazetteer` per iteration.
 
 - [ ] **Step 2.1: Extend the `NodeEntry` type and rebuild `getNameIndex`**
 
+The Task 1 test asserts `nameReads === 0` on a warm `resolvePlace` call — that
+means the inner loop of `findMatches` MUST NOT touch any live `GazetteerNode`
+during a cache-hit run. Caching just the leaf name+aliases is not enough — the
+ancestor chain `[...ancestors, node]` is also walked in the inner loop. So the
+entry must carry a pre-normalized `normPath` (one entry per node on the path
+root→...→this), built once in the index walk.
+
 Replace lines 110–142 (`type NodeEntry`, `nameIndexCache`, `getNameIndex`) with:
 
 ```typescript
 // Name index: maps gazetteer-normalized name → list of entries. Each entry
-// caches the node’s pre-normalized name and aliases so the inner-loop
-// comparisons in findMatches don’t re-run normalizeForGazetteer on every
-// candidate path. The index is per-gazetteer because each gazetteer carries
-// its own suffix/prefix vocabulary.
+// caches the node's pre-normalized name and aliases AND a normPath array
+// holding the same data for every ancestor on the way down. findMatches'
+// inner loop reads from normPath only — it never touches live GazetteerNode
+// fields during a cache hit. The index is per-gazetteer because each
+// gazetteer carries its own suffix/prefix vocabulary.
+type NormPathEntry = { name: string; aliases: Set<string> };
 type NodeEntry = {
   node: GazetteerNode;
   ancestors: GazetteerNode[];
-  /** Pre-normalized node name. Used to skip normalize calls in findMatches. */
+  /** Pre-normalized node name. */
   normName: string;
   /** Pre-normalized aliases as a Set for O(1) membership tests. */
   normAliases: Set<string>;
+  /**
+   * Pre-normalized [...ancestors, node] in path order. findMatches walks
+   * this instead of building a per-anchor list from live node fields, so
+   * the warm path performs zero `node.name` reads.
+   */
+  normPath: NormPathEntry[];
 };
 const nameIndexCache = new WeakMap<Gazetteer, Map<string, NodeEntry[]>>();
 
@@ -193,7 +208,11 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
   const cached = nameIndexCache.get(gaz);
   if (cached) return cached;
   const index = new Map<string, NodeEntry[]>();
-  function walk(node: GazetteerNode, ancestors: GazetteerNode[]) {
+  function walk(
+    node: GazetteerNode,
+    ancestors: GazetteerNode[],
+    ancestorsNorm: NormPathEntry[],
+  ) {
     const normName = normalizeForGazetteer(node.name, gaz);
     const normAliases = new Set<string>();
     if (node.aliases) {
@@ -202,7 +221,15 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
         if (na) normAliases.add(na);
       }
     }
-    const entry: NodeEntry = { node, ancestors, normName, normAliases };
+    const selfNorm: NormPathEntry = { name: normName, aliases: normAliases };
+    const normPath = [...ancestorsNorm, selfNorm];
+    const entry: NodeEntry = {
+      node,
+      ancestors,
+      normName,
+      normAliases,
+      normPath,
+    };
     if (!index.has(normName)) index.set(normName, []);
     index.get(normName)!.push(entry);
     for (const na of normAliases) {
@@ -212,10 +239,10 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
     }
     if (node.children) {
       const nextAncestors = [...ancestors, node];
-      for (const child of node.children) walk(child, nextAncestors);
+      for (const child of node.children) walk(child, nextAncestors, normPath);
     }
   }
-  walk(gaz.root, []);
+  walk(gaz.root, [], []);
   nameIndexCache.set(gaz, index);
   return index;
 }
@@ -230,22 +257,18 @@ index gives us the entry for the leaf, but ancestors are bare nodes.
 Build a parallel array of pre-normalized path strings ONCE per anchor (cheap — at most
 ~5 entries per path), then compare against that:
 
-Replace the inner block (the two nested `for` loops at lines 198–230) with:
+The `findMatches` outer loop iterates over `seedNorms` and for each
+`index.get(norm)` retrieves a list of `NodeEntry`. Use the entry's
+pre-built `normPath` directly — do NOT rebuild it from `fullPath`/live nodes.
+
+Replace the inner block (the two nested `for` loops around lines 198–230) with:
 
 ```typescript
-      // Pre-normalize the path’s node names + aliases ONCE per anchor.
-      // Each path entry becomes { name, aliases } where aliases is a Set
-      // for O(1) `has` checks.
-      const normPath: { name: string; aliases: Set<string> }[] = fullPath.map(n => {
-        const aliases = new Set<string>();
-        if (n.aliases) {
-          for (const a of n.aliases) {
-            const na = normalizeForGazetteer(a, gaz);
-            if (na) aliases.add(na);
-          }
-        }
-        return { name: normalizeForGazetteer(n.name, gaz), aliases };
-      });
+      // The entry carries a pre-normalized normPath built at index time.
+      // Reading it does not touch any live GazetteerNode field — that is
+      // the whole point of the cache, and the Task 1 test asserts it
+      // (zero name reads on warm calls).
+      const normPath = entry.normPath;
 
       const usedPathIndices = new Set<number>();
       const matchedInputIndices = new Set<number>();
