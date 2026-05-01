@@ -59,6 +59,7 @@ import GroupPanel from '../components/GroupPanel.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'GroupsView' });
 
@@ -78,9 +79,9 @@ const groups = ref<GroupRow[]>([]);
 const showAddForm = ref(false);
 
 const groupsBodyRef = ref<HTMLElement | null>(null);
-const selectedGroupId = ref<string | null>(localStorage.getItem('groups-selected-id'));
-const panelOpen = ref(localStorage.getItem('groups-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'groups-panel-width', maxWidthRatio: 0.5 });
+const selectedGroupId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.groupsSelectedId));
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.groupsPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.groupsPanelWidth, maxWidthRatio: 0.5 });
 
 async function load() {
   if (!window.api) return;
@@ -103,7 +104,7 @@ const del = useDeleteConfirm<string>(async (id) => {
   await window.api.groups.delete(id);
   if (selectedGroupId.value === id) {
     selectedGroupId.value = null;
-    localStorage.removeItem('groups-selected-id');
+    localStorage.removeItem(STORAGE_KEYS.groupsSelectedId);
   }
   await load();
 });
@@ -111,16 +112,16 @@ function deleteGroup(id: string) { del.ask(id); }
 
 function selectGroup(id: string) {
   selectedGroupId.value = id;
-  localStorage.setItem('groups-selected-id', id);
+  localStorage.setItem(STORAGE_KEYS.groupsSelectedId, id);
   if (!panelOpen.value) openPanel();
 }
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('groups-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.groupsPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('groups-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.groupsPanelOpen, 'false');
 }
 
 onMounted(async () => {

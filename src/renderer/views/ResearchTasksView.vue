@@ -55,6 +55,7 @@ import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import { usePanelResize } from '../composables/usePanelResize';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'ResearchTasksView' });
 
@@ -93,22 +94,22 @@ const filteredTasks = computed(() => {
 });
 
 const tasksBodyRef = ref<HTMLElement | null>(null);
-const selectedTaskId = ref<string | null>(localStorage.getItem('tasks-selected-id'));
-const panelOpen = ref(localStorage.getItem('tasks-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'tasks-panel-width', maxWidthRatio: 0.5 });
+const selectedTaskId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.tasksSelectedId));
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.tasksPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.tasksPanelWidth, maxWidthRatio: 0.5 });
 
 function selectTask(id: string) {
   selectedTaskId.value = id;
-  localStorage.setItem('tasks-selected-id', id);
+  localStorage.setItem(STORAGE_KEYS.tasksSelectedId, id);
   if (!panelOpen.value) openPanel();
 }
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('tasks-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.tasksPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('tasks-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.tasksPanelOpen, 'false');
 }
 
 

@@ -4,11 +4,13 @@
  * Rules:
  * - Every static-string `localStorage.{getItem,setItem,removeItem}` call in
  *   `src/renderer/` must go through this module.
- * - Keys passed as `storageKey` options to composables (`usePanelResize`,
- *   `usePanelSections`) must come from `STORAGE_KEYS` too.
- * - Dynamic keys built at runtime (e.g. `usePanelSections` builds
- *   `<prefix>-section-<name>-open` per section) are not in the registry; the
- *   prefix is.
+ * - Keys passed as `storageKey` options to single-key helpers
+ *   (`usePanelResize`, `useChartZoom`) must come from `STORAGE_KEYS` too —
+ *   they map 1:1 to a localStorage entry.
+ * - Composables that build dynamic keys from a prefix (`usePanelSections`
+ *   appends `-section-<name>-open`; `usePagedList` appends `-sort-by`/
+ *   `-sort-dir`) take a string prefix; the prefixes are kept as plain string
+ *   literals at the call site to avoid implying they are 1:1 keys.
  * - Use `getJSON` / `setJSON` for any value that is not already a plain string,
  *   so we have a single place to handle parse errors.
  */
@@ -31,8 +33,6 @@ export const STORAGE_KEYS = {
   vizTab: 'viz-tab',
   vizPanelOpen: 'viz-panel-open',
   vizPanelWidth: 'viz-panel-width',
-  // usePanelSections prefixes (composable appends `-section-<name>-open`):
-  personsSectionPrefix: 'persons',
 
   // Places view + Map view (shared keys — Places navigates into Map)
   placesListOpen: 'places-list-open',
@@ -40,20 +40,17 @@ export const STORAGE_KEYS = {
   mapSelectedPlace: 'map-selected-place',
   mapPanelOpen: 'map-panel-open',
   mapPanelWidth: 'map-panel-width',
-  placesSectionPrefix: 'places',
 
   // Media view
   mediaListOpen: 'media-list-open',
   mediaListWidth: 'media-list-width',
   mediaPanelOpen: 'media-panel-open',
   mediaPanelWidth: 'media-panel-width',
-  mediaSectionPrefix: 'media',
 
   // Sources view
   sourcesSelectedId: 'sources-selected-id',
   sourcesPanelOpen: 'sources-panel-open',
   sourcesPanelWidth: 'sources-panel-width',
-  sourcesSectionPrefix: 'sources',
 
   // Groups view
   groupsSelectedId: 'groups-selected-id',

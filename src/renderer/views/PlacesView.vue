@@ -125,6 +125,7 @@ import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { usePagedList } from '../composables/usePagedList';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'PlacesView' });
 
@@ -141,14 +142,14 @@ const placesBodyRef = ref<HTMLElement | null>(null);
 // Persistent left list column. Replaces the old list/map tab toggle —
 // list and map are now always visible side-by-side, with the list
 // collapsible via a ▶/◀ button.
-const listOpen = ref(localStorage.getItem('places-list-open') !== 'false');
+const listOpen = ref(localStorage.getItem(STORAGE_KEYS.placesListOpen) !== 'false');
 function openList() {
   listOpen.value = true;
-  localStorage.setItem('places-list-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.placesListOpen, 'true');
 }
 function closeList() {
   listOpen.value = false;
-  localStorage.setItem('places-list-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.placesListOpen, 'false');
 }
 const activeCountryFilter = ref<string>('all');
 
@@ -185,17 +186,17 @@ const initialPlaceId =
   (typeof paramId === 'string' && paramId) ? paramId :
   (typeof queryPlace === 'string' && queryPlace) ? queryPlace : null;
 if (initialPlaceId) {
-  localStorage.setItem('map-selected-place', initialPlaceId);
-  localStorage.setItem('map-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.mapSelectedPlace, initialPlaceId);
+  localStorage.setItem(STORAGE_KEYS.mapPanelOpen, 'true');
 }
 
 // Panel state (shared keys with MapView so switching modes preserves selection)
-const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
+const selectedPlaceId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.mapSelectedPlace));
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
-const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'map-panel-width', maxWidthRatio: 0.5 });
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.mapPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.mapPanelWidth, maxWidthRatio: 0.5 });
 const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
-  storageKey: 'places-list-width',
+  storageKey: STORAGE_KEYS.placesListWidth,
   side: 'left',
   defaultWidth: 280,
   minWidth: 200,
@@ -204,16 +205,16 @@ const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
 
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
-  localStorage.setItem('map-selected-place', id);
+  localStorage.setItem(STORAGE_KEYS.mapSelectedPlace, id);
   if (!panelOpen.value) openPanel();
 }
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('map-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.mapPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('map-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.mapPanelOpen, 'false');
 }
 
 // Show the gazetteer-resolved path under each row. We build the place's full

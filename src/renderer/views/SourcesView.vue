@@ -122,6 +122,7 @@ import { narrateSourceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { usePagedList } from '../composables/usePagedList';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'SourcesView' });
 
@@ -141,9 +142,9 @@ const route = useRoute();
 const showAddForm = ref(false);
 
 const sourcesBodyRef = ref<HTMLElement | null>(null);
-const selectedSourceId = ref<string | null>(localStorage.getItem('sources-selected-id'));
-const panelOpen = ref(localStorage.getItem('sources-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'sources-panel-width', maxWidthRatio: 0.5 });
+const selectedSourceId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.sourcesSelectedId));
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.sourcesPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.sourcesPanelWidth, maxWidthRatio: 0.5 });
 
 type SourceSortBy = 'title' | 'author' | 'source_type';
 const {
@@ -183,7 +184,7 @@ const del = useDeleteConfirm<string>(async (id) => {
     await window.api.sources.delete(id);
     if (selectedSourceId.value === id) {
       selectedSourceId.value = null;
-      localStorage.removeItem('sources-selected-id');
+      localStorage.removeItem(STORAGE_KEYS.sourcesSelectedId);
     }
     await load();
   } catch (err) {
@@ -204,16 +205,16 @@ function focusPrevRow(e: KeyboardEvent): void {
 
 function selectSource(id: string) {
   selectedSourceId.value = id;
-  localStorage.setItem('sources-selected-id', id);
+  localStorage.setItem(STORAGE_KEYS.sourcesSelectedId, id);
   if (!panelOpen.value) openPanel();
 }
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('sources-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.sourcesPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('sources-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.sourcesPanelOpen, 'false');
 }
 
 onMounted(async () => {
