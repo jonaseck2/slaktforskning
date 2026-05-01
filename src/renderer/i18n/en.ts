@@ -617,6 +617,7 @@ export default {
     managePerson: 'Manage person',
     managePlace: 'Manage place',
     noPersonSelected: 'Click a person in the tree',
+    selectToView: 'Select to view',
     showInTree: 'Show in tree',
     setAsTreeSubject: '🌳 Set as tree subject',
     treeSubject: '🌳 Tree subject',

@@ -617,6 +617,7 @@ export default {
     managePerson: 'Hantera person',
     managePlace: 'Hantera plats',
     noPersonSelected: 'Klicka på en person i trädet',
+    selectToView: 'Välj för att visa',
     showInTree: 'Visa i träd',
     setAsTreeSubject: '🌳 Sätt som trädsubjekt',
     treeSubject: '🌳 Trädsubjekt',
