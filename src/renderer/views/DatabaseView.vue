@@ -29,14 +29,11 @@
     <section class="db-section">
       <h3>{{ $t('database.treeSubject') }}</h3>
       <p class="db-hint">{{ $t('database.treeSubjectHint') }}</p>
-      <div class="tree-subject-row">
-        <PersonPicker
-          :model-value="treeSubjectId"
-          :placeholder="$t('database.treeSubjectNone')"
-          @update:model-value="setTreeSubject"
-        />
-        <button v-if="treeSubjectId" class="btn-sm btn-cancel" :aria-label="$t('a11y.clearSearch')" @click="clearTreeSubject">✕</button>
-      </div>
+      <PersonPicker
+        :model-value="treeSubjectId"
+        :placeholder="$t('database.treeSubjectNone')"
+        @update:model-value="setTreeSubject"
+      />
     </section>
 
     <section class="db-section">
@@ -165,14 +162,6 @@ async function setTreeSubject(personId: string | null) {
     await window.api.db.deleteSetting('default_person_id');
     resetDefaultPersonId();
   }
-}
-
-async function clearTreeSubject() {
-  treeSubjectId.value = null;
-  await window.api.db.deleteSetting('default_person_id');
-  resetDefaultPersonId();
-  statusMsg.value = t('database.treeSubjectCleared');
-  setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function openPath(p: string) {
@@ -312,16 +301,6 @@ h2 {
   font-size: var(--font-sm);
   color: var(--color-text-muted);
   margin-bottom: 8px;
-}
-
-.tree-subject-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tree-subject-row .btn-sm {
-  flex-shrink: 0;
 }
 
 .researcher-grid {

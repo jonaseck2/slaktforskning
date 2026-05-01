@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.175.2 — Settings: drop redundant clear-tree-subject button
+
+- fix(ui): the tree-subject row in Settings → Database had an external ✕ button next to the PersonPicker, but PersonPicker already renders its own clear ✕ — clicking the outer one fired a separate flow that emitted a now-obsolete status toast. Removed the duplicate button (and the now-unused `clearTreeSubject` handler, the `tree-subject-row` wrapper + CSS, and the orphaned `database.treeSubjectCleared` i18n key in both `sv.ts` and `en.ts`). The picker's built-in clear still calls `setTreeSubject(null)` and deletes the `default_person_id` setting.
+
 ## v0.175.1 — Media: missing-file count from DB, not from loaded page
 
 - fix(media): the Media library footer ("The media register contains 11982 files · N missing") was deriving `N` from the in-memory paginated `items.value` array, so missing files were only counted as the user scrolled through them. Now the database returns the total missing count alongside `total` for the same query (new `countMissingMedia(db, query?)` in `src/api/media.ts` + `total_missing` field on the `media:listPage` IPC response). `MediaView.vue` reads it from each fetch instead of computing client-side. Also fixes a latent operator-precedence bug in `buildMediaFilterClause` — the OR group needed parentheses so future combined `AND` predicates bind correctly (e.g. `… AND m.is_missing = 1` now filters within the search result instead of widening it).
